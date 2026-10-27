@@ -59,7 +59,7 @@ def normalize_costco_json(obj):
         else:
             ltype = "item"
         lines.append({
-            "raw": desc, "sku": str(it.get("itemNumber") or ""),
+            "raw": desc, "detail": it.get("itemDescription02"), "sku": str(it.get("itemNumber") or ""),
             "decoded_name": desc, "qty": abs(unit),
             "unit_price": round(amount / unit, 2) if unit else amount,
             "line_total": amount, "line_type": ltype,

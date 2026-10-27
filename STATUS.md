@@ -7,7 +7,7 @@ Deadline: submission Nov 4, 2026, 9:00 PM ET.
 | --- | --- |
 | 0.5 Spikes | Spike 1 PASS (PDF decode 7/7 arithmetic). Spike B closed: owner plan B — uploads/exports. Gate 0 photo decode: owner subset 32/32 lines; public subset running (external). |
 | 0 Foundations | Repo + layout ✓ · model policy ✓ · meta_client + cost_ledger ✓ (6 tests green) · eval harness skeleton ✓ · Oracle skeleton LIVE ✓ (db healthy, api + caddy up on the VM; GET :8081/health returns ok) · owner provisions Oracle API key — owner's hand, when runtime calls begin |
-| 1 Decode API | In progress. Prompt v2 written (versioned file). JSON import + PDF-text decode built, 10 tests green; real-corpus smoke: 114/114 reconcile, 1,058 item / 118 discount / 50 return lines typed, 5 orphan discounts flagged. Photo path waits on Gate 0. Dictionary v1 next. |
+| 1 Decode API | In progress. Prompt v2 written (versioned file). JSON import + PDF-text decode built, 10 tests green; real-corpus smoke: 114/114 reconcile, 1,058 item / 118 discount / 50 return lines typed, 5 orphan discounts flagged. Photo path waits on Gate 0. Dictionary v1 BUILT: 458 entries (10 fee-class), ORG BELLAS resolved = Organic Baby Bella Mushrooms (0.90); 2 entries honestly unresolved (KS Blueberry, KS Vanilla — review-queue material). Dictionary data lives in the staging area, not git. |
 | 2 Patterns/list/cart | Not started. Deterministic code on staged history. |
 | 3 PWA-core | Not started (no pwa/ folder before this stage). |
 | 4–6 Eyes/store/hardening | Not started. |
