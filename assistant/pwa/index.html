@@ -60,25 +60,27 @@
 
 <main id="app-main" hidden>
   <section id="view-home" class="view">
+    <p id="today-dow" class="dow"></p>
     <h2 class="largetitle">Today</h2>
-    <p id="asof" class="subtitle"></p>
-    <h3 class="sect">Games</h3>
+    <div id="today-hero"></div>
+    <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
-    <p style="margin:0 0 4px"><button id="btn-new-hunt" class="btn primary wide" type="button">New hunt</button></p>
-    <div class="group">
-      <button class="navrow" data-qnav="view-community" type="button"><span class="grow">Community</span><span class="chev">›</span></button>
-      <button class="navrow" data-qnav="view-qprofile" type="button"><span class="grow">Quest profile</span><span class="chev">›</span></button>
-    </div>
-    <h3 class="sect">Running low</h3>
-    <div id="running-low" class="group"></div>
-    <h3 class="sect">Your list</h3>
-    <div id="smart-list" class="group"></div>
-    <button id="btn-list-add" class="btn secondary wide" type="button">Add item</button>
-    <div id="add-picker" class="group pad" hidden>
-      <input type="text" id="add-q" placeholder="Search your items, or type a new one" autocomplete="off">
-      <div id="add-cands"></div>
-    </div>
-    <div id="home-notes"></div>
+    <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
+    <div id="today-eye"></div>
+    <button id="today-listline" class="hubrow" type="button"><span id="today-listline-text"></span></button>
+  </section>
+
+  <section id="view-list" class="view" hidden>
+    <h2 class="largetitle">List</h2>
+    <p id="list-line" class="listline"></p>
+    <div id="store-filter" class="seg" role="group" aria-label="Store lens — view the one list by store"></div>
+    <p class="muted" style="font-size:14px">One list — the store chips are a lens. Checking an item off checks it everywhere.</p>
+    <form id="list-add-form" class="addbox">
+      <input type="text" id="list-add-input" placeholder="Add an item…" autocomplete="off" aria-label="Add an item">
+      <button class="btn primary" type="submit">Add</button>
+    </form>
+    <div id="smart-list"></div>
+    <div id="list-notes"></div>
     <h3 class="sect">Prepared cart</h3>
     <div id="cart" class="group"></div>
   </section>
@@ -87,12 +89,19 @@
     <h2 class="largetitle">Add</h2>
     <p class="muted">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.</p>
     <div id="doors"></div>
-    <h3 class="sect">Curator — what things are</h3>
-    <div id="curator" class="group"></div>
     <h3 class="sect">Eyes — sightings to confirm</h3>
     <div class="group pad"><div id="eyes-records"></div></div>
-    <h3 class="sect">Review queue</h3>
-    <div id="review" class="group"></div>
+  </section>
+
+  <section id="view-receipts" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Receipts</h2>
+    <p id="rc-count" class="subtitle"></p>
+    <h3 class="sect">Needs your eye</h3>
+    <div id="review" class="group eyegroup"></div>
+    <div id="curator" class="group eyegroup"></div>
+    <h3 class="sect">Archive</h3>
+    <div id="rc-archive" class="group"></div>
   </section>
 
   <section id="view-chat" class="view" hidden>
@@ -112,15 +121,26 @@
     <p id="voice-note" class="muted" hidden></p>
   </section>
 
-  <section id="view-dash" class="view" hidden>
-    <h2 class="largetitle">Dashboard</h2>
-    <div id="dash-totals" class="group"></div>
+  <section id="view-analysis" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Analysis</h2>
+    <p class="subtitle">From Profile · spend is live</p>
+    <h3 class="sect">Spend — live, from your receipts</h3>
+    <div class="group pad" id="an-spend"></div>
     <h3 class="sect">Spend by month</h3>
-    <div id="dash-months" class="group pad"></div>
+    <div id="an-months" class="group pad"></div>
     <h3 class="sect">Spend by store</h3>
-    <div id="dash-stores" class="group"></div>
+    <div id="an-stores" class="group"></div>
     <h3 class="sect">Top items</h3>
-    <div id="dash-top" class="group"></div>
+    <div id="an-top" class="group"></div>
+    <div class="group pad comingnext" style="margin-top:22px">
+      <p class="nomargin"><strong>Patterns</strong> <span class="sub">Coming next</span></p>
+      <p class="muted nomargin">Your household&rsquo;s buying rhythms — cadence per staple, what runs out when. Not built yet.</p>
+    </div>
+    <div class="group pad comingnext">
+      <p class="nomargin"><strong>Trends</strong> <span class="sub">Coming next</span></p>
+      <p class="muted nomargin">Spend and habits over time — month over month, per store, per category. Not built yet.</p>
+    </div>
   </section>
 
   <section id="view-item" class="view" hidden>
@@ -129,6 +149,18 @@
   </section>
   <section id="view-profile" class="view" hidden>
     <h2 class="largetitle">Profile</h2>
+    <div id="pf-card" class="group pad"></div>
+    <div id="pf-stats" class="stattiles"></div>
+    <div id="pf-spots" class="group"></div>
+    <h3 class="sect">Badge shelf</h3>
+    <div id="pf-badges" class="badgetiles"></div>
+    <h3 class="sect">Mapped by you</h3>
+    <div id="pf-stores" class="group"></div>
+    <div class="group">
+      <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-community" type="button"><span class="grow">Community</span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
+    </div>
     <h3 class="sect">Account</h3>
     <div class="group" id="profile-account"></div>
     <h3 class="sect">Connect Muse</h3>
@@ -331,10 +363,9 @@
     <div id="qp-stores" class="group"></div>
     <h3 class="sect">Receipts</h3>
     <div id="qp-receipts" class="group"></div>
-    <h3 class="sect">Coming next</h3>
-    <div class="group pad comingnext">
-      <p class="nomargin"><strong>Analysis</strong></p>
-      <p class="muted nomargin">Patterns, spend, and the dashboard grow on this archive. Coming next.</p>
+    <h3 class="sect">Analysis</h3>
+    <div class="group pad">
+      <p class="muted nomargin">Spend is live in Profile &rarr; Analysis. Patterns and Trends are coming next.</p>
     </div>
   </section>
 
@@ -346,23 +377,23 @@
 
 <nav id="tabs" hidden>
   <button data-view="view-home" class="active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h11V10"/></svg>
-    <span>Home</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1L12 3z"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+    <span>Today</span>
+  </button>
+  <button data-view="view-list">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.4 6.2 5 7.8 7.6 4.9M3.4 12.2 5 13.8 7.6 10.9M3.4 18.2 5 19.8 7.6 16.9"/></svg>
+    <span>List</span>
   </button>
   <button data-view="view-scan">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M12 8.4v7.2M8.4 12h7.2"/></svg>
     <span>Add</span>
   </button>
   <button data-view="view-chat">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-8 8c-1.2 0-2.4-.25-3.4-.7L4 20l.8-4.2A8 8 0 1 1 20 12z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.2A2.7 2.7 0 0 1 6.7 3.5h10.6A2.7 2.7 0 0 1 20 6.2v7.6a2.7 2.7 0 0 1-2.7 2.7h-5L7.6 20.5v-4H6.7A2.7 2.7 0 0 1 4 13.8V6.2z"/><path d="M12 6.6l.85 2 2 .85-2 .85-.85 2-.85-2-2-.85 2-.85.85-2z" fill="currentColor" stroke="none"/></svg>
     <span>Ask</span>
   </button>
-  <button data-view="view-dash">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V4M19 20v-5"/><path d="M3.5 20h17"/></svg>
-    <span>Dashboard</span>
-  </button>
   <button data-view="view-profile">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="9.8" r="2.9"/><path d="M6.4 18.6a6.2 6.2 0 0 1 11.2 0"/></svg>
     <span>Profile</span>
   </button>
 </nav>
