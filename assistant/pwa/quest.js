@@ -24,6 +24,16 @@ function stopHuntTimer() {
   if (Q.timer) { clearInterval(Q.timer); Q.timer = null; }
 }
 
+/* Stores with a rebuilt 3D model (the platform plane): squashed
+ * store name -> the SceneView "cloud" manifest inside the PWA.
+ * Assets are built by assistant/tools/prep_cloud.py from a shopper's
+ * walkthrough (VGGT). A store not listed here has no model yet: it
+ * plays in strip, and mapping it is the invitation. */
+const STORE_MODELS = { traderjoes: "models/trader-joes/manifest.json" };
+function qStoreModel(store) {
+  return STORE_MODELS[qnorm(store).replace(/ /g, "")] || null;
+}
+
 /* ---------------- navigation ---------------- */
 
 function questShow(id) {
@@ -314,7 +324,8 @@ document.querySelectorAll(".modecard").forEach(b =>
     b.disabled = true;
     try {
       const sess = await post("/api/quest/sessions",
-        { store: Q.draft.store, mode, items: Q.draft.finalItems, driver: Q.driverName });
+        { store: Q.draft.store, mode, items: Q.draft.finalItems,
+          driver: qStoreModel(Q.draft.store) ? "cloud" : Q.driverName });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       qOpenSession(sess);
@@ -352,12 +363,16 @@ function startHuntTimer(sess) {
   Q.timer = setInterval(paint, 1000);
 }
 function paintSceneToggle() {
-  document.querySelectorAll("#scene-toggle [data-driver]").forEach(b =>
-    b.setAttribute("aria-pressed", String(b.dataset.driver === Q.driverName)));
+  const hasModel = !!(Q.current && qStoreModel(Q.current.store));
+  document.querySelectorAll("#scene-toggle [data-driver]").forEach(b => {
+    b.setAttribute("aria-pressed", String(b.dataset.driver === Q.driverName));
+    if (b.dataset.driver === "cloud") b.disabled = !hasModel;
+  });
 }
 function mountScene() {
   const mount = $("#scene-mount");
   if (Q.scene) Q.scene.destroy();
+  mount.dataset.model = (Q.current && qStoreModel(Q.current.store)) || "";
   Q.scene = createSceneView(mount, Q.driverName);
   Q.scene.onTapStop = idx => {
     if (idx === qNextIndex(Q.current)) collectCurrent();
@@ -378,9 +393,16 @@ function openHunt(sess) {
   Q.current = sess;
   questShow("view-hunt");
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
+  const model = qStoreModel(sess.store);
+  // Reopen on the rung the session started in — unless it asks for a
+  // cloud this store does not have.
+  if (sess.driver && (sess.driver !== "cloud" || model)) Q.driverName = sess.driver;
   mountScene();
-  $("#hunt-mapnote").textContent =
-    `No 3D model for ${sess.store} yet — map this store to unlock the 3D view. The hunt plays the same either way.`;
+  $("#hunt-mapnote").textContent = !model
+    ? `No 3D model for ${sess.store} yet — map this store to unlock the 3D view. The hunt plays the same either way.`
+    : Q.driverName === "cloud"
+      ? `${sess.store}, rebuilt in 3D from a shopper's walkthrough. Drag to look around; tap the glowing stop to collect.`
+      : `This store has a 3D model — tap 3D above to walk it. The hunt plays the same either way.`;
   renderHunt();
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
 }
