@@ -1,6 +1,6 @@
 # STATUS — where Arya stands (updated 2026-10-27)
 
-**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Public HTTPS is up 2026-10-27 via a Cloudflare quick tunnel (systemd service arya-tunnel on the VM, auto-restart): https://disposition-comparisons-containers-uniform.trycloudflare.com — the hostname changes if the tunnel restarts; a named tunnel on the owner's domain is the durable upgrade. Remaining: the owner's phone check. Stages 0–2 done except the photo path (Gate 0).**
+**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Public HTTPS is up at the stable name **https://arya-pilot.duckdns.org** (owner's DuckDNS, set to the VM IP the VM; Caddy obtained a Let's Encrypt certificate 2026-10-27 — validation succeeded, so ports 80/443 are publicly reachable). The Cloudflare quick tunnel remains as a backup door. Optional: the owner sends the DuckDNS token and an auto-updater goes on the VM. Remaining: the owner's phone check. Stages 0–2 done except the photo path (Gate 0).**
 Deadline: submission Nov 4, 2026, 9:00 PM ET.
 
 | Stage | State |
