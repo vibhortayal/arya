@@ -50,8 +50,34 @@
     </label>
     <button id="btn-receipt" class="secondary">Read this receipt</button>
     <p id="receipt-result" class="muted"></p>
+    <h2>Eyes — what&rsquo;s inside</h2>
+    <label class="file-label">Photo of the fridge, pantry, freezer, or fruit
+      <input type="file" id="eyes-file" accept="image/*">
+    </label>
+    <label class="file-label">Place
+      <select id="eyes-kind">
+        <option value="fridge">Fridge</option>
+        <option value="pantry">Pantry</option>
+        <option value="freezer">Freezer</option>
+        <option value="fruit">Fruit</option>
+      </select>
+    </label>
+    <button id="btn-eyes" class="secondary">See what&rsquo;s inside</button>
+    <p id="eyes-result" class="muted"></p>
+    <div id="eyes-records"></div>
     <h2>Review queue</h2>
     <div id="review"></div>
+  </section>
+
+  <section id="view-chat" class="view" hidden>
+    <h2>Ask Arya</h2>
+    <div id="chat-log"></div>
+    <form id="chat-form">
+      <label class="file-label">Message
+        <input type="text" id="chat-input" placeholder="What&rsquo;s running low? · We finished the yogurt" autocomplete="off">
+      </label>
+      <p><button type="submit" class="secondary">Send</button></p>
+    </form>
   </section>
 
   <section id="view-dash" class="view" hidden>
@@ -74,6 +100,7 @@
 <nav id="tabs" hidden>
   <button data-view="view-home" class="active">Home</button>
   <button data-view="view-scan">Scan</button>
+  <button data-view="view-chat">Ask</button>
   <button data-view="view-dash">Dashboard</button>
 </nav>
 

@@ -1,6 +1,6 @@
 """Arya API — FastAPI entry point.
 All Meta calls go through api.meta_client; all money math is code."""
-import os
+import hashlib, os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +20,7 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 @app.middleware("http")
 async def require_login(request, call_next):
     path = request.url.path
-    protected = path.startswith(("/api/", "/import", "/decode"))
+    protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
     if protected:
         info = auth.session_info(request.cookies.get(auth.COOKIE))
         if not info:
@@ -126,12 +126,26 @@ async def decode_text_route(req: Request):
 def home():
     d = state.derived()
     nm = state.names()
+    from api.eyes.service import prior_days
+    seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
+             "date": p["seen"]["date"], "kind": p["seen"].get("kind")}
+            for p in d["patterns"] if p.get("seen")]
+    checks = []
+    for p in d["patterns"]:
+        prior = prior_days(nm.get(p["item_id"], ""))
+        if prior and p.get("last_bought") and not p["due"]:
+            from datetime import date as _d
+            age = (_d.fromisoformat(state.as_of()) - _d.fromisoformat(p["last_bought"])).days
+            if age >= prior:
+                checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
+                               "text": f"{nm.get(p['item_id'], p['item_id'])} from {p['last_bought']} usually turns about now — still good?"})
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
             f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
            for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3]
     return {"as_of": state.as_of(), "running_low": low,
-            "list": d["smart_list"], "cart": state.get_cart()}
+            "list": d["smart_list"], "cart": state.get_cart(),
+            "seen": seen, "checks": checks}
 
 
 @app.get("/api/dashboard")
@@ -192,6 +206,96 @@ async def decode_photo_route(req: Request):
         raise HTTPException(502, str(e)[:200])
     added = state.add_receipts([receipt])
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
+
+
+@app.post("/eyes/photo")
+async def eyes_photo(req: Request, kind: str = "fridge"):
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo of the fridge, pantry, freezer, or fruit")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    from api.eyes.service import detect, match_item
+    from datetime import date as _d
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        sightings = detect(body, client, media_type=media)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    rec_id = "eye-" + hashlib.sha1(body).hexdigest()[:10]
+    ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}.get(media, ".jpg")
+    photo_dir = os.path.join(state.data_dir(), "eyes_photos")
+    os.makedirs(photo_dir, exist_ok=True)
+    with open(os.path.join(photo_dir, rec_id + ext), "wb") as fh:
+        fh.write(body)
+    idx = state.name_index()
+    for sg in sightings:
+        sg["item_id"] = match_item(sg["name"], idx)
+        sg["state"] = "pending"
+    rec = {"id": rec_id, "date": _d.today().isoformat(), "kind": kind,
+           "photo": rec_id + ext, "sightings": sightings}
+    state.save_eyes_record(rec)
+    return rec
+
+
+@app.get("/api/eyes")
+def eyes_list():
+    return {"records": sorted(state.eyes_records(), key=lambda r: r["date"], reverse=True)}
+
+
+@app.get("/eyes/photos/{rec_id}")
+def eyes_photo_file(rec_id: str):
+    from fastapi.responses import FileResponse
+    photo_dir = os.path.join(state.data_dir(), "eyes_photos")
+    for ext in (".jpg", ".png", ".webp"):
+        p = os.path.join(photo_dir, rec_id + ext)
+        if os.path.exists(p):
+            return FileResponse(p)
+    raise HTTPException(404, "no such photo")
+
+
+@app.post("/api/eyes/{rec_id}/sightings/{idx}")
+async def eyes_decide(rec_id: str, idx: int, req: Request):
+    body = await req.json()
+    decision = body.get("state")
+    if decision not in ("confirmed", "rejected"):
+        raise HTTPException(400, "state must be confirmed or rejected")
+    for rec in state.eyes_records():
+        if rec["id"] == rec_id:
+            if idx >= len(rec["sightings"]):
+                raise HTTPException(404, "no such sighting")
+            rec["sightings"][idx]["state"] = decision
+            state.save_eyes_record(rec)
+            return rec
+    raise HTTPException(404, "no such eyes record")
+
+
+@app.post("/api/items/{item_id}/expired")
+def item_expired(item_id: str):
+    from datetime import date as _d
+    fl = state.flags()
+    cur = dict(fl.get(item_id, {}))
+    cur["expired"] = _d.today().isoformat()
+    state.set_flag(item_id, cur)
+    return {"item_id": item_id, "expired": cur["expired"]}
+
+
+@app.post("/api/chat")
+async def chat_route(req: Request):
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    body = await req.json()
+    from api.chat_service import chat as run_chat
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        return run_chat(body.get("messages", []), client)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
 
 
 @app.post("/api/cart/approve")

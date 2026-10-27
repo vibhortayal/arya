@@ -90,6 +90,24 @@ def derived():
     def hidden(pid):
         f = fl.get(pid, {})
         return f.get("never") or (f.get("snoozed_until") and today and f["snoozed_until"] >= today)
+    # Stage 4: Eyes corrections + user reports adjust the patterns.
+    from datetime import date as _date
+    sightings = confirmed_sightings()
+    nm = names()
+    for p in patterns:
+        sg = sightings.get(p["item_id"])
+        if sg and p.get("last_bought") and sg["date"] > p["last_bought"] and p["median_interval_days"]:
+            seen_on = _date.fromisoformat(sg["date"])
+            now = _date.fromisoformat(today) if today else seen_on
+            since = (now - seen_on).days
+            p["seen"] = {"date": sg["date"], "kind": sg.get("kind")}
+            p["days_since_last"] = since
+            if since < p["median_interval_days"]:
+                p["due"] = False
+        f = fl.get(p["item_id"], {})
+        if f.get("expired") or f.get("out"):
+            p["due"] = True
+            p["user_report"] = ("expired " + f["expired"]) if f.get("expired") else "you said you're out"
     visible = [p for p in patterns if not hidden(p["item_id"])]
     smart = build_list(visible)
     have = {i["item_id"] for i in smart["items"]}
@@ -100,6 +118,35 @@ def derived():
     for item in smart["items"]:
         item["name"] = names().get(item["item_id"], item["item_id"])
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
+
+
+def eyes_records():
+    return _load("eyes.json", [])
+
+
+def save_eyes_record(rec):
+    records = [r for r in eyes_records() if r["id"] != rec["id"]]
+    records.append(rec)
+    _save("eyes.json", records)
+
+
+def name_index():
+    idx = {}
+    for e in dictionary()["entries"]:
+        idx[e["item_id"]] = [e["canonical_name"]] + list(e.get("aliases") or [])
+    return idx
+
+
+def confirmed_sightings():
+    """item_id -> latest confirmed sighting {date, kind} (Stage 4)."""
+    out = {}
+    for rec in eyes_records():
+        for sg in rec.get("sightings", []):
+            if sg.get("state") == "confirmed" and sg.get("item_id"):
+                cur = out.get(sg["item_id"])
+                if cur is None or rec["date"] > cur["date"]:
+                    out[sg["item_id"]] = {"date": rec["date"], "kind": rec.get("kind")}
+    return out
 
 
 def get_cart():
