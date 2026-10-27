@@ -24,3 +24,11 @@ report is in the research repo. Raw files stay out of git.
 - Oracle API key: owner installs into the Oracle env when the skeleton stands.
 - Public hostname for the PWA (subdomain vs tunnel): owner choice, Stage 3.
 - Trader Joe's walkthrough + paper receipt: owner's next natural shop (Stage 5 input).
+
+## Connector (2026-10-27)
+Muse is an intake surface: per-account API tokens (Home card "Use Arya
+from Muse" mints; hash-only storage), the custom.arya connector +
+bin/arya.py CLI, order-text intake for forwarded online orders. Live
+proof done (read on the owner account; write on a scratch account).
+Distribution: registration opens after the hackathon with a
+"Muse is the only way in" notice; per-user spend caps first.
