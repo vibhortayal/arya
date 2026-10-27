@@ -1,5 +1,5 @@
-const CACHE = "arya-v13";
-const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/manifest.json", "/icon.svg"];
+const CACHE = "arya-v14";
+const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/manifest.json", "/icon.svg", "/vendor/three.module.js"];
 const BYPASS = ["/api/", "/auth/", "/decode", "/import", "/eyes"];
 
 self.addEventListener("install", e => {
