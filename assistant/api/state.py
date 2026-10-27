@@ -11,8 +11,21 @@ from api.patterns.engine import summarize
 from api.list.build import build_list
 from api.cart.build import prepare
 
+import contextvars
+
+_current_user = contextvars.ContextVar("arya_user", default=None)
+
+
 def data_dir():
-    return os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
+    base = os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
+    user = _current_user.get()
+    if user:
+        return os.path.join(base, "users", user)
+    return base
+
+
+def set_current_user(name):
+    _current_user.set(name)
 
 
 def _load(name, default):

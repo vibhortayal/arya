@@ -2,9 +2,10 @@
 All Meta calls go through api.meta_client; all money math is code."""
 import os
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from api import state
+from api import state, auth
 from api.decode.service import decode_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
@@ -12,6 +13,69 @@ from api.cart.build import approve
 
 app = FastAPI(title="Arya API")
 _LEDGER = os.path.join(os.path.dirname(__file__), "..", "loops", "cost-ledger.jsonl")
+
+_OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/index.html", "/")
+
+
+@app.middleware("http")
+async def require_login(request, call_next):
+    path = request.url.path
+    protected = path.startswith(("/api/", "/import", "/decode"))
+    if protected:
+        user = auth.session_user(request.cookies.get(auth.COOKIE))
+        if not user:
+            return JSONResponse({"detail": "login required"}, status_code=401)
+        state.set_current_user(user)
+    return await call_next(request)
+
+
+def _set_session_cookie(resp, token):
+    resp.set_cookie(auth.COOKIE, token, httponly=True, samesite="lax",
+                    secure=os.environ.get("ARYA_INSECURE_COOKIE") != "1",
+                    max_age=auth.SESSION_TTL)
+    return resp
+
+
+@app.get("/auth/status")
+def auth_status():
+    return {"has_users": len(auth.users()) > 0}
+
+
+@app.post("/auth/setup")
+async def auth_setup(req: Request):
+    if len(auth.users()) > 0:
+        raise HTTPException(403, "setup is closed; an account already exists")
+    body = await req.json()
+    try:
+        name = auth.create_user(body.get("username", ""), body.get("password", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+@app.post("/auth/login")
+async def auth_login(req: Request):
+    body = await req.json()
+    name = (body.get("username") or "").strip().lower()
+    if not auth.verify(name, body.get("password", "")):
+        raise HTTPException(401, "wrong username or password")
+    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+@app.post("/auth/logout")
+async def auth_logout(req: Request):
+    auth.drop_session(req.cookies.get(auth.COOKIE))
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(auth.COOKIE)
+    return resp
+
+
+@app.get("/auth/me")
+def auth_me(req: Request):
+    user = auth.session_user(req.cookies.get(auth.COOKIE))
+    if not user:
+        raise HTTPException(401, "login required")
+    return {"user": user}
 
 
 @app.get("/health")
