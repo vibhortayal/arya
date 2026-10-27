@@ -394,7 +394,7 @@ async function renderItem(id) {
       row(esc(p.judge.class.replace("_", " ")), esc(p.judge.reason), onList ? "On the list" : "Off the list") + `</div>`;
   }
   if (p && p.analysis && p.analysis.verdict) {
-    html += `<p class="muted">Pattern check: ${esc(p.analysis.verdict)}${p.analysis.seasonal_months ? ` · bought mostly in months ${p.analysis.seasonal_months.join(", ")}` : ""}.</p>`;
+    html += `<p class="muted">Pattern check: ${esc(p.analysis.verdict)}${p.analysis.seasonal_months ? ` · bought mostly in ${p.analysis.seasonal_months.map(m => MONTHS[m - 1]).join(", ")}` : ""}.</p>`;
   }
   const stores = Object.entries(d.price_by_store);
   if (stores.length) {
