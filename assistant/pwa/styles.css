@@ -207,3 +207,6 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 
 .seg { display: flex; gap: 8px; flex-wrap: wrap; }
 .seg .chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+ol.steps { margin: 10px 0 4px 20px; padding: 0; }
+ol.steps li { margin: 6px 0; line-height: 1.45; }
