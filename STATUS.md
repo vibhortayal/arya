@@ -67,6 +67,23 @@ Distribution: registration opens after the hackathon with a
   Suite: **78 green**. Local serve smoke passed end to end.
   **Not deployed** — deploy is a separate owner step (git pull).
 
+## Quest Stage C (2026-10-27, night)
+- **The cloud driver is real**: the VGGT Trader Joe's reconstruction
+  is a playable SceneView rung. `assistant/tools/prep_cloud.py`
+  (pure stdlib) turns the spike PLY + poses into a web asset —
+  373,630 points, 3.36 MB quantized binary + manifest with a
+  smoothed camera path (5 mislocalized poses dropped as spikes;
+  max path step 0.089). The driver (Three.js, vendored) walks that
+  path: numbered stop markers alternating shelf sides, the next
+  stop pulses, glideTo animates the walk, taps collect, drag looks
+  around. Any load failure falls back to strip in place — a hunt
+  never hard-fails on a model. TJ sessions start on cloud (store
+  wiring by squashed name); strip stays the default elsewhere.
+- Commits `41cf728`, `3f562d3` (+ this log). Suite: **83 green**.
+  Headless-Chromium proof against the real asset (renders, marker
+  states, glide motion, strip fallback). **Not deployed** — deploy
+  is a separate owner step (git pull).
+
 ## Evening addendum (2026-10-27, later)
 - **ARCHITECTURE.md added** (assistant/docs/): the as-built record — two
   layers (edge perception in the user's Muse, core verification and
