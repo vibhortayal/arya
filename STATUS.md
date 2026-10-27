@@ -136,3 +136,28 @@ same evening — see Intake parity below.)
   deploy is a separate owner step (git pull on the VM); the deploy
   smoke should confirm the ASR response envelope against the
   defensive parser in api/voice/service.py.
+
+## Quest Stage D (2026-10-27, night)
+- **The cloud stops are grounded in the real shelves**:
+  `assistant/tools/build_shelf_graph.py` ran SAM 3.1 (Meta Model
+  API, `sam-3.1` via /v1/responses) over every 5th walkthrough
+  frame (18 frames, prompts "grocery shelf" + "grocery products")
+  and Muse Spark 1.3 Standard labelled the clustered shelf
+  regions from crops. Output: `pwa/models/trader-joes/
+  shelf-graph.json` — 18 path stops, 55 labelled regions, each
+  with side (from the pose geometry), the SAM confidence, and
+  the label carried as a proposal (confidence + raw reply
+  stored; an unparseable reply stays unlabelled, never filled
+  in). Walk order checks out: cheese wall at u=0, pasta at
+  0.27, pasta sauce at 0.37, bread at 0.48–0.57, the frozen
+  wall at 0.89–0.91.
+- **Read side**: the cloud driver fetches shelf-graph.json beside
+  the manifest and shows the next stop's shelf label as a chip
+  ("Bread & Bakery Shelf"); no graph → no labels, nothing
+  breaks. Stop placement and scoring untouched.
+- **Cost**: pipeline $0.2414 actual from API usage (SAM 36
+  images $0.0900 + Spark 55 calls $0.1514) against a $2 cap;
+  +$0.0075 of SAM probes while pinning the API shape.
+- Commits `a7c8ef2`, `3e10b45`, `20fe982` (+ this log). Suite:
+  **116 green**. **Not deployed** — deploy is a separate owner
+  step (git pull on the VM).
