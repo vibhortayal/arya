@@ -32,7 +32,11 @@ class TestTranscribeClient(unittest.TestCase):
         self.assertTrue(cap["headers"]["Content-Type"].startswith("multipart/form-data; boundary="))
         self.assertIn(b'name="model"', cap["body"])
         self.assertIn(b"muse-voice-transcribe-1.0", cap["body"])
-        self.assertIn(b'name="file"; filename="voice.wav"', cap["body"])
+        self.assertIn(b'name="audio"; filename="voice.wav"', cap["body"])
+        # Verified live 2026-10-27: the endpoint requires a JSON
+        # 'request' part carrying the model and audioEncoding "WAV".
+        self.assertIn(b'name="request"', cap["body"])
+        self.assertIn(b'"audioEncoding": "WAV"', cap["body"])
         self.assertIn(b"RIFF", cap["body"])
         # $0.18 per audio hour, independent of tokens
         self.assertAlmostEqual(cost, transcribe_cost(2.0), places=9)
