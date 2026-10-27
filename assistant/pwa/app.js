@@ -68,6 +68,12 @@ function listRow(i) {
   </div>`;
 }
 
+function bindItemLinks(root) {
+  if (!root) return;
+  root.querySelectorAll(".item-link").forEach(a =>
+    a.addEventListener("click", ev => { ev.preventDefault(); renderItem(a.dataset.id); }));
+}
+
 async function renderHome() {
   const h = await api("/api/home");
   $("#asof").textContent = h.as_of ? `As of ${fmtDate(h.as_of)}` : "";
