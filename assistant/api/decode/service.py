@@ -161,3 +161,32 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
             "image_ref": None}
+
+
+ORDER_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..",
+                                 "prompts", "order_text_v1.md")
+
+
+def load_order_prompt():
+    text = open(ORDER_PROMPT_PATH).read()
+    return text.split("SYSTEM:", 1)[1].strip()
+
+
+def decode_order_text(text, client):
+    """Pasted online order (Instacart etc.) -> DecodedReceipt via
+    meta_client. Personal data: Standard mode only. The same trust model
+    as receipts: the model proposes, arithmetic disposes (_finish)."""
+    messages = [{"role": "system", "content": load_order_prompt()},
+                {"role": "user", "content": "Extract this order:\n\n" + text}]
+    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
+    try:
+        dec = json.loads(out)
+    except Exception:
+        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    lines, reconcile = _finish(dec.get("lines", []), dec.get("subtotal"))
+    rid = "ord-" + hashlib.sha1(text.encode()).hexdigest()[:10]
+    return {"receipt_id": rid, "source_type": "order",
+            "merchant": dec.get("merchant"), "purchased_at": dec.get("purchased_at"),
+            "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
+            "total": dec.get("total"), "totals_reconcile": reconcile,
+            "image_ref": None}

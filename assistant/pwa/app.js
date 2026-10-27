@@ -105,6 +105,39 @@ async function renderHome() {
   });
   bindItemLinks($("#running-low"));
   bindItemLinks($("#smart-list"));
+  renderConnect();
+}
+
+/* ---------------- Connector token ---------------- */
+
+async function renderConnect() {
+  const el = $("#connect");
+  if (!el || isDemo) { if (el) el.innerHTML = ""; return; }
+  let has = false;
+  try { has = (await api("/auth/token")).has_token; } catch (e) { el.innerHTML = ""; return; }
+  el.innerHTML = `<h3 class="sect">Use Arya from Claude</h3><div class="group">
+    <div class="row"><div class="grow"><span class="sub">Connect your Muse once with a token, then file receipts and orders by chat or WhatsApp — no need to open Arya. The token is shown once; creating a new one replaces it.</span></div></div>
+    <div class="row" id="token-row">${has ? `<span class="sub grow">A connector token is active.</span>` : ""}<button class="btn" id="btn-mint">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" id="btn-revoke">Revoke</button>` : ""}</div>
+  </div>`;
+  $("#btn-mint").addEventListener("click", mintToken);
+  const rv = $("#btn-revoke");
+  if (rv) rv.addEventListener("click", async () => {
+    try { await api("/auth/token", { method: "DELETE" }); toast("Connector token revoked."); renderConnect(); }
+    catch (e) { toast(e.message); }
+  });
+}
+
+async function mintToken() {
+  try {
+    const t = await post("/auth/token");
+    $("#token-row").innerHTML = `<input class="grow" id="token-value" readonly value="${esc(t.token)}"><button class="btn" id="btn-copy">Copy</button>
+      <span class="sub">Copy it now — it is not shown again. Paste it into Muse's secure form.</span>`;
+    $("#btn-copy").addEventListener("click", () => {
+      const i = $("#token-value"); i.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(i.value);
+      toast("Token copied.");
+    });
+  } catch (e) { toast(e.message); }
 }
 
 function bindItemLinks(root) {
