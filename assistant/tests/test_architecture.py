@@ -145,3 +145,29 @@ class TestResolver(unittest.TestCase):
         r = self.c.post("/api/review/suggest", json={
             "item_id": "sku-nope", "candidates": [{"name": "X"}]})
         assert r.status_code == 404
+
+
+class TestDiscountLinesNeverQueue(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import main
+        main.MetaClient = FakeClient
+        main._login_fails.clear()
+        self.c = TestClient(main.app)
+        r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
+        assert r.status_code == 200, r.text
+
+    def test_discount_lines_auto(self):
+        r = self.c.post("/api/intake/structured", json={
+            "merchant": "Costco", "purchased_at": "2026-01-01",
+            "lines": [
+                {"decoded_name": "Eggs", "qty": 1, "unit_price": 8.0,
+                 "line_total": 8.0, "line_type": "item", "confidence": 0.95},
+                {"decoded_name": "Instant Savings", "qty": 1, "unit_price": -2.0,
+                 "line_total": -2.0, "line_type": "discount", "confidence": 0.5},
+                {"decoded_name": "Instant Savings", "raw": "/1234567", "qty": 1,
+                 "unit_price": -1.0, "line_total": -1.0, "confidence": 0.1}],
+            "subtotal": 5.0, "tax": 0, "total": 5.0})
+        assert r.status_code == 200, r.text
+        q = self.c.get("/api/review").json()
+        self.assertEqual(q["lines"], [])
