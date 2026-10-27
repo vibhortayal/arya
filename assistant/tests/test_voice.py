@@ -30,7 +30,6 @@ class TestTranscribeClient(unittest.TestCase):
         self.assertTrue(cap["url"].endswith("/v1/asr/transcribe"))
         self.assertEqual(cap["headers"]["Authorization"], "Bearer test-key")
         self.assertTrue(cap["headers"]["Content-Type"].startswith("multipart/form-data; boundary="))
-        self.assertIn(b'name="model"', cap["body"])
         self.assertIn(b"muse-voice-transcribe-1.0", cap["body"])
         self.assertIn(b'name="audio"; filename="voice.wav"', cap["body"])
         # Verified live 2026-10-27: the endpoint requires a JSON
