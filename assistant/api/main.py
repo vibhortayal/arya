@@ -28,7 +28,7 @@ def _budget_guard():
     if CostLedger(_LEDGER).spent_today() >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
 
-_OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/index.html", "/")
+_OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
 
 @app.middleware("http")
@@ -618,7 +618,8 @@ async def quest_create_session(req: Request):
     from api import quest
     try:
         sess = quest.create_session(store, body.get("mode") or "quest",
-                                    body.get("items") or [])
+                                    body.get("items") or [],
+                                    driver=body.get("driver") or "strip")
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess

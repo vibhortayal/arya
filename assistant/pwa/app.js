@@ -437,7 +437,7 @@ document.querySelectorAll("#tabs button").forEach(b =>
 $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(lastView); refresh(lastView); });
 
 function refresh(view) {
-  if (view === "view-home") renderHome().catch(showErr);
+  if (view === "view-home") { renderHome().catch(showErr); if (window.renderQuestHub) window.renderQuestHub(); }
   if (view === "view-scan") { renderIntake().catch(showErr); renderCurator().catch(showErr); renderScan().catch(showErr); renderEyes().catch(showErr); }
   if (view === "view-dash") renderDash().catch(showErr);
   if (view === "view-profile") renderProfile().catch(showErr);

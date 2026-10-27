@@ -12,6 +12,10 @@ from api import state
 
 MODES = ("quest", "express")
 SESSION_STATES = ("not_started", "playing", "paused", "finished", "done")
+# The SceneView ladder: the session engine is the game, the scene is
+# only a viewport. A session records which driver it started in;
+# nothing in play, scoring, or the receipt finish reads it.
+DRIVERS = ("cloud", "aisle", "strip")
 
 
 # --- store ---------------------------------------------------------------
@@ -123,12 +127,16 @@ def make_items(raw_items):
 
 # --- sessions --------------------------------------------------------------
 
-def create_session(store_name, mode="quest", raw_items=None, extra=None):
+def create_session(store_name, mode="quest", raw_items=None, extra=None,
+                   driver="strip"):
     if mode not in MODES:
         raise ValueError("mode must be quest or express")
+    if driver not in DRIVERS:
+        raise ValueError(f"driver must be one of {DRIVERS}")
     s = _store()
     sess = {"id": _new_id("qs", store_name),
-            "store": store_name, "mode": mode, "state": "not_started",
+            "store": store_name, "mode": mode, "driver": driver,
+            "state": "not_started",
             "items": make_items(raw_items),
             "created_at": _now(), "started_at": None,
             "finished_at": None, "receipt_id": None}
