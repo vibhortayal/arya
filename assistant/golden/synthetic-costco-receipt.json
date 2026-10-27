@@ -1,0 +1,9 @@
+{"_note": "SYNTHETIC fixture for tests. Fabricated values; not owner data.",
+ "warehouseName": "EXAMPLE CITY", "documentType": "WarehouseReceiptDetail",
+ "transactionDate": "2026-10-01", "transactionType": "Sales",
+ "transactionBarcode": "SYNTHETIC-0001", "totalItemCount": 3,
+ "subTotal": 22.36, "taxes": 0.54, "total": 22.90, "instantSavings": -3.00,
+ "itemArray": [
+   {"itemNumber": "96716", "itemDescription01": "ORG SPINACH", "itemDescription02": "1LB", "unit": 1, "amount": 5.39, "taxFlag": "0"},
+   {"itemNumber": "1063232", "itemDescription01": "KS EGG WHITE", "itemDescription02": null, "unit": 1, "amount": 19.97, "taxFlag": "0"},
+   {"itemNumber": "96716", "itemDescription01": "INSTANT SAVINGS", "itemDescription02": null, "unit": 1, "amount": -3.00, "taxFlag": "0"}]}

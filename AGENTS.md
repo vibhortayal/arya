@@ -1,0 +1,54 @@
+# AGENTS.md — read this first. Any coding agent can pick up work from here.
+
+**Project: Arya** — a grocery assistant that keeps a living model of one
+household's purchases (receipts, returns, patterns) so the shopping list
+writes itself. Meta Global AI Developer Hackathon 2026, Team Nightshift,
+Indie track. **Submission deadline: Nov 4, 2026, 9:00 PM ET.**
+
+## Source of truth
+This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
+`assistant/docs/IMPLEMENTATION.md` (stages/how) > `STATUS.md` (where we are)
+> GitHub Issues (stage task lists) > code. The companion research repo
+(`vibhortayal/meta-hackathon-research`) is the frozen evidence record.
+
+## Read before working
+1. `STATUS.md` — current stage, done/next, blockers.
+2. The stage section of `assistant/docs/IMPLEMENTATION.md` for your task.
+3. `assistant/docs/MODEL-POLICY.md` — cost rules (binding).
+4. The GitHub issue for your stage — acceptance lives there.
+
+## Layout (IMPLEMENTATION §2.1)
+`assistant/api/` one module per spec component; ALL Meta API calls go
+through `assistant/api/meta_client.py` (no other module calls the API).
+`assistant/harness/` eval loops; `assistant/prompts/` versioned prompts;
+`assistant/golden/` golden fixtures; `assistant/loops/` work-session logs.
+`assistant/pwa/` does not exist before Stage 3 — do not create it early.
+
+## Hard rules (no exceptions without the owner's word)
+1. **Personal data is Standard mode only.** Contributor mode is eval-only,
+   on synthetic or public data. `meta_client` enforces this; do not bypass.
+2. **Cost policy binds.** Cheapest model that holds the golden-set score.
+   Math, patterns, and list logic are deterministic code ($0), not prompts.
+   Wonder is banned from volume paths.
+3. **Public test fixtures never enter the owner's ledger, dictionary, or
+   patterns.** Fixtures live in `assistant/golden/` or the spike stores.
+4. **Returns semantics:** patterns count kept items only; a returned item is
+   never re-suggested; refunds reconcile into the spend ledger.
+5. **No secrets in the repo.** The API key comes from env `MODEL_API_KEY`.
+   The owner provisions the Oracle runtime key himself. Never ask for it in
+   an issue or commit it anywhere.
+6. **Product documents are written in ASD-STE100** (controlled language).
+7. **Raw owner data is not in this repo** (no real receipts/JSON dumps).
+   Synthetic fixtures only. Owner data lives in the staging area described
+   in STATUS.md.
+
+## Working agreement
+- Small commits to `main`; the message names the stage (`Stage 1: ...`).
+- Tests before commit: `cd assistant && python3 -m unittest discover -s tests`
+  must be green. Add tests with new logic.
+- Every work session: append one entry to `assistant/loops/<date>-<stage>.md`
+  (what changed, scores/costs if models ran, what's next) and update
+  `STATUS.md` + the stage issue checklist.
+- Stage starts, any paid spend, and deploys need the owner's go-ahead.
+- If a spec and the code disagree, the spec wins — fix the code, or flag it
+  in the issue and let the owner decide.
