@@ -111,3 +111,53 @@ def extract_pdf_text(pdf_bytes):
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(pdf_bytes))
     return "\n".join((page.extract_text() or "") for page in reader.pages)
+
+
+PHOTO_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "decode_photo_v1.md")
+
+
+def load_photo_prompt():
+    text = open(PHOTO_PROMPT_PATH).read()
+    return text.split("SYSTEM:", 1)[1].strip()
+
+
+def decode_photo(image_bytes, client, media_type="image/jpeg"):
+    """Receipt photo -> DecodedReceipt via meta_client vision.
+    Personal data: Standard mode only (enforced in meta_client).
+    Prompt: prompts/decode_photo_v1.md (spike-2 verified, Gate 0 passed).
+    Photo semantics: price is the PAID amount (discounts already folded by
+    the prompt); the discount value rides on the line for display, and any
+    line the model flags needs_user_check is forced to unverified so it
+    lands in the review queue."""
+    import base64
+    data_uri = f"data:{media_type};base64," + base64.b64encode(image_bytes).decode()
+    messages = [{"role": "system", "content": load_photo_prompt()},
+                {"role": "user", "content": [
+                    {"type": "text", "text": "Decode this receipt photo."},
+                    {"type": "image_url", "image_url": {"url": data_uri}}]}]
+    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
+    try:
+        dec = json.loads(out)
+    except Exception:
+        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    lines = []
+    for l in dec.get("lines", []):
+        name = " ".join(x for x in [l.get("brand"), l.get("product"), l.get("detail")] if x).strip()
+        line = {"raw": name or (l.get("product") or ""), "detail": l.get("detail"),
+                "sku": str(l.get("item_no") or ""), "decoded_name": name,
+                "qty": l.get("qty") or 1,
+                "unit_price": l.get("price"), "line_total": l.get("price"),
+                "line_type": "return" if l.get("is_return") else "item",
+                "discount_parent_sku": None,
+                "discount_amount": l.get("discount") or 0,
+                "confidence": l.get("confidence") or 0}
+        if l.get("needs_user_check"):
+            line["status"] = "unverified"
+        lines.append(line)
+    lines, reconcile = _finish(lines, dec.get("subtotal"))
+    rid = "dec-" + hashlib.sha1(image_bytes).hexdigest()[:10]
+    return {"receipt_id": rid, "source_type": "grocery",
+            "merchant": dec.get("store"), "purchased_at": dec.get("date"),
+            "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
+            "total": dec.get("total"), "totals_reconcile": reconcile,
+            "image_ref": None}

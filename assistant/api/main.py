@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import state, auth
-from api.decode.service import decode_text, extract_pdf_text, normalize_costco_json
+from api.decode.service import decode_photo, decode_text, extract_pdf_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
 from api.cart.build import approve
@@ -161,6 +161,27 @@ async def decode_pdf(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     client = MetaClient(ledger=CostLedger(_LEDGER))
     receipt = decode_text(text, client)
+    added = state.add_receipts([receipt])
+    return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
+
+
+@app.post("/decode/photo")
+async def decode_photo_route(req: Request):
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a receipt photo (image) or use /decode/pdf for PDFs")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        receipt = decode_photo(body, client, media_type=media)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
     added = state.add_receipts([receipt])
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 

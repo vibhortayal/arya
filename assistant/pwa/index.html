@@ -42,16 +42,11 @@
 
   <section id="view-scan" class="view" hidden>
     <h2>Add a receipt</h2>
-    <label class="file-label">Costco export (JSON)
-      <input type="file" id="file-json" accept=".json,application/json">
+    <label class="file-label">Receipt — a PDF, or a photo of the paper receipt
+      <input type="file" id="receipt-file" accept="application/pdf,image/*">
     </label>
-    <p id="import-result" class="muted"></p>
-    <label class="file-label">Receipt text
-      <textarea id="receipt-text" rows="5" placeholder="Paste receipt text from a PDF"></textarea>
-    </label>
-    <button id="btn-decode" class="secondary">Decode text</button>
-    <p id="decode-result" class="muted"></p>
-    <p class="muted">Photo receipts are being verified and are not open yet.</p>
+    <button id="btn-receipt" class="secondary">Read this receipt</button>
+    <p id="receipt-result" class="muted"></p>
     <h2>Review queue</h2>
     <div id="review"></div>
   </section>
