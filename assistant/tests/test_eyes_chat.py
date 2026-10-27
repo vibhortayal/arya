@@ -104,6 +104,15 @@ class TestEyesOwner(unittest.TestCase):
         self.assertEqual(c.get(f"/eyes/photos/{rec['id']}").status_code, 200)
 
 
+class TestMatching(unittest.TestCase):
+    def test_generic_name_matches_specific_canonical(self):
+        from api.eyes.service import match_item
+        idx = {"demo-milk": ["Whole Milk 1 gal"], "demo-eggs": ["Pasture Eggs 12 ct"]}
+        self.assertEqual(match_item("Milk", idx), "demo-milk")
+        self.assertEqual(match_item("Eggs", idx), "demo-eggs")
+        self.assertIsNone(match_item("Caviar", idx))
+
+
 class TestChat(unittest.TestCase):
     def setUp(self):
         base = tempfile.mkdtemp()
