@@ -138,6 +138,51 @@ def badge_shelf():
     return shelf
 
 
+# --- receipt archive (Profile's private face) --------------------------------
+# Every filed receipt, with its digitized twin: the parsed lines and
+# the verified total. Photos are not retained by the decode paths
+# (image_ref is None today); the field rides along so a stored photo
+# shows the day one exists. Nothing here is estimated.
+
+def _receipt_summary(r):
+    lines = r.get("lines", [])
+    return {"receipt_id": r["receipt_id"],
+            "merchant": r.get("merchant", ""),
+            "purchased_at": r.get("purchased_at"),
+            "total": r.get("total"),
+            "totals_reconcile": bool(r.get("totals_reconcile")),
+            "items": sum(1 for ln in lines
+                         if ln.get("line_type") == "item"),
+            "returns_total": round(sum(
+                ln.get("line_total") or 0 for ln in lines
+                if ln.get("line_type") == "return"), 2),
+            "photo": r.get("image_ref")}
+
+
+def receipt_archive():
+    rs = sorted(state.receipts(),
+                key=lambda r: r.get("purchased_at") or "", reverse=True)
+    return [_receipt_summary(r) for r in rs]
+
+
+def receipt_detail(receipt_id):
+    for r in state.receipts():
+        if r["receipt_id"] == receipt_id:
+            out = _receipt_summary(r)
+            out.update({
+                "subtotal": r.get("subtotal"), "tax": r.get("tax"),
+                "source_type": r.get("source_type"),
+                "lines": [{"name": ln.get("decoded_name") or ln.get("raw"),
+                           "qty": ln.get("qty", 1),
+                           "unit_price": ln.get("unit_price"),
+                           "line_total": ln.get("line_total"),
+                           "line_type": ln.get("line_type", "item"),
+                           "status": ln.get("status")}
+                          for ln in r.get("lines", [])]})
+            return out
+    return None
+
+
 # --- profile -----------------------------------------------------------------
 
 def _streak_weeks(done):

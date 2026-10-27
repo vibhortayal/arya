@@ -304,5 +304,49 @@ class TestSocial(unittest.TestCase):
         assert badges["clean_sweep"]["earned"] is True
 
 
+class TestReceiptArchive(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from api import state
+        state._save("receipts.json", [
+            {"receipt_id": "r-old", "merchant": "Costco",
+             "purchased_at": "2026-10-20", "source_type": "grocery",
+             "lines": [{"decoded_name": "Eggs", "qty": 1,
+                        "unit_price": 9.0, "line_total": 9.0,
+                        "line_type": "item", "status": "auto"}],
+             "subtotal": 9.0, "tax": 0, "total": 9.0,
+             "totals_reconcile": True, "image_ref": None},
+            {"receipt_id": "r-new", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-27T18:42:18",
+             "source_type": "photo",
+             "lines": [{"decoded_name": "Milk", "qty": 1,
+                        "unit_price": 4.5, "line_total": 4.5,
+                        "line_type": "item", "status": "auto"},
+                       {"decoded_name": "Old Yogurt", "qty": 1,
+                        "unit_price": -12.99, "line_total": -12.99,
+                        "line_type": "return", "status": "auto"}],
+             "subtotal": -8.49, "tax": 0.4, "total": -8.09,
+             "totals_reconcile": False, "image_ref": None}])
+        setup_account(self)
+
+    def test_archive_newest_first_with_facts(self):
+        rs = self.c.get("/api/quest/receipts").json()["receipts"]
+        assert [r["receipt_id"] for r in rs] == ["r-new", "r-old"]
+        new = rs[0]
+        assert new["merchant"] == "Trader Joe's" and new["items"] == 1
+        assert new["returns_total"] == -12.99
+        assert new["totals_reconcile"] is False
+        assert new["photo"] is None  # decode retains no photo today
+        assert rs[1]["returns_total"] == 0
+
+    def test_detail_is_the_digitized_twin(self):
+        d = self.c.get("/api/quest/receipts/r-new").json()
+        assert d["total"] == -8.09 and d["tax"] == 0.4
+        assert [ln["name"] for ln in d["lines"]] == ["Milk", "Old Yogurt"]
+        assert d["lines"][1]["line_type"] == "return"
+        assert self.c.get("/api/quest/receipts/r-nope").status_code == 404
+
+
 if __name__ == "__main__":
     unittest.main()
