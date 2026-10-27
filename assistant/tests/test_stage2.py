@@ -50,7 +50,8 @@ class TestStage2(unittest.TestCase):
 
     def test_lapsed_is_not_due(self):
         rs = [receipt("x1", "2026-01-01", [line("E", 4.0)]),
-              receipt("x2", "2026-01-06", [line("E", 4.0)])]
+              receipt("x2", "2026-01-06", [line("E", 4.0)]),
+              receipt("x3", "2026-01-11", [line("E", 4.0)])]
         pats = {p["item_id"]: p for p in summarize(build_ledger(rs), as_of="2026-06-01")}
         self.assertEqual(pats["costco-E"]["history_state"], "lapsed")
         self.assertFalse(pats["costco-E"]["due"])
@@ -74,3 +75,32 @@ class TestStage2(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _entry(item_id, dt):
+    return {"item_id": item_id, "date": dt, "qty": 1, "price": 5.0,
+            "event_type": "purchase", "allocation": "HOUSEHOLD",
+            "store_id": "costco"}
+
+
+class TestEngineFacts(unittest.TestCase):
+    def pat(self, dates, as_of):
+        entries = [_entry("x", d) for d in dates]
+        out = summarize(entries, as_of=as_of)
+        return out[0] if out else None
+
+    def test_two_buys_is_not_a_cadence(self):
+        p = self.pat(["2026-01-01", "2026-06-30"], "2026-12-27")
+        self.assertEqual(p["history_state"], "not-enough-history")
+        self.assertFalse(p["due"])
+
+    def test_seasonal_facts_reported(self):
+        dates = ["2024-06-05", "2024-07-01", "2024-07-26", "2025-06-10", "2025-07-05", "2025-08-02"]
+        p = self.pat(dates, "2026-10-24")
+        self.assertEqual(p["analysis"]["seasonal_months"], [5, 6, 7, 8] if p["analysis"]["seasonal_months"] else None)
+        self.assertIsNotNone(p["analysis"]["seasonal_months"])
+
+    def test_steady_weekly_still_due(self):
+        p = self.pat(["2026-10-01", "2026-10-08", "2026-10-15"], "2026-10-24")
+        self.assertEqual(p["history_state"], "pattern")
+        self.assertTrue(p["due"])

@@ -52,3 +52,16 @@ through `assistant/api/meta_client.py` (no other module calls the API).
 - Stage starts, any paid spend, and deploys need the owner's go-ahead.
 - If a spec and the code disagree, the spec wins — fix the code, or flag it
   in the issue and let the owner decide.
+
+## Design work
+
+- Impeccable v4.8.0 is vendored at `.claude/skills/impeccable/` (installed
+  2026-10-27 at the owner's direction; the npx installer's bundle download
+  is blocked on this network, so it was copied from the pbakaus/impeccable
+  repo's plugin build — same files). Run its `context` once per design
+  session and follow its playbooks. Visual language: Apple UI design system
+  (SF typography, semantic colors, dark mode, grouped lists, 44 pt targets).
+- The staple judge (api/judge.py) gates list admission; the pattern engine
+  reports facts only. Explicit user intent (manual add, ran-out, expired)
+  always beats the judge. Unjudged or unresolved-name items stay off the
+  list — precision over recall, by the owner's word.

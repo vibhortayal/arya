@@ -93,6 +93,13 @@ def main(out_root):
     os.makedirs(dest, exist_ok=True)
     json.dump(receipts, open(os.path.join(dest, "receipts.json"), "w"), indent=1)
     json.dump(dictionary, open(os.path.join(dest, "dictionary.json"), "w"), indent=1)
+    judged = {
+        "demo-milk": {"class": "STAPLE", "list_ok": True, "reason": "weekly household staple", "buys": 5},
+        "demo-bread": {"class": "STAPLE", "list_ok": True, "reason": "weekly household staple", "buys": 4},
+        "demo-spinach": {"class": "STAPLE", "list_ok": True, "reason": "regular weekly greens", "buys": 3},
+        "demo-yogurt": {"class": "OCCASIONAL", "list_ok": False, "reason": "bought a few times a year", "buys": 3},
+    }
+    json.dump(judged, open(os.path.join(dest, "judged.json"), "w"), indent=1)
     print(f"demo household: {len(receipts)} receipts -> {dest}")
 
 
