@@ -151,6 +151,9 @@ def derived():
     visible = [p for p in patterns
                if not hidden(p["item_id"]) and p["item_id"] not in unresolved_ids
                and _admitted(p, judged, fl)]
+    admitted_ids = {p["item_id"] for p in visible}
+    for p in patterns:
+        p["admitted"] = p["item_id"] in admitted_ids
     smart = build_list(visible)
     have = {i["item_id"] for i in smart["items"]}
     for pid, f in fl.items():
@@ -171,6 +174,10 @@ def derived():
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
+        j = judged.get(item["item_id"])
+        if j:
+            item["judge_reason"] = j.get("reason", "")
+            item["judge_class"] = j.get("class", "")
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
 
 
