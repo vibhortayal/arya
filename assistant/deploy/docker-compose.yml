@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: arya
+      POSTGRES_USER: arya
+    volumes:
+      - arya-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arya"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    environment:
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      DATABASE_URL: postgresql://arya:${POSTGRES_PASSWORD:?set in .env}@db:5432/arya
+    depends_on:
+      db:
+        condition: service_healthy
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+volumes:
+  arya-db:

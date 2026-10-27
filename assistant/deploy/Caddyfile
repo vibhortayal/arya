@@ -1,0 +1,5 @@
+# Stage 0: plain HTTP on the VM port. Public hostname + TLS land at Stage 3
+# (owner choice: subdomain vs tunnel). Caddy auto-HTTPS then needs one line.
+:80 {
+	reverse_proxy api:8000
+}
