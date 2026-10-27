@@ -20,6 +20,14 @@ Date: 2026-10-27.
 - The fridge demo step now shows one item with an evidence frame. The demo does not use a silent list edit.
 - The name is parked. This document says "the assistant."
 
+Revision, 2026-10-27 (evening). The name decision above supersedes the parked note.
+- The architecture is now two layers. The user's own Muse reads the media at the edge. Arya verifies, remembers, and reasons in the core. ARCHITECTURE.md is the structural record.
+- Structured intake is the primary intake path. The client proposes. Arya disposes. Server decode is a fallback.
+- A new component exists: the Resolver. The user's Muse researches an unknown item or an unreadable line in the retailer's own catalog. It posts candidates with sources. The user settles. Section 4 gives the rules.
+- Discount lines are structure, not identity. They never enter the review queue.
+- The Curator proposes identity changes. It never applies them. A proposal the dictionary has already overtaken retires on its own.
+- Onboarding is connect-first. The connector carries its instructions. The user writes no prompt.
+
 ## 1. What the product is
 
 The assistant keeps a living model of the purchases of one household.
@@ -86,6 +94,9 @@ Rule 4. A state with no evidence is "unknown." The system shows "unknown." The s
 Rule 5. Real personal data goes to Standard mode models only. Section 7.3 gives the reason.
 Rule 6. Arithmetic is computed by code. A model narrates. A model does not do arithmetic.
 Rule 7. Corrections from the user are final. A correction takes effect at once.
+Rule 8. A discount line is structure, not identity. The system attaches it to its parent item. The system never asks the user about it.
+Rule 9. Research proposes. The user disposes. An outside identification enters as a candidate with its source. It takes effect only on the word of the user.
+Rule 10. A reasoning agent proposes changes to identity. It never applies them. No silent edits.
 
 ## 5. Users and user stories
 

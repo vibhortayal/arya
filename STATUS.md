@@ -32,3 +32,32 @@ bin/arya.py CLI, order-text intake for forwarded online orders. Live
 proof done (read on the owner account; write on a scratch account).
 Distribution: registration opens after the hackathon with a
 "Muse is the only way in" notice; per-user spend caps first.
+
+## Evening addendum (2026-10-27, later)
+- **ARCHITECTURE.md added** (assistant/docs/): the as-built record — two
+  layers (edge perception in the user's Muse, core verification and
+  reasoning in Arya), intake paths, the agents and their limits, the
+  connector, onboarding, cost control, deployment. SPEC.md gained rules
+  8–10 (discounts are structure; research proposes, the user disposes;
+  no silent identity edits) and both living docs carry the evening
+  revision notes.
+- **Resolver LIVE**: POST /api/review/suggest takes researched
+  candidates with source URLs for unresolved items AND for single
+  unverified receipt lines. First runs on owner data: 5 of 7 unresolved
+  items identified from Costco's own catalog pages; 4 receipt lines
+  identified by item number (Bissell 3857P, Cole Haan socks, KS fleece
+  zip, Puma crew socks). TNWMNPRBTC and TB DRESSSOCK have no catalog
+  match and stay open — no guesses posted.
+- **Discount lines are structural**: always auto-verified in decode,
+  never queued (code rule, all paths). The owner's 6 queued discount
+  lines were cleared; the line queue holds only real questions.
+- **Curator reconcile**: proposals the dictionary has already overtaken
+  (already one group, duplicates, splits already in effect) retire as
+  "superseded" when the queue is read, and already-grouped clusters are
+  never proposed again. Of the owner's 23 pending proposals, 21 were
+  already in effect; the queue now shows only genuine judgment calls.
+- **Connect-step upgrade**: numbered steps for both halves of the setup
+  plus a copyable fallback setup prompt (connect view + Profile).
+- Hotfix: bindItemLinks helper (dropped in the Stage 6 file split)
+  restored after the owner hit "Could not load" on Home.
+- Suite: 60 green. sw arya-v12.

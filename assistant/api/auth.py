@@ -67,7 +67,8 @@ def _adopt_household_data(username):
     import shutil
     dest = os.path.join(_root(), "users", username)
     os.makedirs(dest, exist_ok=True)
-    for name in ("receipts.json", "dictionary.json", "cart.json", "flags.json"):
+    for name in ("receipts.json", "dictionary.json", "cart.json", "flags.json",
+                 "curator.json"):
         src = _path(name)
         if os.path.exists(src):
             shutil.move(src, os.path.join(dest, name))
