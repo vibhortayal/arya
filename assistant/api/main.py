@@ -1,6 +1,6 @@
 """Arya API — FastAPI entry point.
 All Meta calls go through api.meta_client; all money math is code."""
-import hashlib, os
+import hashlib, json, os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -197,6 +197,80 @@ async def intake_order_text(req: Request):
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
             "purchased_at": dec["purchased_at"], "lines": len(dec["lines"]),
             "total": dec["total"], "totals_reconcile": dec["totals_reconcile"]}
+
+
+@app.post("/api/intake/structured")
+async def intake_structured(req: Request):
+    """A receipt already read by the user's own Muse. Arya spends no
+    tokens on perception here: it verifies the arithmetic, assigns line
+    statuses by confidence, and queues what does not verify — the client
+    proposes, Arya disposes."""
+    body = await req.json()
+    if not isinstance(body, dict) or not body.get("merchant") \
+            or not body.get("purchased_at") \
+            or not isinstance(body.get("lines"), list) or not body["lines"]:
+        raise HTTPException(422, "a structured receipt needs merchant, purchased_at, and lines")
+    from api.decode.service import _finish
+    lines = []
+    for ln in body["lines"]:
+        if not isinstance(ln, dict) or not ln.get("decoded_name") \
+                or not isinstance(ln.get("line_total"), (int, float)):
+            raise HTTPException(422, "every line needs decoded_name and a numeric line_total")
+        lt = ln.get("line_type") or "item"
+        lines.append({
+            "raw": ln.get("raw") or ln["decoded_name"],
+            "decoded_name": ln["decoded_name"],
+            "qty": ln.get("qty") if isinstance(ln.get("qty"), (int, float)) else 1,
+            "unit_price": ln.get("unit_price"),
+            "line_total": float(ln["line_total"]),
+            "line_type": lt if lt in ("item", "discount", "return") else "item",
+            "sku": ln.get("sku"), "discount_parent_sku": ln.get("discount_parent_sku"),
+            "confidence": ln.get("confidence") if isinstance(ln.get("confidence"), (int, float)) else 0.5,
+            "alternatives": []})
+    lines, reconcile = _finish(lines, body.get("subtotal"))
+    rid = body.get("receipt_id")
+    if not isinstance(rid, str) or not rid:
+        import hashlib as _h
+        rid = "ext-" + _h.sha1(json.dumps(body, sort_keys=True).encode()).hexdigest()[:10]
+    dec = {"receipt_id": rid, "source_type": "muse",
+           "merchant": body["merchant"], "purchased_at": body["purchased_at"],
+           "lines": lines, "subtotal": body.get("subtotal"),
+           "tax": body.get("tax"), "total": body.get("total"),
+           "totals_reconcile": reconcile, "image_ref": None}
+    added = state.add_receipts([dec])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    return {"receipt_id": rid, "merchant": dec["merchant"], "added": added,
+            "lines": len(lines), "totals_reconcile": reconcile,
+            "unverified": sum(1 for l in lines if l["status"] != "auto")}
+
+
+@app.post("/api/curator/run")
+def curator_run():
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    from api.curator import run_curator
+    n = run_curator(MetaClient(ledger=CostLedger(_LEDGER)))
+    return {"proposals": n}
+
+
+@app.get("/api/curator")
+def curator_pending():
+    from api.curator import pending
+    return {"proposals": pending()}
+
+
+@app.post("/api/curator/decide")
+async def curator_decide(req: Request):
+    body = await req.json()
+    from api.curator import decide
+    try:
+        p = decide(body.get("id", ""), body.get("action", ""))
+    except KeyError:
+        raise HTTPException(404, "unknown or settled proposal")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"id": p["id"], "status": p["status"]}
 
 
 @app.get("/api/home")

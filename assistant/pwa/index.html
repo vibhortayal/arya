@@ -8,6 +8,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("arya-theme")||"system"}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -37,6 +38,19 @@
   </div>
 </section>
 
+
+<section id="view-connect" class="view" hidden>
+  <h2 class="largetitle">Connect Muse</h2>
+  <div class="group pad">
+    <p class="nomargin"><strong>Step 1 of 1 — connect your Muse.</strong></p>
+    <p class="muted">Arya takes data in through Muse only. Create a token here, then paste it into Muse&rsquo;s secure form. After that, file receipts, orders, and fridge photos by chat or WhatsApp — no need to open Arya.</p>
+    <div class="row" id="connect-token-row" style="margin-top:10px"></div>
+    <p style="margin-top:14px"><button id="connect-done" class="btn primary wide" type="button">Done</button></p>
+    <p><button id="connect-skip" class="btn secondary wide" type="button">Skip for now</button></p>
+    <p class="muted nomargin">You can connect later in Profile.</p>
+  </div>
+</section>
+
 <main id="app-main" hidden>
   <section id="view-home" class="view">
     <h2 class="largetitle">Today</h2>
@@ -53,36 +67,16 @@
     <div id="home-notes"></div>
     <h3 class="sect">Prepared cart</h3>
     <div id="cart" class="group"></div>
-    <div id="connect"></div>
   </section>
 
   <section id="view-scan" class="view" hidden>
-    <h2 class="largetitle">Scan</h2>
-    <h3 class="sect">Add a receipt</h3>
-    <div class="group pad">
-      <label class="field">Receipt — a PDF, or a photo of the paper receipt
-        <input type="file" id="receipt-file" accept="application/pdf,image/*">
-      </label>
-      <p><button id="btn-receipt" class="btn primary">Read this receipt</button></p>
-      <p id="receipt-result" class="muted"></p>
-    </div>
-    <h3 class="sect">Eyes — what&rsquo;s inside</h3>
-    <div class="group pad">
-      <label class="field">Photo of the fridge, pantry, freezer, or fruit
-        <input type="file" id="eyes-file" accept="image/*">
-      </label>
-      <label class="field">Place
-        <select id="eyes-kind">
-          <option value="fridge">Fridge</option>
-          <option value="pantry">Pantry</option>
-          <option value="freezer">Freezer</option>
-          <option value="fruit">Fruit bowl</option>
-        </select>
-      </label>
-      <p><button id="btn-eyes" class="btn primary">See what&rsquo;s inside</button></p>
-      <p id="eyes-result" class="muted"></p>
-      <div id="eyes-records"></div>
-    </div>
+    <h2 class="largetitle">Add</h2>
+    <h3 class="sect">File through Muse</h3>
+    <div id="intake" class="group pad"></div>
+    <h3 class="sect">Curator — what things are</h3>
+    <div id="curator" class="group"></div>
+    <h3 class="sect">Eyes — sightings to confirm</h3>
+    <div class="group pad"><div id="eyes-records"></div></div>
     <h3 class="sect">Review queue</h3>
     <div id="review" class="group"></div>
   </section>
@@ -119,6 +113,25 @@
     <p><a href="#" id="item-back">&larr; Back</a></p>
     <div id="item-detail"></div>
   </section>
+  <section id="view-profile" class="view" hidden>
+    <h2 class="largetitle">Profile</h2>
+    <h3 class="sect">Account</h3>
+    <div class="group" id="profile-account"></div>
+    <h3 class="sect">Connect Muse</h3>
+    <div class="group pad">
+      <p class="muted nomargin">Data enters Arya through your own Muse. Connect once with a token, then file receipts and orders by chat or WhatsApp. The token is shown once; creating a new one replaces it.</p>
+      <div class="row" id="profile-token-row" style="margin-top:10px"></div>
+    </div>
+    <h3 class="sect">Appearance</h3>
+    <div class="group pad">
+      <div class="seg" id="theme-seg">
+        <button class="chip" data-theme-choice="system">System</button>
+        <button class="chip" data-theme-choice="light">Light</button>
+        <button class="chip" data-theme-choice="dark">Dark</button>
+      </div>
+    </div>
+    <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
+  </section>
 </main>
 
 <nav id="tabs" hidden>
@@ -127,8 +140,8 @@
     <span>Home</span>
   </button>
   <button data-view="view-scan">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16"/></svg>
-    <span>Scan</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+    <span>Add</span>
   </button>
   <button data-view="view-chat">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-8 8c-1.2 0-2.4-.25-3.4-.7L4 20l.8-4.2A8 8 0 1 1 20 12z"/></svg>
@@ -137,6 +150,10 @@
   <button data-view="view-dash">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V4M19 20v-5"/><path d="M3.5 20h17"/></svg>
     <span>Dashboard</span>
+  </button>
+  <button data-view="view-profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5"/></svg>
+    <span>Profile</span>
   </button>
 </nav>
 

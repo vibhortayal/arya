@@ -105,109 +105,116 @@ async function renderHome() {
   });
   bindItemLinks($("#running-low"));
   bindItemLinks($("#smart-list"));
-  renderConnect();
 }
 
-/* ---------------- Connector token ---------------- */
+/* ---------------- Connector token (Profile + first run) ---------------- */
 
-async function renderConnect() {
-  const el = $("#connect");
-  if (!el || isDemo) { if (el) el.innerHTML = ""; return; }
+async function paintTokenRow(el) {
+  if (!el) return;
   let has = false;
   try { has = (await api("/auth/token")).has_token; } catch (e) { el.innerHTML = ""; return; }
-  el.innerHTML = `<h3 class="sect">Use Arya from Muse</h3><div class="group">
-    <div class="row"><div class="grow"><span class="sub">Connect Muse once with a token, then file receipts and orders by chat or WhatsApp — no need to open Arya. The token is shown once; creating a new one replaces it.</span></div></div>
-    <div class="row" id="token-row">${has ? `<span class="sub grow">A connector token is active.</span>` : ""}<button class="btn" id="btn-mint">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" id="btn-revoke">Revoke</button>` : ""}</div>
-  </div>`;
-  $("#btn-mint").addEventListener("click", mintToken);
-  const rv = $("#btn-revoke");
-  if (rv) rv.addEventListener("click", async () => {
-    try { await api("/auth/token", { method: "DELETE" }); toast("Connector token revoked."); renderConnect(); }
-    catch (e) { toast(e.message); }
-  });
+  el.innerHTML = `${has ? `<span class="sub grow">A connector token is active.</span>` : `<span class="sub grow">No token yet.</span>`}<button class="btn" data-mint="1">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" data-revoke="1">Revoke</button>` : ""}`;
 }
 
-async function mintToken() {
+async function mintInto(el) {
   try {
     const t = await post("/auth/token");
-    $("#token-row").innerHTML = `<input class="grow" id="token-value" readonly value="${esc(t.token)}"><button class="btn" id="btn-copy">Copy</button>
+    el.innerHTML = `<input class="grow" data-token-value readonly value="${esc(t.token)}"><button class="btn" data-copy="1">Copy</button>
       <span class="sub">Copy it now — it is not shown again. Paste it into Muse's secure form.</span>`;
-    $("#btn-copy").addEventListener("click", () => {
-      const i = $("#token-value"); i.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(i.value);
-      toast("Token copied.");
-    });
   } catch (e) { toast(e.message); }
 }
 
-function bindItemLinks(root) {
-  root.querySelectorAll(".item-link").forEach(a =>
-    a.addEventListener("click", ev => { ev.preventDefault(); renderItem(a.dataset.id); }));
-}
-
-$("#smart-list").addEventListener("click", async ev => {
-  const btn = ev.target.closest("[data-act]");
-  if (!btn) return;
-  const id = btn.dataset.id;
-  const item = listItems[id];
-  if (!item) return;
-  try {
-    if (btn.dataset.act === "check") await post("/api/list/check", { item_id: id, checked: !item.checked });
-    if (btn.dataset.act === "inc") await post("/api/list/qty", { item_id: id, qty: Number(item.qty) + 1 });
-    if (btn.dataset.act === "dec") await post("/api/list/qty", { item_id: id, qty: Math.max(1, Number(item.qty) - 1) });
-    if (btn.dataset.act === "remove") { await post("/api/list/remove", { item_id: id }); toast(`${item.name} removed. It can come back next cycle.`); }
-    renderHome();
-  } catch (e) { toast(e.message); }
+document.addEventListener("click", async ev => {
+  const rowEl = ev.target.closest("#profile-token-row, #connect-token-row");
+  if (!rowEl) return;
+  const b = ev.target.closest("button");
+  if (!b) return;
+  if (b.dataset.mint) mintInto(rowEl);
+  else if (b.dataset.copy) {
+    const i = rowEl.querySelector("[data-token-value]"); i.select();
+    if (navigator.clipboard) navigator.clipboard.writeText(i.value);
+    toast("Token copied.");
+  } else if (b.dataset.revoke) {
+    try { await api("/auth/token", { method: "DELETE" }); toast("Connector token revoked."); paintTokenRow(rowEl); }
+    catch (e) { toast(e.message); }
+  }
 });
 
-$("#home-notes").addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-check-ok], [data-check-expired]");
+/* ---------------- Profile ---------------- */
+
+function paintThemeSeg() {
+  const cur = localStorage.getItem("arya-theme") || "system";
+  document.querySelectorAll("#theme-seg [data-theme-choice]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.themeChoice === cur)));
+}
+
+async function renderProfile() {
+  $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")));
+  paintTokenRow($("#profile-token-row"));
+  paintThemeSeg();
+}
+
+$("#theme-seg").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-theme-choice]");
+  if (!b) return;
+  localStorage.setItem("arya-theme", b.dataset.themeChoice);
+  document.documentElement.dataset.theme = b.dataset.themeChoice;
+  paintThemeSeg();
+});
+
+$("#btn-signout2").addEventListener("click", async () => {
+  await fetch("/auth/logout", { method: "POST" });
+  location.reload();
+});
+
+/* ---------------- Add: intake status + Curator ---------------- */
+
+async function renderIntake() {
+  const el = $("#intake");
+  if (!el) return;
+  if (isDemo) {
+    el.innerHTML = `<p class="muted nomargin">In the full app, data enters Arya through Muse: send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. The demo is read-only.</p>`;
+    return;
+  }
+  let has = false;
+  try { has = (await api("/auth/token")).has_token; } catch (e) { /* keep false */ }
+  el.innerHTML = has
+    ? `<p class="nomargin"><strong>Connected to Muse.</strong></p><p class="muted">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits below.</p>`
+    : `<p class="nomargin"><strong>Not connected yet.</strong></p><p class="muted">Connect Muse in Profile to file receipts and orders by chat or WhatsApp.</p>`;
+}
+
+async function renderCurator() {
+  const el = $("#curator");
+  if (!el) return;
+  const d = await api("/api/curator").catch(() => ({ proposals: [] }));
+  let html = d.proposals.map(p => `
+    <div class="row"><div class="grow"><span class="name">${p.kind === "merge" ? `Merge into &ldquo;${esc(p.into_name)}&rdquo;` : `Keep &ldquo;${esc(p.names[0])}&rdquo; separate`}</span>
+    <span class="sub">${p.names.map(esc).join(" + ")} — ${esc(p.reason)}</span></div></div>
+    <div class="actions">
+      <button class="chip" data-curator-apply="${esc(p.id)}">Apply</button>
+      <button class="chip" data-curator-dismiss="${esc(p.id)}">Dismiss</button>
+    </div>`).join("");
+  html += `<div class="row"><span class="sub grow">The Curator reasons about which products are the same item. Nothing changes until you apply it.</span>${isDemo ? "" : `<button class="btn" id="btn-curator-run">Ask the Curator</button>`}</div>`;
+  el.innerHTML = html;
+}
+
+$("#curator").addEventListener("click", async ev => {
+  const b = ev.target.closest("button");
   if (!b) return;
   try {
-    if (b.dataset.checkOk) {
-      await post("/api/list/check-ok", { item_id: b.dataset.checkOk });
-      toast("Noted. I will ask again next cycle.");
-    } else {
-      await post(`/api/items/${encodeURIComponent(b.dataset.checkExpired)}/expired`);
-      toast("Marked expired and put on your list.");
+    if (b.id === "btn-curator-run") {
+      b.disabled = true;
+      const r = await post("/api/curator/run");
+      toast(r.proposals ? `The Curator proposed ${r.proposals} change(s).` : "The Curator found nothing to change.");
+      renderCurator();
+    } else if (b.dataset.curatorApply) {
+      await post("/api/curator/decide", { id: b.dataset.curatorApply, action: "apply" });
+      toast("Applied. The products are one now.");
+      renderCurator();
+    } else if (b.dataset.curatorDismiss) {
+      await post("/api/curator/decide", { id: b.dataset.curatorDismiss, action: "dismiss" });
+      renderCurator();
     }
-    renderHome();
-  } catch (e) { toast(e.message); }
-});
-
-/* Add-item picker */
-let candidates = [];
-$("#btn-list-add").addEventListener("click", async () => {
-  const picker = $("#add-picker");
-  picker.hidden = !picker.hidden;
-  if (picker.hidden) return;
-  $("#add-q").value = "";
-  try {
-    candidates = (await api("/api/list/candidates")).candidates;
-  } catch (e) { toast(e.message); candidates = []; }
-  renderCandidates("");
-  $("#add-q").focus();
-});
-$("#add-q").addEventListener("input", ev => renderCandidates(ev.target.value.trim()));
-function renderCandidates(q) {
-  const ql = q.toLowerCase();
-  const matches = candidates.filter(c => !c.on_list && c.name.toLowerCase().includes(ql)).slice(0, 12);
-  let html = matches.map(c =>
-    `<button class="candrow" data-add-id="${esc(c.item_id)}">${esc(c.name)}</button>`).join("");
-  if (q && !candidates.some(c => c.name.toLowerCase() === ql)) {
-    html += `<button class="candrow" data-add-name="${esc(q)}">Add “${esc(q)}” as a new item</button>`;
-  }
-  $("#add-cands").innerHTML = html || `<p class="empty">No matches.</p>`;
-}
-$("#add-cands").addEventListener("click", async ev => {
-  const btn = ev.target.closest("[data-add-id], [data-add-name]");
-  if (!btn) return;
-  try {
-    if (btn.dataset.addId) await post("/api/list/add", { item_id: btn.dataset.addId });
-    else await post("/api/list/add", { name: btn.dataset.addName });
-    $("#add-picker").hidden = true;
-    toast("Added to your list.");
-    renderHome();
   } catch (e) { toast(e.message); }
 });
 
@@ -286,30 +293,6 @@ $("#review").addEventListener("click", async ev => {
   } catch (e) { toast(e.message); }
 });
 
-$("#btn-receipt").addEventListener("click", async () => {
-  const out = $("#receipt-result");
-  const file = $("#receipt-file").files[0];
-  if (!file) { out.textContent = "Choose a receipt first — a PDF or a photo."; return; }
-  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-  const isImage = file.type.startsWith("image/");
-  if (!isPdf && !isImage) { out.textContent = "That file is not a PDF or a photo."; return; }
-  out.textContent = "Reading…";
-  try {
-    const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo",
-      { method: "POST", body: file, headers: { "Content-Type": file.type || (isPdf ? "application/pdf" : "image/jpeg") } });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.detail || "That receipt could not be read.");
-    const rec = data.receipt;
-    const unchecked = (rec.lines || []).filter(l => l.status !== "auto").length;
-    out.textContent = `${rec.merchant || "Receipt"} — total ${money(rec.total)} — ` +
-      (rec.totals_reconcile ? "arithmetic verified" : "total did not reconcile") +
-      (unchecked ? `; ${unchecked} line(s) to check in the review queue.` : ".");
-    renderScan();
-  } catch (e) {
-    out.textContent = e.message;
-  }
-});
-
 /* ---------------- Eyes ---------------- */
 
 async function renderEyes() {
@@ -337,20 +320,6 @@ async function renderEyes() {
       } catch (e) { toast(e.message); }
     }));
 }
-
-$("#btn-eyes").addEventListener("click", async () => {
-  const out = $("#eyes-result");
-  const file = $("#eyes-file").files[0];
-  if (!file) { out.textContent = "Choose a photo first."; return; }
-  out.textContent = "Looking…";
-  const kind = $("#eyes-kind").value;
-  const r = await fetch(`/eyes/photo?kind=${encodeURIComponent(kind)}`,
-    { method: "POST", body: file, headers: { "Content-Type": file.type || "image/jpeg" } });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) { out.textContent = data.detail || "That photo could not be read."; return; }
-  out.textContent = `I see ${data.sightings.length} item(s). Confirm what is really there:`;
-  renderEyes();
-});
 
 /* ---------------- Dashboard ---------------- */
 
@@ -442,8 +411,9 @@ $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(last
 
 function refresh(view) {
   if (view === "view-home") renderHome().catch(showErr);
-  if (view === "view-scan") { renderScan().catch(showErr); renderEyes().catch(showErr); }
+  if (view === "view-scan") { renderIntake().catch(showErr); renderCurator().catch(showErr); renderScan().catch(showErr); renderEyes().catch(showErr); }
   if (view === "view-dash") renderDash().catch(showErr);
+  if (view === "view-profile") renderProfile().catch(showErr);
 }
 
 /* ---------------- Ask Arya + voice ---------------- */
@@ -558,23 +528,33 @@ async function boot() {
 
 function enterApp(user, demo) {
   isDemo = demo;
+  window.__aryaUser = user;
   $("#view-login").hidden = true;
-  $("#app-main").hidden = false;
-  $("#tabs").hidden = false;
-  $("#userbar").hidden = false;
   $("#username").textContent = demo ? "demo" : user;
   $("#demobar").hidden = !demo;
   if (demo) {
-    const rb = $("#btn-receipt");
-    if (rb) { rb.disabled = true; rb.textContent = "Uploads are off in the demo"; }
-    const eb = $("#btn-eyes");
-    if (eb) { eb.disabled = true; eb.textContent = "Eyes is off in the demo"; }
-    ["receipt-file", "eyes-file", "eyes-kind"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
     $("#chat-demo-note").hidden = false;
     $("#chat-input").disabled = true;
     $("#chat-send").disabled = true;
     $("#btn-mic").disabled = true;
+    openShell();
+    return;
   }
+  api("/auth/token").then(t => {
+    if (t.has_token) { openShell(); return; }
+    // Connecting Muse is the first step of a new account.
+    $("#view-connect").hidden = false;
+    paintTokenRow($("#connect-token-row"));
+    const finish = () => { $("#view-connect").hidden = true; openShell(); };
+    $("#connect-done").onclick = finish;
+    $("#connect-skip").onclick = finish;
+  }).catch(() => openShell());
+}
+
+function openShell() {
+  $("#app-main").hidden = false;
+  $("#tabs").hidden = false;
+  $("#userbar").hidden = false;
   show("view-home");
   refresh("view-home");
 }
