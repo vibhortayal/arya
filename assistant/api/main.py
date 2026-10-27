@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import state, auth
-from api.decode.service import decode_photo, decode_text, extract_pdf_text, normalize_costco_json
+from api.decode.service import decode_order_text, decode_photo, decode_text, extract_pdf_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
 from api.cart.build import approve
@@ -36,7 +36,14 @@ async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
     if protected:
-        info = auth.session_info(request.cookies.get(auth.COOKIE))
+        info = None
+        authz = request.headers.get("authorization", "")
+        if authz.startswith("Bearer "):
+            user = auth.api_token_user(authz[7:])
+            if user:
+                info = {"user": user, "demo": False}
+        if not info:
+            info = auth.session_info(request.cookies.get(auth.COOKIE))
         if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
         if info["demo"] and request.method != "GET":
@@ -100,6 +107,32 @@ def auth_me(req: Request):
     return info
 
 
+@app.post("/auth/token")
+def mint_token(req: Request):
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info or info["demo"]:
+        raise HTTPException(401, "sign in with your account to create a connector token")
+    return {"token": auth.new_api_token(info["user"]),
+            "note": "Shown once. Creating a new token replaces the old one."}
+
+
+@app.get("/auth/token")
+def token_status(req: Request):
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info or info["demo"]:
+        raise HTTPException(401, "login required")
+    return {"has_token": auth.has_api_token(info["user"])}
+
+
+@app.delete("/auth/token")
+def revoke_token(req: Request):
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info or info["demo"]:
+        raise HTTPException(401, "login required")
+    auth.revoke_api_tokens(info["user"])
+    return {"ok": True, "has_token": False}
+
+
 @app.post("/auth/demo")
 def auth_demo():
     return _set_session_cookie(JSONResponse({"user": "demo", "demo": True}),
@@ -144,6 +177,26 @@ async def decode_text_route(req: Request):
     state.add_receipts([dec])
     state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return dec
+
+
+@app.post("/api/intake/order-text")
+async def intake_order_text(req: Request):
+    """A pasted online order (Instacart, Amazon Fresh, ...) becomes a
+    receipt through the same verify-and-queue path as a photo."""
+    body = await req.json()
+    text = body.get("text", "")
+    if len(text.strip()) < 20:
+        raise HTTPException(422, "paste the order confirmation text")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    dec = decode_order_text(text, client)
+    state.add_receipts([dec])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
+            "purchased_at": dec["purchased_at"], "lines": len(dec["lines"]),
+            "total": dec["total"], "totals_reconcile": dec["totals_reconcile"]}
 
 
 @app.get("/api/home")

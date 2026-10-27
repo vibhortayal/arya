@@ -89,6 +89,8 @@ a.name { color: var(--label); }
 .btn.primary { background: var(--accent); color: #fff; }
 .btn.primary:active { background: var(--accent-press); }
 .btn.secondary { background: var(--fill); color: var(--label); }
+.btn.danger { background: var(--fill); color: var(--danger); }
+#token-value { flex: 1; font: inherit; font-size: 13px; padding: 8px; border: 1px solid var(--separator); border-radius: 8px; background: var(--bg); color: var(--label); }
 .btn.wide { width: 100%; }
 .chip {
   border: none; background: var(--fill); color: var(--label); border-radius: 980px;
