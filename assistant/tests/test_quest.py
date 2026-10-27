@@ -110,5 +110,73 @@ class TestQuestSessions(unittest.TestCase):
         assert len(sess["items"]) == 1 and sess["items"][0]["qty"] == 2
 
 
+BERRY_DICT = {"entries": [
+    {"item_id": "sku-eggs", "sku": "22", "canonical_name": "Free Range Eggs"},
+    {"item_id": "sku-milk-w", "sku": "31", "canonical_name": "Whole Milk 1 gal"},
+    {"item_id": "sku-milk-o", "sku": "32", "canonical_name": "Oat Milk"},
+    {"item_id": "sku-bb", "sku": "41", "canonical_name": "Blueberries"},
+    {"item_id": "sku-bb-org", "sku": "42", "canonical_name": "Organic Blueberries"},
+    {"item_id": "sku-bb-frz", "sku": "43", "canonical_name": "Frozen Blueberries"}]}
+
+
+class TestOptimizer(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from api import state
+        state._save("dictionary.json", BERRY_DICT)
+        setup_account(self)
+
+    def optimize(self, items):
+        r = self.c.post("/api/quest/optimize",
+                        json={"items": items, "store": "Costco"})
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    def test_merge_duplicates_sum_qty(self):
+        out = self.optimize([{"name": "Eggs"}, {"name": "eggs", "qty": 2}])
+        assert out["report"]["in"] == 2 and out["report"]["out"] == 1
+        line = out["items"][0]
+        assert line["name"] == "Free Range Eggs" and line["qty"] == 3
+        m = out["report"]["merged"]
+        assert len(m) == 1 and m[0]["from"] == ["Eggs", "eggs"] and m[0]["qty"] == 3
+
+    def test_typo_corrected_and_reported(self):
+        out = self.optimize([{"name": "Free Range Egss"}])
+        assert out["items"][0]["name"] == "Free Range Eggs"
+        assert out["report"]["corrected"] == [
+            {"from": "Free Range Egss", "to": "Free Range Eggs"}]
+        assert out["report"]["questions"] == []
+
+    def test_ambiguity_asks_never_guesses(self):
+        out = self.optimize([{"name": "blueberries"}])
+        # no blueberry line is placed; a question with all three real
+        # products comes back instead
+        assert out["items"] == []
+        q = out["report"]["questions"]
+        assert len(q) == 1 and q[0]["item"] == "blueberries"
+        names = {c["name"] for c in q[0]["candidates"]}
+        assert names == {"Blueberries", "Organic Blueberries",
+                         "Frozen Blueberries"}, names
+
+    def test_typed_distinguishing_word_selects(self):
+        out = self.optimize([{"name": "frozen blueberries"},
+                             {"name": "Organic Blueberries"}])
+        names = [i["name"] for i in out["items"]]
+        assert names == ["Frozen Blueberries", "Organic Blueberries"], names
+        assert out["report"]["questions"] == []
+        # and plain "milk" asks too: whole and oat are different products
+        out = self.optimize([{"name": "milk"}])
+        assert out["items"] == []
+        assert len(out["report"]["questions"]) == 1
+
+    def test_unresolved_stays_as_typed_flagged(self):
+        out = self.optimize([{"name": "Unobtainium Dust", "qty": 2}])
+        assert out["report"]["unresolved"] == ["Unobtainium Dust"]
+        line = out["items"][0]
+        assert line["name"] == "Unobtainium Dust" and line["qty"] == 2
+        assert line["unresolved"] is True
+
+
 if __name__ == "__main__":
     unittest.main()
