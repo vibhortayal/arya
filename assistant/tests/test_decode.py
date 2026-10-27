@@ -87,3 +87,44 @@ class TestSlashLines(unittest.TestCase):
         self.assertEqual(r["lines"][1]["line_type"], "discount")
         self.assertEqual(r["lines"][1]["discount_parent_sku"], "1901576")
         self.assertEqual(r["lines"][1]["status"], "auto")
+
+
+class TestPdfIntake(unittest.TestCase):
+    FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "receipt.pdf")
+
+    def test_extract_text(self):
+        from api.decode.service import extract_pdf_text
+        text = extract_pdf_text(open(self.FIXTURE, "rb").read())
+        self.assertIn("SPINACH", text)
+        self.assertIn("25.36", text)
+
+    def test_pdf_endpoint(self):
+        import tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["ARYA_INSECURE_COOKIE"] = "1"
+        os.environ["MODEL_API_KEY"] = "test-key"
+        from fastapi.testclient import TestClient
+        import api.main as main
+
+        class FakeClient:
+            def __init__(self, ledger=None):
+                pass
+
+            def chat(self, messages, mode=None, personal=None):
+                payload = {"merchant": "Costco Example City", "purchased_at": "2026-10-20",
+                           "lines": [{"raw": "spinach", "sku": "1", "line_type": "item",
+                                      "qty": 1, "line_total": 5.39, "confidence": 0.95},
+                                     {"raw": "egg white", "sku": "2", "line_type": "item",
+                                      "qty": 1, "line_total": 19.97, "confidence": 0.95}],
+                           "subtotal": 25.36, "tax": 0.0, "total": 25.36}
+                return json.dumps(payload), {}, 0.001
+
+        main.MetaClient = FakeClient
+        c = TestClient(main.app)
+        c.post("/auth/setup", json={"username": "t", "password": "pw"})
+        r = c.post("/decode/pdf", content=open(self.FIXTURE, "rb").read(),
+                   headers={"Content-Type": "application/pdf"})
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["receipt"]["totals_reconcile"])
+        self.assertEqual(c.post("/decode/pdf", content=b"").status_code, 400)
+        self.assertEqual(c.post("/decode/pdf", content=b"not a pdf").status_code, 422)
