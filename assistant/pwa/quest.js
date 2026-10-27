@@ -671,3 +671,231 @@ $("#score-done").addEventListener("click", () => {
   window.scrollTo(0, 0);
   refresh("view-home");
 });
+
+/* ---------------- Community ---------------- */
+
+function qBadgeRows(badges) {
+  return badges.map(b => `
+    <div class="row">
+      <div class="grow"><span class="name">${esc(b.name)}</span>
+      <span class="sub">${esc(b.criteria)} · ${esc(b.detail)}</span></div>
+      ${b.earned ? `<span class="money" style="color:var(--accent-text)">Earned</span>` : `<span class="sub">Locked</span>`}
+    </div>`).join("");
+}
+function qFinishMs(sess) {
+  if (!sess.started_at) return null;
+  let endIso = sess.finished_at;
+  if (sess.receipt_id) {
+    // The photo finish: the receipt's own timestamp ends the hunt.
+    const r = Q.receiptTimes && Q.receiptTimes[sess.receipt_id];
+    if (r) endIso = r;
+  }
+  if (!endIso) return null;
+  const ms = new Date(endIso).getTime() - new Date(sess.started_at).getTime();
+  return ms > 0 ? ms : null;
+}
+async function renderCommunity() {
+  questShow("view-community");
+  const scope = document.querySelector("#comm-scopes .chip[aria-pressed='true']")?.dataset.scope || "household";
+  const [profile, archive] = await Promise.all([
+    api("/api/quest/profile").catch(() => null),
+    api("/api/quest/receipts").catch(() => ({ receipts: [] }))
+  ]);
+  Q.receiptTimes = Object.fromEntries((archive.receipts || []).map(r => [r.receipt_id, r.purchased_at]));
+  await qLoadSessions().catch(() => {});
+  const board = $("#comm-board");
+  if (scope !== "household") {
+    board.innerHTML = empty("No hunts at this scope yet — boards widen as more hunters play.");
+  } else {
+    const rows = Q.sessions
+      .filter(s => s.state === "done" && s.items.length >= 8)
+      .map(s => ({ s, ms: qFinishMs(s) }))
+      .filter(x => x.ms != null)
+      .map(x => ({ ...x, per: x.ms / x.s.items.length }))
+      .sort((a, b) => a.per - b.per);
+    board.innerHTML = rows.length ? rows.map((x, i) => `
+      <div class="row"><div class="grow"><span class="name">${i + 1}. ${esc(x.s.store)}</span>
+      <span class="sub">${x.s.items.length} items · ${qDurText(x.ms)} · ${fmtShort(String(x.s.started_at).slice(0, 10))}</span></div>
+      <div class="money">${Math.round(x.per / 1000)}s / item</div></div>`).join("")
+      : empty("No qualifying hunts yet — finish a hunt with 8 or more items and a receipt.");
+  }
+  $("#comm-badges").innerHTML = profile ? qBadgeRows(profile.badges)
+    : empty("Badges are unavailable right now.");
+}
+$("#comm-scopes").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-scope]");
+  if (!b) return;
+  document.querySelectorAll("#comm-scopes .chip").forEach(c =>
+    c.setAttribute("aria-pressed", String(c === b)));
+  renderCommunity().catch(showErr);
+});
+
+/* ---------------- Shop-Off ---------------- */
+
+async function renderRace() {
+  questShow("view-race");
+  if (Q.racePrefill) {
+    $("#race-opp").value = Q.racePrefill;
+    Q.racePrefill = "";
+  }
+  await qLoadSessions().catch(() => {});
+  const raceIds = [...new Set(Q.sessions.filter(s => s.shopoff_id).map(s => s.shopoff_id))];
+  const body = $("#race-body");
+  if (!raceIds.length) {
+    body.innerHTML = `<div class="group">${empty("No races yet. Start one below, or challenge a friend.")}</div>`;
+    return;
+  }
+  const races = await Promise.all(raceIds.map(id =>
+    api(`/api/quest/shopoff/${encodeURIComponent(id)}`).catch(() => null)));
+  body.innerHTML = races.filter(Boolean).map(race => `
+    <div class="group pad">
+      <p class="nomargin"><strong>${esc(race.store)}</strong> · ${race.state === "finished" ? "Finished" : "Racing"}</p>
+      ${race.players.map(p => {
+        const pct = p.progress && p.progress.total ? Math.round(p.progress.checked / p.progress.total * 100) : 0;
+        return `<div class="row"><div class="grow"><span class="name">@${esc(p.handle)}${p.placeholder ? " (placeholder)" : ""}</span>
+          <span class="track"><span class="bar" style="width:${pct}%"></span></span>
+          <span class="sub">${p.progress ? `${p.progress.checked}/${p.progress.total} collected` : ""}${p.done && p.finish_time ? ` · receipt ${esc(String(p.finish_time).replace("T", " "))}` : ""}</span></div>
+          <button class="chip" data-open-sess="${esc(p.session_id)}" type="button">Open</button></div>`;
+      }).join("")}
+      ${race.state === "finished"
+        ? `<p class="nomargin" style="margin-top:8px"><strong>${race.winner ? `Winner: @${esc(race.winner)} — by receipt time.` : "Dead heat — identical receipt times."}</strong></p>`
+        : `<p class="muted nomargin" style="margin-top:8px">First verified receipt wins.</p>`}
+    </div>`).join("");
+}
+$("#race-body").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-open-sess]");
+  if (!b) return;
+  await qLoadSessions().catch(() => {});
+  const s = qSessionById(b.dataset.openSess);
+  if (s) qOpenSession(s);
+});
+$("#race-create").addEventListener("click", async () => {
+  const opp = $("#race-opp").value.trim().replace(/^@/, "");
+  const store = $("#race-store").value.trim();
+  const items = qParseLines($("#race-items").value);
+  if (!opp) { toast("Name your opponent's handle."); return; }
+  if (!store) { toast("Name the store."); return; }
+  if (!items.length) { toast("The race needs a list."); return; }
+  const btn = $("#race-create");
+  btn.disabled = true;
+  try {
+    await post("/api/quest/shopoff", { store, items, opponent_handle: opp });
+    toast("Race on. Both hunts are on Today.");
+    renderRace().catch(showErr);
+  } catch (e) { toast(e.message); }
+  btn.disabled = false;
+});
+
+/* ---------------- Friends ---------------- */
+
+async function renderFriends() {
+  questShow("view-friends");
+  const d = await api("/api/quest/friends");
+  const el = $("#fr-list");
+  if (!d.friends.length) {
+    el.innerHTML = empty("No friends yet. Add one by handle.");
+    return;
+  }
+  el.innerHTML = d.friends.map(f => {
+    if (f.status === "pending_in") {
+      return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
+        <span class="sub">Wants to hunt with you</span></div>
+        <button class="chip" data-accept="${esc(f.handle)}" type="button">Accept</button></div>`;
+    }
+    if (f.status === "pending_out") {
+      return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
+        <span class="sub">Request sent</span></div></div>`;
+    }
+    return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
+      <span class="sub">${f.top_badge ? `Top badge: ${esc(f.top_badge)}` : "No badges yet"}${f.last_hunt ? ` · Last hunt: ${esc(f.last_hunt)}` : " · No hunts yet"}</span></div>
+      <button class="chip" data-challenge="${esc(f.handle)}" type="button">Challenge</button></div>`;
+  }).join("");
+}
+$("#fr-list").addEventListener("click", async ev => {
+  const acc = ev.target.closest("[data-accept]");
+  if (acc) {
+    try {
+      await post("/api/quest/friends/accept", { handle: acc.dataset.accept });
+      toast("Friends. Their boards and badges are yours to chase.");
+      renderFriends().catch(showErr);
+    } catch (e) { toast(e.message); }
+    return;
+  }
+  const ch = ev.target.closest("[data-challenge]");
+  if (ch) {
+    Q.racePrefill = ch.dataset.challenge;
+    questGo("view-race");
+  }
+});
+$("#fr-add").addEventListener("click", async () => {
+  const handle = $("#fr-handle").value.trim();
+  if (!handle) { toast("Type a handle first."); return; }
+  try {
+    const f = await post("/api/quest/friends", { handle });
+    toast(f.status === "accepted" ? `@${f.handle} is already your friend.` : `Request sent to @${f.handle}.`);
+    $("#fr-handle").value = "";
+    renderFriends().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+/* ---------------- Quest profile + receipt archive ---------------- */
+
+async function renderQProfile() {
+  questShow("view-qprofile");
+  const [profile, archive] = await Promise.all([
+    api("/api/quest/profile").catch(() => null),
+    api("/api/quest/receipts").catch(() => ({ receipts: [] }))
+  ]);
+  if (profile) {
+    $("#qp-card").innerHTML =
+      row(`@${esc(profile.handle)}`, "Public card — what the community sees", "") +
+      row("Hunts finished", "", String(profile.stats.hunts)) +
+      row("Receipts filed", "", String(profile.stats.receipts)) +
+      row("Streak", "", `${profile.stats.streak_weeks} week${profile.stats.streak_weeks === 1 ? "" : "s"}`);
+    $("#qp-badges").innerHTML = qBadgeRows(profile.badges);
+    $("#qp-stores").innerHTML = profile.mapped_stores && profile.mapped_stores.length
+      ? profile.mapped_stores.map(s => row(esc(s), "Mapped by you")).join("")
+      : empty("No stores mapped yet. Mapping a store is how its 3D view gets built.");
+  }
+  $("#qp-receipts").innerHTML = archive.receipts.length ? archive.receipts.map(r => `
+    <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
+      <span class="grow"><span class="name">${esc(r.merchant)}</span>
+      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
+      <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
+    </button>`).join("") : empty("No receipts filed yet.");
+}
+$("#qp-receipts").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-receipt]");
+  if (b) openReceipt(b.dataset.receipt).catch(showErr);
+});
+function qSigned(n) {
+  return n != null && n < 0 ? `<span class="return">−${money(n)}</span>` : (n != null ? money(n) : "");
+}
+async function openReceipt(receiptId) {
+  const r = await api(`/api/quest/receipts/${encodeURIComponent(receiptId)}`);
+  questShow("view-receipt");
+  const lines = r.lines.map(ln => {
+    if (ln.line_type === "return") {
+      return row(esc(ln.name), "Returned", qSigned(ln.line_total));
+    }
+    if (ln.line_type === "discount") {
+      return row(esc(ln.name), "Savings on the item above", qSigned(ln.line_total));
+    }
+    return row(`${esc(ln.name)}${ln.qty > 1 ? ` × ${qtyFmt(ln.qty)}` : ""}`,
+               ln.status === "unverified" ? "Unverified — in your review queue" : "",
+               ln.line_total != null ? money(ln.line_total) : "");
+  }).join("");
+  $("#rc-body").innerHTML = `
+    <h2 class="largetitle" style="font-size:28px">${esc(r.merchant)}</h2>
+    <p class="subtitle">${esc(String(r.purchased_at).replace("T", " "))} · filed from ${esc(r.source_type || "a receipt")}</p>
+    <div class="group">${lines || empty("No lines on this receipt.")}</div>
+    <div class="group">
+      ${r.subtotal != null ? row("Subtotal", "", money(r.subtotal)) : ""}
+      ${r.tax != null ? row("Tax", "", money(r.tax)) : ""}
+      ${row("Total", "", money(r.total))}
+      ${r.returns_total ? row("Returns netted", "", `<span class="return">−${money(r.returns_total)}</span>`) : ""}
+    </div>
+    <p class="muted">${r.totals_reconcile
+      ? `Total verified ✓ — the lines add up to ${money(r.total)}.`
+      : "The total did not reconcile — unverified lines wait in your review queue."}</p>`;
+}
