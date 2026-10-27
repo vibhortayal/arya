@@ -10,7 +10,7 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
   only. Contributor mode is for eval loops on synthetic/public data and is
   refused for personal payloads.
 """
-import json, os, urllib.request
+import json, os, urllib.request, uuid
 
 BASE = "https://api.meta.ai/v1"
 
@@ -30,6 +30,14 @@ PRICES = {
     "contributor": (0.10, 0.002, 0.20),
     "wonder": (4.00, 0.20, 20.00),
 }
+
+# Muse Voice Transcribe is billed per audio hour, not per token
+# (MODEL-POLICY.md; Meta docs read 2026-10-27).
+ASR_USD_PER_HOUR = 0.18
+
+
+def transcribe_cost(duration_s):
+    return duration_s / 3600 * ASR_USD_PER_HOUR
 
 
 def estimate_cost(mode, input_tokens, cached_tokens=0, output_tokens=0):
@@ -80,3 +88,50 @@ class MetaClient:
         if self.ledger is not None:
             self.ledger.record(mode=mode, model=MODELS[mode], **usage, cost_usd=cost)
         return text, usage, cost
+
+    def _send_multipart(self, path, fields, file_part):
+        """POST multipart/form-data. file_part = (field, filename,
+        content_type, bytes). The injected transport receives the raw
+        body bytes, same (status, payload) contract as _send."""
+        boundary = "arya-" + uuid.uuid4().hex
+        chunks = []
+        for name, value in fields.items():
+            chunks.append((f"--{boundary}\r\nContent-Disposition: form-data; "
+                           f"name=\"{name}\"\r\n\r\n{value}\r\n").encode())
+        field, filename, ctype, data = file_part
+        chunks.append((f"--{boundary}\r\nContent-Disposition: form-data; "
+                       f"name=\"{field}\"; filename=\"{filename}\"\r\n"
+                       f"Content-Type: {ctype}\r\n\r\n").encode())
+        chunks.append(data)
+        chunks.append(f"\r\n--{boundary}--\r\n".encode())
+        body = b"".join(chunks)
+        url = BASE + path
+        headers = {"Content-Type": f"multipart/form-data; boundary={boundary}",
+                   "Authorization": f"Bearer {self.api_key}"}
+        if self.transport is not None:
+            return self.transport("POST", url, headers, body)
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return resp.status, json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read().decode() or "{}")
+
+    def transcribe(self, wav_bytes, duration_s, filename="voice.wav"):
+        """Muse Voice Transcribe, batch endpoint (POST /v1/asr/transcribe).
+        Input contract (Meta docs): mono 16-bit PCM WAV at 16 or 24 kHz;
+        32 MB and 10 minutes per request. Auth is the Bearer header
+        (unlike the realtime WebSocket, which authenticates in-band).
+        Returns (payload, cost_usd); the caller pulls the text out of
+        the payload — see api/voice/service.py."""
+        status, payload = self._send_multipart(
+            "/asr/transcribe", {"model": MODELS["voice"]},
+            ("file", filename, "audio/wav", wav_bytes))
+        if status != 200:
+            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+        cost = transcribe_cost(duration_s)
+        if self.ledger is not None:
+            self.ledger.record(mode="voice", model=MODELS["voice"],
+                               input_tokens=0, cached_tokens=0, output_tokens=0,
+                               cost_usd=cost)
+        return payload, cost
