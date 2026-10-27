@@ -1,0 +1,7 @@
+{"_note": "SYNTHETIC fixture for tests. Fabricated values; not owner data.",
+ "warehouseName": "EXAMPLE CITY", "documentType": "WarehouseReceiptDetail",
+ "transactionDate": "2026-10-02", "transactionType": "Refund",
+ "transactionBarcode": "SYNTHETIC-0002", "totalItemCount": 1,
+ "subTotal": -26.99, "taxes": 0.0, "total": -26.99, "instantSavings": null,
+ "itemArray": [
+   {"itemNumber": "2051892", "itemDescription01": "NFL WOMEN PJ", "itemDescription02": null, "unit": -1, "amount": -26.99, "taxFlag": "0"}]}

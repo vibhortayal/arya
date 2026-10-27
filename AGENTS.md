@@ -44,8 +44,8 @@ through `assistant/api/meta_client.py` (no other module calls the API).
 
 ## Working agreement
 - Small commits to `main`; the message names the stage (`Stage 1: ...`).
-- Tests before commit: `cd assistant && python3 -m unittest discover -s tests`
-  must be green. Add tests with new logic.
+- Tests before commit: `cd assistant && ../.venv/bin/python -m unittest discover -s tests`
+  must be green (create the venv once: `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`). Add tests with new logic.
 - Every work session: append one entry to `assistant/loops/<date>-<stage>.md`
   (what changed, scores/costs if models ran, what's next) and update
   `STATUS.md` + the stage issue checklist.
