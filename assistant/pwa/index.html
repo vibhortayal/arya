@@ -42,9 +42,16 @@
 <section id="view-connect" class="view" hidden>
   <h2 class="largetitle">Connect Muse</h2>
   <div class="group pad">
-    <p class="nomargin"><strong>Step 1 of 1 — connect your Muse.</strong></p>
-    <p class="muted">Arya takes data in through Muse only. Create a token here, then paste it into Muse&rsquo;s secure form. After that, file receipts, orders, and fridge photos by chat or WhatsApp — no need to open Arya.</p>
+    <p class="nomargin"><strong>Connect your Muse — the only setup Arya needs.</strong></p>
+    <ol class="steps">
+      <li>Create a token below. It is shown once.</li>
+      <li>Open Muse and add the Arya connector — or just tell Muse: &ldquo;connect Arya&rdquo;.</li>
+      <li>Paste the token into Muse&rsquo;s secure form. Never paste it into a chat message.</li>
+      <li>Tap Done. From then on, talk to Muse: drop a receipt photo, paste an order, or ask &ldquo;what&rsquo;s on my list?&rdquo;</li>
+    </ol>
     <div class="row" id="connect-token-row" style="margin-top:10px"></div>
+    <p class="muted" style="margin-top:12px">Using a different assistant app? Copy the setup prompt and paste it there once — it teaches the assistant its job. The connector route above stays the better path.</p>
+    <p><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button></p>
     <p style="margin-top:14px"><button id="connect-done" class="btn primary wide" type="button">Done</button></p>
     <p><button id="connect-skip" class="btn secondary wide" type="button">Skip for now</button></p>
     <p class="muted nomargin">You can connect later in Profile.</p>
@@ -121,6 +128,7 @@
     <div class="group pad">
       <p class="muted nomargin">Data enters Arya through your own Muse. Connect once with a token, then file receipts and orders by chat or WhatsApp. The token is shown once; creating a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
+      <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
     <h3 class="sect">Appearance</h3>
     <div class="group pad">
