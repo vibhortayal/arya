@@ -1,0 +1,1168 @@
+{
+ "store": "trader-joes",
+ "kind": "shelf-graph",
+ "version": 1,
+ "source": {
+  "segmentationModel": "sam-3.1",
+  "labelModel": "muse-spark-1.3",
+  "prompts": [
+   "grocery shelf",
+   "grocery products"
+  ]
+ },
+ "pathLength": 6.822,
+ "stops": [
+  {
+   "u": 0.0,
+   "dist": 0.0,
+   "frame": "frame_0001.jpg",
+   "pose": 0,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Cheese Shelf",
+     "rawLabel": "{\"label\": \"Cheese Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.568,
+     "box": [
+      219,
+      228,
+      473,
+      276
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": "left",
+     "label": "Cheese & Dip Shelf",
+     "rawLabel": "{\"label\": \"Cheese & Dip Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.601,
+     "box": [
+      0,
+      282,
+      559,
+      476
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.0244,
+   "dist": 0.167,
+   "frame": "frame_0011.jpg",
+   "pose": 5,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Cheese Shelf",
+     "rawLabel": "{\"label\": \"Cheese Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.676,
+     "box": [
+      0,
+      29,
+      800,
+      376
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 5
+    },
+    {
+     "side": "left",
+     "label": "Cheese Shelf",
+     "rawLabel": "{\"label\": \"Cheese Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.6,
+     "box": [
+      0,
+      289,
+      768,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 4
+    },
+    {
+     "side": "right",
+     "label": "Fresh Produce Shelf",
+     "rawLabel": "{\"label\": \"Fresh Produce Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.619,
+     "box": [
+      540,
+      229,
+      813,
+      310
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    }
+   ]
+  },
+  {
+   "u": 0.0559,
+   "dist": 0.382,
+   "frame": "frame_0021.jpg",
+   "pose": 10,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Salad & Greens Shelf",
+     "rawLabel": "{\"label\": \"Salad & Greens Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.668,
+     "box": [
+      0,
+      109,
+      309,
+      489
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 6
+    },
+    {
+     "side": "right",
+     "label": "Oil & Vinegar Shelf",
+     "rawLabel": "{\"label\": \"Oil & Vinegar Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.748,
+     "box": [
+      785,
+      142,
+      1000,
+      374
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 7
+    }
+   ]
+  },
+  {
+   "u": 0.0789,
+   "dist": 0.538,
+   "frame": "frame_0031.jpg",
+   "pose": 15,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Oil & Vinegar Shelf",
+     "rawLabel": "{\"label\": \"Oil & Vinegar Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.7,
+     "box": [
+      465,
+      131,
+      700,
+      503
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 10
+    },
+    {
+     "side": "right",
+     "label": "Oil & Vinegar Shelf",
+     "rawLabel": "{\"label\": \"Oil & Vinegar Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.716,
+     "box": [
+      466,
+      99,
+      999,
+      423
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 15
+    }
+   ]
+  },
+  {
+   "u": 0.2107,
+   "dist": 1.438,
+   "frame": "frame_0041.jpg",
+   "pose": 20,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.86,
+     "box": [
+      909,
+      305,
+      1035,
+      323
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Salad Dressing Shelf",
+     "rawLabel": "{\"label\": \"Salad Dressing Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.662,
+     "box": [
+      0,
+      0,
+      622,
+      231
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 10
+    },
+    {
+     "side": "right",
+     "label": "Sauce & Dressing Shelf",
+     "rawLabel": "{\"label\": \"Sauce & Dressing Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.652,
+     "box": [
+      0,
+      268,
+      661,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 18
+    }
+   ]
+  },
+  {
+   "u": 0.2658,
+   "dist": 1.814,
+   "frame": "frame_0051.jpg",
+   "pose": 25,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Pasta Shelf",
+     "rawLabel": "{\"label\": \"Pasta Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.707,
+     "box": [
+      0,
+      0,
+      1035,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 24
+    }
+   ]
+  },
+  {
+   "u": 0.3196,
+   "dist": 2.18,
+   "frame": "frame_0061.jpg",
+   "pose": 30,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Canned Goods Shelf",
+     "rawLabel": "{\"label\": \"Canned Goods Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.826,
+     "box": [
+      419,
+      269,
+      620,
+      411
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": null,
+     "label": "Condiments Shelf",
+     "rawLabel": "{\"label\": \"Condiments Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.773,
+     "box": [
+      482,
+      469,
+      619,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Nuts & Dried Fruit Shelf",
+     "rawLabel": "{\"label\": \"Nuts & Dried Fruit Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.65,
+     "box": [
+      0,
+      0,
+      627,
+      295
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 10
+    },
+    {
+     "side": "left",
+     "label": "Rice & Olives Shelf",
+     "rawLabel": "{\"label\": \"Rice & Olives Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.65,
+     "box": [
+      0,
+      298,
+      623,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 8
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.64,
+     "box": [
+      636,
+      161,
+      703,
+      209
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.698,
+     "box": [
+      617,
+      358,
+      707,
+      538
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 3
+    }
+   ]
+  },
+  {
+   "u": 0.3685,
+   "dist": 2.514,
+   "frame": "frame_0071.jpg",
+   "pose": 35,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Hot Sauce Shelf",
+     "rawLabel": "{\"label\": \"Hot Sauce Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.801,
+     "box": [
+      259,
+      11,
+      604,
+      219
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": null,
+     "label": "Peanut Butter Shelf",
+     "rawLabel": "{\"label\": \"Peanut Butter Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.721,
+     "box": [
+      177,
+      278,
+      604,
+      580
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 3
+    },
+    {
+     "side": "left",
+     "label": "Pasta Sauce Shelf",
+     "rawLabel": "{\"label\": \"Pasta Sauce Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.693,
+     "box": [
+      0,
+      0,
+      411,
+      384
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 8
+    },
+    {
+     "side": "left",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.55,
+     "box": [
+      0,
+      395,
+      370,
+      579
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 3
+    },
+    {
+     "side": "right",
+     "label": "Sauce & Condiment Shelf",
+     "rawLabel": "{\"label\": \"Sauce & Condiment Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.721,
+     "box": [
+      378,
+      0,
+      680,
+      221
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": "right",
+     "label": "Peanut Butter Shelf",
+     "rawLabel": "{\"label\": \"Peanut Butter Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.699,
+     "box": [
+      464,
+      341,
+      712,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 6
+    }
+   ]
+  },
+  {
+   "u": 0.4374,
+   "dist": 2.984,
+   "frame": "frame_0081.jpg",
+   "pose": 40,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.813,
+     "box": [
+      288,
+      459,
+      390,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Peanut Butter & Jam Shelf",
+     "rawLabel": "{\"label\": \"Peanut Butter & Jam Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.806,
+     "box": [
+      0,
+      0,
+      387,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 11
+    },
+    {
+     "side": "right",
+     "label": "Personal Care Shelf",
+     "rawLabel": "{\"label\": \"Personal Care Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.811,
+     "box": [
+      387,
+      321,
+      449,
+      465
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 3
+    }
+   ]
+  },
+  {
+   "u": 0.4788,
+   "dist": 3.266,
+   "frame": "frame_0091.jpg",
+   "pose": 45,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.582,
+     "box": [
+      341,
+      124,
+      376,
+      192
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Cookie & Cracker Shelf",
+     "rawLabel": "{\"label\": \"Cookie & Cracker Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.659,
+     "box": [
+      0,
+      0,
+      418,
+      214
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 9
+    },
+    {
+     "side": "left",
+     "label": "Cookie & Cracker Shelf",
+     "rawLabel": "{\"label\": \"Cookie & Cracker Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.623,
+     "box": [
+      0,
+      187,
+      386,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 12
+    },
+    {
+     "side": "right",
+     "label": "Bread & Bakery Shelf",
+     "rawLabel": "{\"label\": \"Bread & Bakery Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.763,
+     "box": [
+      450,
+      204,
+      942,
+      466
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 9
+    }
+   ]
+  },
+  {
+   "u": 0.5675,
+   "dist": 3.872,
+   "frame": "frame_0101.jpg",
+   "pose": 50,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Bread & Bakery Shelf",
+     "rawLabel": "{\"label\": \"Bread & Bakery Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.736,
+     "box": [
+      527,
+      219,
+      1035,
+      579
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 16
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.7,
+     "box": [
+      0,
+      294,
+      197,
+      306
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.577,
+     "box": [
+      0,
+      402,
+      189,
+      443
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    }
+   ]
+  },
+  {
+   "u": 0.6569,
+   "dist": 4.481,
+   "frame": "frame_0111.jpg",
+   "pose": 55,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Fresh Produce Shelf",
+     "rawLabel": "{\"label\": \"Fresh Produce Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.658,
+     "box": [
+      4,
+      240,
+      1035,
+      438
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 8
+    }
+   ]
+  },
+  {
+   "u": 0.791,
+   "dist": 5.397,
+   "frame": "frame_0121.jpg",
+   "pose": 60,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Butter & Cheese Shelf",
+     "rawLabel": "{\"label\": \"Butter & Cheese Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.602,
+     "box": [
+      119,
+      184,
+      333,
+      311
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    }
+   ]
+  },
+  {
+   "u": 0.8628,
+   "dist": 5.886,
+   "frame": "frame_0131.jpg",
+   "pose": 65,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Cheese & Dip Shelf",
+     "rawLabel": "{\"label\": \"Cheese & Dip Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.647,
+     "box": [
+      0,
+      49,
+      594,
+      581
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 13
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.586,
+     "box": [
+      936,
+      331,
+      1023,
+      365
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.8894,
+   "dist": 6.067,
+   "frame": "frame_0141.jpg",
+   "pose": 70,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.695,
+     "box": [
+      899,
+      178,
+      1007,
+      288
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": "left",
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.689,
+     "box": [
+      0,
+      145,
+      786,
+      474
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 11
+    }
+   ]
+  },
+  {
+   "u": 0.9078,
+   "dist": 6.193,
+   "frame": "frame_0151.jpg",
+   "pose": 75,
+   "shelves": [
+    {
+     "side": null,
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.609,
+     "box": [
+      339,
+      41,
+      444,
+      216
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": null,
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.698,
+     "box": [
+      0,
+      233,
+      568,
+      441
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 4
+    },
+    {
+     "side": "left",
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.703,
+     "box": [
+      0,
+      0,
+      567,
+      369
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 11
+    },
+    {
+     "side": "left",
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.564,
+     "box": [
+      0,
+      381,
+      279,
+      522
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 2
+    },
+    {
+     "side": "right",
+     "label": "Frozen Pizza Shelf",
+     "rawLabel": "{\"label\": \"Frozen Pizza Shelf\", \"confidence\": \"high\"}",
+     "labelConfidence": "high",
+     "samConfidence": 0.612,
+     "box": [
+      375,
+      66,
+      857,
+      324
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 8
+    }
+   ]
+  },
+  {
+   "u": 0.9421,
+   "dist": 6.427,
+   "frame": "frame_0161.jpg",
+   "pose": 80,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.706,
+     "box": [
+      0,
+      112,
+      438,
+      207
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.656,
+     "box": [
+      0,
+      230,
+      415,
+      294
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Chips & Snacks Shelf",
+     "rawLabel": "{\"label\": \"Chips & Snacks Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.668,
+     "box": [
+      658,
+      126,
+      1035,
+      205
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Milk & Dairy Shelf",
+     "rawLabel": "{\"label\": \"Milk & Dairy Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.836,
+     "box": [
+      661,
+      230,
+      1035,
+      294
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.578,
+     "box": [
+      651,
+      268,
+      1035,
+      507
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.9784,
+   "dist": 6.675,
+   "frame": "frame_0171.jpg",
+   "pose": 85,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Dips & Hummus Shelf",
+     "rawLabel": "{\"label\": \"Dips & Hummus Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.86,
+     "box": [
+      0,
+      133,
+      379,
+      209
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Cookies Shelf",
+     "rawLabel": "{\"label\": \"Cookies Shelf\", \"confidence\": \"medium\"}",
+     "labelConfidence": "medium",
+     "samConfidence": 0.615,
+     "box": [
+      0,
+      247,
+      272,
+      348
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 3
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.871,
+     "box": [
+      682,
+      130,
+      1035,
+      208
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    },
+    {
+     "side": "right",
+     "label": "Unidentified Shelf",
+     "rawLabel": "{\"label\": \"Unidentified Shelf\", \"confidence\": \"low\"}",
+     "labelConfidence": "low",
+     "samConfidence": 0.714,
+     "box": [
+      680,
+      238,
+      1035,
+      305
+     ],
+     "imageSize": [
+      1036,
+      582
+     ],
+     "segments": 1
+    }
+   ]
+  }
+ ],
+ "run": {
+  "samCalls": 36,
+  "samImages": 36,
+  "sparkCalls": 55,
+  "sparkUsage": {
+   "input_tokens": 16047,
+   "cached_tokens": 4752,
+   "output_tokens": 32137
+  },
+  "costUsd": {
+   "sam": 0.09,
+   "spark": 0.1514,
+   "total": 0.2414
+  },
+  "frames": 18,
+  "segments": 614,
+  "regions": 55
+ }
+}
