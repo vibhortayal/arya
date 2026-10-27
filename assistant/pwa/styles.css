@@ -327,6 +327,14 @@ textarea {
   background: #101318; box-shadow: var(--shadow);
 }
 .cloud-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+/* Stage D: the shelf label for the next stop, from shelf-graph.json. */
+.cloud-shelf {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  max-width: 92%; padding: 5px 12px; border-radius: 999px;
+  background: rgba(16, 19, 24, 0.78); color: #fff;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
 .cloud-dots { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .cloud-dot {
   width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--tertiary);
