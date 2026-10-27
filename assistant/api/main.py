@@ -775,6 +775,28 @@ def quest_receipt_detail(receipt_id: str):
     return detail
 
 
+@app.post("/api/quest/sessions/{session_id}/report-missing")
+async def quest_report_missing(session_id: str, req: Request):
+    body = await req.json()
+    if not body.get("item"):
+        raise HTTPException(400, "item is required")
+    from api import quest
+    try:
+        rep = quest.report_missing(session_id, body["item"],
+                                   body.get("kind", ""), body.get("photo"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if rep is None:
+        raise HTTPException(404, "no such item in this session")
+    return rep
+
+
+@app.get("/api/quest/stores/{store}/reports")
+def quest_store_reports(store: str):
+    from api import quest
+    return quest.store_reports(store)
+
+
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 if os.path.isdir(_PWA):
     app.mount("/", StaticFiles(directory=_PWA, html=True), name="pwa")

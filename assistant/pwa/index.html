@@ -211,6 +211,23 @@
         <button id="btn-finish" class="btn" type="button">Finish</button>
       </span>
     </div>
+    <p style="margin-top:0"><button id="btn-nothere" class="btn wide" type="button">Not here</button></p>
+    <div id="spot-sheet" class="sheetwrap" hidden>
+      <div class="sheet">
+        <div class="row"><span class="name">Not here</span><button id="spot-close" class="btn" type="button">Cancel</button></div>
+        <p class="muted" id="spot-item"></p>
+        <div class="actions" style="flex-direction:column; align-items:stretch">
+          <button class="chip" data-kind="empty_shelf" aria-pressed="false" type="button">Empty shelf — its tag is still there</button>
+          <button class="chip" data-kind="replaced" aria-pressed="false" type="button">Something else here now</button>
+          <button class="chip" data-kind="cant_tell" aria-pressed="false" type="button">Can&rsquo;t tell</button>
+        </div>
+        <label class="field">Shelf photo (optional)
+          <input type="file" id="spot-photo" accept="image/*">
+        </label>
+        <p><button id="spot-send" class="btn primary wide" type="button" disabled>Send the report</button></p>
+        <p class="muted nomargin">A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
+      </div>
+    </div>
     <div id="list-panel" class="sheetwrap" hidden>
       <div class="sheet">
         <div class="row"><span class="name">Your list</span><button id="panel-close" class="btn" type="button">Done</button></div>
