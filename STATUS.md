@@ -30,8 +30,9 @@ Muse is an intake surface: per-account API tokens (Home card "Use Arya
 from Muse" mints; hash-only storage), the custom.arya connector +
 bin/arya.py CLI, order-text intake for forwarded online orders. Live
 proof done (read on the owner account; write on a scratch account).
-Distribution: registration opens after the hackathon with a
-"Muse is the only way in" notice; per-user spend caps first.
+Distribution: registration opens after the hackathon; per-user spend
+caps first. (The "Muse is the only way in" line was retired the
+same evening — see Intake parity below.)
 
 ## Quest Stage A (2026-10-27, later still)
 - **Arya Quest engine built** (owner pivot + build approval; design in
@@ -112,3 +113,26 @@ Distribution: registration opens after the hackathon with a
 - Hotfix: bindItemLinks helper (dropped in the Stage 6 file split)
   restored after the owner hit "Could not load" on Home.
 - Suite: 60 green. sw arya-v12.
+
+## Intake parity (2026-10-27, night)
+- **Owner ruling**: intake is NOT Muse-only — every door runs on
+  Meta models (Muse in chat, Spark on the Meta API in the app).
+  The Add tab now carries all five doors: Via Muse (connector),
+  Photo (Spark on the Meta API, reusing POST /decode/photo), Voice
+  (Muse Voice Transcribe), Paste (order text), Type.
+- **Voice is real**: POST /api/transcribe proxies to Meta's batch
+  ASR (POST /v1/asr/transcribe, muse-voice-transcribe-1.0,
+  $0.18/audio-hour; mono 16-bit WAV 16/24 kHz, ≤10 min). The PWA
+  records and encodes 16 kHz WAV client-side; Ask Arya's mic uses
+  the same path — the device SpeechRecognition input is gone.
+  Speech out stays device TTS (no Meta TTS API; MODEL-POLICY rule 5).
+- **Demo doors live**: the demo household's Photo and Voice doors
+  call the Meta API on camera and persist nothing (photo returns a
+  preview; transcription is stateless). All other demo writes
+  remain 403.
+- Commits `a4634f5`, `584e051`, `6abc9bf` (+ this log). Suite:
+  **116 green**. Session log:
+  assistant/loops/2026-10-27-intake-parity.md. **Not deployed** —
+  deploy is a separate owner step (git pull on the VM); the deploy
+  smoke should confirm the ASR response envelope against the
+  defensive parser in api/voice/service.py.
