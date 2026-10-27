@@ -303,7 +303,10 @@ def dashboard():
         by_store[e["store_id"]] = round(by_store.get(e["store_id"], 0) + e["price"], 2)
         by_item[e["item_id"]] = round(by_item.get(e["item_id"], 0) + e["price"], 2)
     nm = names()
-    top = sorted(by_item.items(), key=lambda kv: -kv[1])[:10]
+    net_by_item = {}
+    for e in entries:  # top items are net of returns, matching item pages
+        net_by_item[e["item_id"]] = round(net_by_item.get(e["item_id"], 0) + e["price"], 2)
+    top = sorted(((k, v) for k, v in net_by_item.items() if v > 0), key=lambda kv: -kv[1])[:10]
     return {"spend_total": spend, "returns_total": returns, "for_others_total": others,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),
             "spend_by_store": by_store,
