@@ -115,8 +115,8 @@ async function renderConnect() {
   if (!el || isDemo) { if (el) el.innerHTML = ""; return; }
   let has = false;
   try { has = (await api("/auth/token")).has_token; } catch (e) { el.innerHTML = ""; return; }
-  el.innerHTML = `<h3 class="sect">Use Arya from Claude</h3><div class="group">
-    <div class="row"><div class="grow"><span class="sub">Connect your Muse once with a token, then file receipts and orders by chat or WhatsApp — no need to open Arya. The token is shown once; creating a new one replaces it.</span></div></div>
+  el.innerHTML = `<h3 class="sect">Use Arya from Muse</h3><div class="group">
+    <div class="row"><div class="grow"><span class="sub">Connect Muse once with a token, then file receipts and orders by chat or WhatsApp — no need to open Arya. The token is shown once; creating a new one replaces it.</span></div></div>
     <div class="row" id="token-row">${has ? `<span class="sub grow">A connector token is active.</span>` : ""}<button class="btn" id="btn-mint">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" id="btn-revoke">Revoke</button>` : ""}</div>
   </div>`;
   $("#btn-mint").addEventListener("click", mintToken);
