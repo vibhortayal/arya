@@ -89,12 +89,18 @@ class MetaClient:
             self.ledger.record(mode=mode, model=MODELS[mode], **usage, cost_usd=cost)
         return text, usage, cost
 
-    def _send_multipart(self, path, fields, file_part):
+    def _send_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,
-        content_type, bytes). The injected transport receives the raw
-        body bytes, same (status, payload) contract as _send."""
+        content_type, bytes). json_fields are emitted as parts with
+        Content-Type: application/json (the ASR endpoint's 'request'
+        part). The injected transport receives the raw body bytes,
+        same (status, payload) contract as _send."""
         boundary = "arya-" + uuid.uuid4().hex
         chunks = []
+        for name, value in (json_fields or {}).items():
+            chunks.append((f"--{boundary}\r\nContent-Disposition: form-data; "
+                           f"name=\"{name}\"\r\nContent-Type: application/json"
+                           f"\r\n\r\n{json.dumps(value)}\r\n").encode())
         for name, value in fields.items():
             chunks.append((f"--{boundary}\r\nContent-Disposition: form-data; "
                            f"name=\"{name}\"\r\n\r\n{value}\r\n").encode())
@@ -125,8 +131,10 @@ class MetaClient:
         Returns (payload, cost_usd); the caller pulls the text out of
         the payload — see api/voice/service.py."""
         status, payload = self._send_multipart(
-            "/asr/transcribe", {"model": MODELS["voice"]},
-            ("file", filename, "audio/wav", wav_bytes))
+            "/asr/transcribe", {},
+            ("audio", filename, "audio/wav", wav_bytes),
+            json_fields={"request": {"model": MODELS["voice"],
+                                     "audioEncoding": "WAV"}})
         if status != 200:
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         cost = transcribe_cost(duration_s)
