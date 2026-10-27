@@ -41,10 +41,15 @@ def users():
     return _load("users.json", {})
 
 
+RESERVED = {"demo"}
+
+
 def create_user(username, password):
     username = username.strip().lower()
     if not username or not password:
         raise ValueError("username and password are required")
+    if username in RESERVED:
+        raise ValueError("that name is reserved")
     all_users = users()
     if username in all_users:
         raise ValueError("user exists")
@@ -76,12 +81,22 @@ def verify(username, password):
     return hmac.compare_digest(digest, u["hash"])
 
 
-def new_session(username):
+def new_session(username, demo=False):
     token = secrets.token_urlsafe(32)
     all_sessions = _load("sessions.json", {})
-    all_sessions[token] = {"user": username, "expires": int(time.time()) + SESSION_TTL}
+    all_sessions[token] = {"user": username, "demo": bool(demo),
+                           "expires": int(time.time()) + SESSION_TTL}
     _save("sessions.json", all_sessions)
     return token
+
+
+def session_info(token):
+    if not token:
+        return None
+    s = _load("sessions.json", {}).get(token)
+    if not s or s["expires"] < time.time():
+        return None
+    return {"user": s["user"], "demo": bool(s.get("demo"))}
 
 
 def session_user(token):

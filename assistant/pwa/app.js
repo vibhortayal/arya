@@ -165,7 +165,7 @@ async function boot() {
   const status = await api("/auth/status").catch(() => ({ has_users: true }));
   const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
   if (me) {
-    enterApp(me.user);
+    enterApp(me.user, me.demo);
     return;
   }
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-login"; });
@@ -181,16 +181,25 @@ async function boot() {
       return;
     }
     const data = await r.json();
-    enterApp(data.user);
+    enterApp(data.user, false);
+  });
+  $("#demo-btn").addEventListener("click", async () => {
+    const r = await fetch("/auth/demo", { method: "POST" });
+    if (r.ok) enterApp("demo", true);
   });
 }
 
-function enterApp(user) {
+function enterApp(user, demo) {
   $("#view-login").hidden = true;
   $("#app-main").hidden = false;
   $("#tabs").hidden = false;
   $("#userbar").hidden = false;
-  $("#username").textContent = user;
+  $("#username").textContent = demo ? "demo" : user;
+  $("#demobar").hidden = !demo;
+  if (demo) {
+    const card = $("#btn-receipt");
+    if (card) { card.disabled = true; card.textContent = "Uploads are off in the demo"; }
+  }
   show("view-home");
   refresh("view-home");
 }

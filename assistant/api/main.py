@@ -22,10 +22,12 @@ async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode"))
     if protected:
-        user = auth.session_user(request.cookies.get(auth.COOKIE))
-        if not user:
+        info = auth.session_info(request.cookies.get(auth.COOKIE))
+        if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
-        state.set_current_user(user)
+        if info["demo"] and request.method != "GET":
+            return JSONResponse({"detail": "the demo household is read-only"}, status_code=403)
+        state.set_current_user(info["user"])
     return await call_next(request)
 
 
@@ -72,10 +74,16 @@ async def auth_logout(req: Request):
 
 @app.get("/auth/me")
 def auth_me(req: Request):
-    user = auth.session_user(req.cookies.get(auth.COOKIE))
-    if not user:
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info:
         raise HTTPException(401, "login required")
-    return {"user": user}
+    return info
+
+
+@app.post("/auth/demo")
+def auth_demo():
+    return _set_session_cookie(JSONResponse({"user": "demo", "demo": True}),
+                               auth.new_session("demo", demo=True))
 
 
 @app.get("/health")

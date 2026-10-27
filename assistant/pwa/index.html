@@ -14,6 +14,7 @@
   <h1>Arya</h1>
   <p id="asof" class="muted"></p>
   <p id="userbar" class="muted" hidden><span id="username"></span> · <a href="#" id="signout">Sign out</a></p>
+  <p id="demobar" class="muted" hidden>Demo household — fictional data, read-only.</p>
 </header>
 
 <section id="view-login" class="view" hidden>
@@ -28,6 +29,8 @@
     <p><button type="submit" id="login-btn">Sign in</button></p>
     <p id="login-error" class="muted"></p>
   </form>
+  <p class="muted">Just looking? <button id="demo-btn" class="secondary" type="button">Try the demo household</button></p>
+  <p class="muted">The demo is a fictional household. It is read-only and makes no model calls.</p>
 </section>
 
 <main id="app-main" hidden>
