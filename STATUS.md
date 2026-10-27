@@ -33,6 +33,17 @@ proof done (read on the owner account; write on a scratch account).
 Distribution: registration opens after the hackathon with a
 "Muse is the only way in" notice; per-user spend caps first.
 
+## Quest Stage A (2026-10-27, later still)
+- **Arya Quest engine built** (owner pivot + build approval; design in
+  the arya-quest repo): sessions (one store trip, quest.json per
+  account, adopted by the first account), the Optimizer (merge /
+  correct / ask, deterministic, dictionary-backed), demo-grade
+  Shop-Off (winner by receipt timestamp), friends + profile with a
+  receipt-verified badge shelf, and the connector's `quest-add`.
+  Commits `41c099d`, `2673256`, `2ed3498` (+ log/status). Suite:
+  **71 green**. No model calls, $0. **Not deployed** — deploy is a
+  separate owner step (git pull on the VM).
+
 ## Evening addendum (2026-10-27, later)
 - **ARCHITECTURE.md added** (assistant/docs/): the as-built record — two
   layers (edge perception in the user's Muse, core verification and
