@@ -12,7 +12,11 @@
  *             rebuilt from a shopper's walkthrough, walked along the
  *             real camera path. The screen sets el.dataset.model to
  *             the store's manifest URL before creating the view
- *             (assets built by assistant/tools/prep_cloud.py). If
+ *             (assets built by assistant/tools/prep_cloud.py).
+ *             shelf-graph.json beside the manifest (Stage D) names
+ *             the shelves observed near each path position and is
+ *             shown as a chip for the next stop; it is optional —
+ *             no graph, no labels, nothing else changes. If
  *             anything fails to load, the driver falls back to
  *             "strip" in place — a hunt never hard-fails on a model.
  *   "aisle" — the stylized aisle scene: what a mapped store shows
@@ -111,10 +115,12 @@ async function buildCloudView(host, modelUrl) {
   const murl = new URL(modelUrl, SCENE_BASE).href;
   const manifest = await (await fetch(murl)).json();
   const buf = await (await fetch(new URL(manifest.bin, murl))).arrayBuffer();
-  return cloudView(THREE, host, manifest, buf);
+  const graph = await fetch(new URL("shelf-graph.json", murl))
+    .then(r => (r.ok ? r.json() : null)).catch(() => null);
+  return cloudView(THREE, host, manifest, buf, graph);
 }
 
-function cloudView(THREE, host, manifest, buf) {
+function cloudView(THREE, host, manifest, buf, graph) {
   const n = manifest.points;
   const mn = manifest.bounds.min, mx = manifest.bounds.max;
   const q = new Uint16Array(buf, 0, n * 3);
@@ -133,6 +139,10 @@ function cloudView(THREE, host, manifest, buf) {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   wrap.appendChild(renderer.domElement);
+  const chip = document.createElement("div");
+  chip.className = "cloud-shelf";
+  chip.hidden = true;
+  wrap.appendChild(chip);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x101318);
   scene.fog = new THREE.Fog(0x101318, 3.5, 8.0);
@@ -235,6 +245,34 @@ function cloudView(THREE, host, manifest, buf) {
       spr.userData.baseScale = span * 0.055;
       markerGroup.add(spr);
     });
+    updateChip();
+  }
+
+  // Shelf labels (Stage D): the graph stop nearest this stop's path
+  // position names the shelves seen there. Markers alternate sides —
+  // even markers sit on the walker's left (see the offset above) —
+  // so a label from the marker's own side wins when both exist.
+  // Labels are model proposals carried in the graph; the chip only
+  // ever shows one verbatim, never a guess made here.
+  function shelfLabel(i) {
+    if (!graph || !graph.stops || !graph.stops.length) return null;
+    if (i < 0 || i >= anchorDist.length) return null;
+    const u = anchorDist[i] / total;
+    let best = null, bestD = Infinity;
+    for (const s of graph.stops) {
+      const d = Math.abs(s.u - u);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    if (!best || bestD > 0.055) return null;
+    const side = i % 2 === 0 ? "left" : "right";
+    const labelled = best.shelves.filter(sh => sh.label);
+    const pick = labelled.find(sh => sh.side === side) || labelled[0];
+    return pick ? pick.label : null;
+  }
+  function updateChip() {
+    const label = shelfLabel(nextIdx);
+    chip.textContent = label || "";
+    chip.hidden = !label;
   }
 
   // Camera state: a cursor on the path, an optional glide, a look
@@ -351,6 +389,7 @@ function cloudView(THREE, host, manifest, buf) {
     },
     setNext(i) {
       nextIdx = i;
+      updateChip();
       const look = markerLook(i);
       if (look && !glide) lookTarget = look;
     },
