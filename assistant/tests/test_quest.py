@@ -178,5 +178,131 @@ class TestOptimizer(unittest.TestCase):
         assert line["unresolved"] is True
 
 
+class TestShopOff(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from api import state
+        state._save("receipts.json", [
+            {"receipt_id": "r-you", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-26T18:43:05", "lines": [],
+             "subtotal": 0, "tax": 0, "total": 0},
+            {"receipt_id": "r-opp", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-26T18:42:18", "lines": [],
+             "subtotal": 0, "tax": 0, "total": 0}])
+        setup_account(self)
+
+    def _finish(self, session_id, receipt_id):
+        sess = self.c.get(f"/api/quest/sessions/{session_id}").json()
+        for it in sess["items"]:
+            r = self.c.post(f"/api/quest/sessions/{session_id}/check",
+                            json={"item": it["name"], "checked": True})
+            assert r.status_code == 200, r.text
+        r = self.c.post(f"/api/quest/sessions/{session_id}/receipt",
+                        json={"receipt_id": receipt_id})
+        assert r.status_code == 200, r.text
+
+    def test_photo_finish_by_receipt_time(self):
+        c = self.c
+        r = c.post("/api/quest/shopoff", json={
+            "store": "Trader Joe's", "items": ["Milk", "Eggs"],
+            "opponent_handle": "@cartqueen"})
+        assert r.status_code == 200, r.text
+        race = r.json()
+        assert race["state"] == "racing" and race["winner"] is None
+        me, opp = race["players"]
+        assert me["handle"] == "owner" and opp["handle"] == "cartqueen"
+        assert opp["placeholder"] is True
+        assert me["progress"] == {"checked": 0, "total": 2, "complete": False}
+        # opponent finishes on an earlier receipt; mine lands later
+        self._finish(opp["session_id"], "r-opp")
+        mid = c.get(f"/api/quest/shopoff/{race['id']}").json()
+        assert mid["state"] == "racing"  # I am still shopping
+        self._finish(me["session_id"], "r-you")
+        final = c.get(f"/api/quest/shopoff/{race['id']}").json()
+        assert final["state"] == "finished"
+        # 18:42:18 beats 18:43:05: the receipt is the photo finish
+        assert final["winner"] == "cartqueen", final
+        assert all(p["done"] and p["progress"]["complete"]
+                   for p in final["players"])
+
+
+class TestSocial(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from datetime import date, timedelta
+        from api import state
+        today = date.today()
+        receipts = []
+        for w in range(5):
+            d = (today - timedelta(days=7 * w)).isoformat()
+            receipts.append({
+                "receipt_id": f"r-w{w}", "merchant": "Costco",
+                "purchased_at": d,
+                "lines": [{"item_id": "sku-eggs", "sku": "22", "qty": 1,
+                           "line_type": "item", "line_total": 9.0,
+                           "status": "auto",
+                           "decoded_name": "Free Range Eggs"}] +
+                          ([{"item_id": "sku-bn", "sku": "23", "qty": 1,
+                             "line_type": "item", "line_total": 1.5,
+                             "status": "auto",
+                             "decoded_name": "Organic Bananas"}] if w < 4 else []),
+                "subtotal": 10.5, "tax": 0, "total": 10.5})
+        state._save("receipts.json", receipts)
+        state._save("quest.json", {"friends": [
+            {"handle": "cartqueen", "status": "pending_in",
+             "top_badge": "Speed Demon", "last_hunt": "Costco · yesterday"}]})
+        setup_account(self)
+
+    def test_friends_request_accept(self):
+        c = self.c
+        friends = c.get("/api/quest/friends").json()["friends"]
+        assert len(friends) == 1 and friends[0]["status"] == "pending_in"
+        r = c.post("/api/quest/friends/accept", json={"handle": "@CartQueen"})
+        assert r.json()["status"] == "accepted"
+        r = c.post("/api/quest/friends", json={"handle": "milk_runner"})
+        assert r.json()["status"] == "pending_out"
+        r = c.post("/api/quest/friends", json={"handle": "milk_runner"})
+        assert r.json()["status"] == "pending_out"  # no duplicate
+        r = c.post("/api/quest/friends", json={"handle": "owner"})
+        assert r.status_code == 400  # your own handle
+        r = c.post("/api/quest/friends/accept", json={"handle": "ghost"})
+        assert r.status_code == 404
+        handles = {f["handle"] for f in c.get("/api/quest/friends").json()["friends"]}
+        assert handles == {"cartqueen", "milk_runner"}
+
+    def test_profile_stats_and_badges(self):
+        p = self.c.get("/api/quest/profile").json()
+        assert p["handle"] == "owner"
+        assert p["stats"]["receipts"] == 5
+        assert p["stats"]["hunts"] == 0
+        assert p["stats"]["streak_weeks"] == 5, p["stats"]
+        assert p["mapped_stores"] == []
+        badges = {b["id"]: b for b in p["badges"]}
+        assert badges["egg_baron"]["earned"] is True
+        assert badges["banana_republic"]["earned"] is True
+        assert badges["top_contributor"]["earned"] is False
+        assert badges["top_contributor"]["detail"] == "5 of 10 receipts"
+        assert badges["first_mapper"]["earned"] is False
+        assert badges["speed_demon"]["earned"] is False
+
+    def test_speed_demon_and_clean_sweep_from_a_hunt(self):
+        c = self.c
+        r = c.post("/api/quest/sessions", json={
+            "store": "Costco", "items": [{"name": "Eggs"}]})
+        sid = r.json()["id"]
+        c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
+        c.post(f"/api/quest/sessions/{sid}/check",
+               json={"item": "Eggs", "checked": True})
+        c.post(f"/api/quest/sessions/{sid}/receipt",
+               json={"receipt_id": "r-w0"})
+        p = c.get("/api/quest/profile").json()
+        assert p["stats"]["hunts"] == 1
+        badges = {b["id"]: b for b in p["badges"]}
+        assert badges["speed_demon"]["earned"] is True
+        assert badges["clean_sweep"]["earned"] is True
+
+
 if __name__ == "__main__":
     unittest.main()
