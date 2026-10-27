@@ -85,6 +85,7 @@ a.name { color: var(--label); }
 .return { color: var(--danger); }
 
 .btn {
+  background: var(--fill); color: var(--label);
   border: none; border-radius: 980px; padding: 10px 20px; min-height: 44px;
   font-weight: 600; font-size: 16px; transition: background 0.15s ease, transform 0.1s ease;
 }
