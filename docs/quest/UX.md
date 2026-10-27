@@ -1,0 +1,64 @@
+# UX — Arya Quest
+
+Design bar: a first-time player finishes a hunt with zero instruction. One primary action per screen. The game is the interface; the list is a tool you summon, not a place you live.
+
+## The session model
+
+- A **session** is one store trip: one store, one list, one mode, one state.
+- A day holds many sessions. Each is an independent game — pause Trader Joe's mid-hunt, run Costco Express, come back; nothing bleeds across.
+- States: **Not started → Playing ⇄ Paused → Finished** (receipt snapped or skipped) → **Done** (scored).
+- Sessions live in two places: as cards on the Today hub, and as a slim rail during play for one-tap switching.
+
+## The list panel rules (the core interaction)
+
+1. The list is a **pull-up panel** over the game scene. It is never a full screen during play.
+2. Open: the floating **List · n left** button, always in thumb reach. The count is the promise — it only ever goes down.
+3. Check: one tap per item. Strike-through, count drops, the item leaves the route.
+4. Close: swipe down, tap outside, tap the button again — **or do nothing**: after a check, the panel slides away on its own once the player starts moving. The game is the home position; the list visits.
+5. Collecting in the scene and checking in the panel are the same act in two places. They can never disagree.
+
+## Screens
+
+| # | Screen | Primary action | Rule it carries |
+|---|---|---|---|
+| 1 | Today (hub) | Resume / Start a session | The day is a row of games, not one list |
+| 2 | New session — add list | "Looks right →" after review | Dump in any form; Arya parses; the human confirms |
+| 3 | New session — pick store | Pick a store | Mapped = play in 3D; unmapped = play in Strip, map it to unlock 3D (platform) |
+| 15 | Optimize list (step 1) | Answer its questions, then "Looks right →" | Merge duplicates into quantities; correct spelling openly; ASK on real ambiguity — the game never starts on a guess |
+| 4 | Mode choose | Tap Quest or Express | The mood chooses the mode — one tap, reversible until start |
+| 5 | Hunt (Quest) | Collect | Scene first; list panel per the rules above; rail to switch sessions |
+| 6 | Express run | Check items in walking order | Same model, game off; big targets; live time estimate |
+| 7 | Finish — receipt | Snap the receipt | The scorecard ritual; skippable, never blocking |
+| 8 | Score | Back to Today / next session | Verified haul, time, streak — the session closes |
+| 9 | Map a store | Upload walkthrough video | Contribution goes to the platform; mapper credit is the wage |
+
+## Simplicity budget
+
+- No screen carries more than one primary button.
+- No settings before the first hunt. Account, appearance, and history live behind the hub's corner, not in the flow.
+- Every label is a plain word a tired parent reads once: List, Next, Collect, Done.
+- If a feature needs a paragraph to explain, it does not ship in v1.
+
+| 10 | Community | Trophy button on the hub | Every board and badge is receipt-verified — the receipt is the referee |
+| 11 | Shop-Off race | Challenge (Community / Friends) | Live race, same store and list; the receipt timestamp is the photo finish |
+| 12 | Profile | Avatar button on the hub | The public card: handle, stats, badge shelf, mapper credit — private data never shown |
+| 13 | Friends | Friends row in Community | Handles only; friends see boards and badges — no chat, no lists |
+| 14 | Receipt detail | A receipt row in Profile | Photo and digitized twin together; verified total; the account's private archive |
+
+Profile also carries a visible "Coming next" tile — Analysis (patterns, spend, dashboard). A placeholder with a name, not a fake screen: the future is declared, not simulated.
+
+List intake has five doors, one list: photo, paste, type, voice — and **chat**: "add eggs to my Trader Joe's list" via the user's Muse lands in today's session for that store through the connector.
+
+## The scene ladder — the game never needs the 3D
+
+The Hunt screen's scene is a viewport, not the game. The game is the session: stops in walking order, COLLECT, the receipt finish, the score. The scene renders that session through one of three drivers, and a hunt completes identically in all of them:
+
+1. **Cloud** — the store's point cloud (VGGT), walked in 3D. A mapped store with a finished reconstruction.
+2. **Aisle** — a stylized 3D aisle scene from the shelf graph. A mapped store before its cloud, or the spike's hybrid fallback.
+3. **Strip** — a flat 2D aisle strip: stops as shelf cards in walking order, the strip scrolling as the hunt advances. First-class, not a degraded mode — this is how unmapped stores play, and how any store plays on a weak device.
+
+Rules: an unmapped store is **playable, never gated** — Strip is its default, and mapping is an invitation ("Map this store to unlock the 3D view"), not a wall. A player can drop a level mid-hunt (battery, comfort, motion sensitivity) from a small in-hunt toggle, with no state lost. Stops, scoring, Shop-Off timing, and the receipt finish are driver-independent.
+
+## Wireframes
+
+Clickable prototype: the "Arya Quest — Wireframes" artifact (Muse) — 10 screens, demo data (Trader Joe's Quest, 8 items + Costco Express, 5 items), the full demo path clickable end to end. The prototype was probe-verified: a panel check updates progress and the panel auto-dismisses; Express checks move the time estimate live. **Approved by the owner 2026-10-27.** Product builds follow the prototype; deviations come back here first.
