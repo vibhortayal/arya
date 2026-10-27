@@ -87,18 +87,42 @@ def _norm_name(s):
 
 
 def group_map():
-    """item_id -> representative item_id, grouping SKUs whose dictionary
-    entries name the same product (Costco re-SKUs the same eggs)."""
-    by_name = {}
+    """item_id -> representative item_id. The group key is the entry's
+    explicit "group" when the Curator has ruled on it, else the normalized
+    canonical name (Costco re-SKUs the same eggs under one name)."""
+    by_key = {}
     for e in dictionary()["entries"]:
-        by_name.setdefault(_norm_name(e["canonical_name"]), []).append(e["item_id"])
+        key = e.get("group") or _norm_name(e["canonical_name"])
+        by_key.setdefault(key, []).append(e["item_id"])
     out = {}
-    for ids in by_name.values():
+    for ids in by_key.values():
         if len(ids) > 1:
             rep = sorted(ids)[0]
             for i in ids:
                 out[i] = rep
     return out
+
+
+def set_entry_group(item_ids, group_key, rename_rep=None):
+    """Curator apply path: pin entries to an explicit group key. The key
+    is the representative item_id for a merge, or the entry's own id for
+    a split. rename_rep optionally renames the representative entry."""
+    d = dictionary()
+    by_id = {e["item_id"]: e for e in d["entries"]}
+    for iid in item_ids:
+        if iid in by_id:
+            by_id[iid]["group"] = group_key
+    if rename_rep and group_key in by_id:
+        by_id[group_key]["canonical_name"] = rename_rep
+    _save("dictionary.json", d)
+
+
+def curator_store():
+    return _load("curator.json", {"proposals": [], "dismissed": []})
+
+
+def save_curator(store):
+    _save("curator.json", store)
 
 
 def _group_entries(entries):
