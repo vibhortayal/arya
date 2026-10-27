@@ -81,9 +81,38 @@ def as_of():
     return max((r["purchased_at"] for r in rs), default=None)
 
 
+def _norm_name(s):
+    import re as _re
+    return _re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
+
+
+def group_map():
+    """item_id -> representative item_id, grouping SKUs whose dictionary
+    entries name the same product (Costco re-SKUs the same eggs)."""
+    by_name = {}
+    for e in dictionary()["entries"]:
+        by_name.setdefault(_norm_name(e["canonical_name"]), []).append(e["item_id"])
+    out = {}
+    for ids in by_name.values():
+        if len(ids) > 1:
+            rep = sorted(ids)[0]
+            for i in ids:
+                out[i] = rep
+    return out
+
+
+def _group_entries(entries):
+    gm = group_map()
+    if not gm:
+        return entries
+    for e in entries:
+        e["item_id"] = gm.get(e["item_id"], e["item_id"])
+    return entries
+
+
 def derived():
     rs = receipts()
-    entries = build_ledger(rs, fee_skus=fee_skus())
+    entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=as_of())
     fl = flags()
     today = as_of()
@@ -92,7 +121,12 @@ def derived():
         return f.get("never") or (f.get("snoozed_until") and today and f["snoozed_until"] >= today)
     # Stage 4: Eyes corrections + user reports adjust the patterns.
     from datetime import date as _date
-    sightings = confirmed_sightings()
+    gm = group_map()
+    sightings = {}
+    for k, v in confirmed_sightings().items():
+        key = gm.get(k, k)
+        if key not in sightings or v["date"] > sightings[key]["date"]:
+            sightings[key] = v
     nm = names()
     for p in patterns:
         sg = sightings.get(p["item_id"])
@@ -108,16 +142,94 @@ def derived():
         if f.get("expired") or f.get("out"):
             p["due"] = True
             p["user_report"] = ("expired " + f["expired"]) if f.get("expired") else "you said you're out"
-    visible = [p for p in patterns if not hidden(p["item_id"])]
+    unresolved_ids = {e["item_id"] for e in dictionary()["entries"]
+                      if e.get("resolution", {}).get("status") == "unresolved"}
+    judged = judgments()
+    for p in patterns:
+        if p["item_id"] in judged:
+            p["judge"] = judged[p["item_id"]]
+    visible = [p for p in patterns
+               if not hidden(p["item_id"]) and p["item_id"] not in unresolved_ids
+               and _admitted(p, judged, fl)]
     smart = build_list(visible)
     have = {i["item_id"] for i in smart["items"]}
     for pid, f in fl.items():
         if f.get("manual") and pid not in have:
             smart["items"].append({"item_id": pid, "qty": 1, "due_reason": "Added by you",
                                     "source": "user"})
+    kept = []
     for item in smart["items"]:
-        item["name"] = names().get(item["item_id"], item["item_id"])
+        f = fl.get(item["item_id"], {})
+        if item.get("source") == "pattern" and f.get("dismissed_on") == today:
+            continue  # removed for this cycle; returns when a new receipt lands
+        if f.get("qty_override"):
+            item["qty"] = f["qty_override"]
+        if f.get("checked_on") == today:
+            item["checked"] = True
+        kept.append(item)
+    smart["items"] = kept
+    for item in smart["items"]:
+        f = fl.get(item["item_id"], {})
+        item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
+
+
+def judgments():
+    return _load("judged.json", {})
+
+
+def judge_pending(client, limit=60):
+    """Judge every pattern (2+ buys) whose verdict is missing or stale.
+    Returns how many items were judged. Never raises to the caller."""
+    from api.judge import judge_batch, facts_line
+    if not getattr(client, "api_key", ""):
+        return 0
+    entries = _group_entries(build_ledger(receipts(), fee_skus=fee_skus()))
+    patterns = summarize(entries, as_of=as_of())
+    judged = judgments()
+    nm = names()
+    pending = []
+    for p in patterns:
+        if p["purchase_count"] < 2:
+            continue
+        cur = judged.get(p["item_id"])
+        if cur is None or p["purchase_count"] - cur.get("buys", 0) >= 2:
+            pending.append(p)
+    done = 0
+    for i in range(0, min(len(pending), limit), 25):
+        batch = pending[i:i + 25]
+        try:
+            verdicts = judge_batch(client, [(p["item_id"], facts_line(nm.get(p["item_id"], p["item_id"]), p))
+                                            for p in batch])
+        except Exception:
+            break
+        for p in batch:
+            v = verdicts.get(p["item_id"])
+            if v:
+                judged[p["item_id"]] = {**v, "buys": p["purchase_count"]}
+                done += 1
+    if done:
+        _save("judged.json", judged)
+    return done
+
+
+def _admitted(p, judged, fl):
+    """May this pattern appear on the list? Judge says yes (or the user
+    added it by hand); unresolved names and unjudged items stay off."""
+    f = fl.get(p["item_id"], {})
+    if f.get("manual") or f.get("out") or f.get("expired"):
+        return True  # explicit user intent beats the judge
+    v = judged.get(p["item_id"])
+    if not v or not v.get("list_ok"):
+        return False
+    if v.get("class") == "SEASONAL":
+        months = (p.get("analysis") or {}).get("seasonal_months")
+        if months and as_of():
+            now_month = int(as_of()[5:7])
+            grace = {((m) % 12) + 1 for m in months}
+            if now_month not in months and now_month not in grace:
+                return False
+    return True
 
 
 def eyes_records():
@@ -150,10 +262,19 @@ def confirmed_sightings():
 
 
 def get_cart():
+    d = derived()
+    unchecked = {"list_id": d["smart_list"]["list_id"],
+                 "items": [i for i in d["smart_list"]["items"] if not i.get("checked")]}
     cart = _load("cart.json", None)
-    if cart is None:
-        cart = prepare(derived()["smart_list"], names())
-        _save("cart.json", cart)
+    if cart is not None:
+        same = [i["item_id"] for i in cart["items"]] == [i["item_id"] for i in unchecked["items"]]
+        fresh = cart["state"] == "waiting" and same
+        new_cycle = cart["state"] == "approved" and cart.get("as_of") != as_of()
+        if fresh or (cart["state"] == "approved" and not new_cycle):
+            return cart
+    cart = prepare(unchecked, names())
+    cart["as_of"] = as_of()
+    _save("cart.json", cart)
     return cart
 
 
@@ -163,7 +284,7 @@ def save_cart(cart):
 
 def dashboard():
     rs = receipts()
-    entries = build_ledger(rs, fee_skus=fee_skus())
+    entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
     spend = round(sum(e["price"] for e in entries if e["event_type"] == "purchase"), 2)
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
@@ -185,9 +306,9 @@ def dashboard():
 def review_queue():
     lines = []
     for r in receipts():
-        for ln in r["lines"]:
+        for li, ln in enumerate(r["lines"]):
             if ln.get("status") == "unverified":
-                lines.append({"receipt_id": r["receipt_id"], "date": r["purchased_at"],
+                lines.append({"receipt_id": r["receipt_id"], "idx": li, "date": r["purchased_at"],
                               "raw": ln["raw"], "decoded_name": ln.get("decoded_name"),
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", [])})
@@ -198,7 +319,43 @@ def review_queue():
     return {"lines": lines, "unresolved": unresolved}
 
 
+def update_receipt_line(receipt_id, idx, fields):
+    rs = receipts()
+    for r in rs:
+        if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
+            r["lines"][idx].update(fields)
+            _save("receipts.json", rs)
+            return r["lines"][idx]
+    return None
+
+
+def teach_name(sku, name):
+    """A user-confirmed line name teaches the dictionary entry for its SKU."""
+    if not sku:
+        return
+    d = dictionary()
+    for e in d["entries"]:
+        if e.get("sku") == sku:
+            e["canonical_name"] = name
+            e.setdefault("resolution", {})["status"] = "manual"
+            _save("dictionary.json", d)
+            return
+
+
+def resolve_dictionary(item_id, name):
+    d = dictionary()
+    for e in d["entries"]:
+        if e["item_id"] == item_id:
+            e["canonical_name"] = name
+            e.setdefault("resolution", {})["status"] = "manual"
+            e["resolution"]["candidates"] = []
+            _save("dictionary.json", d)
+            return e
+    return None
+
+
 def item_detail(item_id):
+    item_id = group_map().get(item_id, item_id)
     d = derived()
     entry = next((e for e in dictionary()["entries"] if e["item_id"] == item_id), None)
     pattern = next((p for p in d["patterns"] if p["item_id"] == item_id), None)

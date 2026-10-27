@@ -43,17 +43,40 @@ def summarize(entries, as_of=None):
         last = dates[-1]
         ref = _d(as_of) if as_of else last
         since = (ref - last).days
-        has_pattern = len(events) >= 2 and median_gap is not None
-        # Lapsed: silence far beyond the cadence means the household stopped
-        # buying it (moved, switched, disliked) — it is not "due", it is over.
-        lapsed = bool(has_pattern and since > 4 * median_gap)
+        n = len(events)
+        # --- evidence facts (the reasoning judge reads these) ---
+        # The engine reports facts; whether an item is a staple worth
+        # listing is a judgment call, made by the staple judge (api/judge).
+        positive = [g for g in gaps if g > 0]
+        spread = (max(positive) / min(positive)) if len(positive) >= 2 else None
+        seasonal_months = None
+        season_share = 0.0
+        if n >= 3:
+            months = [d.month for d in dates]
+            best = None
+            for start_m in range(1, 13):
+                window = {((start_m - 1 + k) % 12) + 1 for k in range(4)}
+                share = sum(1 for mo in months if mo in window) / n
+                if best is None or share > best[0]:
+                    best = (share, sorted(window))
+            if best and best[0] >= 0.7:
+                season_share, seasonal_months = best[0], best[1]
+        if n < 3 or median_gap is None:
+            state_name, verdict = "not-enough-history", "fewer than 3 kept purchases"
+        elif median_gap >= 2 and since > 4 * median_gap:
+            state_name, verdict = "lapsed", "silent for over 4x its rhythm"
+        else:
+            state_name, verdict = "pattern", "3+ kept purchases"
+        has_pattern = state_name == "pattern"
         out.append({
-            "item_id": item_id, "purchase_count": len(events),
+            "item_id": item_id, "purchase_count": n,
             "median_interval_days": median_gap, "last_bought": last.isoformat(),
             "typical_qty": statistics.median([e["qty"] for e in events]),
             "total_spend": round(sum(e["price"] for e in events), 2),
-            "due": bool(has_pattern and not lapsed and since >= median_gap),
-            "history_state": ("lapsed" if lapsed else "pattern") if has_pattern else "not-enough-history",
+            "due": bool(has_pattern and since >= median_gap),
+            "history_state": state_name,
+            "analysis": {"gaps_days": gaps, "gap_spread": spread,
+                         "seasonal_months": seasonal_months, "verdict": verdict},
             "days_since_last": since,
             "due_window": [ (last.fromordinal(last.toordinal() + int(median_gap * 0.75))).isoformat(),
                             (last.fromordinal(last.toordinal() + int(median_gap * 1.25))).isoformat() ] if has_pattern else None})

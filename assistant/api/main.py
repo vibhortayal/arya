@@ -118,6 +118,7 @@ async def import_costco_json(req: Request):
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
     state.add_receipts([dec])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return dec
 
 
@@ -128,6 +129,7 @@ async def import_bulk(req: Request):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
     added = state.add_receipts(decs)
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"received": len(decs), "added": added, "total_receipts": len(state.receipts())}
 
 
@@ -140,6 +142,7 @@ async def decode_text_route(req: Request):
     client = MetaClient(ledger=CostLedger(_LEDGER))
     dec = decode_text(body.get("text", ""), client)
     state.add_receipts([dec])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return dec
 
 
@@ -206,6 +209,7 @@ async def decode_pdf(req: Request):
     client = MetaClient(ledger=CostLedger(_LEDGER))
     receipt = decode_text(text, client)
     added = state.add_receipts([receipt])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -228,6 +232,7 @@ async def decode_photo_route(req: Request):
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     added = state.add_receipts([receipt])
+    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -333,8 +338,107 @@ def approve_route():
 @app.post("/api/items/{item_id}/flag")
 async def flag_route(item_id: str, req: Request):
     body = await req.json()
-    state.set_flag(item_id, body)
-    return {"item_id": item_id, "flags": body}
+    merged = dict(state.flags().get(item_id, {}))
+    merged.update(body)
+    state.set_flag(item_id, merged)
+    return {"item_id": item_id, "flags": merged}
+
+
+def _merge_flag(item_id, fields):
+    merged = dict(state.flags().get(item_id, {}))
+    merged.update(fields)
+    state.set_flag(item_id, merged)
+    return merged
+
+
+@app.get("/api/list/candidates")
+def list_candidates():
+    d = state.derived()
+    nm = state.names()
+    on_list = {i["item_id"] for i in d["smart_list"]["items"]}
+    return {"candidates": [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
+                            "on_list": p["item_id"] in on_list}
+                           for p in d["patterns"] if p["purchase_count"] >= 1]}
+
+
+@app.post("/api/judge/run")
+def judge_run():
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    return {"judged": state.judge_pending(client)}
+
+
+@app.post("/api/list/add")
+async def list_add(req: Request):
+    body = await req.json()
+    item_id = body.get("item_id")
+    if not item_id and body.get("name"):
+        import re as _re
+        item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", body["name"].strip().lower()).strip("-")
+        _merge_flag(item_id, {"manual": True, "name": body["name"].strip(), "dismissed_on": None})
+        return {"item_id": item_id}
+    if not item_id:
+        raise HTTPException(400, "item_id or name is required")
+    _merge_flag(item_id, {"manual": True, "dismissed_on": None})
+    return {"item_id": item_id}
+
+
+@app.post("/api/list/remove")
+async def list_remove(req: Request):
+    body = await req.json()
+    item_id = body.get("item_id")
+    if not item_id:
+        raise HTTPException(400, "item_id is required")
+    _merge_flag(item_id, {"manual": False, "dismissed_on": state.as_of()})
+    return {"ok": True}
+
+
+@app.post("/api/list/qty")
+async def list_qty(req: Request):
+    body = await req.json()
+    qty = max(1, int(body.get("qty") or 1))
+    _merge_flag(body.get("item_id"), {"qty_override": qty})
+    return {"ok": True}
+
+
+@app.post("/api/list/check")
+async def list_check(req: Request):
+    body = await req.json()
+    _merge_flag(body.get("item_id"),
+                {"checked_on": state.as_of() if body.get("checked") else None})
+    return {"ok": True}
+
+
+@app.post("/api/review/line")
+async def review_line(req: Request):
+    body = await req.json()
+    action = body.get("action")
+    if action == "confirm":
+        line = state.update_receipt_line(body["receipt_id"], int(body["idx"]), {"status": "auto"})
+    elif action == "rename":
+        name = (body.get("name") or "").strip()
+        if not name:
+            raise HTTPException(400, "name is required to rename")
+        line = state.update_receipt_line(body["receipt_id"], int(body["idx"]),
+                                         {"status": "auto", "decoded_name": name})
+        if line:
+            state.teach_name(line.get("sku"), name)
+    else:
+        raise HTTPException(400, "action must be confirm or rename")
+    if line is None:
+        raise HTTPException(404, "no such line")
+    return {"ok": True}
+
+
+@app.post("/api/review/resolve")
+async def review_resolve(req: Request):
+    body = await req.json()
+    name = (body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(400, "name is required")
+    entry = state.resolve_dictionary(body.get("item_id"), name)
+    if entry is None:
+        raise HTTPException(404, "no such item")
+    return {"ok": True}
 
 
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
