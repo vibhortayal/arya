@@ -164,9 +164,10 @@ def home():
                 checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
                                "text": f"{nm.get(p['item_id'], p['item_id'])} from {p['last_bought']} usually turns about now — still good?"})
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
+            "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
             f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
-           for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3]
+           for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3 and p.get("admitted")]
     return {"as_of": state.as_of(), "running_low": low,
             "list": d["smart_list"], "cart": state.get_cart(),
             "seen": seen, "checks": checks}

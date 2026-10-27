@@ -6,89 +6,112 @@
 <title>Arya</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#1e6b3c">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header>
-  <h1>Arya</h1>
-  <p id="asof" class="muted"></p>
+  <span class="wordmark">Arya</span>
   <p id="userbar" class="muted" hidden><span id="username"></span> · <a href="#" id="signout">Sign out</a></p>
-  <p id="demobar" class="muted" hidden>Demo household — fictional data, read-only.</p>
 </header>
+<p id="demobar" class="note" hidden>Demo household — fictional data, read-only.</p>
+<div id="toast" role="status" aria-live="polite" hidden></div>
 
 <section id="view-login" class="view" hidden>
-  <h2 id="login-title">Sign in</h2>
-  <form id="login-form">
-    <label class="file-label">Username
+  <h2 class="largetitle" id="login-title">Sign in</h2>
+  <form id="login-form" class="group pad">
+    <label class="field">Username
       <input type="text" id="login-user" autocomplete="username" required>
     </label>
-    <label class="file-label">Password
+    <label class="field">Password
       <input type="password" id="login-pass" autocomplete="current-password" required>
     </label>
-    <p><button type="submit" id="login-btn">Sign in</button></p>
+    <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
     <p id="login-error" class="muted"></p>
   </form>
-  <p class="muted">Just looking? <button id="demo-btn" class="secondary" type="button">Try the demo household</button></p>
-  <p class="muted">The demo is a fictional household. It is read-only and makes no model calls.</p>
+  <div class="group pad">
+    <p class="nomargin">Just looking?</p>
+    <p><button id="demo-btn" class="btn secondary" type="button">Try the demo household</button></p>
+    <p class="muted nomargin">The demo is a fictional household. It is read-only and makes no model calls.</p>
+  </div>
 </section>
 
 <main id="app-main" hidden>
   <section id="view-home" class="view">
-    <h2>Running low</h2>
-    <div id="running-low"></div>
-    <h2>Your list</h2>
-    <div id="smart-list"></div>
-    <h2>Prepared cart</h2>
-    <div id="cart"></div>
+    <h2 class="largetitle">Today</h2>
+    <p id="asof" class="subtitle"></p>
+    <h3 class="sect">Running low</h3>
+    <div id="running-low" class="group"></div>
+    <h3 class="sect">Your list</h3>
+    <div id="smart-list" class="group"></div>
+    <button id="btn-list-add" class="btn secondary wide" type="button">Add item</button>
+    <div id="add-picker" class="group pad" hidden>
+      <input type="text" id="add-q" placeholder="Search your items, or type a new one" autocomplete="off">
+      <div id="add-cands"></div>
+    </div>
+    <div id="home-notes"></div>
+    <h3 class="sect">Prepared cart</h3>
+    <div id="cart" class="group"></div>
   </section>
 
   <section id="view-scan" class="view" hidden>
-    <h2>Add a receipt</h2>
-    <label class="file-label">Receipt — a PDF, or a photo of the paper receipt
-      <input type="file" id="receipt-file" accept="application/pdf,image/*">
-    </label>
-    <button id="btn-receipt" class="secondary">Read this receipt</button>
-    <p id="receipt-result" class="muted"></p>
-    <h2>Eyes — what&rsquo;s inside</h2>
-    <label class="file-label">Photo of the fridge, pantry, freezer, or fruit
-      <input type="file" id="eyes-file" accept="image/*">
-    </label>
-    <label class="file-label">Place
-      <select id="eyes-kind">
-        <option value="fridge">Fridge</option>
-        <option value="pantry">Pantry</option>
-        <option value="freezer">Freezer</option>
-        <option value="fruit">Fruit</option>
-      </select>
-    </label>
-    <button id="btn-eyes" class="secondary">See what&rsquo;s inside</button>
-    <p id="eyes-result" class="muted"></p>
-    <div id="eyes-records"></div>
-    <h2>Review queue</h2>
-    <div id="review"></div>
+    <h2 class="largetitle">Scan</h2>
+    <h3 class="sect">Add a receipt</h3>
+    <div class="group pad">
+      <label class="field">Receipt — a PDF, or a photo of the paper receipt
+        <input type="file" id="receipt-file" accept="application/pdf,image/*">
+      </label>
+      <p><button id="btn-receipt" class="btn primary">Read this receipt</button></p>
+      <p id="receipt-result" class="muted"></p>
+    </div>
+    <h3 class="sect">Eyes — what&rsquo;s inside</h3>
+    <div class="group pad">
+      <label class="field">Photo of the fridge, pantry, freezer, or fruit
+        <input type="file" id="eyes-file" accept="image/*">
+      </label>
+      <label class="field">Place
+        <select id="eyes-kind">
+          <option value="fridge">Fridge</option>
+          <option value="pantry">Pantry</option>
+          <option value="freezer">Freezer</option>
+          <option value="fruit">Fruit</option>
+        </select>
+      </label>
+      <p><button id="btn-eyes" class="btn primary">See what&rsquo;s inside</button></p>
+      <p id="eyes-result" class="muted"></p>
+      <div id="eyes-records"></div>
+    </div>
+    <h3 class="sect">Review queue</h3>
+    <div id="review" class="group"></div>
   </section>
 
   <section id="view-chat" class="view" hidden>
-    <h2>Ask Arya</h2>
+    <h2 class="largetitle">Ask Arya</h2>
+    <p id="chat-demo-note" class="note" hidden>Chat works on the owner&rsquo;s account. The demo household is read-only, so Ask is view-only here.</p>
     <div id="chat-log"></div>
     <form id="chat-form">
-      <label class="file-label">Message
-        <input type="text" id="chat-input" placeholder="What&rsquo;s running low? · We finished the yogurt" autocomplete="off">
-      </label>
-      <p><button type="submit" class="secondary">Send</button></p>
+      <button id="btn-mic" type="button" class="iconbtn" aria-label="Speak your message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+      </button>
+      <input type="text" id="chat-input" placeholder="What&rsquo;s running low?" autocomplete="off" aria-label="Message">
+      <button id="btn-speak" type="button" class="iconbtn" aria-label="Toggle spoken replies" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+      </button>
+      <button type="submit" class="btn primary" id="chat-send">Send</button>
     </form>
+    <p id="voice-note" class="muted" hidden></p>
   </section>
 
   <section id="view-dash" class="view" hidden>
-    <h2>Dashboard</h2>
-    <div id="dash-totals"></div>
-    <h3>Spend by month</h3>
-    <div id="dash-months"></div>
-    <h3>Spend by store</h3>
-    <div id="dash-stores"></div>
-    <h3>Top items</h3>
-    <div id="dash-top"></div>
+    <h2 class="largetitle">Dashboard</h2>
+    <div id="dash-totals" class="group"></div>
+    <h3 class="sect">Spend by month</h3>
+    <div id="dash-months" class="group pad"></div>
+    <h3 class="sect">Spend by store</h3>
+    <div id="dash-stores" class="group"></div>
+    <h3 class="sect">Top items</h3>
+    <div id="dash-top" class="group"></div>
   </section>
 
   <section id="view-item" class="view" hidden>
@@ -98,10 +121,22 @@
 </main>
 
 <nav id="tabs" hidden>
-  <button data-view="view-home" class="active">Home</button>
-  <button data-view="view-scan">Scan</button>
-  <button data-view="view-chat">Ask</button>
-  <button data-view="view-dash">Dashboard</button>
+  <button data-view="view-home" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h11V10"/></svg>
+    <span>Home</span>
+  </button>
+  <button data-view="view-scan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16"/></svg>
+    <span>Scan</span>
+  </button>
+  <button data-view="view-chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-8 8c-1.2 0-2.4-.25-3.4-.7L4 20l.8-4.2A8 8 0 1 1 20 12z"/></svg>
+    <span>Ask</span>
+  </button>
+  <button data-view="view-dash">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V4M19 20v-5"/><path d="M3.5 20h17"/></svg>
+    <span>Dashboard</span>
+  </button>
 </nav>
 
 <script src="app.js"></script>
