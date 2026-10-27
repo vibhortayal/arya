@@ -1,6 +1,6 @@
 # STATUS — where Arya stands (updated 2026-10-27)
 
-**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Public HTTPS is up at the stable name **https://arya-pilot.duckdns.org** (owner's DuckDNS, set to the VM IP 165.1.78.155; Caddy obtained a Let's Encrypt certificate 2026-10-27 — validation succeeded, so ports 80/443 are publicly reachable). The Cloudflare quick tunnel remains as a backup door. Optional: the owner sends the DuckDNS token and an auto-updater goes on the VM. Remaining: the owner's phone check. Stages 0–2 done except the photo path (Gate 0).**
+**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Public HTTPS is up at the stable name **https://arya-pilot.duckdns.org** (owner's DuckDNS, set to the VM IP 165.1.78.155; Caddy obtained a Let's Encrypt certificate 2026-10-27 — validation succeeded, so ports 80/443 are publicly reachable). The Cloudflare quick tunnel remains as a backup door. DuckDNS updater installed on the VM (systemd timer, 5 min; token in ~/.config/duckdns/token, 600, VM only — verified OK). AUTH IS LIVE: accounts + session cookies, per-user data; the API returns 401 signed-out; first-run setup is open for exactly one account, which adopts the seeded household data. Remaining: the owner creates his account and does the phone check. Stages 0–2 done except the photo path (Gate 0).**
 Deadline: submission Nov 4, 2026, 9:00 PM ET.
 
 | Stage | State |
