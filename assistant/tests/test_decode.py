@@ -57,9 +57,12 @@ class TestApi(unittest.TestCase):
     def test_import_route(self):
         import tempfile
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["ARYA_INSECURE_COOKIE"] = "1"
         from fastapi.testclient import TestClient
         from api.main import app
         c = TestClient(app)
+        self.assertEqual(c.get("/api/home").status_code, 401)  # auth gate
+        c.post("/auth/setup", json={"username": "test", "password": "pw-test"})
         resp = c.post("/import/costco-json", json=load("synthetic-costco-receipt.json"))
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()["totals_reconcile"])

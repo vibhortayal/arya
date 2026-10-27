@@ -159,4 +159,43 @@ $("#btn-decode").addEventListener("click", async () => {
 });
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
-refresh("view-home");
+
+async function boot() {
+  const status = await api("/auth/status").catch(() => ({ has_users: true }));
+  const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
+  if (me) {
+    enterApp(me.user);
+    return;
+  }
+  document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-login"; });
+  $("#login-title").textContent = status.has_users ? "Sign in" : "Create your account";
+  $("#login-btn").textContent = status.has_users ? "Sign in" : "Create account";
+  $("#login-form").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const body = JSON.stringify({ username: $("#login-user").value, password: $("#login-pass").value });
+    const path = status.has_users ? "/auth/login" : "/auth/setup";
+    const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+    if (!r.ok) {
+      $("#login-error").textContent = (await r.json().catch(() => ({}))).detail || "Sign-in failed.";
+      return;
+    }
+    const data = await r.json();
+    enterApp(data.user);
+  });
+}
+
+function enterApp(user) {
+  $("#view-login").hidden = true;
+  $("#app-main").hidden = false;
+  $("#tabs").hidden = false;
+  $("#userbar").hidden = false;
+  $("#username").textContent = user;
+  show("view-home");
+  refresh("view-home");
+}
+$("#signout").addEventListener("click", async ev => {
+  ev.preventDefault();
+  await fetch("/auth/logout", { method: "POST" });
+  location.reload();
+});
+boot();

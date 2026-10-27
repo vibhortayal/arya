@@ -68,3 +68,8 @@ textarea {
 .empty { color: var(--muted); padding: 10px 0; }
 .cart-state { font-weight: 550; }
 .fade { transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+input[type="text"], input[type="password"] {
+  width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px; background: #fff; color: var(--ink); margin-top: 6px;
+}
