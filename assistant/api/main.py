@@ -30,6 +30,12 @@ def _budget_guard():
 
 _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
+# The demo household is read-only, with two live doors carved out: the
+# Add tab's Photo and Voice doors call the Meta API on camera and
+# persist nothing (the photo route returns a preview instead of
+# filing; transcription is stateless). Every other demo write is 403.
+_DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe")
+
 
 @app.middleware("http")
 async def require_login(request, call_next):
@@ -46,10 +52,23 @@ async def require_login(request, call_next):
             info = auth.session_info(request.cookies.get(auth.COOKIE))
         if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
-        if info["demo"] and request.method != "GET":
+        if info["demo"] and request.method != "GET" and path not in _DEMO_LIVE_DOORS:
             return JSONResponse({"detail": "the demo household is read-only"}, status_code=403)
         state.set_current_user(info["user"])
     return await call_next(request)
+
+
+def _is_demo(req):
+    """Demo sessions ride the cookie; connector tokens are never demo
+    (minting one requires a real account). Sessions live in the root
+    store, so read them with the per-user context cleared — the
+    middleware has already set it by the time a route runs."""
+    tok = state._current_user.set(None)
+    try:
+        info = auth.session_info(req.cookies.get(auth.COOKIE))
+    finally:
+        state._current_user.reset(tok)
+    return bool(info and info["demo"])
 
 
 def _set_session_cookie(resp, token):
@@ -388,9 +407,43 @@ async def decode_photo_route(req: Request):
         receipt = decode_photo(body, client, media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+    if _is_demo(req):
+        # The demo's Photo door runs the same live read and shows the
+        # lines as a preview; nothing is filed, nothing is judged.
+        return {"demo": True, "added": 0, "receipt": receipt}
     added = state.add_receipts([receipt])
     state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
+
+
+@app.post("/api/transcribe")
+async def transcribe_route(req: Request):
+    """Muse Voice Transcribe, proxied: the browser sends a WAV
+    recording (mono 16-bit PCM, 16 kHz — the batch endpoint's input
+    contract) and the server key makes the call. Stateless by design:
+    the transcript is returned, never stored, for every account
+    including the demo."""
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if media not in ("audio/wav", "audio/x-wav", "audio/wave"):
+        raise HTTPException(415, "send a WAV recording (audio/wav)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty recording")
+    if len(body) > 10_000_000:
+        raise HTTPException(413, "recording too large — keep it under a few minutes")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    from api.voice.service import transcribe_audio
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        out = transcribe_audio(body, client)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    return {"text": out["text"], "duration_s": out["duration_s"],
+            "model": "muse-voice-transcribe-1.0", "demo": _is_demo(req)}
 
 
 @app.post("/eyes/photo")
