@@ -79,6 +79,8 @@ def match_item(name, name_index):
             if not kt:
                 continue
             score = len(target & kt) / max(len(target | kt), 1)
+            if target and (target <= kt or kt <= target):
+                score = max(score, 0.5)  # "Milk" inside "Whole Milk 1 gal" is a match
             if score > best_score:
                 best, best_score = item_id, score
     return best if best_score >= 0.34 else None
