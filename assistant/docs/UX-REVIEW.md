@@ -80,3 +80,28 @@ or annoys, S3 polish.
 - The judge is cached per item and re-runs when purchases move by 2+;
   between runs, a brand-new kind of purchase waits for the next import
   hook, which judges pending items automatically.
+
+## Addendum — screenshot walkthrough of the pre-fix build (same day)
+
+An independent walkthrough (demo household, 21 screenshots) confirmed
+findings 1, 2, 3, 10, 11, 13 from the app itself, and added:
+
+16. **S2 — "Still good?" checks had no way to answer.** Fix: each check
+    now carries "Still good" (acknowledged for the cycle) and "It
+    expired" (the existing expired path). DONE.
+17. **S2 — The cart asked for approval blind.** No items, no quantities.
+    Fix: the cart section lists its items and states that approving
+    places no order. DONE.
+18. **S2 — Dashboard and item page disagreed.** Top items were gross of
+    returns; item totals are net. Fix: top items are net of returns and
+    the dashboard labels its period in human months ("May 2026", not
+    "2026-05"). DONE.
+19. **S3 — A price range of one price** ("$12.30 – $12.30"). Fix: a
+    single price when min equals max; history is labelled "Recent".
+    DONE.
+20. **S3 — Demo Scan still offered live file pickers** while uploads
+    were off. Fix: inputs disable in demo, like the buttons. DONE.
+21. **Noted, not built:** forgot-password and show-password on the
+    sign-in screen. Registration is closed and the pilot has exactly
+    one account; a recovery flow with no mail channel behind it would
+    be a fake affordance. Revisit if registration opens.

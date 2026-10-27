@@ -83,13 +83,17 @@ async function renderHome() {
     notes += h.seen.map(s => `<div class="row"><div class="grow"><span class="name">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`).join("");
   }
   if (h.checks && h.checks.length) {
-    notes += h.checks.map(c => `<div class="row"><div class="grow"><span class="sub" style="font-size:15px">${esc(c.text)}</span></div></div>`).join("");
+    notes += h.checks.map(c => `<div class="row"><div class="grow"><span style="font-size:15px">${esc(c.text)}</span></div><div>
+      <button class="chip" data-check-ok="${esc(c.item_id)}">Still good</button>
+      <button class="chip" data-check-expired="${esc(c.item_id)}">It expired</button></div></div>`).join("");
   }
   $("#home-notes").innerHTML = notes ? `<h3 class="sect">Worth a look</h3><div class="group">${notes}</div>` : "";
   const c = h.cart;
   $("#cart").innerHTML =
     row(`${esc(c.store)} · ${c.items.length} items`, c.state === "approved" ? "Approved" : "Waiting for your approval",
-        c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`);
+        c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`) +
+    c.items.map(i => `<div class="row"><div class="grow"><span>${esc(i.name)}</span></div><div class="money">× ${qtyFmt(i.qty)}</div></div>`).join("") +
+    `<p class="muted">Approving does not place an order. The cart is a list you take to the store.</p>`;
   const b = $("#btn-approve");
   if (b) b.addEventListener("click", async () => {
     b.disabled = true;
@@ -119,6 +123,21 @@ $("#smart-list").addEventListener("click", async ev => {
     if (btn.dataset.act === "inc") await post("/api/list/qty", { item_id: id, qty: Number(item.qty) + 1 });
     if (btn.dataset.act === "dec") await post("/api/list/qty", { item_id: id, qty: Math.max(1, Number(item.qty) - 1) });
     if (btn.dataset.act === "remove") { await post("/api/list/remove", { item_id: id }); toast(`${item.name} removed. It can come back next cycle.`); }
+    renderHome();
+  } catch (e) { toast(e.message); }
+});
+
+$("#home-notes").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-check-ok], [data-check-expired]");
+  if (!b) return;
+  try {
+    if (b.dataset.checkOk) {
+      await post("/api/list/check-ok", { item_id: b.dataset.checkOk });
+      toast("Noted. I will ask again next cycle.");
+    } else {
+      await post(`/api/items/${encodeURIComponent(b.dataset.checkExpired)}/expired`);
+      toast("Marked expired and put on your list.");
+    }
     renderHome();
   } catch (e) { toast(e.message); }
 });
@@ -304,15 +323,19 @@ $("#btn-eyes").addEventListener("click", async () => {
 
 async function renderDash() {
   const d = await api("/api/dashboard");
+  const monthKeys = Object.keys(d.spend_by_month).sort();
+  const monthName = k => `${MONTHS[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}`;
+  const period = monthKeys.length ? `${monthName(monthKeys[0])} – ${monthName(monthKeys[monthKeys.length - 1])}` : "";
   $("#dash-totals").innerHTML =
+    (period ? `<p class="muted" style="padding-top:10px">${period} · after returns, item totals match the item pages</p>` : "") +
     row("Spend", "", money(d.spend_total)) +
     row("Returns", "", "−" + money(d.returns_total)) +
-    row("Bought for others", "", money(d.for_others_total)) +
+    row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) +
     row("Trips", "", String(d.trip_count));
   const months = Object.entries(d.spend_by_month);
   const max = Math.max(...months.map(([, v]) => v), 1);
   $("#dash-months").innerHTML = months.map(([m, v]) =>
-    `<div class="month-row"><span>${esc(m)}</span><div class="track"><div class="bar" style="width:${Math.round(v / max * 100)}%"></div></div><span class="money">${money(v)}</span></div>`).join("") || empty("No trips yet.");
+    `<div class="month-row"><span>${esc(monthName(m))}</span><div class="track"><div class="bar" style="width:${Math.round(v / max * 100)}%"></div></div><span class="money">${money(v)}</span></div>`).join("") || empty("No trips yet.");
   $("#dash-stores").innerHTML = Object.entries(d.spend_by_store)
     .sort((a, b) => b[1] - a[1]).map(([s, v]) => row(esc(s), "", money(v))).join("") || empty("No trips yet.");
   $("#dash-top").innerHTML = d.top_items.map(i =>
@@ -343,10 +366,10 @@ async function renderItem(id) {
   const stores = Object.entries(d.price_by_store);
   if (stores.length) {
     html += `<h3 class="sect">Price by store</h3><div class="group">` + stores.map(([s, v]) =>
-      row(esc(s), `${v.count} buys`, `${money(v.min)} – ${money(v.max)}`)).join("") + `</div>`;
+      row(esc(s), `${v.count} buys`, v.min === v.max ? money(v.min) : `${money(v.min)} – ${money(v.max)}`)).join("") + `</div>`;
   }
   if (d.history.length) {
-    html += `<h3 class="sect">History</h3><div class="group">` + d.history.slice(0, 10).map(h =>
+    html += `<h3 class="sect">Recent history</h3><div class="group">` + d.history.slice(0, 10).map(h =>
       row(fmtDate(h.date), h.event_type === "return" ? "Returned" : esc(h.store_id || ""),
           `<span class="${h.event_type === "return" ? "return" : ""}">${h.event_type === "return" ? "−" : ""}${money(h.price)}</span>`)).join("") + `</div>`;
   }
@@ -513,6 +536,7 @@ function enterApp(user, demo) {
     if (rb) { rb.disabled = true; rb.textContent = "Uploads are off in the demo"; }
     const eb = $("#btn-eyes");
     if (eb) { eb.disabled = true; eb.textContent = "Eyes is off in the demo"; }
+    ["receipt-file", "eyes-file", "eyes-kind"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
     $("#chat-demo-note").hidden = false;
     $("#chat-input").disabled = true;
     $("#chat-send").disabled = true;

@@ -155,14 +155,19 @@ def home():
              "date": p["seen"]["date"], "kind": p["seen"].get("kind")}
             for p in d["patterns"] if p.get("seen")]
     checks = []
+    _fl = state.flags()
+    _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for p in d["patterns"]:
         prior = prior_days(nm.get(p["item_id"], ""))
         if prior and p.get("last_bought") and not p["due"]:
+            if _fl.get(p["item_id"], {}).get("check_ok") == state.as_of():
+                continue  # the user already answered this cycle
             from datetime import date as _d
             age = (_d.fromisoformat(state.as_of()) - _d.fromisoformat(p["last_bought"])).days
             if age >= prior:
+                _lb = p["last_bought"]
                 checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
-                               "text": f"{nm.get(p['item_id'], p['item_id'])} from {p['last_bought']} usually turns about now — still good?"})
+                               "text": f"{nm.get(p['item_id'], p['item_id'])} from {_MON[int(_lb[5:7]) - 1]} {int(_lb[8:10])} usually turns about now — still good?"})
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
@@ -406,6 +411,15 @@ async def list_check(req: Request):
     body = await req.json()
     _merge_flag(body.get("item_id"),
                 {"checked_on": state.as_of() if body.get("checked") else None})
+    return {"ok": True}
+
+
+@app.post("/api/list/check-ok")
+async def list_check_ok(req: Request):
+    body = await req.json()
+    if not body.get("item_id"):
+        raise HTTPException(400, "item_id is required")
+    _merge_flag(body["item_id"], {"check_ok": state.as_of()})
     return {"ok": True}
 
 
