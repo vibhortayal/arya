@@ -345,7 +345,8 @@ def review_queue():
                 lines.append({"receipt_id": r["receipt_id"], "idx": li, "date": r["purchased_at"],
                               "raw": ln["raw"], "decoded_name": ln.get("decoded_name"),
                               "confidence": ln.get("confidence"),
-                              "alternatives": ln.get("alternatives", [])})
+                              "alternatives": ln.get("alternatives", []),
+                              "suggested": ln.get("suggested")})
     unresolved = [{"item_id": e["item_id"], "name": e["canonical_name"],
                    "candidates": e["resolution"].get("candidates", []),
                    "sources": e["resolution"].get("sources", {})}
@@ -391,6 +392,22 @@ def suggest_resolution(item_id, candidates):
             res["sources"] = {c["name"]: c.get("source", "")
                               for c in candidates if c.get("source")}
             _save("dictionary.json", d)
+            return True
+    return False
+
+
+def suggest_line(receipt_id, idx, name, source):
+    """A researched name for one unverified receipt line, with its
+    source. A proposal only: the line stays unverified until the user
+    confirms or renames it."""
+    rs = receipts()
+    for r in rs:
+        if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
+            ln = r["lines"][idx]
+            if ln.get("status") != "unverified":
+                return False
+            ln["suggested"] = {"name": name, "source": source}
+            _save("receipts.json", rs)
             return True
     return False
 

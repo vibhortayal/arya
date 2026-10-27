@@ -250,6 +250,14 @@ async def review_suggest(req: Request):
     user's Muse (the Resolver loop). Candidates carry their source;
     settling still takes the user's word."""
     body = await req.json()
+    if body.get("receipt_id"):
+        name = (body.get("name") or "").strip()
+        if not name:
+            raise HTTPException(422, "a line suggestion needs a name")
+        if not state.suggest_line(body["receipt_id"], int(body.get("idx", -1)),
+                                  name, body.get("source", "")):
+            raise HTTPException(404, "no unverified line with that id")
+        return {"ok": True, "name": name}
     cands = body.get("candidates") or []
     clean = [{"name": c["name"], "source": c.get("source", "")}
              for c in cands if isinstance(c, dict) and c.get("name")]

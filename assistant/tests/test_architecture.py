@@ -112,8 +112,25 @@ class TestResolver(unittest.TestCase):
         state._save("dictionary.json", {"entries": [
             {"item_id": "sku-x", "sku": "999", "canonical_name": "Mystery Can",
              "resolution": {"status": "unresolved", "candidates": []}}]})
+        state._save("receipts.json", [{
+            "receipt_id": "r-1", "merchant": "Costco", "purchased_at": "2026-01-01",
+            "lines": [{"raw": "BISSELL3857P", "decoded_name": "BISSELL3857P",
+                       "sku": "3670779", "qty": 1, "line_total": 99.99,
+                       "status": "unverified"}],
+            "subtotal": 99.99, "tax": 0, "total": 99.99}])
         r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
         assert r.status_code == 200, r.text
+
+    def test_suggest_line(self):
+        r = self.c.post("/api/review/suggest", json={
+            "receipt_id": "r-1", "idx": 0,
+            "name": "Bissell Little Green MultiClean", "source": "https://example.com/b"})
+        assert r.status_code == 200, r.text
+        q = self.c.get("/api/review").json()
+        assert q["lines"][0]["suggested"]["name"] == "Bissell Little Green MultiClean"
+        r = self.c.post("/api/review/suggest", json={
+            "receipt_id": "r-1", "idx": 9, "name": "X"})
+        assert r.status_code == 404
 
     def test_suggest_then_settle(self):
         r = self.c.post("/api/review/suggest", json={
