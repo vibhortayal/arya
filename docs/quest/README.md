@@ -42,6 +42,7 @@ If your store is not mapped yet, you map it: one walkthrough video of the aisles
 
 ## Status
 
-- Engine (Arya): live, tested (60 tests), real household data.
-- UX: 10-screen clickable wireframe browser (sessions, list panel, Quest/Express, receipt finish, Community) — **approved by the owner 2026-10-27**; it is the build reference.
-- 3D spike: in progress — a Trader Joe's walkthrough (Chino Hills, CA) cut to a 90-second aisle stretch, 90 frames, VGGT-Ω reconstruction running. Verdict gates the full-3D plan; fallback is a 2.5D store map with the same game.
+- Engine (Arya): live, tested (83 tests), real household data.
+- Game (Stages A–C): live — sessions, the Optimizer, Shop-Off, friends/profile/badges, the playable PWA (hub, hunt, Community), the Spotter report slice, and the cloud SceneDriver rendering the real VGGT point cloud in the Hunt screen, with the Aisle/Strip ladder underneath.
+- UX: the full wireframe set (Quest screens + Brain B1–B6 + friend-run panel) — **approved by the owner 2026-10-27**; it is the build reference. Intake parity (in-app Photo + Voice doors on the Meta API) and the Brain restyle to the wireframes are the active builds.
+- 3D spike: **PASSED** — a Trader Joe's walkthrough (Chino Hills, CA), 90 frames, VGGT-1B: 1.2M-point cloud + 90 poses; the web asset (373,630 points) ships in the app. Shelf graph (SAM 3.1 + Spark labels) in build.
