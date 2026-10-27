@@ -6,7 +6,7 @@ Deadline: submission Nov 4, 2026, 9:00 PM ET.
 | Stage | State |
 | --- | --- |
 | 0.5 Spikes | Spike 1 PASS (PDF decode 7/7 arithmetic). Spike B closed: owner plan B — uploads/exports. Gate 0 photo decode: owner subset 32/32 lines; public subset running (external). |
-| 0 Foundations | Repo + layout ✓ · model policy ✓ · meta_client + cost_ledger ✓ (6 tests green) · eval harness skeleton ✓ · Oracle skeleton — next · owner provisions Oracle API key — owner's hand, at that step |
+| 0 Foundations | Repo + layout ✓ · model policy ✓ · meta_client + cost_ledger ✓ (6 tests green) · eval harness skeleton ✓ · Oracle skeleton LIVE ✓ (db healthy, api + caddy up on the VM; GET :8081/health returns ok) · owner provisions Oracle API key — owner's hand, when runtime calls begin |
 | 1 Decode API | Not started. Inputs: PDF text, JSON import, photo. Prompt v2: savings fold, line types, allocation. Dictionary v1 from the staged corpus. |
 | 2 Patterns/list/cart | Not started. Deterministic code on staged history. |
 | 3 PWA-core | Not started (no pwa/ folder before this stage). |
