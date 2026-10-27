@@ -607,6 +607,158 @@ async def review_resolve(req: Request):
     return {"ok": True}
 
 
+# --- Arya Quest (Stage A): sessions, optimizer, Shop-Off, social ---
+
+@app.post("/api/quest/sessions")
+async def quest_create_session(req: Request):
+    body = await req.json()
+    store = (body.get("store") or "").strip()
+    if not store:
+        raise HTTPException(400, "store is required")
+    from api import quest
+    try:
+        sess = quest.create_session(store, body.get("mode") or "quest",
+                                    body.get("items") or [])
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return sess
+
+
+@app.get("/api/quest/sessions")
+def quest_list_sessions():
+    from api import quest
+    return {"sessions": quest.list_sessions()}
+
+
+@app.get("/api/quest/sessions/{session_id}")
+def quest_get_session(session_id: str):
+    from api import quest
+    sess = quest.get_session(session_id)
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    return sess
+
+
+@app.post("/api/quest/sessions/{session_id}/items")
+async def quest_add_item(session_id: str, req: Request):
+    body = await req.json()
+    name = (body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(400, "name is required")
+    from api import quest
+    sess = quest.add_item(session_id, name, body.get("qty", 1))
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    return sess
+
+
+@app.post("/api/quest/sessions/{session_id}/check")
+async def quest_check(session_id: str, req: Request):
+    body = await req.json()
+    if not body.get("item"):
+        raise HTTPException(400, "item is required")
+    from api import quest
+    sess = quest.check_item(session_id, body["item"], body.get("checked", True))
+    if sess is None:
+        raise HTTPException(404, "no such item in this session")
+    return sess
+
+
+@app.post("/api/quest/sessions/{session_id}/state")
+async def quest_set_state(session_id: str, req: Request):
+    body = await req.json()
+    from api import quest
+    try:
+        sess = quest.set_state(session_id, body.get("state", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    return sess
+
+
+@app.post("/api/quest/sessions/{session_id}/receipt")
+async def quest_attach_receipt(session_id: str, req: Request):
+    body = await req.json()
+    receipt_id = body.get("receipt_id")
+    if not receipt_id:
+        raise HTTPException(400, "receipt_id is required")
+    from api import quest
+    if quest.get_session(session_id) is None:
+        raise HTTPException(404, "no such session")
+    sess = quest.attach_receipt(session_id, receipt_id)
+    if sess is None:
+        raise HTTPException(404, "no such receipt")
+    return sess
+
+
+@app.post("/api/quest/optimize")
+async def quest_optimize(req: Request):
+    body = await req.json()
+    items = body.get("items")
+    if not isinstance(items, list) or not items:
+        raise HTTPException(400, "items is required")
+    from api.optimizer import optimize
+    return optimize(items, store=body.get("store"))
+
+
+@app.post("/api/quest/shopoff")
+async def quest_create_shopoff(req: Request):
+    body = await req.json()
+    store = (body.get("store") or "").strip()
+    if not store:
+        raise HTTPException(400, "store is required")
+    from api import quest
+    try:
+        race = quest.create_shopoff(store, body.get("items") or [],
+                                    body.get("opponent_handle", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return race
+
+
+@app.get("/api/quest/shopoff/{race_id}")
+def quest_get_shopoff(race_id: str):
+    from api import quest
+    race = quest.get_shopoff(race_id)
+    if race is None:
+        raise HTTPException(404, "no such race")
+    return race
+
+
+@app.get("/api/quest/friends")
+def quest_list_friends():
+    from api import social
+    return {"friends": social.list_friends()}
+
+
+@app.post("/api/quest/friends")
+async def quest_request_friend(req: Request):
+    body = await req.json()
+    from api import social
+    try:
+        friend = social.request_friend(body.get("handle", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return friend
+
+
+@app.post("/api/quest/friends/accept")
+async def quest_accept_friend(req: Request):
+    body = await req.json()
+    from api import social
+    friend = social.accept_friend(body.get("handle", ""))
+    if friend is None:
+        raise HTTPException(404, "no pending request from that handle")
+    return friend
+
+
+@app.get("/api/quest/profile")
+def quest_profile():
+    from api import social
+    return social.profile()
+
+
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 if os.path.isdir(_PWA):
     app.mount("/", StaticFiles(directory=_PWA, html=True), name="pwa")
