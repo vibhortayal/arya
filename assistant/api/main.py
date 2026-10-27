@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import state, auth
-from api.decode.service import decode_text, normalize_costco_json
+from api.decode.service import decode_text, extract_pdf_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
 from api.cart.build import approve
@@ -142,6 +142,27 @@ def item_route(item_id: str):
     if detail["entry"] is None and detail["pattern"] is None:
         raise HTTPException(404, "unknown item")
     return detail
+
+
+@app.post("/decode/pdf")
+async def decode_pdf(req: Request):
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 10_000_000:
+        raise HTTPException(413, "PDF too large (10 MB max)")
+    try:
+        text = extract_pdf_text(body)
+    except Exception:
+        raise HTTPException(422, "could not read this PDF")
+    if len(text.strip()) < 20:
+        raise HTTPException(422, "no text layer in this PDF — scanned receipts use the photo path, which opens after verification")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    receipt = decode_text(text, client)
+    added = state.add_receipts([receipt])
+    return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
 @app.post("/api/cart/approve")

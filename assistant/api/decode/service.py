@@ -101,3 +101,13 @@ def decode_text(text, client):
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
             "image_ref": None}
+
+
+def extract_pdf_text(pdf_bytes):
+    """Text layer of a PDF (digital receipts and e-receipts). Scanned PDFs
+    without a text layer return little or nothing; the caller refuses those
+    until the photo path clears Gate 0."""
+    import io
+    from pypdf import PdfReader
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    return "\n".join((page.extract_text() or "") for page in reader.pages)
