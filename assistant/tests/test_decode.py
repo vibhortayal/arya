@@ -50,7 +50,7 @@ class TestDecodeText(unittest.TestCase):
         self.assertEqual(r["lines"][0]["status"], "auto")
         self.assertEqual(r["lines"][2]["status"], "unverified")   # low confidence
         self.assertEqual(r["lines"][1]["discount_parent_sku"], "96716")
-        self.assertEqual(r["lines"][1]["status"], "unverified")   # inferred attach
+        self.assertEqual(r["lines"][1]["status"], "auto")   # discounts are structural; never queued
 
 
 class TestApi(unittest.TestCase):

@@ -3,10 +3,11 @@
 Paths: normalize_costco_json (structured export, $0, no model),
 decode_text (PDF text via meta_client, Standard + personal).
 Photo decode joins after the Gate 0 verdict.
-Post-rules in code: discount lines must name a parent SKU (orphans attach
-to the previous item line and drop to unverified); status is auto at
-confidence >= 0.8, else unverified; totals_reconcile is computed, never
-taken from the model.
+Post-rules in code: discount lines attach to a parent SKU (named on the
+receipt as "/<sku>", else the previous item line) and are always auto —
+they are structure, not identity, and never enter the review queue;
+status is auto at confidence >= 0.8, else unverified; totals_reconcile
+is computed, never taken from the model.
 """
 import hashlib, json, os
 
@@ -20,14 +21,22 @@ def load_prompt():
 
 
 def _attach_discounts(lines):
+    """Record which item a discount belongs to (metadata only). A
+    discount line is structural, never a question for the user: it is
+    auto-verified in _finish whether its parent was named on the
+    receipt ("/<sku>") or inferred from position."""
     last_item_sku = None
     for ln in lines:
         if ln["line_type"] == "item":
             last_item_sku = ln.get("sku")
         elif ln["line_type"] == "discount" and not ln.get("discount_parent_sku"):
             ln["discount_parent_sku"] = last_item_sku
-            ln["status"] = "unverified"  # attachment was inferred, not read
     return lines
+
+
+def _is_discount(ln):
+    return (ln.get("line_type") == "discount"
+            or (ln.get("raw") or "").lstrip().startswith("/"))
 
 
 def _finish(lines, subtotal):
@@ -36,7 +45,9 @@ def _finish(lines, subtotal):
         ln.setdefault("for_person", None)
         ln.setdefault("item_id", None)
         ln.setdefault("judge_agree", None)
-        if "status" not in ln:
+        if _is_discount(ln):
+            ln["status"] = "auto"  # structural line; never queued
+        elif "status" not in ln:
             ln["status"] = "auto" if (ln.get("confidence") or 0) >= AUTO_THRESHOLD else "unverified"
     lines = _attach_discounts(lines)
     s = round(sum(l["line_total"] for l in lines), 2)
