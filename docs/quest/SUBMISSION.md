@@ -34,4 +34,4 @@
 
 ## IP note
 
-Per the event terms, the team keeps ownership and grants the organizers a perpetual, royalty-free license to the submission; anything shared at the event is non-confidential. Store walkthrough footage in the demo is a publicly posted video of a public retail space; platform contribution policy (faces, store permission) is a post-hackathon item, flagged in ARCHITECTURE.md.
+Per the event terms, the team keeps ownership and grants the organizers a perpetual, royalty-free license to the submission; anything shared at the event is non-confidential.
