@@ -55,6 +55,8 @@ class TestDecodeText(unittest.TestCase):
 
 class TestApi(unittest.TestCase):
     def test_import_route(self):
+        import tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         from api.main import app
         c = TestClient(app)

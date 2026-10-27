@@ -17,8 +17,11 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile.api
     environment:
+      ARYA_DATA_DIR: /app/data
       MODEL_API_KEY: ${MODEL_API_KEY:-}
       DATABASE_URL: postgresql://arya:${POSTGRES_PASSWORD:?set in .env}@db:5432/arya
+    volumes:
+      - arya-data:/app/data
     depends_on:
       db:
         condition: service_healthy
@@ -32,3 +35,4 @@ services:
       - api
 volumes:
   arya-db:
+  arya-data:

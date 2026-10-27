@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arya</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1e6b3c">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Arya</h1>
+  <p id="asof" class="muted"></p>
+</header>
+
+<main>
+  <section id="view-home" class="view">
+    <h2>Running low</h2>
+    <div id="running-low"></div>
+    <h2>Your list</h2>
+    <div id="smart-list"></div>
+    <h2>Prepared cart</h2>
+    <div id="cart"></div>
+  </section>
+
+  <section id="view-scan" class="view" hidden>
+    <h2>Add a receipt</h2>
+    <label class="file-label">Costco export (JSON)
+      <input type="file" id="file-json" accept=".json,application/json">
+    </label>
+    <p id="import-result" class="muted"></p>
+    <label class="file-label">Receipt text
+      <textarea id="receipt-text" rows="5" placeholder="Paste receipt text from a PDF"></textarea>
+    </label>
+    <button id="btn-decode" class="secondary">Decode text</button>
+    <p id="decode-result" class="muted"></p>
+    <p class="muted">Photo receipts are being verified and are not open yet.</p>
+    <h2>Review queue</h2>
+    <div id="review"></div>
+  </section>
+
+  <section id="view-dash" class="view" hidden>
+    <h2>Dashboard</h2>
+    <div id="dash-totals"></div>
+    <h3>Spend by month</h3>
+    <div id="dash-months"></div>
+    <h3>Spend by store</h3>
+    <div id="dash-stores"></div>
+    <h3>Top items</h3>
+    <div id="dash-top"></div>
+  </section>
+
+  <section id="view-item" class="view" hidden>
+    <p><a href="#" id="item-back">&larr; Back</a></p>
+    <div id="item-detail"></div>
+  </section>
+</main>
+
+<nav id="tabs">
+  <button data-view="view-home" class="active">Home</button>
+  <button data-view="view-scan">Scan</button>
+  <button data-view="view-dash">Dashboard</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

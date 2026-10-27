@@ -6,4 +6,5 @@ COPY api ./api
 COPY harness ./harness
 COPY prompts ./prompts
 COPY golden ./golden
+COPY pwa ./pwa
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
