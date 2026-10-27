@@ -22,6 +22,7 @@ EXPANSIONS = {
 
 
 def expand(desc):
+    desc = desc.strip("* ").strip()
     toks = [EXPANSIONS.get(t, t.title() if t.isupper() else t) for t in desc.split()]
     return " ".join(toks).strip()
 
