@@ -25,6 +25,7 @@ def _store():
     s.setdefault("sessions", [])
     s.setdefault("shopoffs", [])
     s.setdefault("friends", [])
+    s.setdefault("reports", [])
     return s
 
 
@@ -316,3 +317,72 @@ def get_shopoff(race_id):
         if race["id"] == race_id:
             return race_view(race)
     return None
+
+
+# --- Spotter: "not here" reports (GAME-DESIGN, store drift) ----------------
+# A hunt is a shelf survey: COLLECT confirms presence, a report flags
+# absence. A report edits nothing — it marks the stop "reported
+# missing" and opens the resolution window. The lifecycle is
+# reported -> resolved_stockout | verified_move; those transitions
+# (a later collect clears it as a stockout; an independent confirm at
+# a new spot applies the move) are rollout — this build carries the
+# state field and the data shape only. Rewards land on truth, never
+# on reports, so filing one earns nothing by itself.
+
+REPORT_KINDS = ("empty_shelf", "replaced", "cant_tell")
+REPORT_STATES = ("reported", "resolved_stockout", "verified_move")
+
+
+def report_missing(session_id, item_name, kind, photo=None):
+    """File a "not here" report for an item on a session's list.
+    Returns the report, the existing open report for the same stop
+    (reports are idempotent per stop), or None when the session or
+    the item does not exist."""
+    if kind not in REPORT_KINDS:
+        raise ValueError(f"kind must be one of {REPORT_KINDS}")
+    sess = get_session(session_id)
+    if sess is None:
+        return None
+    key = _item_key(item_name or "")
+    norm = state._norm_name(item_name or "")
+    item = None
+    for it in sess["items"]:
+        if it["group"] == key or state._norm_name(it["name"]) == norm:
+            item = it
+            break
+    if item is None:
+        return None
+    s = _store()
+    for rep in s["reports"]:
+        if rep["session_id"] == session_id \
+                and rep["item_group"] == item["group"] \
+                and rep["state"] == "reported":
+            return rep
+    rep = {"id": _new_id("rep", session_id + item["group"]),
+           "session_id": session_id, "store": sess["store"],
+           "item": item["name"], "item_group": item["group"],
+           "kind": kind, "photo": photo or None,
+           "state": "reported", "reported_at": _now(),
+           "reporter": my_handle()}
+    s["reports"].append(rep)
+    _save_store(s)
+    return rep
+
+
+def _same_store(a, b):
+    """Store identity for report matching: the normalized names are
+    equal, or equal with spaces removed — so "Trader Joe's" (whose
+    apostrophe normalizes to a word break) and "trader joes" are one
+    store, while genuinely different names stay different."""
+    na, nb = state._norm_name(a or ""), state._norm_name(b or "")
+    return na == nb or na.replace(" ", "") == nb.replace(" ", "")
+
+
+def store_reports(store_name):
+    """A store's open reports — the candidate queue a hunt reads to
+    flag its stops. Open means still in the "reported" state."""
+    open_reps = [r for r in _store()["reports"]
+                 if r["state"] == "reported"
+                 and _same_store(r.get("store"), store_name)]
+    return {"store": store_name, "count": len(open_reps),
+            "reports": open_reps}

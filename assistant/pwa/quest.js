@@ -416,6 +416,7 @@ function renderHunt() {
   $("#btn-pause").textContent = sess.state === "paused" ? "Resume" : "Pause";
   $("#btn-pause").disabled = sess.state === "not_started";
   $("#btn-finish").disabled = sess.state === "not_started";
+  $("#btn-nothere").disabled = sess.state !== "playing" || next === -1;
   $("#list-left").textContent = p.left;
   startHuntTimer(sess);
 }
@@ -459,6 +460,55 @@ $("#btn-finish").addEventListener("click", async () => {
     if (sess.state === "playing" || sess.state === "paused") await qSetState(sess, "finished");
     openFinish(sess);
   } catch (e) { toast(e.message); }
+});
+
+/* "Not here" — the Spotter report (store drift). Two taps: the
+ * action, then what you see. The report flags the stop for other
+ * hunters and earns nothing by itself — rewards land on truth,
+ * when time resolves it, never on the report. */
+let spotKind = null;
+function openSpotSheet() {
+  const sess = Q.current;
+  const next = sess ? qNextIndex(sess) : -1;
+  if (!sess || next === -1) return;
+  spotKind = null;
+  $("#spot-item").textContent = `At the stop for ${sess.items[next].name} — what do you see?`;
+  document.querySelectorAll("#spot-sheet [data-kind]").forEach(b =>
+    b.setAttribute("aria-pressed", "false"));
+  $("#spot-photo").value = "";
+  $("#spot-send").disabled = true;
+  $("#spot-sheet").hidden = false;
+}
+function closeSpotSheet() { $("#spot-sheet").hidden = true; }
+$("#btn-nothere").addEventListener("click", openSpotSheet);
+$("#spot-close").addEventListener("click", closeSpotSheet);
+$("#spot-sheet").addEventListener("click", ev => {
+  if (ev.target.id === "spot-sheet") closeSpotSheet();
+  const b = ev.target.closest("[data-kind]");
+  if (b) {
+    spotKind = b.dataset.kind;
+    document.querySelectorAll("#spot-sheet [data-kind]").forEach(x =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    $("#spot-send").disabled = false;
+  }
+});
+$("#spot-send").addEventListener("click", async () => {
+  const sess = Q.current;
+  const next = sess ? qNextIndex(sess) : -1;
+  if (!sess || next === -1 || !spotKind) return;
+  const f = $("#spot-photo").files[0];
+  const btn = $("#spot-send");
+  btn.disabled = true;
+  try {
+    await post(`/api/quest/sessions/${sess.id}/report-missing`, {
+      item: sess.items[next].name, kind: spotKind,
+      photo: f ? f.name : undefined
+    });
+    closeSpotSheet();
+    toast("Reported — other hunters will confirm.");
+    await qLoadStoreReports(sess.store);
+    renderHunt();
+  } catch (e) { toast(e.message); btn.disabled = false; }
 });
 
 /* The list panel: summoned over the hunt, never a page. */
@@ -851,6 +901,7 @@ async function renderQProfile() {
       row(`@${esc(profile.handle)}`, "Public card — what the community sees", "") +
       row("Hunts finished", "", String(profile.stats.hunts)) +
       row("Receipts filed", "", String(profile.stats.receipts)) +
+      row("Spots reported", "", String(profile.stats.spots_reported || 0)) +
       row("Streak", "", `${profile.stats.streak_weeks} week${profile.stats.streak_weeks === 1 ? "" : "s"}`);
     $("#qp-badges").innerHTML = qBadgeRows(profile.badges);
     $("#qp-stores").innerHTML = profile.mapped_stores && profile.mapped_stores.length

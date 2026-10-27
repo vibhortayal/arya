@@ -122,12 +122,25 @@ BADGES = [
     {"id": "first_mapper", "name": "First Mapper",
      "criteria": "Be the first verified mapper of a store",
      "check": lambda ctx: (False, "no store mapped yet")},
+    {"id": "eagle_eye", "name": "Eagle Eye",
+     "criteria": "Spot a store change and have it verified",
+     "check": lambda ctx: _eagle_eye(ctx["reports"])},
 ]
+
+
+def _eagle_eye(reports):
+    """Earned only when a report resolves as a verified move —
+    rewards land on truth, never on reports, so an open or stockout
+    report alone does not earn it."""
+    n = sum(1 for r in reports if r.get("state") == "verified_move")
+    return (n >= 1, f"{n} verified spot{'s' if n != 1 else ''}"
+            if n else "no verified spots yet")
 
 
 def badge_shelf():
     egg_receipts, banana_weeks = _line_weeks_and_counts()
     ctx = {"receipts": state.receipts(), "done": _done_sessions(),
+           "reports": quest._store()["reports"],
            "egg_receipts": egg_receipts, "banana_weeks": banana_weeks}
     shelf = []
     for b in BADGES:
@@ -215,6 +228,7 @@ def profile():
     return {"handle": quest.my_handle(),
             "stats": {"hunts": len(done),
                       "receipts": len(state.receipts()),
+                      "spots_reported": len(quest._store()["reports"]),
                       "streak_weeks": _streak_weeks(done)},
             "badges": badge_shelf(),
             "mapped_stores": []}

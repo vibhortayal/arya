@@ -370,6 +370,98 @@ class TestDriverLadder(unittest.TestCase):
         assert r.status_code == 400
 
 
+class TestSpotter(unittest.TestCase):
+    """"Not here" reports: a report flags a stop, edits nothing, and
+    earns nothing until time resolves it. Resolution transitions are
+    rollout — this build carries the states and the data shape."""
+
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from api import state
+        state._save("dictionary.json", BERRY_DICT)
+        setup_account(self)
+        r = self.c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "mode": "quest",
+            "items": [{"name": "Free Range Eggs"},
+                      {"name": "Whole Milk 1 gal"}]})
+        assert r.status_code == 200, r.text
+        self.sid = r.json()["id"]
+        self.c.post(f"/api/quest/sessions/{self.sid}/state",
+                    json={"state": "playing"})
+
+    def _report(self, item="Free Range Eggs", kind="empty_shelf", **kw):
+        body = {"item": item, "kind": kind}
+        body.update(kw)
+        return self.c.post(
+            f"/api/quest/sessions/{self.sid}/report-missing", json=body)
+
+    def test_report_files_open_and_reads_back_by_store(self):
+        r = self._report(photo="shelf-1842.jpg")
+        assert r.status_code == 200, r.text
+        rep = r.json()
+        assert rep["state"] == "reported" and rep["kind"] == "empty_shelf"
+        assert rep["store"] == "Trader Joe's"
+        assert rep["item"] == "Free Range Eggs"
+        assert rep["photo"] == "shelf-1842.jpg"
+        assert rep["reporter"] == "owner"
+        out = self.c.get("/api/quest/stores/Trader%20Joe%27s/reports").json()
+        assert out["count"] == 1 and out["reports"][0]["id"] == rep["id"]
+        # a different store reads empty; name matching is forgiving
+        out = self.c.get("/api/quest/stores/Costco/reports").json()
+        assert out["count"] == 0
+        out = self.c.get("/api/quest/stores/trader%20joes/reports").json()
+        assert out["count"] == 1
+        # the hunt itself is untouched: the item is still there to find
+        sess = self.c.get(f"/api/quest/sessions/{self.sid}").json()
+        egg = next(i for i in sess["items"] if "Eggs" in i["name"])
+        assert egg["checked"] is False
+
+    def test_report_is_idempotent_per_stop_and_validates(self):
+        first = self._report().json()
+        again = self._report(kind="cant_tell").json()
+        assert again["id"] == first["id"]  # one open report per stop
+        out = self.c.get("/api/quest/stores/Trader%20Joe%27s/reports").json()
+        assert out["count"] == 1
+        r = self._report(kind="vanished")
+        assert r.status_code == 400
+        r = self._report(item="Unobtainium Dust")
+        assert r.status_code == 404
+        r = self.c.post("/api/quest/sessions/qs-nope/report-missing",
+                        json={"item": "Eggs", "kind": "empty_shelf"})
+        assert r.status_code == 404
+        # a second stop reports independently
+        r = self._report(item="Whole Milk 1 gal", kind="replaced")
+        assert r.status_code == 200
+        out = self.c.get("/api/quest/stores/Trader%20Joe%27s/reports").json()
+        assert out["count"] == 2
+
+    def test_profile_counts_spots_and_eagle_eye_waits_for_truth(self):
+        self._report()
+        p = self.c.get("/api/quest/profile").json()
+        assert p["stats"]["spots_reported"] == 1
+        badges = {b["id"]: b for b in p["badges"]}
+        assert badges["eagle_eye"]["earned"] is False
+        assert badges["eagle_eye"]["detail"] == "no verified spots yet"
+        # a report resolving as a verified move (a rollout transition;
+        # seeded here in its data shape) is what earns the badge
+        from api import state
+        ctx = state._current_user.set("owner@example.com")
+        try:
+            store = state._load("quest.json", {})
+            store["reports"][0]["state"] = "verified_move"
+            state._save("quest.json", store)
+        finally:
+            state._current_user.reset(ctx)
+        p = self.c.get("/api/quest/profile").json()
+        badges = {b["id"]: b for b in p["badges"]}
+        assert badges["eagle_eye"]["earned"] is True
+        assert badges["eagle_eye"]["detail"] == "1 verified spot"
+        # and a resolved stockout closes the store's open queue
+        out = self.c.get("/api/quest/stores/Trader%20Joe%27s/reports").json()
+        assert out["count"] == 0
+
+
 class TestReceiptArchive(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
