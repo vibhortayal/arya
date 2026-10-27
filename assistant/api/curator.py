@@ -32,6 +32,11 @@ def clusters():
     or by an identical normalized name. Singletons are not candidates."""
     entries = [e for e in state.dictionary()["entries"]
                if e.get("kind") != "fee" and not e.get("unresolved")]
+    gm = state.group_map()
+    grouped = {}
+    for e in entries:
+        grouped.setdefault(_group_key(e, gm), []).append(e["item_id"])
+    already = {iid for ids in grouped.values() if len(ids) > 1 for iid in ids}
     toks, freq = {}, Counter()
     for e in entries:
         t = set(_tokens(e["canonical_name"]))
@@ -67,7 +72,16 @@ def clusters():
     groups = defaultdict(list)
     for iid in parent:
         groups[find(iid)].append(iid)
-    return [sorted(ids) for ids in groups.values() if len(ids) > 1]
+    by_id = {e["item_id"]: e for e in entries}
+    out = []
+    for ids in groups.values():
+        if len(ids) <= 1:
+            continue
+        keys = {_group_key(by_id[i], gm) for i in ids}
+        if len(keys) <= 1:
+            continue  # already one product everywhere it matters
+        out.append(sorted(ids))
+    return out
 
 
 def _facts(item_ids):
@@ -145,7 +159,41 @@ def run_curator(client):
     return added
 
 
+def _group_key(e, gm):
+    return e.get("group") or gm.get(e["item_id"]) or state._norm_name(e["canonical_name"])
+
+
+def reconcile():
+    """Retire proposals the dictionary has already overtaken: a merge
+    whose members are already one group, a split whose entry already
+    stands alone, and duplicate ids. Superseded, not deleted — the
+    trail stays. Returns how many were retired."""
+    store = state.curator_store()
+    gm = state.group_map()
+    by_id = {e["item_id"]: e for e in state.dictionary()["entries"]}
+    seen, retired = set(), 0
+    for p in store["proposals"]:
+        if p["status"] != "pending":
+            continue
+        stale = p["id"] in seen
+        seen.add(p["id"])
+        if not stale and p["kind"] == "merge":
+            if all(m in by_id for m in p["members"]):
+                keys = {_group_key(by_id[m], gm) for m in p["members"]}
+                stale = len(keys) <= 1
+        if not stale and p["kind"] == "split":
+            m = p["members"][0] if p.get("members") else None
+            stale = m in by_id and by_id[m].get("group") == m
+        if stale:
+            p["status"] = "superseded"
+            retired += 1
+    if retired:
+        state.save_curator(store)
+    return retired
+
+
 def pending():
+    reconcile()
     store = state.curator_store()
     return [p for p in store["proposals"] if p["status"] == "pending"]
 

@@ -171,3 +171,42 @@ class TestDiscountLinesNeverQueue(unittest.TestCase):
         assert r.status_code == 200, r.text
         q = self.c.get("/api/review").json()
         self.assertEqual(q["lines"], [])
+
+
+class TestCuratorReconcile(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import main
+        main.MetaClient = FakeClient
+        main._login_fails.clear()
+        self.c = TestClient(main.app)
+        from api import state
+        state._save("dictionary.json", {"entries": [
+            {"item_id": "a1", "sku": "1", "canonical_name": "White Peach",
+             "resolution": {"status": "auto", "candidates": []}},
+            {"item_id": "a2", "sku": "2", "canonical_name": "White Peach",
+             "resolution": {"status": "auto", "candidates": []}},
+            {"item_id": "b1", "sku": "3", "canonical_name": "Organic Blueberries",
+             "resolution": {"status": "auto", "candidates": []}},
+            {"item_id": "b2", "sku": "4", "canonical_name": "Kirkland Signature Organic Blueberries 3 lb",
+             "resolution": {"status": "auto", "candidates": []}}]})
+        state._save("curator.json", {"dismissed": [], "proposals": [
+            {"id": "p-same", "kind": "merge", "members": ["a1", "a2"],
+             "names": ["White Peach", "White Peach"], "into_name": "White Peach",
+             "reason": "identical", "status": "pending"},
+            {"id": "p-real", "kind": "merge", "members": ["b1", "b2"],
+             "names": ["Organic Blueberries", "KS Organic Blueberries 3 lb"],
+             "into_name": "Organic Blueberries", "reason": "store brand",
+             "status": "pending"}]})
+    def test_overtaken_proposals_retire(self):
+        from api import curator
+        # Root context (no account yet): identical-name entries never
+        # form a cluster — they are already one product.
+        ids = {i for cl in curator.clusters() for i in cl}
+        self.assertNotIn("a1", ids)
+        r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
+        assert r.status_code == 200, r.text
+        # After adoption, the API serves the reconciled queue: the
+        # overtaken merge retired itself, the real one remains.
+        got = self.c.get("/api/curator").json()["proposals"]
+        self.assertEqual([p["id"] for p in got], ["p-real"])

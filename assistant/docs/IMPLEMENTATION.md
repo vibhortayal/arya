@@ -19,6 +19,12 @@ Date: 2026-10-27.
 - The demo runbook has seven beats in a fixed order. Section 7 gives the beats.
 - Costs and loop rules stay from the prior revision. Amounts are re-allocated to the new stages.
 
+Revision, 2026-10-27 (evening). Built and live since this plan was written:
+- ARCHITECTURE.md is new. It records the as-built structure: the two layers, the intake paths, the agents, the connector, and the deployment.
+- Stage 6 additions: connector tokens (hash-only at rest) and the custom.arya connector; structured intake (POST /api/intake/structured); order-text intake; the Curator (propose-only, with automatic retirement of overtaken proposals); the Resolver endpoints (POST /api/review/suggest for items and for single lines); the Profile tab and the theme switch; the Add tab; the connect-first onboarding step with a copyable setup prompt.
+- Decode post-rule change: discount lines are always auto. The old inferred-attachment demotion is removed.
+- Test count: 59, all green. Deploy is git pull on the VM only.
+
 ## 1. Method — loops, not passes
 
 ### 1.1 The three loop types
