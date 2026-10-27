@@ -1,6 +1,6 @@
 # STATUS — where Arya stands (updated 2026-10-27)
 
-**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Remaining: the owner's hostname choice + his phone check. Stages 0–2 done except the photo path (Gate 0).**
+**Current stage: Stage 3 — PWA-core LIVE on the VM (v1). Public HTTPS is up 2026-10-27 via a Cloudflare quick tunnel (systemd service arya-tunnel on the VM, auto-restart): https://disposition-comparisons-containers-uniform.trycloudflare.com — the hostname changes if the tunnel restarts; a named tunnel on the owner's domain is the durable upgrade. Remaining: the owner's phone check. Stages 0–2 done except the photo path (Gate 0).**
 Deadline: submission Nov 4, 2026, 9:00 PM ET.
 
 | Stage | State |
