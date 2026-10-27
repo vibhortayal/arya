@@ -62,6 +62,13 @@
   <section id="view-home" class="view">
     <h2 class="largetitle">Today</h2>
     <p id="asof" class="subtitle"></p>
+    <h3 class="sect">Games</h3>
+    <div id="quest-sessions"></div>
+    <p style="margin:0 0 4px"><button id="btn-new-hunt" class="btn primary wide" type="button">New hunt</button></p>
+    <div class="group">
+      <button class="navrow" data-qnav="view-community" type="button"><span class="grow">Community</span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-qprofile" type="button"><span class="grow">Quest profile</span><span class="chev">›</span></button>
+    </div>
     <h3 class="sect">Running low</h3>
     <div id="running-low" class="group"></div>
     <h3 class="sect">Your list</h3>
@@ -140,6 +147,184 @@
     </div>
     <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
   </section>
+
+  <section id="view-newlist" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">New hunt</h2>
+    <p class="muted">One item per line. A quantity goes in front or behind: &ldquo;2 milk&rdquo;, &ldquo;milk × 2&rdquo;.</p>
+    <div class="group pad">
+      <textarea id="nl-text" rows="8" placeholder="milk&#10;eggs × 2&#10;blueberries" aria-label="Your list"></textarea>
+      <p style="margin-bottom:0"><button id="nl-from-list" class="btn secondary" type="button">Start from your Arya list</button></p>
+    </div>
+    <p><button id="nl-next" class="btn primary wide" type="button">Pick the store &rarr;</button></p>
+  </section>
+
+  <section id="view-store" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Pick the store</h2>
+    <div class="group pad">
+      <label class="field">Store
+        <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
+      </label>
+      <div id="st-chips" class="seg"></div>
+    </div>
+    <p><button id="st-next" class="btn primary wide" type="button">Check my list &rarr;</button></p>
+  </section>
+
+  <section id="view-optimize" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Check the list</h2>
+    <p id="opt-summary" class="subtitle"></p>
+    <div id="opt-body"></div>
+    <p><button id="opt-next" class="btn primary wide" type="button">Looks right &rarr;</button></p>
+  </section>
+
+  <section id="view-mode" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">How are you shopping?</h2>
+    <div class="group pad">
+      <button class="modecard" data-mode="quest" type="button"><span class="name">Quest</span><span class="sub">Play the hunt. Find each item, collect it, beat the clock.</span></button>
+      <button class="modecard" data-mode="express" type="button"><span class="name">Express</span><span class="sub">The fastest route. The list in walking order, no game.</span></button>
+    </div>
+    <p class="muted">Pick the mood. Either one can pause, and trips switch from the rail while you play.</p>
+  </section>
+
+  <section id="view-hunt" class="view" hidden>
+    <div id="hunt-rail" class="rail"></div>
+    <div class="row" style="border-bottom:none">
+      <div class="grow"><span class="name" id="hunt-store"></span><span class="sub" id="hunt-progress"></span></div>
+      <div class="money" id="hunt-timer">0:00</div>
+    </div>
+    <div class="seg" id="scene-toggle" style="margin-bottom:10px">
+      <button class="chip" data-driver="strip" type="button">Strip</button>
+      <button class="chip" data-driver="aisle" type="button">Aisle</button>
+      <button class="chip" disabled type="button">3D · with the store model</button>
+    </div>
+    <div id="scene-mount"></div>
+    <p id="hunt-mapnote" class="muted"></p>
+    <div id="hunt-next" class="group pad"></div>
+    <p><button id="btn-collect" class="btn primary wide" type="button">Collect</button></p>
+    <div class="row" style="border-bottom:none">
+      <button id="btn-listpanel" class="btn secondary" type="button">List · <span id="list-left">0</span> left</button>
+      <span>
+        <button id="btn-pause" class="btn" type="button">Pause</button>
+        <button id="btn-finish" class="btn" type="button">Finish</button>
+      </span>
+    </div>
+    <div id="list-panel" class="sheetwrap" hidden>
+      <div class="sheet">
+        <div class="row"><span class="name">Your list</span><button id="panel-close" class="btn" type="button">Done</button></div>
+        <div id="panel-items"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-express" class="view" hidden>
+    <div id="exp-rail" class="rail"></div>
+    <div class="row" style="border-bottom:none">
+      <div class="grow"><span class="name" id="exp-store"></span><span class="sub" id="exp-progress"></span></div>
+      <div class="money" id="exp-eta"></div>
+    </div>
+    <div id="exp-startwrap" hidden><p><button id="exp-start" class="btn primary wide" type="button">Start the run</button></p></div>
+    <div id="exp-items" class="group"></div>
+    <p><button id="exp-finish" class="btn primary wide" type="button">Finish</button></p>
+    <p><button id="exp-pause" class="btn secondary wide" type="button">Pause</button></p>
+  </section>
+
+  <section id="view-finish" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Finish</h2>
+    <p class="muted">The receipt is the scorecard. Snap it and Arya settles the hunt.</p>
+    <div class="group pad">
+      <p class="nomargin"><strong>Snap the receipt</strong></p>
+      <input type="file" id="fin-photo" accept="image/*" aria-label="Receipt photo">
+      <p id="fin-status" class="muted nomargin"></p>
+    </div>
+    <h3 class="sect">Or use a receipt already filed</h3>
+    <div id="fin-receipts" class="group"></div>
+    <p><button id="fin-skip" class="btn secondary wide" type="button">Skip the receipt</button></p>
+  </section>
+
+  <section id="view-score" class="view" hidden>
+    <h2 class="largetitle" style="font-size:28px">Score</h2>
+    <div id="score-body"></div>
+    <p><button id="score-done" class="btn primary wide" type="button">Back to Today</button></p>
+  </section>
+
+  <section id="view-community" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Community</h2>
+    <div class="seg" id="comm-scopes">
+      <button class="chip" data-scope="household" aria-pressed="true" type="button">Household</button>
+      <button class="chip" data-scope="friends" aria-pressed="false" type="button">Friends</button>
+      <button class="chip" data-scope="store" aria-pressed="false" type="button">Store</button>
+      <button class="chip" data-scope="global" aria-pressed="false" type="button">Global</button>
+    </div>
+    <h3 class="sect">Fastest Hands</h3>
+    <div id="comm-board" class="group"></div>
+    <p class="muted">Fastest full hunts, scored as time per item. A hunt needs 8 or more items to qualify. Times come from the receipt — the receipt is the referee.</p>
+    <h3 class="sect">Badges</h3>
+    <div id="comm-badges" class="group"></div>
+    <div class="group">
+      <button class="navrow" data-qnav="view-race" type="button"><span class="grow">Shop-Off</span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-friends" type="button"><span class="grow">Friends</span><span class="chev">›</span></button>
+    </div>
+  </section>
+
+  <section id="view-race" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Shop-Off</h2>
+    <div id="race-body"></div>
+    <h3 class="sect">New race</h3>
+    <div class="group pad">
+      <label class="field">Opponent handle
+        <input type="text" id="race-opp" placeholder="cartqueen" autocomplete="off">
+      </label>
+      <label class="field">Store
+        <input type="text" id="race-store" placeholder="Trader Joe&rsquo;s" autocomplete="off">
+      </label>
+      <label class="field">The list — one item per line
+        <textarea id="race-items" rows="5" placeholder="milk&#10;eggs"></textarea>
+      </label>
+      <p style="margin-bottom:0"><button id="race-create" class="btn primary wide" type="button">Start the race</button></p>
+    </div>
+    <p class="muted">Same store, same list. The first verified receipt wins — its timestamp is the photo finish. Until real cross-account races land, your opponent&rsquo;s hunt is a placeholder in this account; run it from its session card.</p>
+  </section>
+
+  <section id="view-friends" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Friends</h2>
+    <div class="group pad">
+      <label class="field">Add by handle
+        <input type="text" id="fr-handle" placeholder="handle" autocomplete="off">
+      </label>
+      <p style="margin-bottom:0"><button id="fr-add" class="btn primary wide" type="button">Send request</button></p>
+    </div>
+    <div id="fr-list" class="group"></div>
+    <p class="muted">Friends see your boards and badges. No chat, no lists.</p>
+  </section>
+
+  <section id="view-qprofile" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Profile</h2>
+    <div id="qp-card" class="group"></div>
+    <h3 class="sect">Badge shelf</h3>
+    <div id="qp-badges" class="group"></div>
+    <h3 class="sect">Mapped stores</h3>
+    <div id="qp-stores" class="group"></div>
+    <h3 class="sect">Receipts</h3>
+    <div id="qp-receipts" class="group"></div>
+    <h3 class="sect">Coming next</h3>
+    <div class="group pad comingnext">
+      <p class="nomargin"><strong>Analysis</strong></p>
+      <p class="muted nomargin">Patterns, spend, and the dashboard grow on this archive. Coming next.</p>
+    </div>
+  </section>
+
+  <section id="view-receipt" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <div id="rc-body"></div>
+  </section>
 </main>
 
 <nav id="tabs" hidden>
@@ -166,5 +351,7 @@
 </nav>
 
 <script src="app.js"></script>
+<script src="scene.js"></script>
+<script src="quest.js"></script>
 </body>
 </html>

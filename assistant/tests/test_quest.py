@@ -304,6 +304,72 @@ class TestSocial(unittest.TestCase):
         assert badges["clean_sweep"]["earned"] is True
 
 
+class TestDriverLadder(unittest.TestCase):
+    """The scene is a viewport, not the game: a hunt played through
+    the strip driver completes and scores exactly like one played
+    through the aisle driver. The session records its starting
+    driver; nothing in play or scoring reads it."""
+
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        make_client(self)
+        from api import state
+        state._save("dictionary.json", BERRY_DICT)
+        state._save("receipts.json", [
+            {"receipt_id": "r-strip", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-27T18:42:18", "lines": [],
+             "subtotal": 0, "tax": 0, "total": 0},
+            {"receipt_id": "r-aisle", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-27T19:42:18", "lines": [],
+             "subtotal": 0, "tax": 0, "total": 0}])
+        setup_account(self)
+
+    def _play(self, driver, receipt_id):
+        c = self.c
+        r = c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "mode": "quest", "driver": driver,
+            "items": [{"name": "Free Range Eggs"},
+                      {"name": "Whole Milk 1 gal"}]})
+        assert r.status_code == 200, r.text
+        sess = r.json()
+        assert sess["driver"] == driver
+        sid = sess["id"]
+        c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
+        for it in sess["items"]:
+            r = c.post(f"/api/quest/sessions/{sid}/check",
+                       json={"item": it["name"], "checked": True})
+            assert r.status_code == 200, r.text
+        r = c.post(f"/api/quest/sessions/{sid}/receipt",
+                   json={"receipt_id": receipt_id})
+        assert r.status_code == 200, r.text
+        done = r.json()
+        profile = c.get("/api/quest/profile").json()
+        return done, profile
+
+    def test_strip_and_aisle_score_identically(self):
+        strip_done, p1 = self._play("strip", "r-strip")
+        assert strip_done["state"] == "done"
+        assert all(i["checked"] for i in strip_done["items"])
+        badges1 = {b["id"] for b in p1["badges"] if b["earned"]}
+        assert p1["stats"]["hunts"] == 1
+        assert {"speed_demon", "clean_sweep"} <= badges1
+        aisle_done, p2 = self._play("aisle", "r-aisle")
+        assert aisle_done["state"] == "done"
+        assert all(i["checked"] for i in aisle_done["items"])
+        badges2 = {b["id"] for b in p2["badges"] if b["earned"]}
+        assert badges2 == badges1  # the viewport changed nothing
+        assert p2["stats"]["hunts"] == 2
+
+    def test_driver_defaults_to_strip_and_validates(self):
+        c = self.c
+        r = c.post("/api/quest/sessions", json={
+            "store": "Costco", "items": ["Eggs"]})
+        assert r.json()["driver"] == "strip"  # no model -> strip
+        r = c.post("/api/quest/sessions", json={
+            "store": "Costco", "items": ["Eggs"], "driver": "hologram"})
+        assert r.status_code == 400
+
+
 class TestReceiptArchive(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
