@@ -18,7 +18,7 @@ IN:
 4. Receipt finish: snap → verified → hunt scored (engine endpoints already live).
 5. **Community, demo-grade (owner call 2026-10-27: "the clincher for hackathon virality"):** a playable **Shop-Off** — two players, same store, same list, live race state, winner by verified receipt timestamp (photo finish); the household leaderboard; badges awarded live on the score screen from verified data; **Friends** (handle-based add/accept, challenge shortcuts) and **Profile** (handle, stats, badge shelf, mapper credits — public card only, private data never shown).
 6. **Session-aware Muse connector:** chat adds land in today's session for the named store (engine add endpoint exists; session wrapper is the new work).
-7. **Profile archive view:** receipt photos with their digitized records under Profile (engine already stores both sides; this is a view). Analysis/dashboard stays future — a named placeholder in the UI, built post-hackathon.
+7. **Profile archive view:** receipt photos with their digitized records under Profile (engine already stores both sides; this is a view). Analysis: Spend is live; Patterns and Trends stay future — named placeholders in the UI, built post-hackathon.
 8. Demo video + submission package per SUBMISSION.md.
 
 OUT (rollout story only): whole-store maps, live relocalization, escape-room skin, public registration, global boards, mapper leaderboards.
@@ -27,9 +27,9 @@ OUT (rollout story only): whole-store maps, live relocalization, escape-room ski
 
 | When | Work |
 |---|---|
-| Oct 27 | Spike verdict; doc pack + DISCUSSION.md; **wireframes approved** (10 screens incl. Community — the build reference); hunt scope locked to the verdict |
-| Oct 28–29 | Shelf graph for the demo aisle (SAM segments + Spark labels + placement review); hunt route builder |
-| Oct 30–31 | Hunt client: cloud in the PWA, quest log, collect flow, Quest/Express modes (light) |
+| Oct 27 | Spike verdict **PASS**; doc pack + DISCUSSION.md; Stages A (engine), B (playable UI), C (cloud driver, live) built and deployed; **final wireframes approved** (Quest + Brain B1–B6 — the build reference) |
+| Oct 27–28 | Intake parity (Photo + Voice doors on the Meta API, demo account live); Brain restyle to the approved wireframes; shelf graph for the demo aisle (SAM 3.1 segments + Spark labels) |
+| Oct 30–31 | Hunt polish: route builder, quest log, Quest/Express refinements |
 | Nov 1 (cont.) | List-in by photo wired to hunts; receipt finish wired to scoring |
 | Nov 2 | End-to-end rehearsal on the demo household; fix pass |
 | Nov 3 | Demo video filmed; submission package assembled |
