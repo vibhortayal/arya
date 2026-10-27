@@ -196,6 +196,7 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .iconbtn svg { width: 22px; height: 22px; }
 .iconbtn.on { background: var(--accent); color: #fff; }
 .iconbtn.listening { background: var(--danger); color: #fff; }
+.btn.listening { background: var(--danger); color: #fff; }
 
 .eyes-record img { max-width: 100%; border-radius: 12px; }
 .view.enter { animation: rise 0.28s cubic-bezier(0.22, 1, 0.36, 1); }

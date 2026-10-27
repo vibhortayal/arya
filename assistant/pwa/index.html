@@ -34,7 +34,7 @@
   <div class="group pad">
     <p class="nomargin">Just looking?</p>
     <p><button id="demo-btn" class="btn secondary" type="button">Try the demo household</button></p>
-    <p class="muted nomargin">The demo is a fictional household. It is read-only and makes no model calls.</p>
+    <p class="muted nomargin">The demo is a fictional household; its data never changes. The Photo and Voice doors in Add do call the Meta API live, so you can watch them work.</p>
   </div>
 </section>
 
@@ -47,7 +47,7 @@
       <li>Create a token below. It is shown once.</li>
       <li>Open Muse and add the Arya connector — or just tell Muse: &ldquo;connect Arya&rdquo;.</li>
       <li>Paste the token into Muse&rsquo;s secure form. Never paste it into a chat message.</li>
-      <li>Tap Done. From then on, talk to Muse: drop a receipt photo, paste an order, or ask &ldquo;what&rsquo;s on my list?&rdquo;</li>
+      <li>Tap Done. From then on, talk to Muse — or use the doors in Add: a receipt photo, your voice, a pasted order.</li>
     </ol>
     <div class="row" id="connect-token-row" style="margin-top:10px"></div>
     <p class="muted" style="margin-top:12px">Using a different assistant app? Copy the setup prompt and paste it there once — it teaches the assistant its job. The connector route above stays the better path.</p>
@@ -85,8 +85,8 @@
 
   <section id="view-scan" class="view" hidden>
     <h2 class="largetitle">Add</h2>
-    <h3 class="sect">File through Muse</h3>
-    <div id="intake" class="group pad"></div>
+    <p class="muted">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.</p>
+    <div id="doors"></div>
     <h3 class="sect">Curator — what things are</h3>
     <div id="curator" class="group"></div>
     <h3 class="sect">Eyes — sightings to confirm</h3>
@@ -133,7 +133,7 @@
     <div class="group" id="profile-account"></div>
     <h3 class="sect">Connect Muse</h3>
     <div class="group pad">
-      <p class="muted nomargin">Data enters Arya through your own Muse. Connect once with a token, then file receipts and orders by chat or WhatsApp. The token is shown once; creating a new one replaces it.</p>
+      <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the Photo and Voice doors in Add work right here. The token is shown once; creating a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
