@@ -64,7 +64,7 @@ def normalize_costco_json(obj):
             ltype = "discount"
         else:
             ltype = "item"
-        if ltype == "item":
+        if ltype in ("item", "return"):
             last_item_sku = str(it.get("itemNumber") or "")
         lines.append({
             "raw": desc, "detail": it.get("itemDescription02"), "sku": str(it.get("itemNumber") or ""),
