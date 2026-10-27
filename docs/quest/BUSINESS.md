@@ -52,6 +52,3 @@ Every piece of Arya Quest exists somewhere. The combination exists nowhere.
 
 The wedge: stores that publish nothing (Trader Joe's, independents, ethnic markets) are unmapped by every incumbent, because incumbents need retailer data or retailer permission. Arya Quest needs neither — its players are the sensors, and the game is why they show up.
 
-## Intellectual property note
-
-Candidate claims sit in the methods, not in Meta's models: drift resolution from gameplay signals over time; receipt-verified competition and scoring; community inventory generation from hunt events; the list optimizer's merge-correct-ask pipeline over a household dictionary. The hackathon submission is a public disclosure — anything shared is non-confidential under the event rules — so any provisional patent application must be filed **before** the November 4 submission to preserve rights outside the US grace period. See LEGAL.md for the full watchlist.
