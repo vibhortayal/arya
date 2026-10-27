@@ -81,5 +81,5 @@ Output: the clean list plus a one-line report (in → out · merged · corrected
 ## Known limits, stated
 
 - VGGT weights are non-commercial licensed. Fine for the hackathon; a commercial launch needs a license path or a successor model.
-- A downloaded or filmed walkthrough contains other shoppers. Platform contributions need a policy (faces, store permission) before public rollout — parked for post-hackathon.
+- A walkthrough contains other shoppers. Platform contributions need a policy (faces, store permission) before public rollout — parked for post-hackathon.
 - One aisle reconstructs well before a whole store does. The demo scopes to what the spike proves.

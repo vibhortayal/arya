@@ -47,9 +47,9 @@ Receipts reveal diet, health-adjacent, and religion-adjacent purchases; session 
 
 The architecture already carries most of the answer: receipts, lists, and personal analysis are account-level and private; store models are platform-level and contain no personal data. Launch adds the paperwork: a real privacy policy, deletion on request, a no-sale posture, and data-minimization review.
 
-## 6. Third-party footage — never in the demo
+## 6. Source footage — never in the demo
 
-The VGGT spike runs on a walkthrough video downloaded from YouTube. Internal research use is one thing; the video belongs to its creator. The submitted demo video shows only Arya Quest output — the point cloud, the game, the score — never the source footage. The same rule applies to any mapper upload: the platform builds models from footage; it does not redistribute the footage.
+The submitted demo video shows only Arya Quest output — the point cloud, the game, the score — never source walkthrough footage. The same rule applies to any mapper upload: the platform builds models from footage; it does not redistribute the footage.
 
 ## 7. Smaller items, handled by design
 
