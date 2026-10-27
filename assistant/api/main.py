@@ -14,6 +14,16 @@ from api.cart.build import approve
 app = FastAPI(title="Arya API")
 _LEDGER = os.path.join(os.path.dirname(__file__), "..", "loops", "cost-ledger.jsonl")
 
+_login_fails = {}
+
+
+def _budget_guard():
+    """Stage 6 hardening: a daily ceiling on model spend (default $10),
+    far above real household use, bounding any single bad day."""
+    cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
+    if CostLedger(_LEDGER).spent_today() >= cap:
+        raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
+
 _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/index.html", "/")
 
 
@@ -57,9 +67,15 @@ async def auth_setup(req: Request):
 
 @app.post("/auth/login")
 async def auth_login(req: Request):
+    import time as _t
+    ip = (req.headers.get("x-forwarded-for") or (req.client.host if req.client else "?")).split(",")[0].strip()
+    fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
+    if len(fails) >= 8:
+        raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
     body = await req.json()
     name = (body.get("username") or "").strip().lower()
     if not auth.verify(name, body.get("password", "")):
+        _login_fails[ip] = fails + [_t.time()]
         raise HTTPException(401, "wrong username or password")
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
@@ -116,6 +132,7 @@ async def decode_text_route(req: Request):
     body = await req.json()
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     dec = decode_text(body.get("text", ""), client)
     state.add_receipts([dec])
@@ -181,6 +198,7 @@ async def decode_pdf(req: Request):
         raise HTTPException(422, "no text layer in this PDF — scanned receipts use the photo path, which opens after verification")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     receipt = decode_text(text, client)
     added = state.add_receipts([receipt])
@@ -199,6 +217,7 @@ async def decode_photo_route(req: Request):
         raise HTTPException(413, "photo too large (12 MB max)")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
         receipt = decode_photo(body, client, media_type=media)
@@ -220,6 +239,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
         raise HTTPException(413, "photo too large (12 MB max)")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
     from api.eyes.service import detect, match_item
     from datetime import date as _d
     client = MetaClient(ledger=CostLedger(_LEDGER))
@@ -289,6 +309,7 @@ def item_expired(item_id: str):
 async def chat_route(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
     body = await req.json()
     from api.chat_service import chat as run_chat
     client = MetaClient(ledger=CostLedger(_LEDGER))

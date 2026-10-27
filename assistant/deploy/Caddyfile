@@ -2,6 +2,11 @@
 # automatically once DNS points at this VM and ports 80/443 are reachable.
 arya-pilot.duckdns.org {
 	reverse_proxy api:8000
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		X-Frame-Options DENY
+	}
 }
 
 # Local/tunnel access stays available during and after the move.

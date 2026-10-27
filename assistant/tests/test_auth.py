@@ -38,3 +38,27 @@ class TestAuth(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHardening(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        import api.main as main
+        main._login_fails.clear()
+        self.c = TestClient(main.app)
+        self.c.post("/auth/setup", json={"username": "owner", "password": "right"})
+
+    def test_login_throttle(self):
+        for _ in range(8):
+            self.assertEqual(self.c.post("/auth/login", json={"username": "owner", "password": "nope"}).status_code, 401)
+        self.assertEqual(self.c.post("/auth/login", json={"username": "owner", "password": "nope"}).status_code, 429)
+
+    def test_budget_guard(self):
+        os.environ["ARYA_DAILY_BUDGET_USD"] = "0"
+        os.environ["MODEL_API_KEY"] = "k"
+        try:
+            r = self.c.post("/decode/text", json={"text": "x"})
+            self.assertEqual(r.status_code, 503)
+            self.assertIn("budget", r.json()["detail"])
+        finally:
+            os.environ.pop("ARYA_DAILY_BUDGET_USD", None)

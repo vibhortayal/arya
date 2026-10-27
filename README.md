@@ -1,24 +1,28 @@
 # Arya
 
-**The assistant who keeps the list.**
+A grocery assistant that keeps a living model of one household's
+purchases — receipts, returns, patterns — so the list writes itself.
 
-Arya keeps a living model of your grocery world: every receipt read and
-verified, every return netted, every pattern learned — so the list writes
-itself. And in the store, she guides you shelf to shelf until the list is
-done. One household, your data, your server.
+**Live:** https://arya-pilot.duckdns.org — tap "Try the demo household"
+for a fictional, read-only household. The owner's data stays behind the
+owner's account.
 
-- **Agents start here: `AGENTS.md`** (repo root) — the pickup contract.
-- Current state: `STATUS.md`; stage tasks: GitHub Issues.
-- Product spec: `assistant/docs/SPEC.md`
-- Build plan: `assistant/docs/IMPLEMENTATION.md` (Stage 0 in progress)
-- Research, evidence, and spikes: the private companion repo
-  `vibhortayal/meta-hackathon-research` (docs/ here is the living copy;
-  the research repo is the frozen record)
+## How it works
 
-Built for the Meta Global AI Developer Hackathon 2026 — Team Nightshift,
-Indie track. Every intelligence call runs on Meta models
-(muse-spark-1.3, sam-3.1, muse-voice-transcribe-1.0, muse-image-1.0).
+- **Intake.** One upload: a receipt PDF or a photo. Muse Spark reads it;
+  code checks the lines against the printed total before anything posts.
+- **Ledger.** Kept purchases only: returns net out, bought-for-others is
+  tracked but never suggested, discounts fold into their parent item.
+- **Patterns.** Deterministic engines learn cadence and price by store.
+  Three kept buys make a claim. The smart list is a derived view.
+- **Eyes.** A fridge or pantry photo produces sightings; two independent
+  reads must agree, and the user confirms before the model changes.
+- **Ask Arya.** A chat agent grounded in a snapshot of the model. It
+  answers from the data and applies stated facts as validated actions.
 
-House rules baked in: real personal data runs on Standard mode only (never
-training-eligible modes); returns count as kept-never; public test fixtures
-never enter the owner's ledger, dictionary, or patterns.
+Personal data is Standard mode only, enforced in `api/meta_client.py`.
+Costs are policy: `assistant/docs/MODEL-POLICY.md`. Documents are the
+source of truth: `assistant/docs/SPEC.md`, `IMPLEMENTATION.md`, and
+`STATUS.md` for where the build stands. Agents: read `AGENTS.md` first.
+
+Meta Global AI Developer Hackathon 2026 — Team Nightshift, Indie track.

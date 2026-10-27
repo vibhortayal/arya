@@ -31,3 +31,8 @@ class CostLedger:
 
     def remaining_usd(self):
         return round(BUDGET_USD - self.total_usd(), 4)
+
+    def spent_today(self):
+        today = time.strftime("%Y-%m-%d")
+        return round(sum(r["cost_usd"] for r in self.rows()
+                         if str(r.get("ts", "")).startswith(today)), 4)
