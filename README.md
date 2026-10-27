@@ -4,7 +4,8 @@
 
 Arya keeps a living model of your grocery world: every receipt read and
 verified, every return netted, every pattern learned — so the list writes
-itself. One household, your data, your server.
+itself. And in the store, she guides you shelf to shelf until the list is
+done. One household, your data, your server.
 
 - **Agents start here: `AGENTS.md`** (repo root) — the pickup contract.
 - Current state: `STATUS.md`; stage tasks: GitHub Issues.
