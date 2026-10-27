@@ -192,20 +192,245 @@ $("#btn-signout2").addEventListener("click", async () => {
   location.reload();
 });
 
-/* ---------------- Add: intake status + Curator ---------------- */
+/* ---------------- Add: the five doors + Curator ----------------
+ * Intake parity (owner ruling 2026-10-27): intake is not Muse-only.
+ * Every door runs on Meta models — Muse in chat, Spark on the Meta
+ * API in the app. In the demo, Photo and Voice call the API live and
+ * persist nothing; Paste and Type file data, so they stay off there. */
+
+function doorCard(title, sub, inner) {
+  return `<div class="group pad door"><p class="nomargin"><strong>${esc(title)}</strong></p><p class="muted">${esc(sub)}</p>${inner}</div>`;
+}
+
+function parseItems(text) {
+  return String(text || "").split(/[\n,;]+/)
+    .map(s => s.replace(/^add\s+/i, "").trim()).filter(Boolean);
+}
+
+/* Microphone capture -> mono 16-bit PCM WAV at 16 kHz, the Meta ASR
+ * batch endpoint's input contract. Browsers cannot record WAV
+ * natively, so the PCM is encoded here from the Web Audio stream. */
+async function startCapture() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  proc.onaudioprocess = ev => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+  src.connect(proc);
+  proc.connect(ctx.destination);
+  return {
+    stop() {
+      proc.disconnect();
+      src.disconnect();
+      stream.getTracks().forEach(t => t.stop());
+      const wav = encodeWav(chunks, ctx.sampleRate);
+      ctx.close();
+      return wav;
+    }
+  };
+}
+
+function encodeWav(chunks, srcRate) {
+  const target = 16000;
+  let len = 0;
+  chunks.forEach(c => { len += c.length; });
+  const flat = new Float32Array(len);
+  let off = 0;
+  chunks.forEach(c => { flat.set(c, off); off += c.length; });
+  const ratio = srcRate / target;
+  const n = Math.floor(flat.length / ratio);
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, "RIFF");
+  v.setUint32(4, 36 + n * 2, true);
+  wstr(8, "WAVEfmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, target, true);
+  v.setUint32(28, target * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  wstr(36, "data");
+  v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) {
+    const s = Math.max(-1, Math.min(1, flat[Math.floor(i * ratio)]));
+    v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+async function transcribeBlob(wav) {
+  const r = await fetch("/api/transcribe", {
+    method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav
+  });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+  return (await r.json()).text || "";
+}
+
+/* One toggle-record button: tap to start, tap again to stop and
+ * transcribe. onText receives the transcript. */
+function wireRecordButton(btn, statusEl, onText) {
+  let capture = null;
+  const label = btn.textContent;
+  btn.addEventListener("click", async () => {
+    if (capture) {
+      const wav = capture.stop();
+      capture = null;
+      btn.classList.remove("listening");
+      btn.textContent = label;
+      statusEl.textContent = "Transcribing with Muse Voice Transcribe…";
+      try {
+        const text = await transcribeBlob(wav);
+        statusEl.textContent = text ? "" : "That did not come through. Try again, closer to the mic.";
+        if (text) onText(text);
+      } catch (e) {
+        statusEl.textContent = "";
+        toast("Transcription failed: " + e.message);
+      }
+      return;
+    }
+    if (!navigator.mediaDevices || !(window.AudioContext || window.webkitAudioContext)) {
+      statusEl.textContent = "Voice input is not available in this browser. The microphone on your keyboard works too.";
+      return;
+    }
+    try {
+      capture = await startCapture();
+      btn.classList.add("listening");
+      btn.textContent = "Stop & transcribe";
+      statusEl.textContent = "Listening…";
+    } catch (e) {
+      statusEl.textContent = "Microphone access was refused. You can type instead.";
+    }
+  });
+}
 
 async function renderIntake() {
-  const el = $("#intake");
+  const el = $("#doors");
   if (!el) return;
+  let claudeInner;
   if (isDemo) {
-    el.innerHTML = `<p class="muted nomargin">In the full app, data enters Arya through Muse: send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. The demo is read-only.</p>`;
-    return;
+    claudeInner = `<p class="muted nomargin">The demo does not connect a Muse. The Photo and Voice doors below call the Meta API live — try those.</p>`;
+  } else {
+    let has = false;
+    try { has = (await api("/auth/token")).has_token; } catch (e) { /* keep false */ }
+    claudeInner = has
+      ? `<p class="nomargin"><strong>Connected.</strong></p><p class="muted nomargin">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits in the review queue below.</p>`
+      : `<p class="nomargin"><strong>Not connected yet.</strong></p><p class="muted nomargin">Connect Muse in Profile to file receipts and orders by chat or WhatsApp.</p>`;
   }
-  let has = false;
-  try { has = (await api("/auth/token")).has_token; } catch (e) { /* keep false */ }
-  el.innerHTML = has
-    ? `<p class="nomargin"><strong>Connected to Muse.</strong></p><p class="muted">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits below.</p>`
-    : `<p class="nomargin"><strong>Not connected yet.</strong></p><p class="muted">Connect Muse in Profile to file receipts and orders by chat or WhatsApp.</p>`;
+  el.innerHTML =
+    doorCard("Via Muse", "Muse + the Arya connector", claudeInner) +
+    doorCard("Photo", "Spark on the Meta API", `
+      <label class="field">Receipt or list photo
+        <input type="file" id="door-photo" accept="image/*">
+      </label>
+      <p class="muted nomargin" id="door-photo-status"></p>
+      <div id="door-photo-preview"></div>`) +
+    doorCard("Voice", "Muse Voice Transcribe", `
+      <p style="margin:0 0 8px"><button class="btn" id="door-voice-btn" type="button">Record items</button>
+      <span class="muted" id="door-voice-status"></span></p>
+      <label class="field">What Arya heard
+        <textarea id="door-voice-text" rows="3" placeholder="milk, eggs, sourdough"></textarea>
+      </label>
+      ${isDemo
+        ? `<p class="muted nomargin">Demo: the transcription is live; nothing is saved.</p>`
+        : `<p style="margin-bottom:0"><button class="btn primary" id="door-voice-add" type="button">Add to my list</button></p>`}`) +
+    doorCard("Paste", "An online order, pasted as text", `
+      <label class="field">Order confirmation
+        <textarea id="door-paste-text" rows="4" placeholder="Paste the order email or confirmation"></textarea>
+      </label>
+      <p style="margin-bottom:0"><button class="btn primary" id="door-paste-btn" type="button" ${isDemo ? "disabled" : ""}>File this order</button></p>
+      ${isDemo ? `<p class="muted nomargin">Pasting files a receipt — off in the demo.</p>` : ""}`) +
+    doorCard("Type", "One item at a time, no model needed", `
+      <form id="door-type-form" style="display:flex; gap:8px">
+        <input type="text" id="door-type-text" class="grow" placeholder="oat milk" autocomplete="off" aria-label="Item name">
+        <button class="btn primary" type="submit" ${isDemo ? "disabled" : ""}>Add</button>
+      </form>
+      ${isDemo ? `<p class="muted nomargin">Typing adds to your list — off in the demo.</p>` : ""}`);
+  bindDoors();
+}
+
+function bindDoors() {
+  const photo = $("#door-photo");
+  if (photo) photo.addEventListener("change", async ev => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const status = $("#door-photo-status");
+    const preview = $("#door-photo-preview");
+    status.textContent = "Reading the photo with Spark…";
+    preview.innerHTML = "";
+    try {
+      const r = await fetch("/decode/photo", {
+        method: "POST",
+        headers: { "Content-Type": f.type || "image/jpeg" },
+        body: f
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+      const out = await r.json();
+      const rec = out.receipt || {};
+      if (out.demo) {
+        status.textContent = "";
+        preview.innerHTML = `<div class="group pad" style="margin-top:10px">
+          <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">demo preview — read live, not saved</span></p>
+          ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
+          ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
+      } else {
+        status.textContent = "";
+        toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in the review queue below.`);
+        renderScan().catch(showErr);
+      }
+    } catch (e) {
+      status.textContent = "";
+      toast("Could not read that photo: " + e.message);
+    }
+    ev.target.value = "";
+  });
+
+  const voiceBtn = $("#door-voice-btn");
+  if (voiceBtn) wireRecordButton(voiceBtn, $("#door-voice-status"),
+    text => { $("#door-voice-text").value = text; });
+
+  const voiceAdd = $("#door-voice-add");
+  if (voiceAdd) voiceAdd.addEventListener("click", async () => {
+    const items = parseItems($("#door-voice-text").value);
+    if (!items.length) { toast("Nothing to add yet — record or type the items first."); return; }
+    voiceAdd.disabled = true;
+    try {
+      for (const name of items) await post("/api/list/add", { name });
+      $("#door-voice-text").value = "";
+      toast(items.length === 1 ? "Added 1 item to your list." : `Added ${items.length} items to your list.`);
+    } catch (e) { toast(e.message); }
+    voiceAdd.disabled = false;
+  });
+
+  const pasteBtn = $("#door-paste-btn");
+  if (pasteBtn) pasteBtn.addEventListener("click", async () => {
+    const text = $("#door-paste-text").value.trim();
+    if (text.length < 20) { toast("Paste the whole order confirmation first."); return; }
+    pasteBtn.disabled = true;
+    try {
+      const r = await post("/api/intake/order-text", { text });
+      toast(`Filed ${r.merchant || "the order"} — ${r.lines} lines, total ${money(r.total || 0)} verified by Arya.`);
+      $("#door-paste-text").value = "";
+      renderScan().catch(showErr);
+    } catch (e) { toast(e.message); }
+    pasteBtn.disabled = false;
+  });
+
+  const typeForm = $("#door-type-form");
+  if (typeForm) typeForm.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const input = $("#door-type-text");
+    const name = input.value.trim();
+    if (!name) return;
+    try {
+      await post("/api/list/add", { name });
+      input.value = "";
+      toast(`Added ${name} to your list.`);
+    } catch (e) { toast(e.message); }
+  });
 }
 
 async function renderCurator() {
@@ -469,36 +694,48 @@ function speak(text) {
   speechSynthesis.cancel();
   speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog = null;
-$("#btn-mic").addEventListener("click", () => {
+/* Ask voice input is Muse Voice Transcribe on the Meta API (the
+ * shared recorder above) — not the browser's speech engine. Speech
+ * output stays device TTS: Meta has no TTS API, and nothing labels
+ * it otherwise. */
+let askCapture = null;
+$("#btn-mic").addEventListener("click", async () => {
   const note = $("#voice-note");
-  if (!SR) {
+  const btn = $("#btn-mic");
+  if (askCapture) {
+    const wav = askCapture.stop();
+    askCapture = null;
+    btn.classList.remove("listening");
+    note.hidden = false;
+    note.textContent = "Transcribing with Muse Voice Transcribe…";
+    try {
+      const text = await transcribeBlob(wav);
+      if (text) {
+        note.hidden = true;
+        $("#chat-input").value = text;
+        $("#chat-form").requestSubmit();
+      } else {
+        note.textContent = "That did not come through. Try again, or type it.";
+      }
+    } catch (e) {
+      note.textContent = "Transcription failed: " + e.message;
+    }
+    return;
+  }
+  if (!navigator.mediaDevices || !(window.AudioContext || window.webkitAudioContext)) {
     note.hidden = false;
     note.textContent = "Voice input is not available in this browser. The microphone on your keyboard works too.";
     return;
   }
-  if (recog) { recog.stop(); return; }
-  recog = new SR();
-  recog.lang = "en-US";
-  recog.interimResults = true;
-  const btn = $("#btn-mic");
-  btn.classList.add("listening");
-  recog.onresult = ev => {
-    let finalText = "", interim = "";
-    for (const res of ev.results) {
-      if (res.isFinal) finalText += res[0].transcript;
-      else interim += res[0].transcript;
-    }
-    $("#chat-input").value = finalText || interim;
-    if (finalText) $("#chat-form").requestSubmit();
-  };
-  recog.onend = () => { recog = null; btn.classList.remove("listening"); };
-  recog.onerror = () => {
+  try {
+    askCapture = await startCapture();
+    btn.classList.add("listening");
     note.hidden = false;
-    note.textContent = "That did not come through. Try again, or type it.";
-  };
-  recog.start();
+    note.textContent = "Listening… tap the mic again to send.";
+  } catch (e) {
+    note.hidden = false;
+    note.textContent = "Microphone access was refused. You can type instead.";
+  }
 });
 $("#chat-form").addEventListener("submit", async ev => {
   ev.preventDefault();
