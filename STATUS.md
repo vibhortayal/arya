@@ -44,6 +44,29 @@ Distribution: registration opens after the hackathon with a
   **71 green**. No model calls, $0. **Not deployed** — deploy is a
   separate owner step (git pull on the VM).
 
+## Quest Stage B (2026-10-27, evening)
+- **Playable Quest UI built** in the PWA (owner: build the game now,
+  plug the 3D in when the spike lands): Today hub session cards +
+  New hunt; the add-list flow with the Optimize screen (merges,
+  corrections with Undo, question chips gating the start); Hunt and
+  Express play screens; receipt finish -> Score with live badges;
+  Community (household Fastest Hands from real finished sessions),
+  Shop-Off, Friends, Quest profile with the private receipt archive
+  (one new read: GET /api/quest/receipts[/{id}]).
+- **SceneView driver ladder**: cloud (stub) / aisle (stylized) /
+  strip (first-class 2D, the default). The engine is the game; the
+  scene is a viewport — sessions record their starting driver and
+  scoring never reads it (proven by test). Mid-hunt toggle drops
+  aisle -> strip without losing state.
+- **Spotter slice** (store drift): "not here" reports
+  (empty_shelf / replaced / cant_tell + photo reference) in the
+  "reported" state, per-store open-report read, Eagle Eye on the
+  badge shelf (locked until a verified_move — rollout), and
+  spots_reported on the profile.
+- Commits `a746e00`, `56cffb1`, `ee85e36`, `0f623e0` (+ this log).
+  Suite: **78 green**. Local serve smoke passed end to end.
+  **Not deployed** — deploy is a separate owner step (git pull).
+
 ## Evening addendum (2026-10-27, later)
 - **ARCHITECTURE.md added** (assistant/docs/): the as-built record — two
   layers (edge perception in the user's Muse, core verification and
