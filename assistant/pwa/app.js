@@ -245,6 +245,7 @@ async function renderScan() {
         ${(u.candidates || []).map(cn => `<button class="chip" data-resolve="${esc(u.item_id)}" data-name="${esc(cn)}">It is ${esc(cn)}</button>`).join("")}
         <button class="chip" data-fix="${esc(key)}">Set the name</button>
       </div>
+      ${(u.sources && Object.keys(u.sources).length) ? `<div class="row"><span class="sub">Researched: ${Object.entries(u.sources).map(([n, u2]) => `<a href="${esc(u2)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" · ")}</span></div>` : ""}
       <div class="editor" data-editor="${esc(key)}" hidden>
         <input type="text" placeholder="Correct name" aria-label="Correct name">
         <button class="chip" data-save-resolve="${esc(u.item_id)}">Save</button>

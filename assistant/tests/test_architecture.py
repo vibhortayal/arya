@@ -99,3 +99,32 @@ class TestArchitecture(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestResolver(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import main
+        main.MetaClient = FakeClient
+        main._login_fails.clear()
+        self.c = TestClient(main.app)
+        from api import state
+        state._save("dictionary.json", {"entries": [
+            {"item_id": "sku-x", "sku": "999", "canonical_name": "Mystery Can",
+             "resolution": {"status": "unresolved", "candidates": []}}]})
+        r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
+        assert r.status_code == 200, r.text
+
+    def test_suggest_then_settle(self):
+        r = self.c.post("/api/review/suggest", json={
+            "item_id": "sku-x",
+            "candidates": [{"name": "Humm Kombucha 8 ct", "source": "https://example.com/p"}]})
+        assert r.status_code == 200, r.text
+        q = self.c.get("/api/review").json()
+        u = q["unresolved"][0]
+        assert u["candidates"] == ["Humm Kombucha 8 ct"]
+        assert u["sources"]["Humm Kombucha 8 ct"] == "https://example.com/p"
+        # suggesting for a settled or unknown item is refused
+        r = self.c.post("/api/review/suggest", json={
+            "item_id": "sku-nope", "candidates": [{"name": "X"}]})
+        assert r.status_code == 404

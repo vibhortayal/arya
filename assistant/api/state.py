@@ -347,7 +347,8 @@ def review_queue():
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", [])})
     unresolved = [{"item_id": e["item_id"], "name": e["canonical_name"],
-                   "candidates": e["resolution"].get("candidates", [])}
+                   "candidates": e["resolution"].get("candidates", []),
+                   "sources": e["resolution"].get("sources", {})}
                   for e in dictionary()["entries"]
                   if e.get("resolution", {}).get("status") == "unresolved"]
     return {"lines": lines, "unresolved": unresolved}
@@ -374,6 +375,24 @@ def teach_name(sku, name):
             e.setdefault("resolution", {})["status"] = "manual"
             _save("dictionary.json", d)
             return
+
+
+def suggest_resolution(item_id, candidates):
+    """Attach researched candidates (with source URLs) to an unresolved
+    entry. Research is evidence, not a verdict: the entry stays
+    unresolved until the user settles it."""
+    d = dictionary()
+    for e in d["entries"]:
+        if e["item_id"] == item_id:
+            res = e.setdefault("resolution", {})
+            if res.get("status") != "unresolved":
+                return False
+            res["candidates"] = [c["name"] for c in candidates]
+            res["sources"] = {c["name"]: c.get("source", "")
+                              for c in candidates if c.get("source")}
+            _save("dictionary.json", d)
+            return True
+    return False
 
 
 def resolve_dictionary(item_id, name):

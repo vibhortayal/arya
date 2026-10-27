@@ -244,6 +244,22 @@ async def intake_structured(req: Request):
             "unverified": sum(1 for l in lines if l["status"] != "auto")}
 
 
+@app.post("/api/review/suggest")
+async def review_suggest(req: Request):
+    """Researched candidates for an unresolved item, posted by the
+    user's Muse (the Resolver loop). Candidates carry their source;
+    settling still takes the user's word."""
+    body = await req.json()
+    cands = body.get("candidates") or []
+    clean = [{"name": c["name"], "source": c.get("source", "")}
+             for c in cands if isinstance(c, dict) and c.get("name")]
+    if not clean:
+        raise HTTPException(422, "candidates need at least one name")
+    if not state.suggest_resolution(body.get("item_id", ""), clean):
+        raise HTTPException(404, "no unresolved item with that id")
+    return {"ok": True, "candidates": [c["name"] for c in clean]}
+
+
 @app.post("/api/curator/run")
 def curator_run():
     if not os.environ.get("MODEL_API_KEY"):
