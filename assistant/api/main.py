@@ -12,7 +12,11 @@ from api.cost_ledger import CostLedger
 from api.cart.build import approve
 
 app = FastAPI(title="Arya API")
-_LEDGER = os.path.join(os.path.dirname(__file__), "..", "loops", "cost-ledger.jsonl")
+# The cost ledger is an operator artifact: it lives in the data root so it
+# survives container redeploys (the app layer is ephemeral; /app/data is not).
+_LEDGER = os.path.join(os.environ.get(
+    "ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data")),
+    "cost-ledger.jsonl")
 
 _login_fails = {}
 
