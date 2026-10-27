@@ -135,26 +135,27 @@ function refresh(view) {
 }
 function showErr(e) { $("#asof").textContent = "Could not load: " + e.message; }
 
-$("#file-json").addEventListener("change", async ev => {
-  const f = ev.target.files[0];
-  if (!f) return;
-  const data = JSON.parse(await f.text());
-  const isList = Array.isArray(data);
-  const res = await api(isList ? "/import/costco-json-bulk" : "/import/costco-json",
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-  $("#import-result").textContent = isList
-    ? `Imported. ${res.added} new receipts (${res.total_receipts} total).`
-    : `Imported. Totals ${res.totals_reconcile ? "verified" : "did not reconcile — flagged for review"}.`;
-  renderScan();
-});
-$("#btn-decode").addEventListener("click", async () => {
-  const text = $("#receipt-text").value.trim();
-  if (!text) return;
+$("#btn-receipt").addEventListener("click", async () => {
+  const out = $("#receipt-result");
+  const file = $("#receipt-file").files[0];
+  if (!file) { out.textContent = "Choose a receipt first — a PDF or a photo."; return; }
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  const isImage = file.type.startsWith("image/");
+  if (!isPdf && !isImage) { out.textContent = "That file is not a PDF or a photo."; return; }
+  out.textContent = "Reading…";
   try {
-    const res = await api("/decode/text", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-    $("#decode-result").textContent = `Decoded ${res.lines.length} lines. Totals ${res.totals_reconcile ? "verified" : "did not reconcile — flagged for review"}.`;
+    const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo",
+      { method: "POST", body: file, headers: { "Content-Type": file.type || (isPdf ? "application/pdf" : "image/jpeg") } });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || "That receipt could not be read.");
+    const rec = data.receipt;
+    const unchecked = (rec.lines || []).filter(l => l.status !== "auto").length;
+    out.textContent = `${rec.merchant || "Receipt"} — total ${money(rec.total)} — ` +
+      (rec.totals_reconcile ? "arithmetic verified" : "total did not reconcile") +
+      (unchecked ? `; ${unchecked} line(s) to check below.` : ".");
+    renderScan();
   } catch (e) {
-    $("#decode-result").textContent = e.message;
+    out.textContent = e.message;
   }
 });
 

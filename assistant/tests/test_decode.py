@@ -128,3 +128,50 @@ class TestPdfIntake(unittest.TestCase):
         self.assertTrue(r.json()["receipt"]["totals_reconcile"])
         self.assertEqual(c.post("/decode/pdf", content=b"").status_code, 400)
         self.assertEqual(c.post("/decode/pdf", content=b"not a pdf").status_code, 422)
+
+
+class TestPhotoIntake(unittest.TestCase):
+    def _fake_client(self, payload):
+        class FakeClient:
+            def __init__(self, ledger=None):
+                pass
+
+            def chat(self, messages, mode=None, personal=None):
+                assert personal is True and mode == "standard"
+                return json.dumps(payload), {}, 0.02
+        return FakeClient
+
+    def test_photo_normalization(self):
+        from api.decode.service import decode_photo
+        payload = {"store": "Safeway", "date": "2026-07-29", "subtotal": 8.98, "tax": 0.0, "total": 8.98,
+                   "lines": [{"item_no": "123", "product": "MILK WHL GAL", "brand": None, "detail": None,
+                              "list_price": 4.49, "price": 4.49, "discount": 0, "qty": 1,
+                              "is_return": False, "confidence": 0.95, "needs_user_check": False, "alternatives": []},
+                             {"item_no": None, "product": "BREAD", "brand": "GG", "detail": None,
+                              "list_price": 5.49, "price": 4.49, "discount": 1.0, "qty": 1,
+                              "is_return": False, "confidence": 0.7, "needs_user_check": True, "alternatives": ["BRD"]}]}
+        dec = decode_photo(b"fake-jpeg-bytes", self._fake_client(payload)())
+        self.assertTrue(dec["totals_reconcile"])
+        self.assertEqual(dec["lines"][0]["status"], "auto")
+        self.assertEqual(dec["lines"][1]["status"], "unverified")   # needs_user_check forces review
+        self.assertEqual(dec["lines"][1]["discount_amount"], 1.0)
+        self.assertEqual(dec["lines"][1]["decoded_name"], "GG BREAD")
+
+    def test_photo_endpoint(self):
+        import tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["ARYA_INSECURE_COOKIE"] = "1"
+        os.environ["MODEL_API_KEY"] = "test-key"
+        from fastapi.testclient import TestClient
+        import api.main as main
+        payload = {"store": "Safeway", "date": "2026-07-29", "subtotal": 4.49, "tax": 0.0, "total": 4.49,
+                   "lines": [{"item_no": "1", "product": "MILK", "brand": None, "detail": None,
+                              "list_price": 4.49, "price": 4.49, "discount": 0, "qty": 1,
+                              "is_return": False, "confidence": 0.95, "needs_user_check": False, "alternatives": []}]}
+        main.MetaClient = self._fake_client(payload)
+        c = TestClient(main.app)
+        c.post("/auth/setup", json={"username": "t", "password": "pw"})
+        r = c.post("/decode/photo", content=b"\xff\xd8\xff fake", headers={"Content-Type": "image/jpeg"})
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["receipt"]["totals_reconcile"])
+        self.assertEqual(c.post("/decode/photo", content=b"x", headers={"Content-Type": "text/plain"}).status_code, 415)
