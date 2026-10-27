@@ -48,22 +48,32 @@ def normalize_costco_json(obj):
     """Costco warehouse JSON export -> DecodedReceipt. Pure code, no model."""
     lines = []
     is_refund = obj.get("transactionType") == "Refund"
+    last_item_sku = None
     for it in obj.get("itemArray", []):
         amount = float(it["amount"])
         unit = it.get("unit") or 1
         desc = (it.get("itemDescription01") or "").strip()
-        if is_refund:
+        # A "/ <number>" line is a coupon/savings line for the item directly
+        # above it (its own itemNumber is a coupon SKU). On a refund it is
+        # the savings clawback for the returned item above.
+        if desc.startswith("/"):
+            ltype = "discount"
+        elif is_refund:
             ltype = "return"
         elif amount < 0 or "SAVINGS" in desc.upper():
             ltype = "discount"
         else:
             ltype = "item"
+        if ltype == "item":
+            last_item_sku = str(it.get("itemNumber") or "")
         lines.append({
             "raw": desc, "detail": it.get("itemDescription02"), "sku": str(it.get("itemNumber") or ""),
-            "decoded_name": desc, "qty": abs(unit),
+            "decoded_name": "Instant Savings" if ltype == "discount" and desc.startswith("/") else desc,
+            "qty": abs(unit),
             "unit_price": round(amount / unit, 2) if unit else amount,
             "line_total": amount, "line_type": ltype,
-            "discount_parent_sku": None, "confidence": 1.0, "status": "auto"})
+            "discount_parent_sku": last_item_sku if ltype == "discount" and desc.startswith("/") else None,
+            "confidence": 1.0, "status": "auto"})
     lines, reconcile = _finish(lines, obj.get("subTotal"))
     return {"receipt_id": obj.get("transactionBarcode"),
             "source_type": "grocery",

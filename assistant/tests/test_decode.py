@@ -69,3 +69,18 @@ class TestApi(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSlashLines(unittest.TestCase):
+    def test_coupon_line_attaches_to_item_above(self):
+        obj = {"transactionBarcode": "T1", "transactionDate": "2026-10-22",
+               "transactionType": "Sales", "warehouseName": "X",
+               "subTotal": 12.99, "taxes": 0, "total": 12.99,
+               "itemArray": [
+                   {"itemNumber": "1901576", "itemDescription01": "KG BLANKET", "itemDescription02": None, "unit": 1, "amount": 18.99},
+                   {"itemNumber": "397161", "itemDescription01": "/ 1901576", "itemDescription02": None, "unit": -1, "amount": -6.00}]}
+        r = normalize_costco_json(obj)
+        self.assertTrue(r["totals_reconcile"])
+        self.assertEqual(r["lines"][1]["line_type"], "discount")
+        self.assertEqual(r["lines"][1]["discount_parent_sku"], "1901576")
+        self.assertEqual(r["lines"][1]["status"], "auto")
