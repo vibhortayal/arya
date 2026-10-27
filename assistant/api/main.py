@@ -759,6 +759,21 @@ def quest_profile():
     return social.profile()
 
 
+@app.get("/api/quest/receipts")
+def quest_receipt_archive():
+    from api import social
+    return {"receipts": social.receipt_archive()}
+
+
+@app.get("/api/quest/receipts/{receipt_id}")
+def quest_receipt_detail(receipt_id: str):
+    from api import social
+    detail = social.receipt_detail(receipt_id)
+    if detail is None:
+        raise HTTPException(404, "no such receipt")
+    return detail
+
+
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 if os.path.isdir(_PWA):
     app.mount("/", StaticFiles(directory=_PWA, html=True), name="pwa")
