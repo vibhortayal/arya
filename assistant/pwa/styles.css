@@ -48,7 +48,7 @@ a { color: var(--accent-text); text-decoration: none; }
 button { font: inherit; cursor: pointer; color: inherit; }
 button:disabled { opacity: 0.45; cursor: default; }
 [hidden] { display: none !important; }
-.btn.primary:disabled { background: var(--fill); color: var(--muted, #8e8e93); opacity: 1; }
+.btn.primary:disabled { background: var(--fill); color: var(--secondary); opacity: 1; }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 
 header { display: flex; justify-content: space-between; align-items: baseline; }
