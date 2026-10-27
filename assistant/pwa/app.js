@@ -39,6 +39,14 @@ async function renderHome() {
   $("#smart-list").innerHTML = h.list.items.length
     ? h.list.items.map(i => row(i.name, i.due_reason, `× ${i.qty}`)).join("")
     : empty("The list is empty. Nothing is due yet.");
+  if (h.seen && h.seen.length) {
+    $("#smart-list").innerHTML += h.seen.map(s =>
+      `<p class="muted">Seen in the ${s.kind} · ${fmtShort(s.date)} — ${s.name} is in stock.</p>`).join("");
+  }
+  if (h.checks && h.checks.length) {
+    $("#smart-list").innerHTML += h.checks.map(c =>
+      `<p class="muted">${c.text}</p>`).join("");
+  }
   const c = h.cart;
   $("#cart").innerHTML =
     row(`${c.store} · ${c.items.length} items`, c.state === "approved" ? "Approved" : "Waiting for your approval",
@@ -106,7 +114,8 @@ async function renderItem(id) {
   }
   html += `<p style="margin-top:20px">
     <button class="secondary" id="btn-add">Add to list</button>
-    <button class="secondary" id="btn-never">Never suggest</button></p>
+    <button class="secondary" id="btn-never">Never suggest</button>
+    <button class="secondary" id="btn-expired">This expired</button></p>
     <p id="flag-result" class="muted"></p>`;
   $("#item-detail").innerHTML = html;
   $("#btn-add").addEventListener("click", async () => {
@@ -116,6 +125,10 @@ async function renderItem(id) {
   $("#btn-never").addEventListener("click", async () => {
     await api(`/api/items/${encodeURIComponent(id)}/flag`, { method: "POST", body: JSON.stringify({ never: true }) });
     $("#flag-result").textContent = "Arya will not suggest this again.";
+  });
+  $("#btn-expired").addEventListener("click", async () => {
+    await api(`/api/items/${encodeURIComponent(id)}/expired`, { method: "POST" });
+    $("#flag-result").textContent = "Marked expired. It's on your list.";
   });
 }
 
@@ -130,7 +143,7 @@ $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(last
 
 function refresh(view) {
   if (view === "view-home") renderHome().catch(showErr);
-  if (view === "view-scan") renderScan().catch(showErr);
+  if (view === "view-scan") { renderScan().catch(showErr); renderEyes().catch(showErr); }
   if (view === "view-dash") renderDash().catch(showErr);
 }
 function showErr(e) { $("#asof").textContent = "Could not load: " + e.message; }
@@ -156,6 +169,72 @@ $("#btn-receipt").addEventListener("click", async () => {
     renderScan();
   } catch (e) {
     out.textContent = e.message;
+  }
+});
+
+async function renderEyes() {
+  const data = await api("/api/eyes").catch(() => ({ records: [] }));
+  const box = $("#eyes-records");
+  if (!box) return;
+  box.innerHTML = data.records.map(rec => `
+    <div class="eyes-record">
+      <img src="/eyes/photos/${rec.id}" alt="Eyes photo" style="max-width:100%;border-radius:10px">
+      <p class="muted">${rec.kind} · ${fmtDate(rec.date)}</p>
+      ${rec.sightings.map((sg, i) => `
+        <div class="row"><div><span class="name">${sg.name}</span>
+        <span class="sub">${sg.judge_agree ? "" : "two reads disagreed · "}${sg.state}</span></div>
+        ${sg.state === "pending" ? `<div>
+          <button class="secondary eyes-confirm" data-rec="${rec.id}" data-idx="${i}">Yes, it's there</button>
+          <button class="secondary eyes-reject" data-rec="${rec.id}" data-idx="${i}">Not there</button></div>` : ""}
+        </div>`).join("")}
+    </div>`).join("");
+  box.querySelectorAll(".eyes-confirm, .eyes-reject").forEach(b =>
+    b.addEventListener("click", async () => {
+      const decision = b.classList.contains("eyes-confirm") ? "confirmed" : "rejected";
+      await api(`/api/eyes/${b.dataset.rec}/sightings/${b.dataset.idx}`,
+        { method: "POST", body: JSON.stringify({ state: decision }) });
+      renderEyes();
+    }));
+}
+
+$("#btn-eyes").addEventListener("click", async () => {
+  const out = $("#eyes-result");
+  const file = $("#eyes-file").files[0];
+  if (!file) { out.textContent = "Choose a photo first."; return; }
+  out.textContent = "Looking…";
+  const kind = $("#eyes-kind").value;
+  const r = await fetch(`/eyes/photo?kind=${encodeURIComponent(kind)}`,
+    { method: "POST", body: file, headers: { "Content-Type": file.type || "image/jpeg" } });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { out.textContent = data.detail || "That photo could not be read."; return; }
+  out.textContent = `I see ${data.sightings.length} item(s). Confirm what is really there:`;
+  renderEyes();
+});
+
+const chatHistory = [];
+function chatLine(who, text) {
+  const el = document.createElement("div");
+  el.className = "row";
+  el.innerHTML = `<div><span class="name">${who}</span><span class="sub" style="display:block">${text}</span></div>`;
+  $("#chat-log").appendChild(el);
+}
+$("#chat-form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const input = $("#chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  chatHistory.push({ role: "user", content: text });
+  chatLine("You", text);
+  try {
+    const res = await api("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatHistory }) });
+    chatHistory.push({ role: "assistant", content: res.reply });
+    chatLine("Arya", res.reply);
+    (res.applied || []).forEach(a => chatLine("Done", a));
+    (res.skipped || []).forEach(a => chatLine("Note", a));
+  } catch (e) {
+    chatLine("Arya", "I could not answer that: " + e.message);
   }
 });
 
