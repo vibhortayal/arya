@@ -22,6 +22,13 @@ class TestState(unittest.TestCase):
         d = state.derived()
         self.assertIn("smart_list", d)
 
+    def test_dateless_receipt_refused(self):
+        obj = json.load(open(os.path.join(GOLDEN, "synthetic-costco-receipt.json")))
+        dec = normalize_costco_json(obj)
+        dec["purchased_at"] = None
+        dec["receipt_id"] = "dateless-1"
+        self.assertEqual(state.add_receipts([dec]), 0)
+
     def test_review_queue_shape(self):
         q = state.review_queue()
         self.assertIn("lines", q)

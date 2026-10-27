@@ -34,7 +34,9 @@ def receipts():
 def add_receipts(new):
     cur = receipts()
     seen = {r["receipt_id"] for r in cur}
-    added = [r for r in new if r["receipt_id"] not in seen]
+    # A receipt with no date cannot be placed in the ledger; it is refused
+    # at the door rather than breaking pattern math later.
+    added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
     _save("receipts.json", cur + added)
     return len(added)
 
