@@ -96,6 +96,10 @@ owner's purchase history, imported as data; it is not code.
 The Trader Joe's walkthrough video and its frames are used with the
 team's rights to them.
 
+## License
+
+MIT, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
+
 ## Rules that hold
 
 Personal data is Standard mode only, enforced in
