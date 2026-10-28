@@ -17,7 +17,7 @@
 <body>
 <header>
   <span class="wordmark">Arya</span>
-  <p id="userbar" class="muted" hidden><span id="username"></span> · <a href="#" id="signout">Sign out</a></p>
+  <button id="avatar-btn" class="avatar" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span></button>
 </header>
 <p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
@@ -78,6 +78,7 @@
     <p id="today-through" class="muted nomargin"></p>
     <div class="todayband"><img src="assets/scenes/hero.webp" alt=""><span id="today-level" class="bandchip" hidden></span></div>
     <div id="today-hero"></div>
+    <div id="today-crew"></div>
     <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
     <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
@@ -183,6 +184,7 @@
     <div id="item-detail"></div>
   </section>
   <section id="view-profile" class="view" hidden>
+    <p><a href="#" id="pf-back">&larr; Back</a></p>
     <h2 class="largetitle">Profile</h2>
     <div id="pf-card" class="group pad"></div>
     <div id="pf-stats" class="stattiles"></div>
@@ -195,7 +197,6 @@
     <div class="group">
       <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
-      <button class="navrow" data-qnav="view-community" type="button"><span class="grow">Community</span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
     </div>
     <h3 class="sect">Account</h3>
@@ -347,6 +348,7 @@
     <h2 class="largetitle" style="font-size:28px">Check the list</h2>
     <p id="opt-summary" class="subtitle"></p>
     <div id="opt-body"></div>
+    <p class="muted nomargin">Optional: <a href="#" id="opt-race">race a friend on this list</a>.</p>
     <p><button id="opt-next" class="btn primary wide" type="button">Looks right &rarr;</button></p>
     <p><button id="opt-skip" class="btn secondary wide" type="button" hidden>Skip for now — keep the rest as typed</button></p>
   </section>
@@ -480,8 +482,12 @@
   </section>
 
   <section id="view-community" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">Community</h2>
+    <h2 class="largetitle">Crew</h2>
+    <div id="crew-summary" class="group"></div>
+    <div class="group">
+      <button class="navrow" data-qnav="view-race" type="button"><span class="grow">Shop-Off<span class="sub">Race a friend on the same list</span></span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-friends" type="button"><span class="grow">Friends<span class="sub" id="crew-friends-sub">Add by handle, accept requests</span></span><span class="chev">›</span></button>
+    </div>
     <div class="seg" id="comm-scopes">
       <button class="chip" data-scope="household" aria-pressed="true" type="button">Household</button>
       <button class="chip" data-scope="friends" aria-pressed="false" type="button">Friends</button>
@@ -493,10 +499,6 @@
     <p class="muted">Fastest full hunts, scored as time per item. A hunt needs 8 or more items to qualify. Times come from the receipt — the receipt is the referee.</p>
     <h3 class="sect">Badges</h3>
     <div id="comm-badges" class="group"></div>
-    <div class="group">
-      <button class="navrow" data-qnav="view-race" type="button"><span class="grow">Shop-Off</span><span class="chev">›</span></button>
-      <button class="navrow" data-qnav="view-friends" type="button"><span class="grow">Friends</span><span class="chev">›</span></button>
-    </div>
   </section>
 
   <section id="view-race" class="view" hidden>
@@ -577,9 +579,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.2A2.7 2.7 0 0 1 6.7 3.5h10.6A2.7 2.7 0 0 1 20 6.2v7.6a2.7 2.7 0 0 1-2.7 2.7h-5L7.6 20.5v-4H6.7A2.7 2.7 0 0 1 4 13.8V6.2z"/><path d="M12 6.6l.85 2 2 .85-2 .85-.85 2-.85-2-2-.85 2-.85.85-2z" fill="currentColor" stroke="none"/></svg>
     <span>Ask</span>
   </button>
-  <button data-view="view-profile">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="9.8" r="2.9"/><path d="M6.4 18.6a6.2 6.2 0 0 1 11.2 0"/></svg>
-    <span>Profile</span>
+  <button data-view="view-community">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9.2" r="2.9"/><path d="M3.6 18.4a5.6 5.6 0 0 1 10.8 0"/><circle cx="16.8" cy="10" r="2.3"/><path d="M15.6 14.6a4.6 4.6 0 0 1 5.4 3.6"/></svg>
+    <span>Crew</span>
   </button>
 </nav>
 
