@@ -105,7 +105,10 @@ function qStorePhotos(store) {
 function qResolveDriver(store) {
   const photos = qStorePhotos(store);
   if (Q.peek3D && qStoreModel(store)) return "cloud";
-  return photos ? "photo" : "strip";
+  if (photos) return "photo";
+  // No walk for this store: a Quest hunt plays on the illustrated
+  // aisle (the art rung); Express keeps its quiet strip.
+  return Q.current && Q.current.mode === "express" ? "strip" : "art";
 }
 
 /* ---------------- navigation ---------------- */
@@ -543,7 +546,12 @@ function renderStorePick() {
   if (!box) return;
   // Stores from the receipts that are not in My Stores yet: one tap
   // names the store for this trip.
-  const hist = qHistoryStores().filter(h => !Q.mine.some(s => qSameStore(s.name, h)));
+  const hist = qHistoryStores()
+    .filter(h => !Q.mine.some(s => qSameStore(s.name, h)))
+    // Demo (owner, 2026-10-28): never offer a store the demo has
+    // no data for — no walk, no model, no row. Typing the name
+    // still works; it just isn't advertised.
+    .filter(h => !qIsDemo() || qStorePhotos(h) || qStoreModel(h));
   const hbox = $("#st-history");
   // Top 3 by trips, the rest behind a fold (owner phone pass,
   // 2026-10-28: his receipts name 11 Costco warehouses — the picker
@@ -560,8 +568,12 @@ function renderStorePick() {
     box.innerHTML = `<div class="group">${empty("No stores in your stores yet. Find one or add one below.")}</div>`;
     return;
   }
-  const favs = Q.mine.filter(s => s.favorite);
-  const rest = Q.mine.filter(s => !s.favorite);
+  // Demo: the same no-data rule covers My Stores rows.
+  const mineShown = qIsDemo()
+    ? Q.mine.filter(s => qStorePhotos(s.name) || qStoreModel(s.name))
+    : Q.mine;
+  const favs = mineShown.filter(s => s.favorite);
+  const rest = mineShown.filter(s => !s.favorite);
   const rowHtml = s => `
     <button class="sessrow pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
       <span class="grow"><span class="name">${esc(s.name)}</span>
@@ -883,7 +895,8 @@ document.querySelectorAll(".modecard").forEach(b =>
       const sess = await post("/api/quest/sessions",
         { store: Q.draft.store, mode, items: Q.draft.finalItems,
           store_id: Q.draft.storeId || undefined,
-          driver: qStorePhotos(Q.draft.store) ? "photo" : "strip" });
+          driver: qStorePhotos(Q.draft.store) ? "photo"
+            : mode === "quest" ? "art" : "strip" });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       // The set-up screens are done with: Back from the new hunt
@@ -1344,7 +1357,8 @@ function startHuntTimer(sess) {
 const QSCENE_CAPTION = {
   photo: "Real photos from a walk through this store. The orange dot is your next item.",
   cloud: "A 3D scan of the store, built from the walkthrough video. Drag to look around.",
-  strip: "One card per stop — this store has no map yet, so the cards lead the way."
+  strip: "One card per stop — this store has no map yet, so the cards lead the way.",
+  art: "An illustrated store — Arya hasn't walked this one yet, so the drawing leads. Tap Teach Arya to map it for real."
 };
 function paintSceneCaption() {
   $("#scene-cap").textContent = QSCENE_CAPTION[Q.driverName] || "";
@@ -1442,6 +1456,15 @@ function qAgo(iso) {
 function renderHunt() {
   const sess = Q.current;
   if (!sess) return;
+  // Art for the unmapped (owner, 2026-10-28): when the focused
+  // stop sits in a section the map doesn't place, the illustrated
+  // aisle takes the stage until focus returns to mapped ground.
+  if (sess.mode === "quest" && sess.state === "playing") {
+    const focus = qStops(sess)[qCurrentIndex(sess)];
+    const base = qResolveDriver(sess.store);
+    const want = base === "photo" && focus && focus.unplaced ? "art" : base;
+    if (want !== Q.driverName) { Q.driverName = want; mountScene(); }
+  }
   const p = qProgress(sess);
   const next = qCurrentIndex(sess);
   if (Q.scene) {
