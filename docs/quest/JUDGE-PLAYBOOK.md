@@ -7,7 +7,7 @@ are grouped by the four judging criteria so you can score as you go.
 
 **Live demo:** https://arya-pilot.duckdns.org/ — no account, no password.
 Use a phone, or a browser window about 390 px wide. Allow the camera
-and the microphone if you want steps 3, 4 and 8 to use them.
+and the microphone if you want steps 3, 4, 7 and 8 to use them.
 
 ## Before you start
 
@@ -20,16 +20,16 @@ runs an older build.
 | What you see on the first page | Build | What it means |
 |---|---|---|
 | A photo of a store, a paragraph, and a button "Try the demo — play the Trader Joe's hunt" | New (service worker `arya-v33` or later) | Everything below works. |
-| A bare "Sign in" form and a button "Try the demo household" | Old (`arya-v32`) | The demo household is **read-only**. Steps 1–2 work. Steps 5–10 fail at the first write with "the demo household is read-only". Use the video for those steps. |
+| A bare "Sign in" form and a button "Try the demo household" | Old (`arya-v32`) | The demo household is **read-only**. Steps 1–4 and 9 work. Steps 5–8 fail at the first write with "the demo household is read-only". Use the demo video for those steps. |
 
 Two small fixes are in pull request #12 (Ask no longer shows internal
 ids such as `manual-milk`; an empty cart shows no Approve button). If
 #12 is not deployed, ignore those two small defects.
 
-**What you need.** A receipt photo for step 9. Any grocery receipt
+**What you need.** A receipt photo for step 8. Any grocery receipt
 works: a paper one, or a photo of one on a screen. The app has no
 built-in sample receipt yet (it is drawn in `wireframes.html` for the
-next release). If you have none, tap **Skip** in step 9; the hunt
+next release). If you have none, tap **Skip** in step 8; the hunt
 still ends, and you only lose the receipt score.
 
 **What is real, what is not.** The demo household is fictional. Your
@@ -154,7 +154,7 @@ Read this while the receipt step runs.
 
 | Symptom | Cause | What to do |
 |---|---|---|
-| "the demo household is read-only" | Old build (no #7) | Use the video for steps 5–9. |
+| "the demo household is read-only" | Old build (no #7) | Use the video for steps 5–8. |
 | "demo rate limit — try again in a bit" | Per-IP cap on live doors | Wait a minute, then retry. |
 | Receipt spinner for more than 90 s | Wonder timeout, then Spark fallback | Wait for the fallback, or tap Skip. |
 | Voice gives nothing | Mic permission or browser | Type the items instead. |
