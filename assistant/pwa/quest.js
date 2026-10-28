@@ -2518,9 +2518,23 @@ async function renderCommunity() {
     ? `<div class="row"><div class="grow"><span class="name">${acc} friend${acc === 1 ? "" : "s"}${pend ? ` · ${pend} request${pend === 1 ? "" : "s"}` : ""}</span><span class="sub">${raceN ? `${raceN} Shop-Off${raceN === 1 ? "" : "s"} on` : "No Shop-Off on right now"}</span></div></div>`
     : empty("Hunting is better with company. Add a friend to race the same list.");
   $("#crew-friends-sub").textContent = pend ? `${pend} request${pend === 1 ? "" : "s"} waiting` : "Add by handle, accept requests";
+  const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
+  $("#comm-news").innerHTML = (nw.news || []).length
+    ? nw.news.map(n => `<div class="row"><div class="grow"><span class="name">${esc(n.item)} is not at ${esc(n.store)}</span>
+      <span class="sub">${n.count} report${n.count === 1 ? "" : "s"} · ${fmtShort(String(n.reported_at || "").slice(0, 10))}</span></div></div>`).join("")
+    : `<div class="row"><div class="grow"><span class="name">Oat milk is not at Costco<span class="samplepill">Sample</span></span>
+      <span class="sub">Example only. Tap Not here? on a hunt and it shows up here.</span></div></div>`;
   const board = $("#comm-board");
   if (scope !== "household") {
-    board.innerHTML = empty("No hunts at this scope yet — boards widen as more hunters play.");
+    // Boards across accounts are not live yet. Show a labelled
+    // sample so the idea is visible, never as real data.
+    const samples = { friends: [["@sample-mina", 33], ["@sample-dev", 38]],
+                      store: [["@sample-ana", 31], ["@sample-ravi", 36]],
+                      global: [["@sample-ana", 31], ["@sample-mina", 33], ["@sample-dev", 38]] }[scope] || [];
+    board.innerHTML = samples.map(([h, per], i) => `
+      <div class="row"><div class="grow"><span class="name">${i + 1}. ${esc(h)}<span class="samplepill">Sample</span></span>
+      <span class="sub">Example only. Real boards fill in as friends play.</span></div>
+      <div class="money">${per}s / item</div></div>`).join("");
   } else {
     const rows = Q.sessions
       .filter(s => s.state === "done" && s.items.length >= 8)

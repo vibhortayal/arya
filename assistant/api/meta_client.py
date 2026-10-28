@@ -208,6 +208,30 @@ class MetaClient:
                                output_tokens=0, cost_usd=cost)
         return image_bytes, usage, cost
 
+    def edit_image(self, image_bytes, prompt, media_type="image/jpeg"):
+        """Muse Image edits (POST /v1/images/edits, multipart; same
+        response shape as generations). Returns (image_bytes, usage,
+        cost_usd), billed per image like generate_image. The input
+        bytes are sent once and not kept here."""
+        import base64
+        status, payload = self._send_multipart(
+            "/images/edits",
+            {"model": MODELS["image"], "prompt": prompt,
+             "response_format": "b64_json"},
+            ("image", "photo", media_type, image_bytes))
+        if status != 200 or not isinstance(payload, dict):
+            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+        data = payload.get("data") or []
+        if not data or not data[0].get("b64_json"):
+            raise RuntimeError(f"Muse Image: no image in response: {str(payload)[:300]}")
+        out = base64.b64decode(data[0]["b64_json"])
+        cost = IMAGE_USD_PER_IMAGE
+        if self.ledger is not None:
+            self.ledger.record(mode="image", model=MODELS["image"],
+                               input_tokens=0, cached_tokens=0,
+                               output_tokens=0, cost_usd=cost)
+        return out, payload.get("usage") or {}, cost
+
     def _send_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,
         content_type, bytes). json_fields are emitted as parts with
