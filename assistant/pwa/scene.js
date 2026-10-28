@@ -170,8 +170,8 @@ function cloudView(THREE, host, manifest, buf, graph) {
   chip.hidden = true;
   wrap.appendChild(chip);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x101318);
-  scene.fog = new THREE.Fog(0x101318, 3.5, 8.0);
+  scene.background = new THREE.Color(0xFAFAFA);
+  scene.fog = new THREE.Fog(0xFAFAFA, 3.5, 8.0);
   const camera = new THREE.PerspectiveCamera(68, 1, 0.01, 60);
 
   const geo = new THREE.BufferGeometry();
@@ -216,7 +216,7 @@ function cloudView(THREE, host, manifest, buf, graph) {
     c.width = c.height = 128;
     const g = c.getContext("2d");
     g.beginPath(); g.arc(56, 64, 40, 0, Math.PI * 2);
-    g.fillStyle = state === "got" ? "#30c759" : "#2f7cf6";
+    g.fillStyle = state === "got" ? "#E4572E" : "#55555C";
     g.fill();
     g.lineWidth = 6; g.strokeStyle = "rgba(255,255,255,0.92)"; g.stroke();
     g.fillStyle = "#fff";
@@ -230,7 +230,7 @@ function cloudView(THREE, host, manifest, buf, graph) {
     }
     if (flagged) {
       g.beginPath(); g.arc(98, 30, 22, 0, Math.PI * 2);
-      g.fillStyle = "#ff9f0a"; g.fill();
+      g.fillStyle = "#E8A33D"; g.fill();
       g.lineWidth = 4; g.strokeStyle = "rgba(255,255,255,0.92)"; g.stroke();
       g.fillStyle = "#fff"; g.font = "800 30px -apple-system, sans-serif";
       g.fillText("!", 98, 32);

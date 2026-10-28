@@ -391,3 +391,26 @@ same evening — see Intake parity below.)
 - Suite: **232 green** (12 new in tests/test_localizer.py).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-localizer-integration.md.
+
+## Theme migration — wireframe orange at the token layer (2026-10-27)
+
+- The approved wireframes' colors are now the app's colors:
+  --acc #E4572E is the one accent and sits on game elements
+  only (Quest primaries, hero card, Quest mode card, hunt
+  markers/dots/progress, GRAB, verified pills, "you" rows,
+  tab-current); structure runs on the wireframes' greyscale
+  tokens (--ink/--line/--bg/--panel/--fill, values verbatim,
+  the app's semantic names aliased onto them). Scene
+  background #FAFAFA everywhere (the cloud viewport is light
+  now); the amber warning palette (#8a3b12 / #FFF1D6 /
+  #E8A33D) stays separate from the accent. The old green
+  accent is gone from every first-party source.
+- Verification, the step the first parity pass skipped:
+  tests/test_theme.py pins the token values exactly and
+  greps out every pre-migration color; computed styles were
+  read in a real browser and a five-screen screenshot pass
+  (Today, List, Hunt, Community, Profile) confirms
+  orange-on-greyscale. SW cache arya-v26.
+- Suite: **240 green** (8 new in tests/test_theme.py).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-theme-migration.md.
