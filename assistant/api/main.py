@@ -301,10 +301,10 @@ async def auth_login(req: Request):
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
     body = await _json_obj(req)
-    name = (body.get("username") or "").strip().lower()
+    name = auth.resolve_login_name(body.get("username"))
     if not auth.verify(name, body.get("password", "")):
         _login_fails[ip] = fails + [_t.time()]
-        raise HTTPException(401, "wrong username or password")
+        raise HTTPException(401, "wrong email or password")
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
 

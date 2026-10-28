@@ -27,6 +27,19 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(c.post("/auth/login", json={"username": "vibhor", "password": "correct horse"}).status_code, 200)
         self.assertEqual(c.get("/api/home").status_code, 200)
 
+    def test_short_name_matches_email_account(self):
+        from api import auth
+        auth.create_user("tester-a@test.arya", "pw-123456")
+        auth.create_user("tester-b@test.arya", "pw-123456")
+        self.assertEqual(auth.resolve_login_name(" Tester-A "), "tester-a@test.arya")
+        self.assertTrue(auth.verify("tester-a", "pw-123456"))
+        self.assertFalse(auth.verify("tester-a", "nope"))
+        self.assertEqual(auth.resolve_login_name("nobody"), "nobody")
+        auth.create_user("tester-a@other.arya", "pw-123456")
+        self.assertEqual(auth.resolve_login_name("tester-a"), "tester-a")  # ambiguous: no guess
+        r = self.c.post("/auth/login", json={"username": "tester-b", "password": "pw-123456"})
+        self.assertEqual(r.json()["user"], "tester-b@test.arya")
+
     def test_register_locked_by_default(self):
         c = self.c
         c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
