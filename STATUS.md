@@ -16,6 +16,10 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   local localizer), photo-walk view of Trader Joe's.
 - **Demo:** a fictional household in a per-visitor sandbox; demo
   writes never reach disk. Light mode only.
+- **Accounts:** registration LOCKED (owner, 2026-10-28) —
+  `POST /auth/register` refuses new accounts unless the operator
+  sets `ARYA_REGISTRATION_OPEN=1`; login, bootstrap setup, existing
+  accounts, and the demo are unchanged. SW arya-v50.
 - **Hunt v2** (PR #16, merged): one-column hunt, put back in place,
   nothing auto-finishes, Back is a stack, Finish closes the hunt.
 

@@ -201,9 +201,18 @@ def _set_session_cookie(resp, token):
     return resp
 
 
+def _registration_open():
+    """New-account creation is locked by default (owner locked it
+    2026-10-28, reversing the same-day open). The operator reopens it
+    by setting ARYA_REGISTRATION_OPEN=1 in the service environment —
+    no code change. Existing accounts and the demo are unaffected."""
+    return os.environ.get("ARYA_REGISTRATION_OPEN") == "1"
+
+
 @app.get("/auth/status")
 def auth_status():
-    return {"has_users": len(auth.users()) > 0}
+    return {"has_users": len(auth.users()) > 0,
+            "registration_open": _registration_open()}
 
 
 @app.post("/auth/setup")
@@ -220,10 +229,14 @@ async def auth_setup(req: Request):
 
 @app.post("/auth/register")
 async def auth_register(req: Request):
-    """Public sign-up (owner opened registration 2026-10-28). Same
-    account shape as setup; setup stays bootstrap-only. A per-IP cap
-    keeps account farming slow, and the password floor is enforced
-    here so the operator path (create_user) keeps its own rules."""
+    """Public sign-up — LOCKED unless the operator opens it
+    (ARYA_REGISTRATION_OPEN=1; owner locked registration 2026-10-28).
+    Same account shape as setup; setup stays bootstrap-only. A per-IP
+    cap keeps account farming slow, and the password floor is
+    enforced here so the operator path (create_user) keeps its own
+    rules."""
+    if not _registration_open():
+        raise HTTPException(403, "registration is closed")
     import time as _t
     ip = _client_ip(req)
     hits = [t for t in _register_hits.get(ip, []) if _t.time() - t < 900]
