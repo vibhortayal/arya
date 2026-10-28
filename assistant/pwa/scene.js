@@ -8,6 +8,14 @@
  * screen and the engine, never in a driver.
  *
  * The ladder:
+ *   "photo" — the photo-walk driver: the mapped store's own
+ *             walkthrough frames, crossfaded by path fraction.
+ *             The DEFAULT view for a mapped store (Discussion
+ *             43). The screen sets el.dataset.photos to the
+ *             store's frames directory before creating the view.
+ *             Honest naming: these are photos of the store along
+ *             the walk path — never a "3D model", never a live
+ *             view.
  *   "cloud" — the VGGT point-cloud driver (Three.js): the store
  *             rebuilt from a shopper's walkthrough, walked along the
  *             real camera path. The screen sets el.dataset.model to
@@ -472,6 +480,139 @@ function cloudView(THREE, host, manifest, buf, graph) {
   };
   return driver;
 }
+
+/* ---- "photo" — the photo-walk driver -------------------------------
+ * The mapped store's default view (Discussion 43): the
+ * walkthrough's frames along the camera path, crossfaded as the
+ * hunt's path fraction moves. The treatment is the photo-walk
+ * prototype's: the sharp frame rides over a blurred fill of
+ * itself (a 16:9 frame in a portrait phone would otherwise
+ * letterbox away), a rolling preload window (-2/+5) keeps the
+ * walk ahead of the player, and the gyro look pans within the
+ * frame. Stops ride as dots on the frame's own track, placed by
+ * the same path fraction the localizer answers in — position is
+ * driver-independent, so the anchor works here exactly as on
+ * the cloud. Presentation only: the session is the game. */
+const PHOTO_FRAME_COUNT = 90;
+function photoFrameForU(u, n) {
+  const c = Math.max(0, Math.min(1, Number(u) || 0));
+  return Math.round(c * ((n || PHOTO_FRAME_COUNT) - 1));
+}
+SceneDrivers.photo = function (el) {
+  const base = el.dataset.photos || "";
+  if (!base) return SceneDrivers.strip(el);
+  el.innerHTML = `
+  <div class="photoview">
+    <img class="photo-bg" alt="">
+    <div class="photo-sharp">
+      <img class="photo-frame on" alt="The store, along the walk">
+      <img class="photo-frame" alt="">
+    </div>
+    <div class="cloud-shelf photo-chip" hidden></div>
+    <div class="photo-dots"></div>
+  </div>`;
+  const bg = el.querySelector(".photo-bg");
+  const sharp = el.querySelector(".photo-sharp");
+  const chip = el.querySelector(".photo-chip");
+  const dotsEl = el.querySelector(".photo-dots");
+  const frames = [...el.querySelectorAll(".photo-frame")];
+  let front = 0;
+  let stops = [], nextIdx = -1;
+  let curU = 0, curFrame = -1, glide = null, raf = 0, widened = false;
+
+  const cache = new Map();
+  function fileFor(i) { return `${base}/f${String(i + 1).padStart(3, "0")}.jpg`; }
+  function ensure(i) {
+    if (i < 0 || i >= PHOTO_FRAME_COUNT) return null;
+    if (!cache.has(i)) {
+      const im = new Image();
+      im.src = fileFor(i);
+      cache.set(i, im);
+    }
+    return cache.get(i);
+  }
+  function preloadAround(i, wide) {
+    const lo = wide ? -2 : -1, hi = wide ? 5 : 4;
+    for (let d = lo; d <= hi; d++) ensure(i + d);
+  }
+  function show(i) {
+    if (i === curFrame) return;
+    const im = ensure(i);
+    const swap = () => {
+      const back = frames[1 - front];
+      back.src = fileFor(i);
+      back.classList.add("on");
+      frames[front].classList.remove("on");
+      front = 1 - front;
+      bg.src = fileFor(i);
+      curFrame = i;
+    };
+    if (im && im.complete && im.naturalWidth) swap();
+    else if (im) im.onload = swap;
+    preloadAround(i, widened);
+    widened = true;
+  }
+  function stopU(i) {
+    const s = stops[i];
+    return s && s.shelfU != null ? s.shelfU : (i + 0.5) / (stops.length || 1);
+  }
+  function paintChip() {
+    const s = nextIdx >= 0 ? stops[nextIdx] : null;
+    chip.hidden = !(s && s.shelfLabel);
+    if (s && s.shelfLabel) chip.textContent = s.shelfLabel;
+  }
+  function paintDots() {
+    dotsEl.innerHTML = stops.map((s, i) => `
+      <button type="button" class="photo-dot${s.checked ? " got" : ""}${i === nextIdx ? " next" : ""}"
+        data-stop="${i}" style="left:${(stopU(i) * 100).toFixed(2)}%"
+        aria-label="Stop ${i + 1}: ${esc(s.name)}">${s.checked ? "✓" : i + 1}</button>`).join("");
+    dotsEl.querySelectorAll(".photo-dot").forEach(d =>
+      d.addEventListener("click", () => { if (driver.onTapStop) driver.onTapStop(Number(d.dataset.stop)); }));
+  }
+  function glideStep(ts) {
+    if (!glide) return;
+    const t = Math.min(1, (ts - glide.t0) / glide.dur);
+    const e = 1 - Math.pow(1 - t, 3);
+    curU = glide.from + (glide.to - glide.from) * e;
+    show(photoFrameForU(curU));
+    if (t < 1) raf = requestAnimationFrame(glideStep);
+    else glide = null;
+  }
+  const driver = {
+    onTapStop: null,
+    setStops(list) { stops = list || []; paintDots(); paintChip(); },
+    setNext(i) { nextIdx = i; paintDots(); paintChip(); },
+    glideTo(i) {
+      if (i < 0 || !stops.length) return;
+      const to = stopU(i);
+      const dur = Math.max(450, Math.min(1900, Math.abs(to - curU) * 6000));
+      glide = { from: curU, to, t0: performance.now(), dur };
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(glideStep);
+    },
+    setProgress(u) {
+      glide = null;
+      cancelAnimationFrame(raf);
+      curU = Math.max(0, Math.min(1, Number(u) || 0));
+      show(photoFrameForU(curU));
+    },
+    // Gyro look: pan within the frame (the prototype's
+    // treatment) — the sharp layer is slightly zoomed so the
+    // pan never exposes an edge.
+    setLook(yaw) {
+      const f = MotionMath.panFraction(yaw);
+      const tx = (0.5 - f) * 36;
+      sharp.style.transform = Math.abs(tx) < 0.5 ? "" : `translateX(${tx.toFixed(1)}px) scale(1.12)`;
+    },
+    destroy() {
+      glide = null;
+      cancelAnimationFrame(raf);
+      el.innerHTML = "";
+    }
+  };
+  show(0);
+  return driver;
+};
 
 /* ---- "aisle" — the stylized aisle scene ----------------------------
  * Two shelf walls, a walk path down the middle, one marker per stop
