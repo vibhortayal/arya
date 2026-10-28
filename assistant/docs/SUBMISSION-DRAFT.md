@@ -38,19 +38,19 @@ tap. Nothing buys itself. A per-account token also connects the user's
 Muse: a forwarded order or a sentence in chat becomes structured
 intake that Arya verifies the same way.
 
-Quest is the play layer. The shopper picks a store from a shared
-directory — search by name, address, or ZIP; favorites first; a store
-can be added with its address. A mapped store is modeled from a
-shopper's walkthrough video: the hunt plays over the walk's own
-frames (the photo-walk, the default view), and VGGT builds a 3D
-point cloud from the same video, one tap away. SAM 3.1 segments
-the shelves, Muse Spark labels them, and hunt stops sit at each
-item's matched shelf. Quest mode plays the list as a treasure
-hunt along that walk; Express mode shows the fastest route. The
-receipt photo ends the hunt: it scores the haul, settles Shop-Off
-races by receipt timestamp, and feeds the brain, so next week's list —
-and next week's hunt — load themselves. A store nobody has mapped
-plays on a flat view and is mapped by its own shoppers.
+Quest is the play layer. The shopper picks a store, and Arya sorts
+the list by where each item is usually bought, from the receipts. A
+mapped store plays over real photos from a shopper's walkthrough
+video, with a VGGT point cloud as a 3D peek; any other store plays as
+shelf cards. Each grab earns points (no clock, no way to lose). Find
+it for me points the camera at the shelf: SAM 3.1 boxes candidates,
+Muse Spark verifies the crop, and the item lights up for one tap.
+SAM also finds every person in a frame so they are blurred before
+anything is kept: Arya keeps pictures of products, never of people.
+Every grab, sighting and "Not here?" report feeds a live store map.
+The receipt photo ends the hunt: it banks the points, settles Shop-Off
+races by receipt timestamp, and feeds the brain, so next week's list
+writes itself.
 
 ## How Meta models are used
 
@@ -67,8 +67,9 @@ plays on a flat view and is mapped by its own shoppers.
 - Muse Image paints the collect-celebration characters (Quest mode).
 - Muse Voice Transcribe takes voice intake in the app: dictation for
   list adds and voice in Ask Arya.
-- SAM 3.1 segments shelves in walkthrough frames; the segments become
-  the store's shelf graph.
+- SAM 3.1 segments shelves in walkthrough frames (the store's shelf
+  graph), boxes items for Shelf Scan and Find it for me, and finds
+  people so they are blurred before any frame is kept.
 - VGGT (Meta AI + Oxford) builds 3D geometry and the camera path from
   walkthrough video. It runs on Modal; its output ships as a web asset.
 - Personal data runs in Standard mode only. Contributor mode is used

@@ -6,6 +6,10 @@
 <title>Arya</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Arya">
 <meta name="theme-color" content="#EFEFF1">
 <script>try{document.documentElement.dataset.theme="light";localStorage.removeItem("arya-theme")}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
@@ -66,7 +70,7 @@
 <main id="app-main" hidden>
   <section id="view-home" class="view">
     <p id="today-dow" class="dow"></p>
-    <h2 class="largetitle">Today</h2>
+    <div class="titlerow"><h2 class="largetitle">Today</h2><span id="today-level" class="levelchip" hidden></span></div>
     <p id="today-through" class="muted nomargin"></p>
     <div id="today-hero"></div>
     <h3 class="sect">Your games</h3>
@@ -202,19 +206,21 @@
 
   <section id="view-newlist" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">New hunt</h2>
-    <p class="muted">One item per line. A quantity goes in front or behind: &ldquo;2 milk&rdquo;, &ldquo;milk × 2&rdquo;.</p>
+    <h2 class="largetitle" style="font-size:28px" id="nl-title">Your quest</h2>
+    <p class="muted" id="nl-sub">Tap an item to move it into the quest or back to your list.</p>
+    <div id="nl-plan"></div>
     <div class="group pad">
-      <textarea id="nl-text" rows="8" placeholder="milk&#10;eggs × 2&#10;blueberries" aria-label="Your list"></textarea>
-      <p style="margin-bottom:0"><button id="nl-from-list" class="btn secondary" type="button">Start from your Arya list</button></p>
+      <label class="field" for="nl-text">Add something else</label>
+      <textarea id="nl-text" rows="3" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
     </div>
-    <p><button id="nl-next" class="btn primary wide" type="button">Pick the store &rarr;</button></p>
+    <p><button id="nl-next" class="btn primary wide" type="button">Start the quest &rarr;</button></p>
   </section>
 
   <section id="view-store" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">Pick the store</h2>
+    <h2 class="largetitle" style="font-size:28px">Where are you shopping?</h2>
     <div id="st-mine"></div>
+    <div id="st-history"></div>
     <div class="group pad">
       <label class="field">Or type a store
         <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
@@ -224,7 +230,7 @@
       <button class="navrow" data-qnav="view-stores-find" type="button"><span class="grow">Find stores<span class="sub">Search by ZIP, address, or name</span></span><span class="chev">›</span></button>
       <button class="navrow" data-qnav="view-stores-add" type="button"><span class="grow">Add a store<span class="sub">A store that is not in the directory yet</span></span><span class="chev">›</span></button>
     </div>
-    <p><button id="st-next" class="btn primary wide" type="button">Check my list &rarr;</button></p>
+    <p><button id="st-next" class="btn primary wide" type="button">Choose items &rarr;</button></p>
   </section>
 
   <section id="view-stores-find" class="view" hidden>
@@ -305,29 +311,31 @@
     <div class="hunthud">
       <a href="#" class="qback hudback" aria-label="Back">&lsaquo;</a>
       <span class="hchip grow" id="hunt-store"></span>
-      <span class="hchip" id="hunt-timer">0:00</span>
+      <span class="hchip" id="hunt-timer" hidden>0:00</span>
+      <span class="hchip pts" id="hunt-pts" aria-live="polite">0 pts</span>
       <span class="hchip prog" id="hunt-count"></span>
       <button id="btn-pause" class="hudbtn" type="button" aria-label="Pause"></button>
     </div>
-    <div class="seg" id="scene-toggle" role="group" aria-label="Store view">
-      <button class="chip" data-driver="photo" disabled type="button">Photos</button>
-      <button class="chip" data-driver="cloud" disabled type="button">3D</button>
-      <button class="chip" data-driver="aisle" type="button">Aisle</button>
-      <button class="chip" data-driver="strip" type="button">Strip</button>
-    </div>
     <div id="scene-mount" class="storeview"></div>
+    <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
+    <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
       <button id="btn-scan" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Scan shelf</span></button>
       <button id="btn-locate" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none"/></svg><span>Where am I?</span></button>
       <button id="btn-nothere" class="btn toolbtn" type="button">Not here?</button>
+      <span class="toolspacer"></span>
+      <button id="btn-howto" class="hudbtn" type="button" aria-label="How to play">?</button>
+      <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
     </div>
     <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <input id="locate-photo" type="file" accept="image/*" capture="environment" hidden>
     <div id="hunt-pop" class="nextcard">
       <p class="nb-k" id="pop-kicker">Suggested next — grab any stop</p>
       <div id="pop-body"></div>
+      <figure id="hunt-fresh" class="fresh" hidden><div class="freshimg"><img id="fresh-img" alt=""><span id="fresh-box" class="freshbox"></span></div><figcaption id="fresh-cap" class="muted"></figcaption></figure>
       <p class="nomargin"><button id="btn-collect" class="btn primary wide grabbtn" type="button">Grab</button></p>
+      <p class="nomargin findrow"><button id="btn-findit" class="btn wide" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><span>Find it for me</span></button></p>
     </div>
     <p id="hunt-done-note" class="donenote" hidden>All collected — nothing moves you on automatically. The hunt waits here until you tap Finish, and any item can still be put back.</p>
     <h3 class="sect">The list</h3>
@@ -342,7 +350,7 @@
       <div class="scanbar">
         <div class="grow">
           <span class="name">Shelf scan</span>
-          <span class="sub">Spots items from your list in a photo — each one verified by a second model before it highlights.</span>
+          <span class="sub">Spots items from your list in a photo — each one verified by a second model before it highlights. We never keep pictures of people, only products: Meta SAM blurs out anyone in the frame first.</span>
           <span class="sub" id="scan-last"></span>
         </div>
         <button id="scan-usephoto" class="btn" type="button" hidden>Take a photo</button>
@@ -356,6 +364,8 @@
       </div>
       <p id="scan-status" class="scanstatus"></p>
     </div>
+    <div id="milestone" class="milestone" role="status" hidden></div>
+    <canvas id="confetti" class="confetti" aria-hidden="true" hidden></canvas>
     <div id="celeb-layer" class="celeblayer" hidden></div>
     <div id="spot-sheet" class="sheetwrap" hidden>
       <div class="sheet">
@@ -479,6 +489,18 @@
       <p class="nomargin demo-only" hidden><button id="ar-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
       <p id="ar-status" class="muted nomargin"></p>
       <p class="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
+    </div>
+  </div>
+  <div id="howto-sheet" class="sheetwrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+      <div class="row"><span class="name" id="howto-title">How to play · 3 steps</span><button id="howto-skip" class="btn" type="button">Skip</button></div>
+      <ol class="howto">
+        <li><b>Find it</b><span>The orange card shows your next item and its shelf; the picture shows where it is in the store. Get any item in any order — the route is just a suggestion.</span></li>
+        <li><b>Grab it</b><span>In your cart? Tap Grab: +10 points. Changed your mind? Put back. Shelf empty? Tap &ldquo;Not here?&rdquo; and warn the next shopper.</span></li>
+        <li><b>Snap the receipt</b><span>Tap Finish and photograph the receipt: +50, and your points bank. No clock, no way to lose.</span></li>
+      </ol>
+      <p class="nomargin"><button id="howto-go" class="btn primary wide" type="button">Got it — let&rsquo;s hunt</button></p>
+      <p class="muted nomargin">The &ldquo;?&rdquo; on the hunt screen opens this again.</p>
     </div>
   </div>
 </main>

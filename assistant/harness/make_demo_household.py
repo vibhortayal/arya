@@ -4,7 +4,9 @@ Deterministic, no model calls, $0. Writes receipts.json + dictionary.json
 into <data_dir>/users/demo/. The household is fictional: the Sharma family,
 two stores, weekly Saturday trips, May-Oct 2026. Designed outcomes:
 milk/spinach/bread due at the last trip, a returned chicken netted in the
-ledger, one FOR-OTHERS gift card, one folded discount."""
+ledger, one FOR-OTHERS gift card, one folded discount. Bulk staples
+(eggs, rice, paper towels, batteries) come from a same-day Costco run,
+so Plan a hunt can show "usually from Costco" (owner, 2026-10-28)."""
 import json, os, sys
 from datetime import date, timedelta
 
@@ -24,6 +26,13 @@ ITEMS = {
     "batteries": ("AA Batteries 8 ct", 8.99, 8, 1),
     "avocado": ("Avocados 4 ct", 5.49, 2, 1),
 }
+
+
+# Bought at Costco on the same Saturday (owner, 2026-10-28: "my milk is
+# typically bought from TJ, eggs from costco"). One eggs trip stays at
+# the grocery store, so the pattern reads "Costco, most of the time".
+COSTCO = {"eggs", "rice", "papertowel", "batteries"}
+EGGS_AT_GROCERY_TRIP = 10
 
 
 def line(sku_key, price=None, qty=None, ltype="item", total=None, alloc="HOUSEHOLD", parent=None):
@@ -53,13 +62,14 @@ def build():
     for t in range(trips):
         day = start + timedelta(days=7 * t)
         merchant = "Trader Joe's" if t % 3 else "Safeway"
-        lines = []
+        lines, bulk = [], []
         for key, (_name, _p, every, _q) in ITEMS.items():
             if t % every != 0:
                 continue
             if t == trips - 1 and key not in ("eggs", "bananas", "coffee"):
                 continue              # the last trip is small: staples lapse -> due
-            lines.append(line(key))
+            costco = key in COSTCO and not (key == "eggs" and t == EGGS_AT_GROCERY_TRIP)
+            (bulk if costco else lines).append(line(key))
         if t == 8:                    # one folded discount on spinach
             lines.append(line("spinach", ltype="discount", total=-1.00, parent="demo-spinach"))
         if t == 12:                   # a gift card for someone else
@@ -69,6 +79,8 @@ def build():
                           "confidence": 1.0, "status": "auto", "allocation": "FOR-OTHERS",
                           "for_person": None, "item_id": "demo-giftcard", "judge_agree": None})
         receipts.append(receipt(f"demo-r{t:02d}", merchant, day, lines))
+        if bulk:
+            receipts.append(receipt(f"demo-c{t:02d}", "Costco", day, bulk))
     # The returned chicken: bought Oct 3 (trip 22 is Sep 26; trip 23 = Oct 3), returned Oct 5.
     receipts.append(receipt("demo-ret1", "Trader Joe's", date(2026, 10, 5),
                             [line("chicken", ltype="return", total=-12.30)]))

@@ -8,7 +8,7 @@ for a store with a shelf graph also runs item–shelf matching
 (api/shelfmatch.py) — the one model-touching step, and it never
 blocks or breaks creation.
 """
-import contextlib, hashlib, re, secrets
+import base64, contextlib, hashlib, re, secrets
 from datetime import date, datetime, timedelta
 
 from api import state
@@ -29,6 +29,7 @@ def _store():
     s.setdefault("shopoffs", [])
     s.setdefault("friends", [])
     s.setdefault("reports", [])
+    s.setdefault("sightings", [])
     return s
 
 
@@ -511,6 +512,82 @@ def get_shopoff(race_id):
 
 REPORT_KINDS = ("empty_shelf", "replaced", "cant_tell")
 REPORT_STATES = ("reported", "resolved_stockout", "verified_move")
+
+
+SIGHTINGS_MAX = 2000
+
+
+def record_sightings(session_id, pops):
+    """Find it for me (owner, 2026-10-28) feeds the store map: each
+    verified pop is kept as WHAT was seen WHERE and WHEN — the item,
+    the store, the stop's shelf label when matched, the time. The
+    frame itself is never kept (Discussion 37: bystanders); only
+    these words are. Returns the sightings written."""
+    sess = get_session(session_id)
+    if sess is None or not pops:
+        return []
+    by_name = {it["name"]: it for it in sess["items"]}
+    out = []
+    with state.file_lock("quest.json"):
+        s = _store()
+        for p in pops:
+            it = by_name.get(p.get("item"))
+            if it is None:
+                continue
+            rec = {"store": sess["store"], "item": it["name"],
+                   "item_group": it["group"],
+                   "shelf_label": it.get("shelf_label"),
+                   "grade": p.get("grade"), "seen_at": _now(),
+                   "session_id": session_id}
+            s["sightings"].append(rec)
+            out.append(rec)
+        s["sightings"] = s["sightings"][-SIGHTINGS_MAX:]
+        _save_store(s)
+    return out
+
+
+FRAMES_FILE = "shelf_frames.json"
+FRAMES_MAX = 300          # one latest photo per (store, item)
+FRAMES_MAX_SANDBOX = 12   # the demo overlay holds 2 MB
+
+
+def _frame_key(store, item):
+    norm = lambda t: re.sub(r"\s+", " ", (t or "").strip().lower())
+    return f"{norm(store)}|{norm(item)}"
+
+
+def keep_frame(session_id, pops, jpeg, people_scrubbed):
+    """A fresh shelf photo per item the scan verified (owner,
+    2026-10-28: the shoppers' frames refresh the store photos). The
+    jpeg is already people-scrubbed (shelfscan.scrub_people) — never
+    call this with a raw frame. Latest wins per (store, item)."""
+    sess = get_session(session_id)
+    if sess is None or not pops or not jpeg:
+        return 0
+    b64 = base64.b64encode(jpeg).decode()
+    names = {it["name"] for it in sess["items"]}
+    n = 0
+    with state.file_lock(FRAMES_FILE):
+        frames = state._load(FRAMES_FILE, {})
+        for p in pops:
+            if p.get("item") not in names:
+                continue
+            frames.pop(_frame_key(sess["store"], p["item"]), None)
+            frames[_frame_key(sess["store"], p["item"])] = {
+                "store": sess["store"], "item": p["item"],
+                "box": p.get("box"), "grade": p.get("grade"),
+                "seen_at": _now(), "people_scrubbed": people_scrubbed,
+                "jpeg_b64": b64}
+            n += 1
+        cap = FRAMES_MAX_SANDBOX if state.in_sandbox() else FRAMES_MAX
+        while len(frames) > cap:
+            frames.pop(next(iter(frames)))
+        state._save(FRAMES_FILE, frames)
+    return n
+
+
+def shelf_photo(store, item):
+    return state._load(FRAMES_FILE, {}).get(_frame_key(store, item))
 
 
 def report_missing(session_id, item_name, kind, photo=None):

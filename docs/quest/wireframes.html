@@ -1036,6 +1036,53 @@
   .demo-only{border-style:dashed;}
   .landing-hero{height:170px;border-radius:16px;background:linear-gradient(160deg,#D9D9DE,#C9C9CF);display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;margin-bottom:12px;}
   .landing-hero span{font-size:11px;font-weight:700;background:rgba(255,255,255,.88);border-radius:8px;padding:4px 8px;color:var(--ink2);}
+
+  /* ---------- Oct 28 updates: plan a hunt, one view, Find it for me ---------- */
+  .store-row .fit{font-size:12px;color:#B8401D;font-weight:600;margin-top:3px;}
+  .prow{display:flex;align-items:center;border-bottom:1px solid var(--line2);}
+  .ptick{flex:1;min-width:0;display:flex;gap:12px;align-items:center;background:none;border:0;padding:10px 2px;text-align:left;color:var(--ink);}
+  .ptick b{display:block;font-size:14.5px;} .ptick small{display:block;font-size:12px;color:var(--ink3);}
+  .prow:not(.in) .ptick b{color:var(--ink3);}
+  .pbox{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;}
+  .prow.in .pbox{background:var(--acc);border-color:var(--acc);}
+  .prm{flex:none;width:40px;height:40px;border:0;background:none;color:var(--ink3);font-size:15px;}
+  .pextra{display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:12.5px;font-weight:700;color:var(--ink2);}
+  .pextra textarea{border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:14px;}
+  .hchip.pts{color:#B8401D;font-weight:800;}
+  .scene-cap{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin:8px 14px 0;font-size:12px;color:var(--ink2);order:3;}
+  .link-3d{background:none;border:0;padding:0;color:#B8401D;font-weight:800;font-size:12.5px;white-space:nowrap;}
+  .tool-btn.sq{padding:8px 0;width:36px;}
+  .fresh{position:relative;height:74px;border-radius:10px;margin-top:8px;background:repeating-linear-gradient(90deg,#CFCFD5 0 14px,#BDBDC4 14px 22px);overflow:hidden;}
+  .fr-blur{position:absolute;left:6%;top:8%;width:16%;height:84%;border-radius:6px;background:repeating-conic-gradient(#A9A9B0 0 25%,#C2C2C8 0 50%) 0 0/12px 12px;}
+  .fr-box{position:absolute;left:52%;top:20%;width:20%;height:56%;border:3px solid var(--acc);border-radius:7px;box-shadow:0 0 0 999px rgba(0,0,0,.25);}
+  .fr-cap{font-size:11.5px;color:var(--ink3);margin-top:4px;}
+  .findit-btn{border:1.5px solid var(--line);background:#fff;border-radius:14px;min-height:46px;font-weight:800;font-size:14px;color:var(--ink);padding:0 14px;}
+  .howto-bg{flex:1;background:rgba(27,27,30,.55);display:flex;flex-direction:column;justify-content:flex-end;}
+  .howto-sheet{background:#fff;border-radius:22px 22px 0 0;padding:16px 16px 24px;display:flex;flex-direction:column;gap:10px;}
+  .hs-head{display:flex;justify-content:space-between;align-items:center;}
+  .hs-step{display:flex;gap:12px;border:1.5px solid var(--line);border-radius:14px;padding:11px;}
+  .hs-step.on{border:2px solid var(--acc);background:var(--acc-soft);}
+  .hs-step .n{width:30px;height:30px;border-radius:99px;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none;}
+  .hs-step.on .n{background:var(--acc);color:#fff;}
+  .hs-step b{display:block;font-size:15px;} .hs-step small{display:block;font-size:12.5px;color:var(--ink2);line-height:1.45;}
+  .fi-cam{flex:1;display:flex;flex-direction:column;background:#1B1B1E;color:#fff;min-height:0;}
+  .fi-bar{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;}
+  .fi-bar b{display:block;font-size:16px;} .fi-bar small{font-size:12.5px;opacity:.8;}
+  .fi-x{width:34px;height:34px;border-radius:99px;border:0;background:#fff;color:var(--ink);font-size:16px;}
+  .fi-feed{flex:1;position:relative;background:linear-gradient(170deg,#5A5A62,#2C2C31);overflow:hidden;}
+  .fi-shelves{position:absolute;inset:20px 14px 40px;display:flex;flex-direction:column;justify-content:space-between;}
+  .fi-shelves i{display:block;height:22%;border-bottom:4px solid rgba(0,0,0,.4);background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 16px,rgba(0,0,0,.18) 16px 26px);}
+  .fi-sweep{position:absolute;left:0;right:0;height:3px;background:var(--acc);box-shadow:0 0 18px var(--acc);top:10%;animation:fisweep 2.2s ease-in-out infinite alternate;}
+  @keyframes fisweep{to{top:88%;}}
+  .fi-found{display:none;position:absolute;left:48%;top:38%;width:28%;height:26%;border:3px solid var(--acc);border-radius:10px;background:transparent;box-shadow:0 0 0 999px rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
+  .fi-found span{transform:translateY(130%);background:var(--acc);color:#fff;border-radius:99px;padding:6px 12px;font-weight:800;font-size:13px;white-space:nowrap;}
+  .fi-cam.found .fi-found{display:flex;} .fi-cam.found .fi-sweep,.fi-cam.miss .fi-sweep{display:none;}
+  .fi-foot{padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px;}
+  .fi-status{background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.4;}
+  .fi-priv{font-size:11.5px;opacity:.75;}
+  .stat.haul{display:flex;}
+  .lvl{height:9px;border-radius:99px;background:var(--fill2);overflow:hidden;} .lvl i{display:block;height:100%;background:var(--acc);border-radius:99px;}
+  @media (prefers-reduced-motion: reduce){ .fi-sweep{animation:none;} }
 </style>
 </head>
 <body>
@@ -1124,7 +1171,7 @@
             <p class="h-k" style="color:var(--ink3);">No quest in progress</p>
             <h3>Nothing is waiting on you</h3>
             <p class="h-sub">Your last hunt is finished and closed — it lives in Receipts now, not here. A hero card only ever shows a hunt that is actually being played.</p>
-            <button class="btn acc" data-go="addlist">Start a shop ▸</button>
+            <button class="btn acc" data-go="pickstore">Plan a hunt ▸</button>
           </article>
 
           <p class="hub-heading">Your games</p>
@@ -1139,7 +1186,7 @@
             <span class="progress plain g-bar"><i id="hubCxBar" style="width:0%"></i></span>
             <span class="g-arrow">›</span>
           </button>
-          <button class="game-row" data-go="addlist">
+          <button class="game-row" data-go="pickstore">
             <span class="g-main"><span class="g-name" style="font-size:14.5px;">＋ New session</span></span>
             <span class="g-arrow">›</span>
           </button>
@@ -1174,7 +1221,7 @@
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="appbar">
           <button class="back" data-back data-fallback="today" aria-label="Back">‹</button>
-          <div><p class="ttl">New session</p><p class="sub">Step 1 of 4 · Your list, any form</p></div>
+          <div><p class="ttl">Add to your list</p><p class="sub">Photo, paste, type, voice or Muse</p></div>
         </div>
         <div class="scroll">
           <div class="dump">
@@ -1200,7 +1247,7 @@
           <button class="add-row-btn" id="addRowBtn">＋ Add an item</button>
         </div>
         <div class="footer-cta">
-          <button class="btn acc" data-go="pickstore">Looks right →</button>
+          <button class="btn acc" data-go="brainlist">Add to my list →</button>
         </div>
       </section>
 
@@ -1208,19 +1255,19 @@
       <section class="screen" data-screen="pickstore">
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="appbar">
-          <button class="back" data-back data-fallback="addlist" aria-label="Back">‹</button>
-          <div><p class="ttl">Which store?</p><p class="sub">Step 2 of 4 · 8 items on your list</p></div>
+          <button class="back" data-back data-fallback="today" aria-label="Back">‹</button>
+          <div><p class="ttl">Where are you shopping?</p><p class="sub">Plan a hunt · step 1 of 3</p></div>
         </div>
         <div class="scroll">
           <p class="section-label" style="margin-top:6px;">Favorites</p>
           <button class="store-row" data-pick-store="Trader Joe's">
             <div class="store-ic">🧀</div>
-            <div><h3>Trader Joe's <span class="star-shown" aria-label="Favorite"><svg class="ic" aria-hidden="true"><use href="#i-star-fill"/></svg></span></h3><p class="smeta">13911 Peyton Dr, Chino Hills, CA 91709 · 1.2 mi</p></div>
+            <div><h3>Trader Joe's <span class="star-shown" aria-label="Favorite"><svg class="ic" aria-hidden="true"><use href="#i-star-fill"/></svg></span></h3><p class="smeta">13911 Peyton Dr, Chino Hills, CA 91709 · 1.2 mi</p><p class="fit">6 of your 8 list items usually here · Usually: milk, sourdough, bananas</p></div>
             <div class="go"><span class="tag game">Mapped — Play</span></div>
           </button>
           <button class="store-row" data-pick-store="Costco">
             <div class="store-ic"><svg class="ic" aria-hidden="true"><use href="#i-basket"/></svg></div>
-            <div><h3>Costco <span class="star-shown" aria-label="Favorite"><svg class="ic" aria-hidden="true"><use href="#i-star-fill"/></svg></span></h3><p class="smeta">17550 Castleton St, City of Industry, CA 91748 · 4.8 mi</p></div>
+            <div><h3>Costco <span class="star-shown" aria-label="Favorite"><svg class="ic" aria-hidden="true"><use href="#i-star-fill"/></svg></span></h3><p class="smeta">17550 Castleton St, City of Industry, CA 91748 · 4.8 mi</p><p class="fit">Usually: eggs, paper towels, rice</p></div>
             <div class="go"><span class="tag game">Mapped — Play</span></div>
           </button>
           <p class="section-label">All my stores</p>
@@ -1237,9 +1284,36 @@
             <button class="btn acc" style="margin-top:12px;" id="playStripBtn">▶ Play Sprouts in Strip</button>
             <button class="btn" style="margin-top:9px;" data-go="mapstore">🎥 Film the aisles — unlock the 3D view</button>
           </div>
-          <p style="font-size:12.5px;color:var(--ink2);line-height:1.55;margin-top:14px;">This pick reads <strong>My Stores, favorites first</strong> — starred stores sit on top with their address under the name; star or add stores in My Stores and this list follows.</p>
-          <p style="font-size:12.5px;color:var(--ink2);line-height:1.55;margin-top:10px;">Starting a hunt uses <strong>that store's slice of your one list</strong> — Trader Joe's starts from your Trader Joe's items, Costco from your Costco items (List tab → store chips show the same lens).</p>
-          <p style="font-size:12.5px;color:var(--ink3);line-height:1.55;margin-top:10px;">Mapped = a 3D model exists on the platform. Not mapped = <strong>Play in Strip · Map it to unlock 3D</strong> — playable now, upgradeable by anyone who films it.</p>
+          <p style="font-size:12.5px;color:var(--ink2);line-height:1.55;margin-top:14px;">Favorites first. Each store says what you usually buy there, counted from your receipts. Stores seen on receipts but not in My Stores are offered too.</p>
+        </div>
+      </section>
+
+      <!-- ===== PLAN A HUNT · MOVE ITEMS INTO THE QUEST ===== -->
+      <section class="screen" data-screen="plan">
+        <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
+        <div class="appbar">
+          <button class="back" data-back data-fallback="pickstore" aria-label="Back">‹</button>
+          <div><p class="ttl">Your quest at <span id="planStoreName">Trader Joe's</span></p><p class="sub">Plan a hunt · step 2 of 3 · tap to move in or out</p></div>
+        </div>
+        <div class="scroll" id="planList">
+          <p class="section-label" style="margin-top:6px;">Usually bought here · 5</p>
+          <div class="prow in"><button class="ptick" type="button"><span class="pbox">✓</span><span><b>Organic Milk</b><small>12 of 14 times here</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <div class="prow in"><button class="ptick" type="button"><span class="pbox">✓</span><span><b>Sourdough</b><small>9 of 9 times here</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <div class="prow in"><button class="ptick" type="button"><span class="pbox">✓</span><span><b>Bananas</b><small>every week</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <div class="prow in"><button class="ptick" type="button"><span class="pbox">✓</span><span><b>Spinach · Pasta Sauce</b><small>2 items</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <p class="section-label">New on your list · 1</p>
+          <div class="prow in"><button class="ptick" type="button"><span class="pbox">✓</span><span><b>Honey</b><small>No history yet</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <p class="section-label">Usually from Costco · 2</p>
+          <div class="prow"><button class="ptick" type="button"><span class="pbox"></span><span><b>Eggs</b><small>Costco 5 of 6 times · stays on your list if unticked</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <div class="prow"><button class="ptick" type="button"><span class="pbox"></span><span><b>Coffee</b><small>Costco 3 of 4 times</small></span></button><button class="prm" type="button" aria-label="Remove from list">✕</button></div>
+          <p class="section-label">Often bought here, not on your list</p>
+          <div class="prow"><button class="ptick" type="button"><span class="pbox"></span><span><b>Greek Yogurt</b><small>every ~14 days · due now</small></span></button></div>
+          <div class="prow"><button class="ptick" type="button"><span class="pbox"></span><span><b>Avocados</b><small>every ~14 days</small></span></button></div>
+          <label class="pextra">Add something else<textarea rows="2" placeholder="oat milk&#10;eggs × 2"></textarea></label>
+          <p style="font-size:12.5px;color:var(--ink3);line-height:1.55;margin-top:10px;">Unticked stays on your Arya list. ✕ takes it off the list (Undo). Typed extras join the list too: one list everywhere.</p>
+        </div>
+        <div class="footer-cta">
+          <button class="btn acc" id="planGo">Start the quest · <span id="planCount">5</span> items →</button>
         </div>
       </section>
 
@@ -1247,8 +1321,8 @@
       <section class="screen" data-screen="optimize">
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="appbar">
-          <button class="back" data-back data-fallback="pickstore" aria-label="Back">‹</button>
-          <div><p class="ttl">Optimize list</p><p class="sub">Step 3 of 4 · <span id="optStoreName">Trader Joe's</span> · smart cleanup</p></div>
+          <button class="back" data-back data-fallback="plan" aria-label="Back">‹</button>
+          <div><p class="ttl">Check my list</p><p class="sub">Step 3 of 3 · <span id="optStoreName">Trader Joe's</span> · only when Arya has a question</p></div>
         </div>
         <div class="scroll">
           <div class="opt-summary"><strong>8 items in → 6 on the list</strong> · 2 merged · 1 corrected · 1 question</div>
@@ -1301,15 +1375,15 @@
       <section class="screen" data-screen="mode">
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="appbar">
-          <button class="back" data-back data-fallback="optimize" aria-label="Back">‹</button>
-          <div><p class="ttl">How do you want to play?</p><p class="sub">Step 4 of 4 · <span id="modeStoreName">Trader Joe's</span> · 6 items</p></div>
+          <button class="back" data-back data-fallback="plan" aria-label="Back">‹</button>
+          <div><p class="ttl">How do you want to play?</p><p class="sub"> <span id="modeStoreName">Trader Joe's</span> · 6 items</p></div>
         </div>
         <div class="scroll">
           <button class="mode-card quest" id="questCard">
             <div class="m-ic"><svg class="ic" aria-hidden="true"><use href="#i-flag"/></svg></div>
             <h3>Quest mode</h3>
-            <p>The play run. Your list becomes a treasure hunt in the store — in real Photos of the aisle (the default on a mapped store), the 3D point cloud, Aisle, or flat Strip. The trail suggests an order — grab any stop in any order; items move and so do you. No 3D? The game still plays.</p>
-            <div class="feats"><span class="tag game">Hunt &amp; collect</span><span class="tag game">Timer</span><span class="tag game">Streaks</span></div>
+            <p>The play run. Your list becomes a treasure hunt in the store: real photos of a mapped store, shelf cards anywhere else. Grab any stop in any order. Points only go up; no clock, no way to lose.</p>
+            <div class="feats"><span class="tag game">Hunt &amp; grab</span><span class="tag game">Points &amp; levels</span><span class="tag game">Find it for me</span></div>
             <p class="tap-hint">Tap to start the hunt ▸</p>
           </button>
           <button class="mode-card express" id="expressCard">
@@ -1401,22 +1475,17 @@
           <div class="ht-row">
             <button class="ht-back" data-back data-fallback="today" aria-label="Back — returns to where you came from">‹</button>
             <span class="hchip" id="huntChip">🧀 Trader Joe's · Quest</span>
-            <span class="hchip timer" id="huntTimer">04:12</span>
+            <span class="hchip pts" id="huntPts">30 pts</span><span id="huntTimer" hidden>04:12</span>
             <span class="hchip prog" id="huntProg">3/8</span>
           </div>
         </div>
         <div class="streak-strip"><span class="hchip">🔥 6-day streak</span></div>
-        <div class="scene-toggle" role="group" aria-label="Scene view — Photos, 3D, Aisle, or Strip">
-          <button data-scene="photo" class="on">📷 Photos</button>
-          <button data-scene="cloud"><svg class="ic" aria-hidden="true"><use href="#i-points"/></svg> 3D</button>
-          <button data-scene="aisle"><svg class="ic" aria-hidden="true"><use href="#i-store"/></svg> Aisle</button>
-          <button data-scene="strip">▦ Strip</button>
-        </div>
+        <div class="scene-cap"><span id="sceneCapText">Real photos from a walk through this store. The orange dot is your next item.</span><button type="button" class="link-3d" id="see3d">See it in 3D ›</button></div>
         <div class="photo-scene on" id="photoScene" aria-label="Photos view — the walkthrough's own frames">
           <div class="ph-frame">
             <span class="ph-chip">Real photo · frame 47 of 90</span>
             <span class="ph-target">🥛 Organic Milk · Dairy wall, right</span>
-            <span class="ph-cap">Photos (default on a mapped store): the walkthrough video's own frames along the path, crossfaded as you move. A real photo of the real aisle — never called a 3D model or a live view.</span>
+            <span class="ph-cap">The walkthrough video's own frames, people blurred by SAM. Any store without a walk plays as shelf cards.</span>
           </div>
         </div>
         <div class="strip-scene" id="stripScene" aria-label="Strip view — flat aisle strip">
@@ -1434,11 +1503,13 @@
           <button class="tool-btn" id="scanBtn" type="button">📷 Scan shelf</button>
           <button class="tool-btn" id="locateBtn" type="button">🧭 Where am I?</button>
           <button class="not-here-btn" id="notHereBtn">⚠ Not here?</button>
+          <button class="tool-btn sq" data-go="howto" type="button" aria-label="How to play">?</button>
+          <button class="tool-btn sq" id="soundBtn" type="button" aria-label="Sound off">🔈</button>
         </div>
         <div class="scan-pop" id="scanPop" role="status">
           <p class="sp-k">SHELF SCAN · SAM 3.1 found it · Spark confirmed</p>
           <div class="sp-row"><span class="sp-box">🍝</span><span class="sp-txt"><strong>Pasta Sauce</strong><br/>On this shelf — middle row, left. Boxed in your photo.</span><button class="strip-grab" type="button" data-grab-pop="Pasta Sauce">GRAB</button></div>
-          <p class="sp-note">One photo of the shelf → only items still on your list are searched; a find shows only after a second model confirms the crop. Nothing is stored. Works in any store, mapped or not.</p>
+          <p class="sp-note">One photo of the shelf → only items still on your list are searched; a find shows only after a second model confirms the crop. We never keep pictures of people, only products: SAM blurs anyone in the frame first. Works in any store, mapped or not.</p>
           <button class="btn ghost" id="scanClose" type="button">Done</button>
         </div>
 
@@ -1454,7 +1525,9 @@
           <p class="nb-k">▼ SUGGESTED NEXT — GRAB ANY STOP</p>
           <h3 id="nextName">Organic Milk</h3>
           <p id="nextHint">Aisle 4 · Dairy wall, right side · ~20 steps</p>
-          <p class="nb-any">Route is a suggestion, not a rail — grab whatever's in front of you, in any order. The list below holds every stop, each with its own GRAB — and ↩ Put back if you change your mind.</p>
+          <div class="fresh"><span class="fr-blur" title="A shopper, pixelated by SAM"></span><span class="fr-box"></span></div>
+          <p class="fr-cap">Fresh from a shopper, 6 min ago. People are blurred out; we only keep products.</p>
+          <p class="nb-any">A suggestion, not a rail: grab any stop in any order.</p>
           <span class="reported-flag" id="reportedFlag">⚠ Reported missing — still route here; a later collect clears it</span>
           <span class="nb-arrow">➜</span>
         </div>
@@ -1463,6 +1536,7 @@
 
         <div class="hunt-actions">
           <button class="collect-btn" id="collectBtn">✓ GRAB</button>
+          <button class="findit-btn" data-go="findit" type="button">🔍 Find it for me</button>
           <button class="list-fab" id="listFab">☰ List <span class="lf-n" id="fabCount">5 left</span></button>
         </div>
 
@@ -1572,6 +1646,34 @@
       </section>
 
       <!-- ===== SCREEN 8 · SCORE ===== -->
+      <!-- ===== HOW TO PLAY (first hunt) ===== -->
+      <section class="screen" data-screen="howto">
+        <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
+        <div class="howto-bg">
+          <div class="howto-sheet">
+            <div class="hs-head"><p class="section-label" style="margin:0;">How to play · 3 steps</p><button class="link-3d" data-back data-fallback="hunt" type="button">Skip</button></div>
+            <div class="hs-step on"><span class="n">1</span><span><b>Find it</b><small>The orange card shows your next item. Lost? Tap Find it for me and point the camera at the shelf.</small></span></div>
+            <div class="hs-step"><span class="n">2</span><span><b>Grab it</b><small>In your cart? Tap Grab: +10. Shelf empty? Tap Not here? to warn the next shopper.</small></span></div>
+            <div class="hs-step"><span class="n">3</span><span><b>Snap the receipt</b><small>Tap Finish and photograph the receipt: +50, and your points bank.</small></span></div>
+            <button class="btn acc" data-back data-fallback="hunt" type="button">Got it — let's hunt</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FIND IT FOR ME ===== -->
+      <section class="screen" data-screen="findit">
+        <div class="statusbar dark"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
+        <div class="fi-cam">
+          <div class="fi-bar"><span><b>Find it for me</b><small id="fiTarget">Looking for Organic Milk</small></span><button class="fi-x" data-back data-fallback="hunt" type="button" aria-label="Close">✕</button></div>
+          <div class="fi-feed"><div class="fi-shelves"><i></i><i></i><i></i></div><div class="fi-sweep" id="fiSweep"></div><button class="fi-found" id="fiFound" type="button" aria-label="Grab"><span>Tap to grab</span></button></div>
+          <div class="fi-foot">
+            <p class="fi-status" id="fiStatus">Scanning… SAM 3.1 boxes candidates, Muse Spark checks each one. About 5 seconds a look.</p>
+            <div class="btn-row"><button class="btn" id="fiSimFound" type="button">Simulate: found</button><button class="btn" id="fiSimMiss" type="button">Simulate: not spotted</button></div>
+            <p class="fi-priv">We never keep pictures of people, only products: SAM blurs anyone in the frame first.</p>
+          </div>
+        </div>
+      </section>
+
       <section class="screen" data-screen="score">
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="score-hero">
@@ -1584,7 +1686,8 @@
             <div class="stat"><p class="sv" id="statTime">9:47</p><p class="sl">Hunt time</p></div>
             <div class="stat"><p class="sv" id="statItems">8 / 8</p><p class="sl">Items found</p></div>
             <div class="stat"><p class="sv" id="statMissed">0</p><p class="sl">Missed</p></div>
-            <div class="stat"><p class="sv">+120</p><p class="sl">Quest points</p></div>
+            <div class="stat"><p class="sv">+155</p><p class="sl">Points banked</p></div>
+            <div class="stat wide haul"><div style="flex:1;"><p class="sl" style="margin-bottom:6px;">8 items × 10 · +80 &nbsp; Full haul · +25 &nbsp; Receipt · +50</p><div class="lvl"><i style="width:90%"></i></div><p class="sl" style="margin-top:6px;">Level 2 → 3 · 270 of 300 pts</p></div></div>
             <div class="stat wide"><span class="flame">🔥</span><div><p class="sv" style="font-size:19px;">7-day streak</p><p class="sl">Every shopping day this week, played and settled.</p></div></div>
           </div>
           <p class="missed-note" id="scoreNote">The receipt also feeds your household patterns — next week's list starts itself from runs like this one.</p>
@@ -2427,21 +2530,30 @@
     {id:"landing",  name:"Landing",          note:"Signed out — what Arya is, one tap into the demo",
      cap:"Screen 0 · Landing (signed out)",
      body:"<strong>Primary action:</strong> “Try the demo — play the Trader Joe's hunt”. <strong>Why (review 2026-10-28):</strong> a judge's first screen used to be a bare sign-in form that never said Quest, hunt or Meta. Now it shows a real frame of the mapped aisle, one sentence, the Meta models by job, and opens the fictional demo household in one tap — no account. <strong>Demo rule:</strong> every demo action works (list, hunt in every mode and view, receipt, Ask) and lasts for that visit only. Sign-in folds below."},
-    {id:"today",    name:"Today",            note:"Hub — hero card + game rows, nothing else",
+    {id:"today", name:"Today", note:"Hub — the hunt in progress, your games, Plan a hunt",
      cap:"Screen 1 · Today (hub)",
-     body:"<strong>Decluttered:</strong> greeting, <strong>one hero card</strong> — the in-progress Trader Joe's Quest, and Resume is the only primary button on the screen. <strong>The hero only ever holds a hunt that is actually being played:</strong> the moment a hunt finishes — receipt snapped or skipped — the hero clears, a “No quest in progress” card takes its place, and the hunt appears once under <strong>Finished</strong> as a closed record (“Finished · Receipt missing”, with an Add-receipt button when skipped). No finished quest can sit here looking resumable — that was the “stuck quest” bug. Below the hero: compact <strong>game rows</strong> under “Your games”, one <strong>“Needs your eye · 2”</strong> row, and the list as <strong>one plain-text line</strong>."},
-    {id:"addlist",  name:"Add list",         note:"New session · step 1 — dump the list in any form",
-     cap:"Screen 2 · New session — add list",
-     body:"<strong>Primary action:</strong> “Looks right →”. <strong>Rule:</strong> the list goes in however it exists — photo of a note, paste, typing, voice — then the user only ever edits what Arya read, never types from scratch. Tap a chip to simulate a read. <strong>Via Muse:</strong> the Muse connector writes to the same session the phone plays."},
-    {id:"pickstore",name:"Pick store",       note:"New session · step 2 — favorites first, mapped or map it",
-     cap:"Screen 3 · New session — pick store",
-     body:"<strong>Primary action:</strong> tap a store. <strong>Rule:</strong> this pick reads <strong>My Stores, favorites first</strong> — starred stores lead under a “Favorites” label with the drawn star shown, and every row carries the <strong>street address under the name</strong>. Every store is playable — mapped stores in 3D, unmapped stores in <strong>Strip</strong> (“Play in Strip · Map it to unlock 3D”). Mapping is an invitation, never a gate. <strong>Seeding:</strong> the hunt starts from that store's slice of the one list — the same lens as List → store chips."},
-    {id:"mode",     name:"Mode choose",      note:"New session · step 4 — Quest or Express",
+     body:"<strong>Primary action:</strong> Resume, or Plan a hunt. The hero only holds a hunt being played; a finished hunt moves to Finished as a closed record (Add receipt if it was skipped). The level chip shows points that only go up."},
+    {id:"addlist", name:"Add to your list", note:"List door — photo, paste, type, voice, Muse",
+     cap:"Screen 2 · Add to your list",
+     body:"<strong>Primary action:</strong> Add to my list. Lists arrive in any form; you only edit what Arya read. This is a list door, not a hunt step: a hunt starts from the store (Plan a hunt)."},
+    {id:"pickstore", name:"Pick store", note:"Plan a hunt · 1 — where are you shopping?",
+     cap:"Screen 3 · Plan a hunt — pick the store",
+     body:"<strong>Primary action:</strong> tap a store. Favorites first. Each store says what you usually buy there, counted from receipts (no model call). Unmapped stores play as shelf cards; filming the aisles adds photos and 3D."},
+    {id:"plan", name:"Plan · move items", note:"Plan a hunt · 2 — your list, sorted for this store",
+     cap:"Screen 3b · Plan a hunt — move items into the quest",
+     body:"<strong>Primary action:</strong> Start the quest. The Arya list, sorted for this store: usually bought here and new items start ticked; items usually bought elsewhere start unticked and stay on the list; usuals not on the list are suggested. ✕ removes from the list (Undo). Typed extras join the list. Try ticking Eggs."},
+    {id:"mode", name:"Mode choose", note:"Quest or Express",
      cap:"Screen 4 · Mode choose",
-     body:"<strong>Primary action:</strong> one tap on a mode card starts the session. <strong>Rule:</strong> modes are moods, not audiences — Quest when there's time to play, Express when it's a rush. Same list, same store, two ways through it."},
-    {id:"hunt",     name:"Hunt (Quest)",     note:"The game — grab any stop, any order",
+     body:"<strong>Primary action:</strong> tap a mode. Quest when there is time to play, Express when it is a rush. Same list, same store."},
+    {id:"hunt", name:"Hunt (Quest)", note:"The game — grab any stop, any order",
      cap:"Screen 5 · Hunt (Quest mode)",
-     body:"<strong>Rebuilt after the broken-UI report — three fixes.</strong> <strong>1 · One column, nothing floating:</strong> the old hunt scattered the banner, rail, streak, view toggle and buttons as absolute overlays on a full-screen scene — “items arranged all over the screen”. Now everything is in normal flow: HUD → view switch → a contained store view → suggested next → actions → the list. <strong>2 · Unchecking is safe:</strong> there is exactly <strong>one list</strong> (Cloud / Aisle / Strip only change the store-view card — they never duplicate the items, which is how views used to desync). Grabbed rows show <strong>↩ Put back</strong> in the same 92px button box; rows never move, re-sort, resize or lose your scroll position; toggling never closes anything, never navigates, and collecting the last item no longer auto-finishes — the button becomes “Finish →” and waits for your tap. Try it: grab Sourdough before Milk, then put Milk back. <strong>3 · Non-sequential stays:</strong> every stop has its own GRAB, the banner only <em>suggests</em> a next stop, and the route is a recommendation, not a rail. <strong>Celebration:</strong> still a small card in a corner, never centre-screen — it carries the item's Muse Image character and a verified fun fact (Quest mode only). <strong>4 · Views (review 2026-10-28):</strong> Photos is the default on a mapped store (the walkthrough's real frames, never called a 3D model), then 3D (the VGGT point cloud), Aisle, Strip — each only swaps the store-view card. <strong>5 · Tools:</strong> 📷 Scan shelf (SAM 3.1 finds list items in one shelf photo; Spark confirms each crop before it pops, with its own GRAB — any store, mapped or not), 🧭 Where am I? (mapped stores: one photo places you at the nearest stop; the matcher Muse Wonder wrote), and ⚠ Not here?. Try Scan shelf, then GRAB from the pop."},
+     body:"<strong>Primary action:</strong> GRAB. <strong>No pressure:</strong> no clock, no lives; +10 per grab, +25 full haul, +50 receipt, milestones and confetti, sound opt-in. <strong>One view, picked by the store:</strong> real photos (people blurred by SAM) on a mapped store, shelf cards anywhere else; See it in 3D is a demo peek. <strong>Next card:</strong> a fresh shopper photo with the item boxed, Grab, and Find it for me. <strong>Tools:</strong> Scan shelf, Where am I?, Not here?, How to play (?), sound. One list: put back any grab; nothing auto-finishes."},
+    {id:"howto", name:"How to play", note:"First hunt only — three steps, ? reopens",
+     cap:"Screen 5a · How to play",
+     body:"<strong>Primary action:</strong> Got it. Shown once on the first Quest hunt on a phone; the ? in the tools row reopens it. Find it, grab it, snap the receipt. No clock, no way to lose."},
+    {id:"findit", name:"Find it for me", note:"Camera aimed at the next item — found, tap to grab",
+     cap:"Screen 5b · Find it for me",
+     body:"<strong>Primary action:</strong> tap the highlighted item to grab it (+10); the camera closes. SAM 3.1 boxes candidates for this one item and Muse Spark checks each crop, so a highlight is never a guess. A miss never says the item isn't there. Verified sightings feed the store map; a frame is kept as the next shopper's fresh photo only after SAM blurs every person in it. Try both Simulate buttons."},
     {id:"express",  name:"Express run",      note:"Same store, game off — walking order + big checks",
      cap:"Screen 6 · Express run",
      body:"<strong>Primary action:</strong> check any row, in any order. <strong>Rule:</strong> no game elements at all — the list is sorted in walking order as a suggestion (check-offs work out of order too), with extra-large targets, and the time estimate drops as stops clear. Finish unlocks when every row is checked."},
@@ -2451,9 +2563,9 @@
     {id:"addreceipt", name:"Add receipt",    note:"Finished hunt · attach a receipt — hunt stays closed",
      cap:"Screen 7b · Add receipt (finished hunt)",
      body:"<strong>Primary action:</strong> snap the receipt photo. <strong>Why this screen exists:</strong> adding a receipt to a finished hunt used to route through the hunt's Finish screen — and Back from there dumped you Home, so the quest felt stuck and the navigation felt broken. Now it is its own screen, reached from Today (Finished row), Receipts, or Profile. It verifies the haul and clears the “Receipt missing” tags everywhere, and it <strong>never reopens the quest</strong>. <strong>Back returns to the exact screen you tapped “Add receipt” on</strong> — the navigation stack, not a hard-coded destination. <strong>Demo:</strong> the same dashed “Use a sample receipt” appears here on the demo household only."},
-    {id:"score",    name:"Score",            note:"Result — verified haul, time, streak",
+    {id:"score", name:"Score", note:"Haul counts up, receipt banks it, level bar",
      cap:"Screen 8 · Score",
-     body:"<strong>Primary action:</strong> “Play next session”. <strong>Rule:</strong> the result closes the loop in one glance — haul, time, streak — and hands you straight into the day's next game. <strong>Closure is stated, not implied:</strong> after a snap it reads verified-and-closed; after a Skip it leads with “hunt finished” — never “not scored yet” — and says exactly where the quest went (Receipts, as “Finished · Receipt missing”) and that the hero on Today no longer holds it. Try it: finish the Trader Joe's hunt, Skip, and watch Today change."},
+     body:"<strong>Primary action:</strong> Play next session. The haul counts up line by line (items, full haul, receipt), then the level bar fills; crossing a level gets its own moment. Skip still closes the hunt, as Finished · Receipt missing."},
     {id:"mapstore", name:"Map a store",      note:"Film the aisles → platform builds the model",
      cap:"Screen 9 · Map a store",
      body:"<strong>Primary action:</strong> upload an aisle video. <strong>Rule:</strong> mapping is platform-level — the video and the model it builds are shared by every player of that store, while lists and receipts stay private on the account. The mapper keeps the credit."},
@@ -2484,9 +2596,9 @@
     {id:"receipt",  name:"Receipt detail",   note:"Photo + digitized lines, total verified",
      cap:"Screen 14 · Receipt detail",
      body:"<strong>Primary action:</strong> none — read and trust. <strong>Rule:</strong> the photo and its digitized twin live together in the account — snap once, read forever. The digitized lines must sum to the printed total before the receipt counts as verified."},
-    {id:"optimize", name:"Optimize list",    note:"New session · step 3 — cleanup pass before the game",
-     cap:"Screen 15 · Optimize list",
-     body:"<strong>Primary action:</strong> answer the one question, then “Looks right → Choose mode”. <strong>Rule:</strong> the optimizer merges duplicates into quantities, fixes spelling against the household dictionary, and <strong>asks</strong> when a name could be two real products (fresh vs frozen, organic vs not) — the Curator's never-merge-distinct-products doctrine, applied before the game starts. It runs on every list, from every door (photo, paste, type, voice, Muse chat)."},
+    {id:"optimize", name:"Check my list", note:"Plan a hunt · 3 — only when Arya has a question",
+     cap:"Screen 15 · Check my list",
+     body:"<strong>Primary action:</strong> answer, then Choose mode. Shown only when something was merged, corrected or needs a choice (fresh vs frozen); a clean list goes straight to the mode. Arya never guesses between two real products."},
     {id:"nothere", name:"Not here — Spotter", note:"Drift / stockout report — points on truth only",
      cap:"Screen 16 · Not here — Spotter report",
      body:"<strong>Primary action:</strong> pick what you see, Report. <strong>Rule:</strong> every hunt is a shelf survey — COLLECT proves a product is there, “Not here” proves it isn't. Three chips (Empty shelf / Something else here / Can't tell) + optional shelf photo. The report only flags the stop <strong>reported missing</strong>; time resolves it — a later collect = stockout (+2), a second hunter confirming a new spot = verified move (+10, model edits). <strong>That is real-time, community-driven inventory</strong> — and pre-trip warnings (“eggs reported out last night”)."},
@@ -2545,6 +2657,7 @@
     document.getElementById("capTitle").textContent = byId[id].cap;
     document.getElementById("capBody").innerHTML = byId[id].body;
     if(id==="hunt"){ startTimer(); }
+    if(id==="findit" && typeof fiReset==="function"){ fiReset(); }
     if(id==="shopoff"){ startShopoffTimer(); }
     closePanel(true);
   }
@@ -2613,14 +2726,14 @@
              navigates, and NEVER auto-finishes — not even on the last
              item. The hunt only moves on when the user taps Finish. */
           item.done = !item.done;
-          if(item.done){ toast("✓ " + item.name + " collected", "+15 pts"); }
+          if(item.done){ toast("✓ " + item.name + " collected", "+10 pts"); }
           else { toast("↩ " + item.name + " put back", "Still on your list — GRAB it again any time"); }
           syncTJ();
         });
       }
       row.addEventListener("click", function(){
         item.done = !item.done;
-        if(item.done){ toast("✓ " + item.name + " collected", "+15 pts"); }
+        if(item.done){ toast("✓ " + item.name + " collected", "+10 pts"); }
         else { toast("↩ " + item.name + " put back", "Still on your list — GRAB it again any time"); }
         syncTJ();
       });
@@ -2645,6 +2758,7 @@
   function syncTJ(){
     var d = tjDone(), left = tjLeft();
     document.getElementById("huntProg").textContent = d + "/" + TJ.length;
+    var hp = document.getElementById("huntPts"); if(hp) hp.textContent = (d*10 + (d===TJ.length ? 25 : 0)) + " pts";
     document.getElementById("fabCount").textContent = left + " left";
     document.getElementById("panelLeft").textContent = left + " left";
     document.getElementById("hubTjBar").style.width = (d/TJ.length*100) + "%";
@@ -2671,7 +2785,7 @@
     if(!nxt){ setFinish("tj"); go("finish"); return; }
     /* Big button = the suggested stop you're at. Any other stop: GRAB on its row/card. */
     nxt.done = true;
-    toast("✓ " + nxt.name + " collected", "+15 pts");
+    toast("✓ " + nxt.name + " collected", "+10 pts");
     syncTJ();
     /* No auto-finish on the last item: the button now reads "Finish →"
        and waits for an explicit tap, so a mistaken grab can still be
@@ -2687,7 +2801,7 @@
            object as the Cloud/Aisle rows — grab and put-back both work,
            and the hunt list below shows the identical state. */
         target.done = !target.done;
-        if(target.done){ toast("✓ " + target.name + " collected", "+15 pts"); }
+        if(target.done){ toast("✓ " + target.name + " collected", "+10 pts"); }
         else { toast("↩ " + target.name + " put back", "Still on your list — GRAB it again any time"); }
         syncTJ();
       }
@@ -2954,7 +3068,8 @@
       document.getElementById("modeStoreName").textContent = chosenStore;
       var optStore = document.getElementById("optStoreName");
       if(optStore) optStore.textContent = chosenStore;
-      go("optimize");
+      var ps = document.getElementById("planStoreName"); if(ps) ps.textContent = chosenStore;
+      go("plan");
     });
   });
   document.getElementById("sproutsRow").addEventListener("click", function(){
@@ -3122,6 +3237,51 @@
   });
   renderReceipt(0);
 
+
+  /* ---------------- Plan a hunt (Oct 28) ---------------- */
+  function planCount(){
+    var n = document.querySelectorAll("#planList .prow.in").length;
+    var c = document.getElementById("planCount"); if(c) c.textContent = n;
+  }
+  document.querySelectorAll("#planList .ptick").forEach(function(b){
+    b.addEventListener("click", function(){ b.parentNode.classList.toggle("in"); var bx=b.querySelector(".pbox"); bx.textContent = b.parentNode.classList.contains("in") ? "✓" : ""; planCount(); });
+  });
+  document.querySelectorAll("#planList .prm").forEach(function(b){
+    b.addEventListener("click", function(){ var row=b.parentNode; var nm=row.querySelector("b").textContent; row.style.display="none"; planCount(); toast(nm + " is off your list", "Undo is on the real toast"); });
+  });
+  var planGo = document.getElementById("planGo");
+  if(planGo){ planGo.addEventListener("click", function(){ document.getElementById("modeStoreName").textContent = chosenStore + " · " + document.getElementById("planCount").textContent + " items"; go("mode"); }); }
+
+  /* ---------------- One view + 3D peek ---------------- */
+  var see3d = document.getElementById("see3d"), in3d = false;
+  if(see3d){ see3d.addEventListener("click", function(){
+    in3d = !in3d; setScene(in3d ? "cloud" : "photo");
+    see3d.textContent = in3d ? "‹ Back to the photos" : "See it in 3D ›";
+    document.getElementById("sceneCapText").textContent = in3d ? "The 3D scan of this store, made from the walk video." : "Real photos from a walk through this store. The orange dot is your next item.";
+  }); }
+
+  /* ---------------- Find it for me ---------------- */
+  var fiCam = document.querySelector(".fi-cam");
+  function fiReset(){
+    if(!fiCam) return;
+    fiCam.classList.remove("found","miss");
+    var nx = nextItem();
+    document.getElementById("fiTarget").textContent = "Looking for " + (nx ? nx.name : "your next item");
+    document.getElementById("fiStatus").textContent = "Scanning… SAM 3.1 boxes candidates, Muse Spark checks each one. About 5 seconds a look.";
+  }
+  document.getElementById("fiSimFound").addEventListener("click", function(){
+    var nx = nextItem(); fiCam.classList.remove("miss"); fiCam.classList.add("found");
+    document.getElementById("fiStatus").innerHTML = "<strong>Found it!</strong> " + (nx ? nx.name : "It") + " is highlighted — tap it to grab.";
+  });
+  document.getElementById("fiSimMiss").addEventListener("click", function(){
+    var nx = nextItem(); fiCam.classList.remove("found"); fiCam.classList.add("miss");
+    document.getElementById("fiStatus").textContent = "Didn't spot " + (nx ? nx.name : "it") + " in this view. Try a little closer or another angle. That doesn't mean it isn't here.";
+  });
+  document.getElementById("fiFound").addEventListener("click", function(){
+    var nx = nextItem(); if(nx){ nx.done = true; toast("✓ " + nx.name + " collected", "+10 pts"); syncTJ(); }
+    goBack("hunt");
+  });
+
   /* ---------------- Scene ladder ---------------- */
   function setScene(mode){
     document.querySelectorAll("[data-scene]").forEach(function(b){ b.classList.toggle("on", b.dataset.scene===mode); });
@@ -3148,7 +3308,7 @@
   if(scanClose){ scanClose.addEventListener("click", function(){ scanPop.classList.remove("show"); }); }
   document.querySelectorAll("[data-grab-pop]").forEach(function(btn){
     btn.addEventListener("click", function(){
-      TJ.forEach(function(x){ if(x.name===btn.dataset.grabPop && !x.done){ x.done = true; toast("✓ " + x.name + " collected", "+15 pts"); } });
+      TJ.forEach(function(x){ if(x.name===btn.dataset.grabPop && !x.done){ x.done = true; toast("✓ " + x.name + " collected", "+10 pts"); } });
       scanPop.classList.remove("show"); syncTJ();
     });
   });
