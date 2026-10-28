@@ -791,3 +791,15 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .freshimg img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
 .freshbox { position: absolute; border: 3px solid var(--acc); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.28); pointer-events: none; }
 .fresh figcaption { font-size: 12px; margin-top: 6px; }
+
+/* Plan a hunt (owner, 2026-10-28): tap a row to move it into the
+ * quest or back to the list. */
+.planrow { display: flex; align-items: center; border-top: 1px solid var(--line); }
+.plantick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: none; border: 0; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.planrm { flex: 0 0 44px; height: 44px; margin-right: 6px; border: 0; background: none; color: var(--ink3); font-size: 16px; border-radius: 12px; cursor: pointer; }
+.planrow:first-child { border-top: 0; }
+.planrow .planbox { width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; }
+.planrow.in .planbox { background: var(--acc); border-color: var(--acc); }
+.planrow:not(.in) .name { color: var(--ink3); }
+.sub.fit { color: var(--acc-ink, var(--ink2)); }
+.toastact { margin-left: 12px; background: none; border: 0; color: var(--acc-soft); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; pointer-events: auto; }

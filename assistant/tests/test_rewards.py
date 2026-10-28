@@ -118,3 +118,39 @@ class TestFindItForMe(unittest.TestCase):
         js = read("quest.js")
         self.assertIn("/api/quest/shelf-photo?store=", js)
         self.assertIn("People are blurred out; we only keep products.", js)
+
+
+class TestPlanAHunt(unittest.TestCase):
+    """Owner, 2026-10-28: pick the store first, then move items from
+    the Arya list into the quest; planning is the same list."""
+
+    def test_store_first_then_items(self):
+        js = read("quest.js")
+        new_hunt = js.split('$("#btn-new-hunt").addEventListener')[1].split("});")[0]
+        self.assertIn('questShow("view-store")', new_hunt)
+        self.assertIn('api("/api/quest/plan")', new_hunt)
+        st = js.split('$("#st-next").addEventListener')[1].split("});")[0]
+        self.assertIn("renderPlan()", st)
+        self.assertIn('questShow("view-newlist")', st)
+        html = read("index.html")
+        self.assertIn("Where are you shopping?", html)
+        self.assertIn('id="nl-plan"', html)
+        self.assertIn("Choose items &rarr;", html)
+
+    def test_buckets_and_list_management(self):
+        js = read("quest.js")
+        for label in ("Usually bought here", "New on your list", "Usually from ${st}",
+                      "Often bought here, not on your list"):
+            self.assertIn(label, js)
+        rm = js.split('const b = ev.target.closest("[data-planrm]")')[1].split("\n});")[0]
+        self.assertIn('post("/api/list/remove"', rm)
+        self.assertIn('action: "Undo"', rm)
+        self.assertIn('post("/api/list/add", { item_id: itemId })', rm)
+        nxt = js.split('$("#nl-next").addEventListener')[1].split("\n});")[0]
+        self.assertIn('post("/api/list/add", { name: r.name })', nxt)
+
+    def test_clean_list_skips_check_my_list(self):
+        js = read("quest.js")
+        opt = js.split("async function qOptimizeDraft()")[1].split("\n}")[0]
+        self.assertIn("!rep.merged.length && !rep.corrected.length && !rep.questions.length", opt)
+        self.assertIn('questShow("view-mode")', opt)

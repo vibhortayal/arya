@@ -206,19 +206,21 @@
 
   <section id="view-newlist" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">New hunt</h2>
-    <p class="muted">One item per line. A quantity goes in front or behind: &ldquo;2 milk&rdquo;, &ldquo;milk × 2&rdquo;.</p>
+    <h2 class="largetitle" style="font-size:28px" id="nl-title">Your quest</h2>
+    <p class="muted" id="nl-sub">Tap an item to move it into the quest or back to your list.</p>
+    <div id="nl-plan"></div>
     <div class="group pad">
-      <textarea id="nl-text" rows="8" placeholder="milk&#10;eggs × 2&#10;blueberries" aria-label="Your list"></textarea>
-      <p style="margin-bottom:0"><button id="nl-from-list" class="btn secondary" type="button">Start from your Arya list</button></p>
+      <label class="field" for="nl-text">Add something else</label>
+      <textarea id="nl-text" rows="3" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
     </div>
-    <p><button id="nl-next" class="btn primary wide" type="button">Pick the store &rarr;</button></p>
+    <p><button id="nl-next" class="btn primary wide" type="button">Start the quest &rarr;</button></p>
   </section>
 
   <section id="view-store" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">Pick the store</h2>
+    <h2 class="largetitle" style="font-size:28px">Where are you shopping?</h2>
     <div id="st-mine"></div>
+    <div id="st-history"></div>
     <div class="group pad">
       <label class="field">Or type a store
         <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
@@ -228,7 +230,7 @@
       <button class="navrow" data-qnav="view-stores-find" type="button"><span class="grow">Find stores<span class="sub">Search by ZIP, address, or name</span></span><span class="chev">›</span></button>
       <button class="navrow" data-qnav="view-stores-add" type="button"><span class="grow">Add a store<span class="sub">A store that is not in the directory yet</span></span><span class="chev">›</span></button>
     </div>
-    <p><button id="st-next" class="btn primary wide" type="button">Check my list &rarr;</button></p>
+    <p><button id="st-next" class="btn primary wide" type="button">Choose items &rarr;</button></p>
   </section>
 
   <section id="view-stores-find" class="view" hidden>
