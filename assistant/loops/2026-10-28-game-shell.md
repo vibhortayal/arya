@@ -166,3 +166,12 @@ Verification: suite 382 OK. Playwright: store first with hints;
 Costco plan puts milk/bread under "usually from Trader Joe's" and
 suggests eggs; TJ plan ticks milk/bread; remove + Undo; typed oat milk
 lands on the list; the hunt opens.
+
+## Part 7 — wireframes and docs
+
+Wireframes in the repo follow the shipped flow (store first, Plan with
+✕ remove, Check my list only when needed, Find it for me, How to play).
+Docs trimmed and brought current: 16 files, 33.1k words down to 19.9k.
+SPEC §6.8 is now the Quest play layer; IMPLEMENTATION keeps method,
+contracts and flags with a stage status table; DISCUSSION.md stays the
+full record. Suite 382 OK.

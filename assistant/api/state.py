@@ -339,7 +339,7 @@ def derived():
             continue  # removed for this cycle; returns when a new receipt lands
         if f.get("qty_override"):
             item["qty"] = f["qty_override"]
-        if f.get("checked_on") == today:
+        if f.get("checked_on") and f.get("checked_on") == today:
             item["checked"] = True
         kept.append(item)
     smart["items"] = kept
