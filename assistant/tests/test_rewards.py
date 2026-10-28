@@ -126,7 +126,9 @@ class TestPlanAHunt(unittest.TestCase):
 
     def test_store_first_then_items(self):
         js = read("quest.js")
-        new_hunt = js.split('$("#btn-new-hunt").addEventListener')[1].split("});")[0]
+        # Slice to the handler's own closing (line-start "});"):
+        # inner callbacks in the handler also end in "});".
+        new_hunt = js.split('$("#btn-new-hunt").addEventListener')[1].split("\n});")[0]
         self.assertIn('questShow("view-store")', new_hunt)
         self.assertIn('api("/api/quest/plan")', new_hunt)
         # Tap-to-advance (owner phone pass, 2026-10-28): picking a
