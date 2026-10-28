@@ -46,7 +46,8 @@ const ShareUI = (() => {
     const got = sess.items.filter(i => i.checked);
     const wild = [...new Set([...(sess.wild_finds || []),
       ...sess.items.filter(i => i.wild).map(i => i.name)])];
-    const pts = window.qHaulPoints ? qHaulPoints(sess, true) : 0;
+    const settled = sess.state === "done";
+    const pts = window.qHaulPoints ? qHaulPoints(sess, settled) : 0;
     const tag = chainTag(sess.store);
     return {
       kind: "haul", title: "My haul", store: sess.store,
@@ -55,9 +56,12 @@ const ShareUI = (() => {
       faces: got.slice(0, 8).map(i => ({ file: faceFor(i.name), name: i.name })),
       more: Math.max(0, got.length - 8),
       wild: wild.slice(0, 3),
-      stat: `${got.length} items · ${pts} pts`,
+      stat: settled ? `${got.length} items · ${pts} pts`
+        : `${got.length} items · ${pts} pts to bank`,
       photo: ctx.haulPhotoURL || null,
-      caption: `My ${sess.store} haul: ${got.length} items, ${pts} pts — receipt-verified on Arya.${tag ? " " + tag : ""}${wild.length ? ` Wild finds: ${wild.join(", ")}.` : ""}`
+      caption: settled
+        ? `My ${sess.store} haul: ${got.length} items, ${pts} pts — receipt-verified on Arya.${tag ? " " + tag : ""}${wild.length ? ` Wild finds: ${wild.join(", ")}.` : ""}`
+        : `My ${sess.store} haul: ${got.length} items, ${pts} pts to bank — played on Arya, receipt still to add.${tag ? " " + tag : ""}${wild.length ? ` Wild finds: ${wild.join(", ")}.` : ""}`
     };
   }
   function specLove(ctx, item) {

@@ -2578,11 +2578,11 @@ async function openScore(sess) {
       wildNames.map(n => { const f = qFaceFor(n); return f ? `<img class="rowface" src="assets/characters/${f}" alt="">` : ""; }).join("") +
       `<div class="grow"><span class="name">${esc(wildNames.join(", "))}</span><span class="sub">Not on the list — grabbed anyway. The receipt catches them and Arya counts them like everything else.</span></div></div></div>`;
   }
-  if (attached || (sess.my_reports || []).length) {
+  {
     html += `<h3 class="sect">Share this run</h3><div class="group pad">
       <p style="display:flex; gap:8px; flex-wrap:wrap; margin:0">
-        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share your haul</button>
-        <button class="btn grow" id="share-love" type="button">Loved something?</button>` : ""}
+        <button class="btn primary grow" id="share-haul" type="button">Share your haul</button>
+        <button class="btn grow" id="share-love" type="button">Loved something?</button>
         ${(sess.my_reports || []).length ? `<button class="btn grow" id="share-sos" type="button">Shelf SOS</button>` : ""}
       </p>
       <p style="margin-top:10px"><label class="btn wide" for="haul-photo" style="text-align:center">Snap your haul</label>
