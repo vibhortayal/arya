@@ -1,65 +1,46 @@
 # The pitch — Arya (Team Nightshift, Indie track)
 
-The complete spoken pitch. ~390 words ≈ 2:25 at speaking pace. Screen beats in brackets; the demo runs on the live app throughout — show, don't tell. Every claim in the text is true of the shipped build (accuracy pass applied 2026-10-27: code checks the arithmetic, Spark reads; 40 named shelf regions; no unverified counts).
+Spoken pitch, plain language. ~320 words, about 2 minutes. Screen beats in brackets.
 
-## Hook (0:00–0:15)
+## Hook
 
-"Every week, you walk into a grocery store that knows nothing about you — hunting for things it will not help you find, working from a list that's half in your head. Google Maps ends at the door. Inside the store, you're on your own."
+"Every week, you walk into a grocery store that knows nothing about you. Your list is half in your head. Google Maps stops at the door — inside, you're on your own."
 
-## Problem (0:15–0:30)
+## Problem
 
-"List apps start blank — they know nothing about what you buy, what you returned, or where anything is. And the stores that publish no layout data at all — Trader Joe's, independents, ethnic markets — are invisible to every app on your phone. The trip stays a chore: slow, forgetful, and repeated every single week."
+"List apps start blank. They don't know what you buy, what you returned, or where anything is. Stores like Trader Joe's publish no layout data at all, so no app can help you inside them. Same slow trip, every week."
 
-## The solution — why it is built this way (0:30–1:05)
+## Solution
 
-"Here's the thing: everything this needs — a map of the store, what's actually on its shelves — doesn't exist for the stores that publish nothing, and nobody sells it for them. The stores won't hand it over. Paying people to scan shelves has been tried — those apps shut down.
+"To fix that, someone has to map these stores and track what's on their shelves. That data doesn't exist. Stores won't give it out. Paying people to scan shelves has been tried — those apps shut down.
 
-So the data has to come from the people already in the store: shoppers. And shoppers don't do chores for free — they do it if it's fun. If it's a game.
+So it has to come from shoppers. People won't do that work for free — they'll do it if it's fun.
 
-So we turned the weekly shop into a game — and the chore became the fun part. Your list becomes a treasure hunt in a 3D model of your real store. You race your own best time, chase streaks and badges, race a friend across town. A kid who drags through the aisles suddenly fights to hold the phone and hunt. And every hunt quietly does the work: it checks the shelves, reports what's missing, and ends with a receipt that proves what really happened.
+So we made shopping a game. Your list becomes a treasure hunt in a 3D model of your real store. Kids who hate the grocery trip fight to hold the phone. Every hunt checks the shelves, reports what's missing, and ends with a photo of the receipt. The receipt is the proof, and the score."
 
-The game isn't decoration. The game is how the map gets built — and why anybody builds it."
+## Demo
 
-## Live demo (1:05–1:50)
+"This is Arya. The list doesn't start blank. Arya learned what your house buys from your receipts, and it reminds you what's about to run out — raspberries, mandarins, almonds. Add items any way you like: a photo of a note, your voice, typing, or a chat with Muse. **Muse Spark** reads it. If something is unclear, Arya asks instead of guessing.
 
-"This is Arya — and the list doesn't start blank. It starts written.
+This Trader Joe's was rebuilt in 3D from a walkthrough video — any shopper can map a store that way. **SAM 3.1** found the shelves, **Spark** labeled them: cheese, pasta, pasta sauce, in walking order.
 
-[Today] Arya learned this house from its receipts — what it buys, how fast it uses it — and reminds you what's due before you run out: raspberries, mandarins, almonds. That's your starting point. And adding is any way you like: photograph a note, dictate it with **Muse Voice Transcribe**, paste it, type it, or just tell Muse in chat. **Muse Spark** reads it; the Optimizer merges duplicates and asks about the one real ambiguity — it never guesses a product into existence.
+Now the hunt. My kid holds the phone and collects each item where it sits. Tap 'not here' and you've reported a stockout. At the end, photograph the receipt. Spark reads it, Arya checks every line against the total, and anything you returned comes off your list for good. That receipt teaches Arya too — next week's list is already half written."
 
-[Pick Trader Joe's] This store was rebuilt in 3D from a walkthrough video — that's how any shopper maps a store. **VGGT** built the geometry; **SAM 3.1** segmented the shelves; **Spark** labeled them — Cheese, Pasta, Pasta Sauce, in the order you walk.
+## Meta fit
 
-[Hunt] Now play it. My items are treasures along the real shelves. My kid holds the phone and hunts; I run the list. Collect — collect — [Not here] — that tap reports a stockout, so the community's map stays true. We're racing our best time, and the badges land at the end.
+"Meta's models do the work: Spark reads and reasons, **Muse Voice Transcribe** takes dictation, SAM 3.1 sees the shelves, **VGGT** builds the 3D store. And stores get mapped by the people who shop in them — the way open-source software gets built by its users."
 
-[Receipt photo] Every hunt ends with the receipt. Spark reads it; Arya checks every line against the total — a return nets out and is never suggested again. The receipt is the scorecard, and it's the brain: next week's list is already writing itself."
+## Future + close
 
-## Meta fit (1:50–2:05)
+"Next: whole-store maps, live 'you are here' in the aisle, and open sign-ups.
 
-"Meta's models do every job here: Muse Spark reasons and reads, Muse Voice Transcribe listens, SAM 3.1 sees the shelves, VGGT builds the world. And the world grows the open way — shoppers map stores the way contributors build open source: the platform belongs to the people who play it."
-
-## Future scope (2:05–2:20)
-
-"With three more weeks: whole-store maps with live you-are-here in the aisle, open registration with per-user spend caps, and a second metro mapped end to end by its own shoppers.
-
-We are Team Nightshift. Arya makes the weekly shop a game worth playing — and every game makes the map truer. We're ready for your questions."
+We're Team Nightshift. This is Arya — grocery shopping, as a game. We're ready for your questions."
 
 ---
 
-## If it must run 2:05
-
-Drop, in order: (1) "You race your own best time, chase streaks and badges, race a friend across town." (−8s; the kid line still carries fun) — (2) the door enumeration down to "photograph it, dictate it, or just tell Muse in chat" (−5s). Nothing else: every remaining sentence is load-bearing.
-
-## How it maps to the four pillars
-
-| Pillar | Where it lands |
-| --- | --- |
-| Technical Execution | The demo itself: Meta's models in one live loop, a verified-arithmetic receipt engine, 126 tests, all built and deployed during the event window |
-| Impact & Viability | A weekly, universal chore; the wedge is the stores no incumbent can map because they publish nothing — Arya's sensors are its players |
-| Innovation | The superpower: a store's interior becomes a playable, community-maintained map, and the receipt — not a scanner, not a robot — is the referee |
-| Meta Alignment | Open contribution (maps built by the community), connection (friends race Shop-Offs, households share one list), and Meta's models as the entire perception stack |
-
 ## Delivery notes
 
-- Run the demo from the demo account on a phone; the Trader Joe's hunt starts in the cloud driver and can drop to Strip live if the network stumbles — say so if it happens; the ladder is a feature, not an apology.
-- The demo hunt list should be drawn from what the mapped stretch actually contains (cheese, oils, pasta, sauce, peanut butter, bread, frozen pizza) so every stop's shelf label agrees with the item.
-- Keep one pre-decoded receipt as the fallback for the finish beat (DEMO.md failure mode: live decode is slow).
-- Every number spoken is verifiable in the repo: 114 real receipts behind the brain, 373,630 points in the shipped cloud, 40 named shelf regions of 55 SAM regions, full-pipeline shelf-graph cost $0.25.
+- Demo account on a phone. The Trader Joe's hunt starts in the 3D view and can drop to the flat view live if the network stumbles — say so if it happens.
+- Build the demo hunt list from what the mapped stretch actually contains (cheese, oils, pasta, sauce, peanut butter, bread, frozen pizza) so each stop's shelf label agrees with the item.
+- Keep one receipt already read as the fallback for the finish beat; a live read takes a few seconds.
+- Numbers, if asked: 114 real receipts behind the brain; 373,630 points in the shipped store model; 40 named shelf regions of 55 found by SAM; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts.
