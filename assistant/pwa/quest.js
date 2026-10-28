@@ -132,6 +132,7 @@ function questBack() {
   paintHuntFrame(prev || "view-home");
   window.scrollTo(0, 0);
   if (!prev || prev === "view-home") refresh("view-home");
+  if (prev === "view-community") renderCommunity().catch(showErr);
 }
 /* The hunt and the Express run are full-screen frames (Discussion
  * 36): the store fills the viewport and the tab bar hides. Every
@@ -152,7 +153,7 @@ document.addEventListener("click", ev => {
   if (nav) { questGo(nav.dataset.qnav); }
 });
 document.querySelectorAll("#tabs button").forEach(b =>
-  b.addEventListener("click", () => { Q.stack = []; stopHuntTimer(); stopHuntMotion(); paintHuntFrame(""); }));
+  b.addEventListener("click", () => { Q.stack = b.dataset.view === "view-community" ? ["view-community"] : []; stopHuntTimer(); stopHuntMotion(); paintHuntFrame(""); }));
 
 function questGo(id) {
   if (id === "view-community") renderCommunity().catch(showErr);
@@ -2441,6 +2442,9 @@ async function openScore(sess) {
     }
   }
   html += `</div>`;
+  if (attached) {
+    html += `<p><button id="score-challenge" class="btn secondary wide" type="button">Challenge a friend to beat this ›</button></p>`;
+  }
   html += `<p class="closenote">This hunt is closed. It has left Today — find it any time in Receipts.</p>`;
   if (!attached) {
     html += `<p class="muted">No receipt yet. Add this trip's receipt and the hunt is settled; until then it waits in Receipts as “Finished · Receipt missing”.</p>
@@ -2461,6 +2465,8 @@ async function openScore(sess) {
   }
   body.innerHTML = html;
   qAfterHaul(sess, profile, attached);
+  const ch = $("#score-challenge");
+  if (ch) ch.addEventListener("click", () => { Q.raceStore = sess.store; questGo("view-race"); });
   const add = $("#score-addreceipt");
   if (add) add.addEventListener("click", () =>
     openAddReceipt(sess.id, sess.store, s => { Object.assign(sess, s); openScore(sess); }));
@@ -2504,6 +2510,14 @@ async function renderCommunity() {
   ]);
   Q.receiptTimes = Object.fromEntries((archive.receipts || []).map(r => [r.receipt_id, r.purchased_at]));
   await qLoadSessions().catch(() => {});
+  const fr = await api("/api/quest/friends").catch(() => ({ friends: [] }));
+  const friends = fr.friends || [], pend = friends.filter(f => f.status === "pending_in").length;
+  const acc = friends.filter(f => f.status === "accepted").length;
+  const raceN = new Set(Q.sessions.filter(s => s.shopoff_id && s.state !== "done" && s.state !== "finished").map(s => s.shopoff_id)).size;
+  $("#crew-summary").innerHTML = (acc || pend || raceN)
+    ? `<div class="row"><div class="grow"><span class="name">${acc} friend${acc === 1 ? "" : "s"}${pend ? ` · ${pend} request${pend === 1 ? "" : "s"}` : ""}</span><span class="sub">${raceN ? `${raceN} Shop-Off${raceN === 1 ? "" : "s"} on` : "No Shop-Off on right now"}</span></div></div>`
+    : empty("Hunting is better with company. Add a friend to race the same list.");
+  $("#crew-friends-sub").textContent = pend ? `${pend} request${pend === 1 ? "" : "s"} waiting` : "Add by handle, accept requests";
   const board = $("#comm-board");
   if (scope !== "household") {
     board.innerHTML = empty("No hunts at this scope yet — boards widen as more hunters play.");
@@ -2535,6 +2549,7 @@ $("#comm-scopes").addEventListener("click", ev => {
 
 async function renderRace() {
   questShow("view-race");
+  if (Q.raceStore) { $("#race-store").value = Q.raceStore; Q.raceStore = ""; }
   if (Q.racePrefill) {
     $("#race-opp").value = Q.racePrefill;
     Q.racePrefill = "";
@@ -2569,6 +2584,11 @@ $("#race-body").addEventListener("click", async ev => {
   await qLoadSessions().catch(() => {});
   const s = qSessionById(b.dataset.openSess);
   if (s) qOpenSession(s);
+});
+$("#opt-race").addEventListener("click", ev => {
+  ev.preventDefault();
+  if (Q.current && Q.current.store) Q.raceStore = Q.current.store;
+  questGo("view-race");
 });
 $("#race-create").addEventListener("click", async () => {
   const opp = $("#race-opp").value.trim().replace(/^@/, "");

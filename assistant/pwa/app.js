@@ -170,6 +170,11 @@ function paintLevelChip(profile) {
   if (!el || !profile || !profile.level) return;
   el.innerHTML = `Level ${profile.level} <span>· ${profile.points} pts</span>`;
   el.hidden = false;
+  // The avatar ring fills toward the next level.
+  const span = (profile.next_level_at - profile.level_floor) || 1;
+  const pct = Math.max(0, Math.min(100, Math.round((profile.points - profile.level_floor) / span * 100)));
+  $("#avatar-btn").style.setProperty("--pct", pct + "%");
+  $("#avatar-btn").setAttribute("aria-label", `Profile, level ${profile.level}`);
 }
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
@@ -222,6 +227,35 @@ function paintTodayGames(sessions) {
     : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
 
+/* The Crew card: one line of social state and one action. It
+ * never nags: no friends means a soft invite, and it names no
+ * clock, rank or penalty. */
+async function paintTodayCrew(sessions) {
+  const el = $("#today-crew");
+  const d = await api("/api/quest/friends").catch(() => ({ friends: [] }));
+  const friends = d.friends || [];
+  const incoming = friends.filter(f => f.status === "pending_in");
+  const accepted = friends.filter(f => f.status === "accepted");
+  const racing = (sessions || []).filter(s => s.shopoff_id && s.state !== "done" && s.state !== "finished");
+  let line, label;
+  if (incoming.length) {
+    line = `@${esc(incoming[0].handle)} wants to hunt with you.`; label = "See request";
+  } else if (racing.length) {
+    line = `Shop-Off at ${esc(racing[0].store)} is on. Race at your own pace.`; label = "Open Crew";
+  } else if (accepted.length) {
+    line = `Crew: ${accepted.length} friend${accepted.length === 1 ? "" : "s"}. Challenge one to a Shop-Off.`; label = "Open Crew";
+  } else {
+    line = "Shop with someone. Invite a friend and race the same list.";  label = "Invite a friend";
+  }
+  el.innerHTML = `<button class="hubrow crewcard" id="today-crew-btn" type="button"><span class="hr-label">${line}</span>${incoming.length ? `<span class="countbadge">${incoming.length}</span>` : ""}<span class="hr-action">${label}</span><span class="chev">›</span></button>`;
+  $("#today-crew-btn").addEventListener("click", () => {
+    show("view-community");
+    refresh("view-community");
+    if (!incoming.length && !accepted.length && !racing.length && window.questGo) questGo("view-friends");
+    else if (incoming.length && window.questGo) questGo("view-friends");
+  });
+}
+
 async function renderHome() {
   const h = await api("/api/home");
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -240,6 +274,7 @@ async function renderHome() {
   paintTodayHero(sessions);
   paintTodayGames(sessions);
   api("/api/quest/profile").then(paintLevelChip).catch(() => {});
+  paintTodayCrew(sessions).catch(() => {});
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
     api("/api/curator").catch(() => ({ proposals: [] }))
@@ -1092,6 +1127,7 @@ function refresh(view) {
   if (view === "view-receipts") renderReceipts().catch(showErr);
   if (view === "view-analysis") renderAnalysis().catch(showErr);
   if (view === "view-profile") renderProfile().catch(showErr);
+  if (view === "view-community") renderCommunity().catch(showErr);
   if (view === "view-chat") paintChatEmpty();
 }
 
@@ -1271,7 +1307,7 @@ function enterApp(user, demo) {
   isDemo = demo;
   window.__aryaUser = user;
   $("#view-login").hidden = true;
-  $("#username").textContent = demo ? "demo" : user;
+  $("#avatar-initial").textContent = (demo ? "demo" : String(user || "A")).charAt(0).toUpperCase();
   $("#demobar").hidden = !demo;
   if (demo) {
     $("#chat-demo-note").hidden = false;
@@ -1292,13 +1328,23 @@ function enterApp(user, demo) {
 function openShell() {
   $("#app-main").hidden = false;
   $("#tabs").hidden = false;
-  $("#userbar").hidden = false;
+  $("#avatar-btn").hidden = false;
   show("view-home");
   refresh("view-home");
 }
-$("#signout").addEventListener("click", async ev => {
+/* The avatar (top right) is the way to Profile: Profile is not a
+ * tab. Back returns to the tab the player left. */
+let avatarFrom = "view-home";
+$("#avatar-btn").addEventListener("click", () => {
+  const cur = [...document.querySelectorAll(".view")].find(v => !v.hidden);
+  avatarFrom = cur && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
+  show("view-profile");
+  refresh("view-profile");
+  window.scrollTo(0, 0);
+});
+$("#pf-back").addEventListener("click", ev => {
   ev.preventDefault();
-  await fetch("/auth/logout", { method: "POST" });
-  location.reload();
+  show(avatarFrom);
+  refresh(avatarFrom);
 });
 boot();
