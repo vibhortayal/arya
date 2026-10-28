@@ -1,57 +1,93 @@
+<p align="center">
+  <img src="assistant/pwa/assets/scenes/hero.webp" alt="Arya and the cast — the raspberry leads the way down the aisle" width="720">
+</p>
+
 # Arya
 
-Arya is a grocery assistant. It keeps a living model of one household's
-purchases — receipts, returns, patterns — so the shopping list writes
-itself. On top of that model sits Quest, a play layer that turns the
-weekly shop into a treasure hunt in a 3D model of the player's own
-store. One product, one app, one account.
+**She remembers the list.** *(Winter is coming.)*
 
-**Live:** https://arya-pilot.duckdns.org — "Try the demo" opens a
-fictional household with no account. A judge can play the whole loop
-there: add to the list by typing, photo or voice, play the Trader
-Joe's hunt in every mode and view, finish on a receipt photo, and use
-Ask Arya. Every demo write goes into an in-memory sandbox for that
-visitor only; nothing reaches disk or another visitor. Bulk imports
-and batch model jobs need a real account. The owner's data stays
-behind the owner's account.
+Arya is a grocery assistant with a memory and a game. She keeps a
+living model of your household's purchases — every receipt, every
+return, every rhythm — until the list writes itself. Then she turns
+the weekly shop into a treasure hunt through a model of your own
+store: follow her route, grab the goods, and finish with the receipt
+that scores the run and feeds her brain. One product, one app, one
+account.
 
-## The brain
+![Tests: 503 passing](https://img.shields.io/badge/tests-503%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
 
-- **Intake.** Receipts enter as PDF or photo. Muse Spark reads them;
-  code checks every line against the printed total before anything
-  posts. Lists enter in any form: a photo of a note or whiteboard,
-  a paste, typing, voice, or your own assistant through the
-  agent connector: any MCP-capable agent (Muse Spark is the
-  showcased client) reads and writes the list with your account
-  token — Arya collects from the apps you already use instead
-  of competing with them (docs: assistant/docs/AGENT-CONNECTOR.md).
+**Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
+
+**Play her live:** https://arya-pilot.duckdns.org — "Try the demo"
+opens a fictional household, no account needed. The whole loop is
+there: build a list by typing, photo or voice, hunt the Trader Joe's
+aisles, settle on a receipt photo, Ask Arya anything. Demo writes
+live in a per-visitor sandbox; nothing reaches disk or another
+visitor. The owner's data stays behind the owner's account.
+
+## Meet the cast
+
+Every item on your list has a face. Hers is a whole company of them:
+
+<p align="center">
+  <img src="assistant/pwa/assets/characters/raspberry.webp" alt="Raspberry" width="96">
+  <img src="assistant/pwa/assets/characters/mandarin.webp" alt="Mandarin" width="96">
+  <img src="assistant/pwa/assets/characters/almond.webp" alt="Almond" width="96">
+  <img src="assistant/pwa/assets/characters/milk.webp" alt="Milk" width="96">
+  <img src="assistant/pwa/assets/characters/egg.webp" alt="Egg" width="96">
+  <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
+</p>
+
+## Her brain
+
+- **Intake.** Receipts arrive as PDF or photo; Muse Spark reads
+  them, and code checks every line against the printed total before
+  anything posts. Lists arrive any way you think of them: a photo of
+  a note or whiteboard, a paste, typing, voice — or your own
+  assistant through the agent connector. Any MCP-capable agent
+  (Muse Spark is the showcased client) reads and writes the list
+  with your account token: Arya collects from the apps you already
+  use instead of competing with them (`assistant/docs/AGENT-CONNECTOR.md`).
 - **Ledger.** Kept purchases only: returns net out, bought-for-others
   is tracked but never suggested, discounts fold into their parent
   item.
-- **Patterns and the judge.** Deterministic engines learn cadence and
-  price by store. A Muse Spark staple judge gates what the pattern
-  facts may put on the list. The Curator proposes product merges and
-  splits; the user applies them — no silent edits. The Resolver
-  researches names Arya cannot resolve and shows its sources; the
-  user settles.
-- **Eyes.** A fridge or pantry photo produces sightings. The user
-  confirms before the model changes.
-- **Ask Arya.** A chat agent grounded in a snapshot of the model. It
-  answers from the data and applies stated facts as server-validated
+- **Patterns and the judge.** Deterministic engines learn cadence
+  and price by store. A Muse Spark staple judge gates what the
+  pattern facts may put on the list — and since Oct 28 she has a
+  second seat: Muse Spark Open (open weights, on Baseten) re-judges
+  from item names alone, and every disagreement is kept as a
+  curation signal. The Curator proposes product merges and splits;
+  you apply them — no silent edits. The Resolver researches names
+  Arya cannot place and shows its sources; you settle.
+- **Eyes.** Show her the fridge, the pantry, the freezer. A photo
+  produces sightings; you confirm before her model changes. What she
+  has not seen, she calls unknown — never absent.
+- **Ask Arya.** A chat grounded in a snapshot of her model. She
+  answers from your data and applies stated facts as server-validated
   actions.
 
-## The game (Quest)
+## Her game (Quest)
 
-List → Store → Play → Receipt. Pick a store from the directory
-(search by name, address, or ZIP; favorites first; a store can be
-added with its address). A mapped store carries a 3D model built
-from a shopper's walkthrough video: VGGT builds the geometry,
-SAM 3.1 segments the shelves, Muse Spark labels them, and each
-hunt stop sits at its item's matched shelf. An unmapped store
-plays as shelf cards and can be mapped by its own shoppers. Find it
-for me aims the camera at one item: SAM 3.1 boxes it, Muse Spark
-verifies it, and no picture of a person is kept. The receipt photo ends the hunt: it scores the haul and
-feeds the brain. Detail: `docs/quest/`.
+**List → Store → Play → Receipt.** Pick a store from the directory
+(search by name, address or ZIP; favorites first; add one with its
+address). A mapped store carries a model built from a shopper's
+walkthrough video: VGGT builds the geometry, SAM 3.1 segments the
+shelves, Muse Spark labels them, and every hunt stop sits at its
+item's matched shelf.
+
+<p align="center">
+  <img src="assistant/pwa/models/trader-joes/frames-web/f012.jpg" alt="Inside the Trader Joe's photo walk — every shopper pixelated by SAM before the frame ships" width="720">
+</p>
+<p align="center"><em>Her view of Trader Joe's. Every person in every frame is
+pixelated by SAM before the frame ships — 476 shoppers, zero faces.</em></p>
+
+No map yet? In Quest she draws you an illustrated aisle and leads
+anyway; Express mode skips the art and just gets you out fast.
+**Find it for me** aims your camera at one item: SAM 3.1 boxes it,
+Muse Spark verifies it, and no picture of a person is ever kept.
+Points bank only when the receipt settles — and every settled
+receipt teaches her what your household actually eats. Design and
+decisions: `docs/quest/`.
 
 ## Measured results
 
@@ -59,15 +95,22 @@ feeds the brain. Detail: `docs/quest/`.
   fallback).** On the Gate 0 public set (9 receipts, 98 lines),
   through the production path: 97/98 lines with the right product
   and price after hand adjudication (98.98%; the automatic scorer
-  gives 87/98), zero price errors, arithmetic 7/7. Muse Spark on the
-  same hand adjudication: 92/98 (93.88%). Record: WONDER-EVAL.md in
-  the research repo, `assistant/loops/2026-10-27-wonder-decode.md`.
+  gives 87/98), zero price errors, arithmetic 7/7. Muse Spark on
+  the same hand adjudication: 92/98 (93.88%). Record: WONDER-EVAL.md
+  in the research repo, `assistant/loops/2026-10-27-wonder-decode.md`.
 - **Gate 0 — the photo gate (Muse Spark, before Wonder).** Public
   set 90/98 (91.84%, product identity + paid price), owner subset
   32/32, combined 122/130 (93.85%); strict-string 81.6%; arithmetic
   7/7. One silent price rotation got through; it is recorded, and
   the review queue is the mitigation. Record: GATE-REPORT.md in the
   research repo.
+- **Open weights agree with her.** Muse Spark Open and hosted
+  Spark labeled the same 32 grocery names independently: category
+  agreement 100%, section agreement 100%. On the demo account's
+  judged staples the second seat agreed 3 of 4 — the disagreement
+  (Greek Yogurt: STAPLE by name, OCCASIONAL by purchase facts) is
+  exactly why names advise and facts decide.
+  `assistant/loops/2026-10-28-open-weights.md`.
 - **"Where am I?" localizer** (written by Muse Wonder): 42/45 stops
   right, 45/45 within one stop, on held-out frames from the mapping
   video (frames half a second from indexed ones, never indexed
@@ -78,8 +121,8 @@ feeds the brain. Detail: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** `cd assistant && python -m unittest discover -s tests`
-  (count in `STATUS.md`).
+- **Tests:** 500+ and green — `cd assistant && python -m unittest
+  discover -s tests` (exact count in `STATUS.md`).
 
 ## How this was built
 
@@ -93,35 +136,23 @@ logs in `assistant/loops/` record each session. The household data
 behind the owner's account (114 receipts back to 2023) is the
 owner's purchase history, imported as data; it is not code.
 
-
 ## License
 
 MIT, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
 
-## Meta API features used
-
-| Feature | Where |
-|---|---|
-| Muse Spark 1.3 Standard (chat, low reasoning effort) | staple judge, Curator, text and order decode, shelf matching, Ask Arya |
-| Structured output (`response_format` json_schema) | judge, Curator, text and order decode; falls back to the tolerant parser if refused |
-| Prompt caching (`prompt_cache_key`, stable prefixes first) | the same four prompts; cached tokens show in the cost ledger |
-| Muse Wonder 1.0 (vision) | receipt photo decode, with a Spark fallback |
-| SAM 3.1 | people scrub of shelf frames, shelf graph build |
-| Muse Voice Transcribe | voice list entry |
-| Muse Image | celebration characters (offline tool) |
-| MCP connector (`custom.arya`) | the user's own Muse files receipts into Arya |
-| Retry policy | 429, 500, 502, 503 retried twice with jittered backoff, other 4xx never |
-
 ## Rules that hold
 
 Personal data is Standard mode only, enforced in
-`api/meta_client.py`. Costs are policy:
-`assistant/docs/MODEL-POLICY.md`. Every door runs on Meta models —
-Muse in chat, Spark on the Meta API in the app. Documents are
-the source of truth: `assistant/docs/SPEC.md` and
+`api/meta_client.py` — and the open-weights client refuses personal
+data in code. Costs are policy: `assistant/docs/MODEL-POLICY.md`.
+Every door runs on Meta models — Muse in chat, Spark on the Meta
+API in the app, Spark Open on Baseten for the platform-level jobs.
+Documents are the source of truth: `assistant/docs/SPEC.md` and
 `IMPLEMENTATION.md`; `STATUS.md` states where the build stands;
 `docs/quest/` carries the hackathon doc pack (pitch, game design,
 submission map). Agents: read `AGENTS.md` first.
 
 Meta Global AI Developer Hackathon 2026 — Team Nightshift, Indie
 track. Submission deadline: Nov 4, 2026, 9:00 PM ET.
+
+*She remembers the list — so you don't have to.*
