@@ -49,10 +49,11 @@ DRIVER = r"""
 class TestRewardsShell(unittest.TestCase):
     def test_no_lives_no_clock_on_the_quest_hud(self):
         html = read("index.html")
-        hud = html.split('id="view-hunt"')[1].split('id="scene-toggle"')[0]
+        hud = html.split('id="view-hunt"')[1].split('id="scene-mount"')[0]
         self.assertIn('id="hunt-timer" hidden', hud)
         self.assertIn('id="hunt-pts"', hud)
-        self.assertIn('id="btn-sound"', hud)
+        tools = html.split('class="hunt-tools"')[1].split("</div>")[0]
+        self.assertIn('id="btn-sound"', tools)
         js = read("quest.js").lower()
         for word in ("game over", "lives left", "lose a life", "you lose", "time's up"):
             self.assertNotIn(word, js)

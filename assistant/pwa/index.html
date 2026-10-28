@@ -312,22 +312,19 @@
       <span class="hchip" id="hunt-timer" hidden>0:00</span>
       <span class="hchip pts" id="hunt-pts" aria-live="polite">0 pts</span>
       <span class="hchip prog" id="hunt-count"></span>
-      <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
       <button id="btn-pause" class="hudbtn" type="button" aria-label="Pause"></button>
     </div>
-    <div class="seg" id="scene-toggle" role="group" aria-label="Store view">
-      <button class="chip" data-driver="photo" disabled type="button">Photos</button>
-      <button class="chip" data-driver="cloud" disabled type="button">3D</button>
-      <button class="chip" data-driver="aisle" type="button">Aisle</button>
-      <button class="chip" data-driver="strip" type="button">Strip</button>
-    </div>
     <div id="scene-mount" class="storeview"></div>
+    <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
     <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
       <button id="btn-scan" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Scan shelf</span></button>
       <button id="btn-locate" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none"/></svg><span>Where am I?</span></button>
       <button id="btn-nothere" class="btn toolbtn" type="button">Not here?</button>
+      <span class="toolspacer"></span>
+      <button id="btn-howto" class="hudbtn" type="button" aria-label="How to play">?</button>
+      <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
     </div>
     <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <input id="locate-photo" type="file" accept="image/*" capture="environment" hidden>
@@ -488,6 +485,18 @@
       <p class="nomargin demo-only" hidden><button id="ar-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
       <p id="ar-status" class="muted nomargin"></p>
       <p class="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
+    </div>
+  </div>
+  <div id="howto-sheet" class="sheetwrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+      <div class="row"><span class="name" id="howto-title">How to play · 3 steps</span><button id="howto-skip" class="btn" type="button">Skip</button></div>
+      <ol class="howto">
+        <li><b>Find it</b><span>The orange card shows your next item and its shelf; the picture shows where it is in the store. Get any item in any order — the route is just a suggestion.</span></li>
+        <li><b>Grab it</b><span>In your cart? Tap Grab: +10 points. Changed your mind? Put back. Shelf empty? Tap &ldquo;Not here?&rdquo; and warn the next shopper.</span></li>
+        <li><b>Snap the receipt</b><span>Tap Finish and photograph the receipt: +50, and your points bank. No clock, no way to lose.</span></li>
+      </ol>
+      <p class="nomargin"><button id="howto-go" class="btn primary wide" type="button">Got it — let&rsquo;s hunt</button></p>
+      <p class="muted nomargin">The &ldquo;?&rdquo; on the hunt screen opens this again.</p>
     </div>
   </div>
 </main>
