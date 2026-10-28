@@ -64,3 +64,46 @@ The owner's steering, in order, 2026-10-27. Each entry ends with what it changed
 51. **Docs trimmed (owner, 2026-10-28).** "The documentation is getting too verbose, trim and clean." STATUS.md now says only what is true now; the build diary lives in `assistant/loops/`. The Quest doc pack was rewritten short and current. This log keeps its entries as written.
 52. **Phone pass: seven friction fixes (owner, 2026-10-28).** Walking the live app, the owner ordered: the store picker loses its "Choose items" button — tapping a store starts the plan, typed stores start on Enter, receipt stores show the top 3 with the rest folded, and the type-a-store field moves to the top. Check the list becomes skippable: an unanswered Ask keeps the item exactly as typed (skipping is not guessing — this amends the earlier "unanswered blocks Start" rule), the question stays on the item and is asked again at the next plan. The collect-celebration character popups are disabled; points floaters stay. In the Add-receipt sheet the Snap button takes its own full-width row. The Add tab is removed: adding lives on the List page in one composer (type/paste with the split shown as chips, voice, photo), Eyes confirmations sit under it while any are pending, and the bottom bar is four tabs (approved wireframe: docs/quest/wireframe-add-on-list.html). On Today, New session moves above Your games, and the staples line is a count only — no name dump, no returns sentence.
 53. **The cast is the game; the teach ask moves (owner, 2026-10-28).** "This app looks so dry and non-game like" — ruling: the 20 Muse Image characters become the visual identity, as layout, never overlays (the collect-popup ruling stands; Express stays bare; store photos stay photographic). Landing wears generated key art instead of a raw walk frame; Today gets a scene band and a due-staples crew lineup; hunt rows and the target card wear item faces; celebration moves to the Score screen (party art, settled hunts only); badges wear characters; empty states get a face. Faces resolve by a ladder — exact item, then category, then the basket — over the character registry (assets/characters/manifest.json, which names its fallback and roles); the brain settles what an item is, the registry only maps identity to art, and an item that outgrows the basket graduates by use (wanted-queue + batch generation after Nov 4). The Teach Arya ask moves OFF the Score screen: a skippable card on the pre-hunt briefing (never before a player's first hunt) and a passive Teach Arya tool during the hunt; one shared week-long mute per store. Wireframes: docs/quest/wireframes-fun-pass.html.
+
+## 54. Shares, wild finds, and the player (owner, 2026-10-28)
+
+Owner's virality pass, decided in chat in three moves: build all
+three Score shares; encourage haul photos so Arya gets the data
+and identifies the products; and answer the impulse-buy question
+with a system, not a scold. Shipped as one PR on top of phone
+pass 2.
+
+- **The player.** One cast member fronts your cards: pick in
+  Profile (23 portraits from the registry), stored per account
+  (POST /api/quest/avatar, validated against the portraits on
+  disk; profile() carries it). Default: the basket.
+- **Haul card.** Settled Score → Share your haul: a canvas card
+  (1080x1350) hosted by your player — the hunt's items pop in as
+  their characters, points count up, the haul photo (if snapped)
+  fronts it. The animation records to a short video where the
+  browser allows (captureStream + MediaRecorder), else a still.
+  Native share sheet only; nothing auto-posts; spend never
+  appears on a card (pinned by test).
+- **Love note.** Pick a grabbed item; its character fronts a
+  "Found & loved" card; the caption tags the chain (@traderjoes,
+  @costco, ... from a small map in share.js).
+- **Shelf SOS.** Pick from THIS hunt's not-here reports; the
+  card's trip count comes from GET /api/quest/sos-count — the
+  player's own reports for that store+item across distinct
+  sessions, nothing else. "3 trips in a row" prints only when
+  the reports prove 3.
+- **Snap your haul.** POST /api/quest/haul-photo runs the Eyes
+  two-read detect and matches sightings to the hunt (token
+  Jaccard >= 0.5 — 'Oat Milk Chocolate' is not 'Milk'). Seen,
+  extras, not-seen; not-seen never claims an absence. The read
+  saves on the session; the photo is not kept. Extras get a
+  one-tap add-to-list.
+- **Wild finds.** Impulse buys, caught three ways: declared
+  live (+ Wild find in the hunt tools — joins collected, flagged
+  wild), caught by the receipt (session_view diffs settled
+  receipt lines against hunt items), caught by the camera
+  (haul-photo extras). The Score wears a Wild finds strip; the
+  haul card names up to three. Never framed as failure — they
+  are the most shareable part of the haul. The third layer —
+  promoting repeat wild finds into plan usuals with a label —
+  is designed, not built (needs the list-vs-receipt join).
