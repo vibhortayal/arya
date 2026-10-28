@@ -512,13 +512,18 @@ function qShowTextConfirm() {
       <button type="button" class="btn grow" id="nl-confirm-edit">Keep editing</button>
     </p>`;
   box.hidden = false;
-  $("#nl-confirm-add").addEventListener("click", () => {
-    for (const it of Q.nlParsed || []) {
+  $("#nl-confirm-add").addEventListener("click", async () => {
+    const items = Q.nlParsed || [];
+    // The photo door's pattern: the adds land on the server list
+    // first, then the plan refetches so the new rows render ticked.
+    await Promise.all(items.map(it =>
+      post("/api/list/add", { name: it.name }).catch(() => {})));
+    try { Q.plan = await api("/api/quest/plan"); } catch (e) {}
+    for (const it of items) {
       const key = qnorm(it.name);
       Q.draft.pick[key] = { name: it.name, qty: it.qty || 1, on: true };
-      post("/api/list/add", { name: it.name }).catch(() => {});
     }
-    const n = (Q.nlParsed || []).length;
+    const n = items.length;
     Q.nlParsed = null;
     $("#nl-text").value = "";
     box.hidden = true; box.innerHTML = "";

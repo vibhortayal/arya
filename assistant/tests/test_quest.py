@@ -642,3 +642,20 @@ class TestReceiptArchive(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAbandonSession(unittest.TestCase):
+    def setUp(self):
+        make_client(self)
+        setup_account(self, "ender@example.com")
+
+    def test_abandon_hides_the_quest_everywhere(self):
+        c = self.c
+        sid = c.post("/api/quest/sessions",
+                     json={"store": "Trader Joe's"}).json()["id"]
+        c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
+        r = c.post(f"/api/quest/sessions/{sid}/state",
+                   json={"state": "abandoned"})
+        self.assertEqual(r.status_code, 200, r.text)
+        ids = [s["id"] for s in c.get("/api/quest/sessions").json()["sessions"]]
+        self.assertNotIn(sid, ids)
