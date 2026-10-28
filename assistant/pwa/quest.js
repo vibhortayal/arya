@@ -435,7 +435,16 @@ document.addEventListener("click", ev => {
 
 /* ---------------- Today hub ---------------- */
 
-$("#quest-sessions").addEventListener("click", ev => {
+$("#quest-sessions").addEventListener("click", async ev => {
+  const ab = ev.target.closest("[data-abandon]");
+  if (ab) {
+    const s = qSessionById(ab.dataset.abandon);
+    if (!s || !window.confirm("End this hunt? It leaves Today and cannot be resumed.")) return;
+    try { await qSetState(s, "abandoned"); toast("Hunt ended."); }
+    catch (e) { toast(e.message); }
+    refresh("view-home");
+    return;
+  }
   const b = ev.target.closest("[data-sess]");
   if (!b) return;
   const s = qSessionById(b.dataset.sess);
@@ -1332,7 +1341,7 @@ function qHuntListHtml(sess) {
       ? `<button type="button" class="btn rowact putback" data-putback="${i}"${live || sess.state === "paused" ? "" : " disabled"}>Put back</button>`
       : rep
         ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
-        : `<button type="button" class="btn primary rowact" data-grab="${i}"${live ? "" : " disabled"}>${it.qty > 1 ? `Grab x${qty}` : "Grab"}</button>`;
+        : `<button type="button" class="btn primary rowact${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"}>${it.qty > 1 ? `Grab x${qty}` : "Grab"}</button>`;
     const badges = [bossGroup && it.group === bossGroup ? `<span class="hunt-badge boss">Boss</span>` : "",
                     it.added_mid_hunt ? `<span class="hunt-badge">Just added</span>` : ""].filter(Boolean).join("");
     const note = qNoteOf(it);
@@ -3127,6 +3136,19 @@ async function openScore(sess) {
     html += `<p class="muted">No receipt yet. Add this trip's receipt and the hunt is settled; until then it waits in Receipts as “Finished · Receipt missing”.</p>
       <p><button id="score-addreceipt" class="btn wide" type="button">Add the receipt ›</button></p>`;
   }
+  {
+    html += `<h3 class="sect">Share this run</h3><div class="group pad">
+      <p style="display:flex; gap:8px; flex-wrap:wrap; margin:0">
+        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share as video</button>
+        <button class="btn grow" id="share-love" type="button">Loved something?</button>` : ""}
+        ${(sess.my_reports || []).length ? `<button class="btn grow" id="share-sos" type="button">Shelf SOS</button>` : ""}
+      </p>
+      <p style="margin-top:10px"><label class="btn wide" for="haul-photo" style="text-align:center">Snap your haul</label>
+      <input type="file" id="haul-photo" accept="image/*" hidden></p>
+      <p class="muted nomargin" id="haul-status">A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.</p>
+      <div id="haul-result"></div>
+    </div>`;
+  }
   if (profile) {
     const seen = new Set(JSON.parse(localStorage.getItem("arya-seen-badges") || "[]"));
     html += `<h3 class="sect">Badges</h3><div class="group">` + profile.badges.map((b, i) => {
@@ -3146,19 +3168,6 @@ async function openScore(sess) {
     html += `<h3 class="sect">Wild finds</h3><div class="group"><div class="row">` +
       wildNames.map(n => { const f = qFaceFor(n); return f ? `<img class="rowface" src="assets/characters/${f}" alt="">` : ""; }).join("") +
       `<div class="grow"><span class="name">${esc(wildNames.join(", "))}</span><span class="sub">Not on the list — grabbed anyway. The receipt catches them and Arya counts them like everything else.</span></div></div></div>`;
-  }
-  {
-    html += `<h3 class="sect">Share this run</h3><div class="group pad">
-      <p style="display:flex; gap:8px; flex-wrap:wrap; margin:0">
-        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share as video</button>
-        <button class="btn grow" id="share-love" type="button">Loved something?</button>` : ""}
-        ${(sess.my_reports || []).length ? `<button class="btn grow" id="share-sos" type="button">Shelf SOS</button>` : ""}
-      </p>
-      <p style="margin-top:10px"><label class="btn wide" for="haul-photo" style="text-align:center">Snap your haul</label>
-      <input type="file" id="haul-photo" accept="image/*" hidden></p>
-      <p class="muted nomargin" id="haul-status">A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.</p>
-      <div id="haul-result"></div>
-    </div>`;
   }
   body.innerHTML = html;
   qAfterHaul(sess, profile, attached);

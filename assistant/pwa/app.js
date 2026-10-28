@@ -211,13 +211,16 @@ function paintLevelChip(profile) {
   $("#avatar-btn").style.setProperty("--pct", pct + "%");
   $("#avatar-btn").setAttribute("aria-label", `Profile, level ${profile.level}`);
 }
+/* Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
+ * The hero is the NEWEST hunt that still wants play (play-test:
+ * three old hunts all said Resume); older open ones fold away. */
+function heroSession(sessions) {
+  return sessions.filter(s => s.state === "playing" || s.state === "paused" || s.state === "not_started")
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))[0];
+}
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
-  // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
-  // The hero carries only a hunt that still wants play.
-  const rank = { playing: 0, paused: 1, not_started: 2 };
-  const hero = sessions.filter(s => s.state in rank)
-    .sort((a, b) => rank[a.state] - rank[b.state])[0];
+  const hero = heroSession(sessions);
   if (!hero) {
     el.innerHTML = `<article class="herocard quiet">
       <p class="hero-k">No quest in progress</p>
@@ -258,11 +261,10 @@ function paintTodayGames(sessions) {
   const open = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
   // The hero card already carries the hunt to resume; any other open
   // hunts fold away so Today shows one thing to do.
-  const rank = { playing: 0, paused: 1, not_started: 2 };
-  const hero = [...open].sort((a, b) => (rank[a.state] ?? 9) - (rank[b.state] ?? 9))[0];
+  const hero = heroSession(open);
   const rest = open.filter(s => s !== hero);
   const openHtml = hero ? gameRow(hero) +
-    (rest.length ? `<details class="g-fold"><summary>${rest.length} other open hunt${rest.length === 1 ? "" : "s"}</summary>${rest.map(gameRow).join("")}</details>` : "") : "";
+    (rest.length ? `<details class="g-fold"><summary>${rest.length} other open hunt${rest.length === 1 ? "" : "s"}</summary>${rest.map(s => `<div class="earlierrow">${gameRow(s)}<button class="btn danger" data-abandon="${esc(s.id)}" type="button">Abandon</button></div>`).join("")}</details>` : "") : "";
   el.innerHTML = sessions.length
     ? openHtml +
       (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
