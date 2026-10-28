@@ -45,3 +45,9 @@ the hackathon credit. The staple judge and Ask Arya STAY on Spark
 Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
 cannot carry Wonder's latency). This amendment expires Nov 4; the
 production policy above is unchanged.
+
+**Demo budget.** Each demo visit may spend `ARYA_DEMO_SESSION_BUDGET_USD`
+(default $0.40) on live reads, held in that visitor's in-memory sandbox;
+all demo visits together stay under `ARYA_DEMO_DAILY_BUDGET_USD`
+(default $2). For the judging window set the daily cap higher in the VM
+env file (for example 15) and restart the api container.
