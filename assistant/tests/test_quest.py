@@ -321,6 +321,9 @@ class TestDriverLadder(unittest.TestCase):
              "subtotal": 0, "tax": 0, "total": 0},
             {"receipt_id": "r-aisle", "merchant": "Trader Joe's",
              "purchased_at": "2026-10-27T19:42:18", "lines": [],
+             "subtotal": 0, "tax": 0, "total": 0},
+            {"receipt_id": "r-photo", "merchant": "Trader Joe's",
+             "purchased_at": "2026-10-27T20:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0}])
         setup_account(self)
 
@@ -359,6 +362,15 @@ class TestDriverLadder(unittest.TestCase):
         badges2 = {b["id"] for b in p2["badges"] if b["earned"]}
         assert badges2 == badges1  # the viewport changed nothing
         assert p2["stats"]["hunts"] == 2
+
+    def test_photo_driver_accepted(self):
+        # Regression (2026-10-27): the photo-walk driver shipped as the
+        # mapped-store default but was missing from DRIVERS, so every
+        # hunt start at a mapped store failed with
+        # "driver must be one of ('cloud', 'aisle', 'strip')".
+        done, p = self._play("photo", "r-photo")
+        assert done["state"] == "done"
+        assert p["stats"]["hunts"] == 1
 
     def test_driver_defaults_to_strip_and_validates(self):
         c = self.c
