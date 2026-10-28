@@ -26,11 +26,28 @@ class TestDemoHousehold(unittest.TestCase):
         list_names = [i["name"] for i in home["list"]["items"]]
         self.assertIn("Whole Milk 1 gal", list_names)
 
+    def test_plan_knows_where_things_are_usually_bought(self):
+        # Owner, 2026-10-28: "my milk is typically bought from TJ, eggs
+        # from costco" — the plan payload counts purchases per store.
+        plan = self.c.get("/api/quest/plan").json()
+        items = {i["name"]: i for i in plan["items"]}
+        eggs = items["Pasture Eggs 12 ct"]["stores"]
+        self.assertEqual(max(eggs, key=eggs.get), "Costco")
+        self.assertGreater(eggs["Costco"], 5 * (sum(eggs.values()) - eggs["Costco"]) - 1)
+        self.assertNotIn("Costco", items["Whole Milk 1 gal"]["stores"])
+        self.assertIn("Trader Joe's", items["Whole Milk 1 gal"]["stores"])
+        names = [i["name"] for i in plan["list"]]
+        self.assertIn("Whole Milk 1 gal", names)
+        for i in plan["items"]:
+            self.assertIn("every_days", i)
+            self.assertIn("due", i)
+
     def test_dashboard_nets_the_return(self):
         d = self.c.get("/api/dashboard").json()
         self.assertEqual(d["returns_total"], 12.30)
         self.assertEqual(d["for_others_total"], 25.0)
-        self.assertEqual(d["trip_count"], 27)
+        # 26 grocery trips + 12 same-day Costco runs + the return.
+        self.assertEqual(d["trip_count"], 39)
 
     def _disk(self):
         out = {}

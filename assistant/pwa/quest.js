@@ -302,31 +302,172 @@ $("#quest-sessions").addEventListener("click", ev => {
   const s = qSessionById(b.dataset.sess);
   if (s) qOpenSession(s);
 });
-$("#btn-new-hunt").addEventListener("click", () => {
-  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {} };
-  questShow("view-newlist");
-});
-
-/* ---------------- New hunt: add list ---------------- */
-
-$("#nl-from-list").addEventListener("click", async () => {
-  try {
-    const h = await api("/api/home");
-    if (!h.list.items.length) { toast("Your Arya list is empty right now."); return; }
-    $("#nl-text").value = h.list.items.map(i => i.qty > 1 ? `${i.name} × ${qtyFmt(i.qty)}` : i.name).join("\n");
-  } catch (e) { toast(e.message); }
-});
-$("#nl-next").addEventListener("click", async () => {
-  const raw = qParseLines($("#nl-text").value);
-  if (!raw.length) { toast("Add at least one item first."); return; }
-  Q.draft.raw = raw;
-  Q.draft.storeId = null;
+$("#btn-new-hunt").addEventListener("click", async () => {
+  // Plan a hunt (owner, 2026-10-28): store first, then move items
+  // from the Arya list into the quest, sorted by where each one is
+  // usually bought.
+  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {} };
   $("#st-name").value = "";
-  // The pick reads My Stores (Stage E): favorites first, addresses
-  // shown. Typed names stay possible for a store not in mine yet.
+  $("#nl-text").value = "";
   try { await qLoadMine(); } catch (e) { Q.mine = []; }
+  try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
   renderStorePick();
   questShow("view-store");
+});
+
+/* ---------------- Plan a hunt: where things are usually bought ----
+ * Counting only, from the receipts (/api/quest/plan). For the picked
+ * store each list item is "here" (bought here at least as often as
+ * anywhere), "new" (no history) or "elsewhere" (mostly another
+ * store: it stays on the list for that trip). Usuals are items
+ * bought here twice or more that are not on the list yet. */
+
+function qPlanItem(name, itemId) {
+  const items = (Q.plan && Q.plan.items) || [];
+  return items.find(i => (itemId && i.item_id === itemId) || qnorm(i.name) === qnorm(name)) || null;
+}
+/* A receipt says "Costco"; the directory says "Costco Wholesale". */
+function qSameStore(a, b) {
+  const x = qnorm(a), y = qnorm(b);
+  return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " "));
+}
+function qStoreCount(rec, store) {
+  if (!rec) return 0;
+  return Object.entries(rec.stores || {}).reduce((n, [s, c]) => n + (qSameStore(s, store) ? c : 0), 0);
+}
+function qPlanBucket(li, store) {
+  const rec = qPlanItem(li.name, li.item_id);
+  const total = rec ? Object.values(rec.stores || {}).reduce((a, b) => a + b, 0) : 0;
+  if (!total) return { bucket: "new" };
+  const here = qStoreCount(rec, store);
+  let best = null, bestN = 0;
+  for (const [s, n] of Object.entries(rec.stores)) {
+    if (!qSameStore(s, store) && n > bestN) { best = s; bestN = n; }
+  }
+  if (here && here >= bestN) return { bucket: "here", here, total, rec };
+  return { bucket: "elsewhere", store: best, n: bestN, total, rec };
+}
+function qPlanUsuals(store) {
+  const onList = new Set(((Q.plan && Q.plan.list) || []).map(i => qnorm(i.name)));
+  return ((Q.plan && Q.plan.items) || [])
+    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)))
+    .map(i => ({ ...i, ripe: i.every_days ? (i.days_since || 0) / i.every_days : 0 }))
+    .sort((a, b) => (b.due - a.due) || (b.ripe - a.ripe) || (qStoreCount(b, store) - qStoreCount(a, store)))
+    .slice(0, 6);
+}
+function qStoreFit(store) {
+  const list = (Q.plan && Q.plan.list) || [];
+  const here = list.filter(li => qPlanBucket(li, store).bucket === "here");
+  const usual = ((Q.plan && Q.plan.items) || [])
+    .filter(i => qStoreCount(i, store) >= 2)
+    .sort((a, b) => qStoreCount(b, store) - qStoreCount(a, store))
+    .slice(0, 3).map(i => i.name);
+  if (!usual.length) return "";
+  const lead = here.length ? `${here.length} of your ${list.length} list items usually here · ` : "";
+  return `${lead}Usually: ${usual.join(", ")}`;
+}
+function qHistoryStores() {
+  const seen = {};
+  for (const i of (Q.plan && Q.plan.items) || []) {
+    for (const [s, n] of Object.entries(i.stores || {})) seen[s] = (seen[s] || 0) + n;
+  }
+  return Object.entries(seen).sort((a, b) => b[1] - a[1]).map(([s]) => s);
+}
+
+function renderPlan() {
+  const store = Q.draft.store;
+  const pick = Q.draft.pick;
+  const list = (Q.plan && Q.plan.list) || [];
+  const groups = { here: [], new: [], elsewhere: {} };
+  for (const li of list) {
+    const b = qPlanBucket(li, store);
+    const key = qnorm(li.name);
+    if (!(key in pick)) pick[key] = { name: li.name, qty: li.qty || 1, on: b.bucket !== "elsewhere" };
+    const rowInfo = { key, li, b };
+    if (b.bucket === "elsewhere") (groups.elsewhere[b.store] = groups.elsewhere[b.store] || []).push(rowInfo);
+    else groups[b.bucket].push(rowInfo);
+  }
+  const usuals = qPlanUsuals(store);
+  for (const u of usuals) {
+    const key = qnorm(u.name);
+    if (!(key in pick)) pick[key] = { name: u.name, qty: 1, on: false };
+  }
+  // Tick = in this trip's quest; unticked stays on the Arya list;
+  // ✕ (list items only) takes it off the Arya list altogether.
+  const rowHtml = (key, name, note, itemId) => {
+    const on = pick[key].on;
+    return `<div class="planrow${on ? " in" : ""}"><button class="plantick" data-plan="${esc(key)}" aria-pressed="${String(on)}" type="button">
+      <span class="planbox" aria-hidden="true">${on ? "✓" : ""}</span>
+      <span class="grow"><span class="name">${esc(name)}</span>${note ? `<span class="sub">${esc(note)}</span>` : ""}</span></button>
+      ${itemId ? `<button class="planrm" data-planrm="${esc(key)}" data-item="${esc(itemId)}" aria-label="Remove ${esc(name)} from your list" type="button">✕</button>` : ""}</div>`;
+  };
+  const every = rec => rec && rec.every_days ? `every ~${Math.round(rec.every_days)} days` : "";
+  let html = "";
+  const sect = (title, rows) => rows.length ? `<h3 class="sect">${esc(title)}</h3><div class="group">${rows.join("")}</div>` : "";
+  html += sect(`Usually bought here · ${groups.here.length}`,
+    groups.here.map(r => rowHtml(r.key, r.li.name, `${r.b.here} of ${r.b.total} times here`, r.li.item_id)));
+  html += sect(`New on your list · ${groups.new.length}`,
+    groups.new.map(r => rowHtml(r.key, r.li.name, "No history yet", r.li.item_id)));
+  for (const [st, rows] of Object.entries(groups.elsewhere)) {
+    html += sect(`Usually from ${st} · ${rows.length}`,
+      rows.map(r => rowHtml(r.key, r.li.name, `${st} ${r.b.n} of ${r.b.total} times · stays on your list if unticked`, r.li.item_id)));
+  }
+  html += sect(`Often bought here, not on your list`,
+    usuals.map(u => rowHtml(qnorm(u.name), u.name, [every(u), u.due ? "due now" : ""].filter(Boolean).join(" · "))));
+  if (!html) html = `<div class="group">${empty("Nothing on your Arya list yet. Type what you need below.")}</div>`;
+  $("#nl-plan").innerHTML = html;
+  $("#nl-title").textContent = `Your quest at ${store}`;
+  qPaintPlanCount();
+}
+function qPlanPicked() {
+  return Object.values(Q.draft.pick).filter(p => p.on).map(p => ({ name: p.name, qty: p.qty }));
+}
+function qPaintPlanCount() {
+  const n = qPlanPicked().length + qParseLines($("#nl-text").value).length;
+  $("#nl-next").textContent = n ? `Start the quest · ${n} item${n === 1 ? "" : "s"} →` : "Start the quest →";
+}
+$("#nl-plan").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-plan]");
+  if (!b || !Q.draft) return;
+  const p = Q.draft.pick[b.dataset.plan];
+  if (!p) return;
+  p.on = !p.on;
+  renderPlan();
+});
+$("#nl-plan").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-planrm]");
+  if (!b || !Q.draft) return;
+  const key = b.dataset.planrm, itemId = b.dataset.item;
+  const li = Q.plan.list.find(i => qnorm(i.name) === key);
+  if (!li) return;
+  b.disabled = true;
+  try {
+    await post("/api/list/remove", { item_id: itemId });
+  } catch (e) { toast(e.message); b.disabled = false; return; }
+  Q.plan.list = Q.plan.list.filter(i => i !== li);
+  delete Q.draft.pick[key];
+  renderPlan();
+  toast(`${li.name} is off your list.`, { action: "Undo", onAction: async () => {
+    try {
+      await post("/api/list/add", { item_id: itemId });
+      Q.plan.list.push(li);
+      renderPlan();
+    } catch (e) { toast(e.message); }
+  } });
+});
+$("#nl-text").addEventListener("input", qPaintPlanCount);
+$("#nl-next").addEventListener("click", async () => {
+  const raw = [...qPlanPicked(), ...qParseLines($("#nl-text").value)];
+  if (!raw.length) { toast("Tick or type at least one item first."); return; }
+  Q.draft.raw = raw;
+  // Typed extras join the Arya list too: one list everywhere.
+  for (const r of qParseLines($("#nl-text").value)) {
+    post("/api/list/add", { name: r.name }).catch(() => {});
+  }
+  const btn = $("#nl-next");
+  btn.disabled = true;
+  try { await qOptimizeDraft(); } catch (e) { toast(e.message); }
+  btn.disabled = false;
 });
 
 /* ---------------- Stores (Stage E) ----------------
@@ -350,6 +491,14 @@ async function qLoadMine() {
 function renderStorePick() {
   const box = $("#st-mine");
   if (!box) return;
+  // Stores from the receipts that are not in My Stores yet: one tap
+  // names the store for this trip.
+  const hist = qHistoryStores().filter(h => !Q.mine.some(s => qSameStore(s.name, h)));
+  const hbox = $("#st-history");
+  if (hbox) hbox.innerHTML = hist.length ? `<h3 class="sect">From your receipts</h3><div class="group">` + hist.map(s => `
+    <button class="sessrow pickrow" data-histstore="${esc(s)}" aria-pressed="${String(qnorm($("#st-name").value) === qnorm(s))}" type="button">
+      <span class="grow"><span class="name">${esc(s)}</span>
+      ${qStoreFit(s) ? `<span class="sub fit">${esc(qStoreFit(s))}</span>` : ""}</span></button>`).join("") + `</div>` : "";
   if (!Q.mine.length) {
     box.innerHTML = `<div class="group">${empty("No stores in your stores yet. Find one or add one below.")}</div>`;
     return;
@@ -359,7 +508,8 @@ function renderStorePick() {
   const rowHtml = s => `
     <button class="sessrow pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
       <span class="grow"><span class="name">${esc(s.name)}</span>
-      <span class="sub">${qStoreMeta(s)}</span></span>
+      <span class="sub">${qStoreMeta(s)}</span>
+      ${qStoreFit(s.name) ? `<span class="sub fit">${esc(qStoreFit(s.name))}</span>` : ""}</span>
       ${s.favorite ? `<span class="starpick">${qStarSvg(true)}</span>` : ""}
     </button>`;
   let html = "";
@@ -367,6 +517,13 @@ function renderStorePick() {
   if (rest.length) html += `<h3 class="sect">All my stores</h3><div class="group">` + rest.map(rowHtml).join("") + `</div>`;
   box.innerHTML = html;
 }
+document.addEventListener("click", ev => {
+  const h = ev.target.closest("[data-histstore]");
+  if (!h || !Q.draft) return;
+  Q.draft.storeId = null;
+  $("#st-name").value = h.dataset.histstore;
+  renderStorePick();
+});
 document.addEventListener("click", ev => {
   const p = ev.target.closest("[data-pick]");
   if (!p || !Q.draft) return;
@@ -489,29 +646,38 @@ $("#sa-form").addEventListener("submit", async ev => {
 
 /* ---------------- New hunt: optimize ---------------- */
 
-$("#st-next").addEventListener("click", async () => {
+$("#st-next").addEventListener("click", () => {
   const store = $("#st-name").value.trim();
-  if (!store) { toast("Name the store first."); return; }
+  if (!store) { toast("Pick or name the store first."); return; }
+  if (Q.draft.store !== store) Q.draft.pick = {};
   Q.draft.store = store;
-  const btn = $("#st-next");
-  btn.disabled = true;
-  try {
-    const out = await post("/api/quest/optimize", { items: Q.draft.raw, store });
-    Q.draft.opt = out;
-    Q.draft.baseItems = out.items.map(i => ({ ...i }));
-    Q.draft.undone = {};
-    Q.draft.answers = {};
-    // Quantities the questions must carry: summed from the raw lines.
-    Q.draft.qQty = {};
-    for (const r of Q.draft.raw) {
-      const k = qnorm(r.name);
-      Q.draft.qQty[k] = (Q.draft.qQty[k] || 0) + r.qty;
-    }
-    renderOptimize();
-    questShow("view-optimize");
-  } catch (e) { toast(e.message); }
-  btn.disabled = false;
+  renderPlan();
+  questShow("view-newlist");
 });
+
+/* Check my list only when there is something to check: a clean list
+ * (nothing merged, corrected or to ask) goes straight to the mode. */
+async function qOptimizeDraft() {
+  const out = await post("/api/quest/optimize", { items: Q.draft.raw, store: Q.draft.store });
+  Q.draft.opt = out;
+  Q.draft.baseItems = out.items.map(i => ({ ...i }));
+  Q.draft.undone = {};
+  Q.draft.answers = {};
+  // Quantities the questions must carry: summed from the raw lines.
+  Q.draft.qQty = {};
+  for (const r of Q.draft.raw) {
+    const k = qnorm(r.name);
+    Q.draft.qQty[k] = (Q.draft.qQty[k] || 0) + r.qty;
+  }
+  const rep = out.report;
+  if (!rep.merged.length && !rep.corrected.length && !rep.questions.length) {
+    Q.draft.finalItems = Q.draft.baseItems.map(i => ({ name: i.name, qty: i.qty, group: i.group }));
+    questShow("view-mode");
+    return;
+  }
+  renderOptimize();
+  questShow("view-optimize");
+}
 
 function qOptNextEnabled() {
   const qs = (Q.draft.opt && Q.draft.opt.report.questions) || [];

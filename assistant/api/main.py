@@ -516,6 +516,40 @@ def home():
             "seen": seen, "checks": checks, "price_by_store": pbs}
 
 
+@app.get("/api/quest/plan")
+def quest_plan():
+    """Plan a hunt (owner, 2026-10-28: "i pick my store. then i should
+    be able to move things from my list to my quest… my milk is
+    typically bought from TJ, eggs from costco"). Where each known
+    item has been bought, counted from the receipts, plus the Arya
+    list. The client sorts the list for the picked store: usually
+    here, new, usually elsewhere, and suggests usuals for that store
+    that are not on the list yet. Counting only — no model call."""
+    d = state.derived()
+    nm = state.names()
+    gm = state.group_map()
+    stores = {}
+    for e in d["entries"]:
+        if e["event_type"] != "purchase" or not e.get("store_id"):
+            continue
+        iid = gm.get(e["item_id"], e["item_id"])
+        by = stores.setdefault(iid, {})
+        by[e["store_id"]] = by.get(e["store_id"], 0) + 1
+    pats = {p["item_id"]: p for p in d["patterns"]}
+    items = []
+    for iid, by in stores.items():
+        p = pats.get(iid) or {}
+        items.append({"item_id": iid, "name": nm.get(iid, iid), "stores": by,
+                      "every_days": p.get("median_interval_days"),
+                      "days_since": p.get("days_since_last"),
+                      "due": bool(p.get("due"))})
+    lst = [{"item_id": gm.get(i.get("item_id"), i.get("item_id")),
+            "name": i.get("name") or nm.get(i.get("item_id"), ""),
+            "qty": i.get("qty") or 1}
+           for i in d["smart_list"]["items"] if not i.get("checked")]
+    return {"list": lst, "items": items}
+
+
 @app.get("/api/dashboard")
 def dashboard_route():
     return state.dashboard()

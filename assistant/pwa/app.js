@@ -36,12 +36,22 @@ function post(path, body) {
   return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
 let toastTimer = null;
-function toast(msg) {
+function toast(msg, opts) {
   const t = $("#toast");
   t.textContent = msg;
+  // An optional one-tap action (Undo) rides on the toast, which then
+  // stays a little longer.
+  if (opts && opts.action) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "toastact";
+    b.textContent = opts.action;
+    b.addEventListener("click", () => { t.hidden = true; opts.onAction && opts.onAction(); });
+    t.appendChild(b);
+  }
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 4200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, opts && opts.action ? 6000 : 4200);
 }
 function showErr(e) { toast("Could not load: " + e.message); }
 function row(name, sub, right) {
