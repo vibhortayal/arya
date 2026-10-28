@@ -526,7 +526,7 @@ def home():
             if _fl.get(p["item_id"], {}).get("check_ok") == state.as_of():
                 continue  # the user already answered this cycle
             from datetime import date as _d
-            age = (_d.fromisoformat(state.as_of()) - _d.fromisoformat(p["last_bought"])).days
+            age = (_d.fromisoformat(state.today_ref()) - _d.fromisoformat(p["last_bought"])).days
             if age >= prior:
                 _lb = p["last_bought"]
                 checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
@@ -585,10 +585,23 @@ def quest_plan():
                       "every_days": p.get("median_interval_days"),
                       "days_since": p.get("days_since_last"),
                       "due": bool(p.get("due"))})
-    lst = [{"item_id": gm.get(i.get("item_id"), i.get("item_id")),
-            "name": i.get("name") or nm.get(i.get("item_id"), ""),
-            "qty": i.get("qty") or 1}
-           for i in d["smart_list"]["items"] if not i.get("checked")]
+    # A hand-typed row ("milk", "eggs") has no history of its own;
+    # the same dictionary match the Check step uses finds the product
+    # it means, so its stores and cadence read from that product's
+    # receipts (QA 2026-10-28). history_id is that match; item_id
+    # stays the list row's own id for removal.
+    from api import quest as _quest
+    lst = []
+    for i in d["smart_list"]["items"]:
+        if i.get("checked"):
+            continue
+        iid = i.get("item_id")
+        name = i.get("name") or nm.get(iid, "")
+        hid = gm.get(iid, iid)
+        if hid not in stores:
+            hid = _quest.resolve_group(name) or hid
+        lst.append({"item_id": iid, "history_id": hid, "name": name,
+                    "qty": i.get("qty") or 1})
     return {"list": lst, "items": items}
 
 

@@ -244,6 +244,16 @@ def as_of():
     return max((r["purchased_at"] for r in rs), default=None)
 
 
+def today_ref():
+    """The day "days ago" and "due" are measured from: today, or the
+    last receipt when that is later (a future-dated fixture). as_of()
+    alone froze the clock at the last receipt, so staples never grew
+    due as days passed (QA 2026-10-28). The per-cycle flags (dismissed,
+    checked) still key on as_of(): they reset when a receipt lands."""
+    from datetime import date as _date
+    return max(as_of() or "", _date.today().isoformat())
+
+
 def _norm_name(s):
     import re as _re
     return _re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
@@ -301,7 +311,7 @@ def _group_entries(entries):
 def derived():
     rs = receipts()
     entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
-    patterns = summarize(entries, as_of=as_of())
+    patterns = summarize(entries, as_of=today_ref())
     fl = flags()
     today = as_of()
     def hidden(pid):
@@ -320,7 +330,7 @@ def derived():
         sg = sightings.get(p["item_id"])
         if sg and p.get("last_bought") and sg["date"] > p["last_bought"] and p["median_interval_days"]:
             seen_on = _date.fromisoformat(sg["date"])
-            now = _date.fromisoformat(today) if today else seen_on
+            now = _date.fromisoformat(today_ref())
             since = (now - seen_on).days
             p["seen"] = {"date": sg["date"], "kind": sg.get("kind")}
             p["days_since_last"] = since
@@ -389,7 +399,7 @@ def judge_pending(client, limit=60):
     if not getattr(client, "api_key", ""):
         return 0
     entries = _group_entries(build_ledger(receipts(), fee_skus=fee_skus()))
-    patterns = summarize(entries, as_of=as_of())
+    patterns = summarize(entries, as_of=today_ref())
     judged = judgments()
     nm = names()
     pending = []

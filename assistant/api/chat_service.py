@@ -23,9 +23,19 @@ def snapshot():
                          "due": p["due"], "seen_in_fridge": (p.get("seen") or {}).get("date")})
     return {
         "as_of": state.as_of(),
+        # Running low = what the patterns say is due: not the checked
+        # rows, not what the user typed in by hand (QA 2026-10-28).
         "running_low": [i.get("name") or nm.get(i["item_id"], i["item_id"])
-                        for i in d["smart_list"]["items"]],
+                        for i in d["smart_list"]["items"]
+                        if not i.get("checked") and i.get("source") != "user"],
+        "on_list": [i.get("name") or nm.get(i["item_id"], i["item_id"])
+                    for i in d["smart_list"]["items"] if not i.get("checked")],
+        "currency": "USD (dollars)",
         "spend_total": dash["spend_total"], "returns_total": dash["returns_total"],
+        "spend_by_month": dash["spend_by_month"],
+        "spend_by_store": dash["spend_by_store"],
+        "top_items_spend": [{"name": t["name"], "spend": t["spend"]}
+                            for t in dash["top_items"][:8]],
         "trips": dash["trip_count"], "top_items": [t["name"] for t in dash["top_items"][:8]],
         "items": pats,
         "review_pending": len(state.review_queue()["lines"]),
@@ -44,6 +54,19 @@ def apply_actions(actions):
     today = date.today().isoformat()
     for a in actions or []:
         item_id = _resolve(a.get("item"))
+        if not item_id and a.get("type") == "add_to_list":
+            # Add is a list act, not a history lookup: a name Arya
+            # has never seen joins the list as a typed item, the same
+            # as the Add box does (QA 2026-10-28).
+            import re
+            name = str(a.get("item") or "").strip()[:60]
+            slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+            if slug:
+                fl = dict(state.flags().get("manual-" + slug, {}))
+                fl.update({"manual": True, "name": name, "dismissed_on": None})
+                state.set_flag("manual-" + slug, fl)
+                applied.append(f"Added {name} to your list.")
+                continue
         if not item_id:
             skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
             continue

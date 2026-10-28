@@ -411,15 +411,6 @@
     <div id="scene-mount" class="storeview"></div>
     <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
     <div id="milestone" class="milestone" role="status"></div>
-    <div id="wild-form" class="group pad" hidden>
-      <label class="field" for="wild-name">Wild find — already in your cart?</label>
-      <input type="text" id="wild-name" placeholder="e.g. oat milk chocolate" autocomplete="off">
-      <p style="display:flex; gap:8px; margin:8px 0 0">
-        <button class="btn primary grow" id="wild-add" type="button">Add to the haul</button>
-        <button class="btn grow" id="wild-mic" type="button">Record</button>
-      </p>
-      <p class="muted nomargin" id="wild-status"></p>
-    </div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
     <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
@@ -431,6 +422,15 @@
       <span class="toolspacer"></span>
       <button id="btn-howto" class="hudbtn" type="button" aria-label="How to play">?</button>
       <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
+    </div>
+    <div id="wild-form" class="group pad" hidden>
+      <label class="field" for="wild-name">Wild find — already in your cart?</label>
+      <input type="text" id="wild-name" placeholder="e.g. oat milk chocolate" autocomplete="off">
+      <p style="display:flex; gap:8px; margin:8px 0 0">
+        <button class="btn primary grow" id="wild-add" type="button">Add to the haul</button>
+        <button class="btn grow" id="wild-mic" type="button">Record</button>
+      </p>
+      <p class="muted nomargin" id="wild-status"></p>
     </div>
     <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <input id="locate-photo" type="file" accept="image/*" capture="environment" hidden>

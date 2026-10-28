@@ -433,7 +433,7 @@ function qStoreCount(rec, store) {
   return Object.entries(rec.stores || {}).reduce((n, [s, c]) => n + (qSameStore(s, store) ? c : 0), 0);
 }
 function qPlanBucket(li, store) {
-  const rec = qPlanItem(li.name, li.item_id);
+  const rec = qPlanItem(li.name, li.history_id || li.item_id);
   const total = rec ? Object.values(rec.stores || {}).reduce((a, b) => a + b, 0) : 0;
   if (!total) return { bucket: "new" };
   const here = qStoreCount(rec, store);
@@ -445,9 +445,11 @@ function qPlanBucket(li, store) {
   return { bucket: "elsewhere", store: best, n: bestN, total, rec };
 }
 function qPlanUsuals(store) {
-  const onList = new Set(((Q.plan && Q.plan.list) || []).map(i => qnorm(i.name)));
+  const listRows = (Q.plan && Q.plan.list) || [];
+  const onList = new Set(listRows.map(i => qnorm(i.name)));
+  const onListIds = new Set(listRows.map(i => i.history_id || i.item_id));
   return ((Q.plan && Q.plan.items) || [])
-    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)))
+    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)) && !onListIds.has(i.item_id))
     .map(i => ({ ...i, ripe: i.every_days ? (i.days_since || 0) / i.every_days : 0 }))
     .sort((a, b) => (b.due - a.due) || (b.ripe - a.ripe) || (qStoreCount(b, store) - qStoreCount(a, store)))
     .slice(0, 6);
@@ -1696,6 +1698,11 @@ function renderHunt() {
   // on the walk — the route is a suggestion, any row can GRAB.
   const ps = qPopState(sess);
   const allIn = ps === "done";
+  /* The note takes the next-card's height when it replaces it, so the
+   * list under them does not jump out from under a tap (QA 2026-10-28). */
+  const popH = $("#hunt-pop").offsetHeight;
+  if (allIn && popH) $("#hunt-done-note").style.minHeight = popH + "px";
+  else if (!allIn) $("#hunt-done-note").style.minHeight = "";
   $("#hunt-pop").hidden = allIn;
   $("#hunt-done-note").hidden = !allIn;
   const btn = $("#btn-collect");
