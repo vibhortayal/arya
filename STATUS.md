@@ -49,8 +49,8 @@ One upgrade of the existing hunt. No new game. No lives, no timers, no
 streaks, no retake loop. Wireframe: `docs/quest/` and the owner's
 game-loop wireframe.
 - **Pack:** the plan deals cards. Pack it or skip it. Quantity, brand,
-  note, and a private cost estimate stay on the phone. Helper mode lets
-  a child add items for a yes or no. Items left last trip come first.
+  note, and a private cost estimate stay on the phone. Items left last
+  trip come first.
 - **Hunt:** a row menu: swap, it moved, save for next trip, drop, edit.
   Done early asks what to do with the rest. Grab takes a quantity.
   A combo count only goes up. A boss item appears only after two real

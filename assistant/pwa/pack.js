@@ -9,7 +9,7 @@
  *  - bag rows with quantity, note, brand and an Edit sheet
  *  - typed items that appear as rows at once, duplicates merged
  *  - a private cost estimate and an opt-in budget (this phone only)
- *  - a helper mode where a kid's adds wait for a grown-up's OK
+ *  - a helper mode where a kid's adds wait for a grown-up's OK (hidden)
  *
  * Every decision is a row in draft.pick[key]:
  *   {name, qty, on, skipped?, extra?, src?, aisle?, note?, variant?,
@@ -25,6 +25,9 @@ const PACK = (() => {
   const KEY_DRAFT = "arya-pack-draft";
   const KEY_BUDGET = "arya-pack-budget";
   const KEY_HELPER = "arya-helper-name";
+  // Helper mode is hidden for now: no toggle, no lock. The code stays so it
+  // can come back; setHelperEnabled(true) turns it on (tests use it).
+  let HELPER_ENABLED = false;
   const DRAFT_MAX_AGE = 12 * 3600 * 1000;
   const UNDO_DEPTH = 20;
   const DECK_CAP = 12;
@@ -529,7 +532,7 @@ const PACK = (() => {
     done("Back one card.");
     return true;
   }
-  function locked() { const P = pk(); return !!(P && P.helper.on); }
+  function locked() { const P = pk(); return !!(HELPER_ENABLED && P && P.helper.on); }
   function lockedSay() { say("Helper mode is on. Turn it off first."); }
   function remaining() { const P = pk(); return P ? Math.max(0, P.deck.length - P.deal) : 0; }
   function sweep(kind) {
@@ -674,9 +677,10 @@ const PACK = (() => {
 
   /* ---------------- helper mode ---------------- */
 
+  function setHelperEnabled(v) { HELPER_ENABLED = !!v; render(); }
   function setHelper(on) {
     const P = pk();
-    if (!P) return;
+    if (!P || !HELPER_ENABLED) return;
     P.helper.on = !!on;
     render();
     save();
@@ -802,7 +806,7 @@ const PACK = (() => {
 
   function helperHtml() {
     const P = pk();
-    if (!P) return "";
+    if (!P || !HELPER_ENABLED) return "";
     const on = P.helper.on;
     let html = `<div class="helperbar"><button class="packtoggle" data-packhelper="toggle" aria-pressed="${String(on)}" type="button"><i aria-hidden="true"></i>Helper mode</button>
       <span class="packhint">${on ? "Helper adds wait for your OK." : "Let a child add items. You say yes or no."}</span></div>`;
@@ -1169,7 +1173,7 @@ const PACK = (() => {
     AISLES, STARTERS,
     // state machine
     open, reset, finish, decide, back, packAll, skipRest, restore, undo,
-    addFromText, addStarter, afterBulkAdd, flush, approve, decline, setHelper,
+    addFromText, addStarter, afterBulkAdd, flush, approve, decline, setHelper, setHelperEnabled,
     // drawing and wiring
     rowHtml, sectionsHtml, emptyBagHtml, paintDeck, paintFoot, syncStart, startBlocked,
     holds, locked, listJoins, openEdit, closeEdit, setBudget, setHelperName,
