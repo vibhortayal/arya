@@ -79,5 +79,25 @@ def is_owner(user):
     return _root_call(_go)
 
 
+def anonymize_user(user):
+    """Account deletion: the notes stay (they may carry a bug
+    worth fixing) but the name goes — rewritten to a tombstone."""
+    def go():
+        p = _path()
+        if not os.path.exists(p):
+            return
+        notes = _read()
+        if not any(n.get("user") == user for n in notes):
+            return
+        tmp = p + ".tmp"
+        with open(tmp, "w") as fh:
+            for n in notes:
+                if n.get("user") == user:
+                    n = {**n, "user": "deleted-account"}
+                fh.write(json.dumps(n) + "\n")
+        os.replace(tmp, p)
+    return _root_call(go)
+
+
 def list_all():
     return _root_call(lambda: list(reversed(_read())))

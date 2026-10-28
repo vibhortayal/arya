@@ -390,6 +390,38 @@ def attach_receipt(session_id, receipt_id):
     return _mutate(session_id, fn)
 
 
+def detach_receipt(receipt_id):
+    """Un-settle every hunt this receipt settled (the receipt is
+    being deleted): the hunt returns to finished/unsettled — its
+    play record stands, its proof is gone, and receipt-banked
+    points stop crediting because boards read settled sessions."""
+    with state.file_lock("quest.json"):
+        s = _store()
+        hit = False
+        for sess in s["sessions"]:
+            if sess.get("receipt_id") == receipt_id:
+                sess["receipt_id"] = None
+                sess["settled"] = False
+                sess["state"] = "finished"
+                hit = True
+        if hit:
+            _save_store(s)
+    return hit
+
+
+def delete_session(session_id):
+    """Hard-remove one hunt from the player's history (Tranche 1).
+    Points and badges recompute from the remaining sessions."""
+    with state.file_lock("quest.json"):
+        s = _store()
+        kept = [x for x in s["sessions"] if x["id"] != session_id]
+        if len(kept) == len(s["sessions"]):
+            return False
+        s["sessions"] = kept
+        _save_store(s)
+    return True
+
+
 SAMPLE_PRICE = 3.99   # a sample line with no price history
 
 

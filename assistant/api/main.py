@@ -304,6 +304,38 @@ async def auth_logout(req: Request):
     return resp
 
 
+@app.post("/auth/account/delete")
+async def auth_delete_account(req: Request):
+    """Erase the caller's account (Tranche 1, register #2):
+    password-confirmed, then the record, sessions, tokens, data
+    directory, friend mirrors in other accounts, and feedback
+    attribution all go. The registry lives in the data root, so
+    reads and writes run with the per-user context cleared (the
+    feedback._root_call idiom)."""
+    body = await _json_obj(req)
+    from api import auth, feedback, social, state
+    user = state._current_user.get()
+    if not user or user == state.DEMO_USER:
+        raise HTTPException(403, "the demo household has no account to delete")
+
+    def _root_call(fn):
+        tok = state._current_user.set(None)
+        try:
+            return fn()
+        finally:
+            state._current_user.reset(tok)
+
+    everyone = _root_call(lambda: list(auth.users()))
+    if not _root_call(lambda: auth.verify(user, body.get("password", ""))):
+        raise HTTPException(401, "that password does not match this account")
+    social.scrub_handle(user.split("@")[0], everyone, skip=user)
+    _root_call(lambda: auth.delete_user(user))
+    feedback.anonymize_user(user)
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(auth.COOKIE)
+    return resp
+
+
 @app.get("/auth/me")
 def auth_me(req: Request):
     # Signed-out is a normal state, not an error (review
@@ -754,6 +786,15 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
 @app.get("/api/eyes")
 def eyes_list():
     return {"records": sorted(state.eyes_records(), key=lambda r: r["date"], reverse=True)}
+
+
+@app.post("/api/eyes/{rec_id}/delete")
+def eyes_delete(rec_id: str):
+    """Delete one Eyes photo and its record (Tranche 1)."""
+    from api import state
+    if state.delete_eyes_record(rec_id) is None:
+        raise HTTPException(404, "no such photo")
+    return {"ok": True, "deleted": rec_id}
 
 
 # --- Agent connector (MCP): any MCP-capable assistant, one token ---
@@ -1339,6 +1380,18 @@ async def stores_favorite(req: Request):
     return row
 
 
+@app.post("/api/stores/mine/remove")
+async def stores_mine_remove(req: Request):
+    body = await _json_obj(req)
+    store_id = (body.get("store_id") or "").strip()
+    if not store_id:
+        raise HTTPException(400, "store_id is required")
+    from api import stores as stores_mod
+    if not stores_mod.remove_from_mine(store_id):
+        raise HTTPException(404, "that store is not in your stores")
+    return {"ok": True, "removed": store_id}
+
+
 # --- Arya Quest (Stage A): sessions, optimizer, Shop-Off, social ---
 
 @app.post("/api/quest/sessions")
@@ -1423,6 +1476,17 @@ async def quest_set_state(session_id: str, req: Request):
     if sess is None:
         raise HTTPException(404, "no such session")
     return sess
+
+
+@app.post("/api/quest/sessions/{session_id}/delete")
+def quest_delete_session(session_id: str):
+    """Remove a hunt from the player's history (Tranche 1) — a
+    mistaken or duplicate hunt, or an unsettled one whose receipt
+    is truly lost. Points recompute from what remains."""
+    from api import quest
+    if not quest.delete_session(session_id):
+        raise HTTPException(404, "no such session")
+    return {"ok": True, "deleted": session_id}
 
 
 @app.post("/api/quest/scan-shelf")
@@ -1599,6 +1663,27 @@ def quest_list_friends():
     return {"friends": social.list_friends()}
 
 
+@app.get("/api/account/export")
+def account_export():
+    """Download everything the account holds (Tranche 1): the
+    raw per-user stores as one JSON file. Photos are not embedded —
+    their records and filenames are, and each original is served
+    by its own route."""
+    import json as _json
+    from datetime import datetime, timezone
+    from api import state
+    out = {"exported_at": datetime.now(timezone.utc).isoformat(),
+           "user": state._current_user.get()}
+    for name in ("receipts.json", "dictionary.json", "flags.json",
+                 "cart.json", "quest.json", "my_stores.json",
+                 "eyes.json", "curator.json"):
+        out[name[:-5]] = state._load(name, None)
+    return Response(_json.dumps(out, indent=1),
+                    media_type="application/json",
+                    headers={"Content-Disposition":
+                             "attachment; filename=arya-export.json"})
+
+
 @app.post("/api/feedback")
 async def feedback_submit(req: Request):
     body = await _json_obj(req)
@@ -1769,6 +1854,21 @@ def quest_receipt_original(receipt_id: str):
                     media_type=rec.get("media_type")
                     or "application/octet-stream",
                     headers={"Content-Disposition": "inline"})
+
+
+@app.post("/api/quest/receipts/{receipt_id}/delete")
+def quest_delete_receipt(receipt_id: str):
+    """Delete a filed receipt (Tranche 1): the record and its kept
+    original go; hunts it settled return to unsettled; the ledger
+    and patterns recompute from what remains."""
+    from api import quest, state
+    if state.in_sandbox():
+        raise HTTPException(403, "the demo household files nothing")
+    rec = state.delete_receipt(receipt_id)
+    if rec is None:
+        raise HTTPException(404, "no such receipt")
+    quest.detach_receipt(receipt_id)
+    return {"ok": True, "deleted": receipt_id}
 
 
 @app.post("/api/quest/sessions/{session_id}/report-missing")

@@ -262,6 +262,18 @@ def add_to_mine(store_id):
     return view(store, entries)
 
 
+def remove_from_mine(store_id):
+    """Take a store out of the account's stores (Tranche 1). The
+    directory row is platform data and stays; only the account's
+    entry goes. Returns True when an entry was removed."""
+    entries = _mine_entries()
+    kept = [e for e in entries if e["store_id"] != store_id]
+    if len(kept) == len(entries):
+        return False
+    _save_mine(kept)
+    return True
+
+
 def set_favorite(store_id, favorite):
     """Star or unstar a store in the account's stores. The store
     must be in My Stores — starring is an account-plane act on an

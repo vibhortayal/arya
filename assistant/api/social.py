@@ -147,6 +147,25 @@ def remove_friend(handle):
     return removed
 
 
+def scrub_handle(handle, usernames, skip=None):
+    """Remove every friend edge pointing at this handle from the
+    given accounts (account deletion: nobody keeps a ghost friend).
+    The caller supplies the account list — it is read with the
+    per-user context cleared, where the user registry lives."""
+    handle = _norm_handle(handle)
+    for other in usernames:
+        if other == skip:
+            continue
+        with quest._as_user(other):
+            with state.file_lock("quest.json"):
+                s = quest._store()
+                kept = [f for f in s["friends"]
+                        if f["handle"] != handle]
+                if len(kept) != len(s["friends"]):
+                    s["friends"] = kept
+                    quest._save_store(s)
+
+
 # --- badges ------------------------------------------------------------------
 # Data-driven and small: each badge reads the account's receipts and
 # done sessions. Earned is a fact, never an estimate.

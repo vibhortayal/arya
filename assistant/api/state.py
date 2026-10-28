@@ -216,6 +216,28 @@ def add_receipts(new, media=None):
         return len(added)
 
 
+def delete_receipt(receipt_id):
+    """Remove one filed receipt and its kept original (Tranche 1,
+    production register #1). Derived state — ledger, patterns,
+    spend — recomputes from the receipt list on every read, so
+    removing the record is the whole correction; the caller
+    detaches any session the receipt settled (quest)."""
+    with file_lock("receipts.json"):
+        cur = _load("receipts.json", [])
+        gone = [r for r in cur if r["receipt_id"] == receipt_id]
+        if not gone:
+            return None
+        _save("receipts.json",
+              [r for r in cur if r["receipt_id"] != receipt_id])
+    rec = gone[0]
+    if rec.get("image_ref") and \
+            os.path.basename(rec["image_ref"]) == rec["image_ref"]:
+        p = os.path.join(_media_dir(), rec["image_ref"])
+        if os.path.exists(p):
+            os.remove(p)
+    return rec
+
+
 def dictionary():
     return _load("dictionary.json", {"entries": []})
 
@@ -458,11 +480,38 @@ def eyes_records():
     return _load("eyes.json", [])
 
 
+EYES_MAX = 200  # per account; the oldest photos age out (register #6)
+
+
 def save_eyes_record(rec):
     with file_lock("eyes.json"):
         records = [r for r in eyes_records() if r["id"] != rec["id"]]
         records.append(rec)
-        _save("eyes.json", records)
+        records.sort(key=lambda r: r["date"])
+        pruned = records[:-EYES_MAX] if len(records) > EYES_MAX else []
+        _save("eyes.json", records[-EYES_MAX:])
+    for old in pruned:
+        _drop_eyes_photo(old)
+
+
+def _drop_eyes_photo(rec):
+    photo = rec.get("photo")
+    if photo and os.path.basename(photo) == photo:
+        p = os.path.join(data_dir(), "eyes_photos", photo)
+        if os.path.exists(p):
+            os.remove(p)
+
+
+def delete_eyes_record(rec_id):
+    """Remove one Eyes record and its photo (Tranche 1)."""
+    with file_lock("eyes.json"):
+        records = eyes_records()
+        gone = [r for r in records if r["id"] == rec_id]
+        if not gone:
+            return None
+        _save("eyes.json", [r for r in records if r["id"] != rec_id])
+    _drop_eyes_photo(gone[0])
+    return gone[0]
 
 
 def name_index():
