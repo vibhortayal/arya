@@ -152,7 +152,7 @@ New cloud resources: zero. New charges: zero.
 | Edge and TLS | Caddy | Automatic HTTPS; PWA files and API proxy under one origin; the camera API needs a secure context |
 | API | Python FastAPI | The media tools are Python: meta-sam-parser and ffmpeg |
 | Background jobs | A Postgres table plus a worker loop | Indexing is a long job; no Redis, no extra parts |
-| Data | Postgres in Docker | Items, ledger, and index are relational data with JSON fields |
+| Data | File-backed JSON store | Per-account files under data/users/<account>/ with atomic writes (temp file + replace + per-file locks). Postgres is provisioned in Docker and unused |
 | Media | VM disk | Videos and photos are large; derived data sits in the database |
 | Deploy | Git pull plus docker compose up | GitHub is the source of truth |
 | Insurance | Nightly sync of media and a database dump to Hatch | A dead VM in demo week loses no data |
