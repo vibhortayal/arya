@@ -370,7 +370,7 @@ def attach_receipt(session_id, receipt_id):
 def sample_receipt(session_id):
     """The demo's "Use a sample receipt" door (Hunt v2 plan item 8).
     Files a synthetic receipt for this trip — merchant = the hunt's
-    store, dated now, one line per collected item at its last known
+    store, dated today, one line per collected item at its last known
     price — and settles the hunt through attach_receipt, the same
     path a real receipt takes. Callers allow this in the demo
     sandbox only, so nothing reaches disk. Returns None when the
@@ -400,7 +400,9 @@ def sample_receipt(session_id):
     rid = _new_id("sample", session_id + _now())
     state.add_receipts([{
         "receipt_id": rid, "merchant": sess["store"],
-        "purchased_at": _now(), "source_type": "sample", "live": True,
+        # Receipt dates are calendar days everywhere (decode's
+        # _iso_day): a time here breaks the brain's date math.
+        "purchased_at": _today(), "source_type": "sample", "live": True,
         "lines": lines, "subtotal": subtotal, "tax": 0,
         "total": subtotal, "totals_reconcile": True,
         "image_ref": None}])
