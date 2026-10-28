@@ -14,7 +14,8 @@ Arya
 Arya keeps a living model of your grocery world: every receipt read and
 verified, every return netted, every pattern learned — so the list
 writes itself. Quest, its play layer, turns the weekly shop into a
-treasure hunt in a 3D model of your own store.
+treasure hunt in your own store — a photo-walk of its real aisles,
+with the 3D model one tap away.
 
 ## What it is
 
@@ -39,11 +40,13 @@ intake that Arya verifies the same way.
 
 Quest is the play layer. The shopper picks a store from a shared
 directory — search by name, address, or ZIP; favorites first; a store
-can be added with its address. A mapped store carries a 3D model built
-from a shopper's walkthrough video: VGGT builds the geometry, SAM 3.1
-segments the shelves, Muse Spark labels them, and hunt stops sit at
-each item's matched shelf. Quest mode plays the list as a treasure
-hunt along that model; Express mode shows the fastest route. The
+can be added with its address. A mapped store is modeled from a
+shopper's walkthrough video: the hunt plays over the walk's own
+frames (the photo-walk, the default view), and VGGT builds a 3D
+point cloud from the same video, one tap away. SAM 3.1 segments
+the shelves, Muse Spark labels them, and hunt stops sit at each
+item's matched shelf. Quest mode plays the list as a treasure
+hunt along that walk; Express mode shows the fastest route. The
 receipt photo ends the hunt: it scores the haul, settles Shop-Off
 races by receipt timestamp, and feeds the brain, so next week's list —
 and next week's hunt — load themselves. A store nobody has mapped
