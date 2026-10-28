@@ -1133,6 +1133,22 @@ async def quest_attach_receipt(session_id: str, req: Request):
     return sess
 
 
+@app.post("/api/quest/sessions/{session_id}/sample-receipt")
+def quest_sample_receipt(session_id: str):
+    """Demo only: settle this hunt with a sample receipt for the
+    trip (Hunt v2 plan item 8). Real accounts attach their own."""
+    if not state.in_sandbox():
+        raise HTTPException(403, "sample receipts are for the demo only")
+    from api import quest
+    try:
+        sess = quest.sample_receipt(session_id)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    return sess
+
+
 @app.post("/api/quest/optimize")
 async def quest_optimize(req: Request):
     body = await _json_obj(req)
