@@ -1894,5 +1894,14 @@ async function openReceipt(receiptId) {
     </div>
     <p class="muted">${r.totals_reconcile
       ? `Total verified ✓ — the lines add up to ${money(r.total)}.`
-      : "The total did not reconcile — unverified lines wait in your review queue."}</p>`;
+      : "The total did not reconcile — unverified lines wait in your review queue."}</p>
+    ${r.photo ? `<p class="nomargin">${String(r.media_type || "").startsWith("image/")
+      ? `<button class="btn" id="rc-view-btn" type="button">View receipt</button>
+         <img id="rc-view-img" class="receiptimg" src="/api/quest/receipts/${encodeURIComponent(r.receipt_id)}/original" alt="The filed receipt photo" hidden>`
+      : `<a class="btn" href="/api/quest/receipts/${encodeURIComponent(r.receipt_id)}/original" target="_blank" rel="noopener">View receipt</a>`}</p>` : ""}`;
+  const viewBtn = $("#rc-view-btn");
+  if (viewBtn) viewBtn.addEventListener("click", () => {
+    const img = $("#rc-view-img");
+    img.hidden = !img.hidden;
+  });
 }

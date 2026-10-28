@@ -153,9 +153,12 @@ def badge_shelf():
 
 # --- receipt archive (Profile's private face) --------------------------------
 # Every filed receipt, with its digitized twin: the parsed lines and
-# the verified total. Photos are not retained by the decode paths
-# (image_ref is None today); the field rides along so a stored photo
-# shows the day one exists. Nothing here is estimated.
+# the verified total. Receipts filed from an uploaded photo or PDF
+# keep their original (Discussion 42): image_ref names the media
+# store key and media_type its type, and the original is served
+# back at /api/quest/receipts/<id>/original. Receipts filed
+# without an upload carry neither — no original exists and none
+# is invented. Nothing here is estimated.
 
 def _receipt_summary(r):
     lines = r.get("lines", [])
@@ -169,7 +172,8 @@ def _receipt_summary(r):
             "returns_total": round(sum(
                 ln.get("line_total") or 0 for ln in lines
                 if ln.get("line_type") == "return"), 2),
-            "photo": r.get("image_ref")}
+            "photo": r.get("image_ref"),
+            "media_type": r.get("media_type")}
 
 
 def receipt_archive():
