@@ -27,15 +27,23 @@ def wav_bytes(seconds=1.0, rate=16000):
 
 
 class FakeClient:
-    """Stands in for MetaClient: chat serves the photo decode, and
-    transcribe serves Muse Voice Transcribe. The real client's
-    Bearer-key request shape is covered in test_voice.py."""
+    """Stands in for MetaClient: chat serves the photo decode and
+    the Add camera's list read, and transcribe serves Muse Voice
+    Transcribe. The real client's Bearer-key request shape is
+    covered in test_voice.py."""
 
     def __init__(self, ledger=None):
         pass
 
-    def chat(self, messages, mode=None, personal=None):
+    def chat(self, messages, mode=None, personal=None, **k):
         assert personal is True and mode == "standard"
+        user = messages[-1]["content"]
+        if isinstance(user, list):
+            text = " ".join(p.get("text", "") for p in user
+                            if isinstance(p, dict))
+            if "shopping list" in text:
+                return json.dumps({"kind": "list",
+                                   "items": ["oat milk", "eggs"]}), {}, 0.01
         return json.dumps(PHOTO_PAYLOAD), {}, 0.02
 
     def transcribe(self, wav, duration_s):
@@ -122,10 +130,26 @@ class TestDemoDoors(unittest.TestCase):
         self.assertEqual(r.json()["text"], "oat milk, eggs")
         self.assertTrue(r.json()["demo"])
 
+    def test_demo_list_photo_previews_and_saves_nothing(self):
+        r = self.c.post("/api/list/from-photo", content=b"\xff\xd8\xff fake",
+                        headers={"Content-Type": "image/jpeg"})
+        self.assertEqual(r.status_code, 200, r.text)
+        body = r.json()
+        self.assertTrue(body["demo"])
+        self.assertEqual(body["kind"], "list")
+        self.assertEqual(body["names"], ["oat milk", "eggs"])
+        self.assertEqual(body["added"], 0)
+        # the read happened; nothing joined the demo's list
+        home = self.c.get("/api/home").json()
+        names = [i["name"] for i in home["list"]["items"]]
+        self.assertNotIn("oat milk", names)
+
     def test_demo_other_writes_stay_closed(self):
         self.assertEqual(self.c.post("/api/cart/approve").status_code, 403)
         self.assertEqual(self.c.post("/decode/pdf", content=b"x").status_code, 403)
         self.assertEqual(self.c.post("/api/list/add", json={"name": "milk"}).status_code, 403)
+        self.assertEqual(self.c.post("/api/list/from-text",
+                                     json={"text": "milk, eggs"}).status_code, 403)
         self.assertEqual(self.c.post("/api/intake/order-text",
                                      json={"text": "x" * 30}).status_code, 403)
 
