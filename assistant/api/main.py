@@ -1124,7 +1124,10 @@ async def quest_attach_receipt(session_id: str, req: Request):
     from api import quest
     if quest.get_session(session_id) is None:
         raise HTTPException(404, "no such session")
-    sess = quest.attach_receipt(session_id, receipt_id)
+    try:
+        sess = quest.attach_receipt(session_id, receipt_id)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     if sess is None:
         raise HTTPException(404, "no such receipt")
     return sess
