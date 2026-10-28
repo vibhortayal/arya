@@ -21,7 +21,8 @@ treasure hunt in a 3D model of your own store.
 One product, two layers, one account.
 
 The brain keeps the household's model. Receipts enter as PDF or photo.
-Muse Spark reads each receipt; code checks the lines against the
+Muse Wonder reads each receipt photo (Muse Spark reads PDFs and is
+the photo fallback); code checks the lines against the
 printed total by arithmetic and builds a ledger of kept purchases —
 returns netted, bought-for-others tracked but never suggested.
 Deterministic engines learn each item's cadence and price by store and
@@ -50,9 +51,16 @@ plays on a flat view and is mapped by its own shoppers.
 
 ## How Meta models are used
 
-- Muse Spark 1.3 (Standard) reads receipt PDFs, receipt photos, list
-  photos, and fridge photos (vision); labels store shelves; and powers
-  the Ask Arya agent and the staple judge.
+- Muse Spark 1.3 (Standard) reads receipt PDFs, list photos, and
+  fridge photos (vision); is the fallback reader for receipt photos;
+  labels store shelves; and powers the Ask Arya agent and the staple
+  judge.
+- Muse Wonder 1.0 reads receipt photos — the primary photo reader
+  (98.98% of lines correct on the Gate 0 public set, against Spark's
+  93.88%; price errors 0 against 4). Wonder also authored the hunt's
+  localizer (the "Where am I?" matcher: 42 of 45 held-out photos at
+  the right stop, 45 of 45 in the right neighborhood).
+- Muse Image paints the collect-celebration characters (Quest mode).
 - Muse Voice Transcribe takes voice intake in the app: dictation for
   list adds and voice in Ask Arya.
 - SAM 3.1 segments shelves in walkthrough frames; the segments become
@@ -78,6 +86,11 @@ plays on a flat view and is mapped by its own shoppers.
   silent price rotation in the public set got through; it is disclosed
   here and in STATUS.md, and the review queue is the mitigation.
   Public fixtures never entered the owner's ledger.
+- Wonder, production proof: the same Gate 0 public set through the
+  live production path scored 97 of 98 lines (identity + price) after
+  hand adjudication, with 0 price errors and 7/7 arithmetic. Wonder
+  reads receipt photos in the app until Nov 4 (MODEL-POLICY amendment);
+  Spark is the automatic fallback on any failure.
 - Staple judge: precision 0.79 against a purchase-cadence proxy on
   the owner's 114 receipts. The eval method and the disagreement
   lists are in the research repo.
@@ -85,7 +98,7 @@ plays on a flat view and is mapped by its own shoppers.
 - Store model: one Trader Joe's stretch (Chino Hills, CA) rebuilt from
   a walkthrough video — a 373,630-point web asset and an 18-stop shelf
   graph (SAM 3.1 segments, Spark labels), live in the app.
-- Test suite: 181 tests, green.
+- Test suite: 317 tests, green.
 - Live at https://arya-pilot.duckdns.org — "Try the demo household" is
   a fictional household; its photo and voice doors call the Meta API
   live and keep nothing, and every other write is refused. Judges need
