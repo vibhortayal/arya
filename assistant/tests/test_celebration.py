@@ -8,7 +8,7 @@ manifest must match it exactly (fun facts only; no nutrition or
 health claims; nothing improvised at runtime). Behavior is pinned
 headless under node with the real manifest (skipped without node).
 """
-import json, os, shutil, subprocess, tempfile, unittest
+import json, os, re, shutil, subprocess, tempfile, unittest
 
 PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 ASSETS = os.path.join(PWA, "assets", "characters")
@@ -108,9 +108,30 @@ class TestCelebrationShell(unittest.TestCase):
         # Panel checks route through the same hook as the GRAB.
         self.assertIn("if (item.checked) qOnCollected(item.name);", js)
 
+    def test_corner_card_placement(self):
+        # Discussion 44 (owner phone test): the celebration is a
+        # small card in the bottom-left corner above the route
+        # bar — never center-screen over the store view, never
+        # over the Up-next rail (top). Anchor + caps are pinned
+        # as CSS tokens, not screenshots.
+        css = read("styles.css")
+        layer = css.split(".celeblayer {")[1].split("}")[0]
+        self.assertIn("left: 12px", layer)
+        self.assertNotIn("right:", layer)
+        self.assertNotIn("translateX(-50%)", layer)
+        self.assertIn("max-width: 55vw", layer)
+        self.assertIn("bottom: calc(64px", layer)  # clears the route bar
+        char = css.split(".celeb-char {")[1].split("}")[0]
+        w = int(re.search(r"width: (\d+)px", char).group(1))
+        h = int(re.search(r"height: (\d+)px", char).group(1))
+        self.assertLessEqual(w, 56)
+        self.assertLessEqual(h, 56)
+        bubble = css.split(".celeb-bubble {")[1].split("}")[0]
+        self.assertIn("font-size: 13px", bubble)  # the small size
+
     def test_sw_precaches_celebration_assets(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v30"', sw)
+        self.assertIn('CACHE = "arya-v31"', sw)
         self.assertIn("/assets/characters/manifest.json", sw)
         self.assertIn("/assets/characters/blueberry.webp", sw)
         self.assertIn("/assets/characters/pantry.webp", sw)

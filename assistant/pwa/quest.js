@@ -29,6 +29,11 @@ const Q = {
   walkTarget: -1,
   arrived: false,
   followHold: false,
+  // Any-order collecting (Discussion 44): the stop the hunt
+  // presents. -1 = no steer, the first uncollected stop presents.
+  // A collect steers it to the next uncollected stop after the
+  // one just grabbed (wrapping to the first uncollected).
+  focusIdx: -1,
   mapNote: "",
   expScene: null,
   // Motion navigation (Discussion 33): the gyro look controller, and
@@ -574,7 +579,7 @@ function qStopU(sess, i) {
   return (i + 0.5) / n;
 }
 function qRouteStripHtml(sess, buttons) {
-  const next = qNextIndex(sess);
+  const next = qCurrentIndex(sess);
   return sess.items.map((it, i) => {
     const cls = it.checked ? "done" : i === next ? "current" : "ahead";
     const label = it.checked ? "✓" : String(i + 1);
@@ -585,21 +590,35 @@ function qRouteStripHtml(sess, buttons) {
 }
 function qUpNextHtml(sess) {
   const stops = qStops(sess);
-  const next = qNextIndex(sess);
+  const next = qCurrentIndex(sess);
   let html = `<p class="up-store">${esc(sess.store)} · ${QMODE_LABEL[sess.mode] || sess.mode}</p>`;
   if (next === -1) {
     return html + `<div class="up-row first"><span class="up-name">All collected</span></div>` +
       (Q.mapNote ? `<p class="up-note">${esc(Q.mapNote)}</p>` : "");
   }
+  // Up to 3 uncollected stops in route order from the presented
+  // stop, wrapping to the route's start — after an out-of-order
+  // grab the rail still shows what remains (Discussion 44).
   const rows = [];
-  for (let i = next; i < sess.items.length && rows.length < 3; i++) {
-    if (!sess.items[i].checked) rows.push(stops[i]);
+  for (let k = 0; k < sess.items.length && rows.length < 3; k++) {
+    const i = (next + k) % sess.items.length;
+    if (!sess.items[i].checked) rows.push(i);
   }
-  html += rows.map((s, k) => `
+  html += rows.map((i, k) => {
+    const s = stops[i];
+    // Every rail row in a hunt carries its own GRAB (Discussion
+    // 44): any stop is collectible right from the rail. Express
+    // rows stay plain — its checks live in the run panel.
+    const grab = sess.mode === "quest"
+      ? `<button type="button" class="up-grab" data-up-grab="${i}"${sess.state === "playing" ? "" : " disabled"}>Grab</button>`
+      : "";
+    return `
     <div class="up-row${k === 0 ? " first" : ""}">
-      <span class="up-name">${esc(s.name)}${s.qty > 1 ? ` · × ${qtyFmt(s.qty)}` : ""}</span>
-      ${s.shelfLabel ? `<span class="up-shelf">${esc(s.shelfLabel)}</span>` : s.unplaced ? `<span class="up-shelf">Not placed on the map</span>` : ""}
-    </div>`).join("");
+      <div class="grow"><span class="up-name">${esc(s.name)}${s.qty > 1 ? ` · × ${qtyFmt(s.qty)}` : ""}</span>
+      ${s.shelfLabel ? `<span class="up-shelf">${esc(s.shelfLabel)}</span>` : s.unplaced ? `<span class="up-shelf">Not placed on the map</span>` : ""}</div>
+      ${grab}
+    </div>`;
+  }).join("");
   if (Q.mapNote) html += `<p class="up-note">${esc(Q.mapNote)}</p>`;
   return html;
 }
@@ -718,6 +737,27 @@ $("#celeb-layer").addEventListener("click", qCelebHide);
 function qNextIndex(sess) {
   return sess.items.findIndex(i => !i.checked);
 }
+/* The stop the hunt presents (Discussion 44). The route is a
+ * recommendation, not a rail: any stop can be grabbed, so the
+ * presented stop is a steer (Q.focusIdx), not simply the first
+ * uncollected one. A stale steer — collected, out of range —
+ * falls back to the first uncollected stop. Express keeps
+ * first-uncollected semantics: its checks are toggles. */
+function qCurrentIndex(sess) {
+  if (!sess) return -1;
+  if (sess.mode !== "quest") return qNextIndex(sess);
+  const f = Q.focusIdx;
+  if (f >= 0 && f < sess.items.length && !sess.items[f].checked) return f;
+  return qNextIndex(sess);
+}
+/* After a collect at idx, steer the hunt: the next uncollected
+ * stop after it, else the first uncollected, else -1 (done). */
+function qRetarget(sess, idx) {
+  let t = sess.items.findIndex((it, i) => i > idx && !it.checked);
+  if (t === -1) t = qNextIndex(sess);
+  Q.focusIdx = t;
+  return t;
+}
 function qStops(sess) {
   const flagged = new Set(Q.storeReports.map(r => r.item_group || qnorm(r.item)));
   return sess.items.map(i => ({
@@ -765,9 +805,7 @@ function mountScene() {
   mount.dataset.model = (Q.current && qStoreModel(Q.current.store)) || "";
   mount.dataset.photos = (Q.current && qStorePhotos(Q.current.store)) || "";
   Q.scene = createSceneView(mount, Q.driverName);
-  Q.scene.onTapStop = idx => {
-    if (idx === qNextIndex(Q.current)) collectCurrent();
-  };
+  Q.scene.onTapStop = idx => qTapStop(idx);
   paintSceneToggle();
 }
 $("#scene-toggle").addEventListener("click", ev => {
@@ -804,16 +842,17 @@ function openHunt(sess) {
       ? `This store is mapped — switch to its photo walk or 3D view in the trip panel. The hunt plays the same either way.`
       : "";
   Q.followHold = false;
+  Q.focusIdx = -1; // a fresh entry presents the first uncollected stop
   renderHunt();
   qInitMotion();
-  qWalkStart(qNextIndex(sess));
+  qWalkStart(qCurrentIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
 }
 function renderHunt() {
   const sess = Q.current;
   if (!sess) return;
   const p = qProgress(sess);
-  const next = qNextIndex(sess);
+  const next = qCurrentIndex(sess);
   if (Q.scene) {
     Q.scene.setStops(qStops(sess));
     Q.scene.setNext(next);
@@ -866,23 +905,46 @@ function renderHunt() {
   $("#btn-locate").hidden = !(Q.driverName === "cloud" || Q.driverName === "photo");
   qStepSync();
 }
-async function collectCurrent() {
+/* Collect one stop by index (Discussion 44): the GRAB on the
+ * arrival pop, the rail GRABs, and marker taps all land here.
+ * Any order — after the grab the hunt re-targets to the next
+ * uncollected stop after this one (wrapping to the first
+ * uncollected), and the walk and step anchor follow it. */
+async function collectStop(idx) {
   const sess = Q.current;
-  const next = qNextIndex(sess);
-  if (!sess || next === -1 || sess.state !== "playing") return;
-  const name = sess.items[next].name;
+  if (!sess || idx < 0 || idx >= sess.items.length) return;
+  if (sess.state !== "playing" || sess.items[idx].checked) return;
+  const name = sess.items[idx].name;
   try {
     await qCheck(sess, name, true);
     qOnCollected(name);
     Q.followHold = false; // the walk resumes from the new anchor
+    const target = qRetarget(sess, idx);
     renderHunt();
     qStepAnchorTo(name); // a collect is ground truth for step-advance
-    qWalkStart(qNextIndex(sess));
-    if (qNextIndex(sess) === -1) {
+    qWalkStart(target);
+    if (target === -1) {
       toast("List complete. Finish with the receipt.");
       openFinish(sess);
     }
   } catch (e) { toast(e.message); }
+}
+function collectCurrent() { return collectStop(qCurrentIndex(Q.current)); }
+/* A marker tap (Discussion 44): tapping the presented stop's
+ * marker grabs it, as before; tapping any other stop's marker
+ * opens that stop's card — the hunt steers to it and its arrival
+ * pop rises with the GRAB enabled. A touch on the scene has
+ * already held the walk (manual navigation), so the card
+ * presents at once; left unheld, the walk glides over and the
+ * pop rises on arrival, as usual. Checked stops do nothing. */
+function qTapStop(idx) {
+  const sess = Q.current;
+  if (!sess || sess.mode !== "quest" || sess.state !== "playing") return;
+  if (idx === qCurrentIndex(sess)) { collectCurrent(); return; }
+  if (idx < 0 || idx >= sess.items.length || sess.items[idx].checked) return;
+  Q.focusIdx = idx;
+  qWalkStart(idx);
+  renderHunt();
 }
 $("#btn-collect").addEventListener("click", async () => {
   const sess = Q.current;
@@ -891,12 +953,18 @@ $("#btn-collect").addEventListener("click", async () => {
     try {
       await qSetState(sess, "playing");
       renderHunt();
-      qWalkStart(qNextIndex(sess));
+      qWalkStart(qCurrentIndex(sess));
     }
     catch (e) { toast(e.message); }
     return;
   }
   collectCurrent();
+});
+/* Rail GRABs (Discussion 44): every Up-next row in a hunt can
+ * collect its own stop directly — any order. */
+$("#hunt-upnext").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-up-grab]");
+  if (b && !b.disabled) collectStop(Number(b.dataset.upGrab));
 });
 $("#btn-pause").addEventListener("click", async () => {
   const sess = Q.current;
@@ -906,7 +974,7 @@ $("#btn-pause").addEventListener("click", async () => {
     await qSetState(sess, to);
     if (to === "paused") qWalkStop(); // freeze mid-walk; the pop stays as it was
     renderHunt();
-    if (to === "playing" && !Q.arrived) qWalkStart(qNextIndex(sess));
+    if (to === "playing" && !Q.arrived) qWalkStart(qCurrentIndex(sess));
   } catch (e) { toast(e.message); }
 });
 $("#btn-finish").addEventListener("click", async () => {
@@ -925,7 +993,7 @@ $("#btn-finish").addEventListener("click", async () => {
 let spotKind = null;
 function openSpotSheet() {
   const sess = Q.current;
-  const next = sess ? qNextIndex(sess) : -1;
+  const next = sess ? qCurrentIndex(sess) : -1;
   if (!sess || next === -1) return;
   spotKind = null;
   $("#spot-item").textContent = `At the stop for ${sess.items[next].name} — what do you see?`;
@@ -950,7 +1018,7 @@ $("#spot-sheet").addEventListener("click", ev => {
 });
 $("#spot-send").addEventListener("click", async () => {
   const sess = Q.current;
-  const next = sess ? qNextIndex(sess) : -1;
+  const next = sess ? qCurrentIndex(sess) : -1;
   if (!sess || next === -1 || !spotKind) return;
   const f = $("#spot-photo").files[0];
   const btn = $("#spot-send");
@@ -1091,7 +1159,7 @@ function qOnMotion(e) {
 function qStepAdvance() {
   const sess = Q.current;
   if (!sess || !Q.scene || !Q.scene.setProgress) return;
-  const next = qNextIndex(sess);
+  const next = qCurrentIndex(sess);
   if (next === -1) return;
   const nextU = qStopU(sess, next);
   const u = MotionMath.advance(Q.stepU, nextU,
@@ -1127,6 +1195,7 @@ function qAnchorToU(u) {
     target = sess.items.findIndex((it, i) => i > best && !it.checked);
     if (target < 0) target = qNextIndex(sess);
   }
+  Q.focusIdx = target; // the presented stop is the anchored one
   qWalkStart(target);
   return best;
 }
@@ -1428,8 +1497,9 @@ $("#scan-boxes").addEventListener("click", async ev => {
   if (!btn || !sess || btn.classList.contains("got")) return;
   const name = btn.dataset.item;
   if (sess.state !== "playing") { toast("Start the hunt first."); return; }
-  const next = qNextIndex(sess);
-  const isCurrent = next >= 0 && sess.items[next].name === name;
+  const cur = qCurrentIndex(sess);
+  const isCurrent = cur >= 0 && sess.items[cur].name === name;
+  const cIdx = sess.items.findIndex(i => i.name === name);
   btn.disabled = true;
   try {
     await qCheck(sess, name, true);
@@ -1437,8 +1507,9 @@ $("#scan-boxes").addEventListener("click", async ev => {
     btn.classList.add("got");
     btn.querySelector(".poplabel").textContent = `${name} ✓`;
     Q.followHold = false;
+    if (isCurrent) qRetarget(sess, cIdx); // a collect re-targets (Discussion 44)
     renderHunt();
-    if (isCurrent) { qStepAnchorTo(name); qWalkStart(qNextIndex(sess)); }
+    if (isCurrent) { qStepAnchorTo(name); qWalkStart(qCurrentIndex(sess)); }
     if (qNextIndex(sess) === -1) {
       closeScan();
       toast("List complete. Finish with the receipt.");
@@ -1454,7 +1525,7 @@ function closeScan() {
   // Resume an interrupted walk, same rule as the pause button.
   if (sess && sess.state === "playing" && !Q.arrived && !Q.followHold &&
       qNextIndex(sess) >= 0 && !$("#view-hunt").hidden) {
-    qWalkStart(qNextIndex(sess));
+    qWalkStart(qCurrentIndex(sess));
   }
 }
 
@@ -1479,8 +1550,14 @@ $("#panel-items").addEventListener("click", async ev => {
   if (!b || !Q.current) return;
   const item = Q.current.items.find(i => i.name === b.dataset.panelCheck);
   if (!item) return;
+  const pIdx = Q.current.items.indexOf(item);
+  const wasCurrent = pIdx === qCurrentIndex(Q.current);
   try {
     await qCheck(Q.current, item.name, !item.checked);
+    // Checking off the presented stop from the panel is a
+    // collect: the hunt re-targets like any other (Discussion 44).
+    if (wasCurrent && Q.current.items[pIdx] && Q.current.items[pIdx].checked)
+      qRetarget(Q.current, pIdx);
     renderPanel();
     renderHunt();
     if (item.checked) qOnCollected(item.name); // same hook as the GRAB

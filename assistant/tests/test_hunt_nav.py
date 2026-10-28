@@ -10,7 +10,9 @@ pinned headless under node (skipped when node is absent): the
 route strip and up-next present stops in route order with no scene
 interaction, GRAB collects exactly the current stop, the walk
 arrives after its interval, manual navigation holds it, and
-leaving the frame stops it.
+leaving the frame stops it. Discussion 44 adds the any-order
+driver: every stop collects from the rail or its marker, and
+the hunt re-targets after each grab.
 """
 import json, os, re, shutil, subprocess, tempfile, unittest
 
@@ -79,6 +81,17 @@ class TestHuntFrameShell(unittest.TestCase):
         self.assertIn("grabbtn", exp)
         css = read("styles.css")
         self.assertIn("#view-express.full", css)
+
+    def test_any_order_surfaces_present(self):
+        js = read("quest.js")
+        for fn in ("qCurrentIndex", "qRetarget", "collectStop", "qTapStop"):
+            self.assertIn(f"function {fn}(", js)
+        # Every rail row in a hunt carries its own GRAB; marker
+        # taps route through qTapStop, not just the current stop.
+        self.assertIn('data-up-grab="${i}"', js)
+        self.assertIn("onTapStop = idx => qTapStop(idx)", js)
+        css = read("styles.css")
+        self.assertIn(".up-grab", css)
 
     def test_walk_and_presentation_logic_present(self):
         js = read("quest.js")
@@ -224,8 +237,101 @@ DRIVER = r"""
 """
 
 
+DRIVER_ANYORDER = r"""
+;(async () => {
+  const out = {};
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const mkSess = (names, mode) => ({
+    id: "s1", store: "Trader Joe's", mode: mode || "quest", state: "playing",
+    items: names.map(n => ({ name: n, qty: 1, checked: false, group: "name:" + n.toLowerCase() }))
+  });
+  const checks = () => __posts.filter(p => p[0].endsWith("/check")).map(p => p[1].item);
+  const fresh = s => {
+    qWalkStop();
+    Q.current = s; Q.scene = { setStops() {}, setNext() {}, glideTo() {}, destroy() {} };
+    Q.storeReports = []; Q.followHold = false; Q.focusIdx = -1; Q.arrived = true;
+  };
+  // --- collect stop 4 while current is 1: re-targets past it ---
+  __posts.length = 0;
+  let sess = mkSess(["A", "B", "C", "D", "E"]);
+  fresh(sess);
+  out.starts_at_first = qCurrentIndex(sess) === 0;
+  await collectStop(3);
+  out.grab4_checks = JSON.stringify(checks()) === JSON.stringify(["D"]);
+  out.grab4_only = sess.items[3].checked && !sess.items[0].checked && !sess.items[4].checked;
+  out.grab4_retargets = qCurrentIndex(sess) === 4 && Q.focusIdx === 4;
+  // --- the rail shows what remains, wrapping to the route start ---
+  const up = qUpNextHtml(sess);
+  const iE = up.indexOf(">E<"), iA = up.indexOf(">A<"), iB = up.indexOf(">B<");
+  out.rail_wrap_order = iE >= 0 && iE < iA && iA < iB;
+  out.rail_grabs = up.includes('data-up-grab="4"') && up.includes('data-up-grab="0"')
+    && up.includes('data-up-grab="1"') && !up.includes('data-up-grab="2"');
+  // --- collecting the last stop wraps current to the first left ---
+  await collectStop(4);
+  out.wrap_to_first = qCurrentIndex(sess) === 0;
+  // --- earlier stops out of order; completion still detected ---
+  await collectStop(2);
+  out.after_c_current = qCurrentIndex(sess) === 0;
+  await collectStop(0);
+  out.after_a_current = qCurrentIndex(sess) === 1;
+  await collectStop(1);
+  out.all_checked = sess.items.every(i => i.checked);
+  out.complete_detected = qNextIndex(sess) === -1 && qCurrentIndex(sess) === -1
+    && qPopState(sess) === "done";
+  // --- sequential play is unchanged ---
+  __posts.length = 0;
+  sess = mkSess(["A", "B", "C"]);
+  fresh(sess);
+  await collectCurrent();
+  const seq1 = qCurrentIndex(sess) === 1;
+  await collectCurrent();
+  out.sequential = seq1 && qCurrentIndex(sess) === 2
+    && JSON.stringify(checks()) === JSON.stringify(["A", "B"]);
+  // --- a checked stop cannot be collected again ---
+  __posts.length = 0;
+  await collectStop(0);
+  out.no_recheck = __posts.filter(p => p[0].endsWith("/check")).length === 0;
+  // --- marker tap presents another stop; tapping it again grabs ---
+  sess = mkSess(["A", "B", "C", "D"]);
+  fresh(sess);
+  Q.followHold = true; // a real tap lands after the scene touch held the walk
+  __posts.length = 0;
+  qTapStop(2);
+  out.tap_presents = Q.focusIdx === 2 && qCurrentIndex(sess) === 2
+    && __posts.filter(p => p[0].endsWith("/check")).length === 0;
+  qTapStop(2);
+  await sleep(10);
+  out.tap_again_grabs = sess.items[2].checked === true && qCurrentIndex(sess) === 3;
+  qTapStop(2);
+  out.tap_checked_noop = qCurrentIndex(sess) === 3;
+  // --- Express rail rows carry no GRAB; express current unchanged ---
+  const es = mkSess(["X", "Y"], "express");
+  const eup = qUpNextHtml(es);
+  out.express_rail_plain = !eup.includes("data-up-grab");
+  out.express_current_first = qCurrentIndex(es) === 0;
+  console.log(JSON.stringify(out));
+  process.exit(0);
+})().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
+"""
+
+
 @unittest.skipUnless(NODE, "node not available")
 class TestHuntNavNode(unittest.TestCase):
+    def test_any_order_collect(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = os.path.join(td, "harness.js")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(PRELUDE)
+                fh.write(read("quest.js"))
+                fh.write(DRIVER_ANYORDER)
+            out = subprocess.run([NODE, path], capture_output=True,
+                                 text=True, timeout=60)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        res = json.loads(out.stdout.strip().splitlines()[-1])
+        self.assertNotIn("error", res, res.get("error"))
+        failed = [k for k, v in res.items() if v is not True]
+        self.assertEqual(failed, [], f"harness checks failed: {failed} in {res}")
+
     def test_navigation_behavior(self):
         with tempfile.TemporaryDirectory() as td:
             path = os.path.join(td, "harness.js")
