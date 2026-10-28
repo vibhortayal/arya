@@ -28,6 +28,21 @@ _LEDGER = os.path.join(os.environ.get(
 _login_fails = {}
 
 
+def _client_ip(req):
+    """The client address for rate limiting. The app sits behind
+    one proxy hop (Caddy), which APPENDS the address it saw to
+    X-Forwarded-For — so the LAST entry is the trustworthy one and
+    the first entries are client-supplied and spoofable. Keying a
+    limiter on the first entry lets an attacker reset their bucket
+    at will (review 2026-10-28, M5). No header: the peer address."""
+    parts = [p.strip() for p in
+             (req.headers.get("x-forwarded-for") or "").split(",")
+             if p.strip()]
+    if parts:
+        return parts[-1]
+    return req.client.host if req.client else "?"
+
+
 def _budget_guard():
     """Stage 6 hardening: a daily ceiling on model spend (default $10),
     far above real household use, bounding any single bad day."""
@@ -136,7 +151,7 @@ async def auth_setup(req: Request):
 @app.post("/auth/login")
 async def auth_login(req: Request):
     import time as _t
-    ip = (req.headers.get("x-forwarded-for") or (req.client.host if req.client else "?")).split(",")[0].strip()
+    ip = _client_ip(req)
     fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
