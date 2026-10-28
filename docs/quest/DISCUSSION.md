@@ -121,3 +121,25 @@ pass 2.
     In the demo, the store picker (history AND My Stores) offers only
     stores the demo can actually play — a photo walk or a model; typed
     names still work, they are just not advertised. Suite 468.
+
+## 55. Teach is a walk, not a form (owner, 2026-10-28)
+
+Owner: the Teach flow "is very data entry heavy — no user is going to
+enter data." Ruled: teaching a store is capture-and-confirm, never
+forms. The Teach screen now leads with **Walk your store**: the
+shopper walks the aisles they use; each sharp frame is people-scrubbed,
+then a Standard vision read names the section (the aisle sign when
+readable, else what is shelved) and the products on it; the section is
+found-or-created (both sides — nobody picks a side) and the frame
+lands in it like any guided capture, with the read's products noted
+as sightings. The only input afterwards is the confirm card: the
+sections Arya found, each removable with one tap ("Not a section")
+while it is still only the teacher's — once another shopper builds
+on a section it is shared and stays, and walkthrough baselines never
+come out. The manual add-an-aisle form is demoted behind a
+"Fine-tune" disclosure; the guided next-capture prompts (which were
+already zero-entry) stay. Known limit, accepted for v1: the reader
+can name one aisle two ways across frames ("Aisle 4" vs "Pasta") and
+zone merging only partly collapses that — the confirm card is the
+correction surface. Store finding stays the directory + add-a-store
+for now; a Maps/Places lookup is a separate, undecided step.
