@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Map my store — guided capture wireframe</title>
+<title>Teach Arya your store — wireframe</title>
 <style>
 :root{--acc:#E4572E;--ink:#1B1B1E;--ink2:#55555C;--ink3:#8B8B93;--line:#D9D9DE;--bg:#EFEFF1;--fill:#F4F4F6;--ok:#1F6B3A;--okbg:#E7F3EA;--accbg:#FDEEE8;
 --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -22,41 +22,55 @@ h2{font-size:26px;margin:6px 0 6px}.muted{color:var(--ink2);font-size:14.5px;lin
 .guide{position:absolute;inset:14px;border:2px dashed var(--acc);border-radius:8px}
 ol.steps{padding-left:22px;margin:6px 0;font-size:15.5px;line-height:1.45}.chip{display:inline-block;padding:7px 13px;border-radius:99px;background:var(--fill);font-size:14px;margin:0 6px 6px 0;font-weight:600}.chip.on{background:var(--ink);color:#fff}
 .note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+.cam{position:relative;height:330px;border-radius:14px;background:linear-gradient(160deg,#3a3f45,#1d2024);margin:8px 0}
+.cam .hint{position:absolute;left:10px;right:10px;bottom:10px;padding:9px;border-radius:10px;background:rgba(0,0,0,.55);color:#fff;font-weight:600;text-align:center}
+.cam .hint.good{background:rgba(31,107,58,.85)}
+.cam .parts{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:6px}.cam .parts span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.3)}.cam .parts span.on{background:#fff}
 </style></head><body>
-<aside><h1>Map my store</h1>
-<p>Clickable wireframe. A guided mapper: the app says exactly what to capture; the engine keeps the best frames. Tap through the six screens, or use the list.</p>
+<aside><h1>Teach Arya your store</h1>
+<p>Clickable wireframe (v2). The shopper never “does mapping”: they open the camera and Arya does the rest. Tap through the screens, or use the list.</p>
 <ol id="nav"></ol>
-<p><strong>Rules this shows:</strong> map only your aisles; many partial maps merge; “not found” asks for one specific capture; weak shots are refused with a one-line fix; people are blurred before anything is saved.</p></aside>
+<p><strong>Rules this shows:</strong> benefit to you first (“your next hunt gets faster”); asked at the right moment, never a popup; no retakes, ever: the live camera hints and snaps the best frame itself, and a soft shot is kept as a partial; long aisles split themselves from the walk; “can't find it” teaches the shelf; points and titles, no streaks, timers or penalties; people are blurred before anything is saved.</p></aside>
 <div class="phone" id="ph"></div>
 <script>
+const CAM=(hint,good,parts)=>`<div class="cam">${parts?`<div class="parts">${parts}</div>`:""}<div class="hint${good?" good":""}">${hint}</div></div>`;
 const S={
-1:{t:"Today hub",h:`<h2>Today</h2><div class="card"><b>Your games</b><div class="row"><span class="g">Trader Joe's · Quest</span>›</div></div>
-<div class="card" data-go="2" style="cursor:pointer;border-color:var(--acc)"><b>Map my store</b><div class="muted">Photograph an aisle. Help every shopper.</div></div>
-<p class="note">New row beside “+ New session”. Tap it.</p>`},
-2:{t:"Map my store",h:`<h2>Map my store</h2><p class="muted">Map the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
+1:{t:"Hunt finished → one small ask",h:`<h2>Trader Joe's — hunt finished</h2><p class="muted">Quest · 12 of 12 collected</p>
+<div class="card" style="border:2px dashed var(--acc)"><div class="eye">Bonus · +10 pts</div><b style="font-size:18px">Got 20 seconds? Teach Arya Aisle 4.</b><div class="muted">Your next hunt here gets faster. Open the camera and walk; Arya does the rest.</div>
+<button class="btn p" data-go="3">Teach Arya</button><button class="btn" data-go="2">Not now</button></div>
+<p class="note">The engine picks the aisle: one where something on today's list was found comes first (you were just there). “Not now” mutes it for this store for a week. Once per hunt.</p>`},
+2:{t:"Teach Arya your store (hub)",h:`<h2>Teach Arya your store</h2><p class="muted">The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, fewer “can't find it” moments.</p>
 <span class="chip on">Trader Joe's</span><span class="chip">Costco</span>
-<div class="card"><b>6 of 22 aisles mapped and fresh</b><div class="bar"><i style="width:27%"></i></div><div class="muted">3 reported out of date. You do not need to map everything.</div></div>
-<div class="card"><div class="eye">Next capture</div><b style="font-size:19px">Photo of Pasta, left side</b><div class="muted">A shopper said this part is out of date.</div><button class="btn p" data-go="3">Start · about 10 s</button></div>
-<b>Aisles</b><div class="card"><div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Pasta<br><small class="muted">left side</small></span><span class="st s">Out of date</span></div>
-<div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Frozen Pizza</span><span class="st ok">Mapped</span></div>
-<div class="row"><span class="st">+</span><span class="g">Dairy wall</span><span class="st">Not mapped</span></div></div>
-<button class="btn">Add an aisle</button><p class="note">“Mine” = just the aisles I use. The next capture comes from there first.</p>`},
-3:{t:"Guided photo",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2><p class="muted">Someone could not find Spaghetti here. A fresh photo helps.</p>
-<div class="card"><ol class="steps"><li>Stand about 1.5 m (5 ft) from Pasta.</li><li>Hold the phone upright and level.</li><li>Get the whole shelf in the frame, top to bottom.</li><li>Wait one second. Then tap Take photo.</li><li>If a shopper is in view, wait. We blur people before we save anything.</li></ol></div>
-<div class="shot"><div class="guide"></div>shelf outline guide</div>
-<button class="btn p" data-go="4">Take photo</button><button class="btn" data-go="6">This part of the map is out of date</button>`},
-4:{t:"Weak shot refused",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
-<div class="card" style="border-color:var(--acc)"><b>Try again.</b> Too blurry. Hold the phone still for one second, then try again.</div>
-<p class="note">Graded on the phone's upload by the engine (sharpness, exposure, shelf fill). A weak frame costs no model call and is never stored.</p>
-<button class="btn p" data-go="5">Retake — sharp this time</button>`},
-5:{t:"Saved, next",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
-<div class="card" style="border-color:var(--ok);background:var(--okbg)"><b>Saved. This is now the best photo of this shelf.</b><div class="muted">People blurred first. 7 of 22 aisles mapped.</div></div>
-<button class="btn p" data-go="3">Next capture</button><button class="btn" data-go="2">Done for today</button>
-<p class="note">Same view as one we hold? “Thanks. That confirms this shelf still looks the same.” — it refreshes the old photo.</p>`},
-6:{t:"Hunt: Not here? → refresh",h:`<h2 style="font-size:23px">Hunt · Spaghetti</h2>
-<div class="card"><b>Not here</b><div class="row"><span class="g">Empty shelf — its tag is still there</span></div><div class="row"><span class="g">Something else here now</span></div></div>
-<div class="card" style="border-color:var(--acc);background:var(--accbg)">Reported — other hunters will confirm.<br><b>Help refresh the map?</b><button class="btn p" data-go="3">Take the photo</button></div>
-<p class="note">The report also marks that aisle out of date and jumps the queue. Walk-video option: for an aisle with several empty parts, the prompt becomes “Walk Aisle 4, left side · about 20 s”; the phone sends only its sharpest frames.</p>`}
+<div class="card"><b>Arya knows 50% of Trader Joe's</b> <span class="muted">· 11 of 22 sections</span><div class="bar"><i style="width:50%"></i></div>
+<div class="muted" style="display:flex;justify-content:space-between"><span>3 more sections and Arya knows 75%</span><span><b>Pathfinder</b> · 90 pts</span></div></div>
+<div class="card"><div class="eye">Teach Arya next</div><b style="font-size:19px">Walk Aisle 4</b><div class="muted">A slow walk maps the whole aisle in one go.</div><button class="btn p" data-go="4">Open camera · about 20 s</button></div>
+<b>Aisles</b><div class="card"><div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Aisle 9 · front</span><span class="st ok">Mapped</span></div>
+<div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Aisle 9 · middle</span><span class="st s">Out of date</span></div>
+<div class="row"><span class="st">+</span><span class="g">Aisle 4</span><span class="st">New to Arya</span></div></div>`},
+3:{t:"Live camera: photo",h:`<h2 style="font-size:23px">Photo of Pasta</h2><p class="muted">Pasta was not where Arya expected. Point the camera at the shelf and Arya learns what is there now.</p>
+${CAM("Hold still…",false)}
+<button class="btn p" data-go="5" style="opacity:.6">Snapping when steady…</button>
+<p class="note">No shutter button. The phone grades every frame (sharpness, light) and snaps the best one after 1.5 s steady, or the best it saw after 6 s. Hints: “A bit dark. Face the shelf light.” · “Tilt a little to lose the glare.” · “Good. Holding…”. Never “not good, try again”.</p>`},
+4:{t:"Live camera: walk an aisle",h:`<h2 style="font-size:23px">Walk Aisle 4</h2><p class="muted">Start at the front end and walk slowly.</p>
+${CAM("Nice and steady. Keep walking.",true,"<span class=on></span><span class=on></span><span></span>")}
+<button class="btn p" data-go="5">Done</button>
+<p class="note">The bar on top grows as the aisle turns out longer: about 8 s of walking per section. A 25 s walk splits Aisle 4 into front / middle / back by itself, with no “how long is this aisle?” question. No video is uploaded: Arya keeps the sharpest frame per section.</p>`},
+5:{t:"Reward",h:`<h2 style="font-size:23px">Walk Aisle 4</h2>
+<div class="card" style="text-align:center"><div style="font-size:34px;font-weight:800;color:var(--acc)">+30</div><b style="font-size:18px">Arya learned 3 sections</b>
+<div class="muted">Arya knows 50% → <b>64%</b> of this store</div><div class="bar"><i style="width:64%"></i></div><div class="muted">1 more section to 75%</div>
+<div style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:var(--acc);color:#fff;font-weight:700">You're now a Cartographer</div>
+<p class="muted">Next hunt here, this aisle shows a real shelf photo, so you spot things faster.</p></div>
+<button class="btn p" data-go="4">Teach one more · about 20 s</button><button class="btn" data-go="2">Done</button>
+<p class="note">Confetti on a new section (skipped with reduced motion). +10 a new section, +3 a refresh. Titles: Scout 1 · Pathfinder 5 · Cartographer 15 · Store whisperer 40. Nothing is ever taken away. A soft shot adds: “Some of it was a little soft. That is fine; it still helps.”</p>`},
+6:{t:"Hunt: can't find it",h:`<h2 style="font-size:23px">Hunt · Spaghetti</h2>
+<div class="card"><b>Not here</b><div class="row"><span class="g">Empty shelf — its tag is still there</span></div><div class="row"><span class="g">Something else here now</span></div>
+<div class="row"><span class="g">Shelf photo (optional, it also teaches Arya this aisle)</span></div></div>
+<div class="card" style="border-color:var(--ok);background:var(--okbg)">With a photo: <b>Reported, and Arya learned this shelf. +10</b></div>
+<div class="card" style="border-color:var(--acc);background:var(--accbg)">Without one: <b>Show Arya the shelf? It learns where things moved.</b><button class="btn p" data-go="3">Open camera</button></div>
+<p class="note">“Can't find it” is the best moment to learn a shelf: you are standing at it. The report marks that section out of date and puts it first in line.</p>`},
+7:{t:"Unknown aisle: one tap",h:`<h2 style="font-size:23px">Which aisle are you in?</h2><p class="muted">We do not know where Spaghetti sits yet.</p>
+<div class="card"><span class="chip">Aisle 4</span><span class="chip">Aisle 9 · front</span><span class="chip">Aisle 9 · middle</span><span class="chip">Dairy wall</span></div>
+<button class="btn p" data-go="3">(tap one) → camera</button>`}
 };
 const nav=document.getElementById("nav"),ph=document.getElementById("ph");
 function go(i){ph.innerHTML=S[i].h;ph.scrollTop=0;[...nav.children].forEach((li,k)=>li.firstChild.classList.toggle("on",k+1==i));
