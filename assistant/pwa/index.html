@@ -215,6 +215,9 @@
     </div>
     <h3 class="sect">Account</h3>
     <div class="group" id="profile-account"></div>
+    <div class="group">
+      <button class="navrow" id="btn-feedback" type="button"><span class="grow">Feature request / Contact us<span class="sub">Tell us what to build, what broke, or ask a question</span></span><span class="chev">›</span></button>
+    </div>
     <h3 class="sect">Connect Muse</h3>
     <div class="group pad">
       <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the camera and microphone on the List tab work right here. The token is shown once; creating a new one replaces it.</p>
@@ -222,6 +225,25 @@
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
     <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
+  </section>
+
+  <section id="view-feedback" class="view" hidden>
+    <p><a href="#" id="fb-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Feature request / Contact us</h2>
+    <div class="group pad">
+      <p class="muted nomargin">We read every note. It goes out with your username only &mdash; no email or name needed.</p>
+      <div class="row" id="fb-kinds" style="margin-top:10px; gap:8px">
+        <button class="chip" type="button" data-kind="idea" aria-pressed="true">Idea</button>
+        <button class="chip" type="button" data-kind="bug" aria-pressed="false">Bug</button>
+        <button class="chip" type="button" data-kind="question" aria-pressed="false">Question</button>
+      </div>
+      <label class="field" for="fb-text" style="margin-top:10px">Your note</label>
+      <textarea id="fb-text" rows="5" maxlength="1000" placeholder="What would make Arya better?"></textarea>
+      <p class="muted nomargin" id="fb-count">0 / 1000</p>
+      <p><button id="fb-send" class="btn primary wide" type="button">Send</button></p>
+      <p class="muted nomargin" id="fb-status"></p>
+    </div>
+    <div id="fb-owner" hidden></div>
   </section>
 
   <section id="view-newlist" class="view" hidden>

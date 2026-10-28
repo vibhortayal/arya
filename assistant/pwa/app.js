@@ -543,6 +543,48 @@ $("#btn-receipts").addEventListener("click", () => { receiptsFrom = "view-profil
 $("#rc-back").addEventListener("click", ev => { ev.preventDefault();
   document.querySelector(`.tab[data-view="${receiptsFrom}"]`).click(); });
 
+/* Feature request / Contact us (Profile): one note, a kind, the
+ * username rides the session. Demo visitors see the form but the
+ * server refuses their send; the owner also sees what came in. */
+let fbKind = "idea";
+$("#btn-feedback").addEventListener("click", () => {
+  show("view-feedback");
+  $("#fb-status").textContent = isDemo ? "Sign in with a real account to send a note." : "";
+  paintFeedbackInbox().catch(() => {});
+});
+$("#fb-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
+$("#fb-kinds").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-kind]");
+  if (!b) return;
+  fbKind = b.dataset.kind;
+  document.querySelectorAll("#fb-kinds [data-kind]").forEach(x =>
+    x.setAttribute("aria-pressed", String(x === b)));
+});
+$("#fb-text").addEventListener("input", () => {
+  $("#fb-count").textContent = `${$("#fb-text").value.length} / 1000`;
+});
+$("#fb-send").addEventListener("click", async () => {
+  const btn = $("#fb-send");
+  btn.disabled = true;
+  try {
+    await post("/api/feedback", { kind: fbKind, text: $("#fb-text").value });
+    $("#fb-text").value = "";
+    $("#fb-count").textContent = "0 / 1000";
+    $("#fb-status").textContent = "Sent. Thank you.";
+    paintFeedbackInbox().catch(() => {});
+  } catch (e) { $("#fb-status").textContent = e.message; }
+  btn.disabled = false;
+});
+async function paintFeedbackInbox() {
+  const box = $("#fb-owner");
+  let d;
+  try { d = await api("/api/feedback"); } catch (e) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<h3 class="sect">Received</h3><div class="group">` + (d.notes.length
+    ? d.notes.map(n => row(esc(n.text), `${esc(n.kind)} · ${esc(n.user)} · ${new Date(n.at * 1000).toLocaleDateString()}`, "")).join("")
+    : empty("Nothing yet.")) + `</div>`;
+}
+
 $("#btn-signout2").addEventListener("click", async () => {
   await fetch("/auth/logout", { method: "POST" });
   location.reload();
