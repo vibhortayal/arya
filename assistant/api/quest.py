@@ -150,7 +150,7 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
             "state": "not_started",
             "items": items,
             "created_at": _now(), "started_at": None,
-            "finished_at": None, "receipt_id": None}
+            "finished_at": None, "receipt_id": None, "settled": False}
     if store_id:
         # Started from the store directory (Stage E): the directory
         # id and address are snapshotted onto the session; the name
@@ -234,6 +234,11 @@ def set_state(session_id, new_state):
             sess["started_at"] = _now()
         if new_state in ("finished", "done") and not sess["finished_at"]:
             sess["finished_at"] = _now()
+        if new_state in ("finished", "done"):
+            # Settled means this trip's receipt is attached
+            # (Discussion 41): a hunt may finish without it —
+            # settled stays False until the receipt lands.
+            sess["settled"] = bool(sess.get("receipt_id"))
     return _mutate(session_id, fn)
 
 
@@ -247,6 +252,7 @@ def attach_receipt(session_id, receipt_id):
     def fn(sess):
         sess["receipt_id"] = receipt_id
         sess["state"] = "done"
+        sess["settled"] = True
         if not sess["finished_at"]:
             sess["finished_at"] = _now()
     return _mutate(session_id, fn)

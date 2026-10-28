@@ -1025,7 +1025,8 @@ def quest_profile():
 @app.get("/api/quest/receipts")
 def quest_receipt_archive():
     from api import social
-    return {"receipts": social.receipt_archive()}
+    return {"receipts": social.receipt_archive(),
+            "unsettled": social.unsettled_hunts()}
 
 
 @app.get("/api/quest/receipts/{receipt_id}")

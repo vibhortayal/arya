@@ -252,6 +252,12 @@ textarea {
   background: var(--accent); color: #fff; border-radius: 980px;
   font-size: 12px; font-weight: 700; padding: 2px 8px; white-space: nowrap;
 }
+/* The unsettled hunt's tag in Receipts (Discussion 41): a game
+   tag — acc-soft ground, acc text, the owner's exact words. */
+.misstag {
+  background: var(--acc-soft); color: var(--acc); border-radius: 980px;
+  font-size: 11px; font-weight: 800; padding: 2px 8px; white-space: nowrap;
+}
 .sheetwrap {
   position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.38);
   display: flex; align-items: flex-end; justify-content: center;
