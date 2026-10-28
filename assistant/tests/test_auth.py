@@ -1,4 +1,5 @@
 import json, os, tempfile, unittest
+from unittest import mock
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 from fastapi.testclient import TestClient
@@ -26,6 +27,19 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(c.post("/auth/login", json={"username": "vibhor", "password": "correct horse"}).status_code, 200)
         self.assertEqual(c.get("/api/home").status_code, 200)
 
+    def test_register_locked_by_default(self):
+        c = self.c
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        c.post("/auth/logout")
+        # locked (owner, 2026-10-28): register refuses and creates nothing
+        self.assertFalse(c.get("/auth/status").json()["registration_open"])
+        r = c.post("/auth/register", json={"username": "New@Example.com", "password": "long enough"})
+        self.assertEqual(r.status_code, 403)
+        self.assertEqual(c.post("/auth/login", json={"username": "new@example.com", "password": "long enough"}).status_code, 401)
+        # existing accounts are unaffected
+        self.assertEqual(c.post("/auth/login", json={"username": "owner", "password": "correct horse"}).status_code, 200)
+
+    @mock.patch.dict(os.environ, {"ARYA_REGISTRATION_OPEN": "1"})
     def test_register_opens_public_signup(self):
         c = self.c
         c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
