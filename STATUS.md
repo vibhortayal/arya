@@ -15,8 +15,9 @@ app is light mode only. A wireframe parity pass (dead surfaces
 removed, primary-action chrome, Brain back links) and the
 collect celebration (Discussion 32: Muse Image characters with
 a verified fun-fact bank, Quest mode only) are built and
-committed locally — deploy is a separate step. A hardening pass
-over the 2026-10-28 code review is also committed locally
+deployed. A hardening pass
+over the 2026-10-28 code review is deployed (2026-10-28,
+main 9712c54, service worker arya-v32)
 (atomic store, event-loop rule, error mapping, input validation,
 session hashing, demo budget bucket, real cross-account friends,
 Today clock, List/Ask/Eyes pass, Caddy CSP/HSTS) — see
@@ -51,10 +52,30 @@ route is a recommendation, and after a grab the hunt
 re-targets to the next uncollected stop after it (wrapping to
 the first). The collect celebration moved from center-screen
 to a small card in the bottom-left corner above the route
-bar. Committed locally — deploy is a separate step. Detail:
+bar. Deployed (main ef20ece, service worker arya-v31). Detail:
 `assistant/loops/2026-10-27-hunt-fixes.md`.
 
-**Remaining for submission:** the demo video and the final
+**Quest UI freeze (2026-10-28; Discussion 45).** The owner's
+phone test found the built hunt UI broken — item markers
+scattered over the scene, uncheck-after-grab corrupting the
+scene state, a finished hunt presenting as stuck, Back from
+Finish exiting to Home. His ruling: wireframes first. The
+Hunt v2 wireframes are reworked and committed in this repo
+(`docs/quest/wireframes.html`); quest UI code is frozen until
+he approves them, and the rebuild (uncheck-after-grab is an
+acceptance item) follows the approved wireframes. The
+finish-flow presentation fixes built the same night are held
+unshipped on branch `held/finish-flow-presentation`. Ahead of
+the hardening batch, one live defect was hotfixed on its own:
+the photo driver was missing from the server's accepted
+driver list, so hunt starts at mapped stores failed
+(67e8d52, with a regression test). One verification finding
+is queued for the next fix round: /auth/login answers 500 on
+a non-string username.
+
+**Remaining for submission:** the quest UI rebuild to the
+Hunt v2 wireframes (owner approval of the wireframes
+required), the demo video, and the final
 submission package (owner go-ahead required). This repo goes
 public with the submission freeze (DISCUSSION 28).
 Deadline: submission Nov 4, 2026, 9:00 PM ET.
