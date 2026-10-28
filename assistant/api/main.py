@@ -1077,8 +1077,8 @@ async def scan_shelf_route(req: Request):
     shelf photo against the session's REMAINING items. SAM 3.1
     proposes boxes from list-driven phrasings, Muse Spark verifies
     each candidate crop, only verified items pop (api/shelfscan.py
-    carries the spike's three fixes). Stateless by design — the
-    frame is processed, never stored, for every account; the demo
+    carries the spike's three fixes). A frame is kept only after its
+    people are scrubbed (below); the raw frame never is. The demo
     household's carve-out is the same live-door rule as the Photo
     door (see _DEMO_LIVE_DOORS)."""
     from api import quest, shelfscan
@@ -1095,8 +1095,13 @@ async def scan_shelf_route(req: Request):
     if sess is None:
         raise HTTPException(404, "no such session")
     remaining = [i["name"] for i in sess["items"] if not i["checked"]]
+    # Find it for me: aim the scan at the one item the player is
+    # after — one item's model calls, not the whole list's.
+    target = (req.query_params.get("item") or "").strip()
+    if target:
+        remaining = [n for n in remaining if n == target]
     if not remaining:
-        return {"pops": [], "not_found": []}
+        return {"pops": [], "not_found": [target] if target else []}
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
@@ -1104,10 +1109,35 @@ async def scan_shelf_route(req: Request):
     client = MetaClient(ledger=CostLedger(
         _LEDGER, bucket="demo" if demo else "app"))
     try:
-        return await run_in_threadpool(shelfscan.scan, body, remaining,
-                                       client, media_type=media)
+        out = await run_in_threadpool(shelfscan.scan, body, remaining,
+                                      client, media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+    # What was seen where feeds the store map. A frame that popped
+    # an item is kept as a fresh shelf photo, but only once SAM 3.1
+    # has found and pixelated every person in it (owner, 2026-10-28:
+    # "we don't store images of people, only products"). Fail closed.
+    pops = out.get("pops") or []
+    quest.record_sightings(session_id, pops)
+    if pops:
+        jpeg, people = await run_in_threadpool(
+            shelfscan.scrub_people, body, client, media_type=media)
+        if jpeg:
+            quest.keep_frame(session_id, pops, jpeg, people)
+    return out
+
+
+@app.get("/api/quest/shelf-photo")
+def quest_shelf_photo(store: str = "", item: str = ""):
+    """The freshest people-scrubbed shopper photo of one item's shelf
+    in one store, with the verified box to highlight."""
+    from api import quest
+    rec = quest.shelf_photo(store, item)
+    if rec is None:
+        raise HTTPException(404, "no fresh photo yet")
+    out = {k: v for k, v in rec.items() if k != "jpeg_b64"}
+    out["image"] = "data:image/jpeg;base64," + rec["jpeg_b64"]
+    return out
 
 
 @app.post("/api/quest/locate")

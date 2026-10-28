@@ -1119,6 +1119,45 @@ function openHunt(sess) {
   qFlushOutbox();
   qMaybeHowto(sess);
 }
+/* Fresh shelf photo (owner, 2026-10-28): the newest shopper frame of
+ * this item's shelf, people already scrubbed by SAM on the server.
+ * One fetch per store+item per visit; silent when there is none. */
+const QFRESH = {};
+function qPaintFresh(store, name) {
+  const fig = $("#hunt-fresh");
+  if (!fig) return;
+  const key = qnorm(store) + "|" + qnorm(name || "");
+  fig.dataset.key = key;
+  const paint = rec => {
+    if (fig.dataset.key !== key) return;
+    if (!rec || !rec.image || !rec.box) { fig.hidden = true; return; }
+    $("#fresh-img").src = rec.image;
+    const [x1, y1, x2, y2] = rec.box;
+    const bx = $("#fresh-box").style;
+    bx.left = (x1 * 100) + "%"; bx.top = (y1 * 100) + "%";
+    bx.width = ((x2 - x1) * 100) + "%"; bx.height = ((y2 - y1) * 100) + "%";
+    $("#fresh-cap").textContent = `Fresh from a shopper, ${qAgo(rec.seen_at)}. People are blurred out; we only keep products.`;
+    fig.hidden = false;
+  };
+  if (!name) { fig.hidden = true; return; }
+  if (key in QFRESH) { paint(QFRESH[key]); return; }
+  fig.hidden = true;
+  if (typeof fetch !== "function") return;
+  QFRESH[key] = null;
+  fetch(`/api/quest/shelf-photo?store=${encodeURIComponent(store)}&item=${encodeURIComponent(name)}`, { credentials: "same-origin" })
+    .then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(rec => { QFRESH[key] = rec; paint(rec); });
+}
+function qAgo(iso) {
+  const t = Date.parse(iso || "");
+  if (!t) return "recently";
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 2) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
+
 function renderHunt() {
   const sess = Q.current;
   if (!sess) return;
@@ -1148,6 +1187,8 @@ function renderHunt() {
       <p class="pop-shelf">First stop: ${first ? esc(first.name) : "—"}.</p>`;
     btn.textContent = "Start the hunt";
     btn.disabled = false;
+    $("#btn-findit").hidden = true;
+    try { qPaintFresh(sess.store, null); } catch (e) {}
     $("#btn-nothere").disabled = true;
   } else if (!allIn && next >= 0) {
     const it = sess.items[next];
@@ -1159,9 +1200,12 @@ function renderHunt() {
       ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
+    $("#btn-findit").hidden = sess.state !== "playing";
+    try { qPaintFresh(sess.store, it.name); } catch (e) {}
     $("#btn-nothere").disabled = sess.state !== "playing";
   }
   $("#btn-nothere").hidden = allIn;
+  if (allIn) { $("#btn-findit").hidden = true; try { qPaintFresh(sess.store, null); } catch (e) {} }
   paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
   $("#btn-finish").disabled = sess.state === "not_started";
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
@@ -1567,7 +1611,20 @@ $("#locate-photo").addEventListener("change", ev => {
  * model chain takes ~4–8 s a frame, so the view is near-live and
  * the last scan's time is shown, not hidden. */
 const SCAN_NO_POP = "Nothing from your list spotted here — that doesn't mean it isn't here. Keep looking.";
-$("#btn-scan").addEventListener("click", () => openScanView().catch(showErr));
+$("#btn-scan").addEventListener("click", () => { Q.scanTarget = null; openScanView().catch(showErr); });
+/* Find it for me (owner, 2026-10-28): the same Shelf Scan, aimed at
+ * the one item on the suggested-next card, in every store. The
+ * camera opens, frames go up as the view settles, SAM 3.1 boxes the
+ * candidates, Muse Spark confirms, and the item pops highlighted with
+ * its GRAB. What was seen where feeds the store map; the frame never
+ * leaves the scan. */
+$("#btn-findit").addEventListener("click", () => {
+  const sess = Q.current;
+  const idx = sess ? qCurrentIndex(sess) : -1;
+  if (idx < 0) return;
+  Q.scanTarget = sess.items[idx].name;
+  openScanView().catch(showErr);
+});
 $("#scan-photo").addEventListener("change", ev => {
   const f = ev.target.files[0];
   if (f) scanStill(f).catch(showErr);
@@ -1579,13 +1636,17 @@ $("#scan-stop").addEventListener("click", () => {
   $("#scan-status").textContent = "Live scan stopped.";
 });
 async function scanRequest(body, sess) {
-  const r = await fetch(`/api/quest/scan-shelf?session=${encodeURIComponent(sess.id)}`, {
+  const aim = Q.scanTarget ? `&item=${encodeURIComponent(Q.scanTarget)}` : "";
+  const r = await fetch(`/api/quest/scan-shelf?session=${encodeURIComponent(sess.id)}${aim}`, {
     method: "POST",
     headers: { "Content-Type": body.type || "image/jpeg" },
     body
   });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
-  return r.json();
+  const out = await r.json();
+  // A pop means the server may hold a fresher shelf photo now.
+  (out.pops || []).forEach(p => { delete QFRESH[qnorm(sess.store) + "|" + qnorm(p.item)]; });
+  return out;
 }
 function scanPopsHtml(pops) {
   return pops.map(p => {
@@ -1597,6 +1658,11 @@ function scanPopsHtml(pops) {
   }).join("");
 }
 function scanStatusFor(pops) {
+  if (Q.scanTarget) {
+    return pops.length
+      ? `Found it! ${Q.scanTarget} is highlighted — tap it to grab.`
+      : `Didn't spot ${Q.scanTarget} in this view — try a little closer or another angle. That doesn't mean it isn't here.`;
+  }
   return pops.length
     ? `${pops.length} from your list spotted here — tap one to collect it.`
     : SCAN_NO_POP;
@@ -1626,7 +1692,9 @@ async function openScanView() {
   $("#scan-boxes").innerHTML = "";
   Q.scanPopsShown = false;
   setScanLast(null);
-  $("#scan-status").textContent = "Starting the camera…";
+  $("#scan-status").textContent = Q.scanTarget
+    ? `Point the camera at the shelf — looking for ${Q.scanTarget}…`
+    : "Starting the camera…";
   $("#scan-overlay").hidden = false;
   Q.scanMode = "starting";
   paintScanChrome();
@@ -1649,7 +1717,7 @@ async function scanStill(file) {
   paintScanChrome();
   $("#scan-boxes").innerHTML = "";
   Q.scanPopsShown = false;
-  $("#scan-status").textContent = "Looking for your list on this shelf…";
+  $("#scan-status").textContent = Q.scanTarget ? `Looking for ${Q.scanTarget} on this shelf…` : "Looking for your list on this shelf…";
   $("#scan-overlay").hidden = false;
   try {
     const out = await scanRequest(file, sess);
@@ -1843,6 +1911,10 @@ $("#scan-boxes").addEventListener("click", async ev => {
     if (isCurrent) qRetarget(sess, cIdx); // a collect re-targets (Discussion 44)
     renderHunt();
     if (isCurrent) { qStepAnchorTo(name); qWalkStart(qCurrentIndex(sess)); }
+    if (Q.scanTarget === name && qNextIndex(sess) !== -1) {
+      // Find it for me did its job: back to the hunt for the next one.
+      setTimeout(closeScan, 700);
+    }
     if (qNextIndex(sess) === -1) {
       closeScan();
       toast("All collected. Tap Finish when you're ready.");
@@ -1851,6 +1923,7 @@ $("#scan-boxes").addEventListener("click", async ev => {
 });
 function closeScan() {
   stopScanLive(); // leaving the view releases the camera, always
+  Q.scanTarget = null;
   $("#scan-overlay").hidden = true;
   $("#scan-photo").value = "";
   const sess = Q.current;

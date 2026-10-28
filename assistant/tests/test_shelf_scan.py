@@ -148,6 +148,71 @@ class TestScanEndpoint(unittest.TestCase):
         self.assertNotIn("boxes of cookies on a shelf",
                          FakeScanClient.calls["segment"])
 
+    def test_find_it_for_me_scans_only_the_target(self):
+        # Owner, 2026-10-28: aimed at one item — one item's calls.
+        r = self.c.post(f"/api/quest/scan-shelf?session={self.sid}&item=Cookies",
+                        content=jpeg_bytes(), headers={"Content-Type": "image/jpeg"})
+        assert r.status_code == 200, r.text
+        out = r.json()
+        self.assertEqual([p["item"] for p in out["pops"]], ["Cookies"])
+        self.assertEqual(out["not_found"], [])
+        from api import shelfscan
+        aimed = [p for p in FakeScanClient.calls["segment"]
+                 if p not in shelfscan.PEOPLE_PROMPTS]
+        self.assertTrue(aimed and all("cookie" in p for p in aimed), aimed)
+        # A target not left on the list answers not found, no calls.
+        FakeScanClient.calls = {"segment": [], "chat": []}
+        r = self.c.post(f"/api/quest/scan-shelf?session={self.sid}&item=Milk",
+                        content=jpeg_bytes(), headers={"Content-Type": "image/jpeg"})
+        self.assertEqual(r.json(), {"pops": [], "not_found": ["Milk"]})
+        self.assertEqual(FakeScanClient.calls["segment"], [])
+
+    def test_pops_feed_the_map_and_the_frame_is_dropped(self):
+        self.scan()
+        sightings = self.quest_file()["sightings"]
+        self.assertEqual(sorted(x["item"] for x in sightings),
+                         ["Cookies", "Frozen Pizza", "Olive Oil"])
+        for x in sightings:
+            self.assertEqual(x["store"], "Corner Store")
+            self.assertEqual(set(x), {"store", "item", "item_group", "shelf_label",
+                                      "grade", "seen_at", "session_id"})
+        # The scrub ran (SAM asked for people) before any frame was kept,
+        # and no raw image file lands in the data dir.
+        self.assertIn("person", FakeScanClient.calls["segment"])
+        for root, _d, files in os.walk(os.environ["ARYA_DATA_DIR"]):
+            for f in files:
+                self.assertFalse(f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")), f)
+        r = self.c.get("/api/quest/shelf-photo",
+                       params={"store": "Corner Store", "item": "Cookies"})
+        self.assertEqual(r.status_code, 200, r.text)
+        rec = r.json()
+        self.assertTrue(rec["image"].startswith("data:image/jpeg;base64,"))
+        self.assertEqual(len(rec["box"]), 4)
+        self.assertEqual(rec["people_scrubbed"], 0)
+        self.assertEqual(self.c.get("/api/quest/shelf-photo", params={
+            "store": "Corner Store", "item": "Cheese"}).status_code, 404)
+
+    def test_no_frame_is_kept_when_the_scrub_fails(self):
+        orig = FakeScanClient.segment
+        def segment(self, image_bytes, prompt, media_type="image/jpeg"):
+            if prompt == "person":
+                raise RuntimeError("SAM down")
+            return orig(self, image_bytes, prompt, media_type)
+        FakeScanClient.segment = segment
+        try:
+            self.assertEqual(self.scan().status_code, 200)
+        finally:
+            FakeScanClient.segment = orig
+        self.assertEqual(self.c.get("/api/quest/shelf-photo", params={
+            "store": "Corner Store", "item": "Cookies"}).status_code, 404)
+
+    def quest_file(self):
+        for root, _d, files in os.walk(os.environ["ARYA_DATA_DIR"]):
+            if "quest.json" in files:
+                with open(os.path.join(root, "quest.json")) as fh:
+                    return json.load(fh)
+        self.fail("no quest.json")
+
     def test_session_and_media_guards(self):
         self.assertEqual(self.scan(sid="nope").status_code, 404)
         r = self.c.post(f"/api/quest/scan-shelf?session={self.sid}",
@@ -370,3 +435,66 @@ class TestScanLiveNode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPeopleScrub(unittest.TestCase):
+    def test_people_are_pixelated_and_products_untouched(self):
+        from PIL import Image
+        from api import shelfscan
+        img = Image.new("RGB", (400, 300), (200, 200, 200))
+        # A sharp checkerboard where the "person" stands, another on
+        # the shelf: only the person's one may lose its detail.
+        for x in range(400):
+            for y in range(300):
+                if (x // 2 + y // 2) % 2 and (40 <= x < 140 or 260 <= x < 360):
+                    img.putpixel((x, y), (0, 0, 0))
+        buf = io.BytesIO(); img.save(buf, "PNG")
+
+        class C:
+            def segment(self, b, prompt, media_type="image/jpeg"):
+                if prompt == "person":
+                    return [{"box": [40, 0, 140, 300], "confidence": .9}], {}, 0
+                return [], {}, 0
+        out, n = shelfscan.scrub_people(buf.getvalue(), C(), "image/png")
+        self.assertEqual(n, 1)
+        kept = Image.open(io.BytesIO(out)).convert("L")
+        def spread(x0, x1):
+            px = [kept.getpixel((x, y)) for x in range(x0, x1) for y in range(60, 240)]
+            return max(px) - min(px)
+        self.assertLess(spread(60, 120), 60)     # the person: mush
+        self.assertGreater(spread(280, 340), 120)  # the shelf: sharp
+
+    def test_scrub_fails_closed(self):
+        from api import shelfscan
+        class C:
+            def segment(self, *a, **k):
+                raise RuntimeError("down")
+        self.assertEqual(shelfscan.scrub_people(jpeg_bytes(), C()), (None, 0))
+
+
+class TestScrubWalkFrames(unittest.TestCase):
+    def test_rewrites_in_place_skips_done_and_fails_closed(self):
+        from PIL import Image
+        from harness import scrub_walk_frames
+        d = tempfile.mkdtemp()
+        for n in ("f001.jpg", "f002.jpg"):
+            Image.new("RGB", (160, 90), (9, 9, 9)).save(os.path.join(d, n), "JPEG")
+        before = open(os.path.join(d, "f002.jpg"), "rb").read()
+
+        class C:
+            calls = 0
+            def segment(self, b, prompt, media_type="image/jpeg"):
+                C.calls += 1
+                if C.calls > 2:  # f002's scrub fails
+                    raise RuntimeError("down")
+                return ([{"box": [0, 0, 80, 90]}] if prompt == "person" else []), {}, 0
+        rc = scrub_walk_frames.main([], client=C(), frames_dir=d)
+        self.assertEqual(rc, 1)
+        log = json.load(open(os.path.join(d, "scrub.json")))
+        self.assertEqual(log, {"f001.jpg": 1})
+        self.assertEqual(open(os.path.join(d, "f002.jpg"), "rb").read(), before)
+        self.assertEqual(Image.open(os.path.join(d, "f001.jpg")).size, (160, 90))
+        C.calls = -100  # a re-run only touches what is left
+        self.assertEqual(scrub_walk_frames.main([], client=C(), frames_dir=d), 0)
+        self.assertEqual(set(json.load(open(os.path.join(d, "scrub.json")))),
+                         {"f001.jpg", "f002.jpg"})

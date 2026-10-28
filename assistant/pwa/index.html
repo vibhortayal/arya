@@ -331,7 +331,9 @@
     <div id="hunt-pop" class="nextcard">
       <p class="nb-k" id="pop-kicker">Suggested next — grab any stop</p>
       <div id="pop-body"></div>
+      <figure id="hunt-fresh" class="fresh" hidden><div class="freshimg"><img id="fresh-img" alt=""><span id="fresh-box" class="freshbox"></span></div><figcaption id="fresh-cap" class="muted"></figcaption></figure>
       <p class="nomargin"><button id="btn-collect" class="btn primary wide grabbtn" type="button">Grab</button></p>
+      <p class="nomargin findrow"><button id="btn-findit" class="btn wide" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><span>Find it for me</span></button></p>
     </div>
     <p id="hunt-done-note" class="donenote" hidden>All collected — nothing moves you on automatically. The hunt waits here until you tap Finish, and any item can still be put back.</p>
     <h3 class="sect">The list</h3>
@@ -346,7 +348,7 @@
       <div class="scanbar">
         <div class="grow">
           <span class="name">Shelf scan</span>
-          <span class="sub">Spots items from your list in a photo — each one verified by a second model before it highlights.</span>
+          <span class="sub">Spots items from your list in a photo — each one verified by a second model before it highlights. We never keep pictures of people, only products: Meta SAM blurs out anyone in the frame first.</span>
           <span class="sub" id="scan-last"></span>
         </div>
         <button id="scan-usephoto" class="btn" type="button" hidden>Take a photo</button>
