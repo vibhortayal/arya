@@ -129,13 +129,19 @@ class TestPlanAHunt(unittest.TestCase):
         new_hunt = js.split('$("#btn-new-hunt").addEventListener')[1].split("});")[0]
         self.assertIn('questShow("view-store")', new_hunt)
         self.assertIn('api("/api/quest/plan")', new_hunt)
-        st = js.split('$("#st-next").addEventListener')[1].split("});")[0]
-        self.assertIn("renderPlan()", st)
-        self.assertIn('questShow("view-newlist")', st)
+        # Tap-to-advance (owner phone pass, 2026-10-28): picking a
+        # store starts the plan — the Choose items button is gone.
+        pick = js.split("function qPickStore()")[1].split("\n}")[0]
+        self.assertIn("renderPlan()", pick)
+        self.assertIn('questShow("view-newlist")', pick)
+        for handler in ('closest("[data-pick]")', 'closest("[data-histstore]")'):
+            body = js.split(handler)[1].split("\n});")[0]
+            self.assertIn("qPickStore();", body)
         html = read("index.html")
         self.assertIn("Where are you shopping?", html)
         self.assertIn('id="nl-plan"', html)
-        self.assertIn("Choose items &rarr;", html)
+        self.assertNotIn('id="st-next"', html)
+        self.assertNotIn("Choose items", html)
 
     def test_buckets_and_list_management(self):
         js = read("quest.js")

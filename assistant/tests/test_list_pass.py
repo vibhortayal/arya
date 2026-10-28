@@ -93,7 +93,10 @@ class TestListClientPins(unittest.TestCase):
         self.assertIn("paintChatEmpty", js)
         self.assertIn("What's running low?", js)
         self.assertIn("chat-empty", js)
-        self.assertIn("No sightings yet.", js)
+        # Eyes on the List page (owner wireframe, 2026-10-28): the
+        # section renders only while a sighting is pending.
+        self.assertIn("wrap.hidden = !pending", js)
+        self.assertNotIn("No sightings yet.", js)
         self.assertIn("#chat-form input { flex: 1; min-width: 0;",
                       read("styles.css"))
 
