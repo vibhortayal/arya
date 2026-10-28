@@ -1112,8 +1112,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    from api.list.intake import split_list_items, extract_items_model
+    from api.list.intake import split_list_items, extract_items_model, skipped_pieces
     typed = split_list_items(text)
+    skipped = skipped_pieces(text) if typed else []
     names = [n for n, _q in typed]
     source = "split"
     if not names:
@@ -1129,7 +1130,8 @@ async def list_from_text(req: Request):
     # Already on the list: neither merged nor new, so not "added".
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
-            "names": [a["name"] for a in added], "source": source}
+            "names": [a["name"] for a in added], "source": source,
+            "skipped": skipped}
 
 
 @app.post("/api/list/from-photo")

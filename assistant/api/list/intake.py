@@ -127,12 +127,9 @@ def split_list_text(text):
     return [name for name, _qty in split_list_items(text)]
 
 
-def split_list_items(text):
-    """Typed or pasted list text -> item names. Splits on lines,
-    semicolons, and commas; strips bullets, numbering, checkboxes,
-    lead-ins ("add", "please buy"), and trailing quantities.
-    Duplicates collapse, order is kept."""
-    out, seen = [], set()
+def _pieces(text):
+    """Every raw piece of typed list text, in order (lines and
+    semicolons, then commas, then "and" for sentence-style chunks)."""
     for chunk in re.split(r"[\n;]+", text or ""):
         low = chunk.strip().lower()
         sentence = ("," in chunk or low.startswith(_PREFIXES)
@@ -141,12 +138,33 @@ def split_list_items(text):
         if sentence:
             pieces = [bit for piece in pieces
                       for bit in re.split(r"\s+and\s+", piece)]
-        for piece in pieces:
-            name = _clean_piece(piece)
-            if _sensible(name) and name.lower() not in seen:
-                seen.add(name.lower())
-                out.append((name, piece_qty(piece)))
+        yield from pieces
+
+
+def split_list_items(text):
+    """Typed or pasted list text -> item names. Splits on lines,
+    semicolons, and commas; strips bullets, numbering, checkboxes,
+    lead-ins ("add", "please buy"), and trailing quantities.
+    Duplicates collapse, order is kept."""
+    out, seen = [], set()
+    for piece in _pieces(text):
+        name = _clean_piece(piece)
+        if _sensible(name) and name.lower() not in seen:
+            seen.add(name.lower())
+            out.append((name, piece_qty(piece)))
     return out
+
+
+def skipped_pieces(text, limit=5):
+    """Typed pieces the split dropped as not-an-item (a bare number,
+    punctuation, a sentence), so the app can say what it left out
+    instead of dropping them silently. Empty pieces do not count."""
+    out = []
+    for piece in _pieces(text):
+        raw = piece.strip()
+        if raw and not _sensible(_clean_piece(piece)):
+            out.append(raw[:30])
+    return out[:limit]
 
 
 _EXTRACT_SYSTEM = (
