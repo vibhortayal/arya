@@ -1060,14 +1060,17 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name):
+def _add_name_to_list(name, qty=1):
     """A typed/pasted/read name joins the list as a manual item —
-    the one add path every Add surface shares."""
+    the one add path every Add surface shares. A typed quantity
+    ("eggs x 2") rides along as the item's quantity."""
     import re as _re
     name = (name or "").strip()
     item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    _merge_flag(item_id, {"manual": True, "name": name,
-                          "dismissed_on": None})
+    flag = {"manual": True, "name": name, "dismissed_on": None}
+    if qty and qty > 1:
+        flag["qty_override"] = qty
+    _merge_flag(item_id, flag)
     return {"item_id": item_id, "name": name}
 
 
@@ -1076,7 +1079,10 @@ async def list_add(req: Request):
     body = await _json_obj(req)
     item_id = body.get("item_id")
     if not item_id and body.get("name"):
-        return {"item_id": _add_name_to_list(body["name"])["item_id"]}
+        from api.list.intake import split_list_items
+        typed = split_list_items(str(body["name"]))
+        name, qty = typed[0] if len(typed) == 1 else (body["name"], 1)
+        return {"item_id": _add_name_to_list(name, qty)["item_id"]}
     if not item_id:
         raise HTTPException(400, "item_id or name is required")
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
@@ -1093,8 +1099,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    from api.list.intake import split_list_text, extract_items_model
-    names = split_list_text(text)
+    from api.list.intake import split_list_items, extract_items_model
+    typed = split_list_items(text)
+    names = [n for n, _q in typed]
     source = "split"
     if not names:
         if not os.environ.get("MODEL_API_KEY"):
@@ -1102,8 +1109,9 @@ async def list_from_text(req: Request):
         _budget_guard()
         client = MetaClient(ledger=_ledger())
         names = extract_items_model(text, client)
+        typed = [(n, 1) for n in names]
         source = "model"
-    added = [_add_name_to_list(n) for n in names]
+    added = [_add_name_to_list(n, q) for n, q in typed]
     return {"added": len(added), "names": [a["name"] for a in added],
             "source": source}
 

@@ -237,9 +237,45 @@ async function qLoadSessions() {
   return Q.sessions;
 }
 function qSessionById(id) { return Q.sessions.find(s => s.id === id) || null; }
+/* The demo sandbox lives in server memory and can reset under a hunt
+ * that is already on screen. When the server no longer knows the
+ * session, rebuild it from what the phone holds (same store, mode and
+ * items, grabs replayed) and carry on under the new id. */
+const Q_GONE = "That hunt is gone — the demo resets now and then. Go back to Today and start it again.";
+function qSessionGone(e) {
+  return !(e instanceof TypeError) && /no such session/i.test(e.message || "");
+}
+async function qRevive(sess) {
+  const fresh = await post("/api/quest/sessions", {
+    store: sess.store, mode: sess.mode, driver: sess.driver,
+    store_id: sess.store_id || undefined,
+    items: (sess.items || []).filter(i => !i.wild).map(i => ({ name: i.name, qty: i.qty })),
+  });
+  let cur = fresh;
+  for (const i of sess.items || []) {
+    if (i.wild) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/items`, { name: i.name, qty: i.qty, wild: true });
+    }
+    if (i.checked) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/check`, { item: i.name, checked: true });
+    }
+  }
+  Object.assign(sess, cur);
+  qLoadSessions().catch(() => {});
+  return sess;
+}
 async function qSetState(sess, state) {
-  const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
-  Object.assign(sess, s);
+  try {
+    const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+    Object.assign(sess, s);
+  } catch (e) {
+    if (!qSessionGone(e)) throw e;
+    try {
+      await qRevive(sess);
+      const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+      Object.assign(sess, s);
+    } catch (e2) { throw new Error(Q_GONE); }
+  }
   return sess;
 }
 /* Offline grabs (game shell): back aisles drop signal. A grab or put
@@ -263,6 +299,14 @@ async function qCheck(sess, itemName, checked) {
     return sess;
   } catch (e) {
     const it = (sess.items || []).find(i => i.name === itemName);
+    if (qSessionGone(e)) {
+      try {
+        await qRevive(sess);
+        const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
+        Object.assign(sess, s);
+        return sess;
+      } catch (e2) { throw new Error(Q_GONE); }
+    }
     if (!(e instanceof TypeError) || !it) throw e;
     it.checked = checked;
     qOutboxSave([...qOutbox(), { sid: sess.id, item: itemName, checked }]);
