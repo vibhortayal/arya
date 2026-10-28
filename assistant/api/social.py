@@ -106,6 +106,47 @@ def accept_friend(handle):
     return entry
 
 
+def _remove_mirror(their_username, my_handle):
+    """Delete my entry from the other account's friends list.
+    Removal crosses accounts like the request did — an edge is
+    never left half-standing on the other side."""
+    with quest._as_user(their_username):
+        with state.file_lock("quest.json"):
+            s = quest._store()
+            kept = [f for f in s["friends"]
+                    if f["handle"] != my_handle]
+            if len(kept) != len(s["friends"]):
+                s["friends"] = kept
+                quest._save_store(s)
+
+
+def remove_friend(handle):
+    """Remove any edge with this handle, from BOTH accounts:
+    unfriend an accepted friend, cancel a sent request, or
+    decline a received one. Returns the entry as it stood, or
+    None when there is no edge to remove."""
+    handle = _norm_handle(handle)
+    if not handle:
+        return None
+    removed = None
+    with state.file_lock("quest.json"):
+        s = quest._store()
+        for f in s["friends"]:
+            if f["handle"] == handle:
+                removed = f
+                break
+        if removed is not None:
+            s["friends"] = [f for f in s["friends"]
+                            if f["handle"] != handle]
+            quest._save_store(s)
+    if removed is None:
+        return None
+    their_username = quest.username_for_handle(handle)
+    if their_username is not None:
+        _remove_mirror(their_username, quest.my_handle())
+    return removed
+
+
 # --- badges ------------------------------------------------------------------
 # Data-driven and small: each badge reads the account's receipts and
 # done sessions. Earned is a fact, never an estimate.
