@@ -11,11 +11,16 @@ receipt-closed hunts only); the late upload settles the hunt
 and clears the entry.
 """
 import os, tempfile, unittest
+from datetime import date
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
+
+# Receipts that settle a hunt must not predate it (issue #14), so
+# fixtures that settle hunts created now are dated today.
+TODAY = date.today().isoformat()
 
 
 def read(name):
@@ -41,7 +46,7 @@ class TestFinishFlow(unittest.TestCase):
         self.c = TestClient(main.app)
         state._save("receipts.json", [{
             "receipt_id": "r-tj-1", "merchant": "Trader Joe's",
-            "purchased_at": "2026-10-27", "lines": [], "subtotal": 0,
+            "purchased_at": TODAY, "lines": [], "subtotal": 0,
             "tax": 0, "total": 0, "totals_reconcile": True}])
         r = self.c.post("/auth/setup", json={
             "username": "owner@example.com", "password": "long-password"})
