@@ -1017,9 +1017,14 @@ def judge_second_seat():
     judged = state.judgments()
     if not judged:
         return {"checked": 0, "agreed": 0, "disagreements": []}
+    client = OpenClient()
+    if not client.api_key:
+        # Not provisioned on this host yet: a quiet no-op, the same
+        # contract judge/run keeps when no Meta key is set.
+        return {"checked": 0, "agreed": 0, "disagreements": [],
+                "provisioned": False}
     nm = state.names()
     items = [(iid, nm.get(iid, iid)) for iid in judged]
-    client = OpenClient()
     verdicts = {}
     for i in range(0, len(items), 25):
         verdicts.update(second_seat_batch(client, items[i:i + 25]))
