@@ -438,20 +438,16 @@ $("#btn-signout2").addEventListener("click", async () => {
   location.reload();
 });
 
-/* ---------------- Add: the five doors + Curator ----------------
- * Intake parity (owner ruling 2026-10-27): intake is not Muse-only.
- * Every door runs on Meta models — Muse in chat, Spark on the Meta
- * API in the app. In the demo, Photo and Voice call the API live and
- * persist nothing; Paste and Type file data, so they stay off there. */
-
-function doorCard(title, sub, inner) {
-  return `<div class="group pad door"><p class="nomargin"><strong>${esc(title)}</strong></p><p class="muted">${esc(sub)}</p>${inner}</div>`;
-}
-
-function parseItems(text) {
-  return String(text || "").split(/[\n,;]+/)
-    .map(s => s.replace(/^add\s+/i, "").trim()).filter(Boolean);
-}
+/* ---------------- Add: one surface for the list ----------------
+ * Add is for the list (owner clarification 2026-10-27): one text
+ * field that takes typing and paste alike, a mic (Muse Voice
+ * Transcribe lands in the field for edit), and a camera. The
+ * camera is smart: a list photo adds its items; a receipt photo
+ * adds nothing — it offers to file the receipt instead (receipts
+ * enter by image only, through /decode/photo). In the demo, the
+ * camera and mic call the Meta API live and persist nothing: the
+ * read lands in the text field as a preview, and the field itself
+ * stays disabled. */
 
 /* Microphone capture -> mono 16-bit PCM WAV at 16 kHz, the Meta ASR
  * batch endpoint's input contract. Browsers cannot record WAV
@@ -554,78 +550,108 @@ function wireRecordButton(btn, statusEl, onText) {
 }
 
 async function renderIntake() {
-  const el = $("#doors");
-  if (!el) return;
-  let claudeInner;
+  const field = $("#add-text");
+  if (!field) return;
   if (isDemo) {
-    claudeInner = `<p class="muted nomargin">The demo does not connect a Muse. The Photo and Voice doors below call the Meta API live — try those.</p>`;
-  } else {
-    let has = false;
-    try { has = (await api("/auth/token")).has_token; } catch (e) { /* keep false */ }
-    claudeInner = has
-      ? `<p class="nomargin"><strong>Connected.</strong></p><p class="muted nomargin">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits in Receipts, under Needs your eye.</p>`
-      : `<p class="nomargin"><strong>Not connected yet.</strong></p><p class="muted nomargin">Connect Muse in Profile to file receipts and orders by chat or WhatsApp.</p>`;
+    field.disabled = true;
+    $("#add-submit").disabled = true;
+    $("#add-status").textContent =
+      "Demo: the camera and microphone read live; nothing is saved, and typing is off.";
+    $("#add-claude-line").textContent =
+      "The demo does not connect a Muse. The camera and microphone here call the Meta API live — try those.";
   }
-  el.innerHTML =
-    doorCard("Via Muse", "Muse + the Arya connector", claudeInner) +
-    doorCard("Photo", "Spark on the Meta API", `
-      <label class="field">Receipt or list photo
-        <input type="file" id="door-photo" accept="image/*">
-      </label>
-      <p class="muted nomargin" id="door-photo-status"></p>
-      <div id="door-photo-preview"></div>`) +
-    doorCard("Voice", "Muse Voice Transcribe", `
-      <p style="margin:0 0 8px"><button class="btn" id="door-voice-btn" type="button">Record items</button>
-      <span class="muted" id="door-voice-status"></span></p>
-      <label class="field">What Arya heard
-        <textarea id="door-voice-text" rows="3" placeholder="milk, eggs, sourdough"></textarea>
-      </label>
-      ${isDemo
-        ? `<p class="muted nomargin">Demo: the transcription is live; nothing is saved.</p>`
-        : `<p style="margin-bottom:0"><button class="btn primary" id="door-voice-add" type="button">Add to my list</button></p>`}`) +
-    doorCard("Paste", "An online order, pasted as text", `
-      <label class="field">Order confirmation
-        <textarea id="door-paste-text" rows="4" placeholder="Paste the order email or confirmation"></textarea>
-      </label>
-      <p style="margin-bottom:0"><button class="btn primary" id="door-paste-btn" type="button" ${isDemo ? "disabled" : ""}>File this order</button></p>
-      ${isDemo ? `<p class="muted nomargin">Pasting files a receipt — off in the demo.</p>` : ""}`) +
-    doorCard("Type", "One item at a time, no model needed", `
-      <form id="door-type-form" style="display:flex; gap:8px">
-        <input type="text" id="door-type-text" class="grow" placeholder="oat milk" autocomplete="off" aria-label="Item name">
-        <button class="btn primary" type="submit" ${isDemo ? "disabled" : ""}>Add</button>
-      </form>
-      ${isDemo ? `<p class="muted nomargin">Typing adds to your list — off in the demo.</p>` : ""}`);
-  bindDoors();
 }
 
-function bindDoors() {
-  const photo = $("#door-photo");
-  if (photo) photo.addEventListener("change", async ev => {
+/* File a receipt photo (image only): the one receipt path the
+ * Receipts view and the Add camera's receipt offer share. */
+async function fileReceiptPhoto(file, statusEl, previewEl) {
+  statusEl.textContent = "Reading the receipt with Spark…";
+  if (previewEl) previewEl.innerHTML = "";
+  try {
+    const r = await fetch("/decode/photo", {
+      method: "POST",
+      headers: { "Content-Type": file.type || "image/jpeg" },
+      body: file
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+    const out = await r.json();
+    const rec = out.receipt || {};
+    statusEl.textContent = "";
+    if (out.demo) {
+      if (previewEl) previewEl.innerHTML = `<div class="group pad" style="margin-top:10px">
+        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">demo preview — read live, not saved</span></p>
+        ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
+        ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
+      else statusEl.textContent = "Read live — demo preview, not saved.";
+    } else {
+      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
+      renderScan().catch(showErr);
+    }
+  } catch (e) {
+    statusEl.textContent = "";
+    toast("Could not read that photo: " + e.message);
+  }
+}
+
+let addBound = false;
+function bindAdd() {
+  if (addBound) return;
+  addBound = true;
+
+  $("#add-submit").addEventListener("click", async () => {
+    const field = $("#add-text");
+    const text = field.value.trim();
+    if (!text) { toast("Type or paste the items first."); return; }
+    const btn = $("#add-submit");
+    btn.disabled = true;
+    try {
+      const r = await post("/api/list/from-text", { text });
+      field.value = "";
+      $("#add-status").textContent = "";
+      toast(r.added === 1 ? "Added 1 item to your list."
+        : `Added ${r.added} items to your list.`);
+    } catch (e) { toast(e.message); }
+    btn.disabled = false;
+  });
+
+  wireRecordButton($("#add-mic"), $("#add-status"), text => {
+    const field = $("#add-text");
+    field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
+  });
+
+  let receiptFile = null;
+  $("#add-photo").addEventListener("change", async ev => {
     const f = ev.target.files[0];
     if (!f) return;
-    const status = $("#door-photo-status");
-    const preview = $("#door-photo-preview");
+    const status = $("#add-status");
+    const offer = $("#add-receipt-offer");
+    offer.innerHTML = "";
     status.textContent = "Reading the photo with Spark…";
-    preview.innerHTML = "";
     try {
-      const r = await fetch("/decode/photo", {
+      const r = await fetch("/api/list/from-photo", {
         method: "POST",
         headers: { "Content-Type": f.type || "image/jpeg" },
         body: f
       });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
       const out = await r.json();
-      const rec = out.receipt || {};
-      if (out.demo) {
-        status.textContent = "";
-        preview.innerHTML = `<div class="group pad" style="margin-top:10px">
-          <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">demo preview — read live, not saved</span></p>
-          ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
-          ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
+      status.textContent = "";
+      if (out.kind === "receipt") {
+        receiptFile = f;
+        offer.innerHTML = `<p class="nomargin" style="margin-top:10px">This looks like a receipt.</p>
+          <p style="margin-bottom:0"><button class="btn primary" id="add-file-receipt" type="button">File it as a receipt</button></p>`;
+        $("#add-file-receipt").addEventListener("click", async () => {
+          offer.innerHTML = "";
+          await fileReceiptPhoto(receiptFile, status, null);
+          receiptFile = null;
+        });
+      } else if (out.demo) {
+        // Preview only: the items land in the field, unsaved.
+        $("#add-text").value = (out.names || []).join(", ");
+        status.textContent = "Read live — a preview in the field; the demo saves nothing.";
       } else {
-        status.textContent = "";
-        toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
-        renderScan().catch(showErr);
+        toast(out.added === 1 ? "Added 1 item to your list."
+          : `Added ${out.added} items to your list.`);
       }
     } catch (e) {
       status.textContent = "";
@@ -634,50 +660,15 @@ function bindDoors() {
     ev.target.value = "";
   });
 
-  const voiceBtn = $("#door-voice-btn");
-  if (voiceBtn) wireRecordButton(voiceBtn, $("#door-voice-status"),
-    text => { $("#door-voice-text").value = text; });
-
-  const voiceAdd = $("#door-voice-add");
-  if (voiceAdd) voiceAdd.addEventListener("click", async () => {
-    const items = parseItems($("#door-voice-text").value);
-    if (!items.length) { toast("Nothing to add yet — record or type the items first."); return; }
-    voiceAdd.disabled = true;
-    try {
-      for (const name of items) await post("/api/list/add", { name });
-      $("#door-voice-text").value = "";
-      toast(items.length === 1 ? "Added 1 item to your list." : `Added ${items.length} items to your list.`);
-    } catch (e) { toast(e.message); }
-    voiceAdd.disabled = false;
-  });
-
-  const pasteBtn = $("#door-paste-btn");
-  if (pasteBtn) pasteBtn.addEventListener("click", async () => {
-    const text = $("#door-paste-text").value.trim();
-    if (text.length < 20) { toast("Paste the whole order confirmation first."); return; }
-    pasteBtn.disabled = true;
-    try {
-      const r = await post("/api/intake/order-text", { text });
-      toast(`Filed ${r.merchant || "the order"} — ${r.lines} lines, total ${money(r.total || 0)} verified by Arya.`);
-      $("#door-paste-text").value = "";
-      renderScan().catch(showErr);
-    } catch (e) { toast(e.message); }
-    pasteBtn.disabled = false;
-  });
-
-  const typeForm = $("#door-type-form");
-  if (typeForm) typeForm.addEventListener("submit", async ev => {
-    ev.preventDefault();
-    const input = $("#door-type-text");
-    const name = input.value.trim();
-    if (!name) return;
-    try {
-      await post("/api/list/add", { name });
-      input.value = "";
-      toast(`Added ${name} to your list.`);
-    } catch (e) { toast(e.message); }
+  const rcPhoto = $("#rc-photo");
+  if (rcPhoto) rcPhoto.addEventListener("change", async ev => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    await fileReceiptPhoto(f, $("#rc-photo-status"), $("#rc-photo-preview"));
+    ev.target.value = "";
   });
 }
+bindAdd();
 
 async function renderCurator() {
   const el = $("#curator");
