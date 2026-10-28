@@ -201,6 +201,11 @@ function qParseLines(text) {
  * never split, so "mac and cheese" stays one item. */
 function qParseText(text) {
   const LEAD = /^(i need( some)?|we need( some)?|i want( some)?|get me|get|buy|add|please add|please get)\s+/i;
+  // Speech fillers and lead-ins are stripped from EVERY fragment,
+  // not just the line start: "Oh, I need some eggs, ..." otherwise
+  // yields an "Oh" item and a whole "I need some eggs" item
+  // (owner's phone, 2026-10-28, second dictation).
+  const FILL = /^(oh|okay|ok|so|well|um|uh|hmm)[,\s]+/i;
   const frags = [];
   for (const rawLine of String(text || "").split("\n")) {
     const line = rawLine.trim();
@@ -209,8 +214,13 @@ function qParseText(text) {
     const body = line.replace(LEAD, "").replace(/[.!]+$/, "");
     for (const part of body.split(/\s*,\s*/)) {
       for (const bit of part.split(/\s+and\s+/i)) {
-        const b = bit.trim().replace(/[.!]+$/, "");
-        if (b) frags.push(b);
+        let b = bit.trim().replace(/[.!]+$/, "");
+        for (let i = 0; i < 3; i++) {
+          const nb = b.replace(FILL, "").replace(LEAD, "").replace(/^some\s+/i, "");
+          if (nb === b) break;
+          b = nb;
+        }
+        if (b && !/^(oh|okay|ok|so|well|um|uh|hmm)$/i.test(b)) frags.push(b);
       }
     }
   }

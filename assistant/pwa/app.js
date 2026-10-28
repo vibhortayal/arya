@@ -790,7 +790,8 @@ function bindAdd() {
       if (sentence) pieces = pieces.flatMap(p => p.split(/\s+and\s+/i));
       for (let piece of pieces) {
         let name = piece.replace(/^[\s•\-*☐☑✓\d.)]+/, "").trim();
-        name = name.replace(ADD_LEAD, "");
+        name = name.replace(/^(oh|okay|ok|so|well|um|uh|hmm)[,\s]+/i, "").replace(ADD_LEAD, "");
+        if (/^(oh|okay|ok|so|well|um|uh|hmm)$/i.test(name)) name = "";
         if (name.toLowerCase().startsWith("some ")) name = name.slice(5);
         name = name.replace(/\s*[x×]\s*\d+\s*$/, "").replace(/[.!]+$/, "").trim();
         if (name && !seen.has(name.toLowerCase())) { seen.add(name.toLowerCase()); out.push(name); }
