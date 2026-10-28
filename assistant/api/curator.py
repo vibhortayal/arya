@@ -18,6 +18,21 @@ UNITS = {"oz", "lb", "lbs", "ct", "dz", "gal", "ml", "kg", "mg", "pk",
          "pack", "x", "fl", "pt", "qt", "each", "count"}
 
 
+SCHEMA = ("CuratorVerdict", {
+    "type": "object",
+    "properties": {
+        "merges": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"members": {"type": "array", "items": {"type": "string"}},
+                           "name": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["members"]}},
+        "splits": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"item_id": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["item_id"]}}},
+    "required": ["merges", "splits"]})
+
+
 def load_prompt():
     return open(PROMPT_PATH).read().split("SYSTEM:", 1)[1].strip()
 
@@ -115,7 +130,8 @@ def run_curator(client):
     messages = [{"role": "system", "content": load_prompt()},
                 {"role": "user", "content":
                  "Judge these product clusters:\n\n" + "\n\n".join(blocks)}]
-    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
+    out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
+                                     schema=SCHEMA, cache_key="arya-curator-v1")
     try:
         verdict = json.loads(out)
     except Exception:

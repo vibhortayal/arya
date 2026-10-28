@@ -12,6 +12,16 @@ import json
 import os
 
 _PROMPT = open(os.path.join(os.path.dirname(__file__), "prompts", "staple_judge_v1.md")).read()
+SCHEMA = ("StapleVerdicts", {
+    "type": "object",
+    "properties": {"verdicts": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"item_id": {"type": "string"},
+                       "class": {"type": "string", "enum": sorted(
+                           ["STAPLE", "SEASONAL", "OCCASIONAL", "ONE_OFF", "NOT_CONSUMABLE"])},
+                       "reason": {"type": "string"}},
+        "required": ["item_id", "class"]}}},
+    "required": ["verdicts"]})
 CLASSES = {"STAPLE", "SEASONAL", "OCCASIONAL", "ONE_OFF", "NOT_CONSUMABLE"}
 
 
@@ -29,7 +39,8 @@ def judge_batch(client, items):
     text, _usage, _cost = client.chat(
         [{"role": "system", "content": _PROMPT},
          {"role": "user", "content": listing}],
-        mode="standard", personal=True, reasoning_effort="low")
+        mode="standard", personal=True, reasoning_effort="low",
+        schema=SCHEMA, cache_key="arya-staple-judge-v1")
     start, end = text.find("{"), text.rfind("}")
     if start < 0:
         return {}

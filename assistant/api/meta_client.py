@@ -10,7 +10,7 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
   only. Contributor mode is for eval loops on synthetic/public data and is
   refused for personal payloads.
 """
-import json, os, urllib.request, uuid
+import json, os, random, time, urllib.error, urllib.request, uuid
 
 BASE = "https://api.meta.ai/v1"
 
@@ -40,6 +40,15 @@ SAM_USD_PER_IMAGE = 2.50 / 1000.0
 
 # Muse Image is billed per image generated (MODEL-POLICY.md).
 IMAGE_USD_PER_IMAGE = 0.01
+
+
+# Transient statuses worth another try (Meta error-handling docs: retry
+# 429/500/503 with 0.5-1 s doubling backoff and jitter, honor Retry-After,
+# never retry other 4xx). A read timeout is not retried: the call may
+# already have been billed, and the Wonder path has its own Spark fallback.
+RETRY_STATUSES = (429, 500, 502, 503)
+MAX_RETRIES = 2
+BACKOFF_BASE_S = 0.5
 
 
 def transcribe_cost(duration_s):
@@ -81,6 +90,44 @@ class MetaClient:
             return {"error": (raw or "")[:300]}
 
     def _send(self, path, body, timeout=None):
+        """POST JSON with bounded retry on transient failures."""
+        for attempt in range(MAX_RETRIES + 1):
+            retry_after = None
+            try:
+                status, payload = self._send_once(path, body, timeout)
+            except RuntimeError as e:
+                # Only a refused/reset connection is safe to repeat.
+                if attempt < MAX_RETRIES and self._connect_failure(e):
+                    self._pause(attempt, None)
+                    continue
+                raise
+            if status in RETRY_STATUSES and attempt < MAX_RETRIES:
+                if isinstance(payload, dict):
+                    retry_after = payload.pop("_retry_after", None)
+                self._pause(attempt, retry_after)
+                continue
+            if isinstance(payload, dict):
+                payload.pop("_retry_after", None)
+            return status, payload
+
+    @staticmethod
+    def _connect_failure(err):
+        cause = err.__cause__
+        if isinstance(cause, TimeoutError):
+            return False
+        if isinstance(cause, urllib.error.URLError):
+            return not isinstance(cause.reason, TimeoutError) \
+                and "timed out" not in str(cause.reason)
+        return isinstance(cause, ConnectionError)
+
+    @staticmethod
+    def _pause(attempt, retry_after):
+        delay = BACKOFF_BASE_S * (2 ** attempt) * (1 + random.random() / 2)
+        if retry_after is not None:
+            delay = max(delay, min(float(retry_after), 10.0))
+        time.sleep(delay)
+
+    def _send_once(self, path, body, timeout=None):
         url = BASE + path
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {self.api_key}"}
@@ -95,25 +142,46 @@ class MetaClient:
                 raw = resp.read().decode(errors="replace")
         except urllib.error.HTTPError as e:
             raw = e.read().decode(errors="replace") if e.fp else ""
-            return e.code, self._parse_body(raw, e.code)
+            payload = self._parse_body(raw, e.code)
+            ra = e.headers.get("Retry-After") if e.headers else None
+            if ra and isinstance(payload, dict):
+                try:
+                    payload["_retry_after"] = float(ra)
+                except ValueError:
+                    pass
+            return e.code, payload
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             raise RuntimeError(f"Meta API unreachable: {e}") from e
         return status, self._parse_body(raw, status)
 
     def chat(self, messages, mode="standard", personal=False,
-             reasoning_effort="low", temperature=0.1, timeout=None):
+             reasoning_effort="low", temperature=0.1, timeout=None,
+             schema=None, cache_key=None):
         """One chat completion. Returns (text, usage_dict, cost_usd).
         usage keys are normalized: input_tokens, cached_tokens, output_tokens.
         reasoning_effort=None omits the key entirely — Wonder's production
         configuration per WONDER-EVAL (no effort key sent). timeout bounds
-        the HTTP call in seconds; None keeps the 120 s default."""
+        the HTTP call in seconds; None keeps the 120 s default.
+        schema=(name, json_schema) asks for structured output
+        (response_format json_schema, non-strict); if the API refuses
+        the key the call repeats once without it, so callers keep their
+        tolerant parser. cache_key is a stable prefix name sent as
+        prompt_cache_key (automatic prefix caching, cheaper input)."""
         if personal and mode == "contributor":
             raise ValueError("personal data is Standard-only (MODEL-POLICY rule 3)")
         body = {"model": MODELS[mode], "messages": messages,
                 "temperature": temperature}
         if reasoning_effort is not None:
             body["reasoning_effort"] = reasoning_effort
+        if cache_key:
+            body["prompt_cache_key"] = cache_key
+        if schema:
+            body["response_format"] = {"type": "json_schema", "json_schema": {
+                "name": schema[0], "schema": schema[1]}}
         status, payload = self._send("/chat/completions", body, timeout=timeout)
+        if status == 400 and schema and "response_format" in str(payload):
+            body.pop("response_format")
+            status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status != 200:
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         try:
