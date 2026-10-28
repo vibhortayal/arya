@@ -21,7 +21,10 @@ requirements here:
 Copy discipline (the spike's demo boundaries): a scan spots items
 from the list, each verified by a second model. It does not find
 everything, and a missing pop never means the item is not there.
-Frames are processed, never stored: this module keeps nothing.
+This module keeps nothing. A frame that popped an item may be kept
+by the route as a fresh shelf photo, but only after scrub_people()
+below has blurred out every person SAM 3.1 finds in it (owner,
+2026-10-28: "we don't store images of people, only products").
 """
 import base64, io, re
 
@@ -183,3 +186,48 @@ def scan(image_bytes, item_names, client, media_type="image/jpeg"):
         else:
             not_found.append(name)
     return {"pops": pops, "not_found": not_found}
+
+
+# --- people scrub (owner, 2026-10-28) ---------------------------------
+# Before a shelf frame is kept as a fresh store photo, SAM 3.1 finds
+# every person in it and each one is pixelated past recognition. Fail
+# closed: if the scrub call fails, the frame is not kept.
+PEOPLE_PROMPTS = ("person", "human face")
+SCRUB_PAD = 0.08       # grow each person box by this fraction a side
+SCRUB_BLOCK = 24       # mosaic cell, in kept-frame pixels
+KEEP_MAX_SIDE = 960    # kept frames are downscaled to this
+
+
+def scrub_people(image_bytes, client, media_type="image/jpeg",
+                 max_side=KEEP_MAX_SIDE, quality=72):
+    """Return (jpeg_bytes, people_count) with every person SAM finds
+    pixelated, downscaled to max_side; or (None, 0) when the scrub
+    could not run, so the caller keeps nothing."""
+    try:
+        boxes = []
+        for prompt in PEOPLE_PROMPTS:
+            found, _u, _c = client.segment(image_bytes, prompt,
+                                           media_type=media_type)
+            boxes.extend(b["box"] for b in found or [])
+    except Exception:
+        return None, 0
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    W, H = img.size
+    for x1, y1, x2, y2 in boxes:
+        px, py = (x2 - x1) * SCRUB_PAD, (y2 - y1) * SCRUB_PAD
+        bx = (max(0, int(x1 - px)), max(0, int(y1 - py)),
+              min(W, int(x2 + px + 1)), min(H, int(y2 + py + 1)))
+        if bx[2] - bx[0] < 2 or bx[3] - bx[1] < 2:
+            continue
+        region = img.crop(bx)
+        rw, rh = region.size
+        cell = max(SCRUB_BLOCK, max(rw, rh) // 8)
+        small = region.resize((max(1, rw // cell), max(1, rh // cell)),
+                              Image.BILINEAR)
+        img.paste(small.resize((rw, rh), Image.NEAREST), bx[:2])
+    scale = max_side / float(max(W, H))
+    if scale < 1:
+        img = img.resize((int(W * scale), int(H * scale)), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=quality)
+    return buf.getvalue(), len(boxes)
