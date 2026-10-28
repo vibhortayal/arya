@@ -149,8 +149,14 @@ function paintTodayGames(sessions) {
 async function renderHome() {
   const h = await api("/api/home");
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const d = h.as_of ? new Date(`${h.as_of}T12:00:00`) : new Date();
-  $("#today-dow").textContent = `${days[d.getDay()]} · ${h.as_of ? fmtDate(h.as_of) : ""}`;
+  // The header is a clock: it shows the real date, always. The
+  // brain's as_of (newest data date) is a different fact and is
+  // labeled as what it is — "Data through" — never dressed as
+  // today (review 2026-10-28, M7).
+  const now = new Date();
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  $("#today-dow").textContent = `${days[now.getDay()]} · ${fmtDate(iso)}`;
+  $("#today-through").textContent = h.as_of ? `Data through ${fmtDate(h.as_of)}` : "";
   let sessions = [];
   if (window.qLoadSessions) {
     try { sessions = await qLoadSessions(); } catch (e) { sessions = []; }
