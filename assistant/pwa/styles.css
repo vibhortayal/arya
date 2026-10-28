@@ -779,3 +779,15 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 14px; min-height: 32px; }
 .hunt-tools .toolspacer { flex: 1 1 0; }
 .hunt-tools .hudbtn { flex-shrink: 0; }
+.findrow { margin-top: 8px; }
+#btn-findit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; }
+#btn-findit[hidden] { display: none; }
+#btn-findit svg { width: 18px; height: 18px; }
+
+/* Fresh shelf photo (owner, 2026-10-28): the latest people-scrubbed
+ * shopper frame of the next item, its verified box outlined. */
+.fresh { margin: 10px 0 0; }
+.freshimg { position: relative; border-radius: 14px; overflow: hidden; background: var(--fill); }
+.freshimg img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+.freshbox { position: absolute; border: 3px solid var(--acc); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.28); pointer-events: none; }
+.fresh figcaption { font-size: 12px; margin-top: 6px; }
