@@ -11,6 +11,7 @@ longer carries the teach ask; the teach ask lives on the briefing
 wear characters; the registry names its fallback.
 """
 import json
+import os
 import pathlib
 import unittest
 
@@ -125,7 +126,7 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v48"', sw)
+        self.assertIn('CACHE = "arya-v49"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",
@@ -187,3 +188,36 @@ class TestQuietMilestones(unittest.TestCase):
         self.assertIn("var(--acc-soft)", block)
         self.assertNotIn("position: fixed", block)
         self.assertNotIn("var(--ink)", block)
+
+
+class TestArtScene(unittest.TestCase):
+    """The art rung + the demo store filter (owner, 2026-10-28):
+    an unmapped store or section in Quest mode plays on the
+    illustrated aisle, and the demo never offers a data-less
+    store."""
+
+    def test_art_driver_registered_and_honest(self):
+        s = read("scene.js")
+        self.assertIn("SceneDrivers.art = function", s)
+        self.assertIn("assets/scenes/aisle-art.webp", s)
+        self.assertIn('"art"', read("quest.js"))
+        api = open(os.path.join(os.path.dirname(__file__), "..",
+                                "api", "quest.py"), encoding="utf-8").read()
+        self.assertIn('"art"', api.split("DRIVERS =")[1].split("\n")[0])
+
+    def test_art_asset_ships_and_precaches(self):
+        here = os.path.dirname(__file__)
+        self.assertTrue(os.path.exists(os.path.join(
+            here, "..", "pwa", "assets", "scenes", "aisle-art.webp")))
+        self.assertIn("/assets/scenes/aisle-art.webp", read("sw.js"))
+
+    def test_resolution_and_caption_carry_the_nudge(self):
+        q = read("quest.js")
+        self.assertIn('base === "photo" && focus && focus.unplaced ? "art" : base', q)
+        self.assertIn("Tap Teach Arya to map it for real", q)
+        # Express never gets the art rung
+        self.assertIn('Q.current.mode === "express" ? "strip" : "art"', q)
+
+    def test_demo_picker_hides_dataless_stores(self):
+        q = read("quest.js")
+        self.assertIn("!qIsDemo() || qStorePhotos(h) || qStoreModel(h)", q)
