@@ -503,11 +503,15 @@ document.addEventListener("click", ev => {
   if (ev.target.closest("#view-capture .qback")) { CAM.walk = null; camStop(); }
 });
 
-/* ---------------- after a hunt: one small, skippable ask ----------------
- * When a hunt ends, the score screen offers one aisle to map, picked
- * by the engine (an aisle where something on this list was found
- * comes first: they were just there). "Not now" mutes the ask for that
- * store for a week. Once per hunt; never a popup. */
+/* ---------------- the teach ask: briefing + in-hunt icon ----------
+ * (Owner, 2026-10-28: moved OFF the score screen.) One ask, two
+ * surfaces: a skippable card on the pre-hunt briefing (shown only
+ * once the player has finished a hunt before — never before the
+ * first), and a passive Teach Arya tool button during the hunt
+ * itself, where the player is standing in the aisle. "Not now"
+ * mutes the store for a week across both surfaces. Never a popup;
+ * Express gets neither surface. The engine picks the aisle (one
+ * where something on this list was found comes first). */
 const MAP_MUTE_DAYS = 7;
 function mapperMuted(store) {
   try {
@@ -522,16 +526,15 @@ function mapperMute(store) {
     localStorage.setItem("arya-map-mute", JSON.stringify(m));
   } catch (e) { /* private mode: the ask just returns next time */ }
 }
-async function mapperOfferAfterHunt(sess) {
-  if (!sess || !sess.store || mapperMuted(sess.store)) return;
-  const items = (sess.items || []).filter(i => i.checked).map(i => i.name).slice(0, 30);
-  let out;
+async function mapperNextPrompt(store, items) {
   try {
-    out = await api(`/api/storemap/next?store=${encodeURIComponent(sess.store)}&items=${encodeURIComponent(items.join(","))}`);
-  } catch (e) { return; }
-  const p = out && out.prompt;
-  const body = $("#score-body");
-  if (!p || !p.segment || !body || $("#view-score").hidden) return;
+    const out = await api(`/api/storemap/next?store=${encodeURIComponent(store)}&items=${encodeURIComponent((items || []).join(","))}`);
+    const p = out && out.prompt;
+    return p && p.segment ? p : null;
+  } catch (e) { return null; }
+}
+function mapperOfferCard(sess, host, p) {
+  if (!host || host.querySelector(".mp-offer")) return;
   const where = p.title.replace(/^(Photo of|Walk)\s+/, "");
   const card = document.createElement("div");
   card.className = "group pad mp-offer";
@@ -540,7 +543,7 @@ async function mapperOfferAfterHunt(sess) {
     <p class="muted nomargin">Your next hunt here gets faster. Open the camera and walk; Arya does the rest.</p>
     <div class="rail"><button class="btn primary" data-mapoffer="go" type="button">Teach Arya</button>
     <button class="btn" data-mapoffer="later" type="button">Not now</button></div>`;
-  body.prepend(card);
+  host.prepend(card);
   card.addEventListener("click", ev => {
     const b = ev.target.closest("[data-mapoffer]");
     if (!b) return;
@@ -549,4 +552,42 @@ async function mapperOfferAfterHunt(sess) {
     api(`/api/storemap?store=${encodeURIComponent(M.store)}`).then(v => { M.view = v; }).catch(() => {});
     openCapture(p);
   });
+}
+/* The briefing card: before the hunt starts, at the store door —
+ * the player is about to walk the aisles anyway. */
+async function mapperOfferBriefing(sess) {
+  if (!sess || !sess.store || sess.mode === "express" || mapperMuted(sess.store)) return;
+  let hunted = false;
+  try { hunted = !!localStorage.getItem("arya-hunted"); } catch (e) {}
+  if (!hunted) return;
+  const host = $("#q-brief");
+  if (!host || $("#view-hunt").hidden) return;
+  if (host.dataset.store === sess.store && host.querySelector(".mp-offer")) return;
+  host.dataset.store = sess.store;
+  const items = (sess.items || []).map(i => i.name).slice(0, 30);
+  const p = await mapperNextPrompt(sess.store, items);
+  if (p) mapperOfferCard(sess, host, p);
+}
+/* The in-hunt icon: a passive tool button, present only while the
+ * store still has an aisle to teach. Tapping opens the capture for
+ * the engine's picked aisle; the hunt waits (it lives server-side). */
+let MAP_ICON = { store: null, prompt: undefined };
+async function mapperHuntIcon(sess) {
+  const btn = $("#btn-teach");
+  if (!btn) return;
+  const live = sess && sess.state === "playing" && sess.mode !== "express" && !mapperMuted(sess.store);
+  if (!live) { btn.hidden = true; return; }
+  if (MAP_ICON.store !== sess.store) MAP_ICON = { store: sess.store, prompt: undefined };
+  if (MAP_ICON.prompt === undefined) {
+    MAP_ICON.prompt = null;
+    const items = (sess.items || []).filter(i => !i.checked).map(i => i.name).slice(0, 30);
+    MAP_ICON.prompt = await mapperNextPrompt(sess.store, items);
+  }
+  btn.hidden = !MAP_ICON.prompt;
+  btn.onclick = () => {
+    if (!MAP_ICON.prompt) return;
+    M.store = sess.store;
+    api(`/api/storemap?store=${encodeURIComponent(M.store)}`).then(v => { M.view = v; }).catch(() => {});
+    openCapture(MAP_ICON.prompt);
+  };
 }
