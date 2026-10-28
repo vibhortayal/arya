@@ -11,6 +11,8 @@ is computed, never taken from the model.
 """
 import hashlib, json, os
 
+from api.meta_client import MODELS
+
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "decode_v2.md")
 AUTO_THRESHOLD = 0.8
 
@@ -132,9 +134,31 @@ def load_photo_prompt():
     return text.split("SYSTEM:", 1)[1].strip()
 
 
+# Photo decode reads with Wonder first, per the MODEL-POLICY hackathon
+# amendment (through 2026-11-04; WONDER-EVAL.md is the evidence: Gate 0
+# public photos, Wonder 98.98% identity+price vs Spark 93.88%, price
+# errors 0 vs 4, silent errors 0 vs 4). Wonder's cost is latency —
+# 34.4 s mean / 60.5 s p95 in the eval — so the attempt is bounded at
+# 90 s (p95 plus headroom) and ANY failure (timeout, HTTP error,
+# unparseable output) falls back to Spark Standard, the previous
+# production reader at its production configuration. The receipt
+# records the reader in decoded_by, so a fallback is never silent.
+PHOTO_WONDER_TIMEOUT_S = 90
+
+
+def _photo_read(messages, client, **kw):
+    out, _usage, _cost = client.chat(messages, personal=True, **kw)
+    try:
+        return json.loads(out)
+    except Exception:
+        return json.loads(out[out.find("{"): out.rfind("}") + 1])
+
+
 def decode_photo(image_bytes, client, media_type="image/jpeg"):
     """Receipt photo -> DecodedReceipt via meta_client vision.
-    Personal data: Standard mode only (enforced in meta_client).
+    Personal data: handled under the MODEL-POLICY hackathon amendment
+    (Wonder for this path through 2026-11-04; meta_client still refuses
+    Contributor for personal payloads).
     Prompt: prompts/decode_photo_v1.md (spike-2 verified, Gate 0 passed).
     Photo semantics: price is the PAID amount (discounts already folded by
     the prompt); the discount value rides on the line for display, and any
@@ -146,11 +170,14 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
                 {"role": "user", "content": [
                     {"type": "text", "text": "Decode this receipt photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
-    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
     try:
-        dec = json.loads(out)
+        dec = _photo_read(messages, client, mode="wonder",
+                          reasoning_effort=None,
+                          timeout=PHOTO_WONDER_TIMEOUT_S)
+        decoded_by = MODELS["wonder"]
     except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+        dec = _photo_read(messages, client, mode="standard")
+        decoded_by = MODELS["standard"]
     lines = []
     for l in dec.get("lines", []):
         name = " ".join(x for x in [l.get("brand"), l.get("product"), l.get("detail")] if x).strip()
@@ -171,7 +198,7 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
             "merchant": dec.get("store"), "purchased_at": dec.get("date"),
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
-            "image_ref": None}
+            "image_ref": None, "decoded_by": decoded_by}
 
 
 ORDER_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..",

@@ -136,9 +136,11 @@ class TestPhotoIntake(unittest.TestCase):
             def __init__(self, ledger=None):
                 pass
 
-            def chat(self, messages, mode=None, personal=None):
-                assert personal is True and mode == "standard"
-                return json.dumps(payload), {}, 0.02
+            def chat(self, messages, mode=None, personal=None, **kw):
+                # Photo decode reads with Wonder first (MODEL-POLICY
+                # hackathon amendment, through 2026-11-04).
+                assert personal is True and mode == "wonder"
+                return json.dumps(payload), {}, 0.12
         return FakeClient
 
     def test_photo_normalization(self):
@@ -151,6 +153,7 @@ class TestPhotoIntake(unittest.TestCase):
                               "list_price": 5.49, "price": 4.49, "discount": 1.0, "qty": 1,
                               "is_return": False, "confidence": 0.7, "needs_user_check": True, "alternatives": ["BRD"]}]}
         dec = decode_photo(b"fake-jpeg-bytes", self._fake_client(payload)())
+        self.assertEqual(dec["decoded_by"], "muse-wonder-1.0")
         self.assertTrue(dec["totals_reconcile"])
         self.assertEqual(dec["lines"][0]["status"], "auto")
         self.assertEqual(dec["lines"][1]["status"], "unverified")   # needs_user_check forces review
@@ -174,4 +177,80 @@ class TestPhotoIntake(unittest.TestCase):
         r = c.post("/decode/photo", content=b"\xff\xd8\xff fake", headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 200)
         self.assertTrue(r.json()["receipt"]["totals_reconcile"])
+        self.assertEqual(r.json()["receipt"]["decoded_by"], "muse-wonder-1.0")
         self.assertEqual(c.post("/decode/photo", content=b"x", headers={"Content-Type": "text/plain"}).status_code, 415)
+
+
+PHOTO_PAYLOAD = {"store": "Safeway", "date": "2026-07-29", "subtotal": 4.49,
+                 "tax": 0.0, "total": 4.49,
+                 "lines": [{"item_no": "1", "product": "MILK WHL GAL", "brand": None,
+                            "detail": None, "list_price": 4.49, "price": 4.49,
+                            "discount": 0, "qty": 1, "is_return": False,
+                            "confidence": 0.95, "needs_user_check": False,
+                            "alternatives": []}]}
+
+
+class FlipClient:
+    """chat() stub for the Wonder flip: Wonder's behavior is injected,
+    Spark always answers. Every call is recorded."""
+
+    def __init__(self, wonder_exc=None, wonder_out=None):
+        self.calls = []
+        self.wonder_exc = wonder_exc
+        self.wonder_out = wonder_out
+
+    def chat(self, messages, mode=None, personal=None, **kw):
+        self.calls.append({"mode": mode, "personal": personal, **kw})
+        if mode == "wonder":
+            if self.wonder_exc is not None:
+                raise self.wonder_exc
+            return self.wonder_out or json.dumps(PHOTO_PAYLOAD), {}, 0.12
+        assert mode == "standard" and personal is True
+        return json.dumps(PHOTO_PAYLOAD), {}, 0.013
+
+
+class TestPhotoDecodeWonderFlip(unittest.TestCase):
+    def test_wonder_is_the_photo_reader(self):
+        from api.decode.service import decode_photo, PHOTO_WONDER_TIMEOUT_S
+        client = FlipClient()
+        dec = decode_photo(b"fake-jpeg-bytes", client)
+        self.assertEqual(dec["decoded_by"], "muse-wonder-1.0")
+        self.assertTrue(dec["totals_reconcile"])
+        self.assertEqual(len(client.calls), 1)
+        call = client.calls[0]
+        self.assertEqual(call["mode"], "wonder")
+        self.assertIs(call["personal"], True)
+        # The eval's Wonder configuration: no reasoning_effort key, and
+        # the attempt is bounded (eval p95 was 60.5 s; bound is 90 s).
+        self.assertIsNone(call["reasoning_effort"])
+        self.assertEqual(call["timeout"], PHOTO_WONDER_TIMEOUT_S)
+        self.assertEqual(PHOTO_WONDER_TIMEOUT_S, 90)
+
+    def test_wonder_timeout_falls_back_to_spark(self):
+        from api.decode.service import decode_photo
+        client = FlipClient(wonder_exc=TimeoutError("read timed out"))
+        dec = decode_photo(b"fake-jpeg-bytes", client)
+        # The SAME photo completes via Spark, marked as Spark-read.
+        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertTrue(dec["totals_reconcile"])
+        self.assertEqual(dec["lines"][0]["decoded_name"], "MILK WHL GAL")
+        self.assertEqual([c["mode"] for c in client.calls], ["wonder", "standard"])
+
+    def test_wonder_http_error_falls_back_to_spark(self):
+        from api.decode.service import decode_photo
+        client = FlipClient(wonder_exc=RuntimeError("Meta API HTTP 500: boom"))
+        dec = decode_photo(b"fake-jpeg-bytes", client)
+        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertEqual([c["mode"] for c in client.calls], ["wonder", "standard"])
+
+    def test_wonder_garbage_output_falls_back_to_spark(self):
+        from api.decode.service import decode_photo
+        client = FlipClient(wonder_out="I cannot read this receipt.")
+        dec = decode_photo(b"fake-jpeg-bytes", client)
+        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+
+    def test_non_photo_paths_have_no_decoded_by(self):
+        # Scope pin: the flip is photo-only. Text decode stays Spark and
+        # carries no decoded_by (its StubClient asserts mode=standard).
+        r = decode_text("any text", StubClient())
+        self.assertNotIn("decoded_by", r)
