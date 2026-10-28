@@ -133,6 +133,80 @@ class TestQuestSessions(unittest.TestCase):
                    json={"state": "playing"})
         assert r.status_code == 400
 
+    def _file_receipt(self, receipt_id, merchant):
+        from api import state
+        # Direct state calls from the test thread need the account's
+        # context, or the write lands in the data root, not the
+        # account's store (the setUp seed predates the account).
+        # The context is restored afterwards: it is a ContextVar and
+        # would otherwise leak into later tests on this thread.
+        prev = state._current_user.get()
+        state.set_current_user("owner@example.com")
+        try:
+            rs = state.receipts()
+            rs.append({"receipt_id": receipt_id, "merchant": merchant,
+                       "purchased_at": "2026-10-27", "lines": [],
+                       "subtotal": 0, "tax": 0, "total": 0,
+                       "totals_reconcile": True})
+            state._save("receipts.json", rs)
+        finally:
+            state.set_current_user(prev)
+
+    def _finished_hunt(self, store="Trader Joe's"):
+        c = self.c
+        sid = c.post("/api/quest/sessions", json={
+            "store": store, "mode": "quest",
+            "items": ["milk"]}).json()["id"]
+        c.post(f"/api/quest/sessions/{sid}/state",
+               json={"state": "playing"})
+        c.post(f"/api/quest/sessions/{sid}/state",
+               json={"state": "finished"})
+        return sid
+
+    def test_attach_cross_merchant_refused(self):
+        # Issue #11: a Safeway receipt must not settle a Trader Joe's
+        # hunt (the sweep settled one, zero overlap, no check).
+        self._file_receipt("r-safeway-1", "Safeway")
+        sid = self._finished_hunt()
+        r = self.c.post(f"/api/quest/sessions/{sid}/receipt",
+                        json={"receipt_id": "r-safeway-1"})
+        assert r.status_code == 400, r.text
+        detail = r.json()["detail"]
+        assert "Safeway" in detail and "Trader Joe's" in detail, detail
+        # the hunt is untouched: unsettled, and the right receipt
+        # still settles it afterwards
+        assert self.c.get("/api/quest/profile").json()["stats"]["hunts"] == 0
+        r = self.c.post(f"/api/quest/sessions/{sid}/receipt",
+                        json={"receipt_id": "r-tj-1"})
+        assert r.status_code == 200 and r.json()["settled"] is True, r.text
+
+    def test_attach_variant_store_name_settles(self):
+        # Same family under decode's raw naming settles without
+        # friction (issue #11: never block a variant of the store).
+        self._file_receipt("r-tj-variant", "TRADER JOES #452")
+        sid = self._finished_hunt()
+        r = self.c.post(f"/api/quest/sessions/{sid}/receipt",
+                        json={"receipt_id": "r-tj-variant"})
+        assert r.status_code == 200, r.text
+        assert r.json()["state"] == "done" and r.json()["settled"] is True
+
+    def test_attach_unknown_merchant_settles(self):
+        # An unmappable merchant cannot be classified, so it never
+        # blocks the settle (issue #11).
+        self._file_receipt("r-deli-1", "Corner Deli")
+        sid = self._finished_hunt()
+        r = self.c.post(f"/api/quest/sessions/{sid}/receipt",
+                        json={"receipt_id": "r-deli-1"})
+        assert r.status_code == 200 and r.json()["settled"] is True, r.text
+
+    def test_attach_unknown_hunt_store_settles(self):
+        # Same rule from the other side: a hunt at an unmappable
+        # store settles on any filed receipt.
+        sid = self._finished_hunt(store="Corner Deli")
+        r = self.c.post(f"/api/quest/sessions/{sid}/receipt",
+                        json={"receipt_id": "r-tj-1"})
+        assert r.status_code == 200 and r.json()["settled"] is True, r.text
+
 
 BERRY_DICT = {"entries": [
     {"item_id": "sku-eggs", "sku": "22", "canonical_name": "Free Range Eggs"},
