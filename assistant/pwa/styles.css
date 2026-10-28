@@ -303,6 +303,7 @@ textarea {
 .strip-num { font-size: 12px; font-weight: 700; color: var(--tertiary); }
 .strip-name { font-weight: 650; font-size: 15.5px; overflow-wrap: anywhere; line-height: 1.25; }
 .strip-sub { font-size: 13px; color: var(--secondary); margin-top: auto; }
+.strip-shelf { font-size: 12px; color: var(--secondary); }
 .strip-card.got { opacity: 0.55; }
 .strip-card.got .strip-name { text-decoration: line-through; }
 .strip-card.next { border-color: var(--accent); background: var(--group); box-shadow: var(--shadow); }

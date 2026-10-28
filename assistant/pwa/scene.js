@@ -29,8 +29,14 @@
  * Driver contract:
  *   create(el) -> driver            mount into el (the driver owns el's content)
  *   driver.setStops(stops)          stops in route order:
- *                                   [{name, qty, checked, flagged}]
- *                                   flagged = an open "not here" report
+ *                                   [{name, qty, checked, flagged,
+ *                                     shelfLabel, shelfU, shelfSide,
+ *                                     unplaced}]
+ *                                   flagged = an open "not here" report;
+ *                                   shelf* = the stop's matched shelf
+ *                                   (item–shelf matching); unplaced =
+ *                                   the store has a graph but this
+ *                                   item matched no shelf
  *   driver.setNext(index)           highlight the next unchecked stop; -1 = none
  *   driver.glideTo(index)           animate the walk toward a stop
  *   driver.onTapStop = fn(index)    assigned by the screen; the driver
@@ -51,9 +57,12 @@ function createSceneView(el, driverName) {
  * Renders the store's rebuilt point cloud (Three.js) and walks the
  * smoothed camera path shipped in the model manifest (prep_cloud.py
  * removed the mislocalized poses, so the path cannot lurch). Stops
- * are numbered markers anchored along the path, alternating shelf
- * sides; the next stop pulses; glideTo walks the camera to a stop;
- * tapping a marker fires onTapStop; dragging looks around.
+ * are numbered markers anchored along the path: a stop matched to a
+ * shelf (item–shelf matching) sits at its shelf's path position on
+ * the shelf's side; an unmatched stop keeps the even spacing and
+ * alternating sides. The next stop pulses; glideTo walks the camera
+ * to a stop; tapping a marker fires onTapStop; dragging looks
+ * around.
  *
  * The contract is synchronous but loading is not, so this driver is
  * a proxy: it starts on a loading view, adopts the real driver when
@@ -224,14 +233,35 @@ function cloudView(THREE, host, manifest, buf, graph) {
     markerPos = []; anchorDist = [];
     const count = stops.length;
     const up = new THREE.Vector3(0, 1, 0);
+    // Matched stops share their shelf's path position; spread a
+    // shelf's stops a step apart along the path so the markers do
+    // not stack on one point. (+ offset is the walker's left, as
+    // below: even markers have always sat on the left.)
+    const shelfCount = {}, shelfSeen = {};
+    stops.forEach(s => {
+      if (s.shelfU != null) {
+        const k = s.shelfU.toFixed(4);
+        shelfCount[k] = (shelfCount[k] || 0) + 1;
+      }
+    });
     stops.forEach((s, i) => {
-      const d = count <= 1 ? total / 2 : ((i + 0.5) / count) * total;
+      let d, sideSign = i % 2 === 0 ? 1 : -1;
+      if (s.shelfU != null) {
+        const k = s.shelfU.toFixed(4);
+        const j = (shelfSeen[k] = (shelfSeen[k] || 0) + 1) - 1;
+        d = s.shelfU * total + (j - (shelfCount[k] - 1) / 2) * total * 0.012;
+        d = Math.max(0, Math.min(total, d));
+        if (s.shelfSide === "left") sideSign = 1;
+        else if (s.shelfSide === "right") sideSign = -1;
+      } else {
+        d = count <= 1 ? total / 2 : ((i + 0.5) / count) * total;
+      }
       anchorDist.push(d);
       const at = pathAt(d);
       const side = new THREE.Vector3().crossVectors(up, at.f);
       if (side.lengthSq() < 1e-4) side.set(1, 0, 0); else side.normalize();
       const p = at.p.clone()
-        .addScaledVector(side, (i % 2 === 0 ? 1 : -1) * span * 0.13)
+        .addScaledVector(side, sideSign * span * 0.13)
         .add(new THREE.Vector3(0, span * 0.03, 0));
       markerPos.push(p);
       const state = s.checked ? "got" : "todo";
@@ -248,13 +278,16 @@ function cloudView(THREE, host, manifest, buf, graph) {
     updateChip();
   }
 
-  // Shelf labels (Stage D): the graph stop nearest this stop's path
-  // position names the shelves seen there. Markers alternate sides —
-  // even markers sit on the walker's left (see the offset above) —
-  // so a label from the marker's own side wins when both exist.
+  // Shelf labels: a stop matched to a shelf (item–shelf matching)
+  // shows ITS shelf — the chip names the item's shelf, not whatever
+  // is nearest. Unmatched stops fall back to the Stage D behavior:
+  // the graph stop nearest this stop's path position names the
+  // shelves seen there, preferring the marker's own side (even
+  // markers sit on the walker's left — see the offsets above).
   // Labels are model proposals carried in the graph; the chip only
   // ever shows one verbatim, never a guess made here.
   function shelfLabel(i) {
+    if (stops[i] && stops[i].shelfLabel) return stops[i].shelfLabel;
     if (!graph || !graph.stops || !graph.stops.length) return null;
     if (i < 0 || i >= anchorDist.length) return null;
     const u = anchorDist[i] / total;
@@ -510,6 +543,7 @@ SceneDrivers.strip = function (el) {
         <span class="strip-shelfbar"></span>
         <span class="strip-num">${i + 1}</span>
         <span class="strip-name">${esc(s.name)}</span>
+        ${s.shelfLabel ? `<span class="strip-shelf">${esc(s.shelfLabel)}</span>` : s.unplaced ? `<span class="strip-shelf">Not placed on the map</span>` : ""}
         <span class="strip-sub">${s.checked ? "Collected" : i === nextIdx ? "Next" : s.qty > 1 ? `× ${qtyFmt(s.qty)}` : "On the list"}</span>
         ${s.flagged ? `<span class="strip-flag" title="Reported missing">!</span>` : ""}
       </button>`).join("");

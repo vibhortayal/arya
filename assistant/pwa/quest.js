@@ -499,7 +499,15 @@ function qStops(sess) {
   const flagged = new Set(Q.storeReports.map(r => r.item_group || qnorm(r.item)));
   return sess.items.map(i => ({
     name: i.name, qty: i.qty, checked: i.checked,
-    flagged: flagged.has(i.group) || flagged.has(qnorm(i.name))
+    flagged: flagged.has(i.group) || flagged.has(qnorm(i.name)),
+    // Item–shelf matching (server-side at session creation): a
+    // matched stop carries its shelf label + path position; an
+    // unmatched stop in a graphed store is honestly "unplaced";
+    // a store with no graph sets neither field.
+    shelfLabel: i.shelf_label || null,
+    shelfU: (i.shelf_u === undefined ? null : i.shelf_u),
+    shelfSide: i.shelf_side || null,
+    unplaced: i.shelf_label !== undefined && i.shelf_u == null
   }));
 }
 async function qLoadStoreReports(store) {
