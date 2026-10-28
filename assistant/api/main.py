@@ -205,9 +205,12 @@ async def auth_logout(req: Request):
 
 @app.get("/auth/me")
 def auth_me(req: Request):
+    # Signed-out is a normal state, not an error (review
+    # 2026-10-28, U5): the boot probe reads user=None and shows
+    # the sign-in screen, with no 401 noise in the console.
     info = auth.session_info(req.cookies.get(auth.COOKIE))
     if not info:
-        raise HTTPException(401, "login required")
+        return {"user": None, "demo": False}
     return info
 
 

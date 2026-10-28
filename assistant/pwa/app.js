@@ -407,7 +407,7 @@ async function renderProfile() {
   $("#pf-card").innerHTML = `<p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
     <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p>`;
   $("#pf-stats").innerHTML =
-    `<div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Hunts</div></div>
+    `<div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
      <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
   const eagle = (profile.badges || []).find(b => b.id === "eagle_eye");
@@ -1124,7 +1124,7 @@ paintSpeak();
 async function boot() {
   const status = await api("/auth/status").catch(() => ({ has_users: true }));
   const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
-  if (me) {
+  if (me && me.user) {
     enterApp(me.user, me.demo);
     return;
   }
