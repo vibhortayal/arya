@@ -552,12 +552,10 @@ async function renderIntake() {
   const field = $("#add-text");
   if (!field) return;
   if (isDemo) {
-    field.disabled = true;
-    $("#add-submit").disabled = true;
     $("#add-status").textContent =
-      "Demo: the camera and microphone read live; nothing is saved, and typing is off.";
+      "Demo: type, snap a list or speak — the camera and microphone call the Meta API live. Changes last for this visit only.";
     $("#add-claude-line").textContent =
-      "The demo does not connect a Muse. The camera and microphone here call the Meta API live — try those.";
+      "The demo does not connect a Muse. Every other door works here.";
   }
 }
 
@@ -578,10 +576,10 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
     statusEl.textContent = "";
     if (out.demo) {
       if (previewEl) previewEl.innerHTML = `<div class="group pad" style="margin-top:10px">
-        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">demo preview — read live, not saved</span></p>
+        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">read live · kept for this demo visit only</span></p>
         ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
         ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
-      else statusEl.textContent = "Read live — demo preview, not saved.";
+      else statusEl.textContent = "Read live — kept for this demo visit only.";
     } else {
       toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
       renderScan().catch(showErr);
@@ -644,10 +642,6 @@ function bindAdd() {
           await fileReceiptPhoto(receiptFile, status, null);
           receiptFile = null;
         });
-      } else if (out.demo) {
-        // Preview only: the items land in the field, unsaved.
-        $("#add-text").value = (out.names || []).join(", ");
-        status.textContent = "Read live — a preview in the field; the demo saves nothing.";
       } else {
         toast(out.added === 1 ? "Added 1 item to your list."
           : `Added ${out.added} items to your list.`);
@@ -1130,6 +1124,7 @@ async function boot() {
   }
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-login"; });
   $("#login-title").textContent = status.has_users ? "Sign in" : "Create your account";
+  if (!status.has_users) $(".signin").open = true;
   $("#login-btn").textContent = status.has_users ? "Sign in" : "Create account";
   $("#login-form").addEventListener("submit", async ev => {
     ev.preventDefault();
@@ -1145,7 +1140,9 @@ async function boot() {
   });
   $("#demo-btn").addEventListener("click", async () => {
     const r = await fetch("/auth/demo", { method: "POST" });
-    if (r.ok) enterApp("demo", true);
+    if (r.ok) { enterApp("demo", true); return; }
+    $("#login-error").textContent = (await r.json().catch(() => ({}))).detail || "The demo did not open. Try again.";
+    $(".signin").open = true;
   });
 }
 
@@ -1157,9 +1154,6 @@ function enterApp(user, demo) {
   $("#demobar").hidden = !demo;
   if (demo) {
     $("#chat-demo-note").hidden = false;
-    $("#chat-input").disabled = true;
-    $("#chat-send").disabled = true;
-    $("#btn-mic").disabled = true;
     openShell();
     return;
   }

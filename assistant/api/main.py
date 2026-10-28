@@ -7,6 +7,7 @@ or judge_pending, which calls the judge — on the event loop.
 Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
 import hashlib, json, os
+from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
@@ -49,7 +50,7 @@ def _budget_guard(demo=False):
     demo household has its own smaller bucket (default $2): a crowd
     of judges can exhaust the demo's day, never the real accounts'
     (review 2026-10-28, H4)."""
-    if demo:
+    if demo or state.in_sandbox():
         cap = float(os.environ.get("ARYA_DEMO_DAILY_BUDGET_USD", "2"))
         spent = CostLedger(_LEDGER).spent_today("demo")
     else:
@@ -57,6 +58,12 @@ def _budget_guard(demo=False):
         spent = CostLedger(_LEDGER).spent_today("app")
     if spent >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
+
+
+def _ledger():
+    """The cost ledger for this request: demo sandbox calls spend from
+    the demo bucket, everything else from the app bucket."""
+    return CostLedger(_LEDGER, bucket="demo" if state.in_sandbox() else "app")
 
 
 # Per-IP sliding-window caps on the demo's unauthenticated surface:
@@ -78,20 +85,42 @@ def _demo_rate(bucket, key, limit_env, default):
 
 _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
-# The demo household is read-only, with live doors carved out: the
-# Add tab's camera and microphone call the Meta API on camera and
-# persist nothing (the photo routes return previews instead of
-# filing or listing; transcription is stateless). Every other demo
-# write is 403.
+# The demo household is a sandbox (review 2026-10-28): a judge can play
+# the whole loop — list, hunt in every mode and view, receipt finish,
+# Ask — and every write lands in an in-memory overlay for that visitor
+# alone (state.set_overlay). Nothing a demo visitor does reaches disk,
+# the shipped household, or another visitor; the overlay is dropped
+# when the session ages out of the LRU below. Routes that write
+# outside the state layer, or only exist to run batch model jobs,
+# stay closed to the demo.
+_DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
+                "/api/curator/run", "/api/judge/run", "/api/review/suggest",
+                "/api/intake/")
+# Doors that can call the Meta API: the per-IP live-door cap applies.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
-                    "/api/list/from-photo", "/api/quest/scan-shelf",
-                    "/api/quest/locate")
+                    "/api/list/from-photo", "/api/list/from-text",
+                    "/api/quest/scan-shelf", "/api/quest/locate",
+                    "/api/chat", "/api/quest/sessions", "/api/quest/shopoff")
+DEMO_SANDBOXES_MAX = 500
+_demo_sandboxes = OrderedDict()   # session cookie -> overlay dict
+
+
+def _demo_sandbox(token):
+    box = _demo_sandboxes.get(token)
+    if box is None:
+        box = _demo_sandboxes[token] = {}
+        while len(_demo_sandboxes) > DEMO_SANDBOXES_MAX:
+            _demo_sandboxes.popitem(last=False)
+    else:
+        _demo_sandboxes.move_to_end(token)
+    return box
 
 
 @app.middleware("http")
 async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
+    state.set_overlay(None)
     if protected:
         info = None
         authz = request.headers.get("authorization", "")
@@ -99,18 +128,24 @@ async def require_login(request, call_next):
             user = auth.api_token_user(authz[7:])
             if user:
                 info = {"user": user, "demo": False}
+        cookie = request.cookies.get(auth.COOKIE)
         if not info:
-            info = auth.session_info(request.cookies.get(auth.COOKIE))
+            info = auth.session_info(cookie)
         if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
-        if info["demo"] and request.method == "POST" and path in _DEMO_LIVE_DOORS:
-            if not _demo_rate(_demo_door_hits, _client_ip(request),
-                              "ARYA_DEMO_DOOR_RATE", 240):
-                return JSONResponse(
-                    {"detail": "demo rate limit — try again in a bit"},
-                    status_code=429)
-        if info["demo"] and request.method != "GET" and path not in _DEMO_LIVE_DOORS:
-            return JSONResponse({"detail": "the demo household is read-only"}, status_code=403)
+        if info["demo"]:
+            if request.method != "GET":
+                if path.startswith(_DEMO_CLOSED):
+                    return JSONResponse(
+                        {"detail": "this needs a real account — the demo household keeps nothing"},
+                        status_code=403)
+                if path.startswith(_DEMO_LIVE_DOORS) and not _demo_rate(
+                        _demo_door_hits, _client_ip(request),
+                        "ARYA_DEMO_DOOR_RATE", 240):
+                    return JSONResponse(
+                        {"detail": "demo rate limit — try again in a bit"},
+                        status_code=429)
+            state.set_overlay(_demo_sandbox(cookie))
         state.set_current_user(info["user"])
     return await call_next(request)
 
@@ -261,7 +296,7 @@ async def import_costco_json(req: Request):
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return dec
 
 
@@ -272,7 +307,7 @@ async def import_bulk(req: Request):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
     added = state.add_receipts(decs)
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"received": len(decs), "added": added, "total_receipts": len(state.receipts())}
 
 
@@ -282,10 +317,10 @@ async def decode_text_route(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return dec
 
 
@@ -300,10 +335,10 @@ async def intake_order_text(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     dec = await run_in_threadpool(decode_order_text, text, client)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
             "purchased_at": dec["purchased_at"], "lines": len(dec["lines"]),
             "total": dec["total"], "totals_reconcile": dec["totals_reconcile"]}
@@ -348,7 +383,7 @@ async def intake_structured(req: Request):
            "tax": body.get("tax"), "total": body.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
     added = state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"receipt_id": rid, "merchant": dec["merchant"], "added": added,
             "lines": len(lines), "totals_reconcile": reconcile,
             "unverified": sum(1 for l in lines if l["status"] != "auto")}
@@ -385,7 +420,7 @@ def curator_run():
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     from api.curator import run_curator
-    n = run_curator(MetaClient(ledger=CostLedger(_LEDGER)))
+    n = run_curator(MetaClient(ledger=_ledger()))
     return {"proposals": n}
 
 
@@ -491,11 +526,11 @@ async def decode_pdf(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     receipt = await run_in_threadpool(decode_text, text, client)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -521,12 +556,14 @@ async def decode_photo_route(req: Request):
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     if demo:
-        # The demo's Photo door runs the same live read and shows the
-        # lines as a preview; nothing is filed, nothing is judged.
-        return {"demo": True, "added": 0, "receipt": receipt}
+        # The demo files into the visitor's sandbox (never disk), so a
+        # hunt can finish on its receipt; the batch judge does not run.
+        receipt["live"] = True
+        added = state.add_receipts([receipt])
+        return {"demo": True, "added": added, "receipt": receipt}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -579,7 +616,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
     _budget_guard()
     from api.eyes.service import detect, match_item
     from datetime import date as _d
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     try:
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
@@ -650,7 +687,7 @@ async def chat_route(req: Request):
     _budget_guard()
     body = await _json_obj(req)
     from api.chat_service import chat as run_chat
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     try:
         return await run_in_threadpool(run_chat, body.get("messages", []), client)
     except RuntimeError as e:
@@ -704,7 +741,7 @@ def list_candidates():
 
 @app.post("/api/judge/run")
 def judge_run():
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=_ledger())
     return {"judged": state.judge_pending(client)}
 
 
@@ -748,7 +785,7 @@ async def list_from_text(req: Request):
         if not os.environ.get("MODEL_API_KEY"):
             raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
         _budget_guard()
-        client = MetaClient(ledger=CostLedger(_LEDGER))
+        client = MetaClient(ledger=_ledger())
         names = extract_items_model(text, client)
         source = "model"
     added = [_add_name_to_list(n) for n in names]
@@ -784,14 +821,12 @@ async def list_from_photo(req: Request):
                                        media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
-    if demo:
-        return {"demo": True, "kind": read["kind"],
-                "names": read["items"], "added": 0}
     if read["kind"] == "receipt":
         return {"kind": "receipt", "names": [], "added": 0}
+    # The demo adds too: its writes land in the visitor's sandbox.
     added = [_add_name_to_list(n) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],
-            "added": len(added)}
+            "added": len(added), "demo": demo}
 
 
 @app.post("/api/list/remove")
@@ -953,7 +988,7 @@ async def quest_create_session(req: Request):
             body.get("items") or [],
             driver=body.get("driver") or "strip",
             store_id=store_id, store_address=store_address,
-            client=MetaClient(ledger=CostLedger(_LEDGER)))
+            client=MetaClient(ledger=_ledger()))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess
@@ -1116,7 +1151,7 @@ async def quest_create_shopoff(req: Request):
         race = await run_in_threadpool(
             quest.create_shopoff, store, body.get("items") or [],
             body.get("opponent_handle", ""),
-            client=MetaClient(ledger=CostLedger(_LEDGER)))
+            client=MetaClient(ledger=_ledger()))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return race
