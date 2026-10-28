@@ -1400,7 +1400,7 @@ async function boot() {
   });
   $("#login-form").addEventListener("submit", async ev => {
     ev.preventDefault();
-    const body = JSON.stringify({ username: $("#login-user").value, password: $("#login-pass").value });
+    const body = JSON.stringify({ username: $("#login-user").value.trim(), password: $("#login-pass").value });
     const path = loginMode === "login" ? "/auth/login" : loginMode === "register" ? "/auth/register" : "/auth/setup";
     const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     if (!r.ok) {
@@ -1429,14 +1429,19 @@ function enterApp(user, demo) {
     openShell();
     return;
   }
+  const skipKey = "arya-connect-skipped:" + user;
+  let skipped = false;
+  try { skipped = localStorage.getItem(skipKey) === "1"; } catch (e) {}
   api("/auth/token").then(t => {
-    if (t.has_token) { openShell(); return; }
+    if (t.has_token || skipped) { openShell(); return; }
     // Connecting Muse is the first step of a new account.
     $("#view-connect").hidden = false;
     paintTokenRow($("#connect-token-row"));
     const finish = () => { $("#view-connect").hidden = true; openShell(); };
+    const skip = () => { try { localStorage.setItem(skipKey, "1"); } catch (e) {} finish(); };
     $("#connect-done").onclick = finish;
-    $("#connect-skip").onclick = finish;
+    $("#connect-skip").onclick = skip;
+    $("#connect-skip-top").onclick = skip;
   }).catch(() => openShell());
 }
 
