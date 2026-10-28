@@ -1,85 +1,60 @@
-# Architecture
+# Architecture — Arya Quest
 
-## Principle
+Perception at the edge, reasoning in the platform, the game on the
+phone. Two data planes never mix:
 
-Perception at the edge, reasoning in the platform, the game on the phone.
-Two data planes that never mix:
-
-| Plane | Contents | Owner | Shared? |
-|---|---|---|---|
-| Platform | Store models: point clouds, camera paths, shelf graphs, product placements | The platform | Yes — every player of that store |
-| Account | Lists, receipts, inventory, patterns, spend | The household | Never |
-
-A walkthrough video upload goes to the platform plane. A receipt or list upload goes to the account plane. Store modeling is never tied to an account; personal parsing is never published.
+| Plane | Contents | Shared? |
+| --- | --- | --- |
+| Platform | Store models: photos, point cloud, camera path, shelf graph, sightings, fresh shelf photos | Yes, with every player of that store |
+| Account | Lists, receipts, patterns, spend | Never |
 
 ## Pipelines
 
 ### 1. Store mapping (platform)
+`walkthrough video → frames → VGGT → point cloud + path → SAM 3.1 + Spark labels → shelf graph`
 
-`walkthrough video → frames → VGGT → point cloud + camera path → shelf graph → playable store`
+Frames at ~1 fps; VGGT infers poses and the cloud; SAM 3.1 segments
+shelves; Muse Spark names the regions. The graph carries the game
+logic; the photos and cloud carry the look. Shipped walk photos are
+scrubbed of people with SAM (`harness/scrub_walk_frames.py`).
 
-- Frames sampled ~1 fps from a continuous aisle stretch; blur and duplicate frames dropped. (90 frames covers a strong aisle run.)
-- **VGGT / VGGT-Ω** infers camera poses, depth, and the dense point cloud in one pass. Output GLB.
-- **SAM 3.1** segments individual products on key shelf frames.
-- **Muse Spark** reads shelf labels and price cards on those frames and names the segments.
-- A human-light review pass confirms placements. Result: a shelf graph — zones, shelves, product positions in cloud coordinates.
-- The cloud is decimated for phone delivery; the graph carries the game logic, the cloud carries the look.
+### 2. List and plan (account)
+One Add surface (text, mic, camera, Muse connector) feeds one list.
+Plan a hunt reads where each item was bought from the ledger
+(`GET /api/quest/plan`, counting only, $0) and sorts the list for the
+picked store.
 
-### 2. List intake (account)
+### 3. The Optimizer
+Runs after the store is picked. Merge repeats into quantities; correct
+typos against the dictionary (shown, with Undo); ask when a name could
+be two real products. Deterministic first; Spark only where code
+cannot settle. A clean list skips the screen.
 
-`one Add surface — text field (type or paste) / mic / camera / Muse chat → structured list in a session`
+### 4. The hunt (client PWA)
+Installable, works offline (grabs queue and sync). One store view per
+store: photos or shelf cards; 3D peek. Stops follow the shelf graph;
+any stop can be grabbed in any order. Where am I? matches a photo
+against the walk index locally ($0). Shelf Scan and Find it for me
+send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one
+item): SAM 3.1 proposes boxes, Spark verifies each crop. Verified pops
+are stored as sightings (item, store, shelf, time). A frame is kept as
+a fresh shelf photo only after SAM finds every person and pixelates
+them; if that step fails, nothing is kept.
 
-- Handwriting and messy lists are a perception task, not a form. Output: items, quantities, and the store the user picked.
-- **The Muse connector writes lists too** (owner requirement): "add oat milk and eggs to my Trader Joe's list" in chat lands in today's session for that store — created on the spot if none exists. The connector's add path already exists in the engine (`POST /api/list/add`, proven live); Quest makes it session-aware, so chat, the PWA, and the hunt all edit one list.
-- Arya's pattern engine annotates the list: what the household usually buys, what is probably still in the pantry, what is due. The hunt loads with judgment, not just text.
+### 5. Settle (account)
+`receipt photo → Muse Wonder (Spark fallback) → arithmetic check → ledger, patterns`
 
-### 2b. The Optimizer — step one before the game (owner requirement)
-
-Every list, from every door, passes the optimizer before a hunt can start. It runs after the store is picked, because resolution needs that store's catalog plus the household dictionary. Three moves, in order:
-
-1. **Merge.** The same product added repeatedly becomes one line with summed quantity ("milk" ×3 adds → Milk, qty 3). Always silent, always shown in the optimizer report.
-2. **Correct.** Typos and fuzzy names ("bluberry", "OJ", "chix") resolve against the household dictionary and the store catalog. High-confidence corrections apply and are shown with an undo; nothing is corrected silently.
-3. **Ask.** If a name can be two real products — blueberries: fresh organic vs frozen; milk: whole vs oat — the optimizer does not guess. If the household buys exactly one kind, it defaults and notes it; if it buys several, the player gets one-tap chips (the two kinds, or "both"). Unresolvable names stay as typed and flagged. This is the Curator's doctrine — never merge distinct products — applied at list time.
-
-Output: the clean list plus a one-line report (in → out · merged · corrected · questions). Unanswered questions block the start button; "keep as typed" is always an available answer. Fuzzy matching is deterministic code first; Spark judges only the cases code cannot settle.
-
-### 3. The hunt (client)
-
-- The PWA renders the store through the scene ladder (Photo default; Cloud, Aisle, Strip one tap away). No install, no app store.
-- The quest log is the list, ordered by the shelf graph into a route. The presented stop is a steer: any stop can be grabbed in any order (Discussion 44), and after a grab the hunt re-targets.
-- Positioning: "Where am I?" is shipped — one photo places the player at a stop (the Wonder-authored localizer: 42 of 45 held-out photos at the right stop). Continuous tracking is the rollout item. No indoor GPS.
-- Quest mode (play) and Express mode (rush) are two modes on one state machine (see GAME-DESIGN.md).
-
-### 4. Settle (account)
-
-`receipt photo → Muse Wonder (Spark fallback) → arithmetic verification → patterns, ledger, inventory`
-
-- Totals must reconcile or the lines queue for review — the client proposes, Arya disposes.
-- Returns net against purchases; patterns count kept items only.
-- The verified haul scores the finished hunt and updates what the next hunt suggests.
-- The finish snap is taken in the app, so the **Profile archive stores the receipt photo with its digitized record** (account plane, private). Receipts filed through Muse chat keep the standing rule: structured data only, the image stays with the user.
-
-## Components
-
-| Component | State | Notes |
-|---|---|---|
-| Arya engine (intake, dictionary, review queue, ledger, patterns, staple judge, Ask Arya) | **Live** — vibhortayal/arya | Per-account file state, token-gated connector, 317 tests |
-| Muse connector for Arya | **Live** | Data enters Arya through the user's own Muse — zero perception spend server-side |
-| Store registry + model store (platform plane) | **Shipped** (Stage E) | Store ID, location, mapper credit, cloud + graph versions; directory with search, favorites, add-with-address |
-| Mapping pipeline (VGGT + SAM + Spark labeling) | **Shipped** for the demo store | One Trader Joe's stretch live: 18 stops, 55 labeled regions |
-| Hunt client (scene ladder in the PWA) | **Shipped** (Stages B–D) | Photo-walk default; Cloud, Aisle, Strip one tap away; localizer places the player from one photo |
-| Hunt generation (list + shelf graph → route) | **Shipped** | Deterministic code; no model spend; item-to-shelf matching live |
+Totals must reconcile or lines queue for review. Returns net against
+purchases. The receipt banks the hunt's points; the original image is
+kept in the account.
 
 ## Cost rules
+- Math, routing, planning and patterns are code, $0.
+- Spark Standard for volume judgment; personal data is Standard-only.
+- Engine spend caps: $10/day for the app, $2/day for the demo bucket.
+- Find it for me scans one item: one item's SAM and Spark calls.
 
-- Math, routing, and pattern facts are computed in code at $0.
-- Muse Spark 1.3 Standard, low reasoning effort, cached prefixes, for volume judgment (staple judge, hunt narration). Personal data is Standard-only.
-- Contributor tier is eval/synthetic only — it may train on inputs; real household data never touches it.
-- Spend caps enforced in the engine: the app's $10/day ceiling, and the demo household on its own budget bucket ($2/day), so demo use cannot drain the app.
-- VGGT runs on free/open tooling for the hackathon; production mapping is a batch GPU job per store, amortized across all its players.
-
-## Known limits, stated
-
-- VGGT weights are non-commercial licensed. Fine for the hackathon; a commercial launch needs a license path or a successor model.
-- A walkthrough contains other shoppers. Platform contributions need a policy (faces, store permission) before public rollout — parked for post-hackathon.
-- One aisle reconstructs well before a whole store does. The demo scopes to what the spike proves.
+## Known limits
+- VGGT weights are non-commercial; a launch needs a license path.
+- Store permission and a photo opt-in policy are post-hackathon.
+- One aisle stretch is mapped; a whole store is rollout.
