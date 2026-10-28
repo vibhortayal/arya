@@ -631,6 +631,12 @@ def review_route():
 def item_route(item_id: str):
     detail = state.item_detail(item_id)
     if detail["entry"] is None and detail["pattern"] is None:
+        # A typed item has no receipts yet: show its page with the name
+        # it was typed as, instead of a 404 (first-timer play-test).
+        typed = state.flags().get(item_id) or {}
+        if typed.get("manual") and typed.get("name"):
+            detail["entry"] = {"item_id": item_id, "canonical_name": typed["name"]}
+            return detail
         raise HTTPException(404, "unknown item")
     return detail
 
