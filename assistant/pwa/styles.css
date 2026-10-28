@@ -50,8 +50,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 .btn.primary:disabled { background: var(--fill); color: var(--secondary); opacity: 1; }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 
-header { display: flex; justify-content: space-between; align-items: baseline; }
-.wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+/* No top bar (owner, 2026-10-28): the wordmark cost a row of
+ * screen on every view. The profile door floats instead. */
+.avatar.floating { position: fixed; top: 10px; right: 12px; z-index: 40;
+  box-shadow: 0 2px 10px rgba(27,27,30,.18); }
+
 .largetitle { font-size: 34px; font-weight: 700; letter-spacing: -0.022em; margin: 10px 0 2px; }
 .subtitle { color: var(--secondary); margin: 0 0 4px; font-size: 15px; }
 .muted { color: var(--secondary); font-size: 15px; }
@@ -519,7 +522,7 @@ textarea {
    column. HUD, view switch, the store view in a contained box with
    ONE target, the tools row, the suggested-next card, then the one
    list in flow. The tab bar hides while a hunt or run is open. */
-body.hunting #tabs, body.hunting > header, body.hunting #demobar { display: none !important; }
+body.hunting #tabs, body.hunting #avatar-btn, body.hunting #demobar { display: none !important; }
 /* Game shell: while hunting, a page gesture is never a zoom or a
    pull-to-refresh — the column still scrolls vertically, and the 3D
    canvas keeps its own drag. Full height follows the dynamic

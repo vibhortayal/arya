@@ -16,7 +16,8 @@ class CrewVisibility(unittest.TestCase):
         html = read("index.html")
         nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
         self.assertNotIn("view-profile", nav)
-        self.assertIn('id="avatar-btn"', html.split("</header>")[0])
+        self.assertNotIn("<header>", html)
+        self.assertIn('id="avatar-btn"', html)
         self.assertNotIn('id="userbar"', html)
         self.assertIn('id="btn-signout2"', html)
         self.assertIn('id="profile-account"', html)
