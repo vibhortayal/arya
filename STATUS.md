@@ -256,3 +256,20 @@ same evening — see Intake parity below.)
   SW cache arya-v18.
 - Suite: **166 green** (20 new in tests/test_shelf_match.py).
   **Not deployed** — deploy is a separate owner step.
+
+## Add is one surface (2026-10-27)
+
+- The five Add doors are gone. Add is one surface for the LIST:
+  a text field (typing and paste are the same act; placeholder
+  "Add items — type, or paste a list from WhatsApp"), a mic
+  (Voice Transcribe lands in the field), a camera, and one line
+  pointing at Muse chat. POST /api/list/from-text splits
+  deterministically ($0) with one Spark Standard fallback when
+  the split finds nothing sensible; POST /api/list/from-photo
+  reads a list photo into list adds, and routes a receipt photo
+  to "File it as a receipt" (/decode/photo) adding nothing.
+  Receipts enter by image only; the Receipts view has its own
+  "Add a receipt photo". Demo: camera/mic live, persist nothing.
+  SW cache arya-v19.
+- Suite: **180 green** (13 new in tests/test_add_surface.py,
+  parity tests extended). **Not deployed** — separate owner step.
