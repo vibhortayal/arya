@@ -13,7 +13,7 @@ List apps digitized the note. Nobody made the store itself playable, and nobody 
 
 ## Solution
 
-Arya Quest is a collection game played in a photoreal 3D model of the player's own store:
+Arya Quest is a collection game played in the player's own store — walked in photos of the actual aisles (the photo-walk), with a 3D model of the store one tap away:
 
 - **Personal spawns.** Your list items are the treasures, on their real shelves.
 - **Two moods.** Quest mode hunts — big targets, a guide character, collecting; a kid can hold the phone while the adult runs quantities, substitutions, and checkout. Express mode drops the game and shows the fastest route out. Same model, same list.
@@ -47,9 +47,9 @@ Every metric is receipt-verified, so the social layer needs no trust: leaderboar
 
 ## Rollout story
 
-- One store, one aisle, one playable hunt for the hackathon.
+- Shipped for the hackathon: one mapped Trader Joe's stretch (18 stops, 55 labeled regions) with playable hunts across the photo, 3D, Aisle, and Strip views, on a live household brain.
 - Mapping is crowdsourced from day one by design: a store is added by the first player who wants to hunt in it.
-- Depth path (post-hackathon): camera relocalization for live "you are here", more game skins (escape room), household analytics, mapper events and store leaderboards.
+- Depth path (post-hackathon): continuous camera relocalization — one-shot placement from a single photo ("Where am I?") is shipped; live tracking is the future item — more game skins (escape room), household analytics, mapper events and store leaderboards.
 
 ## One line
 

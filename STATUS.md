@@ -1,10 +1,10 @@
 # STATUS — where Arya stands (updated 2026-10-28)
 
-**Current state (2026-10-27, night).** Arya is live at
+**Current state (2026-10-28).** Arya is live at
 https://arya-pilot.duckdns.org. The engine — intake, ledger,
 patterns, the staple judge, Eyes, Ask Arya, the Muse connector —
 and the Quest layer (Stages A–E: sessions, the Optimizer, the
-playable hunt on the cloud/Aisle/Strip scene ladder, Shop-Off,
+playable hunt on the photo/Cloud/Aisle/Strip scene ladder (Photo is the default view), Shop-Off,
 friends and badges, item-to-shelf matching, the stores directory)
 are built and deployed. Intake parity holds: every door runs on
 Meta models (Muse in chat, Spark on the Meta API in the app).
@@ -104,6 +104,8 @@ arithmetic) staged in the Hatch workspace
 report is in the research repo. Raw files stay out of git.
 
 ## Blockers / owner items
+- Friend run notifications: designed (Discussion 24 — the run-start ping carries store + moment, never the list; Challenge / Add one thing / Follow), engine NOT built. The top known gap in the social layer.
+- Known deferred: stale-staple / near-duplicate curation (M8 — curator and product-rule territory, owner's call); /health reports a receipt count (M11 sub-point); the deny-by-default route-guard rewrite (L12 — the prefix list still guards routes).
 - Demo video + final submission package: pending the owner's go-ahead on the complete package. Nothing submits without it.
 - Public flip of this repo: lands with the submission freeze (DISCUSSION 28); the pre-flip scrub (VM internals out of the docs, secrets re-grep) is part of that step.
 - Closed: the Oracle API key is provisioned; the public hostname is live (DuckDNS + Let's Encrypt); the Trader Joe's walkthrough was obtained (Quest Stage C).
