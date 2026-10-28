@@ -1643,6 +1643,16 @@ async def quest_accept_friend(req: Request):
     return friend
 
 
+@app.post("/api/quest/friends/remove")
+async def quest_remove_friend(req: Request):
+    body = await _json_obj(req)
+    from api import social
+    friend = social.remove_friend(body.get("handle", ""))
+    if friend is None:
+        raise HTTPException(404, "no friend or request with that handle")
+    return {"ok": True, "removed": friend}
+
+
 @app.get("/api/quest/avatar")
 def quest_avatar():
     from api import avatar

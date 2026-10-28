@@ -3062,18 +3062,31 @@ async function renderFriends() {
     if (f.status === "pending_in") {
       return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
         <span class="sub">Wants to hunt with you</span></div>
-        <button class="chip" data-accept="${esc(f.handle)}" type="button">Accept</button></div>`;
+        <button class="chip" data-accept="${esc(f.handle)}" type="button">Accept</button>
+        <button class="chip" data-remove="${esc(f.handle)}" type="button">Decline</button></div>`;
     }
     if (f.status === "pending_out") {
       return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
-        <span class="sub">Request sent</span></div></div>`;
+        <span class="sub">Request sent</span></div>
+        <button class="chip" data-remove="${esc(f.handle)}" type="button">Cancel</button></div>`;
     }
     return `<div class="row"><div class="grow"><span class="name">@${esc(f.handle)}</span>
       <span class="sub">${f.top_badge ? `Top badge: ${esc(f.top_badge)}` : "No badges yet"}${f.last_hunt ? ` · Last hunt: ${esc(f.last_hunt)}` : " · No hunts yet"}</span></div>
-      <button class="chip" data-challenge="${esc(f.handle)}" type="button">Challenge</button></div>`;
+      <button class="chip" data-challenge="${esc(f.handle)}" type="button">Challenge</button>
+      <button class="chip" data-remove="${esc(f.handle)}" data-confirm="1" type="button">Remove</button></div>`;
   }).join("");
 }
 $("#fr-list").addEventListener("click", async ev => {
+  const rm = ev.target.closest("[data-remove]");
+  if (rm) {
+    if (rm.dataset.confirm && !confirm(`Remove @${rm.dataset.remove} from your friends?`)) return;
+    try {
+      await post("/api/quest/friends/remove", { handle: rm.dataset.remove });
+      toast(`@${rm.dataset.remove} removed.`);
+      renderFriends().catch(showErr);
+    } catch (e) { toast(e.message); }
+    return;
+  }
   const acc = ev.target.closest("[data-accept]");
   if (acc) {
     try {

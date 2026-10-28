@@ -83,3 +83,28 @@ class TestFriendsAcrossAccounts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_unfriend_clears_both_sides(self):
+        a, b = self.a, self.b
+        a.post("/api/quest/friends", json={"handle": "bob"})
+        b.post("/api/quest/friends/accept", json={"handle": "alice"})
+        self.assertEqual(len(self._friends(a)), 1)
+        r = a.post("/api/quest/friends/remove", json={"handle": "bob"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self._friends(a), [])
+        self.assertEqual(self._friends(b), [])
+        r = a.post("/api/quest/friends/remove", json={"handle": "bob"})
+        self.assertEqual(r.status_code, 404, r.text)
+
+    def test_cancel_and_decline_clear_both_sides(self):
+        a, b = self.a, self.b
+        a.post("/api/quest/friends", json={"handle": "bob"})
+        r = a.post("/api/quest/friends/remove", json={"handle": "@Bob"})
+        self.assertEqual(r.status_code, 200, r.text)  # cancel sent
+        self.assertEqual(self._friends(a), [])
+        self.assertEqual(self._friends(b), [])
+        a.post("/api/quest/friends", json={"handle": "bob"})
+        r = b.post("/api/quest/friends/remove", json={"handle": "alice"})
+        self.assertEqual(r.status_code, 200, r.text)  # decline received
+        self.assertEqual(self._friends(a), [])
+        self.assertEqual(self._friends(b), [])
