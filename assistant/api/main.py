@@ -660,19 +660,88 @@ async def review_resolve(req: Request):
     return {"ok": True}
 
 
+# --- Stores (Stage E): the platform directory + My Stores ---
+
+@app.get("/api/stores/search")
+def stores_search(q: str = "", quests: int = 0):
+    from api import stores as stores_mod
+    return {"stores": stores_mod.search_views(q, quests_only=bool(quests))}
+
+
+@app.get("/api/stores/mine")
+def stores_mine():
+    from api import stores as stores_mod
+    return {"stores": stores_mod.mine()}
+
+
+@app.post("/api/stores/mine")
+async def stores_add_mine(req: Request):
+    body = await req.json()
+    store_id = (body.get("store_id") or "").strip()
+    if not store_id:
+        raise HTTPException(400, "store_id is required")
+    from api import stores as stores_mod
+    row = stores_mod.add_to_mine(store_id)
+    if row is None:
+        raise HTTPException(404, "no such store in the directory")
+    return row
+
+
+@app.post("/api/stores")
+async def stores_create(req: Request):
+    body = await req.json()
+    from api import stores as stores_mod
+    try:
+        store, _created = stores_mod.create_store(
+            body.get("name"), body.get("street"), body.get("city"),
+            body.get("state"), body.get("zip"),
+            created_by=state._current_user.get())
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return stores_mod.add_to_mine(store["id"])
+
+
+@app.post("/api/stores/favorite")
+async def stores_favorite(req: Request):
+    body = await req.json()
+    store_id = (body.get("store_id") or "").strip()
+    if not store_id:
+        raise HTTPException(400, "store_id is required")
+    if "favorite" not in body:
+        raise HTTPException(400, "favorite is required")
+    from api import stores as stores_mod
+    row = stores_mod.set_favorite(store_id, body.get("favorite"))
+    if row is None:
+        raise HTTPException(404, "that store is not in your stores")
+    return row
+
+
 # --- Arya Quest (Stage A): sessions, optimizer, Shop-Off, social ---
 
 @app.post("/api/quest/sessions")
 async def quest_create_session(req: Request):
     body = await req.json()
     store = (body.get("store") or "").strip()
+    store_id = (body.get("store_id") or "").strip() or None
+    store_address = None
+    if store_id:
+        # A directory store wins over the typed name: the session
+        # snapshots the directory's name + address (Stage E).
+        from api import stores as stores_mod
+        snap = stores_mod.snapshot(store_id)
+        if snap is None:
+            raise HTTPException(404, "no such store in the directory")
+        store = snap["name"]
+        store_address = snap["address"]
     if not store:
         raise HTTPException(400, "store is required")
     from api import quest
     try:
         sess = quest.create_session(store, body.get("mode") or "quest",
                                     body.get("items") or [],
-                                    driver=body.get("driver") or "strip")
+                                    driver=body.get("driver") or "strip",
+                                    store_id=store_id,
+                                    store_address=store_address)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess
