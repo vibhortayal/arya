@@ -53,11 +53,12 @@ let isDemo = false;
 
 const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg>`;
 
-function listRow(i) {
+function listRow(i, tags) {
   const reason = [i.due_reason, i.judge_reason].filter(Boolean).join(" · ");
+  const tagHtml = (tags || []).map(t => `<span class="storetag">${esc(t)}</span>`).join("");
   return `<div class="row listrow${i.checked ? " checked" : ""}">
     <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
-    <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>
+    <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}
     ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}</div>
     <div class="stepper">
       <button data-act="dec" data-id="${esc(i.item_id)}" aria-label="One less">−</button>
@@ -74,16 +75,190 @@ function bindItemLinks(root) {
     a.addEventListener("click", ev => { ev.preventDefault(); renderItem(a.dataset.id); }));
 }
 
+/* The owner's Today/List line, in his format: a count, the names,
+ * the evidence, and the returns rule — plain text, no cards. */
+function staplesLine(items, verified) {
+  const tail = ` — learned from ${verified} verified receipt${verified === 1 ? "" : "s"}. Returned items never re-suggested.`;
+  if (!items.length) return `Nothing due${tail}`;
+  return `${items.length} staple${items.length === 1 ? "" : "s"} due: ${items.map(i => i.name).join(" · ")}${tail}`;
+}
+
+async function verifiedReceipts() {
+  const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
+  return archive.receipts.filter(r => r.totals_reconcile).length;
+}
+
+/* ---------------- Today (decluttered) ----------------
+ * Greeting, ONE hero card (the resumable hunt; Resume is the only
+ * primary button), compact game rows, one Needs-your-eye row, and
+ * the list as one plain-text line. No money, no Community/Profile
+ * cards — those live behind the Profile tab. */
+
+const QSTATE_LBL = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished — add the receipt", done: "Done" };
+const QMODE_LBL = { quest: "Quest", express: "Express" };
+const BASKET_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.8 13 11 7.2M15.2 13 13 7.2"/><path d="M3.5 13h17l-1.8 6a2 2 0 0 1-1.9 1.4H7.2A2 2 0 0 1 5.3 19L3.5 13z"/><path d="M9 16.2v2.3M12 16.2v2.3M15 16.2v2.3"/></svg>`;
+
+function sessProgress(s) {
+  const total = s.items.length;
+  const done = s.items.filter(i => i.checked).length;
+  return { done, total };
+}
+
+function openSess(id) {
+  const s = window.qSessionById ? qSessionById(id) : null;
+  if (s && window.qOpenSession) qOpenSession(s);
+}
+
+function paintTodayHero(sessions) {
+  const el = $("#today-hero");
+  const rank = { playing: 0, paused: 1, finished: 2, not_started: 3 };
+  const hero = sessions.filter(s => s.state !== "done")
+    .sort((a, b) => (rank[a.state] ?? 9) - (rank[b.state] ?? 9))[0];
+  if (!hero) { el.innerHTML = ""; return; }
+  const p = sessProgress(hero);
+  const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  const kicker = hero.state === "not_started" ? "Up next — your next game" : "In progress — your next action";
+  const btn = hero.state === "finished" ? "Add the receipt ▸" : hero.state === "not_started" ? "Start ▸" : "Resume ▸";
+  el.innerHTML = `<article class="herocard">
+    <p class="hero-k">${kicker}</p>
+    <h3 class="hero-title">${esc(hero.store)} · ${QMODE_LBL[hero.mode] || esc(hero.mode)}</h3>
+    <p class="hero-sub">${p.total} item${p.total === 1 ? "" : "s"} · from your ${esc(hero.store)} list</p>
+    <span class="track"><span class="bar" style="width:${pct}%"></span></span>
+    <span class="hero-state">${QSTATE_LBL[hero.state] || esc(hero.state)} · ${p.done} of ${p.total} collected</span>
+    <button class="btn primary wide" data-hero="${esc(hero.id)}" type="button">${btn}</button>
+  </article>`;
+  el.querySelector("[data-hero]").addEventListener("click", ev => openSess(ev.currentTarget.dataset.hero));
+}
+
+function paintTodayGames(sessions) {
+  const el = $("#quest-sessions");
+  el.innerHTML = sessions.length ? sessions.map(s => {
+    const p = sessProgress(s);
+    const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+    const bar = (s.state === "playing" || s.state === "paused")
+      ? `<span class="track g-bar"><span class="bar" style="width:${pct}%"></span></span>` : "";
+    return `<button class="gamerow" data-sess="${esc(s.id)}" type="button">
+      <span class="storeic">${BASKET_SVG}</span>
+      <span class="g-main"><span class="g-name">${esc(s.store)} — ${QMODE_LBL[s.mode] || esc(s.mode)}</span>
+      <span class="g-meta">${QSTATE_LBL[s.state] || esc(s.state)} · ${p.done} of ${p.total}</span></span>
+      ${bar}<span class="chev">›</span></button>`;
+  }).join("") : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
+}
+
 async function renderHome() {
   const h = await api("/api/home");
-  $("#asof").textContent = h.as_of ? `As of ${fmtDate(h.as_of)}` : "";
-  $("#running-low").innerHTML = h.running_low.length
-    ? h.running_low.map(p => `<div class="row"><div class="grow"><a href="#" class="name item-link" data-id="${esc(p.item_id)}">${esc(p.name)}</a><span class="sub">${esc(p.due_window ? `around ${fmtShort(p.due_window[0])} – ${fmtShort(p.due_window[1])} · ${p.reason}` : p.reason)}${p.judge_reason ? ` · ${esc(p.judge_reason)}` : ""}</span></div></div>`).join("")
-    : empty("Nothing is running low.");
-  listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
-  $("#smart-list").innerHTML = h.list.items.length
-    ? h.list.items.map(listRow).join("")
-    : empty("The list is empty. Nothing is due yet.");
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const d = h.as_of ? new Date(`${h.as_of}T12:00:00`) : new Date();
+  $("#today-dow").textContent = `${days[d.getDay()]} · ${h.as_of ? fmtDate(h.as_of) : ""}`;
+  let sessions = [];
+  if (window.qLoadSessions) {
+    try { sessions = await qLoadSessions(); } catch (e) { sessions = []; }
+  }
+  paintTodayHero(sessions);
+  paintTodayGames(sessions);
+  const [q, cur] = await Promise.all([
+    api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
+    api("/api/curator").catch(() => ({ proposals: [] }))
+  ]);
+  const n = (q.lines || []).length + (q.unresolved || []).length + (cur.proposals || []).length;
+  $("#today-eye").innerHTML = n
+    ? `<button class="hubrow" id="today-eye-btn" type="button"><span class="hr-label">Needs your eye</span><span class="countbadge">${n}</span><span class="chev">›</span></button>`
+    : "";
+  const eyeBtn = $("#today-eye-btn");
+  if (eyeBtn) eyeBtn.addEventListener("click", () => { show("view-receipts"); refresh("view-receipts"); });
+  $("#today-listline-text").textContent = staplesLine(h.list.items, await verifiedReceipts());
+}
+
+$("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
+
+/* ---------------- List (B1: one list, a store lens) ----------------
+ * Store affinity comes from purchase history: /api/items/{id}
+ * price_by_store is the honest source (the dictionary tracks
+ * store-varying prices). An item with no history at a store sits in
+ * "Could grab here too" under that store's lens. Check-off is the
+ * same global flag in every lens — the lens never duplicates. */
+
+let listLens = "All";
+let listData = null;
+const itemStores = {};
+
+async function loadItemStores(items) {
+  await Promise.all(items.map(async i => {
+    if (itemStores[i.item_id]) return;
+    try {
+      const d = await api(`/api/items/${encodeURIComponent(i.item_id)}`);
+      itemStores[i.item_id] = Object.keys(d.price_by_store || {});
+    } catch (e) { itemStores[i.item_id] = []; }
+  }));
+}
+
+function paintStoreFilter(items) {
+  const stores = [...new Set(items.flatMap(i => itemStores[i.item_id] || []))].sort();
+  if (listLens !== "All" && !stores.includes(listLens)) listLens = "All";
+  $("#store-filter").innerHTML = ["All", ...stores].map(s =>
+    `<button class="chip" data-lens="${esc(s)}" aria-pressed="${String(listLens === s)}" type="button">${esc(s)}</button>`).join("");
+}
+
+$("#store-filter").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-lens]");
+  if (!b) return;
+  listLens = b.dataset.lens;
+  paintStoreFilter(listData.list.items);
+  paintListGroups();
+});
+
+function paintListGroups() {
+  const items = listData.list.items;
+  const box = $("#smart-list");
+  if (!items.length) { box.innerHTML = empty("The list is empty. Nothing is due yet."); return; }
+  if (listLens === "All") {
+    box.innerHTML = `<div class="group">${items.map(i => listRow(i, itemStores[i.item_id] || [])).join("")}</div>`;
+  } else {
+    const mine = items.filter(i => (itemStores[i.item_id] || []).includes(listLens));
+    const rest = items.filter(i => !(itemStores[i.item_id] || []).includes(listLens));
+    box.innerHTML =
+      `<p class="grouplabel">Your ${esc(listLens)} list</p>` +
+      (mine.length ? `<div class="group">${mine.map(i => listRow(i, [])).join("")}</div>`
+                   : empty(`Nothing on your list is usually bought at ${esc(listLens)}.`)) +
+      (rest.length ? `<p class="grouplabel">Could grab here too</p><div class="grabgroup"><div class="group">${rest.map(i => listRow(i, [])).join("")}</div></div>` : "");
+  }
+  bindItemLinks(box);
+}
+
+/* The list-row actions (check / stepper / remove). The endpoints
+ * always existed; the Stage 6 file split dropped these handlers —
+ * restored here, one delegation for every lens. */
+$("#smart-list").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-act]");
+  if (!b) return;
+  const id = b.dataset.id, item = listItems[id];
+  try {
+    if (b.dataset.act === "check") {
+      await post("/api/list/check", { item_id: id, checked: !(item && item.checked) });
+    } else if (b.dataset.act === "inc" || b.dataset.act === "dec") {
+      const cur = item ? Number(item.qty) || 1 : 1;
+      await post("/api/list/qty", { item_id: id, qty: Math.max(1, cur + (b.dataset.act === "inc" ? 1 : -1)) });
+    } else if (b.dataset.act === "remove") {
+      await post("/api/list/remove", { item_id: id });
+    } else return;
+    renderList().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+$("#list-add-form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const input = $("#list-add-input");
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    await post("/api/list/add", { name });
+    input.value = "";
+    toast(`Added ${name} to your list.`);
+    renderList().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+function paintListNotes(h) {
   let notes = "";
   if (h.seen && h.seen.length) {
     notes += h.seen.map(s => `<div class="row"><div class="grow"><span class="name">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`).join("");
@@ -93,7 +268,27 @@ async function renderHome() {
       <button class="chip" data-check-ok="${esc(c.item_id)}">Still good</button>
       <button class="chip" data-check-expired="${esc(c.item_id)}">It expired</button></div></div>`).join("");
   }
-  $("#home-notes").innerHTML = notes ? `<h3 class="sect">Worth a look</h3><div class="group">${notes}</div>` : "";
+  $("#list-notes").innerHTML = notes ? `<h3 class="sect">Worth a look</h3><div class="group">${notes}</div>` : "";
+  bindItemLinks($("#list-notes"));
+}
+
+$("#list-notes").addEventListener("click", async ev => {
+  const ok = ev.target.closest("[data-check-ok]");
+  const ex = ev.target.closest("[data-check-expired]");
+  if (!ok && !ex) return;
+  try {
+    if (ok) {
+      await post("/api/list/check-ok", { item_id: ok.dataset.checkOk });
+      toast("Still good — Arya will ask again next cycle.");
+    } else {
+      await post(`/api/items/${encodeURIComponent(ex.dataset.checkExpired)}/expired`);
+      toast("Marked expired. It's on your list.");
+    }
+    renderList().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+function paintCart(h) {
   const c = h.cart;
   $("#cart").innerHTML =
     row(`${esc(c.store)} · ${c.items.length} items`, c.state === "approved" ? "Approved" : "Waiting for your approval",
@@ -106,11 +301,21 @@ async function renderHome() {
     try {
       await post("/api/cart/approve");
       toast("Cart approved. Nothing was ordered — the cart is a proposal.");
-      renderHome();
+      renderList().catch(showErr);
     } catch (e) { toast(e.message); b.disabled = false; }
   });
-  bindItemLinks($("#running-low"));
-  bindItemLinks($("#smart-list"));
+}
+
+async function renderList() {
+  const h = await api("/api/home");
+  listData = h;
+  listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
+  $("#list-line").textContent = staplesLine(h.list.items, await verifiedReceipts());
+  await loadItemStores(h.list.items);
+  paintStoreFilter(h.list.items);
+  paintListGroups();
+  paintListNotes(h);
+  paintCart(h);
 }
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
@@ -173,11 +378,52 @@ function paintThemeSeg() {
     b.setAttribute("aria-pressed", String(b.dataset.themeChoice === cur)));
 }
 
+/* One unified Profile (B6): the Quest player card (handle, stats,
+ * badge shelf, mapper credits, Eagle Eye + spots) merged with the
+ * account Profile (account, Muse token card, Appearance, receipt
+ * count). There is no second, brain-only profile. */
 async function renderProfile() {
   $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")));
   paintTokenRow($("#profile-token-row"));
   paintThemeSeg();
+  const [profile, archive] = await Promise.all([
+    api("/api/quest/profile").catch(() => null),
+    api("/api/quest/receipts").catch(() => ({ receipts: [] }))
+  ]);
+  $("#pf-receipts-sub").textContent = archive.receipts.length
+    ? `${archive.receipts.length} receipts · the private archive` : "The private archive";
+  if (!profile) {
+    $("#pf-card").innerHTML = empty("Your player card could not load.");
+    $("#pf-stats").innerHTML = "";
+    $("#pf-spots").innerHTML = "";
+    $("#pf-badges").innerHTML = "";
+    $("#pf-stores").innerHTML = "";
+    return;
+  }
+  const s = profile.stats;
+  $("#pf-card").innerHTML = `<p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
+    <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p>`;
+  $("#pf-stats").innerHTML =
+    `<div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Hunts</div></div>
+     <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
+     <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
+  const eagle = (profile.badges || []).find(b => b.id === "eagle_eye");
+  $("#pf-spots").innerHTML =
+    row("Spots reported", "Points land only when a spot verifies", String(s.spots_reported || 0)) +
+    (eagle ? row("Eagle Eye", esc(eagle.detail || eagle.criteria), eagle.earned ? "Earned ✓" : "Locked") : "");
+  $("#pf-badges").innerHTML = (profile.badges || []).map(b =>
+    `<div class="badgetile${b.earned ? "" : " locked"}"><h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
+     <span class="b-state">${b.earned ? "Earned ✓" : `Locked · ${esc(b.detail || "")}`}</span></div>`).join("");
+  $("#pf-stores").innerHTML = profile.mapped_stores && profile.mapped_stores.length
+    ? profile.mapped_stores.map(st => row(esc(st), "Mapped by you", "✓")).join("")
+    : empty("No stores mapped yet. Mapping a store is how its 3D view gets built.");
 }
+
+$("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refresh("view-analysis"); });
+/* Analysis is reached only from Profile, and the wireframe's back
+ * arrow returns there — not through the quest view stack. */
+$("#an-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
+$("#btn-receipts").addEventListener("click", () => { show("view-receipts"); refresh("view-receipts"); });
 
 $("#theme-seg").addEventListener("click", ev => {
   const b = ev.target.closest("[data-theme-choice]");
@@ -317,7 +563,7 @@ async function renderIntake() {
     let has = false;
     try { has = (await api("/auth/token")).has_token; } catch (e) { /* keep false */ }
     claudeInner = has
-      ? `<p class="nomargin"><strong>Connected.</strong></p><p class="muted nomargin">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits in the review queue below.</p>`
+      ? `<p class="nomargin"><strong>Connected.</strong></p><p class="muted nomargin">Send a receipt photo, paste an online order, or send a fridge photo by chat or WhatsApp. Arya verifies every line; anything it cannot settle waits in Receipts, under Needs your eye.</p>`
       : `<p class="nomargin"><strong>Not connected yet.</strong></p><p class="muted nomargin">Connect Muse in Profile to file receipts and orders by chat or WhatsApp.</p>`;
   }
   el.innerHTML =
@@ -378,7 +624,7 @@ function bindDoors() {
           ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
       } else {
         status.textContent = "";
-        toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in the review queue below.`);
+        toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
         renderScan().catch(showErr);
       }
     } catch (e) {
@@ -573,28 +819,62 @@ async function renderEyes() {
     }));
 }
 
-/* ---------------- Dashboard ---------------- */
+/* ---------------- Receipts (B4) ----------------
+ * Needs-your-eye cards on top (the review queue + the Curator,
+ * whose renderers and handlers are unchanged — only their home
+ * moved), then the archive. Rows open the receipt detail. No spend
+ * content lives here; spend is Analysis, reached from Profile. */
 
-async function renderDash() {
+async function renderReceipts() {
+  await Promise.all([renderScan().catch(() => {}), renderCurator().catch(() => {})]);
+  const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
+  $("#rc-count").textContent = archive.receipts.length
+    ? `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted` : "";
+  $("#rc-archive").innerHTML = archive.receipts.length ? archive.receipts.map(r => `
+    <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
+      <span class="grow"><span class="name">${esc(r.merchant)}</span>
+      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
+      <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
+    </button>`).join("") : empty("No receipts filed yet.");
+}
+
+$("#rc-archive").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-receipt]");
+  if (b && window.openReceipt) openReceipt(b.dataset.receipt).catch(showErr);
+});
+
+/* ---------------- Analysis (B5) ----------------
+ * Spend is live because it is arithmetic over verified receipts —
+ * no estimates. The dashboard API reports returns as one all-time
+ * total and per-month spend gross of returns, so the panel labels
+ * each figure with the period it actually covers; Patterns and
+ * Trends are named "Coming next" panels, never faked. */
+
+async function renderAnalysis() {
   const d = await api("/api/dashboard");
   const monthKeys = Object.keys(d.spend_by_month).sort();
   const monthName = k => `${MONTHS[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}`;
-  const period = monthKeys.length ? `${monthName(monthKeys[0])} – ${monthName(monthKeys[monthKeys.length - 1])}` : "";
-  $("#dash-totals").innerHTML =
-    (period ? `<p class="muted" style="padding-top:10px">${period} · after returns, item totals match the item pages</p>` : "") +
-    row("Spend", "", money(d.spend_total)) +
-    row("Returns", "", "−" + money(d.returns_total)) +
-    row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) +
-    row("Trips", "", String(d.trip_count));
+  const latest = monthKeys[monthKeys.length - 1];
+  const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
+  const monthReceipts = latest
+    ? archive.receipts.filter(r => String(r.purchased_at).startsWith(latest)).length : 0;
+  $("#an-spend").innerHTML = latest ? `
+    <p class="an-cap">${esc(monthName(latest))} total</p>
+    <p class="bignum">${money(d.spend_by_month[latest])}</p>
+    <p class="muted" style="text-align:center">Across ${monthReceipts} receipt${monthReceipts === 1 ? "" : "s"} filed this month</p>
+    ${row("Returns netted", "All receipts — refunds reconcile into the ledger; returned items never count in patterns", "−" + money(d.returns_total))}
+    ${row("All-time spend", `${d.trip_count} trips`, money(d.spend_total))}
+    ${d.for_others_total ? row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) : ""}`
+    : empty("No trips yet.");
   const months = Object.entries(d.spend_by_month);
   const max = Math.max(...months.map(([, v]) => v), 1);
-  $("#dash-months").innerHTML = months.map(([m, v]) =>
+  $("#an-months").innerHTML = months.map(([m, v]) =>
     `<div class="month-row"><span>${esc(monthName(m))}</span><div class="track"><div class="bar" style="width:${Math.round(v / max * 100)}%"></div></div><span class="money">${money(v)}</span></div>`).join("") || empty("No trips yet.");
-  $("#dash-stores").innerHTML = Object.entries(d.spend_by_store)
+  $("#an-stores").innerHTML = Object.entries(d.spend_by_store)
     .sort((a, b) => b[1] - a[1]).map(([s, v]) => row(esc(s), "", money(v))).join("") || empty("No trips yet.");
-  $("#dash-top").innerHTML = d.top_items.map(i =>
+  $("#an-top").innerHTML = d.top_items.map(i =>
     `<div class="row"><div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a></div><div class="money">${money(i.spend)}</div></div>`).join("") || empty("No items yet.");
-  bindItemLinks($("#dash-top"));
+  bindItemLinks($("#an-top"));
 }
 
 /* ---------------- Item page ---------------- */
@@ -662,9 +942,11 @@ document.querySelectorAll("#tabs button").forEach(b =>
 $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(lastView); refresh(lastView); });
 
 function refresh(view) {
-  if (view === "view-home") { renderHome().catch(showErr); if (window.renderQuestHub) window.renderQuestHub(); }
-  if (view === "view-scan") { renderIntake().catch(showErr); renderCurator().catch(showErr); renderScan().catch(showErr); renderEyes().catch(showErr); }
-  if (view === "view-dash") renderDash().catch(showErr);
+  if (view === "view-home") renderHome().catch(showErr);
+  if (view === "view-list") renderList().catch(showErr);
+  if (view === "view-scan") { renderIntake().catch(showErr); renderEyes().catch(showErr); }
+  if (view === "view-receipts") renderReceipts().catch(showErr);
+  if (view === "view-analysis") renderAnalysis().catch(showErr);
   if (view === "view-profile") renderProfile().catch(showErr);
 }
 
@@ -675,6 +957,15 @@ function chatLine(kind, text) {
   const el = document.createElement("div");
   el.className = "bubble " + kind;
   el.textContent = text;
+  $("#chat-log").appendChild(el);
+  el.scrollIntoView({ block: "end" });
+}
+/* B3: a confirmed action renders as a chip under the reply — the
+ * wireframe's "✓ Yogurt marked finished" — not as a log line. */
+function chatChip(text) {
+  const el = document.createElement("div");
+  el.className = "bubble actionchip";
+  el.textContent = "✓ " + text;
   $("#chat-log").appendChild(el);
   el.scrollIntoView({ block: "end" });
 }
@@ -750,7 +1041,7 @@ $("#chat-form").addEventListener("submit", async ev => {
     chatHistory.push({ role: "assistant", content: res.reply });
     chatLine("arya", res.reply);
     speak(res.reply);
-    (res.applied || []).forEach(a => chatLine("sys", "Done: " + a));
+    (res.applied || []).forEach(a => chatChip(a));
     (res.skipped || []).forEach(a => chatLine("sys", a));
   } catch (e) {
     chatLine("arya", "I could not answer that: " + e.message);
