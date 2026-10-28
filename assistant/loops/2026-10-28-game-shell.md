@@ -57,3 +57,25 @@ recounts, Express quiet, sound off by default). Playwright drive on
 the demo household: every check passed (HUD points, +10 float,
 milestones, confetti shows and hides, Score 65 → banked 115 with the
 level bar, Today level chip).
+
+# Part 3: offline hunts
+
+- A grab or put back that cannot reach the server (a network
+  failure, never a refusal) applies on the phone and waits in an
+  outbox in localStorage, in order. It replays on the `online` event,
+  when a hunt opens, and before the next online grab; a refused op is
+  dropped, the rest still sync. A banner says "Offline — keep
+  grabbing" with the count waiting; "Back online — N grabs synced".
+- `api()` keeps network failures a TypeError with a readable message.
+- The shell and every store asset already viewed come from the
+  service worker cache (network-first, cache fallback); Finish and
+  receipts still need a connection. Unseen store photos are not
+  pre-fetched (17 MB of frames is too much mobile data to take
+  unasked).
+- Service worker arya-v39.
+
+Verification: suite 367 OK (1 skipped), new `test_offline_hunt.py`
+(node: local apply, queue order, replay order, refusals never queued,
+a refused queued op dropped). Playwright with the browser set offline
+mid-hunt: two grabs counted and paid points offline, the banner
+showed 2 waiting, and after reconnecting the server held both grabs.
