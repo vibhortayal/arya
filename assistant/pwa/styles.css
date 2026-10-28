@@ -347,6 +347,41 @@ textarea {
   background: #FAFAFA; box-shadow: var(--shadow);
 }
 .cloud-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+/* Photo-walk driver (Discussion 43): the store's frames along
+   the walk path — the sharp frame over a blurred fill of
+   itself, crossfaded by path fraction (the prototype's
+   treatment). */
+.photoview {
+  position: absolute; inset: 0; overflow: hidden; background: #FAFAFA;
+}
+.photo-bg {
+  position: absolute; inset: -40px; width: calc(100% + 80px);
+  height: calc(100% + 80px); object-fit: cover;
+  filter: blur(28px) brightness(.62);
+}
+.photo-sharp { position: absolute; inset: 0; transition: transform 0.18s ease-out; }
+.photo-frame {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 100%; height: auto; max-height: 100%; object-fit: contain;
+  opacity: 0; transition: opacity .45s ease;
+}
+.photo-frame.on { opacity: 1; }
+@media (min-aspect-ratio: 1/1) {
+  .photo-frame { top: 0; transform: none; height: 100%; object-fit: cover; }
+}
+.photo-dots { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 24px; }
+.photo-dot {
+  position: absolute; transform: translateX(-50%);
+  width: 24px; height: 24px; border-radius: 50%; padding: 0;
+  border: 1.5px solid var(--line); background: rgba(255, 255, 255, 0.92);
+  color: var(--ink2); font-size: 11px; font-weight: 700;
+  display: grid; place-items: center; cursor: pointer;
+}
+.photo-dot.got { background: var(--fill2); color: var(--ink3); }
+.photo-dot.next {
+  background: var(--acc); border-color: var(--acc); color: #fff;
+  box-shadow: 0 0 0 3px var(--acc-soft);
+}
 /* Stage D: the shelf label for the next stop, from shelf-graph.json. */
 .cloud-shelf {
   position: absolute; top: 10px; left: 50%; transform: translateX(-50%);

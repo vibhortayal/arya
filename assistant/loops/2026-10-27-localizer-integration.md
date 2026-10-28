@@ -91,3 +91,14 @@ spike's 1.3–1.6 s was the full index on its run host. The gate
 - SW cache **arya-v25**. Shelf graph untouched (the duplicate
   Frozen Pizza stops stay; the session-stop snap absorbs them).
   **Not pushed, not deployed** — parent reviews and ships.
+
+## Addendum — gating amendment (2026-10-27, photo-driver stage)
+
+The Cloud-only gating written above was superseded the same
+night by the owner's photo-walk decision (Discussion 43):
+"Where am I?" now shows on any hunt in a mapped store —
+Photo or Cloud driver — because the anchor is a path
+fraction, driver-independent. The btn-locate pin in
+tests/test_localizer.py was updated to the new rule in the
+photo-driver commit; Shelf Scan remains Strip-only, so the
+corner slot still never shows both.
