@@ -253,5 +253,43 @@ class TestDemoStoreWritesBlocked(unittest.TestCase):
             "favorite": False}).status_code == 403
 
 
+class TestStoreShell(unittest.TestCase):
+    """The Stage E screens exist in the shell and the pick is wired
+    to the API: favorites first, addresses shown, drawn-SVG stars."""
+
+    def read(self, name):
+        pwa = os.path.join(os.path.dirname(__file__), "..", "pwa")
+        with open(os.path.join(pwa, name), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_store_views_exist(self):
+        html = self.read("index.html")
+        for vid in ("view-store", "view-stores-find", "view-stores-mine",
+                    "view-stores-add"):
+            self.assertIn(f'id="{vid}"', html)
+        for fid in ("sf-q", "sf-chips", "sf-results", "sm-list",
+                    "sa-name", "sa-street", "sa-city", "sa-state",
+                    "sa-zip", "st-mine"):
+            self.assertIn(f'id="{fid}"', html)
+        # the old free-text-only chips are gone from the pick
+        self.assertNotIn('id="st-chips"', html)
+        # Profile carries the Stores navrow
+        self.assertIn('data-qnav="view-stores-mine"', html)
+
+    def test_pick_and_views_use_the_api(self):
+        js = self.read("quest.js")
+        for path in ("/api/stores/mine", "/api/stores/search",
+                     "/api/stores/favorite", "/api/stores\""):
+            self.assertIn(path, js)
+        self.assertIn("store_id: Q.draft.storeId", js)
+        self.assertIn("Favorites", js)
+        # the star is a drawn SVG path, never an emoji
+        self.assertIn("<svg", js)
+        self.assertNotIn("⭐", js)
+
+    def test_sw_cache_bumped(self):
+        self.assertIn('arya-v17', self.read("sw.js"))
+
+
 if __name__ == "__main__":
     unittest.main()

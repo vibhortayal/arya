@@ -433,3 +433,15 @@ textarea {
 }
 .cloud-dot.next { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cloud-dot.got { background: var(--fill); border-color: var(--sep); }
+
+/* Stage E: store rows — pick selection, drawn-star favorites. */
+.pickrow[aria-pressed="true"] { background: var(--fill); border-radius: 10px; }
+.pickrow[aria-pressed="true"] .name { color: var(--accent); }
+.starpick { color: var(--accent); flex: none; }
+.starpick svg { width: 20px; height: 20px; display: block; }
+.starbtn {
+  background: none; border: none; padding: 10px; flex: none;
+  min-width: 44px; min-height: 44px; color: var(--tertiary);
+}
+.starbtn.on { color: var(--accent); }
+.starbtn svg { width: 24px; height: 24px; display: block; }
