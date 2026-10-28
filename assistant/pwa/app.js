@@ -490,34 +490,6 @@ document.addEventListener("click", async ev => {
 
 /* ---------------- Profile ---------------- */
 
-/* Your player (owner, 2026-10-28): pick the cast member who
- * fronts your cards. The choice is stored on the account; the
- * picker paints from the same character registry as the faces. */
-async function paintPlayerPicker(current) {
-  const el = $("#pf-player");
-  if (!el) return;
-  if (!CHARM) {
-    try { CHARM = await (await fetch("assets/characters/manifest.json")).json(); }
-    catch (e) { el.innerHTML = ""; return; }
-  }
-  const files = [...new Set([...(CHARM.items || []).map(i => i.char),
-    ...(CHARM.categories || []).map(c => c.char),
-    ...Object.values(CHARM.roles || {}), CHARM.fallback].filter(Boolean))];
-  el.innerHTML = `<p class="nomargin"><strong>Your player</strong></p>
-    <p class="muted">The character who hosts your haul cards and love notes.</p>
-    <div class="playergrid">` + files.map(f =>
-      `<button class="playerpick${f === current ? " on" : ""}" data-avatar="${esc(f)}" type="button" aria-label="Play as ${esc(f.replace(".webp", ""))}"><img src="assets/characters/${esc(f)}" alt=""></button>`).join("") + `</div>`;
-  el.querySelectorAll("[data-avatar]").forEach(b => b.addEventListener("click", async () => {
-    const file = b.dataset.avatar;
-    try {
-      await post("/api/quest/avatar", { file });
-      try { localStorage.setItem("arya-avatar", file); } catch (e) {}
-      paintPlayerPicker(file);
-      toast("Player set.");
-    } catch (e) { toast(e.message); }
-  }));
-}
-
 /* One unified Profile (B6): the Quest player card (handle, stats,
  * badge shelf, mapper credits, Eagle Eye + spots) merged with the
  * account Profile (account, Muse token card, receipt count).
@@ -533,7 +505,7 @@ async function renderProfile() {
   $("#pf-receipts-sub").textContent = archive.receipts.length
     ? `${archive.receipts.length} receipts · the private archive` : "The private archive";
   if (!profile) {
-    $("#pf-card").innerHTML = empty("Your player card could not load.");
+    $("#pf-handle").textContent = "";
     $("#pf-stats").innerHTML = "";
     $("#pf-spots").innerHTML = "";
     $("#pf-badges").innerHTML = "";
@@ -541,12 +513,7 @@ async function renderProfile() {
     return;
   }
   const s = profile.stats;
-  const avatarFile = profile.avatar || "basket.webp";
-  try { localStorage.setItem("arya-avatar", avatarFile); } catch (e) {}
-  $("#pf-card").innerHTML = `<div class="row"><img class="rowface" style="width:52px;height:52px" src="assets/characters/${esc(avatarFile)}" alt="">
-    <div class="grow"><p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
-    <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p></div></div>`;
-  paintPlayerPicker(avatarFile);
+  $("#pf-handle").textContent = "@" + profile.handle;
   $("#pf-stats").innerHTML =
     `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
@@ -1369,31 +1336,44 @@ function openShell() {
   refresh("view-home");
 }
 /* ---------------- Avatar ----------------
- * A cast character, a Muse Image drawing from a description, or a
- * drawing made from the player's own photo (the photo is dropped
- * server-side). A made picture waits as a candidate until Use this. */
-let AV = { preset: null, image: false, version: 0, presets: [] };
+ * One avatar for the whole app: a cast character, a Muse Image
+ * drawing from a description, or a drawing made from the player's
+ * own photo (the photo is dropped server-side). The same avatar
+ * hosts the haul cards and the love note. A made picture waits as
+ * a candidate until Use this. */
+let AV = { file: null, image: false, version: 0 };
+function avatarSrc() {
+  return AV.image ? `/api/quest/avatar/image?v=${AV.version}` : `assets/characters/${AV.file || "basket.webp"}`;
+}
 function paintAvatar() {
-  const src = AV.image ? `/api/quest/avatar/image?v=${AV.version}`
-    : AV.preset ? `assets/characters/${AV.preset}.webp` : "";
   for (const id of ["avatar", "pf-avatar"]) {
     const img = $(`#${id}-img`);
     if (!img) continue;
-    img.hidden = !src;
-    if (src) img.src = src;
+    img.hidden = false;
+    img.src = avatarSrc();
   }
   document.querySelectorAll("#av-presets button").forEach(b =>
-    b.setAttribute("aria-pressed", String(!AV.image && b.dataset.preset === AV.preset)));
+    b.setAttribute("aria-pressed", String(!AV.image && b.dataset.file === (AV.file || "basket.webp"))));
+}
+async function castFiles() {
+  if (!CHARM) {
+    try { CHARM = await (await fetch("assets/characters/manifest.json")).json(); }
+    catch (e) { return []; }
+  }
+  return [...new Set([...(CHARM.items || []).map(i => i.char),
+    ...(CHARM.categories || []).map(c => c.char),
+    ...Object.values(CHARM.roles || {}), CHARM.fallback].filter(Boolean))];
 }
 async function loadAvatar() {
   try { AV = await api("/api/quest/avatar"); } catch (e) { return; }
+  try { localStorage.setItem("arya-avatar", AV.file || "basket.webp"); } catch (e) {}
   const box = $("#av-presets");
   if (box && !box.children.length) {
-    box.innerHTML = AV.presets.map(p =>
-      `<button type="button" data-preset="${esc(p)}" aria-label="${esc(p)}" aria-pressed="false"><img src="assets/characters/${esc(p)}.webp" alt=""></button>`).join("");
+    box.innerHTML = (await castFiles()).map(f =>
+      `<button type="button" data-file="${esc(f)}" aria-label="${esc(f.replace(".webp", ""))}" aria-pressed="false"><img src="assets/characters/${esc(f)}" alt=""></button>`).join("");
   }
-  const initial = ($("#avatar-initial").textContent || "A");
-  $("#pf-avatar-initial").textContent = initial;
+  $("#av-make-box").hidden = isDemo;
+  $("#pf-avatar-initial").textContent = ($("#avatar-initial").textContent || "A");
   paintAvatar();
 }
 function avStatus(msg) { $("#av-status").textContent = msg || ""; }
@@ -1402,17 +1382,21 @@ function avShowCandidate() {
   $("#av-candidate").hidden = false;
 }
 $("#av-presets").addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-preset]");
+  const b = ev.target.closest("[data-file]");
   if (!b) return;
-  try { AV = { ...AV, ...(await put("/api/quest/avatar", { preset: b.dataset.preset })) }; paintAvatar(); avStatus(""); }
-  catch (e) { toast(e.message); }
+  try {
+    await post("/api/quest/avatar", { file: b.dataset.file });
+    AV = { ...AV, file: b.dataset.file, image: false };
+    try { localStorage.setItem("arya-avatar", b.dataset.file); } catch (e) {}
+    paintAvatar(); avStatus("");
+  } catch (e) { toast(e.message); }
 });
 $("#av-make").addEventListener("click", async () => {
   const prompt = $("#av-prompt").value.trim();
   if (!prompt) { toast("Describe your avatar first."); return; }
   const btn = $("#av-make"); btn.disabled = true; avStatus("Drawing it…");
   try { await post("/api/quest/avatar/generate", { prompt }); avStatus(""); avShowCandidate(); }
-  catch (e) { avStatus(isDemo ? "Making an avatar needs a real account. Pick a character instead." : e.message); }
+  catch (e) { avStatus(e.message); }
   btn.disabled = false;
 });
 $("#av-photo").addEventListener("change", async ev => {
@@ -1424,7 +1408,7 @@ $("#av-photo").addEventListener("change", async ev => {
     const r = await fetch("/api/quest/avatar/photo", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || "Could not make it");
     avStatus(""); avShowCandidate();
-  } catch (e) { avStatus(isDemo ? "Making an avatar needs a real account. Pick a character instead." : e.message); }
+  } catch (e) { avStatus(e.message); }
 });
 $("#av-use").addEventListener("click", async () => {
   try { AV = { ...AV, ...(await post("/api/quest/avatar/use", {})) }; $("#av-candidate").hidden = true; paintAvatar(); toast("Avatar saved."); }

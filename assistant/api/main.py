@@ -1494,17 +1494,7 @@ async def quest_accept_friend(req: Request):
 @app.get("/api/quest/avatar")
 def quest_avatar():
     from api import avatar
-    return {**avatar.get(), "presets": list(avatar.PRESETS)}
-
-
-@app.put("/api/quest/avatar")
-async def quest_avatar_preset(req: Request):
-    body = await _json_obj(req)
-    from api import avatar
-    try:
-        return avatar.set_preset(body.get("preset", ""))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
+    return avatar.get()
 
 
 @app.get("/api/quest/avatar/image")
