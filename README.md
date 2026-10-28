@@ -82,6 +82,13 @@ Points bank only when the receipt settles — and every settled
 receipt teaches her what your household actually eats. Design and
 decisions: `docs/quest/`.
 
+<p align="center">
+  <img src="docs/images/today.png" alt="Today — your level, your points, your games" width="230">
+  <img src="docs/images/hunt.png" alt="The hunt — inside the real store, the orange dot is your next item" width="230">
+  <img src="docs/images/score.png" alt="The score — the cast celebrates a settled hunt" width="230">
+</p>
+<p align="center"><em>Today, the hunt, and the score — the demo household, live build.</em></p>
+
 ## Measured results
 
 - **Receipt photos — production reader (Muse Wonder 1.0, Spark
