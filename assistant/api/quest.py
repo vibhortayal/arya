@@ -262,8 +262,15 @@ def check_item(session_id, item_name, checked):
 def set_state(session_id, new_state):
     if new_state not in SESSION_STATES:
         raise ValueError(f"state must be one of {SESSION_STATES}")
+    if new_state == "done":
+        # "done" is receipt-closed: only attach_receipt sets it, so a
+        # client cannot claim hunts, streaks or a Shop-Off win
+        # without the trip's receipt (Discussion 41).
+        raise ValueError("a hunt closes when its receipt attaches")
 
     def fn(sess):
+        if sess["state"] == "done":
+            raise ValueError("this hunt is closed")
         sess["state"] = new_state
         if new_state == "playing" and not sess["started_at"]:
             sess["started_at"] = _now()

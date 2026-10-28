@@ -32,10 +32,60 @@ class TestDemoHousehold(unittest.TestCase):
         self.assertEqual(d["for_others_total"], 25.0)
         self.assertEqual(d["trip_count"], 27)
 
-    def test_demo_is_read_only(self):
+    def _disk(self):
+        out = {}
+        for root, _dirs, files in os.walk(os.environ["ARYA_DATA_DIR"]):
+            for f in files:
+                if f in ("sessions.json", "cost-ledger.jsonl"):
+                    continue
+                p = os.path.join(root, f)
+                with open(p, "rb") as fh:
+                    out[p] = fh.read()
+        return out
+
+    def test_demo_batch_doors_stay_closed(self):
         self.assertEqual(self.c.post("/decode/pdf", content=b"x").status_code, 403)
-        self.assertEqual(self.c.post("/api/cart/approve").status_code, 403)
+        self.assertEqual(self.c.post("/api/judge/run").status_code, 403)
+        self.assertEqual(self.c.post("/api/curator/run").status_code, 403)
         self.assertEqual(self.c.get("/api/home").status_code, 200)
+
+    def test_demo_writes_land_in_a_sandbox_not_on_disk(self):
+        before = self._disk()
+        self.assertEqual(self.c.post("/api/cart/approve").status_code, 200)
+        r = self.c.post("/api/list/add", json={"name": "Hummus"})
+        self.assertEqual(r.status_code, 200)
+        names = [i["name"] for i in self.c.get("/api/home").json()["list"]["items"]]
+        self.assertIn("Hummus", names)
+        self.assertEqual(self._disk(), before)
+        # A second demo visitor starts from the shipped household.
+        c2 = TestClient(self.c.app)
+        c2.post("/auth/demo")
+        names2 = [i["name"] for i in c2.get("/api/home").json()["list"]["items"]]
+        self.assertNotIn("Hummus", names2)
+
+    def test_demo_plays_a_hunt_end_to_end(self):
+        before = self._disk()
+        opt = self.c.post("/api/quest/optimize", json={"items": ["milk", "bread"]})
+        self.assertEqual(opt.status_code, 200)
+        sess = self.c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "mode": "quest", "driver": "strip",
+            "items": ["Whole Milk 1 gal", "Sourdough Loaf"]}).json()
+        sid = sess["id"]
+        self.assertEqual(self.c.post(f"/api/quest/sessions/{sid}/state",
+                                     json={"state": "playing"}).status_code, 200)
+        item = sess["items"][0]["id"] if "id" in sess["items"][0] else sess["items"][0]["name"]
+        r = self.c.post(f"/api/quest/sessions/{sid}/check", json={"item": item})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.c.post(f"/api/quest/sessions/{sid}/state",
+                                     json={"state": "finished"}).status_code, 200)
+        listed = [s["id"] for s in self.c.get("/api/quest/sessions").json()["sessions"]]
+        self.assertIn(sid, listed)
+        self.assertEqual(self._disk(), before)
+
+    def test_demo_household_lives_in_the_present_week(self):
+        from datetime import date, timedelta
+        home = self.c.get("/api/home").json()
+        self.assertEqual(home["as_of"], (date.today() - timedelta(days=3)).isoformat())
 
     def test_demo_name_is_reserved(self):
         c2 = TestClient(self.c.app)
