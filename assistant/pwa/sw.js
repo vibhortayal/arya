@@ -1,6 +1,5 @@
-const CACHE = "arya-v43";
-const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/mapper.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",
-  "/assets/characters/manifest.json",
+const CACHE = "arya-v44";
+const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/mapper.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
   "/assets/characters/blueberry.webp", "/assets/characters/banana.webp",
   "/assets/characters/raspberry.webp", "/assets/characters/mandarin.webp",
   "/assets/characters/egg.webp", "/assets/characters/cheese.webp",
