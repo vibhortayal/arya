@@ -37,3 +37,23 @@ class TestAbandonQuest(unittest.TestCase):
                        "End this quest? It leaves Today and cannot be resumed.",
                        '"abandoned"'):
             self.assertIn(needle, q)
+
+
+class TestListComposerSmarts(unittest.TestCase):
+    def test_server_split_understands_dictation(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from api.list.intake import split_list_text
+        self.assertEqual(
+            split_list_text("I need some eggs, eggs, bananas, cookies, oranges."),
+            ["eggs", "bananas", "cookies", "oranges"])
+        self.assertEqual(split_list_text("eggs and bananas and milk"),
+                         ["eggs", "bananas", "milk"])
+        self.assertEqual(split_list_text("mac and cheese"), ["mac and cheese"])
+        self.assertEqual(split_list_text("salt and pepper"), ["salt and pepper"])
+
+    def test_client_preview_mirrors(self):
+        a = read("app.js")
+        for needle in ("ADD_LEAD", "i need some ", "sentence",
+                       "mac and cheese"):
+            self.assertIn(needle, a)

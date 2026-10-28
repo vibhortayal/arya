@@ -180,7 +180,14 @@ for now; a Maps/Places lookup is a separate, undecided step.
     cheese" stays whole), an Add items button, and a "Looks right?"
     confirm strip: the parsed list shows as droppable chips before
     anything joins the quest; voice lands in the same confirm.
-    (b) A started quest could not be ended: new state "abandoned" —
+    The List composer had the same dumbness from the other side:
+    its server split already stripped "add"/"buy" lead-ins but not
+    "I need some", never split a sentence's "and"s, and left the
+    period on the last item — the chips preview mirrored it. Both
+    now carry the sentence rules (the server stays the authority;
+    test-pinned cases: his sentence -> 4 items, "mac and cheese"
+    and "salt and pepper" stay whole). (b) A started quest could
+    not be ended: new state "abandoned" —
     the hunt view gains End this quest (confirm first); abandoned
     quests appear in no list. (c) The header bar is gone (entry 57's
     companion fix, PR #51): the wordmark row cost screen on every

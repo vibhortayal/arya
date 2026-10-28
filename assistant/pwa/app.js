@@ -771,11 +771,25 @@ function bindAdd() {
    * server split (lines/semicolons, then commas; bullets and
    * numbering stripped; duplicates collapsed) — the server stays
    * the authority; removing a chip rewrites the field. */
+  /* Mirrors the server split (api/list/intake.py) — the server
+   * stays the authority. Sentence smarts (owner's phone, 2026-10-28):
+   * dictation lead-ins ("i need some") strip, a sentence's "and"s
+   * split, duplicates fold; a plain line never splits, so
+   * "mac and cheese" stays one item in the chips too. */
+  const ADD_LEAD = /^(please get |please buy |please add |add |buy |get |and |i need some |i need |we need some |we need |i want some |i want |get me some |get me )/i;
   function splitPreview(text) {
     const out = [], seen = new Set();
     for (const chunk of String(text || "").split(/[\n;]+/)) {
-      for (const piece of chunk.split(",")) {
-        const name = piece.replace(/^[\s•\-*☐☑✓\d.)]+/, "").trim();
+      const low = chunk.trim().toLowerCase();
+      const sentence = chunk.includes(",") || ADD_LEAD.test(low)
+        || (low.match(/ and /g) || []).length >= 2;
+      let pieces = chunk.split(",");
+      if (sentence) pieces = pieces.flatMap(p => p.split(/\s+and\s+/i));
+      for (let piece of pieces) {
+        let name = piece.replace(/^[\s•\-*☐☑✓\d.)]+/, "").trim();
+        name = name.replace(ADD_LEAD, "");
+        if (name.toLowerCase().startsWith("some ")) name = name.slice(5);
+        name = name.replace(/\s*[x×]\s*\d+\s*$/, "").replace(/[.!]+$/, "").trim();
         if (name && !seen.has(name.toLowerCase())) { seen.add(name.toLowerCase()); out.push(name); }
       }
     }
