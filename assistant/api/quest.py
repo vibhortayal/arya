@@ -129,7 +129,7 @@ def make_items(raw_items):
 # --- sessions --------------------------------------------------------------
 
 def create_session(store_name, mode="quest", raw_items=None, extra=None,
-                   driver="strip"):
+                   driver="strip", store_id=None, store_address=None):
     if mode not in MODES:
         raise ValueError("mode must be quest or express")
     if driver not in DRIVERS:
@@ -141,6 +141,13 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
             "items": make_items(raw_items),
             "created_at": _now(), "started_at": None,
             "finished_at": None, "receipt_id": None}
+    if store_id:
+        # Started from the store directory (Stage E): the directory
+        # id and address are snapshotted onto the session; the name
+        # above stays the display string everywhere else. Free-text
+        # sessions carry neither field (back-compat).
+        sess["store_id"] = store_id
+        sess["store_address"] = store_address
     if extra:
         sess.update(extra)
     s["sessions"].append(sess)
