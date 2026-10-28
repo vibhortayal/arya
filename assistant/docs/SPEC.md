@@ -5,28 +5,9 @@ Submission deadline: November 4, 2026, 9:00 PM ET.
 The owner reviews the final package. No person submits without the approval of the owner.
 This document uses ASD-STE100 style. Sentences are short. Each sentence has one idea.
 
-## Changes in this revision
-
-Date: 2026-10-27.
-- Name decided (owner, 2026-10-27): the assistant is **Arya**. Body text keeps "the assistant" as the generic noun.
-
-- The product is now an assistant with an inventory-first model. The old store-first product is now an add-on.
-- The core is now: receipts, decode, patterns, reconciliation, the self-writing list, and a prepared cart.
-- A photo-receipt gate now stands before the build. The build commits only after the gate passes.
-- The whole receipt counts. Deep pattern functions apply to food and household consumables only in the MVP. Electronics and clothing are captured only.
-- Returns netting is a core function and a demo requirement.
-- The competitor teardown (COMPETITORS.md) is now part of this specification. Positioning rules are in Section 10.
-- Each receipt line now has an allocation: household or for-others. Section 6.2 gives the rules.
-- The fridge demo step now shows one item with an evidence frame. The demo does not use a silent list edit.
-- The name is parked. This document says "the assistant."
-
-Revision, 2026-10-27 (evening). The name decision above supersedes the parked note.
-- The architecture is now two layers. The user's own Muse reads the media at the edge. Arya verifies, remembers, and reasons in the core. ARCHITECTURE.md is the structural record.
-- Structured intake is the primary intake path. The client proposes. Arya disposes. Server decode is a fallback.
-- A new component exists: the Resolver. The user's Muse researches an unknown item or an unreadable line in the retailer's own catalog. It posts candidates with sources. The user settles. Section 4 gives the rules.
-- Discount lines are structure, not identity. They never enter the review queue.
-- The Curator proposes identity changes. It never applies them. A proposal the dictionary has already overtaken retires on its own.
-- Onboarding is connect-first. The connector carries its instructions. The user writes no prompt.
+Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
+"the assistant". Structure as built: ARCHITECTURE.md. Decisions:
+`docs/quest/DISCUSSION.md`.
 
 ## 1. What the product is
 
@@ -61,7 +42,7 @@ Food gets the deep functions because food expires and food is visible in the hom
 The MVP has one user and one household.
 The MVP uses the real data of the owner.
 The MVP closes the core loop of Section 3 with no store map.
-The store guidance of Section 6.8 is an add-on. The add-on is not on the critical path.
+Quest (Section 6.8) is the play layer. It feeds the core and is not on its critical path.
 
 ## 3. The core loop
 
@@ -199,22 +180,32 @@ Allocation (a field on each ledger line):
 - FR-7.8 A report of "this expired" from the user adjusts the shelf-life model of that item for this household.
 - FR-7.9 An expiry warning is a question, not a fact. Example: "The spinach from October 24 usually turns about now. Is it still good?"
 
-### 6.8 Store guidance — the add-on (C8)
+### 6.8 Quest — the play layer (C8)
 
-The add-on guides the user in one store with a map.
-The add-on is not the core. A failure of the add-on does not change the core.
-Spike 2 (Section 9) gates the add-on only.
+Quest turns a store trip into a game. It feeds the core; it never
+replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
-- FR-8.1 A walkthrough video becomes a store index. The index has zones and item sightings. Each sighting has a confidence value, a date, and an evidence type.
-- FR-8.2 The map is incremental and partial. Coverage is a percent value. The system shows coverage. The system lists the gaps.
-- FR-8.3 A sighting confidence decays with time. The half-life is 21 days. A "Found it" report refreshes the confidence. A "Not here" report multiplies the confidence by 0.3 and marks the sighting disputed. Two "Not here" reports in 14 days retire the sighting.
-- FR-8.4 A route groups the list by zone. An item with no live sighting goes to an unknowns list. The system invents no location.
-- FR-8.5 Guidance uses landmarks and the camera. Guidance uses no GPS route and no invented aisle numbers.
-- FR-8.6 At the shelf, SAM grounds one concept per request on one still photo. No mask means no failure. The user can always tap "Got it."
-- FR-8.7 Spark indexes video. SAM does not run on a full walkthrough video. IMPLEMENTATION.md flag F2 gives the reason.
-- FR-8.8 Voice input uses Muse Voice Transcribe with the dictionary as keyword biasing. Voice output is device text-to-speech. Voice output is short and rare.
-- FR-8.9 A second walkthrough of one store is graded on recency, clarity, and completeness. The better walkthrough becomes the map source. The grade table is visible.
-- FR-8.10 Glimmer is a flag-isolated pre-filter for aisle photos. All gates pass with the flag off.
+- FR-8.1 A hunt is one store trip: one store, one list, one mode
+  (Quest or Express). A receipt settles it.
+- FR-8.2 Planning starts from the store. The list is sorted by where
+  each item is usually bought, counted from the ledger. Unticked items
+  stay on the list. Removing an item removes it from the list.
+- FR-8.3 The game has no lives, no game over and no clock. Points
+  only go up: +10 a grab, +25 a full haul, +50 the receipt. Points
+  bank when the receipt lands.
+- FR-8.4 Any stop can be grabbed in any order. A grab can be put back.
+  Nothing finishes by itself.
+- FR-8.5 A store with a walkthrough plays over its photos; any other
+  store plays as shelf cards. The system invents no location.
+- FR-8.6 Shelf Scan and Find it for me: SAM 3.1 proposes boxes, Spark
+  verifies each crop. Only a verified item highlights. A miss never
+  says the item is absent.
+- FR-8.7 No pictures of people are kept. A frame is kept only after
+  SAM finds every person and the frame is pixelated there. If the
+  scrub fails, the frame is not kept.
+- FR-8.8 "Not here?" files a report and edits nothing. Time resolves
+  it: a later grab means a stockout; a confirmed new spot means a move.
+- FR-8.9 Every board and badge is receipt-verified.
 
 ### 6.9 Meal hook — optional scene (C9)
 
@@ -230,12 +221,12 @@ Spike 2 (Section 9) gates the add-on only.
 | Interaction | Budget | Note |
 |---|---|---|
 | Receipt decode, PDF to draft | 20 s or less | Progress is visible |
-| Receipt decode, photo to draft | 30 s or less | Progress is visible |
+| Receipt decode, photo to draft | 30 s or less (Wonder, under the amendment: 90 s bound, then Spark) | Progress is visible |
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
 | Eyes photo to sightings | 15 s or less | One photo |
-| Add-on: SAM find, one still | 3 s or less | One concept |
-| Add-on: relocalization | 6 s p95 or less | The call is not blocking |
+| Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
+| Quest: Where am I?, one photo | about 1 s | Local matcher, no model call |
 
 Spark is a reasoning model. Default effort is slow.
 In-store calls use low reasoning effort, short prompts, and cached prefixes.
@@ -334,12 +325,11 @@ Status of the evidence:
 | Reconciliation (C6) | A test trip with one mismatch asks about that mismatch only. |
 | Eyes (C7) | A sighting of an item on the list draft removes the item. An unseen item stays unknown. |
 
-### Gate 3 — Spike 2, add-on only (Stage 5)
+### Gate 3 — superseded
 
-Eight of ten fresh in-store photos relocalize to the correct zone at 6 s p95 or less.
-A failure gives the degraded add-on: zone guide and item spotting.
-The decision is made on the same day.
-The core does not change after a failure of Gate 3.
+The store add-on became Quest (Discussion 29). Quest is measured by
+its own evidence: the localizer (42/45 held-out frames) and Shelf Scan
+(0 false pops in the spike).
 
 ## 10. Positioning and demo requirements
 
@@ -368,16 +358,10 @@ Platform risk is real. Samsung or Instacart can close the gap in one release.
 
 ### 10.3 Demo requirements
 
-The demo must show these beats. IMPLEMENTATION.md Section 7 gives the order.
-
-- A scan of a receipt.
-- The model learns: dictionary and patterns update on screen.
-- The list writes itself.
-- One fridge photo with an evidence frame removes one item from the list. The evidence frame shows the item highlight in the photo and the sighting card.
-- A return changes the ledger and the patterns on screen.
-- A receipt total verified by arithmetic on screen.
-- The prepared cart waits for approval. The user approves with one tap.
-- The privacy sentence of Section 7.3 is spoken in the demo.
+The demo shows: a receipt scan; the model learning; the list writing
+itself; a planned hunt with a grab and Find it for me; a return
+changing the ledger; a total verified by arithmetic; the privacy
+sentence of Section 7.3. The judge path: `docs/quest/JUDGE-PLAYBOOK.md`.
 
 ## 11. Future vision
 
@@ -400,7 +384,6 @@ Groceries are the first domain. Groceries are not the final domain.
 
 ## 12. Out of scope for the MVP
 
-- A product name. Decided: the app is Arya; the hackathon entry name is Arya Quest.
 - Nutrition, health, or dietary advice. This exclusion is permanent.
 - Multiple users and shared lists.
 - A real order or a real payment. The cart is a sandbox.
@@ -411,4 +394,4 @@ Groceries are the first domain. Groceries are not the final domain.
 - Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback) and it authored the hunt localizer. Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
 - The mapper network and consensus maps. Section 11 covers these items as vision.
 
-Design flags live in IMPLEMENTATION.md Section 9: F1 to F8.
+Design flags live in IMPLEMENTATION.md Section 8.

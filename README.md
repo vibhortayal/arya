@@ -44,8 +44,9 @@ added with its address). A mapped store carries a 3D model built
 from a shopper's walkthrough video: VGGT builds the geometry,
 SAM 3.1 segments the shelves, Muse Spark labels them, and each
 hunt stop sits at its item's matched shelf. An unmapped store
-plays on the flat Strip view and can be mapped by its own
-shoppers. The receipt photo ends the hunt: it scores the haul and
+plays as shelf cards and can be mapped by its own shoppers. Find it
+for me aims the camera at one item: SAM 3.1 boxes it, Muse Spark
+verifies it, and no picture of a person is kept. The receipt photo ends the hunt: it scores the haul and
 feeds the brain. Detail: `docs/quest/`.
 
 ## Measured results
@@ -73,8 +74,8 @@ feeds the brain. Detail: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** 336 green at the commit that wrote this line
-  (`cd assistant && python -m unittest discover -s tests`).
+- **Tests:** `cd assistant && python -m unittest discover -s tests`
+  (count in `STATUS.md`).
 
 ## How this was built
 
