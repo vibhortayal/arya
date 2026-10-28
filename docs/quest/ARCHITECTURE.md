@@ -63,7 +63,7 @@ Output: the clean list plus a one-line report (in → out · merged · corrected
 
 | Component | State | Notes |
 |---|---|---|
-| Arya engine (intake, dictionary, review queue, ledger, patterns, staple judge, Ask Arya) | **Live** — vibhortayal/arya | Per-account file state, token-gated connector, 60 tests |
+| Arya engine (intake, dictionary, review queue, ledger, patterns, staple judge, Ask Arya) | **Live** — vibhortayal/arya | Per-account file state, token-gated connector, 181 tests |
 | Muse connector for Arya | **Live** | Data enters Arya through the user's own Muse — zero perception spend server-side |
 | Store registry + model store (platform plane) | New | Store ID, location, mapper credit, cloud + graph versions |
 | Mapping pipeline (VGGT + SAM + Spark labeling) | Spike running | One TJ aisle; verdict gates scope |

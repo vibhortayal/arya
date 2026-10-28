@@ -165,15 +165,20 @@ Each agent has a narrow job and a named limit.
   arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
-- Tests (59) run before every commit. Small commits to main, named by
+- Tests (181) run before every commit. Small commits to main, named by
   stage; a session log goes to loops/ and STATUS.md is updated.
 
 ## 12. Not built / held
 
 - Per-user spend caps (§10) — required before registration opens.
 - Public registration — closed. The plan: open after the hackathon,
-  with a clear notice that Muse is the only way in.
-- Stage 5, the store guidance add-on — held by the owner. It does not
-  gate the core.
+  once per-user spend caps exist (§10). Intake is not Muse-only:
+  every door runs on Meta models — Muse in chat, Spark on the Meta
+  API in the app.
+- Stage 5, the store add-on as first scoped, was superseded: the
+  store layer shipped as Quest work — a Trader Joe's 3D model with
+  a SAM/Spark shelf graph, item-to-shelf stop matching, and a
+  stores directory with search and favorites (STATUS.md, Quest
+  Stages C–E). It does not gate the core.
 - Forgot-password — not built. There is no mail channel; a fake
   affordance was refused on principle.
