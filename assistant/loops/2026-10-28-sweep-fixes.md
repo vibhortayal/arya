@@ -56,3 +56,29 @@ deploy gate like everything else.
   unstyled file input on the photo door. Shop-Off cross-account
   placeholder; friend-run notifications unbuilt.
   Full detail: ~/workspace/arya-qa/findings.md.
+
+## Follow-up (2026-10-28, later): F-01 reconciled + F-03 built
+
+The owner lifted the holds on issues #10 and #11.
+
+- F-01 (this file's fix): cherry-picked onto the PR #7 merge
+  (737a1b4) as 27b76f7 — clean pick, decode/service.py and
+  patterns/engine.py untouched by the PR.
+- F-03 (issue #11), server-side only, no quest UI: attach_receipt
+  now compares store families before settling. `_store_family`
+  normalizes a free-text name (lowercase, apostrophes dropped,
+  "#452" / "No. 12" suffixes stripped, punctuation to word breaks)
+  and maps it through a small alias table (trader-joes, safeway,
+  costco, target, walmart). Both families known and different ->
+  ValueError; the attach route surfaces it as HTTP 400 naming both
+  ("this receipt is from Safeway; the hunt is at Trader Joe's"),
+  mirroring the set_state error pattern. Either side unclassifiable
+  -> the settle proceeds. The Receipts-tab late attach files the
+  receipt, then calls this same route/function, so one check covers
+  both doors. Four new tests in TestQuestSessions: cross-merchant
+  refused (hunt untouched, right receipt still settles), variant
+  name settles, unknown merchant settles, unknown hunt store
+  settles. (Test-writing note: mid-test state writes need the
+  account's current-user context, restored afterwards — the
+  ContextVar otherwise leaks across tests on the thread.)
+- Suite: 334 green (323 PR head + 7 receipt-date tests + 4 new).
