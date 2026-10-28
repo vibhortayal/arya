@@ -1,5 +1,16 @@
-const CACHE = "arya-v23";
-const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/manifest.json", "/icon.svg", "/vendor/three.module.js"];
+const CACHE = "arya-v24";
+const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/manifest.json", "/icon.svg", "/vendor/three.module.js",
+  "/assets/characters/manifest.json",
+  "/assets/characters/blueberry.webp", "/assets/characters/banana.webp",
+  "/assets/characters/raspberry.webp", "/assets/characters/mandarin.webp",
+  "/assets/characters/egg.webp", "/assets/characters/cheese.webp",
+  "/assets/characters/bread.webp", "/assets/characters/pasta.webp",
+  "/assets/characters/pizza.webp", "/assets/characters/hummus.webp",
+  "/assets/characters/olive-oil.webp", "/assets/characters/peanut-butter.webp",
+  "/assets/characters/almond.webp", "/assets/characters/milk.webp",
+  "/assets/characters/fruit.webp", "/assets/characters/vegetable.webp",
+  "/assets/characters/dairy.webp", "/assets/characters/bakery.webp",
+  "/assets/characters/frozen.webp", "/assets/characters/pantry.webp"];
 const BYPASS = ["/api/", "/auth/", "/decode", "/import", "/eyes"];
 
 self.addEventListener("install", e => {

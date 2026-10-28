@@ -38,6 +38,9 @@ ASR_USD_PER_HOUR = 0.18
 # SAM 3.1 is billed per image processed (MODEL-POLICY.md).
 SAM_USD_PER_IMAGE = 2.50 / 1000.0
 
+# Muse Image is billed per image generated (MODEL-POLICY.md).
+IMAGE_USD_PER_IMAGE = 0.01
+
 
 def transcribe_cost(duration_s):
     return duration_s / 3600 * ASR_USD_PER_HOUR
@@ -141,6 +144,30 @@ class MetaClient:
                 conf = None
             boxes.append({"box": box, "w": w, "h": h, "confidence": conf})
         return boxes, {"images_processed": images}, cost
+
+    def generate_image(self, prompt):
+        """Muse Image generation (POST /v1/images/generations; shape
+        verified by probe 2026-10-27: data[0].b64_json carries the
+        image bytes, WebP). Returns (image_bytes, usage, cost_usd);
+        cost is per image generated, logged to the ledger like every
+        other door. Used offline by tools (celebration characters);
+        generated art never claims to picture a real store."""
+        import base64
+        body = {"model": MODELS["image"], "prompt": prompt}
+        status, payload = self._send("/images/generations", body)
+        if status != 200:
+            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+        data = payload.get("data") or []
+        if not data or not data[0].get("b64_json"):
+            raise RuntimeError(f"Muse Image: no image in response: {str(payload)[:300]}")
+        image_bytes = base64.b64decode(data[0]["b64_json"])
+        usage = payload.get("usage") or {}
+        cost = IMAGE_USD_PER_IMAGE
+        if self.ledger is not None:
+            self.ledger.record(mode="image", model=MODELS["image"],
+                               input_tokens=0, cached_tokens=0,
+                               output_tokens=0, cost_usd=cost)
+        return image_bytes, usage, cost
 
     def _send_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,
