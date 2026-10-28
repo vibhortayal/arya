@@ -1605,17 +1605,6 @@ function openFinish(sess) {
   questShow("view-finish");
   $("#fin-status").textContent = "";
   $("#fin-photo").value = "";
-  renderFinishReceipts().catch(showErr);
-}
-async function renderFinishReceipts() {
-  const d = await api("/api/quest/receipts");
-  const el = $("#fin-receipts");
-  el.innerHTML = d.receipts.length ? d.receipts.slice(0, 8).map(r => `
-    <button class="sessrow" data-attach="${esc(r.receipt_id)}" type="button">
-      <span class="grow"><span class="name">${esc(r.merchant)}</span>
-      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items</span></span>
-      <span class="money">${r.total != null ? money(r.total) : ""}</span>
-    </button>`).join("") : empty("No receipts filed yet.");
 }
 async function attachAndScore(receiptId) {
   const sess = Q.current;
@@ -1624,12 +1613,6 @@ async function attachAndScore(receiptId) {
   await qLoadSessions().catch(() => {});
   openScore(sess);
 }
-$("#fin-receipts").addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-attach]");
-  if (!b) return;
-  try { await attachAndScore(b.dataset.attach); }
-  catch (e) { toast(e.message); }
-});
 $("#fin-photo").addEventListener("change", async ev => {
   const f = ev.target.files[0];
   if (!f) return;
@@ -1685,7 +1668,7 @@ async function openScore(sess) {
       html += `<p class="muted">The total did not reconcile — its lines are in your review queue.</p>`;
     }
   } else {
-    html += `<p class="muted">No receipt attached — this hunt is not scored yet. Attach one from the session card and the haul verifies.</p>`;
+    html += `<p class="muted">No receipt attached — this hunt is unsettled and not scored yet. It waits in Receipts with a “Receipt missing” tag; upload this trip's receipt there and the haul verifies.</p>`;
   }
   html += `</div>`;
   if (profile) {

@@ -121,6 +121,7 @@
     </div>
     <h3 class="sect">Archive</h3>
     <div id="rc-archive" class="group"></div>
+    <input type="file" id="rc-late-photo" accept="image/*" aria-label="This trip's receipt photo" hidden>
   </section>
 
   <section id="view-chat" class="view" hidden>
@@ -412,9 +413,8 @@
       <p class="nomargin"><label class="btn primary wide receiptbtn" for="fin-photo">Snap the receipt</label></p>
       <p id="fin-status" class="muted nomargin"></p>
     </div>
-    <h3 class="sect">Or use a receipt already filed</h3>
-    <div id="fin-receipts" class="group"></div>
-    <p><button id="fin-skip" class="btn secondary wide" type="button">Skip the receipt</button></p>
+    <p><button id="fin-skip" class="btn secondary wide" type="button">Skip</button></p>
+    <p class="muted">Skipping leaves the hunt unsettled — it waits in Receipts with a “Receipt missing” tag until this trip's receipt is uploaded.</p>
   </section>
 
   <section id="view-score" class="view" hidden>

@@ -178,6 +178,27 @@ def receipt_archive():
     return [_receipt_summary(r) for r in rs]
 
 
+def unsettled_hunts():
+    """Finished hunts still waiting for this trip's receipt
+    (Discussion 41). The Receipts view logs each as its own
+    entry with a "Receipt missing" tag; uploading the receipt
+    later settles the hunt and the entry clears. While a hunt
+    is unsettled its play record stands, but receipt-verified
+    rewards do not credit — badges and boards read done
+    (receipt-closed) sessions only."""
+    out = []
+    for s in quest._store()["sessions"]:
+        if s["state"] != "finished":
+            continue
+        done = sum(1 for i in s["items"] if i.get("checked"))
+        out.append({"session_id": s["id"], "store": s["store"],
+                    "finished_at": s.get("finished_at"),
+                    "items_collected": done,
+                    "items_total": len(s["items"])})
+    return sorted(out, key=lambda e: e["finished_at"] or "",
+                  reverse=True)
+
+
 def receipt_detail(receipt_id):
     for r in state.receipts():
         if r["receipt_id"] == receipt_id:

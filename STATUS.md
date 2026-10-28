@@ -414,3 +414,22 @@ same evening — see Intake parity below.)
 - Suite: **240 green** (8 new in tests/test_theme.py).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-theme-migration.md.
+
+## Finish flow — this trip's receipt, now or later (2026-10-27)
+
+- Discussion 41: the filed-receipt picker is off the Finish
+  screen (the settling receipt is this trip's, snapped at
+  finish — never an old receipt tagged onto a hunt). Finish
+  is "Snap the receipt" or Skip. Skip finishes the hunt
+  unsettled: sessions carry an explicit settled flag, and
+  the Receipts view logs the hunt as its own entry with a
+  "Receipt missing" tag; its "Upload the receipt" button
+  files this trip's photo through the normal decode,
+  attaches it to the hunt, settles it, and clears the tag.
+  While unsettled the play record stands but
+  receipt-verified rewards do not credit (badges, boards,
+  and the profile hunt count read receipt-closed hunts
+  only — now pinned by tests). SW cache arya-v27.
+- Suite: **247 green** (7 new in tests/test_finish_flow.py).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-finish-flow.md.
