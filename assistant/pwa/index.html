@@ -24,33 +24,34 @@
     <img class="heroimg" src="assets/scenes/hero.webp" alt="Arya's cast of grocery characters follows the orange route through a store to a chest of groceries" width="1600" height="900">
     <h2 class="largetitle herotitle">Your grocery list, as a treasure hunt in your real store.</h2>
     <p class="nomargin">Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
-    <p class="muted herometa">Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab.</p>
     <p><button id="demo-btn" class="btn primary wide" type="button">Try the demo &mdash; play the Trader Joe&rsquo;s hunt</button></p>
     <p class="muted nomargin">Opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
     <div class="caststrip" aria-hidden="true">
       <img src="assets/characters/milk.webp" alt=""><img src="assets/characters/banana.webp" alt=""><img src="assets/characters/egg.webp" alt=""><img src="assets/characters/blueberry.webp" alt=""><img src="assets/characters/pizza.webp" alt=""><img src="assets/characters/pantry.webp" alt="">
     </div>
     <p class="castlbl">THE CAST — EVERY ITEM ON YOUR LIST HAS A FACE</p>
+    <p class="muted herometa">Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab.</p>
   </div>
   <details class="group pad signin">
-    <summary id="login-title">Sign in</summary>
+    <summary id="login-title" class="btn secondary wide">Sign in</summary>
     <form id="login-form">
-      <label class="field">Username
-        <input type="text" id="login-user" autocomplete="username" required>
+      <label class="field">Email or username
+        <input type="text" id="login-user" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required>
       </label>
       <label class="field">Password
         <input type="password" id="login-pass" autocomplete="current-password" required>
       </label>
       <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
+      <p id="login-error" class="muted loginerr" role="alert"></p>
     </form>
     <p class="nomargin"><button type="button" id="login-toggle" class="linkbtn">New here? Create account</button></p>
   </details>
-  <p id="login-error" class="muted"></p>
 </section>
 
 
 <section id="view-connect" class="view" hidden>
   <h2 class="largetitle">Connect Muse</h2>
+  <p class="nomargin"><button id="connect-skip-top" class="linkbtn" type="button">Skip for now</button></p>
   <div class="group pad">
     <p class="nomargin"><strong>Connect your Muse — the only setup Arya needs.</strong></p>
     <ol class="steps">
