@@ -20,7 +20,11 @@ behind the owner's account.
 - **Intake.** Receipts enter as PDF or photo. Muse Spark reads them;
   code checks every line against the printed total before anything
   posts. Lists enter in any form: a photo of a note or whiteboard,
-  a paste, typing, voice, or Muse with the Arya connector.
+  a paste, typing, voice, or your own assistant through the
+  agent connector: any MCP-capable agent (Muse Spark is the
+  showcased client) reads and writes the list with your account
+  token — Arya collects from the apps you already use instead
+  of competing with them (docs: assistant/docs/AGENT-CONNECTOR.md).
 - **Ledger.** Kept purchases only: returns net out, bought-for-others
   is tracked but never suggested, discounts fold into their parent
   item.
