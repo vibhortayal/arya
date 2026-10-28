@@ -33,6 +33,13 @@
  *             flat store strip, in walking order. The default when a
  *             store has no model, and the low-battery / low-motion
  *             choice mid-hunt.
+ *   "art"   — the illustrated aisle (owner, 2026-10-28): what a
+ *             Quest hunt shows when the store — or the focused
+ *             stop's section — is not mapped. One cast-style
+ *             illustration that drifts forward as the hunt
+ *             progresses, dots for stops, and a caption that
+ *             invites the player to teach Arya the real store.
+ *             Quest mode only; Express keeps the strip.
  *
  * Driver contract:
  *   create(el) -> driver            mount into el (the driver owns el's content)
@@ -761,6 +768,35 @@ SceneDrivers.strip = function (el) {
     // strip's left end); progress scrolls to the walked fraction.
     setLook(yaw) { scrollToFraction(MotionMath.panFraction(yaw)); },
     setProgress(u) { scrollToFraction(u); },
+    destroy() { el.innerHTML = ""; }
+  };
+  return driver;
+};
+
+SceneDrivers.art = function (el) {
+  el.innerHTML = `<div class="artview"><img class="art-img" src="assets/scenes/aisle-art.webp" alt="An illustrated grocery aisle — this store is not mapped yet"><div class="photo-dots"></div></div>`;
+  const img = el.querySelector(".art-img");
+  const dotsEl = el.querySelector(".photo-dots");
+  let stops = [], nextIdx = -1;
+
+  function frameAt(t) {
+    img.style.transform = `scale(${1.10 + t * 0.14}) translateX(${(0.5 - t) * 10}%)`;
+  }
+  function paint() {
+    const t = stops.length > 1 && nextIdx >= 0 ? nextIdx / (stops.length - 1) : 0;
+    frameAt(t);
+    dotsEl.innerHTML = stops.map((s, i) => `
+      <button type="button" class="photo-dot${s.checked ? " got" : ""}${i === nextIdx ? " next" : ""}" data-stop="${i}"
+        style="left:${stops.length > 1 ? 4 + (i / (stops.length - 1)) * 92 : 50}%">${i + 1}</button>`).join("");
+    dotsEl.querySelectorAll(".photo-dot").forEach(d =>
+      d.addEventListener("click", () => { if (driver.onTapStop) driver.onTapStop(Number(d.dataset.stop)); }));
+  }
+  const driver = {
+    onTapStop: null,
+    setStops(list) { stops = list || []; paint(); },
+    setNext(i) { nextIdx = i; paint(); },
+    glideTo(i) { nextIdx = i; paint(); },
+    setProgress(u) { frameAt(Math.max(0, Math.min(1, u))); },
     destroy() { el.innerHTML = ""; }
   };
   return driver;

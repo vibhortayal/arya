@@ -106,12 +106,15 @@ QUEST_DRIVER = r"""
   const TJ = "Trader Joe's", CS = "Corner Store";
   // One view, picked by the store (owner, 2026-10-28).
   out.mapped_default = qResolveDriver(TJ) === "photo";
-  out.unmapped_default = qResolveDriver(CS) === "strip";
+  out.unmapped_default = qResolveDriver(CS) === "art";
+  Q.current = { mode: "express" };
+  out.unmapped_express_stays_strip = qResolveDriver(CS) === "strip";
+  Q.current = null;
   localStorage.setItem("arya-scene-driver", "aisle");
   out.old_stored_choice_ignored = qResolveDriver(TJ) === "photo";
   Q.peek3D = true;
   out.peek_3d_mapped = qResolveDriver(TJ) === "cloud";
-  out.peek_3d_unmapped_stays_strip = qResolveDriver(CS) === "strip";
+  out.peek_3d_unmapped_stays_art = qResolveDriver(CS) === "art";
   Q.peek3D = false;
   console.log(JSON.stringify(out));
   process.exit(0);
@@ -169,7 +172,8 @@ class TestPhotoWiring(unittest.TestCase):
         self.assertIn("SceneDrivers.photo = function (el)", js)
         self.assertIn("photoFrameForU", js)
         q = read("quest.js")
-        self.assertIn('qStorePhotos(Q.draft.store) ? "photo" : "strip"', q)
+        self.assertIn('qStorePhotos(Q.draft.store) ? "photo"', q)
+        self.assertIn('mode === "quest" ? "art" : "strip"', q)
         self.assertIn("mount.dataset.photos", q)
         self.assertIn("Q.driverName = qResolveDriver(sess.store);", q)
         html = read("index.html")

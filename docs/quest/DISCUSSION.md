@@ -107,3 +107,17 @@ pass 2.
   are the most shareable part of the haul. The third layer —
   promoting repeat wild finds into plan usuals with a label —
   is designed, not built (needs the list-vs-receipt join).
+
+55. **Art for the unmapped + the demo offers only playable stores (owner,
+    2026-10-28).** An unmapped store — or a focused stop the map doesn't
+    place — never shows an empty stage in Quest mode again. A fifth
+    SceneView rung, "art", plays the hunt on one illustrated aisle in the
+    cast style: the drawing drifts forward (pan + slow zoom) as the hunt
+    progresses, stop dots ride the bottom like the photo walk, and the
+    caption says plainly that Arya has not walked this store and invites
+    the player to Teach Arya. Per-stop rule: at a mapped store, focus on
+    an unplaced stop swaps the scene to art until focus returns to
+    mapped ground. Express keeps its quiet strip — art is a Quest mood.
+    In the demo, the store picker (history AND My Stores) offers only
+    stores the demo can actually play — a photo walk or a model; typed
+    names still work, they are just not advertised. Suite 468.
