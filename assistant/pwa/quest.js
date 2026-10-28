@@ -20,6 +20,17 @@ const Q = {
   // still plays in full); the player can switch rungs mid-hunt and
   // loses nothing — session state lives here, never in a driver.
   driverName: localStorage.getItem("arya-scene-driver") || "strip",
+  // Navigation-first hunt (Discussion 35 + 36): the scene follows
+  // the route on its own; walkTimer walks the view to the current
+  // stop and `arrived` presents its pop. followHold = the player
+  // took manual control (seated fallback) — the walk waits until
+  // the next collect. expScene is the Express frame's strip view.
+  walkTimer: null,
+  walkTarget: -1,
+  arrived: false,
+  followHold: false,
+  mapNote: "",
+  expScene: null,
 };
 
 function stopHuntTimer() {
@@ -41,6 +52,7 @@ function qStoreModel(store) {
 function questShow(id) {
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== id; });
   if (id !== "view-hunt") stopHuntTimer();
+  paintHuntFrame(id);
   if (Q.stack[Q.stack.length - 1] !== id) Q.stack.push(id);
   window.scrollTo(0, 0);
 }
@@ -49,7 +61,19 @@ function questBack() {
   const prev = Q.stack[Q.stack.length - 1];
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== (prev || "view-home"); });
   if (prev !== "view-hunt") stopHuntTimer();
+  paintHuntFrame(prev || "view-home");
   window.scrollTo(0, 0);
+}
+/* The hunt and the Express run are full-screen frames (Discussion
+ * 36): the store fills the viewport and the tab bar hides. Every
+ * exit path funnels through here, so the frame always comes down. */
+function paintHuntFrame(id) {
+  const hunt = id === "view-hunt", exp = id === "view-express";
+  document.body.classList.toggle("hunting", hunt || exp);
+  const hv = $("#view-hunt"); if (hv) hv.classList.toggle("full", hunt);
+  const ev = $("#view-express"); if (ev) ev.classList.toggle("full", exp);
+  if (!hunt && !exp) qWalkStop();
+  if (!exp) destroyExpScene();
 }
 document.addEventListener("click", ev => {
   const back = ev.target.closest(".qback");
@@ -58,7 +82,7 @@ document.addEventListener("click", ev => {
   if (nav) { questGo(nav.dataset.qnav); }
 });
 document.querySelectorAll("#tabs button").forEach(b =>
-  b.addEventListener("click", () => { Q.stack = []; stopHuntTimer(); }));
+  b.addEventListener("click", () => { Q.stack = []; stopHuntTimer(); paintHuntFrame(""); }));
 
 function questGo(id) {
   if (id === "view-community") renderCommunity().catch(showErr);
@@ -490,6 +514,112 @@ document.querySelectorAll(".modecard").forEach(b =>
     b.disabled = false;
   }));
 
+/* ---------------- Navigation-first hunt (Discussion 35 + 36) ----
+ * The hunt is navigation, not a viewer. The scene follows the
+ * route: qWalkStart glides the view to the current stop and, after
+ * a sane walk interval, the stop "arrives" — its pop rises with
+ * the one big GRAB. In the demo the walk is simulated on a timer
+ * (judges are seated); in the store the same arrival is anchored
+ * by position. Manual navigation (a touch on the scene, a view
+ * switch) holds the walk and presents the stop at once — the
+ * seated fallback always works. The route strip and the up-next
+ * overlay are pure functions of the session, in route order. */
+const WALK_MS = { quest: 3200, express: 2000 };
+const PAUSE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>`;
+const PLAY_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>`;
+function paintPauseBtn(sel, paused, disabled) {
+  const b = $(sel);
+  if (!b) return;
+  b.innerHTML = paused ? PLAY_SVG : PAUSE_SVG;
+  b.setAttribute("aria-label", paused ? "Resume" : "Pause");
+  b.disabled = !!disabled;
+}
+function qStopU(sess, i) {
+  const it = sess.items[i];
+  if (it && it.shelf_u != null) return Math.max(0, Math.min(1, it.shelf_u));
+  const n = Math.max(1, sess.items.length);
+  return (i + 0.5) / n;
+}
+function qRouteStripHtml(sess, buttons) {
+  const next = qNextIndex(sess);
+  return sess.items.map((it, i) => {
+    const cls = it.checked ? "done" : i === next ? "current" : "ahead";
+    const label = it.checked ? "✓" : String(i + 1);
+    return buttons
+      ? `<button type="button" class="rstop ${cls}" data-exp-dot="${esc(it.name)}" aria-label="Check off ${esc(it.name)}">${label}</button>`
+      : `<span class="rstop ${cls}" title="${esc(it.name)}">${label}</span>`;
+  }).join("");
+}
+function qUpNextHtml(sess) {
+  const stops = qStops(sess);
+  const next = qNextIndex(sess);
+  let html = `<p class="up-store">${esc(sess.store)} · ${QMODE_LABEL[sess.mode] || sess.mode}</p>`;
+  if (next === -1) {
+    return html + `<div class="up-row first"><span class="up-name">All collected</span></div>` +
+      (Q.mapNote ? `<p class="up-note">${esc(Q.mapNote)}</p>` : "");
+  }
+  const rows = [];
+  for (let i = next; i < sess.items.length && rows.length < 3; i++) {
+    if (!sess.items[i].checked) rows.push(stops[i]);
+  }
+  html += rows.map((s, k) => `
+    <div class="up-row${k === 0 ? " first" : ""}">
+      <span class="up-name">${esc(s.name)}${s.qty > 1 ? ` · × ${qtyFmt(s.qty)}` : ""}</span>
+      ${s.shelfLabel ? `<span class="up-shelf">${esc(s.shelfLabel)}</span>` : s.unplaced ? `<span class="up-shelf">Not placed on the map</span>` : ""}
+    </div>`).join("");
+  if (Q.mapNote) html += `<p class="up-note">${esc(Q.mapNote)}</p>`;
+  return html;
+}
+/* What the arrival pop shows: "ready" before the start, "stop"
+ * when the followed position has reached the current stop (or the
+ * player is navigating by hand), "done" when nothing is left,
+ * "hidden" while the walk is still traveling. */
+function qPopState(sess) {
+  if (sess.state === "not_started") return "ready";
+  if (sess.state !== "playing" && sess.state !== "paused") return "hidden";
+  if (qNextIndex(sess) === -1) return "done";
+  return Q.arrived ? "stop" : "hidden";
+}
+function renderCurrent() {
+  const s = Q.current;
+  if (!s) return;
+  if (s.mode === "express") renderExpress(); else renderHunt();
+}
+function qWalkStop() {
+  if (Q.walkTimer) { clearTimeout(Q.walkTimer); Q.walkTimer = null; }
+  Q.walkTarget = -1;
+}
+function qWalkStart(idx) {
+  qWalkStop();
+  Q.walkTarget = idx;
+  Q.arrived = false;
+  const sess = Q.current;
+  if (!sess || idx < 0) return;
+  const scene = sess.mode === "express" ? Q.expScene : Q.scene;
+  if (scene) scene.glideTo(idx);
+  if (Q.followHold || sess.state !== "playing") { Q.arrived = true; return; }
+  Q.walkTimer = setTimeout(() => {
+    Q.walkTimer = null;
+    Q.arrived = true;
+    renderCurrent();
+  }, WALK_MS[sess.mode] || WALK_MS.quest);
+}
+/* Manual navigation: the walk holds, the current stop presents
+ * itself at once, and step/walk resumes only at the next collect. */
+function qFollowHold() {
+  Q.followHold = true;
+  if (Q.walkTimer) {
+    clearTimeout(Q.walkTimer);
+    Q.walkTimer = null;
+    Q.arrived = true;
+    renderCurrent();
+  }
+}
+/* The collect hook: the sub-stage 2 celebration (character + fun
+ * fact) fires from here — GRAB and marker taps both collect through
+ * collectCurrent, so the celebration has exactly one home. */
+function qOnCollected(name) { /* celebration lands with sub-stage 2 */ }
+
 /* ---------------- Hunt (Quest mode) ---------------- */
 
 function qNextIndex(sess) {
@@ -549,11 +679,17 @@ $("#scene-toggle").addEventListener("click", ev => {
   if (!b || b.dataset.driver === Q.driverName) return;
   // Drop a rung (or climb one) mid-hunt: the driver is only a view —
   // stops, checks, and the clock live in the session, untouched.
+  // Switching the view by hand is manual navigation: the walk holds.
+  qFollowHold();
   Q.driverName = b.dataset.driver;
   localStorage.setItem("arya-scene-driver", Q.driverName);
   mountScene();
   renderHunt();
 });
+/* A touch on the scene is manual navigation (the seated fallback):
+ * the auto-follow holds until the next collect. */
+$("#scene-mount").addEventListener("pointerdown", () => qFollowHold());
+$("#exp-mount").addEventListener("pointerdown", () => qFollowHold());
 function openHunt(sess) {
   Q.current = sess;
   questShow("view-hunt");
@@ -563,49 +699,63 @@ function openHunt(sess) {
   // cloud this store does not have.
   if (sess.driver && (sess.driver !== "cloud" || model)) Q.driverName = sess.driver;
   mountScene();
-  $("#hunt-mapnote").textContent = !model
+  Q.mapNote = !model
     ? `No 3D model for ${sess.store} yet — map this store to unlock the 3D view. The hunt plays the same either way.`
     : Q.driverName === "cloud"
-      ? `${sess.store}, rebuilt in 3D from a shopper's walkthrough. Drag to look around; tap the glowing stop to collect.`
-      : `This store has a 3D model — tap 3D above to walk it. The hunt plays the same either way.`;
+      ? ""
+      : `This store has a 3D model — switch views in the trip panel. The hunt plays the same either way.`;
+  Q.followHold = false;
   renderHunt();
+  qWalkStart(qNextIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
 }
 function renderHunt() {
   const sess = Q.current;
   if (!sess) return;
   const p = qProgress(sess);
-  $("#hunt-store").textContent = sess.store;
-  $("#hunt-progress").textContent =
-    `${QMODE_LABEL[sess.mode]} · ${QSTATE_LABEL[sess.state]} · ${p.done} of ${p.total} collected`;
   const next = qNextIndex(sess);
   if (Q.scene) {
     Q.scene.setStops(qStops(sess));
     Q.scene.setNext(next);
   }
-  const banner = $("#hunt-next");
-  if (sess.state === "not_started") {
-    banner.innerHTML = `<p class="nomargin"><strong>Ready when you are.</strong></p>
-      <p class="muted nomargin">${p.total} items. The first one glows in the aisle.</p>`;
-  } else if (next === -1) {
-    banner.innerHTML = `<p class="nomargin"><strong>Everything collected.</strong></p>
-      <p class="muted nomargin">Finish with the receipt to settle the hunt.</p>`;
-  } else {
-    const it = sess.items[next];
-    const rep = Q.storeReports.find(r => (r.item_group && r.item_group === it.group) || qnorm(r.item) === qnorm(it.name));
-    banner.innerHTML = `<p class="nomargin"><span class="sub">Next</span><strong>${esc(it.name)}</strong>${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p>
-      ${rep ? `<p class="warn nomargin">Reported missing — another hunter could not find it here.</p>` : ""}`;
-  }
-  const btn = $("#btn-collect");
-  if (sess.state === "not_started") { btn.textContent = "Start the hunt"; btn.disabled = false; }
-  else if (next === -1) { btn.textContent = "Collect"; btn.disabled = true; }
-  else { btn.textContent = `Collect · ${sess.items[next].name}`; btn.disabled = sess.state !== "playing"; }
-  $("#btn-pause").textContent = sess.state === "paused" ? "Resume" : "Pause";
-  $("#btn-pause").disabled = sess.state === "not_started";
-  $("#btn-finish").disabled = sess.state === "not_started";
-  $("#btn-nothere").disabled = sess.state !== "playing" || next === -1;
+  // Top overlay: up next. Bottom overlay: route progress only.
+  $("#hunt-upnext").innerHTML = qUpNextHtml(sess);
+  $("#hunt-route").innerHTML = qRouteStripHtml(sess, false);
+  $("#hunt-count").textContent = `${p.done} of ${p.total}`;
   $("#list-left").textContent = p.left;
-  startHuntTimer(sess);
+  // The arrival pop: the primary collect surface.
+  const pop = $("#hunt-pop");
+  const ps = qPopState(sess);
+  pop.hidden = ps === "hidden";
+  const btn = $("#btn-collect");
+  if (ps === "ready") {
+    const first = sess.items[0];
+    $("#pop-body").innerHTML = `<p class="pop-name" style="font-size:22px">Ready when you are</p>
+      <p class="pop-shelf">${p.total} items. First stop: ${first ? esc(first.name) : "—"}.</p>`;
+    btn.textContent = "Start the hunt";
+    btn.disabled = false;
+    $("#btn-nothere").hidden = true;
+  } else if (ps === "done") {
+    $("#pop-body").innerHTML = `<p class="pop-name" style="font-size:22px">Everything collected</p>
+      <p class="pop-shelf">Finish with the receipt to settle the hunt.</p>`;
+    btn.textContent = "Grab";
+    btn.disabled = true;
+    $("#btn-nothere").hidden = true;
+  } else if (ps === "stop") {
+    const it = sess.items[next];
+    const stop = qStops(sess)[next];
+    const rep = Q.storeReports.find(r => (r.item_group && r.item_group === it.group) || qnorm(r.item) === qnorm(it.name));
+    $("#pop-body").innerHTML = `<div class="pop-char" data-char-slot></div>
+      <p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p>
+      ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
+      ${rep ? `<p class="warn" style="margin:6px 0 0">Reported missing — another hunter could not find it here.</p>` : ""}`;
+    btn.textContent = `Grab · ${it.name}`;
+    btn.disabled = sess.state !== "playing";
+    $("#btn-nothere").hidden = false;
+    $("#btn-nothere").disabled = sess.state !== "playing";
+  }
+  paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
+  $("#btn-finish").disabled = sess.state === "not_started";
 }
 async function collectCurrent() {
   const sess = Q.current;
@@ -614,8 +764,10 @@ async function collectCurrent() {
   const name = sess.items[next].name;
   try {
     await qCheck(sess, name, true);
-    if (Q.scene) Q.scene.glideTo(qNextIndex(sess));
+    qOnCollected(name);
+    Q.followHold = false; // the walk resumes from the new anchor
     renderHunt();
+    qWalkStart(qNextIndex(sess));
     if (qNextIndex(sess) === -1) {
       toast("List complete. Finish with the receipt.");
       openFinish(sess);
@@ -626,7 +778,11 @@ $("#btn-collect").addEventListener("click", async () => {
   const sess = Q.current;
   if (!sess) return;
   if (sess.state === "not_started") {
-    try { await qSetState(sess, "playing"); renderHunt(); }
+    try {
+      await qSetState(sess, "playing");
+      renderHunt();
+      qWalkStart(qNextIndex(sess));
+    }
     catch (e) { toast(e.message); }
     return;
   }
@@ -636,8 +792,11 @@ $("#btn-pause").addEventListener("click", async () => {
   const sess = Q.current;
   if (!sess) return;
   try {
-    await qSetState(sess, sess.state === "paused" ? "playing" : "paused");
+    const to = sess.state === "paused" ? "playing" : "paused";
+    await qSetState(sess, to);
+    if (to === "paused") qWalkStop(); // freeze mid-walk; the pop stays as it was
     renderHunt();
+    if (to === "playing" && !Q.arrived) qWalkStart(qNextIndex(sess));
   } catch (e) { toast(e.message); }
 });
 $("#btn-finish").addEventListener("click", async () => {
@@ -729,26 +888,44 @@ $("#panel-items").addEventListener("click", async ev => {
   } catch (e) { toast(e.message); }
 });
 
-/* ---------------- Express run ---------------- */
+/* ---------------- Express run ----------------
+ * The same navigation frame as the hunt (Discussion 35 + 36),
+ * without the game: the strip is the store view, the walk advances
+ * faster, GRAB checks the current stop. The full checklist lives
+ * in the run panel, and the route dots double as checks — Express
+ * is any-order by design. No celebration in this mode. */
 
+function destroyExpScene() {
+  if (Q.expScene) { Q.expScene.destroy(); Q.expScene = null; }
+}
 function openExpress(sess) {
   Q.current = sess;
   questShow("view-express");
   $("#exp-rail").innerHTML = qRailHtml(sess.id);
+  destroyExpScene();
+  Q.expScene = createSceneView($("#exp-mount"), "strip");
+  Q.expScene.onTapStop = idx => {
+    const it = Q.current && Q.current.items[idx];
+    if (it) qExpToggle(it);
+  };
+  Q.followHold = false;
+  Q.mapNote = "";
   renderExpress();
+  qWalkStart(qNextIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderExpress(); });
 }
 function renderExpress() {
   const sess = Q.current;
   if (!sess) return;
   const p = qProgress(sess);
-  $("#exp-store").textContent = sess.store;
-  $("#exp-progress").textContent =
-    `${QMODE_LABEL[sess.mode]} · ${QSTATE_LABEL[sess.state]} · ${p.done} of ${p.total} checked`;
-  $("#exp-startwrap").hidden = sess.state !== "not_started";
-  const eta = $("#exp-eta");
-  if (p.left === 0 && p.total > 0) eta.textContent = "Done";
-  else eta.textContent = `≈ ${p.left * 2 + 2} min left`;
+  const next = qNextIndex(sess);
+  if (Q.expScene) {
+    Q.expScene.setStops(qStops(sess));
+    Q.expScene.setNext(next);
+  }
+  $("#exp-upnext").innerHTML = qUpNextHtml(sess);
+  $("#exp-route").innerHTML = qRouteStripHtml(sess, true);
+  $("#exp-count").textContent = `${p.done} of ${p.total}`;
   const flagged = new Set(Q.storeReports.map(r => r.item_group || qnorm(r.item)));
   $("#exp-items").innerHTML = sess.items.map(i => `
     <div class="row listrow${i.checked ? " checked" : ""}">
@@ -757,34 +934,86 @@ function renderExpress() {
       ${(flagged.has(i.group) || flagged.has(qnorm(i.name))) ? `<span class="sub warn">Reported missing at this store.</span>` : ""}</div>
       <div class="money">× ${qtyFmt(i.qty)}</div>
     </div>`).join("") || empty("The list is empty.");
-  $("#exp-pause").textContent = sess.state === "paused" ? "Resume" : "Pause";
-  $("#exp-pause").disabled = sess.state === "not_started";
+  const pop = $("#exp-pop");
+  const ps = qPopState(sess);
+  pop.hidden = ps === "hidden";
+  const grab = $("#exp-grab");
+  if (ps === "ready") {
+    const first = sess.items[0];
+    $("#exp-pop-body").innerHTML = `<p class="pop-name" style="font-size:22px">Ready when you are</p>
+      <p class="pop-shelf">${p.total} items. First stop: ${first ? esc(first.name) : "—"}.</p>`;
+    grab.textContent = "Start the run";
+    grab.disabled = false;
+  } else if (ps === "done") {
+    $("#exp-pop-body").innerHTML = `<p class="pop-name" style="font-size:22px">All checked</p>
+      <p class="pop-shelf">Finish with the receipt.</p>`;
+    grab.textContent = "Grab";
+    grab.disabled = true;
+  } else if (ps === "stop") {
+    const it = sess.items[next];
+    const stop = qStops(sess)[next];
+    $("#exp-pop-body").innerHTML = `
+      <p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p>
+      ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}`;
+    grab.textContent = `Grab · ${it.name}`;
+    grab.disabled = sess.state !== "playing";
+  }
+  paintPauseBtn("#exp-pause", sess.state === "paused", sess.state === "not_started");
   $("#exp-finish").disabled = sess.state === "not_started";
 }
-$("#exp-start").addEventListener("click", async () => {
-  if (!Q.current) return;
-  try { await qSetState(Q.current, "playing"); renderExpress(); }
-  catch (e) { toast(e.message); }
-});
-$("#exp-items").addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-exp-check]");
-  if (!b || !Q.current) return;
+async function qExpToggle(item) {
   const sess = Q.current;
-  const item = sess.items.find(i => i.name === b.dataset.expCheck);
-  if (!item) return;
+  if (!sess || !item) return;
   try {
     if (sess.state === "not_started") await qSetState(sess, "playing");
     if (sess.state === "paused") { toast("The run is paused — resume first."); return; }
+    const nextIdx = qNextIndex(sess);
+    const wasNext = nextIdx >= 0 && sess.items[nextIdx].name === item.name;
     await qCheck(sess, item.name, !item.checked);
     renderExpress();
+    if (item.checked && wasNext) {
+      Q.followHold = false;
+      qWalkStart(qNextIndex(sess));
+    }
     if (qProgress(sess).left === 0) toast("All checked. Finish with the receipt.");
   } catch (e) { toast(e.message); }
+}
+async function qExpGrab() {
+  const sess = Q.current;
+  if (!sess) return;
+  if (sess.state === "not_started") {
+    try {
+      await qSetState(sess, "playing");
+      renderExpress();
+      qWalkStart(qNextIndex(sess));
+    } catch (e) { toast(e.message); }
+    return;
+  }
+  const i = qNextIndex(sess);
+  if (i >= 0) qExpToggle(sess.items[i]);
+}
+$("#exp-grab").addEventListener("click", () => { qExpGrab(); });
+$("#exp-items").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-exp-check]");
+  if (!b || !Q.current) return;
+  const item = Q.current.items.find(i => i.name === b.dataset.expCheck);
+  if (item) qExpToggle(item);
+});
+$("#exp-route").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-exp-dot]");
+  if (!b || !Q.current) return;
+  const item = Q.current.items.find(i => i.name === b.dataset.expDot);
+  if (item) qExpToggle(item);
 });
 $("#exp-pause").addEventListener("click", async () => {
-  if (!Q.current) return;
+  const sess = Q.current;
+  if (!sess) return;
   try {
-    await qSetState(Q.current, Q.current.state === "paused" ? "playing" : "paused");
+    const to = sess.state === "paused" ? "playing" : "paused";
+    await qSetState(sess, to);
+    if (to === "paused") qWalkStop();
     renderExpress();
+    if (to === "playing" && !Q.arrived) qWalkStart(qNextIndex(sess));
   } catch (e) { toast(e.message); }
 });
 $("#exp-finish").addEventListener("click", async () => {
@@ -794,6 +1023,11 @@ $("#exp-finish").addEventListener("click", async () => {
     if (sess.state === "playing" || sess.state === "paused") await qSetState(sess, "finished");
     openFinish(sess);
   } catch (e) { toast(e.message); }
+});
+$("#exp-listbtn").addEventListener("click", () => { $("#exp-panel").hidden = false; });
+$("#exp-panel-close").addEventListener("click", () => { $("#exp-panel").hidden = true; });
+$("#exp-panel").addEventListener("click", ev => {
+  if (ev.target.id === "exp-panel") $("#exp-panel").hidden = true;
 });
 
 /* ---------------- Finish: the receipt settles it ---------------- */

@@ -123,7 +123,7 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .candrow:last-child { border-bottom: none; }
 
 #toast {
-  position: sticky; top: 8px; z-index: 20; margin: 8px 0;
+  position: sticky; top: 8px; z-index: 70; margin: 8px 0;
   background: var(--label); color: var(--bg); border-radius: 10px;
   padding: 10px 14px; font-size: 15px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
@@ -401,6 +401,96 @@ textarea {
 }
 .cloud-dot.next { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cloud-dot.got { background: var(--fill); border-color: var(--sep); }
+
+/* Hunt, full-screen (Discussion 35 + 36): the store fills the
+   screen; up-next rides the top, route progress the bottom, the
+   arrival pop carries the one big GRAB. Nothing else competes. */
+#view-hunt.full, #view-express.full {
+  position: fixed; inset: 0; z-index: 25; background: var(--bg);
+  overflow: hidden; padding: 0;
+}
+body.hunting { overflow: hidden; }
+body.hunting #tabs { display: none !important; }
+.full #scene-mount, .full #exp-mount { position: absolute; inset: 0; }
+.full .cloud-wrap { height: 100%; border-radius: 0; box-shadow: none; }
+.full .strip-wrap {
+  height: 100%; border-radius: 0; box-shadow: none;
+  display: flex; align-items: center;
+}
+.full .scene { width: 100%; height: 100%; display: block; }
+.upnext {
+  position: absolute; top: calc(10px + env(safe-area-inset-top));
+  left: 12px; right: 76px; z-index: 5;
+  background: rgba(255, 255, 255, 0.86); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 10px 14px;
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+}
+.up-store {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--secondary); margin: 0 0 2px;
+}
+.up-row { padding: 2px 0; }
+.up-row .up-name { font-size: 16px; font-weight: 650; display: block; }
+.up-row.first .up-name { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; }
+.up-shelf { color: var(--secondary); font-size: 13.5px; display: block; }
+.up-note { color: var(--secondary); font-size: 13px; margin: 6px 0 0; }
+.cornerstack {
+  position: absolute; top: calc(10px + env(safe-area-inset-top));
+  right: 12px; z-index: 6; display: flex; flex-direction: column; gap: 8px;
+}
+.cornerbtn {
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: rgba(255, 255, 255, 0.88); color: var(--label);
+  box-shadow: var(--shadow); display: grid; place-items: center;
+  position: relative;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.cornerbtn svg { width: 22px; height: 22px; }
+.cornerbtn .cb-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px;
+  padding: 0 5px; border-radius: 980px; background: var(--accent);
+  color: #fff; font-size: 11px; font-weight: 800;
+  display: grid; place-items: center;
+}
+.popcard {
+  position: absolute; left: 12px; right: 12px; z-index: 6;
+  bottom: calc(66px + env(safe-area-inset-bottom));
+  background: var(--group); border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); padding: 14px 16px;
+  animation: popup 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes popup { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.pop-name { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 0; }
+.pop-shelf { color: var(--secondary); font-size: 15px; margin: 2px 0 0; }
+.grabbtn {
+  min-height: 60px; font-size: 19px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.huntbottom {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.86); border-top: 1px solid var(--sep);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+}
+.routestrip { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.rstop {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  display: grid; place-items: center; flex: none;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  background: var(--fill); color: var(--tertiary);
+}
+.rstop.done { color: var(--accent-text); }
+.rstop.current {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent);
+}
+.huntcount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .popcard { animation: none; }
+}
 
 /* Stage E: store rows — pick selection, drawn-star favorites. */
 .pickrow[aria-pressed="true"] { background: var(--fill); border-radius: 10px; }
