@@ -101,7 +101,8 @@ _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
                     "/api/quest/scan-shelf", "/api/quest/locate",
-                    "/api/chat", "/api/quest/sessions", "/api/quest/shopoff")
+                    "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
+                    "/api/storemap")
 DEMO_SANDBOXES_MAX = 500
 _demo_sandboxes = OrderedDict()   # session cookie -> overlay dict
 
@@ -1348,7 +1349,7 @@ async def quest_report_missing(session_id: str, req: Request):
     body = await _json_obj(req)
     if not body.get("item"):
         raise HTTPException(400, "item is required")
-    from api import quest
+    from api import quest, storemap
     try:
         rep = quest.report_missing(session_id, body["item"],
                                    body.get("kind", ""), body.get("photo"))
@@ -1356,13 +1357,158 @@ async def quest_report_missing(session_id: str, req: Request):
         raise HTTPException(400, str(e))
     if rep is None:
         raise HTTPException(404, "no such item in this session")
-    return rep
+    # Map my store: a "not found" also flags the part of the map where
+    # the item was last seen, and answers with the capture to ask for.
+    task = storemap.flag_outdated(rep["store"], item=rep["item"],
+                                  reason="not_found")
+    return {**rep, "map_task": task}
 
 
 @app.get("/api/quest/stores/{store}/reports")
 def quest_store_reports(store: str):
     from api import quest
     return quest.store_reports(store)
+
+
+# --- Map my store: the guided, crowd-built store map -----------------------
+# See api/storemap.py. One shared map per store; a shopper maps the
+# aisles they use, and every shopper's captures merge into it.
+
+def _map_store(value):
+    name = (value or "").strip()
+    if not name:
+        raise HTTPException(400, "store is required")
+    return name
+
+
+@app.get("/api/storemap")
+def storemap_view(store: str = ""):
+    from api import storemap
+    name = _map_store(store)
+    focus = storemap.get_focus(name)
+    return {**storemap.view(name, focus=focus), "focus": focus}
+
+
+@app.post("/api/storemap/segments")
+async def storemap_add_segment(req: Request):
+    from api import storemap
+    body = await _json_obj(req)
+    try:
+        seg, created = storemap.add_segment(
+            _map_store(body.get("store")), body.get("label"),
+            body.get("side") or "both")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"segment": seg["id"], "label": seg["label"],
+            "side": seg["side"], "created": created}
+
+
+@app.post("/api/storemap/focus")
+async def storemap_set_focus(req: Request):
+    from api import storemap
+    body = await _json_obj(req)
+    name = _map_store(body.get("store"))
+    ids = body.get("segments")
+    if not isinstance(ids, list):
+        raise HTTPException(400, "segments must be a list")
+    return {"focus": storemap.set_focus(name, [str(i) for i in ids])}
+
+
+@app.get("/api/storemap/next")
+def storemap_next(store: str = "", segment: str = ""):
+    from api import storemap
+    name = _map_store(store)
+    prompt = storemap.next_prompt(
+        name, focus=storemap.get_focus(name), seg_id=segment or None)
+    return {"prompt": prompt}
+
+
+@app.post("/api/storemap/outdated")
+async def storemap_outdated(req: Request):
+    """"The map is outdated": flag a segment (or the segment of an
+    item) and answer with the capture the engine wants."""
+    from api import storemap
+    body = await _json_obj(req)
+    return storemap.flag_outdated(
+        _map_store(body.get("store")), seg_id=body.get("segment"),
+        item=body.get("item"), reason=body.get("reason") or "outdated")
+
+
+@app.get("/api/storemap/photo")
+def storemap_photo(store: str = "", segment: str = ""):
+    """The segment's best kept photo (people already scrubbed), or the
+    walkthrough frame a seeded segment started from."""
+    from api import storemap
+    name = _map_store(store)
+    data = storemap.best_image(name, segment)
+    if data is not None:
+        return Response(content=data, media_type="image/jpeg")
+    frame = storemap.baseline_frame(name, segment)
+    if frame and storemap.store_key(name) == storemap.store_key("Trader Joe's"):
+        path = os.path.join(_PWA, "models", "trader-joes", "frames-web", frame)
+        if os.path.isfile(path):
+            with open(path, "rb") as fh:
+                return Response(content=fh.read(), media_type="image/jpeg")
+    raise HTTPException(404, "no photo for this part of the map yet")
+
+
+@app.post("/api/storemap/capture")
+async def storemap_capture(req: Request):
+    """One guided capture: a photo, or one frame the app picked from a
+    walk video. The frame goes through the SAM 3.1 people scrub first
+    and fails closed; then the engine grades it, drops it if it
+    repeats a better view, and keeps the best few per segment. A weak
+    capture is refused with a one-line fix to retake."""
+    from api import shelfscan, storemap
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    name = _map_store(req.query_params.get("store"))
+    seg_id = req.query_params.get("segment", "")
+    kind = req.query_params.get("kind", "photo")
+    if seg_id not in storemap.load_map(name)["segments"]:
+        raise HTTPException(404, "no such part of the map")
+    # Grade BEFORE any model call: a blurry frame costs nothing.
+    try:
+        pre = storemap.score_image(body)
+    except Exception:
+        raise HTTPException(400, "that file is not a readable photo")
+    if pre["fix"] and "Too far" not in pre["fix"]:
+        return {"accepted": False, "fix": pre["fix"],
+                "score": pre["score"], "segment": seg_id}
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
+    jpeg, people = await run_in_threadpool(
+        shelfscan.scrub_people, body, client, media_type=media)
+    if jpeg is None:
+        raise HTTPException(
+            503, "could not blur people out of the photo, so nothing was kept")
+    fill = None
+    try:
+        boxes, _u, _c = await run_in_threadpool(
+            client.segment, body, "grocery shelf", media_type=media)
+        if boxes:
+            from PIL import Image
+            import io
+            w, h = Image.open(io.BytesIO(body)).size
+            fill = max((b["box"][2] - b["box"][0]) * (b["box"][3] - b["box"][1])
+                       for b in boxes) / float(w * h)
+    except Exception:
+        fill = None   # neutral: the fill check never blocks a capture
+    try:
+        return storemap.ingest(name, seg_id, jpeg, kind=kind,
+                               shelf_fill=fill, people=people)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
