@@ -767,3 +767,4 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .titlerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .levelchip { background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .levelchip span { color: var(--accent-text); }
+.offlinenote { margin: 0 0 10px; background: var(--fill2); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
