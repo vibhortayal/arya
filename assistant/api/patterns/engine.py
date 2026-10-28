@@ -3,11 +3,29 @@ Input set per §3: purchases minus returns minus FOR-OTHERS lines.
 A return cancels earlier purchases of the same item, FIFO, by quantity.
 A cadence claim needs >= 2 kept purchases (SPEC: pattern rule)."""
 import statistics
-from datetime import date
+from datetime import date, datetime
 
 
 def _d(s):
-    return date.fromisoformat(s)
+    """Parse an entry date. The store is ISO by contract, but receipts
+    filed before decode-side normalization can carry the format the
+    source printed ('07/29/26') — parse those too instead of raising
+    (a US-dated photo receipt crashed summarize, and with it
+    /api/home and the decode route's judge step, 2026-10-28).
+    Returns None for values no format claims; callers skip them."""
+    if not s:
+        return None
+    s = str(s)
+    try:
+        return date.fromisoformat(s[:10])
+    except ValueError:
+        pass
+    for fmt in ("%m/%d/%y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
 
 
 def net_purchases(entries):
@@ -36,12 +54,18 @@ def summarize(entries, as_of=None):
     kept = net_purchases(entries)
     out = []
     for item_id, events in kept.items():
-        events = sorted(events, key=lambda e: e["date"])
+        # Order by parsed day (string order lies across formats) and
+        # drop events whose date no format claims — they cannot be
+        # placed in time, and cadence math must not guess.
+        events = sorted(events, key=lambda e: _d(e["date"]) or date.min)
+        events = [e for e in events if _d(e["date"]) is not None]
+        if not events:
+            continue
         dates = [_d(e["date"]) for e in events]
         gaps = [(b - a).days for a, b in zip(dates, dates[1:])]
         median_gap = round(statistics.median(gaps), 1) if gaps else None
         last = dates[-1]
-        ref = _d(as_of) if as_of else last
+        ref = (_d(as_of) if as_of else None) or last
         since = (ref - last).days
         n = len(events)
         # --- evidence facts (the reasoning judge reads these) ---
