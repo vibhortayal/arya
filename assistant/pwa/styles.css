@@ -81,7 +81,11 @@ header { display: flex; justify-content: space-between; align-items: baseline; }
 #profile-token-row, #connect-token-row { flex-wrap: wrap; }
 #profile-token-row .sub, #connect-token-row .sub { flex: 1 1 160px; }
 /* Sign out is a real tap target, not a text-height link (U7). */
-#userbar a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
+.avatar { --pct: 0%; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 3px; cursor: pointer;
+  background: conic-gradient(var(--accent) var(--pct), var(--fill2) 0); align-self: center; }
+.avatar span { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  border-radius: 50%; background: var(--panel); color: var(--label); font-weight: 700; font-size: 16px; }
+.crewcard .hr-action { color: var(--accent-text); font-weight: 600; font-size: 14px; margin-left: auto; }
 .row .grow { flex: 1; min-width: 0; }
 .name { font-weight: 600; overflow-wrap: anywhere; }
 a.name { color: var(--label); }

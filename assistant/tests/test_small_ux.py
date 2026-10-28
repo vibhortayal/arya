@@ -53,7 +53,7 @@ class TestSmallUxPins(unittest.TestCase):
         css = read("styles.css")
         self.assertIn("#profile-token-row, #connect-token-row "
                       "{ flex-wrap: wrap; }", css)
-        self.assertIn("#userbar a { display: inline-flex;", css)
+        self.assertIn(".avatar {", css)
         self.assertIn("min-height: 44px", css)
 
 
