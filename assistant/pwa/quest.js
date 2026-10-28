@@ -19,7 +19,8 @@ const Q = {
   // The SceneView ladder: strip is the default (a store with no model
   // still plays in full); the player can switch rungs mid-hunt and
   // loses nothing — session state lives here, never in a driver.
-  driverName: localStorage.getItem("arya-scene-driver") || "strip",
+  driverName: "strip",
+  peek3D: false,
   // Navigation-first hunt (Discussion 35 + 36): the scene follows
   // the route on its own; walkTimer walks the view to the current
   // stop and `arrived` presents its pop. followHold = the player
@@ -95,14 +96,16 @@ function qStorePhotos(store) {
  * lives in the toggle), so it too opens in photo. A rung the
  * store cannot serve falls back — photo needs a walk, cloud
  * needs a model, anything else is strip. */
-function qResolveDriver(store, sessDriver) {
-  const model = qStoreModel(store), photos = qStorePhotos(store);
-  const stored = localStorage.getItem("arya-scene-driver");
-  let drv = stored || sessDriver || (photos ? "photo" : "strip");
-  if (!stored && photos && (sessDriver === "cloud" || sessDriver === "strip")) drv = "photo";
-  if (drv === "photo" && !photos) drv = model ? "cloud" : "strip";
-  if (drv === "cloud" && !model) drv = photos ? "photo" : "strip";
-  return drv;
+/* One store view, picked by the store (owner, 2026-10-28: "even I
+ * don't understand what and why we need those 4 modes"): a mapped
+ * store shows its real photos, any other store its shelf cards. The
+ * 3D scan is one tap away for the curious and the judges ("See it in
+ * 3D"); the drawn Aisle map is retired from the hunt. The list,
+ * grabs and points never change with the picture. */
+function qResolveDriver(store) {
+  const photos = qStorePhotos(store);
+  if (Q.peek3D && qStoreModel(store)) return "cloud";
+  return photos ? "photo" : "strip";
 }
 
 /* ---------------- navigation ---------------- */
@@ -615,7 +618,7 @@ document.querySelectorAll(".modecard").forEach(b =>
       const sess = await post("/api/quest/sessions",
         { store: Q.draft.store, mode, items: Q.draft.finalItems,
           store_id: Q.draft.storeId || undefined,
-          driver: qStorePhotos(Q.draft.store) ? "photo" : Q.driverName });
+          driver: qStorePhotos(Q.draft.store) ? "photo" : "strip" });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       // The set-up screens are done with: Back from the new hunt
@@ -1057,14 +1060,17 @@ function startHuntTimer(sess) {
   paint();
   Q.timer = setInterval(paint, 1000);
 }
-function paintSceneToggle() {
+const QSCENE_CAPTION = {
+  photo: "Real photos from a walk through this store. The orange dot is your next item.",
+  cloud: "A 3D scan of the store, built from the walkthrough video. Drag to look around.",
+  strip: "One card per stop — this store has no map yet, so the cards lead the way."
+};
+function paintSceneCaption() {
+  $("#scene-cap").textContent = QSCENE_CAPTION[Q.driverName] || "";
+  const b = $("#btn-3d");
   const hasModel = !!(Q.current && qStoreModel(Q.current.store));
-  const hasPhotos = !!(Q.current && qStorePhotos(Q.current.store));
-  document.querySelectorAll("#scene-toggle [data-driver]").forEach(b => {
-    b.setAttribute("aria-pressed", String(b.dataset.driver === Q.driverName));
-    if (b.dataset.driver === "cloud") b.disabled = !hasModel;
-    if (b.dataset.driver === "photo") b.disabled = !hasPhotos;
-  });
+  b.hidden = !hasModel;
+  b.innerHTML = Q.driverName === "cloud" ? "&lsaquo; Back to the photos" : "See it in 3D &rsaquo;";
 }
 function mountScene() {
   const mount = $("#scene-mount");
@@ -1073,18 +1079,16 @@ function mountScene() {
   mount.dataset.photos = (Q.current && qStorePhotos(Q.current.store)) || "";
   Q.scene = createSceneView(mount, Q.driverName);
   Q.scene.onTapStop = idx => qTapStop(idx);
-  paintSceneToggle();
+  paintSceneCaption();
 }
-$("#scene-toggle").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-driver]");
-  if (!b || b.dataset.driver === Q.driverName) return;
-  Q.stepsHold = true; // switching the view is manual navigation
-  // Drop a rung (or climb one) mid-hunt: the driver is only a view —
-  // stops, checks, and the clock live in the session, untouched.
-  // Switching the view by hand is manual navigation: the walk holds.
+$("#btn-3d").addEventListener("click", () => {
+  if (!Q.current) return;
+  // Only the picture changes: stops, checks and points live in the
+  // session, untouched. Looking around is manual navigation.
+  Q.stepsHold = true;
   qFollowHold();
-  Q.driverName = b.dataset.driver;
-  localStorage.setItem("arya-scene-driver", Q.driverName);
+  Q.peek3D = Q.driverName !== "cloud";
+  Q.driverName = qResolveDriver(Q.current.store);
   mountScene();
   renderHunt();
 });
@@ -1101,13 +1105,10 @@ function openHunt(sess) {
   const photos = qStorePhotos(sess.store);
   // Reopen on the session's rung, resolved against what this
   // store can serve (the mapped default is the photo walk).
-  Q.driverName = qResolveDriver(sess.store, sess.driver);
+  Q.peek3D = false;  // every hunt opens on the store's own view
+  Q.driverName = qResolveDriver(sess.store);
   mountScene();
-  Q.mapNote = !model && !photos
-    ? `No map for ${sess.store} yet — map this store to unlock its photo walk and 3D view. The hunt plays the same either way.`
-    : Q.driverName === "strip"
-      ? `This store is mapped — switch to Photos or 3D above. The hunt plays the same either way.`
-      : "";
+  Q.mapNote = "";
   Q.followHold = false;
   Q.focusIdx = -1; // a fresh entry presents the first uncollected stop
   renderHunt();
@@ -1116,6 +1117,7 @@ function openHunt(sess) {
   qWalkStart(qCurrentIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
   qFlushOutbox();
+  qMaybeHowto(sess);
 }
 function renderHunt() {
   const sess = Q.current;
@@ -1251,6 +1253,8 @@ function qHuntKey(e) {
   const shown = id => { const v = $(id); return v && !v.hidden; };
   // Esc is Back on any screen of the run (hunt, Express, Finish);
   // an open sheet takes it first.
+  if (e.key === "Escape" && shown("#howto-sheet")) { closeHowto(); e.preventDefault(); return; }
+  if (shown("#howto-sheet")) return;
   if (e.key === "Escape" && !shown("#ar-sheet") && !shown("#spot-sheet")
       && (shown("#view-hunt") || shown("#view-express") || shown("#view-finish"))) {
     questBack(); e.preventDefault(); return;
@@ -2025,6 +2029,26 @@ function openAddReceipt(sessionId, label, onDone) {
   qShowDemoDoors($("#ar-sheet"));
   $("#ar-sheet").hidden = false;
 }
+/* How to play (user feedback, 2026-10-28: "don't understand how to
+ * play"): three steps — find it, grab it, snap the receipt. Shown
+ * once, on the first Quest hunt on this device; the HUD "?" opens it
+ * again. */
+const QHOWTO_KEY = "arya-howto-seen";
+function openHowto() { $("#howto-sheet").hidden = false; }
+function closeHowto() {
+  $("#howto-sheet").hidden = true;
+  try { localStorage.setItem(QHOWTO_KEY, "1"); } catch (e) {}
+}
+function qMaybeHowto(sess) {
+  if (!sess || sess.mode !== "quest") return;
+  let seen = false;
+  try { seen = localStorage.getItem(QHOWTO_KEY) === "1"; } catch (e) {}
+  if (!seen) openHowto();
+}
+$("#btn-howto").addEventListener("click", openHowto);
+$("#howto-skip").addEventListener("click", closeHowto);
+$("#howto-go").addEventListener("click", closeHowto);
+$("#howto-sheet").addEventListener("click", ev => { if (ev.target.id === "howto-sheet") closeHowto(); });
 function closeAddReceipt() { $("#ar-sheet").hidden = true; qAR = null; }
 async function qArSettle(settle) {
   if (!qAR) return;

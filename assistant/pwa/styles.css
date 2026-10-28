@@ -769,3 +769,13 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .levelchip { background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .levelchip span { color: var(--accent-text); }
 .offlinenote { margin: 0 0 10px; background: var(--fill2); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.howto { margin: 4px 0 14px; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 10px; }
+.howto li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 2px 12px; padding: 12px; border: 1.5px solid var(--line); border-radius: 16px; }
+.howto li::before { content: counter(step); grid-row: span 2; width: 34px; height: 34px; border-radius: 999px; background: var(--acc); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.howto b { font-size: 17px; }
+.howto span { font-size: 14px; color: var(--secondary); }
+#btn-howto { font-weight: 800; font-size: 17px; }
+.scenecap { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 6px 2px 10px; font-size: 13px; }
+.linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 14px; min-height: 32px; }
+.hunt-tools .toolspacer { flex: 1 1 0; }
+.hunt-tools .hudbtn { flex-shrink: 0; }
