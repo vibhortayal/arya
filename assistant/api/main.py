@@ -1073,14 +1073,17 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name):
+def _add_name_to_list(name, qty=1):
     """A typed/pasted/read name joins the list as a manual item —
-    the one add path every Add surface shares."""
+    the one add path every Add surface shares. A typed quantity
+    ("eggs x 2") rides along as the item's quantity."""
     import re as _re
     name = (name or "").strip()
     item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    _merge_flag(item_id, {"manual": True, "name": name,
-                          "dismissed_on": None})
+    flag = {"manual": True, "name": name, "dismissed_on": None}
+    if qty and qty > 1:
+        flag["qty_override"] = qty
+    _merge_flag(item_id, flag)
     return {"item_id": item_id, "name": name}
 
 
@@ -1089,7 +1092,10 @@ async def list_add(req: Request):
     body = await _json_obj(req)
     item_id = body.get("item_id")
     if not item_id and body.get("name"):
-        return {"item_id": _add_name_to_list(body["name"])["item_id"]}
+        from api.list.intake import split_list_items
+        typed = split_list_items(str(body["name"]))
+        name, qty = typed[0] if len(typed) == 1 else (body["name"], 1)
+        return {"item_id": _add_name_to_list(name, qty)["item_id"]}
     if not item_id:
         raise HTTPException(400, "item_id or name is required")
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
@@ -1106,8 +1112,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    from api.list.intake import split_list_text, extract_items_model
-    names = split_list_text(text)
+    from api.list.intake import split_list_items, extract_items_model
+    typed = split_list_items(text)
+    names = [n for n, _q in typed]
     source = "split"
     if not names:
         if not os.environ.get("MODEL_API_KEY"):
@@ -1115,10 +1122,14 @@ async def list_from_text(req: Request):
         _budget_guard()
         client = MetaClient(ledger=_ledger())
         names = extract_items_model(text, client)
+        typed = [(n, 1) for n in names]
         source = "model"
-    added = [_add_name_to_list(n) for n in names]
-    return {"added": len(added), "names": [a["name"] for a in added],
-            "source": source}
+    on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
+    added = [_add_name_to_list(n, q) for n, q in typed]
+    # Already on the list: neither merged nor new, so not "added".
+    already = sum(1 for a in added if a["item_id"] in on_list)
+    return {"added": len(added) - already, "already": already,
+            "names": [a["name"] for a in added], "source": source}
 
 
 @app.post("/api/list/from-photo")
@@ -1273,6 +1284,44 @@ async def stores_create(req: Request):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return stores_mod.add_to_mine(store["id"])
+
+
+@app.get("/api/stores/places")
+def stores_places(q: str = "", session: str = "",
+                  lat: float = None, lng: float = None):
+    """Google Places suggestions for the store picker. A plain def
+    route: the upstream call blocks, so FastAPI runs it in the
+    threadpool. Unprovisioned (no key) is a quiet no-op, the
+    second-seat shape."""
+    from api import places
+    if not places.provisioned() or len(q.strip()) < 3:
+        return {"provisioned": places.provisioned(), "suggestions": []}
+    try:
+        rows = places.autocomplete(q.strip(), session or None, lat, lng)
+    except places.PlacesError:
+        return {"provisioned": True, "suggestions": [], "error": "places"}
+    return {"provisioned": True, "suggestions": rows}
+
+
+@app.post("/api/stores/places/pick")
+async def stores_places_pick(req: Request):
+    body = await _json_obj(req)
+    place_id = (body.get("place_id") or "").strip()
+    name = (body.get("name") or "").strip()
+    if not place_id or not name:
+        raise HTTPException(400, "place_id and name are required")
+    from api import places
+    if not places.provisioned():
+        raise HTTPException(503, "Google Places is not provisioned yet")
+    from starlette.concurrency import run_in_threadpool
+    try:
+        row = await run_in_threadpool(
+            places.pick_store, place_id, name, state._current_user.get())
+    except places.PlacesError as e:
+        raise HTTPException(502, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return row
 
 
 @app.post("/api/stores/favorite")

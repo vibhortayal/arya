@@ -489,7 +489,9 @@ def get_cart():
     with file_lock("cart.json"):
         cart = _load("cart.json", None)
         if cart is not None:
-            same = [i["item_id"] for i in cart["items"]] == [i["item_id"] for i in unchecked["items"]]
+            def _sig(items):
+                return [(i["item_id"], i.get("qty")) for i in items]
+            same = _sig(cart["items"]) == _sig(unchecked["items"])
             fresh = cart["state"] == "waiting" and same
             new_cycle = cart["state"] == "approved" and cart.get("as_of") != as_of()
             if fresh or (cart["state"] == "approved" and not new_cycle):
