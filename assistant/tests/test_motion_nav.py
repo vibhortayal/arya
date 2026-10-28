@@ -71,7 +71,7 @@ class TestMotionShell(unittest.TestCase):
         self.assertIn("collectStop(Number(g.dataset.grab))", js)
         # Manual navigation pauses step-advance until the next collect.
         self.assertIn('$("#scene-mount").addEventListener("pointerdown"', js)
-        self.assertGreaterEqual(js.count("Q.stepsHold = true"), 2)  # scene touch + driver switch
+        self.assertGreaterEqual(js.count("Q.stepsHold = true"), 2)  # scene touch + the 3D peek
         self.assertIn("if (!Q.stepDet || Q.stepsHold", js)
         # A step can never walk past the stop it heads for.
         self.assertIn("MotionMath.advance(Q.stepU, nextU", js)
@@ -85,7 +85,7 @@ class TestMotionShell(unittest.TestCase):
         self.assertIn('removeEventListener("devicemotion", qOnMotion)', js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v37"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v42"', read("sw.js"))
 
 
 PRELUDE = r"""

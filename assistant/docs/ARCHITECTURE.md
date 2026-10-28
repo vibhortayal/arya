@@ -1,7 +1,6 @@
 # Arya — Architecture (as built)
 
-Status: living document. This revision describes the system as it runs on
-October 27, 2026. SPEC.md states the product rules. This document states
+Status: living document, revised 2026-10-28. SPEC.md states the product rules. This document states
 how the built system is put together. Where the two disagree, SPEC.md
 wins for behavior and this document wins for structure.
 
@@ -169,20 +168,25 @@ Each agent has a narrow job and a named limit.
   arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
-- Tests (317) run before every commit. Small commits to main, named by
+- The test suite runs before every commit. Small commits to main, named by
   stage; a session log goes to loops/ and STATUS.md is updated.
 
-## 12. Not built / held
+## 12. Quest storage
+
+Per account, in `quest.json`: sessions, Shop-Offs, friends, Spotter
+reports, and sightings (item, store, shelf label, time; no image).
+`shelf_frames.json` holds one fresh shelf photo per store and item,
+already scrubbed of people by SAM (`shelfscan.scrub_people`; no scrub,
+no frame). `GET /api/quest/plan` counts purchases per store from the
+ledger for Plan a hunt ($0). The demo sandbox overlays all of it in
+memory. The store directory (`stores.json`) is platform-level.
+
+## 13. Not built / held
 
 - Per-user spend caps (§10) — required before registration opens.
 - Public registration — closed. The plan: open after the hackathon,
   once per-user spend caps exist (§10). Intake is not Muse-only:
   every door runs on Meta models — Muse in chat, Spark on the Meta
   API in the app.
-- Stage 5, the store add-on as first scoped, was superseded: the
-  store layer shipped as Quest work — a Trader Joe's 3D model with
-  a SAM/Spark shelf graph, item-to-shelf stop matching, and a
-  stores directory with search and favorites (STATUS.md, Quest
-  Stages C–E). It does not gate the core.
 - Forgot-password — not built. There is no mail channel; a fake
   affordance was refused on principle.

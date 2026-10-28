@@ -22,7 +22,13 @@ function qtyFmt(q) {
   return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
 }
 async function api(path, opts) {
-  const r = await fetch(path, opts);
+  let r;
+  try { r = await fetch(path, opts); }
+  catch (e) {
+    // A network failure stays a TypeError (the hunt's offline outbox
+    // keys on it) but reads as what it is.
+    throw new TypeError("No connection right now — try again when you're back online.");
+  }
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
   return r.json();
 }
@@ -30,12 +36,22 @@ function post(path, body) {
   return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
 let toastTimer = null;
-function toast(msg) {
+function toast(msg, opts) {
   const t = $("#toast");
   t.textContent = msg;
+  // An optional one-tap action (Undo) rides on the toast, which then
+  // stays a little longer.
+  if (opts && opts.action) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "toastact";
+    b.textContent = opts.action;
+    b.addEventListener("click", () => { t.hidden = true; opts.onAction && opts.onAction(); });
+    t.appendChild(b);
+  }
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 4200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, opts && opts.action ? 6000 : 4200);
 }
 function showErr(e) { toast("Could not load: " + e.message); }
 function row(name, sub, right) {
@@ -110,6 +126,14 @@ function openSess(id) {
   if (s && window.qOpenSession) qOpenSession(s);
 }
 
+/* Level and points (owner, 2026-10-28): the bragging chip on Today
+ * and the player card. Points bank with receipts; levels never drop. */
+function paintLevelChip(profile) {
+  const el = $("#today-level");
+  if (!el || !profile || !profile.level) return;
+  el.innerHTML = `Level ${profile.level} <span>· ${profile.points} pts</span>`;
+  el.hidden = false;
+}
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
   // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
@@ -178,6 +202,7 @@ async function renderHome() {
   }
   paintTodayHero(sessions);
   paintTodayGames(sessions);
+  api("/api/quest/profile").then(paintLevelChip).catch(() => {});
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
     api("/api/curator").catch(() => ({ proposals: [] }))
@@ -429,6 +454,7 @@ async function renderProfile() {
   $("#pf-stats").innerHTML =
     `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
+     <div class="stattile"><div class="sv">${profile.level || 1}</div><div class="sl">Level · ${profile.points || 0} pts</div></div>
      <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
      <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
   paintMissingReceipts($("#pf-missing"), archive.unsettled || [], () => renderProfile().catch(showErr));
