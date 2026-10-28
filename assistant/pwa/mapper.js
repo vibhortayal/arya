@@ -43,7 +43,7 @@ async function renderMapper() {
     `<button class="chip" data-mstore="${esc(n)}" aria-pressed="${String(n === M.store)}" type="button">${esc(n)}</button>`).join("");
   if (!M.store) {
     $("#mp-cover").innerHTML = empty("Pick a store from My Stores first.");
-    $("#mp-next").innerHTML = ""; $("#mp-segs").innerHTML = "";
+    $("#mp-walk").innerHTML = ""; $("#mp-next").innerHTML = ""; $("#mp-segs").innerHTML = "";
     return;
   }
   M.view = await api(`/api/storemap?store=${encodeURIComponent(M.store)}`);
@@ -52,13 +52,19 @@ async function renderMapper() {
 
 function paintMapper() {
   const v = M.view;
+  $("#mp-walk").innerHTML = `<div class="group pad mp-nextcard">
+       <span class="eyebrow">Zero typing</span>
+       <div class="name">Walk your store</div>
+       <p class="muted">Just walk the aisles you shop, phone up. Arya reads the shelves, names each section, and builds the map. Afterwards you check what it found — that's all.</p>
+       <button class="btn primary wide" id="mp-walkstart" type="button">Start the walk</button>
+     </div>`;
   const done = v.counts.mapped;
   $("#mp-cover").innerHTML = v.total
     ? `<div class="mp-count">Arya knows <strong>${v.coverage_pct}%</strong> of ${esc(v.store || M.store)} <span class="muted">· ${done} of ${v.total} sections</span></div>
        <div class="track" aria-hidden="true"><span class="bar" style="width:${v.coverage_pct}%"></span></div>
        <p class="muted nomargin">${v.counts.aging ? `${v.counts.aging} getting old. ` : ""}${v.counts.stale ? `${v.counts.stale} reported out of date. ` : ""}${v.counts.unmapped ? `${v.counts.unmapped} still new to Arya. ` : ""}Teach the aisles you use. You never need all of them.</p>
        ${mapperGoalHtml(v)}`
-    : `<p class="nomargin">No aisles here yet. Add the aisle you shop in, below.</p>`;
+    : `<p class="nomargin">No aisles here yet. Walk the store and Arya builds the map from what it sees.</p>`;
   const p = v.next;
   $("#mp-next").innerHTML = p
     ? `<div class="group pad mp-nextcard">
@@ -169,8 +175,25 @@ function openCapture(prompt) {
   $("#cp-outdated").hidden = !prompt.segment;
   $("#cp-photo").value = ""; $("#cp-video").value = "";
   questShow("view-capture");
-  if (!prompt.segment) mapperPickAisle();
+  if (!prompt.segment && !prompt.teach) mapperPickAisle();
 }
+
+/* Zero-entry teach (owner, 2026-10-28): the walk IS the form. The
+ * shopper walks; the server reads each frame's section and builds
+ * the map; the confirm card at the end is the only "input" — and
+ * it is check-and-remove, never typing. */
+function openTeachWalk() {
+  openCapture({ kind: "walk", segment: "", teach: true, est_seconds: 30,
+    title: `Walk ${M.store}`,
+    why: "Just walk the aisles you shop. Arya reads the shelves and builds the map — nothing to type, no aisles to name.",
+    steps: ["Hold the phone upright at chest height, shelves in view.",
+            "Walk slowly, the way you shop.",
+            "Pass the aisles you use. Skip the rest — other shoppers fill them in.",
+            "Tap Done at the end. Arya names each section it saw, and you check them."] });
+}
+$("#mp-walk").addEventListener("click", ev => {
+  if (ev.target.closest("#mp-walkstart")) openTeachWalk();
+});
 
 /* A "not found" report asks for one specific photo. Offered as a
  * one-tap on the report toast; nothing is forced. */
@@ -364,8 +387,76 @@ async function camFinishWalk() {
   camStop();
   const frames = [];
   for (const b of w.buckets.filter(Boolean)) frames.push({ blob: await camBlob(b.c), score: b.score });
+  if (M.prompt && M.prompt.teach) { await mapperTeachSend(teachPicks(frames)); return; }
   await mapperSendWalk(frames, secs);
 }
+
+/* A teach walk sends a spread of its sharpest frames — one read
+ * per frame, and the server merges repeats of the same section. */
+function teachPicks(frames) {
+  if (frames.length <= M_WALK_SEND) return frames.map(f => f.blob);
+  const step = frames.length / M_WALK_SEND;
+  const out = [];
+  for (let i = 0; i < M_WALK_SEND; i++) out.push(frames[Math.floor(i * step)].blob);
+  return out;
+}
+
+async function mapperTeachUpload(blob) {
+  const q = `store=${encodeURIComponent(M.store)}&kind=walk`;
+  const r = await fetch(`/api/storemap/teach?${q}`, {
+    method: "POST", headers: { "Content-Type": blob.type || "image/jpeg" }, body: blob });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+  return r.json();
+}
+
+/* Send the walk's frames to the teach reader, then show the
+ * confirm card: the sections Arya found, each removable with one
+ * tap while it is still only the teacher's. Unreadable frames are
+ * skipped quietly — a walk never fails over one bad frame. */
+async function mapperTeachSend(blobs) {
+  M.busy = true;
+  $("#cp-controls").hidden = true;
+  $("#cp-cam").hidden = true;
+  mapperShowResult(`<p class="nomargin">Reading the shelves and building the map…</p>`);
+  const found = new Map();
+  let pts = 0, newTitle = null;
+  for (const blob of blobs) {
+    try {
+      const out = await mapperTeachUpload(blob);
+      const cur = found.get(out.segment) || { label: out.label, segment: out.segment, created: out.created, fresh: false };
+      if (out.reward) {
+        pts += out.reward.points;
+        if (out.reward.new_section) cur.fresh = true;
+        if (out.reward.new_title) newTitle = out.reward.new_title;
+      }
+      found.set(out.segment, cur);
+    } catch (e) { /* skip the frame; nothing was kept for it */ }
+  }
+  M.busy = false;
+  if (!found.size) { mapperGentle(); await mapperAfter(); return; }
+  const rows = [...found.values()].map(f =>
+    `<div class="row mp-seg"><span class="grow"><span class="name">${esc(f.label)}</span><span class="sub">${f.created ? "new section" : "already on the map"}</span></span><button class="btn small" data-tdiscard="${esc(f.segment)}" type="button">Not a section ✕</button></div>`).join("");
+  mapperShowResult(`<div class="mp-reward">
+    <div class="what">Arya found ${found.size} section${found.size === 1 ? "" : "s"}</div>
+    <p class="muted">Check them — a wrong one comes straight back out. Everything here came from your walk. You typed nothing.</p>
+    ${rows}
+    ${pts ? `<div class="pts">+${pts}</div>` : ""}
+    ${newTitle ? `<div class="mp-title">You're now a ${esc(newTitle)}</div>` : ""}
+  </div>`);
+  if ([...found.values()].some(f => f.fresh) && window.qConfetti) qConfetti();
+  await mapperAfter();
+}
+
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-tdiscard]");
+  if (!b) return;
+  try {
+    const out = await post("/api/storemap/discard", { store: M.store, segment: b.dataset.tdiscard });
+    const row = b.closest(".mp-seg"); if (row) row.remove();
+    toast(`${out.label} taken back off the map.`);
+    M.view = await api(`/api/storemap?store=${encodeURIComponent(M.store)}`);
+  } catch (e) { toast(e.message); }
+});
 
 /* Spread a walk's frames, in time order, over the aisle's sections
  * and send the sharpest frame of each section. */
@@ -482,7 +573,8 @@ $("#cp-video").addEventListener("change", async ev => {
   mapperShowResult("Picking the sharpest frames from your walk…");
   try {
     const { frames, secs } = await mapperVideoFrames(f);
-    await mapperSendWalk(frames, secs);
+    if (M.prompt && M.prompt.teach) await mapperTeachSend(teachPicks(frames));
+    else await mapperSendWalk(frames, secs);
   } catch (e) { mapperGentle(); }
 });
 
