@@ -33,7 +33,7 @@ OUT (rollout story only): whole-store maps, live relocalization, escape-room ski
 | Nov 1 (cont.) | List-in by photo wired to hunts; receipt finish wired to scoring; **feature freeze** |
 | Nov 1–2 | **Wonder QA pass (owner-approved stage):** Playwright sweeps the frozen build (every screen and door, phone-size screenshots, console errors, flow transcripts) on the demo household and a test account only. Coverage includes full Quest playthroughs, not just screens: session start, the Optimizer (merge/correct/ask), a complete hunt on each scene driver (Cloud, Aisle, Strip) with collects and "Not here" Spotter reports, the receipt finish and scoring, Shop-Off create/join, Community boards, friends add/accept, and the badge/profile surfaces. Muse Wonder reviews the evidence — screenshots against the wireframes, transcripts, logs — and files findings (functional, UI, UX) with proposed fixes as code on a branch. Every finding is verified against the app before a fix lands; fixes go through the normal review gate (suite green, sweep re-run). The findings report (filed / verified / fixed / false positive) is kept as submission evidence |
 | Nov 2 | Re-sweep clean; end-to-end rehearsal on the demo household; fix pass |
-| Nov 3 | Demo video filmed; submission package assembled |
+| Nov 3 | Demo video filmed in the store during a real shop (Discussion 36); submission package assembled |
 | Nov 4 | Owner reviews the complete package; submit before 9:00 PM ET — only on his explicit go-ahead |
 
 ## Risks
