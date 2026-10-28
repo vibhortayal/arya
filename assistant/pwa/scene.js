@@ -42,6 +42,19 @@
  *   driver.onTapStop = fn(index)    assigned by the screen; the driver
  *                                   calls it when a stop is tapped
  *   driver.destroy()                tear down listeners/timers
+ *
+ * Motion navigation (Discussion 33) — OPTIONAL driver methods. One
+ * motion layer (MotionMath + createMotionLook + createStepDetector,
+ * below) serves every rung; drivers only render what they are told:
+ *   driver.setLook(yaw, pitch)      look offsets in radians, relative
+ *                                   to facing the next stop; the same
+ *                                   clamps as drag-look. A photo-style
+ *                                   driver implements this as a
+ *                                   horizontal pan across its wide
+ *                                   frame (MotionMath.panFraction).
+ *   driver.setProgress(u)           place the view at path fraction
+ *                                   u in [0, 1] (step advance).
+ * A driver without them simply does not move; the hunt is unchanged.
  */
 const SCENE_BASE = (document.currentScript && document.currentScript.src)
   || document.baseURI;
@@ -72,7 +85,7 @@ SceneDrivers.cloud = function (el) {
   const modelUrl = el.dataset.model || "";
   el.innerHTML = `<div class="cloud-host"></div>`;
   const host = el.querySelector(".cloud-host");
-  const queued = { stops: [], next: -1, glide: -1, hasGlide: false };
+  const queued = { stops: [], next: -1, glide: -1, hasGlide: false, look: null, progress: null };
   let impl = null, dead = false;
 
   function adopt(next) {
@@ -82,12 +95,16 @@ SceneDrivers.cloud = function (el) {
     impl.setStops(queued.stops);
     impl.setNext(queued.next);
     if (queued.hasGlide) impl.glideTo(queued.glide);
+    if (queued.look) impl.setLook(queued.look.yaw, queued.look.pitch);
+    if (queued.progress != null) impl.setProgress(queued.progress);
   }
   const driver = {
     onTapStop: null,
     setStops(list) { queued.stops = list || []; if (impl) impl.setStops(queued.stops); },
     setNext(i) { queued.next = i; if (impl) impl.setNext(i); },
     glideTo(i) { queued.glide = i; queued.hasGlide = true; if (impl) impl.glideTo(i); },
+    setLook(yaw, pitch) { queued.look = { yaw, pitch }; if (impl) impl.setLook(yaw, pitch); },
+    setProgress(u) { queued.progress = u; if (impl) impl.setProgress(u); },
     destroy() { dead = true; if (impl) impl.destroy(); el.innerHTML = ""; }
   };
   adopt(cloudLoadingView(host));
@@ -111,7 +128,7 @@ function cloudLoadingView(host) {
   </div>`;
   return {
     onTapStop: null,
-    setStops() {}, setNext() {}, glideTo() {},
+    setStops() {}, setNext() {}, glideTo() {}, setLook() {}, setProgress() {},
     // No teardown: the successor's constructor takes over the host.
     // (Clearing here would wipe the view that replaces this one —
     // adopt() destroys the old impl after the new one is built.)
@@ -427,6 +444,19 @@ function cloudView(THREE, host, manifest, buf, graph) {
       if (look && !glide) lookTarget = look;
     },
     glideTo,
+    // Motion navigation: gyro look writes the same offsets drag
+    // writes (same clamps); step progress parks the cursor on the
+    // path and faces the next stop (or the path ahead at the end).
+    setLook(y, p) {
+      yaw = Math.max(-1.15, Math.min(1.15, y));
+      pitch = Math.max(-0.5, Math.min(0.55, p));
+    },
+    setProgress(u) {
+      glide = null;
+      cursor = Math.max(0, Math.min(1, u)) * total;
+      const look = markerLook(nextIdx);
+      lookTarget = look || pathAt(Math.min(total, cursor + span * 0.8)).p.clone();
+    },
     destroy() {
       destroyed = true;
       cancelAnimationFrame(raf);
@@ -474,7 +504,15 @@ SceneDrivers.aisle = function (el) {
     </g>
   </svg>`;
   const stopsG = el.querySelector(".scene-stops");
+  const svg = el.querySelector(".scene");
   let stops = [], nextIdx = -1;
+  // Step advance parks the column at a base shift; glideTo adds a
+  // transient nudge on top and settles back to the base.
+  let baseShift = 0, shiftTimer = null;
+  function applyShift(px) {
+    stopsG.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+    stopsG.style.transform = `translateY(${px}px)`;
+  }
 
   function pos(i, n) {
     // t runs 0 (far) .. 1 (near); stops spread along the path.
@@ -504,14 +542,27 @@ SceneDrivers.aisle = function (el) {
     setNext(i) { nextIdx = i; render(); },
     glideTo(i) {
       // Bring stop i toward the front: shift the column so the walk
-      // reads as forward motion, then settle back.
+      // reads as forward motion, then settle back to the base shift.
       const n = stops.length || 1;
-      const target = Math.max(0, Math.min(26, (i / n) * 26));
-      stopsG.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-      stopsG.style.transform = `translateY(${target}px)`;
-      setTimeout(() => { stopsG.style.transform = ""; }, 650);
+      const target = baseShift + Math.max(0, Math.min(26, (i / n) * 26));
+      applyShift(target);
+      clearTimeout(shiftTimer);
+      shiftTimer = setTimeout(() => applyShift(baseShift), 650);
     },
-    destroy() { el.innerHTML = ""; }
+    // Motion navigation: look pans the whole scene sideways (the
+    // slight zoom keeps the pan from exposing the SVG's edges);
+    // progress parks the column at the walked fraction.
+    setLook(yaw) {
+      const f = MotionMath.panFraction(yaw);
+      const tx = (0.5 - f) * 44;
+      svg.style.transform = Math.abs(tx) < 0.5 ? "" : `translateX(${tx.toFixed(1)}px) scale(1.14)`;
+    },
+    setProgress(u) {
+      baseShift = Math.max(0, Math.min(1, u)) * 26;
+      clearTimeout(shiftTimer);
+      applyShift(baseShift);
+    },
+    destroy() { clearTimeout(shiftTimer); el.innerHTML = ""; }
   };
   return driver;
 };
@@ -551,12 +602,147 @@ SceneDrivers.strip = function (el) {
       c.addEventListener("click", () => { if (driver.onTapStop) driver.onTapStop(Number(c.dataset.stop)); }));
     scrollToNext(false);
   }
+  function scrollToFraction(f) {
+    const max = wrap.scrollWidth - wrap.clientWidth;
+    if (max > 0) wrap.scrollTo({ left: Math.max(0, Math.min(1, f)) * max, behavior: "auto" });
+  }
   const driver = {
     onTapStop: null,
     setStops(list) { stops = list || []; render(); },
     setNext(i) { nextIdx = i; render(); },
     glideTo(i) { nextIdx = i; render(); scrollToNext(true); },
+    // Motion navigation: look pans the strip (left look = the
+    // strip's left end); progress scrolls to the walked fraction.
+    setLook(yaw) { scrollToFraction(MotionMath.panFraction(yaw)); },
+    setProgress(u) { scrollToFraction(u); },
     destroy() { el.innerHTML = ""; }
   };
   return driver;
 };
+
+/* ---- Motion navigation (Discussion 33) -----------------------------
+ * One motion layer for every rung of the ladder. The math is pure
+ * (no DOM), so the suite pins it headless; the controllers own the
+ * sensor listeners and feed drivers through setLook / setProgress.
+ * Motion is additive: manual drag, tap, and scroll always remain,
+ * and a missing sensor changes nothing.
+ *
+ * Orientation convention (deviceorientation, portrait):
+ *   alpha — compass-style heading. It DECREASES as the phone turns
+ *     right (north 0 -> east 270), so the wrapped delta from the
+ *     baseline is already "positive = turned left".
+ *   beta — tilt: ~90 upright, grows as the top tips away (the back
+ *     camera pitches up), so beta minus baseline is look-up.
+ * The cloud/aisle look offsets use yaw > 0 = look left and
+ * pitch > 0 = look up, with the same clamps as drag-look — hence
+ * yaw = wrapped alpha delta and pitch = beta delta, both in radians.
+ */
+const MotionMath = {
+  YAW_MAX: 1.15, PITCH_MIN: -0.5, PITCH_MAX: 0.55,
+  wrapDelta(deg) { return ((deg % 360) + 540) % 360 - 180; },
+  look(alpha, beta, baseAlpha, baseBeta) {
+    if (alpha == null || beta == null || baseAlpha == null || baseBeta == null) return null;
+    const yaw = MotionMath.wrapDelta(alpha - baseAlpha) * Math.PI / 180;
+    const pitch = (beta - baseBeta) * Math.PI / 180;
+    return {
+      yaw: Math.max(-MotionMath.YAW_MAX, Math.min(MotionMath.YAW_MAX, yaw)),
+      pitch: Math.max(MotionMath.PITCH_MIN, Math.min(MotionMath.PITCH_MAX, pitch))
+    };
+  },
+  // Look yaw -> pan position: -1 = looking fully right, +1 = fully
+  // left. panFraction maps that to a frame position in [0, 1]
+  // where 0 shows the frame's left edge (looking left) and 1 its
+  // right edge — what a photo-style driver pans with.
+  pan(yaw) { return Math.max(-1, Math.min(1, yaw / MotionMath.YAW_MAX)); },
+  panFraction(yaw) { return (1 - MotionMath.pan(yaw)) / 2; },
+  // Step advance: a shelf segment is walked in a fixed stride
+  // count — calibrated at ~8 strides of ~0.7 m for a ~5-6 m segment.
+  // The path's own units are not meters (VGGT scale is arbitrary),
+  // so the fraction is what is pinned, not a distance.
+  segmentStepU(anchorU, nextU, stepsPerSegment = 8) {
+    return Math.max(0, nextU - anchorU) / stepsPerSegment;
+  },
+  // A step moves u toward the next stop, never past it.
+  advance(u, nextU, stepU) { return Math.min(nextU, u + Math.max(0, stepU)); }
+};
+
+/* Step detector: a pure state machine over acceleration magnitude
+ * (devicemotion accelerationIncludingGravity; ~9.8 at rest). A step
+ * is a rise above HI followed by a fall below LO, with a refractory
+ * window so one stride's bounce counts once. */
+function createStepDetector(onStep) {
+  const HI = 12.0, LO = 10.6, REFRACT_MS = 300;
+  let armed = false, lastStep = -Infinity;
+  function push(x, y, z, nowMs) {
+    const m = Math.sqrt(x * x + y * y + z * z);
+    if (!armed) {
+      if (m > HI) armed = true;
+      return false;
+    }
+    if (m < LO) {
+      armed = false;
+      if (nowMs - lastStep >= REFRACT_MS) {
+        lastStep = nowMs;
+        if (onStep) onStep(nowMs);
+        return true;
+      }
+    }
+    return false;
+  }
+  return {
+    push,
+    sample(a, nowMs) { return a ? push(a.x || 0, a.y || 0, a.z || 0, nowMs) : false; }
+  };
+}
+
+/* Gyro look controller. getDriver() is read per event, so a driver
+ * switch mid-hunt needs no rewiring. start() resolves false when
+ * the sensor or its permission is unavailable — the caller keeps
+ * today's hunt, no error surface. The first valid event becomes
+ * the baseline (the way the phone faces at enable = forward).
+ * Touching the scene suspends gyro briefly, so a drag never fights
+ * the sensor; when the sensor reports nothing at all (a desktop),
+ * the controller stops itself and reports onUnavailable. */
+function createMotionLook(getDriver, mount) {
+  let on = false, base = null, suspendUntil = 0;
+  function onOrient(e) {
+    if (!on) return;
+    if (e.alpha == null && e.beta == null) {
+      stop();
+      if (ctl.onUnavailable) ctl.onUnavailable();
+      return;
+    }
+    if (performance.now() < suspendUntil) return;
+    if (base === null) { base = { a: e.alpha, b: e.beta }; return; }
+    const look = MotionMath.look(e.alpha, e.beta, base.a, base.b);
+    const d = getDriver();
+    if (look && d && d.setLook) d.setLook(look.yaw, look.pitch);
+  }
+  function onPointer() { suspendUntil = performance.now() + 2500; }
+  function stop() {
+    if (!on) return;
+    on = false;
+    window.removeEventListener("deviceorientation", onOrient);
+    if (mount) mount.removeEventListener("pointerdown", onPointer);
+    const d = getDriver();
+    if (d && d.setLook) d.setLook(0, 0);
+  }
+  const ctl = {
+    onUnavailable: null,
+    get on() { return on; },
+    async start() {
+      if (typeof DeviceOrientationEvent === "undefined") return false;
+      if (typeof DeviceOrientationEvent.requestPermission === "function") {
+        const res = await DeviceOrientationEvent.requestPermission().catch(() => "denied");
+        if (res !== "granted") return false;
+      }
+      base = null;
+      on = true;
+      window.addEventListener("deviceorientation", onOrient);
+      if (mount) mount.addEventListener("pointerdown", onPointer);
+      return true;
+    },
+    stop
+  };
+  return ctl;
+}

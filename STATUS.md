@@ -330,3 +330,17 @@ same evening — see Intake parity below.)
   18-check headless behavior harness over the real quest.js).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-hunt-navigation.md.
+
+## Motion navigation (2026-10-27)
+
+- Discussion 33 built, on top of the navigation-first frame:
+  gyro look-around (one-tap enable, baseline capture, manual
+  input suspends, silent absence) driving every SceneView driver
+  through setLook/setProgress; controls live in the trip panel.
+  Step-advance ships as a flagged experiment (arya-steps, default
+  OFF): synthetic-step simulation passes, collects re-anchor,
+  manual navigation holds it. SW cache arya-v22.
+- Suite: **194 green** (7 new in tests/test_motion_nav.py, incl.
+  a 22-check headless simulation harness). **Not deployed** —
+  separate owner step. Loops:
+  assistant/loops/2026-10-27-motion-nav.md.

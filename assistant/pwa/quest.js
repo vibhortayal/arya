@@ -31,6 +31,17 @@ const Q = {
   followHold: false,
   mapNote: "",
   expScene: null,
+  // Motion navigation (Discussion 33): the gyro look controller, and
+  // the step-advance EXPERIMENT — behind the arya-steps flag, default
+  // OFF (absent key = off). stepsHold = a manual navigation paused
+  // step-advance until the next collect re-anchors it.
+  motion: null,
+  stepsOn: localStorage.getItem("arya-steps") === "1",
+  stepDet: null,
+  stepListening: false,
+  stepU: 0,
+  stepAnchorU: 0,
+  stepsHold: false,
 };
 
 function stopHuntTimer() {
@@ -51,7 +62,7 @@ function qStoreModel(store) {
 
 function questShow(id) {
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== id; });
-  if (id !== "view-hunt") stopHuntTimer();
+  if (id !== "view-hunt") { stopHuntTimer(); stopHuntMotion(); }
   paintHuntFrame(id);
   if (Q.stack[Q.stack.length - 1] !== id) Q.stack.push(id);
   window.scrollTo(0, 0);
@@ -60,7 +71,7 @@ function questBack() {
   Q.stack.pop();
   const prev = Q.stack[Q.stack.length - 1];
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== (prev || "view-home"); });
-  if (prev !== "view-hunt") stopHuntTimer();
+  if (prev !== "view-hunt") { stopHuntTimer(); stopHuntMotion(); }
   paintHuntFrame(prev || "view-home");
   window.scrollTo(0, 0);
 }
@@ -82,7 +93,7 @@ document.addEventListener("click", ev => {
   if (nav) { questGo(nav.dataset.qnav); }
 });
 document.querySelectorAll("#tabs button").forEach(b =>
-  b.addEventListener("click", () => { Q.stack = []; stopHuntTimer(); paintHuntFrame(""); }));
+  b.addEventListener("click", () => { Q.stack = []; stopHuntTimer(); stopHuntMotion(); paintHuntFrame(""); }));
 
 function questGo(id) {
   if (id === "view-community") renderCommunity().catch(showErr);
@@ -677,6 +688,7 @@ function mountScene() {
 $("#scene-toggle").addEventListener("click", ev => {
   const b = ev.target.closest("[data-driver]");
   if (!b || b.dataset.driver === Q.driverName) return;
+  Q.stepsHold = true; // switching the view is manual navigation
   // Drop a rung (or climb one) mid-hunt: the driver is only a view —
   // stops, checks, and the clock live in the session, untouched.
   // Switching the view by hand is manual navigation: the walk holds.
@@ -706,6 +718,7 @@ function openHunt(sess) {
       : `This store has a 3D model — switch views in the trip panel. The hunt plays the same either way.`;
   Q.followHold = false;
   renderHunt();
+  qInitMotion();
   qWalkStart(qNextIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
 }
@@ -756,6 +769,7 @@ function renderHunt() {
   }
   paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
   $("#btn-finish").disabled = sess.state === "not_started";
+  qStepSync();
 }
 async function collectCurrent() {
   const sess = Q.current;
@@ -767,6 +781,7 @@ async function collectCurrent() {
     qOnCollected(name);
     Q.followHold = false; // the walk resumes from the new anchor
     renderHunt();
+    qStepAnchorTo(name); // a collect is ground truth for step-advance
     qWalkStart(qNextIndex(sess));
     if (qNextIndex(sess) === -1) {
       toast("List complete. Finish with the receipt.");
@@ -857,6 +872,138 @@ $("#spot-send").addEventListener("click", async () => {
   } catch (e) { toast(e.message); btn.disabled = false; }
 });
 
+/* ---------------- Motion navigation (Discussion 33) ----------------
+ * Gyro look: the SceneView motion layer (scene.js) turns the view
+ * as the phone turns. One tap on "Look around with your phone" is
+ * the iOS permission gesture; Android needs none. Absent a sensor
+ * or a grant, the hunt is exactly today's — the button simply never
+ * appears or quietly stops. Drag and tap always remain.
+ *
+ * Step-advance is an EXPERIMENT behind the arya-steps flag (default
+ * off; the toggle chip shows on the demo account only). Walking
+ * advances the view's path fraction toward the next stop, never
+ * past it; every COLLECT re-anchors to the collected stop (collects
+ * are ground truth), and any manual navigation — a touch on the
+ * scene, a driver switch — holds step-advance until that collect. */
+function qGyroAvailable() { return typeof DeviceOrientationEvent !== "undefined"; }
+function qStepsVisible() { return typeof isDemo !== "undefined" && isDemo; }
+function paintGyroBtn() {
+  const b = $("#btn-gyro");
+  if (!b) return;
+  const on = !!(Q.motion && Q.motion.on);
+  b.setAttribute("aria-pressed", String(on));
+  b.textContent = on ? "Stop phone look" : "Look around with your phone";
+}
+function paintStepsBtn() {
+  const b = $("#btn-steps");
+  if (!b) return;
+  b.setAttribute("aria-pressed", String(Q.stepsOn));
+  b.textContent = Q.stepsOn ? "Steps advance · on (experiment)" : "Steps advance · experiment";
+}
+function paintMotionRow() {
+  const gyro = qGyroAvailable();
+  $("#btn-gyro").hidden = !gyro;
+  $("#btn-steps").hidden = !qStepsVisible();
+  $("#motion-row").hidden = !(gyro || qStepsVisible());
+  paintGyroBtn();
+  paintStepsBtn();
+}
+function qInitMotion() {
+  if (!Q.motion) {
+    Q.motion = createMotionLook(() => Q.scene, $("#scene-mount"));
+    Q.motion.onUnavailable = () => {
+      // The sensor exists but reports nothing (a desktop): retire
+      // the button for this hunt, no message, hunt unchanged.
+      $("#btn-gyro").hidden = true;
+      $("#motion-row").hidden = !qStepsVisible();
+      paintGyroBtn();
+    };
+  }
+  paintMotionRow();
+  qStepReset();
+  qStepSync();
+}
+function stopHuntMotion() {
+  if (Q.motion && Q.motion.on) Q.motion.stop();
+  if (Q.stepListening) {
+    window.removeEventListener("devicemotion", qOnMotion);
+    Q.stepListening = false;
+  }
+  paintGyroBtn();
+}
+$("#btn-gyro").addEventListener("click", async () => {
+  if (!Q.motion) qInitMotion();
+  if (Q.motion.on) { Q.motion.stop(); paintGyroBtn(); return; }
+  const ok = await Q.motion.start();
+  if (!ok) toast("Phone look is not available — drag and tap still work.");
+  paintGyroBtn();
+});
+$("#btn-steps").addEventListener("click", async () => {
+  if (!Q.stepsOn) {
+    if (typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function") {
+      const res = await DeviceMotionEvent.requestPermission().catch(() => "denied");
+      if (res !== "granted") { toast("Steps need motion permission — they stay off."); return; }
+    }
+    Q.stepsOn = true;
+    localStorage.setItem("arya-steps", "1");
+    qStepReset();
+  } else {
+    Q.stepsOn = false;
+    localStorage.removeItem("arya-steps");
+  }
+  paintStepsBtn();
+  qStepSync();
+});
+/* Manual navigation holds step-advance: any touch on the scene. */
+$("#scene-mount").addEventListener("pointerdown", () => { Q.stepsHold = true; });
+
+function qStepReset() {
+  const sess = Q.current;
+  if (!sess) return;
+  let anchor = 0;
+  sess.items.forEach((it, i) => { if (it.checked) anchor = qStopU(sess, i); });
+  Q.stepAnchorU = anchor;
+  Q.stepU = anchor;
+  Q.stepsHold = false;
+}
+function qStepAnchorTo(name) {
+  const sess = Q.current;
+  if (!sess) return;
+  const i = sess.items.findIndex(it => it.name === name);
+  if (i < 0) return;
+  Q.stepAnchorU = qStopU(sess, i);
+  Q.stepU = Q.stepAnchorU;
+  Q.stepsHold = false;
+  if (Q.stepsOn && Q.scene && Q.scene.setProgress) Q.scene.setProgress(Q.stepU);
+}
+function qStepSync() {
+  const huntOpen = !$("#view-hunt").hidden;
+  const want = Q.stepsOn && huntOpen && !!Q.current && Q.current.mode === "quest";
+  if (want && !Q.stepListening) {
+    Q.stepDet = createStepDetector(() => qStepAdvance());
+    window.addEventListener("devicemotion", qOnMotion);
+    Q.stepListening = true;
+  } else if (!want && Q.stepListening) {
+    window.removeEventListener("devicemotion", qOnMotion);
+    Q.stepListening = false;
+  }
+}
+function qOnMotion(e) {
+  if (!Q.stepDet || Q.stepsHold || !Q.current || Q.current.state !== "playing") return;
+  Q.stepDet.sample(e.accelerationIncludingGravity, performance.now());
+}
+function qStepAdvance() {
+  const sess = Q.current;
+  if (!sess || !Q.scene || !Q.scene.setProgress) return;
+  const next = qNextIndex(sess);
+  if (next === -1) return;
+  const nextU = qStopU(sess, next);
+  const u = MotionMath.advance(Q.stepU, nextU,
+    MotionMath.segmentStepU(Q.stepAnchorU, nextU));
+  if (u !== Q.stepU) { Q.stepU = u; Q.scene.setProgress(u); }
+}
+
 /* The list panel: summoned over the hunt, never a page. */
 function renderPanel() {
   const sess = Q.current;
@@ -882,6 +1029,7 @@ $("#panel-items").addEventListener("click", async ev => {
     await qCheck(Q.current, item.name, !item.checked);
     renderPanel();
     renderHunt();
+    if (item.checked) qStepAnchorTo(item.name);
     // After a check the panel slides away on its own — the game is home.
     clearTimeout(panelTimer);
     panelTimer = setTimeout(closePanel, 650);
