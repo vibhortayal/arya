@@ -908,3 +908,24 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 .presetrow img { width: 100%; height: 100%; object-fit: contain; }
 .candimg { display: block; width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin: 10px auto; }
 .samplepill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--secondary); background: var(--fill2); border-radius: 6px; padding: 2px 6px; margin-left: 6px; }
+
+/* Thumb zone (button-placement audit 2026-10-28): the one primary
+   action of a screen is docked at the bottom edge instead of sitting
+   at the end of a long scroll. Docked bars clear the tab bar
+   (~62px + safe area) on tabbed screens and sit on the edge in the
+   tab-less hunt. */
+#chat-form { position: sticky; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 6; padding: 8px 0; background: var(--bg); }
+#view-hunt p:has(> #btn-collect) {
+  position: sticky; bottom: 0; z-index: 6; margin: 8px -14px -14px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--group) 75%, transparent); border-radius: 0 0 16px 16px;
+}
+#view-hunt:has(#hunt-done-note:not([hidden])) p:has(> #btn-finish) {
+  position: sticky; bottom: 0; z-index: 6; margin: 0 -16px; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 75%, transparent);
+}
+#view-hunt:has(#hunt-done-note:not([hidden])) #btn-finish { min-height: 56px; font-weight: 700; }
+.storeview { height: clamp(200px, 32dvh, 360px); }
+.scoreparty { max-height: 140px; object-fit: cover; object-position: center 40%; }
+/* Ask: the input rides just above the tab bar even on an empty log. */
+#view-chat:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
+#view-chat #chat-log { flex: 1; }
