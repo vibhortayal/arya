@@ -861,6 +861,7 @@ async function renderFindStores() {
 }
 $("#sf-form").addEventListener("submit", ev => {
   ev.preventDefault();
+  qHideDrops();
   renderFindStores().catch(showErr);
 });
 $("#sf-chips").addEventListener("click", ev => {
@@ -1014,7 +1015,7 @@ async function qSuggestInto(input, box, mode) {
   } catch (e) { box.innerHTML = ""; box.hidden = true; }
 }
 function qHideDrops() {
-  for (const id of ["#st-goog", "#sa-results"]) {
+  for (const id of ["#st-goog", "#sa-results", "#sf-goog"]) {
     const b = $(id);
     if (b) { b.hidden = true; b.innerHTML = ""; }
   }
@@ -1037,6 +1038,13 @@ if (saQ) saQ.addEventListener("input", () => {
   clearTimeout(qPlacesTimer);
   qPlacesTimer = setTimeout(() => {
     qSuggestInto(saQ, $("#sa-results"), "add").catch(() => {});
+  }, 300);
+});
+const sfQ = $("#sf-q");
+if (sfQ) sfQ.addEventListener("input", () => {
+  clearTimeout(qPlacesTimer);
+  qPlacesTimer = setTimeout(() => {
+    qSuggestInto(sfQ, $("#sf-goog"), "add").catch(() => {});
   }, 300);
 });
 document.addEventListener("click", async ev => {

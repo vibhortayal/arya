@@ -126,6 +126,17 @@ class TestPickerClient(unittest.TestCase):
             self.assertIn(needle, q)
         self.assertNotIn('$("#sa-form")', q)
 
+    def test_find_stores_wiring(self):
+        # Find stores carries the same live Google dropdown as the
+        # hunt picker and Add a store (owner, 2026-10-28: the Find
+        # box searched the directory only, so a real store not yet
+        # in the directory could never be found by name or address).
+        q = (PWA / "quest.js").read_text()
+        self.assertIn('$("#sf-goog")', q)
+        self.assertIn('"#sf-goog"', q)  # in the qHideDrops list
+        html = (PWA / "index.html").read_text()
+        self.assertIn('id="sf-goog" class="gdrop"', html)
+
 
 @unittest.skipUnless(shutil.which("node"), "node not installed")
 class TestPickerRefreshOnBack(unittest.TestCase):
