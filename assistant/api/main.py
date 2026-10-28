@@ -2,7 +2,7 @@
 All Meta calls go through api.meta_client; all money math is code."""
 import hashlib, json, os
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from api import state, auth
@@ -387,7 +387,8 @@ async def decode_pdf(req: Request):
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     receipt = decode_text(text, client)
-    added = state.add_receipts([receipt])
+    added = state.add_receipts(
+        [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
     state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
@@ -414,7 +415,8 @@ async def decode_photo_route(req: Request):
         # The demo's Photo door runs the same live read and shows the
         # lines as a preview; nothing is filed, nothing is judged.
         return {"demo": True, "added": 0, "receipt": receipt}
-    added = state.add_receipts([receipt])
+    added = state.add_receipts(
+        [receipt], media={receipt["receipt_id"]: (body, media)})
     state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
@@ -1036,6 +1038,27 @@ def quest_receipt_detail(receipt_id: str):
     if detail is None:
         raise HTTPException(404, "no such receipt")
     return detail
+
+
+@app.get("/api/quest/receipts/{receipt_id}/original")
+def quest_receipt_original(receipt_id: str):
+    """The kept original upload for a filed receipt (Discussion
+    42): the caller's own bytes, served at their recorded media
+    type. The lookup runs over the caller's receipts — no
+    cross-account access — and the demo files nothing. A
+    receipt filed without an upload (seeded history, order
+    text) has no original and 404s honestly."""
+    rec = next((r for r in state.receipts()
+                if r["receipt_id"] == receipt_id), None)
+    if rec is None or not rec.get("image_ref"):
+        raise HTTPException(404, "no original kept for this receipt")
+    data = state.receipt_media(receipt_id)
+    if data is None:
+        raise HTTPException(404, "no original kept for this receipt")
+    return Response(content=data,
+                    media_type=rec.get("media_type")
+                    or "application/octet-stream",
+                    headers={"Content-Disposition": "inline"})
 
 
 @app.post("/api/quest/sessions/{session_id}/report-missing")

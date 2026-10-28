@@ -433,3 +433,22 @@ same evening — see Intake parity below.)
 - Suite: **247 green** (7 new in tests/test_finish_flow.py).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-finish-flow.md.
+
+## Receipt image retention (2026-10-27)
+
+- A filed receipt now keeps its original: receipts filed
+  from an uploaded photo or PDF store the bytes per account
+  (users/<user>/receipt-media/<receipt_id>, as uploaded, no
+  recompression), with the media type on the record.
+  Retention lives in the filing path (state.add_receipts),
+  so every upload door keeps it — including the Finish
+  flow's late attach. GET /api/quest/receipts/{id}/original
+  serves the owner's own original at its media type; a
+  receipt filed without an upload (seeded history, order
+  text) has none and 404s honestly; the demo files nothing.
+  The receipt detail gains "View receipt" when an original
+  exists (photo inline, PDF opens). Discussion 42.
+  SW cache arya-v28.
+- Suite: **253 green** (6 new in tests/test_receipt_media.py).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-receipt-media.md.

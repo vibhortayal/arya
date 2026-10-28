@@ -44,12 +44,49 @@ def receipts():
     return _load("receipts.json", [])
 
 
-def add_receipts(new):
+def _media_dir():
+    return os.path.join(data_dir(), "receipt-media")
+
+
+def receipt_media(receipt_id):
+    """The kept original's bytes, or None. The id is a server-minted
+    slug; anything carrying a path separator is refused outright,
+    so a crafted id can never walk out of the media store."""
+    if not receipt_id or os.path.basename(receipt_id) != receipt_id:
+        return None
+    p = os.path.join(_media_dir(), receipt_id)
+    if not os.path.exists(p):
+        return None
+    with open(p, "rb") as fh:
+        return fh.read()
+
+
+def add_receipts(new, media=None):
+    """File decoded receipts. media maps receipt_id -> (bytes,
+    media_type): the original upload for receipts filed from a
+    photo or PDF (Discussion 42). The bytes are kept per account
+    under receipt-media/, exactly as uploaded, and the record
+    carries image_ref + media_type so the original can be served
+    back to its owner. Doors that file without an upload (order
+    text, JSON imports, the seeded history) pass no media — those
+    receipts simply have no original. Retention lives here, in
+    the filing path, so every door that files an uploaded
+    original keeps it."""
     cur = receipts()
     seen = {r["receipt_id"] for r in cur}
     # A receipt with no date cannot be placed in the ledger; it is refused
     # at the door rather than breaking pattern math later.
     added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
+    media = media or {}
+    for r in added:
+        m = media.get(r["receipt_id"])
+        if m:
+            data, media_type = m
+            os.makedirs(_media_dir(), exist_ok=True)
+            with open(os.path.join(_media_dir(), r["receipt_id"]), "wb") as fh:
+                fh.write(data)
+            r["image_ref"] = r["receipt_id"]
+            r["media_type"] = media_type
     _save("receipts.json", cur + added)
     return len(added)
 
