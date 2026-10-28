@@ -991,3 +991,17 @@ input[type=file]::file-selector-button {
 
 /* Ask: a new bubble scrolls to just above the docked input, not under it. */
 #chat-log > .bubble { scroll-margin-bottom: calc(150px + env(safe-area-inset-bottom)); }
+
+/* Play-test fixes: demo banner clears the floating avatar, list rows
+   keep a readable name column on a phone, new rows flash, extra
+   open hunts fold. */
+#demobar { padding-right: 62px; }
+@media (max-width: 480px) {
+  .listrow { flex-wrap: wrap; }
+  .listrow .grow { flex: 1 1 130px; }
+  .listrow .stepper { margin-left: 42px; }
+}
+.listrow.flash { animation: rowflash 1.6s ease-out; }
+@keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .listrow.flash { animation: none; } }
+.g-fold summary { cursor: pointer; padding: 10px 4px; color: var(--secondary); font-size: 14px; min-height: 44px; display: flex; align-items: center; }
