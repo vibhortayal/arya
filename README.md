@@ -73,7 +73,7 @@ feeds the brain. Detail: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** 321 green at the commit that wrote this line
+- **Tests:** 323 green at the commit that wrote this line
   (`cd assistant && python -m unittest discover -s tests`).
 
 ## How this was built

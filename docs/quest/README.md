@@ -43,7 +43,7 @@ If your store is not mapped yet, you map it: one walkthrough video of the aisles
 
 ## Status
 
-- Engine (Arya): live, tested (321 tests), real household data.
+- Engine (Arya): live, tested (323 tests), real household data.
 - Game (Stages A–E): live — sessions, the Optimizer, Shop-Off, friends/profile/badges, the playable PWA (hub, hunt, Community), the Spotter report slice, the photo-walk as the mapped default view with the VGGT point-cloud driver one tap away and the Aisle/Strip ladder underneath, the shelf graph with item-to-shelf stop matching, and the stores directory (search by name/address/ZIP, favorites, add-with-address).
 - UX: the full wireframe set (Quest screens + Brain B1–B6 + friend-run panel) — the pre-v2 set was **approved by the owner 2026-10-27** and is the build reference. The Hunt v2 screens **await owner approval** (Discussion 45); quest UI is frozen until then. Intake parity (in-app Photo + Voice doors on the Meta API) and the Brain restyle to the wireframes are built and live; the Add tab is one surface for the list, and the app is light mode only.
 - 3D spike: **PASSED** — a Trader Joe's walkthrough (Chino Hills, CA), 90 frames, VGGT-1B: 1.2M-point cloud + 90 poses; the web asset (373,630 points) ships in the app. Shelf graph (SAM 3.1 + Spark labels) built and live: 18 stops, 55 labeled regions.
