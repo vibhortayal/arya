@@ -41,22 +41,29 @@ class TestAvatar(unittest.TestCase):
     def tearDown(self):
         self.p.stop()
 
-    def test_preset_round_trip_and_bad_name(self):
-        self.assertEqual(self.c.put("/api/quest/avatar", json={"preset": "egg"}).json()["preset"], "egg")
-        self.assertEqual(self.c.get("/api/quest/avatar").json()["preset"], "egg")
-        self.assertEqual(self.c.put("/api/quest/avatar", json={"preset": "../x"}).status_code, 400)
+    def test_one_avatar_character_then_drawing_then_character(self):
+        self.assertEqual(self.c.post("/api/quest/avatar", json={"file": "egg.webp"}).status_code, 200)
+        self.assertEqual(self.c.get("/api/quest/avatar").json()["file"], "egg.webp")
+        self.assertEqual(self.c.post("/api/quest/avatar", json={"file": "../x"}).status_code, 400)
+        self.c.post("/api/quest/avatar/generate", json={"prompt": "a fox"})
+        self.c.post("/api/quest/avatar/use")
+        # The profile (which the haul cards read) carries the same field.
+        self.assertEqual(self.c.get("/api/quest/profile").json()["avatar"], "custom")
+        self.c.post("/api/quest/avatar", json={"file": "bread.webp"})
+        a = self.c.get("/api/quest/avatar").json()
+        self.assertEqual((a["file"], a["image"]), ("bread.webp", False))
 
     def test_generated_waits_as_candidate_until_used(self):
-        self.c.put("/api/quest/avatar", json={"preset": "egg"})
+        self.c.post("/api/quest/avatar", json={"file": "egg.webp"})
         r = self.c.post("/api/quest/avatar/generate", json={"prompt": "a fox"})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertTrue(r.json()["candidate"])
-        self.assertEqual(self.c.get("/api/quest/avatar").json()["preset"], "egg")
+        self.assertEqual(self.c.get("/api/quest/avatar").json()["file"], "egg.webp")
         self.assertEqual(self.c.get("/api/quest/avatar/image?candidate=true").content, b"DRAWN")
         self.assertEqual(self.c.post("/api/quest/avatar/use").status_code, 200)
         a = self.c.get("/api/quest/avatar").json()
         self.assertTrue(a["image"])
-        self.assertIsNone(a["preset"])
+        self.assertEqual(a["file"], "custom")
         self.assertEqual(self.c.get("/api/quest/avatar/image").content, b"DRAWN")
 
     def test_empty_and_long_prompts_refused_without_spend(self):
@@ -85,7 +92,7 @@ class TestAvatar(unittest.TestCase):
         self.assertEqual(d.post("/api/quest/avatar/generate", json={"prompt": "a fox"}).status_code, 403)
         self.assertEqual(d.post("/api/quest/avatar/photo", content=b"x",
                                 headers={"Content-Type": "image/jpeg"}).status_code, 403)
-        self.assertEqual(d.put("/api/quest/avatar", json={"preset": "banana"}).status_code, 200)
+        self.assertEqual(d.post("/api/quest/avatar", json={"file": "banana.webp"}).status_code, 200)
         self.assertEqual(FakeClient.calls, [])
 
 

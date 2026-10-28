@@ -38,7 +38,7 @@ const ShareUI = (() => {
     images[src] = im;
     return im;
   }
-  function faceSrc(file) { return "assets/characters/" + file; }
+  function faceSrc(file) { return file === "custom" ? "/api/quest/avatar/image" : "assets/characters/" + file; }
 
   /* Card specs. ctx = { sess, profile, haulPhotoURL } */
   function specHaul(ctx) {
