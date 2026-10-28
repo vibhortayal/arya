@@ -508,6 +508,11 @@ textarea {
    ONE target, the tools row, the suggested-next card, then the one
    list in flow. The tab bar hides while a hunt or run is open. */
 body.hunting #tabs, body.hunting > header, body.hunting #demobar { display: none !important; }
+/* Game shell: while hunting, a page gesture is never a zoom or a
+   pull-to-refresh — the column still scrolls vertically, and the 3D
+   canvas keeps its own drag. Full height follows the dynamic
+   viewport so the mobile URL bar never hides the HUD. */
+body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dvh; }
 #view-hunt.full, #view-express.full { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .hunthud {
   position: sticky; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px;
