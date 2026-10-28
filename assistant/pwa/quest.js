@@ -14,6 +14,8 @@ const Q = {
   draft: null,         // new-hunt flow state
   racePrefill: "",     // opponent handle carried from Friends
   storeReports: [],    // open "not here" reports for the current store
+  mine: [],            // My Stores (Stage E): directory rows + favorite
+  sfFilter: "all",     // Find stores chip: all | quests | zip
   // The SceneView ladder: strip is the default (a store with no model
   // still plays in full); the player can switch rungs mid-hunt and
   // loses nothing — session state lives here, never in a driver.
@@ -63,6 +65,8 @@ function questGo(id) {
   if (id === "view-race") renderRace().catch(showErr);
   if (id === "view-friends") renderFriends().catch(showErr);
   if (id === "view-qprofile") renderQProfile().catch(showErr);
+  if (id === "view-stores-mine") renderMyStores().catch(showErr);
+  if (id === "view-stores-find") renderFindStores().catch(showErr);
   questShow(id);
 }
 
@@ -180,19 +184,171 @@ $("#nl-next").addEventListener("click", async () => {
   const raw = qParseLines($("#nl-text").value);
   if (!raw.length) { toast("Add at least one item first."); return; }
   Q.draft.raw = raw;
-  // Store chips: stores this account already shops (sessions + spend).
-  const stores = new Set(Q.sessions.map(s => s.store));
-  try {
-    const d = await api("/api/dashboard");
-    Object.keys(d.spend_by_store || {}).forEach(s => stores.add(s));
-  } catch (e) { /* chips are a shortcut, not a requirement */ }
-  $("#st-chips").innerHTML = [...stores].map(s =>
-    `<button class="chip" data-store="${esc(s)}" type="button">${esc(s)}</button>`).join("");
+  Q.draft.storeId = null;
+  $("#st-name").value = "";
+  // The pick reads My Stores (Stage E): favorites first, addresses
+  // shown. Typed names stay possible for a store not in mine yet.
+  try { await qLoadMine(); } catch (e) { Q.mine = []; }
+  renderStorePick();
   questShow("view-store");
 });
-$("#st-chips").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-store]");
-  if (b) $("#st-name").value = b.dataset.store;
+
+/* ---------------- Stores (Stage E) ----------------
+ * The directory is the platform plane (shared by every player);
+ * My Stores + favorites are the account plane. The pick, Find, and
+ * My Stores all render the same joined rows from /api/stores/*. */
+
+const QSCENE_LABEL = { cloud: "3D mapped · Quest ready", strip: "Plays in Strip" };
+function qStarSvg(filled) {
+  return `<svg viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>`;
+}
+function qStoreMeta(s) {
+  return `${esc(s.street)}, ${esc(s.city)}, ${esc(s.state)} ${esc(s.zip)} · ${QSCENE_LABEL[s.scene] || ""}`;
+}
+async function qLoadMine() {
+  const d = await api("/api/stores/mine");
+  Q.mine = d.stores || [];
+  return Q.mine;
+}
+
+function renderStorePick() {
+  const box = $("#st-mine");
+  if (!box) return;
+  if (!Q.mine.length) {
+    box.innerHTML = `<div class="group">${empty("No stores in your stores yet. Find one or add one below.")}</div>`;
+    return;
+  }
+  const favs = Q.mine.filter(s => s.favorite);
+  const rest = Q.mine.filter(s => !s.favorite);
+  const rowHtml = s => `
+    <button class="sessrow pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
+      <span class="grow"><span class="name">${esc(s.name)}</span>
+      <span class="sub">${qStoreMeta(s)}</span></span>
+      ${s.favorite ? `<span class="starpick">${qStarSvg(true)}</span>` : ""}
+    </button>`;
+  let html = "";
+  if (favs.length) html += `<h3 class="sect">Favorites</h3><div class="group">` + favs.map(rowHtml).join("") + `</div>`;
+  if (rest.length) html += `<h3 class="sect">All my stores</h3><div class="group">` + rest.map(rowHtml).join("") + `</div>`;
+  box.innerHTML = html;
+}
+document.addEventListener("click", ev => {
+  const p = ev.target.closest("[data-pick]");
+  if (!p || !Q.draft) return;
+  const s = Q.mine.find(x => x.id === p.dataset.pick);
+  if (!s) return;
+  Q.draft.storeId = s.id;
+  $("#st-name").value = s.name;
+  renderStorePick();
+});
+$("#st-name").addEventListener("input", () => {
+  if (!Q.draft || !Q.draft.storeId) return;
+  const sel = Q.mine.find(x => x.id === Q.draft.storeId);
+  if (sel && $("#st-name").value.trim() !== sel.name) {
+    Q.draft.storeId = null;  // typed a different store: free-text trip
+    renderStorePick();
+  }
+});
+
+async function renderFindStores() {
+  const q = $("#sf-q").value.trim();
+  let rows = [];
+  try {
+    const d = await api(`/api/stores/search?q=${encodeURIComponent(q)}${Q.sfFilter === "quests" ? "&quests=1" : ""}`);
+    rows = d.stores || [];
+  } catch (e) { toast(e.message); }
+  if (Q.sfFilter === "zip") {
+    // "Near" = the same ZIP prefix area (first three digits): the
+    // typed ZIP's area, or the first favorite's when nothing typed.
+    let digits = q.replace(/\D/g, "");
+    if (!digits) {
+      if (!Q.mine.length) { try { await qLoadMine(); } catch (e) { Q.mine = []; } }
+      const fav = Q.mine.find(s => s.favorite) || Q.mine[0];
+      digits = fav ? fav.zip : "";
+    }
+    const prefix = digits.slice(0, 3);
+    if (prefix) rows = rows.filter(s => s.zip.startsWith(prefix));
+  }
+  const box = $("#sf-results");
+  if (!rows.length) {
+    box.innerHTML = `<div class="group">${empty("No stores match. Add it — a new store joins the directory for everyone.")}</div>`;
+    return;
+  }
+  box.innerHTML = `<div class="group">` + rows.map(s => `
+    <div class="row"><div class="grow"><span class="name">${esc(s.name)}</span>
+    <span class="sub">${qStoreMeta(s)}</span></div>
+    ${s.in_mine ? `<span class="sub">Added ✓</span>` : `<button class="chip" data-addstore="${esc(s.id)}" type="button">Add</button>`}
+    </div>`).join("") + `</div>`;
+}
+$("#sf-form").addEventListener("submit", ev => {
+  ev.preventDefault();
+  renderFindStores().catch(showErr);
+});
+$("#sf-chips").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-sfchip]");
+  if (!b) return;
+  Q.sfFilter = b.dataset.sfchip;
+  document.querySelectorAll("#sf-chips .chip").forEach(c =>
+    c.setAttribute("aria-pressed", String(c === b)));
+  renderFindStores().catch(showErr);
+});
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-addstore]");
+  if (!b) return;
+  b.disabled = true;
+  try {
+    await post("/api/stores/mine", { store_id: b.dataset.addstore });
+    await qLoadMine().catch(() => {});
+    renderFindStores().catch(showErr);
+  } catch (e) { toast(e.message); b.disabled = false; }
+});
+
+async function renderMyStores() {
+  try { await qLoadMine(); } catch (e) { Q.mine = []; }
+  const box = $("#sm-list");
+  if (!Q.mine.length) {
+    box.innerHTML = `<div class="group">${empty("No stores yet. Find one or add one below.")}</div>`;
+    return;
+  }
+  const favs = Q.mine.filter(s => s.favorite);
+  const rest = Q.mine.filter(s => !s.favorite);
+  const rowHtml = s => `
+    <div class="row"><div class="grow"><span class="name">${esc(s.name)}</span>
+    <span class="sub">${qStoreMeta(s)}</span></div>
+    <button class="starbtn ${s.favorite ? "on" : ""}" data-fav="${esc(s.id)}" data-on="${String(s.favorite)}" aria-pressed="${String(s.favorite)}" aria-label="${s.favorite ? "Remove from favorites" : "Add to favorites"}" type="button">${qStarSvg(s.favorite)}</button></div>`;
+  let html = "";
+  if (favs.length) html += `<h3 class="sect">Favorites</h3><div class="group">` + favs.map(rowHtml).join("") + `</div>`;
+  if (rest.length) html += `<h3 class="sect">All my stores</h3><div class="group">` + rest.map(rowHtml).join("") + `</div>`;
+  box.innerHTML = html;
+}
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-fav]");
+  if (!b) return;
+  try {
+    await post("/api/stores/favorite",
+      { store_id: b.dataset.fav, favorite: b.dataset.on !== "true" });
+    renderMyStores().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+$("#sa-form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const body = {
+    name: $("#sa-name").value.trim(), street: $("#sa-street").value.trim(),
+    city: $("#sa-city").value.trim(), state: $("#sa-state").value.trim(),
+    zip: $("#sa-zip").value.trim(),
+  };
+  if (!body.name || !body.street || !body.city || !body.state || !body.zip) {
+    toast("Fill in the name and the whole address."); return;
+  }
+  const btn = ev.target.querySelector("button[type=submit]");
+  btn.disabled = true;
+  try {
+    const row = await post("/api/stores", body);
+    toast(`${row.name} is in your stores.`);
+    await qLoadMine().catch(() => {});
+    questGo("view-stores-mine");
+  } catch (e) { toast(e.message); }
+  btn.disabled = false;
 });
 
 /* ---------------- New hunt: optimize ---------------- */
@@ -325,6 +481,7 @@ document.querySelectorAll(".modecard").forEach(b =>
     try {
       const sess = await post("/api/quest/sessions",
         { store: Q.draft.store, mode, items: Q.draft.finalItems,
+          store_id: Q.draft.storeId || undefined,
           driver: qStoreModel(Q.draft.store) ? "cloud" : Q.driverName });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
