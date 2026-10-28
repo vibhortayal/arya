@@ -51,14 +51,17 @@ def seed_receipt(c, merchant, date, lines, rid):
 
 
 class TestShellContract(unittest.TestCase):
-    def test_five_tabs_no_dashboard(self):
+    def test_four_tabs_no_add_no_dashboard(self):
+        # The Add tab is gone (owner, 2026-10-28): adding lives on
+        # the List page. Four tabs remain.
         html = read("index.html")
         nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
         labels = re.findall(r"<span>([^<]+)</span>", nav)
-        self.assertEqual(labels, ["Today", "List", "Add", "Ask", "Profile"])
+        self.assertEqual(labels, ["Today", "List", "Ask", "Profile"])
         views = re.findall(r'data-view="([^"]+)"', nav)
-        self.assertEqual(views, ["view-home", "view-list", "view-scan",
+        self.assertEqual(views, ["view-home", "view-list",
                                  "view-chat", "view-profile"])
+        self.assertNotIn('id="view-scan"', html)
 
     def test_new_views_exist_dashboard_gone(self):
         html = read("index.html")
@@ -75,10 +78,13 @@ class TestShellContract(unittest.TestCase):
     def test_today_and_list_hooks(self):
         html, js = read("index.html"), read("app.js")
         for el in ("today-hero", "today-eye", "today-listline",
-                   "store-filter", "list-add-form", "rc-archive",
+                   "store-filter", "composer", "add-text", "add-submit",
+                   "add-split", "list-eyes", "rc-archive",
                    "an-spend", "pf-card", "pf-badges"):
             self.assertIn(f'id="{el}"', html)
-        self.assertIn("Returned items never re-suggested.", js)
+        # The staples line is a count only (owner, 2026-10-28): no
+        # name dump, no returns sentence.
+        self.assertNotIn("never re-suggested", js)
         self.assertIn("staplesLine", js)
 
     def test_list_actions_wired(self):
