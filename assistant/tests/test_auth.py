@@ -26,6 +26,25 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(c.post("/auth/login", json={"username": "vibhor", "password": "correct horse"}).status_code, 200)
         self.assertEqual(c.get("/api/home").status_code, 200)
 
+    def test_register_opens_public_signup(self):
+        c = self.c
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        c.post("/auth/logout")
+        # setup stays closed, but anyone may register
+        self.assertEqual(c.post("/auth/setup", json={"username": "x", "password": "y12345678"}).status_code, 403)
+        r = c.post("/auth/register", json={"username": "New@Example.com", "password": "long enough"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["user"], "new@example.com")
+        self.assertEqual(c.get("/api/home").status_code, 200)  # signed in at once
+        c.post("/auth/logout")
+        # the registered account signs in through the normal door
+        self.assertEqual(c.post("/auth/login", json={"username": "new@example.com", "password": "long enough"}).status_code, 200)
+        c.post("/auth/logout")
+        # duplicates, reserved names, and short passwords are refused
+        self.assertEqual(c.post("/auth/register", json={"username": "new@example.com", "password": "long enough"}).status_code, 400)
+        self.assertEqual(c.post("/auth/register", json={"username": "demo", "password": "long enough"}).status_code, 400)
+        self.assertEqual(c.post("/auth/register", json={"username": "shorty@example.com", "password": "short"}).status_code, 400)
+
     def test_first_user_adopts_household_data(self):
         from api import state
         from api.decode.service import normalize_costco_json
