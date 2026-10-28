@@ -35,7 +35,7 @@ class TestHuntFrameShell(unittest.TestCase):
 
     def test_hunt_is_one_scrolling_column(self):
         hunt, css = self.hunt(), read("styles.css")
-        order = ["hunthud", 'id="scene-toggle"', 'id="scene-mount"',
+        order = ["hunthud", 'id="scene-mount"', 'class="scenecap"',
                  'class="hunt-tools"', 'id="hunt-pop"', 'id="hunt-list"',
                  'id="btn-finish"']
         idx = [hunt.index(k) for k in order]
