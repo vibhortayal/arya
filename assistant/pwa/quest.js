@@ -113,7 +113,6 @@ function questGo(id) {
   if (id === "view-community") renderCommunity().catch(showErr);
   if (id === "view-race") renderRace().catch(showErr);
   if (id === "view-friends") renderFriends().catch(showErr);
-  if (id === "view-qprofile") renderQProfile().catch(showErr);
   if (id === "view-stores-mine") renderMyStores().catch(showErr);
   if (id === "view-stores-find") renderFindStores().catch(showErr);
   questShow(id);
@@ -189,26 +188,6 @@ document.addEventListener("click", ev => {
 
 /* ---------------- Today hub ---------------- */
 
-async function renderQuestHub() {
-  const box = $("#quest-sessions");
-  if (!box) return;
-  await qLoadSessions().catch(() => { Q.sessions = []; });
-  if (!Q.sessions.length) {
-    box.innerHTML = `<div class="group">${empty("No hunts yet today. Start one — the list becomes the game.")}</div>`;
-    return;
-  }
-  box.innerHTML = `<div class="group">` + Q.sessions.map(s => {
-    const p = qProgress(s);
-    const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
-    const who = s.placeholder ? ` · @${esc(s.owner_handle || "opponent")}&rsquo;s hunt (Shop-Off)` : "";
-    return `<button class="sessrow" data-sess="${esc(s.id)}" type="button">
-      <span class="grow"><span class="name">${esc(s.store)}</span>
-      <span class="sub">${QMODE_LABEL[s.mode] || s.mode} · ${QSTATE_LABEL[s.state] || s.state}${who}</span>
-      <span class="track"><span class="bar" style="width:${pct}%"></span></span></span>
-      <span class="money">${p.done}/${p.total}</span>
-    </button>`;
-  }).join("") + `</div>`;
-}
 $("#quest-sessions").addEventListener("click", ev => {
   const b = ev.target.closest("[data-sess]");
   if (!b) return;
@@ -1777,40 +1756,14 @@ $("#fr-add").addEventListener("click", async () => {
   } catch (e) { toast(e.message); }
 });
 
-/* ---------------- Quest profile + receipt archive ---------------- */
+/* ---------------- Receipt archive ---------------- */
 
-async function renderQProfile() {
-  questShow("view-qprofile");
-  const [profile, archive] = await Promise.all([
-    api("/api/quest/profile").catch(() => null),
-    api("/api/quest/receipts").catch(() => ({ receipts: [] }))
-  ]);
-  if (profile) {
-    $("#qp-card").innerHTML =
-      row(`@${esc(profile.handle)}`, "Public card — what the community sees", "") +
-      row("Hunts finished", "", String(profile.stats.hunts)) +
-      row("Receipts filed", "", String(profile.stats.receipts)) +
-      row("Spots reported", "", String(profile.stats.spots_reported || 0)) +
-      row("Streak", "", `${profile.stats.streak_weeks} week${profile.stats.streak_weeks === 1 ? "" : "s"}`);
-    $("#qp-badges").innerHTML = qBadgeRows(profile.badges);
-    $("#qp-stores").innerHTML = profile.mapped_stores && profile.mapped_stores.length
-      ? profile.mapped_stores.map(s => row(esc(s), "Mapped by you")).join("")
-      : empty("No stores mapped yet. Mapping a store is how its 3D view gets built.");
-  }
-  $("#qp-receipts").innerHTML = archive.receipts.length ? archive.receipts.map(r => `
-    <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
-      <span class="grow"><span class="name">${esc(r.merchant)}</span>
-      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
-      <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
-    </button>`).join("") : empty("No receipts filed yet.");
-}
-$("#qp-receipts").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-receipt]");
-  if (b) openReceipt(b.dataset.receipt).catch(showErr);
-});
 function qSigned(n) {
   return n != null && n < 0 ? `<span class="return">−${money(n)}</span>` : (n != null ? money(n) : "");
 }
+$("#rcd-back").addEventListener("click", ev => {
+  ev.preventDefault(); show("view-receipts"); refresh("view-receipts");
+});
 async function openReceipt(receiptId) {
   const r = await api(`/api/quest/receipts/${encodeURIComponent(receiptId)}`);
   questShow("view-receipt");
