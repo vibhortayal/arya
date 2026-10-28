@@ -90,7 +90,23 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v19"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v20"', read("sw.js"))
+
+    def test_light_mode_only(self):
+        """Owner 2026-10-27: light theme only. No Appearance switch,
+        no dark token variant, and the boot script pins light while
+        clearing any persisted theme preference."""
+        html = read("index.html")
+        js = read("app.js")
+        css = read("styles.css")
+        self.assertNotIn("Appearance", html)
+        self.assertNotIn("theme-seg", html + js)
+        self.assertNotIn("data-theme-choice", html + js)
+        self.assertNotIn("prefers-color-scheme: dark", css + html)
+        self.assertNotIn('[data-theme="dark"]', css)
+        self.assertNotIn("color-scheme: dark", css)
+        self.assertIn('dataset.theme="light"', html)
+        self.assertIn('removeItem("arya-theme")', html)
 
 
 class TestLensData(unittest.TestCase):

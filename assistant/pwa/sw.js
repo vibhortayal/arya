@@ -1,4 +1,4 @@
-const CACHE = "arya-v19";
+const CACHE = "arya-v20";
 const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/manifest.json", "/icon.svg", "/vendor/three.module.js"];
 const BYPASS = ["/api/", "/auth/", "/decode", "/import", "/eyes"];
 
