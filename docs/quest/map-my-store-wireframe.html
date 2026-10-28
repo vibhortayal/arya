@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map my store — guided capture wireframe</title>
+<style>
+:root{--acc:#E4572E;--ink:#1B1B1E;--ink2:#55555C;--ink3:#8B8B93;--line:#D9D9DE;--bg:#EFEFF1;--fill:#F4F4F6;--ok:#1F6B3A;--okbg:#E7F3EA;--accbg:#FDEEE8;
+--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);display:flex;gap:28px;flex-wrap:wrap;justify-content:center;padding:24px}
+aside{width:300px}aside h1{font-size:20px;margin:0 0 6px}aside p{font-size:13.5px;line-height:1.5;color:var(--ink2)}
+aside ol{padding:0;list-style:none;margin:14px 0}aside li button{width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:6px;font:inherit;font-size:14px;cursor:pointer}
+aside li button.on{border-color:var(--acc);background:var(--accbg)}
+.phone{width:375px;height:760px;background:#fff;border:1px solid var(--line);border-radius:34px;overflow:auto;padding:22px 16px 28px}
+h2{font-size:26px;margin:6px 0 6px}.muted{color:var(--ink2);font-size:14.5px;line-height:1.4}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.bar{height:6px;background:var(--fill);border-radius:3px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--acc)}
+.btn{display:block;width:100%;min-height:46px;border:0;border-radius:12px;background:var(--fill);font:inherit;font-weight:650;font-size:16px;cursor:pointer;margin:8px 0}
+.btn.p{background:var(--acc);color:#fff}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}.row:last-child{border:0}.row .g{flex:1}
+.st{font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--fill)}.st.ok{background:var(--okbg);color:var(--ok)}.st.s{background:var(--accbg);color:var(--acc)}
+.eye{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+.shot{height:150px;border-radius:12px;background:repeating-linear-gradient(0deg,#e2e2e6 0 18px,#d3d3d9 18px 20px);display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:13px;margin:8px 0;position:relative}
+.guide{position:absolute;inset:14px;border:2px dashed var(--acc);border-radius:8px}
+ol.steps{padding-left:22px;margin:6px 0;font-size:15.5px;line-height:1.45}.chip{display:inline-block;padding:7px 13px;border-radius:99px;background:var(--fill);font-size:14px;margin:0 6px 6px 0;font-weight:600}.chip.on{background:var(--ink);color:#fff}
+.note{font-size:12.5px;color:var(--ink3);margin-top:10px}
+</style></head><body>
+<aside><h1>Map my store</h1>
+<p>Clickable wireframe. A guided mapper: the app says exactly what to capture; the engine keeps the best frames. Tap through the screens, or use the list.</p>
+<ol id="nav"></ol>
+<p><strong>Rules this shows:</strong> map only your aisles; many partial maps merge; “not found” asks for one specific capture; no shutter and no rejection screens: the live camera coaches and picks the frames itself; people are blurred before anything is saved.</p></aside>
+<div class="phone" id="ph"></div>
+<script>
+const S={
+1:{t:"Today hub",h:`<h2>Today</h2><div class="card"><b>Your games</b><div class="row"><span class="g">Trader Joe's · Quest</span>›</div></div>
+<div class="card" data-go="2" style="cursor:pointer;border-color:var(--acc)"><b>Map my store</b><div class="muted">Photograph an aisle. Help every shopper.</div></div>
+<p class="note">New row beside “+ New session”. Tap it.</p>`},
+2:{t:"Map my store",h:`<h2>Map my store</h2><p class="muted">Map the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
+<span class="chip on">Trader Joe's</span><span class="chip">Costco</span>
+<div class="card"><b>6 of 22 aisles mapped and fresh</b><div class="bar"><i style="width:27%"></i></div><div class="muted">3 reported out of date. You do not need to map everything.</div></div>
+<div class="card"><div class="eye">Next capture</div><b style="font-size:19px">Photo of Pasta, left side</b><div class="muted">A shopper said this part is out of date.</div><button class="btn p" data-go="3">Start · about 10 s</button></div>
+<b>Aisles</b><div class="card"><div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Pasta<br><small class="muted">left side</small></span><span class="st s">Out of date</span></div>
+<div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Frozen Pizza</span><span class="st ok">Mapped</span></div>
+<div class="row"><span class="st">+</span><span class="g">Dairy wall</span><span class="st">Not mapped</span></div></div>
+<button class="btn">Add an aisle</button><p class="note">“Mine” = just the aisles I use. The next capture comes from there first.</p>`},
+3:{t:"Live guided camera",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2><p class="muted">Someone could not find Spaghetti here. A fresh photo helps.</p>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Hold still on the shelf.</p>
+<p style="text-align:center;margin:0 0 10px"><span class="chip">&nbsp;</span></p>
+<button class="btn p" data-go="4">(the app watches for a steady, sharp frame)</button><button class="btn" data-go="2">Done for today</button><button class="btn" data-go="6">This part of the map is out of date</button>
+<p class="note">No shutter, no verdict. One short live line: “A little dark. Face the shelf light.” / “Slow down a little.” / “Good. Hold still.”</p>`},
+4:{t:"It captures itself",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Mapped. Thank you.</p><p style="text-align:center"><span class="chip on">&nbsp;</span></p>
+<p class="note">Sharpness and light are checked on the phone BEFORE upload. A frame that is not good is never sent, never shown, never mentioned. Nothing asks for a retake.</p>
+<button class="btn p" data-go="5">Moves on by itself…</button>`},
+5:{t:"Next, or the map",h:`<h2 style="font-size:23px">Photo of Frozen Pizza</h2><p class="muted">Mapped once, from an old walkthrough video.</p>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Good. Hold still.</p>
+<button class="btn" data-go="2">Done for today</button>
+<p class="note">After ~1.5 s the app opens the next capture the engine wants (your aisles first), or returns to the map when none is left. After 30 s with nothing usable: “No worries. Try again another time.” No retake request. A walk works the same: “Start walking slowly.” and six dots fill as good frames are kept.</p>`},
+6:{t:"Hunt: Not here? → refresh",h:`<h2 style="font-size:23px">Hunt · Spaghetti</h2>
+<div class="card"><b>Not here</b><div class="row"><span class="g">Empty shelf — its tag is still there</span></div><div class="row"><span class="g">Something else here now</span></div></div>
+<div class="card" style="border-color:var(--acc);background:var(--accbg)">Reported — other hunters will confirm.<br><b>Help refresh the map?</b><button class="btn p" data-go="3">Take the photo</button></div>
+<p class="note">The report also marks that aisle out of date and jumps the queue. Walk-video option: for an aisle with several empty parts, the prompt becomes “Walk Aisle 4, left side · about 20 s”; the phone sends only its sharpest frames.</p>`}
+};
+const nav=document.getElementById("nav"),ph=document.getElementById("ph");
+function go(i){ph.innerHTML=S[i].h;ph.scrollTop=0;[...nav.children].forEach((li,k)=>li.firstChild.classList.toggle("on",k+1==i));
+ph.querySelectorAll("[data-go]").forEach(e=>e.addEventListener("click",()=>go(e.dataset.go)))}
+Object.keys(S).forEach(i=>{const li=document.createElement("li");li.innerHTML=`<button>${i}. ${S[i].t}</button>`;li.firstChild.onclick=()=>go(i);nav.appendChild(li)});
+go(1);
+</script></body></html>

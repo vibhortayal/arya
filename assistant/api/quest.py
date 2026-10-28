@@ -543,6 +543,11 @@ def record_sightings(session_id, pops):
             out.append(rec)
         s["sightings"] = s["sightings"][-SIGHTINGS_MAX:]
         _save_store(s)
+    # Map my store: remember which segment each item was seen in.
+    from api import storemap
+    for rec in out:
+        storemap.note_sighting(rec["store"], rec["item"],
+                               rec.get("shelf_label"))
     return out
 
 
