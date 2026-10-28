@@ -1,14 +1,16 @@
 "use strict";
-/* Map my store (owner, 2026-10-28). A guided mapper: the app says
+/* Map my store, shown as "Teach Arya your store" (owner,
+ * 2026-10-28: the shopper teaches the app so it can help them). A guided mapper: the app says
  * exactly what to capture, the engine (api/storemap.py) keeps the
  * best frames. A shopper maps only the aisles they use, over many
  * visits; every shopper's captures merge into one shared map.
  *
  * Two kinds of capture, both prompted: a PHOTO of one shelf, or a
- * WALK (a short video past one aisle). A walk never uploads the
- * video: the phone picks the sharpest few frames and sends those
- * as photos, so each one goes through the same people scrub and
- * the same grading. State lives on the server; this file keeps
+ * WALK past one aisle. Either way the camera stays open and the app
+ * watches the frames itself: it guides with a live hint and keeps
+ * the best frame, so nobody is ever told to retake (owner rule).
+ * A walk never uploads video; it sends the sharpest frame of each
+ * section, and its length decides how many sections the aisle has. State lives on the server; this file keeps
  * only the screen's selection. */
 const M = {
   store: "",
@@ -18,11 +20,13 @@ const M = {
   busy: false,
 };
 const M_STATUS = {
-  unmapped: ["Not mapped", "st-none"],
+  unmapped: ["New to Arya", "st-none"],
   mapped: ["Mapped", "st-ok"],
   aging: ["Getting old", "st-age"],
   stale: ["Out of date", "st-stale"],
 };
+const M_WALK_SAMPLES = 12;   // frames looked at in a walk video
+const M_WALK_SEND = 6;       // sharpest frames sent
 
 function mapperStoreName() {
   if (M.store) return M.store;
@@ -50,19 +54,20 @@ function paintMapper() {
   const v = M.view;
   const done = v.counts.mapped;
   $("#mp-cover").innerHTML = v.total
-    ? `<div class="mp-count"><strong>${done} of ${v.total}</strong> aisles mapped and fresh</div>
+    ? `<div class="mp-count">Arya knows <strong>${v.coverage_pct}%</strong> of ${esc(v.store || M.store)} <span class="muted">· ${done} of ${v.total} sections</span></div>
        <div class="track" aria-hidden="true"><span class="bar" style="width:${v.coverage_pct}%"></span></div>
-       <p class="muted nomargin">${v.counts.aging ? `${v.counts.aging} getting old. ` : ""}${v.counts.stale ? `${v.counts.stale} reported out of date. ` : ""}${v.counts.unmapped ? `${v.counts.unmapped} not mapped yet. ` : ""}You do not need to map everything.</p>`
+       <p class="muted nomargin">${v.counts.aging ? `${v.counts.aging} getting old. ` : ""}${v.counts.stale ? `${v.counts.stale} reported out of date. ` : ""}${v.counts.unmapped ? `${v.counts.unmapped} still new to Arya. ` : ""}Teach the aisles you use. You never need all of them.</p>
+       ${mapperGoalHtml(v)}`
     : `<p class="nomargin">No aisles here yet. Add the aisle you shop in, below.</p>`;
   const p = v.next;
   $("#mp-next").innerHTML = p
     ? `<div class="group pad mp-nextcard">
-         <span class="eyebrow">Next capture</span>
+         <span class="eyebrow">Teach Arya next</span>
          <div class="name">${esc(p.title)}</div>
          <p class="muted">${esc(p.why)}</p>
-         <button class="btn primary wide" id="mp-start" type="button">${p.kind === "walk" ? "Start the walk" : "Start"} · about ${p.est_seconds} s</button>
+         <button class="btn primary wide" id="mp-start" type="button">Open camera · about ${p.est_seconds} s</button>
        </div>`
-    : (v.total ? `<div class="group pad"><p class="nomargin">Everything you picked is mapped. Thank you.</p></div>` : "");
+    : (v.total ? `<div class="group pad"><p class="nomargin">Arya knows every aisle you picked. Your hunts here use real shelf photos now.</p></div>` : "");
   const focus = new Set(v.focus || M.focus || []);
   $("#mp-segs").innerHTML = v.segments.length
     ? v.segments.map(s => {
@@ -76,6 +81,15 @@ function paintMapper() {
           <span class="mp-st ${cls}">${label}</span></div>`;
       }).join("")
     : empty("Nothing mapped yet.");
+}
+
+function mapperGoalHtml(v) {
+  const c = v.credit || {};
+  const goal = v.goal
+    ? `${v.goal.sections_needed} more section${v.goal.sections_needed === 1 ? "" : "s"} and Arya knows ${v.goal.pct}%`
+    : "Arya knows this whole store.";
+  return `<div class="mp-me"><span class="muted">${esc(goal)}</span>${c.title
+    ? `<span><strong>${esc(c.title)}</strong> · ${c.points} pts</span>` : ""}</div>`;
 }
 
 /* "My aisles": the shopper's own focus. Tapping + / Mine moves the
@@ -114,7 +128,7 @@ $("#mp-add").addEventListener("click", async () => {
   try {
     const out = await post("/api/storemap/segments", { store: M.store, label, side: M.side });
     $("#mp-label").value = "";
-    toast(out.created ? "Added. Tap Start to map it." : "That aisle is already on the map.");
+    toast(out.created ? "Added. Open the camera to teach it." : "Arya already has that aisle.");
     await renderMapper();
   } catch (e) { toast(e.message); }
 });
@@ -125,235 +139,357 @@ async function mapperOpenSegment(id) {
 }
 
 /* ---------------- guided capture ----------------
- * No shutter button, no verdicts, no retakes. The camera opens, the
- * app watches the live view, tells the shopper what it needs in one
- * short line ("Slow down", "More light", "Good, keep going"), and
- * quietly sends the good frames. Grading happens on the phone
- * before upload, and anything the server still declines is dropped
- * without a word. The screen finishes on its own. */
-const MC = {
-  stream: null, timer: null, wake: null, queue: [], sending: false,
-  prevThumb: null, lastSentThumb: null, lastSentAt: 0, steadySince: 0,
-  accepted: 0, target: 0, started: 0, kind: "photo", done: false,
-  gen: 0,
-};
-const MC_TICK_MS = 600;
-const MC_MIN_SHARP = 60;        // laplacian variance at 480 px wide
-const MC_MIN_LUMA = 55, MC_MAX_LUMA = 215;
-const MC_GIVE_UP_MS = 30000;
-const MC_WALK_GAP_MS = 1500;
+ * Owner rule: no retake loops. The shopper opens the camera; the app
+ * watches every frame, shows one live hint, and keeps the best frame
+ * on its own. The server never refuses a shot either: a weak one is
+ * kept as a partial and the engine asks again on a later visit. */
+
+const CAM = { stream: null, timer: null, walk: null };
+const CAM_TICK_MS = 250;
+const PHOTO_SETTLE_MS = 1500;   // steady this long, then snap
+const PHOTO_MAX_MS = 6000;      // snap the best seen by then anyway
+const WALK_BUCKET_MS = 2000;    // keep the sharpest frame per 2 s
+const WALK_SECONDS_PER_PART = 8;
+const WALK_MAX_MS = 45000;
 
 function openCapture(prompt) {
-  mcStop();
+  camStop();
   M.prompt = prompt;
   $("#cp-title").textContent = prompt.title;
   $("#cp-why").textContent = prompt.why || "";
   $("#cp-steps").innerHTML = (prompt.steps || []).map(t => `<li>${esc(t)}</li>`).join("");
-  $("#cp-hint").textContent = "Starting the camera…";
-  $("#cp-dots").innerHTML = "";
-  $("#cp-fallback").hidden = true;
-  $("#cp-video-wrap").hidden = false;
+  $("#cp-time").textContent = `About ${prompt.est_seconds || 10} seconds.`;
+  $("#cp-go").textContent = "Open camera";
+  $("#cp-go").disabled = false;
+  $("#cp-howto").hidden = false;
+  $("#cp-cam").hidden = true;
+  $("#cp-controls").hidden = false;
+  $("#cp-result").hidden = true;
+  $("#cp-after").hidden = true;
   $("#cp-outdated").hidden = !prompt.segment;
+  $("#cp-photo").value = ""; $("#cp-video").value = "";
   questShow("view-capture");
-  mcStart(prompt).catch(() => mcFallback());
+  if (!prompt.segment) mapperPickAisle();
 }
 
-function mcDots() {
-  $("#cp-dots").innerHTML = Array.from({ length: MC.target }, (_, i) =>
-    `<span class="mc-dot${i < MC.accepted ? " on" : ""}"></span>`).join("");
-}
-
-async function mcStart(prompt) {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("no camera");
-  const gen = ++MC.gen;
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment", width: { ideal: 1280 } }, audio: false });
-  if (gen !== MC.gen) { stream.getTracks().forEach(t => t.stop()); return; }
-  MC.stream = stream;
-  const v = $("#cp-video");
-  v.srcObject = stream;
-  if (v.play) { try { await v.play(); } catch (e) { /* frames still read once playing */ } }
-  Object.assign(MC, { queue: [], sending: false, prevThumb: null, lastSentThumb: null,
-    lastSentAt: 0, steadySince: 0, accepted: 0, done: false, started: Date.now(),
-    kind: prompt.kind, target: prompt.kind === "walk" ? 6 : 1 });
-  mcDots();
-  $("#cp-hint").textContent = prompt.kind === "walk" ? "Start walking slowly." : "Hold still on the shelf.";
-  MC.timer = setInterval(mcTick, MC_TICK_MS);
-  if (navigator.wakeLock) {
-    try { MC.wake = await navigator.wakeLock.request("screen"); } catch (e) { MC.wake = null; }
-  }
-}
-
-function mcStop() {
-  MC.gen++;
-  if (MC.timer) { clearInterval(MC.timer); MC.timer = null; }
-  if (MC.stream) { MC.stream.getTracks().forEach(t => t.stop()); MC.stream = null; }
-  if (MC.wake) { const w = MC.wake; MC.wake = null; if (w.release) w.release().catch(() => {}); }
-}
-
-/* The camera is not available (a desktop, a refusal): the phone's
- * own camera app takes one photo. Whatever the server decides, the
- * shopper is thanked once and never asked to retake. */
-function mcFallback() {
-  mcStop();
-  $("#cp-video-wrap").hidden = true;
-  $("#cp-fallback").hidden = false;
-  $("#cp-hint").textContent = "";
-}
-$("#cp-photo").addEventListener("change", async ev => {
-  const f = ev.target.files[0];
-  if (!f) return;
-  $("#cp-hint").textContent = "Thanks. Checking it…";
-  try {
-    const out = await mapperUpload(f, "photo");
-    $("#cp-hint").textContent = out.accepted
-      ? "Saved. Thank you."
-      : "Thanks. This one was not clear enough to use, so the map keeps what it has.";
-    await mapperAfter();
-    mcFinishSoon();
-  } catch (e) { $("#cp-hint").textContent = "Thanks. We could not send that one."; }
-});
-
-function mcThumb(video) {
-  const c = mcThumb.c || (mcThumb.c = document.createElement("canvas"));
-  c.width = 32; c.height = 18;
-  c.getContext("2d").drawImage(video, 0, 0, 32, 18);
-  const d = c.getContext("2d").getImageData(0, 0, 32, 18).data;
-  const a = new Float32Array(32 * 18);
-  for (let i = 0; i < a.length; i++) a[i] = 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2];
-  return a;
-}
-function mcDiff(a, b) {
-  if (!a || !b) return 255;
-  let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
-  return s / a.length;
-}
-function mcFrameBlob(video, maxSide) {
-  const w = video.videoWidth, h = video.videoHeight;
-  const k = Math.min(1, maxSide / Math.max(w, h));
-  const c = document.createElement("canvas");
-  c.width = Math.round(w * k); c.height = Math.round(h * k);
-  c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
-  return c;
-}
-function mcLuma(canvas) {
-  const c = document.createElement("canvas"); c.width = 48; c.height = 27;
-  const ctx = c.getContext("2d"); ctx.drawImage(canvas, 0, 0, 48, 27);
-  const d = ctx.getImageData(0, 0, 48, 27).data; let s = 0;
-  for (let i = 0; i < d.length; i += 4) s += 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
-  return s / (d.length / 4);
-}
-
-function mcTick() {
-  const v = $("#cp-video");
-  if (MC.done || !v.videoWidth) return;
-  const now = Date.now();
-  const small = mcFrameBlob(v, 480);
-  const sharp = mapperSharpness(small);
-  const luma = mcLuma(small);
-  const thumb = mcThumb(v);
-  const moving = mcDiff(thumb, MC.prevThumb) > 14;
-  MC.prevThumb = thumb;
-  let hint, good = false;
-  if (luma < MC_MIN_LUMA) hint = "A little dark. Face the shelf light.";
-  else if (luma > MC_MAX_LUMA) hint = "Too much glare. Tilt the phone a little.";
-  else if (sharp < MC_MIN_SHARP) hint = MC.kind === "walk" ? "Slow down a little." : "Hold still for a second.";
-  else { good = true; hint = MC.kind === "walk" ? "Good. Keep walking slowly." : "Good. Hold still."; }
-  if (good && MC.kind === "photo") {
-    if (!MC.steadySince || moving) MC.steadySince = now;
-    good = now - MC.steadySince >= 800;
-  }
-  const spaced = now - MC.lastSentAt >= (MC.kind === "walk" ? MC_WALK_GAP_MS : 2500);
-  const fresh = mcDiff(thumb, MC.lastSentThumb) > (MC.kind === "walk" ? 20 : 6);
-  if (good && spaced && fresh && MC.queue.length < 2 && MC.accepted + MC.queue.length < MC.target) {
-    MC.lastSentAt = now; MC.lastSentThumb = thumb;
-    const full = mcFrameBlob(v, 960);
-    full.toBlob(b => { MC.queue.push(b); mcPump(); }, "image/jpeg", 0.85);
-  }
-  if (MC.accepted < MC.target) $("#cp-hint").textContent = hint;
-  if (now - MC.started > MC_GIVE_UP_MS && MC.accepted < MC.target && !MC.queue.length && !MC.sending) {
-    // Not a failure, not a retake: the shopper is thanked and the
-    // map keeps what it has. Whatever was kept still counts.
-    mcFinish(MC.accepted ? "Thanks. That helps." : "No worries. Try again another time.");
-  }
-}
-
-async function mcPump() {
-  if (MC.sending || !MC.queue.length) return;
-  MC.sending = true;
-  const gen = MC.gen;
-  const blob = MC.queue.shift();
-  try {
-    const out = await mapperUpload(blob, MC.kind === "walk" ? "walk" : "photo");
-    if (gen === MC.gen && out.accepted) { MC.accepted++; mcDots(); }
-  } catch (e) { /* silent: the next good frame goes up instead */ }
-  MC.sending = false;
-  if (gen !== MC.gen) return;
-  if (MC.accepted >= MC.target) mcFinish("Mapped. Thank you.");
-  else mcPump();
-}
-
-async function mcFinish(msg) {
-  if (MC.done) return;
-  MC.done = true;
-  mcStop();
-  $("#cp-hint").textContent = msg;
-  try { await mapperAfter(); } catch (e) { /* the map screen reloads anyway */ }
-  mcFinishSoon();
-}
-/* After a capture the app moves on by itself: the next capture the
- * engine wants, or the map when nothing is left. "Done for today"
- * is always one tap away. */
-function mcFinishSoon() {
-  const gen = ++MC.gen;
-  setTimeout(() => {
-    if (gen !== MC.gen) return;
-    if (M.view && M.view.next) openCapture(M.view.next);
-    else questGo("view-mapper");
-  }, 1400);
-}
-
-/* A "not found" report asks for one specific capture. Offered as a
+/* A "not found" report asks for one specific photo. Offered as a
  * one-tap on the report toast; nothing is forced. */
 function mapperOffer(store, task) {
   if (!task || !task.prompt) return;
   M.store = store;
-  toast("Help refresh the map?", {
-    action: "Open the camera",
+  toast("Show Arya the shelf? It learns where things moved.", {
+    action: "Open camera",
     onAction: () => {
-      if (task.prompt.segment) openCapture(task.prompt);
-      else questGo("view-mapper");
+      api(`/api/storemap?store=${encodeURIComponent(store)}`)
+        .then(v => { M.view = v; openCapture(task.prompt); })
+        .catch(() => openCapture(task.prompt));
     }
   });
 }
 
-async function mapperUpload(blob, kind) {
-  const q = `store=${encodeURIComponent(M.store)}&segment=${encodeURIComponent(M.prompt.segment)}&kind=${kind}`;
+/* "Can't find it" with a photo already attached: that photo teaches
+ * the map directly, in the background. No screen, no retake. */
+async function mapperQuietCapture(store, segment, file) {
+  M.store = store;
+  try {
+    const out = await mapperUpload(file, "photo", segment);
+    toast(out.reward && out.reward.new_section
+      ? `Reported, and Arya learned this shelf. +${out.reward.points}`
+      : "Reported, and Arya's map of this shelf is fresh again.");
+  } catch (e) {
+    toast("Reported — other hunters will confirm.");
+  }
+}
+
+/* We do not know which aisle a missing item lives in yet: one tap on
+ * the aisle you are standing in, then the camera. */
+function mapperPickAisle() {
+  const segs = ((M.view && M.view.segments) || []);
+  $("#cp-controls").hidden = true;
+  mapperShowResult(segs.length
+    ? `<p class="nomargin">Tap the aisle you are in:</p><div class="rail">${segs.map(s =>
+        `<button class="chip" data-mpick="${esc(s.id)}" type="button">${esc(s.label)}</button>`).join("")}</div>`
+    : `<p class="nomargin">Arya does not know this store's aisles yet. Add the one you are in from Teach Arya your store.</p>`);
+}
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-mpick]");
+  if (b) mapperOpenSegment(b.dataset.mpick).catch(e => toast(e.message));
+});
+
+function mapperShowResult(html) {
+  const box = $("#cp-result");
+  box.innerHTML = html; box.hidden = false;
+}
+
+async function mapperUpload(blob, kind, segment) {
+  const q = `store=${encodeURIComponent(M.store)}&segment=${encodeURIComponent(segment || M.prompt.segment)}&kind=${kind}`;
   const r = await fetch(`/api/storemap/capture?${q}`, {
     method: "POST", headers: { "Content-Type": blob.type || "image/jpeg" }, body: blob });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
   return r.json();
 }
 
-async function mapperAfter() {
-  M.view = await api(`/api/storemap?store=${encodeURIComponent(M.store)}`);
-}
-
+/* ---- frame grading on the phone (no network, no model) ---- */
 function mapperSharpness(canvas) {
-  const w = canvas.width, h = canvas.height;
-  const ctx = canvas.getContext("2d");
+  const w = 160, h = Math.max(1, Math.round(canvas.height * 160 / canvas.width));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); ctx.drawImage(canvas, 0, 0, w, h);
   const d = ctx.getImageData(0, 0, w, h).data;
   const g = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) g[i] = 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2];
+  let luma = 0;
+  for (let i = 0; i < w * h; i++) { g[i] = 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2]; luma += g[i]; }
   let sum = 0, sq = 0, n = 0;
   for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
     const l = -4 * g[y * w + x] + g[y * w + x - 1] + g[y * w + x + 1] + g[(y - 1) * w + x] + g[(y + 1) * w + x];
     sum += l; sq += l * l; n++;
   }
-  return sq / n - (sum / n) * (sum / n);
+  return { sharp: sq / n - (sum / n) * (sum / n), luma: luma / (w * h) };
+}
+/* One line of live guidance. `rel` is this frame's sharpness over the
+ * best seen so far, so "hold still" means "you were steadier a moment
+ * ago", whatever the phone's camera. */
+function camHint(g, rel, walk) {
+  if (g.luma < 45) return ["A bit dark. Face the shelf light.", false];
+  if (g.luma > 225) return ["Tilt a little to lose the glare.", false];
+  if (rel < 0.5) return [walk ? "A little slower…" : "Hold still…", false];
+  return [walk ? "Nice and steady. Keep walking." : "Good. Holding…", true];
+}
+function camGrab(video) {
+  const scale = Math.min(1, 1280 / (video.videoWidth || 1280));
+  const c = document.createElement("canvas");
+  c.width = Math.round((video.videoWidth || 1280) * scale);
+  c.height = Math.round((video.videoHeight || 960) * scale);
+  c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
+  return c;
+}
+const camBlob = c => new Promise(res => c.toBlob(res, "image/jpeg", 0.88));
+
+async function camStart() {
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return false;
+  try {
+    CAM.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 } }, audio: false });
+  } catch (e) { return false; }
+  const v = $("#cp-live");
+  v.srcObject = CAM.stream;
+  await v.play().catch(() => {});
+  $("#cp-cam").hidden = false;
+  $("#cp-howto").hidden = true;
+  return true;
+}
+function camStop() {
+  clearInterval(CAM.timer); CAM.timer = null;
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = null;
+  const v = $("#cp-live"); if (v) v.srcObject = null;
 }
 
-$("#cp-done").addEventListener("click", () => { mcStop(); MC.gen++; MC.done = true; questGo("view-mapper"); });
+$("#cp-go").addEventListener("click", async () => {
+  if (M.busy) return;
+  if (CAM.walk) { camFinishWalk(); return; }      // the button is "Done" mid-walk
+  const walk = M.prompt.kind === "walk";
+  if (!(await camStart())) {
+    // No live camera (old browser, permission denied): fall back to
+    // the system camera. Still no retakes: we use what comes back.
+    $(walk ? "#cp-video" : "#cp-photo").click();
+    return;
+  }
+  if (walk) camWalk(); else camPhoto();
+});
+
+/* PHOTO: watch, hint, and snap the best frame once it has been
+ * steady for a moment (or after a few seconds, whatever we have). */
+function camPhoto() {
+  const v = $("#cp-live"), hint = $("#cp-hint");
+  $("#cp-go").textContent = "Snapping when steady…";
+  $("#cp-go").disabled = true;
+  $("#cp-parts").innerHTML = "";
+  const t0 = Date.now();
+  let best = null, maxSharp = 1, goodSince = 0;
+  CAM.timer = setInterval(async () => {
+    if (!v.videoWidth) return;
+    const c = camGrab(v), g = mapperSharpness(c);
+    maxSharp = Math.max(maxSharp, g.sharp);
+    const [text, ok] = camHint(g, g.sharp / maxSharp, false);
+    hint.textContent = text; hint.classList.toggle("good", ok);
+    const score = g.sharp * (ok ? 1 : 0.5);
+    if (!best || score > best.score) best = { c, score };
+    goodSince = ok ? (goodSince || Date.now()) : 0;
+    const now = Date.now();
+    if ((goodSince && now - goodSince >= PHOTO_SETTLE_MS) || now - t0 >= PHOTO_MAX_MS) {
+      clearInterval(CAM.timer); CAM.timer = null;
+      hint.textContent = "Got it ✓"; hint.classList.add("good");
+      const blob = await camBlob(best.c);
+      camStop();
+      await mapperSend([{ blob, segment: M.prompt.segment }], "photo");
+    }
+  }, CAM_TICK_MS);
+}
+
+/* WALK: record nothing; keep the sharpest frame of every 2 seconds.
+ * Its length says how long the aisle is: about 8 s of walking per
+ * section, so a long aisle splits itself into front/middle/back. */
+function camWalk() {
+  const v = $("#cp-live"), hint = $("#cp-hint");
+  const go = $("#cp-go");
+  go.textContent = "Done"; go.disabled = false;
+  CAM.walk = { t0: Date.now(), buckets: [], maxSharp: 1 };
+  const parts = (M.prompt.parts || [M.prompt.segment]).length;
+  CAM.walk.shownParts = parts;
+  $("#cp-parts").innerHTML = "<span></span>".repeat(parts);
+  CAM.timer = setInterval(() => {
+    const w = CAM.walk;
+    if (!w || !v.videoWidth) return;
+    const el = Date.now() - w.t0;
+    const c = camGrab(v), g = mapperSharpness(c);
+    w.maxSharp = Math.max(w.maxSharp, g.sharp);
+    const [text, ok] = camHint(g, g.sharp / w.maxSharp, true);
+    hint.textContent = text; hint.classList.toggle("good", ok);
+    const b = Math.floor(el / WALK_BUCKET_MS);
+    const score = g.sharp * (ok ? 1 : 0.5);
+    if (!w.buckets[b] || score > w.buckets[b].score) w.buckets[b] = { c, score };
+    // Grow the section bar as the aisle turns out longer.
+    const want = M.prompt.splittable ? Math.max(1, Math.min(6, Math.round(el / 1000 / WALK_SECONDS_PER_PART))) : parts;
+    if (want !== w.shownParts) { w.shownParts = want; $("#cp-parts").innerHTML = "<span></span>".repeat(want); }
+    const done = Math.min(want, Math.floor(el / 1000 / WALK_SECONDS_PER_PART) + 1);
+    $("#cp-parts").querySelectorAll("span").forEach((s, i) => s.classList.toggle("on", i < done));
+    if (el >= WALK_MAX_MS) camFinishWalk();
+  }, CAM_TICK_MS * 2);
+}
+
+async function camFinishWalk() {
+  const w = CAM.walk; CAM.walk = null;
+  if (!w) return;
+  const secs = (Date.now() - w.t0) / 1000;
+  camStop();
+  const frames = [];
+  for (const b of w.buckets.filter(Boolean)) frames.push({ blob: await camBlob(b.c), score: b.score });
+  await mapperSendWalk(frames, secs);
+}
+
+/* Spread a walk's frames, in time order, over the aisle's sections
+ * and send the sharpest frame of each section. */
+async function mapperSendWalk(frames, secs) {
+  if (!frames.length) { mapperGentle(); return; }
+  let ids = M.prompt.parts || [M.prompt.segment];
+  const want = Math.max(1, Math.min(6, Math.round(secs / WALK_SECONDS_PER_PART)));
+  if (M.prompt.splittable && want >= 2) {
+    try {
+      const out = await post("/api/storemap/split", { store: M.store, segment: M.prompt.segment, parts: want });
+      ids = out.segments.map(s => s.id);
+    } catch (e) { /* keep the whole aisle as one piece */ }
+  }
+  const picks = ids.map((id, k) => {
+    const lo = Math.floor(k * frames.length / ids.length);
+    const hi = Math.max(lo + 1, Math.floor((k + 1) * frames.length / ids.length));
+    const group = frames.slice(lo, hi);
+    if (!group.length) return null;
+    return { blob: group.reduce((a, b) => (b.score > a.score ? b : a)).blob, segment: id };
+  }).filter(Boolean);
+  await mapperSend(picks, "walk");
+}
+
+/* Upload, then celebrate. A failure never asks for a retake: the
+ * engine simply asks for this part again on a later visit. */
+async function mapperSend(picks, kind) {
+  M.busy = true;
+  $("#cp-controls").hidden = true;
+  $("#cp-cam").hidden = true;
+  mapperShowResult(`<p class="nomargin">Blurring any people and adding it to the map…</p>`);
+  const won = [];
+  let last = null;
+  for (const p of picks) {
+    try {
+      const out = await mapperUpload(p.blob, kind, p.segment);
+      if (out.reward) { won.push({ out, seg: p.segment }); last = out.reward; }
+    } catch (e) { /* skip quietly; nothing was kept for this one */ }
+  }
+  M.busy = false;
+  if (!won.length) { mapperGentle(); await mapperAfter(); return; }
+  mapperShowResult(mapperRewardHtml(won, last));
+  if (won.some(w => w.out.reward.new_section) && window.qConfetti) qConfetti();
+  requestAnimationFrame(() => {
+    const bar = document.querySelector("#cp-result .bar");
+    if (bar) bar.style.width = `${last.store_pct[1]}%`;
+  });
+  await mapperAfter();
+}
+
+function mapperGentle() {
+  mapperShowResult(`<p class="nomargin"><strong>Thanks!</strong> We could not save this one just now, so nothing was kept. No need to redo it. We will ask again another time.</p>`);
+}
+
+function mapperSegLabel(id) {
+  const s = ((M.view && M.view.segments) || []).find(x => x.id === id);
+  return s ? s.label : (M.prompt && M.prompt.title) || "This aisle";
+}
+
+function mapperRewardHtml(won, last) {
+  const pts = won.reduce((n, w) => n + w.out.reward.points, 0);
+  const fresh = won.filter(w => w.out.reward.new_section);
+  const partial = won.some(w => w.out.weak);
+  const what = fresh.length > 1 ? `Arya learned ${fresh.length} sections`
+    : fresh.length ? `Arya learned ${esc(mapperSegLabel(fresh[0].seg))}`
+    : "Arya's picture of this shelf is fresh again";
+  const [a, b] = last.store_pct;
+  const goal = last.goal ? `${last.goal.sections_needed} more section${last.goal.sections_needed === 1 ? "" : "s"} to ${last.goal.pct}%` : "Arya knows the whole store!";
+  return `<div class="mp-reward">
+    <div class="pts">+${pts}</div>
+    <div class="what">${what}</div>
+    <div class="muted">Arya knows ${a}% → <strong>${b}%</strong> of this store</div>
+    <div class="track" aria-hidden="true"><span class="bar" style="width:${a}%"></span></div>
+    <div class="muted">${esc(goal)}</div>
+    ${last.new_title ? `<div class="mp-title">You're now a ${esc(last.new_title)}</div>` : ""}
+    ${fresh.length ? `<p class="muted">Next hunt here, this aisle shows a real shelf photo, so you spot things faster.</p>` : ""}
+    ${partial ? `<p class="muted">Some of it was a little soft. That is fine; it still helps, and a later shopper will sharpen it.</p>` : ""}
+  </div>`;
+}
+
+async function mapperAfter() {
+  M.view = await api(`/api/storemap?store=${encodeURIComponent(M.store)}`);
+  $("#cp-after").hidden = false;
+  $("#cp-next").textContent = M.view.next ? "Teach one more · about 20 s" : "Back to the map";
+}
+
+/* Fallbacks when the live camera is not available. Same rules. */
+$("#cp-photo").addEventListener("change", async ev => {
+  const f = ev.target.files[0];
+  if (!f || M.busy) return;
+  await mapperSend([{ blob: f, segment: M.prompt.segment }], "photo");
+});
+function mapperSeek(video, t) {
+  return new Promise(res => { video.onseeked = () => res(); video.currentTime = t; });
+}
+async function mapperVideoFrames(file) {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.muted = true; video.playsInline = true; video.src = url;
+  await new Promise((res, rej) => { video.onloadedmetadata = res; video.onerror = () => rej(new Error("Could not read that video.")); });
+  const dur = video.duration || 1;
+  const n = Math.max(4, Math.min(24, Math.round(dur / (WALK_BUCKET_MS / 1000))));
+  const frames = [];
+  for (let i = 0; i < n; i++) {
+    await mapperSeek(video, dur * (i + 0.5) / n);
+    const c = camGrab(video);
+    frames.push({ blob: await camBlob(c), score: mapperSharpness(c).sharp });
+  }
+  URL.revokeObjectURL(url);
+  return { frames, secs: dur };
+}
+$("#cp-video").addEventListener("change", async ev => {
+  const f = ev.target.files[0];
+  if (!f || M.busy) return;
+  mapperShowResult("Picking the sharpest frames from your walk…");
+  try {
+    const { frames, secs } = await mapperVideoFrames(f);
+    await mapperSendWalk(frames, secs);
+  } catch (e) { mapperGentle(); }
+});
+
+$("#cp-next").addEventListener("click", () => {
+  if (M.view && M.view.next) openCapture(M.view.next);
+  else questGo("view-mapper");
+});
 $("#cp-outdated").addEventListener("click", async () => {
   if (!M.prompt || !M.prompt.segment) return;
   try {
@@ -362,6 +498,55 @@ $("#cp-outdated").addEventListener("click", async () => {
     if (out.prompt) openCapture(out.prompt);
   } catch (e) { toast(e.message); }
 });
+/* Leaving the capture screen always turns the camera off. */
 document.addEventListener("click", ev => {
-  if (ev.target.closest(".qback")) { mcStop(); MC.gen++; }
+  if (ev.target.closest("#view-capture .qback")) { CAM.walk = null; camStop(); }
 });
+
+/* ---------------- after a hunt: one small, skippable ask ----------------
+ * When a hunt ends, the score screen offers one aisle to map, picked
+ * by the engine (an aisle where something on this list was found
+ * comes first: they were just there). "Not now" mutes the ask for that
+ * store for a week. Once per hunt; never a popup. */
+const MAP_MUTE_DAYS = 7;
+function mapperMuted(store) {
+  try {
+    const m = JSON.parse(localStorage.getItem("arya-map-mute") || "{}");
+    return m[store] && Date.now() - m[store] < MAP_MUTE_DAYS * 864e5;
+  } catch (e) { return false; }
+}
+function mapperMute(store) {
+  try {
+    const m = JSON.parse(localStorage.getItem("arya-map-mute") || "{}");
+    m[store] = Date.now();
+    localStorage.setItem("arya-map-mute", JSON.stringify(m));
+  } catch (e) { /* private mode: the ask just returns next time */ }
+}
+async function mapperOfferAfterHunt(sess) {
+  if (!sess || !sess.store || mapperMuted(sess.store)) return;
+  const items = (sess.items || []).filter(i => i.checked).map(i => i.name).slice(0, 30);
+  let out;
+  try {
+    out = await api(`/api/storemap/next?store=${encodeURIComponent(sess.store)}&items=${encodeURIComponent(items.join(","))}`);
+  } catch (e) { return; }
+  const p = out && out.prompt;
+  const body = $("#score-body");
+  if (!p || !p.segment || !body || $("#view-score").hidden) return;
+  const where = p.title.replace(/^(Photo of|Walk)\s+/, "");
+  const card = document.createElement("div");
+  card.className = "group pad mp-offer";
+  card.innerHTML = `<span class="eyebrow">Bonus · +10 pts</span>
+    <div class="name">Got ${p.est_seconds} seconds? Teach Arya ${esc(where)}.</div>
+    <p class="muted nomargin">Your next hunt here gets faster. Open the camera and walk; Arya does the rest.</p>
+    <div class="rail"><button class="btn primary" data-mapoffer="go" type="button">Teach Arya</button>
+    <button class="btn" data-mapoffer="later" type="button">Not now</button></div>`;
+  body.prepend(card);
+  card.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-mapoffer]");
+    if (!b) return;
+    if (b.dataset.mapoffer === "later") { mapperMute(sess.store); card.remove(); return; }
+    M.store = sess.store;
+    api(`/api/storemap?store=${encodeURIComponent(M.store)}`).then(v => { M.view = v; }).catch(() => {});
+    openCapture(p);
+  });
+}
