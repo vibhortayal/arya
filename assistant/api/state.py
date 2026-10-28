@@ -4,7 +4,7 @@ cart.json, flags.json. Derived state (ledger/patterns/list) is recomputed
 on read — at household scale that is milliseconds, and it can never drift
 from the stored receipts. Postgres replaces the files when volume demands.
 """
-import json, os
+import json, os, tempfile, threading
 
 from api.ledger.build import build_ledger
 from api.patterns.engine import summarize
@@ -28,16 +28,60 @@ def set_current_user(name):
     _current_user.set(name)
 
 
+# --- store durability -------------------------------------------------------
+# Writes are atomic and serialized per file (hardening, review
+# 2026-10-28 H2): a save goes to a temp file in the same directory
+# and lands with os.replace, so a reader sees the old file or the
+# new one, never a half-written one; and a per-file RLock serializes
+# writers so load-modify-save cycles cannot silently lose updates.
+# The lock is re-entrant: a cycle holds file_lock(name) while _save
+# takes the same lock again on the same thread.
+
+_file_locks = {}
+_file_locks_guard = threading.Lock()
+
+
+def lock_for(path):
+    with _file_locks_guard:
+        lk = _file_locks.get(path)
+        if lk is None:
+            lk = _file_locks[path] = threading.RLock()
+        return lk
+
+
+def file_lock(name):
+    """Hold the store lock for one file (by store name) across a
+    load-modify-save cycle."""
+    return lock_for(os.path.join(data_dir(), name))
+
+
+def write_json_atomic(path, obj):
+    with lock_for(path):
+        d = os.path.dirname(path)
+        os.makedirs(d, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=d, prefix=".tmp-", suffix=".json")
+        try:
+            with os.fdopen(fd, "w") as fh:
+                json.dump(obj, fh, indent=1)
+            os.replace(tmp, path)
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+
 def _load(name, default):
     p = os.path.join(data_dir(), name)
     if os.path.exists(p):
-        return json.load(open(p))
+        with open(p) as fh:
+            return json.load(fh)
     return default
 
 
 def _save(name, obj):
-    os.makedirs(data_dir(), exist_ok=True)
-    json.dump(obj, open(os.path.join(data_dir(), name), "w"), indent=1)
+    write_json_atomic(os.path.join(data_dir(), name), obj)
 
 
 def receipts():
@@ -72,23 +116,24 @@ def add_receipts(new, media=None):
     receipts simply have no original. Retention lives here, in
     the filing path, so every door that files an uploaded
     original keeps it."""
-    cur = receipts()
-    seen = {r["receipt_id"] for r in cur}
-    # A receipt with no date cannot be placed in the ledger; it is refused
-    # at the door rather than breaking pattern math later.
-    added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
-    media = media or {}
-    for r in added:
-        m = media.get(r["receipt_id"])
-        if m:
-            data, media_type = m
-            os.makedirs(_media_dir(), exist_ok=True)
-            with open(os.path.join(_media_dir(), r["receipt_id"]), "wb") as fh:
-                fh.write(data)
-            r["image_ref"] = r["receipt_id"]
-            r["media_type"] = media_type
-    _save("receipts.json", cur + added)
-    return len(added)
+    with file_lock("receipts.json"):
+        cur = receipts()
+        seen = {r["receipt_id"] for r in cur}
+        # A receipt with no date cannot be placed in the ledger; it is refused
+        # at the door rather than breaking pattern math later.
+        added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
+        media = media or {}
+        for r in added:
+            m = media.get(r["receipt_id"])
+            if m:
+                data, media_type = m
+                os.makedirs(_media_dir(), exist_ok=True)
+                with open(os.path.join(_media_dir(), r["receipt_id"]), "wb") as fh:
+                    fh.write(data)
+                r["image_ref"] = r["receipt_id"]
+                r["media_type"] = media_type
+        _save("receipts.json", cur + added)
+        return len(added)
 
 
 def dictionary():
@@ -108,9 +153,10 @@ def flags():
 
 
 def set_flag(item_id, flag):
-    f = flags()
-    f[item_id] = flag
-    _save("flags.json", f)
+    with file_lock("flags.json"):
+        f = flags()
+        f[item_id] = flag
+        _save("flags.json", f)
 
 
 def as_of():
@@ -144,14 +190,15 @@ def set_entry_group(item_ids, group_key, rename_rep=None):
     """Curator apply path: pin entries to an explicit group key. The key
     is the representative item_id for a merge, or the entry's own id for
     a split. rename_rep optionally renames the representative entry."""
-    d = dictionary()
-    by_id = {e["item_id"]: e for e in d["entries"]}
-    for iid in item_ids:
-        if iid in by_id:
-            by_id[iid]["group"] = group_key
-    if rename_rep and group_key in by_id:
-        by_id[group_key]["canonical_name"] = rename_rep
-    _save("dictionary.json", d)
+    with file_lock("dictionary.json"):
+        d = dictionary()
+        by_id = {e["item_id"]: e for e in d["entries"]}
+        for iid in item_ids:
+            if iid in by_id:
+                by_id[iid]["group"] = group_key
+        if rename_rep and group_key in by_id:
+            by_id[group_key]["canonical_name"] = rename_rep
+        _save("dictionary.json", d)
 
 
 def curator_store():
@@ -277,7 +324,13 @@ def judge_pending(client, limit=60):
                 judged[p["item_id"]] = {**v, "buys": p["purchase_count"]}
                 done += 1
     if done:
-        _save("judged.json", judged)
+        # Merge under the lock: a concurrent judge run's verdicts
+        # are read fresh and kept, not overwritten by this run's
+        # older snapshot.
+        with file_lock("judged.json"):
+            fresh = judgments()
+            fresh.update(judged)
+            _save("judged.json", fresh)
     return done
 
 
@@ -305,9 +358,10 @@ def eyes_records():
 
 
 def save_eyes_record(rec):
-    records = [r for r in eyes_records() if r["id"] != rec["id"]]
-    records.append(rec)
-    _save("eyes.json", records)
+    with file_lock("eyes.json"):
+        records = [r for r in eyes_records() if r["id"] != rec["id"]]
+        records.append(rec)
+        _save("eyes.json", records)
 
 
 def name_index():
@@ -333,17 +387,18 @@ def get_cart():
     d = derived()
     unchecked = {"list_id": d["smart_list"]["list_id"],
                  "items": [i for i in d["smart_list"]["items"] if not i.get("checked")]}
-    cart = _load("cart.json", None)
-    if cart is not None:
-        same = [i["item_id"] for i in cart["items"]] == [i["item_id"] for i in unchecked["items"]]
-        fresh = cart["state"] == "waiting" and same
-        new_cycle = cart["state"] == "approved" and cart.get("as_of") != as_of()
-        if fresh or (cart["state"] == "approved" and not new_cycle):
-            return cart
-    cart = prepare(unchecked, names())
-    cart["as_of"] = as_of()
-    _save("cart.json", cart)
-    return cart
+    with file_lock("cart.json"):
+        cart = _load("cart.json", None)
+        if cart is not None:
+            same = [i["item_id"] for i in cart["items"]] == [i["item_id"] for i in unchecked["items"]]
+            fresh = cart["state"] == "waiting" and same
+            new_cycle = cart["state"] == "approved" and cart.get("as_of") != as_of()
+            if fresh or (cart["state"] == "approved" and not new_cycle):
+                return cart
+        cart = prepare(unchecked, names())
+        cart["as_of"] = as_of()
+        _save("cart.json", cart)
+        return cart
 
 
 def save_cart(cart):
@@ -393,12 +448,13 @@ def review_queue():
 
 
 def update_receipt_line(receipt_id, idx, fields):
-    rs = receipts()
-    for r in rs:
-        if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
-            r["lines"][idx].update(fields)
-            _save("receipts.json", rs)
-            return r["lines"][idx]
+    with file_lock("receipts.json"):
+        rs = receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
+                r["lines"][idx].update(fields)
+                _save("receipts.json", rs)
+                return r["lines"][idx]
     return None
 
 
@@ -406,30 +462,32 @@ def teach_name(sku, name):
     """A user-confirmed line name teaches the dictionary entry for its SKU."""
     if not sku:
         return
-    d = dictionary()
-    for e in d["entries"]:
-        if e.get("sku") == sku:
-            e["canonical_name"] = name
-            e.setdefault("resolution", {})["status"] = "manual"
-            _save("dictionary.json", d)
-            return
+    with file_lock("dictionary.json"):
+        d = dictionary()
+        for e in d["entries"]:
+            if e.get("sku") == sku:
+                e["canonical_name"] = name
+                e.setdefault("resolution", {})["status"] = "manual"
+                _save("dictionary.json", d)
+                return
 
 
 def suggest_resolution(item_id, candidates):
     """Attach researched candidates (with source URLs) to an unresolved
     entry. Research is evidence, not a verdict: the entry stays
     unresolved until the user settles it."""
-    d = dictionary()
-    for e in d["entries"]:
-        if e["item_id"] == item_id:
-            res = e.setdefault("resolution", {})
-            if res.get("status") != "unresolved":
-                return False
-            res["candidates"] = [c["name"] for c in candidates]
-            res["sources"] = {c["name"]: c.get("source", "")
-                              for c in candidates if c.get("source")}
-            _save("dictionary.json", d)
-            return True
+    with file_lock("dictionary.json"):
+        d = dictionary()
+        for e in d["entries"]:
+            if e["item_id"] == item_id:
+                res = e.setdefault("resolution", {})
+                if res.get("status") != "unresolved":
+                    return False
+                res["candidates"] = [c["name"] for c in candidates]
+                res["sources"] = {c["name"]: c.get("source", "")
+                                  for c in candidates if c.get("source")}
+                _save("dictionary.json", d)
+                return True
     return False
 
 
@@ -437,27 +495,29 @@ def suggest_line(receipt_id, idx, name, source):
     """A researched name for one unverified receipt line, with its
     source. A proposal only: the line stays unverified until the user
     confirms or renames it."""
-    rs = receipts()
-    for r in rs:
-        if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
-            ln = r["lines"][idx]
-            if ln.get("status") != "unverified":
-                return False
-            ln["suggested"] = {"name": name, "source": source}
-            _save("receipts.json", rs)
-            return True
+    with file_lock("receipts.json"):
+        rs = receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
+                ln = r["lines"][idx]
+                if ln.get("status") != "unverified":
+                    return False
+                ln["suggested"] = {"name": name, "source": source}
+                _save("receipts.json", rs)
+                return True
     return False
 
 
 def resolve_dictionary(item_id, name):
-    d = dictionary()
-    for e in d["entries"]:
-        if e["item_id"] == item_id:
-            e["canonical_name"] = name
-            e.setdefault("resolution", {})["status"] = "manual"
-            e["resolution"]["candidates"] = []
-            _save("dictionary.json", d)
-            return e
+    with file_lock("dictionary.json"):
+        d = dictionary()
+        for e in d["entries"]:
+            if e["item_id"] == item_id:
+                e["canonical_name"] = name
+                e.setdefault("resolution", {})["status"] = "manual"
+                e["resolution"]["candidates"] = []
+                _save("dictionary.json", d)
+                return e
     return None
 
 
