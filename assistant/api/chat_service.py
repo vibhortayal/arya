@@ -23,7 +23,8 @@ def snapshot():
                          "due": p["due"], "seen_in_fridge": (p.get("seen") or {}).get("date")})
     return {
         "as_of": state.as_of(),
-        "running_low": [nm.get(i["item_id"], i["item_id"]) for i in d["smart_list"]["items"]],
+        "running_low": [i.get("name") or nm.get(i["item_id"], i["item_id"])
+                        for i in d["smart_list"]["items"]],
         "spend_total": dash["spend_total"], "returns_total": dash["returns_total"],
         "trips": dash["trip_count"], "top_items": [t["name"] for t in dash["top_items"][:8]],
         "items": pats,

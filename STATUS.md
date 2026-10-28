@@ -56,6 +56,10 @@ ways ("pasta sauce" became "Pasta 1 lb"), so now it runs
 typed-into-product only. Suite: **323 green**. Known and not changed:
 Shop-Off and Spotter reports are single-account (the opponent can't
 see the race, and other players can't see the reports).
+Follow-up from the same pass: Ask told a new account it was running
+low on "manual-milk" (the chat snapshot sent item ids for typed adds,
+so now it sends names), and an empty prepared cart asked for approval
+(now it says there's nothing to approve). Suite: **336 green** after merging main.
 
 **Sweep fixes F-01 + F-03 (2026-10-28, on main; not yet deployed).**
 F-01 (issue #10): a photo receipt whose date the model returns in
