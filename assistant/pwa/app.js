@@ -110,6 +110,14 @@ function openSess(id) {
   if (s && window.qOpenSession) qOpenSession(s);
 }
 
+/* Level and points (owner, 2026-10-28): the bragging chip on Today
+ * and the player card. Points bank with receipts; levels never drop. */
+function paintLevelChip(profile) {
+  const el = $("#today-level");
+  if (!el || !profile || !profile.level) return;
+  el.innerHTML = `Level ${profile.level} <span>· ${profile.points} pts</span>`;
+  el.hidden = false;
+}
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
   // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
@@ -178,6 +186,7 @@ async function renderHome() {
   }
   paintTodayHero(sessions);
   paintTodayGames(sessions);
+  api("/api/quest/profile").then(paintLevelChip).catch(() => {});
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
     api("/api/curator").catch(() => ({ proposals: [] }))
@@ -429,6 +438,7 @@ async function renderProfile() {
   $("#pf-stats").innerHTML =
     `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
+     <div class="stattile"><div class="sv">${profile.level || 1}</div><div class="sl">Level · ${profile.points || 0} pts</div></div>
      <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
      <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
   paintMissingReceipts($("#pf-missing"), archive.unsettled || [], () => renderProfile().catch(showErr));

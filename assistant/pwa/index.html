@@ -69,7 +69,7 @@
 <main id="app-main" hidden>
   <section id="view-home" class="view">
     <p id="today-dow" class="dow"></p>
-    <h2 class="largetitle">Today</h2>
+    <div class="titlerow"><h2 class="largetitle">Today</h2><span id="today-level" class="levelchip" hidden></span></div>
     <p id="today-through" class="muted nomargin"></p>
     <div id="today-hero"></div>
     <h3 class="sect">Your games</h3>
@@ -308,8 +308,10 @@
     <div class="hunthud">
       <a href="#" class="qback hudback" aria-label="Back">&lsaquo;</a>
       <span class="hchip grow" id="hunt-store"></span>
-      <span class="hchip" id="hunt-timer">0:00</span>
+      <span class="hchip" id="hunt-timer" hidden>0:00</span>
+      <span class="hchip pts" id="hunt-pts" aria-live="polite">0 pts</span>
       <span class="hchip prog" id="hunt-count"></span>
+      <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
       <button id="btn-pause" class="hudbtn" type="button" aria-label="Pause"></button>
     </div>
     <div class="seg" id="scene-toggle" role="group" aria-label="Store view">
@@ -359,6 +361,8 @@
       </div>
       <p id="scan-status" class="scanstatus"></p>
     </div>
+    <div id="milestone" class="milestone" role="status" hidden></div>
+    <canvas id="confetti" class="confetti" aria-hidden="true" hidden></canvas>
     <div id="celeb-layer" class="celeblayer" hidden></div>
     <div id="spot-sheet" class="sheetwrap" hidden>
       <div class="sheet">
