@@ -93,20 +93,44 @@ def verify(username, password):
     return hmac.compare_digest(digest, u["hash"])
 
 
+def _session_key(token):
+    # Sessions are stored under the token's SHA-256 — the same
+    # scheme as API tokens below — so a leaked sessions.json is
+    # not a set of live logins (review 2026-10-28, M5).
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
 def new_session(username, demo=False):
     token = secrets.token_urlsafe(32)
     with _file_lock("sessions.json"):
         all_sessions = _load("sessions.json", {})
-        all_sessions[token] = {"user": username, "demo": bool(demo),
-                               "expires": int(time.time()) + SESSION_TTL}
+        all_sessions[_session_key(token)] = {
+            "user": username, "demo": bool(demo),
+            "expires": int(time.time()) + SESSION_TTL}
         _save("sessions.json", all_sessions)
     return token
+
+
+def _session_record(all_sessions, token):
+    """Find a session by raw token. A pre-hardening plaintext key
+    still authenticates once and is migrated to the hashed key.
+    Caller holds the sessions lock."""
+    rec = all_sessions.get(_session_key(token))
+    if rec is not None:
+        return rec
+    rec = all_sessions.get(token)
+    if rec is not None:
+        all_sessions[_session_key(token)] = rec
+        del all_sessions[token]
+        _save("sessions.json", all_sessions)
+    return rec
 
 
 def session_info(token):
     if not token:
         return None
-    s = _load("sessions.json", {}).get(token)
+    with _file_lock("sessions.json"):
+        s = _session_record(_load("sessions.json", {}), token)
     if not s or s["expires"] < time.time():
         return None
     return {"user": s["user"], "demo": bool(s.get("demo"))}
@@ -115,7 +139,8 @@ def session_info(token):
 def session_user(token):
     if not token:
         return None
-    s = _load("sessions.json", {}).get(token)
+    with _file_lock("sessions.json"):
+        s = _session_record(_load("sessions.json", {}), token)
     if not s or s["expires"] < time.time():
         return None
     return s["user"]
@@ -159,7 +184,10 @@ def revoke_api_tokens(username):
 
 
 def drop_session(token):
+    if not token:
+        return
     with _file_lock("sessions.json"):
         all_sessions = _load("sessions.json", {})
-        all_sessions.pop(token, None)
+        all_sessions.pop(token, None)            # pre-hardening key
+        all_sessions.pop(_session_key(token), None)
         _save("sessions.json", all_sessions)
