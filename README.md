@@ -93,8 +93,6 @@ logs in `assistant/loops/` record each session. The household data
 behind the owner's account (114 receipts back to 2023) is the
 owner's purchase history, imported as data; it is not code.
 
-The Trader Joe's walkthrough frames ship in the app.
-
 
 ## Rules that hold
 
