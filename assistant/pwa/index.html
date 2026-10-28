@@ -312,21 +312,17 @@
 
   <section id="view-capture" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:26px" id="cp-title"></h2>
+    <h2 class="largetitle" style="font-size:24px" id="cp-title"></h2>
     <p class="muted" id="cp-why"></p>
-    <div class="group pad">
-      <ol id="cp-steps" class="cpsteps"></ol>
-      <p class="muted nomargin" id="cp-time"></p>
-    </div>
-    <p>
-      <label class="btn primary wide" id="cp-go" for="cp-photo">Take photo</label>
+    <div id="cp-video-wrap" class="cpcam"><video id="cp-video" playsinline muted></video><div class="cpguide"></div></div>
+    <p id="cp-hint" class="cphint" role="status"></p>
+    <div id="cp-dots" class="cpdots" aria-hidden="true"></div>
+    <div id="cp-fallback" hidden>
+      <label class="btn primary wide" for="cp-photo">Open the camera</label>
       <input type="file" id="cp-photo" accept="image/*" capture="environment" hidden>
-      <input type="file" id="cp-video" accept="video/*" capture="environment" hidden>
-    </p>
-    <div id="cp-result" class="group pad" hidden></div>
-    <p id="cp-after" hidden>
-      <button id="cp-next" class="btn primary wide" type="button">Next capture</button>
-    </p>
+    </div>
+    <details class="group pad"><summary>How</summary><ol id="cp-steps" class="cpsteps"></ol></details>
+    <p><button id="cp-done" class="btn wide" type="button">Done for today</button></p>
     <p><button id="cp-outdated" class="btn wide" type="button">This part of the map is out of date</button></p>
   </section>
 
