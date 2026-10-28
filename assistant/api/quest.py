@@ -8,7 +8,7 @@ for a store with a shelf graph also runs item–shelf matching
 (api/shelfmatch.py) — the one model-touching step, and it never
 blocks or breaks creation.
 """
-import contextlib, hashlib, secrets
+import contextlib, hashlib, re, secrets
 from datetime import date, datetime
 
 from api import state
@@ -284,12 +284,51 @@ def set_state(session_id, new_state):
     return _mutate(session_id, fn)
 
 
+# --- Merchant families for the settle check (issue #11) --------------
+# The receipt that settles a hunt must be this trip's (Discussion 41).
+# Merchant strings are free text on both sides — decode files
+# "TRADER JOES #452" for a hunt at "Trader Joe's" — so the check
+# compares normalized store FAMILIES, never raw strings. A side that
+# cannot be classified never blocks the settle.
+_FAMILY_ALIASES = {
+    "trader joes": "trader-joes", "trader joe": "trader-joes",
+    "tjs": "trader-joes",
+    "safeway": "safeway", "safeway inc": "safeway",
+    "costco": "costco", "costco wholesale": "costco",
+    "target": "target",
+    "walmart": "walmart",
+}
+
+
+def _store_family(name):
+    """Map a free-text store or merchant name to its family key, or
+    None when the name cannot be classified."""
+    if not name:
+        return None
+    s = str(name).lower().replace("'", "").replace("’", "")
+    s = re.sub(r"#\s*\d+", " ", s)        # "trader joes #452"
+    s = re.sub(r"\bno\.?\s*\d+", " ", s)  # "safeway no. 12"
+    s = re.sub(r"[^a-z0-9 ]", " ", s)     # punctuation -> word breaks
+    return _FAMILY_ALIASES.get(" ".join(s.split()))
+
+
 def attach_receipt(session_id, receipt_id):
     """Attach a filed receipt: it scores the hunt and closes the
-    session. The receipt must exist in the account's receipts."""
-    known = {r["receipt_id"] for r in state.receipts()}
-    if receipt_id not in known:
+    session. The receipt must exist in the account's receipts, and —
+    when both the hunt's store and the receipt's merchant name a
+    known store family — the families must match (issue #11)."""
+    receipts = {r["receipt_id"]: r for r in state.receipts()}
+    receipt = receipts.get(receipt_id)
+    if receipt is None:
         return None
+    sess = get_session(session_id)
+    if sess is not None:
+        hunt_family = _store_family(sess.get("store"))
+        receipt_family = _store_family(receipt.get("merchant"))
+        if hunt_family and receipt_family and hunt_family != receipt_family:
+            raise ValueError(
+                f"this receipt is from {receipt.get('merchant')}; "
+                f"the hunt is at {sess.get('store')}")
 
     def fn(sess):
         sess["receipt_id"] = receipt_id
