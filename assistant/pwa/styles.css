@@ -518,10 +518,18 @@ body.hunting #tabs { display: none !important; }
   font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--secondary); margin: 0 0 2px;
 }
-.up-row { padding: 2px 0; }
+.up-row { padding: 2px 0; display: flex; align-items: center; gap: 10px; }
 .up-row .up-name { font-size: 16px; font-weight: 650; display: block; }
 .up-row.first .up-name { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; }
 .up-shelf { color: var(--secondary); font-size: 13.5px; display: block; }
+/* Per-row GRAB (Discussion 44): any stop collects from the rail. */
+.up-grab {
+  flex: none; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--acc); color: #fff;
+  font-size: 13px; font-weight: 700; padding: 7px 14px;
+  box-shadow: 0 3px 10px rgba(228, 87, 46, 0.35);
+}
+.up-grab:disabled { background: var(--fill2); color: var(--ink3); box-shadow: none; cursor: default; }
 .up-note { color: var(--secondary); font-size: 13px; margin: 6px 0 0; }
 .cornerstack {
   position: absolute; top: calc(10px + env(safe-area-inset-top));
@@ -644,32 +652,30 @@ body.hunting #tabs { display: none !important; }
 .starbtn.on { color: var(--accent); }
 .starbtn svg { width: 24px; height: 24px; display: block; }
 
-/* Collect celebration (Discussion 32): the collected item pops in as
-   a character over the scene, its fun fact in a speech bubble.
+/* Collect celebration (Discussion 32; placement Discussion 44):
+   the collected item as a character with one fun fact, in a small
+   card in the bottom-left corner above the route bar — never
+   over the center of the store view, never over the Up-next rail.
    Non-blocking, tap to dismiss, gone in ~3.5 s. Quest mode only —
    the layer lives in the hunt frame and Express never fills it. */
 .celeblayer {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  bottom: 212px; z-index: 8; width: min(78vw, 320px);
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  position: absolute; left: 12px; z-index: 8;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  max-width: 55vw;
+  display: flex; flex-direction: row; align-items: center; gap: 8px;
+  background: #fff; border-radius: 14px; padding: 8px 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
   cursor: pointer;
 }
 .celeb-char {
-  width: 118px; height: 118px; object-fit: contain;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
+  width: 52px; height: 52px; flex: none; object-fit: contain;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.25));
   animation: celebpop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .celeb-bubble {
-  position: relative; background: #fff; color: var(--label);
-  border-radius: 16px; padding: 10px 14px;
-  font-size: 15px; line-height: 1.4; text-align: center;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  color: var(--label);
+  font-size: 13px; line-height: 1.35; text-align: left;
   animation: celebfade 0.3s ease-out both;
-}
-.celeb-bubble::after {
-  content: ""; position: absolute; left: 50%; top: -7px;
-  transform: translateX(-50%);
-  border: 8px solid transparent; border-bottom-color: #fff; border-top: 0;
 }
 @keyframes celebpop {
   0% { transform: scale(0.3) translateY(16px); opacity: 0; }
