@@ -2,11 +2,16 @@
 All deterministic code — a FakeClient stands in only because main.py
 builds one on other routes; no Quest path calls a model."""
 import os, tempfile, unittest
+from datetime import date
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
+
+# Receipts that settle a hunt must not predate it (issue #14), so
+# fixtures that settle hunts created now are dated today.
+TODAY = date.today().isoformat()
 
 
 class FakeClient:
@@ -44,7 +49,7 @@ class TestQuestSessions(unittest.TestCase):
              "canonical_name": "Free Range Eggs"}]})
         state._save("receipts.json", [{
             "receipt_id": "r-tj-1", "merchant": "Trader Joe's",
-            "purchased_at": "2026-10-27", "lines": [], "subtotal": 0,
+            "purchased_at": TODAY, "lines": [], "subtotal": 0,
             "tax": 0, "total": 0, "totals_reconcile": True}])
         setup_account(self)
 
@@ -145,7 +150,7 @@ class TestQuestSessions(unittest.TestCase):
         try:
             rs = state.receipts()
             rs.append({"receipt_id": receipt_id, "merchant": merchant,
-                       "purchased_at": "2026-10-27", "lines": [],
+                       "purchased_at": TODAY, "lines": [],
                        "subtotal": 0, "tax": 0, "total": 0,
                        "totals_reconcile": True})
             state._save("receipts.json", rs)
@@ -294,10 +299,10 @@ class TestShopOff(unittest.TestCase):
         from api import state
         state._save("receipts.json", [
             {"receipt_id": "r-you", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-26T18:43:05", "lines": [],
+             "purchased_at": TODAY + "T18:43:05", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0},
             {"receipt_id": "r-opp", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-26T18:42:18", "lines": [],
+             "purchased_at": TODAY + "T18:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0}])
         setup_account(self)
         # Shop-Off opponents must be real accounts (review M10).
@@ -434,13 +439,13 @@ class TestDriverLadder(unittest.TestCase):
         state._save("dictionary.json", BERRY_DICT)
         state._save("receipts.json", [
             {"receipt_id": "r-strip", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-27T18:42:18", "lines": [],
+             "purchased_at": TODAY + "T18:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0},
             {"receipt_id": "r-aisle", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-27T19:42:18", "lines": [],
+             "purchased_at": TODAY + "T19:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0},
             {"receipt_id": "r-photo", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-27T20:42:18", "lines": [],
+             "purchased_at": TODAY + "T20:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0}])
         setup_account(self)
 
@@ -605,7 +610,7 @@ class TestReceiptArchive(unittest.TestCase):
              "subtotal": 9.0, "tax": 0, "total": 9.0,
              "totals_reconcile": True, "image_ref": None},
             {"receipt_id": "r-new", "merchant": "Trader Joe's",
-             "purchased_at": "2026-10-27T18:42:18",
+             "purchased_at": TODAY + "T18:42:18",
              "source_type": "photo",
              "lines": [{"decoded_name": "Milk", "qty": 1,
                         "unit_price": 4.5, "line_total": 4.5,
