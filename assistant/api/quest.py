@@ -9,7 +9,7 @@ for a store with a shelf graph also runs item–shelf matching
 blocks or breaks creation.
 """
 import contextlib, hashlib, re, secrets
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from api import state
 
@@ -203,7 +203,11 @@ def list_sessions():
     """Today's sessions first, then newest first (UX: the day is a row
     of games)."""
     today = _today()
-    out = sorted(_store()["sessions"],
+    # A Shop-Off opponent's placeholder lives in the creator's
+    # account until cross-account play exists; it is not the
+    # creator's hunt, so no list shows it (issue #15).
+    out = sorted((x for x in _store()["sessions"]
+                  if not x.get("placeholder")),
                  key=lambda x: (x["created_at"][:10] != today,
                                 -_ts(x["created_at"])))
     return out
@@ -312,6 +316,29 @@ def _store_family(name):
     return _FAMILY_ALIASES.get(" ".join(s.split()))
 
 
+def _check_receipt_is_this_trips(sess, receipt):
+    """The settling receipt must be this trip's (issue #14). A
+    receipt settles at most one hunt per account (the demo
+    household is exempt: judges replay its sample trips), and a
+    receipt dated before the hunt began is refused. The date check
+    is date-granular with one day of grace, because hunts carry the
+    server clock and receipts carry the store's local time."""
+    if not state.in_sandbox():
+        for other in _store()["sessions"]:
+            if other["id"] != sess["id"] \
+                    and other.get("receipt_id") == receipt["receipt_id"]:
+                raise ValueError("this receipt already settled another hunt")
+    began = (sess.get("started_at") or sess.get("created_at") or "")[:10]
+    bought = (receipt.get("purchased_at") or "")[:10]
+    try:
+        early = date.fromisoformat(bought) < \
+            date.fromisoformat(began) - timedelta(days=1)
+    except ValueError:
+        return  # an undated receipt or session: nothing to compare
+    if early:
+        raise ValueError(f"this receipt is from {bought}, before the hunt began")
+
+
 def attach_receipt(session_id, receipt_id):
     """Attach a filed receipt: it scores the hunt and closes the
     session. The receipt must exist in the account's receipts, and —
@@ -329,6 +356,7 @@ def attach_receipt(session_id, receipt_id):
             raise ValueError(
                 f"this receipt is from {receipt.get('merchant')}; "
                 f"the hunt is at {sess.get('store')}")
+        _check_receipt_is_this_trips(sess, receipt)
 
     def fn(sess):
         sess["receipt_id"] = receipt_id
@@ -337,6 +365,48 @@ def attach_receipt(session_id, receipt_id):
         if not sess["finished_at"]:
             sess["finished_at"] = _now()
     return _mutate(session_id, fn)
+
+
+def sample_receipt(session_id):
+    """The demo's "Use a sample receipt" door (Hunt v2 plan item 8).
+    Files a synthetic receipt for this trip — merchant = the hunt's
+    store, dated today, one line per collected item at its last known
+    price — and settles the hunt through attach_receipt, the same
+    path a real receipt takes. Callers allow this in the demo
+    sandbox only, so nothing reaches disk. Returns None when the
+    session does not exist."""
+    sess = get_session(session_id)
+    if sess is None:
+        return None
+    prices = {}
+    for e in state.derived()["entries"]:
+        if e.get("event_type") == "purchase":
+            prices[e["item_id"]] = e["price"]
+    gm = state.group_map()
+    lines = []
+    for it in sess["items"]:
+        if not it.get("checked"):
+            continue
+        price = prices.get(it["group"])
+        if price is None:
+            price = next((p for iid, p in prices.items()
+                          if gm.get(iid, iid) == it["group"]), 0.0)
+        qty = it.get("qty", 1)
+        lines.append({"decoded_name": it["name"], "qty": qty,
+                      "unit_price": price,
+                      "line_total": round(price * qty, 2),
+                      "line_type": "item", "status": "auto"})
+    subtotal = round(sum(ln["line_total"] for ln in lines), 2)
+    rid = _new_id("sample", session_id + _now())
+    state.add_receipts([{
+        "receipt_id": rid, "merchant": sess["store"],
+        # Receipt dates are calendar days everywhere (decode's
+        # _iso_day): a time here breaks the brain's date math.
+        "purchased_at": _today(), "source_type": "sample", "live": True,
+        "lines": lines, "subtotal": subtotal, "tax": 0,
+        "total": subtotal, "totals_reconcile": True,
+        "image_ref": None}])
+    return attach_receipt(session_id, rid)
 
 
 def progress(sess):
