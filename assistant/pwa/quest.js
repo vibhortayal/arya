@@ -965,6 +965,47 @@ function qTapStop(idx) {
   qWalkStart(idx);
   renderHunt();
 }
+/* Keyboard controls for the hunt (desktop players and judges):
+ * Space/Enter start or grab the target, ←/→ aim at the previous or
+ * next open stop, P pauses, F opens Finish, Esc goes Back. Touch
+ * stays primary; every key presses a button the screen already has. */
+function qAimStep(sess, dir) {
+  const n = sess.items.length;
+  let i = qCurrentIndex(sess);
+  for (let k = 0; k < n; k++) {
+    i = (i + dir + n) % n;
+    if (!sess.items[i].checked) return i;
+  }
+  return -1;
+}
+function qHuntKey(e) {
+  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (!Q.current) return;
+  const shown = id => { const v = $(id); return v && !v.hidden; };
+  // Esc is Back on any screen of the run (hunt, Express, Finish);
+  // an open sheet takes it first.
+  if (e.key === "Escape" && !shown("#ar-sheet") && !shown("#spot-sheet")
+      && (shown("#view-hunt") || shown("#view-express") || shown("#view-finish"))) {
+    questBack(); e.preventDefault(); return;
+  }
+  if (!shown("#view-hunt")) return;
+  const press = sel => { const b = $(sel); if (b && b.offsetParent !== null && !b.disabled) { b.click(); return true; } return false; };
+  let done = false;
+  switch (e.key) {
+    case " ": case "Enter": done = press("#btn-collect"); break;
+    case "ArrowRight": case "ArrowLeft": {
+      const i = qAimStep(Q.current, e.key === "ArrowRight" ? 1 : -1);
+      if (i >= 0) { qTapStop(i); done = true; }
+      break;
+    }
+    case "p": case "P": done = press("#btn-pause"); break;
+    case "f": case "F": done = press("#btn-finish"); break;
+  }
+  if (done) e.preventDefault();
+}
+document.addEventListener("keydown", qHuntKey);
+
 $("#btn-collect").addEventListener("click", async () => {
   const sess = Q.current;
   if (!sess) return;
