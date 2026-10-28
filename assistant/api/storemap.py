@@ -238,6 +238,34 @@ def add_segment(name, label, side):
         return seg, True
 
 
+def discard_segment(name, seg_id):
+    """Retract a section the signed-in shopper just taught, from the
+    confirm card's "Not a section" tap. Only the shopper's own fresh
+    work comes back out: the segment must be theirs (created by
+    them, every capture theirs) and must not be a walkthrough
+    baseline. Once another shopper has built on it, it is shared
+    and stays. Returns the removed segment's label."""
+    with _Lock():
+        doc = load_map(name)
+        seg = doc["segments"].get(seg_id)
+        if seg is None:
+            raise KeyError(seg_id)
+        me = contributor()
+        if seg.get("baseline") or seg["created_by"] == SOURCE_BASELINE:
+            raise ValueError("that section came with the store's "
+                             "walkthrough — it is not yours to remove")
+        if seg["created_by"] != me or \
+                any(c["by"] != me for c in seg["captures"]):
+            raise ValueError("other shoppers have built on that "
+                             "section — it is shared now and stays")
+        label = seg["label"]
+        del doc["segments"][seg_id]
+        _save_map(doc)
+        _drop_images(doc["key"], {c["id"] for s in doc["segments"].values()
+                                  for c in s["captures"]})
+        return label
+
+
 # --- splitting a long aisle ----------------------------------------------
 # A long aisle is one segment until a walk shows it is long. The app
 # measures the walk (about WALK_SECONDS_PER_PART of walking per part)

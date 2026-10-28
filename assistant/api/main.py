@@ -1864,6 +1864,97 @@ async def storemap_capture(req: Request):
     return out
 
 
+@app.post("/api/storemap/teach")
+async def storemap_teach(req: Request):
+    """Zero-entry teach (owner, 2026-10-28: "no user is going to
+    enter data"). One frame with NO segment named: the people scrub
+    runs first, the section reader names what the scrubbed frame
+    shows, that section is found-or-created (both sides — the
+    shopper never picks one), and the frame lands in it like any
+    guided capture. The walk sends its sharpest frames one by one;
+    sections the reader gets wrong come back out through the
+    confirm card's discard, while they are still the teacher's own.
+    """
+    from api import mapread, shelfscan, storemap
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    name = _map_store(req.query_params.get("store"))
+    kind = req.query_params.get("kind", "walk")
+    if kind not in storemap.KINDS:
+        raise HTTPException(400, "kind must be photo or walk")
+    try:
+        storemap.score_image(body)
+    except Exception:
+        raise HTTPException(400, "that file is not a readable photo")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
+    jpeg, people = await run_in_threadpool(
+        shelfscan.scrub_people, body, client, media_type=media)
+    if jpeg is None:
+        raise HTTPException(
+            503, "could not blur people out of the photo, so nothing was kept")
+    try:
+        read = await run_in_threadpool(mapread.read_section, client, jpeg)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    if not read["label"]:
+        raise HTTPException(422, "no shelf in that frame — nothing kept")
+    try:
+        seg, created = storemap.add_segment(name, read["label"], "both")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    fill = None
+    try:
+        boxes, _u, _c = await run_in_threadpool(
+            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
+        if boxes:
+            from PIL import Image
+            import io
+            w, h = Image.open(io.BytesIO(jpeg)).size
+            fill = min(1.0, sum((b["box"][2] - b["box"][0])
+                                * (b["box"][3] - b["box"][1])
+                                for b in boxes) / float(w * h))
+    except Exception:
+        fill = None   # neutral: the fill check never blocks a capture
+    try:
+        out = storemap.ingest(name, seg["id"], jpeg, kind=kind,
+                              shelf_fill=fill, people=people)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    for item in read["items"]:
+        storemap.note_sighting(name, item, read["label"])
+    out.update({"label": seg["label"], "created": created,
+                "items": read["items"]})
+    out["reward"] = storemap.award(name, out)
+    return out
+
+
+@app.post("/api/storemap/discard")
+async def storemap_discard(req: Request):
+    """The confirm card's "Not a section": retract a section the
+    signed-in shopper just taught, while it is still only theirs."""
+    from api import storemap
+    body = await _json_obj(req)
+    try:
+        label = storemap.discard_segment(
+            _map_store(body.get("store")), str(body.get("segment") or ""))
+    except KeyError:
+        raise HTTPException(404, "no such part of the map")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"removed": True, "label": label}
+
+
 @app.post("/api/storemap/split")
 async def storemap_split(req: Request):
     """The app timed a walk and asks for the aisle to be split into

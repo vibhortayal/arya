@@ -341,10 +341,12 @@
     <p class="muted">The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
     <div id="mp-stores" class="rail"></div>
     <div id="mp-cover" class="group pad"></div>
+    <div id="mp-walk"></div>
     <div id="mp-next"></div>
     <h3 class="sect">Aisles</h3>
     <div id="mp-segs" class="group"></div>
-    <div class="group pad">
+    <details class="group pad">
+      <summary>Fine-tune: add an aisle yourself</summary>
       <label class="field">Add an aisle
         <input type="text" id="mp-label" placeholder="Aisle 4, Frozen, Dairy wall" autocomplete="off" maxlength="60">
       </label>
@@ -354,7 +356,7 @@
         <button class="chip" data-side="both" aria-pressed="true" type="button">Both sides</button>
       </div>
       <p><button id="mp-add" class="btn wide" type="button">Add this aisle</button></p>
-    </div>
+    </details>
     <p class="muted">We blur every person before we save a photo. We keep pictures of products only.</p>
   </section>
 
