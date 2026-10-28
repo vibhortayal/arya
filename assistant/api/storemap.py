@@ -333,9 +333,10 @@ def hamming(a, b):
 def score_image(jpeg, shelf_fill=None):
     """Grade one capture. Returns {score, sharpness, exposure, fill,
     luma, fix}: fix is a one-line live hint when the capture is weak,
-    else None. shelf_fill is the share of the frame the
-    biggest shelf covers (SAM 3.1), or None when the check did not
-    run — then fill counts as neutral, never as a penalty."""
+    else None (never a refusal). shelf_fill is the share of the frame
+    that shelves cover (SAM 3.1, summed over bays), or None when the
+    check did not run — then fill counts as neutral. Fill only shapes
+    the score: a far shot is still useful."""
     img = Image.open(io.BytesIO(jpeg)).convert("RGB")
     g = _gray(img)
     sharp = min(1.0, _laplacian_var(g) / 150.0)
@@ -349,8 +350,6 @@ def score_image(jpeg, shelf_fill=None):
         fix = "Too dark. Face the shelf light, or step back from your own shadow."
     elif luma > MAX_LUMA:
         fix = "Too bright. Tilt the phone a little to lose the glare."
-    elif shelf_fill is not None and shelf_fill < 0.15:
-        fix = "Too far from the shelf. Step closer so the shelf fills the frame."
     score = round(0.5 * sharp + 0.3 * exposure + 0.2 * fill, 4)
     return {"score": score, "sharpness": round(sharp, 3),
             "exposure": round(exposure, 3), "fill": round(fill, 3),
