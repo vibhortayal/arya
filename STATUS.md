@@ -57,7 +57,7 @@ the unblurred originals.
   after the pre-flip scrub (VM internals out of docs, secrets grep).
 
 ## Known gaps
-- Avatar maker (Muse Image, prompt or photo) is not built; the avatar shows the first letter of the handle.
+- Store news and the Friends/Store/Global boards read this account only; cross-account data shows labelled samples.
 - Split the list (kids or partner) is not built.
 - Friend run notifications: designed (Discussion 24), not built.
 - Shop-Off and Spotter reports are single-account.
