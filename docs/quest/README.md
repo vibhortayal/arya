@@ -32,6 +32,7 @@ If your store is not mapped yet, you map it: one walkthrough video of the aisles
 ## Documents
 
 - [PITCH.md](PITCH.md) — problem, audience, flywheel, rollout
+- [PITCH-SCRIPT.md](PITCH-SCRIPT.md) — the spoken 2-minute pitch in the Meta structure (hook / problem / live demo / Meta fit / future scope), pillar map, delivery notes
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system design, data split, pipelines
 - [META-PRODUCTS.md](META-PRODUCTS.md) — every Meta product used, and its job
 - [GAME-DESIGN.md](GAME-DESIGN.md) — modes, roles, mechanics
