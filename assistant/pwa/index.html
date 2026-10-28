@@ -6,9 +6,8 @@
 <title>Arya</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<script>try{document.documentElement.dataset.theme=localStorage.getItem("arya-theme")||"system"}catch(e){}</script>
+<meta name="theme-color" content="#f2f2f7">
+<script>try{document.documentElement.dataset.theme="light";localStorage.removeItem("arya-theme")}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -189,14 +188,6 @@
       <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the camera and microphone on the Add tab work right here. The token is shown once; creating a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
-    </div>
-    <h3 class="sect">Appearance</h3>
-    <div class="group pad">
-      <div class="seg" id="theme-seg">
-        <button class="chip" data-theme-choice="system">System</button>
-        <button class="chip" data-theme-choice="light">Light</button>
-        <button class="chip" data-theme-choice="dark">Dark</button>
-      </div>
     </div>
     <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
   </section>
