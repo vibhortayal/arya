@@ -344,3 +344,24 @@ same evening — see Intake parity below.)
   a 22-check headless simulation harness). **Not deployed** —
   separate owner step. Loops:
   assistant/loops/2026-10-27-motion-nav.md.
+
+## Shelf Scan demo slice (2026-10-27)
+
+- Discussion 37 built to the spike's measured spec: in an
+  unmapped (Strip) hunt, Shelf Scan spots the session's
+  remaining list items in a shelf photo — SAM 3.1 proposes
+  boxes from a list-driven phrasing bank, Muse Spark verifies
+  each crop, only verified items pop (top-3 verify, 0.35
+  box-area cap with region-grade pops, per-item phrasings —
+  the spike's three fixes). POST /api/quest/scan-shelf is
+  stateless (frames processed, never stored) and a live door
+  for the demo household.
+- The scan view opens as a live viewfinder: still frames sent
+  on settle (frame-diff sampler; 3 s floor, 2 s ceiling under
+  continued change), pops overlaid and replaced per scan, the
+  last scan's time shown. Still-photo capture remains the
+  fallback. Copy claims a verified scan, never real-time.
+  SW cache arya-v23.
+- Suite: **203 green** (9 new in tests/test_shelf_scan.py).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-shelf-scan.md.

@@ -501,6 +501,45 @@ body.hunting #tabs { display: none !important; }
   .scene { transition: none; }
 }
 
+/* Shelf Scan (Discussion 37): the captured shelf photo full-screen,
+   verified pops boxed over it. The overlay rides above the hunt
+   frame; a pop is a button — tapping it collects the item. */
+.scanoverlay {
+  position: fixed; inset: 0; z-index: 40; background: #111;
+  display: flex; flex-direction: column;
+}
+.scanoverlay[hidden] { display: none; }
+.scanbar {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px; color: #fff;
+}
+.scanbar .sub { color: rgba(255, 255, 255, 0.72); }
+.scanstage {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: 0 10px;
+}
+.scanwrap { position: relative; line-height: 0; }
+#scan-img, #scan-video { max-width: calc(100vw - 20px); max-height: 100%; display: block; border-radius: 8px; }
+#scan-img[hidden], #scan-video[hidden] { display: none; }
+.scanbar .btn { flex: none; align-self: center; }
+#scan-boxes { position: absolute; inset: 0; }
+.scanpop {
+  position: absolute; border: 3px solid var(--accent); border-radius: 10px;
+  background: rgba(0, 122, 255, 0.10); padding: 0; cursor: pointer;
+}
+.scanpop.region { border-style: dashed; }
+.scanpop .poplabel {
+  position: absolute; top: -15px; left: -3px; white-space: nowrap;
+  background: var(--accent); color: #fff; border-radius: 980px;
+  padding: 3px 10px; font-size: 13px; font-weight: 700; line-height: 1.35;
+}
+.scanpop.got { border-color: #34c759; background: rgba(52, 199, 89, 0.14); pointer-events: none; }
+.scanpop.got .poplabel { background: #34c759; }
+.scanstatus {
+  color: #fff; font-size: 16px; text-align: center; margin: 0;
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+}
+
 /* Stage E: store rows — pick selection, drawn-star favorites. */
 .pickrow[aria-pressed="true"] { background: var(--fill); border-radius: 10px; }
 .pickrow[aria-pressed="true"] .name { color: var(--accent); }

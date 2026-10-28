@@ -42,6 +42,19 @@ const Q = {
   stepU: 0,
   stepAnchorU: 0,
   stepsHold: false,
+  // Shelf Scan (Discussion 37): "still" (one photo) or "live"
+  // (viewfinder frame feed). The live sampler, camera stream, tick
+  // timer, and wake lock live here; leaving the view tears them down.
+  scanMode: "still",
+  scanUrl: "",
+  scanStream: null,
+  scanTimer: null,
+  scanWake: null,
+  scanBusy: false,
+  sampler: null,
+  scanPrevArr: null,
+  scanSentArr: null,
+  scanPopsShown: false,
 };
 
 function stopHuntTimer() {
@@ -85,6 +98,7 @@ function paintHuntFrame(id) {
   const ev = $("#view-express"); if (ev) ev.classList.toggle("full", exp);
   if (!hunt && !exp) qWalkStop();
   if (!exp) destroyExpScene();
+  if (!hunt) stopScanLive(); // the camera never outlives the hunt view
 }
 document.addEventListener("click", ev => {
   const back = ev.target.closest(".qback");
@@ -769,6 +783,9 @@ function renderHunt() {
   }
   paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
   $("#btn-finish").disabled = sess.state === "not_started";
+  // Shelf Scan is the unmapped-store mode: present on the Strip
+  // rung, absent in a mapped (Cloud) hunt.
+  $("#btn-scan").hidden = Q.driverName !== "strip";
   qStepSync();
 }
 async function collectCurrent() {
@@ -1002,6 +1019,309 @@ function qStepAdvance() {
   const u = MotionMath.advance(Q.stepU, nextU,
     MotionMath.segmentStepU(Q.stepAnchorU, nextU));
   if (u !== Q.stepU) { Q.stepU = u; Q.scene.setProgress(u); }
+}
+
+/* ---------------- Shelf Scan (Discussion 37) ----------------
+ * The unmapped-store mode. SAM proposes boxes for the remaining
+ * list, Spark verifies, verified items pop over the view. Tapping
+ * a pop collects that item — through qCheck and the same
+ * qOnCollected hook as the GRAB, so the celebration (sub-stage 2)
+ * fires identically. A scan that spots nothing says so plainly;
+ * it never claims the item is not here.
+ *
+ * Two feed shapes, one endpoint: STILL (one photo) and LIVE (the
+ * viewfinder). Live sends still frames — no video streaming: the
+ * model chain takes ~4–8 s a frame, so the view is near-live and
+ * the last scan's time is shown, not hidden. */
+const SCAN_NO_POP = "Nothing from your list spotted here — that doesn't mean it isn't here. Keep looking.";
+$("#btn-scan").addEventListener("click", () => openScanView().catch(showErr));
+$("#scan-photo").addEventListener("change", ev => {
+  const f = ev.target.files[0];
+  if (f) scanStill(f).catch(showErr);
+});
+$("#scan-close").addEventListener("click", closeScan);
+$("#scan-usephoto").addEventListener("click", () => $("#scan-photo").click());
+$("#scan-stop").addEventListener("click", () => {
+  stopScanLive();
+  $("#scan-status").textContent = "Live scan stopped.";
+});
+async function scanRequest(body, sess) {
+  const r = await fetch(`/api/quest/scan-shelf?session=${encodeURIComponent(sess.id)}`, {
+    method: "POST",
+    headers: { "Content-Type": body.type || "image/jpeg" },
+    body
+  });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+  return r.json();
+}
+function scanPopsHtml(pops) {
+  return pops.map(p => {
+    const [x1, y1, x2, y2] = p.box;
+    return `<button class="scanpop${p.grade === "region" ? " region" : ""}" type="button"
+      data-item="${esc(p.item)}"
+      style="left:${x1 * 100}%;top:${y1 * 100}%;width:${(x2 - x1) * 100}%;height:${(y2 - y1) * 100}%">
+      <span class="poplabel">${esc(p.item)}${p.grade === "region" ? " · this shelf" : ""}</span></button>`;
+  }).join("");
+}
+function scanStatusFor(pops) {
+  return pops.length
+    ? `${pops.length} from your list spotted here — tap one to collect it.`
+    : SCAN_NO_POP;
+}
+function renderScanPops(pops) {
+  // A new scan REPLACES the pops of the last one, wholesale.
+  $("#scan-boxes").innerHTML = scanPopsHtml(pops);
+  Q.scanPopsShown = pops.length > 0;
+  $("#scan-status").textContent = scanStatusFor(pops);
+}
+function setScanLast(when) {
+  $("#scan-last").textContent = when
+    ? `${Q.scanMode === "live" ? "Live scan · " : ""}Last scan ${when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })}`
+    : "";
+}
+function paintScanChrome() {
+  const live = Q.scanMode === "live";
+  $("#scan-stop").hidden = !live;
+  $("#scan-usephoto").hidden = live;
+  $("#scan-video").hidden = !live;
+  $("#scan-img").hidden = live || !Q.scanUrl;
+}
+async function openScanView() {
+  const sess = Q.current;
+  if (!sess) return;
+  qWalkStop(); // the player is standing at a shelf; the walk waits
+  $("#scan-boxes").innerHTML = "";
+  Q.scanPopsShown = false;
+  setScanLast(null);
+  $("#scan-status").textContent = "Starting the camera…";
+  $("#scan-overlay").hidden = false;
+  Q.scanMode = "starting";
+  paintScanChrome();
+  try {
+    await startScanLive();
+  } catch (e) {
+    Q.scanMode = "still";
+    paintScanChrome();
+    $("#scan-status").textContent = "Camera not available here — take or choose a photo instead.";
+  }
+}
+async function scanStill(file) {
+  const sess = Q.current;
+  if (!sess) return;
+  Q.scanMode = "still";
+  stopScanLive();
+  if (Q.scanUrl) URL.revokeObjectURL(Q.scanUrl);
+  Q.scanUrl = URL.createObjectURL(file);
+  $("#scan-img").src = Q.scanUrl;
+  paintScanChrome();
+  $("#scan-boxes").innerHTML = "";
+  Q.scanPopsShown = false;
+  $("#scan-status").textContent = "Looking for your list on this shelf…";
+  $("#scan-overlay").hidden = false;
+  try {
+    const out = await scanRequest(file, sess);
+    if (Q.current !== sess || $("#scan-overlay").hidden) return;
+    renderScanPops(out.pops || []);
+    setScanLast(new Date());
+  } catch (e) {
+    $("#scan-status").textContent = "That scan didn't work — close and try again.";
+  }
+}
+/* --- Live frame feed -----------------------------------------------
+ * Sampling policy (unit-pinned): a downscaled frame diff runs on a
+ * 250 ms tick. A frame is sent when the scene CHANGED materially
+ * against the last sent frame (mean abs diff >= SCAN_DIFF) and then
+ * HELD ~1 s (diffs against the previous frame under SCAN_SETTLE_EPS)
+ * — settle sends are spaced by a floor of one per SCAN_FLOOR_MS.
+ * If the scene never settles (continued change), a frame still goes
+ * at a ceiling of one per SCAN_CEIL_MS. Pops from a stale frame
+ * clear when the view has clearly moved on (diff >= SCAN_CLEAR,
+ * sustained). One scan in flight at a time; the spacing clock runs
+ * from the send, so a slow chain spaces the next frame out. */
+const SCAN_TICK_MS = 250;
+const SCAN_DIFF = 0.06;
+const SCAN_SETTLE_EPS = 0.02;
+const SCAN_HOLD_MS = 1000;
+const SCAN_FLOOR_MS = 3000;
+const SCAN_CEIL_MS = 2000;
+const SCAN_CLEAR = 0.18;
+function createScanSampler() {
+  let lastSentAt = null, holdSince = null, clearStreak = 0, clearArmed = true;
+  return {
+    noteFrame(diffPrev, diffSent, now) {
+      let clear = false;
+      if (diffSent >= SCAN_CLEAR) {
+        clearStreak++;
+        if (clearStreak >= 2 && clearArmed) { clear = true; clearArmed = false; }
+      } else { clearStreak = 0; clearArmed = true; }
+      let send = false;
+      if (diffSent >= SCAN_DIFF) {
+        if (diffPrev < SCAN_SETTLE_EPS) {
+          if (holdSince === null) holdSince = now;
+        } else holdSince = null;
+        const held = holdSince !== null && now - holdSince >= SCAN_HOLD_MS;
+        if (held && (lastSentAt === null || now - lastSentAt >= SCAN_FLOOR_MS)) send = true;
+        else if (!held && holdSince === null && diffPrev >= SCAN_DIFF &&
+                 lastSentAt !== null && now - lastSentAt >= SCAN_CEIL_MS) send = true;
+      } else holdSince = null;
+      return { send, clear };
+    },
+    noteSent(now) { lastSentAt = now; holdSince = null; },
+    reset() { lastSentAt = null; holdSince = null; clearStreak = 0; clearArmed = true; }
+  };
+}
+async function startScanLive() {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia) throw new Error("no camera");
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }, audio: false
+  });
+  Q.scanStream = stream;
+  const v = $("#scan-video");
+  v.srcObject = stream;
+  if (v.play) { try { await v.play(); } catch (e) { /* autoplay refusal: frames still read once playing */ } }
+  Q.scanMode = "live";
+  Q.sampler = createScanSampler();
+  Q.scanPrevArr = null;
+  Q.scanSentArr = null;
+  Q.scanBusy = false;
+  paintScanChrome();
+  $("#scan-status").textContent = "Live scan — point the camera at a shelf.";
+  Q.scanTimer = setInterval(scanTick, SCAN_TICK_MS);
+  if (navigator.wakeLock) {
+    try { Q.scanWake = await navigator.wakeLock.request("screen"); }
+    catch (e) { Q.scanWake = null; }
+  }
+}
+function stopScanLive() {
+  if (Q.scanTimer) { clearInterval(Q.scanTimer); Q.scanTimer = null; }
+  if (Q.scanStream) {
+    Q.scanStream.getTracks().forEach(t => t.stop());
+    Q.scanStream = null;
+  }
+  if (Q.scanWake) {
+    const w = Q.scanWake;
+    Q.scanWake = null;
+    if (w.release) w.release().catch(() => {});
+  }
+  const v = $("#scan-video");
+  if (v) v.srcObject = null;
+  if (Q.scanMode === "live") Q.scanMode = "still";
+  paintScanChrome();
+}
+document.addEventListener("visibilitychange", () => {
+  // The platform drops the wake lock when the page hides; re-take
+  // it when the live view comes back.
+  if (typeof document !== "undefined" && document.visibilityState === "visible" &&
+      Q.scanMode === "live" && !Q.scanWake &&
+      typeof navigator !== "undefined" && navigator.wakeLock) {
+    navigator.wakeLock.request("screen")
+      .then(w => { Q.scanWake = w; }).catch(() => {});
+  }
+});
+function scanFrameArray(video) {
+  /* The tick's cheap eye: the frame downscaled to 48x36 luminance. */
+  if (!Q.scanCanvas) Q.scanCanvas = document.createElement("canvas");
+  const c = Q.scanCanvas;
+  c.width = 48; c.height = 36;
+  const ctx = c.getContext && c.getContext("2d");
+  if (!ctx || !ctx.getImageData) return null;
+  ctx.drawImage(video, 0, 0, 48, 36);
+  const d = ctx.getImageData(0, 0, 48, 36).data;
+  const arr = new Float32Array(48 * 36);
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) / 255;
+  }
+  return arr;
+}
+function scanArrDiff(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s / a.length;
+}
+function scanTick() {
+  const sess = Q.current;
+  if (!sess || Q.scanMode !== "live" || !Q.sampler) return;
+  const v = $("#scan-video");
+  if (!v || (v.readyState !== undefined && v.readyState < 2)) return;
+  const arr = scanFrameArray(v);
+  if (!arr) return;
+  const diffPrev = Q.scanPrevArr ? scanArrDiff(arr, Q.scanPrevArr) : 0;
+  const diffSent = Q.scanSentArr ? scanArrDiff(arr, Q.scanSentArr) : 1;
+  Q.scanPrevArr = arr;
+  const d = Q.sampler.noteFrame(diffPrev, diffSent, performance.now());
+  if (d.clear && Q.scanPopsShown) {
+    $("#scan-boxes").innerHTML = "";
+    Q.scanPopsShown = false;
+    $("#scan-status").textContent = "Live scan — looking…";
+  }
+  if (d.send && !Q.scanBusy) sendLiveFrame(v, arr, sess);
+}
+function sendLiveFrame(video, arr, sess) {
+  Q.scanBusy = true;
+  Q.sampler.noteSent(performance.now());
+  const fail = () => {
+    Q.scanBusy = false;
+    if (Q.scanMode === "live" && !Q.scanPopsShown) {
+      $("#scan-status").textContent = "That scan didn't work — still looking.";
+    }
+  };
+  let c;
+  try {
+    c = document.createElement("canvas");
+    const scale = Math.min(1, 1280 / (video.videoWidth || 1280));
+    c.width = Math.round((video.videoWidth || 1280) * scale);
+    c.height = Math.round((video.videoHeight || 960) * scale);
+    const ctx = c.getContext && c.getContext("2d");
+    if (!ctx || !c.toBlob) { fail(); return; }
+    ctx.drawImage(video, 0, 0, c.width, c.height);
+  } catch (e) { fail(); return; }
+  c.toBlob(async blob => {
+    if (!blob) { fail(); return; }
+    try {
+      const out = await scanRequest(blob, sess);
+      Q.scanBusy = false;
+      if (Q.scanMode !== "live" || Q.current !== sess) return;
+      Q.scanSentArr = arr;
+      renderScanPops(out.pops || []);
+      setScanLast(new Date());
+    } catch (e) { fail(); }
+  }, "image/jpeg", 0.85);
+}
+$("#scan-boxes").addEventListener("click", async ev => {
+  const btn = ev.target.closest("[data-item]");
+  const sess = Q.current;
+  if (!btn || !sess || btn.classList.contains("got")) return;
+  const name = btn.dataset.item;
+  if (sess.state !== "playing") { toast("Start the hunt first."); return; }
+  const next = qNextIndex(sess);
+  const isCurrent = next >= 0 && sess.items[next].name === name;
+  btn.disabled = true;
+  try {
+    await qCheck(sess, name, true);
+    qOnCollected(name); // celebration hook — same as the GRAB
+    btn.classList.add("got");
+    btn.querySelector(".poplabel").textContent = `${name} ✓`;
+    Q.followHold = false;
+    renderHunt();
+    if (isCurrent) { qStepAnchorTo(name); qWalkStart(qNextIndex(sess)); }
+    if (qNextIndex(sess) === -1) {
+      closeScan();
+      toast("List complete. Finish with the receipt.");
+      openFinish(sess);
+    }
+  } catch (e) { btn.disabled = false; toast(e.message); }
+});
+function closeScan() {
+  stopScanLive(); // leaving the view releases the camera, always
+  $("#scan-overlay").hidden = true;
+  $("#scan-photo").value = "";
+  const sess = Q.current;
+  // Resume an interrupted walk, same rule as the pause button.
+  if (sess && sess.state === "playing" && !Q.arrived && !Q.followHold &&
+      qNextIndex(sess) >= 0 && !$("#view-hunt").hidden) {
+    qWalkStart(qNextIndex(sess));
+  }
 }
 
 /* The list panel: summoned over the hunt, never a page. */
