@@ -31,3 +31,17 @@ Escalation is by evidence (a scored eval), never by default.
 - JSON import: $0. Patterns on imported history: $0.
 - Policy targets: a full trip decode at or under 1–2 cents; total hackathon
   API spend well under the $150 credit (plan §8 estimated $57–61 at defaults).
+
+## Hackathon amendment (2026-10-27, per WONDER-EVAL.md)
+Through Nov 4, judge-facing PHOTO DECODE runs muse-wonder-1.0, with a
+timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
+98 lines, hand-adjudicated): Wonder 98.98% identity+price vs Spark
+93.88%; price errors 0 vs 4; silent (unflagged) errors 0 vs 4 — Wonder
+read the pub-05 price rotation correctly, the error class arithmetic
+cannot catch. Latency is the cost: 34s mean / 60s p95 vs Spark's
+8.6s / 11.9s — accepted because decode lands in the review queue, not
+an interactive path. Cost $0.118/receipt vs $0.013 — immaterial against
+the hackathon credit. The staple judge and Ask Arya STAY on Spark
+Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
+cannot carry Wonder's latency). This amendment expires Nov 4; the
+production policy above is unchanged.
