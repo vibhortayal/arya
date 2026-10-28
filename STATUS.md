@@ -61,6 +61,17 @@ low on "manual-milk" (the chat snapshot sent item ids for typed adds,
 so now it sends names), and an empty prepared cart asked for approval
 (now it says there's nothing to approve). Suite: **325 green**.
 
+**Sweep fixes F-01 + F-03 (2026-10-28, on main; not yet deployed).**
+F-01 (issue #10): a photo receipt whose date the model returns in
+US format ("07/29/26") no longer poisons the account — decode
+normalizes dates to ISO at all four constructors and the patterns
+engine parses tolerantly. F-03 (issue #11): the settle path now
+checks the merchant family — when the hunt's store and the
+receipt's merchant both name a known store family and they differ,
+the attach is refused with HTTP 400 naming both; variant names of
+the same family ("TRADER JOES #452") and unclassifiable names
+settle without friction. Suite: **334 green**.
+
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
 93.85% (122/130); strict-string accuracy 81.6%; arithmetic 7/7.
