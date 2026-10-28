@@ -57,10 +57,10 @@ class TestShellContract(unittest.TestCase):
         html = read("index.html")
         nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
         labels = re.findall(r"<span>([^<]+)</span>", nav)
-        self.assertEqual(labels, ["Today", "List", "Ask", "Profile"])
+        self.assertEqual(labels, ["Today", "List", "Ask", "Crew"])
         views = re.findall(r'data-view="([^"]+)"', nav)
         self.assertEqual(views, ["view-home", "view-list",
-                                 "view-chat", "view-profile"])
+                                 "view-chat", "view-community"])
         self.assertNotIn('id="view-scan"', html)
 
     def test_new_views_exist_dashboard_gone(self):
@@ -96,7 +96,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v45"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v46"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
