@@ -1,4 +1,4 @@
-# STATUS — where Arya stands (updated 2026-10-27)
+# STATUS — where Arya stands (updated 2026-10-28)
 
 **Current state (2026-10-27, night).** Arya is live at
 https://arya-pilot.duckdns.org. The engine — intake, ledger,
@@ -15,8 +15,13 @@ app is light mode only. A wireframe parity pass (dead surfaces
 removed, primary-action chrome, Brain back links) and the
 collect celebration (Discussion 32: Muse Image characters with
 a verified fun-fact bank, Quest mode only) are built and
-committed locally — deploy is a separate step. Test suite:
-**270 green**.
+committed locally — deploy is a separate step. A hardening pass
+over the 2026-10-28 code review is also committed locally
+(atomic store, event-loop rule, error mapping, input validation,
+session hashing, demo budget bucket, real cross-account friends,
+Today clock, List/Ask/Eyes pass, Caddy CSP/HSTS) — see
+assistant/loops/2026-10-28-hardening.md. Test suite:
+**317 green**.
 
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
