@@ -372,20 +372,14 @@ document.addEventListener("click", async ev => {
 
 /* ---------------- Profile ---------------- */
 
-function paintThemeSeg() {
-  const cur = localStorage.getItem("arya-theme") || "system";
-  document.querySelectorAll("#theme-seg [data-theme-choice]").forEach(b =>
-    b.setAttribute("aria-pressed", String(b.dataset.themeChoice === cur)));
-}
-
 /* One unified Profile (B6): the Quest player card (handle, stats,
  * badge shelf, mapper credits, Eagle Eye + spots) merged with the
- * account Profile (account, Muse token card, Appearance, receipt
- * count). There is no second, brain-only profile. */
+ * account Profile (account, Muse token card, receipt count).
+ * There is no second, brain-only profile. The app is light theme
+ * only (owner 2026-10-27) — there is no theme switch. */
 async function renderProfile() {
   $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")));
   paintTokenRow($("#profile-token-row"));
-  paintThemeSeg();
   const [profile, archive] = await Promise.all([
     api("/api/quest/profile").catch(() => null),
     api("/api/quest/receipts").catch(() => ({ receipts: [] }))
@@ -424,14 +418,6 @@ $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refr
  * arrow returns there — not through the quest view stack. */
 $("#an-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
 $("#btn-receipts").addEventListener("click", () => { show("view-receipts"); refresh("view-receipts"); });
-
-$("#theme-seg").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-theme-choice]");
-  if (!b) return;
-  localStorage.setItem("arya-theme", b.dataset.themeChoice);
-  document.documentElement.dataset.theme = b.dataset.themeChoice;
-  paintThemeSeg();
-});
 
 $("#btn-signout2").addEventListener("click", async () => {
   await fetch("/auth/logout", { method: "POST" });
