@@ -3,6 +3,7 @@ Any MCP-capable assistant connects with the account's API token (the
 same token the REST connector uses); Muse Spark is the showcased
 client, not a special case (owner, 2026-10-28)."""
 import json, os, tempfile, unittest
+from unittest import mock
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
@@ -157,8 +158,9 @@ class TestMcp(unittest.TestCase):
     def test_account_isolation(self):
         call(self.c, self.token, "add_items", {"items": ["owner only item"]})
         other = TestClient(self.c.app)
-        r = other.post("/auth/register", json={"username": "two@example.com",
-                                               "password": "long-password"})
+        with mock.patch.dict(os.environ, {"ARYA_REGISTRATION_OPEN": "1"}):
+            r = other.post("/auth/register", json={"username": "two@example.com",
+                                                   "password": "long-password"})
         assert r.status_code == 200, r.text
         tok2 = other.post("/auth/token").json()["token"]
         lst = call(other, tok2, "get_list")["structuredContent"]
