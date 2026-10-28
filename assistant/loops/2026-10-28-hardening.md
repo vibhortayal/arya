@@ -44,10 +44,14 @@ choices inside it, outside the hardening brief.
 
 - Live sessions migrate to hashed keys on first use — no forced
   logout at deploy.
-- The owner's live flags.json still holds the junk empty record
-  for item "x" from the reviewer's probe (M6 evidence). The flag
-  allowlist prevents new ones; the record itself is removed in a
-  separate, backed-up live-data step after these commits land.
+- The junk empty flag record for item "x" (the reviewer's M6
+  probe artifact) was removed from the owner's live flags.json
+  after these commits landed: 13 keys → 12, only "x" removed,
+  every other key verified unchanged, file re-parsed clean.
+  In-place backup kept beside it:
+  `flags.json.bak-20261028-035344` in the owner's data directory
+  (the SQL export in the workspace is the second backup). The
+  flag allowlist prevents new ones.
 - Heads-up received mid-run: `quest.py` DRIVERS lacks "photo"
   (owner-hit live bug) — Spark hotfixes that separately; this
   pass's quest.py changes are all in `340c4a6` and do not touch
