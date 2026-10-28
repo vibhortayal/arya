@@ -146,12 +146,13 @@ class TestShareClient(unittest.TestCase):
             self.assertIn(needle, q)
         html = read("index.html")
         for needle in ('id="share-sheet"', 'id="share-canvas"',
-                       'id="pf-player"', 'id="wild-form"',
+                       'id="wild-form"',
                        'id="btn-wild"', 'src="share.js"'):
             self.assertIn(needle, html)
         a = read("app.js")
         self.assertIn('post("/api/quest/avatar"', a)
-        self.assertIn("paintPlayerPicker", a)
+        self.assertNotIn("paintPlayerPicker", a)  # one avatar, no second picker
+        self.assertNotIn('id="pf-player"', html)
 
     def test_no_spend_on_cards(self):
         js = read("share.js")

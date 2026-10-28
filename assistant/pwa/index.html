@@ -188,22 +188,19 @@
     <h2 class="largetitle">Profile</h2>
     <div id="pf-avatar" class="group pad">
       <div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div>
-      <p class="muted nomargin" style="text-align:center">Your avatar</p>
+      <p class="nomargin" style="text-align:center"><strong id="pf-handle" style="font-size:19px"></strong></p>
+      <p class="muted nomargin" style="text-align:center">Also hosts your haul cards and love notes. Public: boards and badges only.</p>
       <div id="av-presets" class="presetrow"></div>
-      <label class="field">Describe it
-        <input type="text" id="av-prompt" maxlength="200" placeholder="a fox pushing a shopping cart" autocomplete="off">
-      </label>
-      <p class="nomargin"><button id="av-make" class="btn wide" type="button">Make it</button></p>
-      <p class="nomargin"><label class="btn secondary wide receiptbtn" for="av-photo">Use my photo</label><input type="file" id="av-photo" accept="image/*" hidden></p>
-      <p class="muted nomargin">Your photo is drawn as a cartoon, then dropped. Only the drawing is kept.</p>
-      <div id="av-candidate" hidden>
-        <img id="av-cand-img" class="candimg" alt="Your new avatar">
-        <p class="nomargin"><button id="av-use" class="btn primary wide" type="button">Use this</button></p>
+      <div id="av-make-box" hidden>
+        <div class="avrow"><input type="text" id="av-prompt" maxlength="200" placeholder="Describe it: a fox with a cart" aria-label="Describe your avatar" autocomplete="off"><button id="av-make" class="btn compact primary" type="button">Make</button></div>
+        <p class="nomargin avalt"><label class="linkbtn" for="av-photo">or use my photo</label><input type="file" id="av-photo" accept="image/*" hidden><span class="muted"> Drawn as a cartoon, then dropped.</span></p>
+        <div id="av-candidate" class="avcand" hidden>
+          <img id="av-cand-img" class="candimg" alt="Your new avatar">
+          <button id="av-use" class="btn compact primary" type="button">Use this</button>
+        </div>
       </div>
-      <p id="av-status" class="muted nomargin"></p>
+      <p id="av-status" class="muted nomargin" style="text-align:center"></p>
     </div>
-    <div id="pf-card" class="group pad"></div>
-    <div id="pf-player" class="group pad"></div>
     <div id="pf-stats" class="stattiles"></div>
     <div id="pf-missing" class="group"></div>
     <div id="pf-spots" class="group"></div>

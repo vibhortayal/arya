@@ -41,5 +41,15 @@ class CrewVisibility(unittest.TestCase):
         self.assertIn("score-challenge", read("quest.js"))
 
 
+class OneAvatar(unittest.TestCase):
+    def test_demo_hides_the_make_controls_and_one_avatar_hosts_cards(self):
+        html, js = read("index.html"), read("app.js")
+        self.assertIn('id="av-make-box" hidden', html)
+        self.assertIn('$("#av-make-box").hidden = isDemo;', js)
+        self.assertNotIn('id="pf-card"', html)
+        self.assertNotIn("Your player", html + js)
+        self.assertIn('"custom"', read("share.js"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -761,10 +761,6 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
   pointer-events: none;
 }
 .milestone.show { max-height: 40px; opacity: 1; padding: 6px 14px; margin: 8px auto 0; }
-.playergrid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.playerpick { width: 56px; height: 56px; border-radius: 50%; border: 2px solid transparent; background: #fff; padding: 2px; cursor: pointer; }
-.playerpick img { width: 100%; height: 100%; border-radius: 50%; display: block; }
-.playerpick.on { border-color: var(--acc); background: var(--acc-soft); }
 .confetti { position: fixed; inset: 0; width: 100vw; height: 100dvh; z-index: 28; pointer-events: none; }
 .haul { background: var(--panel); border-radius: 20px; padding: 18px; margin: 12px 0; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .haul-k { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
@@ -931,3 +927,14 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 /* Ask: the input rides just above the tab bar even on an empty log. */
 #view-chat:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
 #view-chat #chat-log { flex: 1; }
+.avrow { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.avrow input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 10px 14px; min-height: 44px; border: 0; border-radius: 980px; background: var(--fill); color: var(--label); box-sizing: border-box; }
+.btn.compact { padding: 8px 18px; flex: none; }
+.avalt { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 2px; }
+.avalt .linkbtn { padding: 0; }
+.avalt .muted { font-size: 13px; }
+.avcand { display: flex; align-items: center; gap: 14px; justify-content: center; margin-top: 4px; }
+.avcand .candimg { margin: 0; width: 88px; height: 88px; }
+.presetrow { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.presetrow button { flex: none; }
+
