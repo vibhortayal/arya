@@ -97,7 +97,7 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
                 "/api/curator/run", "/api/judge/run", "/api/review/suggest",
                 "/api/intake/", "/api/quest/avatar/generate",
-                "/api/quest/avatar/photo")
+                "/api/quest/avatar/photo", "/api/feedback")
 # Doors that can call the Meta API: the per-IP live-door cap applies.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
@@ -1468,6 +1468,29 @@ def quest_get_shopoff(race_id: str):
 def quest_list_friends():
     from api import social
     return {"friends": social.list_friends()}
+
+
+@app.post("/api/feedback")
+async def feedback_submit(req: Request):
+    body = await _json_obj(req)
+    from api import feedback
+    user = state._current_user.get()
+    try:
+        feedback.submit(user, body.get("kind", ""), body.get("text", ""))
+    except PermissionError as e:
+        raise HTTPException(429, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True}
+
+
+@app.get("/api/feedback")
+def feedback_list():
+    """Owner only: the first account reads what people sent."""
+    from api import feedback
+    if not feedback.is_owner(state._current_user.get()):
+        raise HTTPException(403, "only the owner can read feedback")
+    return {"notes": feedback.list_all()}
 
 
 @app.post("/api/quest/friends")
