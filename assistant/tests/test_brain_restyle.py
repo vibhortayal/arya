@@ -80,7 +80,7 @@ class TestShellContract(unittest.TestCase):
         for el in ("today-hero", "today-eye", "today-listline",
                    "store-filter", "composer", "add-text", "add-submit",
                    "add-split", "list-eyes", "rc-archive",
-                   "an-spend", "pf-card", "pf-badges"):
+                   "an-spend", "pf-avatar", "pf-badges"):
             self.assertIn(f'id="{el}"', html)
         # The staples line is a count only (owner, 2026-10-28): no
         # name dump, no returns sentence.

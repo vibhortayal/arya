@@ -17,3 +17,8 @@ Not built (waiting on the owner): the Muse Image avatar maker and the photo avat
 - Store news: open Not-here reports grouped by store and item, in Crew. Own account only.
 - Friends/Store/Global boards and an empty news feed show rows labelled Sample.
 - Cache arya-v47, 8 new tests, suite 451.
+
+## Third pass: one avatar, compact maker
+- Demo hides Make and photo (it could not spend anyway); only the character row shows.
+- Make is one compact row (input and Make), photo is a text link, Use this sits beside the preview.
+- One avatar everywhere: the cast row on Profile replaces the old "Your player" picker and the player card text. quest.avatar holds a cast file or "custom" (the drawing); the header, Profile, haul cards and the love note all read it. Cache arya-v48, suite 465.
