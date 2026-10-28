@@ -16,7 +16,9 @@ List apps digitized the note. Nobody made the store itself playable, and nobody 
 Arya Quest is a collection game played in the player's own store — walked in photos of the actual aisles (the photo-walk), with a 3D model of the store one tap away:
 
 - **Personal spawns.** Your list items are the treasures, on their real shelves.
-- **Two moods.** Quest mode hunts — big targets, a guide character, collecting; a kid can hold the phone while the adult runs quantities, substitutions, and checkout. Express mode drops the game and shows the fastest route out. Same model, same list.
+- **A list that plans itself.** Pick the store; Arya sorts your list by where you usually buy each thing.
+- **No stress.** Points only go up; no clock, no way to lose. Find it for me points the camera at the shelf.
+- **Two moods.** Quest mode hunts; a kid can hold the phone while the adult runs checkout. Express mode drops the game. Same list.
 - **A finish ritual.** The receipt photo scores the haul and settles the quest — and feeds the household model that pre-loads next week's hunt.
 
 ## Audience
@@ -47,7 +49,7 @@ Every metric is receipt-verified, so the social layer needs no trust: leaderboar
 
 ## Rollout story
 
-- Shipped for the hackathon: one mapped Trader Joe's stretch (18 stops, 55 labeled regions) with playable hunts across the photo, 3D, Aisle, and Strip views, on a live household brain.
+- Shipped for the hackathon: one mapped Trader Joe's stretch (18 stops, 55 labeled regions), played in real photos with a 3D peek; any other store plays as shelf cards, on a live household brain.
 - Mapping is crowdsourced from day one by design: a store is added by the first player who wants to hunt in it.
 - Depth path (post-hackathon): continuous camera relocalization — one-shot placement from a single photo ("Where am I?") is shipped; live tracking is the future item — more game skins (escape room), household analytics, mapper events and store leaderboards.
 
