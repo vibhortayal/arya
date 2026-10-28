@@ -56,7 +56,7 @@
       <li>Create a token below. It is shown once.</li>
       <li>Open Muse and add the Arya connector — or just tell Muse: &ldquo;connect Arya&rdquo;.</li>
       <li>Paste the token into Muse&rsquo;s secure form. Never paste it into a chat message.</li>
-      <li>Tap Done. From then on, talk to Muse — or add to your list on the Add tab.</li>
+      <li>Tap Done. From then on, talk to Muse — or add to your list on the List tab.</li>
     </ol>
     <div class="row" id="connect-token-row" style="margin-top:10px"></div>
     <p class="muted" style="margin-top:12px">Using a different assistant app? Copy the setup prompt and paste it there once — it teaches the assistant its job. The connector route above stays the better path.</p>
@@ -73,9 +73,9 @@
     <div class="titlerow"><h2 class="largetitle">Today</h2><span id="today-level" class="levelchip" hidden></span></div>
     <p id="today-through" class="muted nomargin"></p>
     <div id="today-hero"></div>
+    <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
     <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
-    <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
     <button id="btn-map-store" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">Teach Arya your store</span><span class="g-sub">20 seconds an aisle. Your next hunt gets faster.</span></span><span class="chev">›</span></button>
     <div id="today-eye"></div>
     <button id="today-listline" class="hubrow" type="button"><span id="today-listline-text"></span></button>
@@ -86,23 +86,14 @@
     <p id="list-line" class="listline"></p>
     <div id="store-filter" class="seg" role="group" aria-label="Store lens — view the one list by store"></div>
     <p class="muted" style="font-size:14px">One list — the store chips are a lens. Checking an item off checks it everywhere.</p>
-    <form id="list-add-form" class="addbox">
-      <input type="text" id="list-add-input" placeholder="Add an item…" autocomplete="off" aria-label="Add an item">
-      <button class="btn primary" type="submit">Add</button>
-    </form>
-    <div id="smart-list"></div>
-    <div id="list-notes"></div>
-    <h3 class="sect">Prepared cart</h3>
-    <div id="cart" class="group"></div>
-  </section>
-
-  <section id="view-scan" class="view" hidden>
-    <h2 class="largetitle">Add</h2>
-    <p class="muted">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.</p>
-    <div class="group pad">
+    <!-- The composer (owner, 2026-10-28): the Add tab is gone — adding
+         lives on the List page, in one field with voice and photo.
+         Wireframe: docs/quest/wireframe-add-on-list.html -->
+    <div class="group pad" id="composer">
       <label class="field">Add to your list
-        <textarea id="add-text" rows="4" placeholder="Add items — type, or paste a list from WhatsApp"></textarea>
+        <textarea id="add-text" rows="2" placeholder="Type, or paste a list from WhatsApp"></textarea>
       </label>
+      <div id="add-split" class="splitpreview" hidden></div>
       <p style="display:flex; gap:8px; margin:0 0 8px">
         <button class="btn primary grow" id="add-submit" type="button">Add</button>
         <button class="btn" id="add-mic" type="button">Record</button>
@@ -112,9 +103,16 @@
       <p class="muted nomargin" id="add-status"></p>
       <div id="add-receipt-offer"></div>
     </div>
-    <p class="muted" id="add-claude-line">You can also add from Muse chat — say &ldquo;add eggs to my list&rdquo;.</p>
-    <h3 class="sect">Eyes — sightings to confirm</h3>
-    <div class="group pad"><div id="eyes-records"></div></div>
+    <div id="list-eyes" hidden>
+      <h3 class="sect">Eyes — sightings to confirm</h3>
+      <div class="group pad"><div id="eyes-records"></div></div>
+    </div>
+    <div id="smart-list"></div>
+    <div id="list-notes"></div>
+    <h3 class="sect">Prepared cart</h3>
+    <div id="cart" class="group"></div>
+    <p class="muted listfoot">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.</p>
+    <p class="muted listfoot" id="add-claude-line">You can also add from Muse chat — say &ldquo;add eggs to my list&rdquo;.</p>
   </section>
 
   <section id="view-receipts" class="view" hidden>
@@ -198,7 +196,7 @@
     <div class="group" id="profile-account"></div>
     <h3 class="sect">Connect Muse</h3>
     <div class="group pad">
-      <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the camera and microphone on the Add tab work right here. The token is shown once; creating a new one replaces it.</p>
+      <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the camera and microphone on the List tab work right here. The token is shown once; creating a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
@@ -220,18 +218,18 @@
   <section id="view-store" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Where are you shopping?</h2>
-    <div id="st-mine"></div>
-    <div id="st-history"></div>
     <div class="group pad">
-      <label class="field">Or type a store
+      <label class="field">Type a store — or tap one below
         <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
       </label>
+      <p class="muted nomargin" style="font-size:13px">Tapping a store starts the plan. For a typed store, press Enter.</p>
     </div>
+    <div id="st-mine"></div>
+    <div id="st-history"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-stores-find" type="button"><span class="grow">Find stores<span class="sub">Search by ZIP, address, or name</span></span><span class="chev">›</span></button>
       <button class="navrow" data-qnav="view-stores-add" type="button"><span class="grow">Add a store<span class="sub">A store that is not in the directory yet</span></span><span class="chev">›</span></button>
     </div>
-    <p><button id="st-next" class="btn primary wide" type="button">Choose items &rarr;</button></p>
   </section>
 
   <section id="view-stores-find" class="view" hidden>
@@ -343,6 +341,7 @@
     <p id="opt-summary" class="subtitle"></p>
     <div id="opt-body"></div>
     <p><button id="opt-next" class="btn primary wide" type="button">Looks right &rarr;</button></p>
+    <p><button id="opt-skip" class="btn secondary wide" type="button" hidden>Skip for now — keep the rest as typed</button></p>
   </section>
 
   <section id="view-mode" class="view" hidden>
@@ -564,10 +563,6 @@
   <button data-view="view-list">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.4 6.2 5 7.8 7.6 4.9M3.4 12.2 5 13.8 7.6 10.9M3.4 18.2 5 19.8 7.6 16.9"/></svg>
     <span>List</span>
-  </button>
-  <button data-view="view-scan">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M12 8.4v7.2M8.4 12h7.2"/></svg>
-    <span>Add</span>
   </button>
   <button data-view="view-chat">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.2A2.7 2.7 0 0 1 6.7 3.5h10.6A2.7 2.7 0 0 1 20 6.2v7.6a2.7 2.7 0 0 1-2.7 2.7h-5L7.6 20.5v-4H6.7A2.7 2.7 0 0 1 4 13.8V6.2z"/><path d="M12 6.6l.85 2 2 .85-2 .85-.85 2-.85-2-2-.85 2-.85.85-2z" fill="currentColor" stroke="none"/></svg>
