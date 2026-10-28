@@ -157,6 +157,7 @@
     <h3 class="sect">Mapped by you</h3>
     <div id="pf-stores" class="group"></div>
     <div class="group">
+      <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" data-qnav="view-community" type="button"><span class="grow">Community</span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
@@ -194,13 +195,70 @@
   <section id="view-store" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Pick the store</h2>
+    <div id="st-mine"></div>
     <div class="group pad">
-      <label class="field">Store
+      <label class="field">Or type a store
         <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
       </label>
-      <div id="st-chips" class="seg"></div>
+    </div>
+    <div class="group">
+      <button class="navrow" data-qnav="view-stores-find" type="button"><span class="grow">Find stores<span class="sub">Search by ZIP, address, or name</span></span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-stores-add" type="button"><span class="grow">Add a store<span class="sub">A store that is not in the directory yet</span></span><span class="chev">›</span></button>
     </div>
     <p><button id="st-next" class="btn primary wide" type="button">Check my list &rarr;</button></p>
+  </section>
+
+  <section id="view-stores-find" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Find stores</h2>
+    <form id="sf-form" class="group pad">
+      <label class="field">ZIP, address, or name
+        <input type="text" id="sf-q" placeholder="91709" autocomplete="off">
+      </label>
+      <p style="margin-bottom:0"><button class="btn primary wide" type="submit">Search</button></p>
+    </form>
+    <div class="seg" id="sf-chips" style="margin:12px 0">
+      <button class="chip" data-sfchip="all" aria-pressed="true" type="button">All</button>
+      <button class="chip" data-sfchip="quests" aria-pressed="false" type="button">With quests</button>
+      <button class="chip" data-sfchip="zip" aria-pressed="false" type="button">Near this ZIP</button>
+    </div>
+    <div id="sf-results"></div>
+    <p class="muted">The directory is shared by every player. Add a store to your stores to pick it for a hunt.</p>
+  </section>
+
+  <section id="view-stores-mine" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">My stores</h2>
+    <div id="sm-list"></div>
+    <div class="group">
+      <button class="navrow" data-qnav="view-stores-find" type="button"><span class="grow">Find stores<span class="sub">Search the directory by ZIP, address, or name</span></span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-stores-add" type="button"><span class="grow">Add a store<span class="sub">A store that is not in the directory yet</span></span><span class="chev">›</span></button>
+    </div>
+  </section>
+
+  <section id="view-stores-add" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Add a store</h2>
+    <form id="sa-form" class="group pad">
+      <label class="field">Store name
+        <input type="text" id="sa-name" autocomplete="off" required>
+      </label>
+      <label class="field">Street address
+        <input type="text" id="sa-street" autocomplete="off" required>
+      </label>
+      <label class="field">City
+        <input type="text" id="sa-city" autocomplete="off" required>
+      </label>
+      <label class="field">State
+        <input type="text" id="sa-state" autocomplete="off" maxlength="2" placeholder="CA" required>
+      </label>
+      <label class="field">ZIP
+        <input type="text" id="sa-zip" autocomplete="off" inputmode="numeric" placeholder="91709" required>
+      </label>
+      <p class="muted">New stores play in Strip. Map it to unlock the 3D view.</p>
+      <p style="margin-bottom:0"><button class="btn primary wide" type="submit">Add store</button></p>
+    </form>
+    <p class="muted">The store joins the shared directory, so other players can find it too.</p>
   </section>
 
   <section id="view-optimize" class="view" hidden>
