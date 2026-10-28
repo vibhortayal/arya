@@ -26,8 +26,8 @@ people add aisles, so the bar means "of what is known so far".
 `next_prompt()` returns one capture: kind, title, why, numbered steps, time.
 Order of need: stale, then unmapped, then aging. The shopper's **focus**
 ("Mine" aisles, saved per account) is served first. Two or more unmapped
-segments in one zone get one **walk** prompt (about 20 s, the phone sends its
-6 sharpest of 12 sampled frames as photos; no video upload). Otherwise a
+segments in one zone get one **walk** prompt (about 20 s; the phone sends up to 6 good frames
+as photos; no video upload). Otherwise a
 **photo** prompt (about 10 s). A stale prompt names the missing item.
 
 ## How contributions merge
@@ -41,8 +41,18 @@ map.
 ## How the engine chooses frames
 All deterministic, $0, except two model calls per upload in the route:
 SAM 3.1 people scrub (fails closed) and a "grocery shelf" box for fill.
-1. Grade before any model call: sharpness (Laplacian variance), exposure
-   (mean grey level), shelf fill. A weak frame is refused with a one-line fix.
+0. **No retake, ever** (owner, 2026-10-28). The capture screen is a live
+   camera with no shutter. The phone grades frames as they stream
+   (sharpness, light), shows one short coaching line ("Slow down a little",
+   "A little dark. Face the shelf light."), and sends only frames that pass.
+   A photo prompt waits for a steady, sharp view and takes it itself; a walk
+   keeps up to 6 spread-out frames. The screen finishes by itself and opens
+   the next capture. Anything the server still declines is dropped silently;
+   after 30 s with nothing usable the shopper is thanked, not asked to retry.
+   Without a camera, the phone's camera app takes one photo and the shopper
+   is thanked either way.
+1. Server grade before any model call (same thresholds): sharpness (Laplacian
+   variance), exposure (mean grey level), shelf fill. A weak frame is dropped.
 2. Score = 0.5 sharpness + 0.3 exposure + 0.2 fill (fill is neutral if the
    check failed).
 3. Value = score x freshness; freshness halves every 30 days.
