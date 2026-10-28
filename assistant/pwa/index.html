@@ -34,7 +34,7 @@
   <div class="group pad">
     <p class="nomargin">Just looking?</p>
     <p><button id="demo-btn" class="btn secondary" type="button">Try the demo household</button></p>
-    <p class="muted nomargin">The demo is a fictional household; its data never changes. The Photo and Voice doors in Add do call the Meta API live, so you can watch them work.</p>
+    <p class="muted nomargin">The demo is a fictional household; its data never changes. The camera and microphone on the Add tab do call the Meta API live, so you can watch them work.</p>
   </div>
 </section>
 
@@ -47,7 +47,7 @@
       <li>Create a token below. It is shown once.</li>
       <li>Open Muse and add the Arya connector — or just tell Muse: &ldquo;connect Arya&rdquo;.</li>
       <li>Paste the token into Muse&rsquo;s secure form. Never paste it into a chat message.</li>
-      <li>Tap Done. From then on, talk to Muse — or use the doors in Add: a receipt photo, your voice, a pasted order.</li>
+      <li>Tap Done. From then on, talk to Muse — or add to your list on the Add tab.</li>
     </ol>
     <div class="row" id="connect-token-row" style="margin-top:10px"></div>
     <p class="muted" style="margin-top:12px">Using a different assistant app? Copy the setup prompt and paste it there once — it teaches the assistant its job. The connector route above stays the better path.</p>
@@ -88,7 +88,20 @@
   <section id="view-scan" class="view" hidden>
     <h2 class="largetitle">Add</h2>
     <p class="muted">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.</p>
-    <div id="doors"></div>
+    <div class="group pad">
+      <label class="field">Add to your list
+        <textarea id="add-text" rows="4" placeholder="Add items — type, or paste a list from WhatsApp"></textarea>
+      </label>
+      <p style="display:flex; gap:8px; margin:0 0 8px">
+        <button class="btn primary grow" id="add-submit" type="button">Add</button>
+        <button class="btn" id="add-mic" type="button">Record</button>
+        <label class="btn" for="add-photo">Photo</label>
+        <input type="file" id="add-photo" accept="image/*" hidden>
+      </p>
+      <p class="muted nomargin" id="add-status"></p>
+      <div id="add-receipt-offer"></div>
+    </div>
+    <p class="muted" id="add-claude-line">You can also add from Muse chat — say &ldquo;add eggs to my list&rdquo;.</p>
     <h3 class="sect">Eyes — sightings to confirm</h3>
     <div class="group pad"><div id="eyes-records"></div></div>
   </section>
@@ -100,6 +113,13 @@
     <h3 class="sect">Needs your eye</h3>
     <div id="review" class="group eyegroup"></div>
     <div id="curator" class="group eyegroup"></div>
+    <div class="group pad">
+      <label class="field">Add a receipt photo
+        <input type="file" id="rc-photo" accept="image/*">
+      </label>
+      <p class="muted nomargin" id="rc-photo-status"></p>
+      <div id="rc-photo-preview"></div>
+    </div>
     <h3 class="sect">Archive</h3>
     <div id="rc-archive" class="group"></div>
   </section>
@@ -166,7 +186,7 @@
     <div class="group" id="profile-account"></div>
     <h3 class="sect">Connect Muse</h3>
     <div class="group pad">
-      <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the Photo and Voice doors in Add work right here. The token is shown once; creating a new one replaces it.</p>
+      <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Connect Muse once with a token to file receipts and orders by chat or WhatsApp; the camera and microphone on the Add tab work right here. The token is shown once; creating a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
