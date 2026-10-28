@@ -457,6 +457,54 @@ $("#nl-plan").addEventListener("click", async ev => {
   } });
 });
 $("#nl-text").addEventListener("input", qPaintPlanCount);
+
+/* The plan composer takes voice and photos too (owner, 2026-10-28):
+ * the same doors as the List composer. Voice lands in the text box,
+ * where the count and the quest pick it up like typing. A photo is
+ * read by Spark; its items join the Arya list (the endpoint's job)
+ * and are ticked into this quest, so what you photographed is what
+ * you hunt. A receipt photo adds nothing here — it is filed from
+ * the List, never mid-plan. */
+if (window.wireRecordButton) wireRecordButton($("#nl-mic"), $("#nl-status"), text => {
+  const field = $("#nl-text");
+  field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
+  field.dispatchEvent(new Event("input"));
+});
+$("#nl-photo").addEventListener("change", async ev => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const status = $("#nl-status");
+  status.textContent = "Reading the photo with Spark…";
+  try {
+    const r = await fetch("/api/list/from-photo", {
+      method: "POST",
+      headers: { "Content-Type": f.type || "image/jpeg" },
+      body: f
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+    const out = await r.json();
+    status.textContent = "";
+    if (out.kind === "receipt") {
+      toast("That looks like a receipt — file it from the List tab.");
+    } else if (out.names && out.names.length) {
+      try { Q.plan = await api("/api/quest/plan"); } catch (e) {}
+      for (const n of out.names) {
+        const key = qnorm(n);
+        Q.draft.pick[key] = { name: n, qty: (Q.draft.pick[key] || {}).qty || 1, on: true };
+      }
+      renderPlan();
+      qPaintPlanCount();
+      toast(out.names.length === 1 ? "Added 1 item to the quest."
+        : `Added ${out.names.length} items to the quest.`);
+    } else {
+      toast("No list items found in that photo.");
+    }
+  } catch (e) {
+    status.textContent = "";
+    toast("Could not read that photo: " + e.message);
+  }
+  ev.target.value = "";
+});
 $("#nl-next").addEventListener("click", async () => {
   const raw = [...qPlanPicked(), ...qParseLines($("#nl-text").value)];
   if (!raw.length) { toast("Tick or type at least one item first."); return; }
@@ -1032,8 +1080,8 @@ function qOnCollected(name) {
 $("#celeb-layer").addEventListener("click", qCelebHide);
 
 /* ---------------- Rewards (owner, 2026-10-28) ----------------
- * Dopamine, never pressure: every grab pays, milestones at a
- * quarter, half and three quarters, a burst at all collected, and
+ * Dopamine, never pressure: every grab pays, two quiet milestones
+ * (halfway, one to go), a burst at all collected, and
  * the Score counts the haul up. Points only ever add (the server's
  * social.hunt_points is the truth; this mirrors it for the HUD) and
  * bank when the receipt lands. No lives, no penalty, no countdown —
@@ -1102,16 +1150,20 @@ function qBumpHud() {
   if (!c) return;
   c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump");
 }
-const QMILESTONES = [[0.25, "A quarter of the way!"], [0.5, "Halfway there!"], [0.75, "Three quarters — nearly home!"]];
+/* Milestones (owner, 2026-10-28): the big black banner over the
+ * store photo is gone. Two moments only — halfway and one to go —
+ * as a small soft pill tucked under the scene caption, in the flow,
+ * never over the store. The full-haul line joins the same slot;
+ * the confetti carries that moment. */
+const QMILESTONES = [[0.5, "Halfway there!"]];
 let qMilestoneTimer = null;
 function qShowMilestone(text) {
   const m = $("#milestone");
   if (!m) return;
   m.textContent = text;
-  m.hidden = false;
   m.classList.remove("show"); void m.offsetWidth; m.classList.add("show");
   clearTimeout(qMilestoneTimer);
-  qMilestoneTimer = setTimeout(() => { m.hidden = true; }, 2200);
+  qMilestoneTimer = setTimeout(() => { m.classList.remove("show"); }, 2400);
 }
 /* One grab's reward: +10 floats up, the points chip bumps, a quick
  * run of grabs reads as a hot streak, a crossed milestone gets its
@@ -1138,9 +1190,9 @@ function qRewardGrab(sess, before) {
   if (crossed) {
     qShowMilestone(crossed[1]);
     qTone([587, 740, 880], 0.08);
-  } else if (Q.combo >= 3) {
-    qShowMilestone(`Hot streak ×${Q.combo}!`);
-    qTone([660, 990], 0.06);
+  } else if (p.total > 2 && p.total - p.done === 1) {
+    qShowMilestone("One to go!");
+    qTone([587, 740, 880], 0.08);
   } else {
     qTone([660, 880], 0.06);
   }

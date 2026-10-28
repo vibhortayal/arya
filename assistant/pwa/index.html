@@ -213,11 +213,17 @@
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px" id="nl-title">Your quest</h2>
     <p class="muted" id="nl-sub">Tap an item to move it into the quest or back to your list.</p>
-    <div id="nl-plan"></div>
     <div class="group pad">
       <label class="field" for="nl-text">Add something else</label>
-      <textarea id="nl-text" rows="3" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
+      <textarea id="nl-text" rows="2" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
+      <p style="display:flex; gap:8px; margin:8px 0 0">
+        <button class="btn grow" id="nl-mic" type="button">Record</button>
+        <label class="btn grow" for="nl-photo" style="text-align:center">Photo</label>
+        <input type="file" id="nl-photo" accept="image/*" hidden>
+      </p>
+      <p class="muted nomargin" id="nl-status"></p>
     </div>
+    <div id="nl-plan"></div>
     <p><button id="nl-next" class="btn primary wide" type="button">Start the quest &rarr;</button></p>
   </section>
 
@@ -376,6 +382,7 @@
     <div id="q-brief"></div>
     <div id="scene-mount" class="storeview"></div>
     <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
+    <div id="milestone" class="milestone" role="status"></div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
     <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
@@ -423,7 +430,6 @@
       </div>
       <p id="scan-status" class="scanstatus"></p>
     </div>
-    <div id="milestone" class="milestone" role="status" hidden></div>
     <canvas id="confetti" class="confetti" aria-hidden="true" hidden></canvas>
     <div id="celeb-layer" class="celeblayer" hidden></div>
     <div id="spot-sheet" class="sheetwrap" hidden>

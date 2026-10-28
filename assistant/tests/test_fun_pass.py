@@ -125,7 +125,7 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v45"', sw)
+        self.assertIn('CACHE = "arya-v47"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",
@@ -136,3 +136,54 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPlanComposer(unittest.TestCase):
+    """The plan screen's add box (owner, 2026-10-28): raised above
+    the plan rows, shorter, and fed by voice and photo as well as
+    text — the same doors as the List composer."""
+
+    def test_composer_sits_above_the_plan_rows(self):
+        html = read("index.html")
+        self.assertLess(html.index('id="nl-text"'), html.index('id="nl-plan"'))
+
+    def test_shorter_box_with_mic_and_photo(self):
+        html = read("index.html")
+        self.assertIn('id="nl-text" rows="2"', html)
+        self.assertIn('id="nl-mic"', html)
+        self.assertIn('id="nl-photo"', html)
+        self.assertIn('id="nl-status"', html)
+
+    def test_voice_and_photo_feed_the_quest(self):
+        q = read("quest.js")
+        self.assertIn('wireRecordButton($("#nl-mic")', q)
+        self.assertIn('"/api/list/from-photo"', q)
+        # photo items are ticked into this quest, not just the list
+        self.assertIn("Q.draft.pick[key]", q)
+        # a receipt photo is never filed mid-plan
+        self.assertIn("file it from the List tab", q)
+
+
+class TestQuietMilestones(unittest.TestCase):
+    """The milestone banner (owner, 2026-10-28): off the photo,
+    tucked under the scene, two moments only, soft pill styling."""
+
+    def test_slot_sits_under_the_scene_in_flow(self):
+        html = read("index.html")
+        self.assertLess(html.index('id="scene-cap"'), html.index('id="milestone"'))
+        self.assertLess(html.index('id="milestone"'), html.index('class="hunt-tools"'))
+        self.assertNotIn('id="milestone" class="milestone" role="status" hidden', html)
+
+    def test_two_moments_only(self):
+        q = read("quest.js")
+        self.assertIn('[[0.5, "Halfway there!"]]', q)
+        self.assertIn('"One to go!"', q)
+        for gone in ("A quarter of the way!", "Three quarters", "Hot streak"):
+            self.assertNotIn(gone, q)
+
+    def test_soft_pill_not_a_black_banner(self):
+        css = read("styles.css")
+        block = css.split(".milestone {")[1].split("}")[0]
+        self.assertIn("var(--acc-soft)", block)
+        self.assertNotIn("position: fixed", block)
+        self.assertNotIn("var(--ink)", block)
