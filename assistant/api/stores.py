@@ -167,6 +167,11 @@ def upsert_google_store(place_id, name, det, created_by):
     return store
 
 
+def _haystack(s):
+    return state._norm_name(" ".join(
+        str(s.get(k) or "") for k in ("name", "street", "city", "state", "zip")))
+
+
 def search(query, quests_only=False):
     """Case-insensitive directory search. A digit query matches the
     ZIP by prefix (a full 5-digit ZIP therefore matches exactly or
@@ -179,12 +184,13 @@ def search(query, quests_only=False):
         if q.isdigit():
             stores = [s for s in stores if s["zip"].startswith(q)]
         else:
-            nq = state._norm_name(q)
+            # Every word of the query must appear somewhere in the
+            # store's name + address, so a full address ("4455 W
+            # Armitage Ave, Chicago, IL 60639") finds the store whose
+            # street, city, state and ZIP are stored in separate parts.
+            tokens = state._norm_name(q).split()
             stores = [s for s in stores
-                      if nq in state._norm_name(s["name"])
-                      or nq in state._norm_name(s["street"])
-                      or nq in state._norm_name(s["city"])
-                      or nq in state._norm_name(s["state"])]
+                      if all(t in _haystack(s) for t in tokens)]
     if quests_only:
         stores = [s for s in stores if s["scene"] == "cloud"]
     return sorted(stores, key=lambda s: s["name"].lower())
