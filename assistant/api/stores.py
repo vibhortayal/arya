@@ -136,6 +136,37 @@ def create_store(name, street, city, state_name, zipcode, created_by):
     return store, True
 
 
+def upsert_google_store(place_id, name, det, created_by):
+    """A store picked from Google Places (owner, 2026-10-28: stores
+    are picked from the API, never typed). Identity is the
+    place_id: the first pick creates the directory row, every
+    later pick returns it — one real store, one row, forever.
+    det is places.details(): street/city/state/zip/lat/lng."""
+    name = (name or "").strip()
+    zip5 = _zip5(det.get("zip"))
+    if not place_id or not name:
+        raise ValueError("a Google place id and name are required")
+    if zip5 is None:
+        raise ValueError("that listing has no ZIP Arya can file")
+    stores = directory()
+    for s in stores:
+        if s.get("place_id") == place_id:
+            return s
+    sid = "gplace-" + hashlib.sha1(place_id.encode()).hexdigest()[:12]
+    store = {"id": sid, "place_id": place_id, "name": name,
+             "street": (det.get("street") or "").strip(),
+             "city": (det.get("city") or "").strip(),
+             "state": (det.get("state") or "").strip().upper(),
+             "zip": zip5, "lat": det.get("lat"), "lng": det.get("lng"),
+             "scene": "strip", "source": "google",
+             "created_by": created_by or "unknown"}
+    if not store["street"] or not store["city"] or not store["state"]:
+        raise ValueError("that listing is missing address parts")
+    stores.append(store)
+    _root_save("stores.json", {"stores": stores})
+    return store
+
+
 def search(query, quests_only=False):
     """Case-insensitive directory search. A digit query matches the
     ZIP by prefix (a full 5-digit ZIP therefore matches exactly or

@@ -23,8 +23,11 @@ class TestNewAccount(unittest.TestCase):
         self.c.post("/api/list/from-text", json={"text": "milk, peanut butter"})
         from api import chat_service, state
         state.set_current_user("new@example.com")
-        low = chat_service.snapshot()["running_low"]
-        assert low == ["milk", "peanut butter"], low
+        snap = chat_service.snapshot()
+        assert snap["on_list"] == ["milk", "peanut butter"], snap["on_list"]
+        # Typed items are on the list, not "running low": that is
+        # for what the patterns say is due (QA 2026-10-28).
+        assert snap["running_low"] == [], snap["running_low"]
 
     def test_empty_cart_offers_no_approve(self):
         pwa = os.path.join(os.path.dirname(__file__), "..", "pwa", "app.js")

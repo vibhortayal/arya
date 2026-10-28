@@ -274,9 +274,12 @@ class TestStoreShell(unittest.TestCase):
         for vid in ("view-store", "view-stores-find", "view-stores-mine",
                     "view-stores-add"):
             self.assertIn(f'id="{vid}"', html)
+        # Add a store is a Google pick since the owner's 2026-10-28
+        # ruling (stores are picked from the API, never typed): the
+        # sa-* address form is replaced by sa-q + sa-results, and
+        # the hunt picker carries the st-goog suggestions box.
         for fid in ("sf-q", "sf-chips", "sf-results", "sm-list",
-                    "sa-name", "sa-street", "sa-city", "sa-state",
-                    "sa-zip", "st-mine"):
+                    "sa-q", "sa-results", "st-mine", "st-goog"):
             self.assertIn(f'id="{fid}"', html)
         # the old free-text-only chips are gone from the pick
         self.assertNotIn('id="st-chips"', html)
@@ -286,7 +289,7 @@ class TestStoreShell(unittest.TestCase):
     def test_pick_and_views_use_the_api(self):
         js = self.read("quest.js")
         for path in ("/api/stores/mine", "/api/stores/search",
-                     "/api/stores/favorite", "/api/stores\""):
+                     "/api/stores/favorite", "/api/stores/places/pick"):
             self.assertIn(path, js)
         self.assertIn("store_id: Q.draft.storeId", js)
         self.assertIn("Favorites", js)
@@ -295,7 +298,7 @@ class TestStoreShell(unittest.TestCase):
         self.assertNotIn("⭐", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('arya-v56', self.read("sw.js"))
+        self.assertIn('arya-v57', self.read("sw.js"))
 
 
 if __name__ == "__main__":

@@ -132,7 +132,8 @@ class TestChat(unittest.TestCase):
                 assert "Whole Milk 1 gal" in snap  # snapshot carries the model
                 return json.dumps({"reply": "Yogurt is on the list. Milk is due too.",
                                    "actions": [{"type": "ran_out", "item": "Greek Yogurt 32 oz"},
-                                               {"type": "add_to_list", "item": "Untracked Thing"}]}), {}, 0.01
+                                               {"type": "ran_out", "item": "Untracked Thing"},
+                                               {"type": "add_to_list", "item": "Fresh Basil"}]}), {}, 0.01
 
         main.MetaClient = FakeClient
         self.c = TestClient(main.app)
@@ -144,6 +145,8 @@ class TestChat(unittest.TestCase):
         d = r.json()
         self.assertIn("Greek Yogurt 32 oz", " ".join(d["applied"]))
         self.assertTrue(any("don't track" in s for s in d["skipped"]))
+        # Add is a list act: a name Arya never saw still joins the list.
+        self.assertIn("Fresh Basil", " ".join(d["applied"]))
         home = self.c.get("/api/home").json()
         self.assertIn("Greek Yogurt 32 oz", [i["name"] for i in home["list"]["items"]])
 

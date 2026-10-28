@@ -192,3 +192,18 @@ for now; a Maps/Places lookup is a separate, undecided step.
     quests appear in no list. (c) The header bar is gone (entry 57's
     companion fix, PR #51): the wordmark row cost screen on every
     view; the profile avatar floats top-right instead.
+
+59. **Stores are picked, never typed (owner, 2026-10-28).** His
+    words: "I shouldn't just be able to type any store's name. It
+    should have an address, it should have everything. Only pick
+    stores from an API." The picker now takes Google Places
+    suggestions (name + branch address, biased to the player's
+    location), and a tap files the store in the shared directory
+    keyed by its place_id — one real store, one row, forever; the
+    first pick costs one Place Details call, every later pick is
+    local. The typed name+address Add-a-store form is gone (a
+    Google search replaces it), and Enter on a typed name proceeds
+    only when the name is already one of yours — a directory store
+    or a store your receipts name; anything else is refused with
+    the reason. Without GOOGLE_PLACES_API_KEY on the server the
+    endpoints answer provisioned:false and the picker stays local.

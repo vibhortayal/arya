@@ -262,8 +262,9 @@
       <label class="field">Type a store — or tap one below
         <input type="text" id="st-name" placeholder="Trader Joe&rsquo;s" autocomplete="off">
       </label>
-      <p class="muted nomargin" style="font-size:13px">Tapping a store starts the plan. For a typed store, press Enter.</p>
+      <p class="muted nomargin" style="font-size:13px">Stores come from Google, with their real addresses — tap yours to start the plan.</p>
     </div>
+    <div id="st-goog"></div>
     <div id="st-mine"></div>
     <div id="st-history"></div>
     <div class="group">
@@ -303,26 +304,14 @@
   <section id="view-stores-add" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Add a store</h2>
-    <form id="sa-form" class="group pad" novalidate>
-      <label class="field">Store name
-        <input type="text" id="sa-name" autocomplete="off" required>
+    <div class="group pad">
+      <label class="field">Search Google for the store
+        <input type="text" id="sa-q" placeholder="Costco" autocomplete="off">
       </label>
-      <label class="field">Street address
-        <input type="text" id="sa-street" autocomplete="off" required>
-      </label>
-      <label class="field">City
-        <input type="text" id="sa-city" autocomplete="off" required>
-      </label>
-      <label class="field">State
-        <input type="text" id="sa-state" autocomplete="off" maxlength="2" placeholder="CA" required>
-      </label>
-      <label class="field">ZIP
-        <input type="text" id="sa-zip" autocomplete="off" inputmode="numeric" placeholder="91709" required>
-      </label>
-      <p class="muted">New stores play in Strip. Map it to unlock the 3D view.</p>
-      <p style="margin-bottom:0"><button class="btn primary wide" type="submit">Add store</button></p>
-    </form>
-    <p class="muted">The store joins the shared directory, so other players can find it too.</p>
+      <p class="muted nomargin" style="font-size:13px">Every store carries its real name and address from Google. Tap yours to add it.</p>
+    </div>
+    <div id="sa-results"></div>
+    <p class="muted">The store joins the shared directory, so other players can find it too. New stores play in the walk-through view — map one to unlock the 3D view.</p>
   </section>
 
   <section id="view-mapper" class="view" hidden>
@@ -414,15 +403,6 @@
     <div id="scene-mount" class="storeview"></div>
     <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
     <div id="milestone" class="milestone" role="status"></div>
-    <div id="wild-form" class="group pad" hidden>
-      <label class="field" for="wild-name">Wild find — already in your cart?</label>
-      <input type="text" id="wild-name" placeholder="e.g. oat milk chocolate" autocomplete="off">
-      <p style="display:flex; gap:8px; margin:8px 0 0">
-        <button class="btn primary grow" id="wild-add" type="button">Add to the haul</button>
-        <button class="btn grow" id="wild-mic" type="button">Record</button>
-      </p>
-      <p class="muted nomargin" id="wild-status"></p>
-    </div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
     <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
@@ -436,6 +416,15 @@
         <button id="btn-howto" class="hudbtn" type="button" aria-label="How to play">?</button>
         <button id="btn-sound" class="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed="false"></button>
       </span>
+    </div>
+    <div id="wild-form" class="group pad" hidden>
+      <label class="field" for="wild-name">Wild find — already in your cart?</label>
+      <input type="text" id="wild-name" placeholder="e.g. oat milk chocolate" autocomplete="off">
+      <p style="display:flex; gap:8px; margin:8px 0 0">
+        <button class="btn primary grow" id="wild-add" type="button">Add to the haul</button>
+        <button class="btn grow" id="wild-mic" type="button">Record</button>
+      </p>
+      <p class="muted nomargin" id="wild-status"></p>
     </div>
     <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <input id="locate-photo" type="file" accept="image/*" capture="environment" hidden>

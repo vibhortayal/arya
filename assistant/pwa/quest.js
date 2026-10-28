@@ -247,9 +247,45 @@ async function qLoadSessions() {
   return Q.sessions;
 }
 function qSessionById(id) { return Q.sessions.find(s => s.id === id) || null; }
+/* The demo sandbox lives in server memory and can reset under a hunt
+ * that is already on screen. When the server no longer knows the
+ * session, rebuild it from what the phone holds (same store, mode and
+ * items, grabs replayed) and carry on under the new id. */
+const Q_GONE = "That hunt is gone — the demo resets now and then. Go back to Today and start it again.";
+function qSessionGone(e) {
+  return !(e instanceof TypeError) && /no such session/i.test(e.message || "");
+}
+async function qRevive(sess) {
+  const fresh = await post("/api/quest/sessions", {
+    store: sess.store, mode: sess.mode, driver: sess.driver,
+    store_id: sess.store_id || undefined,
+    items: (sess.items || []).filter(i => !i.wild).map(i => ({ name: i.name, qty: i.qty })),
+  });
+  let cur = fresh;
+  for (const i of sess.items || []) {
+    if (i.wild) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/items`, { name: i.name, qty: i.qty, wild: true });
+    }
+    if (i.checked) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/check`, { item: i.name, checked: true });
+    }
+  }
+  Object.assign(sess, cur);
+  qLoadSessions().catch(() => {});
+  return sess;
+}
 async function qSetState(sess, state) {
-  const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
-  Object.assign(sess, s);
+  try {
+    const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+    Object.assign(sess, s);
+  } catch (e) {
+    if (!qSessionGone(e)) throw e;
+    try {
+      await qRevive(sess);
+      const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+      Object.assign(sess, s);
+    } catch (e2) { throw new Error(Q_GONE); }
+  }
   return sess;
 }
 /* Offline grabs (game shell): back aisles drop signal. A grab or put
@@ -273,6 +309,14 @@ async function qCheck(sess, itemName, checked) {
     return sess;
   } catch (e) {
     const it = (sess.items || []).find(i => i.name === itemName);
+    if (qSessionGone(e)) {
+      try {
+        await qRevive(sess);
+        const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
+        Object.assign(sess, s);
+        return sess;
+      } catch (e2) { throw new Error(Q_GONE); }
+    }
     if (!(e instanceof TypeError) || !it) throw e;
     it.checked = checked;
     qOutboxSave([...qOutbox(), { sid: sess.id, item: itemName, checked }]);
@@ -354,6 +398,14 @@ $("#btn-new-hunt").addEventListener("click", async () => {
   Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {} };
   $("#st-name").value = "";
   $("#nl-text").value = "";
+  // One-shot location for biasing Google suggestions toward the
+  // branches near the player; never required, never blocking.
+  if (!Q.geoAsked && navigator.geolocation) {
+    Q.geoAsked = true;
+    navigator.geolocation.getCurrentPosition(
+      p => { Q.geo = { lat: p.coords.latitude, lng: p.coords.longitude }; },
+      () => {}, { timeout: 4000, maximumAge: 600000 });
+  }
   try { await qLoadMine(); } catch (e) { Q.mine = []; }
   try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
   renderStorePick();
@@ -381,7 +433,7 @@ function qStoreCount(rec, store) {
   return Object.entries(rec.stores || {}).reduce((n, [s, c]) => n + (qSameStore(s, store) ? c : 0), 0);
 }
 function qPlanBucket(li, store) {
-  const rec = qPlanItem(li.name, li.item_id);
+  const rec = qPlanItem(li.name, li.history_id || li.item_id);
   const total = rec ? Object.values(rec.stores || {}).reduce((a, b) => a + b, 0) : 0;
   if (!total) return { bucket: "new" };
   const here = qStoreCount(rec, store);
@@ -393,9 +445,11 @@ function qPlanBucket(li, store) {
   return { bucket: "elsewhere", store: best, n: bestN, total, rec };
 }
 function qPlanUsuals(store) {
-  const onList = new Set(((Q.plan && Q.plan.list) || []).map(i => qnorm(i.name)));
+  const listRows = (Q.plan && Q.plan.list) || [];
+  const onList = new Set(listRows.map(i => qnorm(i.name)));
+  const onListIds = new Set(listRows.map(i => i.history_id || i.item_id));
   return ((Q.plan && Q.plan.items) || [])
-    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)))
+    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)) && !onListIds.has(i.item_id))
     .map(i => ({ ...i, ripe: i.every_days ? (i.days_since || 0) / i.every_days : 0 }))
     .sort((a, b) => (b.due - a.due) || (b.ripe - a.ripe) || (qStoreCount(b, store) - qStoreCount(a, store)))
     .slice(0, 6);
@@ -794,26 +848,9 @@ document.addEventListener("click", async ev => {
   } catch (e) { toast(e.message); }
 });
 
-$("#sa-form").addEventListener("submit", async ev => {
-  ev.preventDefault();
-  const body = {
-    name: $("#sa-name").value.trim(), street: $("#sa-street").value.trim(),
-    city: $("#sa-city").value.trim(), state: $("#sa-state").value.trim(),
-    zip: $("#sa-zip").value.trim(),
-  };
-  if (!body.name || !body.street || !body.city || !body.state || !body.zip) {
-    toast("Fill in the name and the whole address."); return;
-  }
-  const btn = ev.target.querySelector("button[type=submit]");
-  btn.disabled = true;
-  try {
-    const row = await post("/api/stores", body);
-    toast(`${row.name} is in your stores.`);
-    await qLoadMine().catch(() => {});
-    questGo("view-stores-mine");
-  } catch (e) { toast(e.message); }
-  btn.disabled = false;
-});
+/* Add a store is a Google pick now (see qSuggestInto / data-gpick
+ * above): the typed name+address form is gone — a store enters the
+ * directory only with a place_id and Google's address for it. */
 
 /* ---------------- New hunt: optimize ---------------- */
 
@@ -824,6 +861,20 @@ function qPickStore() {
   if (!Q.draft) return;
   const store = $("#st-name").value.trim();
   if (!store) { toast("Pick or name the store first."); return; }
+  if (!Q.draft.storeId) {
+    // Typed names no longer invent stores (owner, 2026-10-28): the
+    // name must be one of yours — a directory store or a store your
+    // receipts name — otherwise pick it from Google so the trip
+    // carries the real address.
+    const known = (Q.mine || []).some(s2 => qSameStore(s2.name, store))
+      || qHistoryStores().some(h => qSameStore(h, store));
+    if (!known) {
+      toast("Pick the store from the list — Arya needs its real address from Google.");
+      const box = $("#st-goog");
+      if (box) qSuggestInto($("#st-name"), box, "hunt").catch(() => {});
+      return;
+    }
+  }
   if (Q.draft.store !== store) Q.draft.pick = {};
   Q.draft.store = store;
   renderPlan();
@@ -831,6 +882,74 @@ function qPickStore() {
 }
 $("#st-name").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); qPickStore(); }
+});
+
+/* Google Places in the picker (owner, 2026-10-28): a store is
+ * picked, never typed — suggestions carry the branch's real name
+ * and address, and a tap files the store in the directory by its
+ * place_id before the plan starts. One session token per hunt
+ * plan, per Google's session billing. */
+let qPlacesTimer = null;
+function qPlacesSession() {
+  if (!Q.placesSession) Q.placesSession = `s${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`;
+  return Q.placesSession;
+}
+async function qFetchPlaces(q) {
+  const geo = Q.geo ? `&lat=${Q.geo.lat}&lng=${Q.geo.lng}` : "";
+  const d = await api(`/api/stores/places?q=${encodeURIComponent(q)}&session=${qPlacesSession()}${geo}`);
+  return d.suggestions || [];
+}
+function qPlacesRows(rows, mode) {
+  if (!rows.length) return "";
+  return `<h3 class="sect">From Google</h3><div class="group">` + rows.map(r => `
+    <button class="sessrow pickrow" data-gpick="${esc(r.place_id)}" data-gname="${esc(r.name)}" data-gmode="${mode}" type="button">
+      <span class="grow"><span class="name">${esc(r.name)}</span>
+      <span class="sub">${esc(r.secondary)}</span></span>
+    </button>`).join("") + `</div>`;
+}
+async function qSuggestInto(input, box, mode) {
+  const q = input.value.trim();
+  if (q.length < 3) { box.innerHTML = ""; return; }
+  try {
+    const rows = await qFetchPlaces(q);
+    if (input.value.trim() !== q) return;  // typed on: stale answer
+    box.innerHTML = qPlacesRows(rows, mode);
+  } catch (e) { box.innerHTML = ""; }
+}
+$("#st-name").addEventListener("input", () => {
+  clearTimeout(qPlacesTimer);
+  qPlacesTimer = setTimeout(() => {
+    const box = $("#st-goog");
+    if (box) qSuggestInto($("#st-name"), box, "hunt").catch(() => {});
+  }, 300);
+});
+const saQ = $("#sa-q");
+if (saQ) saQ.addEventListener("input", () => {
+  clearTimeout(qPlacesTimer);
+  qPlacesTimer = setTimeout(() => {
+    qSuggestInto(saQ, $("#sa-results"), "add").catch(() => {});
+  }, 300);
+});
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-gpick]");
+  if (!b) return;
+  b.disabled = true;
+  try {
+    const row = await post("/api/stores/places/pick",
+      { place_id: b.dataset.gpick, name: b.dataset.gname });
+    Q.placesSession = null;  // the pick ends the billing session
+    await qLoadMine().catch(() => {});
+    if (b.dataset.gmode === "add") {
+      toast(`${row.name} is in your stores.`);
+      questGo("view-stores-mine");
+      return;
+    }
+    if (!Q.draft) return;
+    Q.draft.storeId = row.id;
+    $("#st-name").value = row.name;
+    const gb = $("#st-goog"); if (gb) gb.innerHTML = "";
+    qPickStore();
+  } catch (e) { toast(e.message); b.disabled = false; }
 });
 
 /* Check my list only when there is something to check: a clean list
@@ -1579,6 +1698,11 @@ function renderHunt() {
   // on the walk — the route is a suggestion, any row can GRAB.
   const ps = qPopState(sess);
   const allIn = ps === "done";
+  /* The note takes the next-card's height when it replaces it, so the
+   * list under them does not jump out from under a tap (QA 2026-10-28). */
+  const popH = $("#hunt-pop").offsetHeight;
+  if (allIn && popH) $("#hunt-done-note").style.minHeight = popH + "px";
+  else if (!allIn) $("#hunt-done-note").style.minHeight = "";
   $("#hunt-pop").hidden = allIn;
   $("#hunt-done-note").hidden = !allIn;
   const btn = $("#btn-collect");

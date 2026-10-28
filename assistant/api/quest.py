@@ -380,6 +380,9 @@ def attach_receipt(session_id, receipt_id):
     return _mutate(session_id, fn)
 
 
+SAMPLE_PRICE = 3.99   # a sample line with no price history
+
+
 def sample_receipt(session_id):
     """The demo's "Use a sample receipt" door (Hunt v2 plan item 8).
     Files a synthetic receipt for this trip — merchant = the hunt's
@@ -403,12 +406,19 @@ def sample_receipt(session_id):
         price = prices.get(it["group"])
         if price is None:
             price = next((p for iid, p in prices.items()
-                          if gm.get(iid, iid) == it["group"]), 0.0)
+                          if gm.get(iid, iid) == it["group"]), None)
+        if price is None:
+            # No price history: a $0.00 line would let a free trip
+            # settle a hunt and bank its points (QA 2026-10-28).
+            price = SAMPLE_PRICE
         qty = it.get("qty", 1)
         lines.append({"decoded_name": it["name"], "qty": qty,
                       "unit_price": price,
                       "line_total": round(price * qty, 2),
                       "line_type": "item", "status": "auto"})
+    if not lines:
+        raise ValueError("Grab something first, then the sample receipt "
+                         "has something to list.")
     subtotal = round(sum(ln["line_total"] for ln in lines), 2)
     rid = _new_id("sample", session_id + _now())
     state.add_receipts([{
