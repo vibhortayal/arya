@@ -1,5 +1,10 @@
 # UX review — 2026-10-27
 
+Dated review of the build as it stood on 2026-10-27. Finding 3 is
+superseded: Muse Voice Transcribe replaced Web Speech. Finding 14 is
+superseded: the visual system is now the wireframe theme (greyscale
+structure, one orange accent), light mode only.
+
 Method: full walkthrough of the live build at phone size (sign-in, demo
 household, Home, Scan, Ask, Dashboard, item page, sign-out), a
 control-by-control audit of the PWA against the API routes, and the
