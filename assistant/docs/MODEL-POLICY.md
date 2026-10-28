@@ -51,3 +51,10 @@ production policy above is unchanged.
 all demo visits together stay under `ARYA_DEMO_DAILY_BUDGET_USD`
 (default $2). For the judging window set the daily cap higher in the VM
 env file (for example 15) and restart the api container.
+
+**Switch at expiry.** The photo reader is an env setting:
+`ARYA_PHOTO_READER=spark` on the VM (then restart the api container)
+puts photo decode on Spark Standard with no deploy; unset or `wonder`
+is the amendment path. Receipts record `decoded_by`, so the switch is
+visible in the data. Spark-only photo decode scored 93.88% in the Gate 0
+eval, with the review queue as the mitigation.
