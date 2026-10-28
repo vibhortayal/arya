@@ -139,6 +139,12 @@ function questBack() {
   window.scrollTo(0, 0);
   if (!prev || prev === "view-home") refresh("view-home");
   if (prev === "view-community") renderCommunity().catch(showErr);
+  // The picker was drawn before Find / Add a store sent the player
+  // away: a store added there is not in that stale list, so it could
+  // not be selected. Redraw it from My Stores on the way back.
+  if (prev === "view-store" && Q.draft) {
+    qLoadMine().catch(() => {}).then(() => renderStorePick());
+  }
 }
 /* The hunt and the Express run are full-screen frames (Discussion
  * 36): the store fills the viewport and the tab bar hides. Every
@@ -929,6 +935,15 @@ document.addEventListener("click", async ev => {
 /* Picking a store IS the decision (owner phone pass, 2026-10-28):
  * a tap on any store row — or Enter on a typed name — starts the
  * plan. There is no separate confirm button. */
+function qStoreAtAddress(text) {
+  const toks = qnorm(text).split(" ").filter(Boolean);
+  if (toks.length < 2) return null;
+  const hits = (Q.mine || []).filter(s => {
+    const hay = qnorm(`${s.street} ${s.city} ${s.state} ${s.zip}`);
+    return toks.every(t => hay.includes(t));
+  });
+  return hits.length === 1 ? hits[0] : null;
+}
 function qPickStore() {
   if (!Q.draft) return;
   const store = $("#st-name").value.trim();
@@ -938,6 +953,15 @@ function qPickStore() {
     // name must be one of yours — a directory store or a store your
     // receipts name — otherwise pick it from Google so the trip
     // carries the real address.
+    // Only an address typed (no store name): it names the store of
+    // yours that sits at that address, if there is one.
+    const byAddr = qStoreAtAddress(store);
+    if (byAddr) {
+      Q.draft.storeId = byAddr.id;
+      $("#st-name").value = byAddr.name;
+      qPickStore();
+      return;
+    }
     const known = (Q.mine || []).some(s2 => qSameStore(s2.name, store))
       || qHistoryStores().some(h => qSameStore(h, store));
     if (!known) {

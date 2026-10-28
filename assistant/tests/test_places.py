@@ -1,7 +1,7 @@
 """Google Places store picking (owner, 2026-10-28): a store is
 picked from the API — name, address, place_id — never typed into
 existence. The HTTP layer is faked; no key, no network."""
-import os, tempfile, unittest
+import os, shutil, subprocess, tempfile, unittest
 from pathlib import Path
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -125,3 +125,60 @@ class TestPickerClient(unittest.TestCase):
                        "Pick the store from the list"):
             self.assertIn(needle, q)
         self.assertNotIn('$("#sa-form")', q)
+
+
+@unittest.skipUnless(shutil.which("node"), "node not installed")
+class TestPickerRefreshOnBack(unittest.TestCase):
+    """A store added via Find / Add a store must be selectable when
+    the player comes Back to the picker: the picker is redrawn from
+    My Stores, not left as it was drawn before they left it."""
+
+    def run_back(self, prev, draft):
+        q = (PWA / "quest.js").read_text()
+        fn = q.split("function questBack() {")[1].split("\n}\n")[0]
+        js = ("const Q={stack:['view-store','view-stores-add'],draft:%s,"
+              "current:null};const calls=[];"
+              "const document={querySelectorAll:()=>({forEach(){}})};"
+              "const window={scrollTo(){}};"
+              "function stopHuntTimer(){}function stopHuntMotion(){}"
+              "function paintHuntFrame(){}function refresh(){}"
+              "function renderCommunity(){return Promise.resolve()}"
+              "function showErr(){}"
+              "function qLoadMine(){calls.push('load');return Promise.resolve()}"
+              "function renderStorePick(){calls.push('render')}"
+              "function questBack(){%s}"
+              "Q.stack=['%s','view-stores-add'];questBack();"
+              "setTimeout(()=>console.log(calls.join(',')),20);"
+              % (draft, fn, prev))
+        return subprocess.run(["node", "-e", js], capture_output=True,
+                              text=True, check=True).stdout.strip()
+
+    def test_back_to_picker_reloads_and_redraws(self):
+        self.assertEqual(self.run_back("view-store", "{}"), "load,render")
+
+    def test_back_elsewhere_leaves_picker_alone(self):
+        self.assertEqual(self.run_back("view-home", "{}"), "")
+        self.assertEqual(self.run_back("view-store", "null"), "")
+
+
+class TestAddressOnlySearch(unittest.TestCase):
+    """Typing only a store's address (no name) finds the store."""
+
+    def setUp(self):
+        make_client(self)
+
+    def test_full_address_finds_store_without_its_name(self):
+        from api import stores
+        stores.upsert_google_store("pid-addr", "Trader Joe's", {
+            "street": "4455 W Armitage Ave", "city": "Chicago",
+            "state": "IL", "zip": "60639", "lat": 1, "lng": 2}, "t")
+        for q in ("4455 W Armitage Ave, Chicago, IL 60639",
+                  "4455 armitage chicago", "4455 W Armitage Ave"):
+            names = [s["name"] for s in stores.search(q)]
+            self.assertEqual(names, ["Trader Joe's"], q)
+        self.assertEqual(stores.search("4455 Armitage Boston"), [])
+
+    def test_client_picks_own_store_by_typed_address(self):
+        q = (PWA / "quest.js").read_text()
+        self.assertIn("function qStoreAtAddress", q)
+        self.assertIn("qStoreAtAddress(store)", q)
