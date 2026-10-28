@@ -27,7 +27,7 @@ A walkthrough video upload goes to the platform plane. A receipt or list upload 
 
 ### 2. List intake (account)
 
-`photo of note / whiteboard / paste / voice / Muse chat → structured list in a session`
+`one Add surface — text field (type or paste) / mic / camera / Muse chat → structured list in a session`
 
 - Handwriting and messy lists are a perception task, not a form. Output: items, quantities, and the store the user picked.
 - **The Muse connector writes lists too** (owner requirement): "add oat milk and eggs to my Trader Joe's list" in chat lands in today's session for that store — created on the spot if none exists. The connector's add path already exists in the engine (`POST /api/list/add`, proven live); Quest makes it session-aware, so chat, the PWA, and the hunt all edit one list.
@@ -45,14 +45,14 @@ Output: the clean list plus a one-line report (in → out · merged · corrected
 
 ### 3. The hunt (client)
 
-- Three.js renders the store cloud in the PWA. No install, no app store.
-- The quest log is the list, ordered by the shelf graph into a route. Camera glides the camera path; the next item's position pulses; collect = tap (v1) or shelf check.
-- Positioning v1 is model-relative: follow the trail, tap to collect. No indoor GPS, no live relocalization — that is the v2 headline feature.
+- The PWA renders the store through the scene ladder (Photo default; Cloud, Aisle, Strip one tap away). No install, no app store.
+- The quest log is the list, ordered by the shelf graph into a route. The presented stop is a steer: any stop can be grabbed in any order (Discussion 44), and after a grab the hunt re-targets.
+- Positioning: "Where am I?" is shipped — one photo places the player at a stop (the Wonder-authored localizer: 42 of 45 held-out photos at the right stop). Continuous tracking is the rollout item. No indoor GPS.
 - Quest mode (play) and Express mode (rush) are two modes on one state machine (see GAME-DESIGN.md).
 
 ### 4. Settle (account)
 
-`receipt photo → Muse Spark → arithmetic verification → patterns, ledger, inventory`
+`receipt photo → Muse Wonder (Spark fallback) → arithmetic verification → patterns, ledger, inventory`
 
 - Totals must reconcile or the lines queue for review — the client proposes, Arya disposes.
 - Returns net against purchases; patterns count kept items only.
@@ -63,19 +63,19 @@ Output: the clean list plus a one-line report (in → out · merged · corrected
 
 | Component | State | Notes |
 |---|---|---|
-| Arya engine (intake, dictionary, review queue, ledger, patterns, staple judge, Ask Arya) | **Live** — vibhortayal/arya | Per-account file state, token-gated connector, 181 tests |
+| Arya engine (intake, dictionary, review queue, ledger, patterns, staple judge, Ask Arya) | **Live** — vibhortayal/arya | Per-account file state, token-gated connector, 317 tests |
 | Muse connector for Arya | **Live** | Data enters Arya through the user's own Muse — zero perception spend server-side |
-| Store registry + model store (platform plane) | New | Store ID, location, mapper credit, cloud + graph versions |
-| Mapping pipeline (VGGT + SAM + Spark labeling) | Spike running | One TJ aisle; verdict gates scope |
-| Hunt client (Three.js in the PWA) | Scaffold verified | PLY viewer + walk animation proven on synthetic data |
-| Hunt generation (list + shelf graph → route) | To build | Deterministic code; no model spend |
+| Store registry + model store (platform plane) | **Shipped** (Stage E) | Store ID, location, mapper credit, cloud + graph versions; directory with search, favorites, add-with-address |
+| Mapping pipeline (VGGT + SAM + Spark labeling) | **Shipped** for the demo store | One Trader Joe's stretch live: 18 stops, 55 labeled regions |
+| Hunt client (scene ladder in the PWA) | **Shipped** (Stages B–D) | Photo-walk default; Cloud, Aisle, Strip one tap away; localizer places the player from one photo |
+| Hunt generation (list + shelf graph → route) | **Shipped** | Deterministic code; no model spend; item-to-shelf matching live |
 
 ## Cost rules
 
 - Math, routing, and pattern facts are computed in code at $0.
 - Muse Spark 1.3 Standard, low reasoning effort, cached prefixes, for volume judgment (staple judge, hunt narration). Personal data is Standard-only.
 - Contributor tier is eval/synthetic only — it may train on inputs; real household data never touches it.
-- Per-account daily spend cap already enforced in the engine ($10/day global ceiling today).
+- Spend caps enforced in the engine: the app's $10/day ceiling, and the demo household on its own budget bucket ($2/day), so demo use cannot drain the app.
 - VGGT runs on free/open tooling for the hackathon; production mapping is a batch GPU job per store, amortized across all its players.
 
 ## Known limits, stated

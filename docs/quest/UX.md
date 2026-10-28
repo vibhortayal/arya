@@ -6,16 +6,22 @@ Design bar: a first-time player finishes a hunt with zero instruction. One prima
 
 - A **session** is one store trip: one store, one list, one mode, one state.
 - A day holds many sessions. Each is an independent game — pause Trader Joe's mid-hunt, run Costco Express, come back; nothing bleeds across.
-- States: **Not started → Playing ⇄ Paused → Finished** (receipt snapped or skipped) → **Done** (scored).
+- States: **Not started → Playing ⇄ Paused → Finished → Done**. Done means scored, and scoring needs the receipt. A hunt finished by Skip is Finished and unsettled; it is never Done until its receipt lands.
 - Sessions live in two places: as cards on the Today hub, and as a slim rail during play for one-tap switching.
 
-## The list panel rules (the core interaction)
+## The hunt layout — Hunt v2 (the core interaction)
 
-1. The list is a **pull-up panel** over the game scene. It is never a full screen during play.
-2. Open: the floating **List · n left** button, always in thumb reach. The count is the promise — it only ever goes down.
-3. Check: one tap per item. Strike-through, count drops, the item leaves the route.
-4. Close: swipe down, tap outside, tap the button again — **or do nothing**: after a check, the panel slides away on its own once the player starts moving. The game is the home position; the list visits.
-5. Collecting in the scene and checking in the panel are the same act in two places. They can never disagree.
+Design direction from Discussion 45. The v2 wireframes are the design
+of record; they are **not yet owner-approved**, and that approval
+gates the quest UI rebuild. The shipped build still uses the earlier
+hunt screen until the rebuild lands.
+
+1. The hunt is **one scrolling column**: HUD, view switch, a contained store view, the suggested-next card, the actions, then the list. Nothing floats over the scene.
+2. The store view shows **one target** — the suggested stop. The scene drivers (Photo, Cloud, Aisle, Strip) change only the store view; items are never duplicated across overlays.
+3. The list lives in **exactly one place**: the column, in route order. Rows never move, re-sort, or lose scroll position.
+4. GRAB collects in place. A collected row carries **Put back** in the same button box; putting back re-aims the suggestion. Check state derives from the session items only, so the scene and the list can never disagree.
+5. Collecting the last item does not finish the hunt. The hunt ends when the player taps Finish.
+6. Navigation is a **stack**: every Back returns to the screen the player came from.
 
 ## Screens
 
@@ -26,7 +32,7 @@ Design bar: a first-time player finishes a hunt with zero instruction. One prima
 | 3 | New session — pick store | Pick a store | Mapped = play in 3D; unmapped = play in Strip, map it to unlock 3D (platform) |
 | 15 | Optimize list (step 1) | Answer its questions, then "Looks right →" | Merge duplicates into quantities; correct spelling openly; ASK on real ambiguity — the game never starts on a guess |
 | 4 | Mode choose | Tap Quest or Express | The mood chooses the mode — one tap, reversible until start |
-| 5 | Hunt (Quest) | Collect | Scene first; list panel per the rules above; rail to switch sessions |
+| 5 | Hunt (Quest) | Collect / Put back | Hunt v2 column: one target in the store view; the list in flow below; rows never move |
 | 6 | Express run | Check items in walking order | Same model, game off; big targets; live time estimate |
 | 7 | Finish — receipt | Snap the receipt | The scorecard ritual; skippable, never blocking |
 | 8 | Score | Back to Today / next session | Verified haul, time, streak — the session closes |
@@ -47,7 +53,7 @@ Design bar: a first-time player finishes a hunt with zero instruction. One prima
 
 Profile also carries a visible "Coming next" tile — Analysis (patterns, spend, dashboard). A placeholder with a name, not a fake screen: the future is declared, not simulated.
 
-List intake has five doors, one list: photo, paste, type, voice — and **chat**: "add eggs to my Trader Joe's list" via the user's Muse lands in today's session for that store through the connector.
+List intake is one surface (Discussion 30): the Add tab carries one text field (type or paste), one mic (Voice Transcribe; the transcript lands in the field for edit), one camera with smart routing (a list photo becomes list items; a receipt photo is offered as a receipt), and the pointer to **chat**: "add eggs to my Trader Joe's list" via the user's Muse lands in today's session for that store through the connector. Receipts enter by image only.
 
 ## The scene ladder — the game never needs the 3D
 
@@ -62,4 +68,4 @@ Rules: an unmapped store is **playable, never gated** — Strip is its default, 
 
 ## Wireframes
 
-Clickable prototype: the "Arya Quest — Wireframes" artifact (Muse) — 10 screens, demo data (Trader Joe's Quest, 8 items + Costco Express, 5 items), the full demo path clickable end to end. The prototype was probe-verified: a panel check updates progress and the panel auto-dismisses; Express checks move the time estimate live. **Approved by the owner 2026-10-27.** Product builds follow the prototype; deviations come back here first.
+Clickable prototype: the "Arya Quest — Wireframes" artifact (Muse), also committed in this repo at `docs/quest/wireframes.html` — ~25 screens (Quest screens + Brain B1–B6 + panels), demo data (Trader Joe's Quest, 8 items + Costco Express, 5 items), the full demo path clickable end to end. **The pre-v2 set was approved by the owner 2026-10-27.** The Hunt v2 rework (Discussion 45) is **not yet owner-approved**; that approval is the gate for the quest UI rebuild, and quest UI code is frozen until it lands. Product builds follow the approved prototype; deviations come back here first.
