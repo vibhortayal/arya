@@ -101,6 +101,41 @@ function staplesLine(items) {
   return `${items.length} staple${items.length === 1 ? "" : "s"} due`;
 }
 
+/* The character registry (owner, 2026-10-28): the manifest maps an
+ * item to its character — exact item first, then category, then the
+ * basket fallback. The brain settles what an item IS; this only maps
+ * that identity to art and never guesses a match of its own. */
+let CHARM = null;
+let TODAY_DUE = [];
+fetch("assets/characters/manifest.json").then(r => r.json()).then(m => {
+  CHARM = m;
+  paintLineup(TODAY_DUE);
+}).catch(() => {});
+function charMatch(tokens, kw) {
+  const kt = kw.split(" ");
+  for (let i = 0; i + kt.length <= tokens.length; i++)
+    if (kt.every((w, j) => tokens[i + j] === w)) return true;
+  return false;
+}
+function charFor(name) {
+  if (!CHARM) return null;
+  const tokens = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+  for (const r of CHARM.items || [])
+    if ((r.keywords || []).some(k => charMatch(tokens, k))) return r.char;
+  for (const c of CHARM.categories || [])
+    if ((c.keywords || []).some(k => charMatch(tokens, k))) return c.char;
+  return CHARM.fallback || null;
+}
+function paintLineup(items) {
+  const el = $("#today-lineup");
+  if (!el) return;
+  const due = (items || []).filter(i => i && i.name).slice(0, 4);
+  el.innerHTML = due.length ? `<div class="duelineup">${due.map(i => {
+    const c = charFor(i.name);
+    return `<figure>${c ? `<img src="assets/characters/${c}" alt="">` : ""}<figcaption>${esc(i.name)}${i.due_reason ? `<br>${esc(i.due_reason)}` : ""}</figcaption></figure>`;
+  }).join("")}</div>` : "";
+}
+
 /* ---------------- Today (decluttered) ----------------
  * Greeting, ONE hero card (the resumable hunt; Resume is the only
  * primary button), compact game rows, one Needs-your-eye row, and
@@ -124,6 +159,12 @@ function openSess(id) {
 
 /* Level and points (owner, 2026-10-28): the bragging chip on Today
  * and the player card. Points bank with receipts; levels never drop. */
+/* Badge art: each badge wears a character (owner, 2026-10-28). */
+const BADGE_ART = { top_contributor: "blueberry.webp", egg_baron: "egg.webp",
+  banana_republic: "banana.webp", speed_demon: "pizza.webp",
+  clean_sweep: "basket.webp", first_mapper: "compass.webp",
+  eagle_eye: "binoculars.webp" };
+
 function paintLevelChip(profile) {
   const el = $("#today-level");
   if (!el || !profile || !profile.level) return;
@@ -210,6 +251,8 @@ async function renderHome() {
   const eyeBtn = $("#today-eye-btn");
   if (eyeBtn) eyeBtn.addEventListener("click", () => { receiptsFrom = "view-home"; show("view-receipts"); refresh("view-receipts"); });
   $("#today-listline-text").textContent = staplesLine(h.list.items);
+  TODAY_DUE = h.list.items || [];
+  paintLineup(TODAY_DUE);
 }
 
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
@@ -249,7 +292,7 @@ $("#store-filter").addEventListener("click", ev => {
 function paintListGroups() {
   const items = listData.list.items;
   const box = $("#smart-list");
-  if (!items.length) { box.innerHTML = empty("The list is empty. Nothing is due yet."); return; }
+  if (!items.length) { box.innerHTML = `<div class="emptyface-wrap"><img class="emptyface" src="assets/characters/pantry.webp" alt="">${empty("The list is empty. Nothing is due yet.")}</div>`; return; }
   if (listLens === "All") {
     // No per-store tags in the All lens — at household scale every
     // row wore three, and the row drowned (review U1). Store
@@ -446,7 +489,7 @@ async function renderProfile() {
     row("Spots reported", "Points land only when a spot verifies", String(s.spots_reported || 0)) +
     (eagle ? row("Eagle Eye", esc(eagle.detail || eagle.criteria), eagle.earned ? "Earned ✓" : "Locked") : "");
   $("#pf-badges").innerHTML = (profile.badges || []).map(b =>
-    `<div class="badgetile${b.earned ? "" : " locked"}"><h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
+    `<div class="badgetile${b.earned ? "" : " locked"}">${BADGE_ART[b.id] ? `<img class="bdgimg" src="assets/characters/${BADGE_ART[b.id]}" alt="">` : ""}<h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
      <span class="b-state">${b.earned ? "Earned ✓" : `Locked · ${esc(b.detail || "")}`}</span></div>`).join("");
   $("#pf-stores").innerHTML = profile.mapped_stores && profile.mapped_stores.length
     ? profile.mapped_stores.map(st => row(esc(st), "Mapped by you", "✓")).join("")
