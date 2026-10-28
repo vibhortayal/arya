@@ -27,6 +27,7 @@ _LEDGER = os.path.join(os.environ.get(
     "cost-ledger.jsonl")
 
 _login_fails = {}
+_register_hits = {}
 
 
 def _client_ip(req):
@@ -210,6 +211,29 @@ async def auth_setup(req: Request):
     body = await _json_obj(req)
     try:
         name = auth.create_user(body.get("username", ""), body.get("password", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+@app.post("/auth/register")
+async def auth_register(req: Request):
+    """Public sign-up (owner opened registration 2026-10-28). Same
+    account shape as setup; setup stays bootstrap-only. A per-IP cap
+    keeps account farming slow, and the password floor is enforced
+    here so the operator path (create_user) keeps its own rules."""
+    import time as _t
+    ip = _client_ip(req)
+    hits = [t for t in _register_hits.get(ip, []) if _t.time() - t < 900]
+    if len(hits) >= 10:
+        raise HTTPException(429, "too many account creations — try again later")
+    _register_hits[ip] = hits + [_t.time()]
+    body = await _json_obj(req)
+    password = body.get("password", "")
+    if len(password) < 8:
+        raise HTTPException(400, "password must be at least 8 characters")
+    try:
+        name = auth.create_user(body.get("username", ""), password)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))

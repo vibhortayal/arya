@@ -1132,16 +1132,32 @@ async function boot() {
     return;
   }
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-login"; });
-  $("#login-title").textContent = status.has_users ? "Sign in" : "Create your account";
+  // Three modes: bootstrap (no accounts yet -> setup), sign in, and
+  // public registration (opened by the owner 2026-10-28). The toggle
+  // flips between the last two; bootstrap never shows it.
+  let loginMode = status.has_users ? "login" : "setup";
+  const paintLoginMode = () => {
+    const create = loginMode !== "login";
+    $("#login-title").textContent = create ? "Create your account" : "Sign in";
+    $("#login-btn").textContent = create ? "Create account" : "Sign in";
+    $("#login-pass").autocomplete = create ? "new-password" : "current-password";
+    $("#login-toggle").hidden = loginMode === "setup";
+    $("#login-toggle").textContent = create ? "Already have an account? Sign in" : "New here? Create account";
+    $("#login-error").textContent = "";
+  };
   if (!status.has_users) $(".signin").open = true;
-  $("#login-btn").textContent = status.has_users ? "Sign in" : "Create account";
+  paintLoginMode();
+  $("#login-toggle").addEventListener("click", () => {
+    loginMode = loginMode === "login" ? "register" : "login";
+    paintLoginMode();
+  });
   $("#login-form").addEventListener("submit", async ev => {
     ev.preventDefault();
     const body = JSON.stringify({ username: $("#login-user").value, password: $("#login-pass").value });
-    const path = status.has_users ? "/auth/login" : "/auth/setup";
+    const path = loginMode === "login" ? "/auth/login" : loginMode === "register" ? "/auth/register" : "/auth/setup";
     const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     if (!r.ok) {
-      $("#login-error").textContent = (await r.json().catch(() => ({}))).detail || "Sign-in failed.";
+      $("#login-error").textContent = (await r.json().catch(() => ({}))).detail || (loginMode === "login" ? "Sign-in failed." : "Could not create the account.");
       return;
     }
     const data = await r.json();
