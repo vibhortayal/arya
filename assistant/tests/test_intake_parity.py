@@ -110,18 +110,30 @@ class TestDemoDoors(unittest.TestCase):
         r = self.c.post("/auth/demo")
         assert r.status_code == 200, r.text
 
-    def test_demo_photo_previews_and_saves_nothing(self):
+    def _disk(self):
+        out = {}
+        for root, _dirs, files in os.walk(os.environ["ARYA_DATA_DIR"]):
+            for f in files:
+                if f in ("sessions.json", "cost-ledger.jsonl"):
+                    continue
+                with open(os.path.join(root, f), "rb") as fh:
+                    out[os.path.join(root, f)] = fh.read()
+        return out
+
+    def test_demo_photo_files_into_the_sandbox_only(self):
+        before = self._disk()
         r = self.c.post("/decode/photo", content=b"\xff\xd8\xff fake",
                         headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 200, r.text)
         body = r.json()
         self.assertTrue(body["demo"])
-        self.assertEqual(body["added"], 0)
+        self.assertEqual(body["added"], 1)
         self.assertEqual(body["receipt"]["merchant"], "Safeway")
         self.assertEqual(len(body["receipt"]["lines"]), 1)
-        # the live read happened; the household did not change
-        self.assertEqual(self.c.get("/api/quest/receipts").json()["receipts"], [])
-        self.assertEqual(self.c.get("/api/review").json()["lines"], [])
+        # the visitor sees it (a hunt can finish on it); disk did not change
+        ids = [x["receipt_id"] for x in self.c.get("/api/quest/receipts").json()["receipts"]]
+        self.assertIn(body["receipt"]["receipt_id"], ids)
+        self.assertEqual(self._disk(), before)
 
     def test_demo_transcribe_works(self):
         r = self.c.post("/api/transcribe", content=wav_bytes(),
@@ -130,7 +142,8 @@ class TestDemoDoors(unittest.TestCase):
         self.assertEqual(r.json()["text"], "oat milk, eggs")
         self.assertTrue(r.json()["demo"])
 
-    def test_demo_list_photo_previews_and_saves_nothing(self):
+    def test_demo_list_photo_adds_to_the_sandbox_only(self):
+        before = self._disk()
         r = self.c.post("/api/list/from-photo", content=b"\xff\xd8\xff fake",
                         headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 200, r.text)
@@ -138,21 +151,22 @@ class TestDemoDoors(unittest.TestCase):
         self.assertTrue(body["demo"])
         self.assertEqual(body["kind"], "list")
         self.assertEqual(body["names"], ["oat milk", "eggs"])
-        self.assertEqual(body["added"], 0)
-        # the read happened; nothing joined the demo's list
+        self.assertEqual(body["added"], 2)
         home = self.c.get("/api/home").json()
-        names = [i["name"] for i in home["list"]["items"]]
-        self.assertNotIn("oat milk", names)
+        names = [i["name"].lower() for i in home["list"]["items"]]
+        self.assertIn("oat milk", names)
+        self.assertEqual(self._disk(), before)
 
-    def test_demo_other_writes_stay_closed(self):
-        self.assertEqual(self.c.post("/api/cart/approve").status_code, 403)
+    def test_demo_batch_doors_stay_closed(self):
         self.assertEqual(self.c.post("/decode/pdf", content=b"x").status_code, 403)
-        self.assertEqual(self.c.post("/api/list/add", json={"name": "milk"}).status_code, 403)
-        self.assertEqual(self.c.post("/api/list/from-text",
-                                     json={"text": "milk, eggs"}).status_code, 403)
         self.assertEqual(self.c.post("/api/intake/order-text",
                                      json={"text": "x" * 30}).status_code, 403)
-
+        self.assertEqual(self.c.post("/eyes/photo", content=b"\xff\xd8",
+                                     headers={"Content-Type": "image/jpeg"}).status_code, 403)
+        # typing and the cart work in the sandbox
+        self.assertEqual(self.c.post("/api/list/add", json={"name": "milk"}).status_code, 200)
+        self.assertEqual(self.c.post("/api/list/from-text",
+                                     json={"text": "milk, eggs"}).status_code, 200)
 
 if __name__ == "__main__":
     unittest.main()

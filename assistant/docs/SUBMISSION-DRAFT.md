@@ -61,8 +61,9 @@ plays on a flat view and is mapped by its own shoppers.
 - Muse Wonder 1.0 reads receipt photos — the primary photo reader
   (98.98% of lines correct on the Gate 0 public set, against Spark's
   93.88%; price errors 0 against 4). Wonder also authored the hunt's
-  localizer (the "Where am I?" matcher: 42 of 45 held-out photos at
-  the right stop, 45 of 45 in the right neighborhood).
+  localizer (the "Where am I?" matcher: 42 of 45 held-out frames from
+  the mapping video at the right stop, 45 of 45 in the right
+  neighborhood; not yet measured on fresh shopper photos).
 - Muse Image paints the collect-celebration characters (Quest mode).
 - Muse Voice Transcribe takes voice intake in the app: dictation for
   list adds and voice in Ask Arya.
@@ -101,11 +102,12 @@ plays on a flat view and is mapped by its own shoppers.
 - Store model: one Trader Joe's stretch (Chino Hills, CA) rebuilt from
   a walkthrough video — a 373,630-point web asset and an 18-stop shelf
   graph (SAM 3.1 segments, Spark labels), live in the app.
-- Test suite: 317 tests, green.
-- Live at https://arya-pilot.duckdns.org — "Try the demo household" is
-  a fictional household; its photo and voice doors call the Meta API
-  live and keep nothing, and every other write is refused. Judges need
-  no account.
+- Test suite: 323 tests, green.
+- Live at https://arya-pilot.duckdns.org — "Try the demo" opens a
+  fictional household with no account. Judges can play the whole
+  loop: list in by typing, photo or voice; the Trader Joe's hunt in
+  every mode and view; the receipt finish; and Ask Arya. Each
+  visitor's changes live in a sandbox for that visit only.
 
 ## Team
 

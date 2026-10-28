@@ -239,18 +239,25 @@ class TestDemoStoreWritesBlocked(unittest.TestCase):
         r = self.c.post("/auth/demo")
         assert r.status_code == 200, r.text
 
-    def test_demo_reads_but_cannot_write(self):
+    def test_demo_store_writes_stay_in_the_sandbox(self):
         assert self.c.get("/api/stores/search",
                           params={"q": "91709"}).status_code == 200
         assert self.c.get("/api/stores/mine").status_code == 200
-        assert self.c.post("/api/stores", json={
+        base = os.environ["ARYA_DATA_DIR"]
+        shared = os.path.join(base, "stores.json")
+        before = open(shared).read() if os.path.exists(shared) else None
+        r = self.c.post("/api/stores", json={
             "name": "X", "street": "1 A St", "city": "Chino",
-            "state": "CA", "zip": "91709"}).status_code == 403
-        assert self.c.post("/api/stores/mine",
-                           json={"store_id": "seed-costco-91709"}).status_code == 403
-        assert self.c.post("/api/stores/favorite", json={
-            "store_id": "seed-costco-91709",
-            "favorite": False}).status_code == 403
+            "state": "CA", "zip": "91709"})
+        assert r.status_code == 200, r.text
+        # The shared directory on disk never sees a demo store.
+        after = open(shared).read() if os.path.exists(shared) else None
+        assert after == before
+        c2 = TestClient(self.c.app)
+        c2.post("/auth/demo")
+        names = [s["name"] for s in c2.get("/api/stores/search",
+                                           params={"q": "91709"}).json()["stores"]]
+        assert "X" not in names
 
 
 class TestStoreShell(unittest.TestCase):
@@ -288,7 +295,7 @@ class TestStoreShell(unittest.TestCase):
         self.assertNotIn("⭐", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('arya-v32', self.read("sw.js"))
+        self.assertIn('arya-v33', self.read("sw.js"))
 
 
 if __name__ == "__main__":
