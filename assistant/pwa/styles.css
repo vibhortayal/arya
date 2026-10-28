@@ -686,6 +686,37 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .pickrow[aria-pressed="true"] .name { color: var(--accent); }
 .starpick { color: var(--accent); flex: none; }
 .starpick svg { width: 20px; height: 20px; display: block; }
+/* Google suggestions: a dropdown under the field, never a card
+ * (owner, 2026-10-28). The group anchors it (position: relative);
+ * rows are compact — name + address, one tap. */
+.dropanchor { position: relative; }
+.gdrop {
+  position: absolute; left: 10px; right: 10px; top: calc(100% - 6px);
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.20); z-index: 60; overflow: hidden;
+}
+.gdrop .ghead {
+  padding: 8px 14px 6px; font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--tertiary);
+  border-bottom: 1px solid var(--line);
+}
+.gdrop .gitem {
+  display: block; width: 100%; text-align: left; background: none;
+  border: none; border-bottom: 1px solid var(--fill);
+  padding: 10px 14px; font: inherit; color: inherit; cursor: pointer;
+}
+.gdrop .gitem:last-child { border-bottom: none; }
+.gdrop .gitem:active { background: var(--fill); }
+.gdrop .gitem .name { display: block; font-weight: 600; font-size: 15px; }
+.gdrop .gitem .sub { display: block; font-size: 12.5px; color: var(--tertiary); margin-top: 1px; }
+/* Picker rows wrap a pick button + a star toggle side by side:
+ * the star must be tappable without starting the plan. */
+.pickwrap { align-items: center; }
+.pickmain {
+  background: none; border: none; flex: 1; min-width: 0;
+  text-align: left; padding: 0; font: inherit; color: inherit;
+  cursor: pointer;
+}
 .starbtn {
   background: none; border: none; padding: 10px; flex: none;
   min-width: 44px; min-height: 44px; color: var(--tertiary);
