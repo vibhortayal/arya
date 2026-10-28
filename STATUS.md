@@ -137,6 +137,37 @@ same evening — see Intake parity below.)
   smoke should confirm the ASR response envelope against the
   defensive parser in api/voice/service.py.
 
+## Brain restyle (2026-10-27, night)
+- **The Brain screens now match the approved wireframes** (B1–B6 +
+  decluttered Today; DISCUSSION 20–27), built on top of Intake
+  parity: five tabs (Today / List / Add / Ask / Profile, wireframe
+  SVG icon set; no Dashboard tab — Dashboard became Analysis,
+  reached from Profile); Today = greeting, one hero card (Resume
+  the only primary button), game rows, a Needs-your-eye row, and
+  the list as one plain-text line in the owner's format; B1 List
+  with the store lens (affinity from price_by_store history,
+  "Your <store> list" / muted "Could grab here too", global
+  check-off); B4 Receipts (review + Curator as Needs-your-eye,
+  archive rows open the detail); B5 Analysis (Spend live with
+  honest period labels; Patterns/Trends "Coming next"); B6 one
+  unified Profile (player card + badge shelf + Eagle Eye/spots +
+  account/token/Appearance). B3's confirmed actions render as
+  chips.
+- **Restored dead controls:** the list-row actions (check /
+  stepper / remove), the still-good/expired check buttons, and
+  the old Home add-picker had no click handlers anywhere (lost
+  in the Stage 6 file split; the endpoints always existed).
+  All wired and smoke-proven.
+- Commits `3be9bd6`, `2f9fb4b` (+ tests/log). Suite: **126 green**
+  (10 new: shell contract + lens/analysis/Today data shapes).
+  Headless serve smoke: 40 checks passed. **Not deployed** —
+  deploy is a separate owner step (git pull on the VM).
+- Gaps (no fabricated data): Analysis has no category source
+  (Top items + by-store shown) and cannot net returns per month
+  (API exposes returns all-time only — labeled as such); Profile
+  mapper credits have no data source (mapped_stores is empty;
+  empty state shown). Detail: assistant/loops/2026-10-27-brain-restyle.md.
+
 ## Quest Stage D (2026-10-27, night)
 - **The cloud stops are grounded in the real shelves**:
   `assistant/tools/build_shelf_graph.py` ran SAM 3.1 (Meta Model
