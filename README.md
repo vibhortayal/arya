@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assistant/pwa/assets/scenes/hero.webp" alt="Arya and the cast — the raspberry leads the way down the aisle" width="720">
-</p>
-
 # Arya
 
 **She remembers the list.** *(Winter is coming.)*
@@ -75,11 +71,8 @@ walkthrough video: VGGT builds the geometry, SAM 3.1 segments the
 shelves, Muse Spark labels them, and every hunt stop sits at its
 item's matched shelf.
 
-<p align="center">
-  <img src="assistant/pwa/models/trader-joes/frames-web/f012.jpg" alt="Inside the Trader Joe's photo walk — every shopper pixelated by SAM before the frame ships" width="720">
-</p>
-<p align="center"><em>Her view of Trader Joe's. Every person in every frame is
-pixelated by SAM before the frame ships — 476 shoppers, zero faces.</em></p>
+Every person in every walkthrough frame is pixelated by SAM before
+the frame ships — 476 shoppers, zero faces.
 
 No map yet? In Quest she draws you an illustrated aisle and leads
 anyway; Express mode skips the art and just gets you out fast.
