@@ -104,3 +104,37 @@ Verification: suite 370 OK (1 skipped); new `test_howto.py`,
 `test_photo_driver.py` rewritten for one view. Playwright: guide on
 first hunt only, ? reopens, Esc closes; no switch, photo caption,
 3D peek mounts the canvas and returns, the hunt still plays.
+
+# Part 5: Find it for me, fresh shelf photos, people scrubbed
+
+Owner: "Can we have a find it for me in the game? it opens the camera…
+finds the product… highlights? then user clicks grab?" Then: "we can
+scrub faces off… Say we don't store images of people, only products.
+scrubbing can use a meta product?" Opt-in and privacy policy are
+deferred past the hackathon (owner).
+
+- "Find it for me" under Grab on the next-item card opens the scan
+  aimed at that one item (`?item=`): one item's SAM + Spark calls.
+  Status says "Found it! X is highlighted — tap it to grab", or that
+  it was not spotted (never "not here"). Grabbing the target closes
+  the scan after a beat.
+- Every verified pop is a sighting (store, item, shelf label, time)
+  for the store map.
+- A frame that popped an item is kept as a fresh shelf photo only
+  after SAM 3.1 finds every "person" / "human face" and they are
+  pixelated (`shelfscan.scrub_people`). Fail closed: no scrub, no
+  frame. Latest frame per store+item, downscaled to 960px, inside
+  `shelf_frames.json` (sandbox capped at 12).
+- The next-item card shows that photo with the verified box outlined:
+  "Fresh from a shopper, 5 min ago. People are blurred out; we only
+  keep products." The scan sheet says "We never keep pictures of
+  people, only products".
+- The 90 shipped walk-video frames show recognizable shoppers in
+  about half. `harness/scrub_walk_frames.py` runs the same scrub over
+  them in place (about $0.45; needs MODEL_API_KEY, so the owner runs
+  it on the VM). Git history still holds the unscrubbed originals.
+- Service worker arya-v41.
+
+Verification: suite 378 OK (1 skipped): target filter, sightings,
+scrub pixelates people and leaves shelves sharp, fail-closed paths,
+the walk-frame script's in-place/skip/fail-closed behaviour.

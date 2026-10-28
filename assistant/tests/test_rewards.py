@@ -97,3 +97,24 @@ class TestRewardsNode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFindItForMe(unittest.TestCase):
+    def test_button_on_the_next_card_aims_the_scan(self):
+        html = read("index.html")
+        pop = html.split('id="hunt-pop"')[1].split('id="hunt-done-note"')[0]
+        self.assertIn('id="btn-findit"', pop)
+        self.assertIn("Find it for me", pop)
+        js = read("quest.js")
+        self.assertIn("Q.scanTarget = sess.items[idx].name;", js)
+        self.assertIn("&item=${encodeURIComponent(Q.scanTarget)}", js)
+        self.assertIn("Found it! ${Q.scanTarget} is highlighted", js)
+
+    def test_fresh_photo_on_the_card_and_the_privacy_line(self):
+        html = read("index.html")
+        pop = html.split('id="hunt-pop"')[1].split('id="hunt-done-note"')[0]
+        self.assertIn('id="hunt-fresh"', pop)
+        self.assertIn("We never keep pictures of people, only products", html)
+        js = read("quest.js")
+        self.assertIn("/api/quest/shelf-photo?store=", js)
+        self.assertIn("People are blurred out; we only keep products.", js)
