@@ -373,6 +373,15 @@ def judgments():
     return _load("judged.json", {})
 
 
+def second_seat_store():
+    return _load("second_seat.json", {"checked": 0, "agreed": 0,
+                                      "disagreements": []})
+
+
+def save_second_seat(report):
+    _save("second_seat.json", report)
+
+
 def judge_pending(client, limit=60):
     """Judge every pattern (2+ buys) whose verdict is missing or stale.
     Returns how many items were judged. Never raises to the caller."""
