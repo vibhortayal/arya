@@ -725,12 +725,14 @@ function renderStorePick() {
   const favs = mineShown.filter(s => s.favorite);
   const rest = mineShown.filter(s => !s.favorite);
   const rowHtml = s => `
-    <button class="sessrow pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
-      <span class="grow"><span class="name">${esc(s.name)}</span>
-      <span class="sub">${qStoreMeta(s)}</span>
-      ${qStoreFit(s.name) ? `<span class="sub fit">${esc(qStoreFit(s.name))}</span>` : ""}</span>
-      ${s.favorite ? `<span class="starpick">${qStarSvg(true)}</span>` : ""}
-    </button>`;
+    <div class="sessrow pickwrap">
+      <button class="pickmain pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
+        <span class="grow"><span class="name">${esc(s.name)}</span>
+        <span class="sub">${qStoreMeta(s)}</span>
+        ${qStoreFit(s.name) ? `<span class="sub fit">${esc(qStoreFit(s.name))}</span>` : ""}</span>
+      </button>
+      <button class="starbtn ${s.favorite ? "on" : ""}" data-fav="${esc(s.id)}" data-on="${String(s.favorite)}" aria-pressed="${String(s.favorite)}" aria-label="${s.favorite ? "Remove from favorites" : "Add to favorites"}" type="button">${qStarSvg(s.favorite)}</button>
+    </div>`;
   let html = "";
   if (favs.length) html += `<h3 class="sect">Favorites</h3><div class="group">` + favs.map(rowHtml).join("") + `</div>`;
   if (rest.length) html += `<h3 class="sect">All my stores</h3><div class="group">` + rest.map(rowHtml).join("") + `</div>`;
@@ -841,10 +843,14 @@ async function renderMyStores() {
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-fav]");
   if (!b) return;
+  const on = b.dataset.on !== "true";
   try {
     await post("/api/stores/favorite",
-      { store_id: b.dataset.fav, favorite: b.dataset.on !== "true" });
-    renderMyStores().catch(showErr);
+      { store_id: b.dataset.fav, favorite: on });
+    await qLoadMine().catch(() => {});
+    renderStorePick();
+    renderMyStores().catch(() => {});
+    toast(on ? "Added to favorites." : "Removed from favorites.");
   } catch (e) { toast(e.message); }
 });
 
@@ -901,21 +907,34 @@ async function qFetchPlaces(q) {
 }
 function qPlacesRows(rows, mode) {
   if (!rows.length) return "";
-  return `<h3 class="sect">From Google</h3><div class="group">` + rows.map(r => `
-    <button class="sessrow pickrow" data-gpick="${esc(r.place_id)}" data-gname="${esc(r.name)}" data-gmode="${mode}" type="button">
-      <span class="grow"><span class="name">${esc(r.name)}</span>
-      <span class="sub">${esc(r.secondary)}</span></span>
-    </button>`).join("") + `</div>`;
+  return `<div class="ghead">From Google</div>` + rows.map(r => `
+    <button class="gitem" data-gpick="${esc(r.place_id)}" data-gname="${esc(r.name)}" data-gmode="${mode}" type="button">
+      <span class="name">${esc(r.name)}</span>
+      <span class="sub">${esc(r.secondary)}</span>
+    </button>`).join("");
 }
 async function qSuggestInto(input, box, mode) {
   const q = input.value.trim();
-  if (q.length < 3) { box.innerHTML = ""; return; }
+  if (q.length < 3) { box.innerHTML = ""; box.hidden = true; return; }
   try {
     const rows = await qFetchPlaces(q);
     if (input.value.trim() !== q) return;  // typed on: stale answer
     box.innerHTML = qPlacesRows(rows, mode);
-  } catch (e) { box.innerHTML = ""; }
+    box.hidden = !rows.length;
+  } catch (e) { box.innerHTML = ""; box.hidden = true; }
 }
+function qHideDrops() {
+  for (const id of ["#st-goog", "#sa-results"]) {
+    const b = $(id);
+    if (b) { b.hidden = true; b.innerHTML = ""; }
+  }
+}
+document.addEventListener("click", ev => {
+  if (!ev.target.closest(".dropanchor")) qHideDrops();
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape") qHideDrops();
+});
 $("#st-name").addEventListener("input", () => {
   clearTimeout(qPlacesTimer);
   qPlacesTimer = setTimeout(() => {
@@ -938,6 +957,7 @@ document.addEventListener("click", async ev => {
     const row = await post("/api/stores/places/pick",
       { place_id: b.dataset.gpick, name: b.dataset.gname });
     Q.placesSession = null;  // the pick ends the billing session
+    qHideDrops();
     await qLoadMine().catch(() => {});
     if (b.dataset.gmode === "add") {
       toast(`${row.name} is in your stores.`);
@@ -947,7 +967,6 @@ document.addEventListener("click", async ev => {
     if (!Q.draft) return;
     Q.draft.storeId = row.id;
     $("#st-name").value = row.name;
-    const gb = $("#st-goog"); if (gb) gb.innerHTML = "";
     qPickStore();
   } catch (e) { toast(e.message); b.disabled = false; }
 });
