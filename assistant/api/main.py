@@ -1,7 +1,14 @@
 """Arya API — FastAPI entry point.
-All Meta calls go through api.meta_client; all money math is code."""
+All Meta calls go through api.meta_client; all money math is code.
+
+Event-loop rule (review 2026-10-28, H1): MetaClient is blocking
+urllib with timeouts up to 120 s, so no route may call a model —
+or judge_pending, which calls the judge — on the event loop.
+Model work runs through run_in_threadpool; a slow photo read then
+stalls one worker thread, never every other request."""
 import hashlib, json, os
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -173,7 +180,7 @@ async def import_costco_json(req: Request):
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
     state.add_receipts([dec])
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return dec
 
 
@@ -184,7 +191,7 @@ async def import_bulk(req: Request):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
     added = state.add_receipts(decs)
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return {"received": len(decs), "added": added, "total_receipts": len(state.receipts())}
 
 
@@ -195,9 +202,9 @@ async def decode_text_route(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
-    dec = decode_text(body.get("text", ""), client)
+    dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
     state.add_receipts([dec])
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return dec
 
 
@@ -213,9 +220,9 @@ async def intake_order_text(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
-    dec = decode_order_text(text, client)
+    dec = await run_in_threadpool(decode_order_text, text, client)
     state.add_receipts([dec])
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
             "purchased_at": dec["purchased_at"], "lines": len(dec["lines"]),
             "total": dec["total"], "totals_reconcile": dec["totals_reconcile"]}
@@ -260,7 +267,7 @@ async def intake_structured(req: Request):
            "tax": body.get("tax"), "total": body.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
     added = state.add_receipts([dec])
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return {"receipt_id": rid, "merchant": dec["merchant"], "added": added,
             "lines": len(lines), "totals_reconcile": reconcile,
             "unverified": sum(1 for l in lines if l["status"] != "auto")}
@@ -377,7 +384,7 @@ async def decode_pdf(req: Request):
     if len(body) > 10_000_000:
         raise HTTPException(413, "PDF too large (10 MB max)")
     try:
-        text = extract_pdf_text(body)
+        text = await run_in_threadpool(extract_pdf_text, body)
     except Exception:
         raise HTTPException(422, "could not read this PDF")
     if len(text.strip()) < 20:
@@ -386,10 +393,10 @@ async def decode_pdf(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
-    receipt = decode_text(text, client)
+    receipt = await run_in_threadpool(decode_text, text, client)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -408,7 +415,8 @@ async def decode_photo_route(req: Request):
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        receipt = decode_photo(body, client, media_type=media)
+        receipt = await run_in_threadpool(decode_photo, body, client,
+                                          media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     if _is_demo(req):
@@ -417,7 +425,7 @@ async def decode_photo_route(req: Request):
         return {"demo": True, "added": 0, "receipt": receipt}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
-    state.judge_pending(MetaClient(ledger=CostLedger(_LEDGER)))
+    await run_in_threadpool(state.judge_pending, MetaClient(ledger=CostLedger(_LEDGER)))
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -442,7 +450,7 @@ async def transcribe_route(req: Request):
     from api.voice.service import transcribe_audio
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        out = transcribe_audio(body, client)
+        out = await run_in_threadpool(transcribe_audio, body, client)
     except ValueError as e:
         raise HTTPException(422, str(e))
     except RuntimeError as e:
@@ -468,7 +476,8 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
     from datetime import date as _d
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        sightings = detect(body, client, media_type=media)
+        sightings = await run_in_threadpool(detect, body, client,
+                                            media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     rec_id = "eye-" + hashlib.sha1(body).hexdigest()[:10]
@@ -538,7 +547,7 @@ async def chat_route(req: Request):
     from api.chat_service import chat as run_chat
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        return run_chat(body.get("messages", []), client)
+        return await run_in_threadpool(run_chat, body.get("messages", []), client)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
 
@@ -652,7 +661,8 @@ async def list_from_photo(req: Request):
     from api.list.intake import read_list_photo
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        read = read_list_photo(body, client, media_type=media)
+        read = await run_in_threadpool(read_list_photo, body, client,
+                                       media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     if _is_demo(req):
@@ -810,13 +820,12 @@ async def quest_create_session(req: Request):
         raise HTTPException(400, "store is required")
     from api import quest
     try:
-        sess = quest.create_session(store, body.get("mode") or "quest",
-                                    body.get("items") or [],
-                                    driver=body.get("driver") or "strip",
-                                    store_id=store_id,
-                                    store_address=store_address,
-                                    client=MetaClient(
-                                        ledger=CostLedger(_LEDGER)))
+        sess = await run_in_threadpool(
+            quest.create_session, store, body.get("mode") or "quest",
+            body.get("items") or [],
+            driver=body.get("driver") or "strip",
+            store_id=store_id, store_address=store_address,
+            client=MetaClient(ledger=CostLedger(_LEDGER)))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess
@@ -906,7 +915,8 @@ async def scan_shelf_route(req: Request):
     _budget_guard()
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
-        return shelfscan.scan(body, remaining, client, media_type=media)
+        return await run_in_threadpool(shelfscan.scan, body, remaining,
+                                       client, media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
 
@@ -935,7 +945,7 @@ async def locate_route(req: Request):
     if sess is None:
         raise HTTPException(404, "no such session")
     try:
-        return locate.locate(body, sess)
+        return await run_in_threadpool(locate.locate, body, sess)
     except UnidentifiedImageError:
         raise HTTPException(400, "could not read that photo")
 
@@ -973,10 +983,10 @@ async def quest_create_shopoff(req: Request):
         raise HTTPException(400, "store is required")
     from api import quest
     try:
-        race = quest.create_shopoff(store, body.get("items") or [],
-                                    body.get("opponent_handle", ""),
-                                    client=MetaClient(
-                                        ledger=CostLedger(_LEDGER)))
+        race = await run_in_threadpool(
+            quest.create_shopoff, store, body.get("items") or [],
+            body.get("opponent_handle", ""),
+            client=MetaClient(ledger=CostLedger(_LEDGER)))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return race
