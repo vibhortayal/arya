@@ -132,7 +132,7 @@ everywhere, Profile counts finished and receipt-attached apart);
 Add receipt is a sheet reachable from Score, Today, Receipts and
 Profile; the demo settles with a sample receipt. Server: a
 receipt settles one hunt only and not one begun after its date
-(#14); placeholders are hidden (#15). Service worker arya-v35.
+(#14); placeholders are hidden (#15). Service worker arya-v36.
 Suite: **350 green**. Not deployed — deploy is the owner's
 step. Detail: `assistant/loops/2026-10-28-hunt-v2.md`.
 

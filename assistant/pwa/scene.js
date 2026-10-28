@@ -166,6 +166,10 @@ function cloudView(THREE, host, manifest, buf, graph) {
     col[i] = raw[i] / 255;
   }
 
+  // Hunt v2: inside the contained store view only the presented
+  // stop shows — the same one-target rule the DOM drivers get
+  // from CSS, applied here because sprites are not DOM.
+  const oneTarget = !!(host.closest && host.closest(".storeview"));
   host.innerHTML = "";
   const wrap = document.createElement("div");
   wrap.className = "cloud-wrap";
@@ -381,7 +385,7 @@ function cloudView(THREE, host, manifest, buf, graph) {
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1,
             -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(markerGroup.children, false)[0];
+    const hit = ray.intersectObjects(markerGroup.children.filter(m => m.visible), false)[0];
     if (hit) driver.onTapStop(hit.object.userData.index);
   }
   const dom = renderer.domElement;
@@ -428,6 +432,7 @@ function cloudView(THREE, host, manifest, buf, graph) {
     if (right.lengthSq() > 1e-4) dir.applyAxisAngle(right, pitch);
     camera.lookAt(camera.position.clone().add(dir));
     markerGroup.children.forEach((m, i) => {
+      m.visible = !oneTarget || i === nextIdx;
       const base = m.userData.baseScale;
       const pulse = i === nextIdx ? 1 + 0.17 * Math.sin(now * 4.2) : 1;
       m.scale.setScalar(base * pulse);
