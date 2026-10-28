@@ -479,7 +479,7 @@ async function paintTokenRow(el) {
   if (!el) return;
   let has = false;
   try { has = (await api("/auth/token")).has_token; } catch (e) { el.innerHTML = ""; return; }
-  el.innerHTML = `${has ? `<span class="sub grow">A connector token is active.</span>` : `<span class="sub grow">No token yet.</span>`}<button class="btn" data-mint="1">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" data-revoke="1">Revoke</button>` : ""}`;
+  el.innerHTML = `${has ? `<span class="sub grow">Your link code is active.</span>` : `<span class="sub grow">No link code yet.</span>`}<button class="btn" data-mint="1">${has ? "Make a new code" : "Make my link code"}</button>${has ? `<button class="btn danger" data-revoke="1">Revoke</button>` : ""}`;
 }
 
 async function mintInto(el) {
@@ -501,7 +501,7 @@ document.addEventListener("click", async ev => {
     if (navigator.clipboard) navigator.clipboard.writeText(i.value);
     toast("Token copied.");
   } else if (b.dataset.revoke) {
-    try { await api("/auth/token", { method: "DELETE" }); toast("Connector token revoked."); paintTokenRow(rowEl); }
+    try { await api("/auth/token", { method: "DELETE" }); toast("Link code revoked."); paintTokenRow(rowEl); }
     catch (e) { toast(e.message); }
   }
 });
@@ -1371,6 +1371,7 @@ async function boot() {
   const paintLoginMode = () => {
     const create = loginMode !== "login";
     $("#login-title").textContent = create ? "Create your account" : "Sign in";
+    $("#login-user").parentElement.firstChild.textContent = create ? "Username" : "Email";
     $("#login-btn").textContent = create ? "Create account" : "Sign in";
     $("#login-pass").autocomplete = create ? "new-password" : "current-password";
     $("#login-toggle").hidden = loginMode === "setup" || !status.registration_open;
@@ -1415,12 +1416,20 @@ function enterApp(user, demo) {
     openShell();
     return;
   }
+  const seenKey = "arya-connect-seen:" + user;
+  let seen = false;
+  try { seen = !!localStorage.getItem(seenKey); } catch (e) {}
+  if (seen) { openShell(); return; }
   api("/auth/token").then(t => {
     if (t.has_token) { openShell(); return; }
-    // Connecting Muse is the first step of a new account.
+    // Linking Muse is offered once per account on this phone; Skip is
+    // remembered, and the setup stays in Profile.
     $("#view-connect").hidden = false;
     paintTokenRow($("#connect-token-row"));
-    const finish = () => { $("#view-connect").hidden = true; openShell(); };
+    const finish = () => {
+      try { localStorage.setItem(seenKey, "1"); } catch (e) {}
+      $("#view-connect").hidden = true; openShell();
+    };
     $("#connect-done").onclick = finish;
     $("#connect-skip").onclick = finish;
   }).catch(() => openShell());
