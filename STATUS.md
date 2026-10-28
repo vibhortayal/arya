@@ -45,6 +45,18 @@ frames, and the README has a "How this was built" note. No quest
 UI was changed (Hunt v2 freeze). Suite: **321 green**. Not
 deployed — deploy is a separate owner step.
 
+**Live tester pass (2026-10-28).** Owner test account plus
+tester-a/b/c on the live site: sign-in, every Brain tab, Ask, Quest
+and Express at Trader Joe's and Costco, friends request/accept and
+cross-account isolation (another account's session, race and
+reports all 404). Two fixes: a client could post state "done" and
+bank a verified hunt with no receipt, so now only the receipt
+attach closes a hunt; and the Optimizer's token coverage ran both
+ways ("pasta sauce" became "Pasta 1 lb"), so now it runs
+typed-into-product only. Suite: **323 green**. Known and not changed:
+Shop-Off and Spotter reports are single-account (the opponent can't
+see the race, and other players can't see the reports).
+
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
 93.85% (122/130); strict-string accuracy 81.6%; arithmetic 7/7.
