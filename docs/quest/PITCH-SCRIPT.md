@@ -1,6 +1,6 @@
 # The 2-minute pitch — Arya (Team Nightshift, Indie track)
 
-Spoken script, timed to the Meta hackathon structure. ~330 words ≈ 2:15 at speaking pace — the extra 15 seconds buy the solution logic (why a game at all) ahead of the demo, per the owner 2026-10-27. Screen beats in brackets; the demo runs on the live app throughout — show, don't tell.
+Spoken script, timed to the Meta hackathon structure. ~355 words ≈ 2:20 at speaking pace — the extra 15 seconds buy the solution logic (why a game at all) ahead of the demo, per the owner 2026-10-27. Screen beats in brackets; the demo runs on the live app throughout — show, don't tell.
 
 ## Hook (0:00–0:15)
 
@@ -22,9 +22,9 @@ The game isn't decoration. The game is how the map gets built."
 
 ## Live demo (1:00–1:45)
 
-"This is Arya.
+"This is Arya — and the list doesn't start blank. It starts written.
 
-[Photo of a handwritten list] I photograph my list. **Muse Spark** reads it; Arya's Optimizer merges duplicates and asks about the one real ambiguity — it never guesses a product into existence. Don't want to type? Dictate it — **Muse Voice Transcribe**.
+[Today screen] Arya learned this house from its receipts — what it buys, how fast it uses it. It reminds you what's due before you run out: raspberries, mandarins, almonds. That's your starting point. And adding is any way you like: photograph a note, dictate it with **Muse Voice Transcribe**, paste it, type it, or just tell Muse in chat. **Muse Spark** reads it; the Optimizer merges duplicates and asks about the one real ambiguity — it never guesses a product into existence.
 
 [Pick Trader Joe's] This store was rebuilt in 3D from a shopper's walkthrough video by **VGGT**, Meta AI's reconstruction model. **SAM 3.1** segmented the shelves; **Spark** labeled them — Cheese, Pasta, Pasta Sauce, in the order you walk.
 
