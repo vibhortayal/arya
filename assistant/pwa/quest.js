@@ -1652,7 +1652,7 @@ $("#fin-photo").addEventListener("change", async ev => {
   const f = ev.target.files[0];
   if (!f) return;
   const status = $("#fin-status");
-  status.textContent = "Reading the receipt…";
+  status.textContent = "Reading the receipt — this can take up to a minute.";
   try {
     const r = await fetch("/decode/photo", {
       method: "POST",

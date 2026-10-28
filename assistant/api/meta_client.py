@@ -58,7 +58,7 @@ class MetaClient:
         self.transport = transport  # injectable for tests: fn(method, url, headers, body) -> (status, payload)
         self.ledger = ledger        # optional cost_ledger.CostLedger
 
-    def _send(self, path, body):
+    def _send(self, path, body, timeout=None):
         url = BASE + path
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {self.api_key}"}
@@ -67,20 +67,26 @@ class MetaClient:
         req = urllib.request.Request(url, data=json.dumps(body).encode(),
                                      headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(
+                    req, timeout=120 if timeout is None else timeout) as resp:
                 return resp.status, json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read().decode() or "{}")
 
     def chat(self, messages, mode="standard", personal=False,
-             reasoning_effort="low", temperature=0.1):
+             reasoning_effort="low", temperature=0.1, timeout=None):
         """One chat completion. Returns (text, usage_dict, cost_usd).
-        usage keys are normalized: input_tokens, cached_tokens, output_tokens."""
+        usage keys are normalized: input_tokens, cached_tokens, output_tokens.
+        reasoning_effort=None omits the key entirely — Wonder's production
+        configuration per WONDER-EVAL (no effort key sent). timeout bounds
+        the HTTP call in seconds; None keeps the 120 s default."""
         if personal and mode == "contributor":
             raise ValueError("personal data is Standard-only (MODEL-POLICY rule 3)")
         body = {"model": MODELS[mode], "messages": messages,
-                "temperature": temperature, "reasoning_effort": reasoning_effort}
-        status, payload = self._send("/chat/completions", body)
+                "temperature": temperature}
+        if reasoning_effort is not None:
+            body["reasoning_effort"] = reasoning_effort
+        status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status != 200:
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         text = payload["choices"][0]["message"]["content"]
