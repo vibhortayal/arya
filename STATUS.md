@@ -121,9 +121,23 @@ driver list, so hunt starts at mapped stores failed
 is queued for the next fix round: /auth/login answers 500 on
 a non-string username.
 
-**Remaining for submission:** the quest UI rebuild to the
-Hunt v2 wireframes (owner approval of the wireframes
-required), the demo video, and the final
+**Hunt v2 rebuild (2026-10-28; Discussion 46; branch
+fix/hunt-v2-rebuild, PR pending owner review).** The owner
+approved the Hunt v2 wireframes and the amended plan; the quest
+UI freeze is lifted by that approval. The hunt is one scrolling
+column with one target in the store view; GRAB puts back in
+place; nothing auto-finishes; Back is a stack; Finish closes the
+hunt (closure Score, the Today hero clears, one label
+everywhere, Profile counts finished and receipt-attached apart);
+Add receipt is a sheet reachable from Score, Today, Receipts and
+Profile; the demo settles with a sample receipt. Server: a
+receipt settles one hunt only and not one begun after its date
+(#14); placeholders are hidden (#15). Service worker arya-v36.
+Suite: **350 green**. Not deployed — deploy is the owner's
+step. Detail: `assistant/loops/2026-10-28-hunt-v2.md`.
+
+**Remaining for submission:** the owner's phone pass on the
+Hunt v2 rebuild, the demo video, and the final
 submission package (owner go-ahead required). This repo goes
 public with the submission freeze (DISCUSSION 28).
 Deadline: submission Nov 4, 2026, 9:00 PM ET.

@@ -82,6 +82,32 @@ class TestDemoHousehold(unittest.TestCase):
         self.assertIn(sid, listed)
         self.assertEqual(self._disk(), before)
 
+    def test_demo_sample_receipt_settles_in_the_sandbox(self):
+        # Hunt v2 plan item 8: one tap settles the demo hunt through
+        # the real attach path, dated now, with nothing on disk.
+        before = self._disk()
+        sess = self.c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "mode": "quest", "driver": "strip",
+            "items": ["Whole Milk 1 gal", "Sourdough Loaf"]}).json()
+        sid = sess["id"]
+        self.c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
+        self.c.post(f"/api/quest/sessions/{sid}/check",
+                    json={"item": sess["items"][0]["name"]})
+        self.c.post(f"/api/quest/sessions/{sid}/state", json={"state": "finished"})
+        r = self.c.post(f"/api/quest/sessions/{sid}/sample-receipt")
+        self.assertEqual(r.status_code, 200, r.text)
+        done = r.json()
+        self.assertEqual(done["state"], "done")
+        self.assertTrue(done["settled"])
+        rec = self.c.get(f"/api/quest/receipts/{done['receipt_id']}").json()
+        self.assertEqual(rec["merchant"], "Trader Joe's")
+        self.assertEqual([ln["name"] for ln in rec["lines"]],
+                         [sess["items"][0]["name"]])
+        self.assertGreater(rec["total"], 0)
+        # The brain still reads the household after a sample settles.
+        self.assertEqual(self.c.get("/api/home").status_code, 200)
+        self.assertEqual(self._disk(), before)
+
     def test_demo_household_lives_in_the_present_week(self):
         from datetime import date, timedelta
         home = self.c.get("/api/home").json()
