@@ -815,7 +815,7 @@ function renderHunt() {
     $("#pop-body").innerHTML = `<div class="pop-char" data-char-slot></div>
       <p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p>
       ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
-      ${rep ? `<p class="warn" style="margin:6px 0 0">Reported missing — another hunter could not find it here.</p>` : ""}`;
+      ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
     $("#btn-nothere").hidden = false;
@@ -1499,7 +1499,7 @@ function renderExpress() {
     <div class="row listrow${i.checked ? " checked" : ""}">
       <button class="check" data-exp-check="${esc(i.name)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
       <div class="grow"><span class="name">${esc(i.name)}</span>
-      ${(flagged.has(i.group) || flagged.has(qnorm(i.name))) ? `<span class="sub warn">Reported missing at this store.</span>` : ""}</div>
+      ${(flagged.has(i.group) || flagged.has(qnorm(i.name))) ? `<span class="repflag">Reported missing at this store.</span>` : ""}</div>
       <div class="money">× ${qtyFmt(i.qty)}</div>
     </div>`).join("") || empty("The list is empty.");
   const pop = $("#exp-pop");
