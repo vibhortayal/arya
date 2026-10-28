@@ -619,10 +619,70 @@ function qFollowHold() {
     renderCurrent();
   }
 }
-/* The collect hook: the sub-stage 2 celebration (character + fun
- * fact) fires from here — GRAB and marker taps both collect through
- * collectCurrent, so the celebration has exactly one home. */
-function qOnCollected(name) { /* celebration lands with sub-stage 2 */ }
+/* The collect hook: the celebration (Discussion 32 — the item as an
+ * animated character with one fun fact) fires from here. GRAB and
+ * marker taps collect through collectCurrent; panel checks and
+ * Shelf Scan pops route here too, so the celebration has exactly
+ * one home. Hunt state is already recorded when this runs — the
+ * celebration never delays or gates a collect, and "Not here"
+ * never fires it. Facts come from the verified static bank in
+ * assets/characters/manifest.json: fun facts only, no nutrition
+ * or health claims, nothing improvised at runtime. */
+let CELEB = null;          // the manifest, once loaded
+let celebTimer = null;     // the one auto-dismiss timer — never stacked
+function qCelebLoad() {
+  if (CELEB) return;
+  CELEB = { items: [], categories: [] };  // until the manifest lands
+  try {
+    fetch("assets/characters/manifest.json").then(r => r.json())
+      .then(m => { CELEB = m; }).catch(() => {});
+  } catch (e) { /* no fetch (test harness) — celebrations stay off */ }
+}
+function qCelebSetManifest(m) { CELEB = m; }  // test seam
+function qCelebMatch(tokens, kw) {
+  const kt = kw.split(" ");
+  for (let i = 0; i + kt.length <= tokens.length; i++)
+    if (kt.every((w, j) => tokens[i + j] === w)) return true;
+  return false;
+}
+/* Resolution: an exact item rule wins for character and fact
+ * independently; then the first matching category; else none. */
+function qCelebResolve(name, manifest) {
+  if (!manifest) return null;
+  const tokens = qnorm(name).split(" ").filter(Boolean);
+  let item = null, cat = null;
+  for (const r of manifest.items || [])
+    if (!item && (r.keywords || []).some(k => qCelebMatch(tokens, k))) item = r;
+  for (const c of manifest.categories || [])
+    if (!cat && (c.keywords || []).some(k => qCelebMatch(tokens, k))) cat = c;
+  const char = (item && item.char) || (cat && cat.char) || null;
+  const fact = (item && item.fact) || (cat && cat.fact) || null;
+  if (!char && !fact) return null;
+  return { char, fact };
+}
+function qCelebHide() {
+  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
+  const layer = $("#celeb-layer");
+  if (layer) { layer.hidden = true; layer.innerHTML = ""; }
+}
+function qCelebrate(name) {
+  const hit = qCelebResolve(name, CELEB);
+  const layer = $("#celeb-layer");
+  if (!hit || !layer) return;
+  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
+  layer.innerHTML =
+    (hit.char ? `<img class="celeb-char" src="assets/characters/${esc(hit.char)}" alt="">` : "") +
+    (hit.fact ? `<div class="celeb-bubble">${esc(hit.fact)}</div>` : "");
+  layer.hidden = false;
+  celebTimer = setTimeout(qCelebHide, 3500);
+}
+function qOnCollected(name) {
+  // Discussion 32: Quest mode only — Express never celebrates.
+  if (!Q.current || Q.current.mode !== "quest") return;
+  qCelebLoad();
+  qCelebrate(name);
+}
+$("#celeb-layer").addEventListener("click", qCelebHide);
 
 /* ---------------- Hunt (Quest mode) ---------------- */
 
@@ -697,6 +757,7 @@ $("#scene-mount").addEventListener("pointerdown", () => qFollowHold());
 $("#exp-mount").addEventListener("pointerdown", () => qFollowHold());
 function openHunt(sess) {
   Q.current = sess;
+  qCelebLoad();  // warm the celebration manifest before the first collect
   questShow("view-hunt");
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
   const model = qStoreModel(sess.store);
@@ -1328,6 +1389,7 @@ $("#panel-items").addEventListener("click", async ev => {
     await qCheck(Q.current, item.name, !item.checked);
     renderPanel();
     renderHunt();
+    if (item.checked) qOnCollected(item.name); // same hook as the GRAB
     if (item.checked) qStepAnchorTo(item.name);
     // After a check the panel slides away on its own — the game is home.
     clearTimeout(panelTimer);

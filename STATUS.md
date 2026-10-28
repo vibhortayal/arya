@@ -11,7 +11,12 @@ Meta models (Muse in chat, Spark on the Meta API in the app).
 The demo household is fictional and read-only except its photo
 and voice doors, which call the API and keep nothing. The Add tab
 is one surface for the list; receipts enter by image only. The
-app is light mode only. Test suite: **181 green**.
+app is light mode only. A wireframe parity pass (dead surfaces
+removed, primary-action chrome, Brain back links) and the
+collect celebration (Discussion 32: Muse Image characters with
+a verified fun-fact bank, Quest mode only) are built and
+committed locally — deploy is a separate step. Test suite:
+**220 green**.
 
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
