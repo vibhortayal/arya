@@ -75,6 +75,13 @@ header { display: flex; justify-content: space-between; align-items: baseline; }
   padding: 11px 0; border-bottom: 1px solid var(--sep); min-height: 44px;
 }
 .row:last-child { border-bottom: none; }
+/* Token rows carry explanatory text plus up to two buttons: on a
+   phone the text wraps to its own line instead of crushing the
+   buttons off-screen (review U3). */
+#profile-token-row, #connect-token-row { flex-wrap: wrap; }
+#profile-token-row .sub, #connect-token-row .sub { flex: 1 1 160px; }
+/* Sign out is a real tap target, not a text-height link (U7). */
+#userbar a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
 .row .grow { flex: 1; min-width: 0; }
 .name { font-weight: 600; overflow-wrap: anywhere; }
 a.name { color: var(--label); }
