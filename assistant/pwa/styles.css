@@ -96,6 +96,7 @@ a.name { color: var(--label); }
   font-weight: 600; font-size: 16px; transition: background 0.15s ease, transform 0.1s ease;
 }
 .btn.primary { background: var(--accent); color: #fff; }
+.linkbtn { background: none; border: none; padding: 8px 0; min-height: 44px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
 .btn.primary:active { background: var(--accent-press); }
 .btn.secondary { background: var(--fill); color: var(--label); }
 .btn.danger { background: var(--fill); color: var(--danger); }
