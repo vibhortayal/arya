@@ -30,11 +30,13 @@ def _budget_guard():
 
 _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
-# The demo household is read-only, with two live doors carved out: the
-# Add tab's Photo and Voice doors call the Meta API on camera and
-# persist nothing (the photo route returns a preview instead of
-# filing; transcription is stateless). Every other demo write is 403.
-_DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe")
+# The demo household is read-only, with live doors carved out: the
+# Add tab's camera and microphone call the Meta API on camera and
+# persist nothing (the photo routes return previews instead of
+# filing or listing; transcription is stateless). Every other demo
+# write is 403.
+_DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
+                    "/api/list/from-photo")
 
 
 @app.middleware("http")
@@ -577,19 +579,87 @@ def judge_run():
     return {"judged": state.judge_pending(client)}
 
 
+def _add_name_to_list(name):
+    """A typed/pasted/read name joins the list as a manual item —
+    the one add path every Add surface shares."""
+    import re as _re
+    name = (name or "").strip()
+    item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    _merge_flag(item_id, {"manual": True, "name": name,
+                          "dismissed_on": None})
+    return {"item_id": item_id, "name": name}
+
+
 @app.post("/api/list/add")
 async def list_add(req: Request):
     body = await req.json()
     item_id = body.get("item_id")
     if not item_id and body.get("name"):
-        import re as _re
-        item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", body["name"].strip().lower()).strip("-")
-        _merge_flag(item_id, {"manual": True, "name": body["name"].strip(), "dismissed_on": None})
-        return {"item_id": item_id}
+        return {"item_id": _add_name_to_list(body["name"])["item_id"]}
     if not item_id:
         raise HTTPException(400, "item_id or name is required")
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
     return {"item_id": item_id}
+
+
+@app.post("/api/list/from-text")
+async def list_from_text(req: Request):
+    """Typed or pasted list text -> list adds. The split is
+    deterministic code ($0); only when it yields nothing sensible
+    (chat text with chatter in it) does one Spark Standard
+    extraction call run."""
+    body = await req.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        raise HTTPException(400, "text is required")
+    from api.list.intake import split_list_text, extract_items_model
+    names = split_list_text(text)
+    source = "split"
+    if not names:
+        if not os.environ.get("MODEL_API_KEY"):
+            raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+        _budget_guard()
+        client = MetaClient(ledger=CostLedger(_LEDGER))
+        names = extract_items_model(text, client)
+        source = "model"
+    added = [_add_name_to_list(n) for n in names]
+    return {"added": len(added), "names": [a["name"] for a in added],
+            "source": source}
+
+
+@app.post("/api/list/from-photo")
+async def list_from_photo(req: Request):
+    """The Add tab's camera: one Spark vision read. A list photo
+    (handwritten, whiteboard) adds its items to the list; a receipt
+    photo adds nothing — it is reported as a receipt so the client
+    can offer to file it (receipts enter by image, through
+    /decode/photo). The demo runs the same live read and persists
+    nothing."""
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    from api.list.intake import read_list_photo
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        read = read_list_photo(body, client, media_type=media)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    if _is_demo(req):
+        return {"demo": True, "kind": read["kind"],
+                "names": read["items"], "added": 0}
+    if read["kind"] == "receipt":
+        return {"kind": "receipt", "names": [], "added": 0}
+    added = [_add_name_to_list(n) for n in read["items"]]
+    return {"kind": "list", "names": [a["name"] for a in added],
+            "added": len(added)}
 
 
 @app.post("/api/list/remove")
