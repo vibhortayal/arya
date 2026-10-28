@@ -451,7 +451,7 @@ function cloudView(THREE, host, manifest, buf, graph) {
  * on the group transform) so the next stop comes to the front. */
 SceneDrivers.aisle = function (el) {
   el.innerHTML = `
-  <svg class="scene" viewBox="0 0 320 210" role="img" aria-label="Store aisle">
+  <svg class="scene" viewBox="0 0 320 210" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Store aisle">
     <defs>
       <linearGradient id="sc-floor" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="var(--fill)"/>

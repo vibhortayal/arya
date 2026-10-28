@@ -309,3 +309,24 @@ same evening — see Intake parity below.)
   media/data-theme blocks deleted); the boot script pins
   data-theme="light" and clears any stored theme preference.
   SW cache arya-v20. Suite: **181 green**. Not deployed.
+
+## Navigation-first hunt (2026-10-27)
+
+- Discussion 35 + 36 built: the hunt is a full-screen portrait
+  store view (tab bar hidden while hunting), not a viewer. The
+  scene auto-follows the route — a walk timer glides to the
+  current stop and its arrival pop rises with the one big GRAB
+  (60px, current stop only; marker taps remain the seated
+  fallback). Top overlay: Up next (3 stops, route order, shelf
+  labels). Bottom overlay: route dots + collected count, nothing
+  else. Rail and view switch live in the trip panel. Express
+  wears the same frame (strip view, faster walk, no game).
+  Manual navigation holds the walk until the next collect.
+- The celebration hook is wired (collectCurrent → qOnCollected)
+  but sub-stage 2's characters/facts are not built yet — the pop
+  carries an empty character slot until they land.
+  SW cache arya-v21.
+- Suite: **187 green** (6 new in tests/test_hunt_nav.py, incl. an
+  18-check headless behavior harness over the real quest.js).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-hunt-navigation.md.

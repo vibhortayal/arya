@@ -291,28 +291,27 @@
   </section>
 
   <section id="view-hunt" class="view" hidden>
-    <div id="hunt-rail" class="rail"></div>
-    <div class="row" style="border-bottom:none">
-      <div class="grow"><span class="name" id="hunt-store"></span><span class="sub" id="hunt-progress"></span></div>
-      <div class="money" id="hunt-timer">0:00</div>
-    </div>
-    <div class="seg" id="scene-toggle" style="margin-bottom:10px">
-      <button class="chip" data-driver="strip" type="button">Strip</button>
-      <button class="chip" data-driver="aisle" type="button">Aisle</button>
-      <button class="chip" data-driver="cloud" disabled type="button">3D</button>
-    </div>
     <div id="scene-mount"></div>
-    <p id="hunt-mapnote" class="muted"></p>
-    <div id="hunt-next" class="group pad"></div>
-    <p><button id="btn-collect" class="btn primary wide" type="button">Collect</button></p>
-    <div class="row" style="border-bottom:none">
-      <button id="btn-listpanel" class="btn secondary" type="button">List · <span id="list-left">0</span> left</button>
-      <span>
-        <button id="btn-pause" class="btn" type="button">Pause</button>
-        <button id="btn-finish" class="btn" type="button">Finish</button>
-      </span>
+    <div id="hunt-upnext" class="upnext"></div>
+    <div class="cornerstack">
+      <button id="btn-pause" class="cornerbtn" type="button" aria-label="Pause"></button>
+      <button id="btn-listpanel" class="cornerbtn" type="button" aria-label="Trip and list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.4 6.2 5 7.8 7.6 4.9M3.4 12.2 5 13.8 7.6 10.9M3.4 18.2 5 19.8 7.6 16.9"/></svg>
+        <span class="cb-badge" id="list-left">0</span>
+      </button>
+      <button id="btn-finish" class="cornerbtn" type="button" aria-label="Finish the hunt">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.4 11 15.2 15.8 9.4"/></svg>
+      </button>
     </div>
-    <p style="margin-top:0"><button id="btn-nothere" class="btn wide" type="button">Not here</button></p>
+    <div id="hunt-pop" class="popcard" hidden>
+      <div id="pop-body"></div>
+      <p style="margin:10px 0 0"><button id="btn-collect" class="btn primary wide grabbtn" type="button">Grab</button></p>
+      <p style="margin:8px 0 0"><button id="btn-nothere" class="btn wide" type="button">Not here</button></p>
+    </div>
+    <div class="huntbottom">
+      <div id="hunt-route" class="routestrip"></div>
+      <span id="hunt-count" class="huntcount"></span>
+    </div>
     <div id="spot-sheet" class="sheetwrap" hidden>
       <div class="sheet">
         <div class="row"><span class="name">Not here</span><button id="spot-close" class="btn" type="button">Cancel</button></div>
@@ -331,22 +330,46 @@
     </div>
     <div id="list-panel" class="sheetwrap" hidden>
       <div class="sheet">
-        <div class="row"><span class="name">Your list</span><button id="panel-close" class="btn" type="button">Done</button></div>
+        <div class="row"><span class="name">Your trip</span><button id="panel-close" class="btn" type="button">Done</button></div>
+        <div id="hunt-rail" class="rail"></div>
+        <p class="muted" style="margin:2px 0 6px">View</p>
+        <div class="seg" id="scene-toggle" style="margin-bottom:10px">
+          <button class="chip" data-driver="strip" type="button">Strip</button>
+          <button class="chip" data-driver="aisle" type="button">Aisle</button>
+          <button class="chip" data-driver="cloud" disabled type="button">3D</button>
+        </div>
         <div id="panel-items"></div>
       </div>
     </div>
   </section>
 
   <section id="view-express" class="view" hidden>
-    <div id="exp-rail" class="rail"></div>
-    <div class="row" style="border-bottom:none">
-      <div class="grow"><span class="name" id="exp-store"></span><span class="sub" id="exp-progress"></span></div>
-      <div class="money" id="exp-eta"></div>
+    <div id="exp-mount"></div>
+    <div id="exp-upnext" class="upnext"></div>
+    <div class="cornerstack">
+      <button id="exp-pause" class="cornerbtn" type="button" aria-label="Pause"></button>
+      <button id="exp-listbtn" class="cornerbtn" type="button" aria-label="Trip and list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.4 6.2 5 7.8 7.6 4.9M3.4 12.2 5 13.8 7.6 10.9M3.4 18.2 5 19.8 7.6 16.9"/></svg>
+      </button>
+      <button id="exp-finish" class="cornerbtn" type="button" aria-label="Finish the run">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.4 11 15.2 15.8 9.4"/></svg>
+      </button>
     </div>
-    <div id="exp-startwrap" hidden><p><button id="exp-start" class="btn primary wide" type="button">Start the run</button></p></div>
-    <div id="exp-items" class="group"></div>
-    <p><button id="exp-finish" class="btn primary wide" type="button">Finish</button></p>
-    <p><button id="exp-pause" class="btn secondary wide" type="button">Pause</button></p>
+    <div id="exp-pop" class="popcard" hidden>
+      <div id="exp-pop-body"></div>
+      <p style="margin:10px 0 0"><button id="exp-grab" class="btn primary wide grabbtn" type="button">Grab</button></p>
+    </div>
+    <div class="huntbottom">
+      <div id="exp-route" class="routestrip"></div>
+      <span id="exp-count" class="huntcount"></span>
+    </div>
+    <div id="exp-panel" class="sheetwrap" hidden>
+      <div class="sheet">
+        <div class="row"><span class="name">Your run</span><button id="exp-panel-close" class="btn" type="button">Done</button></div>
+        <div id="exp-rail" class="rail"></div>
+        <div id="exp-items" class="group"></div>
+      </div>
+    </div>
   </section>
 
   <section id="view-finish" class="view" hidden>
