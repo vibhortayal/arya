@@ -8,8 +8,9 @@ playable hunt on the photo/Cloud/Aisle/Strip scene ladder (Photo is the default 
 friends and badges, item-to-shelf matching, the stores directory)
 are built and deployed. Intake parity holds: every door runs on
 Meta models (Muse in chat, Spark on the Meta API in the app).
-The demo household is fictional and read-only except its photo
-and voice doors, which call the API and keep nothing. The Add tab
+The demo household is fictional and plays the full loop in a
+per-visitor sandbox (2026-10-28): list, hunt in every mode and
+view, receipt finish, Ask. Demo writes never reach disk. The Add tab
 is one surface for the list; receipts enter by image only. The
 app is light mode only. A wireframe parity pass (dead surfaces
 removed, primary-action chrome, Brain back links) and the
@@ -23,6 +24,26 @@ session hashing, demo budget bucket, real cross-account friends,
 Today clock, List/Ask/Eyes pass, Caddy CSP/HSTS) — see
 assistant/loops/2026-10-28-hardening.md. Test suite:
 **317 green**.
+
+**Demo sandbox + judge front door (2026-10-28; branch
+fix/demo-hunt-and-review, PR pending owner review).** The gap
+review found that a judge could not start a hunt: the demo
+household refused every write, so "Check my list" returned 403.
+The demo is now a sandbox: each demo visitor's writes go to an
+in-memory overlay keyed by their session (`state.set_overlay`),
+reads see the overlay first, and nothing reaches disk or another
+visitor. Judges can type, snap or speak a list, play the hunt in
+Quest and Express on every view (Photos, 3D, Aisle, Strip), finish
+on a receipt photo, and use Ask. Bulk imports, PDF/text decode,
+fridge photos and batch model jobs stay closed to the demo. Demo
+model spend goes to the demo budget bucket and the per-IP live-door
+cap. The demo's fictional trips shift so the last one is three days
+before today. The landing page now says what Arya is and opens the
+demo in one tap. Docs carry one set of numbers (README "Measured
+results"), the localizer number is described as held-out mapping
+frames, and the README has a "How this was built" note. No quest
+UI was changed (Hunt v2 freeze). Suite: **321 green**. Not
+deployed — deploy is a separate owner step.
 
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
@@ -92,7 +113,7 @@ URL above is the deployed result.
 | 0 Foundations | Repo + layout ✓ · model policy ✓ · meta_client + cost_ledger ✓ (6 tests green) · eval harness skeleton ✓ · Oracle skeleton LIVE ✓ (db healthy, api + caddy up on the VM; GET :8081/health returns ok) · owner provisioned the Oracle API key 2026-10-27; live decode verified on the VM (Standard, $0.0054/call, ledger row written) |
 | 1 Decode API | Built and live. Prompt v2 written (versioned file). JSON import + PDF-text decode built, 10 tests green; real-corpus smoke: 114/114 reconcile, 1,058 item / 118 discount / 50 return lines typed, 5 orphan discounts flagged. Photo path opened after Gate 0 passed. Dictionary v1 BUILT: 458 entries (10 fee-class), ORG BELLAS resolved = Organic Baby Bella Mushrooms (0.90); 2 entries honestly unresolved (KS Blueberry, KS Vanilla — review-queue material). Dictionary data lives in the staging area, not git. |
 | 2 Patterns/list/cart | DONE (v1). Ledger 1,074 entries; 91 patterns; returns netted FIFO; lapsed state for items the household stopped buying; list requires >=3 kept purchases. Staple check: egg whites every ~21d (x35), spinach ~22d (x30), pasture eggs ~34d (x25) — all correct, none due after the Oct 26 trip. Known limit: seasonality not modeled (annual items read as long intervals). |
-| 3 PWA-core | LIVE. Auth + per-user data; first account (owner) adopted the 114-receipt household. Demo household live and read-only. |
+| 3 PWA-core | LIVE. Auth + per-user data; first account (owner) adopted the 114-receipt household. Demo household live; since 2026-10-28 it is a per-visitor sandbox, not read-only. |
 | 4 Eyes + chat | LIVE. Eyes dual-judge sightings with confirm/reject; Ask Arya chat with server-validated actions; voice input + spoken replies (Stage 6). |
 | 5 Store add-on | Superseded: the TJ walkthrough landed, and the store layer shipped as Quest Stages C–E (3D model + shelf graph, stores directory) — see the dated sections below (DISCUSSION 29). |
 | 6 Hardening/UX | UX review implemented + deployed; then intake parity, the Brain restyle to the approved wireframes, and light mode only — see the dated sections below. Impeccable vendored (.claude/skills/impeccable); PRODUCT.md + DESIGN.md written. Suite 181 green. |
