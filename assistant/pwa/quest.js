@@ -496,10 +496,17 @@ function renderStorePick() {
   // names the store for this trip.
   const hist = qHistoryStores().filter(h => !Q.mine.some(s => qSameStore(s.name, h)));
   const hbox = $("#st-history");
-  if (hbox) hbox.innerHTML = hist.length ? `<h3 class="sect">From your receipts</h3><div class="group">` + hist.map(s => `
+  // Top 3 by trips, the rest behind a fold (owner phone pass,
+  // 2026-10-28: his receipts name 11 Costco warehouses — the picker
+  // was a scroll of one-off travel stops).
+  const shown = Q.histAll ? hist : hist.slice(0, 3);
+  const fold = (!Q.histAll && hist.length > 3)
+    ? `<button class="sessrow pickrow" data-histall="1" type="button">
+        <span class="grow"><span class="name">Show all ${hist.length} stores</span></span><span class="chev">›</span></button>` : "";
+  if (hbox) hbox.innerHTML = hist.length ? `<h3 class="sect">From your receipts</h3><div class="group">` + shown.map(s => `
     <button class="sessrow pickrow" data-histstore="${esc(s)}" aria-pressed="${String(qnorm($("#st-name").value) === qnorm(s))}" type="button">
       <span class="grow"><span class="name">${esc(s)}</span>
-      ${qStoreFit(s) ? `<span class="sub fit">${esc(qStoreFit(s))}</span>` : ""}</span></button>`).join("") + `</div>` : "";
+      ${qStoreFit(s) ? `<span class="sub fit">${esc(qStoreFit(s))}</span>` : ""}</span></button>`).join("") + fold + `</div>` : "";
   if (!Q.mine.length) {
     box.innerHTML = `<div class="group">${empty("No stores in your stores yet. Find one or add one below.")}</div>`;
     return;
@@ -519,11 +526,17 @@ function renderStorePick() {
   box.innerHTML = html;
 }
 document.addEventListener("click", ev => {
+  const f = ev.target.closest("[data-histall]");
+  if (!f) return;
+  Q.histAll = true;
+  renderStorePick();
+});
+document.addEventListener("click", ev => {
   const h = ev.target.closest("[data-histstore]");
   if (!h || !Q.draft) return;
   Q.draft.storeId = null;
   $("#st-name").value = h.dataset.histstore;
-  renderStorePick();
+  qPickStore();
 });
 document.addEventListener("click", ev => {
   const p = ev.target.closest("[data-pick]");
@@ -532,7 +545,7 @@ document.addEventListener("click", ev => {
   if (!s) return;
   Q.draft.storeId = s.id;
   $("#st-name").value = s.name;
-  renderStorePick();
+  qPickStore();
 });
 $("#st-name").addEventListener("input", () => {
   if (!Q.draft || !Q.draft.storeId) return;
@@ -647,13 +660,20 @@ $("#sa-form").addEventListener("submit", async ev => {
 
 /* ---------------- New hunt: optimize ---------------- */
 
-$("#st-next").addEventListener("click", () => {
+/* Picking a store IS the decision (owner phone pass, 2026-10-28):
+ * a tap on any store row — or Enter on a typed name — starts the
+ * plan. There is no separate confirm button. */
+function qPickStore() {
+  if (!Q.draft) return;
   const store = $("#st-name").value.trim();
   if (!store) { toast("Pick or name the store first."); return; }
   if (Q.draft.store !== store) Q.draft.pick = {};
   Q.draft.store = store;
   renderPlan();
   questShow("view-newlist");
+}
+$("#st-name").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); qPickStore(); }
 });
 
 /* Check my list only when there is something to check: a clean list
@@ -680,7 +700,24 @@ async function qOptimizeDraft() {
   questShow("view-optimize");
 }
 
-function qOptNextEnabled() {
+/* Skipped questions (owner, 2026-10-28): an unanswered Ask no longer
+ * blocks the hunt. The item goes in exactly as typed — skipping is
+ * not guessing — and the question is remembered on the item (the
+ * List shows a "To ask" line) and asked again at the next plan,
+ * because the ambiguity lives in the dictionary until it is answered. */
+let QASKLATER = null;
+function qAskLaterSet() {
+  if (QASKLATER) return QASKLATER;
+  try { QASKLATER = new Set(JSON.parse(localStorage.getItem("arya-ask-later") || "[]")); }
+  catch (e) { QASKLATER = new Set(); }
+  return QASKLATER;
+}
+function qAskLaterSave() {
+  try { localStorage.setItem("arya-ask-later", JSON.stringify([...qAskLaterSet()])); } catch (e) {}
+}
+window.qAskLaterHas = name => qAskLaterSet().has(qnorm(name));
+
+function qOptPending() {
   const qs = (Q.draft.opt && Q.draft.opt.report.questions) || [];
   const seen = new Set();
   let pending = 0;
@@ -689,7 +726,13 @@ function qOptNextEnabled() {
     seen.add(q.item);
     if (!Q.draft.answers[q.item]) pending++;
   }
-  $("#opt-next").disabled = pending > 0;
+  return pending;
+}
+function qOptNextEnabled() {
+  // The way forward is always open; Skip shows while questions remain.
+  $("#opt-next").disabled = false;
+  const skip = $("#opt-skip");
+  if (skip) skip.hidden = qOptPending() === 0;
 }
 function renderOptimize() {
   const rep = Q.draft.opt.report;
@@ -754,15 +797,18 @@ $("#opt-body").addEventListener("click", ev => {
     renderOptimize();
   }
 });
-$("#opt-next").addEventListener("click", () => {
+function qOptProceed() {
   const items = Q.draft.baseItems.map(i => ({ name: i.name, qty: i.qty, group: i.group }));
   const seenQ = new Set();
+  const later = qAskLaterSet();
   for (const q of Q.draft.opt.report.questions) {
     if (seenQ.has(q.item)) continue;
     seenQ.add(q.item);
-    const ans = Q.draft.answers[q.item];
+    // Unanswered = kept as typed (never guessed); the question is
+    // remembered on the item and asked again at the next plan.
+    const ans = Q.draft.answers[q.item] || "typed";
+    if (Q.draft.answers[q.item]) later.delete(qnorm(q.item)); else later.add(qnorm(q.item));
     const qty = Q.draft.qQty[qnorm(q.item)] || 1;
-    if (!ans) continue; // unreachable: the button stays disabled
     if (ans === "both") {
       q.candidates.forEach(c => items.push({ name: c.name, qty }));
     } else if (ans === "typed") {
@@ -771,9 +817,12 @@ $("#opt-next").addEventListener("click", () => {
       items.push({ name: ans.slice(5), qty });
     }
   }
+  qAskLaterSave();
   Q.draft.finalItems = items;
   questShow("view-mode");
-});
+}
+$("#opt-next").addEventListener("click", qOptProceed);
+$("#opt-skip").addEventListener("click", qOptProceed);
 
 /* ---------------- New hunt: mode choose ---------------- */
 
@@ -963,10 +1012,12 @@ function qCelebrate(name) {
   celebTimer = setTimeout(qCelebHide, 3500);
 }
 function qOnCollected(name) {
-  // Discussion 32: Quest mode only — Express never celebrates.
-  if (!Q.current || Q.current.mode !== "quest") return;
-  qCelebLoad();
-  qCelebrate(name);
+  // DISABLED at the owner's word (phone pass, 2026-10-28): the
+  // character popup on every grab was noise in the store. The
+  // celebration code, manifest, and fact bank stay in place —
+  // re-enabling is this one function — but nothing pops. The
+  // points floaters (qRewardGrab) are separate and still fire.
+  return;
 }
 $("#celeb-layer").addEventListener("click", qCelebHide);
 
