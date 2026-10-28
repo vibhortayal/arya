@@ -812,17 +812,62 @@ async function renderReceipts() {
   const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
   $("#rc-count").textContent = archive.receipts.length
     ? `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted` : "";
-  $("#rc-archive").innerHTML = archive.receipts.length ? archive.receipts.map(r => `
+  // Unsettled hunts (Discussion 41): a hunt finished without its
+  // receipt is logged here as its own entry, tagged "Receipt
+  // missing", until this trip's receipt is uploaded against it.
+  const unsettled = (archive.unsettled || []).map(e => `
+    <div class="sessrow">
+      <span class="grow"><span class="name">${esc(e.store)}</span>
+      <span class="sub">${fmtShort(String(e.finished_at || "").slice(0, 10))} · ${e.items_collected} of ${e.items_total} items collected</span></span>
+      <span class="misstag">Receipt missing</span>
+      <button class="btn" data-upload="${esc(e.session_id)}" type="button">Upload the receipt</button>
+    </div>`).join("");
+  const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
       <span class="grow"><span class="name">${esc(r.merchant)}</span>
       <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
       <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
-    </button>`).join("") : empty("No receipts filed yet.");
+    </button>`).join("");
+  $("#rc-archive").innerHTML = (unsettled || rows)
+    ? unsettled + rows : empty("No receipts filed yet.");
 }
 
+let lateSessionId = null;
 $("#rc-archive").addEventListener("click", ev => {
+  const up = ev.target.closest("[data-upload]");
+  if (up) {
+    lateSessionId = up.dataset.upload;
+    $("#rc-late-photo").click();
+    return;
+  }
   const b = ev.target.closest("[data-receipt]");
   if (b && window.openReceipt) openReceipt(b.dataset.receipt).catch(showErr);
+});
+
+// The late receipt: this trip's own photo, filed through the
+// normal decode, then attached to its own hunt — which settles
+// it and clears the tag. Never a picker over old receipts.
+$("#rc-late-photo").addEventListener("change", async ev => {
+  const f = ev.target.files[0];
+  ev.target.value = "";
+  if (!f || !lateSessionId) return;
+  const sid = lateSessionId;
+  lateSessionId = null;
+  try {
+    const r = await fetch("/decode/photo", {
+      method: "POST",
+      headers: { "Content-Type": f.type || "image/jpeg" },
+      body: f
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+    const out = await r.json();
+    await post(`/api/quest/sessions/${sid}/receipt`,
+               { receipt_id: out.receipt.receipt_id });
+    toast("Receipt filed — hunt settled.");
+    renderReceipts().catch(showErr);
+  } catch (e) {
+    toast("Could not file that photo: " + e.message);
+  }
 });
 
 /* ---------------- Analysis (B5) ----------------
