@@ -1014,3 +1014,5 @@ input[type=file]::file-selector-button {
 .earlierrow { display: flex; align-items: center; gap: 8px; }
 .earlierrow .gamerow { flex: 1; min-width: 0; }
 .earlierrow .btn { flex: none; min-height: 36px; padding: 6px 10px; font-size: 13px; }
+
+.sheetgrip { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--sep); margin: 4px auto 10px; }

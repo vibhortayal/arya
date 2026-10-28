@@ -497,18 +497,15 @@
     <div id="celeb-layer" class="celeblayer" hidden></div>
     <div id="spot-sheet" class="sheetwrap" hidden>
       <div class="sheet">
-        <div class="row"><span class="name">Not here</span><button id="spot-close" class="btn" type="button">Cancel</button></div>
+        <span class="sheetgrip" aria-hidden="true"></span>
+        <div class="row"><span class="name">Not here</span></div>
         <p class="muted" id="spot-item"></p>
         <div class="actions" style="flex-direction:column; align-items:stretch">
           <button class="chip" data-kind="empty_shelf" aria-pressed="false" type="button">Empty shelf — its tag is still there</button>
           <button class="chip" data-kind="replaced" aria-pressed="false" type="button">Something else here now</button>
           <button class="chip" data-kind="cant_tell" aria-pressed="false" type="button">Can&rsquo;t tell</button>
         </div>
-        <label class="field">Shelf photo (optional, it also teaches Arya this aisle)
-          <input type="file" id="spot-photo" accept="image/*">
-        </label>
-        <p><button id="spot-send" class="btn primary wide" type="button" disabled>Send the report</button></p>
-        <p class="muted nomargin">A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
+        <p class="muted nomargin">Tap what you see and the report is sent. Tap outside or drag down to close. A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
       </div>
     </div>
     </section>

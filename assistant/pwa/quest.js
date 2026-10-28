@@ -2204,8 +2204,6 @@ function openSpotSheet(idx) {
   $("#spot-item").textContent = `At the stop for ${sess.items[next].name} — what do you see?`;
   document.querySelectorAll("#spot-sheet [data-kind]").forEach(b =>
     b.setAttribute("aria-pressed", "false"));
-  $("#spot-photo").value = "";
-  $("#spot-send").disabled = true;
   $("#spot-sheet").hidden = false;
 }
 function closeSpotSheet() { $("#spot-sheet").hidden = true; }
@@ -2257,37 +2255,31 @@ $("#wild-add").addEventListener("click", async () => {
     toast(`Wild find: ${name} is in the haul.`);
   } catch (e) { toast(e.message); }
 });
-$("#spot-close").addEventListener("click", closeSpotSheet);
 $("#spot-sheet").addEventListener("click", ev => {
-  if (ev.target.id === "spot-sheet") closeSpotSheet();
+  if (ev.target.id === "spot-sheet") { closeSpotSheet(); return; }
   const b = ev.target.closest("[data-kind]");
-  if (b) {
-    spotKind = b.dataset.kind;
-    document.querySelectorAll("#spot-sheet [data-kind]").forEach(x =>
-      x.setAttribute("aria-pressed", String(x === b)));
-    $("#spot-send").disabled = false;
-  }
+  if (b && !spotBusy) sendSpotReport(b.dataset.kind, b);
 });
-$("#spot-send").addEventListener("click", async () => {
+/* One tap on what you see sends the report; the live camera is
+ * offered afterwards (mapperOffer) when the stop can teach the map. */
+let spotBusy = false;
+async function sendSpotReport(kind, btn) {
   const sess = Q.current;
   const next = sess ? (spotIdx >= 0 && spotIdx < sess.items.length ? spotIdx : qCurrentIndex(sess)) : -1;
-  if (!sess || next === -1 || !spotKind) return;
-  const f = $("#spot-photo").files[0];
-  const btn = $("#spot-send");
-  btn.disabled = true;
+  if (!sess || next === -1 || !kind) return;
+  spotKind = kind;
+  spotBusy = true;
+  btn.setAttribute("aria-pressed", "true");
   try {
     const rep = await post(`/api/quest/sessions/${sess.id}/report-missing`, {
-      item: sess.items[next].name, kind: spotKind,
-      photo: f ? f.name : undefined
+      item: sess.items[next].name, kind
     });
     closeSpotSheet();
     // Teach Arya your store: "can't find it" is the best moment to
     // learn this shelf. A photo already attached to the report maps
     // it with no extra step; otherwise one tap opens the live camera.
     const task = rep && rep.map_task;
-    if (f && task && task.segment && window.mapperQuietCapture) {
-      mapperQuietCapture(sess.store, task.segment, f);
-    } else if (window.mapperOffer && task && task.prompt) {
+    if (window.mapperOffer && task && task.prompt) {
       mapperOffer(sess.store, task);
     } else {
       // "Found it after all" on the row takes the report back at any time.
@@ -2300,8 +2292,9 @@ $("#spot-send").addEventListener("click", async () => {
     Q.focusIdx = -1;
     await qLoadStoreReports(sess.store);
     renderHunt();
-  } catch (e) { toast(e.message); btn.disabled = false; }
-});
+  } catch (e) { toast(e.message); btn.setAttribute("aria-pressed", "false"); }
+  spotBusy = false;
+}
 
 /* ---------------- Motion navigation (Discussion 33) ----------------
  * Gyro look: the SceneView motion layer (scene.js) turns the view
@@ -3519,3 +3512,21 @@ async function openReceipt(receiptId) {
     } catch (e) { toast(e.message); }
   });
 }
+
+
+/* Drag a bottom sheet down to dismiss it: it fires the same
+ * outside-tap the scrim already handles. */
+document.querySelectorAll(".sheetwrap .sheet").forEach(sheet => {
+  let y0 = null;
+  sheet.addEventListener("touchstart", ev => { y0 = sheet.scrollTop <= 0 ? ev.touches[0].clientY : null; }, { passive: true });
+  sheet.addEventListener("touchmove", ev => {
+    if (y0 === null) return;
+    const dy = ev.touches[0].clientY - y0;
+    sheet.style.transform = dy > 0 ? `translateY(${dy}px)` : "";
+  }, { passive: true });
+  sheet.addEventListener("touchend", ev => {
+    const dy = y0 === null ? 0 : ev.changedTouches[0].clientY - y0;
+    y0 = null; sheet.style.transform = "";
+    if (dy > 90) sheet.parentElement.dispatchEvent(new MouseEvent("click"));
+  });
+});
