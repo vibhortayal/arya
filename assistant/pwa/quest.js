@@ -160,6 +160,7 @@ function questGo(id) {
   if (id === "view-friends") renderFriends().catch(showErr);
   if (id === "view-stores-mine") renderMyStores().catch(showErr);
   if (id === "view-stores-find") renderFindStores().catch(showErr);
+  if (id === "view-mapper" && window.renderMapper) renderMapper().catch(showErr);
   questShow(id);
 }
 
@@ -1564,12 +1565,14 @@ $("#spot-send").addEventListener("click", async () => {
   const btn = $("#spot-send");
   btn.disabled = true;
   try {
-    await post(`/api/quest/sessions/${sess.id}/report-missing`, {
+    const rep = await post(`/api/quest/sessions/${sess.id}/report-missing`, {
       item: sess.items[next].name, kind: spotKind,
       photo: f ? f.name : undefined
     });
     closeSpotSheet();
     toast("Reported — other hunters will confirm.");
+    // Map my store: a "not found" asks for one specific photo.
+    if (window.mapperOffer) mapperOffer(sess.store, rep && rep.map_task);
     await qLoadStoreReports(sess.store);
     renderHunt();
   } catch (e) { toast(e.message); btn.disabled = false; }

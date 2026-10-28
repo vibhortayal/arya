@@ -76,6 +76,7 @@
     <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
     <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
+    <button id="btn-map-store" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">Map my store</span><span class="g-sub">Photograph an aisle. Help every shopper.</span></span><span class="chev">›</span></button>
     <div id="today-eye"></div>
     <button id="today-listline" class="hubrow" type="button"><span id="today-listline-text"></span></button>
   </section>
@@ -284,6 +285,49 @@
       <p style="margin-bottom:0"><button class="btn primary wide" type="submit">Add store</button></p>
     </form>
     <p class="muted">The store joins the shared directory, so other players can find it too.</p>
+  </section>
+
+  <section id="view-mapper" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Map my store</h2>
+    <p class="muted">Map the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
+    <div id="mp-stores" class="rail"></div>
+    <div id="mp-cover" class="group pad"></div>
+    <div id="mp-next"></div>
+    <h3 class="sect">Aisles</h3>
+    <div id="mp-segs" class="group"></div>
+    <div class="group pad">
+      <label class="field">Add an aisle
+        <input type="text" id="mp-label" placeholder="Aisle 4, Frozen, Dairy wall" autocomplete="off" maxlength="60">
+      </label>
+      <div class="rail" id="mp-side">
+        <button class="chip" data-side="left" aria-pressed="false" type="button">Left side</button>
+        <button class="chip" data-side="right" aria-pressed="false" type="button">Right side</button>
+        <button class="chip" data-side="both" aria-pressed="true" type="button">Both sides</button>
+      </div>
+      <p><button id="mp-add" class="btn wide" type="button">Add to the map</button></p>
+    </div>
+    <p class="muted">We blur every person before we save a photo. We keep pictures of products only.</p>
+  </section>
+
+  <section id="view-capture" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:26px" id="cp-title"></h2>
+    <p class="muted" id="cp-why"></p>
+    <div class="group pad">
+      <ol id="cp-steps" class="cpsteps"></ol>
+      <p class="muted nomargin" id="cp-time"></p>
+    </div>
+    <p>
+      <label class="btn primary wide" id="cp-go" for="cp-photo">Take photo</label>
+      <input type="file" id="cp-photo" accept="image/*" capture="environment" hidden>
+      <input type="file" id="cp-video" accept="video/*" capture="environment" hidden>
+    </p>
+    <div id="cp-result" class="group pad" hidden></div>
+    <p id="cp-after" hidden>
+      <button id="cp-next" class="btn primary wide" type="button">Next capture</button>
+    </p>
+    <p><button id="cp-outdated" class="btn wide" type="button">This part of the map is out of date</button></p>
   </section>
 
   <section id="view-optimize" class="view" hidden>
@@ -531,5 +575,6 @@
 <script src="app.js"></script>
 <script src="scene.js"></script>
 <script src="quest.js"></script>
+<script src="mapper.js"></script>
 </body>
 </html>
