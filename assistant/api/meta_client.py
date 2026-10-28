@@ -35,6 +35,9 @@ PRICES = {
 # (MODEL-POLICY.md; Meta docs read 2026-10-27).
 ASR_USD_PER_HOUR = 0.18
 
+# SAM 3.1 is billed per image processed (MODEL-POLICY.md).
+SAM_USD_PER_IMAGE = 2.50 / 1000.0
+
 
 def transcribe_cost(duration_s):
     return duration_s / 3600 * ASR_USD_PER_HOUR
@@ -88,6 +91,56 @@ class MetaClient:
         if self.ledger is not None:
             self.ledger.record(mode=mode, model=MODELS[mode], **usage, cost_usd=cost)
         return text, usage, cost
+
+    def segment(self, image_bytes, prompt, media_type="image/jpeg"):
+        """SAM 3.1 segmentation for one text prompt (the /responses
+        surface — the one non-chat endpoint this client uses; shape
+        verified by the Stage D and Shelf Scan spikes). Returns
+        (boxes, usage, cost_usd): boxes are {box: [x1, y1, x2, y2]
+        in frame pixels, w, h, confidence} parsed from SAM's box
+        tokens. Cost is per image processed, logged to the ledger
+        like every other door."""
+        import base64, re
+        uri = (f"data:{media_type};base64,"
+               + base64.b64encode(image_bytes).decode())
+        body = {"model": MODELS["sam"], "stream": False,
+                "input": [{"type": "message", "role": "user", "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_image", "image_url": uri}]}],
+                "metadata": {"include_confidence": "true"}}
+        status, payload = self._send("/responses", body)
+        if status != 200 or payload.get("status") != "completed":
+            raise RuntimeError(f"SAM HTTP {status}: {str(payload)[:300]}")
+        images = (payload.get("usage") or {}).get("images_processed", 1)
+        cost = images * SAM_USD_PER_IMAGE
+        if self.ledger is not None:
+            self.ledger.record(mode="sam", model=MODELS["sam"],
+                               input_tokens=0, cached_tokens=0,
+                               output_tokens=0, cost_usd=cost)
+        text = ""
+        for item in payload.get("output") or []:
+            for part in item.get("content") or []:
+                if part.get("type") == "output_text":
+                    text += part.get("text", "")
+        boxes = []
+        for m in re.finditer(r"(\d+)<\|box;([^|]*)\|>", text):
+            fields = {}
+            for part in m.group(2).split(";"):
+                if "=" in part:
+                    k, v = part.split("=", 1)
+                    fields[k.strip()] = v.strip()
+            try:
+                box = [int(fields["x1"]), int(fields["y1"]),
+                       int(fields["x2"]), int(fields["y2"])]
+                w, h = int(fields["w"]), int(fields["h"])
+            except (KeyError, ValueError):
+                continue
+            try:
+                conf = float(fields["c"]) if "c" in fields else None
+            except ValueError:
+                conf = None
+            boxes.append({"box": box, "w": w, "h": h, "confidence": conf})
+        return boxes, {"images_processed": images}, cost
 
     def _send_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,

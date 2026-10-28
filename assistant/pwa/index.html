@@ -302,6 +302,28 @@
       <button id="btn-finish" class="cornerbtn" type="button" aria-label="Finish the hunt">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.4 11 15.2 15.8 9.4"/></svg>
       </button>
+      <button id="btn-scan" class="cornerbtn" type="button" aria-label="Scan shelf" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
+      </button>
+    </div>
+    <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
+    <div id="scan-overlay" class="scanoverlay" hidden>
+      <div class="scanbar">
+        <div class="grow">
+          <span class="name">Shelf scan</span>
+          <span class="sub">Spots items from your list in a photo — each one verified by a second model before it highlights.</span>
+          <span class="sub" id="scan-last"></span>
+        </div>
+        <button id="scan-usephoto" class="btn" type="button" hidden>Take a photo</button>
+        <button id="scan-stop" class="btn" type="button" hidden>Stop</button>
+        <button id="scan-close" class="cornerbtn" type="button" aria-label="Close scan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="scanstage">
+        <div class="scanwrap"><video id="scan-video" playsinline muted hidden></video><img id="scan-img" alt="Your shelf photo" hidden><div id="scan-boxes"></div></div>
+      </div>
+      <p id="scan-status" class="scanstatus"></p>
     </div>
     <div id="hunt-pop" class="popcard" hidden>
       <div id="pop-body"></div>

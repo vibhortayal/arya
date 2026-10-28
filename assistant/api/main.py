@@ -36,7 +36,7 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 # filing or listing; transcription is stateless). Every other demo
 # write is 403.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
-                    "/api/list/from-photo")
+                    "/api/list/from-photo", "/api/quest/scan-shelf")
 
 
 @app.middleware("http")
@@ -870,6 +870,42 @@ async def quest_set_state(session_id: str, req: Request):
     if sess is None:
         raise HTTPException(404, "no such session")
     return sess
+
+
+@app.post("/api/quest/scan-shelf")
+async def scan_shelf_route(req: Request):
+    """Shelf Scan (Discussion 37), the unmapped-store mode: one
+    shelf photo against the session's REMAINING items. SAM 3.1
+    proposes boxes from list-driven phrasings, Muse Spark verifies
+    each candidate crop, only verified items pop (api/shelfscan.py
+    carries the spike's three fixes). Stateless by design — the
+    frame is processed, never stored, for every account; the demo
+    household's carve-out is the same live-door rule as the Photo
+    door (see _DEMO_LIVE_DOORS)."""
+    from api import quest, shelfscan
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a shelf photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    session_id = req.query_params.get("session", "")
+    sess = quest.get_session(session_id) if session_id else None
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    remaining = [i["name"] for i in sess["items"] if not i["checked"]]
+    if not remaining:
+        return {"pops": [], "not_found": []}
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    client = MetaClient(ledger=CostLedger(_LEDGER))
+    try:
+        return shelfscan.scan(body, remaining, client, media_type=media)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
 
 
 @app.post("/api/quest/sessions/{session_id}/receipt")
