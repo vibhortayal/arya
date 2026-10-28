@@ -138,10 +138,11 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
         raise ValueError("mode must be quest or express")
     if driver not in DRIVERS:
         raise ValueError(f"driver must be one of {DRIVERS}")
-    s = _store()
     # Item–shelf matching (stores with a shelf graph only): stops
     # gain their shelf label + path position and walk in shelf
     # order. A store with no graph keeps its items exactly as made.
+    # Matching may call a model — it runs BEFORE the store lock is
+    # taken, never under it.
     from api import shelfmatch
     items = shelfmatch.annotate_items(make_items(raw_items),
                                       store_name, client)
@@ -160,8 +161,10 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
         sess["store_address"] = store_address
     if extra:
         sess.update(extra)
-    s["sessions"].append(sess)
-    _save_store(s)
+    with state.file_lock("quest.json"):
+        s = _store()
+        s["sessions"].append(sess)
+        _save_store(s)
     return sess
 
 
@@ -190,12 +193,13 @@ def get_session(session_id):
 
 
 def _mutate(session_id, fn):
-    s = _store()
-    for sess in s["sessions"]:
-        if sess["id"] == session_id:
-            fn(sess)
-            _save_store(s)
-            return sess
+    with state.file_lock("quest.json"):
+        s = _store()
+        for sess in s["sessions"]:
+            if sess["id"] == session_id:
+                fn(sess)
+                _save_store(s)
+                return sess
     return None
 
 
@@ -297,14 +301,15 @@ def create_shopoff(store_name, raw_items, opponent_handle, client=None):
                             extra={"shopoff_id": race_id,
                                    "placeholder": True,
                                    "owner_handle": opponent}, client=client)
-    s = _store()
     race = {"id": race_id, "store": store_name, "state": "racing",
             "created_at": _now(), "winner": None,
             "players": [{"handle": my_handle(), "session_id": mine["id"]},
                         {"handle": opponent, "session_id": theirs["id"],
                          "placeholder": True}]}
-    s["shopoffs"].append(race)
-    _save_store(s)
+    with state.file_lock("quest.json"):
+        s = _store()
+        s["shopoffs"].append(race)
+        _save_store(s)
     return race_view(race)
 
 
@@ -324,12 +329,13 @@ def race_view(race):
         if times[0] and times[1] and times[0] != times[1]:
             winner = players[0]["handle"] if times[0] < times[1] \
                 else players[1]["handle"]
-        s = _store()
-        for r in s["shopoffs"]:
-            if r["id"] == race["id"]:
-                r["state"] = "finished"
-                r["winner"] = winner
-                _save_store(s)
+        with state.file_lock("quest.json"):
+            s = _store()
+            for r in s["shopoffs"]:
+                if r["id"] == race["id"]:
+                    r["state"] = "finished"
+                    r["winner"] = winner
+                    _save_store(s)
         view["state"] = "finished"
         view["winner"] = winner
     return view
@@ -375,21 +381,22 @@ def report_missing(session_id, item_name, kind, photo=None):
             break
     if item is None:
         return None
-    s = _store()
-    for rep in s["reports"]:
-        if rep["session_id"] == session_id \
-                and rep["item_group"] == item["group"] \
-                and rep["state"] == "reported":
-            return rep
-    rep = {"id": _new_id("rep", session_id + item["group"]),
-           "session_id": session_id, "store": sess["store"],
-           "item": item["name"], "item_group": item["group"],
-           "kind": kind, "photo": photo or None,
-           "state": "reported", "reported_at": _now(),
-           "reporter": my_handle()}
-    s["reports"].append(rep)
-    _save_store(s)
-    return rep
+    with state.file_lock("quest.json"):
+        s = _store()
+        for rep in s["reports"]:
+            if rep["session_id"] == session_id \
+                    and rep["item_group"] == item["group"] \
+                    and rep["state"] == "reported":
+                return rep
+        rep = {"id": _new_id("rep", session_id + item["group"]),
+               "session_id": session_id, "store": sess["store"],
+               "item": item["name"], "item_group": item["group"],
+               "kind": kind, "photo": photo or None,
+               "state": "reported", "reported_at": _now(),
+               "reporter": my_handle()}
+        s["reports"].append(rep)
+        _save_store(s)
+        return rep
 
 
 def _same_store(a, b):

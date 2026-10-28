@@ -23,12 +23,22 @@ def _path(name):
 
 def _load(name, default):
     p = _path(name)
-    return json.load(open(p)) if os.path.exists(p) else default
+    if os.path.exists(p):
+        with open(p) as fh:
+            return json.load(fh)
+    return default
 
 
 def _save(name, obj):
-    os.makedirs(_root(), exist_ok=True)
-    json.dump(obj, open(_path(name), "w"), indent=1)
+    # Same durability contract as the household store (state.py):
+    # temp file + os.replace, serialized per file.
+    from api.state import write_json_atomic
+    write_json_atomic(_path(name), obj)
+
+
+def _file_lock(name):
+    from api.state import lock_for
+    return lock_for(_path(name))
 
 
 def hash_password(password, salt=None):
@@ -50,13 +60,14 @@ def create_user(username, password):
         raise ValueError("username and password are required")
     if username in RESERVED:
         raise ValueError("that name is reserved")
-    all_users = users()
-    if username in all_users:
-        raise ValueError("user exists")
-    first = len(all_users) == 0
-    salt, digest = hash_password(password)
-    all_users[username] = {"salt": salt, "hash": digest, "created": int(time.time())}
-    _save("users.json", all_users)
+    with _file_lock("users.json"):
+        all_users = users()
+        if username in all_users:
+            raise ValueError("user exists")
+        first = len(all_users) == 0
+        salt, digest = hash_password(password)
+        all_users[username] = {"salt": salt, "hash": digest, "created": int(time.time())}
+        _save("users.json", all_users)
     if first:
         _adopt_household_data(username)
     return username
@@ -84,10 +95,11 @@ def verify(username, password):
 
 def new_session(username, demo=False):
     token = secrets.token_urlsafe(32)
-    all_sessions = _load("sessions.json", {})
-    all_sessions[token] = {"user": username, "demo": bool(demo),
-                           "expires": int(time.time()) + SESSION_TTL}
-    _save("sessions.json", all_sessions)
+    with _file_lock("sessions.json"):
+        all_sessions = _load("sessions.json", {})
+        all_sessions[token] = {"user": username, "demo": bool(demo),
+                               "expires": int(time.time()) + SESSION_TTL}
+        _save("sessions.json", all_sessions)
     return token
 
 
@@ -119,10 +131,11 @@ def _token_hash(raw):
 
 def new_api_token(username):
     raw = "arya_" + secrets.token_urlsafe(32)
-    tokens = _load("api_tokens.json", {})
-    tokens = {h: v for h, v in tokens.items() if v["user"] != username}
-    tokens[_token_hash(raw)] = {"user": username, "created": int(time.time())}
-    _save("api_tokens.json", tokens)
+    with _file_lock("api_tokens.json"):
+        tokens = _load("api_tokens.json", {})
+        tokens = {h: v for h, v in tokens.items() if v["user"] != username}
+        tokens[_token_hash(raw)] = {"user": username, "created": int(time.time())}
+        _save("api_tokens.json", tokens)
     return raw
 
 
@@ -139,12 +152,14 @@ def has_api_token(username):
 
 
 def revoke_api_tokens(username):
-    tokens = _load("api_tokens.json", {})
-    _save("api_tokens.json",
-          {h: v for h, v in tokens.items() if v["user"] != username})
+    with _file_lock("api_tokens.json"):
+        tokens = _load("api_tokens.json", {})
+        _save("api_tokens.json",
+              {h: v for h, v in tokens.items() if v["user"] != username})
 
 
 def drop_session(token):
-    all_sessions = _load("sessions.json", {})
-    all_sessions.pop(token, None)
-    _save("sessions.json", all_sessions)
+    with _file_lock("sessions.json"):
+        all_sessions = _load("sessions.json", {})
+        all_sessions.pop(token, None)
+        _save("sessions.json", all_sessions)
