@@ -22,7 +22,13 @@ function qtyFmt(q) {
   return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
 }
 async function api(path, opts) {
-  const r = await fetch(path, opts);
+  let r;
+  try { r = await fetch(path, opts); }
+  catch (e) {
+    // A network failure stays a TypeError (the hunt's offline outbox
+    // keys on it) but reads as what it is.
+    throw new TypeError("No connection right now — try again when you're back online.");
+  }
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
   return r.json();
 }

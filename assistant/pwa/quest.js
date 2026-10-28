@@ -204,11 +204,73 @@ async function qSetState(sess, state) {
   Object.assign(sess, s);
   return sess;
 }
-async function qCheck(sess, itemName, checked) {
-  const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
-  Object.assign(sess, s);
-  return sess;
+/* Offline grabs (game shell): back aisles drop signal. A grab or put
+ * back that cannot reach the server applies on the phone and waits
+ * in an outbox (this device, in order); it replays when the phone is
+ * back online. Only a network failure queues — a server refusal is
+ * still a refusal. Finish and receipts need a connection. */
+const QOUT_KEY = "arya-outbox";
+function qOutbox() {
+  try { return JSON.parse(localStorage.getItem(QOUT_KEY) || "[]"); } catch (e) { return []; }
 }
+function qOutboxSave(list) {
+  try { localStorage.setItem(QOUT_KEY, JSON.stringify(list)); } catch (e) {}
+}
+async function qCheck(sess, itemName, checked) {
+  // Earlier offline grabs go first, so the server sees them in order.
+  if (qOutbox().length) await qFlushOutbox();
+  try {
+    const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
+    Object.assign(sess, s);
+    return sess;
+  } catch (e) {
+    const it = (sess.items || []).find(i => i.name === itemName);
+    if (!(e instanceof TypeError) || !it) throw e;
+    it.checked = checked;
+    qOutboxSave([...qOutbox(), { sid: sess.id, item: itemName, checked }]);
+    qPaintOffline();
+    return sess;
+  }
+}
+let qFlushing = false;
+async function qFlushOutbox() {
+  if (qFlushing || !qOutbox().length) { qPaintOffline(); return; }
+  qFlushing = true;
+  let synced = 0;
+  try {
+    while (qOutbox().length) {
+      const op = qOutbox()[0];
+      try {
+        const s = await post(`/api/quest/sessions/${op.sid}/check`, { item: op.item, checked: op.checked });
+        if (Q.current && Q.current.id === op.sid) Object.assign(Q.current, s);
+        synced++;
+      } catch (e) {
+        if (e instanceof TypeError) break;   // still offline: keep the queue
+        // refused (hunt closed elsewhere): drop this one op
+      }
+      qOutboxSave(qOutbox().slice(1));
+    }
+  } finally {
+    qFlushing = false;
+    qPaintOffline();
+  }
+  if (synced) {
+    toast(`Back online — ${synced} grab${synced === 1 ? "" : "s"} synced.`);
+    const hunt = $("#view-hunt");
+    if (Q.current && hunt && !hunt.hidden) renderHunt();
+  }
+}
+function qPaintOffline() {
+  const el = $("#hunt-offline");
+  if (!el) return;
+  const n = qOutbox().length, off = navigator.onLine === false;
+  el.hidden = !off && !n;
+  el.textContent = off
+    ? `Offline — keep grabbing. Grabs save on this phone${n ? ` (${n} waiting)` : ""} and sync when you're back.`
+    : `Syncing ${n} grab${n === 1 ? "" : "s"}…`;
+}
+window.addEventListener("online", () => { qFlushOutbox(); });
+window.addEventListener("offline", qPaintOffline);
 function qOpenSession(sess) {
   Q.current = sess;
   // A closed hunt (finished or receipt-attached) opens on its
@@ -1053,6 +1115,7 @@ function openHunt(sess) {
   qInitMotion();
   qWalkStart(qCurrentIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
+  qFlushOutbox();
 }
 function renderHunt() {
   const sess = Q.current;
