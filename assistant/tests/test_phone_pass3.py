@@ -57,3 +57,18 @@ class TestListComposerSmarts(unittest.TestCase):
         for needle in ("ADD_LEAD", "i need some ", "sentence",
                        "mac and cheese"):
             self.assertIn(needle, a)
+
+    def test_second_dictation_with_filler_word(self):
+        # Owner's phone, 2026-10-28: "Oh, I need some eggs, ..." made
+        # an "Oh" item and kept "I need some eggs" whole.
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from api.list.intake import split_list_text
+        self.assertEqual(
+            split_list_text("Oh, I need some eggs, potatoes, tomatoes, tomatoes, onions."),
+            ["eggs", "potatoes", "tomatoes", "onions"])
+        q = read("quest.js")
+        self.assertIn("FILL", q)
+        self.assertIn("oh|okay|ok|so|well|um|uh|hmm", q)
+        a = read("app.js")
+        self.assertIn("oh|okay|ok|so|well|um|uh|hmm", a)

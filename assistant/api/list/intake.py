@@ -70,6 +70,15 @@ def _clean_piece(s):
     s = re.sub(r"^[\-\*•–—]+\s*", "", s)          # bullets
     s = re.sub(r"^\d+\s*[.\)\:\-]\s*", "", s)     # numbering: 1. 2)
     s = re.sub(r"^\[\s?[xX ]?\]\s*", "", s)       # checkboxes
+    for _ in range(3):
+        stripped = re.sub(r"^(oh|okay|ok|so|well|um|uh|hmm)[,\s]+",
+                          "", s, flags=re.I)
+        if stripped == s:
+            break
+        s = stripped
+    if s.lower().strip(".,!") in ("oh", "okay", "ok", "so", "well",
+                                  "um", "uh", "hmm"):
+        return ""
     low = s.lower()
     for p in _PREFIXES:
         if low.startswith(p):
