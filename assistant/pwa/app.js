@@ -46,6 +46,7 @@ function empty(text) {
 }
 
 let lastView = "view-home";
+let receiptsFrom = "view-profile";  // Brain view that opened Receipts (B4)
 let listItems = {};
 let isDemo = false;
 
@@ -165,7 +166,7 @@ async function renderHome() {
     ? `<button class="hubrow" id="today-eye-btn" type="button"><span class="hr-label">Needs your eye</span><span class="countbadge">${n}</span><span class="chev">›</span></button>`
     : "";
   const eyeBtn = $("#today-eye-btn");
-  if (eyeBtn) eyeBtn.addEventListener("click", () => { show("view-receipts"); refresh("view-receipts"); });
+  if (eyeBtn) eyeBtn.addEventListener("click", () => { receiptsFrom = "view-home"; show("view-receipts"); refresh("view-receipts"); });
   $("#today-listline-text").textContent = staplesLine(h.list.items, await verifiedReceipts());
 }
 
@@ -417,7 +418,11 @@ $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refr
 /* Analysis is reached only from Profile, and the wireframe's back
  * arrow returns there — not through the quest view stack. */
 $("#an-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
-$("#btn-receipts").addEventListener("click", () => { show("view-receipts"); refresh("view-receipts"); });
+$("#btn-receipts").addEventListener("click", () => { receiptsFrom = "view-profile"; show("view-receipts"); refresh("view-receipts"); });
+// Receipts back returns to the Brain view that opened it,
+// through that tab's own entry so tab state stays in sync.
+$("#rc-back").addEventListener("click", ev => { ev.preventDefault();
+  document.querySelector(`.tab[data-view="${receiptsFrom}"]`).click(); });
 
 $("#btn-signout2").addEventListener("click", async () => {
   await fetch("/auth/logout", { method: "POST" });
