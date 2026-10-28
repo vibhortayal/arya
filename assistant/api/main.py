@@ -36,7 +36,8 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 # filing or listing; transcription is stateless). Every other demo
 # write is 403.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
-                    "/api/list/from-photo", "/api/quest/scan-shelf")
+                    "/api/list/from-photo", "/api/quest/scan-shelf",
+                    "/api/quest/locate")
 
 
 @app.middleware("http")
@@ -906,6 +907,35 @@ async def scan_shelf_route(req: Request):
         return shelfscan.scan(body, remaining, client, media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+
+
+@app.post("/api/quest/locate")
+async def locate_route(req: Request):
+    """Where am I? — the hunt's position anchor. One photo is
+    matched locally against the session store's walkthrough index
+    (api/locate.py; the matcher is Wonder-authored, vendored in
+    api/localizer.py). No model calls, nothing stored: the answer
+    is a path fraction the client snaps to its nearest stop. The
+    demo household may use it — position is ephemeral hunt state,
+    like a collect (see _DEMO_LIVE_DOORS)."""
+    from PIL import UnidentifiedImageError
+    from api import locate, quest
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    session_id = req.query_params.get("session", "")
+    sess = quest.get_session(session_id) if session_id else None
+    if sess is None:
+        raise HTTPException(404, "no such session")
+    try:
+        return locate.locate(body, sess)
+    except UnidentifiedImageError:
+        raise HTTPException(400, "could not read that photo")
 
 
 @app.post("/api/quest/sessions/{session_id}/receipt")
