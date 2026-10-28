@@ -24,7 +24,9 @@ _CHATTER_LINES = {"grocery list", "shopping list", "the list", "list",
                   "please", "thanks", "thank you"}
 _CHATTER_FIRST = {"thanks", "thank", "hey", "hi", "hello", "please"}
 _PREFIXES = ("please get ", "please buy ", "please add ", "add ",
-             "buy ", "get ", "and ")
+             "buy ", "get ", "and ",
+             "i need some ", "i need ", "we need some ", "we need ",
+             "i want some ", "i want ", "get me some ", "get me ")
 
 
 def load_list_photo_prompt():
@@ -73,8 +75,10 @@ def _clean_piece(s):
         if low.startswith(p):
             s = s[len(p):]
             break
+    if s.lower().startswith("some "):
+        s = s[5:]
     s = re.sub(r"\s*[x×]\s*\d+\s*$", "", s)       # trailing qty: x2
-    return s.strip(" :").strip()
+    return s.strip(" :.!").strip()
 
 
 def _sensible(name):
@@ -103,7 +107,14 @@ def split_list_text(text):
     Duplicates collapse, order is kept."""
     out, seen = [], set()
     for chunk in re.split(r"[\n;]+", text or ""):
-        for piece in chunk.split(","):
+        low = chunk.strip().lower()
+        sentence = ("," in chunk or low.startswith(_PREFIXES)
+                    or low.count(" and ") >= 2)
+        pieces = chunk.split(",")
+        if sentence:
+            pieces = [bit for piece in pieces
+                      for bit in re.split(r"\s+and\s+", piece)]
+        for piece in pieces:
             name = _clean_piece(piece)
             if _sensible(name) and name.lower() not in seen:
                 seen.add(name.lower())

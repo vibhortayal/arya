@@ -14,7 +14,8 @@ from datetime import date, datetime, timedelta
 from api import state
 
 MODES = ("quest", "express")
-SESSION_STATES = ("not_started", "playing", "paused", "finished", "done")
+SESSION_STATES = ("not_started", "playing", "paused", "finished", "done",
+                  "abandoned")
 # The SceneView ladder: the session engine is the game, the scene is
 # only a viewport. A session records which driver it started in;
 # nothing in play, scoring, or the receipt finish reads it.
@@ -207,8 +208,11 @@ def list_sessions():
     # A Shop-Off opponent's placeholder lives in the creator's
     # account until cross-account play exists; it is not the
     # creator's hunt, so no list shows it (issue #15).
+    # Abandoned quests are deleted from the player's world: no list
+    # shows them (the record stays for honesty, like a closed hunt).
     out = sorted((x for x in _store()["sessions"]
-                  if not x.get("placeholder")),
+                  if not x.get("placeholder")
+                  and x.get("state") != "abandoned"),
                  key=lambda x: (x["created_at"][:10] != today,
                                 -_ts(x["created_at"])))
     return out

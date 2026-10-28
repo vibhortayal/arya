@@ -170,3 +170,25 @@ for now; a Maps/Places lookup is a separate, undecided step.
     to add" and never claim verification. Points still bank only on
     the receipt (Discussion 41 unchanged) — banking is the brain's
     rule; joy is not gated.
+
+58. **Phone pass 3 (owner's phone, 2026-10-28).** Three findings in
+    one walk. (a) Dictation became one item: "I need some eggs,
+    eggs, bananas, cookies, oranges." sat in the plan box as a raw
+    sentence — the parser was line-based and the box had no submit.
+    Now a sentence parser (lead-ins and commas mark a sentence,
+    fragments split and dedupe, plain lines never split — "mac and
+    cheese" stays whole), an Add items button, and a "Looks right?"
+    confirm strip: the parsed list shows as droppable chips before
+    anything joins the quest; voice lands in the same confirm.
+    The List composer had the same dumbness from the other side:
+    its server split already stripped "add"/"buy" lead-ins but not
+    "I need some", never split a sentence's "and"s, and left the
+    period on the last item — the chips preview mirrored it. Both
+    now carry the sentence rules (the server stays the authority;
+    test-pinned cases: his sentence -> 4 items, "mac and cheese"
+    and "salt and pepper" stay whole). (b) A started quest could
+    not be ended: new state "abandoned" —
+    the hunt view gains End this quest (confirm first); abandoned
+    quests appear in no list. (c) The header bar is gone (entry 57's
+    companion fix, PR #51): the wordmark row cost screen on every
+    view; the profile avatar floats top-right instead.

@@ -85,7 +85,7 @@ class TestMotionShell(unittest.TestCase):
         self.assertIn('removeEventListener("devicemotion", qOnMotion)', js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v54"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v55"', read("sw.js"))
 
 
 PRELUDE = r"""
