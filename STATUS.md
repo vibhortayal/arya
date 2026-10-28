@@ -19,7 +19,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
 - **Hunt v2** (PR #16, merged): one-column hunt, put back in place,
   nothing auto-finishes, Back is a stack, Finish closes the hunt.
 
-## Open: PR #18 (draft, feat/game-shell): not deployed
+## PR #18 (game shell): merged and deployed 2026-10-28
 - Installable PWA (manifest, icons, offline grabs that sync later).
 - No clock, no lives: +10 a grab, +25 full haul, +50 receipt; levels;
   milestones, confetti, opt-in sound and buzz.
@@ -68,3 +68,11 @@ the unblurred originals.
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged
 in the Hatch workspace `meta-hackathon-2026/imports/costco-json/`.
 Raw files stay out of git.
+
+## Open: phone-pass batch PR (fix/phone-pass-batch) — awaiting owner review
+- Seven owner phone-pass fixes in one PR: store-picker tap-to-advance
+  + receipts fold, skippable Check-the-list, character popups off,
+  receipt-sheet button layout, Add folded into List (four tabs),
+  New session on top of Today, compact staples line. SW arya-v43.
+- Known pre-existing failure on main: test_photo_driver frame budgets
+  (the scrub commit pushed the walk frames over the size guide).
