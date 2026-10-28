@@ -335,6 +335,7 @@ def profile():
     done = _done_sessions()
     points = sum(hunt_points(s) for s in done)
     return {"handle": quest.my_handle(),
+            "avatar": quest.my_avatar(),
             "points": points, **level_for(points),
             "stats": {"hunts": len(done),
                       "receipts": len(state.receipts()),
