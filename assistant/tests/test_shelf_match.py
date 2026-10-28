@@ -235,13 +235,17 @@ class TestDemoUnchanged(unittest.TestCase):
         self.c = TestClient(app)
         self.c.post("/auth/demo")
 
-    def test_demo_cannot_create_sessions(self):
-        # The demo household stays read-only: session creation (and
-        # with it, matching) is a normal write — 403, as before.
+    def test_demo_sessions_live_in_the_sandbox(self):
+        # The demo plays hunts (review 2026-10-28): the session exists
+        # for this visitor, and nothing reaches the household on disk.
         r = self.c.post("/api/quest/sessions", json={
             "store": "Trader Joe's", "mode": "quest",
             "items": [{"name": "Cheese"}]})
-        assert r.status_code == 403
+        assert r.status_code == 200, r.text
+        demo_dir = os.path.join(os.environ["ARYA_DATA_DIR"], "users", "demo")
+        assert not os.path.exists(os.path.join(demo_dir, "quest.json"))
+        sid = r.json()["id"]
+        assert self.c.get(f"/api/quest/sessions/{sid}").status_code == 200
 
 
 if __name__ == "__main__":
