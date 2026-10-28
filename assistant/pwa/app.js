@@ -296,6 +296,11 @@ $("#list-notes").addEventListener("click", async ev => {
 
 function paintCart(h) {
   const c = h.cart;
+  if (!c.items.length) {
+    // Nothing to approve: an empty cart asks for nothing.
+    $("#cart").innerHTML = `<p class="muted">The cart fills from your list. Nothing to approve yet.</p>`;
+    return;
+  }
   $("#cart").innerHTML =
     row(`${esc(c.store)} · ${c.items.length} items`, c.state === "approved" ? "Approved" : "Waiting for your approval",
         c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`) +
