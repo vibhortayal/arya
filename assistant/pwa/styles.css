@@ -492,6 +492,15 @@ body.hunting #tabs { display: none !important; }
   .popcard { animation: none; }
 }
 
+/* Motion navigation (Discussion 33): gyro look + step experiment. */
+#btn-gyro[aria-pressed="true"] { background: var(--accent); color: #fff; }
+#btn-steps { margin-left: 8px; }
+#btn-steps[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.scene { transition: transform 0.15s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .scene { transition: none; }
+}
+
 /* Stage E: store rows — pick selection, drawn-star favorites. */
 .pickrow[aria-pressed="true"] { background: var(--fill); border-radius: 10px; }
 .pickrow[aria-pressed="true"] .name { color: var(--accent); }
