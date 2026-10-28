@@ -405,5 +405,29 @@ class TestHuntNavNode(unittest.TestCase):
         self.assertEqual(failed, [], f"harness checks failed: {failed} in {res}")
 
 
+class TestHuntMenuPins(unittest.TestCase):
+    """Hunt slice (2026-10-28): the frame keeps its contract while the
+    menu loads after it. The behaviour lives in test_hunt_menu.py."""
+
+    def test_menu_script_loads_after_quest_and_the_frame_ids_survive(self):
+        html = read("index.html")
+        self.assertLess(html.index('<script src="quest.js">'), html.index('<script src="huntmenu.js">'))
+        for el in ("btn-finish", "btn-nothere", "btn-collect", "hunt-list", "exp-finish"):
+            self.assertIn(f'id="{el}"', html)
+
+    def test_quest_js_stays_loadable_alone(self):
+        js = read("quest.js")
+        # the menu is reached only through guarded hooks
+        self.assertIn("window.huntAfterRender", js)
+        self.assertIn("window.huntAfterGrab", js)
+        self.assertNotIn("Hunt.", js.replace("window.Hunt", ""))
+
+    def test_combo_is_a_count_not_a_clock(self):
+        js = read("quest.js")
+        self.assertIn("function qComboAfter(", js)
+        self.assertNotIn("COMBO_WINDOW", js)
+        self.assertNotIn("45000", js)
+
+
 if __name__ == "__main__":
     unittest.main()

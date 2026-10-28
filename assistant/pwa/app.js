@@ -54,8 +54,16 @@ function put(path, body) {
   return api(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
 let toastTimer = null;
+/* How long a toast stays up: 60 ms a character, at least 4 s, and at
+ * least 7 s when it carries an action (Undo). */
+function toastMs(msg, hasAction) {
+  return Math.max(hasAction ? 7000 : 4000, 60 * String(msg == null ? "" : msg).length);
+}
 function toast(msg, opts) {
   const t = $("#toast");
+  clearTimeout(toastTimer);
+  // The text goes in first (the live region reads the message), then
+  // the buttons are appended.
   t.textContent = msg;
   // An optional one-tap action (Undo) rides on the toast, which then
   // stays a little longer.
@@ -64,12 +72,18 @@ function toast(msg, opts) {
     b.type = "button";
     b.className = "toastact";
     b.textContent = opts.action;
-    b.addEventListener("click", () => { t.hidden = true; opts.onAction && opts.onAction(); });
+    b.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; opts.onAction && opts.onAction(); });
     t.appendChild(b);
   }
+  const x = document.createElement("button");
+  x.type = "button";
+  x.className = "toastclose";
+  x.setAttribute("aria-label", "Dismiss");
+  x.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  x.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; });
+  t.appendChild(x);
   t.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, opts && opts.action ? 6000 : 4200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, toastMs(msg, !!(opts && opts.action)));
 }
 function showErr(e) { toast("Could not load: " + e.message); }
 function row(name, sub, right) {
@@ -184,7 +198,7 @@ function openSess(id) {
 const BADGE_ART = { top_contributor: "blueberry.webp", egg_baron: "egg.webp",
   banana_republic: "banana.webp", speed_demon: "pizza.webp",
   clean_sweep: "basket.webp", first_mapper: "compass.webp",
-  eagle_eye: "binoculars.webp" };
+  eagle_eye: "binoculars.webp", receipt_keeper: "pantry.webp" };
 
 function paintLevelChip(profile) {
   const el = $("#today-level");
@@ -197,13 +211,16 @@ function paintLevelChip(profile) {
   $("#avatar-btn").style.setProperty("--pct", pct + "%");
   $("#avatar-btn").setAttribute("aria-label", `Profile, level ${profile.level}`);
 }
+/* Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
+ * The hero is the NEWEST hunt that still wants play (play-test:
+ * three old hunts all said Resume); older open ones fold away. */
+function heroSession(sessions) {
+  return sessions.filter(s => s.state === "playing" || s.state === "paused" || s.state === "not_started")
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))[0];
+}
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
-  // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
-  // The hero carries only a hunt that still wants play.
-  const rank = { playing: 0, paused: 1, not_started: 2 };
-  const hero = sessions.filter(s => s.state in rank)
-    .sort((a, b) => rank[a.state] - rank[b.state])[0];
+  const hero = heroSession(sessions);
   if (!hero) {
     el.innerHTML = `<article class="herocard quiet">
       <p class="hero-k">No quest in progress</p>
@@ -242,8 +259,14 @@ function paintTodayGames(sessions) {
   const el = $("#quest-sessions");
   const closed = s => s.state === "finished" || s.state === "done";
   const open = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
+  // The hero card already carries the hunt to resume; any other open
+  // hunts fold away so Today shows one thing to do.
+  const hero = heroSession(open);
+  const rest = open.filter(s => s !== hero);
+  const openHtml = hero ? gameRow(hero) +
+    (rest.length ? `<details class="g-fold"><summary>${rest.length} other open hunt${rest.length === 1 ? "" : "s"}</summary>${rest.map(s => `<div class="earlierrow">${gameRow(s)}<button class="btn danger" data-abandon="${esc(s.id)}" type="button">Abandon</button></div>`).join("")}</details>` : "") : "";
   el.innerHTML = sessions.length
-    ? open.map(gameRow).join("") +
+    ? openHtml +
       (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
     : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
@@ -479,7 +502,7 @@ async function paintTokenRow(el) {
   if (!el) return;
   let has = false;
   try { has = (await api("/auth/token")).has_token; } catch (e) { el.innerHTML = ""; return; }
-  el.innerHTML = `${has ? `<span class="sub grow">A connector token is active.</span>` : `<span class="sub grow">No token yet.</span>`}<button class="btn" data-mint="1">${has ? "Replace token" : "Create connector token"}</button>${has ? `<button class="btn danger" data-revoke="1">Revoke</button>` : ""}`;
+  el.innerHTML = `${has ? `<span class="sub grow">Your link code is active.</span>` : `<span class="sub grow">No link code yet.</span>`}<button class="btn" data-mint="1">${has ? "Make a new code" : "Make my link code"}</button>${has ? `<button class="btn danger" data-revoke="1">Revoke</button>` : ""}`;
 }
 
 async function mintInto(el) {
@@ -501,7 +524,7 @@ document.addEventListener("click", async ev => {
     if (navigator.clipboard) navigator.clipboard.writeText(i.value);
     toast("Token copied.");
   } else if (b.dataset.revoke) {
-    try { await api("/auth/token", { method: "DELETE" }); toast("Connector token revoked."); paintTokenRow(rowEl); }
+    try { await api("/auth/token", { method: "DELETE" }); toast("Link code revoked."); paintTokenRow(rowEl); }
     catch (e) { toast(e.message); }
   }
 });
@@ -765,6 +788,18 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
   }
 }
 
+/* After an add, bring the new rows into view and flash them: the
+ * add box sits above the fold of a long list, so a toast alone
+ * left first-time users unsure anything happened. */
+function flashNewRows(names) {
+  const want = new Set((names || []).map(n => String(n).toLowerCase()));
+  const rows = [...document.querySelectorAll("#view-list .listrow")]
+    .filter(r => want.has((r.querySelector(".name")?.textContent || "").trim().toLowerCase()));
+  if (!rows.length) return;
+  rows.forEach(r => { r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash"); });
+  rows[0].scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
 let addBound = false;
 function bindAdd() {
   if (addBound) return;
@@ -783,9 +818,11 @@ function bindAdd() {
       paintAddSplit();
       $("#add-status").textContent = "";
       const dup = r.already ? ` ${r.already} already on it.` : "";
+      const skip = (r.skipped || []).length
+        ? ` Left out (not items): ${r.skipped.join(", ")}.` : "";
       toast((r.added === 1 ? "Added 1 item to your list."
-        : `Added ${r.added} items to your list.`) + dup);
-      renderList().catch(() => {});
+        : `Added ${r.added} items to your list.`) + dup + skip);
+      renderList().then(() => flashNewRows(r.names)).catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
   });
@@ -1334,7 +1371,7 @@ $("#chat-form").addEventListener("submit", async ev => {
   ev.preventDefault();
   const input = $("#chat-input");
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) { toast("Type a question first."); input.focus(); return; }
   input.value = "";
   chatHistory.push({ role: "user", content: text });
   chatLine("me", text);
@@ -1371,6 +1408,7 @@ async function boot() {
   const paintLoginMode = () => {
     const create = loginMode !== "login";
     $("#login-title").textContent = create ? "Create your account" : "Sign in";
+    $("#login-user").parentElement.firstChild.textContent = create ? "Username" : "Email or username";
     $("#login-btn").textContent = create ? "Create account" : "Sign in";
     $("#login-pass").autocomplete = create ? "new-password" : "current-password";
     $("#login-toggle").hidden = loginMode === "setup" || !status.registration_open;
@@ -1386,7 +1424,7 @@ async function boot() {
   });
   $("#login-form").addEventListener("submit", async ev => {
     ev.preventDefault();
-    const body = JSON.stringify({ username: $("#login-user").value, password: $("#login-pass").value });
+    const body = JSON.stringify({ username: $("#login-user").value.trim(), password: $("#login-pass").value });
     const path = loginMode === "login" ? "/auth/login" : loginMode === "register" ? "/auth/register" : "/auth/setup";
     const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     if (!r.ok) {
@@ -1415,14 +1453,22 @@ function enterApp(user, demo) {
     openShell();
     return;
   }
+  const skipKey = "arya-connect-skipped:" + user;
+  let skipped = false;
+  try { skipped = localStorage.getItem(skipKey) === "1"; } catch (e) {}
   api("/auth/token").then(t => {
-    if (t.has_token) { openShell(); return; }
+    if (t.has_token || skipped) { openShell(); return; }
     // Connecting Muse is the first step of a new account.
     $("#view-connect").hidden = false;
     paintTokenRow($("#connect-token-row"));
-    const finish = () => { $("#view-connect").hidden = true; openShell(); };
+    const finish = () => {
+      try { localStorage.setItem(skipKey, "1"); } catch (e) {}
+      $("#view-connect").hidden = true; openShell();
+    };
+    const skip = finish;
     $("#connect-done").onclick = finish;
-    $("#connect-skip").onclick = finish;
+    $("#connect-skip").onclick = skip;
+    $("#connect-skip-top").onclick = skip;
   }).catch(() => openShell());
 }
 

@@ -208,7 +208,11 @@ def _speed_demon(done):
 
 
 def _clean_sweep(done):
+    """Every item the trip started with is checked. Items moved to
+    sess["left"] (saved or dropped) were not grabbed, so they break the
+    sweep. A swapped-out original does not: its substitute stands in."""
     return any(s["items"] and all(i.get("checked") for i in s["items"])
+               and not any(not e.get("swapped_for") for e in s.get("left") or [])
                for s in done)
 
 
@@ -235,11 +239,43 @@ BADGES = [
                            "a fully checked hunt")},
     {"id": "first_mapper", "name": "First Mapper",
      "criteria": "Be the first verified mapper of a store",
-     "check": lambda ctx: (False, "no store mapped yet")},
+     "check": lambda ctx: _first_mapper(ctx.get("mapped_stores") or [])},
     {"id": "eagle_eye", "name": "Eagle Eye",
      "criteria": "Spot a store change and have it verified",
      "check": lambda ctx: _eagle_eye(ctx["reports"])},
+    {"id": "receipt_keeper", "name": "Receipt Keeper",
+     "criteria": "Keep 5 receipts that add up",
+     "check": lambda ctx: _receipt_keeper(ctx["receipts"])},
 ]
+
+
+def _first_mapper(mapped_stores):
+    """Earned only for a real first map: the shopper made a store's
+    first aisle section and kept a capture in it (api/album.py).
+    Sections seeded from the shipped walkthrough never count."""
+    if mapped_stores:
+        return True, f"First to map {mapped_stores[0]}"
+    return False, "no store mapped yet"
+
+
+SYNTHETIC_RECEIPT_SOURCES = {"sample"}   # demo receipts (quest.sample_receipt)
+
+
+def _receipt_keeper(receipts):
+    """Five distinct real receipts whose totals reconcile. The demo
+    sample receipts never existed, so they never count."""
+    ids = {r.get("receipt_id") for r in receipts
+           if isinstance(r, dict) and r.get("totals_reconcile") and r.get("receipt_id")
+           and r.get("source_type") not in SYNTHETIC_RECEIPT_SOURCES}
+    return (len(ids) >= 5, f"{min(len(ids), 5)} of 5 checked receipts")
+
+
+def _mapped_stores():
+    try:
+        from api import album
+        return album.first_mapped_stores()
+    except Exception:
+        return []
 
 
 def _eagle_eye(reports):
@@ -255,7 +291,8 @@ def badge_shelf():
     egg_receipts, banana_weeks = _line_weeks_and_counts()
     ctx = {"receipts": state.receipts(), "done": _done_sessions(),
            "reports": quest._store()["reports"],
-           "egg_receipts": egg_receipts, "banana_weeks": banana_weeks}
+           "egg_receipts": egg_receipts, "banana_weeks": banana_weeks,
+           "mapped_stores": _mapped_stores()}
     shelf = []
     for b in BADGES:
         earned, detail = b["check"](ctx)
@@ -370,15 +407,43 @@ def _streak_weeks(done):
 POINTS_PER_ITEM = 10
 POINTS_FULL_HAUL = 25
 POINTS_RECEIPT = 50
+POINTS_BOSS = 40   # only when the boss item itself is grabbed
 LEVEL_STEP = 100   # level n starts at LEVEL_STEP * n(n-1)/2 points
 
 
-def hunt_points(sess):
+def _reported_here(sess, it, reports):
+    """An open item the shopper told other shoppers is gone, on this
+    trip. A taken-back (withdrawn) report does not count."""
+    if it.get("checked") or not sess.get("id"):
+        return False
+    norm = state._norm_name(it.get("name"))
+    return any(r.get("session_id") == sess["id"] and r.get("state") != "withdrawn"
+               and ((r.get("item_group") and r.get("item_group") == it.get("group"))
+                    or state._norm_name(r.get("item")) == norm)
+               for r in reports)
+
+
+def hunt_points(sess, reports=None):
     items = sess.get("items") or []
     got = sum(1 for i in items if i.get("checked"))
     pts = got * POINTS_PER_ITEM
-    if items and got == len(items):
+    # Items left for next time are not on the hunt (sess["left"]), so
+    # a full haul is every item still on the hunt, grabbed. An item
+    # the shopper reported missing on this trip is handled too: an
+    # honest report never costs the full haul (the client mirrors this
+    # in qProgress).
+    open_items = [i for i in items if not i.get("checked")]
+    if open_items and sess.get("id"):
+        if reports is None:
+            reports = quest._store().get("reports", [])
+        open_items = [i for i in open_items if not _reported_here(sess, i, reports)]
+    if got and not open_items:
         pts += POINTS_FULL_HAUL
+    # The boss pays only when that item is grabbed: never when it was
+    # dropped, swapped, or reported. Truth, not reports.
+    from api import hunt
+    if hunt.boss_found(sess):
+        pts += POINTS_BOSS
     return pts + POINTS_RECEIPT
 
 
@@ -393,13 +458,73 @@ def level_for(points):
 
 def profile():
     done = _done_sessions()
-    points = sum(hunt_points(s) for s in done)
+    reports = quest._store().get("reports", [])
+    points = sum(hunt_points(s, reports) for s in done)
     return {"handle": quest.my_handle(),
             "avatar": quest.my_avatar(),
             "points": points, **level_for(points),
             "stats": {"hunts": len(done),
                       "receipts": len(state.receipts()),
-                      "spots_reported": len(quest._store()["reports"]),
+                      "spots_reported": sum(1 for r in quest._store()["reports"] if r.get("state") != "withdrawn"),
                       "streak_weeks": _streak_weeks(done)},
             "badges": badge_shelf(),
-            "mapped_stores": []}
+            "mapped_stores": _mapped_stores(),
+            "unlocks": {**unlock_view(level_for(points)["level"]),
+                        "never_locked": list(NEVER_LOCKED),
+                        "open_to_all": [o["title"] for o in OPEN_TO_ALL]},
+            "album": _album_summary()}
+
+
+# --- level unlock ladder (Game: album) -----------------------------------------
+# Levels never lock anything today: every feature is open to everyone.
+# The ladder only names what each level celebrates. `live` says whether
+# the thing exists in the app now; a rung that is not live is "Coming
+# soon", never a padlock. A live rung must name a `feature` that exists
+# (a test checks the app source for it). Features that already work
+# for everyone, whatever the level, are NOT rungs: they sit in
+# OPEN_TO_ALL, so a level-up card never claims them as new.
+# NEVER_LOCKED is policy: levels never lock the things that make
+# shopping faster or safer.
+LEVEL_UNLOCKS = [
+    {"level": 2, "title": "Avatar extras",
+     "kind": "expression", "live": False},
+    {"level": 4, "title": "Pin a badge on your card",
+     "kind": "expression", "live": False},
+    {"level": 5, "title": "Confirmer: check other shoppers' store changes",
+     "kind": "trust", "live": False},
+    {"level": 6, "title": "Propose a badge",
+     "kind": "community", "live": False},
+    {"level": 7, "title": "Clue Hunt with kids",
+     "kind": "fun", "live": False},
+    {"level": 8, "title": "Store Steward for your home store",
+     "kind": "trust", "live": False},
+    {"level": 10, "title": "Name a shelf landmark",
+     "kind": "community", "live": False},
+]
+NEVER_LOCKED = ["Find it for me", "Receipts", "Lists", "Shop together",
+                "Split the List"]
+# Open to everyone from level 1. `feature` is a marker that must appear
+# in the app source (pwa/*.js), so this list cannot name a ghost.
+OPEN_TO_ALL = [
+    {"title": "Shop-Off race with friends", "feature": "Shop-Off"},
+    {"title": "Celebration sound", "feature": "arya-sound"},
+]
+
+
+def unlock_view(level, prev_level=None):
+    """The ladder at `level`: every rung with reached/live flags, the
+    rungs gained since `prev_level` (none when prev_level is None),
+    and the next rung to look forward to (None past the last)."""
+    ladder = [{**u, "reached": u["level"] <= level} for u in LEVEL_UNLOCKS]
+    gained = ([u for u in ladder if prev_level < u["level"] <= level]
+              if prev_level is not None else [])
+    nxt = next((u for u in ladder if not u["reached"]), None)
+    return {"ladder": ladder, "gained": gained, "next": nxt}
+
+
+def _album_summary():
+    try:
+        from api import album
+        return album.summary()
+    except Exception:
+        return {"stickers": 0, "pages_complete": 0}

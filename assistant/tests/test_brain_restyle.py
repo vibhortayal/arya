@@ -96,7 +96,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v59"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v62"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
@@ -140,9 +140,10 @@ class TestLensData(unittest.TestCase):
         ids = [i["item_id"] for i in items]
         self.assertIn("costco-1001", ids)
         self.assertIn("manual-oat-milk", ids)
-        # the lens fallback: a manual item has no item page history
+        # a manual item has no history: its page opens with no stores
         r = self.c.get("/api/items/manual-oat-milk")
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["price_by_store"], {})
 
 
 class TestAnalysisAndTodayData(unittest.TestCase):

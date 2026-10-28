@@ -128,8 +128,20 @@ def delete_user(username):
     return True
 
 
+def resolve_login_name(name):
+    """Map what a person typed to an account name. Exact match wins; a
+    short name without "@" (tester-a) also matches the one account whose
+    email starts with it (tester-a@test.arya) when that is unambiguous."""
+    name = (name or "").strip().lower()
+    all_users = users()
+    if name in all_users or "@" in name or not name:
+        return name
+    hits = [u for u in all_users if u.split("@", 1)[0] == name]
+    return hits[0] if len(hits) == 1 else name
+
+
 def verify(username, password):
-    u = users().get((username or "").strip().lower())
+    u = users().get(resolve_login_name(username))
     if not u:
         return False
     _, digest = hash_password(password, u["salt"])

@@ -548,7 +548,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
   background: var(--fill); color: var(--label); white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.hchip.grow { overflow: hidden; text-overflow: ellipsis; }
+.hchip.grow { white-space: normal; min-width: 0; line-height: 1.2; border-radius: 14px; overflow-wrap: anywhere; }
 .hchip.prog { background: var(--accent); color: #fff; }
 .hudbtn {
   width: 44px; height: 44px; flex: none; border-radius: 50%; border: none;
@@ -775,7 +775,10 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .herotitle { font-size: 28px; line-height: 1.15; margin: 14px 0 8px; }
 .herometa { margin: 10px 0 4px; }
 .signin summary { cursor: pointer; font-weight: 600; min-height: 44px;
-  display: flex; align-items: center; }
+  display: flex; align-items: center; justify-content: center; list-style: none; }
+.signin summary::-webkit-details-marker { display: none; }
+.signin[open] summary { margin-bottom: 12px; }
+.loginerr { margin: 0; min-height: 1.2em; color: var(--danger, #B3261E); }
 /* On a laptop the tab icons sit under the 680 px column, not at the
    screen edges. */
 @media (min-width: 760px) {
@@ -991,3 +994,23 @@ input[type=file]::file-selector-button {
 
 /* Ask: a new bubble scrolls to just above the docked input, not under it. */
 #chat-log > .bubble { scroll-margin-bottom: calc(150px + env(safe-area-inset-bottom)); }
+
+/* Play-test fixes: demo banner clears the floating avatar, list rows
+   keep a readable name column on a phone, new rows flash, extra
+   open hunts fold. */
+#demobar { padding-right: 62px; }
+@media (max-width: 480px) {
+  .listrow { flex-wrap: wrap; }
+  .listrow .grow { flex: 1 1 130px; }
+  .listrow .stepper { margin-left: 42px; }
+}
+.listrow.flash { animation: rowflash 1.6s ease-out; }
+@keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .listrow.flash { animation: none; } }
+.g-fold summary { cursor: pointer; padding: 10px 4px; color: var(--secondary); font-size: 14px; min-height: 44px; display: flex; align-items: center; }
+
+/* Grab waits for Start: muted, but a tap still answers (first-timer play-test). */
+.rowact.notlive { opacity: .5; }
+.earlierrow { display: flex; align-items: center; gap: 8px; }
+.earlierrow .gamerow { flex: 1; min-width: 0; }
+.earlierrow .btn { flex: none; min-height: 36px; padding: 6px 10px; font-size: 13px; }

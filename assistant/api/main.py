@@ -20,6 +20,7 @@ from api.cost_ledger import CostLedger
 from api.cart.build import approve
 
 app = FastAPI(title="Arya API")
+from api import pack as pack_api; app.include_router(pack_api.router)  # noqa: E402,E702
 # The cost ledger is an operator artifact: it lives in the data root so it
 # survives container redeploys (the app layer is ephemeral; /app/data is not).
 _LEDGER = os.path.join(os.environ.get(
@@ -131,6 +132,17 @@ _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/quest/scan-shelf", "/api/quest/locate",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
                     "/api/storemap")
+# The haul writes (fix, hide, post, second receipt) sit under the
+# sessions prefix but never call a model, so they spend no door budget.
+_DEMO_FREE_DOORS = ("/api/quest/sessions/",)
+
+
+def _demo_live_door(path):
+    if not path.startswith(_DEMO_LIVE_DOORS):
+        return False
+    return not (path.startswith(_DEMO_FREE_DOORS) and "/haul/" in path)
+
+
 DEMO_SANDBOXES_MAX = 500
 _demo_sandboxes = OrderedDict()   # session cookie -> overlay dict
 
@@ -169,7 +181,7 @@ async def require_login(request, call_next):
                     return JSONResponse(
                         {"detail": "this needs a real account — the demo household keeps nothing"},
                         status_code=403)
-                if path.startswith(_DEMO_LIVE_DOORS) and not _demo_rate(
+                if _demo_live_door(path) and not _demo_rate(
                         _demo_door_hits, _client_ip(request),
                         "ARYA_DEMO_DOOR_RATE", 240):
                     return JSONResponse(
@@ -289,10 +301,10 @@ async def auth_login(req: Request):
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
     body = await _json_obj(req)
-    name = (body.get("username") or "").strip().lower()
+    name = auth.resolve_login_name(body.get("username"))
     if not auth.verify(name, body.get("password", "")):
         _login_fails[ip] = fails + [_t.time()]
-        raise HTTPException(401, "wrong username or password")
+        raise HTTPException(401, "wrong email or password")
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
 
@@ -634,7 +646,7 @@ def quest_plan():
             hid = _quest.resolve_group(name) or hid
         lst.append({"item_id": iid, "history_id": hid, "name": name,
                     "qty": i.get("qty") or 1})
-    return {"list": lst, "items": items}
+    return pack_api.enrich_plan({"list": lst, "items": items}, d)
 
 
 @app.get("/api/dashboard")
@@ -651,6 +663,12 @@ def review_route():
 def item_route(item_id: str):
     detail = state.item_detail(item_id)
     if detail["entry"] is None and detail["pattern"] is None:
+        # A typed item has no receipts yet: show its page with the name
+        # it was typed as, instead of a 404 (first-timer play-test).
+        typed = state.flags().get(item_id) or {}
+        if typed.get("manual") and typed.get("name"):
+            detail["entry"] = {"item_id": item_id, "canonical_name": typed["name"]}
+            return detail
         raise HTTPException(404, "unknown item")
     return detail
 
@@ -1128,18 +1146,60 @@ def _add_name_to_list(name, qty=1):
     return {"item_id": item_id, "name": name}
 
 
+def _list_add_fields(body):
+    """Validate the Pack extras of an add BEFORE anything is written.
+    Returns the flag fields to set; raises 400 on a bad quantity."""
+    qty = body.get("qty")
+    fields = {}
+    if qty is not None and not isinstance(qty, bool):
+        try:
+            n = int(qty)
+        except (TypeError, ValueError):
+            raise HTTPException(400, "qty must be a whole number")
+        if n >= 1:
+            fields["qty_override"] = min(n, 99)
+    return fields
+
+
+def _list_add_extras(item_id, body, fields):
+    """Pack slice: an add may carry a quantity (stored as the list
+    row's qty_override), who added it (flag added_by, at most 24
+    characters) and approved (the grown-up said yes to that add).
+    Only an add that carries a "by" key changes the name: a later add
+    with no "by" key, such as an Undo of a removal, leaves it alone;
+    an empty "by" clears it."""
+    from api.itemmeta import clean_extras
+    merged = dict(state.flags().get(item_id, {}))
+    merged.update(fields)
+    if "by" in body:
+        by = clean_extras({"by": body.get("by")}).get("by")
+        if by:
+            merged["added_by"] = by
+        else:
+            merged.pop("added_by", None)
+        merged.pop("approved", None)
+    if body.get("approved") is True:
+        merged["approved"] = True
+    state.set_flag(item_id, merged)
+
+
 @app.post("/api/list/add")
 async def list_add(req: Request):
     body = await _json_obj(req)
     item_id = body.get("item_id")
-    if not item_id and body.get("name"):
+    if not item_id and not body.get("name"):
+        raise HTTPException(400, "item_id or name is required")
+    fields = _list_add_fields(body)  # a bad qty fails before any write
+    if not item_id:
+        # A typed quantity ("eggs x 2") rides along; a qty in the body wins.
         from api.list.intake import split_list_items
         typed = split_list_items(str(body["name"]))
         name, qty = typed[0] if len(typed) == 1 else (body["name"], 1)
-        return {"item_id": _add_name_to_list(name, qty)["item_id"]}
-    if not item_id:
-        raise HTTPException(400, "item_id or name is required")
+        item_id = _add_name_to_list(name, qty)["item_id"]
+        _list_add_extras(item_id, body, fields)
+        return {"item_id": item_id}
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
+    _list_add_extras(item_id, body, fields)
     return {"item_id": item_id}
 
 
@@ -1153,8 +1213,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    from api.list.intake import split_list_items, extract_items_model
+    from api.list.intake import split_list_items, extract_items_model, skipped_pieces
     typed = split_list_items(text)
+    skipped = skipped_pieces(text) if typed else []
     names = [n for n, _q in typed]
     source = "split"
     if not names:
@@ -1170,7 +1231,8 @@ async def list_from_text(req: Request):
     # Already on the list: neither merged nor new, so not "added".
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
-            "names": [a["name"] for a in added], "source": source}
+            "names": [a["name"] for a in added], "source": source,
+            "skipped": skipped}
 
 
 @app.post("/api/list/from-photo")
@@ -1459,10 +1521,26 @@ async def quest_check(session_id: str, req: Request):
     if not body.get("item"):
         raise HTTPException(400, "item is required")
     from api import quest
-    sess = quest.check_item(session_id, body["item"], body.get("checked", True))
+    checked = body.get("checked", True)
+    sess = quest.check_item(session_id, body["item"], checked)
     if sess is None:
         raise HTTPException(404, "no such item in this session")
+    # Album: a grab mints a sticker (a put back retracts one). Stickers
+    # are garnish and must never fail a grab. The payload rides along
+    # only for a first-time product.
+    try:
+        from api import stickers
+        payload = await run_in_threadpool(
+            stickers.on_check, sess, body["item"], bool(checked))
+    except Exception:
+        payload = None
+    if payload:
+        return {**sess, "new_sticker": payload}
     return sess
+
+
+from api.album_routes import router as album_router  # noqa: E402
+app.include_router(album_router)
 
 
 @app.post("/api/quest/sessions/{session_id}/state")
@@ -1897,6 +1975,10 @@ def quest_store_reports(store: str):
     return quest.store_reports(store)
 
 
+from api import hunt_routes
+app.include_router(hunt_routes.router)
+
+
 @app.post("/api/quest/avatar")
 async def quest_set_avatar(req: Request):
     body = await _json_obj(req)
@@ -2198,6 +2280,9 @@ async def storemap_split(req: Request):
     return {"created": created,
             "segments": [{"id": k["id"], "label": k["label"]} for k in kids]}
 
+
+from api import haul_routes  # noqa: E402  (HAUL slice: review, card, Crew)
+app.include_router(haul_routes.router)
 
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 if os.path.isdir(_PWA):
