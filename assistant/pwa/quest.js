@@ -887,6 +887,7 @@ function qHuntListHtml(sess) {
       : `<button type="button" class="btn primary rowact" data-grab="${i}"${live ? "" : " disabled"}>Grab</button>`;
     return `<div class="row huntrow${it.checked ? " got" : ""}${i === cur ? " next" : ""}">
       <span class="hl-n">${it.checked ? "✓" : i + 1}</span>
+      <img class="rowface" src="assets/characters/${qFaceFor(it.name)}" alt="" loading="lazy">
       <div class="grow"><span class="name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</span>
       ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</div>
       ${act}
@@ -982,6 +983,15 @@ function qCelebMatch(tokens, kw) {
 }
 /* Resolution: an exact item rule wins for character and fact
  * independently; then the first matching category; else none. */
+/* The face ladder (owner, 2026-10-28): an exact item character,
+ * then its category character, then the basket — the registry's
+ * universal fallback, so any item can wear a face and no item ever
+ * waits for art. The registry is assets/characters/manifest.json. */
+function qFaceFor(name) {
+  const r = qCelebResolve(name, CELEB);
+  return (r && r.char) || (CELEB && CELEB.fallback) || "basket.webp";
+}
+
 function qCelebResolve(name, manifest) {
   if (!manifest) return null;
   const tokens = qnorm(name).split(" ").filter(Boolean);
@@ -1391,6 +1401,8 @@ function renderHunt() {
   $("#hunt-mapnote").textContent = Q.mapNote || "";
   $("#hunt-mapnote").hidden = !Q.mapNote;
   $("#hunt-list").innerHTML = qHuntListHtml(sess);
+  if (window.mapperOfferBriefing && sess.state === "not_started") mapperOfferBriefing(sess);
+  if (window.mapperHuntIcon) mapperHuntIcon(sess);
   // The suggested-next card: always the one target, never a wait
   // on the walk — the route is a suggestion, any row can GRAB.
   const ps = qPopState(sess);
@@ -1413,7 +1425,7 @@ function renderHunt() {
     const stop = qStops(sess)[next];
     const rep = Q.storeReports.find(r => (r.item_group && r.item_group === it.group) || qnorm(r.item) === qnorm(it.name));
     $("#pop-kicker").textContent = sess.state === "paused" ? "Paused" : "Suggested next — grab any stop";
-    $("#pop-body").innerHTML = `<p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p>
+    $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
       ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
@@ -2409,7 +2421,9 @@ async function openScore(sess) {
   const p = qProgress(sess);
   const dur = qHuntDuration(sess, receipt);
   const attached = sess.state === "done";
-  let html = `<div class="scorehero">
+  try { localStorage.setItem("arya-hunted", "1"); } catch (e) {}
+  let html = attached ? `<img class="scoreparty" src="assets/scenes/score-party.webp" alt="The cast celebrates around the receipt">` : "";
+  html += `<div class="scorehero">
     <p class="hero-k">${attached ? "Receipt attached ✓" : "Finished · Receipt missing"}</p>
     <h2 class="largetitle" style="font-size:28px">${esc(sess.store)} — hunt finished</h2>
     <p class="muted nomargin">${QMODE_LABEL[sess.mode] || esc(sess.mode)} · ${p.done} of ${p.total} collected</p>
@@ -2447,7 +2461,6 @@ async function openScore(sess) {
   }
   body.innerHTML = html;
   qAfterHaul(sess, profile, attached);
-  if (window.mapperOfferAfterHunt) mapperOfferAfterHunt(sess);
   const add = $("#score-addreceipt");
   if (add) add.addEventListener("click", () =>
     openAddReceipt(sess.id, sess.store, s => { Object.assign(sess, s); openScore(sess); }));
