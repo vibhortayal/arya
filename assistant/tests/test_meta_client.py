@@ -28,6 +28,22 @@ class TestMetaClient(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.chat([], mode="contributor", personal=True)
 
+    def test_generate_image_shape_and_cost(self):
+        import base64
+        cap = {}
+        def t(method, url, headers, body):
+            cap.update(method=method, url=url, headers=headers, body=body)
+            return 200, {"data": [{"b64_json": base64.b64encode(b"WEBPDATA").decode()}],
+                         "usage": {"images_generated": 1}}
+        c = MetaClient(api_key="<redacted>", transport=t)
+        img, usage, cost = c.generate_image("a mascot")
+        self.assertTrue(cap["url"].endswith("/v1/images/generations"))
+        self.assertEqual(cap["body"]["model"], "muse-image-1.0")
+        self.assertEqual(cap["body"]["prompt"], "a mascot")
+        self.assertEqual(img, b"WEBPDATA")
+        self.assertEqual(usage, {"images_generated": 1})
+        self.assertAlmostEqual(cost, 0.01, places=9)
+
     def test_cost_math(self):
         self.assertAlmostEqual(estimate_cost("standard", 1_000_000), 1.25, places=6)
         self.assertAlmostEqual(estimate_cost("standard", 1_000_000, cached_tokens=1_000_000), 0.15, places=6)

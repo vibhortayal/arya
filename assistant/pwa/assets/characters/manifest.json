@@ -1,0 +1,331 @@
+{
+ "categories": [
+  {
+   "char": "fruit.webp",
+   "fact": "Botanically, a banana is a berry — but a strawberry isn't.",
+   "id": "fruit",
+   "keywords": [
+    "fruit",
+    "berry",
+    "berries",
+    "strawberry",
+    "strawberries",
+    "blackberry",
+    "blackberries",
+    "apple",
+    "apples",
+    "grape",
+    "grapes",
+    "melon",
+    "peach",
+    "peaches",
+    "pear",
+    "pears",
+    "mango",
+    "kiwi",
+    "lemon",
+    "lemons",
+    "lime",
+    "orange",
+    "oranges",
+    "cherry",
+    "cherries",
+    "plum",
+    "pineapple",
+    "apricot",
+    "nectarine",
+    "avocado"
+   ]
+  },
+  {
+   "char": "frozen.webp",
+   "fact": "October is National Pizza Month in the United States.",
+   "id": "frozen",
+   "keywords": [
+    "frozen",
+    "ice cream",
+    "popsicle",
+    "popsicles",
+    "gelato",
+    "sorbet"
+   ]
+  },
+  {
+   "char": "vegetable.webp",
+   "fact": null,
+   "id": "vegetable",
+   "keywords": [
+    "vegetable",
+    "vegetables",
+    "veggie",
+    "carrot",
+    "carrots",
+    "broccoli",
+    "spinach",
+    "lettuce",
+    "tomato",
+    "tomatoes",
+    "potato",
+    "potatoes",
+    "onion",
+    "onions",
+    "garlic",
+    "pepper",
+    "peppers",
+    "cucumber",
+    "corn",
+    "mushroom",
+    "mushrooms",
+    "kale",
+    "zucchini",
+    "cauliflower",
+    "celery",
+    "salad",
+    "greens",
+    "cabbage",
+    "squash",
+    "eggplant",
+    "beet",
+    "beets",
+    "radish",
+    "basil",
+    "cilantro",
+    "parsley",
+    "herb",
+    "herbs",
+    "tofu"
+   ]
+  },
+  {
+   "char": "bakery.webp",
+   "fact": "People have been baking bread for more than 10,000 years.",
+   "id": "bakery",
+   "keywords": [
+    "bakery",
+    "bagel",
+    "bagels",
+    "muffin",
+    "muffins",
+    "croissant",
+    "cake",
+    "cookie",
+    "cookies",
+    "bun",
+    "buns",
+    "roll",
+    "rolls",
+    "pastry",
+    "donut",
+    "doughnut",
+    "pie",
+    "tortilla",
+    "tortillas",
+    "pita",
+    "naan",
+    "brownie",
+    "brownies"
+   ]
+  },
+  {
+   "char": "dairy.webp",
+   "fact": "The holes in Swiss cheese are bubbles made by friendly bacteria.",
+   "id": "dairy",
+   "keywords": [
+    "dairy",
+    "milk",
+    "yogurt",
+    "butter",
+    "cream",
+    "curd",
+    "paneer",
+    "ghee",
+    "kefir"
+   ]
+  },
+  {
+   "char": "pantry.webp",
+   "fact": "There are over 300 shapes of pasta, each made to hold sauce its own way.",
+   "id": "pantry",
+   "keywords": [
+    "pantry",
+    "rice",
+    "cereal",
+    "flour",
+    "sugar",
+    "sauce",
+    "vinegar",
+    "beans",
+    "lentils",
+    "lentil",
+    "chickpeas",
+    "soup",
+    "spice",
+    "spices",
+    "honey",
+    "syrup",
+    "jam",
+    "jelly",
+    "oats",
+    "oatmeal",
+    "granola",
+    "crackers",
+    "cracker",
+    "chips",
+    "nuts",
+    "seeds",
+    "quinoa",
+    "couscous",
+    "oil",
+    "ketchup",
+    "mustard",
+    "mayo",
+    "mayonnaise",
+    "dressing",
+    "broth",
+    "canned"
+   ]
+  }
+ ],
+ "items": [
+  {
+   "char": "blueberry.webp",
+   "fact": "The white dusty coating on a blueberry is called bloom — it's a natural shield that keeps the berry fresh.",
+   "id": "blueberry",
+   "keywords": [
+    "blueberry",
+    "blueberries"
+   ]
+  },
+  {
+   "char": "banana.webp",
+   "fact": "Botanically, a banana is a berry — but a strawberry isn't.",
+   "id": "banana",
+   "keywords": [
+    "banana",
+    "bananas"
+   ]
+  },
+  {
+   "fact": "A strawberry carries its seeds on the outside — about 200 of them on every berry.",
+   "id": "strawberry",
+   "keywords": [
+    "strawberry",
+    "strawberries"
+   ]
+  },
+  {
+   "char": "raspberry.webp",
+   "fact": "A raspberry is many tiny fruits joined together — every little bead is one fruit.",
+   "id": "raspberry",
+   "keywords": [
+    "raspberry",
+    "raspberries"
+   ]
+  },
+  {
+   "char": "mandarin.webp",
+   "fact": "Mandarins were named after the bright orange robes of officials in ancient China.",
+   "id": "mandarin",
+   "keywords": [
+    "mandarin",
+    "mandarins",
+    "clementine",
+    "clementines",
+    "tangerine",
+    "tangerines"
+   ]
+  },
+  {
+   "char": "egg.webp",
+   "fact": "Brown eggs and white eggs taste the same — the shell color just depends on the hen.",
+   "id": "egg",
+   "keywords": [
+    "egg",
+    "eggs"
+   ]
+  },
+  {
+   "char": "cheese.webp",
+   "fact": "The holes in Swiss cheese are bubbles made by friendly bacteria.",
+   "id": "cheese",
+   "keywords": [
+    "cheese"
+   ]
+  },
+  {
+   "char": "bread.webp",
+   "fact": "People have been baking bread for more than 10,000 years.",
+   "id": "bread",
+   "keywords": [
+    "bread"
+   ]
+  },
+  {
+   "char": "pasta.webp",
+   "fact": "There are over 300 shapes of pasta, each made to hold sauce its own way.",
+   "id": "pasta",
+   "keywords": [
+    "pasta",
+    "spaghetti",
+    "penne",
+    "fettuccine",
+    "fusilli",
+    "rigatoni",
+    "macaroni",
+    "linguine",
+    "noodle",
+    "noodles"
+   ]
+  },
+  {
+   "char": "pizza.webp",
+   "fact": "October is National Pizza Month in the United States.",
+   "id": "pizza",
+   "keywords": [
+    "pizza"
+   ]
+  },
+  {
+   "char": "hummus.webp",
+   "fact": "Hummus means 'chickpeas' in Arabic — the dip is named after its main ingredient.",
+   "id": "hummus",
+   "keywords": [
+    "hummus"
+   ]
+  },
+  {
+   "char": "olive-oil.webp",
+   "fact": "An olive tree can live for over 1,000 years and still make olives.",
+   "id": "olive oil",
+   "keywords": [
+    "olive oil"
+   ]
+  },
+  {
+   "char": "peanut-butter.webp",
+   "fact": "It takes about 540 peanuts to make one jar of peanut butter.",
+   "id": "peanut butter",
+   "keywords": [
+    "peanut butter"
+   ]
+  },
+  {
+   "char": "almond.webp",
+   "fact": "Almonds are cousins of peaches — an almond is the seed inside a fruit.",
+   "id": "almond",
+   "keywords": [
+    "almond",
+    "almonds"
+   ]
+  },
+  {
+   "char": "milk.webp",
+   "id": "milk",
+   "keywords": [
+    "milk"
+   ]
+  }
+ ],
+ "note": "Collect celebration (Discussion 32). Facts are a verified static bank: fun facts only, no nutrition or health claims, never improvised at runtime. Resolution: an exact item rule wins for character and fact independently; then the first matching category; else no celebration.",
+ "version": 1
+}
