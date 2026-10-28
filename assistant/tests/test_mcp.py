@@ -117,6 +117,43 @@ class TestMcp(unittest.TestCase):
         res = call(self.c, self.token, "nope_tool")
         assert res["isError"]
 
+    def test_bad_input_is_a_tool_error_not_a_500(self):
+        res = call(self.c, self.token, "check_item", {"name": 5})
+        assert res["isError"]
+        line = {"decoded_name": 5, "line_total": 1}
+        res = call(self.c, self.token, "file_receipt", {
+            "merchant": "m", "purchased_at": "2026-10-28", "lines": [line]})
+        assert res["isError"]
+        res = call(self.c, self.token, "add_items", {"items": [None, "  ", "eggs"]})
+        assert [a["name"] for a in res["structuredContent"]["added"]] == ["eggs"]
+        res = call(self.c, self.token, "add_items", {"items": ["x"] * 51})
+        assert res["isError"]
+        r = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                         "params": {"name": "get_list", "arguments": ["x"]}},
+                self.token)
+        assert r.json()["result"]["isError"]
+        recs = call(self.c, self.token, "get_receipts", {"limit": -3})
+        assert not recs["isError"]
+
+    def test_receipt_date_must_be_real_and_not_future(self):
+        for bad in ("garbage", "2099-01-01", "2026-13-40"):
+            res = call(self.c, self.token, "file_receipt", {
+                "merchant": "m", "purchased_at": bad,
+                "lines": [{"decoded_name": "x", "line_total": 1}]})
+            assert res["isError"], bad
+        snap = call(self.c, self.token, "get_snapshot")["structuredContent"]
+        assert snap["trips"] == 0 and snap["as_of"] is None
+
+    def test_demo_cannot_file_receipts(self):
+        demo = TestClient(self.c.app)
+        assert demo.post("/auth/demo").status_code == 200
+        res = call(demo, None, "file_receipt", {
+            "merchant": "m", "purchased_at": "2026-10-28",
+            "lines": [{"decoded_name": "x", "line_total": 1}]})
+        assert res["isError"] and "real account" in res["content"][0]["text"]
+        res = call(demo, None, "add_items", {"items": ["sandbox milk"]})
+        assert not res["isError"]
+
     def test_account_isolation(self):
         call(self.c, self.token, "add_items", {"items": ["owner only item"]})
         other = TestClient(self.c.app)

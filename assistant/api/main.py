@@ -6,7 +6,7 @@ urllib with timeouts up to 120 s, so no route may call a model —
 or judge_pending, which calls the judge — on the event loop.
 Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
-import hashlib, json, os
+import datetime, hashlib, json, math, os
 from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
@@ -727,18 +727,25 @@ def _mcp_get_list(args):
         for i in d["smart_list"]["items"]]}
 
 
+def _mcp_str(v):
+    return v.strip() if isinstance(v, str) else ""
+
+
 def _mcp_add_items(args):
     items = args.get("items")
     if not isinstance(items, list) or not items:
         raise ValueError("items must be a non-empty array of names")
-    added = [_add_name_to_list(str(n)) for n in items if str(n).strip()]
+    if len(items) > 50:
+        raise ValueError("add at most 50 items per call")
+    added = [_add_name_to_list(_mcp_str(n)[:120]) for n in items
+             if _mcp_str(n)]
     if not added:
         raise ValueError("items must be a non-empty array of names")
     return {"added": added}
 
 
 def _mcp_check_item(args):
-    name = (args.get("name") or "").strip()
+    name = _mcp_str(args.get("name"))
     if not name:
         raise ValueError("name is required")
     d = state.derived()
@@ -754,16 +761,25 @@ def _mcp_check_item(args):
 
 
 def _mcp_file_receipt(args):
-    merchant = (args.get("merchant") or "").strip()
-    purchased_at = (args.get("purchased_at") or "").strip()
+    merchant = _mcp_str(args.get("merchant"))
+    purchased_at = _mcp_str(args.get("purchased_at"))
+    try:
+        day = datetime.date.fromisoformat(purchased_at)
+    except ValueError:
+        day = None
+    if purchased_at and (day is None or day > datetime.date.today()):
+        raise ValueError("purchased_at must be a real ISO date (YYYY-MM-DD) "
+                         "that is not in the future")
     raw_lines = args.get("lines")
     if not merchant or not purchased_at or not isinstance(raw_lines, list) or not raw_lines:
         raise ValueError("a receipt needs merchant, purchased_at, and lines")
     from api.decode.service import _finish
     lines = []
     for ln in raw_lines:
-        if not isinstance(ln, dict) or not ln.get("decoded_name") \
-                or not isinstance(ln.get("line_total"), (int, float)):
+        if not isinstance(ln, dict) or not _mcp_str(ln.get("decoded_name")) \
+                or isinstance(ln.get("line_total"), bool) \
+                or not isinstance(ln.get("line_total"), (int, float)) \
+                or not math.isfinite(ln["line_total"]):
             raise ValueError("every line needs decoded_name and a numeric line_total")
         lt = ln.get("line_type") or "item"
         lines.append({
@@ -793,7 +809,10 @@ def _mcp_file_receipt(args):
 
 
 def _mcp_get_receipts(args):
-    limit = args.get("limit") or 10
+    limit = args.get("limit")
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        limit = 10
+    limit = min(max(limit, 1), 100)
     out = []
     for r in state.receipts():
         total = r.get("total")
@@ -802,7 +821,7 @@ def _mcp_get_receipts(args):
         out.append({"receipt_id": r["receipt_id"], "merchant": r.get("merchant"),
                     "purchased_at": r.get("purchased_at"), "total": total})
     out.sort(key=lambda x: x["purchased_at"] or "", reverse=True)
-    return {"receipts": out[:max(1, int(limit))]}
+    return {"receipts": out[:limit]}
 
 
 _MCP_HANDLERS = {
@@ -815,7 +834,7 @@ _MCP_HANDLERS = {
 }
 
 
-def _mcp_dispatch(msg):
+def _mcp_dispatch(msg, demo=False):
     """One JSON-RPC message in, one response dict out (None for a
     notification). Runs in a threadpool: tool handlers block on the
     file store and, for file_receipt, on the staple judge."""
@@ -842,11 +861,19 @@ def _mcp_dispatch(msg):
         return mcp.result(rid, {"tools": mcp.TOOL_DEFS})
     if method == "tools/call":
         name = params.get("name") if isinstance(params, dict) else None
-        handler = _MCP_HANDLERS.get(name or "")
+        handler = _MCP_HANDLERS.get(name if isinstance(name, str) else "")
+        if name == "file_receipt" and demo:
+            # Same rule as /api/intake/: filing a receipt (and the model
+            # call that judges it) needs a real account.
+            return mcp.result(rid, mcp.tool_error(
+                "this needs a real account — the demo household keeps nothing"))
         if handler is None:
             return mcp.result(rid, mcp.tool_error(f"unknown tool: {name}"))
+        args = params.get("arguments") or {}
+        if not isinstance(args, dict):
+            return mcp.result(rid, mcp.tool_error("arguments must be an object"))
         try:
-            data = handler(params.get("arguments") or {})
+            data = handler(args)
         except ValueError as e:
             return mcp.result(rid, mcp.tool_error(str(e)))
         return mcp.result(rid, mcp.tool_result(data))
@@ -856,7 +883,7 @@ def _mcp_dispatch(msg):
 @app.post("/api/mcp")
 async def mcp_route(req: Request):
     body = await _json_body(req)
-    resp = await run_in_threadpool(_mcp_dispatch, body)
+    resp = await run_in_threadpool(_mcp_dispatch, body, _is_demo(req))
     if resp is None:
         return Response(status_code=202)
     return resp
