@@ -1666,7 +1666,7 @@ async def storemap_capture(req: Request):
         pre = storemap.score_image(body)
     except Exception:
         raise HTTPException(400, "that file is not a readable photo")
-    if pre["fix"] and "Too far" not in pre["fix"]:
+    if pre["fix"]:
         return {"accepted": False, "fix": pre["fix"],
                 "score": pre["score"], "segment": seg_id}
     if not os.environ.get("MODEL_API_KEY"):
@@ -1680,16 +1680,20 @@ async def storemap_capture(req: Request):
     if jpeg is None:
         raise HTTPException(
             503, "could not blur people out of the photo, so nothing was kept")
+    # Shelf fill: live SAM returns one box per shelf bay, so fill is
+    # the SUM of the box areas (capped at 1), not the largest box. It
+    # is measured on the scrubbed JPEG, so no raw frame is sent twice.
     fill = None
     try:
         boxes, _u, _c = await run_in_threadpool(
-            client.segment, body, "grocery shelf", media_type=media)
+            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
         if boxes:
             from PIL import Image
             import io
-            w, h = Image.open(io.BytesIO(body)).size
-            fill = max((b["box"][2] - b["box"][0]) * (b["box"][3] - b["box"][1])
-                       for b in boxes) / float(w * h)
+            w, h = Image.open(io.BytesIO(jpeg)).size
+            fill = min(1.0, sum((b["box"][2] - b["box"][0])
+                                * (b["box"][3] - b["box"][1])
+                                for b in boxes) / float(w * h))
     except Exception:
         fill = None   # neutral: the fill check never blocks a capture
     try:
