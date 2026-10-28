@@ -71,7 +71,10 @@ class TestEngine(unittest.TestCase):
         self.assertIn("blurry", self.sm.score_image(jpeg(kind="flat"))["fix"])
         self.assertIn("dark", self.sm.score_image(jpeg(kind="dark"))["fix"])
         self.assertIn("bright", self.sm.score_image(jpeg(kind="bright"))["fix"])
-        self.assertIn("closer", self.sm.score_image(jpeg(1), shelf_fill=0.05)["fix"])
+        # Fill shapes the score but never refuses a capture.
+        low = self.sm.score_image(jpeg(1), shelf_fill=0.05)
+        self.assertIsNone(low["fix"])
+        self.assertLess(low["score"], self.sm.score_image(jpeg(1), shelf_fill=0.6)["score"])
         # An unrun shelf check is neutral, never a penalty.
         self.assertIsNone(self.sm.score_image(jpeg(1), shelf_fill=None)["fix"])
 
@@ -212,6 +215,7 @@ class TestEngine(unittest.TestCase):
 class FakeClient:
     people_fails = False
     calls = []
+    shelf_sizes = []
 
     def __init__(self, *a, **k):
         pass
@@ -221,8 +225,11 @@ class FakeClient:
         if prompt == "person" and FakeClient.people_fails:
             raise RuntimeError("SAM down")
         if prompt == "grocery shelf":
-            return [{"box": [0, 0, 480, 360], "w": 640, "h": 480,
-                     "confidence": 0.9}], {}, 0.0025
+            # Live SAM returns one small box per shelf bay (27 on a real
+            # walk frame; largest 12% of the frame, union 53%).
+            FakeClient.shelf_sizes.append(len(image_bytes))
+            return [{"box": [i * 20, 40, i * 20 + 18, 400], "w": 640, "h": 480,
+                     "confidence": 0.8} for i in range(27)], {}, 0.0025
         return [], {}, 0.0025
 
 
@@ -290,6 +297,7 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         fresh_data()
         FakeClient.calls, FakeClient.people_fails = [], False
+        FakeClient.shelf_sizes = []
         from api import main, state
         main.MetaClient = FakeClient
         main._login_fails.clear()
@@ -321,6 +329,10 @@ class TestRoutes(unittest.TestCase):
         out = r.json()
         self.assertTrue(out["accepted"])
         self.assertIn("person", FakeClient.calls)       # scrub ran first
+        self.assertIn("grocery shelf", FakeClient.calls)
+        # Many small bay boxes must not read as "too far": the capture
+        # is accepted, and the fill check ran on the scrubbed JPEG.
+        self.assertEqual(len(FakeClient.shelf_sizes), 1)
         v = self.c.get("/api/storemap", params={"store": self.store}).json()
         self.assertEqual(v["coverage_pct"], 100)
         self.assertIsNone(v["next"])
