@@ -27,7 +27,7 @@ for cand in ("/opt/node24/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
         NODE = cand
         break
 
-HELDOUT = "/home/hatch/workspace/arya-3d/localize-spike/heldout"
+HELDOUT = os.environ.get("ARYA_LOCALIZER_HELDOUT", "")
 
 
 def read(name):

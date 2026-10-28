@@ -94,6 +94,10 @@ behind the owner's account (114 receipts back to 2023) is the
 owner's purchase history, imported as data; it is not code.
 
 
+## License
+
+MIT, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
+
 ## Rules that hold
 
 Personal data is Standard mode only, enforced in
