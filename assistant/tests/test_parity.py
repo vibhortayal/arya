@@ -61,10 +61,16 @@ class TestOnePrimaryAction(unittest.TestCase):
     def test_flow_screens_have_one_primary(self):
         html = read("index.html")
         for start, end in (('id="view-newlist"', 'id="view-store"'),
-                           ('id="view-optimize"', 'id="view-mode"'),
-                           ('id="view-score"', 'id="view-community"')):
+                           ('id="view-optimize"', 'id="view-mode"')):
             sec = section(html, start, end)
             self.assertEqual(sec.count("btn primary"), 1, start)
+
+    def test_score_leaves_through_the_tab_bar(self):
+        # The Score is a summary the haul flow opens; the Today tab is
+        # always visible there, so it carries no "Back to Today" button.
+        sec = section(read("index.html"), 'id="view-score"', 'id="view-community"')
+        self.assertEqual(sec.count("btn primary"), 0)
+        self.assertNotIn("score-done", sec)
 
 
 class TestBackLinksReturnHome(unittest.TestCase):

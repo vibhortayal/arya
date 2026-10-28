@@ -118,6 +118,7 @@
       <div class="group pad"><div id="eyes-records"></div></div>
     </div>
     <div id="smart-list"></div>
+    <p class="muted small listhint">Tap the amount to change it. Swipe a row left to remove it.</p>
     <div id="list-notes"></div>
     <h3 class="sect">Prepared cart</h3>
     <div id="cart" class="group"></div>
@@ -152,8 +153,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
       </button>
       <input type="text" id="chat-input" placeholder="What&rsquo;s running low?" autocomplete="off" aria-label="Message">
-      <button id="btn-speak" type="button" class="iconbtn" aria-label="Toggle spoken replies" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+      <button id="btn-speak" type="button" class="iconbtn" aria-label="Toggle spoken replies" aria-pressed="false">       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10"/></svg>
       </button>
       <button type="submit" class="btn primary" id="chat-send">Send</button>
     </form>
@@ -554,7 +554,6 @@
 
   <section id="view-score" class="view" hidden>
     <div id="score-body"></div>
-    <p><button id="score-done" class="btn primary wide" type="button">Back to Today</button></p>
   </section>
 
   <section id="view-album" class="view" hidden>

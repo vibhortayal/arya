@@ -3238,13 +3238,6 @@ async function openScore(sess) {
       if (window.HaulUI) HaulUI.afterFinish(sess); else openScore(sess);
     }, { goesToHaul: !!window.HaulUI }));
 }
-$("#score-done").addEventListener("click", () => {
-  Q.stack = [];
-  document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-home"; });
-  stopHuntTimer();
-  window.scrollTo(0, 0);
-  refresh("view-home");
-});
 
 /* ---------------- Community ---------------- */
 

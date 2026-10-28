@@ -143,6 +143,11 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
   background: var(--fill); font-size: 19px; line-height: 1; color: var(--label);
 }
 .stepper .qty { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; }
+.qtybtn { flex: none; min-width: 52px; height: 36px; border: none; border-radius: 18px; background: var(--fill); font-size: 15px; font-weight: 600; color: var(--label); font-variant-numeric: tabular-nums; }
+.qtyinput { flex: none; width: 64px; height: 36px; padding: 0 8px; text-align: center; border-radius: 10px; }
+.listrow { transition: transform .15s ease-out; }
+.listrow.swipe-ready { background: rgba(200, 30, 30, 0.12); }
+.listhint { margin: 8px 4px 0; }
 .remove {
   flex: none; width: 36px; height: 36px; border: none; border-radius: 50%;
   background: transparent; color: var(--tertiary); font-size: 20px; line-height: 1;
@@ -1002,7 +1007,7 @@ input[type=file]::file-selector-button {
 @media (max-width: 480px) {
   .listrow { flex-wrap: wrap; }
   .listrow .grow { flex: 1 1 130px; }
-  .listrow .stepper { margin-left: 42px; }
+  .listrow .qtybtn { margin-left: 42px; }
 }
 .listrow.flash { animation: rowflash 1.6s ease-out; }
 @keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }

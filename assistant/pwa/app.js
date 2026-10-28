@@ -105,17 +105,12 @@ const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 function listRow(i, tags) {
   const reason = [i.due_reason, i.judge_reason].filter(Boolean).join(" · ");
   const tagHtml = (tags || []).map(t => `<span class="storetag">${esc(t)}</span>`).join("");
-  return `<div class="row listrow${i.checked ? " checked" : ""}">
+  return `<div class="row listrow${i.checked ? " checked" : ""}" tabindex="0" data-row-id="${esc(i.item_id)}">
     <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
     <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}
     ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
     ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}</div>
-    <div class="stepper">
-      <button data-act="dec" data-id="${esc(i.item_id)}" aria-label="One less">−</button>
-      <span class="qty">× ${qtyFmt(i.qty)}</span>
-      <button data-act="inc" data-id="${esc(i.item_id)}" aria-label="One more">+</button>
-    </div>
-    <button class="remove" data-act="remove" data-id="${esc(i.item_id)}" aria-label="Remove ${esc(i.name)} from the list">×</button>
+    <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${qtyFmt(i.qty)}. Tap to change.">× ${qtyFmt(i.qty)}</button>
   </div>`;
 }
 
@@ -399,15 +394,81 @@ $("#smart-list").addEventListener("click", async ev => {
   try {
     if (b.dataset.act === "check") {
       await post("/api/list/check", { item_id: id, checked: !(item && item.checked) });
-    } else if (b.dataset.act === "inc" || b.dataset.act === "dec") {
-      const cur = item ? Number(item.qty) || 1 : 1;
-      await post("/api/list/qty", { item_id: id, qty: Math.max(1, cur + (b.dataset.act === "inc" ? 1 : -1)) });
-    } else if (b.dataset.act === "remove") {
-      await post("/api/list/remove", { item_id: id });
+    } else if (b.dataset.act === "qty") {
+      editQty(b, id, item);
+      return;
     } else return;
     renderList().catch(showErr);
   } catch (e) { toast(e.message); }
 });
+
+/* Tap the amount to change it: the button swaps for a number
+ * field; Enter or leaving the field saves. */
+function editQty(btn, id, item) {
+  const inp = document.createElement("input");
+  inp.type = "number"; inp.min = "1"; inp.step = "1"; inp.inputMode = "numeric";
+  inp.className = "qtyinput"; inp.value = item ? Number(item.qty) || 1 : 1;
+  inp.setAttribute("aria-label", "Quantity");
+  btn.replaceWith(inp);
+  inp.focus(); inp.select();
+  let done = false;
+  const commit = async () => {
+    if (done) return; done = true;
+    const q = Math.max(1, Math.round(Number(inp.value) || 1));
+    try { if (!item || q !== Number(item.qty)) await post("/api/list/qty", { item_id: id, qty: q }); }
+    catch (e) { toast(e.message); }
+    renderList().catch(showErr);
+  };
+  inp.addEventListener("blur", commit);
+  inp.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") { ev.preventDefault(); inp.blur(); }
+    if (ev.key === "Escape") { done = true; renderList().catch(showErr); }
+  });
+}
+
+/* Remove by swiping a row left (or Delete on a focused row), with
+ * Undo: the remove endpoint only dismisses, so Undo is an add by id. */
+async function removeListItem(id) {
+  const item = listItems[id];
+  try {
+    await post("/api/list/remove", { item_id: id });
+    renderList().catch(showErr);
+    toast(`${item ? item.name : "Item"} removed.`, { action: "Undo", onAction: async () => {
+      try { await post("/api/list/add", { item_id: id }); renderList().catch(showErr); }
+      catch (e) { toast(e.message); }
+    } });
+  } catch (e) { toast(e.message); }
+}
+(function wireListSwipe() {
+  const box = $("#smart-list");
+  let row = null, x0 = 0, y0 = 0, dx = 0, lock = null;
+  box.addEventListener("touchstart", ev => {
+    row = ev.target.closest(".listrow");
+    if (!row || ev.target.closest("input")) { row = null; return; }
+    x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; dx = 0; lock = null;
+  }, { passive: true });
+  box.addEventListener("touchmove", ev => {
+    if (!row) return;
+    const mx = ev.touches[0].clientX - x0, my = ev.touches[0].clientY - y0;
+    if (!lock && (Math.abs(mx) > 8 || Math.abs(my) > 8)) lock = Math.abs(mx) > Math.abs(my) * 1.5 ? "x" : "y";
+    if (lock !== "x") return;
+    dx = Math.min(0, mx);
+    row.style.transform = `translateX(${dx}px)`;
+    row.classList.toggle("swipe-ready", dx < -90);
+  }, { passive: true });
+  const end = () => {
+    if (!row) return;
+    const r = row; row = null;
+    r.style.transform = ""; r.classList.remove("swipe-ready");
+    if (lock === "x" && dx < -90) removeListItem(r.dataset.rowId);
+  };
+  box.addEventListener("touchend", end);
+  box.addEventListener("touchcancel", () => { if (row) { row.style.transform = ""; row = null; } });
+  box.addEventListener("keydown", ev => {
+    const r = ev.target.closest && ev.target.closest(".listrow");
+    if (r && ev.target === r && (ev.key === "Delete" || ev.key === "Backspace")) { ev.preventDefault(); removeListItem(r.dataset.rowId); }
+  });
+})();
 
 function paintListNotes(h) {
   let notes = "";
