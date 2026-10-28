@@ -380,7 +380,7 @@ MACHINE = r"""
   d = fresh(); P.setBudget("$7x4.5");
   out.budgetKept = localStorage.getItem("arya-pack-budget") === "74.5" && d.pack.budget === "74.5";
   // helper mode
-  d = fresh();
+  d = fresh(); P.setHelperEnabled(true);
   P.setHelperName("Mia"); P.setHelper(true);
   out.locked = P.locked();
   out.lockedPackAll = P.packAll(); out.lockedSkipRest = P.skipRest();
@@ -398,6 +398,8 @@ MACHINE = r"""
   out.declined = !("gum" in d.pick) && d.pack.helper.pending.length === 0;
   P.setHelper(false);
   out.unlocked = !P.locked();
+  P.setHelperEnabled(false); P.setHelper(true);
+  out.hiddenNoLock = !P.locked();
   // rows html is escaped and carries the contract classes
   d = fresh();
   d.pick["x"] = { name: "<img onerror=1>", qty: 2, on: true, extra: true, src: "typed", note: "a&b", aisle: "Pantry" };
@@ -585,7 +587,7 @@ class TestPackMachine(unittest.TestCase):
 
     def test_helper_mode(self):
         r = self.r
-        self.check("locked", "notInBag", "nameStored", "approved", "declined", "unlocked")
+        self.check("locked", "notInBag", "nameStored", "approved", "declined", "unlocked", "hiddenNoLock")
         self.assertIs(r["lockedPackAll"], False)
         self.assertIs(r["lockedSkipRest"], False)
         self.assertEqual(r["pending"], ["Juice boxes"])
@@ -777,12 +779,12 @@ COMBINED = r"""
   // helper mode blocks a photo before it is read
   Q.draft = { raw: [], store: "Trader Joe's", pick: {}, pack: null };
   renderPlan();
-  PACK.setHelper(true);
+  PACK.setHelperEnabled(true); PACK.setHelper(true);
   toasts.length = 0;
   const target = { files: [{ type: "image/jpeg" }], value: "x" };
   await fire("#nl-photo", "change", { target });
   out.photoBlocked = fetched === 0 && toasts[0] === "Helper mode is on. Turn it off first." && target.value === "";
-  PACK.setHelper(false);
+  PACK.setHelper(false); PACK.setHelperEnabled(false);
   await fire("#nl-photo", "change", { target: { files: [{ type: "image/jpeg" }], value: "x" } });
   out.photoRuns = fetched === 1;
   console.log(JSON.stringify(out));
