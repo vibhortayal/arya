@@ -1006,6 +1006,28 @@ def judge_run():
     return {"judged": state.judge_pending(client)}
 
 
+@app.post("/api/judge/second-seat")
+def judge_second_seat():
+    """The open-weights second seat re-judges this account's judged
+    items by NAME only (no facts leave the hosted API) and records
+    where it disagrees with the deciding verdict. Advisory only:
+    judgments are never changed here."""
+    from api.judge import second_seat_batch, second_seat_report
+    from api.open_client import OpenClient
+    judged = state.judgments()
+    if not judged:
+        return {"checked": 0, "agreed": 0, "disagreements": []}
+    nm = state.names()
+    items = [(iid, nm.get(iid, iid)) for iid in judged]
+    client = OpenClient()
+    verdicts = {}
+    for i in range(0, len(items), 25):
+        verdicts.update(second_seat_batch(client, items[i:i + 25]))
+    report = second_seat_report(verdicts, judged, nm)
+    state.save_second_seat(report)
+    return report
+
+
 def _add_name_to_list(name):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares."""

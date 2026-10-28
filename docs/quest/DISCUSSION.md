@@ -143,3 +143,16 @@ can name one aisle two ways across frames ("Aisle 4" vs "Pasta") and
 zone merging only partly collapses that — the confirm card is the
 correction surface. Store finding stays the directory + add-a-store
 for now; a Maps/Places lookup is a separate, undecided step.
+
+56. **Open weights get two real jobs (owner, 2026-10-28).** Muse Spark
+    Open (Baseten, the hackathon partner key) now (a) enriches the
+    dictionary — item name to cast category + store section, the fields
+    build.py always left empty — with hosted Spark arbitrating only
+    low-confidence rows, and (b) sits as the staple judge's second seat:
+    name-only verdicts recorded against the deciding facts-based
+    verdict, disagreements kept as a curation signal. Personal data
+    never crosses to Baseten — the open client refuses personal=True
+    in code, and both jobs send names only. Live check on a 32-name
+    public corpus: 32/32 labels, 32/32 seat verdicts. The hosted-vs-open
+    agreement rate is measured on the VM once the key is provisioned
+    there. Suite 502.
