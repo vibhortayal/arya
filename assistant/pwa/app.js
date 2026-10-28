@@ -100,8 +100,11 @@ function bindItemLinks(root) {
  * a count only. The names live on the List itself — Today taps
  * through to it — and the returns sentence is gone. */
 function staplesLine(items) {
-  if (!items.length) return "Nothing due";
-  return `${items.length} staple${items.length === 1 ? "" : "s"} due`;
+  /* Due staples only: the patterns' rows, not what you ticked off or
+   * typed in by hand (QA 2026-10-28). */
+  const n = (items || []).filter(i => !i.checked && i.source !== "user").length;
+  if (!n) return "Nothing due";
+  return `${n} staple${n === 1 ? "" : "s"} due`;
 }
 
 /* The character registry (owner, 2026-10-28): the manifest maps an
@@ -1168,6 +1171,10 @@ async function renderItem(id) {
 /* ---------------- Navigation ---------------- */
 
 function show(id) {
+  /* Every tab opens at its top, not wherever the last one was left
+   * (QA 2026-10-28). */
+  const shown = document.querySelector(".view:not([hidden])");
+  if (!shown || shown.id !== id) window.scrollTo(0, 0);
   document.querySelectorAll(".view").forEach(v => {
     v.hidden = v.id !== id;
     if (v.id === id) { v.classList.remove("enter"); void v.offsetWidth; v.classList.add("enter"); }
