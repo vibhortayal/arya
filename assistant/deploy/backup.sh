@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Nightly backup: run ON the VM (cron line below). Archives the JSON data
 # volume and, when ARYA_BACKUP_DATABASE_URL is set in deploy/.env, a
-# pg_dump of the arya schema only (never khelo's tables). Keeps the
+# pg_dump of the arya schema only (never the host project's own tables). Keeps the
 # newest KEEP files of each kind. Copy BACKUP_DIR off the VM if you can;
 # a backup on the same disk does not survive losing the VM.
 #
