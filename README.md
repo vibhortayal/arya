@@ -138,7 +138,7 @@ owner's purchase history, imported as data; it is not code.
 
 ## License
 
-MIT, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
+All rights reserved, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
 
 ## Rules that hold
 
