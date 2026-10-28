@@ -45,3 +45,10 @@ the hackathon credit. The staple judge and Ask Arya STAY on Spark
 Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
 cannot carry Wonder's latency). This amendment expires Nov 4; the
 production policy above is unchanged.
+
+**Switch at expiry.** The photo reader is an env setting:
+`ARYA_PHOTO_READER=spark` on the VM (then restart the api container)
+puts photo decode on Spark Standard with no deploy; unset or `wonder`
+is the amendment path. Receipts record `decoded_by`, so the switch is
+visible in the data. Spark-only photo decode scored 93.88% in the Gate 0
+eval, with the review queue as the mitigation.

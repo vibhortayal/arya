@@ -172,6 +172,15 @@ def load_photo_prompt():
 PHOTO_WONDER_TIMEOUT_S = 90
 
 
+def photo_reader():
+    """Which model reads receipt photos: ARYA_PHOTO_READER=wonder
+    (default, the amendment path) or spark. The amendment expires
+    2026-11-04; flipping this env var and restarting moves the
+    live site onto Spark Standard with no deploy."""
+    v = os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
+    return "standard" if v in ("spark", "standard") else "wonder"
+
+
 def _photo_read(messages, client, **kw):
     out, _usage, _cost = client.chat(messages, personal=True, **kw)
     try:
@@ -197,6 +206,8 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
                     {"type": "text", "text": "Decode this receipt photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
     try:
+        if photo_reader() == "standard":
+            raise RuntimeError("Wonder disabled by ARYA_PHOTO_READER")
         dec = _photo_read(messages, client, mode="wonder",
                           reasoning_effort=None,
                           timeout=PHOTO_WONDER_TIMEOUT_S)
