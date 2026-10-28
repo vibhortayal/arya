@@ -23,7 +23,7 @@ DRIVER = r"""
   Q.current = s; Q.scene = scene(); Q.storeReports = []; Q.focusIdx = -1; Q.arrived = true;
   Q.lastGrabAt = 0;
   for (let i = 0; i < 8; i++) { await collectStop(i); Q.lastGrabAt = 0; }
-  out.milestones_in_order = JSON.stringify(shown.slice(0, 3)) === JSON.stringify(["A quarter of the way!", "Halfway there!", "Three quarters — nearly home!"]);
+  out.milestones_in_order = JSON.stringify(shown.slice(0, 2)) === JSON.stringify(["Halfway there!", "One to go!"]);
   out.full_haul_bursts_once = bursts === 1 && shown[shown.length - 1] === "All collected! Full haul!";
   out.points_full = qHaulPoints(s, false) === 105 && qHaulPoints(s, true) === 155;
   await putBackStop(7);
@@ -32,7 +32,7 @@ DRIVER = r"""
   shown.length = 0;
   s = mk(12); Q.current = s; Q.lastGrabAt = 0; Q.combo = 0;
   await collectStop(0); await collectStop(1); await collectStop(2);
-  out.hot_streak = shown.includes("Hot streak ×3!") || shown.includes("A quarter of the way!");
+  out.hot_streak_quiet = shown.length === 0;
   // Express never celebrates
   shown.length = 0; bursts = 0;
   const e = mk(2, "express"); Q.current = e;
