@@ -19,7 +19,8 @@ const Q = {
   // The SceneView ladder: strip is the default (a store with no model
   // still plays in full); the player can switch rungs mid-hunt and
   // loses nothing — session state lives here, never in a driver.
-  driverName: localStorage.getItem("arya-scene-driver") || "strip",
+  driverName: "strip",
+  peek3D: false,
   // Navigation-first hunt (Discussion 35 + 36): the scene follows
   // the route on its own; walkTimer walks the view to the current
   // stop and `arrived` presents its pop. followHold = the player
@@ -95,14 +96,16 @@ function qStorePhotos(store) {
  * lives in the toggle), so it too opens in photo. A rung the
  * store cannot serve falls back — photo needs a walk, cloud
  * needs a model, anything else is strip. */
-function qResolveDriver(store, sessDriver) {
-  const model = qStoreModel(store), photos = qStorePhotos(store);
-  const stored = localStorage.getItem("arya-scene-driver");
-  let drv = stored || sessDriver || (photos ? "photo" : "strip");
-  if (!stored && photos && (sessDriver === "cloud" || sessDriver === "strip")) drv = "photo";
-  if (drv === "photo" && !photos) drv = model ? "cloud" : "strip";
-  if (drv === "cloud" && !model) drv = photos ? "photo" : "strip";
-  return drv;
+/* One store view, picked by the store (owner, 2026-10-28: "even I
+ * don't understand what and why we need those 4 modes"): a mapped
+ * store shows its real photos, any other store its shelf cards. The
+ * 3D scan is one tap away for the curious and the judges ("See it in
+ * 3D"); the drawn Aisle map is retired from the hunt. The list,
+ * grabs and points never change with the picture. */
+function qResolveDriver(store) {
+  const photos = qStorePhotos(store);
+  if (Q.peek3D && qStoreModel(store)) return "cloud";
+  return photos ? "photo" : "strip";
 }
 
 /* ---------------- navigation ---------------- */
@@ -204,11 +207,73 @@ async function qSetState(sess, state) {
   Object.assign(sess, s);
   return sess;
 }
-async function qCheck(sess, itemName, checked) {
-  const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
-  Object.assign(sess, s);
-  return sess;
+/* Offline grabs (game shell): back aisles drop signal. A grab or put
+ * back that cannot reach the server applies on the phone and waits
+ * in an outbox (this device, in order); it replays when the phone is
+ * back online. Only a network failure queues — a server refusal is
+ * still a refusal. Finish and receipts need a connection. */
+const QOUT_KEY = "arya-outbox";
+function qOutbox() {
+  try { return JSON.parse(localStorage.getItem(QOUT_KEY) || "[]"); } catch (e) { return []; }
 }
+function qOutboxSave(list) {
+  try { localStorage.setItem(QOUT_KEY, JSON.stringify(list)); } catch (e) {}
+}
+async function qCheck(sess, itemName, checked) {
+  // Earlier offline grabs go first, so the server sees them in order.
+  if (qOutbox().length) await qFlushOutbox();
+  try {
+    const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
+    Object.assign(sess, s);
+    return sess;
+  } catch (e) {
+    const it = (sess.items || []).find(i => i.name === itemName);
+    if (!(e instanceof TypeError) || !it) throw e;
+    it.checked = checked;
+    qOutboxSave([...qOutbox(), { sid: sess.id, item: itemName, checked }]);
+    qPaintOffline();
+    return sess;
+  }
+}
+let qFlushing = false;
+async function qFlushOutbox() {
+  if (qFlushing || !qOutbox().length) { qPaintOffline(); return; }
+  qFlushing = true;
+  let synced = 0;
+  try {
+    while (qOutbox().length) {
+      const op = qOutbox()[0];
+      try {
+        const s = await post(`/api/quest/sessions/${op.sid}/check`, { item: op.item, checked: op.checked });
+        if (Q.current && Q.current.id === op.sid) Object.assign(Q.current, s);
+        synced++;
+      } catch (e) {
+        if (e instanceof TypeError) break;   // still offline: keep the queue
+        // refused (hunt closed elsewhere): drop this one op
+      }
+      qOutboxSave(qOutbox().slice(1));
+    }
+  } finally {
+    qFlushing = false;
+    qPaintOffline();
+  }
+  if (synced) {
+    toast(`Back online — ${synced} grab${synced === 1 ? "" : "s"} synced.`);
+    const hunt = $("#view-hunt");
+    if (Q.current && hunt && !hunt.hidden) renderHunt();
+  }
+}
+function qPaintOffline() {
+  const el = $("#hunt-offline");
+  if (!el) return;
+  const n = qOutbox().length, off = navigator.onLine === false;
+  el.hidden = !off && !n;
+  el.textContent = off
+    ? `Offline — keep grabbing. Grabs save on this phone${n ? ` (${n} waiting)` : ""} and sync when you're back.`
+    : `Syncing ${n} grab${n === 1 ? "" : "s"}…`;
+}
+window.addEventListener("online", () => { qFlushOutbox(); });
+window.addEventListener("offline", qPaintOffline);
 function qOpenSession(sess) {
   Q.current = sess;
   // A closed hunt (finished or receipt-attached) opens on its
@@ -237,31 +302,172 @@ $("#quest-sessions").addEventListener("click", ev => {
   const s = qSessionById(b.dataset.sess);
   if (s) qOpenSession(s);
 });
-$("#btn-new-hunt").addEventListener("click", () => {
-  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {} };
-  questShow("view-newlist");
-});
-
-/* ---------------- New hunt: add list ---------------- */
-
-$("#nl-from-list").addEventListener("click", async () => {
-  try {
-    const h = await api("/api/home");
-    if (!h.list.items.length) { toast("Your Arya list is empty right now."); return; }
-    $("#nl-text").value = h.list.items.map(i => i.qty > 1 ? `${i.name} × ${qtyFmt(i.qty)}` : i.name).join("\n");
-  } catch (e) { toast(e.message); }
-});
-$("#nl-next").addEventListener("click", async () => {
-  const raw = qParseLines($("#nl-text").value);
-  if (!raw.length) { toast("Add at least one item first."); return; }
-  Q.draft.raw = raw;
-  Q.draft.storeId = null;
+$("#btn-new-hunt").addEventListener("click", async () => {
+  // Plan a hunt (owner, 2026-10-28): store first, then move items
+  // from the Arya list into the quest, sorted by where each one is
+  // usually bought.
+  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {} };
   $("#st-name").value = "";
-  // The pick reads My Stores (Stage E): favorites first, addresses
-  // shown. Typed names stay possible for a store not in mine yet.
+  $("#nl-text").value = "";
   try { await qLoadMine(); } catch (e) { Q.mine = []; }
+  try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
   renderStorePick();
   questShow("view-store");
+});
+
+/* ---------------- Plan a hunt: where things are usually bought ----
+ * Counting only, from the receipts (/api/quest/plan). For the picked
+ * store each list item is "here" (bought here at least as often as
+ * anywhere), "new" (no history) or "elsewhere" (mostly another
+ * store: it stays on the list for that trip). Usuals are items
+ * bought here twice or more that are not on the list yet. */
+
+function qPlanItem(name, itemId) {
+  const items = (Q.plan && Q.plan.items) || [];
+  return items.find(i => (itemId && i.item_id === itemId) || qnorm(i.name) === qnorm(name)) || null;
+}
+/* A receipt says "Costco"; the directory says "Costco Wholesale". */
+function qSameStore(a, b) {
+  const x = qnorm(a), y = qnorm(b);
+  return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " "));
+}
+function qStoreCount(rec, store) {
+  if (!rec) return 0;
+  return Object.entries(rec.stores || {}).reduce((n, [s, c]) => n + (qSameStore(s, store) ? c : 0), 0);
+}
+function qPlanBucket(li, store) {
+  const rec = qPlanItem(li.name, li.item_id);
+  const total = rec ? Object.values(rec.stores || {}).reduce((a, b) => a + b, 0) : 0;
+  if (!total) return { bucket: "new" };
+  const here = qStoreCount(rec, store);
+  let best = null, bestN = 0;
+  for (const [s, n] of Object.entries(rec.stores)) {
+    if (!qSameStore(s, store) && n > bestN) { best = s; bestN = n; }
+  }
+  if (here && here >= bestN) return { bucket: "here", here, total, rec };
+  return { bucket: "elsewhere", store: best, n: bestN, total, rec };
+}
+function qPlanUsuals(store) {
+  const onList = new Set(((Q.plan && Q.plan.list) || []).map(i => qnorm(i.name)));
+  return ((Q.plan && Q.plan.items) || [])
+    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)))
+    .map(i => ({ ...i, ripe: i.every_days ? (i.days_since || 0) / i.every_days : 0 }))
+    .sort((a, b) => (b.due - a.due) || (b.ripe - a.ripe) || (qStoreCount(b, store) - qStoreCount(a, store)))
+    .slice(0, 6);
+}
+function qStoreFit(store) {
+  const list = (Q.plan && Q.plan.list) || [];
+  const here = list.filter(li => qPlanBucket(li, store).bucket === "here");
+  const usual = ((Q.plan && Q.plan.items) || [])
+    .filter(i => qStoreCount(i, store) >= 2)
+    .sort((a, b) => qStoreCount(b, store) - qStoreCount(a, store))
+    .slice(0, 3).map(i => i.name);
+  if (!usual.length) return "";
+  const lead = here.length ? `${here.length} of your ${list.length} list items usually here · ` : "";
+  return `${lead}Usually: ${usual.join(", ")}`;
+}
+function qHistoryStores() {
+  const seen = {};
+  for (const i of (Q.plan && Q.plan.items) || []) {
+    for (const [s, n] of Object.entries(i.stores || {})) seen[s] = (seen[s] || 0) + n;
+  }
+  return Object.entries(seen).sort((a, b) => b[1] - a[1]).map(([s]) => s);
+}
+
+function renderPlan() {
+  const store = Q.draft.store;
+  const pick = Q.draft.pick;
+  const list = (Q.plan && Q.plan.list) || [];
+  const groups = { here: [], new: [], elsewhere: {} };
+  for (const li of list) {
+    const b = qPlanBucket(li, store);
+    const key = qnorm(li.name);
+    if (!(key in pick)) pick[key] = { name: li.name, qty: li.qty || 1, on: b.bucket !== "elsewhere" };
+    const rowInfo = { key, li, b };
+    if (b.bucket === "elsewhere") (groups.elsewhere[b.store] = groups.elsewhere[b.store] || []).push(rowInfo);
+    else groups[b.bucket].push(rowInfo);
+  }
+  const usuals = qPlanUsuals(store);
+  for (const u of usuals) {
+    const key = qnorm(u.name);
+    if (!(key in pick)) pick[key] = { name: u.name, qty: 1, on: false };
+  }
+  // Tick = in this trip's quest; unticked stays on the Arya list;
+  // ✕ (list items only) takes it off the Arya list altogether.
+  const rowHtml = (key, name, note, itemId) => {
+    const on = pick[key].on;
+    return `<div class="planrow${on ? " in" : ""}"><button class="plantick" data-plan="${esc(key)}" aria-pressed="${String(on)}" type="button">
+      <span class="planbox" aria-hidden="true">${on ? "✓" : ""}</span>
+      <span class="grow"><span class="name">${esc(name)}</span>${note ? `<span class="sub">${esc(note)}</span>` : ""}</span></button>
+      ${itemId ? `<button class="planrm" data-planrm="${esc(key)}" data-item="${esc(itemId)}" aria-label="Remove ${esc(name)} from your list" type="button">✕</button>` : ""}</div>`;
+  };
+  const every = rec => rec && rec.every_days ? `every ~${Math.round(rec.every_days)} days` : "";
+  let html = "";
+  const sect = (title, rows) => rows.length ? `<h3 class="sect">${esc(title)}</h3><div class="group">${rows.join("")}</div>` : "";
+  html += sect(`Usually bought here · ${groups.here.length}`,
+    groups.here.map(r => rowHtml(r.key, r.li.name, `${r.b.here} of ${r.b.total} times here`, r.li.item_id)));
+  html += sect(`New on your list · ${groups.new.length}`,
+    groups.new.map(r => rowHtml(r.key, r.li.name, "No history yet", r.li.item_id)));
+  for (const [st, rows] of Object.entries(groups.elsewhere)) {
+    html += sect(`Usually from ${st} · ${rows.length}`,
+      rows.map(r => rowHtml(r.key, r.li.name, `${st} ${r.b.n} of ${r.b.total} times · stays on your list if unticked`, r.li.item_id)));
+  }
+  html += sect(`Often bought here, not on your list`,
+    usuals.map(u => rowHtml(qnorm(u.name), u.name, [every(u), u.due ? "due now" : ""].filter(Boolean).join(" · "))));
+  if (!html) html = `<div class="group">${empty("Nothing on your Arya list yet. Type what you need below.")}</div>`;
+  $("#nl-plan").innerHTML = html;
+  $("#nl-title").textContent = `Your quest at ${store}`;
+  qPaintPlanCount();
+}
+function qPlanPicked() {
+  return Object.values(Q.draft.pick).filter(p => p.on).map(p => ({ name: p.name, qty: p.qty }));
+}
+function qPaintPlanCount() {
+  const n = qPlanPicked().length + qParseLines($("#nl-text").value).length;
+  $("#nl-next").textContent = n ? `Start the quest · ${n} item${n === 1 ? "" : "s"} →` : "Start the quest →";
+}
+$("#nl-plan").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-plan]");
+  if (!b || !Q.draft) return;
+  const p = Q.draft.pick[b.dataset.plan];
+  if (!p) return;
+  p.on = !p.on;
+  renderPlan();
+});
+$("#nl-plan").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-planrm]");
+  if (!b || !Q.draft) return;
+  const key = b.dataset.planrm, itemId = b.dataset.item;
+  const li = Q.plan.list.find(i => qnorm(i.name) === key);
+  if (!li) return;
+  b.disabled = true;
+  try {
+    await post("/api/list/remove", { item_id: itemId });
+  } catch (e) { toast(e.message); b.disabled = false; return; }
+  Q.plan.list = Q.plan.list.filter(i => i !== li);
+  delete Q.draft.pick[key];
+  renderPlan();
+  toast(`${li.name} is off your list.`, { action: "Undo", onAction: async () => {
+    try {
+      await post("/api/list/add", { item_id: itemId });
+      Q.plan.list.push(li);
+      renderPlan();
+    } catch (e) { toast(e.message); }
+  } });
+});
+$("#nl-text").addEventListener("input", qPaintPlanCount);
+$("#nl-next").addEventListener("click", async () => {
+  const raw = [...qPlanPicked(), ...qParseLines($("#nl-text").value)];
+  if (!raw.length) { toast("Tick or type at least one item first."); return; }
+  Q.draft.raw = raw;
+  // Typed extras join the Arya list too: one list everywhere.
+  for (const r of qParseLines($("#nl-text").value)) {
+    post("/api/list/add", { name: r.name }).catch(() => {});
+  }
+  const btn = $("#nl-next");
+  btn.disabled = true;
+  try { await qOptimizeDraft(); } catch (e) { toast(e.message); }
+  btn.disabled = false;
 });
 
 /* ---------------- Stores (Stage E) ----------------
@@ -285,6 +491,14 @@ async function qLoadMine() {
 function renderStorePick() {
   const box = $("#st-mine");
   if (!box) return;
+  // Stores from the receipts that are not in My Stores yet: one tap
+  // names the store for this trip.
+  const hist = qHistoryStores().filter(h => !Q.mine.some(s => qSameStore(s.name, h)));
+  const hbox = $("#st-history");
+  if (hbox) hbox.innerHTML = hist.length ? `<h3 class="sect">From your receipts</h3><div class="group">` + hist.map(s => `
+    <button class="sessrow pickrow" data-histstore="${esc(s)}" aria-pressed="${String(qnorm($("#st-name").value) === qnorm(s))}" type="button">
+      <span class="grow"><span class="name">${esc(s)}</span>
+      ${qStoreFit(s) ? `<span class="sub fit">${esc(qStoreFit(s))}</span>` : ""}</span></button>`).join("") + `</div>` : "";
   if (!Q.mine.length) {
     box.innerHTML = `<div class="group">${empty("No stores in your stores yet. Find one or add one below.")}</div>`;
     return;
@@ -294,7 +508,8 @@ function renderStorePick() {
   const rowHtml = s => `
     <button class="sessrow pickrow" data-pick="${esc(s.id)}" aria-pressed="${String(!!Q.draft && Q.draft.storeId === s.id)}" type="button">
       <span class="grow"><span class="name">${esc(s.name)}</span>
-      <span class="sub">${qStoreMeta(s)}</span></span>
+      <span class="sub">${qStoreMeta(s)}</span>
+      ${qStoreFit(s.name) ? `<span class="sub fit">${esc(qStoreFit(s.name))}</span>` : ""}</span>
       ${s.favorite ? `<span class="starpick">${qStarSvg(true)}</span>` : ""}
     </button>`;
   let html = "";
@@ -302,6 +517,13 @@ function renderStorePick() {
   if (rest.length) html += `<h3 class="sect">All my stores</h3><div class="group">` + rest.map(rowHtml).join("") + `</div>`;
   box.innerHTML = html;
 }
+document.addEventListener("click", ev => {
+  const h = ev.target.closest("[data-histstore]");
+  if (!h || !Q.draft) return;
+  Q.draft.storeId = null;
+  $("#st-name").value = h.dataset.histstore;
+  renderStorePick();
+});
 document.addEventListener("click", ev => {
   const p = ev.target.closest("[data-pick]");
   if (!p || !Q.draft) return;
@@ -424,29 +646,38 @@ $("#sa-form").addEventListener("submit", async ev => {
 
 /* ---------------- New hunt: optimize ---------------- */
 
-$("#st-next").addEventListener("click", async () => {
+$("#st-next").addEventListener("click", () => {
   const store = $("#st-name").value.trim();
-  if (!store) { toast("Name the store first."); return; }
+  if (!store) { toast("Pick or name the store first."); return; }
+  if (Q.draft.store !== store) Q.draft.pick = {};
   Q.draft.store = store;
-  const btn = $("#st-next");
-  btn.disabled = true;
-  try {
-    const out = await post("/api/quest/optimize", { items: Q.draft.raw, store });
-    Q.draft.opt = out;
-    Q.draft.baseItems = out.items.map(i => ({ ...i }));
-    Q.draft.undone = {};
-    Q.draft.answers = {};
-    // Quantities the questions must carry: summed from the raw lines.
-    Q.draft.qQty = {};
-    for (const r of Q.draft.raw) {
-      const k = qnorm(r.name);
-      Q.draft.qQty[k] = (Q.draft.qQty[k] || 0) + r.qty;
-    }
-    renderOptimize();
-    questShow("view-optimize");
-  } catch (e) { toast(e.message); }
-  btn.disabled = false;
+  renderPlan();
+  questShow("view-newlist");
 });
+
+/* Check my list only when there is something to check: a clean list
+ * (nothing merged, corrected or to ask) goes straight to the mode. */
+async function qOptimizeDraft() {
+  const out = await post("/api/quest/optimize", { items: Q.draft.raw, store: Q.draft.store });
+  Q.draft.opt = out;
+  Q.draft.baseItems = out.items.map(i => ({ ...i }));
+  Q.draft.undone = {};
+  Q.draft.answers = {};
+  // Quantities the questions must carry: summed from the raw lines.
+  Q.draft.qQty = {};
+  for (const r of Q.draft.raw) {
+    const k = qnorm(r.name);
+    Q.draft.qQty[k] = (Q.draft.qQty[k] || 0) + r.qty;
+  }
+  const rep = out.report;
+  if (!rep.merged.length && !rep.corrected.length && !rep.questions.length) {
+    Q.draft.finalItems = Q.draft.baseItems.map(i => ({ name: i.name, qty: i.qty, group: i.group }));
+    questShow("view-mode");
+    return;
+  }
+  renderOptimize();
+  questShow("view-optimize");
+}
 
 function qOptNextEnabled() {
   const qs = (Q.draft.opt && Q.draft.opt.report.questions) || [];
@@ -553,7 +784,7 @@ document.querySelectorAll(".modecard").forEach(b =>
       const sess = await post("/api/quest/sessions",
         { store: Q.draft.store, mode, items: Q.draft.finalItems,
           store_id: Q.draft.storeId || undefined,
-          driver: qStorePhotos(Q.draft.store) ? "photo" : Q.driverName });
+          driver: qStorePhotos(Q.draft.store) ? "photo" : "strip" });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       // The set-up screens are done with: Back from the new hunt
@@ -738,6 +969,205 @@ function qOnCollected(name) {
 }
 $("#celeb-layer").addEventListener("click", qCelebHide);
 
+/* ---------------- Rewards (owner, 2026-10-28) ----------------
+ * Dopamine, never pressure: every grab pays, milestones at a
+ * quarter, half and three quarters, a burst at all collected, and
+ * the Score counts the haul up. Points only ever add (the server's
+ * social.hunt_points is the truth; this mirrors it for the HUD) and
+ * bank when the receipt lands. No lives, no penalty, no countdown —
+ * the hunt timer stays off the Quest HUD. Sound and buzz are opt-in.
+ * Quest mode only: Express stays quiet (Discussion 32). */
+const QPTS = { item: 10, haul: 25, receipt: 50 };
+function qHaulPoints(sess, withReceipt) {
+  const p = qProgress(sess);
+  return p.done * QPTS.item + (p.total && p.done === p.total ? QPTS.haul : 0)
+    + (withReceipt ? QPTS.receipt : 0);
+}
+const QFX = { on: false, ctx: null };
+try { QFX.on = localStorage.getItem("arya-sound") === "1"; } catch (e) {}
+function qPaintSoundBtn() {
+  const b = $("#btn-sound");
+  if (!b) return;
+  b.setAttribute("aria-pressed", String(QFX.on));
+  b.innerHTML = QFX.on
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>`;
+}
+qPaintSoundBtn();
+$("#btn-sound").addEventListener("click", () => {
+  QFX.on = !QFX.on;
+  try { localStorage.setItem("arya-sound", QFX.on ? "1" : "0"); } catch (e) {}
+  qPaintSoundBtn();
+  if (QFX.on) qTone([660, 880], 0.07);
+});
+/* Retro blips generated by Web Audio: square waves, no files. */
+function qTone(freqs, step) {
+  if (!QFX.on) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    QFX.ctx = QFX.ctx || new AC();
+    const ctx = QFX.ctx, t0 = ctx.currentTime + 0.01;
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = f;
+      const t = t0 + i * step;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.06, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + step * 0.95);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + step);
+    });
+  } catch (e) { /* sound is garnish */ }
+}
+function qBuzz(pattern) {
+  if (QFX.on && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+}
+function qFloat(text, anchorSel) {
+  const at = $(anchorSel);
+  if (!at) return;
+  const r = at.getBoundingClientRect();
+  const el = document.createElement("span");
+  el.className = "ptfloat";
+  el.textContent = text;
+  el.style.left = `${Math.round(r.left + r.width / 2)}px`;
+  el.style.top = `${Math.round(r.top)}px`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+function qBumpHud() {
+  const c = $("#hunt-pts");
+  if (!c) return;
+  c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump");
+}
+const QMILESTONES = [[0.25, "A quarter of the way!"], [0.5, "Halfway there!"], [0.75, "Three quarters — nearly home!"]];
+let qMilestoneTimer = null;
+function qShowMilestone(text) {
+  const m = $("#milestone");
+  if (!m) return;
+  m.textContent = text;
+  m.hidden = false;
+  m.classList.remove("show"); void m.offsetWidth; m.classList.add("show");
+  clearTimeout(qMilestoneTimer);
+  qMilestoneTimer = setTimeout(() => { m.hidden = true; }, 2200);
+}
+/* One grab's reward: +10 floats up, the points chip bumps, a quick
+ * run of grabs reads as a hot streak, a crossed milestone gets its
+ * banner, and the last item bursts confetti. Nothing here can fail
+ * a hunt; it only celebrates. */
+function qRewardGrab(sess, before) {
+  if (!sess || sess.mode !== "quest") return;
+  const p = qProgress(sess);
+  const now = Date.now();
+  Q.combo = Q.lastGrabAt && now - Q.lastGrabAt < 45000 ? (Q.combo || 1) + 1 : 1;
+  Q.lastGrabAt = now;
+  qFloat(`+${QPTS.item}`, "#hunt-pts");
+  qBumpHud();
+  qBuzz(15);
+  if (p.total && p.done === p.total) {
+    qFloat(`+${QPTS.haul} full haul`, "#hunt-count");
+    qShowMilestone("All collected! Full haul!");
+    qConfetti();
+    qTone([523, 659, 784, 1047], 0.11);
+    qBuzz([30, 60, 30, 60, 80]);
+    return;
+  }
+  const crossed = QMILESTONES.filter(([f]) => before < p.total * f && p.done >= p.total * f).pop();
+  if (crossed) {
+    qShowMilestone(crossed[1]);
+    qTone([587, 740, 880], 0.08);
+  } else if (Q.combo >= 3) {
+    qShowMilestone(`Hot streak ×${Q.combo}!`);
+    qTone([660, 990], 0.06);
+  } else {
+    qTone([660, 880], 0.06);
+  }
+}
+/* Confetti on one fixed canvas, one requestAnimationFrame loop,
+ * ~1.8s, then the canvas hides. Reduced motion skips it. */
+function qConfetti() {
+  const cv = $("#confetti");
+  if (!cv || !cv.getContext) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = window.innerWidth, H = window.innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.hidden = false;
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // The theme is greyscale + the one orange (Discussion 31): the
+  // confetti is too.
+  const colors = ["#E4572E", "#E4572E", "#FDEEE8", "#1B1B1E", "#8B8B93", "#FFFFFF"];
+  const bits = Array.from({ length: 120 }, () => ({
+    x: W / 2 + (Math.random() - 0.5) * W * 0.3, y: H * 0.35,
+    vx: (Math.random() - 0.5) * 9, vy: -Math.random() * 11 - 4,
+    w: 5 + Math.random() * 6, h: 3 + Math.random() * 4,
+    a: Math.random() * Math.PI, va: (Math.random() - 0.5) * 0.3,
+    c: colors[Math.floor(Math.random() * colors.length)]
+  }));
+  const t0 = performance.now();
+  let last = t0;
+  function frame(now) {
+    const dt = Math.min(2, (now - last) / (1000 / 60));
+    last = now;
+    g.clearRect(0, 0, W, H);
+    for (const b of bits) {
+      b.vy += 0.32 * dt; b.vx *= 0.99;
+      b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.va * dt;
+      g.save(); g.translate(b.x, b.y); g.rotate(b.a);
+      g.fillStyle = b.c; g.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      g.restore();
+    }
+    if (now - t0 < 1800) requestAnimationFrame(frame);
+    else { g.clearRect(0, 0, W, H); cv.hidden = true; }
+  }
+  requestAnimationFrame(frame);
+}
+/* The Score's haul: count up from 0, then the level bar fills. A
+ * new level (remembered on the device) gets its own burst. */
+function qCountUp(el, to, ms) {
+  if (!el) return;
+  const t0 = performance.now();
+  function frame(now) {
+    const k = Math.min(1, (now - t0) / ms);
+    el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function qHaulHtml(sess, profile, attached) {
+  const p = qProgress(sess);
+  const pts = qHaulPoints(sess, attached);
+  const parts = [`${p.done} × ${QPTS.item}`];
+  if (p.total && p.done === p.total) parts.push(`full haul +${QPTS.haul}`);
+  if (attached) parts.push(`receipt +${QPTS.receipt}`);
+  let html = `<div class="haul"><p class="haul-k">${attached ? "Haul banked ✓" : "Your haul"}</p>
+    <p class="haul-pts"><span id="haul-n">0</span> pts</p>
+    <p class="muted nomargin">${parts.join(" · ")}</p>`;
+  if (attached && profile && profile.level) {
+    const span = Math.max(1, profile.next_level_at - profile.level_floor);
+    const fill = Math.max(0, Math.min(100, Math.round(100 * (profile.points - profile.level_floor) / span)));
+    html += `<div class="lvl"><span class="lvl-n">Level ${profile.level}</span>
+      <span class="lvl-bar"><span class="lvl-fill" style="--lvl:${fill}%"></span></span>
+      <span class="sub">${profile.next_level_at - profile.points} pts to Level ${profile.level + 1}</span></div>`;
+  } else if (!attached) {
+    html += `<p class="haul-wait">+${QPTS.receipt} more when you add this trip's receipt — that's when the haul banks.</p>`;
+  }
+  return html + `</div>`;
+}
+function qAfterHaul(sess, profile, attached) {
+  qCountUp($("#haul-n"), qHaulPoints(sess, attached), 900);
+  if (!attached || !profile || !profile.level) return;
+  let seen = 0;
+  try { seen = Number(localStorage.getItem("arya-level") || 0); } catch (e) {}
+  if (seen && profile.level > seen) {
+    setTimeout(() => { qShowMilestone(`Level up! Level ${profile.level}`); qConfetti(); qTone([523, 784, 1047, 1319], 0.1); }, 700);
+  } else if (qProgress(sess).done) {
+    setTimeout(() => qTone([660, 880, 1175], 0.09), 300);
+  }
+  try { localStorage.setItem("arya-level", String(profile.level)); } catch (e) {}
+}
+
 /* ---------------- Hunt (Quest mode) ---------------- */
 
 function qNextIndex(sess) {
@@ -796,14 +1226,17 @@ function startHuntTimer(sess) {
   paint();
   Q.timer = setInterval(paint, 1000);
 }
-function paintSceneToggle() {
+const QSCENE_CAPTION = {
+  photo: "Real photos from a walk through this store. The orange dot is your next item.",
+  cloud: "A 3D scan of the store, built from the walkthrough video. Drag to look around.",
+  strip: "One card per stop — this store has no map yet, so the cards lead the way."
+};
+function paintSceneCaption() {
+  $("#scene-cap").textContent = QSCENE_CAPTION[Q.driverName] || "";
+  const b = $("#btn-3d");
   const hasModel = !!(Q.current && qStoreModel(Q.current.store));
-  const hasPhotos = !!(Q.current && qStorePhotos(Q.current.store));
-  document.querySelectorAll("#scene-toggle [data-driver]").forEach(b => {
-    b.setAttribute("aria-pressed", String(b.dataset.driver === Q.driverName));
-    if (b.dataset.driver === "cloud") b.disabled = !hasModel;
-    if (b.dataset.driver === "photo") b.disabled = !hasPhotos;
-  });
+  b.hidden = !hasModel;
+  b.innerHTML = Q.driverName === "cloud" ? "&lsaquo; Back to the photos" : "See it in 3D &rsaquo;";
 }
 function mountScene() {
   const mount = $("#scene-mount");
@@ -812,18 +1245,16 @@ function mountScene() {
   mount.dataset.photos = (Q.current && qStorePhotos(Q.current.store)) || "";
   Q.scene = createSceneView(mount, Q.driverName);
   Q.scene.onTapStop = idx => qTapStop(idx);
-  paintSceneToggle();
+  paintSceneCaption();
 }
-$("#scene-toggle").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-driver]");
-  if (!b || b.dataset.driver === Q.driverName) return;
-  Q.stepsHold = true; // switching the view is manual navigation
-  // Drop a rung (or climb one) mid-hunt: the driver is only a view —
-  // stops, checks, and the clock live in the session, untouched.
-  // Switching the view by hand is manual navigation: the walk holds.
+$("#btn-3d").addEventListener("click", () => {
+  if (!Q.current) return;
+  // Only the picture changes: stops, checks and points live in the
+  // session, untouched. Looking around is manual navigation.
+  Q.stepsHold = true;
   qFollowHold();
-  Q.driverName = b.dataset.driver;
-  localStorage.setItem("arya-scene-driver", Q.driverName);
+  Q.peek3D = Q.driverName !== "cloud";
+  Q.driverName = qResolveDriver(Q.current.store);
   mountScene();
   renderHunt();
 });
@@ -840,13 +1271,10 @@ function openHunt(sess) {
   const photos = qStorePhotos(sess.store);
   // Reopen on the session's rung, resolved against what this
   // store can serve (the mapped default is the photo walk).
-  Q.driverName = qResolveDriver(sess.store, sess.driver);
+  Q.peek3D = false;  // every hunt opens on the store's own view
+  Q.driverName = qResolveDriver(sess.store);
   mountScene();
-  Q.mapNote = !model && !photos
-    ? `No map for ${sess.store} yet — map this store to unlock its photo walk and 3D view. The hunt plays the same either way.`
-    : Q.driverName === "strip"
-      ? `This store is mapped — switch to Photos or 3D above. The hunt plays the same either way.`
-      : "";
+  Q.mapNote = "";
   Q.followHold = false;
   Q.focusIdx = -1; // a fresh entry presents the first uncollected stop
   renderHunt();
@@ -854,7 +1282,48 @@ function openHunt(sess) {
   qInitMotion();
   qWalkStart(qCurrentIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderHunt(); });
+  qFlushOutbox();
+  qMaybeHowto(sess);
 }
+/* Fresh shelf photo (owner, 2026-10-28): the newest shopper frame of
+ * this item's shelf, people already scrubbed by SAM on the server.
+ * One fetch per store+item per visit; silent when there is none. */
+const QFRESH = {};
+function qPaintFresh(store, name) {
+  const fig = $("#hunt-fresh");
+  if (!fig) return;
+  const key = qnorm(store) + "|" + qnorm(name || "");
+  fig.dataset.key = key;
+  const paint = rec => {
+    if (fig.dataset.key !== key) return;
+    if (!rec || !rec.image || !rec.box) { fig.hidden = true; return; }
+    $("#fresh-img").src = rec.image;
+    const [x1, y1, x2, y2] = rec.box;
+    const bx = $("#fresh-box").style;
+    bx.left = (x1 * 100) + "%"; bx.top = (y1 * 100) + "%";
+    bx.width = ((x2 - x1) * 100) + "%"; bx.height = ((y2 - y1) * 100) + "%";
+    $("#fresh-cap").textContent = `Fresh from a shopper, ${qAgo(rec.seen_at)}. People are blurred out; we only keep products.`;
+    fig.hidden = false;
+  };
+  if (!name) { fig.hidden = true; return; }
+  if (key in QFRESH) { paint(QFRESH[key]); return; }
+  fig.hidden = true;
+  if (typeof fetch !== "function") return;
+  QFRESH[key] = null;
+  fetch(`/api/quest/shelf-photo?store=${encodeURIComponent(store)}&item=${encodeURIComponent(name)}`, { credentials: "same-origin" })
+    .then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(rec => { QFRESH[key] = rec; paint(rec); });
+}
+function qAgo(iso) {
+  const t = Date.parse(iso || "");
+  if (!t) return "recently";
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 2) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
+
 function renderHunt() {
   const sess = Q.current;
   if (!sess) return;
@@ -866,6 +1335,7 @@ function renderHunt() {
   }
   $("#hunt-store").textContent = `${sess.store} · ${QMODE_LABEL[sess.mode] || sess.mode}`;
   $("#hunt-count").textContent = `${p.done}/${p.total}`;
+  $("#hunt-pts").textContent = `${qHaulPoints(sess, false)} pts`;
   $("#hunt-mapnote").textContent = Q.mapNote || "";
   $("#hunt-mapnote").hidden = !Q.mapNote;
   $("#hunt-list").innerHTML = qHuntListHtml(sess);
@@ -883,6 +1353,8 @@ function renderHunt() {
       <p class="pop-shelf">First stop: ${first ? esc(first.name) : "—"}.</p>`;
     btn.textContent = "Start the hunt";
     btn.disabled = false;
+    $("#btn-findit").hidden = true;
+    try { qPaintFresh(sess.store, null); } catch (e) {}
     $("#btn-nothere").disabled = true;
   } else if (!allIn && next >= 0) {
     const it = sess.items[next];
@@ -894,9 +1366,12 @@ function renderHunt() {
       ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
+    $("#btn-findit").hidden = sess.state !== "playing";
+    try { qPaintFresh(sess.store, it.name); } catch (e) {}
     $("#btn-nothere").disabled = sess.state !== "playing";
   }
   $("#btn-nothere").hidden = allIn;
+  if (allIn) { $("#btn-findit").hidden = true; try { qPaintFresh(sess.store, null); } catch (e) {} }
   paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
   $("#btn-finish").disabled = sess.state === "not_started";
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
@@ -922,8 +1397,11 @@ async function collectStop(idx) {
   if (sess.state !== "playing" || sess.items[idx].checked) return;
   const name = sess.items[idx].name;
   try {
+    const before = qProgress(sess).done;
     await qCheck(sess, name, true);
     qOnCollected(name);
+    // Rewards are garnish: a missing API on some phone never fails a grab.
+    try { qRewardGrab(sess, before); } catch (e) { /* celebration only */ }
     Q.followHold = false; // the walk resumes from the new anchor
     const target = qRetarget(sess, idx);
     renderHunt();
@@ -931,7 +1409,7 @@ async function collectStop(idx) {
     qWalkStart(target);
     // At N/N the hunt waits for the player's Finish — collecting
     // the last item never jumps to the Finish screen (Hunt v2 item 2).
-    if (target === -1) toast("All collected. Tap Finish when you're ready.");
+    if (target === -1) toast("All collected! Tap Finish when you're ready.");
   } catch (e) { toast(e.message); }
 }
 function collectCurrent() { return collectStop(qCurrentIndex(Q.current)); }
@@ -965,6 +1443,49 @@ function qTapStop(idx) {
   qWalkStart(idx);
   renderHunt();
 }
+/* Keyboard controls for the hunt (desktop players and judges):
+ * Space/Enter start or grab the target, ←/→ aim at the previous or
+ * next open stop, P pauses, F opens Finish, Esc goes Back. Touch
+ * stays primary; every key presses a button the screen already has. */
+function qAimStep(sess, dir) {
+  const n = sess.items.length;
+  let i = qCurrentIndex(sess);
+  for (let k = 0; k < n; k++) {
+    i = (i + dir + n) % n;
+    if (!sess.items[i].checked) return i;
+  }
+  return -1;
+}
+function qHuntKey(e) {
+  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (!Q.current) return;
+  const shown = id => { const v = $(id); return v && !v.hidden; };
+  // Esc is Back on any screen of the run (hunt, Express, Finish);
+  // an open sheet takes it first.
+  if (e.key === "Escape" && shown("#howto-sheet")) { closeHowto(); e.preventDefault(); return; }
+  if (shown("#howto-sheet")) return;
+  if (e.key === "Escape" && !shown("#ar-sheet") && !shown("#spot-sheet")
+      && (shown("#view-hunt") || shown("#view-express") || shown("#view-finish"))) {
+    questBack(); e.preventDefault(); return;
+  }
+  if (!shown("#view-hunt")) return;
+  const press = sel => { const b = $(sel); if (b && b.offsetParent !== null && !b.disabled) { b.click(); return true; } return false; };
+  let done = false;
+  switch (e.key) {
+    case " ": case "Enter": done = press("#btn-collect"); break;
+    case "ArrowRight": case "ArrowLeft": {
+      const i = qAimStep(Q.current, e.key === "ArrowRight" ? 1 : -1);
+      if (i >= 0) { qTapStop(i); done = true; }
+      break;
+    }
+    case "p": case "P": done = press("#btn-pause"); break;
+    case "f": case "F": done = press("#btn-finish"); break;
+  }
+  if (done) e.preventDefault();
+}
+document.addEventListener("keydown", qHuntKey);
+
 $("#btn-collect").addEventListener("click", async () => {
   const sess = Q.current;
   if (!sess) return;
@@ -1256,7 +1777,20 @@ $("#locate-photo").addEventListener("change", ev => {
  * model chain takes ~4–8 s a frame, so the view is near-live and
  * the last scan's time is shown, not hidden. */
 const SCAN_NO_POP = "Nothing from your list spotted here — that doesn't mean it isn't here. Keep looking.";
-$("#btn-scan").addEventListener("click", () => openScanView().catch(showErr));
+$("#btn-scan").addEventListener("click", () => { Q.scanTarget = null; openScanView().catch(showErr); });
+/* Find it for me (owner, 2026-10-28): the same Shelf Scan, aimed at
+ * the one item on the suggested-next card, in every store. The
+ * camera opens, frames go up as the view settles, SAM 3.1 boxes the
+ * candidates, Muse Spark confirms, and the item pops highlighted with
+ * its GRAB. What was seen where feeds the store map; the frame never
+ * leaves the scan. */
+$("#btn-findit").addEventListener("click", () => {
+  const sess = Q.current;
+  const idx = sess ? qCurrentIndex(sess) : -1;
+  if (idx < 0) return;
+  Q.scanTarget = sess.items[idx].name;
+  openScanView().catch(showErr);
+});
 $("#scan-photo").addEventListener("change", ev => {
   const f = ev.target.files[0];
   if (f) scanStill(f).catch(showErr);
@@ -1268,13 +1802,17 @@ $("#scan-stop").addEventListener("click", () => {
   $("#scan-status").textContent = "Live scan stopped.";
 });
 async function scanRequest(body, sess) {
-  const r = await fetch(`/api/quest/scan-shelf?session=${encodeURIComponent(sess.id)}`, {
+  const aim = Q.scanTarget ? `&item=${encodeURIComponent(Q.scanTarget)}` : "";
+  const r = await fetch(`/api/quest/scan-shelf?session=${encodeURIComponent(sess.id)}${aim}`, {
     method: "POST",
     headers: { "Content-Type": body.type || "image/jpeg" },
     body
   });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
-  return r.json();
+  const out = await r.json();
+  // A pop means the server may hold a fresher shelf photo now.
+  (out.pops || []).forEach(p => { delete QFRESH[qnorm(sess.store) + "|" + qnorm(p.item)]; });
+  return out;
 }
 function scanPopsHtml(pops) {
   return pops.map(p => {
@@ -1286,6 +1824,11 @@ function scanPopsHtml(pops) {
   }).join("");
 }
 function scanStatusFor(pops) {
+  if (Q.scanTarget) {
+    return pops.length
+      ? `Found it! ${Q.scanTarget} is highlighted — tap it to grab.`
+      : `Didn't spot ${Q.scanTarget} in this view — try a little closer or another angle. That doesn't mean it isn't here.`;
+  }
   return pops.length
     ? `${pops.length} from your list spotted here — tap one to collect it.`
     : SCAN_NO_POP;
@@ -1315,7 +1858,9 @@ async function openScanView() {
   $("#scan-boxes").innerHTML = "";
   Q.scanPopsShown = false;
   setScanLast(null);
-  $("#scan-status").textContent = "Starting the camera…";
+  $("#scan-status").textContent = Q.scanTarget
+    ? `Point the camera at the shelf — looking for ${Q.scanTarget}…`
+    : "Starting the camera…";
   $("#scan-overlay").hidden = false;
   Q.scanMode = "starting";
   paintScanChrome();
@@ -1338,7 +1883,7 @@ async function scanStill(file) {
   paintScanChrome();
   $("#scan-boxes").innerHTML = "";
   Q.scanPopsShown = false;
-  $("#scan-status").textContent = "Looking for your list on this shelf…";
+  $("#scan-status").textContent = Q.scanTarget ? `Looking for ${Q.scanTarget} on this shelf…` : "Looking for your list on this shelf…";
   $("#scan-overlay").hidden = false;
   try {
     const out = await scanRequest(file, sess);
@@ -1521,14 +2066,21 @@ $("#scan-boxes").addEventListener("click", async ev => {
   const cIdx = sess.items.findIndex(i => i.name === name);
   btn.disabled = true;
   try {
+    const before = qProgress(sess).done;
     await qCheck(sess, name, true);
-    qOnCollected(name); // celebration hook — same as the GRAB
+    qOnCollected(name);
+    // Rewards are garnish: a missing API on some phone never fails a grab.
+    try { qRewardGrab(sess, before); } catch (e) { /* celebration only */ } // celebration hook — same as the GRAB
     btn.classList.add("got");
     btn.querySelector(".poplabel").textContent = `${name} ✓`;
     Q.followHold = false;
     if (isCurrent) qRetarget(sess, cIdx); // a collect re-targets (Discussion 44)
     renderHunt();
     if (isCurrent) { qStepAnchorTo(name); qWalkStart(qCurrentIndex(sess)); }
+    if (Q.scanTarget === name && qNextIndex(sess) !== -1) {
+      // Find it for me did its job: back to the hunt for the next one.
+      setTimeout(closeScan, 700);
+    }
     if (qNextIndex(sess) === -1) {
       closeScan();
       toast("All collected. Tap Finish when you're ready.");
@@ -1537,6 +2089,7 @@ $("#scan-boxes").addEventListener("click", async ev => {
 });
 function closeScan() {
   stopScanLive(); // leaving the view releases the camera, always
+  Q.scanTarget = null;
   $("#scan-overlay").hidden = true;
   $("#scan-photo").value = "";
   const sess = Q.current;
@@ -1715,6 +2268,26 @@ function openAddReceipt(sessionId, label, onDone) {
   qShowDemoDoors($("#ar-sheet"));
   $("#ar-sheet").hidden = false;
 }
+/* How to play (user feedback, 2026-10-28: "don't understand how to
+ * play"): three steps — find it, grab it, snap the receipt. Shown
+ * once, on the first Quest hunt on this device; the HUD "?" opens it
+ * again. */
+const QHOWTO_KEY = "arya-howto-seen";
+function openHowto() { $("#howto-sheet").hidden = false; }
+function closeHowto() {
+  $("#howto-sheet").hidden = true;
+  try { localStorage.setItem(QHOWTO_KEY, "1"); } catch (e) {}
+}
+function qMaybeHowto(sess) {
+  if (!sess || sess.mode !== "quest") return;
+  let seen = false;
+  try { seen = localStorage.getItem(QHOWTO_KEY) === "1"; } catch (e) {}
+  if (!seen) openHowto();
+}
+$("#btn-howto").addEventListener("click", openHowto);
+$("#howto-skip").addEventListener("click", closeHowto);
+$("#howto-go").addEventListener("click", closeHowto);
+$("#howto-sheet").addEventListener("click", ev => { if (ev.target.id === "howto-sheet") closeHowto(); });
 function closeAddReceipt() { $("#ar-sheet").hidden = true; qAR = null; }
 async function qArSettle(settle) {
   if (!qAR) return;
@@ -1779,7 +2352,9 @@ async function openScore(sess) {
     <p class="hero-k">${attached ? "Receipt attached ✓" : "Finished · Receipt missing"}</p>
     <h2 class="largetitle" style="font-size:28px">${esc(sess.store)} — hunt finished</h2>
     <p class="muted nomargin">${QMODE_LABEL[sess.mode] || esc(sess.mode)} · ${p.done} of ${p.total} collected</p>
-  </div><div class="group">`;
+  </div>`;
+  html += qHaulHtml(sess, profile, attached);
+  html += `<div class="group">`;
   html += row("Items found", "", `${p.done}/${p.total}`);
   if (dur != null) html += row("Time", receipt ? "hunt start to receipt" : "hunt start to finish", qDurText(dur));
   if (receipt) {
@@ -1810,6 +2385,7 @@ async function openScore(sess) {
       JSON.stringify(profile.badges.filter(b => b.earned).map(b => b.id)));
   }
   body.innerHTML = html;
+  qAfterHaul(sess, profile, attached);
   const add = $("#score-addreceipt");
   if (add) add.addEventListener("click", () =>
     openAddReceipt(sess.id, sess.store, s => { Object.assign(sess, s); openScore(sess); }));

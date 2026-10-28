@@ -1,26 +1,32 @@
 # Meta products used, and how
 
-Every intelligent step in Arya Quest runs on a Meta model. Commodity tooling (Three.js, ffmpeg, Postgres) does plumbing only — no non-Meta AI touches perception, reconstruction, or judgment.
+Every intelligent step runs on a Meta model. Other tooling (Three.js,
+ffmpeg, Postgres) does plumbing only.
 
-| Meta product | Job in Arya Quest | Where it runs |
-|---|---|---|
-| **SAM 3.1** | Product segmentation: cut individual products out of shelf frames so items can be placed on the shelf graph; the same segmenter powers Shelf Scan — in an unmapped store the camera proposes the shelf regions that hold list items | Mapping pipeline; Shelf Scan on the server |
-| **Muse Spark** (vision, via the user's own Muse + the Arya connector) | Edge perception: read handwritten lists and whiteboards, shelf labels and price cards, fridge/pantry photos (Eyes), receipt photos | User's Muse session; structured output only reaches Arya |
-| **Muse Spark 1.3 Standard** (Meta Model API) | Server judgment: the staple judge (what belongs on the list), the Curator (product identity merges), hunt narration in Ask Arya, order-text extraction fallback, Shelf Scan crop verification, and the fallback reader for receipt photos | Arya engine on our server |
-| **Muse Wonder 1.0** (Meta Model API) | Two jobs, both earned by measurement. (1) Receipt photo decode: on the Gate 0 public set Wonder scored 98.98% identity+price against Spark's 93.88%, with zero price errors — it reads the price rotation Spark missed (WONDER-EVAL.md, research repo). A 90-second timeout falls back to Spark, and the receipt records which model read it. (2) Software authorship: Wonder wrote the in-store localizer — the SIFT matcher behind "Where am I?", which placed 42 of 45 held-out frames from the mapping video at the right stop (not yet measured on fresh shopper photos) and runs locally, with no API call | Arya engine (decode); localizer runs on the server, authored once |
-| **Muse Image 1.0** (Meta Model API) | Game art: the 20 collect-celebration characters (one per item or category) shown when an item is collected in Quest mode | Generated once, shipped as app assets |
-| **Muse Voice Transcribe** (Meta Model API) | The list voice door and the Ask Arya microphone: speech becomes text the user can edit before anything is filed | Arya engine on our server |
-| **VGGT / VGGT-Ω** (Meta AI research + Oxford VGG; CVPR 2025 Best Paper — a research model, not on the event's Meta model list, so it supports the claim rather than leading it) | Store geometry: walkthrough video frames → camera poses, depth maps, dense point cloud of the real store | Mapping pipeline (platform plane) |
-| **Meta Model API** (api.meta.ai) | The single surface for all server-side model calls — one client module, per-account tokens, daily spend ceiling | Arya engine |
+| Meta product | Job | Where |
+| --- | --- | --- |
+| **SAM 3.1** | Shelf segmentation for the store map; Shelf Scan and Find it for me boxes; finding people so they are blurred before any frame is kept | Mapping pipeline; server |
+| **Muse Spark 1.3 Standard** | Staple judge, Curator, Ask Arya, list photos, order-text fallback, shelf labels, Shelf Scan crop verification, receipt fallback | Server (Meta Model API) |
+| **Muse Spark** (user's own Muse + connector) | Edge perception: lists, fridge photos, receipts from chat | The user's Muse session |
+| **Muse Wonder 1.0** | (1) Receipt photo decode: 97/98 lines after adjudication vs Spark 92/98, zero price errors; 90 s timeout to Spark. (2) Authored the "Where am I?" localizer (42/45 held-out frames at the right stop; runs locally, no API call) | Server |
+| **Muse Image 1.0** | The 20 grab-celebration characters | Generated once, shipped as assets |
+| **Muse Voice Transcribe** | The list mic and Ask Arya's mic | Server |
+| **VGGT** (Meta AI research; not on the event list, so it supports rather than leads) | Store geometry from walkthrough frames | Mapping pipeline |
+| **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
 
-## Rules we hold
+## Rules
+- Personal data is Standard-only; Contributor mode is eval and
+  synthetic data only.
+- Model output is a proposal: receipts must reconcile, low-confidence
+  lines queue for review, identity changes need the user's approval.
+- Cheapest model that holds the score. Wonder on receipt decode is the
+  one exception, time-boxed to the hackathon amendment (expires Nov 4).
+- No pictures of people kept: SAM blurs them first, or the frame is
+  dropped.
 
-- **Personal data is Standard-only.** The Contributor tier may train on inputs; real household data (receipts, lists, photos) never goes there. Contributor is for eval and synthetic fixtures.
-- **Verification over trust.** Model output is a proposal: receipt totals must reconcile arithmetically, low-confidence lines queue for human review, identity changes (Curator merges) apply only on user approval.
-- **Most cost-efficient model per job.** Deterministic code first ($0), Spark 1.3 Standard low-effort with cached prefixes for judgment. Frontier models are banned from volume paths unless a scored eval moves the job — receipt photo decode is the one exception, it is time-boxed to the hackathon amendment (expires Nov 4), and it carries a Spark fallback.
-
-## Models considered and not used
-
-- **Muse Spark Open / Muse Glimmer** (open weights) — not yet run. One real job on an open-weights model (the staple-judge batch or shelf matching, served from Modal) is the open tooling item; it closes only on a scored run, not a token call.
-- **Gaussian splatting** — tested as a store view and rejected for the submission: the splat collapses in the mid and late aisles because the walkthrough poses drift (VERDICT.md in the spike record). The shipped store views are the photo-walk (default) and the VGGT point cloud.
-- Third-party vision/reconstruction (COLMAP pipelines, hosted splat services) — VGGT covers reconstruction as a Meta model and skips the classical pipeline entirely; using a non-Meta reconstructor would spend the hackathon's core claim (Meta tooling) for no gain.
+## Considered, not used
+- **Spark Open / Glimmer** (open weights): not run yet; we do not
+  claim that bonus.
+- **Gaussian splatting:** rejected; the splat collapses where the walk
+  poses drift. Photos and the VGGT cloud ship instead.
+- Non-Meta reconstruction: VGGT covers it.

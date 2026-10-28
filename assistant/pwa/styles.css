@@ -476,9 +476,9 @@ textarea {
   border: 1.5px solid var(--accent); color: var(--accent-text);
   font-weight: 700; font-size: 14px; border-radius: 980px; padding: 7px 13px;
 }
-.stattiles { display: flex; gap: 10px; margin-bottom: 12px; }
+.stattiles { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .stattile {
-  flex: 1; background: var(--group); border-radius: var(--radius); box-shadow: var(--shadow);
+  flex: 1 1 28%; background: var(--group); border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 12px 8px; text-align: center;
 }
 .stattile .sv { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -509,6 +509,11 @@ textarea {
    ONE target, the tools row, the suggested-next card, then the one
    list in flow. The tab bar hides while a hunt or run is open. */
 body.hunting #tabs, body.hunting > header, body.hunting #demobar { display: none !important; }
+/* Game shell: while hunting, a page gesture is never a zoom or a
+   pull-to-refresh — the column still scrolls vertically, and the 3D
+   canvas keeps its own drag. Full height follows the dynamic
+   viewport so the mobile URL bar never hides the HUD. */
+body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dvh; }
 #view-hunt.full, #view-express.full { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .hunthud {
   position: sticky; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px;
@@ -723,3 +728,78 @@ body.hunting #tabs, body.hunting > header, body.hunting #demobar { display: none
 @media (min-width: 760px) {
   #tabs { padding-left: calc((100vw - 680px) / 2); padding-right: calc((100vw - 680px) / 2); }
 }
+
+/* Rewards (owner, 2026-10-28): every grab pays, milestones pop,
+   the haul counts up. Celebration only — nothing here can fail a
+   hunt. Reduced motion keeps the numbers and drops the movement. */
+.hchip.pts { color: var(--accent-text); font-weight: 700; }
+.hchip.pts.bump { animation: ptsbump .45s ease-out; }
+@keyframes ptsbump { 0% { transform: scale(1); } 35% { transform: scale(1.22); background: var(--acc-soft); } 100% { transform: scale(1); } }
+.ptfloat {
+  position: fixed; z-index: 30; pointer-events: none; transform: translateX(-50%);
+  font-weight: 800; font-size: 18px; color: var(--acc);
+  text-shadow: 0 1px 0 #fff; animation: ptfloat 1.1s ease-out forwards;
+}
+@keyframes ptfloat { 0% { opacity: 0; translate: 0 6px; } 15% { opacity: 1; } 100% { opacity: 0; translate: 0 -46px; } }
+.milestone {
+  position: fixed; z-index: 29; left: 50%; top: calc(64px + env(safe-area-inset-top));
+  transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  background: var(--ink); color: #fff; border-radius: 999px; padding: 12px 22px;
+  font-weight: 800; font-size: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.milestone.show { animation: milestone 2.2s ease-out forwards; }
+@keyframes milestone { 0% { opacity: 0; scale: .7; } 12% { opacity: 1; scale: 1.06; } 20% { scale: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100dvh; z-index: 28; pointer-events: none; }
+.haul { background: var(--panel); border-radius: 20px; padding: 18px; margin: 12px 0; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.haul-k { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
+.haul-pts { margin: 0; font-size: 52px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.haul-pts span + * { font-size: 22px; }
+.haul-wait { margin: 6px 0 0; background: var(--acc-soft); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.lvl { width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; margin-top: 6px; text-align: left; }
+.lvl-n { font-weight: 700; }
+.lvl-bar { height: 12px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.lvl-fill { display: block; height: 100%; width: var(--lvl); border-radius: 999px; background: var(--acc); animation: lvlfill 1.1s .5s ease-out both; }
+@keyframes lvlfill { from { width: 0; } }
+.lvl .sub { grid-column: 1 / -1; }
+@media (prefers-reduced-motion: reduce) {
+  .hchip.pts.bump, .ptfloat, .milestone.show, .lvl-fill { animation: none; }
+  .ptfloat { display: none; }
+}
+.titlerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.levelchip { background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.levelchip span { color: var(--accent-text); }
+.offlinenote { margin: 0 0 10px; background: var(--fill2); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.howto { margin: 4px 0 14px; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 10px; }
+.howto li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 2px 12px; padding: 12px; border: 1.5px solid var(--line); border-radius: 16px; }
+.howto li::before { content: counter(step); grid-row: span 2; width: 34px; height: 34px; border-radius: 999px; background: var(--acc); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.howto b { font-size: 17px; }
+.howto span { font-size: 14px; color: var(--secondary); }
+#btn-howto { font-weight: 800; font-size: 17px; }
+.scenecap { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 6px 2px 10px; font-size: 13px; }
+.linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 14px; min-height: 32px; }
+.hunt-tools .toolspacer { flex: 1 1 0; }
+.hunt-tools .hudbtn { flex-shrink: 0; }
+.findrow { margin-top: 8px; }
+#btn-findit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; }
+#btn-findit[hidden] { display: none; }
+#btn-findit svg { width: 18px; height: 18px; }
+
+/* Fresh shelf photo (owner, 2026-10-28): the latest people-scrubbed
+ * shopper frame of the next item, its verified box outlined. */
+.fresh { margin: 10px 0 0; }
+.freshimg { position: relative; border-radius: 14px; overflow: hidden; background: var(--fill); }
+.freshimg img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+.freshbox { position: absolute; border: 3px solid var(--acc); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.28); pointer-events: none; }
+.fresh figcaption { font-size: 12px; margin-top: 6px; }
+
+/* Plan a hunt (owner, 2026-10-28): tap a row to move it into the
+ * quest or back to the list. */
+.planrow { display: flex; align-items: center; border-top: 1px solid var(--line); }
+.plantick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: none; border: 0; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.planrm { flex: 0 0 44px; height: 44px; margin-right: 6px; border: 0; background: none; color: var(--ink3); font-size: 16px; border-radius: 12px; cursor: pointer; }
+.planrow:first-child { border-top: 0; }
+.planrow .planbox { width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; }
+.planrow.in .planbox { background: var(--acc); border-color: var(--acc); }
+.planrow:not(.in) .name { color: var(--ink3); }
+.sub.fit { color: var(--acc-ink, var(--ink2)); }
+.toastact { margin-left: 12px; background: none; border: 0; color: var(--acc-soft); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; pointer-events: auto; }
