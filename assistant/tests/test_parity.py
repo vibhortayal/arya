@@ -49,7 +49,7 @@ class TestDeadSurfacesRemoved(unittest.TestCase):
 class TestOnePrimaryAction(unittest.TestCase):
     def test_finish_snap_is_the_primary_button(self):
         fin = section(read("index.html"), 'id="view-finish"', 'id="view-score"')
-        self.assertIn('<label class="btn primary wide" for="fin-photo">Snap the receipt</label>', fin)
+        self.assertIn('<label class="btn primary wide receiptbtn" for="fin-photo">Snap the receipt</label>', fin)
         self.assertIn('id="fin-photo"', fin)
         self.assertIn("hidden>", fin)  # the raw input stays out of sight
 
