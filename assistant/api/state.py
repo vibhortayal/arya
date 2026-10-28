@@ -4,7 +4,8 @@ cart.json, flags.json. Derived state (ledger/patterns/list) is recomputed
 on read — at household scale that is milliseconds, and it can never drift
 from the stored receipts. Postgres replaces the files when volume demands.
 """
-import json, os, tempfile, threading
+import copy, json, os, tempfile, threading
+from datetime import date, timedelta
 
 from api.ledger.build import build_ledger
 from api.patterns.engine import summarize
@@ -14,6 +15,15 @@ from api.cart.build import prepare
 import contextvars
 
 _current_user = contextvars.ContextVar("arya_user", default=None)
+# The demo sandbox (review 2026-10-28): a demo visitor's writes land in
+# an in-memory overlay keyed by file path, never on disk. Reads see the
+# overlay first, then the shipped demo household. One overlay per demo
+# session (api/main.py), so two judges never see each other's hunts.
+_overlay = contextvars.ContextVar("arya_overlay", default=None)
+# Caches that hold no visitor state still write through from the
+# sandbox, so a repeat item never costs a second model call.
+_WRITE_THROUGH = {"shelf_matches.json"}
+OVERLAY_MAX_BYTES = 2_000_000
 
 
 def data_dir():
@@ -72,8 +82,21 @@ def write_json_atomic(path, obj):
             raise
 
 
+def set_overlay(overlay):
+    """Route this request's writes into overlay (a dict), or back to
+    disk with None."""
+    _overlay.set(overlay)
+
+
+def in_sandbox():
+    return _overlay.get() is not None
+
+
 def _load(name, default):
     p = os.path.join(data_dir(), name)
+    ov = _overlay.get()
+    if ov is not None and p in ov:
+        return copy.deepcopy(ov[p])
     if os.path.exists(p):
         with open(p) as fh:
             return json.load(fh)
@@ -81,11 +104,52 @@ def _load(name, default):
 
 
 def _save(name, obj):
-    write_json_atomic(os.path.join(data_dir(), name), obj)
+    p = os.path.join(data_dir(), name)
+    ov = _overlay.get()
+    if ov is not None and name not in _WRITE_THROUGH:
+        if len(json.dumps(obj)) > OVERLAY_MAX_BYTES:
+            raise ValueError("the demo sandbox is full — sign out and open the demo again")
+        ov[p] = copy.deepcopy(obj)
+        return
+    write_json_atomic(p, obj)
+
+
+DEMO_USER = "demo"
+DEMO_LAG_DAYS = 3
+
+
+def _demo_shift(rs):
+    """The demo household lives in the present week: its fictional
+    trips shift so the last one falls DEMO_LAG_DAYS before today.
+    The shipped file never changes; only what the app reads moves.
+    Receipts a visitor files live (marked live) keep their dates."""
+    last = max((r.get("purchased_at") or "" for r in rs
+                if not r.get("live")), default="")
+    if not last:
+        return rs
+    try:
+        delta = (date.today() - timedelta(days=DEMO_LAG_DAYS)) - date.fromisoformat(last[:10])
+    except ValueError:
+        return rs
+    if not delta.days:
+        return rs
+    out = []
+    for r in rs:
+        pa = r.get("purchased_at")
+        if pa and not r.get("live"):
+            try:
+                r = dict(r, purchased_at=(date.fromisoformat(pa[:10]) + delta).isoformat() + pa[10:])
+            except ValueError:
+                pass
+        out.append(r)
+    return out
 
 
 def receipts():
-    return _load("receipts.json", [])
+    rs = _load("receipts.json", [])
+    if _current_user.get() == DEMO_USER:
+        return _demo_shift(rs)
+    return rs
 
 
 def _media_dir():
@@ -125,7 +189,7 @@ def add_receipts(new, media=None):
         media = media or {}
         for r in added:
             m = media.get(r["receipt_id"])
-            if m:
+            if m and not in_sandbox():
                 data, media_type = m
                 os.makedirs(_media_dir(), exist_ok=True)
                 with open(os.path.join(_media_dir(), r["receipt_id"]), "wb") as fh:
