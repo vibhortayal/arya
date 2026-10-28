@@ -370,3 +370,24 @@ same evening — see Intake parity below.)
 - Suite: **203 green** (9 new in tests/test_shelf_scan.py).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-shelf-scan.md.
+
+## Localizer integration — Where am I? (2026-10-27)
+
+- Discussion 34's Wonder-authored localizer is integrated as
+  the mapped hunt's position anchor: `api/localizer.py` is the
+  spike code vendored verbatim (paths only adapted), matching
+  a photo against the store's walkthrough index locally — no
+  model calls, $0, photo never stored. Shipped index:
+  10.6 MB (per-frame descriptor subsample in the build step),
+  and the spike's held-out eval re-run against it holds the
+  spike's numbers: stop accuracy 42/45, neighborhood 45/45,
+  median |Δu| 0.003, ~1 s per query. Confidence gate 0.60.
+- Client: in a Cloud hunt the corner stack carries Where am
+  I? (compass) where Shelf Scan sits on the Strip rung; a
+  placement anchors the hunt — position jumps to the nearest
+  stop, the follow resumes from there. POST
+  /api/quest/locate is a live door for the demo household.
+  SW cache arya-v25.
+- Suite: **232 green** (12 new in tests/test_localizer.py).
+  **Not deployed** — separate owner step. Loops:
+  assistant/loops/2026-10-27-localizer-integration.md.

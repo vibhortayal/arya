@@ -826,6 +826,9 @@ function renderHunt() {
   // Shelf Scan is the unmapped-store mode: present on the Strip
   // rung, absent in a mapped (Cloud) hunt.
   $("#btn-scan").hidden = Q.driverName !== "strip";
+  // Where am I? is the mapped-store anchor: the Cloud rung
+  // carries it in the same corner slot — the two never coexist.
+  $("#btn-locate").hidden = Q.driverName !== "cloud";
   qStepSync();
 }
 async function collectCurrent() {
@@ -1060,6 +1063,62 @@ function qStepAdvance() {
     MotionMath.segmentStepU(Q.stepAnchorU, nextU));
   if (u !== Q.stepU) { Q.stepU = u; Q.scene.setProgress(u); }
 }
+
+/* ---------------- Where am I? (localizer) ----------------
+ * The position anchor for a mapped (Cloud) hunt. The server
+ * matches a photo against the store's walkthrough index
+ * (Wonder-authored matcher, no model calls) and answers a path
+ * fraction; the client snaps it to the nearest stop and the
+ * follow resumes from there. On the Strip rung the same corner
+ * slot carries Shelf Scan instead — never both. */
+function qAnchorToU(u) {
+  const sess = Q.current;
+  if (!sess || !sess.items.length) return -1;
+  let best = 0, bestD = Infinity;
+  sess.items.forEach((it, i) => {
+    const d = Math.abs(qStopU(sess, i) - u);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  // An anchor is ground truth, like a collect: the follow
+  // resumes, step-advance re-bases here, the view jumps to the
+  // photo's place on the path.
+  Q.followHold = false;
+  Q.stepAnchorU = u; Q.stepU = u; Q.stepsHold = false;
+  if (Q.scene && Q.scene.setProgress) Q.scene.setProgress(u);
+  // Present the anchored stop itself; if it is already in the
+  // basket, present the next uncollected stop ahead of it.
+  let target = best;
+  if (sess.items[target].checked) {
+    target = sess.items.findIndex((it, i) => i > best && !it.checked);
+    if (target < 0) target = qNextIndex(sess);
+  }
+  qWalkStart(target);
+  return best;
+}
+async function locateFromPhoto(file) {
+  const sess = Q.current;
+  if (!sess) return;
+  const r = await fetch(`/api/quest/locate?session=${encodeURIComponent(sess.id)}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "image/jpeg" },
+    body: file
+  });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+  const out = await r.json();
+  if (out.found) {
+    const idx = qAnchorToU(out.u);
+    const stop = qStops(sess)[idx];
+    toast(`Placed you at ${stop && stop.shelfLabel ? stop.shelfLabel : sess.items[idx].name}`);
+  } else {
+    toast("Couldn't place that photo — keep following the route.");
+  }
+}
+$("#btn-locate").addEventListener("click", () => $("#locate-photo").click());
+$("#locate-photo").addEventListener("change", ev => {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = "";
+  if (f) locateFromPhoto(f).catch(showErr);
+});
 
 /* ---------------- Shelf Scan (Discussion 37) ----------------
  * The unmapped-store mode. SAM proposes boxes for the remaining
