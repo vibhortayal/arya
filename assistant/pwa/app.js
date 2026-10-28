@@ -12,7 +12,8 @@ function fmtDate(iso) {
 }
 function fmtShort(iso) {
   const [y, m, d] = iso.split("-").map(Number);
-  return `${MONTHS[m - 1]} ${d}`;
+  // The year shows when it is not this year: an archive spans years.
+  return y && y !== new Date().getFullYear() ? `${MONTHS[m - 1]} ${d}, ${y}` : `${MONTHS[m - 1]} ${d}`;
 }
 function money(n) {
   return "$" + Math.abs(n).toFixed(2);
@@ -423,7 +424,7 @@ function paintCart(h) {
     return;
   }
   $("#cart").innerHTML =
-    row(`${esc(c.store)} · ${c.items.length} items`, c.state === "approved" ? "Approved" : "Waiting for your approval",
+    row(`${esc(c.store)} · ${c.items.length} item${c.items.length === 1 ? "" : "s"}`, c.state === "approved" ? "Approved" : "Waiting for your approval",
         c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`) +
     c.items.map(i => `<div class="row"><div class="grow"><span>${esc(i.name)}</span></div><div class="money">× ${qtyFmt(i.qty)}</div></div>`).join("") +
     `<p class="muted">Approving does not place an order. The cart is a list you take to the store.</p>`;
@@ -558,7 +559,9 @@ $("#btn-receipts").addEventListener("click", () => { receiptsFrom = "view-profil
 // Receipts back returns to the Brain view that opened it,
 // through that tab's own entry so tab state stays in sync.
 $("#rc-back").addEventListener("click", ev => { ev.preventDefault();
-  document.querySelector(`.tab[data-view="${receiptsFrom}"]`).click(); });
+  // Profile is not a tab: fall back to showing the view directly.
+  const tab = document.querySelector(`.tab[data-view="${receiptsFrom}"]`);
+  if (tab) tab.click(); else { show(receiptsFrom); refresh(receiptsFrom); } });
 
 /* Feature request / Contact us (Profile): one note, a kind, the
  * username rides the session. Demo visitors see the form but the
@@ -1066,7 +1069,7 @@ async function renderReceipts() {
   const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
       <span class="grow"><span class="name">${esc(r.merchant)}</span>
-      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items} items${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
+      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
       <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
     </button>`).join("");
   $("#rc-archive").innerHTML = (unsettled || rows)
@@ -1082,7 +1085,7 @@ function paintMissingReceipts(el, unsettled, after) {
   el.innerHTML = unsettled.length
     ? unsettled.map(e => `<div class="sessrow">
         <span class="grow"><span class="name">${esc(e.store)}</span>
-        <span class="sub">Finished · Receipt missing · ${e.items_collected} of ${e.items_total} collected</span></span>
+        <span class="sub">${fmtShort(String(e.finished_at || "").slice(0, 10))} · Finished · Receipt missing · ${e.items_collected} of ${e.items_total} collected</span></span>
         <button class="btn" data-upload="${esc(e.session_id)}" data-store="${esc(e.store)}" type="button">Add receipt</button>
       </div>`).join("")
     : "";
@@ -1121,11 +1124,23 @@ async function renderAnalysis() {
     <p class="an-cap">${esc(monthName(latest))} total</p>
     <p class="bignum">${money(d.spend_by_month[latest])}</p>
     <p class="muted" style="text-align:center">Across ${monthReceipts} receipt${monthReceipts === 1 ? "" : "s"} filed this month</p>
-    ${row("Returns netted", "All receipts — refunds reconcile into the ledger; returned items never count in patterns", "−" + money(d.returns_total))}
+    ${row("Returns netted, all time", "All receipts — refunds reconcile into the ledger; returned items never count in patterns", "−" + money(d.returns_total))}
     ${row("All-time spend", `${d.trip_count} trips`, money(d.spend_total))}
     ${d.for_others_total ? row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) : ""}`
     : empty("No trips yet.");
-  const months = Object.entries(d.spend_by_month);
+  // Months with no receipts still get a row, so the bars do not jump a gap.
+  const spent = d.spend_by_month;
+  const months = [];
+  const keys = Object.keys(spent).sort();
+  if (keys.length) {
+    let [y, m] = keys[0].split("-").map(Number);
+    const [ly, lm] = keys[keys.length - 1].split("-").map(Number);
+    while (y < ly || (y === ly && m <= lm)) {
+      const k = `${y}-${String(m).padStart(2, "0")}`;
+      months.push([k, spent[k] || 0]);
+      if (++m > 12) { m = 1; y++; }
+    }
+  }
   const max = Math.max(...months.map(([, v]) => v), 1);
   $("#an-months").innerHTML = months.map(([m, v]) =>
     `<div class="month-row"><span>${esc(monthName(m))}</span><div class="track"><div class="bar" style="width:${Math.round(v / max * 100)}%"></div></div><span class="money">${money(v)}</span></div>`).join("") || empty("No trips yet.");

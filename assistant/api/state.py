@@ -442,6 +442,8 @@ def _admitted(p, judged, fl):
     v = judged.get(p["item_id"])
     if not v or not v.get("list_ok"):
         return False
+    if p.get("history_state") == "lapsed":
+        return False  # silent for over 4x its rhythm: not due, just gone
     if v.get("class") == "SEASONAL":
         months = (p.get("analysis") or {}).get("seasonal_months")
         if months and as_of():
