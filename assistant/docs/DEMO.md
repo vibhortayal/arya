@@ -29,12 +29,14 @@ The video follows Path A beats; the narration is Path B safe.
 
 ## Judge path (no narration)
 
-Open the site. Tap "Try the demo household." The household is fictional
-and read-only. Today shows items due and the list. Analysis (from
-Profile) shows the netted return and the gift card under "Bought for
-others." The demo's Photo and Voice doors are live — they call the
-Meta API and persist nothing. Chat is off in the demo; it needs the
-owner's account.
+Open the site. Tap "Try the demo." The household is fictional. Today
+shows items due and the list. Analysis (from Profile) shows the netted
+return and the gift card under "Bought for others." The judge can play
+the full loop: add items (type, photo, voice), play a hunt at Trader
+Joe's (Quest or Express; Photos, 3D, Aisle or Strip), finish on a
+receipt photo, and ask Arya. Every demo write lives in a sandbox for
+that visit only. Bulk imports, PDF decode, fridge photos and batch
+model jobs need a real account.
 
 ## Failure fallbacks
 

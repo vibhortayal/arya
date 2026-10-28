@@ -9,7 +9,7 @@
 | Criterion | Weight | Our evidence |
 |---|---|---|
 | Impact | 30% | The weekly shop, made play: parents and kids first; a contribution flywheel that maps the world's stores from shoppers' phones |
-| Use of Meta AI Tooling | 25% | VGGT builds the stores, SAM 3.1 places the products and scans live shelves (Shelf Scan), Muse Spark reads the lists and labels, Muse Wonder reads the receipt photos and authored the localizer, Muse Image paints the celebration characters, Muse Voice Transcribe takes dictation, Spark 1.3 judges — every intelligent step is a Meta model (see META-PRODUCTS.md) |
+| Use of Meta AI Tooling | 25% | SAM 3.1 places the products and scans live shelves (Shelf Scan), Muse Wonder reads the receipt photos and authored the localizer, Muse Spark reads the lists and labels, Muse Image paints the celebration characters, Muse Voice Transcribe takes dictation, Spark 1.3 judges, and VGGT (Meta AI research, not on the event's model list) builds the point cloud — every intelligent step is a Meta model (see META-PRODUCTS.md) |
 | Demo | 25% | A playable hunt in a real store's 3D model, filmed end to end: note photo → hunt → receipt finish |
 | Technical Depth | 20% | Crowdsourced 3D store models + shelf graphs; verified receipt pipeline (arithmetic-checked, returns netted); a pattern engine with an LLM judge (precision 0.79 against a purchase-cadence proxy on the owner's 114 receipts — eval method and disagreement lists in the research repo); per-account vs platform data planes |
 
@@ -25,7 +25,7 @@
 
 ## Package checklist
 
-- [ ] Working demo (PWA, demo household, read-only judge access)
+- [ ] Working demo (PWA, demo household — the full loop plays in a per-visitor sandbox, no account)
 - [ ] Demo video (beats above)
 - [ ] This repository (vibhortayal/arya — one repo, Discussion 25): pitch, architecture, Meta products, game design, build plan, and the live engine, tests green
 - [ ] Portal form fields completed from the drafts here
