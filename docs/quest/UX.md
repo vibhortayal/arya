@@ -51,13 +51,14 @@ List intake has five doors, one list: photo, paste, type, voice — and **chat**
 
 ## The scene ladder — the game never needs the 3D
 
-The Hunt screen's scene is a viewport, not the game. The game is the session: stops in walking order, COLLECT, the receipt finish, the score. The scene renders that session through one of three drivers, and a hunt completes identically in all of them:
+The Hunt screen's scene is a viewport, not the game. The game is the session: stops in walking order, COLLECT, the receipt finish, the score. The scene renders that session through one of four drivers, and a hunt completes identically in all of them:
 
-1. **Cloud** — the store's point cloud (VGGT), walked in 3D. A mapped store with a finished reconstruction.
-2. **Aisle** — a stylized 3D aisle scene from the shelf graph. A mapped store before its cloud, or the spike's hybrid fallback.
-3. **Strip** — a flat 2D aisle strip: stops as shelf cards in walking order, the strip scrolling as the hunt advances. First-class, not a degraded mode — this is how unmapped stores play, and how any store plays on a weak device.
+1. **Photo** — the photo-walk: the mapped store's own walkthrough frames along the path, crossfaded by path fraction, the gyro panning within the frame. Real photos of the real store — never called a 3D model or a live view. **The default view for a mapped store** (Discussion 43).
+2. **Cloud** — the store's point cloud (VGGT), walked in 3D. A mapped store's alternate 3D view, one tap from Photo.
+3. **Aisle** — a stylized 3D aisle scene from the shelf graph. A fallback view for a store with a path but no walk frames.
+4. **Strip** — a flat 2D aisle strip: stops as shelf cards in walking order, the strip scrolling as the hunt advances. First-class, not a degraded mode — this is how unmapped stores play, and how any store plays on a weak device.
 
-Rules: an unmapped store is **playable, never gated** — Strip is its default, and mapping is an invitation ("Map this store to unlock the 3D view"), not a wall. A player can drop a level mid-hunt (battery, comfort, motion sensitivity) from a small in-hunt toggle, with no state lost. Stops, scoring, Shop-Off timing, and the receipt finish are driver-independent.
+Rules: an unmapped store is **playable, never gated** — Strip is its default, and mapping is an invitation ("Map this store to unlock its photo walk and 3D view"), not a wall. A player can drop a level mid-hunt (battery, comfort, motion sensitivity) from a small in-hunt toggle, with no state lost. Stops, scoring, Shop-Off timing, and the receipt finish are driver-independent. The localizer's "Where am I?" gates on the store being mapped (Photo or Cloud), not on a rung — position is a path fraction.
 
 ## Wireframes
 

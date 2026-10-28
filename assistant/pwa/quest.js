@@ -71,6 +71,35 @@ function qStoreModel(store) {
   return STORE_MODELS[qnorm(store).replace(/ /g, "")] || null;
 }
 
+/* Stores with a photo walk (the platform plane): squashed store
+ * name -> the SceneView "photo" frames directory inside the PWA.
+ * The photo walk is a mapped store's default view (Discussion
+ * 43); the cloud stays one tap away as the alternate 3D view. */
+const STORE_PHOTOS = { traderjoes: "models/trader-joes/frames-web" };
+function qStorePhotos(store) {
+  return STORE_PHOTOS[qnorm(store).replace(/ /g, "")] || null;
+}
+
+/* Which rung a hunt opens on. The player's own stored choice
+ * (the scene toggle) wins when the store can serve it; else the
+ * session's recorded rung — with two defaults corrected: a
+ * session recorded under the old mapped default (cloud) opens
+ * in the new one (photo), and a "strip" recorded for a mapped
+ * store is the silent server/legacy default, not a choice (the
+ * create path always states its rung; a real strip preference
+ * lives in the toggle), so it too opens in photo. A rung the
+ * store cannot serve falls back — photo needs a walk, cloud
+ * needs a model, anything else is strip. */
+function qResolveDriver(store, sessDriver) {
+  const model = qStoreModel(store), photos = qStorePhotos(store);
+  const stored = localStorage.getItem("arya-scene-driver");
+  let drv = stored || sessDriver || (photos ? "photo" : "strip");
+  if (!stored && photos && (sessDriver === "cloud" || sessDriver === "strip")) drv = "photo";
+  if (drv === "photo" && !photos) drv = model ? "cloud" : "strip";
+  if (drv === "cloud" && !model) drv = photos ? "photo" : "strip";
+  return drv;
+}
+
 /* ---------------- navigation ---------------- */
 
 function questShow(id) {
@@ -510,7 +539,7 @@ document.querySelectorAll(".modecard").forEach(b =>
       const sess = await post("/api/quest/sessions",
         { store: Q.draft.store, mode, items: Q.draft.finalItems,
           store_id: Q.draft.storeId || undefined,
-          driver: qStoreModel(Q.draft.store) ? "cloud" : Q.driverName });
+          driver: qStorePhotos(Q.draft.store) ? "photo" : Q.driverName });
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       qOpenSession(sess);
@@ -723,15 +752,18 @@ function startHuntTimer(sess) {
 }
 function paintSceneToggle() {
   const hasModel = !!(Q.current && qStoreModel(Q.current.store));
+  const hasPhotos = !!(Q.current && qStorePhotos(Q.current.store));
   document.querySelectorAll("#scene-toggle [data-driver]").forEach(b => {
     b.setAttribute("aria-pressed", String(b.dataset.driver === Q.driverName));
     if (b.dataset.driver === "cloud") b.disabled = !hasModel;
+    if (b.dataset.driver === "photo") b.disabled = !hasPhotos;
   });
 }
 function mountScene() {
   const mount = $("#scene-mount");
   if (Q.scene) Q.scene.destroy();
   mount.dataset.model = (Q.current && qStoreModel(Q.current.store)) || "";
+  mount.dataset.photos = (Q.current && qStorePhotos(Q.current.store)) || "";
   Q.scene = createSceneView(mount, Q.driverName);
   Q.scene.onTapStop = idx => {
     if (idx === qNextIndex(Q.current)) collectCurrent();
@@ -761,15 +793,16 @@ function openHunt(sess) {
   questShow("view-hunt");
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
   const model = qStoreModel(sess.store);
-  // Reopen on the rung the session started in — unless it asks for a
-  // cloud this store does not have.
-  if (sess.driver && (sess.driver !== "cloud" || model)) Q.driverName = sess.driver;
+  const photos = qStorePhotos(sess.store);
+  // Reopen on the session's rung, resolved against what this
+  // store can serve (the mapped default is the photo walk).
+  Q.driverName = qResolveDriver(sess.store, sess.driver);
   mountScene();
-  Q.mapNote = !model
-    ? `No 3D model for ${sess.store} yet — map this store to unlock the 3D view. The hunt plays the same either way.`
-    : Q.driverName === "cloud"
-      ? ""
-      : `This store has a 3D model — switch views in the trip panel. The hunt plays the same either way.`;
+  Q.mapNote = !model && !photos
+    ? `No map for ${sess.store} yet — map this store to unlock its photo walk and 3D view. The hunt plays the same either way.`
+    : Q.driverName === "strip"
+      ? `This store is mapped — switch to its photo walk or 3D view in the trip panel. The hunt plays the same either way.`
+      : "";
   Q.followHold = false;
   renderHunt();
   qInitMotion();
@@ -826,9 +859,11 @@ function renderHunt() {
   // Shelf Scan is the unmapped-store mode: present on the Strip
   // rung, absent in a mapped (Cloud) hunt.
   $("#btn-scan").hidden = Q.driverName !== "strip";
-  // Where am I? is the mapped-store anchor: the Cloud rung
-  // carries it in the same corner slot — the two never coexist.
-  $("#btn-locate").hidden = Q.driverName !== "cloud";
+  // Where am I? gates on the store being MAPPED, not on a rung:
+  // the anchor is a path fraction, so it works on the Photo and
+  // Cloud views alike (it shares the corner slot with Shelf
+  // Scan, which stays Strip-only — the two never coexist).
+  $("#btn-locate").hidden = !(Q.driverName === "cloud" || Q.driverName === "photo");
   qStepSync();
 }
 async function collectCurrent() {

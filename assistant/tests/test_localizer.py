@@ -210,7 +210,8 @@ class TestLocateShell(unittest.TestCase):
 
     def test_client_contract(self):
         js = read("quest.js")
-        self.assertIn('$("#btn-locate").hidden = Q.driverName !== "cloud";', js)
+        self.assertIn('$("#btn-locate").hidden = !(Q.driverName === "cloud" '
+                      '|| Q.driverName === "photo");', js)
         self.assertIn("function qAnchorToU(u)", js)
         self.assertIn("/api/quest/locate?session=", js)
         self.assertIn("Placed you at", js)

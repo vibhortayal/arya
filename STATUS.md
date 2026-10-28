@@ -452,3 +452,24 @@ same evening — see Intake parity below.)
 - Suite: **253 green** (6 new in tests/test_receipt_media.py).
   **Not deployed** — separate owner step. Loops:
   assistant/loops/2026-10-27-receipt-media.md.
+
+## Photo-walk driver — the mapped default (2026-10-27)
+
+- The photo-walk is a first-class SceneView driver and the
+  default view for mapped stores (Discussion 43). The splat
+  spike closed NO-GO (pose drift; parked until pose
+  refinement); the point cloud stays one tap away as the
+  alternate 3D view; Strip remains the unmapped default.
+- The 90-frame web tier ships at
+  `assistant/pwa/models/trader-joes/frames-web/` — 17.45 MB
+  total, ~1.27 MB initial window with rolling preload
+  (-1/+4 at open, widening to -2/+5). Frames crossfade by
+  path fraction; stops, markers, GRAB, route dots, gyro pan,
+  and the step flag behave as in the other drivers; a
+  mid-hunt switch loses no session state. Honest labels:
+  "Photos", never a 3D model or a live view.
+- Localizer gating amended with this stage: "Where am I?"
+  shows on any hunt in a mapped store (Photo or Cloud) —
+  the anchor is a path fraction. Suite 260 green, SW
+  arya-v29. Log:
+  `assistant/loops/2026-10-27-photo-driver.md`.
