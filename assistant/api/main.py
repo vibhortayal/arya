@@ -1254,7 +1254,7 @@ def quest_get_session(session_id: str):
     sess = quest.get_session(session_id)
     if sess is None:
         raise HTTPException(404, "no such session")
-    return sess
+    return quest.session_view(sess)
 
 
 @app.post("/api/quest/sessions/{session_id}/items")
@@ -1264,7 +1264,8 @@ async def quest_add_item(session_id: str, req: Request):
     if not name:
         raise HTTPException(400, "name is required")
     from api import quest
-    sess = quest.add_item(session_id, name, body.get("qty", 1))
+    sess = quest.add_item(session_id, name, body.get("qty", 1),
+                          wild=bool(body.get("wild")))
     if sess is None:
         raise HTTPException(404, "no such session")
     return sess
@@ -1408,7 +1409,7 @@ async def quest_attach_receipt(session_id: str, req: Request):
         raise HTTPException(400, str(e))
     if sess is None:
         raise HTTPException(404, "no such receipt")
-    return sess
+    return quest.session_view(sess)
 
 
 @app.post("/api/quest/sessions/{session_id}/sample-receipt")
@@ -1642,6 +1643,55 @@ async def quest_report_missing(session_id: str, req: Request):
 def quest_store_reports(store: str):
     from api import quest
     return quest.store_reports(store)
+
+
+@app.post("/api/quest/avatar")
+async def quest_set_avatar(req: Request):
+    body = await _json_obj(req)
+    from api import quest
+    saved = quest.set_avatar((body.get("file") or "").strip())
+    if saved is None:
+        raise HTTPException(400, "pick one of the cast portraits")
+    return {"avatar": saved}
+
+
+@app.get("/api/quest/sos-count")
+def quest_sos_count(store: str = "", item: str = ""):
+    from api import quest
+    return quest.sos_count(store, item)
+
+
+@app.post("/api/quest/haul-photo")
+async def quest_haul_photo(req: Request, session: str = ""):
+    """Snap your haul: one Eyes read of the haul photo, matched
+    against the hunt by quest.haul_check. The read is saved on the
+    session; the photo itself is never stored."""
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    from api import quest
+    if quest.get_session(session) is None:
+        raise HTTPException(404, "no such session")
+    _budget_guard(demo=_is_demo(req))
+    from api.eyes.service import detect
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if _is_demo(req) else "app"))
+    try:
+        sightings = await run_in_threadpool(detect, body, client,
+                                            media_type=media)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    out = quest.haul_check(session, sightings)
+    if out is None:
+        raise HTTPException(404, "no such session")
+    return out
 
 
 # --- Map my store: the guided, crowd-built store map -----------------------

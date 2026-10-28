@@ -490,6 +490,34 @@ document.addEventListener("click", async ev => {
 
 /* ---------------- Profile ---------------- */
 
+/* Your player (owner, 2026-10-28): pick the cast member who
+ * fronts your cards. The choice is stored on the account; the
+ * picker paints from the same character registry as the faces. */
+async function paintPlayerPicker(current) {
+  const el = $("#pf-player");
+  if (!el) return;
+  if (!CHARM) {
+    try { CHARM = await (await fetch("assets/characters/manifest.json")).json(); }
+    catch (e) { el.innerHTML = ""; return; }
+  }
+  const files = [...new Set([...(CHARM.items || []).map(i => i.char),
+    ...(CHARM.categories || []).map(c => c.char),
+    ...Object.values(CHARM.roles || {}), CHARM.fallback].filter(Boolean))];
+  el.innerHTML = `<p class="nomargin"><strong>Your player</strong></p>
+    <p class="muted">The character who hosts your haul cards and love notes.</p>
+    <div class="playergrid">` + files.map(f =>
+      `<button class="playerpick${f === current ? " on" : ""}" data-avatar="${esc(f)}" type="button" aria-label="Play as ${esc(f.replace(".webp", ""))}"><img src="assets/characters/${esc(f)}" alt=""></button>`).join("") + `</div>`;
+  el.querySelectorAll("[data-avatar]").forEach(b => b.addEventListener("click", async () => {
+    const file = b.dataset.avatar;
+    try {
+      await post("/api/quest/avatar", { file });
+      try { localStorage.setItem("arya-avatar", file); } catch (e) {}
+      paintPlayerPicker(file);
+      toast("Player set.");
+    } catch (e) { toast(e.message); }
+  }));
+}
+
 /* One unified Profile (B6): the Quest player card (handle, stats,
  * badge shelf, mapper credits, Eagle Eye + spots) merged with the
  * account Profile (account, Muse token card, receipt count).
@@ -513,8 +541,12 @@ async function renderProfile() {
     return;
   }
   const s = profile.stats;
-  $("#pf-card").innerHTML = `<p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
-    <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p>`;
+  const avatarFile = profile.avatar || "basket.webp";
+  try { localStorage.setItem("arya-avatar", avatarFile); } catch (e) {}
+  $("#pf-card").innerHTML = `<div class="row"><img class="rowface" style="width:52px;height:52px" src="assets/characters/${esc(avatarFile)}" alt="">
+    <div class="grow"><p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
+    <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p></div></div>`;
+  paintPlayerPicker(avatarFile);
   $("#pf-stats").innerHTML =
     `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
