@@ -102,7 +102,12 @@ class TestCelebrationShell(unittest.TestCase):
 
     def test_hook_wiring(self):
         js = read("quest.js")
-        self.assertIn('Q.current.mode !== "quest"', js)  # mode gate
+        # Owner-disabled (phone pass, 2026-10-28): the collect hook
+        # never pops a character card. The machinery stays wired
+        # for a one-function re-enable.
+        hook = js.split("function qOnCollected(")[1].split("\n}")[0]
+        self.assertIn("DISABLED at the owner's word", hook)
+        self.assertNotIn("qCelebrate(", hook)
         self.assertIn("setTimeout(qCelebHide, 3500)", js)
         self.assertIn("function qCelebResolve(", js)
         # Hunt v2: list-row GRABs route through collectStop, the one
@@ -134,7 +139,7 @@ class TestCelebrationShell(unittest.TestCase):
 
     def test_sw_precaches_celebration_assets(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v43"', sw)
+        self.assertIn('CACHE = "arya-v44"', sw)
         self.assertIn("/assets/characters/manifest.json", sw)
         self.assertIn("/assets/characters/blueberry.webp", sw)
         self.assertIn("/assets/characters/pantry.webp", sw)
@@ -197,21 +202,17 @@ out.bagel_bakery = R("Bagels").char === "bakery.webp" && R("Bagels").fact.includ
 out.carrot_veg_no_fact = R("Carrots").char === "vegetable.webp" && R("Carrots").fact === null;
 out.granola_pantry = R("Granola").char === "pantry.webp" && R("Granola").fact.includes("300 shapes");
 out.unmatched_none = R("Durian") === null;
-// --- mode gate + single bubble, through the real hook ---
+// --- the hook is owner-disabled (2026-10-28): silent in BOTH
+// modes; the machinery itself still renders when called directly ---
 Q.current = { mode: "express", items: [] };
 qOnCollected("Blueberries");
 out.express_silent = layer().innerHTML === "";
 Q.current = { mode: "quest", items: [] };
 qCelebHide();
 qOnCollected("Blueberries");
-out.quest_fires = layer().hidden === false && layer().innerHTML.includes("blueberry.webp") && layer().innerHTML.includes("bloom");
-qOnCollected("Bananas");
-qOnCollected("Raspberries");
-out.single_bubble = (layer().innerHTML.match(/celeb-bubble/g) || []).length === 1
-  && layer().innerHTML.includes("raspberry.webp") && !layer().innerHTML.includes("Botanically");
-qCelebHide();
-qOnCollected("Carrots");
-out.vegetable_char_only = layer().innerHTML.includes("vegetable.webp") && !layer().innerHTML.includes("celeb-bubble");
+out.quest_silent = layer().hidden === true && layer().innerHTML === "";
+qCelebrate("Blueberries");
+out.direct_still_works = layer().hidden === false && layer().innerHTML.includes("blueberry.webp") && layer().innerHTML.includes("bloom");
 qCelebHide();
 out.hide_clears = layer().hidden === true && layer().innerHTML === "";
 console.log(JSON.stringify(out));
