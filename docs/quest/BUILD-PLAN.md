@@ -2,7 +2,7 @@
 
 ## Gate
 
-**The VGGT spike verdict.** A 90-second Trader Joe's aisle stretch (4:00–5:30 of the Chino Hills walkthrough), 90 frames, is in reconstruction now.
+**The VGGT spike verdict: PASS** (recorded Oct 27, as the sequence table below states). A 90-second Trader Joe's aisle stretch (4:00–5:30 of the Chino Hills walkthrough), 90 frames, was reconstructed.
 
 - **Pass** (cloud reads as the store, camera path is smooth): build the mini-hunt in full 3D per this plan.
 - **Soft** (geometry holds, texture is washy): hybrid — 3D for the wide walk, real shelf photos pinned at item stops.
@@ -21,7 +21,9 @@ IN:
 7. **Profile archive view:** receipt photos with their digitized records under Profile (engine already stores both sides; this is a view). Analysis: Spend is live; Patterns and Trends stay future — named placeholders in the UI, built post-hackathon.
 8. Demo video + submission package per SUBMISSION.md.
 
-OUT (rollout story only): whole-store maps, live relocalization, escape-room skin, public registration, global boards, mapper leaderboards.
+Note: the shipped scope supersedes the mini-hunt scope above. The full loop is live — the Optimizer, Shop-Off, friends, the stores directory, the photo-walk default, Shelf Scan, and the localizer. The sequence table below is the current record.
+
+OUT (rollout story only): whole-store maps, continuous relocalization tracking (one-shot placement is shipped), escape-room skin, public registration, global boards, mapper leaderboards.
 
 ## Sequence
 

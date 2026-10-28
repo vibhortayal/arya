@@ -9,7 +9,7 @@ The quest log is the grocery list. The dungeon is the real store. The treasures 
 ## Launch mode: Treasure Hunt
 
 - The list becomes a route through the store's 3D model, ordered by the shelf graph — no backtracking by design.
-- The next item pulses on its shelf in the model. Camera glides the walkthrough path to it.
+- One target at a time: the suggested stop is presented in a contained store view, with the suggested-next card under it (Hunt v2 presentation, Discussion 45). Any stop can be grabbed in any order; the suggestion re-aims after each grab.
 - Collect: tap the item in the model (at home, planning) or tap "Got it" at the shelf (in store).
 - Score: time, completion, and a streak for consecutive full hauls.
 - Finish ritual: the receipt photo at checkout. It scores the hunt and settles the data.
@@ -97,6 +97,7 @@ The community game runs on one unfair advantage: **every metric is receipt-verif
 ### Friends and profiles (owner: "needs to be there")
 
 - **Friends** are handle-based: add by handle or QR, accept/decline, no contact-list scraping. A friend's row shows their top badge and last hunt — and a challenge button. Friends are who you Shop-Off.
+- **Run notifications (designed, Discussion 24; NOT built).** When a friend starts a run, the ping carries the store and the moment — never the list. The actions: ⚔️ Challenge, ➕ Add one thing (a request; bought-for-others rules apply — ledger yes, patterns never), 👁 Follow. No engine exists yet; this is the top known gap in the social layer.
 - **Profile** has two faces. The **public card** (what the community sees): handle, hunt/receipt/streak stats, the badge shelf (earned + locked with criteria), mapper credits ("Mapped by you"). The **private archive** (only the account sees): every receipt photo saved with its **digitized twin** — the parsed line items and the verified total, one tap from photo to record. Analysis and dashboards (patterns, spend — the current Arya dashboard) are the declared future layer on top of this archive, not v1.
 
 ### Community rules
