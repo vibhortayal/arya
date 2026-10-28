@@ -52,8 +52,17 @@ def _budget_guard(demo=False):
     of judges can exhaust the demo's day, never the real accounts'
     (review 2026-10-28, H4)."""
     if demo or state.in_sandbox():
+        box = state._overlay.get()
+        share = float(os.environ.get("ARYA_DEMO_SESSION_BUDGET_USD", "0.40"))
+        if box is not None and box.get(_DEMO_SPENT_KEY, 0.0) >= share:
+            raise HTTPException(503, "You've used this demo visit's live reads. "
+                                "Everything else still works; sign in with a real "
+                                "account for more.")
         cap = float(os.environ.get("ARYA_DEMO_DAILY_BUDGET_USD", "2"))
         spent = CostLedger(_LEDGER).spent_today("demo")
+        if spent >= cap:
+            raise HTTPException(503, "The demo's live reads are paused for today. "
+                                "Everything else still works.")
     else:
         cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
         spent = CostLedger(_LEDGER).spent_today("app")
@@ -61,10 +70,28 @@ def _budget_guard(demo=False):
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
 
 
+# Spend a demo visit has caused, kept in that visitor's in-memory sandbox
+# (not in the storage layer), so one visitor cannot drain the day's
+# demo bucket (review 2026-10-28, item 1).
+_DEMO_SPENT_KEY = "__demo_spent_usd"
+
+
+class _SessionLedger(CostLedger):
+    def record(self, *a, **k):
+        row = super().record(*a, **k)
+        box = state._overlay.get()
+        if box is not None:
+            box[_DEMO_SPENT_KEY] = box.get(_DEMO_SPENT_KEY, 0.0) + row["cost_usd"]
+        return row
+
+
 def _ledger():
     """The cost ledger for this request: demo sandbox calls spend from
-    the demo bucket, everything else from the app bucket."""
-    return CostLedger(_LEDGER, bucket="demo" if state.in_sandbox() else "app")
+    the demo bucket (and count against the visit's own share),
+    everything else from the app bucket."""
+    if state.in_sandbox():
+        return _SessionLedger(_LEDGER, bucket="demo")
+    return CostLedger(_LEDGER, bucket="app")
 
 
 # Per-IP sliding-window caps on the demo's unauthenticated surface:

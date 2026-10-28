@@ -110,7 +110,7 @@ class TestPdfIntake(unittest.TestCase):
             def __init__(self, ledger=None):
                 pass
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 payload = {"merchant": "Costco Example City", "purchased_at": "2026-10-20",
                            "lines": [{"raw": "spinach", "sku": "1", "line_type": "item",
                                       "qty": 1, "line_total": 5.39, "confidence": 0.95},
@@ -225,6 +225,17 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         self.assertIsNone(call["reasoning_effort"])
         self.assertEqual(call["timeout"], PHOTO_WONDER_TIMEOUT_S)
         self.assertEqual(PHOTO_WONDER_TIMEOUT_S, 90)
+
+    def test_spark_only_setting_never_calls_wonder(self):
+        import os
+        from unittest import mock
+        from api.decode.service import decode_photo
+        client = FlipClient()
+        with mock.patch.dict(os.environ, {"ARYA_PHOTO_READER": "spark"}):
+            dec = decode_photo(b"fake-jpeg-bytes", client)
+        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertTrue(dec["totals_reconcile"])
+        self.assertEqual([c["mode"] for c in client.calls], ["standard"])
 
     def test_wonder_timeout_falls_back_to_spark(self):
         from api.decode.service import decode_photo
