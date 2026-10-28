@@ -203,6 +203,7 @@
       <p id="av-status" class="muted nomargin"></p>
     </div>
     <div id="pf-card" class="group pad"></div>
+    <div id="pf-player" class="group pad"></div>
     <div id="pf-stats" class="stattiles"></div>
     <div id="pf-missing" class="group"></div>
     <div id="pf-spots" class="group"></div>
@@ -401,12 +402,22 @@
     <div id="scene-mount" class="storeview"></div>
     <div class="scenecap"><p id="scene-cap" class="muted nomargin"></p><button id="btn-3d" class="linkbtn" type="button" hidden>See it in 3D &rsaquo;</button></div>
     <div id="milestone" class="milestone" role="status"></div>
+    <div id="wild-form" class="group pad" hidden>
+      <label class="field" for="wild-name">Wild find — already in your cart?</label>
+      <input type="text" id="wild-name" placeholder="e.g. oat milk chocolate" autocomplete="off">
+      <p style="display:flex; gap:8px; margin:8px 0 0">
+        <button class="btn primary grow" id="wild-add" type="button">Add to the haul</button>
+        <button class="btn grow" id="wild-mic" type="button">Record</button>
+      </p>
+      <p class="muted nomargin" id="wild-status"></p>
+    </div>
     <p id="hunt-mapnote" class="muted small" hidden></p>
     <p id="hunt-offline" class="offlinenote" role="status" hidden></p>
     <div class="hunt-tools" role="group" aria-label="Hunt tools">
       <button id="btn-scan" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Scan shelf</span></button>
       <button id="btn-locate" class="btn toolbtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none"/></svg><span>Where am I?</span></button>
       <button id="btn-nothere" class="btn toolbtn" type="button">Not here?</button>
+      <button id="btn-wild" class="btn toolbtn" type="button">+ Wild find</button>
       <button id="btn-teach" class="btn toolbtn" type="button" hidden><img class="toolimg" src="assets/characters/compass.webp" alt=""><span>Teach Arya</span></button>
       <span class="toolspacer"></span>
       <button id="btn-howto" class="hudbtn" type="button" aria-label="How to play">?</button>
@@ -588,6 +599,20 @@
       <p class="muted nomargin">The &ldquo;?&rdquo; on the hunt screen opens this again.</p>
     </div>
   </div>
+  <div id="share-sheet" class="sheetwrap" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="share-title">
+        <h3 id="share-title" style="margin-top:0">Share</h3>
+    <div id="share-chips"></div>
+        <canvas id="share-canvas" width="1080" height="1350" style="width:100%; border-radius:16px; display:block" hidden></canvas>
+        <p class="muted" id="share-caption" style="margin-top:10px"></p>
+        <p style="display:flex; gap:8px">
+          <button class="btn primary grow" id="share-go" type="button" hidden>Share</button>
+          <button class="btn grow" id="share-png" type="button" hidden>Save still</button>
+          <button class="btn grow" id="share-close" type="button">Close</button>
+        </p>
+        <p class="muted nomargin" id="share-status"></p>
+    </div>
+    </div>
 </main>
 
 <nav id="tabs" hidden>
@@ -613,5 +638,6 @@
 <script src="scene.js"></script>
 <script src="quest.js"></script>
 <script src="mapper.js"></script>
+<script src="share.js"></script>
 </body>
 </html>
