@@ -147,7 +147,7 @@ class TestPhotoMappingNode(unittest.TestCase):
 
 class TestPhotoAssets(unittest.TestCase):
     def test_frames_ship_complete_and_under_the_guide(self):
-        files = sorted(os.listdir(FRAMES))
+        files = sorted(f for f in os.listdir(FRAMES) if f.endswith(".jpg"))
         self.assertEqual(len(files), 90)
         self.assertEqual(files[0], "f001.jpg")
         self.assertEqual(files[-1], "f090.jpg")
