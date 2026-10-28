@@ -76,7 +76,8 @@ function listRow(i, tags) {
   return `<div class="row listrow${i.checked ? " checked" : ""}">
     <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
     <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}
-    ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}</div>
+    ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
+    ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}</div>
     <div class="stepper">
       <button data-act="dec" data-id="${esc(i.item_id)}" aria-label="One less">−</button>
       <span class="qty">× ${qtyFmt(i.qty)}</span>
@@ -92,17 +93,12 @@ function bindItemLinks(root) {
     a.addEventListener("click", ev => { ev.preventDefault(); renderItem(a.dataset.id); }));
 }
 
-/* The owner's Today/List line, in his format: a count, the names,
- * the evidence, and the returns rule — plain text, no cards. */
-function staplesLine(items, verified) {
-  const tail = ` — learned from ${verified} verified receipt${verified === 1 ? "" : "s"}. Returned items never re-suggested.`;
-  if (!items.length) return `Nothing due${tail}`;
-  return `${items.length} staple${items.length === 1 ? "" : "s"} due: ${items.map(i => i.name).join(" · ")}${tail}`;
-}
-
-async function verifiedReceipts() {
-  const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
-  return archive.receipts.filter(r => r.totals_reconcile).length;
+/* The owner's Today/List line (revised at his word, 2026-10-28):
+ * a count only. The names live on the List itself — Today taps
+ * through to it — and the returns sentence is gone. */
+function staplesLine(items) {
+  if (!items.length) return "Nothing due";
+  return `${items.length} staple${items.length === 1 ? "" : "s"} due`;
 }
 
 /* ---------------- Today (decluttered) ----------------
@@ -213,7 +209,7 @@ async function renderHome() {
     : "";
   const eyeBtn = $("#today-eye-btn");
   if (eyeBtn) eyeBtn.addEventListener("click", () => { receiptsFrom = "view-home"; show("view-receipts"); refresh("view-receipts"); });
-  $("#today-listline-text").textContent = staplesLine(h.list.items, await verifiedReceipts());
+  $("#today-listline-text").textContent = staplesLine(h.list.items);
 }
 
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
@@ -291,19 +287,6 @@ $("#smart-list").addEventListener("click", async ev => {
   } catch (e) { toast(e.message); }
 });
 
-$("#list-add-form").addEventListener("submit", async ev => {
-  ev.preventDefault();
-  const input = $("#list-add-input");
-  const name = input.value.trim();
-  if (!name) return;
-  try {
-    await post("/api/list/add", { name });
-    input.value = "";
-    toast(`Added ${name} to your list.`);
-    renderList().catch(showErr);
-  } catch (e) { toast(e.message); }
-});
-
 function paintListNotes(h) {
   let notes = "";
   if (h.seen && h.seen.length) {
@@ -364,7 +347,7 @@ async function renderList() {
   const h = await api("/api/home");
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
-  $("#list-line").textContent = staplesLine(h.list.items, await verifiedReceipts());
+  $("#list-line").textContent = staplesLine(h.list.items);
   loadItemStores(h.list.items);
   paintStoreFilter(h.list.items);
   paintListGroups();
@@ -652,16 +635,59 @@ function bindAdd() {
     try {
       const r = await post("/api/list/from-text", { text });
       field.value = "";
+      paintAddSplit();
       $("#add-status").textContent = "";
       toast(r.added === 1 ? "Added 1 item to your list."
         : `Added ${r.added} items to your list.`);
+      renderList().catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
+  });
+
+  /* The split preview (owner wireframe, 2026-10-28): what the field
+   * will add, shown as chips before anything is added. Mirrors the
+   * server split (lines/semicolons, then commas; bullets and
+   * numbering stripped; duplicates collapsed) — the server stays
+   * the authority; removing a chip rewrites the field. */
+  function splitPreview(text) {
+    const out = [], seen = new Set();
+    for (const chunk of String(text || "").split(/[\n;]+/)) {
+      for (const piece of chunk.split(",")) {
+        const name = piece.replace(/^[\s•\-*☐☑✓\d.)]+/, "").trim();
+        if (name && !seen.has(name.toLowerCase())) { seen.add(name.toLowerCase()); out.push(name); }
+      }
+    }
+    return out;
+  }
+  function paintAddSplit() {
+    const box = $("#add-split"), field = $("#add-text"), btn = $("#add-submit");
+    if (!box || !field) return;
+    const items = splitPreview(field.value);
+    box.hidden = items.length < 2;
+    box.innerHTML = items.map((n, i) =>
+      `<span class="spchip">${esc(n)}<button type="button" data-spx="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join("");
+    if (btn) btn.textContent = items.length > 1 ? `Add ${items.length} items` : "Add";
+  }
+  $("#add-text").addEventListener("input", paintAddSplit);
+  $("#add-split").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-spx]");
+    if (!b) return;
+    const items = splitPreview($("#add-text").value);
+    items.splice(Number(b.dataset.spx), 1);
+    $("#add-text").value = items.join("\n");
+    paintAddSplit();
+  });
+  /* One line + Enter adds at once (the old quick-add's speed);
+   * Enter inside a multi-line paste just adds a line. */
+  $("#add-text").addEventListener("keydown", ev => {
+    if (ev.key !== "Enter" || ev.shiftKey) return;
+    if (!$("#add-text").value.includes("\n")) { ev.preventDefault(); $("#add-submit").click(); }
   });
 
   wireRecordButton($("#add-mic"), $("#add-status"), text => {
     const field = $("#add-text");
     field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
+    field.dispatchEvent(new Event("input"));
   });
 
   let receiptFile = null;
@@ -693,6 +719,7 @@ function bindAdd() {
       } else {
         toast(out.added === 1 ? "Added 1 item to your list."
           : `Added ${out.added} items to your list.`);
+        renderList().catch(() => {});
       }
     } catch (e) {
       status.textContent = "";
@@ -829,12 +856,13 @@ async function renderEyes() {
   const data = await api("/api/eyes").catch(() => ({ records: [] }));
   const box = $("#eyes-records");
   if (!box) return;
-  if (!data.records.length) {
-    // No sightings yet is a state, not a blank (review U2's
-    // empty-state rule, applied to Eyes).
-    box.innerHTML = empty("No sightings yet. Photograph the fridge, pantry, freezer, or fruit bowl and Arya reads what it sees.");
-    return;
-  }
+  // On the List page the section exists only while a sighting waits
+  // for a decision (owner wireframe, 2026-10-28) — no pending
+  // sightings, no section; decided sightings report in list notes.
+  const wrap = $("#list-eyes");
+  const pending = data.records.some(r => (r.sightings || []).some(s => s.state === "pending"));
+  if (wrap) wrap.hidden = !pending;
+  if (!data.records.length) { box.innerHTML = ""; return; }
   box.innerHTML = data.records.map(rec => `
     <div class="eyes-record">
       <img src="/eyes/photos/${rec.id}" alt="Eyes photo">
@@ -1017,8 +1045,7 @@ $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(last
 
 function refresh(view) {
   if (view === "view-home") renderHome().catch(showErr);
-  if (view === "view-list") renderList().catch(showErr);
-  if (view === "view-scan") { renderIntake().catch(showErr); renderEyes().catch(showErr); }
+  if (view === "view-list") { renderList().catch(showErr); renderIntake().catch(showErr); renderEyes().catch(showErr); }
   if (view === "view-receipts") renderReceipts().catch(showErr);
   if (view === "view-analysis") renderAnalysis().catch(showErr);
   if (view === "view-profile") renderProfile().catch(showErr);

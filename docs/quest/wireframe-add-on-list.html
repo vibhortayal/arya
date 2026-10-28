@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add lives on the List page — wireframe</title>
+<style>
+  :root{
+    --acc:#E4572E; --acc-soft:#FDEEE8;
+    --ink:#1B1B1E; --ink2:#55555C; --ink3:#8B8B93;
+    --line:#D9D9DE; --line2:#ECECEF;
+    --bg:#EFEFF1; --panel:#FFFFFF; --fill:#F4F4F6; --fill2:#E7E7EB;
+    --radius:14px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,p{margin:0;}
+  .page{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+  .page h1{font-size:26px;letter-spacing:-.02em;}
+  .page .sub{color:var(--ink2);margin-top:6px;font-size:15px;max-width:70ch;}
+  .frames{display:flex;gap:28px;flex-wrap:wrap;margin-top:28px;align-items:flex-start;}
+  .fwrap{width:340px;}
+  .fcap{font-size:13.5px;color:var(--ink2);margin-top:10px;line-height:1.45;}
+  .fcap b{color:var(--ink);}
+  .phone{background:var(--panel);border:1px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:0 8px 28px rgba(20,20,30,.08);}
+  .scr{padding:16px 16px 0;min-height:600px;display:flex;flex-direction:column;}
+  .brand{display:flex;justify-content:space-between;align-items:baseline;}
+  .brand .logo{font-weight:800;font-size:17px;}
+  .brand .who{font-size:11.5px;color:var(--ink3);}
+  .h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin:14px 0 10px;}
+  .chips{display:flex;gap:8px;overflow:hidden;margin-bottom:12px;}
+  .chip{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 13px;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .chip.on{border-color:var(--acc);color:var(--acc);background:var(--acc-soft);}
+  /* the composer */
+  .composer{border:1.5px solid var(--line);border-radius:16px;background:var(--fill);padding:10px 10px 10px 14px;}
+  .composer .row{display:flex;align-items:center;gap:6px;}
+  .composer .field{flex:1;font-size:15.5px;color:var(--ink);}
+  .composer .field.ph{color:var(--ink3);}
+  .icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;}
+  .composer .hint{font-size:12px;color:var(--ink3);margin-top:8px;}
+  .split{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .item-chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:600;}
+  .item-chip span{color:var(--ink3);font-weight:400;margin-left:5px;}
+  .addbtn{margin-top:12px;width:100%;background:var(--acc);color:#fff;border:none;border-radius:12px;padding:12px;font-size:15.5px;font-weight:700;}
+  .ghostbtn{margin-top:8px;width:100%;background:none;border:none;color:var(--ink2);font-size:13.5px;padding:6px;}
+  /* list rows */
+  .lrow{display:flex;gap:10px;align-items:flex-start;padding:13px 2px;border-bottom:1px solid var(--line2);}
+  .ring{width:24px;height:24px;border:2px solid var(--ink3);border-radius:50%;flex:none;margin-top:2px;}
+  .lrow .nm{font-weight:700;font-size:16.5px;line-height:1.2;}
+  .lrow .why{font-size:12.5px;color:var(--ink2);margin-top:2px;line-height:1.35;}
+  .lrow .qty{margin-left:auto;display:flex;align-items:center;gap:9px;font-weight:700;flex:none;}
+  .lrow .qty .pm{width:30px;height:30px;border-radius:50%;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink2);}
+  .lrow .x{color:var(--ink3);font-size:16px;flex:none;margin-top:3px;}
+  /* eyes section */
+  .sect{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--ink2);margin:16px 0 8px;}
+  .eye{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;margin-bottom:8px;}
+  .eye .t{font-weight:700;font-size:15px;}
+  .eye .w{font-size:12.5px;color:var(--ink2);margin-top:1px;}
+  .eye .acts{display:flex;gap:8px;margin-top:9px;}
+  .eye .acts button{flex:1;border-radius:10px;padding:8px;font-size:13.5px;font-weight:700;border:1px solid var(--line);background:var(--panel);}
+  .eye .acts .ok{background:var(--acc);border-color:var(--acc);color:#fff;}
+  .foot{font-size:11.5px;color:var(--ink3);line-height:1.5;padding:14px 2px 12px;margin-top:auto;}
+  /* tab bar */
+  .tabs{display:flex;border-top:1px solid var(--line);background:var(--panel);margin:0 -16px;padding:8px 0 14px;}
+  .tabs div{flex:1;text-align:center;font-size:11.5px;color:var(--ink2);}
+  .tabs .ic{font-size:19px;display:block;margin-bottom:2px;}
+  .tabs .on{color:var(--acc);font-weight:700;}
+  .decisions{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-top:34px;max-width:760px;}
+  .decisions h2{font-size:17px;margin-bottom:8px;}
+  .decisions li{font-size:14.5px;line-height:1.55;margin-bottom:5px;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Add lives on the List page</h1>
+  <p class="sub">Proposal (owner direction, 2026-10-28): no separate Add screen. Everything the Add tab
+  does moves into one composer at the top of the List page — the page you are already looking at when
+  you think of something. Same doors behind it (type/paste, voice, photo), no server change.</p>
+
+  <div class="frames">
+
+    <!-- Frame A -->
+    <div class="fwrap">
+      <div class="phone"><div class="scr">
+        <div class="brand"><span class="logo">Arya</span><span class="who">vibhor15@gmail.com · Sign out</span></div>
+        <div class="h1">List</div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Costco FREMONT</span><span class="chip">Trader Joe's</span></div>
+        <div class="composer">
+          <div class="row">
+            <span class="field ph">Add to your list…</span>
+            <span class="icobtn" title="Voice">🎙</span>
+            <span class="icobtn" title="Photo">📷</span>
+          </div>
+        </div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Organic 2% Milk</div><div class="why">every ~24 days · rebought every three weeks</div></div><span class="qty"><span class="pm">−</span>× 1<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Power Up Mega Omega Trail Mix 26 oz</div><div class="why">every ~23 days · 3 buys</div></div><span class="qty"><span class="pm">−</span>× 2<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Organic Raspberry</div><div class="why">due now · last bought 6 days ago</div></div><span class="qty"><span class="pm">−</span>× 1<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="tabs" style="margin-top:auto;">
+          <div><span class="ic">✦</span>Today</div>
+          <div class="on"><span class="ic">☰</span>List</div>
+          <div><span class="ic">✧</span>Ask</div>
+          <div><span class="ic">◉</span>Profile</div>
+        </div>
+      </div></div>
+      <p class="fcap"><b>A — List, at rest.</b> The composer sits under the store lens, one line tall:
+      a field, a mic, a camera. The bottom bar drops to <b>four tabs</b> — the Add tab is gone,
+      because this page is the add surface.</p>
+    </div>
+
+    <!-- Frame B -->
+    <div class="fwrap">
+      <div class="phone"><div class="scr">
+        <div class="brand"><span class="logo">Arya</span><span class="who">vibhor15@gmail.com · Sign out</span></div>
+        <div class="h1">List</div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Costco FREMONT</span><span class="chip">Trader Joe's</span></div>
+        <div class="composer">
+          <div class="row">
+            <span class="field">oat milk<br>eggs<br>paper towels</span>
+            <span class="icobtn" title="Voice">🎙</span>
+            <span class="icobtn" title="Photo">📷</span>
+          </div>
+          <div class="split">
+            <span class="item-chip">oat milk <span>✕</span></span>
+            <span class="item-chip">eggs <span>✕</span></span>
+            <span class="item-chip">paper towels <span>✕</span></span>
+          </div>
+          <button class="addbtn">Add 3 items</button>
+          <p class="hint">Pasted from WhatsApp? Paste it all — Arya splits it. A photo of a list,
+          a receipt, or the fridge works too: tap 📷 and Arya sorts it out.</p>
+        </div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Organic 2% Milk</div><div class="why">every ~24 days · rebought every three weeks</div></div><span class="qty"><span class="pm">−</span>× 1<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Power Up Mega Omega Trail Mix 26 oz</div><div class="why">every ~23 days · 3 buys</div></div><span class="qty"><span class="pm">−</span>× 2<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="tabs" style="margin-top:auto;">
+          <div><span class="ic">✦</span>Today</div>
+          <div class="on"><span class="ic">☰</span>List</div>
+          <div><span class="ic">✧</span>Ask</div>
+          <div><span class="ic">◉</span>Profile</div>
+        </div>
+      </div></div>
+      <p class="fcap"><b>B — Composer open.</b> Typing or pasting expands the field; the split is shown
+      as chips before anything is added (✕ removes one). One item + Enter still adds instantly — the
+      quick add that is already on this page does not get slower. Voice keeps its rule: the transcript
+      lands in this field, editable, before it adds.</p>
+    </div>
+
+    <!-- Frame C -->
+    <div class="fwrap">
+      <div class="phone"><div class="scr">
+        <div class="brand"><span class="logo">Arya</span><span class="who">vibhor15@gmail.com · Sign out</span></div>
+        <div class="h1">List</div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Costco FREMONT</span><span class="chip">Trader Joe's</span></div>
+        <div class="composer">
+          <div class="row">
+            <span class="field ph">Add to your list…</span>
+            <span class="icobtn" title="Voice">🎙</span>
+            <span class="icobtn" title="Photo">📷</span>
+          </div>
+        </div>
+        <div class="sect">SEEN AT HOME — CONFIRM</div>
+        <div class="eye"><div class="t">Greek Yogurt 32 oz</div><div class="w">Seen in the fridge · today</div>
+          <div class="acts"><button class="ok">On the list</button><button>Not there</button></div></div>
+        <div class="eye"><div class="t">Eggs 12 ct</div><div class="w">Seen in the fridge · today</div>
+          <div class="acts"><button class="ok">On the list</button><button>Not there</button></div></div>
+        <div class="lrow"><span class="ring"></span><div><div class="nm">Organic 2% Milk</div><div class="why">every ~24 days · rebought every three weeks</div></div><span class="qty"><span class="pm">−</span>× 1<span class="pm">+</span></span><span class="x">✕</span></div>
+        <div class="foot">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app.
+        You can also add from Muse chat — say “add eggs to my list”.</div>
+        <div class="tabs">
+          <div><span class="ic">✦</span>Today</div>
+          <div class="on"><span class="ic">☰</span>List</div>
+          <div><span class="ic">✧</span>Ask</div>
+          <div><span class="ic">◉</span>Profile</div>
+        </div>
+      </div></div>
+      <p class="fcap"><b>C — Eyes move here.</b> Sightings to confirm appear under the composer, only
+      while any are pending — confirming one is a list decision, so it lives with the list. When none
+      are pending the section is absent, not an empty card. The Meta-models line becomes footer
+      small print: the disclosure survives, the screen does not.</p>
+    </div>
+
+  </div>
+
+  <div class="decisions">
+    <h2>Decisions in this wireframe</h2>
+    <ol>
+      <li>The <b>Add tab is removed</b>; the bottom bar is Today · List · Ask · Profile.</li>
+      <li>One composer on List: <b>type/paste in the field, mic and camera as icon buttons</b> — the Add tab's three doors, one row.</li>
+      <li>Paste splits are <b>shown as chips before adding</b>; a single item still adds on Enter, instantly.</li>
+      <li><b>Eyes confirmations</b> sit under the composer, only when pending.</li>
+      <li>The “Every door runs on Meta models” line becomes <b>footer small print</b> on List.</li>
+      <li>No server change: the composer calls the same from-text / transcribe / from-photo doors the Add tab calls today.</li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>
