@@ -144,3 +144,18 @@ class TestSecondSeat(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOpenClientEnv(unittest.TestCase):
+    def test_empty_model_env_falls_back_to_default(self):
+        import os
+        from api.open_client import DEFAULT_MODEL
+        old = os.environ.get("ARYA_OPEN_MODEL")
+        os.environ["ARYA_OPEN_MODEL"] = ""
+        try:
+            self.assertEqual(OpenClient(api_key="k").model, DEFAULT_MODEL)
+        finally:
+            if old is None:
+                del os.environ["ARYA_OPEN_MODEL"]
+            else:
+                os.environ["ARYA_OPEN_MODEL"] = old
