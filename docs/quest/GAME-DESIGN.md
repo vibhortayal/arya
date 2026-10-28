@@ -41,6 +41,7 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 - Tools: Scan shelf, Where am I? (mapped stores), Not here?, How to
   play (?), sound.
 - Put back any grab; nothing finishes by itself.
+- I'm done shopping works any time; leftovers are saved for next trip or dropped; nothing counts as failure.
 - How to play shows once, on the first Quest hunt on a phone.
 
 ## Rewards
@@ -48,7 +49,8 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 | Event | Reward |
 | --- | --- |
 | Grab | +10, the chip bumps, a fun fact |
-| Streak (3 grabs in 45 s) | combo |
+| Combo | Combo: each grab of the suggested stop adds 1. It never resets and put back never lowers it. |
+| Boss | +40, only when the boss item was grabbed; a boss is an item you reported missing here on 2 earlier trips. |
 | Halfway, full haul | milestone; full haul +25 and confetti |
 | Receipt snapped | +50; the trip's points bank |
 | Level line crossed | level-up moment (L2 at 100, L3 at 300, L4 at 600, +100 more each level) |

@@ -132,7 +132,7 @@ class TestFinishClient(unittest.TestCase):
         self.assertNotIn("already filed", fin)
         self.assertNotIn('id="fin-receipts"', fin)
         self.assertIn('id="fin-skip"', fin)
-        self.assertIn(">Skip</button>", fin)
+        self.assertIn(">No receipt today</button>", fin)
         self.assertIn("Snap the receipt", fin)
         js = read("quest.js")
         self.assertNotIn("renderFinishReceipts", js)

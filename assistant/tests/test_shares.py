@@ -135,9 +135,11 @@ class TestShareClient(unittest.TestCase):
     def test_share_engine_and_surfaces(self):
         js = read("share.js")
         for needle in ("@traderjoes", "@costco", "captureStream",
-                       "MediaRecorder", "receipt-verified",
+                       "MediaRecorder",
                        "Arya keeps count", "Wild finds"):
             self.assertIn(needle, js)
+        # A photo or a receipt is never called verified (haul slice).
+        self.assertNotIn("receipt-verified", js)
         q = read("quest.js")
         for needle in ('id="share-haul"', 'id="share-love"',
                        'id="share-sos"', 'id="haul-photo"',

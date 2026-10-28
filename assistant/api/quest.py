@@ -11,7 +11,7 @@ blocks or breaks creation.
 import base64, contextlib, hashlib, re, secrets
 from datetime import date, datetime, timedelta
 
-from api import state
+from api import itemmeta, state
 
 MODES = ("quest", "express")
 SESSION_STATES = ("not_started", "playing", "paused", "finished", "done",
@@ -135,8 +135,11 @@ def _canonical(name):
     return name
 
 
-def _add_item(items, name, qty=1, group=None):
-    """Add to a session item list, merging quantity on same product."""
+def _add_item(items, name, qty=1, group=None, extras=None):
+    """Add to a session item list, merging quantity on same product.
+    Extras (note, variant, by, src, aisle: api/itemmeta) pass through
+    cleaned; a same-group merge keeps what the line has and only
+    fills the empty extras."""
     name = (name or "").strip()
     if not name:
         return items
@@ -145,9 +148,11 @@ def _add_item(items, name, qty=1, group=None):
     for it in items:
         if it["group"] == key:
             it["qty"] += qty
+            itemmeta.apply_extras(it, extras)
             return items
-    items.append({"name": _canonical(name), "qty": qty,
-                  "checked": False, "group": key})
+    line = {"name": _canonical(name), "qty": qty,
+            "checked": False, "group": key}
+    items.append(itemmeta.apply_extras(line, extras))
     return items
 
 
@@ -168,7 +173,8 @@ def make_items(raw_items):
             for piece in pieces:
                 _add_item(items, piece, 1)
         else:
-            _add_item(items, name, qty, group=group)
+            _add_item(items, name, qty, group=group,
+                      extras=raw if isinstance(raw, dict) else None)
     return items
 
 
@@ -189,10 +195,14 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
     from api import shelfmatch
     items = shelfmatch.annotate_items(make_items(raw_items),
                                       store_name, client)
+    # The boss (hunt slice): a list item this account reported
+    # missing here on 2+ earlier trips, frozen now. Counting only.
+    from api import hunt
+    boss = hunt.pick_boss(store_name, items)
     sess = {"id": _new_id("qs", store_name),
             "store": store_name, "mode": mode, "driver": driver,
             "state": "not_started",
-            "items": items,
+            "items": items, "boss": boss,
             "created_at": _now(), "started_at": None,
             "finished_at": None, "receipt_id": None, "settled": False}
     if store_id:
@@ -497,6 +507,7 @@ def sos_count(store_name, item_name):
     key = _item_key(item_name or "")
     sessions = {r["session_id"] for r in _store()["reports"]
                 if r.get("reporter") == me
+                and r.get("state") != "withdrawn"
                 and _same_store(r.get("store"), store_name)
                 and (r.get("item_group") == key
                      or state._norm_name(r.get("item") or "") == state._norm_name(item_name or ""))}
@@ -532,7 +543,10 @@ def session_view(sess):
         receipt = next((r for r in state.receipts()
                         if r["receipt_id"] == sess["receipt_id"]), None)
         if receipt:
-            names = [it["name"] for it in sess.get("items", [])]
+            # Items left for next time are still list items: a receipt
+            # line for one is not a wild find.
+            names = [it["name"] for it in sess.get("items", [])] \
+                + [it["name"] for it in sess.get("left", [])]
             for ln in receipt.get("lines", []):
                 nm = ln.get("decoded_name") or ln.get("raw") or ""
                 if nm and not any(_name_match(nm, n) for n in names) \
@@ -542,7 +556,8 @@ def session_view(sess):
     me = my_handle()
     out["my_reports"] = [r["item"] for r in _store()["reports"]
                          if r.get("session_id") == sess.get("id")
-                         and r.get("reporter") == me]
+                         and r.get("reporter") == me
+                         and r.get("state") != "withdrawn"]
     return out
 
 
@@ -654,7 +669,7 @@ def get_shopoff(race_id):
 # on reports, so filing one earns nothing by itself.
 
 REPORT_KINDS = ("empty_shelf", "replaced", "cant_tell")
-REPORT_STATES = ("reported", "resolved_stockout", "verified_move")
+REPORT_STATES = ("reported", "resolved_stockout", "verified_move", "withdrawn")
 
 
 SIGHTINGS_MAX = 2000
