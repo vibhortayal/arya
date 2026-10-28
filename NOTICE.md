@@ -1,6 +1,6 @@
 # Third-party notices and asset provenance
 
-Arya's own code and documents are under the MIT License (see `LICENSE`).
+Arya's own code and documents are all rights reserved (see `LICENSE`).
 The items below are not covered by that grant, or need attribution.
 
 ## Code
