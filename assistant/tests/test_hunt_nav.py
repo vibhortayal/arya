@@ -139,11 +139,13 @@ function __el() {
     setAttribute() {}, getAttribute() { return null; },
     addEventListener() {}, removeEventListener() {},
     querySelector() { return __el(); }, querySelectorAll() { return []; },
-    closest() { return null; }
+    closest() { return null; }, appendChild() {}, remove() {},
+    getBoundingClientRect() { return { left: 0, top: 0, width: 0, height: 0 }; },
+    get offsetWidth() { return 0; }
   };
 }
 globalThis.document = {
-  currentScript: null, baseURI: "http://test/", body: __el(),
+  currentScript: null, baseURI: "http://test/", body: __el(), createElement() { return __el(); },
   querySelector() { return __el(); },
   querySelectorAll() { return []; },
   addEventListener() {}, removeEventListener() {}

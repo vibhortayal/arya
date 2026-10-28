@@ -302,9 +302,40 @@ def _streak_weeks(done):
     return streak
 
 
+# Points and levels (owner, 2026-10-28: dopamine, never pressure).
+# Points only ever add: every collected item, a full haul, and the
+# receipt. They bank when the receipt settles the hunt — the receipt
+# is the proof (Discussion 41) — so an unsettled hunt shows its
+# points as waiting, never as lost. No time limit, no penalty.
+POINTS_PER_ITEM = 10
+POINTS_FULL_HAUL = 25
+POINTS_RECEIPT = 50
+LEVEL_STEP = 100   # level n starts at LEVEL_STEP * n(n-1)/2 points
+
+
+def hunt_points(sess):
+    items = sess.get("items") or []
+    got = sum(1 for i in items if i.get("checked"))
+    pts = got * POINTS_PER_ITEM
+    if items and got == len(items):
+        pts += POINTS_FULL_HAUL
+    return pts + POINTS_RECEIPT
+
+
+def level_for(points):
+    n = 1
+    while LEVEL_STEP * (n + 1) * n // 2 <= points:
+        n += 1
+    floor = LEVEL_STEP * n * (n - 1) // 2
+    return {"level": n, "level_floor": floor,
+            "next_level_at": LEVEL_STEP * (n + 1) * n // 2}
+
+
 def profile():
     done = _done_sessions()
+    points = sum(hunt_points(s) for s in done)
     return {"handle": quest.my_handle(),
+            "points": points, **level_for(points),
             "stats": {"hunts": len(done),
                       "receipts": len(state.receipts()),
                       "spots_reported": len(quest._store()["reports"]),
