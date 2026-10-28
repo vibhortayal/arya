@@ -3,7 +3,10 @@ A session is one store trip: one store, one list, one mode, one state
 (UX.md session model). Sessions, Shop-Off races, and friends live in one
 per-account file, quest.json, beside receipts.json and friends. Derived
 facts (progress, winners) are computed on read, like the ledger.
-All logic here is deterministic code — no model calls, $0.
+Play, scoring, and reports are deterministic code. Session creation
+for a store with a shelf graph also runs item–shelf matching
+(api/shelfmatch.py) — the one model-touching step, and it never
+blocks or breaks creation.
 """
 import hashlib, secrets
 from datetime import date, datetime
@@ -129,16 +132,23 @@ def make_items(raw_items):
 # --- sessions --------------------------------------------------------------
 
 def create_session(store_name, mode="quest", raw_items=None, extra=None,
-                   driver="strip", store_id=None, store_address=None):
+                   driver="strip", store_id=None, store_address=None,
+                   client=None):
     if mode not in MODES:
         raise ValueError("mode must be quest or express")
     if driver not in DRIVERS:
         raise ValueError(f"driver must be one of {DRIVERS}")
     s = _store()
+    # Item–shelf matching (stores with a shelf graph only): stops
+    # gain their shelf label + path position and walk in shelf
+    # order. A store with no graph keeps its items exactly as made.
+    from api import shelfmatch
+    items = shelfmatch.annotate_items(make_items(raw_items),
+                                      store_name, client)
     sess = {"id": _new_id("qs", store_name),
             "store": store_name, "mode": mode, "driver": driver,
             "state": "not_started",
-            "items": make_items(raw_items),
+            "items": items,
             "created_at": _now(), "started_at": None,
             "finished_at": None, "receipt_id": None}
     if store_id:
@@ -270,17 +280,17 @@ def my_handle():
     return handle or "you"
 
 
-def create_shopoff(store_name, raw_items, opponent_handle):
+def create_shopoff(store_name, raw_items, opponent_handle, client=None):
     opponent = (opponent_handle or "").strip().lstrip("@").lower()
     if not opponent:
         raise ValueError("opponent_handle is required")
     race_id = _new_id("race", store_name + opponent)
     mine = create_session(store_name, "quest", raw_items,
-                          extra={"shopoff_id": race_id})
+                          extra={"shopoff_id": race_id}, client=client)
     theirs = create_session(store_name, "quest", raw_items,
                             extra={"shopoff_id": race_id,
                                    "placeholder": True,
-                                   "owner_handle": opponent})
+                                   "owner_handle": opponent}, client=client)
     s = _store()
     race = {"id": race_id, "store": store_name, "state": "racing",
             "created_at": _now(), "winner": None,
