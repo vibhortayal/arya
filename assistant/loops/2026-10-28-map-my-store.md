@@ -16,3 +16,10 @@ video". Built on PR #18 (branch feat/map-my-store, base feat/game-shell).
 - Model cost per upload: two SAM people calls plus one SAM shelf call,
   about $0.0075; a refused weak frame costs $0.
 - Next: split long aisles, Spark item labels from captures, rewards.
+
+## Follow-up: no retakes (owner, 2026-10-28)
+Capture is now a live camera with no shutter and no verdict screens. The
+phone grades frames while streaming, coaches in one line, sends only good
+frames, finishes by itself and opens the next capture. Rejections are never
+shown. Checked in headless Chromium with a fake camera: one photo prompt
+auto-captured and advanced.
