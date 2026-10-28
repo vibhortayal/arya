@@ -106,7 +106,7 @@
   </section>
 
   <section id="view-receipts" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" id="rc-back" class="backlink">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Receipts</h2>
     <p id="rc-count" class="subtitle"></p>
     <h3 class="sect">Needs your eye</h3>
@@ -283,7 +283,7 @@
   <section id="view-mode" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">How are you shopping?</h2>
-    <div class="group pad">
+    <div>
       <button class="modecard" data-mode="quest" type="button"><span class="name">Quest</span><span class="sub">Play the hunt. Find each item, collect it, beat the clock.</span></button>
       <button class="modecard" data-mode="express" type="button"><span class="name">Express</span><span class="sub">The fastest route. The list in walking order, no game.</span></button>
     </div>
@@ -403,8 +403,8 @@
     <h2 class="largetitle" style="font-size:28px">Finish</h2>
     <p class="muted">The receipt is the scorecard. Snap it and Arya settles the hunt.</p>
     <div class="group pad">
-      <p class="nomargin"><strong>Snap the receipt</strong></p>
-      <input type="file" id="fin-photo" accept="image/*" aria-label="Receipt photo">
+      <input type="file" id="fin-photo" accept="image/*" aria-label="Receipt photo" hidden>
+      <p class="nomargin"><label class="btn primary wide" for="fin-photo">Snap the receipt</label></p>
       <p id="fin-status" class="muted nomargin"></p>
     </div>
     <h3 class="sect">Or use a receipt already filed</h3>
@@ -471,24 +471,8 @@
     <p class="muted">Friends see your boards and badges. No chat, no lists.</p>
   </section>
 
-  <section id="view-qprofile" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">Profile</h2>
-    <div id="qp-card" class="group"></div>
-    <h3 class="sect">Badge shelf</h3>
-    <div id="qp-badges" class="group"></div>
-    <h3 class="sect">Mapped stores</h3>
-    <div id="qp-stores" class="group"></div>
-    <h3 class="sect">Receipts</h3>
-    <div id="qp-receipts" class="group"></div>
-    <h3 class="sect">Analysis</h3>
-    <div class="group pad">
-      <p class="muted nomargin">Spend is live in Profile &rarr; Analysis. Patterns and Trends are coming next.</p>
-    </div>
-  </section>
-
   <section id="view-receipt" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" id="rcd-back" class="backlink">&larr; Back</a></p>
     <div id="rc-body"></div>
   </section>
 </main>
