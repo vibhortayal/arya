@@ -741,7 +741,9 @@ async def quest_create_session(req: Request):
                                     body.get("items") or [],
                                     driver=body.get("driver") or "strip",
                                     store_id=store_id,
-                                    store_address=store_address)
+                                    store_address=store_address,
+                                    client=MetaClient(
+                                        ledger=CostLedger(_LEDGER)))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess
@@ -834,7 +836,9 @@ async def quest_create_shopoff(req: Request):
     from api import quest
     try:
         race = quest.create_shopoff(store, body.get("items") or [],
-                                    body.get("opponent_handle", ""))
+                                    body.get("opponent_handle", ""),
+                                    client=MetaClient(
+                                        ledger=CostLedger(_LEDGER)))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return race
