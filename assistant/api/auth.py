@@ -102,6 +102,32 @@ def _adopt_household_data(username):
             shutil.move(src, os.path.join(dest, name))
 
 
+def delete_user(username):
+    """Erase an account (Tranche 1, register #2): the user record,
+    every session, the connector tokens, and the whole per-user
+    data directory. Friend mirrors in other accounts and feedback
+    attribution are the caller's job (social.scrub_handle,
+    feedback.anonymize_user). Runs with the per-user context
+    cleared — the registry lives in the data root."""
+    username = (username or "").strip().lower()
+    with _file_lock("users.json"):
+        all_users = users()
+        if username not in all_users:
+            return False
+        del all_users[username]
+        _save("users.json", all_users)
+    with _file_lock("sessions.json"):
+        all_sessions = _load("sessions.json", {})
+        _save("sessions.json", {k: v for k, v in all_sessions.items()
+                                if v.get("user") != username})
+    revoke_api_tokens(username)
+    import shutil
+    dest = os.path.join(_root(), "users", username)
+    if os.path.isdir(dest):
+        shutil.rmtree(dest)
+    return True
+
+
 def resolve_login_name(name):
     """Map what a person typed to an account name. Exact match wins; a
     short name without "@" (tester-a) also matches the one account whose

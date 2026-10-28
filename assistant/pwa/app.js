@@ -598,6 +598,23 @@ $("#btn-feedback").addEventListener("click", () => {
   paintFeedbackInbox().catch(() => {});
 });
 $("#fb-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
+
+/* Account exit doors (Tranche 1a): export is a plain link in the
+ * Profile markup; delete asks for the password inline, then the
+ * server erases the account and clears the session cookie. */
+$("#btn-del-account").addEventListener("click", () => {
+  const box = $("#del-account-box");
+  box.hidden = !box.hidden;
+  if (!box.hidden) $("#del-account-pw").focus();
+});
+$("#btn-del-account-go").addEventListener("click", async () => {
+  const pw = $("#del-account-pw").value;
+  if (!pw) { toast("Enter your password to confirm."); return; }
+  try {
+    await post("/auth/account/delete", { password: pw });
+    location.href = "/";
+  } catch (e) { toast(e.message); }
+});
 $("#fb-kinds").addEventListener("click", ev => {
   const b = ev.target.closest("[data-kind]");
   if (!b) return;
@@ -1072,7 +1089,17 @@ async function renderEyes() {
           <button class="chip eyes-confirm" data-rec="${rec.id}" data-idx="${i}">Yes, it&rsquo;s there</button>
           <button class="chip eyes-reject" data-rec="${rec.id}" data-idx="${i}">Not there</button></div>` : ""}
         </div>`).join("")}
+      <p class="nomargin" style="margin-top:6px"><button class="chip eyes-del" data-rec="${rec.id}" type="button">Delete photo</button></p>
     </div>`).join("");
+  box.querySelectorAll(".eyes-del").forEach(b =>
+    b.addEventListener("click", async () => {
+      if (!confirm("Delete this photo and its sightings? This cannot be undone.")) return;
+      try {
+        await post(`/api/eyes/${b.dataset.rec}/delete`, {});
+        toast("Photo deleted.");
+        renderEyes();
+      } catch (e) { toast(e.message); }
+    }));
   box.querySelectorAll(".eyes-confirm, .eyes-reject").forEach(b =>
     b.addEventListener("click", async () => {
       const decision = b.classList.contains("eyes-confirm") ? "confirmed" : "rejected";
@@ -1103,6 +1130,7 @@ async function renderReceipts() {
       <span class="sub">${fmtShort(String(e.finished_at || "").slice(0, 10))} · ${e.items_collected} of ${e.items_total} items collected</span></span>
       <span class="misstag">Receipt missing</span>
       <button class="btn" data-upload="${esc(e.session_id)}" data-store="${esc(e.store)}" type="button">Add receipt</button>
+      <button class="btn" data-dismiss="${esc(e.session_id)}" type="button">Dismiss</button>
     </div>`).join("");
   const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
@@ -1125,14 +1153,35 @@ function paintMissingReceipts(el, unsettled, after) {
         <span class="grow"><span class="name">${esc(e.store)}</span>
         <span class="sub">${fmtShort(String(e.finished_at || "").slice(0, 10))} · Finished · Receipt missing · ${e.items_collected} of ${e.items_total} collected</span></span>
         <button class="btn" data-upload="${esc(e.session_id)}" data-store="${esc(e.store)}" type="button">Add receipt</button>
+        <button class="btn" data-dismiss="${esc(e.session_id)}" type="button">Dismiss</button>
       </div>`).join("")
     : "";
-  el.onclick = ev => {
+  el.onclick = async ev => {
+    const dis = ev.target.closest("[data-dismiss]");
+    if (dis) {
+      if (!confirm("Dismiss this hunt? It leaves your Receipts list. This cannot be undone.")) return;
+      try {
+        await post(`/api/quest/sessions/${encodeURIComponent(dis.dataset.dismiss)}/delete`, {});
+        toast("Hunt dismissed.");
+        if (after) after();
+      } catch (e) { toast(e.message); }
+      return;
+    }
     const up = ev.target.closest("[data-upload]");
     if (up && window.openAddReceipt) openAddReceipt(up.dataset.upload, up.dataset.store, after);
   };
 }
-$("#rc-archive").addEventListener("click", ev => {
+$("#rc-archive").addEventListener("click", async ev => {
+  const dis = ev.target.closest("[data-dismiss]");
+  if (dis) {
+    if (!confirm("Dismiss this hunt? It leaves your Receipts list. This cannot be undone.")) return;
+    try {
+      await post(`/api/quest/sessions/${encodeURIComponent(dis.dataset.dismiss)}/delete`, {});
+      toast("Hunt dismissed.");
+      renderReceipts().catch(showErr);
+    } catch (e) { toast(e.message); }
+    return;
+  }
   const up = ev.target.closest("[data-upload]");
   if (up) {
     if (window.openAddReceipt)

@@ -212,6 +212,15 @@
     <h3 class="sect">Account</h3>
     <div class="group" id="profile-account"></div>
     <div class="group">
+      <a class="navrow" href="/api/account/export"><span class="grow">Export my data<span class="sub">Everything Arya holds for you, as one file</span></span><span class="chev">›</span></a>
+      <button class="navrow" id="btn-del-account" type="button"><span class="grow">Delete my account<span class="sub">Erase your account and all of its data</span></span><span class="chev">›</span></button>
+      <div id="del-account-box" class="pad" hidden>
+        <p class="muted">This erases your receipts, lists, hunts, photos, and sign-in — for good. Enter your password to confirm.</p>
+        <input type="password" id="del-account-pw" autocomplete="current-password" placeholder="Your password">
+        <p style="margin-top:10px"><button class="btn danger" id="btn-del-account-go" type="button">Erase everything</button></p>
+      </div>
+    </div>
+    <div class="group">
       <button class="navrow" id="btn-feedback" type="button"><span class="grow">Feature request / Contact us<span class="sub">Tell us what to build, what broke, or ask a question</span></span><span class="chev">›</span></button>
     </div>
     <h3 class="sect">Connect Muse</h3>
