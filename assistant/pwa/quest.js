@@ -624,7 +624,7 @@ $("#nl-next").addEventListener("click", async () => {
  * My Stores + favorites are the account plane. The pick, Find, and
  * My Stores all render the same joined rows from /api/stores/*. */
 
-const QSCENE_LABEL = { cloud: "3D mapped · Quest ready", strip: "Plays in Strip" };
+const QSCENE_LABEL = { cloud: "3D mapped · Quest ready", strip: "Walk-through view" };
 function qStarSvg(filled) {
   return `<svg viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>`;
 }
@@ -1599,7 +1599,7 @@ function renderHunt() {
     $("#pop-kicker").textContent = sess.state === "paused" ? "Paused" : "Suggested next — grab any stop";
     $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
-      ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
+      ${rep ? `<p style="margin:6px 0 0"><span class="repflag">You reported this missing here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
     $("#btn-findit").hidden = sess.state !== "playing";
@@ -1697,6 +1697,10 @@ function qAimStep(sess, dir) {
 function qHuntKey(e) {
   if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  // Enter / Space on a focused button or link is that control's own
+  // press, never a GRAB (QA 2026-10-28).
+  if ((e.key === "Enter" || e.key === " ") && e.target.closest
+      && e.target.closest("button, a[href], [role=button], summary")) return;
   if (!Q.current) return;
   const shown = id => { const v = $(id); return v && !v.hidden; };
   // Esc is Back on any screen of the run (hunt, Express, Finish);
@@ -1743,7 +1747,10 @@ $("#btn-collect").addEventListener("click", async () => {
  * directly — any order — and a collected row puts back in place. */
 $("#hunt-list").addEventListener("click", ev => {
   const g = ev.target.closest("[data-grab]");
-  if (g && !g.disabled) { collectStop(Number(g.dataset.grab)); return; }
+  if (g && !g.disabled) {
+    if (Q.current && Q.current.state === "not_started") { toast("Tap Start the hunt first."); return; }
+    collectStop(Number(g.dataset.grab)); return;
+  }
   const u = ev.target.closest("[data-putback]");
   if (u && !u.disabled) putBackStop(Number(u.dataset.putback));
 });
@@ -1806,6 +1813,9 @@ $("#btn-wild").addEventListener("click", () => {
 });
 if (window.wireRecordButton) wireRecordButton($("#wild-mic"), $("#wild-status"), text => {
   $("#wild-name").value = text;
+});
+$("#wild-name").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); $("#wild-add").click(); }
 });
 $("#wild-add").addEventListener("click", async () => {
   const sess = Q.current;
