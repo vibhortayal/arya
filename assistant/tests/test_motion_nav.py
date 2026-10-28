@@ -65,9 +65,10 @@ class TestMotionShell(unittest.TestCase):
 
     def test_collect_reanchors_and_manual_nav_holds(self):
         js = read("quest.js")
-        self.assertGreaterEqual(js.count("qStepAnchorTo("), 3)  # def + hunt collect + panel check
+        self.assertGreaterEqual(js.count("qStepAnchorTo("), 3)  # def + hunt collect + scan pop
         self.assertIn("qStepAnchorTo(name); // a collect is ground truth", js)
-        self.assertIn("if (item.checked) qStepAnchorTo(item.name);", js)
+        # Hunt v2: list-row GRABs collect through collectStop too.
+        self.assertIn("collectStop(Number(g.dataset.grab))", js)
         # Manual navigation pauses step-advance until the next collect.
         self.assertIn('$("#scene-mount").addEventListener("pointerdown"', js)
         self.assertGreaterEqual(js.count("Q.stepsHold = true"), 2)  # scene touch + driver switch
@@ -84,7 +85,7 @@ class TestMotionShell(unittest.TestCase):
         self.assertIn('removeEventListener("devicemotion", qOnMotion)', js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v34"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v35"', read("sw.js"))
 
 
 PRELUDE = r"""

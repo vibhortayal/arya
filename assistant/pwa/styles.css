@@ -503,106 +503,111 @@ textarea {
 .cloud-dot.next { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cloud-dot.got { background: var(--fill); border-color: var(--sep); }
 
-/* Hunt, full-screen (Discussion 35 + 36): the store fills the
-   screen; up-next rides the top, route progress the bottom, the
-   arrival pop carries the one big GRAB. Nothing else competes. */
-#view-hunt.full, #view-express.full {
-  position: fixed; inset: 0; z-index: 25; background: var(--bg);
-  overflow: hidden; padding: 0;
-}
-body.hunting { overflow: hidden; }
-body.hunting #tabs { display: none !important; }
-.full #scene-mount, .full #exp-mount { position: absolute; inset: 0; }
-.full .cloud-wrap { height: 100%; border-radius: 0; box-shadow: none; }
-.full .strip-wrap {
-  height: 100%; border-radius: 0; box-shadow: none;
-  display: flex; align-items: center;
-}
-.full .scene { width: 100%; height: 100%; display: block; }
-.upnext {
-  position: absolute; top: calc(10px + env(safe-area-inset-top));
-  left: 12px; right: 76px; z-index: 5;
-  background: rgba(255, 255, 255, 0.86); border-radius: 16px;
-  box-shadow: var(--shadow); padding: 10px 14px;
+/* Hunt v2 (owner-approved wireframes, 2026-10-28): one scrolling
+   column. HUD, view switch, the store view in a contained box with
+   ONE target, the tools row, the suggested-next card, then the one
+   list in flow. The tab bar hides while a hunt or run is open. */
+body.hunting #tabs, body.hunting > header, body.hunting #demobar { display: none !important; }
+#view-hunt.full, #view-express.full { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+.hunthud {
+  position: sticky; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px;
+  margin: 0 -16px 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+  background: rgba(255, 255, 255, 0.92); border-bottom: 1px solid var(--sep);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
   backdrop-filter: saturate(180%) blur(16px);
 }
-.up-store {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--secondary); margin: 0 0 2px;
+.hudback {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+  font-size: 30px; line-height: 1; color: var(--label); text-decoration: none;
 }
-.up-row { padding: 2px 0; display: flex; align-items: center; gap: 10px; }
-.up-row .up-name { font-size: 16px; font-weight: 650; display: block; }
-.up-row.first .up-name { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; }
-.up-shelf { color: var(--secondary); font-size: 13.5px; display: block; }
-/* Per-row GRAB (Discussion 44): any stop collects from the rail. */
-.up-grab {
-  flex: none; border: 0; border-radius: 999px; cursor: pointer;
-  background: var(--acc); color: #fff;
-  font-size: 13px; font-weight: 700; padding: 7px 14px;
-  box-shadow: 0 3px 10px rgba(228, 87, 46, 0.35);
+.hchip {
+  font-size: 13px; font-weight: 700; padding: 6px 10px; border-radius: 999px;
+  background: var(--fill); color: var(--label); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-.up-grab:disabled { background: var(--fill2); color: var(--ink3); box-shadow: none; cursor: default; }
-.up-note { color: var(--secondary); font-size: 13px; margin: 6px 0 0; }
-.cornerstack {
-  position: absolute; top: calc(10px + env(safe-area-inset-top));
-  right: 12px; z-index: 6; display: flex; flex-direction: column; gap: 8px;
+.hchip.grow { overflow: hidden; text-overflow: ellipsis; }
+.hchip.prog { background: var(--accent); color: #fff; }
+.hudbtn {
+  width: 44px; height: 44px; flex: none; border-radius: 50%; border: none;
+  background: var(--fill); color: var(--label); display: grid; place-items: center;
 }
-.cornerbtn {
-  width: 44px; height: 44px; border-radius: 50%; border: none;
-  background: rgba(255, 255, 255, 0.88); color: var(--label);
-  box-shadow: var(--shadow); display: grid; place-items: center;
-  position: relative;
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+.hudbtn svg { width: 20px; height: 20px; }
+.hudbtn:disabled { opacity: 0.4; }
+#scene-toggle { margin: 0 0 10px; }
+/* The store view: a contained box. Every driver fills it; the
+   Photos, Aisle, and Strip drivers show only the target stop —
+   stops are never stacked or scattered across it (sweep F-05). */
+.storeview {
+  position: relative; height: 44vh; min-height: 240px; max-height: 460px;
+  border-radius: var(--radius); overflow: hidden; background: #FAFAFA;
+  box-shadow: var(--shadow);
 }
-.cornerbtn svg { width: 22px; height: 22px; }
-.cornerbtn .cb-badge {
-  position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px;
-  padding: 0 5px; border-radius: 980px; background: var(--accent);
-  color: #fff; font-size: 11px; font-weight: 800;
-  display: grid; place-items: center;
+.storeview.mini { height: 22vh; min-height: 140px; }
+.storeview .cloud-wrap { height: 100%; min-height: 0; border-radius: 0; box-shadow: none; }
+.storeview .scene { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+.storeview .strip-wrap {
+  height: 100%; border-radius: 0; box-shadow: none;
+  display: flex; align-items: center;
 }
-.popcard {
-  position: absolute; left: 12px; right: 12px; z-index: 6;
-  bottom: calc(66px + env(safe-area-inset-bottom));
-  background: var(--group); border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); padding: 14px 16px;
-  animation: popup 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+.storeview .photo-dot:not(.next) { display: none; }
+.storeview .scene-stop:not(.next) { display: none; }
+.storeview .strip-card:not(.next) { display: none; }
+.storeview .strip-track { width: 100%; justify-content: center; }
+.hunt-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 0; }
+.toolbtn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.toolbtn svg { width: 18px; height: 18px; }
+.toolbtn[hidden] { display: none; }
+.motionrow { margin: 8px 0 0; }
+.small { font-size: 13px; }
+#hunt-mapnote { margin: 8px 0 0; }
+.nextcard {
+  margin: 12px 0 0; background: var(--group); border-radius: 18px;
+  border: 2px solid var(--accent); box-shadow: var(--shadow); padding: 12px 14px 14px;
 }
-@keyframes popup { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.pop-name { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 0; }
-.pop-shelf { color: var(--secondary); font-size: 15px; margin: 2px 0 0; }
+.nb-k {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent-text); margin: 0 0 2px;
+}
+.pop-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 0; }
+.pop-shelf { color: var(--secondary); font-size: 15px; margin: 2px 0 10px; }
 .grabbtn {
   min-height: 60px; font-size: 19px; font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   box-shadow: 0 8px 22px rgba(228, 87, 46, .35);
 }
+.donenote {
+  margin: 12px 0 0; padding: 12px 14px; border-radius: 14px;
+  background: var(--fill); font-weight: 600;
+}
+/* The one list: rows never move. A collected row keeps its place and
+   swaps GRAB for Put back in the same button box. */
+.huntrow { gap: 10px; }
+.huntrow.next { background: var(--acc-soft, rgba(228, 87, 46, 0.08)); }
+.huntrow.got .name { color: var(--secondary); text-decoration: line-through; }
+.hl-n {
+  width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: var(--fill); color: var(--secondary); font-size: 12.5px; font-weight: 700;
+}
+.huntrow.got .hl-n { color: var(--accent-text); }
+.rowact { flex: none; width: 112px; min-height: 44px; padding: 0 10px; justify-content: center; }
 /* The Finish screen's receipt button carries the wireframes'
    softer accent shadow. */
 .receiptbtn { box-shadow: 0 8px 22px rgba(228, 87, 46, .32); }
-.huntbottom {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.86); border-top: 1px solid var(--sep);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
-  backdrop-filter: saturate(180%) blur(16px);
+.demotag {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--fill); color: var(--secondary); border-radius: 6px; padding: 2px 6px; margin-left: 6px;
 }
-.routestrip { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
-.rstop {
-  width: 28px; height: 28px; border-radius: 50%; border: none;
-  display: grid; place-items: center; flex: none;
-  font: inherit; font-size: 12.5px; font-weight: 700;
-  background: var(--fill); color: var(--tertiary);
-}
-.rstop.done { color: var(--accent-text); }
-.rstop.current {
-  background: var(--accent); color: #fff;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent);
-}
-.huntcount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) {
-  .popcard { animation: none; }
+/* Express v2: each row is the check — the whole row is the button. */
+.walk-label { color: var(--secondary); font-size: 13px; font-weight: 600; margin: 12px 0 6px; }
+.exprow { width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; min-height: 52px; }
+.exprow.next .name { font-weight: 800; }
+/* Score: the closure. */
+.scorehero { margin: 6px 0 12px; }
+.closenote { font-weight: 700; margin: 12px 0 4px; }
+.herocard.quiet .hero-sub { margin-top: 4px; }
+.g-group {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--secondary); margin: 14px 0 6px;
 }
 
 /* Motion navigation (Discussion 33): gyro look + step experiment. */
@@ -672,8 +677,8 @@ body.hunting #tabs { display: none !important; }
    Non-blocking, tap to dismiss, gone in ~3.5 s. Quest mode only —
    the layer lives in the hunt frame and Express never fills it. */
 .celeblayer {
-  position: absolute; left: 12px; z-index: 8;
-  bottom: calc(64px + env(safe-area-inset-bottom));
+  position: fixed; left: 12px; z-index: 8;
+  bottom: calc(16px + env(safe-area-inset-bottom));
   max-width: 55vw;
   display: flex; flex-direction: row; align-items: center; gap: 8px;
   background: #fff; border-radius: 14px; padding: 8px 10px;

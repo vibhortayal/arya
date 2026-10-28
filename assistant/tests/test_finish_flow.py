@@ -140,13 +140,19 @@ class TestFinishClient(unittest.TestCase):
         self.assertNotIn("data-attach", js)
 
     def test_receipts_view_carries_the_unsettled_entry(self):
+        # Hunt v2 item 7: the unsettled entry raises the Add receipt
+        # sheet (wireframe 7b) — this trip's receipt, attached to its
+        # own hunt, which settles it and clears the tag.
         js = read("app.js")
         self.assertIn("Receipt missing", js)
-        self.assertIn("Upload the receipt", js)
+        self.assertIn(">Add receipt</button>", js)
         self.assertIn("archive.unsettled", js)
-        self.assertIn("rc-late-photo", js)
-        self.assertIn("/api/quest/sessions/${sid}/receipt", js)
-        self.assertIn('id="rc-late-photo"', read("index.html"))
+        self.assertIn("openAddReceipt(up.dataset.upload", js)
+        q = read("quest.js")
+        self.assertIn("/api/quest/sessions/${sessionId}/receipt", q)
+        html = read("index.html")
+        self.assertIn('id="ar-sheet"', html)
+        self.assertIn('id="ar-photo"', html)
         self.assertIn(".misstag", read("styles.css"))
 
     def test_rule_is_logged(self):
