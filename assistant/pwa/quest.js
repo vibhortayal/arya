@@ -387,7 +387,16 @@ document.addEventListener("click", ev => {
 
 /* ---------------- Today hub ---------------- */
 
-$("#quest-sessions").addEventListener("click", ev => {
+$("#quest-sessions").addEventListener("click", async ev => {
+  const ab = ev.target.closest("[data-abandon]");
+  if (ab) {
+    const s = qSessionById(ab.dataset.abandon);
+    if (!s || !window.confirm("End this hunt? It leaves Today and cannot be resumed.")) return;
+    try { await qSetState(s, "abandoned"); toast("Hunt ended."); }
+    catch (e) { toast(e.message); }
+    refresh("view-home");
+    return;
+  }
   const b = ev.target.closest("[data-sess]");
   if (!b) return;
   const s = qSessionById(b.dataset.sess);
@@ -2823,17 +2832,16 @@ async function openScore(sess) {
       <p><button id="score-addreceipt" class="btn wide" type="button">Add the receipt ›</button></p>`;
   }
   if (profile) {
-    const seen = new Set(JSON.parse(localStorage.getItem("arya-seen-badges") || "[]"));
+    const seen = readSeenBadges();
     html += `<h3 class="sect">Badges</h3><div class="group">` + profile.badges.map((b, i) => {
-      const isNew = b.earned && !seen.has(b.id);
+      const isNew = b.earned && seen !== null && !seen.has(b.id);
       return `<div class="row${b.earned ? " badgepop" : ""}" style="animation-delay:${i * 90}ms">
         <div class="grow"><span class="name">${esc(b.name)}</span>
         <span class="sub">${esc(b.criteria)} · ${esc(b.detail)}</span></div>
         ${b.earned ? `<span class="money" style="color:var(--accent-text)">Earned</span>${isNew ? `<span class="newpill">New</span>` : ""}` : `<span class="sub">Locked</span>`}
       </div>`;
     }).join("") + `</div>`;
-    localStorage.setItem("arya-seen-badges",
-      JSON.stringify(profile.badges.filter(b => b.earned).map(b => b.id)));
+    markBadgesSeen(profile.badges);
   }
   const wildNames = [...new Set([...(sess.wild_finds || []),
     ...sess.items.filter(i => i.wild).map(i => i.name)])];
@@ -2911,12 +2919,7 @@ $("#score-done").addEventListener("click", () => {
 /* ---------------- Community ---------------- */
 
 // Badges the player has seen on Crew or Profile are not "New" on the Score.
-function qMarkBadgesSeen(badges) {
-  try {
-    localStorage.setItem("arya-seen-badges",
-      JSON.stringify((badges || []).filter(b => b.earned).map(b => b.id)));
-  } catch (e) {}
-}
+function qMarkBadgesSeen(badges) { markBadgesSeen(badges); }
 function qBadgeRows(badges) {
   qMarkBadgesSeen(badges);
   return badges.map(b => `

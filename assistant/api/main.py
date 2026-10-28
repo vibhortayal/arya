@@ -1129,7 +1129,8 @@ async def list_from_text(req: Request):
     # Already on the list: neither merged nor new, so not "added".
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
-            "names": [a["name"] for a in added], "source": source}
+            "names": [a["name"] for a in added],
+            "item_ids": [a["item_id"] for a in added], "source": source}
 
 
 @app.post("/api/list/from-photo")

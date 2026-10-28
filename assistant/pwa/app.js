@@ -186,8 +186,27 @@ const BADGE_ART = { top_contributor: "blueberry.webp", egg_baron: "egg.webp",
   clean_sweep: "basket.webp", first_mapper: "compass.webp",
   eagle_eye: "binoculars.webp" };
 
+/* "New" on a badge means earned during this run (owner, 2026-10-28).
+ * Every Today paint records the badges already held, so the Score
+ * screen can tell what the hunt just earned. null = nothing recorded
+ * yet, and then no badge is called New. */
+function seenBadgesKey() { return "arya-seen-badges:" + (window.__aryaUser || ""); }
+function readSeenBadges() {
+  try {
+    const raw = localStorage.getItem(seenBadgesKey());
+    return raw == null ? null : new Set(JSON.parse(raw));
+  } catch (e) { return null; }
+}
+function markBadgesSeen(badges) {
+  try {
+    localStorage.setItem(seenBadgesKey(), JSON.stringify([...new Set([
+      ...(readSeenBadges() || []), ...(badges || []).filter(b => b.earned).map(b => b.id)])]));
+  } catch (e) {}
+}
+
 function paintLevelChip(profile) {
   const el = $("#today-level");
+  if (profile && profile.badges) markBadgesSeen(profile.badges);
   if (!el || !profile || !profile.level) return;
   el.innerHTML = `Level ${profile.level} <span>· ${profile.points} pts</span>`;
   el.hidden = false;
@@ -197,13 +216,17 @@ function paintLevelChip(profile) {
   $("#avatar-btn").style.setProperty("--pct", pct + "%");
   $("#avatar-btn").setAttribute("aria-label", `Profile, level ${profile.level}`);
 }
+/* Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
+ * The hero carries only the NEWEST hunt that still wants play; older
+ * open ones fold under Earlier, where they can be ended. */
+const OPEN_STATES = { playing: 1, paused: 1, not_started: 1 };
+function heroSession(sessions) {
+  return sessions.filter(s => s.state in OPEN_STATES)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))[0];
+}
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
-  // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
-  // The hero carries only a hunt that still wants play.
-  const rank = { playing: 0, paused: 1, not_started: 2 };
-  const hero = sessions.filter(s => s.state in rank)
-    .sort((a, b) => rank[a.state] - rank[b.state])[0];
+  const hero = heroSession(sessions);
   if (!hero) {
     el.innerHTML = `<article class="herocard quiet">
       <p class="hero-k">No quest in progress</p>
@@ -241,9 +264,14 @@ function gameRow(s) {
 function paintTodayGames(sessions) {
   const el = $("#quest-sessions");
   const closed = s => s.state === "finished" || s.state === "done";
-  const open = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
+  const hero = heroSession(sessions);
+  const open = sessions.filter(s => !closed(s) && s !== hero), done = sessions.filter(closed);
+  const earlier = open.length
+    ? `<details class="earlier"><summary>Earlier (${open.length})</summary>` +
+      open.map(s => `<div class="earlierrow">${gameRow(s)}<button class="btn danger" data-abandon="${esc(s.id)}" type="button">Abandon</button></div>`).join("") +
+      `</details>` : "";
   el.innerHTML = sessions.length
-    ? open.map(gameRow).join("") +
+    ? (hero ? gameRow(hero) : "") + earlier +
       (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
     : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
@@ -765,6 +793,17 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
   }
 }
 
+/* A new list row says "I landed": the List scrolls to the first
+ * added item and every added row flashes (first-timer play-test). */
+function flashNewItems(ids) {
+  const rows = [...new Set(ids || [])].map(id =>
+    document.querySelector(`#smart-list .listrow [data-act="check"][data-id="${CSS.escape(id)}"]`))
+    .filter(Boolean).map(b => b.closest(".listrow"));
+  if (!rows.length) return;
+  rows[0].scrollIntoView({ block: "center", behavior: "smooth" });
+  rows.forEach(r => { r.classList.add("justadded"); setTimeout(() => r.classList.remove("justadded"), 2400); });
+}
+
 let addBound = false;
 function bindAdd() {
   if (addBound) return;
@@ -785,7 +824,7 @@ function bindAdd() {
       const dup = r.already ? ` ${r.already} already on it.` : "";
       toast((r.added === 1 ? "Added 1 item to your list."
         : `Added ${r.added} items to your list.`) + dup);
-      renderList().catch(() => {});
+      renderList().then(() => flashNewItems(r.item_ids)).catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
   });
@@ -1334,7 +1373,7 @@ $("#chat-form").addEventListener("submit", async ev => {
   ev.preventDefault();
   const input = $("#chat-input");
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) { toast("Type a question first."); input.focus(); return; }
   input.value = "";
   chatHistory.push({ role: "user", content: text });
   chatLine("me", text);
