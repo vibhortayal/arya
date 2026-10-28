@@ -109,6 +109,30 @@ class TestQuestSessions(unittest.TestCase):
         assert sess["mode"] == "quest"  # default
         assert len(sess["items"]) == 1 and sess["items"][0]["qty"] == 2
 
+    def test_done_is_receipt_closed_only(self):
+        # Live test 2026-10-28: a client could post state "done" and
+        # bank a verified hunt (hunts, streak, Shop-Off win) with no
+        # receipt. Only the receipt attach closes a hunt now.
+        c = self.c
+        sid = c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "mode": "quest",
+            "items": ["milk"]}).json()["id"]
+        c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
+        r = c.post(f"/api/quest/sessions/{sid}/state", json={"state": "done"})
+        assert r.status_code == 400, r.text
+        assert c.get("/api/quest/profile").json()["stats"]["hunts"] == 0
+        r = c.post(f"/api/quest/sessions/{sid}/state",
+                   json={"state": "finished"})
+        assert r.status_code == 200 and r.json()["settled"] is False
+        r = c.post(f"/api/quest/sessions/{sid}/receipt",
+                   json={"receipt_id": "r-tj-1"})
+        assert r.json()["state"] == "done"
+        assert c.get("/api/quest/profile").json()["stats"]["hunts"] == 1
+        # a closed hunt stays closed
+        r = c.post(f"/api/quest/sessions/{sid}/state",
+                   json={"state": "playing"})
+        assert r.status_code == 400
+
 
 BERRY_DICT = {"entries": [
     {"item_id": "sku-eggs", "sku": "22", "canonical_name": "Free Range Eggs"},
@@ -116,7 +140,8 @@ BERRY_DICT = {"entries": [
     {"item_id": "sku-milk-o", "sku": "32", "canonical_name": "Oat Milk"},
     {"item_id": "sku-bb", "sku": "41", "canonical_name": "Blueberries"},
     {"item_id": "sku-bb-org", "sku": "42", "canonical_name": "Organic Blueberries"},
-    {"item_id": "sku-bb-frz", "sku": "43", "canonical_name": "Frozen Blueberries"}]}
+    {"item_id": "sku-bb-frz", "sku": "43", "canonical_name": "Frozen Blueberries"},
+    {"item_id": "sku-pasta", "sku": "51", "canonical_name": "Pasta 1 lb"}]}
 
 
 class TestOptimizer(unittest.TestCase):
@@ -169,6 +194,16 @@ class TestOptimizer(unittest.TestCase):
         out = self.optimize([{"name": "milk"}])
         assert out["items"] == []
         assert len(out["report"]["questions"]) == 1
+
+    def test_longer_typed_name_never_takes_a_shorter_product(self):
+        # Gap review 2026-10-28: "pasta sauce" merged into "Pasta 1 lb"
+        # because the product's tokens were a subset of the typed ones.
+        # A broader product is a different product: it stays as typed.
+        out = self.optimize([{"name": "pasta sauce"}, {"name": "pasta"}])
+        names = [i["name"] for i in out["items"]]
+        assert names == ["pasta sauce", "Pasta 1 lb"], names
+        assert out["report"]["unresolved"] == ["pasta sauce"]
+        assert out["report"]["merged"] == []
 
     def test_unresolved_stays_as_typed_flagged(self):
         out = self.optimize([{"name": "Unobtainium Dust", "qty": 2}])
