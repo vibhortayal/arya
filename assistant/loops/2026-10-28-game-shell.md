@@ -138,3 +138,31 @@ deferred past the hackathon (owner).
 Verification: suite 378 OK (1 skipped): target filter, sightings,
 scrub pixelates people and leaves shelves sharp, fail-closed paths,
 the walk-frame script's in-place/skip/fail-closed behaviour.
+
+# Part 6: Plan a hunt — store first, move items into the quest
+
+Owner: "i pick my store. then i should be able to move things from my
+list to my quest… my milk is typically bought from TJ, eggs from
+costco." Then: planning is list management: untick keeps an item on
+the list, remove takes it off.
+
+- New hunt opens on "Where are you shopping?". Each store shows what
+  is usually bought there, counted from receipts (`GET
+  /api/quest/plan`, no model call). Stores seen on receipts but not in
+  My Stores are offered too; "Costco" matches "Costco Wholesale".
+- "Your quest at X" sorts the Arya list: usually bought here (ticked),
+  new (ticked), usually from another store (unticked, stays on the
+  list), and usuals bought here that are not on the list (unticked).
+  ✕ removes an item from the Arya list (Undo on the toast); typed
+  extras join the Arya list.
+- Check my list shows only when something was merged, corrected or
+  needs a choice.
+- Demo household: eggs, rice, paper towels and batteries come from a
+  same-day Costco run (39 receipts). The VM's demo data must be
+  regenerated: `python -m harness.make_demo_household data`.
+- Service worker arya-v42.
+
+Verification: suite 382 OK. Playwright: store first with hints;
+Costco plan puts milk/bread under "usually from Trader Joe's" and
+suggests eggs; TJ plan ticks milk/bread; remove + Undo; typed oat milk
+lands on the list; the hunt opens.
