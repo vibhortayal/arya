@@ -15,8 +15,9 @@ module is the merge and the engine under it:
   photo".
 - Selection: ingest() scores every capture (sharpness, exposure,
   how much of the frame is shelf), drops near-duplicates, and keeps
-  the best few per segment. A weak capture is refused with a
-  one-line fix ("hold steady"), never silently stored.
+  the best few per segment. Nothing is ever refused: a weak capture
+  is kept as a partial and replaced by a better one later, and the
+  live camera shows a one-line hint ("hold steady") while shooting.
 - Freshness: "not found" reports and "map is outdated" taps flag a
   segment stale. A stale segment goes to the top of the prompts
   until a newer, good capture clears it.
@@ -237,6 +238,70 @@ def add_segment(name, label, side):
         return seg, True
 
 
+# --- splitting a long aisle ----------------------------------------------
+# A long aisle is one segment until a walk shows it is long. The app
+# measures the walk (about WALK_SECONDS_PER_PART of walking per part)
+# and asks for the split itself, so the shopper is never asked "how
+# long is this aisle?". Parts keep the zone key, so item sightings,
+# "not found" reports and merges still find them.
+
+MAX_PARTS = 6
+WALK_SECONDS_PER_PART = 8
+
+
+def part_names(n):
+    if n == 2:
+        return ["first half", "second half"]
+    if n == 3:
+        return ["front", "middle", "back"]
+    return [f"part {k}" for k in range(1, n + 1)]
+
+
+def _parts_of(doc, seg_id):
+    kids = [s for s in doc["segments"].values() if s.get("parent") == seg_id]
+    return sorted(kids, key=lambda s: s.get("part", 0))
+
+
+def split_segment(name, seg_id, parts):
+    """Split one segment into `parts` ordered sections. Idempotent:
+    a segment that is already split returns its sections, whatever
+    `parts` says, so two shoppers walking the same aisle agree.
+    Returns (sections, created_flag). The old whole-aisle captures
+    are dropped (a photo of the whole aisle is not a photo of any one
+    section); the walk that asked for the split fills the sections."""
+    try:
+        parts = int(parts)
+    except (TypeError, ValueError):
+        raise ValueError("parts must be a number")
+    parts = max(1, min(MAX_PARTS, parts))
+    with _Lock():
+        doc = load_map(name)
+        seg = doc["segments"].get(seg_id)
+        if seg is None:
+            kids = _parts_of(doc, seg_id)
+            if kids:
+                return kids, False
+            raise KeyError(seg_id)
+        if parts < 2:
+            return [seg], False
+        names = part_names(parts)
+        kids = []
+        for k, word in enumerate(names, 1):
+            kid = _new_segment(f"{seg['label']} \u00b7 {word}", seg["side"],
+                               seg["created_by"])
+            kid.update(id=f"{seg_id}:{k}", zone=seg["zone"], parent=seg_id,
+                       part=k, items=dict(seg["items"]),
+                       baseline=seg.get("baseline"), stale=seg.get("stale"))
+            kids.append(kid)
+        del doc["segments"][seg_id]
+        for kid in kids:
+            doc["segments"][kid["id"]] = kid
+        _drop_images(doc["key"], {c["id"] for s in doc["segments"].values()
+                                  for c in s["captures"]})
+        _save_map(doc)
+        return kids, True
+
+
 # --- the engine: scoring and selection -----------------------------------
 
 def _gray(img, width=480):
@@ -267,12 +332,11 @@ def hamming(a, b):
 
 def score_image(jpeg, shelf_fill=None):
     """Grade one capture. Returns {score, sharpness, exposure, fill,
-    luma, fix}: fix is a one-line instruction when the capture is
-    refused, else None. shelf_fill is the share of the frame that
-    shelves cover (SAM 3.1, summed over bays), or None when the check
-    did not run — then fill counts as neutral. Fill only shapes the
-    score: a far shot is still useful, and a refusal on a noisy
-    metric would silently drop real captures."""
+    luma, fix}: fix is a one-line live hint when the capture is weak,
+    else None (never a refusal). shelf_fill is the share of the frame
+    that shelves cover (SAM 3.1, summed over bays), or None when the
+    check did not run — then fill counts as neutral. Fill only shapes
+    the score: a far shot is still useful."""
     img = Image.open(io.BytesIO(jpeg)).convert("RGB")
     g = _gray(img)
     sharp = min(1.0, _laplacian_var(g) / 150.0)
@@ -315,6 +379,8 @@ def select_best(captures, keep=KEEP_PER_SEGMENT, now=None):
 def segment_status(seg, now=None):
     """unmapped | mapped | aging | stale."""
     best = max(seg["captures"], key=lambda c: _value(c, now), default=None)
+    if best is not None and best.get("weak") and not seg.get("stale"):
+        return "aging"      # only a partial so far: ask again later
     flag = seg.get("stale")
     if flag and (best is None or best["at"] <= flag["at"]):
         return "stale"
@@ -358,9 +424,14 @@ def ingest(name, seg_id, jpeg, kind="photo", shelf_fill=None, people=0):
         if seg is None:
             raise KeyError(seg_id)
         graded = score_image(jpeg, shelf_fill)
-        if graded["fix"]:
-            return {"accepted": False, "fix": graded["fix"],
-                    "score": graded["score"], "segment": seg_id}
+        was = segment_status(seg)
+        pct_before = _coverage(doc)[2]
+        # Never refuse a shot (owner: no retake loops). A weak frame
+        # is kept as a partial: it still counts as something, it is
+        # replaced the moment a better view arrives, and the segment
+        # stays "aging" until then so the engine asks again on a
+        # later visit. The `hint` is for the live camera, not a reject.
+        weak = bool(graded["fix"])
         img = Image.open(io.BytesIO(jpeg))
         cap = {"id": hashlib.sha1(
                    f"{seg_id}|{_now()}|{len(jpeg)}|{contributor()}".encode()
@@ -369,7 +440,7 @@ def ingest(name, seg_id, jpeg, kind="photo", shelf_fill=None, people=0):
                "score": graded["score"], "parts": {
                    k: graded[k] for k in ("sharpness", "exposure", "fill")},
                "dhash": dhash(img), "w": img.size[0], "h": img.size[1],
-               "people": int(people)}
+               "people": int(people), "weak": weak}
         before_best = max(seg["captures"], key=_value, default=None)
         # The same view again is a CONFIRMATION, not a second copy: the
         # old capture is refreshed (and swapped when the new one is
@@ -403,10 +474,12 @@ def ingest(name, seg_id, jpeg, kind="photo", shelf_fill=None, people=0):
         if (became_kept or duplicate) and seg.get("stale"):
             seg["stale"] = None
         _save_map(doc)
-        return {"accepted": True, "kept": became_kept,
+        return {"accepted": True, "weak": weak, "hint": graded["fix"],
+                "kept": became_kept,
                 "duplicate": duplicate, "best": became_best,
                 "score": cap["score"], "segment": seg_id,
-                "status": segment_status(seg), "capture": cap["id"]}
+                "status": segment_status(seg), "capture": cap["id"],
+                "was": was, "pct_before": pct_before}
 
 
 def best_image(name, seg_id):
@@ -494,36 +567,42 @@ def _prompt_for(seg, status, item=None, walk=False):
             "steps": [f"Start at the front end of {label}.",
                       "Hold the phone upright, at chest height.",
                       point,
-                      "Walk slowly to the end. It takes about 15 seconds.",
-                      "The app picks the sharp frames for you."]}
+                      "Walk slowly to the end. Long aisles split into sections by themselves.",
+                      "Tap Done at the end. Arya keeps the sharpest frames."]}
     why = {"unmapped": "This part of the map is empty.",
            "aging": "Mapped once, from an old walkthrough video. Shelves change.",
            "stale": "A shopper said this part is out of date.",
            "refresh": "Keeping this part of the map fresh."}[status]
+    title = (f"Photo of {label}, {seg['side']} side"
+             if seg["side"] != "both" else f"Photo of {label}")
     if item and status == "stale":
-        why = f"Someone could not find {item} here. A fresh photo helps."
+        why = (f"{item} was not where Arya expected. Point the camera at "
+               "the shelf and Arya learns what is there now.")
+        title = f"Show Arya the shelf in {label}"
     return {
         "kind": "photo", "segment": seg["id"], "est_seconds": 10,
-        "title": f"Photo of {label}, {seg['side']} side"
-                 if seg["side"] != "both" else f"Photo of {label}",
+        "title": title,
         "why": why,
         "steps": [f"Stand about 1.5 m (5 ft) from {label}.",
                   "Hold the phone upright and level.",
                   "Get the whole shelf in the frame, top to bottom.",
-                  "Hold still. The app takes the photo for you.",
-                  "We blur people before we save anything."]}
+                  "Hold still. Arya snaps the best moment by itself.",
+                  "Shoppers in view are fine. We blur people before we save anything."]}
 
 
 NEED = {"stale": 3.0, "unmapped": 2.0, "aging": 1.0}
 
 
-def next_prompt(name, focus=None, seg_id=None):
+def next_prompt(name, focus=None, seg_id=None, hint_items=None):
     """The one capture the engine wants next. focus is the list of
     segment ids the shopper chose to map ("just my aisles"); the
     prompt comes from there first, and from the whole store only when
     the focus is done. seg_id forces a segment (a refresh request).
+    hint_items are items the shopper just bought: an aisle where one
+    was seen is asked for first, because they were just there.
     Returns None when nothing needs capture."""
     doc = load_map(name)
+    hints = {state._norm_name(i) for i in (hint_items or []) if i}
     segs = doc["segments"]
     if seg_id:
         seg = segs.get(seg_id)
@@ -537,6 +616,7 @@ def next_prompt(name, focus=None, seg_id=None):
         if st == "mapped":
             continue
         scored.append((NEED[st] + (0.5 if focus and seg["id"] in focus else 0)
+                       + (0.8 if hints & set(seg["items"]) else 0)
                        - (0.0 if not seg["captures"] else 0.2), seg, st))
     if focus:
         mine = [t for t in scored if t[1]["id"] in focus]
@@ -551,7 +631,87 @@ def next_prompt(name, focus=None, seg_id=None):
     walk = st == "unmapped" and (len(zone_peers) >= 2 or seg["side"] == "both")
     prompt = _prompt_for(seg, st, item=(seg.get("stale") or {}).get("item"),
                          walk=walk)
+    if walk:
+        # The walk fills these sections in order; a lone whole-aisle
+        # segment may be split by the app once it has timed the walk.
+        peers = sorted(zone_peers or [seg],
+                       key=lambda s: (s.get("part", 0), s["id"]))
+        prompt["parts"] = [s["id"] for s in peers]
+        prompt["splittable"] = len(peers) == 1 and not peers[0].get("parent")
     return prompt
+
+
+
+# --- rewards: small, kind, never a penalty ---------------------------------
+# Mapping earns points and titles; nothing is ever taken away, there
+# is no streak to break and no clock. Credit lives on the account (the
+# shared map never stores who you are, only a hash).
+
+CREDIT_FILE = "map_credit.json"
+PTS_NEW_SECTION = 10
+PTS_REFRESH = 3
+TITLES = [(1, "Scout"), (5, "Pathfinder"), (15, "Cartographer"),
+          (40, "Store whisperer")]
+GOALS = (25, 50, 75, 100)
+
+
+def _coverage(doc):
+    now = datetime.now()
+    counts = {"unmapped": 0, "mapped": 0, "aging": 0, "stale": 0}
+    for seg in doc["segments"].values():
+        counts[segment_status(seg, now)] += 1
+    total = sum(counts.values())
+    pct = round(100 * counts["mapped"] / total) if total else 0
+    return counts, total, pct
+
+
+def title_for(sections):
+    name = None
+    for need, label in TITLES:
+        if sections >= need:
+            name = label
+    return name
+
+
+def next_goal(doc):
+    """The next 25% step and how many more sections reach it, or
+    None when the map is complete."""
+    counts, total, pct = _coverage(doc)
+    for g in GOALS:
+        if pct < g:
+            need = max(1, math.ceil(g * total / 100.0) - counts["mapped"])
+            return {"pct": g, "sections_needed": need}
+    return None
+
+
+def award(name, result):
+    """Credit one accepted capture and describe it for the screen.
+    A section that goes from not-mapped to mapped earns the big
+    reward; a confirmation or refresh earns a small one."""
+    if not result.get("accepted"):
+        return None
+    newly = result["status"] == "mapped" and result["was"] != "mapped"
+    pts = PTS_NEW_SECTION if newly else PTS_REFRESH
+    with state.file_lock(CREDIT_FILE):
+        credit = state._load(CREDIT_FILE, {"points": 0, "sections": 0})
+        before_title = title_for(credit["sections"])
+        credit["points"] += pts
+        credit["sections"] += 1 if newly else 0
+        state._save(CREDIT_FILE, credit)
+    doc = load_map(name)
+    pct_after = _coverage(doc)[2]
+    title = title_for(credit["sections"])
+    return {"points": pts, "total_points": credit["points"],
+            "sections": credit["sections"], "title": title,
+            "new_title": title if title and title != before_title else None,
+            "new_section": newly,
+            "store_pct": [result["pct_before"], pct_after],
+            "goal": next_goal(doc)}
+
+
+def my_credit():
+    credit = state._load(CREDIT_FILE, {"points": 0, "sections": 0})
+    return {**credit, "title": title_for(credit["sections"])}
 
 
 # --- the shared view -------------------------------------------------------
@@ -587,6 +747,7 @@ def view(name, focus=None):
                 100 * (counts["mapped"] + counts["aging"]) / total)
             if total else 0,
             "unplaced": list(doc["unplaced"]),
+            "goal": next_goal(doc), "credit": my_credit(),
             "next": next_prompt(name, focus)}
 
 

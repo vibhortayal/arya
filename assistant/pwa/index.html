@@ -76,7 +76,7 @@
     <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
     <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
-    <button id="btn-map-store" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">Map my store</span><span class="g-sub">Photograph an aisle. Help every shopper.</span></span><span class="chev">›</span></button>
+    <button id="btn-map-store" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">Teach Arya your store</span><span class="g-sub">20 seconds an aisle. Your next hunt gets faster.</span></span><span class="chev">›</span></button>
     <div id="today-eye"></div>
     <button id="today-listline" class="hubrow" type="button"><span id="today-listline-text"></span></button>
   </section>
@@ -289,8 +289,8 @@
 
   <section id="view-mapper" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:28px">Map my store</h2>
-    <p class="muted">Map the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
+    <h2 class="largetitle" style="font-size:28px">Teach Arya your store</h2>
+    <p class="muted">The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
     <div id="mp-stores" class="rail"></div>
     <div id="mp-cover" class="group pad"></div>
     <div id="mp-next"></div>
@@ -305,24 +305,35 @@
         <button class="chip" data-side="right" aria-pressed="false" type="button">Right side</button>
         <button class="chip" data-side="both" aria-pressed="true" type="button">Both sides</button>
       </div>
-      <p><button id="mp-add" class="btn wide" type="button">Add to the map</button></p>
+      <p><button id="mp-add" class="btn wide" type="button">Add this aisle</button></p>
     </div>
     <p class="muted">We blur every person before we save a photo. We keep pictures of products only.</p>
   </section>
 
   <section id="view-capture" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
-    <h2 class="largetitle" style="font-size:24px" id="cp-title"></h2>
+    <h2 class="largetitle" style="font-size:26px" id="cp-title"></h2>
     <p class="muted" id="cp-why"></p>
-    <div id="cp-video-wrap" class="cpcam"><video id="cp-video" playsinline muted></video><div class="cpguide"></div></div>
-    <p id="cp-hint" class="cphint" role="status"></p>
-    <div id="cp-dots" class="cpdots" aria-hidden="true"></div>
-    <div id="cp-fallback" hidden>
-      <label class="btn primary wide" for="cp-photo">Open the camera</label>
-      <input type="file" id="cp-photo" accept="image/*" capture="environment" hidden>
+    <!-- Live camera: the app watches the frames and keeps the best one
+         itself. Nothing is ever refused; the hint guides while you shoot. -->
+    <div class="cp-cam" id="cp-cam" hidden>
+      <video id="cp-live" playsinline muted autoplay></video>
+      <div class="cp-hint" id="cp-hint" aria-live="polite"></div>
+      <div class="cp-parts" id="cp-parts" aria-hidden="true"></div>
     </div>
-    <details class="group pad"><summary>How</summary><ol id="cp-steps" class="cpsteps"></ol></details>
-    <p><button id="cp-done" class="btn wide" type="button">Done for today</button></p>
+    <div class="group pad" id="cp-howto">
+      <ol id="cp-steps" class="cpsteps"></ol>
+      <p class="muted nomargin" id="cp-time"></p>
+    </div>
+    <p id="cp-controls">
+      <button class="btn primary wide" id="cp-go" type="button">Open camera</button>
+      <input type="file" id="cp-photo" accept="image/*" capture="environment" hidden>
+      <input type="file" id="cp-video" accept="video/*" capture="environment" hidden>
+    </p>
+    <div id="cp-result" class="group pad" hidden></div>
+    <p id="cp-after" hidden>
+      <button id="cp-next" class="btn primary wide" type="button">Next capture</button>
+    </p>
     <p><button id="cp-outdated" class="btn wide" type="button">This part of the map is out of date</button></p>
   </section>
 
@@ -416,7 +427,7 @@
           <button class="chip" data-kind="replaced" aria-pressed="false" type="button">Something else here now</button>
           <button class="chip" data-kind="cant_tell" aria-pressed="false" type="button">Can&rsquo;t tell</button>
         </div>
-        <label class="field">Shelf photo (optional)
+        <label class="field">Shelf photo (optional, it also teaches Arya this aisle)
           <input type="file" id="spot-photo" accept="image/*">
         </label>
         <p><button id="spot-send" class="btn primary wide" type="button" disabled>Send the report</button></p>
