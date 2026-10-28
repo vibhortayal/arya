@@ -11,9 +11,10 @@ Arya has two layers. Each layer does the work it is good at.
 
 - **The edge** is the user's own Muse. It sees the media: receipt
   photos, PDFs, pasted orders, fridge photos. It reads them and sends
-  Arya structured data only. Arya holds no receipt images. The evidence
-  stays with the user. This is an accepted trade-off, recorded in
-  SPEC.md.
+  Arya structured data only; on this path no receipt image reaches the
+  server. A receipt photo filed in the app itself is kept per account
+  and is viewable in the app ("View receipt", Discussion 42). This is
+  an accepted trade-off, recorded in SPEC.md.
 - **The core** is the Arya server. It verifies, remembers, reasons, and
   answers. It spends no tokens on reading media.
 
@@ -121,7 +122,8 @@ Each agent has a narrow job and a named limit.
 ## 8. Accounts, tokens, and the connector
 
 - Per-user state lives in files under data/users/<account>/. Passwords
-  are PBKDF2 hashes; sign-in is throttled; sessions are cookies.
+  are PBKDF2 hashes; sign-in is throttled; sessions are cookies, and
+  session tokens are stored as SHA-256 hashes.
 - A connector token is `arya_` plus a random secret. **Only its SHA-256
   hash is stored.** It is shown once at mint; minting a new one replaces
   the old; it can be revoked at any time. Bearer tokens are accepted
@@ -152,9 +154,11 @@ Each agent has a narrow job and a named limit.
   Spark 1.3 Standard, low effort, cached prefixes for volume reasoning;
   Contributor for evaluation and synthetic data only — never personal
   data; Wonder is banned from volume paths.
-- Every model call is written to a cost ledger. A global daily ceiling
-  ($10) stops model spend. Per-user spend caps are required before
-  public registration opens; they are not yet built.
+- Every model call is written to a cost ledger. The app's daily
+  ceiling ($10) stops app model spend; the demo household spends from
+  a separate budget bucket ($2/day), so demo use cannot drain the
+  app. Per-user spend caps are required before public registration
+  opens; they are not yet built.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -165,7 +169,7 @@ Each agent has a narrow job and a named limit.
   arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
-- Tests (181) run before every commit. Small commits to main, named by
+- Tests (317) run before every commit. Small commits to main, named by
   stage; a session log goes to loops/ and STATUS.md is updated.
 
 ## 12. Not built / held
