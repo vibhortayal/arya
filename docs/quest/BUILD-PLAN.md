@@ -30,8 +30,9 @@ OUT (rollout story only): whole-store maps, live relocalization, escape-room ski
 | Oct 27 | Spike verdict **PASS**; doc pack + DISCUSSION.md; Stages A (engine), B (playable UI), C (cloud driver, live) built and deployed; **final wireframes approved** (Quest + Brain B1–B6 — the build reference) |
 | Oct 27–28 | Intake parity (Photo + Voice doors on the Meta API, demo account live); Brain restyle to the approved wireframes; shelf graph for the demo aisle (SAM 3.1 segments + Spark labels) |
 | Oct 30–31 | Hunt polish: route builder, quest log, Quest/Express refinements |
-| Nov 1 (cont.) | List-in by photo wired to hunts; receipt finish wired to scoring |
-| Nov 2 | End-to-end rehearsal on the demo household; fix pass |
+| Nov 1 (cont.) | List-in by photo wired to hunts; receipt finish wired to scoring; **feature freeze** |
+| Nov 1–2 | **Wonder QA pass (owner-approved stage):** Playwright sweeps the frozen build (every screen and door, phone-size screenshots, console errors, flow transcripts) on the demo household and a test account only. Muse Wonder reviews the evidence — screenshots against the wireframes, transcripts, logs — and files findings (functional, UI, UX) with proposed fixes as code on a branch. Every finding is verified against the app before a fix lands; fixes go through the normal review gate (suite green, sweep re-run). The findings report (filed / verified / fixed / false positive) is kept as submission evidence |
+| Nov 2 | Re-sweep clean; end-to-end rehearsal on the demo household; fix pass |
 | Nov 3 | Demo video filmed; submission package assembled |
 | Nov 4 | Owner reviews the complete package; submit before 9:00 PM ET — only on his explicit go-ahead |
 
