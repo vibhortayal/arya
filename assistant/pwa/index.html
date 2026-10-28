@@ -17,7 +17,7 @@
 <body>
 <header>
   <span class="wordmark">Arya</span>
-  <button id="avatar-btn" class="avatar" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span></button>
+  <button id="avatar-btn" class="avatar" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span><img id="avatar-img" alt="" hidden></button>
 </header>
 <p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
@@ -186,6 +186,22 @@
   <section id="view-profile" class="view" hidden>
     <p><a href="#" id="pf-back">&larr; Back</a></p>
     <h2 class="largetitle">Profile</h2>
+    <div id="pf-avatar" class="group pad">
+      <div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div>
+      <p class="muted nomargin" style="text-align:center">Your avatar</p>
+      <div id="av-presets" class="presetrow"></div>
+      <label class="field">Describe it
+        <input type="text" id="av-prompt" maxlength="200" placeholder="a fox pushing a shopping cart" autocomplete="off">
+      </label>
+      <p class="nomargin"><button id="av-make" class="btn wide" type="button">Make it</button></p>
+      <p class="nomargin"><label class="btn secondary wide receiptbtn" for="av-photo">Use my photo</label><input type="file" id="av-photo" accept="image/*" hidden></p>
+      <p class="muted nomargin">Your photo is drawn as a cartoon, then dropped. Only the drawing is kept.</p>
+      <div id="av-candidate" hidden>
+        <img id="av-cand-img" class="candimg" alt="Your new avatar">
+        <p class="nomargin"><button id="av-use" class="btn primary wide" type="button">Use this</button></p>
+      </div>
+      <p id="av-status" class="muted nomargin"></p>
+    </div>
     <div id="pf-card" class="group pad"></div>
     <div id="pf-stats" class="stattiles"></div>
     <div id="pf-missing" class="group"></div>
@@ -494,6 +510,8 @@
       <button class="chip" data-scope="store" aria-pressed="false" type="button">Store</button>
       <button class="chip" data-scope="global" aria-pressed="false" type="button">Global</button>
     </div>
+    <h3 class="sect">Store news</h3>
+    <div id="comm-news" class="group"></div>
     <h3 class="sect">Fastest Hands</h3>
     <div id="comm-board" class="group"></div>
     <p class="muted">Fastest full hunts, scored as time per item. A hunt needs 8 or more items to qualify. Times come from the receipt — the receipt is the referee.</p>
