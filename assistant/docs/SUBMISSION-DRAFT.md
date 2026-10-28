@@ -21,6 +21,13 @@ with the 3D model one tap away.
 
 One product, two layers, one account.
 
+Arya does not compete with your list app — it collects from all of
+them, through your own assistant, and gives you back one list that
+writes itself. The agent connector is a standard MCP server: any
+MCP-capable assistant connects with your account token to read the
+list, add items, and file receipts it has read. Muse Spark is the
+showcased client.
+
 The brain keeps the household's model. Receipts enter as PDF or photo.
 Muse Wonder reads each receipt photo (Muse Spark reads PDFs and is
 the photo fallback); code checks the lines against the
