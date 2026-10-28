@@ -649,3 +649,23 @@ def store_reports(store_name):
                  and _same_store(r.get("store"), store_name)]
     return {"store": store_name, "count": len(open_reps),
             "reports": open_reps}
+
+
+def store_news(limit=20):
+    """Store news: open "not here" reports grouped by store and item,
+    newest first. It reads this account's own reports (reports are
+    single-account), counting each stop once."""
+    groups = {}
+    for r in _store()["reports"]:
+        if r["state"] != "reported":
+            continue
+        key = (state._norm_name(r.get("store") or "").replace(" ", ""),
+               r.get("item_group") or state._norm_name(r.get("item") or ""))
+        g = groups.setdefault(key, {"store": r.get("store"), "item": r.get("item"),
+                                    "kind": r.get("kind"), "count": 0,
+                                    "reported_at": r.get("reported_at")})
+        g["count"] += 1
+        if (r.get("reported_at") or "") > (g["reported_at"] or ""):
+            g["reported_at"] = r.get("reported_at")
+    news = sorted(groups.values(), key=lambda g: g["reported_at"] or "", reverse=True)
+    return {"news": news[:limit]}

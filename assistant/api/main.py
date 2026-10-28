@@ -96,7 +96,8 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 # stay closed to the demo.
 _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
                 "/api/curator/run", "/api/judge/run", "/api/review/suggest",
-                "/api/intake/")
+                "/api/intake/", "/api/quest/avatar/generate",
+                "/api/quest/avatar/photo")
 # Doors that can call the Meta API: the per-IP live-door cap applies.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
@@ -1487,6 +1488,91 @@ async def quest_accept_friend(req: Request):
     if friend is None:
         raise HTTPException(404, "no pending request from that handle")
     return friend
+
+
+@app.get("/api/quest/avatar")
+def quest_avatar():
+    from api import avatar
+    return {**avatar.get(), "presets": list(avatar.PRESETS)}
+
+
+@app.put("/api/quest/avatar")
+async def quest_avatar_preset(req: Request):
+    body = await _json_obj(req)
+    from api import avatar
+    try:
+        return avatar.set_preset(body.get("preset", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/quest/avatar/image")
+def quest_avatar_image(candidate: bool = False):
+    from api import avatar
+    img = avatar.read_image(candidate=candidate)
+    if img is None:
+        raise HTTPException(404, "no avatar image")
+    return Response(img, media_type="image/webp",
+                    headers={"Cache-Control": "no-cache"})
+
+
+@app.post("/api/quest/avatar/generate")
+async def quest_avatar_generate(req: Request):
+    """One tap, one image ($0.01). No retries here: a try-again is the
+    player's next tap."""
+    from api import avatar
+    body = await _json_obj(req)
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    try:
+        await run_in_threadpool(avatar.make_from_prompt, body.get("prompt", ""),
+                                MetaClient(ledger=_ledger()))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    return avatar.get()
+
+
+@app.post("/api/quest/avatar/photo")
+async def quest_avatar_photo(req: Request):
+    """The player's own photo, drawn as a cartoon. The upload is read
+    into memory, sent to Muse Image and dropped; it is never saved."""
+    from api import avatar
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    photo = await req.body()
+    if not photo:
+        raise HTTPException(400, "empty upload")
+    if len(photo) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    try:
+        await run_in_threadpool(avatar.make_from_photo, photo, media,
+                                MetaClient(ledger=_ledger()))
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    return avatar.get()
+
+
+@app.post("/api/quest/avatar/use")
+def quest_avatar_use():
+    from api import avatar
+    try:
+        return avatar.use_candidate()
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/quest/news")
+def quest_news():
+    """Store news: stops people flagged as not here, newest first."""
+    from api import quest
+    return quest.store_news()
 
 
 @app.get("/api/quest/profile")
