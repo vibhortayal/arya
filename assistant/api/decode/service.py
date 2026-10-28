@@ -43,6 +43,18 @@ PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "de
 AUTO_THRESHOLD = 0.8
 
 
+# Receipt-shaped output for the text paths. Loose on purpose: the
+# arithmetic in _finish() is the real validator, the schema only keeps
+# the model on a JSON object with a lines array.
+RECEIPT_SCHEMA = ("DecodedReceipt", {
+    "type": "object",
+    "properties": {"merchant": {"type": ["string", "null"]},
+                   "purchased_at": {"type": ["string", "null"]},
+                   "lines": {"type": "array", "items": {"type": "object"}},
+                   "subtotal": {"type": ["number", "null"]}},
+    "required": ["lines"]})
+
+
 def load_prompt():
     text = open(PROMPT_PATH).read()
     return text.split("SYSTEM:", 1)[1].strip()
@@ -128,7 +140,9 @@ def decode_text(text, client):
     Personal data: Standard mode only (enforced in meta_client)."""
     messages = [{"role": "system", "content": load_prompt()},
                 {"role": "user", "content": "Decode this receipt text:\n\n" + text}]
-    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
+    out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
+                                     schema=RECEIPT_SCHEMA,
+                                     cache_key="arya-decode-text-v2")
     try:
         dec = json.loads(out)
     except Exception:
@@ -172,6 +186,15 @@ def load_photo_prompt():
 PHOTO_WONDER_TIMEOUT_S = 90
 
 
+def photo_reader():
+    """Which model reads receipt photos: ARYA_PHOTO_READER=wonder
+    (default, the amendment path) or spark. The amendment expires
+    2026-11-04; flipping this env var and restarting moves the
+    live site onto Spark Standard with no deploy."""
+    v = os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
+    return "standard" if v in ("spark", "standard") else "wonder"
+
+
 def _photo_read(messages, client, **kw):
     out, _usage, _cost = client.chat(messages, personal=True, **kw)
     try:
@@ -197,6 +220,8 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
                     {"type": "text", "text": "Decode this receipt photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
     try:
+        if photo_reader() == "standard":
+            raise RuntimeError("Wonder disabled by ARYA_PHOTO_READER")
         dec = _photo_read(messages, client, mode="wonder",
                           reasoning_effort=None,
                           timeout=PHOTO_WONDER_TIMEOUT_S)
@@ -242,7 +267,9 @@ def decode_order_text(text, client):
     as receipts: the model proposes, arithmetic disposes (_finish)."""
     messages = [{"role": "system", "content": load_order_prompt()},
                 {"role": "user", "content": "Extract this order:\n\n" + text}]
-    out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
+    out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
+                                     schema=RECEIPT_SCHEMA,
+                                     cache_key="arya-order-text-v1")
     try:
         dec = json.loads(out)
     except Exception:

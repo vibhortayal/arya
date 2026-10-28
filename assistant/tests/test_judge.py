@@ -10,7 +10,7 @@ class FakeClient:
     def __init__(self):
         self.calls = 0
 
-    def chat(self, messages, mode="standard", personal=False, reasoning_effort=None):
+    def chat(self, messages, mode="standard", personal=False, reasoning_effort=None, **kw):
         self.calls += 1
         listing = messages[-1]["content"]
         verdicts = []

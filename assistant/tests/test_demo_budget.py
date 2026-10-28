@@ -110,3 +110,47 @@ class TestSessionPruning(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSessionShare(unittest.TestCase):
+    def setUp(self):
+        from api import main, state
+        self.main, self.state = main, state
+        fd, path = tempfile.mkstemp(suffix=".jsonl")
+        os.close(fd)
+        os.unlink(path)
+        self._old = main._LEDGER
+        main._LEDGER = path
+
+    def tearDown(self):
+        self.state.set_overlay(None)
+        self.main._LEDGER = self._old
+
+    def _spend(self, box, usd):
+        self.state.set_overlay(box)
+        self.main._ledger().record(mode="standard", model="m", input_tokens=1,
+                                   cached_tokens=0, output_tokens=1, cost_usd=usd)
+
+    def test_visit_share_stops_one_visitor_only(self):
+        from fastapi import HTTPException
+        a, b = {}, {}
+        self._spend(a, 0.50)
+        self.state.set_overlay(a)
+        with self.assertRaises(HTTPException) as cm:
+            self.main._budget_guard()
+        self.assertEqual(cm.exception.status_code, 503)
+        self.assertIn("this demo visit", cm.exception.detail)
+        self.state.set_overlay(b)       # another visitor is unaffected
+        self.main._budget_guard()
+
+    def test_daily_demo_cap_message_is_friendly(self):
+        from fastapi import HTTPException
+        os.environ["ARYA_DEMO_DAILY_BUDGET_USD"] = "0.30"
+        try:
+            self._spend({}, 0.35)
+            self.state.set_overlay({})
+            with self.assertRaises(HTTPException) as cm:
+                self.main._budget_guard()
+            self.assertIn("paused for today", cm.exception.detail)
+        finally:
+            del os.environ["ARYA_DEMO_DAILY_BUDGET_USD"]
