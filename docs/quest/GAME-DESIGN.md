@@ -23,7 +23,7 @@ The quest log is the grocery list. The dungeon is the real store. The treasures 
 | Collecting | Tap the treasure on its shelf | Check items off as you pass them |
 | Ends with | The receipt photo scores the haul | The receipt photo, same as always |
 
-The mode is a mood, not an age. Quest mode with a child holding the phone is the family case: the kid hunts and collects, the adult runs quantities and checkout from the same hunt — the child follows the list exactly, in order, at pace, because the game asks for precisely that behavior. Express mode is the same store model and the same list with the game layer switched off.
+The mode is a mood, not an age. Quest mode with a child holding the phone is the family case: the kid hunts and collects, the adult runs quantities and checkout from the same hunt — the child hunts the list at pace — the game recommends a route but never rails it: any stop can be grabbed in any order, because items move and shoppers wander (Discussion 44). Express mode is the same store model and the same list with the game layer switched off.
 
 ## Future skins (same mechanic)
 

@@ -16,7 +16,7 @@ removed, primary-action chrome, Brain back links) and the
 collect celebration (Discussion 32: Muse Image characters with
 a verified fun-fact bank, Quest mode only) are built and
 committed locally — deploy is a separate step. Test suite:
-**267 green**.
+**270 green**.
 
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
@@ -37,6 +37,17 @@ proof run cost $1.12. **The amendment expires Nov 4, 2026** —
 photo decode returns to Spark Standard then unless the owner
 extends it. The staple judge and Ask Arya stay on Spark
 Standard. Detail: `assistant/loops/2026-10-27-wonder-decode.md`.
+
+**Hunt fixes (2026-10-27, late; Discussion 44).** From the
+owner's phone test: collecting is non-sequential — every stop
+in a hunt is grabbable in any order (per-row GRABs on the
+Up-next rail, any marker tap opens that stop's card), the
+route is a recommendation, and after a grab the hunt
+re-targets to the next uncollected stop after it (wrapping to
+the first). The collect celebration moved from center-screen
+to a small card in the bottom-left corner above the route
+bar. Committed locally — deploy is a separate step. Detail:
+`assistant/loops/2026-10-27-hunt-fixes.md`.
 
 **Remaining for submission:** the demo video and the final
 submission package (owner go-ahead required). This repo goes
