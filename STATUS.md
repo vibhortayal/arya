@@ -237,3 +237,22 @@ same evening — see Intake parity below.)
   (first three digits), not a distance sort — no geocoding yet;
   there is no remove-from-mine or directory edit; Shop-Off
   creation still takes a free-text store (no store_id yet).
+
+## Item–shelf matching (2026-10-27)
+
+- Hunt stops now sit at the shelf their item belongs to.
+  Matching runs at session creation for stores with a shelf graph
+  (`api/shelfmatch.py`): a deterministic token-overlap pass ($0),
+  then ONE batched Spark 1.3 Standard call for the rest, verdicts
+  cached per item name in `shelf_matches.json`. Stops record
+  shelf_label / shelf_u / shelf_side / match_source; matched
+  stops walk in shelf order, unmatched keep list order after
+  them. Sessions for stores with no graph are unchanged; the
+  demo household still cannot create sessions (403).
+- PWA: cloud markers anchor at the matched shelf position/side
+  and the chip shows the stop's own shelf label (Stage D
+  nearest-label remains the fallback for unmatched stops); the
+  Strip card prints the shelf label, or "Not placed on the map".
+  SW cache arya-v18.
+- Suite: **166 green** (20 new in tests/test_shelf_match.py).
+  **Not deployed** — deploy is a separate owner step.
