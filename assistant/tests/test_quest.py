@@ -191,6 +191,9 @@ class TestShopOff(unittest.TestCase):
              "purchased_at": "2026-10-26T18:42:18", "lines": [],
              "subtotal": 0, "tax": 0, "total": 0}])
         setup_account(self)
+        # Shop-Off opponents must be real accounts (review M10).
+        from api import auth
+        auth.create_user("cartqueen@example.com", "long-password")
 
     def _finish(self, session_id, receipt_id):
         sess = self.c.get(f"/api/quest/sessions/{session_id}").json()
@@ -254,6 +257,11 @@ class TestSocial(unittest.TestCase):
             {"handle": "cartqueen", "status": "pending_in",
              "top_badge": "Speed Demon", "last_hunt": "Costco · yesterday"}]})
         setup_account(self)
+        # Friend requests resolve against real accounts (review
+        # M10): cartqueen and milk_runner must exist to be asked.
+        from api import auth
+        auth.create_user("cartqueen@example.com", "long-password")
+        auth.create_user("milk_runner@example.com", "long-password")
 
     def test_friends_request_accept(self):
         c = self.c
