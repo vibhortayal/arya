@@ -619,7 +619,7 @@ const HaulUI = (() => {
     }
     const act = ev.target.closest("[data-act]");
     if (!act) return;
-    if (act.dataset.act === "save") ShareUI.open("haul", shareCtx(sess));
+    if (act.dataset.act === "save") ShareUI.open("haul", Object.assign(shareCtx(sess), { newBadge: Q.newBadge || null }));
     else if (act.dataset.act === "post") openPostSheet(sess);
     else if (act.dataset.act === "delpost") unpost(sess, false);
     else if (act.dataset.act === "done") openScore(sess);
@@ -727,7 +727,7 @@ const HaulUI = (() => {
   });
   /* The share card's context: hidden stickers, Arya's name for the
    * trip, the reviewed names and the numbers. It reads the last haul
-   * view. Share as video calls shareReady, which waits for that view;
+   * view. Share your haul calls shareReady, which waits for that view;
    * the plain hunt (every checked item) is never the fallback for a
    * closed hunt, because it would show hidden and removed stickers. */
   async function shareReady(sess) {
@@ -735,7 +735,7 @@ const HaulUI = (() => {
       if (!H.cache[sess.id]) await fetchHaul(sess);
       await loadProfile();
     } catch (e) {
-      toast("Could not load your haul. Check your connection. Then tap Share as video once more.");
+      toast("Could not load your haul. Check your connection. Then tap Share your haul once more.");
       return null;
     }
     return shareCtx(sess);

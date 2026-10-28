@@ -3,10 +3,15 @@
  * items and their cast faces from the character registry, the
  * player's own character as the host, points the receipt proved.
  * Nothing posts itself: the player taps Share and their own app
- * (WhatsApp, Instagram, X) does the posting. Spend never appears
- * on a card. The card animates on a canvas — faces pop in one by
- * one and the points count up — and the animation is recorded to
- * a short video when the browser allows; otherwise a still. */
+ * (WhatsApp, Instagram, Facebook) does the posting. Spend never
+ * appears on a card. The share is a still PNG, never a video.
+ *
+ * The haul card has an optional paint pass (sharelook.py): the badge
+ * the player just earned, a cast character joining in, or a
+ * hand-painted storybook scene. The phone sends Muse Image only the
+ * art layer (cream ground and cast stickers, no words, no photo) and
+ * draws the words itself afterwards. The footer says Made with Arya,
+ * and adds Powered by Meta Muse only when Muse painted the card. */
 "use strict";
 
 const ShareUI = (() => {
@@ -68,6 +73,8 @@ const ShareUI = (() => {
       more: Math.max(0, got.length - 8),
       wild: wild.slice(0, 3),
       stat: `${got.length} items · ${st.new || 0} new · level ${level}`,
+      statBase: `${got.length} items · ${st.new || 0} new`, level,
+      badge: ctx.newBadge || null,
       photo: ctx.haulPhotoURL || null,
       caption: "My haul on Arya."
     };
@@ -97,6 +104,14 @@ const ShareUI = (() => {
   }
 
   /* ---------- canvas drawing ---------- */
+  const W = 1080, COLS = 4, CELL = (W - 120) / COLS;
+  // Share options for the open card. size: story 9:16 or post 4:5.
+  let opts = null;
+  function freshOpts() {
+    return { size: "story", handle: true, level: true, photo: false,
+             look: "plain", painted: null, tries: 0, busy: false };
+  }
+  const sizeH = () => (opts && opts.size === "post" ? 1350 : 1920);
   function rr(g, x, y, w, h, r) {
     g.beginPath();
     g.moveTo(x + r, y);
@@ -106,41 +121,83 @@ const ShareUI = (() => {
     g.arcTo(x, y, x + w, y, r);
     g.closePath();
   }
-  function popScale(t) {  // ease-out-back for one pop window
-    if (t <= 0) return 0;
-    if (t >= 1) return 1;
-    const c = 1.70158;
-    return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2);
-  }
-  function drawFace(g, file, cx, cy, size, scale) {
+  function drawFace(g, file, cx, cy, size) {
     const im = loadImg(faceSrc(file));
-    if (!im.complete || !im.naturalWidth || scale <= 0) return;
-    const s = size * scale;
+    if (!im.complete || !im.naturalWidth) return;
     g.save();
-    g.beginPath(); g.arc(cx, cy, s / 2, 0, Math.PI * 2); g.clip();
+    g.beginPath(); g.arc(cx, cy, size / 2, 0, Math.PI * 2); g.clip();
     g.fillStyle = "#fff"; g.fill();
-    g.drawImage(im, cx - s / 2, cy - s / 2, s, s);
+    g.drawImage(im, cx - size / 2, cy - size / 2, size, size);
     g.restore();
     g.save();
     g.strokeStyle = SOFT; g.lineWidth = 6;
-    g.beginPath(); g.arc(cx, cy, s / 2, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(cx, cy, size / 2, 0, Math.PI * 2); g.stroke();
     g.restore();
   }
-  function draw(g, W, H, t) {
-    const c = card;
+  const showPhoto = c => !!(c.photo && opts && opts.photo);
+  // Where the haul's sticker block starts and ends on this canvas.
+  function faceTop(c, H) { return 250 + (H > 1400 ? 220 : 0) + (showPhoto(c) ? 480 : 0); }
+  function faceRows(c) { return Math.ceil(c.faces.length / COLS); }
+  function faceEnd(c, H) { return faceTop(c, H) + faceRows(c) * 300 + 90; }
+  const BADGE_ART = { egg_baron: "egg.webp", banana_republic: "banana.webp" };
+  function castPair(c) {
+    const files = [...new Set(c.faces.map(f => f.file))];
+    if (!files.length) return [];
+    const n = Math.min(2, files.length), k = opts ? opts.tries : 0;
+    return Array.from({ length: n }, (_, i) => files[(k + i) % files.length]);
+  }
+  /* The art layer: cream ground, the cast stickers, and the badge or
+   * the joining characters for those two looks. No words, no photo. */
+  function drawArt(g, H, c, look, names) {
     g.fillStyle = CREAM; g.fillRect(0, 0, W, H);
+    const y = faceTop(c, H);
+    c.faces.forEach((f, i) => {
+      const cx = 60 + CELL * (i % COLS) + CELL / 2;
+      const cy = y + Math.floor(i / COLS) * 300 + 110;
+      drawFace(g, f.file, cx, cy, 168);
+      if (names) {
+        g.fillStyle = INK; g.textAlign = "center";
+        g.font = "600 30px system-ui, sans-serif";
+        wrapText(g, shortName(f.name), cx, cy + 122, CELL - 14, 34, 2);
+      }
+    });
+    if (look === "badge" && c.badge) {
+      const cx = W - 130, cy = 190;
+      g.fillStyle = ACC; g.fillRect(cx - 46, cy + 60, 30, 70); g.fillRect(cx + 16, cy + 60, 30, 70);
+      g.beginPath(); g.arc(cx, cy, 92, 0, Math.PI * 2); g.fillStyle = "#fff"; g.fill();
+      g.lineWidth = 12; g.strokeStyle = ACC; g.stroke();
+      drawFace(g, BADGE_ART[c.badge.id] || "basket.webp", cx, cy, 130);
+    }
+    if (look === "friends") {
+      const pair = castPair(c), cy = faceEnd(c, H) + 100;
+      pair.forEach((file, i) => drawFace(g, file, W - 190 - i * 150, cy + (i ? 30 : 0), 190));
+    }
+  }
+  function draw(g, H) {
+    const c = card;
+    const painted = opts && opts.painted;
+    if (painted) g.drawImage(painted, 0, 0, W, H);
+    else if (c.kind === "haul") drawArt(g, H, c, "plain", true);
+    else { g.fillStyle = CREAM; g.fillRect(0, 0, W, H); }
+    if (painted) {   // keep the words readable on any painting
+      const top = g.createLinearGradient(0, 0, 0, 250), bot = g.createLinearGradient(0, H - 300, 0, H);
+      top.addColorStop(0, "rgba(251,245,230,.82)"); top.addColorStop(1, "rgba(251,245,230,0)");
+      bot.addColorStop(0, "rgba(251,245,230,0)"); bot.addColorStop(1, "rgba(251,245,230,.9)");
+      g.fillStyle = top; g.fillRect(0, 0, W - 300, 250);
+      g.fillStyle = bot; g.fillRect(0, H - 300, W, 300);
+    }
     // header: host avatar + handle + title
-    const headA = Math.min(1, t / 0.12);
-    g.globalAlpha = headA;
-    drawFace(g, c.host, 110, 104, 128, 1);
+    drawFace(g, c.host, 110, 104, 128);
     g.fillStyle = INK; g.textAlign = "left";
     g.font = "800 64px system-ui, sans-serif";
     g.fillText(c.title, 216, 100);
+    const sub = c.kind === "haul"
+      ? [opts.handle ? c.handle : "", opts.level ? c.sub : ""].filter(Boolean).join(" · ")
+      : `${c.handle ? c.handle + " · " : ""}${c.sub !== undefined ? c.sub : c.store}`;
     g.font = "600 40px system-ui, sans-serif"; g.fillStyle = GREY;
-    g.fillText(`${c.handle ? c.handle + " · " : ""}${c.sub !== undefined ? c.sub : c.store}`, 218, 158);
-    g.globalAlpha = 1;
-    let y = 250;
-    if (c.photo) {
+    g.fillText(sub, 218, 158);
+    let y = 250 + (c.kind === "haul" && H > 1400 ? 220 : 0);
+    if (showPhoto(c)) {
       const im = loadImg(c.photo);
       if (im.complete && im.naturalWidth) {
         g.save(); rr(g, 60, y, W - 120, 430, 28); g.clip();
@@ -154,52 +211,37 @@ const ShareUI = (() => {
     }
     if (c.kind === "love" || c.kind === "sos") {
       const f = c.faces[0];
-      const s = popScale((t - 0.15) / 0.3);
-      drawFace(g, f.file, W / 2, y + 260, 470, s);
-      g.globalAlpha = Math.min(1, Math.max(0, (t - 0.4) / 0.2));
+      drawFace(g, f.file, W / 2, y + 260, 470);
       g.fillStyle = INK; g.textAlign = "center";
       g.font = "800 58px system-ui, sans-serif";
       wrapText(g, f.name, W / 2, y + 580, W - 160, 66);
-      g.globalAlpha = 1;
       y += 700;
     } else {
-      const cols = 4, cell = (W - 120) / cols;
-      c.faces.forEach((f, i) => {
-        const cx = 60 + cell * (i % cols) + cell / 2;
-        const cy = y + Math.floor(i / cols) * 300 + 110;
-        const s = popScale((t - 0.12 - i * 0.07) / 0.25);
-        drawFace(g, f.file, cx, cy, 168, s);
-        if (s > 0.6) {
-          g.fillStyle = INK; g.textAlign = "center";
-          g.font = "600 30px system-ui, sans-serif";
-          wrapText(g, shortName(f.name), cx, cy + 122, cell - 14, 34, 2);
-        }
-      });
       if (c.more) {
         g.fillStyle = GREY; g.textAlign = "center";
         g.font = "700 34px system-ui, sans-serif";
-        g.fillText(`+ ${c.more} more`, W / 2, y + Math.ceil(c.faces.length / cols) * 300 + 40);
+        g.fillText(`+ ${c.more} more`, W / 2, y + faceRows(c) * 300 + 40);
       }
-      y += Math.ceil(c.faces.length / cols) * 300 + 90;
+      y += faceRows(c) * 300 + 90;
       if (c.wild && c.wild.length) {
-        g.globalAlpha = Math.min(1, Math.max(0, (t - 0.62) / 0.2));
         g.fillStyle = ACC; g.textAlign = "center";
         g.font = "800 38px system-ui, sans-serif";
         g.fillText("Wild finds: " + c.wild.join(" · "), W / 2, y);
-        g.globalAlpha = 1;
         y += 60;
       }
     }
-    // stat line counts in at the end
-    const statT = Math.min(1, Math.max(0, (t - 0.72) / 0.25));
-    g.globalAlpha = statT;
     g.fillStyle = ACC; g.textAlign = "center";
     g.font = "800 56px system-ui, sans-serif";
-    g.fillText(c.stat, W / 2, H - 150);
+    const stat = c.kind === "haul" && !opts.level ? c.statBase : c.stat;
+    g.fillText(stat, W / 2, H - 150);
     g.fillStyle = GREY; g.font = "600 32px system-ui, sans-serif";
-    g.fillText("Arya — your grocery list, as a game · arya-pilot.duckdns.org",
-               W / 2, H - 84);
-    g.globalAlpha = 1;
+    g.fillText(creditLine(), W / 2, H - 96);
+    g.font = "500 26px system-ui, sans-serif";
+    g.fillText("arya-pilot.duckdns.org", W / 2, H - 56);
+  }
+  // The Meta credit is claimed only when Muse painted the card.
+  function creditLine() {
+    return "Made with Arya" + (opts && opts.painted ? " · Powered by Meta Muse" : "");
   }
   function shortName(n) { return n.length > 18 ? n.slice(0, 17) + "…" : n; }
   function wrapText(g, text, cx, y, maxW, lh, maxLines) {
@@ -216,36 +258,22 @@ const ShareUI = (() => {
     use.forEach((ln, i) => g.fillText(ln, cx, y + i * lh));
     return use.length * lh;
   }
-
-  function animate(canvas, record) {
-    return new Promise(resolve => {
-      const g = canvas.getContext("2d");
-      const dur = 2600;
-      let stream = null, rec = null, chunks = [];
-      if (record && canvas.captureStream && window.MediaRecorder) {
-        try {
-          stream = canvas.captureStream(30);
-          const mime = ["video/webm;codecs=vp9", "video/webm", "video/mp4"]
-            .find(m => MediaRecorder.isTypeSupported(m));
-          if (mime) {
-            rec = new MediaRecorder(stream, { mimeType: mime });
-            rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-            rec.start(200);
-          }
-        } catch (e) { rec = null; }
-      }
-      const t0 = performance.now();
-      const step = now => {
-        const t = Math.min(1, (now - t0) / dur);
-        draw(g, canvas.width, canvas.height, t);
-        if (t < 1) { raf = requestAnimationFrame(step); return; }
-        if (rec) {
-          rec.onstop = () => resolve(new Blob(chunks, { type: rec.mimeType }));
-          rec.stop();
-        } else resolve(null);
-      };
-      raf = requestAnimationFrame(step);
-    });
+  function paint() {
+    const cv = $("#share-canvas");
+    cv.width = W; cv.height = sizeH();
+    draw(cv.getContext("2d"), cv.height);
+  }
+  const toBlob = (cv, type) => new Promise(r => cv.toBlob(r, type));
+  async function paintLook(look) {
+    const c = card;
+    const art = document.createElement("canvas");
+    art.width = W; art.height = sizeH();
+    drawArt(art.getContext("2d"), art.height, c, look, false);
+    const png = await toBlob(art, "image/png");
+    const r = await fetch(`/api/quest/share-look?look=${look}`, {
+      method: "POST", headers: { "Content-Type": "image/png" }, body: png });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+    return createImageBitmap(await r.blob());
   }
 
   /* ---------- sheet ---------- */
@@ -253,9 +281,12 @@ const ShareUI = (() => {
   function open(kind, ctx) {
     const sheet = $("#share-sheet");
     sheet.hidden = false;
+    opts = freshOpts();
     $("#share-canvas").hidden = true;
     $("#share-go").hidden = true;
     $("#share-png").hidden = true;
+    $("#share-copy").hidden = true;
+    $("#share-opts").hidden = true;
     $("#share-status").textContent = "";
     const chips = $("#share-chips");
     chips.innerHTML = "";
@@ -296,21 +327,64 @@ const ShareUI = (() => {
     chips.querySelectorAll("[data-pick]").forEach(b =>
       b.addEventListener("click", () => { chips.innerHTML = ""; done(b.dataset.pick); }));
   }
+  /* The options only exist on the haul card. The badge look needs a
+   * badge earned on this haul; any look needs the sticker-only card,
+   * so a haul photo (which may show people) switches the looks off. */
+  function syncOpts() {
+    const c = card, haul = c.kind === "haul";
+    $("#share-opts").hidden = !haul;
+    if (!haul) return;
+    $$("#share-size .chip").forEach(b => b.setAttribute("aria-pressed", b.dataset.size === opts.size));
+    $$("#share-looks .chip").forEach(b => {
+      const l = b.dataset.look;
+      b.setAttribute("aria-pressed", l === opts.look);
+      b.disabled = opts.busy || (l !== "plain" && (!!opts.photo || !c.faces.length || (l === "badge" && !c.badge)));
+    });
+    $("#opt-photo-row").hidden = !c.photo;
+    $("#opt-photo").checked = !!opts.photo;
+    $("#share-again").hidden = opts.look === "plain";
+    $("#share-again").disabled = opts.busy;
+    const hint = $("#share-look-hint");
+    hint.textContent = opts.photo ? "Looks use the stickers only, so they are off while your photo is on."
+      : !c.badge ? "No new badge on this haul, so Add my badge is off."
+      : "Muse paints the picture. Arya adds the words after. About 10 seconds.";
+  }
+  async function setLook(look) {
+    if (opts.busy) return;
+    if (look === "plain") { opts.look = "plain"; opts.painted = null; syncOpts(); paint(); return; }
+    opts.busy = true; opts.look = look; syncOpts();
+    $("#share-status").textContent = "Arya is painting your card…";
+    try {
+      opts.painted = await paintLook(look);
+      $("#share-status").textContent = "";
+    } catch (e) {
+      opts.look = "plain"; opts.painted = null;
+      $("#share-status").textContent = "Could not paint that one. Your plain card is untouched. " + (e.message || "");
+    }
+    opts.busy = false; syncOpts(); paint();
+  }
+  const $$ = s => [...document.querySelectorAll(s)];
   async function showCard(ctx) {
     const cv = $("#share-canvas");
     cv.hidden = false;
+    if (card.kind !== "haul") opts.size = "post";
     $("#share-caption").textContent = card.caption;
-    // Preload faces so the pop-in is not a fax machine.
+    // Preload faces so the first draw is complete.
     const srcs = [faceSrc(card.host), ...card.faces.map(f => faceSrc(f.file))];
     if (card.photo) srcs.push(card.photo);
-    await Promise.all(srcs.map(src => new Promise(res => {
+    if (card.badge) srcs.push(faceSrc(BADGE_ART[card.badge.id] || "basket.webp"));
+    // One wait per distinct file: two cards faces can share one image.
+    await Promise.all([...new Set(srcs)].map(src => new Promise(res => {
       const im = loadImg(src);
       if (im.complete) return res();
-      im.onload = im.onerror = () => res();
+      im.addEventListener("load", () => res());
+      im.addEventListener("error", () => res());
     })));
-    await animate(cv, false);
+    paint();
+    syncOpts();
     $("#share-go").hidden = false;
     $("#share-png").hidden = false;
+    $("#share-copy").hidden = false;
   }
   function download(blob, name) {
     const a = document.createElement("a");
@@ -319,42 +393,56 @@ const ShareUI = (() => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
+  async function stillFile() {
+    const blob = await toBlob($("#share-canvas"), "image/png");
+    return blob ? new File([blob], "arya-haul.png", { type: "image/png" }) : null;
+  }
   async function doShare() {
     const status = $("#share-status");
-    const cv = $("#share-canvas");
-    status.textContent = "Making your video…";
-    const video = await animate(cv, true);
-    const files = [];
-    let still = null;
-    if (video && video.size > 1000) {
-      files.push(new File([video], "arya-haul.webm", { type: video.type }));
-    } else {
-      still = await new Promise(r => cv.toBlob(r, "image/png"));
-      if (still) files.push(new File([still], "arya-haul.png", { type: "image/png" }));
-    }
-    status.textContent = "";
+    const file = await stillFile();
+    if (!file) return;
     const data = { title: "Arya haul", text: card.caption };
-    if (files.length && navigator.canShare && navigator.canShare({ files })) {
-      data.files = files;
-    }
+    if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
     if (navigator.share) {
       try { await navigator.share(data); return; }
       catch (e) { if (e && e.name === "AbortError") return; }
     }
-    if (files.length) { download(files[0], files[0].name); status.textContent = "Saved — post it anywhere."; }
+    download(file, file.name);
+    status.textContent = "Saved. Post it anywhere.";
   }
-  async function doPng() {
-    const cv = $("#share-canvas");
-    const blob = await new Promise(r => cv.toBlob(r, "image/png"));
-    if (blob) download(blob, "arya-card.png");
+  async function doSave() {
+    const file = await stillFile();
+    if (file) { download(file, file.name); $("#share-status").textContent = "Saved."; }
+  }
+  async function doCopy() {
+    // Instagram and Facebook drop pre-filled text, so the caption is one tap to copy.
+    try { await navigator.clipboard.writeText(card.caption); $("#share-status").textContent = "Caption copied."; }
+    catch (e) { $("#share-status").textContent = card.caption; }
   }
   document.addEventListener("DOMContentLoaded", () => {
-    $("#share-close").addEventListener("click", () => {
-      $("#share-sheet").hidden = true;
-      if (raf) cancelAnimationFrame(raf);
-    });
+    $("#share-close").addEventListener("click", () => { $("#share-sheet").hidden = true; });
     $("#share-go").addEventListener("click", () => doShare().catch(() => {}));
-    $("#share-png").addEventListener("click", () => doPng().catch(() => {}));
+    $("#share-png").addEventListener("click", () => doSave().catch(() => {}));
+    $("#share-copy").addEventListener("click", () => doCopy());
+    $("#share-size").addEventListener("click", e => {
+      const b = e.target.closest("[data-size]");
+      if (!b || opts.busy) return;
+      opts.size = b.dataset.size;
+      const l = opts.look;
+      if (l !== "plain") setLook(l); else { syncOpts(); paint(); }
+    });
+    $("#share-looks").addEventListener("click", e => {
+      const b = e.target.closest("[data-look]");
+      if (b && !b.disabled) { opts.tries = 0; setLook(b.dataset.look); }
+    });
+    $("#share-again").addEventListener("click", () => { opts.tries++; setLook(opts.look); });
+    $("#opt-handle").addEventListener("change", e => { opts.handle = e.target.checked; paint(); });
+    $("#opt-level").addEventListener("change", e => { opts.level = e.target.checked; paint(); });
+    $("#opt-photo").addEventListener("change", e => {
+      opts.photo = e.target.checked;
+      if (opts.photo && opts.look !== "plain") { opts.look = "plain"; opts.painted = null; }
+      syncOpts(); paint();
+    });
   });
   return { open, chainTag };
 })();
