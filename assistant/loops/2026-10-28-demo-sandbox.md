@@ -59,3 +59,16 @@ grab, finish, score — all 200s, no page errors. Quest at Costco
 - The Optimizer merged "pasta sauce" into "Pasta 1 lb" on the demo
   dictionary (token-subset match); Undo recovers it. Worth a rule.
 - Open-weights job (Spark Open on Modal/Baseten) not started.
+
+## Wireframes (owner go-ahead, 2026-10-28)
+
+`docs/quest/wireframes.html` updated on the same PR so the Hunt v2
+rebuild keeps what already ships: Photos is the hunt's default view
+(3D Cloud renamed 3D); a tools row adds 📷 Scan shelf (SAM 3.1 +
+Spark confirm, pop card with GRAB) and 🧭 Where am I? beside Not
+here; the collect card carries the Muse Image character and a fun
+fact; Finish and Add receipt show a dashed demo-only "Use a sample
+receipt"; a new Screen 0 Landing is the signed-out front door; the
+Today sample staples drop the duplicate almonds. Clicked through in
+Chromium: no console errors; Scan → GRAB counts; sample receipt
+reaches Score.
