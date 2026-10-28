@@ -28,7 +28,7 @@ Now the hunt. My kid holds the phone and collects each item where it sits. Lose 
 
 And if your store has no map yet, nothing stops: the camera watches the shelf as you shop, and when it spots something on your list, the item pops up on screen, ready to grab.
 
-At the end, photograph the receipt. Muse Wonder reads it — on our test set it read every price right. Arya checks every line against the total, and anything you returned comes off your list for good. That receipt teaches Arya too — next week's list is already half written."
+At the end, photograph the receipt. Muse Wonder reads it — on our 98-line test set it made zero price errors. Arya checks every line against the total, and anything you returned comes off your list for good. That receipt teaches Arya too — next week's list is already half written."
 
 ## Meta fit
 
@@ -47,4 +47,4 @@ We're Team Nightshift. This is Arya — grocery shopping, as a game. We're ready
 - Demo account on a phone. The Trader Joe's hunt starts in the photo view and can switch to the 3D view or drop to the flat view live — say so if it happens.
 - Build the demo hunt list from what the mapped stretch actually contains (cheese, oils, pasta, sauce, peanut butter, bread, frozen pizza) so each stop's shelf label agrees with the item.
 - Keep one receipt already read as the fallback for the finish beat; a live photo read takes up to a minute on Wonder, and the app says so while it works.
-- Numbers, if asked: 114 real receipts behind the brain; 373,630 points in the shipped store model; 55 of 55 shelf regions found by SAM, all labeled; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder, Gate 0 public set) against Spark's 93.88%; the localizer placed 42 of 45 held-out photos at the right stop, the rest one stop over.
+- Numbers, if asked: 114 real receipts behind the brain; 373,630 points in the shipped store model; 55 of 55 shelf regions found by SAM, all labeled; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder, Gate 0 public set) against Spark's 93.88%; the localizer placed 42 of 45 held-out frames from the mapping video at the right stop and the rest one stop over — it is not yet measured on fresh shopper photos, so do not call them photos.

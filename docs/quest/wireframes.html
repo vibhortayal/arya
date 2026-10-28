@@ -1008,6 +1008,34 @@
     .stage{padding:18px 10px 40px;}
     .phone{height:min(780px,calc(100vh - 260px));}
   }
+
+  /* ---- Review 2026-10-28: Photos view, hunt tools, Shelf Scan pop,
+     Muse Image celebration, demo sample receipt, landing ---- */
+  .photo-scene{display:none;}
+  .photo-scene.on{display:block;}
+  .screen[data-screen="hunt"] .photo-scene{position:relative;order:3;flex:none;margin:10px 14px 0;border:1.5px solid var(--line);border-radius:16px;overflow:hidden;height:188px;}
+  .ph-frame{position:absolute;inset:0;background:linear-gradient(160deg,#D9D9DE 0%,#ECECEF 45%,#C9C9CF 100%);display:flex;flex-direction:column;justify-content:space-between;padding:10px;box-sizing:border-box;}
+  .ph-chip{align-self:flex-start;background:rgba(27,27,30,.78);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;}
+  .ph-target{align-self:center;background:var(--acc);color:#fff;font-size:13px;font-weight:800;border-radius:10px;padding:6px 10px;box-shadow:0 0 0 6px rgba(228,87,46,.18);}
+  .ph-cap{font-size:11px;line-height:1.45;color:var(--ink2);background:rgba(255,255,255,.86);border-radius:8px;padding:5px 7px;}
+  .screen[data-screen="hunt"].scene-photo .scene{display:none;}
+  .hunt-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:8px 14px 0;order:4;}
+  .screen[data-screen="hunt"] .hunt-tools .not-here-btn{margin:0;}
+  .tool-btn{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-size:12.5px;font-weight:800;color:var(--ink);min-height:36px;}
+  .scan-pop{display:none;order:4;margin:10px 14px 0;border:1.5px solid var(--acc);background:#fff;border-radius:16px;padding:12px;}
+  .scan-pop.show{display:block;}
+  .sp-k{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--acc);margin:0 0 8px;}
+  .sp-row{display:flex;align-items:center;gap:10px;}
+  .sp-box{width:44px;height:44px;border:2.5px solid var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;}
+  .sp-txt{flex:1;font-size:13px;line-height:1.4;color:var(--ink2);}
+  .sp-txt strong{color:var(--ink);}
+  .sp-note{font-size:11.5px;line-height:1.5;color:var(--ink3);margin:9px 0 8px;}
+  .t-art{font-size:22px;line-height:1;}
+  .t-credit{display:block;font-size:10px;color:var(--ink3);margin-top:2px;}
+  .demo-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;background:var(--fill2);color:var(--ink2);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:1px;}
+  .demo-only{border-style:dashed;}
+  .landing-hero{height:170px;border-radius:16px;background:linear-gradient(160deg,#D9D9DE,#C9C9CF);display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;margin-bottom:12px;}
+  .landing-hero span{font-size:11px;font-weight:700;background:rgba(255,255,255,.88);border-radius:8px;padding:4px 8px;color:var(--ink2);}
 </style>
 </head>
 <body>
@@ -1037,10 +1065,10 @@
   <nav class="index" aria-label="Wireframe screens">
     <p class="tool-label">Wireframe browser</p>
     <h1><svg class="ic" aria-hidden="true"><use href="#i-basket-pin"/></svg>Arya Quest — UX</h1>
-    <p class="tool-sub">Click a screen to jump, or tap through inside the phone — the buttons work. Greyscale is structure; the orange is the game. Screens 1–16 are Quest; B1–B5 are the Brain (B6 lives inside Profile, screen 12).</p>
+    <p class="tool-sub">Click a screen to jump, or tap through inside the phone — the buttons work. Greyscale is structure; the orange is the game. Screen 0 is the signed-out Landing; screens 1–16 are Quest; B1–B5 are the Brain (B6 lives inside Profile, screen 12).</p>
     <ol id="screenIndex"></ol>
     <div class="flow-note">
-      <strong>Try the fixed path:</strong> Today → Resume Trader Joe's → in the Hunt, <strong>GRAB Sourdough (stop 5) before Organic Milk</strong>, then tap <strong>↩ Put back</strong> on Milk's row — the row never moves, nothing closes, the count just changes. Collect everything (the hunt waits — no auto-finish) → <strong>Finish →</strong> → <strong>Skip receipt</strong> → Score reads “hunt finished” → back on Today the hero is gone and the quest sits once under <strong>Finished · Receipt missing</strong> → tap <strong>Add receipt</strong> (its own screen — not Finish) → <strong>Back</strong> returns you to Today, exactly where you tapped it.
+      <strong>Start at Landing</strong> (the judge's front door). <strong>Try the fixed path:</strong> Today → Resume Trader Joe's → in the Hunt, <strong>GRAB Sourdough (stop 5) before Organic Milk</strong>, then tap <strong>↩ Put back</strong> on Milk's row — the row never moves, nothing closes, the count just changes. Collect everything (the hunt waits — no auto-finish) → <strong>Finish →</strong> → <strong>Skip receipt</strong> → Score reads “hunt finished” → back on Today the hero is gone and the quest sits once under <strong>Finished · Receipt missing</strong> → tap <strong>Add receipt</strong> (its own screen — not Finish) → <strong>Back</strong> returns you to Today, exactly where you tapped it.
     </div>
   </nav>
 
@@ -1059,6 +1087,21 @@
     </div>
     <div class="phone" id="phone">
       <div class="notch"></div>
+
+      <!-- ===== SCREEN 0 · LANDING (signed out — the judge's front door) ===== -->
+      <section class="screen" data-screen="landing">
+        <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
+        <div class="scroll" style="padding-top:8px;">
+          <p style="font-size:17px;font-weight:800;margin:4px 0 10px;">Arya</p>
+          <div class="landing-hero"><span>A real frame of the mapped Trader Joe's aisle</span></div>
+          <h2 style="font-size:24px;line-height:1.15;margin:0 0 8px;">Your grocery list, as a treasure hunt in your real store.</h2>
+          <p style="font-size:14px;line-height:1.55;color:var(--ink);">Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store — real photos of the aisle, with a 3D model one tap away. The receipt at checkout settles the score.</p>
+          <p style="font-size:12.5px;line-height:1.5;color:var(--ink2);">Built on Meta models: SAM 3.1 finds the shelves · Muse Spark reads lists and labels shelves · Muse Wonder reads receipts · Muse Voice Transcribe takes dictation · Muse Image drew the characters.</p>
+          <button class="btn acc" data-go="today" style="margin-top:6px;">Try the demo — play the Trader Joe's hunt</button>
+          <p style="font-size:12px;line-height:1.5;color:var(--ink3);margin-top:8px;">A fictional household, no account. Everything you do lasts for this visit only; the camera and microphone call the Meta API live.</p>
+          <p style="font-size:14px;font-weight:700;margin-top:14px;">Sign in ›</p>
+        </div>
+      </section>
 
       <!-- ===== SCREEN 1 · TODAY (HUB) ===== -->
       <section class="screen" data-screen="today">
@@ -1114,7 +1157,7 @@
             <span class="g-arrow">›</span>
           </button>
           <button class="hub-row" data-go="brainlist">
-            <span style="font-size:13px;line-height:1.55;color:var(--ink);">4 staples due: Organic Raspberry · Mandarins · KS Almonds · Slice Almond — learned from 114 verified receipts. Returned items never re-suggested.</span>
+            <span style="font-size:13px;line-height:1.55;color:var(--ink);">4 staples due: Organic Raspberry · Mandarins · KS Almonds · Greek Yogurt — learned from 114 verified receipts. Returned items never re-suggested.</span>
           </button>
         </div>
         <div class="tabbar">
@@ -1265,7 +1308,7 @@
           <button class="mode-card quest" id="questCard">
             <div class="m-ic"><svg class="ic" aria-hidden="true"><use href="#i-flag"/></svg></div>
             <h3>Quest mode</h3>
-            <p>The play run. Your list becomes a treasure hunt in the store — in 3D Cloud, Aisle, or flat Strip. The trail suggests an order — grab any stop in any order; items move and so do you. No 3D? The game still plays.</p>
+            <p>The play run. Your list becomes a treasure hunt in the store — in real Photos of the aisle (the default on a mapped store), the 3D point cloud, Aisle, or flat Strip. The trail suggests an order — grab any stop in any order; items move and so do you. No 3D? The game still plays.</p>
             <div class="feats"><span class="tag game">Hunt &amp; collect</span><span class="tag game">Timer</span><span class="tag game">Streaks</span></div>
             <p class="tap-hint">Tap to start the hunt ▸</p>
           </button>
@@ -1281,7 +1324,7 @@
       </section>
 
       <!-- ===== SCREEN 5 · HUNT (QUEST) ===== -->
-      <section class="screen" data-screen="hunt">
+      <section class="screen scene-photo" data-screen="hunt">
         <div class="scene" id="cloudScene" aria-hidden="true">
           <svg viewBox="0 0 390 800" preserveAspectRatio="xMidYMid slice">
             <!-- back wall / ceiling -->
@@ -1363,10 +1406,18 @@
           </div>
         </div>
         <div class="streak-strip"><span class="hchip">🔥 6-day streak</span></div>
-        <div class="scene-toggle" role="group" aria-label="Scene view — Cloud, Aisle, or Strip">
-          <button data-scene="cloud" class="on"><svg class="ic" aria-hidden="true"><use href="#i-points"/></svg> 3D Cloud</button>
+        <div class="scene-toggle" role="group" aria-label="Scene view — Photos, 3D, Aisle, or Strip">
+          <button data-scene="photo" class="on">📷 Photos</button>
+          <button data-scene="cloud"><svg class="ic" aria-hidden="true"><use href="#i-points"/></svg> 3D</button>
           <button data-scene="aisle"><svg class="ic" aria-hidden="true"><use href="#i-store"/></svg> Aisle</button>
           <button data-scene="strip">▦ Strip</button>
+        </div>
+        <div class="photo-scene on" id="photoScene" aria-label="Photos view — the walkthrough's own frames">
+          <div class="ph-frame">
+            <span class="ph-chip">Real photo · frame 47 of 90</span>
+            <span class="ph-target">🥛 Organic Milk · Dairy wall, right</span>
+            <span class="ph-cap">Photos (default on a mapped store): the walkthrough video's own frames along the path, crossfaded as you move. A real photo of the real aisle — never called a 3D model or a live view.</span>
+          </div>
         </div>
         <div class="strip-scene" id="stripScene" aria-label="Strip view — flat aisle strip">
           <p class="strip-label">Strip view · Suggested order · Grab any stop · No 3D needed</p>
@@ -1379,7 +1430,17 @@
           <div class="strip-stop" data-strip-name="Honey"><span class="ss-n">7</span><span class="ss-name">Honey</span><span class="ss-meta">Aisle 3</span><button class="strip-grab" data-grab="Honey" type="button">GRAB</button></div>
           <div class="strip-stop" data-strip-name="Spinach"><span class="ss-n">8</span><span class="ss-name">Spinach</span><span class="ss-meta">Aisle 2</span><button class="strip-grab" data-grab="Spinach" type="button">GRAB</button></div>
         </div>
-        <button class="not-here-btn" id="notHereBtn">⚠ Not here?</button>
+        <div class="hunt-tools" role="group" aria-label="Hunt tools">
+          <button class="tool-btn" id="scanBtn" type="button">📷 Scan shelf</button>
+          <button class="tool-btn" id="locateBtn" type="button">🧭 Where am I?</button>
+          <button class="not-here-btn" id="notHereBtn">⚠ Not here?</button>
+        </div>
+        <div class="scan-pop" id="scanPop" role="status">
+          <p class="sp-k">SHELF SCAN · SAM 3.1 found it · Spark confirmed</p>
+          <div class="sp-row"><span class="sp-box">🍝</span><span class="sp-txt"><strong>Pasta Sauce</strong><br/>On this shelf — middle row, left. Boxed in your photo.</span><button class="strip-grab" type="button" data-grab-pop="Pasta Sauce">GRAB</button></div>
+          <p class="sp-note">One photo of the shelf → only items still on your list are searched; a find shows only after a second model confirms the crop. Nothing is stored. Works in any store, mapped or not.</p>
+          <button class="btn ghost" id="scanClose" type="button">Done</button>
+        </div>
 
         <!-- slim session rail -->
         <div class="rail" aria-label="Today's sessions">
@@ -1475,6 +1536,7 @@
               <span class="tag">Back returns to the hunt — not Home</span>
             </div>
             <button class="receipt-btn" id="snapBtn"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg> Snap your receipt</button>
+            <button class="btn ghost demo-only" data-sample="snapBtn" type="button" style="margin-top:11px;">Use a sample receipt <span class="demo-tag">DEMO</span></button>
             <button class="btn ghost" id="skipBtn" style="margin-top:11px;">Skip receipt — finish anyway</button>
             <div class="skip-explainer">
               <strong>What Skip does — it closes the hunt.</strong> The quest is finished either way: it leaves Today's hero and your Profile's active spots, and moves to <strong>Receipts</strong> as <strong>“Finished · Receipt missing.”</strong> It does not stay open, pending, or resumable. You can add the receipt later from Receipts — that opens its own Add-receipt screen, never this Finish screen again.
@@ -1498,6 +1560,7 @@
           </div>
           <p style="font-size:14px;line-height:1.6;color:var(--ink2);margin-top:14px;">This screen exists for one job: attaching a receipt to a hunt that is <strong style="color:var(--ink)">already finished</strong>. Snapping it verifies the haul and feeds your patterns. It does <strong style="color:var(--ink)">not</strong> reopen the quest, restart the hunt, or route you through the Finish screen.</p>
           <button class="receipt-btn" id="attachSnapBtn" style="margin-top:18px;"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg> Snap the receipt photo</button>
+          <button class="btn ghost demo-only" data-sample="attachSnapBtn" type="button" style="margin-top:11px;">Use a sample receipt <span class="demo-tag">DEMO</span></button>
           <div class="upload-done" id="attachDone">✓ Receipt added — haul verified. The “Receipt missing” tags clear everywhere: Today, Receipts, Profile.</div>
           <button class="btn ghost" id="attachViewBtn" style="display:none;margin-top:11px;" data-go="receipt">View the digitized receipt ›</button>
         </div>
@@ -2231,7 +2294,7 @@
         <div class="statusbar"><span>9:41</span><span class="sicons">5G ▰▰▰▱</span></div>
         <div class="appbar"><div><p class="ttl">List</p><p class="sub">The Brain · B1 — one list, a store lens</p></div></div>
                 <div class="scroll">
-          <p style="font-size:13.5px;line-height:1.55;color:var(--ink);">4 staples due: Organic Raspberry · Mandarins · KS Almonds · Slice Almond — learned from 114 verified receipts. Returned items never re-suggested.</p>
+          <p style="font-size:13.5px;line-height:1.55;color:var(--ink);">4 staples due: Organic Raspberry · Mandarins · KS Almonds · Greek Yogurt — learned from 114 verified receipts. Returned items never re-suggested.</p>
           <div class="store-filter" role="group" aria-label="Store lens — view the one list by store" style="margin-top:14px;">
             <button data-store-filter="all" class="on">All</button>
             <button data-store-filter="costco">Costco</button>
@@ -2361,6 +2424,9 @@
 
   /* ---------------- Screen registry + captions ---------------- */
   var SCREENS = [
+    {id:"landing",  name:"Landing",          note:"Signed out — what Arya is, one tap into the demo",
+     cap:"Screen 0 · Landing (signed out)",
+     body:"<strong>Primary action:</strong> “Try the demo — play the Trader Joe's hunt”. <strong>Why (review 2026-10-28):</strong> a judge's first screen used to be a bare sign-in form that never said Quest, hunt or Meta. Now it shows a real frame of the mapped aisle, one sentence, the Meta models by job, and opens the fictional demo household in one tap — no account. <strong>Demo rule:</strong> every demo action works (list, hunt in every mode and view, receipt, Ask) and lasts for that visit only. Sign-in folds below."},
     {id:"today",    name:"Today",            note:"Hub — hero card + game rows, nothing else",
      cap:"Screen 1 · Today (hub)",
      body:"<strong>Decluttered:</strong> greeting, <strong>one hero card</strong> — the in-progress Trader Joe's Quest, and Resume is the only primary button on the screen. <strong>The hero only ever holds a hunt that is actually being played:</strong> the moment a hunt finishes — receipt snapped or skipped — the hero clears, a “No quest in progress” card takes its place, and the hunt appears once under <strong>Finished</strong> as a closed record (“Finished · Receipt missing”, with an Add-receipt button when skipped). No finished quest can sit here looking resumable — that was the “stuck quest” bug. Below the hero: compact <strong>game rows</strong> under “Your games”, one <strong>“Needs your eye · 2”</strong> row, and the list as <strong>one plain-text line</strong>."},
@@ -2375,16 +2441,16 @@
      body:"<strong>Primary action:</strong> one tap on a mode card starts the session. <strong>Rule:</strong> modes are moods, not audiences — Quest when there's time to play, Express when it's a rush. Same list, same store, two ways through it."},
     {id:"hunt",     name:"Hunt (Quest)",     note:"The game — grab any stop, any order",
      cap:"Screen 5 · Hunt (Quest mode)",
-     body:"<strong>Rebuilt after the broken-UI report — three fixes.</strong> <strong>1 · One column, nothing floating:</strong> the old hunt scattered the banner, rail, streak, view toggle and buttons as absolute overlays on a full-screen scene — “items arranged all over the screen”. Now everything is in normal flow: HUD → view switch → a contained store view → suggested next → actions → the list. <strong>2 · Unchecking is safe:</strong> there is exactly <strong>one list</strong> (Cloud / Aisle / Strip only change the store-view card — they never duplicate the items, which is how views used to desync). Grabbed rows show <strong>↩ Put back</strong> in the same 92px button box; rows never move, re-sort, resize or lose your scroll position; toggling never closes anything, never navigates, and collecting the last item no longer auto-finishes — the button becomes “Finish →” and waits for your tap. Try it: grab Sourdough before Milk, then put Milk back. <strong>3 · Non-sequential stays:</strong> every stop has its own GRAB, the banner only <em>suggests</em> a next stop, and the route is a recommendation, not a rail. <strong>Celebration:</strong> still a small card in a corner, never centre-screen."},
+     body:"<strong>Rebuilt after the broken-UI report — three fixes.</strong> <strong>1 · One column, nothing floating:</strong> the old hunt scattered the banner, rail, streak, view toggle and buttons as absolute overlays on a full-screen scene — “items arranged all over the screen”. Now everything is in normal flow: HUD → view switch → a contained store view → suggested next → actions → the list. <strong>2 · Unchecking is safe:</strong> there is exactly <strong>one list</strong> (Cloud / Aisle / Strip only change the store-view card — they never duplicate the items, which is how views used to desync). Grabbed rows show <strong>↩ Put back</strong> in the same 92px button box; rows never move, re-sort, resize or lose your scroll position; toggling never closes anything, never navigates, and collecting the last item no longer auto-finishes — the button becomes “Finish →” and waits for your tap. Try it: grab Sourdough before Milk, then put Milk back. <strong>3 · Non-sequential stays:</strong> every stop has its own GRAB, the banner only <em>suggests</em> a next stop, and the route is a recommendation, not a rail. <strong>Celebration:</strong> still a small card in a corner, never centre-screen — it carries the item's Muse Image character and a verified fun fact (Quest mode only). <strong>4 · Views (review 2026-10-28):</strong> Photos is the default on a mapped store (the walkthrough's real frames, never called a 3D model), then 3D (the VGGT point cloud), Aisle, Strip — each only swaps the store-view card. <strong>5 · Tools:</strong> 📷 Scan shelf (SAM 3.1 finds list items in one shelf photo; Spark confirms each crop before it pops, with its own GRAB — any store, mapped or not), 🧭 Where am I? (mapped stores: one photo places you at the nearest stop; the matcher Muse Wonder wrote), and ⚠ Not here?. Try Scan shelf, then GRAB from the pop."},
     {id:"express",  name:"Express run",      note:"Same store, game off — walking order + big checks",
      cap:"Screen 6 · Express run",
      body:"<strong>Primary action:</strong> check any row, in any order. <strong>Rule:</strong> no game elements at all — the list is sorted in walking order as a suggestion (check-offs work out of order too), with extra-large targets, and the time estimate drops as stops clear. Finish unlocks when every row is checked."},
     {id:"finish",   name:"Finish — receipt", note:"The scorecard ritual at the end of every session",
      cap:"Screen 7 · Finish — receipt",
-     body:"<strong>Primary action:</strong> snap the receipt. <strong>Rule:</strong> every session ends the same way — the receipt is the scorecard that proves the haul and settles the quest, and quietly feeds the household patterns underneath. <strong>Skip closes the hunt, full stop:</strong> the screen says so in plain words — the quest leaves Today's hero and Profile's active spots and moves to Receipts as “Finished · Receipt missing”. It never reads as pending or resumable. <strong>Back returns to the hunt</strong> (the stack), not Home — this screen finally has a Back button at all."},
+     body:"<strong>Primary action:</strong> snap the receipt. <strong>Rule:</strong> every session ends the same way — the receipt is the scorecard that proves the haul and settles the quest, and quietly feeds the household patterns underneath. <strong>Skip closes the hunt, full stop:</strong> the screen says so in plain words — the quest leaves Today's hero and Profile's active spots and moves to Receipts as “Finished · Receipt missing”. It never reads as pending or resumable. <strong>Back returns to the hunt</strong> (the stack), not Home — this screen finally has a Back button at all. <strong>Demo:</strong> on the demo household a dashed “Use a sample receipt” stands in for the photo, so a judge who is not in the store still reaches a verified score; real accounts never see it."},
     {id:"addreceipt", name:"Add receipt",    note:"Finished hunt · attach a receipt — hunt stays closed",
      cap:"Screen 7b · Add receipt (finished hunt)",
-     body:"<strong>Primary action:</strong> snap the receipt photo. <strong>Why this screen exists:</strong> adding a receipt to a finished hunt used to route through the hunt's Finish screen — and Back from there dumped you Home, so the quest felt stuck and the navigation felt broken. Now it is its own screen, reached from Today (Finished row), Receipts, or Profile. It verifies the haul and clears the “Receipt missing” tags everywhere, and it <strong>never reopens the quest</strong>. <strong>Back returns to the exact screen you tapped “Add receipt” on</strong> — the navigation stack, not a hard-coded destination."},
+     body:"<strong>Primary action:</strong> snap the receipt photo. <strong>Why this screen exists:</strong> adding a receipt to a finished hunt used to route through the hunt's Finish screen — and Back from there dumped you Home, so the quest felt stuck and the navigation felt broken. Now it is its own screen, reached from Today (Finished row), Receipts, or Profile. It verifies the haul and clears the “Receipt missing” tags everywhere, and it <strong>never reopens the quest</strong>. <strong>Back returns to the exact screen you tapped “Add receipt” on</strong> — the navigation stack, not a hard-coded destination. <strong>Demo:</strong> the same dashed “Use a sample receipt” appears here on the demo household only."},
     {id:"score",    name:"Score",            note:"Result — verified haul, time, streak",
      cap:"Screen 8 · Score",
      body:"<strong>Primary action:</strong> “Play next session”. <strong>Rule:</strong> the result closes the loop in one glance — haul, time, streak — and hands you straight into the day's next game. <strong>Closure is stated, not implied:</strong> after a snap it reads verified-and-closed; after a Skip it leads with “hunt finished” — never “not scored yet” — and says exactly where the quest went (Receipts, as “Finished · Receipt missing”) and that the hero on Today no longer holds it. Try it: finish the Trader Joe's hunt, Skip, and watch Today change."},
@@ -2665,11 +2731,17 @@
     var m = msg.match(/^(✓|⚠|▦|👁)?\s*(.+?)\s+collected(?:\s*·\s*(.+))?$/);
     if(m){ main = m[2] + " collected"; rest = m[3] || rest; }
     var thumb = msg.indexOf("↩")===0 ? "↩" : "✓";
+    /* Quest-mode collect: a Muse Image character + a verified fun
+       fact ride the same small corner card (Discussion 32/44). */
+    var CHAR = {"Organic Milk":"🥛","Sourdough":"🍞","Pasta Sauce":"🍝","Honey":"🍯","Spinach":"🥬","Eggs":"🥚","Bananas":"🍌","Coffee":"☕"};
+    var FACT = {"Organic Milk":"A dairy cow drinks about a bathtub of water a day.","Sourdough":"Sourdough starters can live for over a century.","Pasta Sauce":"Tomatoes were once grown only as decoration in Europe.","Honey":"Sealed honey never spoils.","Spinach":"Spinach is in the same family as beets.","Eggs":"An eggshell has up to 17,000 tiny pores."};
+    if(m && CHAR[m[2]]){ thumb = '<span class="t-art">'+CHAR[m[2]]+'</span>'; rest = (FACT[m[2]] || rest); }
     if(main.indexOf("↩ ")===0){ main = main.slice(2); }
     toastEl.innerHTML = '<span class="t-thumb">'+thumb+'</span><span><span class="t-main"></span><span class="t-sub"></span></span>';
     toastEl.querySelector(".t-main").textContent = main;
     toastEl.querySelector(".t-sub").textContent = rest;
     toastEl.querySelector(".t-sub").style.display = rest ? "block" : "none";
+    if(m && CHAR[m[2]]){ var cr = document.createElement("span"); cr.className = "t-credit"; cr.textContent = "Character: Muse Image · Quest mode only"; toastEl.querySelector(".t-sub").after(cr); }
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1900);
@@ -3055,15 +3127,40 @@
     document.querySelectorAll("[data-scene]").forEach(function(b){ b.classList.toggle("on", b.dataset.scene===mode); });
     var strip = document.getElementById("stripScene");
     var cloud = document.getElementById("cloudScene");
+    var photo = document.getElementById("photoScene");
+    var huntEl = document.querySelector('.screen[data-screen="hunt"]');
     if(strip) strip.classList.toggle("on", mode==="strip");
-    if(cloud) cloud.classList.toggle("hide", mode==="strip");
+    if(photo) photo.classList.toggle("on", mode==="photo");
+    if(huntEl) huntEl.classList.toggle("scene-photo", mode==="photo");
+    if(cloud) cloud.classList.toggle("hide", mode==="strip" || mode==="photo");
     if(mode==="aisle" && cloud){ cloud.style.opacity=".72"; } else if(cloud){ cloud.style.opacity="1"; }
   }
   document.querySelectorAll("[data-scene]").forEach(function(b){
-    b.addEventListener("click", function(){ setScene(b.dataset.scene); toast(b.dataset.scene==="strip" ? "▦ Strip view — same hunt, no 3D" : b.dataset.scene==="aisle" ? "Aisle view — stylized shelves" : "3D Cloud — point-cloud store"); });
+    b.addEventListener("click", function(){ setScene(b.dataset.scene); toast(b.dataset.scene==="strip" ? "▦ Strip view — same hunt, no 3D" : b.dataset.scene==="aisle" ? "Aisle view — stylized shelves" : b.dataset.scene==="photo" ? "📷 Photos — the walkthrough's real frames" : "3D — VGGT point cloud of the store"); });
   });
   var playStripBtn = document.getElementById("playStripBtn");
   if(playStripBtn){ playStripBtn.addEventListener("click", function(){ document.getElementById("huntChip").textContent="🌱 Sprouts · Quest · Strip"; go("hunt"); setScene("strip"); }); }
+
+  /* ---------------- Hunt tools: Shelf Scan, Where am I? ---------------- */
+  var scanBtn = document.getElementById("scanBtn"), scanPop = document.getElementById("scanPop");
+  if(scanBtn){ scanBtn.addEventListener("click", function(){ scanPop.classList.add("show"); }); }
+  var scanClose = document.getElementById("scanClose");
+  if(scanClose){ scanClose.addEventListener("click", function(){ scanPop.classList.remove("show"); }); }
+  document.querySelectorAll("[data-grab-pop]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      TJ.forEach(function(x){ if(x.name===btn.dataset.grabPop && !x.done){ x.done = true; toast("✓ " + x.name + " collected", "+15 pts"); } });
+      scanPop.classList.remove("show"); syncTJ();
+    });
+  });
+  var locateBtn = document.getElementById("locateBtn");
+  if(locateBtn){ locateBtn.addEventListener("click", function(){
+    toast("🧭 Placed you at stop 4 · Dairy wall", "One shelf photo, matched on the server — the hunt follows from here");
+  }); }
+  /* Demo only: a sample receipt stands in for a real one, so a judge
+     who is not in the store still reaches a verified score. */
+  document.querySelectorAll("[data-sample]").forEach(function(b){
+    b.addEventListener("click", function(){ var t = document.getElementById(b.dataset.sample); if(t) t.click(); });
+  });
 
   /* ---------------- Not here / Spotter ---------------- */
   var notHereBtn = document.getElementById("notHereBtn");
@@ -3094,7 +3191,7 @@
     {name:"Organic Raspberry", why:"every ~9 days · due now", qty:1, done:false, stores:["tj"]},
     {name:"Mandarins", why:"every ~10 days · due now", qty:2, done:false, stores:["tj"]},
     {name:"KS Almonds", why:"every ~6 weeks · running low", qty:1, done:false, stores:["costco"]},
-    {name:"Slice Almond", why:"every ~6 weeks · running low", qty:1, done:false, stores:["costco"]}
+    {name:"Greek Yogurt", why:"every ~6 weeks · running low", qty:1, done:false, stores:["costco"]}
   ];
   var STORE_NAMES = {costco:"Costco", tj:"Trader Joe's"};
   var brainFilter = "all";

@@ -702,3 +702,18 @@ body.hunting #tabs { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .celeb-char, .celeb-bubble { animation: celebfade 0.25s ease-out both; }
 }
+
+/* Landing (review 2026-10-28): the judge's front door says what Arya
+   is and opens the demo in one tap; sign-in folds below it. */
+.hero { margin: 6px 0 14px; }
+.heroimg { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover;
+  border-radius: var(--radius); display: block; margin: 6px 0 4px; }
+.herotitle { font-size: 28px; line-height: 1.15; margin: 14px 0 8px; }
+.herometa { margin: 10px 0 4px; }
+.signin summary { cursor: pointer; font-weight: 600; min-height: 44px;
+  display: flex; align-items: center; }
+/* On a laptop the tab icons sit under the 680 px column, not at the
+   screen edges. */
+@media (min-width: 760px) {
+  #tabs { padding-left: calc((100vw - 680px) / 2); padding-right: calc((100vw - 680px) / 2); }
+}

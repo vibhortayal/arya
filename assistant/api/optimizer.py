@@ -67,7 +67,12 @@ def _candidates(typed_name):
             continue
         for n in names:
             toks = set(_tokens(n))
-            cover = bool(typed and toks and (typed <= toks or toks <= typed))
+            # Coverage runs one way only: every typed token is in the
+            # product's name ("eggs" -> "Organic Eggs" is a candidate).
+            # A product whose name is a strict subset of what was typed
+            # is a different, broader thing — "pasta sauce" is not
+            # "Pasta 1 lb" — so it is never a candidate (never guess).
+            cover = bool(typed and toks and typed <= toks)
             close = _ratio(norm, state._norm_name(n)) >= FUZZY_MIN
             token_close = bool(typed) and all(
                 any(_ratio(_squash(t), _squash(et)) >= 0.75 for et in toks)
