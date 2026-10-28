@@ -1111,9 +1111,12 @@ async def list_from_text(req: Request):
         names = extract_items_model(text, client)
         typed = [(n, 1) for n in names]
         source = "model"
+    on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
     added = [_add_name_to_list(n, q) for n, q in typed]
-    return {"added": len(added), "names": [a["name"] for a in added],
-            "source": source}
+    # Already on the list: neither merged nor new, so not "added".
+    already = sum(1 for a in added if a["item_id"] in on_list)
+    return {"added": len(added) - already, "already": already,
+            "names": [a["name"] for a in added], "source": source}
 
 
 @app.post("/api/list/from-photo")
