@@ -6,7 +6,7 @@ import time
 def prepare(smart_list, names, store="Costco"):
     return {"cart_id": "cart-" + smart_list["list_id"], "list_id": smart_list["list_id"],
             "store": store,
-            "items": [{"item_id": i["item_id"], "name": names.get(i["item_id"], i["item_id"]),
+            "items": [{"item_id": i["item_id"], "name": i.get("name") or names.get(i["item_id"], i["item_id"]),
                        "qty": i["qty"]} for i in smart_list["items"]],
             "state": "waiting", "approved_at": None}
 
