@@ -1259,7 +1259,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").cat
 paintSpeak();
 
 async function boot() {
-  const status = await api("/auth/status").catch(() => ({ has_users: true }));
+  const status = await api("/auth/status").catch(() => ({ has_users: true, registration_open: false }));
   const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
   if (me && me.user) {
     enterApp(me.user, me.demo);
@@ -1267,21 +1267,23 @@ async function boot() {
   }
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-login"; });
   // Three modes: bootstrap (no accounts yet -> setup), sign in, and
-  // public registration (opened by the owner 2026-10-28). The toggle
-  // flips between the last two; bootstrap never shows it.
+  // public registration. Registration is LOCKED by default (owner,
+  // 2026-10-28): the toggle shows only when the server reports it
+  // open (ARYA_REGISTRATION_OPEN=1). Bootstrap never shows it.
   let loginMode = status.has_users ? "login" : "setup";
   const paintLoginMode = () => {
     const create = loginMode !== "login";
     $("#login-title").textContent = create ? "Create your account" : "Sign in";
     $("#login-btn").textContent = create ? "Create account" : "Sign in";
     $("#login-pass").autocomplete = create ? "new-password" : "current-password";
-    $("#login-toggle").hidden = loginMode === "setup";
+    $("#login-toggle").hidden = loginMode === "setup" || !status.registration_open;
     $("#login-toggle").textContent = create ? "Already have an account? Sign in" : "New here? Create account";
     $("#login-error").textContent = "";
   };
   if (!status.has_users) $(".signin").open = true;
   paintLoginMode();
   $("#login-toggle").addEventListener("click", () => {
+    if (!status.registration_open) return;
     loginMode = loginMode === "login" ? "register" : "login";
     paintLoginMode();
   });
