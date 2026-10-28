@@ -131,7 +131,8 @@ def _line_weeks_and_counts():
 
 
 def _done_sessions():
-    return [s for s in quest._store()["sessions"] if s["state"] == "done"]
+    return [s for s in quest._store()["sessions"]
+            if s["state"] == "done" and not s.get("placeholder")]
 
 
 def _speed_demon(done):
@@ -245,7 +246,7 @@ def unsettled_hunts():
     (receipt-closed) sessions only."""
     out = []
     for s in quest._store()["sessions"]:
-        if s["state"] != "finished":
+        if s["state"] != "finished" or s.get("placeholder"):
             continue
         done = sum(1 for i in s["items"] if i.get("checked"))
         out.append({"session_id": s["id"], "store": s["store"],
