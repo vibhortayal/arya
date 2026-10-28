@@ -8,7 +8,7 @@ for a store with a shelf graph also runs item–shelf matching
 (api/shelfmatch.py) — the one model-touching step, and it never
 blocks or breaks creation.
 """
-import hashlib, secrets
+import contextlib, hashlib, secrets
 from datetime import date, datetime
 
 from api import state
@@ -34,6 +34,37 @@ def _store():
 
 def _save_store(s):
     state._save("quest.json", s)
+
+
+@contextlib.contextmanager
+def _as_user(username):
+    """Run a block against another account's per-user store (the
+    friends mirror in social.py). Only a handle and a friend
+    status ever cross accounts this way — no household data is
+    read or written."""
+    tok = state._current_user.set(username)
+    try:
+        yield
+    finally:
+        state._current_user.reset(tok)
+
+
+def username_for_handle(handle):
+    """The registered account whose handle this is, or None. The
+    account registry lives in the root store, so it is read with
+    the per-user context cleared. If two accounts share a
+    local-part across domains, the first by name wins; the handle
+    is the social spelling either way."""
+    from api import auth
+    tok = state._current_user.set(None)
+    try:
+        names = sorted(auth.users())
+    finally:
+        state._current_user.reset(tok)
+    for name in names:
+        if name.split("@")[0].strip().lower() == handle:
+            return name
+    return None
 
 
 def _now():
@@ -280,9 +311,11 @@ def finish_time(sess):
 
 
 # --- Shop-Off ---------------------------------------------------------------
-# Demo-grade: both players' sessions live in this account; the
-# opponent's is a local placeholder, marked as such, until real
-# cross-account races exist.
+# Race mechanics are local: both players' sessions live in this
+# account and the opponent's is a placeholder, marked as such.
+# The opponent must still be a real registered account (review
+# 2026-10-28, M10) — a race against a handle nobody owns can
+# never be joined, finished, or verified.
 
 def my_handle():
     user = state._current_user.get() or ""
@@ -294,6 +327,8 @@ def create_shopoff(store_name, raw_items, opponent_handle, client=None):
     opponent = (opponent_handle or "").strip().lstrip("@").lower()
     if not opponent:
         raise ValueError("opponent_handle is required")
+    if username_for_handle(opponent) is None:
+        raise ValueError("no account with that handle")
     race_id = _new_id("race", store_name + opponent)
     mine = create_session(store_name, "quest", raw_items,
                           extra={"shopoff_id": race_id}, client=client)

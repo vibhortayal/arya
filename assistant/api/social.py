@@ -22,35 +22,88 @@ def list_friends():
     return quest._store()["friends"]
 
 
+def _mirror_friend(their_username, my_handle, status, create):
+    """Write my side of the edge into the other account's own
+    store: their entry for me, with the mirrored status (my
+    pending_out is their pending_in; accepted mirrors as
+    accepted). Only the handle and the status cross — top_badge
+    and last_hunt start as None there and are never copied.
+    create=False updates an existing entry only, so an accept
+    cannot invent an edge that was never requested."""
+    mirror_status = "pending_in" if status == "pending_out" else status
+    with quest._as_user(their_username):
+        with state.file_lock("quest.json"):
+            s = quest._store()
+            for f in s["friends"]:
+                if f["handle"] == my_handle:
+                    f["status"] = mirror_status
+                    quest._save_store(s)
+                    return f
+            if not create:
+                return None
+            entry = {"handle": my_handle, "status": mirror_status,
+                     "top_badge": None, "last_hunt": None}
+            s["friends"].append(entry)
+            quest._save_store(s)
+            return entry
+
+
 def request_friend(handle):
     handle = _norm_handle(handle)
     if not handle:
         raise ValueError("handle is required")
-    if handle == quest.my_handle():
+    me = quest.my_handle()
+    if handle == me:
         raise ValueError("that is your own handle")
-    s = quest._store()
-    for f in s["friends"]:
-        if f["handle"] == handle:
-            if f["status"] == "pending_in":
-                f["status"] = "accepted"  # mutual: they asked first
-                quest._save_store(s)
-            return f
+    their_username = quest.username_for_handle(handle)
+    if their_username is None:
+        raise ValueError("no account with that handle")
+    friend = None
+    with state.file_lock("quest.json"):
+        s = quest._store()
+        for f in s["friends"]:
+            if f["handle"] == handle:
+                friend = f
+                if f["status"] == "pending_in":
+                    f["status"] = "accepted"  # mutual: they asked first
+                    quest._save_store(s)
+                break
+    if friend is not None:
+        if friend["status"] == "accepted":
+            _mirror_friend(their_username, me, "accepted", create=False)
+        elif friend["status"] == "pending_out":
+            # Idempotent re-request: re-mirror, in case their side
+            # of the edge never landed.
+            _mirror_friend(their_username, me, "pending_out", create=True)
+        return friend
     friend = {"handle": handle, "status": "pending_out",
               "top_badge": None, "last_hunt": None}
-    s["friends"].append(friend)
-    quest._save_store(s)
+    with state.file_lock("quest.json"):
+        s = quest._store()
+        s["friends"].append(friend)
+        quest._save_store(s)
+    _mirror_friend(their_username, me, "pending_out", create=True)
     return friend
 
 
 def accept_friend(handle):
     handle = _norm_handle(handle)
-    s = quest._store()
-    for f in s["friends"]:
-        if f["handle"] == handle and f["status"] == "pending_in":
-            f["status"] = "accepted"
-            quest._save_store(s)
-            return f
-    return None
+    entry = None
+    with state.file_lock("quest.json"):
+        s = quest._store()
+        for f in s["friends"]:
+            if f["handle"] == handle and f["status"] == "pending_in":
+                f["status"] = "accepted"
+                quest._save_store(s)
+                entry = f
+                break
+    if entry is None:
+        return None
+    their_username = quest.username_for_handle(handle)
+    if their_username is not None:
+        _mirror_friend(their_username, quest.my_handle(),
+                       "accepted", create=False)
+    return entry
 
 
 # --- badges ------------------------------------------------------------------
