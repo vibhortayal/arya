@@ -40,28 +40,36 @@ const ShareUI = (() => {
   }
   function faceSrc(file) { return file === "custom" ? "/api/quest/avatar/image" : "assets/characters/" + file; }
 
-  /* Card specs. ctx = { sess, profile, haulPhotoURL } */
+  /* Card specs. ctx = { sess, profile, haulPhotoURL }. The haul card
+   * (HAUL slice) also reads ctx.hidden (a Set of normalised item names
+   * the shopper hid), ctx.title (Arya's trip name), ctx.stats
+   * ({items, new, level}) and ctx.names (the reviewed haul's item
+   * names). It carries no price, no store and no receipt line. */
+  function normKey(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
   function specHaul(ctx) {
     const sess = ctx.sess;
-    const got = sess.items.filter(i => i.checked);
-    const wild = [...new Set([...(sess.wild_finds || []),
-      ...sess.items.filter(i => i.wild).map(i => i.name)])];
-    const settled = sess.state === "done";
-    const pts = window.qHaulPoints ? qHaulPoints(sess, settled) : 0;
-    const tag = chainTag(sess.store);
+    const hidden = ctx.hidden instanceof Set ? ctx.hidden : new Set(ctx.hidden || []);
+    const pool = Array.isArray(ctx.names)
+      ? ctx.names.map(n => ({ name: n }))
+      : sess.items.filter(i => i.checked);
+    const got = pool.filter(i => !hidden.has(normKey(i.name)));
+    const wild = Array.isArray(ctx.names) ? [] :
+      [...new Set([...(sess.wild_finds || []),
+        ...sess.items.filter(i => i.wild).map(i => i.name)])]
+        .filter(n => !hidden.has(normKey(n)));
+    const st = ctx.stats || {};
+    const level = st.level || (ctx.profile && ctx.profile.level) || 1;
     return {
-      kind: "haul", title: "My haul", store: sess.store,
+      kind: "haul", title: ctx.title || "My haul", store: "",
+      sub: `Level ${level}`,
       host: ctx.profile && ctx.profile.avatar || "basket.webp",
       handle: ctx.profile ? "@" + ctx.profile.handle : "",
       faces: got.slice(0, 8).map(i => ({ file: faceFor(i.name), name: i.name })),
       more: Math.max(0, got.length - 8),
       wild: wild.slice(0, 3),
-      stat: settled ? `${got.length} items · ${pts} pts`
-        : `${got.length} items · ${pts} pts to bank`,
+      stat: `${got.length} items · ${st.new || 0} new · level ${level}`,
       photo: ctx.haulPhotoURL || null,
-      caption: settled
-        ? `My ${sess.store} haul: ${got.length} items, ${pts} pts — receipt-verified on Arya.${tag ? " " + tag : ""}${wild.length ? ` Wild finds: ${wild.join(", ")}.` : ""}`
-        : `My ${sess.store} haul: ${got.length} items, ${pts} pts to bank — played on Arya, receipt still to add.${tag ? " " + tag : ""}${wild.length ? ` Wild finds: ${wild.join(", ")}.` : ""}`
+      caption: "My haul on Arya."
     };
   }
   function specLove(ctx, item) {
@@ -129,7 +137,7 @@ const ShareUI = (() => {
     g.font = "800 64px system-ui, sans-serif";
     g.fillText(c.title, 216, 100);
     g.font = "600 40px system-ui, sans-serif"; g.fillStyle = GREY;
-    g.fillText(`${c.handle ? c.handle + " · " : ""}${c.store}`, 218, 158);
+    g.fillText(`${c.handle ? c.handle + " · " : ""}${c.sub !== undefined ? c.sub : c.store}`, 218, 158);
     g.globalAlpha = 1;
     let y = 250;
     if (c.photo) {

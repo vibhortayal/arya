@@ -54,8 +54,16 @@ function put(path, body) {
   return api(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
 let toastTimer = null;
+/* How long a toast stays up: 60 ms a character, at least 4 s, and at
+ * least 7 s when it carries an action (Undo). */
+function toastMs(msg, hasAction) {
+  return Math.max(hasAction ? 7000 : 4000, 60 * String(msg == null ? "" : msg).length);
+}
 function toast(msg, opts) {
   const t = $("#toast");
+  clearTimeout(toastTimer);
+  // The text goes in first (the live region reads the message), then
+  // the buttons are appended.
   t.textContent = msg;
   // An optional one-tap action (Undo) rides on the toast, which then
   // stays a little longer.
@@ -64,12 +72,18 @@ function toast(msg, opts) {
     b.type = "button";
     b.className = "toastact";
     b.textContent = opts.action;
-    b.addEventListener("click", () => { t.hidden = true; opts.onAction && opts.onAction(); });
+    b.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; opts.onAction && opts.onAction(); });
     t.appendChild(b);
   }
+  const x = document.createElement("button");
+  x.type = "button";
+  x.className = "toastclose";
+  x.setAttribute("aria-label", "Dismiss");
+  x.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  x.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; });
+  t.appendChild(x);
   t.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, opts && opts.action ? 6000 : 4200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, toastMs(msg, !!(opts && opts.action)));
 }
 function showErr(e) { toast("Could not load: " + e.message); }
 function row(name, sub, right) {
@@ -184,7 +198,7 @@ function openSess(id) {
 const BADGE_ART = { top_contributor: "blueberry.webp", egg_baron: "egg.webp",
   banana_republic: "banana.webp", speed_demon: "pizza.webp",
   clean_sweep: "basket.webp", first_mapper: "compass.webp",
-  eagle_eye: "binoculars.webp" };
+  eagle_eye: "binoculars.webp", receipt_keeper: "pantry.webp" };
 
 function paintLevelChip(profile) {
   const el = $("#today-level");
@@ -242,8 +256,15 @@ function paintTodayGames(sessions) {
   const el = $("#quest-sessions");
   const closed = s => s.state === "finished" || s.state === "done";
   const open = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
+  // The hero card already carries the hunt to resume; any other open
+  // hunts fold away so Today shows one thing to do.
+  const rank = { playing: 0, paused: 1, not_started: 2 };
+  const hero = [...open].sort((a, b) => (rank[a.state] ?? 9) - (rank[b.state] ?? 9))[0];
+  const rest = open.filter(s => s !== hero);
+  const openHtml = hero ? gameRow(hero) +
+    (rest.length ? `<details class="g-fold"><summary>${rest.length} other open hunt${rest.length === 1 ? "" : "s"}</summary>${rest.map(gameRow).join("")}</details>` : "") : "";
   el.innerHTML = sessions.length
-    ? open.map(gameRow).join("") +
+    ? openHtml +
       (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
     : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
@@ -765,6 +786,18 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
   }
 }
 
+/* After an add, bring the new rows into view and flash them: the
+ * add box sits above the fold of a long list, so a toast alone
+ * left first-time users unsure anything happened. */
+function flashNewRows(names) {
+  const want = new Set((names || []).map(n => String(n).toLowerCase()));
+  const rows = [...document.querySelectorAll("#view-list .listrow")]
+    .filter(r => want.has((r.querySelector(".name")?.textContent || "").trim().toLowerCase()));
+  if (!rows.length) return;
+  rows.forEach(r => { r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash"); });
+  rows[0].scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
 let addBound = false;
 function bindAdd() {
   if (addBound) return;
@@ -783,9 +816,11 @@ function bindAdd() {
       paintAddSplit();
       $("#add-status").textContent = "";
       const dup = r.already ? ` ${r.already} already on it.` : "";
+      const skip = (r.skipped || []).length
+        ? ` Left out (not items): ${r.skipped.join(", ")}.` : "";
       toast((r.added === 1 ? "Added 1 item to your list."
-        : `Added ${r.added} items to your list.`) + dup);
-      renderList().catch(() => {});
+        : `Added ${r.added} items to your list.`) + dup + skip);
+      renderList().then(() => flashNewRows(r.names)).catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
   });
@@ -1334,7 +1369,7 @@ $("#chat-form").addEventListener("submit", async ev => {
   ev.preventDefault();
   const input = $("#chat-input");
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) { toast("Type a question first."); input.focus(); return; }
   input.value = "";
   chatHistory.push({ role: "user", content: text });
   chatLine("me", text);

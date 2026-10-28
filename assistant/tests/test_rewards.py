@@ -147,8 +147,7 @@ class TestPlanAHunt(unittest.TestCase):
 
     def test_buckets_and_list_management(self):
         js = read("quest.js")
-        for label in ("Usually bought here", "New on your list", "Usually from ${st}",
-                      "Often bought here, not on your list"):
+        for label in ("Usually bought here", "New on your list", "Usually from ${st}"):
             self.assertIn(label, js)
         rm = js.split('const b = ev.target.closest("[data-planrm]")')[1].split("\n});")[0]
         self.assertIn('post("/api/list/remove"', rm)

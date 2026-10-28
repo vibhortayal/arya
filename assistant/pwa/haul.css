@@ -1,0 +1,155 @@
+/* Haul (game slice): receipt review, reveal, haul card, Crew hauls.
+   Loaded after styles.css. Only rv- and hl- classes live here, and
+   only the tokens styles.css already defines: greyscale structure and
+   the one orange accent. No gradient, no new colour, light mode only.
+   Text is 15px or more; 12px is for badges and chips. Every control
+   is at least 44px tall. */
+
+/* ---------- the receipt review ---------- */
+.rv-line {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--line2); min-height: 44px;
+}
+.rv-line:last-child { border-bottom: 0; }
+.rv-line .grow { flex: 1 1 160px; min-width: 0; }
+.rv-line .name { display: block; font-weight: 600; }
+.rv-line .sub { display: block; color: var(--ink2); font-size: 15px; }
+.rv-chips { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.rv-fix {
+  min-height: 44px; padding: 0 16px; border: 0; border-radius: 980px;
+  background: var(--fill); color: var(--ink); font-size: 15px; font-weight: 600;
+}
+.rv-fix[aria-pressed="true"] { background: var(--acc); color: var(--panel); }
+.rv-more { margin: 14px 0 0; }
+.rv-more-note { margin: 0 0 8px; }
+.rv-addrcpt, .rv-link {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0;
+  background: none; border: 0; color: var(--acc); font-size: 15px; font-weight: 600;
+  cursor: pointer;
+}
+.rv-sum { text-align: center; margin: 0; }
+
+/* ---------- the reveal ---------- */
+.rv-head { text-align: center; margin: 6px 0 14px; }
+.rv-loot {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 14px;
+}
+.rv-tile {
+  position: relative; aspect-ratio: 1; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--line2);
+  display: grid; place-items: center;
+  opacity: 0; transform: scale(0.6);
+  transition: opacity 0.28s ease, transform 0.34s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+.rv-tile.in { opacity: 1; transform: none; }
+.rv-tile img { width: 84%; height: 84%; object-fit: contain; }
+.rv-boss { border: 2px solid var(--acc); }
+.rv-new {
+  position: absolute; top: -6px; right: -6px; padding: 2px 6px; border-radius: 980px;
+  background: var(--acc); color: var(--panel); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.04em; line-height: 1.3;
+}
+.rv-pts {
+  margin: 4px 0 0; text-align: center; font-size: 52px; font-weight: 800; line-height: 1.1;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.rv-ptsub { text-align: center; margin: 0 0 12px; }
+/* Heard by screen readers once, when the count ends. Never seen. */
+.rv-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.rv-lines { padding: 2px 16px; }
+.rv-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 11px 0; min-height: 44px; border-bottom: 1px solid var(--line2); font-size: 16px;
+}
+.rv-row:last-child { border-bottom: 0; }
+.rv-row b { font-variant-numeric: tabular-nums; }
+.rv-grey { color: var(--ink2); }
+.rv-private { font-size: 15px; color: var(--ink2); }
+.rv-priv-n { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ---------- the haul card ---------- */
+.hl-card {
+  background: var(--acc-soft); border-radius: 20px; padding: 18px 14px;
+  margin: 12px 0; text-align: center;
+}
+.hl-top { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+.hl-chip {
+  display: inline-block; padding: 4px 10px; border-radius: 980px;
+  background: var(--panel); color: var(--acc); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.hl-name { margin: 4px 0 12px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+.hl-flat { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hl-flat button {
+  position: relative; min-width: 44px; min-height: 44px; padding: 3px;
+  display: grid; place-items: center; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--line2); cursor: pointer;
+}
+.hl-flat button img { width: 54px; height: 54px; object-fit: contain; display: block; }
+.hl-flat button.hid { opacity: 0.2; }
+.hl-xwrap { display: inline-block; }
+.hl-x {
+  position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--ink); color: var(--panel);
+  font-size: 15px; font-weight: 700; line-height: 1;
+}
+.hl-hint { margin: 10px 0 0; color: var(--ink2); font-size: 15px; }
+.hl-stats { display: flex; justify-content: center; gap: 28px; margin: 14px 0 6px; }
+.hl-stats b { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hl-stats span { color: var(--ink2); font-size: 15px; }
+.hl-bosschip { margin: 6px 0 0; }
+.hl-foot { margin: 10px 0 0; color: var(--ink2); font-size: 15px; }
+.hl-actions { display: flex; gap: 10px; margin: 0 0 10px; }
+.hl-actions .btn { flex: 1 1 0; }
+.hl-btnrow { display: flex; gap: 10px; }
+.hl-btnrow .btn { flex: 1 1 0; }
+
+/* ---------- the Score screen's haul row ---------- */
+.hl-score { margin-top: 12px; }
+.hl-wait {
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 12px;
+  background: var(--acc-soft); font-size: 15px;
+}
+.hl-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.hl-btns .btn { flex: 1 1 auto; }
+
+/* ---------- Crew hauls and Same haul ---------- */
+.hl-feed { margin: 0; }
+.hl-fcard { padding: 12px 0; border-bottom: 1px solid var(--line2); }
+.hl-fcard:last-child { border-bottom: 0; }
+.hl-fhead { display: flex; align-items: center; gap: 10px; }
+.hl-fhead .grow { flex: 1; min-width: 0; }
+.hl-fhead .sub { display: block; color: var(--ink2); font-size: 15px; }
+.hl-av {
+  width: 44px; height: 44px; border-radius: 12px; object-fit: contain;
+  background: var(--fill); flex: none;
+}
+.hl-fflat { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.hl-fflat img {
+  width: 40px; height: 40px; border-radius: 10px; object-fit: contain;
+  background: var(--fill);
+}
+.hl-reacts { display: flex; flex-wrap: wrap; gap: 8px; }
+.hl-react {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 14px;
+  border: 0; border-radius: 980px; background: var(--fill); color: var(--ink);
+  font-size: 15px; font-weight: 600;
+}
+.hl-react img { width: 28px; height: 28px; object-fit: contain; }
+.hl-react[aria-pressed="true"] { background: var(--acc); color: var(--panel); }
+.hl-react:disabled { opacity: 1; color: var(--ink2); }
+.hl-same { margin-left: auto; }
+.hl-pick {
+  display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 0;
+  border-bottom: 1px solid var(--line2); cursor: pointer;
+}
+.hl-pick:last-child { border-bottom: 0; }
+.hl-pick input { width: 24px; height: 24px; flex: none; accent-color: var(--acc); }
+.hl-pick .grow { flex: 1; min-width: 0; }
+.hl-pick .name { display: block; font-weight: 600; }
+.hl-pick .sub { display: block; color: var(--ink2); font-size: 15px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-tile { opacity: 1; transform: none; transition: none; }
+}

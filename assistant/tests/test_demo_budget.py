@@ -91,6 +91,24 @@ class TestDemoRateLimits(unittest.TestCase):
         self.assertEqual(r.status_code, 429, r.text)
 
 
+class TestHaulWritesAreFree(unittest.TestCase):
+    """Haul fixes, hides and posts never call a model, so they spend
+    no live-door budget (they sit under the sessions prefix)."""
+
+    def test_door_check(self):
+        import api.main as main
+        for path in ("/api/quest/sessions/s1/haul/fix",
+                     "/api/quest/sessions/s1/haul/hide",
+                     "/api/quest/sessions/s1/haul/post",
+                     "/api/quest/sessions/s1/haul/receipts"):
+            self.assertFalse(main._demo_live_door(path), path)
+        # The real doors stay counted.
+        for path in ("/api/quest/sessions", "/api/quest/sessions/s1/check",
+                     "/api/quest/sessions/s1/receipt", "/decode/photo",
+                     "/api/quest/scan-shelf"):
+            self.assertTrue(main._demo_live_door(path), path)
+
+
 class TestSessionPruning(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()

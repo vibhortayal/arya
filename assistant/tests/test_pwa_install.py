@@ -91,3 +91,55 @@ class TestHuntMobileAndKeys(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGameLoopPrecache(unittest.TestCase):
+    """Every file the game loop added is in the offline shell, in the
+    same order index.html loads it."""
+
+    FILES = ("hunt.css", "pack.css", "album.css", "haul.css",
+             "pack.js", "huntmenu.js", "album.js", "haul.js")
+
+    def test_new_files_are_precached(self):
+        sw = read("sw.js")
+        for f in self.FILES:
+            self.assertIn(f'"/{f}"', sw, f)
+
+    def test_precached_files_exist_and_are_linked(self):
+        html = read("index.html")
+        for f in self.FILES:
+            self.assertTrue(os.path.exists(os.path.join(PWA, f)), f)
+            self.assertIn(f'"{f}"', html, f)
+
+    def test_script_order(self):
+        html = read("index.html")
+        order = ["app.js", "pack.js", "scene.js", "quest.js", "huntmenu.js",
+                 "album.js", "mapper.js", "share.js", "haul.js"]
+        pos = [html.index(f'<script src="{n}">') for n in order]
+        self.assertEqual(pos, sorted(pos))
+        css = ["styles.css", "hunt.css", "pack.css", "album.css", "haul.css"]
+        pos = [html.index(f'<link rel="stylesheet" href="{n}">') for n in css]
+        self.assertEqual(pos, sorted(pos))
+
+
+class TestIntegrationFixes(unittest.TestCase):
+    def test_rail_counts_the_live_session(self):
+        q = read("quest.js")
+        rail = q.split("function qRailHtml(currentId) {")[1].split("\n}")[0]
+        self.assertIn("Q.current.id === s0.id", rail)
+
+    def test_finish_step_hides_the_hunt_toast(self):
+        q = read("quest.js")
+        fin = q.split("function openFinish(sess) {")[1].split("\n}")[0]
+        self.assertIn('$("#toast")', fin)
+        self.assertIn("hidden = true", fin)
+
+    def test_mode_copy_has_no_clock(self):
+        html = read("index.html")
+        self.assertNotIn("beat the clock", html)
+
+    def test_plan_shows_the_deck_before_the_composer(self):
+        html = read("index.html")
+        nl = html.split('id="view-newlist"')[1].split('id="view-store"')[0]
+        self.assertLess(nl.index('id="nl-deck"'), nl.index('id="nl-text"'))
+        self.assertLess(nl.index('id="nl-text"'), nl.index('id="nl-plan"'))

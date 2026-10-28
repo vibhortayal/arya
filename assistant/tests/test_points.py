@@ -32,7 +32,7 @@ class TestPoints(unittest.TestCase):
     def test_client_mirrors_the_server_rule(self):
         import os
         js = open(os.path.join(os.path.dirname(__file__), "..", "pwa", "quest.js"), encoding="utf-8").read()
-        self.assertIn("const QPTS = { item: 10, haul: 25, receipt: 50 };", js)
+        self.assertIn("const QPTS = { item: 10, haul: 25, receipt: 50, boss: 40 };", js)
 
 
 if __name__ == "__main__":

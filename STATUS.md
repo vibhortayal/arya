@@ -44,6 +44,27 @@ trips); `MODEL_API_KEY=… python -m harness.scrub_walk_frames` (blurs
 shoppers in the 90 walk photos, about $0.45). Git history still holds
 the unblurred originals.
 
+## Game loop upgrade (branch `feat/game-loop`, not yet merged)
+One upgrade of the existing hunt. No new game. No lives, no timers, no
+streaks, no retake loop. Wireframe: `docs/quest/` and the owner's
+game-loop wireframe.
+- **Pack:** the plan deals cards. Pack it or skip it. Quantity, brand,
+  note, and a private cost estimate stay on the phone. Helper mode lets
+  a child add items for a yes or no. Items left last trip come first.
+- **Hunt:** a row menu: swap, it moved, save for next trip, drop, edit.
+  Done early asks what to do with the rest. Grab takes a quantity.
+  A combo count only goes up. A boss item appears only after two real
+  reports. Toasts have a close button and stay longer.
+- **Haul:** receipt check, then a reveal of stickers and points, then a
+  haul card with a trip name. Fixes change the haul view only, never
+  points. Posts go to accepted friends and show stock art, never a
+  price or a photo. A saved list from a friend's haul waits in the plan.
+- **Album:** one sticker for each product grabbed. New means first found
+  on that trip. Level-up card lists what is new. Levels never lock
+  anything that makes shopping faster.
+- Service worker arya-v49 precaches the four new scripts and styles.
+- Suite: 764 green, 1 skipped. Phone pass by the owner is still open.
+
 ## Measured results
 - Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), owner
   32/32, combined 93.85%, arithmetic 7/7. One silent price rotation
