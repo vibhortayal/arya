@@ -45,3 +45,66 @@ def judge_batch(client, items):
                                  "list_ok": cls in ("STAPLE", "SEASONAL"),
                                  "reason": str(v.get("reason", ""))[:120]}
     return out
+
+
+# --- Second seat (owner, 2026-10-28) ---------------------------------
+# Muse Spark Open (open weights, via Baseten) re-judges item NAMES
+# only — no purchase facts ever leave the hosted API (MODEL-POLICY).
+# It judges what kind of thing an item IS; judge_batch above, with
+# the household's facts, stays the decider. Disagreements are a
+# curation signal, recorded by the caller, never an override.
+
+_NAMES_PROMPT = open(os.path.join(os.path.dirname(__file__),
+                                  "prompts",
+                                  "staple_judge_names_v1.md")).read()
+
+
+def second_seat_batch(open_client, items):
+    """items: [(item_id, name)] -> {item_id: {class, list_ok, reason}}
+
+    Name-only: the prompt forbids household reasoning and the facts
+    line is never built. Same verdict shape as judge_batch."""
+    listing = "\n".join(f"[{iid}] {name}" for iid, name in items)
+    text, _usage, _cost = open_client.chat(
+        [{"role": "system", "content": _NAMES_PROMPT},
+         {"role": "user", "content": listing}],
+        personal=False, temperature=0.0)
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0:
+        return {}
+    try:
+        data = json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return {}
+    out = {}
+    for v in data.get("verdicts", []):
+        cls = str(v.get("class", "")).upper()
+        if v.get("item_id") and cls in CLASSES:
+            out[v["item_id"]] = {
+                "class": cls,
+                "list_ok": cls in ("STAPLE", "SEASONAL"),
+                "reason": str(v.get("reason", ""))[:120]}
+    return out
+
+
+def second_seat_report(open_verdicts, spark_verdicts, names):
+    """Compare the two seats over the items both judged.
+
+    Returns {checked, agreed, disagreements: [{item_id, name,
+    open_class, spark_class, open_reason, spark_reason}]}."""
+    rows = []
+    agreed = 0
+    for iid, ov in open_verdicts.items():
+        sv = spark_verdicts.get(iid)
+        if not sv:
+            continue
+        if ov["class"] == sv["class"]:
+            agreed += 1
+        else:
+            rows.append({"item_id": iid, "name": names.get(iid, iid),
+                         "open_class": ov["class"],
+                         "spark_class": sv["class"],
+                         "open_reason": ov.get("reason", ""),
+                         "spark_reason": sv.get("reason", "")})
+    return {"checked": agreed + len(rows), "agreed": agreed,
+            "disagreements": rows}
