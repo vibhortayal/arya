@@ -43,12 +43,38 @@ def _client_ip(req):
     return req.client.host if req.client else "?"
 
 
-def _budget_guard():
+def _budget_guard(demo=False):
     """Stage 6 hardening: a daily ceiling on model spend (default $10),
-    far above real household use, bounding any single bad day."""
-    cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
-    if CostLedger(_LEDGER).spent_today() >= cap:
+    far above real household use, bounding any single bad day. The
+    demo household has its own smaller bucket (default $2): a crowd
+    of judges can exhaust the demo's day, never the real accounts'
+    (review 2026-10-28, H4)."""
+    if demo:
+        cap = float(os.environ.get("ARYA_DEMO_DAILY_BUDGET_USD", "2"))
+        spent = CostLedger(_LEDGER).spent_today("demo")
+    else:
+        cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
+        spent = CostLedger(_LEDGER).spent_today("app")
+    if spent >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
+
+
+# Per-IP sliding-window caps on the demo's unauthenticated surface:
+# session minting and the live doors. Generous for a human judge,
+# a hard stop for a script (review 2026-10-28, H4).
+_demo_auth_hits = {}
+_demo_door_hits = {}
+
+
+def _demo_rate(bucket, key, limit_env, default):
+    import time as _t
+    limit = int(os.environ.get(limit_env, str(default)))
+    now = _t.time()
+    hits = [t for t in bucket.get(key, []) if now - t < 3600]
+    if len(hits) >= limit:
+        return False
+    bucket[key] = hits + [now]
+    return True
 
 _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
@@ -77,6 +103,12 @@ async def require_login(request, call_next):
             info = auth.session_info(request.cookies.get(auth.COOKIE))
         if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
+        if info["demo"] and request.method == "POST" and path in _DEMO_LIVE_DOORS:
+            if not _demo_rate(_demo_door_hits, _client_ip(request),
+                              "ARYA_DEMO_DOOR_RATE", 240):
+                return JSONResponse(
+                    {"detail": "demo rate limit — try again in a bit"},
+                    status_code=429)
         if info["demo"] and request.method != "GET" and path not in _DEMO_LIVE_DOORS:
             return JSONResponse({"detail": "the demo household is read-only"}, status_code=403)
         state.set_current_user(info["user"])
@@ -206,7 +238,10 @@ def revoke_token(req: Request):
 
 
 @app.post("/auth/demo")
-def auth_demo():
+def auth_demo(req: Request):
+    if not _demo_rate(_demo_auth_hits, _client_ip(req),
+                      "ARYA_DEMO_AUTH_RATE", 120):
+        raise HTTPException(429, "too many demo sessions — try again in a bit")
     return _set_session_cookie(JSONResponse({"user": "demo", "demo": True}),
                                auth.new_session("demo", demo=True))
 
@@ -456,14 +491,16 @@ async def decode_photo_route(req: Request):
         raise HTTPException(413, "photo too large (12 MB max)")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
     try:
         receipt = await run_in_threadpool(decode_photo, body, client,
                                           media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
-    if _is_demo(req):
+    if demo:
         # The demo's Photo door runs the same live read and shows the
         # lines as a preview; nothing is filed, nothing is judged.
         return {"demo": True, "added": 0, "receipt": receipt}
@@ -490,9 +527,11 @@ async def transcribe_route(req: Request):
         raise HTTPException(413, "recording too large — keep it under a few minutes")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
     try:
         out = await run_in_threadpool(transcribe_audio, body, client)
     except ValueError as e:
@@ -500,7 +539,7 @@ async def transcribe_route(req: Request):
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     return {"text": out["text"], "duration_s": out["duration_s"],
-            "model": "muse-voice-transcribe-1.0", "demo": _is_demo(req)}
+            "model": "muse-voice-transcribe-1.0", "demo": demo}
 
 
 @app.post("/eyes/photo")
@@ -715,15 +754,17 @@ async def list_from_photo(req: Request):
         raise HTTPException(413, "photo too large (12 MB max)")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
     from api.list.intake import read_list_photo
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
     try:
         read = await run_in_threadpool(read_list_photo, body, client,
                                        media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
-    if _is_demo(req):
+    if demo:
         return {"demo": True, "kind": read["kind"],
                 "names": read["items"], "added": 0}
     if read["kind"] == "receipt":
@@ -979,8 +1020,10 @@ async def scan_shelf_route(req: Request):
         return {"pops": [], "not_found": []}
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
-    client = MetaClient(ledger=CostLedger(_LEDGER))
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
     try:
         return await run_in_threadpool(shelfscan.scan, body, remaining,
                                        client, media_type=media)

@@ -103,7 +103,12 @@ def _session_key(token):
 def new_session(username, demo=False):
     token = secrets.token_urlsafe(32)
     with _file_lock("sessions.json"):
-        all_sessions = _load("sessions.json", {})
+        # Expired sessions are dead weight — prune them on write so
+        # the store cannot grow without bound (review H4).
+        now = int(time.time())
+        all_sessions = {k: v for k, v in
+                        _load("sessions.json", {}).items()
+                        if v.get("expires", 0) > now}
         all_sessions[_session_key(token)] = {
             "user": username, "demo": bool(demo),
             "expires": int(time.time()) + SESSION_TTL}
