@@ -58,20 +58,47 @@ class MetaClient:
         self.transport = transport  # injectable for tests: fn(method, url, headers, body) -> (status, payload)
         self.ledger = ledger        # optional cost_ledger.CostLedger
 
+    def _via_transport(self, method, url, headers, body):
+        """The injectable transport, under the same error contract
+        as the real one: a network failure is a RuntimeError, never
+        a raw urllib/TimeoutError escaping to a route (review H3)."""
+        try:
+            return self.transport(method, url, headers, body)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise RuntimeError(f"Meta API unreachable: {e}") from e
+
+    @staticmethod
+    def _parse_body(raw, status):
+        """A gateway error page is not JSON. Parse what is, and
+        carry the rest as text so the caller's status check raises
+        a RuntimeError with the HTTP code — never a JSONDecodeError
+        surfacing as a bare 500."""
+        try:
+            return json.loads(raw or "{}")
+        except json.JSONDecodeError:
+            if status == 200:
+                raise RuntimeError("Meta API returned a non-JSON response")
+            return {"error": (raw or "")[:300]}
+
     def _send(self, path, body, timeout=None):
         url = BASE + path
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {self.api_key}"}
         if self.transport is not None:
-            return self.transport("POST", url, headers, body)
+            return self._via_transport("POST", url, headers, body)
         req = urllib.request.Request(url, data=json.dumps(body).encode(),
                                      headers=headers, method="POST")
         try:
             with urllib.request.urlopen(
                     req, timeout=120 if timeout is None else timeout) as resp:
-                return resp.status, json.loads(resp.read().decode())
+                status = resp.status
+                raw = resp.read().decode(errors="replace")
         except urllib.error.HTTPError as e:
-            return e.code, json.loads(e.read().decode() or "{}")
+            raw = e.read().decode(errors="replace") if e.fp else ""
+            return e.code, self._parse_body(raw, e.code)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise RuntimeError(f"Meta API unreachable: {e}") from e
+        return status, self._parse_body(raw, status)
 
     def chat(self, messages, mode="standard", personal=False,
              reasoning_effort="low", temperature=0.1, timeout=None):
@@ -89,7 +116,11 @@ class MetaClient:
         status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status != 200:
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
-        text = payload["choices"][0]["message"]["content"]
+        try:
+            text = payload["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            raise RuntimeError(
+                f"Meta API: unexpected response shape: {str(payload)[:300]}")
         u = payload.get("usage", {})
         cached = (u.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
         usage = {"input_tokens": u.get("prompt_tokens", u.get("input_tokens", 0)),
@@ -118,6 +149,8 @@ class MetaClient:
                     {"type": "input_image", "image_url": uri}]}],
                 "metadata": {"include_confidence": "true"}}
         status, payload = self._send("/responses", body)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"SAM: unexpected response: {str(payload)[:300]}")
         if status != 200 or payload.get("status") != "completed":
             raise RuntimeError(f"SAM HTTP {status}: {str(payload)[:300]}")
         images = (payload.get("usage") or {}).get("images_processed", 1)
@@ -161,7 +194,7 @@ class MetaClient:
         import base64
         body = {"model": MODELS["image"], "prompt": prompt}
         status, payload = self._send("/images/generations", body)
-        if status != 200:
+        if status != 200 or not isinstance(payload, dict):
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         data = payload.get("data") or []
         if not data or not data[0].get("b64_json"):
@@ -201,13 +234,18 @@ class MetaClient:
         headers = {"Content-Type": f"multipart/form-data; boundary={boundary}",
                    "Authorization": f"Bearer {self.api_key}"}
         if self.transport is not None:
-            return self.transport("POST", url, headers, body)
+            return self._via_transport("POST", url, headers, body)
         req = urllib.request.Request(url, data=body, headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=120) as resp:
-                return resp.status, json.loads(resp.read().decode())
+                status = resp.status
+                raw = resp.read().decode(errors="replace")
         except urllib.error.HTTPError as e:
-            return e.code, json.loads(e.read().decode() or "{}")
+            raw = e.read().decode(errors="replace") if e.fp else ""
+            return e.code, self._parse_body(raw, e.code)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise RuntimeError(f"Meta API unreachable: {e}") from e
+        return status, self._parse_body(raw, status)
 
     def transcribe(self, wav_bytes, duration_s, filename="voice.wav"):
         """Muse Voice Transcribe, batch endpoint (POST /v1/asr/transcribe).
@@ -221,7 +259,7 @@ class MetaClient:
             ("audio", filename, "audio/wav", wav_bytes),
             json_fields={"request": {"model": MODELS["voice"],
                                      "audioEncoding": "WAV"}})
-        if status != 200:
+        if status != 200 or not isinstance(payload, dict):
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         cost = transcribe_cost(duration_s)
         if self.ledger is not None:

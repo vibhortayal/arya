@@ -88,11 +88,108 @@ class TestMetaClient(unittest.TestCase):
         self.assertEqual(usage, {"images_generated": 1})
         self.assertAlmostEqual(cost, 0.01, places=9)
 
+    def test_gateway_html_error_is_runtime_error(self):
+        # A 502 from the gateway carries an HTML page, not JSON
+        # (review H3): the caller must see RuntimeError, and the
+        # HTTP code must survive in the message.
+        def t(method, url, headers, body):
+            return 502, "<html><title>Bad Gateway</title></html>"
+        c = MetaClient(api_key="k", transport=t)
+        with self.assertRaises(RuntimeError) as cm:
+            c.chat([{"role": "user", "content": "hi"}])
+        self.assertIn("502", str(cm.exception))
+
+    def test_transport_timeout_is_runtime_error(self):
+        import urllib.error
+        def t(method, url, headers, body):
+            raise TimeoutError("timed out")
+        c = MetaClient(api_key="k", transport=t)
+        with self.assertRaises(RuntimeError):
+            c.chat([{"role": "user", "content": "hi"}])
+        def t2(method, url, headers, body):
+            raise urllib.error.URLError("connection reset")
+        c2 = MetaClient(api_key="k", transport=t2)
+        with self.assertRaises(RuntimeError):
+            c2.transcribe(b"wav", 3.0)
+
+    def test_unexpected_200_shape_is_runtime_error(self):
+        def t(method, url, headers, body):
+            return 200, {"status": "ok"}  # no choices at all
+        c = MetaClient(api_key="k", transport=t)
+        with self.assertRaises(RuntimeError):
+            c.chat([{"role": "user", "content": "hi"}])
+
+    def test_urlopen_html_error_page_is_runtime_error(self):
+        # The real transport: an HTTPError whose body is a gateway
+        # HTML page must not raise JSONDecodeError out of _send.
+        import io, urllib.error, urllib.request
+        from unittest import mock
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.HTTPError(
+                req.full_url, 504, "Gateway Timeout", {},
+                io.BytesIO(b"<html>gateway timeout</html>"))
+
+        c = MetaClient(api_key="k")
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
+            with self.assertRaises(RuntimeError) as cm:
+                c.chat([{"role": "user", "content": "hi"}])
+        self.assertIn("504", str(cm.exception))
+
+    def test_urlopen_timeout_is_runtime_error(self):
+        import urllib.error, urllib.request
+        from unittest import mock
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("timed out")
+
+        c = MetaClient(api_key="k")
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
+            with self.assertRaises(RuntimeError):
+                c.chat([{"role": "user", "content": "hi"}])
+
     def test_cost_math(self):
         self.assertAlmostEqual(estimate_cost("standard", 1_000_000), 1.25, places=6)
         self.assertAlmostEqual(estimate_cost("standard", 1_000_000, cached_tokens=1_000_000), 0.15, places=6)
         self.assertAlmostEqual(estimate_cost("contributor", 1_000_000, output_tokens=1_000_000), 0.30, places=6)
         self.assertAlmostEqual(estimate_cost("wonder", 0, output_tokens=1_000_000), 20.00, places=6)
+
+
+class TestRouteErrorMapping(unittest.TestCase):
+    """A Meta failure inside a route answers 502, never a bare 500."""
+
+    def test_photo_decode_timeout_is_502(self):
+        import os, tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["ARYA_INSECURE_COOKIE"] = "1"
+        os.environ["MODEL_API_KEY"] = "test-key"
+        from fastapi.testclient import TestClient
+        import api.main as main
+
+        class WrappingClient:
+            """Routes build MetaClient directly; this stand-in runs
+            the real client's error mapping over a transport that
+            times out, so the route sees the mapped RuntimeError."""
+
+            def __init__(self, *a, **k):
+                self._inner = MetaClient(
+                    api_key="k",
+                    transport=lambda *a: (_ for _ in ()).throw(
+                        TimeoutError("timed out")))
+
+            def chat(self, messages, **kw):
+                return self._inner.chat(messages, **kw)
+
+        main.MetaClient = WrappingClient
+        try:
+            c = TestClient(main.app)
+            c.post("/auth/setup", json={"username": "t@example.com",
+                                        "password": "pw-test"})
+            r = c.post("/decode/photo", content=b"\xff\xd8\xff fake",
+                       headers={"Content-Type": "image/jpeg"})
+            self.assertEqual(r.status_code, 502, r.text)
+        finally:
+            main.MetaClient = MetaClient
 
 
 if __name__ == "__main__":
