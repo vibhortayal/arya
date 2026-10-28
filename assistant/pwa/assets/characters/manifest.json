@@ -2,7 +2,7 @@
  "categories": [
   {
    "char": "fruit.webp",
-   "fact": "Botanically, a banana is a berry — but a strawberry isn't.",
+   "fact": "Botanically, a banana is a berry \u2014 but a strawberry isn't.",
    "id": "fruit",
    "keywords": [
     "fruit",
@@ -186,10 +186,11 @@
    ]
   }
  ],
+ "fallback": "basket.webp",
  "items": [
   {
    "char": "blueberry.webp",
-   "fact": "The white dusty coating on a blueberry is called bloom — it's a natural shield that keeps the berry fresh.",
+   "fact": "The white dusty coating on a blueberry is called bloom \u2014 it's a natural shield that keeps the berry fresh.",
    "id": "blueberry",
    "keywords": [
     "blueberry",
@@ -198,7 +199,7 @@
   },
   {
    "char": "banana.webp",
-   "fact": "Botanically, a banana is a berry — but a strawberry isn't.",
+   "fact": "Botanically, a banana is a berry \u2014 but a strawberry isn't.",
    "id": "banana",
    "keywords": [
     "banana",
@@ -206,7 +207,7 @@
    ]
   },
   {
-   "fact": "A strawberry carries its seeds on the outside — about 200 of them on every berry.",
+   "fact": "A strawberry carries its seeds on the outside \u2014 about 200 of them on every berry.",
    "id": "strawberry",
    "keywords": [
     "strawberry",
@@ -215,7 +216,7 @@
   },
   {
    "char": "raspberry.webp",
-   "fact": "A raspberry is many tiny fruits joined together — every little bead is one fruit.",
+   "fact": "A raspberry is many tiny fruits joined together \u2014 every little bead is one fruit.",
    "id": "raspberry",
    "keywords": [
     "raspberry",
@@ -237,7 +238,7 @@
   },
   {
    "char": "egg.webp",
-   "fact": "Brown eggs and white eggs taste the same — the shell color just depends on the hen.",
+   "fact": "Brown eggs and white eggs taste the same \u2014 the shell color just depends on the hen.",
    "id": "egg",
    "keywords": [
     "egg",
@@ -287,7 +288,7 @@
   },
   {
    "char": "hummus.webp",
-   "fact": "Hummus means 'chickpeas' in Arabic — the dip is named after its main ingredient.",
+   "fact": "Hummus means 'chickpeas' in Arabic \u2014 the dip is named after its main ingredient.",
    "id": "hummus",
    "keywords": [
     "hummus"
@@ -311,7 +312,7 @@
   },
   {
    "char": "almond.webp",
-   "fact": "Almonds are cousins of peaches — an almond is the seed inside a fruit.",
+   "fact": "Almonds are cousins of peaches \u2014 an almond is the seed inside a fruit.",
    "id": "almond",
    "keywords": [
     "almond",
@@ -327,5 +328,10 @@
   }
  ],
  "note": "Collect celebration (Discussion 32). Facts are a verified static bank: fun facts only, no nutrition or health claims, never improvised at runtime. Resolution: an exact item rule wins for character and fact independently; then the first matching category; else no celebration.",
+ "roles": {
+  "basket": "basket.webp",
+  "binoculars": "binoculars.webp",
+  "compass": "compass.webp"
+ },
  "version": 1
 }
