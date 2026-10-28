@@ -392,6 +392,8 @@ textarea {
 @media (min-aspect-ratio: 1/1) {
   .photo-frame { top: 0; transform: none; height: 100%; object-fit: cover; }
 }
+.artview { position: absolute; inset: 0; overflow: hidden; background: var(--cream, #FBF5E6); }
+.art-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.1s ease; }
 .photo-dots { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 24px; }
 .photo-dot {
   position: absolute; transform: translateX(-50%);

@@ -18,7 +18,7 @@ SESSION_STATES = ("not_started", "playing", "paused", "finished", "done")
 # The SceneView ladder: the session engine is the game, the scene is
 # only a viewport. A session records which driver it started in;
 # nothing in play, scoring, or the receipt finish reads it.
-DRIVERS = ("photo", "cloud", "aisle", "strip")
+DRIVERS = ("photo", "cloud", "aisle", "strip", "art")
 
 
 # --- store ---------------------------------------------------------------
