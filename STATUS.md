@@ -192,3 +192,48 @@ same evening — see Intake parity below.)
 - Commits `a7c8ef2`, `3e10b45`, `20fe982` (+ this log). Suite:
   **116 green**. **Not deployed** — deploy is a separate owner
   step (git pull on the VM).
+
+## Quest Stage E (2026-10-27, night)
+- **Stores: the directory, search, favorites, add-with-address**
+  (owner design fix, DISCUSSION entry 29). Two planes, per the
+  architecture split: the **directory is platform-level** — one
+  shared `stores.json` in the data root (id, name, street, city,
+  state, ZIP, scene cloud|strip, created_by), seeded idempotently
+  with four Chino Hills stores (Trader Joe's, 13911 Peyton Dr,
+  scene cloud; Costco Wholesale; Sprouts Farmers Market;
+  Los Serranos Market — seeded demo data). **My Stores +
+  favorites are account-level** (`my_stores.json`: store ids +
+  favorite flag); a fresh account starts with the seeds, Trader
+  Joe's and Costco starred.
+- **API** (`api/stores.py`, no model calls, $0): GET
+  /api/stores/search (name/street/city substring; digit query =
+  ZIP prefix; &quests=1 keeps scene=cloud; rows carry in_mine +
+  favorite), GET /api/stores/mine (favorites first, then name),
+  POST /api/stores/mine (idempotent), POST /api/stores (create —
+  scene strip, dedupe on normalized name+ZIP — and add to mine),
+  POST /api/stores/favorite (must be in mine, else 404). Store
+  writes are normal writes: the demo household gets 403, like
+  every write outside the two carved live doors.
+- **Sessions**: POST /api/quest/sessions accepts `store_id` —
+  the session snapshots the directory name + address
+  (`store_id`, `store_address`); the name stays the display
+  string everywhere. Free-text sessions are unchanged.
+- **PWA** (wireframe panels S1–S3): the store pick reads My
+  Stores — Favorites section first (drawn-SVG star, address +
+  scene status under the name), typed-name fallback kept, Find /
+  Add links at the bottom. Find stores view (search + All / With
+  quests / Near this ZIP chips, Add / Added per row), My stores
+  view (star toggles), Add-a-store form (name + full address,
+  "New stores play in Strip. Map it to unlock the 3D view."),
+  and a Stores navrow in Profile. SW cache arya-v17.
+- Commits `9030836`, `757d6db` (+ tests/log). Suite: **146
+  green** (20 new in tests/test_stores.py: directory/search,
+  mine ordering, dedupe, favorite authz, session snapshot,
+  demo write block, shell contract). Live-serve smoke passed
+  (mine, quests search, session snapshot, new views served).
+  **Not deployed** — deploy is a separate owner step (git pull
+  on the VM).
+- Gaps (honest): "Near this ZIP" is a ZIP-prefix-area filter
+  (first three digits), not a distance sort — no geocoding yet;
+  there is no remove-from-mine or directory edit; Shop-Off
+  creation still takes a free-text store (no store_id yet).
