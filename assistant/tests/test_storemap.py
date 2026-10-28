@@ -1,7 +1,7 @@
 """Map my store (owner, 2026-10-28): the guided, crowd-built store map.
 
 Pinned here: zone merging, segment status, the capture grade and its
-one-line retake fixes, best-capture selection (duplicates dropped,
+one-line live hints (never a refusal), best-capture selection (duplicates dropped,
 freshness counts), prompts that follow the shopper's focus and the
 stale flags, merging many accounts into one map, the walkthrough seed,
 and the capture route (people scrub fails closed, a weak frame costs
@@ -66,7 +66,7 @@ class TestEngine(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.sm.add_segment("Corner Store", "Aisle 5", "up")
 
-    def test_score_refuses_weak_captures_with_a_fix(self):
+    def test_score_gives_a_live_hint_for_weak_captures(self):
         self.assertIsNone(self.sm.score_image(jpeg(1))["fix"])
         self.assertIn("blurry", self.sm.score_image(jpeg(kind="flat"))["fix"])
         self.assertIn("dark", self.sm.score_image(jpeg(kind="dark"))["fix"])
@@ -78,13 +78,14 @@ class TestEngine(unittest.TestCase):
         # An unrun shelf check is neutral, never a penalty.
         self.assertIsNone(self.sm.score_image(jpeg(1), shelf_fill=None)["fix"])
 
-    def test_ingest_maps_a_segment_and_refuses_a_blurry_one(self):
+    def test_a_weak_shot_is_kept_as_a_partial_never_refused(self):
         self.sm.add_segment("Corner Store", "Aisle 4", "left")
         sid = "aisle-4:left"
-        bad = self.sm.ingest("Corner Store", sid, jpeg(kind="flat"))
-        self.assertFalse(bad["accepted"])
-        self.assertIn("blurry", bad["fix"])
-        self.assertEqual(self.sm.view("Corner Store")["counts"]["unmapped"], 1)
+        weak = self.sm.ingest("Corner Store", sid, jpeg(kind="flat"))
+        self.assertTrue(weak["accepted"])
+        self.assertTrue(weak["weak"])
+        self.assertIn("blurry", weak["hint"])
+        self.assertEqual(weak["status"], "aging")      # partial, ask later
         ok = self.sm.ingest("Corner Store", sid, jpeg(1))
         self.assertTrue(ok["accepted"])
         self.assertTrue(ok["best"])
@@ -232,6 +233,66 @@ class FakeClient:
         return [], {}, 0.0025
 
 
+class TestSplitAndRewards(unittest.TestCase):
+    def setUp(self):
+        fresh_data()
+        from api import state, storemap
+        self.sm = storemap
+        state.set_current_user("ana")
+        state.set_overlay(None)
+
+    def test_split_is_ordered_idempotent_and_keeps_the_zone(self):
+        self.sm.add_segment("Corner Store", "Aisle 4", "both")
+        kids, made = self.sm.split_segment("Corner Store", "aisle-4:both", 3)
+        self.assertTrue(made)
+        self.assertEqual([k["label"] for k in kids], [
+            "Aisle 4 \u00b7 front", "Aisle 4 \u00b7 middle", "Aisle 4 \u00b7 back"])
+        self.assertTrue(all(k["zone"] == "aisle-4" for k in kids))
+        again, made = self.sm.split_segment("Corner Store", "aisle-4:both", 2)
+        self.assertFalse(made)
+        self.assertEqual(len(again), 3)
+        self.assertEqual(self.sm.split_segment("Corner Store", "aisle-4:both", 9)[1], False)
+
+    def test_one_part_does_not_split_and_parts_are_capped(self):
+        self.sm.add_segment("Corner Store", "Aisle 4", "both")
+        kids, made = self.sm.split_segment("Corner Store", "aisle-4:both", 1)
+        self.assertEqual((len(kids), made), (1, False))
+        kids, _ = self.sm.split_segment("Corner Store", "aisle-4:both", 50)
+        self.assertEqual(len(kids), self.sm.MAX_PARTS)
+
+    def test_walk_prompt_lists_the_sections_in_order(self):
+        self.sm.add_segment("Corner Store", "Aisle 4", "both")
+        p = self.sm.next_prompt("Corner Store")
+        self.assertTrue(p["splittable"])
+        self.sm.split_segment("Corner Store", "aisle-4:both", 3)
+        p = self.sm.next_prompt("Corner Store")
+        self.assertEqual(p["kind"], "walk")
+        self.assertEqual(p["parts"], ["aisle-4:both:1", "aisle-4:both:2", "aisle-4:both:3"])
+        self.assertFalse(p["splittable"])
+
+    def test_items_just_bought_pull_their_aisle_first(self):
+        self.sm.add_segment("Corner Store", "Aisle 1", "left")
+        self.sm.add_segment("Corner Store", "Aisle 2", "left")
+        self.sm.note_sighting("Corner Store", "pasta", "Aisle 2")
+        p = self.sm.next_prompt("Corner Store", hint_items=["Pasta"])
+        self.assertEqual(p["segment"], "aisle-2:left")
+
+    def test_rewards_titles_goal_and_no_penalty(self):
+        for n in range(1, 5):
+            self.sm.add_segment("Corner Store", f"Aisle {n}", "left")
+        out = self.sm.ingest("Corner Store", "aisle-1:left", jpeg(1))
+        rw = self.sm.award("Corner Store", out)
+        self.assertEqual((rw["points"], rw["title"], rw["new_title"]), (10, "Scout", "Scout"))
+        self.assertEqual(rw["store_pct"], [0, 25])
+        self.assertEqual(rw["goal"], {"pct": 50, "sections_needed": 1})
+        # the same view again is a small thank-you, never negative
+        out = self.sm.ingest("Corner Store", "aisle-1:left", jpeg(1))
+        rw = self.sm.award("Corner Store", out)
+        self.assertEqual((rw["points"], rw["new_title"]), (3, None))
+        self.assertEqual(rw["total_points"], 13)
+        self.assertIsNone(self.sm.award("Corner Store", {"accepted": False}))
+
+
 class TestRoutes(unittest.TestCase):
     def setUp(self):
         fresh_data()
@@ -280,13 +341,37 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(photo.status_code, 200)
         self.assertEqual(photo.headers["content-type"], "image/jpeg")
 
-    def test_weak_frame_is_refused_before_any_model_call(self):
+    def test_weak_frame_is_still_accepted_and_scrubbed(self):
         sid = self.add()
         r = self.capture(sid, jpeg(kind="flat"))
         self.assertEqual(r.status_code, 200)
-        self.assertFalse(r.json()["accepted"])
-        self.assertIn("blurry", r.json()["fix"])
-        self.assertEqual(FakeClient.calls, [])
+        self.assertTrue(r.json()["accepted"])
+        self.assertTrue(r.json()["weak"])
+        self.assertIn("person", FakeClient.calls)
+
+    def test_capture_returns_a_reward(self):
+        sid = self.add()
+        rw = self.capture(sid, jpeg(1)).json()["reward"]
+        self.assertEqual(rw["points"], 10)
+        self.assertEqual(rw["title"], "Scout")
+        self.assertEqual(rw["store_pct"], [0, 100])
+        self.assertTrue(rw["new_section"])
+
+    def test_split_route_and_walk_fill_sections(self):
+        sid = self.add("Aisle 9", "both")
+        r = self.c.post("/api/storemap/split", json={
+            "store": self.store, "segment": sid, "parts": 3}).json()
+        self.assertTrue(r["created"])
+        ids = [x["id"] for x in r["segments"]]
+        self.assertEqual(ids, [f"{sid}:1", f"{sid}:2", f"{sid}:3"])
+        again = self.c.post("/api/storemap/split", json={
+            "store": self.store, "segment": sid, "parts": 5}).json()
+        self.assertFalse(again["created"])
+        self.assertEqual([x["id"] for x in again["segments"]], ids)
+        for k, i in enumerate(ids):
+            self.assertTrue(self.capture(i, jpeg(10 + k)).json()["accepted"])
+        v = self.c.get("/api/storemap", params={"store": self.store}).json()
+        self.assertEqual((v["total"], v["coverage_pct"]), (3, 100))
 
     def test_nothing_is_kept_when_the_people_scrub_fails(self):
         sid = self.add()
