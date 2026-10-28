@@ -81,6 +81,34 @@ def _is_demo(req):
     return bool(info and info["demo"])
 
 
+async def _json_body(req):
+    """Parse a request body as JSON. Malformed JSON is a client
+    error (400), never a 500 (review 2026-10-28, M6)."""
+    try:
+        return await req.json()
+    except Exception:
+        raise HTTPException(400, "request body must be valid JSON")
+
+
+async def _json_obj(req):
+    """_json_body, plus the shape the JSON routes expect: an
+    object. An array or scalar body is a 400, not an
+    AttributeError 500 downstream."""
+    body = await _json_body(req)
+    if not isinstance(body, dict):
+        raise HTTPException(400, "request body must be a JSON object")
+    return body
+
+
+def _int_field(body, key, default=None):
+    """Coerce an integer body field; a non-numeric value is a
+    client error (400), not a ValueError 500."""
+    try:
+        return int(body.get(key, default))
+    except (TypeError, ValueError):
+        raise HTTPException(400, f"{key} must be an integer")
+
+
 def _set_session_cookie(resp, token):
     resp.set_cookie(auth.COOKIE, token, httponly=True, samesite="lax",
                     secure=os.environ.get("ARYA_INSECURE_COOKIE") != "1",
@@ -97,7 +125,7 @@ def auth_status():
 async def auth_setup(req: Request):
     if len(auth.users()) > 0:
         raise HTTPException(403, "setup is closed; an account already exists")
-    body = await req.json()
+    body = await _json_obj(req)
     try:
         name = auth.create_user(body.get("username", ""), body.get("password", ""))
     except ValueError as e:
@@ -112,7 +140,7 @@ async def auth_login(req: Request):
     fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
-    body = await req.json()
+    body = await _json_obj(req)
     name = (body.get("username") or "").strip().lower()
     if not auth.verify(name, body.get("password", "")):
         _login_fails[ip] = fails + [_t.time()]
@@ -175,7 +203,7 @@ def health():
 
 @app.post("/import/costco-json")
 async def import_costco_json(req: Request):
-    obj = await req.json()
+    obj = await _json_body(req)
     if not isinstance(obj, dict) or "itemArray" not in obj:
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
@@ -186,7 +214,7 @@ async def import_costco_json(req: Request):
 
 @app.post("/import/costco-json-bulk")
 async def import_bulk(req: Request):
-    objs = await req.json()
+    objs = await _json_body(req)
     if not isinstance(objs, list):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
@@ -197,7 +225,7 @@ async def import_bulk(req: Request):
 
 @app.post("/decode/text")
 async def decode_text_route(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
@@ -212,7 +240,7 @@ async def decode_text_route(req: Request):
 async def intake_order_text(req: Request):
     """A pasted online order (Instacart, Amazon Fresh, ...) becomes a
     receipt through the same verify-and-queue path as a photo."""
-    body = await req.json()
+    body = await _json_obj(req)
     text = body.get("text", "")
     if len(text.strip()) < 20:
         raise HTTPException(422, "paste the order confirmation text")
@@ -234,7 +262,7 @@ async def intake_structured(req: Request):
     tokens on perception here: it verifies the arithmetic, assigns line
     statuses by confidence, and queues what does not verify — the client
     proposes, Arya disposes."""
-    body = await req.json()
+    body = await _json_body(req)
     if not isinstance(body, dict) or not body.get("merchant") \
             or not body.get("purchased_at") \
             or not isinstance(body.get("lines"), list) or not body["lines"]:
@@ -278,12 +306,13 @@ async def review_suggest(req: Request):
     """Researched candidates for an unresolved item, posted by the
     user's Muse (the Resolver loop). Candidates carry their source;
     settling still takes the user's word."""
-    body = await req.json()
+    body = await _json_obj(req)
     if body.get("receipt_id"):
         name = (body.get("name") or "").strip()
         if not name:
             raise HTTPException(422, "a line suggestion needs a name")
-        if not state.suggest_line(body["receipt_id"], int(body.get("idx", -1)),
+        if not state.suggest_line(body["receipt_id"],
+                                  _int_field(body, "idx", -1),
                                   name, body.get("source", "")):
             raise HTTPException(404, "no unverified line with that id")
         return {"ok": True, "name": name}
@@ -315,7 +344,7 @@ def curator_pending():
 
 @app.post("/api/curator/decide")
 async def curator_decide(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     from api.curator import decide
     try:
         p = decide(body.get("id", ""), body.get("action", ""))
@@ -461,6 +490,8 @@ async def transcribe_route(req: Request):
 
 @app.post("/eyes/photo")
 async def eyes_photo(req: Request, kind: str = "fridge"):
+    if kind not in ("fridge", "pantry", "freezer", "fruit"):
+        raise HTTPException(400, "kind must be fridge, pantry, freezer, or fruit")
     media = (req.headers.get("content-type") or "").split(";")[0].strip()
     if not media.startswith("image/"):
         raise HTTPException(415, "send a photo of the fridge, pantry, freezer, or fruit")
@@ -514,13 +545,13 @@ def eyes_photo_file(rec_id: str):
 
 @app.post("/api/eyes/{rec_id}/sightings/{idx}")
 async def eyes_decide(rec_id: str, idx: int, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     decision = body.get("state")
     if decision not in ("confirmed", "rejected"):
         raise HTTPException(400, "state must be confirmed or rejected")
     for rec in state.eyes_records():
         if rec["id"] == rec_id:
-            if idx >= len(rec["sightings"]):
+            if idx < 0 or idx >= len(rec["sightings"]):
                 raise HTTPException(404, "no such sighting")
             rec["sightings"][idx]["state"] = decision
             state.save_eyes_record(rec)
@@ -543,7 +574,7 @@ async def chat_route(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    body = await req.json()
+    body = await _json_obj(req)
     from api.chat_service import chat as run_chat
     client = MetaClient(ledger=CostLedger(_LEDGER))
     try:
@@ -559,11 +590,23 @@ def approve_route():
     return cart
 
 
+# The flag vocabulary — every key a flag record may carry. The
+# flag route writes only these; anything else in a POST body is a
+# caller bug and never lands in the store (review M6: an empty
+# probe POST once left a junk record behind).
+_FLAG_KEYS = {"manual", "never", "out", "expired", "snoozed_until",
+              "dismissed_on", "checked_on", "check_ok", "qty_override",
+              "name"}
+
+
 @app.post("/api/items/{item_id}/flag")
 async def flag_route(item_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
+    updates = {k: v for k, v in body.items() if k in _FLAG_KEYS}
+    if not updates:
+        raise HTTPException(400, "no recognized flag fields")
     merged = dict(state.flags().get(item_id, {}))
-    merged.update(body)
+    merged.update(updates)
     state.set_flag(item_id, merged)
     return {"item_id": item_id, "flags": merged}
 
@@ -604,7 +647,7 @@ def _add_name_to_list(name):
 
 @app.post("/api/list/add")
 async def list_add(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     item_id = body.get("item_id")
     if not item_id and body.get("name"):
         return {"item_id": _add_name_to_list(body["name"])["item_id"]}
@@ -620,7 +663,7 @@ async def list_from_text(req: Request):
     deterministic code ($0); only when it yields nothing sensible
     (chat text with chatter in it) does one Spark Standard
     extraction call run."""
-    body = await req.json()
+    body = await _json_obj(req)
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
@@ -677,7 +720,7 @@ async def list_from_photo(req: Request):
 
 @app.post("/api/list/remove")
 async def list_remove(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
@@ -687,23 +730,28 @@ async def list_remove(req: Request):
 
 @app.post("/api/list/qty")
 async def list_qty(req: Request):
-    body = await req.json()
-    qty = max(1, int(body.get("qty") or 1))
-    _merge_flag(body.get("item_id"), {"qty_override": qty})
+    body = await _json_obj(req)
+    item_id = body.get("item_id")
+    if not item_id:
+        raise HTTPException(400, "item_id is required")
+    qty = _int_field(body, "qty", 1)
+    _merge_flag(item_id, {"qty_override": max(1, qty)})
     return {"ok": True}
 
 
 @app.post("/api/list/check")
 async def list_check(req: Request):
-    body = await req.json()
-    _merge_flag(body.get("item_id"),
+    body = await _json_obj(req)
+    if not body.get("item_id"):
+        raise HTTPException(400, "item_id is required")
+    _merge_flag(body["item_id"],
                 {"checked_on": state.as_of() if body.get("checked") else None})
     return {"ok": True}
 
 
 @app.post("/api/list/check-ok")
 async def list_check_ok(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
     _merge_flag(body["item_id"], {"check_ok": state.as_of()})
@@ -712,15 +760,19 @@ async def list_check_ok(req: Request):
 
 @app.post("/api/review/line")
 async def review_line(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     action = body.get("action")
+    receipt_id = body.get("receipt_id")
+    if not receipt_id:
+        raise HTTPException(400, "receipt_id is required")
+    idx = _int_field(body, "idx")
     if action == "confirm":
-        line = state.update_receipt_line(body["receipt_id"], int(body["idx"]), {"status": "auto"})
+        line = state.update_receipt_line(receipt_id, idx, {"status": "auto"})
     elif action == "rename":
         name = (body.get("name") or "").strip()
         if not name:
             raise HTTPException(400, "name is required to rename")
-        line = state.update_receipt_line(body["receipt_id"], int(body["idx"]),
+        line = state.update_receipt_line(receipt_id, idx,
                                          {"status": "auto", "decoded_name": name})
         if line:
             state.teach_name(line.get("sku"), name)
@@ -733,7 +785,7 @@ async def review_line(req: Request):
 
 @app.post("/api/review/resolve")
 async def review_resolve(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     name = (body.get("name") or "").strip()
     if not name:
         raise HTTPException(400, "name is required")
@@ -759,7 +811,7 @@ def stores_mine():
 
 @app.post("/api/stores/mine")
 async def stores_add_mine(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     store_id = (body.get("store_id") or "").strip()
     if not store_id:
         raise HTTPException(400, "store_id is required")
@@ -772,7 +824,7 @@ async def stores_add_mine(req: Request):
 
 @app.post("/api/stores")
 async def stores_create(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     from api import stores as stores_mod
     try:
         store, _created = stores_mod.create_store(
@@ -786,7 +838,7 @@ async def stores_create(req: Request):
 
 @app.post("/api/stores/favorite")
 async def stores_favorite(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     store_id = (body.get("store_id") or "").strip()
     if not store_id:
         raise HTTPException(400, "store_id is required")
@@ -803,7 +855,7 @@ async def stores_favorite(req: Request):
 
 @app.post("/api/quest/sessions")
 async def quest_create_session(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     store = (body.get("store") or "").strip()
     store_id = (body.get("store_id") or "").strip() or None
     store_address = None
@@ -848,7 +900,7 @@ def quest_get_session(session_id: str):
 
 @app.post("/api/quest/sessions/{session_id}/items")
 async def quest_add_item(session_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     name = (body.get("name") or "").strip()
     if not name:
         raise HTTPException(400, "name is required")
@@ -861,7 +913,7 @@ async def quest_add_item(session_id: str, req: Request):
 
 @app.post("/api/quest/sessions/{session_id}/check")
 async def quest_check(session_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     if not body.get("item"):
         raise HTTPException(400, "item is required")
     from api import quest
@@ -873,7 +925,7 @@ async def quest_check(session_id: str, req: Request):
 
 @app.post("/api/quest/sessions/{session_id}/state")
 async def quest_set_state(session_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     from api import quest
     try:
         sess = quest.set_state(session_id, body.get("state", ""))
@@ -952,7 +1004,7 @@ async def locate_route(req: Request):
 
 @app.post("/api/quest/sessions/{session_id}/receipt")
 async def quest_attach_receipt(session_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     receipt_id = body.get("receipt_id")
     if not receipt_id:
         raise HTTPException(400, "receipt_id is required")
@@ -967,7 +1019,7 @@ async def quest_attach_receipt(session_id: str, req: Request):
 
 @app.post("/api/quest/optimize")
 async def quest_optimize(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     items = body.get("items")
     if not isinstance(items, list) or not items:
         raise HTTPException(400, "items is required")
@@ -977,7 +1029,7 @@ async def quest_optimize(req: Request):
 
 @app.post("/api/quest/shopoff")
 async def quest_create_shopoff(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     store = (body.get("store") or "").strip()
     if not store:
         raise HTTPException(400, "store is required")
@@ -1009,7 +1061,7 @@ def quest_list_friends():
 
 @app.post("/api/quest/friends")
 async def quest_request_friend(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     from api import social
     try:
         friend = social.request_friend(body.get("handle", ""))
@@ -1020,7 +1072,7 @@ async def quest_request_friend(req: Request):
 
 @app.post("/api/quest/friends/accept")
 async def quest_accept_friend(req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     from api import social
     friend = social.accept_friend(body.get("handle", ""))
     if friend is None:
@@ -1073,7 +1125,7 @@ def quest_receipt_original(receipt_id: str):
 
 @app.post("/api/quest/sessions/{session_id}/report-missing")
 async def quest_report_missing(session_id: str, req: Request):
-    body = await req.json()
+    body = await _json_obj(req)
     if not body.get("item"):
         raise HTTPException(400, "item is required")
     from api import quest
