@@ -251,11 +251,13 @@
       <label class="field" for="nl-text">Add something else</label>
       <textarea id="nl-text" rows="2" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
       <p style="display:flex; gap:8px; margin:8px 0 0">
+        <button class="btn grow" id="nl-add" type="button">Add items</button>
         <button class="btn grow" id="nl-mic" type="button">Record</button>
         <label class="btn grow" for="nl-photo" style="text-align:center">Photo</label>
         <input type="file" id="nl-photo" accept="image/*" hidden>
       </p>
       <p class="muted nomargin" id="nl-status"></p>
+      <div id="nl-confirm" hidden></div>
     </div>
     <div id="nl-plan"></div>
     <p><button id="nl-next" class="btn primary wide" type="button">Start the quest &rarr;</button></p>
@@ -454,6 +456,7 @@
     <h3 class="sect">The list</h3>
     <div id="hunt-list" class="group"></div>
     <p><button id="btn-finish" class="btn primary wide" type="button">Finish &rarr;</button></p>
+    <p style="text-align:center"><button id="btn-abandon" class="btn" type="button" hidden>End this quest</button></p>
     <p id="motion-row" class="motionrow" hidden>
       <button id="btn-gyro" class="btn" type="button" aria-pressed="false" hidden>Look around with your phone</button>
       <button id="btn-steps" class="chip" type="button" aria-pressed="false" hidden>Steps advance · experiment</button>

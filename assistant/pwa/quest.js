@@ -176,7 +176,7 @@ function qProgress(sess) {
   const done = sess.items.filter(i => i.checked).length;
   return { done, total, left: total - done };
 }
-const QSTATE_LABEL = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished · Receipt missing", done: "Finished · Receipt attached ✓" };
+const QSTATE_LABEL = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished · Receipt missing", done: "Finished · Receipt attached ✓", abandoned: "Ended" };
 const QMODE_LABEL = { quest: "Quest", express: "Express" };
 
 function qParseLines(text) {
@@ -189,6 +189,36 @@ function qParseLines(text) {
     m = s.match(/^(.+?)\s*[x×]\s*(\d+)$/);
     if (m) { out.push({ name: m[1].trim(), qty: Number(m[2]) }); continue; }
     out.push({ name: s, qty: 1 });
+  }
+  return out;
+}
+/* Dictation and typed sentences (owner's phone test, 2026-10-28):
+ * "I need some eggs, eggs, bananas, cookies, oranges." is ONE line
+ * to qParseLines and became one item. qParseText first splits a
+ * sentence-like line into items: a lead-in ("i need some") or a
+ * comma marks a sentence; fragments split on commas and "and";
+ * duplicates fold. A plain line with no comma and no lead-in is
+ * never split, so "mac and cheese" stays one item. */
+function qParseText(text) {
+  const LEAD = /^(i need( some)?|we need( some)?|i want( some)?|get me|get|buy|add|please add|please get)\s+/i;
+  const frags = [];
+  for (const rawLine of String(text || "").split("\n")) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    if (!/,/.test(line) && !LEAD.test(line)) { frags.push(line); continue; }
+    const body = line.replace(LEAD, "").replace(/[.!]+$/, "");
+    for (const part of body.split(/\s*,\s*/)) {
+      for (const bit of part.split(/\s+and\s+/i)) {
+        const b = bit.trim().replace(/[.!]+$/, "");
+        if (b) frags.push(b);
+      }
+    }
+  }
+  const seen = new Set(), out = [];
+  for (const item of qParseLines(frags.join("\n"))) {
+    const k = qnorm(item.name);
+    if (!k || seen.has(k)) continue;
+    seen.add(k); out.push(item);
   }
   return out;
 }
@@ -428,7 +458,7 @@ function qPlanPicked() {
   return Object.values(Q.draft.pick).filter(p => p.on).map(p => ({ name: p.name, qty: p.qty }));
 }
 function qPaintPlanCount() {
-  const n = qPlanPicked().length + qParseLines($("#nl-text").value).length;
+  const n = qPlanPicked().length + qParseText($("#nl-text").value).length;
   $("#nl-next").textContent = n ? `Start the quest · ${n} item${n === 1 ? "" : "s"} →` : "Start the quest →";
 }
 $("#nl-plan").addEventListener("click", ev => {
@@ -462,6 +492,56 @@ $("#nl-plan").addEventListener("click", async ev => {
 });
 $("#nl-text").addEventListener("input", qPaintPlanCount);
 
+/* "Looks right?" (owner, 2026-10-28): transcription becomes a list
+ * and ASKS before anything joins the quest. The Add items button is
+ * the submit this box never had. Chips tap to drop an item. */
+function qShowTextConfirm() {
+  const items = qParseText($("#nl-text").value);
+  const box = $("#nl-confirm");
+  if (!items.length) {
+    box.hidden = true;
+    toast("Nothing to add yet — say or type the items first.");
+    return;
+  }
+  Q.nlParsed = items;
+  box.innerHTML = `<p class="muted" style="margin:0 0 6px">Looks right? Tap an item to drop it.</p>
+    <p style="display:flex; flex-wrap:wrap; gap:8px; margin:0 0 10px">${items.map((it, i) =>
+      `<button type="button" class="btn" data-nldrop="${i}">${esc(it.name)}${it.qty > 1 ? " × " + it.qty : ""} ✕</button>`).join("")}</p>
+    <p style="display:flex; gap:8px; margin:0">
+      <button type="button" class="btn primary grow" id="nl-confirm-add">Add ${items.length} item${items.length === 1 ? "" : "s"}</button>
+      <button type="button" class="btn grow" id="nl-confirm-edit">Keep editing</button>
+    </p>`;
+  box.hidden = false;
+  $("#nl-confirm-add").addEventListener("click", () => {
+    for (const it of Q.nlParsed || []) {
+      const key = qnorm(it.name);
+      Q.draft.pick[key] = { name: it.name, qty: it.qty || 1, on: true };
+      post("/api/list/add", { name: it.name }).catch(() => {});
+    }
+    const n = (Q.nlParsed || []).length;
+    Q.nlParsed = null;
+    $("#nl-text").value = "";
+    box.hidden = true; box.innerHTML = "";
+    renderPlan(); qPaintPlanCount();
+    toast(n === 1 ? "Added 1 item to the quest." : `Added ${n} items to the quest.`);
+  });
+  $("#nl-confirm-edit").addEventListener("click", () => {
+    box.hidden = true; box.innerHTML = ""; Q.nlParsed = null;
+    $("#nl-text").focus();
+  });
+  box.querySelectorAll("[data-nldrop]").forEach(b => b.addEventListener("click", () => {
+    Q.nlParsed.splice(Number(b.dataset.nldrop), 1);
+    if (Q.nlParsed.length) qShowTextConfirmFromParsed(); else { box.hidden = true; box.innerHTML = ""; Q.nlParsed = null; }
+  }));
+}
+function qShowTextConfirmFromParsed() {
+  const keep = $("#nl-text").value;
+  $("#nl-text").value = (Q.nlParsed || []).map(it => it.name).join(", ");
+  qShowTextConfirm();
+  $("#nl-text").value = keep;
+}
+$("#nl-add").addEventListener("click", qShowTextConfirm);
+
 /* The plan composer takes voice and photos too (owner, 2026-10-28):
  * the same doors as the List composer. Voice lands in the text box,
  * where the count and the quest pick it up like typing. A photo is
@@ -473,6 +553,7 @@ if (window.wireRecordButton) wireRecordButton($("#nl-mic"), $("#nl-status"), tex
   const field = $("#nl-text");
   field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
   field.dispatchEvent(new Event("input"));
+  qShowTextConfirm();
 });
 $("#nl-photo").addEventListener("change", async ev => {
   const f = ev.target.files[0];
@@ -510,11 +591,11 @@ $("#nl-photo").addEventListener("change", async ev => {
   ev.target.value = "";
 });
 $("#nl-next").addEventListener("click", async () => {
-  const raw = [...qPlanPicked(), ...qParseLines($("#nl-text").value)];
+  const raw = [...qPlanPicked(), ...qParseText($("#nl-text").value)];
   if (!raw.length) { toast("Tick or type at least one item first."); return; }
   Q.draft.raw = raw;
   // Typed extras join the Arya list too: one list everywhere.
-  for (const r of qParseLines($("#nl-text").value)) {
+  for (const r of qParseText($("#nl-text").value)) {
     post("/api/list/add", { name: r.name }).catch(() => {});
   }
   const btn = $("#nl-next");
@@ -1514,6 +1595,8 @@ function renderHunt() {
   if (allIn) { $("#btn-findit").hidden = true; try { qPaintFresh(sess.store, null); } catch (e) {} }
   paintPauseBtn("#btn-pause", sess.state === "paused", sess.state === "not_started");
   $("#btn-finish").disabled = sess.state === "not_started";
+  const ab = $("#btn-abandon");
+  if (ab) ab.hidden = !["playing", "paused", "not_started"].includes(sess.state);
   $("#hunt-rail").innerHTML = qRailHtml(sess.id);
   // Shelf Scan is the unmapped-store mode: present on the Strip
   // rung, absent in a mapped (Cloud) hunt.
@@ -1658,6 +1741,17 @@ $("#btn-pause").addEventListener("click", async () => {
     if (to === "paused") qWalkStop(); // freeze mid-walk; the pop stays as it was
     renderHunt();
     if (to === "playing" && !Q.arrived) qWalkStart(qCurrentIndex(sess));
+  } catch (e) { toast(e.message); }
+});
+$("#btn-abandon").addEventListener("click", async () => {
+  const sess = Q.current;
+  if (!sess) return;
+  if (!window.confirm("End this quest? It leaves Today and cannot be resumed.")) return;
+  try {
+    await qSetState(sess, "abandoned");
+    Q.sessions = Q.sessions.filter(x => x.id !== sess.id);
+    toast("Quest ended.");
+    questGo("view-home");
   } catch (e) { toast(e.message); }
 });
 $("#btn-finish").addEventListener("click", () => {
