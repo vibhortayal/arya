@@ -33,7 +33,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--index", default=localizer.DEFAULT_INDEX_PATH)
     ap.add_argument("--heldout",
-                    default="/home/hatch/workspace/arya-3d/localize-spike/heldout")
+                    required=True)
     args = ap.parse_args()
     heldout = Path(args.heldout)
     manifest = json.loads((heldout / "manifest.json").read_text(encoding="utf-8"))

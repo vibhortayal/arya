@@ -68,7 +68,7 @@ def subsample(data, cap, seed=SEED):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--frames", default="/home/hatch/workspace/arya-3d/frames90")
+    ap.add_argument("--frames", required=True, help="directory of walk frames")
     ap.add_argument("--out", default=localizer.DEFAULT_INDEX_PATH)
     ap.add_argument("--max-per-frame", type=int, default=400)
     args = ap.parse_args()
