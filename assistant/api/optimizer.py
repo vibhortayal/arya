@@ -179,6 +179,10 @@ def optimize(raw_items, store=None):
     merged = [{"name": by_group[g]["name"], "qty": by_group[g]["qty"],
                "from": srcs}
               for g, srcs in feeds.items() if len(srcs) > 1]
+    # A name that merged into another line is reported once, as merged:
+    # counting it as "corrected" too double-counted it in the summary.
+    merged_names = {m["name"] for m in merged}
+    corrected = [c for c in corrected if c["to"] not in merged_names]
     report = {"in": in_count, "out": len(items), "merged": merged,
               "corrected": corrected, "questions": questions,
               "unresolved": unresolved}

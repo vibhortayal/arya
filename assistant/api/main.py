@@ -526,7 +526,7 @@ def home():
             if _fl.get(p["item_id"], {}).get("check_ok") == state.as_of():
                 continue  # the user already answered this cycle
             from datetime import date as _d
-            age = (_d.fromisoformat(state.as_of()) - _d.fromisoformat(p["last_bought"])).days
+            age = (_d.fromisoformat(state.today_ref()) - _d.fromisoformat(p["last_bought"])).days
             if age >= prior:
                 _lb = p["last_bought"]
                 checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
@@ -585,10 +585,23 @@ def quest_plan():
                       "every_days": p.get("median_interval_days"),
                       "days_since": p.get("days_since_last"),
                       "due": bool(p.get("due"))})
-    lst = [{"item_id": gm.get(i.get("item_id"), i.get("item_id")),
-            "name": i.get("name") or nm.get(i.get("item_id"), ""),
-            "qty": i.get("qty") or 1}
-           for i in d["smart_list"]["items"] if not i.get("checked")]
+    # A hand-typed row ("milk", "eggs") has no history of its own;
+    # the same dictionary match the Check step uses finds the product
+    # it means, so its stores and cadence read from that product's
+    # receipts (QA 2026-10-28). history_id is that match; item_id
+    # stays the list row's own id for removal.
+    from api import quest as _quest
+    lst = []
+    for i in d["smart_list"]["items"]:
+        if i.get("checked"):
+            continue
+        iid = i.get("item_id")
+        name = i.get("name") or nm.get(iid, "")
+        hid = gm.get(iid, iid)
+        if hid not in stores:
+            hid = _quest.resolve_group(name) or hid
+        lst.append({"item_id": iid, "history_id": hid, "name": name,
+                    "qty": i.get("qty") or 1})
     return {"list": lst, "items": items}
 
 
@@ -1060,14 +1073,17 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name):
+def _add_name_to_list(name, qty=1):
     """A typed/pasted/read name joins the list as a manual item —
-    the one add path every Add surface shares."""
+    the one add path every Add surface shares. A typed quantity
+    ("eggs x 2") rides along as the item's quantity."""
     import re as _re
     name = (name or "").strip()
     item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    _merge_flag(item_id, {"manual": True, "name": name,
-                          "dismissed_on": None})
+    flag = {"manual": True, "name": name, "dismissed_on": None}
+    if qty and qty > 1:
+        flag["qty_override"] = qty
+    _merge_flag(item_id, flag)
     return {"item_id": item_id, "name": name}
 
 
@@ -1076,7 +1092,10 @@ async def list_add(req: Request):
     body = await _json_obj(req)
     item_id = body.get("item_id")
     if not item_id and body.get("name"):
-        return {"item_id": _add_name_to_list(body["name"])["item_id"]}
+        from api.list.intake import split_list_items
+        typed = split_list_items(str(body["name"]))
+        name, qty = typed[0] if len(typed) == 1 else (body["name"], 1)
+        return {"item_id": _add_name_to_list(name, qty)["item_id"]}
     if not item_id:
         raise HTTPException(400, "item_id or name is required")
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
@@ -1093,8 +1112,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    from api.list.intake import split_list_text, extract_items_model
-    names = split_list_text(text)
+    from api.list.intake import split_list_items, extract_items_model
+    typed = split_list_items(text)
+    names = [n for n, _q in typed]
     source = "split"
     if not names:
         if not os.environ.get("MODEL_API_KEY"):
@@ -1102,10 +1122,14 @@ async def list_from_text(req: Request):
         _budget_guard()
         client = MetaClient(ledger=_ledger())
         names = extract_items_model(text, client)
+        typed = [(n, 1) for n in names]
         source = "model"
-    added = [_add_name_to_list(n) for n in names]
-    return {"added": len(added), "names": [a["name"] for a in added],
-            "source": source}
+    on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
+    added = [_add_name_to_list(n, q) for n, q in typed]
+    # Already on the list: neither merged nor new, so not "added".
+    already = sum(1 for a in added if a["item_id"] in on_list)
+    return {"added": len(added) - already, "already": already,
+            "names": [a["name"] for a in added], "source": source}
 
 
 @app.post("/api/list/from-photo")

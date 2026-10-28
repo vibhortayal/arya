@@ -87,7 +87,21 @@ def _clean_piece(s):
     if s.lower().startswith("some "):
         s = s[5:]
     s = re.sub(r"\s*[x×]\s*\d+\s*$", "", s)       # trailing qty: x2
+    s = re.sub(r"^\d+\s*[x×]\s+", "", s)           # leading qty: 2 x eggs
     return s.strip(" :.!").strip()
+
+
+_QTY_TAIL = re.compile(r"\s*[x×]\s*(\d+)\s*[.!]*\s*$")
+_QTY_HEAD = re.compile(r"^(\d+)\s*[x×]\s+")
+
+
+def piece_qty(piece):
+    """The quantity a typed piece carries ("eggs x 2", "2 x eggs"),
+    1 when it carries none. _clean_piece strips the quantity from the
+    name; this reads it, so the two stay a pair."""
+    s = (piece or "").strip()
+    m = _QTY_TAIL.search(s) or _QTY_HEAD.match(s)
+    return max(1, min(int(m.group(1)), 99)) if m else 1
 
 
 def _sensible(name):
@@ -110,6 +124,10 @@ def _sensible(name):
 
 
 def split_list_text(text):
+    return [name for name, _qty in split_list_items(text)]
+
+
+def split_list_items(text):
     """Typed or pasted list text -> item names. Splits on lines,
     semicolons, and commas; strips bullets, numbering, checkboxes,
     lead-ins ("add", "please buy"), and trailing quantities.
@@ -127,7 +145,7 @@ def split_list_text(text):
             name = _clean_piece(piece)
             if _sensible(name) and name.lower() not in seen:
                 seen.add(name.lower())
-                out.append(name)
+                out.append((name, piece_qty(piece)))
     return out
 
 

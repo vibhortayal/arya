@@ -247,9 +247,45 @@ async function qLoadSessions() {
   return Q.sessions;
 }
 function qSessionById(id) { return Q.sessions.find(s => s.id === id) || null; }
+/* The demo sandbox lives in server memory and can reset under a hunt
+ * that is already on screen. When the server no longer knows the
+ * session, rebuild it from what the phone holds (same store, mode and
+ * items, grabs replayed) and carry on under the new id. */
+const Q_GONE = "That hunt is gone — the demo resets now and then. Go back to Today and start it again.";
+function qSessionGone(e) {
+  return !(e instanceof TypeError) && /no such session/i.test(e.message || "");
+}
+async function qRevive(sess) {
+  const fresh = await post("/api/quest/sessions", {
+    store: sess.store, mode: sess.mode, driver: sess.driver,
+    store_id: sess.store_id || undefined,
+    items: (sess.items || []).filter(i => !i.wild).map(i => ({ name: i.name, qty: i.qty })),
+  });
+  let cur = fresh;
+  for (const i of sess.items || []) {
+    if (i.wild) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/items`, { name: i.name, qty: i.qty, wild: true });
+    }
+    if (i.checked) {
+      cur = await post(`/api/quest/sessions/${fresh.id}/check`, { item: i.name, checked: true });
+    }
+  }
+  Object.assign(sess, cur);
+  qLoadSessions().catch(() => {});
+  return sess;
+}
 async function qSetState(sess, state) {
-  const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
-  Object.assign(sess, s);
+  try {
+    const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+    Object.assign(sess, s);
+  } catch (e) {
+    if (!qSessionGone(e)) throw e;
+    try {
+      await qRevive(sess);
+      const s = await post(`/api/quest/sessions/${sess.id}/state`, { state });
+      Object.assign(sess, s);
+    } catch (e2) { throw new Error(Q_GONE); }
+  }
   return sess;
 }
 /* Offline grabs (game shell): back aisles drop signal. A grab or put
@@ -273,6 +309,14 @@ async function qCheck(sess, itemName, checked) {
     return sess;
   } catch (e) {
     const it = (sess.items || []).find(i => i.name === itemName);
+    if (qSessionGone(e)) {
+      try {
+        await qRevive(sess);
+        const s = await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked });
+        Object.assign(sess, s);
+        return sess;
+      } catch (e2) { throw new Error(Q_GONE); }
+    }
     if (!(e instanceof TypeError) || !it) throw e;
     it.checked = checked;
     qOutboxSave([...qOutbox(), { sid: sess.id, item: itemName, checked }]);
@@ -389,7 +433,7 @@ function qStoreCount(rec, store) {
   return Object.entries(rec.stores || {}).reduce((n, [s, c]) => n + (qSameStore(s, store) ? c : 0), 0);
 }
 function qPlanBucket(li, store) {
-  const rec = qPlanItem(li.name, li.item_id);
+  const rec = qPlanItem(li.name, li.history_id || li.item_id);
   const total = rec ? Object.values(rec.stores || {}).reduce((a, b) => a + b, 0) : 0;
   if (!total) return { bucket: "new" };
   const here = qStoreCount(rec, store);
@@ -401,9 +445,11 @@ function qPlanBucket(li, store) {
   return { bucket: "elsewhere", store: best, n: bestN, total, rec };
 }
 function qPlanUsuals(store) {
-  const onList = new Set(((Q.plan && Q.plan.list) || []).map(i => qnorm(i.name)));
+  const listRows = (Q.plan && Q.plan.list) || [];
+  const onList = new Set(listRows.map(i => qnorm(i.name)));
+  const onListIds = new Set(listRows.map(i => i.history_id || i.item_id));
   return ((Q.plan && Q.plan.items) || [])
-    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)))
+    .filter(i => qStoreCount(i, store) >= 2 && !onList.has(qnorm(i.name)) && !onListIds.has(i.item_id))
     .map(i => ({ ...i, ripe: i.every_days ? (i.days_since || 0) / i.every_days : 0 }))
     .sort((a, b) => (b.due - a.due) || (b.ripe - a.ripe) || (qStoreCount(b, store) - qStoreCount(a, store)))
     .slice(0, 6);
@@ -632,7 +678,7 @@ $("#nl-next").addEventListener("click", async () => {
  * My Stores + favorites are the account plane. The pick, Find, and
  * My Stores all render the same joined rows from /api/stores/*. */
 
-const QSCENE_LABEL = { cloud: "3D mapped · Quest ready", strip: "Plays in Strip" };
+const QSCENE_LABEL = { cloud: "3D mapped · Quest ready", strip: "Walk-through view" };
 function qStarSvg(filled) {
   return `<svg viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>`;
 }
@@ -1652,6 +1698,11 @@ function renderHunt() {
   // on the walk — the route is a suggestion, any row can GRAB.
   const ps = qPopState(sess);
   const allIn = ps === "done";
+  /* The note takes the next-card's height when it replaces it, so the
+   * list under them does not jump out from under a tap (QA 2026-10-28). */
+  const popH = $("#hunt-pop").offsetHeight;
+  if (allIn && popH) $("#hunt-done-note").style.minHeight = popH + "px";
+  else if (!allIn) $("#hunt-done-note").style.minHeight = "";
   $("#hunt-pop").hidden = allIn;
   $("#hunt-done-note").hidden = !allIn;
   const btn = $("#btn-collect");
@@ -1672,7 +1723,7 @@ function renderHunt() {
     $("#pop-kicker").textContent = sess.state === "paused" ? "Paused" : "Suggested next — grab any stop";
     $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
-      ${rep ? `<p style="margin:6px 0 0"><span class="repflag">Reported missing — another hunter could not find it here.</span></p>` : ""}`;
+      ${rep ? `<p style="margin:6px 0 0"><span class="repflag">You reported this missing here.</span></p>` : ""}`;
     btn.textContent = `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
     $("#btn-findit").hidden = sess.state !== "playing";
@@ -1770,6 +1821,10 @@ function qAimStep(sess, dir) {
 function qHuntKey(e) {
   if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  // Enter / Space on a focused button or link is that control's own
+  // press, never a GRAB (QA 2026-10-28).
+  if ((e.key === "Enter" || e.key === " ") && e.target.closest
+      && e.target.closest("button, a[href], [role=button], summary")) return;
   if (!Q.current) return;
   const shown = id => { const v = $(id); return v && !v.hidden; };
   // Esc is Back on any screen of the run (hunt, Express, Finish);
@@ -1816,7 +1871,10 @@ $("#btn-collect").addEventListener("click", async () => {
  * directly — any order — and a collected row puts back in place. */
 $("#hunt-list").addEventListener("click", ev => {
   const g = ev.target.closest("[data-grab]");
-  if (g && !g.disabled) { collectStop(Number(g.dataset.grab)); return; }
+  if (g && !g.disabled) {
+    if (Q.current && Q.current.state === "not_started") { toast("Tap Start the hunt first."); return; }
+    collectStop(Number(g.dataset.grab)); return;
+  }
   const u = ev.target.closest("[data-putback]");
   if (u && !u.disabled) putBackStop(Number(u.dataset.putback));
 });
@@ -1879,6 +1937,9 @@ $("#btn-wild").addEventListener("click", () => {
 });
 if (window.wireRecordButton) wireRecordButton($("#wild-mic"), $("#wild-status"), text => {
   $("#wild-name").value = text;
+});
+$("#wild-name").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); $("#wild-add").click(); }
 });
 $("#wild-add").addEventListener("click", async () => {
   const sess = Q.current;
