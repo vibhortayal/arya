@@ -356,8 +356,15 @@ def derived():
     have = {i["item_id"] for i in smart["items"]}
     for pid, f in fl.items():
         if f.get("manual") and pid not in have:
-            smart["items"].append({"item_id": pid, "qty": 1, "due_reason": "Added by you",
-                                    "source": "user"})
+            by = f.get("added_by")
+            row = {"item_id": pid, "qty": 1,
+                   "due_reason": f"Added by {by}" if by else "Added by you",
+                   "source": "user"}
+            if by:
+                row["added_by"] = by
+                if f.get("approved"):
+                    row["approved"] = True
+            smart["items"].append(row)
     kept = []
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
@@ -365,6 +372,10 @@ def derived():
             continue  # removed for this cycle; returns when a new receipt lands
         if f.get("qty_override"):
             item["qty"] = f["qty_override"]
+        if f.get("added_by") and f.get("manual"):
+            item["added_by"] = f["added_by"]
+            if f.get("approved"):
+                item["approved"] = True
         if f.get("checked_on") and f.get("checked_on") == today:
             item["checked"] = True
         kept.append(item)

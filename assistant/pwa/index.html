@@ -13,11 +13,16 @@
 <meta name="theme-color" content="#EFEFF1">
 <script>try{document.documentElement.dataset.theme="light";localStorage.removeItem("arya-theme")}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="hunt.css">
+<link rel="stylesheet" href="pack.css">
+<link rel="stylesheet" href="album.css">
+<link rel="stylesheet" href="haul.css">
 </head>
 <body>
 <button id="avatar-btn" class="avatar floating" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span><img id="avatar-img" alt="" hidden></button>
 <p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
 
 <section id="view-login" class="view" hidden>
   <div class="hero">
@@ -240,20 +245,22 @@
   <section id="view-newlist" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px" id="nl-title">Your quest</h2>
-    <p class="muted" id="nl-sub">Tap an item to move it into the quest or back to your list.</p>
-    <div class="group pad">
+    <p class="muted" id="nl-sub">Pack what you need. Tap a row to take it in or out.</p>
+    <div id="nl-deck" hidden></div>
+    <div class="group pad packcomposer">
       <label class="field" for="nl-text">Add something else</label>
-      <textarea id="nl-text" rows="2" placeholder="oat milk&#10;eggs × 2" aria-label="Add something else"></textarea>
-      <p style="display:flex; gap:8px; margin:8px 0 0">
-        <button class="btn grow" id="nl-add" type="button">Add items</button>
+      <textarea id="nl-text" rows="2" placeholder="oat milk&#10;2x tortillas" aria-label="Add something else"></textarea>
+      <p class="packaddrow">
         <button class="btn grow" id="nl-mic" type="button">Record</button>
         <label class="btn grow" for="nl-photo" style="text-align:center">Photo</label>
+        <button class="btn grow" id="nl-add" type="button">Add</button>
         <input type="file" id="nl-photo" accept="image/*" hidden>
       </p>
       <p class="muted nomargin" id="nl-status"></p>
-      <div id="nl-confirm" hidden></div>
+      <div id="nl-helper"></div>
     </div>
     <div id="nl-plan"></div>
+    <div id="nl-foot"></div>
     <p><button id="nl-next" class="btn primary wide" type="button">Start the quest &rarr;</button></p>
   </section>
 
@@ -399,6 +406,7 @@
       <span class="hchip" id="hunt-timer" hidden>0:00</span>
       <span class="hchip pts" id="hunt-pts" aria-live="polite">0 pts</span>
       <span class="hchip prog" id="hunt-count"></span>
+      <span class="hchip combo" id="hunt-combo" hidden>Combo x2</span>
       <button id="btn-pause" class="hudbtn" type="button" aria-label="Pause"></button>
     </div>
     <div id="q-brief"></div>
@@ -437,10 +445,21 @@
       <p class="nomargin"><button id="btn-collect" class="btn primary wide grabbtn" type="button">Grab</button></p>
       <p class="nomargin findrow"><button id="btn-findit" class="btn wide" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><span>Find it for me</span></button></p>
     </div>
-    <p id="hunt-done-note" class="donenote" hidden>All collected — nothing moves you on automatically. The hunt waits here until you tap Finish, and any item can still be put back.</p>
+    <p id="hunt-done-note" class="donenote" hidden>All collected. Nothing moves you on by itself. Tap Done when you are ready. You can still put any item back.</p>
     <h3 class="sect">The list</h3>
     <div id="hunt-list" class="group"></div>
-    <p><button id="btn-finish" class="btn primary wide" type="button">Finish &rarr;</button></p>
+    <div id="hunt-left" class="hm-left" hidden></div>
+    <div id="hunt-add" class="hm-add group pad">
+      <label class="hm-addlabel" for="hm-add-input">+ Forgot something?</label>
+      <div class="hm-addrow">
+        <input type="text" id="hm-add-input" class="hm-addinput" placeholder="2x tortillas" autocomplete="off" enterkeyhint="done">
+        <button id="hm-add-btn" class="btn primary" type="button">Add</button>
+        <button id="hm-add-mic" class="btn hm-mic" type="button">Record</button>
+      </div>
+      <p id="hm-add-status" class="muted nomargin"></p>
+      <div id="hm-add-chips" class="hm-chips"></div>
+    </div>
+    <p><button id="btn-finish" class="btn secondary wide" type="button">I'm done shopping</button></p>
     <p style="text-align:center"><button id="btn-abandon" class="btn" type="button" hidden>End this quest</button></p>
     <p id="motion-row" class="motionrow" hidden>
       <button id="btn-gyro" class="btn" type="button" aria-pressed="false" hidden>Look around with your phone</button>
@@ -503,21 +522,32 @@
 
   <section id="view-finish" class="view" hidden>
     <p><a href="#" class="qback">&larr; Back to the hunt</a></p>
-    <h2 class="largetitle" style="font-size:28px">Finish</h2>
+    <h2 class="largetitle" style="font-size:28px">Add your receipt</h2>
     <p class="muted" id="fin-sub">The receipt is the scorecard. Snap it and the hunt is settled.</p>
+    <p class="muted">Arya reads items and the total. Your photo stays private to you. Nothing here is shared.</p>
     <div class="group pad">
       <input type="file" id="fin-photo" accept="image/*" aria-label="Receipt photo" hidden>
       <p class="nomargin"><label class="btn primary wide receiptbtn" for="fin-photo">Snap the receipt</label></p>
-      <p class="nomargin demo-only" hidden><button id="fin-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
+      <input type="file" id="fin-ereceipt" accept="application/pdf,image/*" aria-label="E-receipt, PDF or screenshot" hidden>
+      <p class="nomargin real-only" style="margin-top:10px"><label class="btn wide" for="fin-ereceipt">Add an e-receipt (PDF or screenshot)</label></p>
+      <p class="nomargin demo-only" hidden style="margin-top:10px"><button id="fin-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
       <p id="fin-status" class="muted nomargin"></p>
     </div>
-    <p><button id="fin-skip" class="btn secondary wide" type="button">Skip</button></p>
-    <p class="muted">Skip closes the hunt without a receipt. It leaves Today and waits in Receipts as &ldquo;Finished · Receipt missing&rdquo; until this trip's receipt is added.</p>
+    <p><button id="fin-skip" class="btn secondary wide" type="button">No receipt today</button></p>
+    <p class="muted">Your +50 bonus waits. It never expires. Add the receipt any time from Receipts.</p>
+    <p class="muted">A blurry or partial photo is fine. Arya keeps what it can read.</p>
   </section>
 
   <section id="view-score" class="view" hidden>
     <div id="score-body"></div>
     <p><button id="score-done" class="btn primary wide" type="button">Back to Today</button></p>
+  </section>
+
+  <section id="view-album" class="view" hidden>
+    <p><a href="#" class="qback">&larr; Back</a></p>
+    <h2 class="largetitle">Album</h2>
+    <p class="subtitle" id="alb-sub"></p>
+    <div id="alb-body"><p class="empty">The album did not load. Close the app and open it again.</p></div>
   </section>
 
   <section id="view-community" class="view" hidden>
@@ -526,6 +556,7 @@
     <div class="group">
       <button class="navrow" data-qnav="view-race" type="button"><span class="grow">Shop-Off<span class="sub">Race a friend on the same list</span></span><span class="chev">›</span></button>
       <button class="navrow" data-qnav="view-friends" type="button"><span class="grow">Friends<span class="sub" id="crew-friends-sub">Add by handle, accept requests</span></span><span class="chev">›</span></button>
+      <button class="navrow" data-qnav="view-album" type="button"><span class="grow">Album<span class="sub" id="album-nav-sub">Stickers from your hunts</span></span><span class="chev">›</span></button>
     </div>
     <div class="seg" id="comm-scopes">
       <button class="chip" data-scope="household" aria-pressed="true" type="button">Household</button>
@@ -641,9 +672,13 @@
 </nav>
 
 <script src="app.js"></script>
+<script src="pack.js"></script>
 <script src="scene.js"></script>
 <script src="quest.js"></script>
+<script src="huntmenu.js"></script>
+<script src="album.js"></script>
 <script src="mapper.js"></script>
 <script src="share.js"></script>
+<script src="haul.js"></script>
 </body>
 </html>

@@ -12,21 +12,22 @@ def read(name):
 
 
 class TestVoiceToList(unittest.TestCase):
-    def test_sentence_parser_and_confirm_flow(self):
+    def test_sentence_parser_feeds_the_bag(self):
         q = read("quest.js")
-        for needle in ("function qParseText", "function qShowTextConfirm",
-                       "Looks right? Tap an item to drop it.",
-                       "Add ${items.length} item",
-                       'post("/api/list/add", { name: it.name })'):
-            self.assertIn(needle, q)
-        # voice lands in the confirm flow, not just the raw box
-        self.assertIn("qShowTextConfirm();\n});", q)
+        # The "Looks right?" strip gave way to the Pack bag: dictation
+        # becomes bag rows (each can be taken out or put back).
+        self.assertIn("function qParseText", q)
+        self.assertNotIn("function qShowTextConfirm", q)
+        self.assertIn("qNlAdd();\n});", q)
         # the plan count and Start read the sentence parser
         self.assertIn("qParseText($(\"#nl-text\").value)", q)
+        # the bag splits a sentence the same way
+        pack = read("pack.js")
+        self.assertIn("qParseText(l)", pack)
 
-    def test_add_button_and_confirm_strip_exist(self):
+    def test_add_button_and_helper_slot_exist(self):
         html = read("index.html")
-        for needle in ('id="nl-add"', 'id="nl-confirm"', 'id="btn-abandon"'):
+        for needle in ('id="nl-add"', 'id="nl-helper"', 'id="btn-abandon"'):
             self.assertIn(needle, html)
 
 

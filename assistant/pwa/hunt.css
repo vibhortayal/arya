@@ -1,0 +1,125 @@
+/* Hunt menu (hunt slice, 2026-10-28). Loaded after styles.css; uses
+   only its tokens. Greyscale structure plus the one orange; light mode
+   only; no gradients, no emoji, no padlocks; every tap target at least
+   44px; text 15px and up (12px only for badges and chips). */
+
+/* ---- The HUD wraps instead of overflowing, even at 360px ---- */
+.hunthud { flex-wrap: wrap; row-gap: 4px; }
+.hunthud .hchip.grow { flex: 1 1 120px; min-width: 0; }
+#view-hunt .toolbtn, .hchip, .hudbtn, #view-hunt .chip, #spot-sheet .chip, .hm-chip { min-height: 44px; }
+.hchip { display: inline-flex; align-items: center; }
+.hchip.combo { background: var(--acc-soft); color: var(--acc); box-shadow: inset 0 0 0 1.5px var(--acc); }
+
+/* ---- Text: row detail and sub lines are 15px ---- */
+#view-hunt .sub, #hunt-left .sub, .huntrow .sub { font-size: 15px; }
+.hunt-badge {
+  display: inline-block; font-size: 12px; font-weight: 700; line-height: 1;
+  padding: 4px 8px; border-radius: 999px; background: var(--fill); color: var(--ink2);
+}
+.hunt-badge.boss { background: var(--acc-soft); color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); }
+.hunt-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.hunt-note { color: var(--ink); }
+.hunt-boss { color: var(--acc); font-weight: 600; }
+
+/* ---- The row: 44px leading cell, face, text, action ---- */
+.huntrow { gap: 10px; }
+.huntrow .rowface { width: 40px; height: 40px; }
+.morebtn, .hunt-lead {
+  flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: transparent; color: var(--ink2); padding: 0;
+}
+.morebtn { background: var(--fill); }
+.morebtn:active { background: var(--fill2); }
+.morebtn svg, .hunt-lead svg { width: 22px; height: 22px; }
+.hunt-lead.got { color: var(--acc); }
+.huntrow.got .name { color: var(--secondary); text-decoration: line-through; }
+.huntrow.reported .name { color: var(--secondary); }
+.rowact {
+  flex: none; width: auto; min-width: 112px; max-width: 128px; min-height: 44px;
+  margin-left: 6px; padding: 6px 10px; white-space: normal; line-height: 1.15;
+}
+.findline {
+  display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-left: 8px;
+  min-height: 44px; border-radius: 12px; background: var(--acc-soft); color: var(--ink);
+  font-size: 15px;
+}
+.findline > svg { width: 18px; height: 18px; flex: none; color: var(--acc); }
+.hunt-findtext { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hunt-unfind {
+  flex: none; width: 44px; height: 44px; border: 0; background: transparent;
+  color: var(--ink2); display: grid; place-items: center; padding: 0;
+}
+.hunt-unfind svg { width: 18px; height: 18px; }
+
+/* ---- The sheet (one dialog for every hunt menu) ---- */
+#hunt-sheet { z-index: 40; }
+#hunt-sheet .sheet { max-height: 86vh; padding-top: 14px; }
+.hm-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; overflow-wrap: anywhere; }
+.hm-sub { margin: 0 0 12px; }
+.hm-opts { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; }
+.hm-opt {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
+  width: 100%; min-height: 56px; padding: 8px 14px; border: 0; border-radius: 14px;
+  background: var(--fill); color: var(--ink); text-align: left; font-size: 16px;
+}
+.hm-opt:active { background: var(--fill2); }
+.hm-opt b { font-weight: 600; }
+.hm-opt .sub { font-size: 15px; }
+#hunt-sheet .btn.wide { margin-top: 8px; }
+.hm-main { box-shadow: 0 8px 22px rgba(228, 87, 46, .28); }
+.hm-label { display: block; margin: 12px 0 6px; font-size: 15px; font-weight: 600; }
+.hm-leavelist { margin: 8px 0 12px; }
+.hm-leaverow { gap: 12px; }
+.hm-seg { display: inline-flex; flex: none; border-radius: 999px; background: var(--fill); padding: 2px; }
+.hm-segbtn {
+  min-height: 44px; min-width: 84px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--ink2); font-size: 15px; font-weight: 600;
+}
+.hm-segbtn[aria-pressed="true"] { background: var(--acc-soft); color: var(--acc); box-shadow: inset 0 0 0 1.5px var(--acc); }
+.hm-stepper { gap: 12px; }
+.hm-step { display: inline-flex; align-items: center; gap: 8px; }
+.hm-step b { min-width: 36px; text-align: center; font-size: 20px; font-variant-numeric: tabular-nums; }
+.hm-stepbtn {
+  width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--fill);
+  color: var(--ink); font-size: 22px; font-weight: 600; line-height: 1;
+}
+.hm-stepbtn:active { background: var(--fill2); }
+
+/* ---- Forgot something ---- */
+.hm-add { margin-top: 12px; }
+.hm-addlabel { display: block; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.hm-addrow { display: flex; gap: 8px; align-items: center; }
+.hm-addinput { flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: 17px; }
+.hm-wide { width: 100%; }
+.hm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.hm-chips[hidden] { display: none; }
+.hm-chip { font-size: 15px; }
+
+/* ---- Left for next time ---- */
+.hm-left { margin-top: 12px; }
+.hm-leftgroup { padding: 2px 16px; }
+.hm-leftbar {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  min-height: 56px; padding: 0; border: 0; background: transparent; color: var(--ink);
+  font-size: 16px; font-weight: 600; text-align: left;
+}
+.hm-chev { width: 22px; height: 22px; color: var(--ink2); }
+.hm-chev.open { transform: rotate(180deg); }
+.hm-leftrow { gap: 12px; }
+.hm-leftrow .btn { flex: none; min-height: 44px; }
+
+/* ---- Toast: a 44px Dismiss and a 44px action ---- */
+#toast:not([hidden]) { display: flex; align-items: center; gap: 4px; }
+.toastact { min-height: 44px; min-width: 44px; padding: 0 8px; }
+.toastclose {
+  flex: none; margin-left: auto; width: 44px; height: 44px; border: 0; padding: 0;
+  background: transparent; color: var(--bg); display: grid; place-items: center;
+}
+.toastclose svg { width: 18px; height: 18px; }
+
+/* ---- Narrow phones ---- */
+@media (max-width: 380px) {
+  .huntrow { gap: 8px; }
+  .huntrow .rowface { display: none; }
+  .rowact { min-width: 104px; }
+}

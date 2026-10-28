@@ -10,6 +10,7 @@ import difflib
 
 from api import state
 from api.curator import _tokens
+from api.itemmeta import apply_extras
 
 # Tokens that make two products DIFFERENT products: form, source, and
 # preparation. Whole vs oat, fresh vs frozen, organic vs not — the
@@ -125,15 +126,21 @@ def optimize(raw_items, store=None):
     corrected, questions, unresolved = [], [], []
     in_count = 0
 
-    def add(name, qty, group, typed, flag=None):
+    def add(name, qty, group, typed, flag=None, extras=None):
         for it in items:
             if it["group"] == group:
                 it["qty"] += qty
                 feeds[group].append(typed)
+                # Same rule as quest._add_item: the merged line keeps
+                # what it has and only fills its empty extras.
+                apply_extras(it, extras)
                 return
         line = {"name": name, "qty": qty, "checked": False, "group": group}
         if flag:
             line[flag] = True
+        # Pack extras (note, variant, by, src, aisle) ride along; a
+        # merged duplicate fills only the extras the first line lacks.
+        apply_extras(line, extras)
         items.append(line)
         feeds[group] = [typed]
 
@@ -168,13 +175,13 @@ def optimize(raw_items, store=None):
         elif kind == "unresolved":
             unresolved.append(name)
             add(name, qty, "name:" + state._norm_name(name), name,
-                flag="unresolved")
+                flag="unresolved", extras=raw)
         else:
             rep = gm.get(picked["item_id"], picked["item_id"])
             canon = state.names().get(rep, picked["canonical_name"])
             if name != canon:
                 corrected.append({"from": name, "to": canon})
-            add(canon, qty, rep, name)
+            add(canon, qty, rep, name, extras=raw)
     by_group = {i["group"]: i for i in items}
     merged = [{"name": by_group[g]["name"], "qty": by_group[g]["qty"],
                "from": srcs}

@@ -1,0 +1,117 @@
+/* Album (Game: album). Loaded after styles.css. Greyscale structure
+   with the one orange accent, light mode only, grouped lists, 44px
+   targets, text 15px and up (12px only on chips). Tokens from
+   styles.css only: no new colors, no gradients, no emoji, no gold, no
+   padlock. Class prefixes reserved for this slice: alb*, stk*,
+   level*, ladder*. */
+
+/* ---- tabs: one chip per page, scrolls sideways ---- */
+.albtabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.albtabs::-webkit-scrollbar { display: none; }
+.albtab {
+  flex: none; min-height: 44px; padding: 6px 16px; border: none;
+  border-radius: 980px; background: var(--panel); color: var(--ink);
+  font-size: 15px; font-weight: 550; white-space: nowrap;
+}
+.albtab[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+
+/* ---- a page: head, progress, the 8-slot grid, the badge ---- */
+.albpage { margin-top: 0; }
+.albhead { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.albtitle { font-size: 17px; font-weight: 700; }
+.albcount { margin-left: auto; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.albchip, .ladderchip {
+  display: inline-block; font-size: 12px; font-weight: 700; line-height: 1;
+  padding: 5px 8px; border-radius: 999px; background: var(--fill2); color: var(--ink2);
+}
+.albprog { height: 8px; margin: 4px 0 12px; border-radius: 999px; background: var(--fill2); overflow: hidden; }
+.albprog i { display: block; height: 100%; border-radius: 999px; background: var(--acc); }
+#view-album .sub, #alb-sheet .sub, #alb-level .sub { font-size: 15px; }
+.albnote { margin: 0 0 10px; }
+.albchunk { margin: 10px 0 6px; }
+.albgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.albslot {
+  aspect-ratio: 1; min-width: 44px; min-height: 44px; padding: 0; border: none;
+  border-radius: 50%; background: var(--fill); display: grid; place-items: center;
+  position: relative;
+}
+.albslot img { width: 66%; height: 66%; object-fit: contain; }
+.albslot.empty { background: var(--fill2); border: 2px dashed var(--line); }
+.albslot.empty::after { content: "?"; color: var(--ink3); font-size: 20px; font-weight: 700; }
+.albslot.season { border: 2px solid var(--acc); }
+.albslot.empty.season { border-style: dashed; }
+.albbadge {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--fill);
+}
+.albbadge .grow { flex: 1; min-width: 0; }
+.albbadge b { display: block; font-size: 15px; }
+.albbadge.earned { background: var(--acc-soft); }
+
+/* ---- community chapter, empty state, privacy line ---- */
+.albchapter { display: flex; align-items: center; gap: 12px; }
+.albchapter .grow { flex: 1; min-width: 0; }
+.albchapter b { display: block; font-size: 15px; }
+.albchimg { width: 48px; height: 48px; flex: none; border-radius: 12px; object-fit: cover; background: var(--acc-soft); }
+.albempty { text-align: center; }
+.albprivate { margin: 4px 16px 0; font-size: 15px; }
+
+/* ---- sticker sheet (rides on the shared .sheetwrap/.sheet) ---- */
+.albsheet { text-align: center; padding-top: 10px; }
+.albsheetimg { width: 120px; height: 120px; object-fit: contain; }
+.albsheettitle { margin: 6px 0 4px; font-size: 20px; }
+.albtruth {
+  margin: 12px 0; padding: 10px 12px; border-radius: 12px;
+  background: var(--fill); color: var(--ink); font-size: 15px; font-weight: 600;
+}
+
+/* ---- the New sticker card: fixed above the toast line, never blocks Grab ---- */
+.stkcard {
+  position: fixed; left: 12px; right: 12px; margin: 0 auto; max-width: 560px;
+  bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 25;
+  display: flex; align-items: center; gap: 12px; min-height: 56px;
+  padding: 6px 6px 6px 12px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow);
+  animation: stkin 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes stkin { from { transform: translateY(12px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+.stkimg { width: 44px; height: 44px; flex: none; object-fit: contain; }
+.stkbody { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.stkhead {
+  align-self: flex-start; font-size: 15px; font-weight: 700; color: var(--ink);
+  background: var(--acc-soft); border-radius: 6px; padding: 0 6px;
+}
+.stkname { font-size: 17px; font-weight: 550; overflow-wrap: anywhere; }
+.stkbadge { font-size: 15px; color: var(--ink2); }
+.stkcard .undo {
+  flex: none; min-width: 64px; min-height: 44px; padding: 6px 16px; border: none;
+  border-radius: 980px; background: var(--fill); color: var(--ink);
+  font-size: 15px; font-weight: 600;
+}
+
+/* ---- level-up card and the unlock ladder ---- */
+.levelcard { text-align: center; padding: 10px 0 0; }
+.levelkick { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink2); }
+.levelnum {
+  font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em;
+  color: var(--acc); font-variant-numeric: tabular-nums; margin: 4px 0;
+}
+.levelsub { margin: 4px 0 10px; font-size: 17px; }
+.levelhead { margin: 14px 0 6px; font-size: 15px; font-weight: 600; color: var(--ink2); text-align: left; }
+.ladder { display: grid; gap: 6px; text-align: left; }
+.ladderrow {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  padding: 8px 12px; border-radius: 12px; background: var(--fill); font-size: 15px;
+}
+.ladderrow b { width: 34px; flex: none; }
+.ladderttl { flex: 1; min-width: 0; }
+.ladderrow.ahead { color: var(--ink2); }
+.ladderchip.live { background: var(--acc-soft); color: var(--ink); }
+.levelnever { margin: 14px 0; font-size: 15px; color: var(--ink2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stkcard { animation: none; }
+}

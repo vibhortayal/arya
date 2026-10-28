@@ -1,0 +1,153 @@
+/* Arya Pack — the pre-hunt list step (Pack slice).
+   Loaded after styles.css. It uses only the tokens defined there:
+   greyscale structure plus the one orange accent. Light mode only,
+   no gradients, no red, text 15px and up (12px only for chips),
+   every tap target 44px or more. */
+
+/* ---- composer ---- */
+.packaddrow { display: flex; gap: 8px; margin: 8px 0 0; }
+.packaddrow .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; }
+
+/* ---- helper mode ---- */
+.helperbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.packtoggle {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  padding: 0 14px 0 8px; border: 1px solid var(--line); border-radius: 980px;
+  background: var(--fill); color: var(--ink); font-size: 15px; font-weight: 600;
+}
+.packtoggle i {
+  position: relative; width: 38px; height: 24px; border-radius: 980px;
+  background: var(--fill2); flex: none; transition: background 0.15s ease;
+}
+.packtoggle i::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--panel); box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+.packtoggle[aria-pressed="true"] { background: var(--acc-soft); border-color: var(--acc); }
+.packtoggle[aria-pressed="true"] i { background: var(--acc); }
+.packtoggle[aria-pressed="true"] i::after { transform: translateX(14px); }
+.packhint { color: var(--ink2); font-size: 15px; margin: 0; flex: 1 1 160px; min-width: 0; }
+.packhelpername { margin: 10px 0 0; }
+.pendingrow {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--fill); border-radius: 12px; padding: 8px 10px; margin-top: 8px;
+  font-size: 15px;
+}
+.pendingrow .grow { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+
+/* ---- the deck ---- */
+#nl-deck { margin: 14px 0 6px; }
+.packhead { display: flex; align-items: center; justify-content: space-between; min-height: 24px; }
+.packcount { color: var(--ink2); font-size: 15px; font-weight: 600; }
+.packlinks { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.packlinkgroup { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.packlink {
+  background: none; border: 0; min-height: 44px; padding: 0 8px;
+  color: var(--ink2); font-size: 15px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.packlink[aria-disabled="true"], .packbtn[aria-disabled="true"], .packback[aria-disabled="true"],
+.planrm[aria-disabled="true"] { opacity: 0.45; }
+.packdeck { position: relative; height: 340px; margin: 4px 0 12px; touch-action: pan-y; }
+.packcard {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; padding: 14px 16px; text-align: center;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 22px;
+  box-shadow: var(--shadow); overflow: hidden;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+.packcard.drag { transition: none; cursor: grabbing; }
+.packcard.leaving { pointer-events: none; z-index: 2; }
+.packcard.out-r { transform: translateX(120%) rotate(14deg); opacity: 0; }
+.packcard.out-l { transform: translateX(-120%) rotate(-14deg); opacity: 0; }
+.packcard:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.packcard h3 { margin: 0; font-size: 22px; line-height: 1.2; overflow-wrap: anywhere; max-width: 100%; }
+.packart { width: 80px; height: 80px; object-fit: contain; pointer-events: none; }
+.packwhy { margin: 0; color: var(--ink2); font-size: 15px; line-height: 1.35; max-width: 30ch; min-height: 20px; }
+.packchip {
+  display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.2;
+  padding: 3px 9px; border-radius: 980px; background: var(--fill); color: var(--ink2);
+}
+.packchip.src { background: var(--acc-soft); color: var(--ink); }
+.packchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; }
+.packqty { display: inline-flex; align-items: center; gap: 4px; background: var(--fill); border-radius: 980px; padding: 2px; }
+.packqty button {
+  width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--panel);
+  color: var(--ink); font-size: 22px; font-weight: 700; line-height: 1;
+}
+.packqty b { min-width: 32px; text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+.packbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.packbtn {
+  min-height: 48px; border-radius: 980px; font-size: 17px; font-weight: 700;
+  border: 2px solid transparent; transition: transform 0.1s ease;
+}
+.packbtn:active { transform: scale(0.98); }
+.packbtn.skip { background: var(--fill); color: var(--ink); }
+.packbtn.pack { background: var(--acc-soft); color: var(--ink); border-color: var(--acc); }
+
+/* ---- first run ---- */
+.packfirst { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.packfirst h3 { margin: 0 0 6px; font-size: 20px; }
+.packfirst p { margin: 0 0 8px; }
+.packstarter { min-height: 44px; font-size: 15px; }
+
+/* ---- bag rows ---- */
+.packrow .grow { flex: 1; min-width: 0; }
+.packrow .name { overflow-wrap: anywhere; }
+.packrow .sub { font-size: 15px; }
+.packx {
+  display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 980px;
+  background: var(--fill); color: var(--ink); font-size: 12px; font-weight: 700;
+  vertical-align: 1px; font-variant-numeric: tabular-nums;
+}
+.packedit, .packback {
+  flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 12px; margin-right: 4px;
+  border: 0; border-radius: 12px; background: var(--fill); color: var(--ink);
+  font-size: 15px; font-weight: 600;
+}
+.packback { border-radius: 980px; }
+.packback.yes { background: var(--acc-soft); border: 2px solid var(--acc); }
+.packskipname { padding: 12px 14px; }
+.packfold { width: 100%; text-align: left; padding: 0 14px; }
+
+/* ---- the foot: estimate and budget ---- */
+#nl-foot { margin: 12px 0 4px; }
+.packestimate { margin: 0 0 8px; color: var(--ink2); font-size: 15px; }
+.budgetrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.budgetrow label { flex: 1 1 180px; min-width: 0; color: var(--ink2); font-size: 15px; }
+.budgetrow input { width: 110px; min-height: 44px; text-align: right; font-size: 17px; }
+.budgetline { margin: 6px 0 0; color: var(--ink2); font-size: 15px; }
+.budgetline:empty { display: none; }
+
+/* ---- the Start button: grey, never red, at zero items ---- */
+.btn.primary[aria-disabled="true"] { background: var(--fill); color: var(--ink2); }
+.btn.primary[aria-disabled="true"]:active { background: var(--fill); }
+
+/* ---- the Edit sheet (uses .sheetwrap and .sheet from styles.css) ---- */
+.packsheet { max-height: 86vh; }
+.packsheet h3 { margin: 12px 0 4px; font-size: 20px; overflow-wrap: anywhere; }
+.packfield { display: block; margin: 14px 0; }
+.packlabel { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 600; }
+.packfield input[type="text"] { min-height: 44px; margin-top: 8px; }
+.packfield .packchips { margin-top: 0; }
+.packsheetbtns { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.packsheetbtns .packbtn { min-width: 120px; padding: 0 20px; }
+.packsheet .chip { min-height: 44px; font-size: 15px; }
+.packsheet .chip[aria-pressed="true"] { background: var(--acc-soft); box-shadow: inset 0 0 0 2px var(--acc); }
+
+/* ---- small phones ---- */
+@media (max-width: 380px) {
+  .packcard h3 { font-size: 20px; }
+  .packbtn { font-size: 16px; }
+  .packestimate, .budgetrow label { font-size: 15px; }
+}
+
+/* ---- no motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .packcard, .packcard.drag { transition: none; }
+  .packcard.out-r, .packcard.out-l { transform: none; opacity: 0; }
+  .packbtn:active { transform: none; }
+  .packtoggle i, .packtoggle i::after { transition: none; }
+}

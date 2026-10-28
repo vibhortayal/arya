@@ -54,8 +54,16 @@ function put(path, body) {
   return api(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
 let toastTimer = null;
+/* How long a toast stays up: 60 ms a character, at least 4 s, and at
+ * least 7 s when it carries an action (Undo). */
+function toastMs(msg, hasAction) {
+  return Math.max(hasAction ? 7000 : 4000, 60 * String(msg == null ? "" : msg).length);
+}
 function toast(msg, opts) {
   const t = $("#toast");
+  clearTimeout(toastTimer);
+  // The text goes in first (the live region reads the message), then
+  // the buttons are appended.
   t.textContent = msg;
   // An optional one-tap action (Undo) rides on the toast, which then
   // stays a little longer.
@@ -64,12 +72,18 @@ function toast(msg, opts) {
     b.type = "button";
     b.className = "toastact";
     b.textContent = opts.action;
-    b.addEventListener("click", () => { t.hidden = true; opts.onAction && opts.onAction(); });
+    b.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; opts.onAction && opts.onAction(); });
     t.appendChild(b);
   }
+  const x = document.createElement("button");
+  x.type = "button";
+  x.className = "toastclose";
+  x.setAttribute("aria-label", "Dismiss");
+  x.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  x.addEventListener("click", () => { clearTimeout(toastTimer); t.hidden = true; });
+  t.appendChild(x);
   t.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, opts && opts.action ? 6000 : 4200);
+  toastTimer = setTimeout(() => { t.hidden = true; }, toastMs(msg, !!(opts && opts.action)));
 }
 function showErr(e) { toast("Could not load: " + e.message); }
 function row(name, sub, right) {
@@ -184,7 +198,7 @@ function openSess(id) {
 const BADGE_ART = { top_contributor: "blueberry.webp", egg_baron: "egg.webp",
   banana_republic: "banana.webp", speed_demon: "pizza.webp",
   clean_sweep: "basket.webp", first_mapper: "compass.webp",
-  eagle_eye: "binoculars.webp" };
+  eagle_eye: "binoculars.webp", receipt_keeper: "pantry.webp" };
 
 function paintLevelChip(profile) {
   const el = $("#today-level");
