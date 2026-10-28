@@ -1,49 +1,48 @@
-# Arya Quest — hackathon doc pack
+# Arya Quest — doc pack
 
-Canonical home since 2026-10-27: **vibhortayal/arya · docs/quest/** (moved from vibhortayal/arya-quest, now archived — one product, one repo).
+**Pokémon GO for your grocery list.** Team Nightshift · Meta Global AI
+Developer Hackathon · Indie track · submission Nov 4, 2026, 9:00 PM ET.
 
-# Arya Quest — Pokémon GO for your grocery list
+Arya Quest turns your grocery list into a treasure hunt in your real
+store. Pick the store; Arya sorts your list by where you usually buy
+each thing. Walk the hunt through real photos of the aisles, grab each
+item (points only go up, no clock), and let **Find it for me** point
+the camera at the shelf. Snap the receipt at checkout: it banks your
+points and teaches Arya your household, so next week's list writes
+itself.
 
-**Team Nightshift · Meta Global AI Developer Hackathon · Indie track**
-**Submission deadline: Nov 4, 2026, 9:00 PM ET**
+An unmapped store still plays, as shelf cards. One walkthrough video
+maps it for every shopper after you.
 
-Grocery shopping is a chore. Kids cry in the aisles. You forget the one thing you came for.
+## Loop
 
-Arya Quest turns a grocery list into a treasure hunt in your actual store. Dump your list in any form — a photo of a handwritten note, a whiteboard, a paste. Pick your store. Walk the hunt: you move through photos of the real aisles — the photo-walk is the shipped default view, with a 3D model of the store one tap away — each item sits on its real shelf, you collect it and move to the next. At checkout you snap the receipt — it scores your haul and quietly teaches Arya your household, so next week's hunt loads itself.
+**Plan → Find → Grab → Receipt.**
 
-If your store is not mapped yet, you map it: one walkthrough video of the aisles, filmed on your phone, becomes a shared 3D model for every player who shops there. Every shopper a mapper. Every hunt makes the platform smarter.
-
-## The loop
-
-**List → Store → Play → Receipt.**
-
-1. **List in, any form.** Photo of a note or whiteboard, paste, typing, voice. Muse Spark reads it into a structured list.
-2. **Store.** Mapped stores carry a 3D model built from walkthrough video by Meta's VGGT, with products placed by SAM 3.1 and Muse Spark. Unmapped stores get mapped by their own shoppers.
-3. **Play — or don't.** Quest mode: treasure hunt — items glow on real shelves, route in order, tap to collect, timer and streaks; a kid holding the phone follows the list exactly because the game asks for it. Express mode: same model, game off — the fastest route out. The mood chooses the mode.
-4. **Receipt.** The hunt ends with the receipt photo. It verifies the haul (the scorecard) and feeds the household brain: patterns, spend, returns — the list that writes itself.
-
-## Why it works
-
-- **The hunt is personal.** The treasures are your items in your store, not random spawns.
-- **The utility floor is real.** Novelty fades; dinner does not. The list is real every week.
-- **Fun is the data strategy.** The two contributions the platform needs — store videos and receipts — are the two things the game makes people want to do.
-- **The brain is already built.** Under the game sits Arya: receipt parsing with arithmetic verification, returns netting, a learned-pattern engine, and an LLM staple judge — live today at arya-pilot.duckdns.org (repo: vibhortayal/arya).
+1. **Plan.** The list arrives in any form (photo, paste, typing, voice,
+   Muse chat). Pick the store; the list is sorted for it from your
+   receipts.
+2. **Find.** Real photos of a mapped store (people blurred by SAM 3.1),
+   shelf cards elsewhere. Find it for me: SAM 3.1 boxes candidates,
+   Muse Spark verifies.
+3. **Grab.** +10 a grab, milestones, a full-haul bonus. Shortage
+   reports and sightings feed a live store map.
+4. **Receipt.** Muse Wonder reads it, code checks the arithmetic; it
+   feeds patterns, spend and returns.
 
 ## Documents
 
-- [PITCH.md](PITCH.md) — problem, audience, flywheel, rollout
-- [PITCH-SCRIPT.md](PITCH-SCRIPT.md) — the spoken 2-minute pitch in the Meta structure (hook / problem / live demo / Meta fit / future scope), pillar map, delivery notes
-- [ARCHITECTURE.md](ARCHITECTURE.md) — system design, data split, pipelines
-- [META-PRODUCTS.md](META-PRODUCTS.md) — every Meta product used, and its job
-- [GAME-DESIGN.md](GAME-DESIGN.md) — modes, roles, mechanics
-- [BUILD-PLAN.md](BUILD-PLAN.md) — the road to Nov 4
-- [SUBMISSION.md](SUBMISSION.md) — judging map and submission checklist
-- [UX.md](UX.md) — session model, list-panel rules, screen inventory
-- [DISCUSSION.md](DISCUSSION.md) — the owner's steering, in order, and what each turn changed
+| File | What it holds |
+| --- | --- |
+| [GAME-DESIGN.md](GAME-DESIGN.md) | Rules, loop, rewards, Spotter, community |
+| [UX.md](UX.md) | Sessions, flow, store view, intake |
+| [wireframes.html](wireframes.html) | Clickable design of record |
+| [game-flow-prototype.html](game-flow-prototype.html) | The game flow, tap through on one phone |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Data planes and pipelines |
+| [META-PRODUCTS.md](META-PRODUCTS.md) | Each Meta product and its job |
+| [JUDGE-PLAYBOOK.md](JUDGE-PLAYBOOK.md) | An 8-minute path through the live demo |
+| [PITCH.md](PITCH.md), [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | Pitch and spoken script |
+| [BUSINESS.md](BUSINESS.md) | Market and model |
+| [BUILD-PLAN.md](BUILD-PLAN.md), [SUBMISSION.md](SUBMISSION.md) | Road to Nov 4, checklist |
+| [DISCUSSION.md](DISCUSSION.md) | The owner's steering, in order |
 
-## Status
-
-- Engine (Arya): live, tested (336 tests), real household data.
-- Game (Stages A–E): live — sessions, the Optimizer, Shop-Off, friends/profile/badges, the playable PWA (hub, hunt, Community), the Spotter report slice, the photo-walk as the mapped default view with the VGGT point-cloud driver one tap away and the Aisle/Strip ladder underneath, the shelf graph with item-to-shelf stop matching, and the stores directory (search by name/address/ZIP, favorites, add-with-address).
-- UX: the full wireframe set (Quest screens + Brain B1–B6 + friend-run panel) — the pre-v2 set was **approved by the owner 2026-10-27** and is the build reference. The Hunt v2 screens were **approved by the owner 2026-10-28** and are built (Discussion 46). Intake parity (in-app Photo + Voice doors on the Meta API) and the Brain restyle to the wireframes are built and live; the Add tab is one surface for the list, and the app is light mode only.
-- 3D spike: **PASSED** — a Trader Joe's walkthrough (Chino Hills, CA), 90 frames, VGGT-1B: 1.2M-point cloud + 90 poses; the web asset (373,630 points) ships in the app. Shelf graph (SAM 3.1 + Spark labels) built and live: 18 stops, 55 labeled regions.
+Current state: `STATUS.md` at the repo root.

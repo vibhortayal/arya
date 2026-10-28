@@ -87,7 +87,8 @@ streaks or timers.
 
 ## How the engine chooses frames
 All deterministic, $0, except two model calls per upload in the route:
-SAM 3.1 people scrub (fails closed) and a "grocery shelf" box for fill.
+SAM 3.1 people scrub (fails closed) and "grocery shelf" boxes for fill
+(summed over bays, measured on the scrubbed JPEG).
 1. Grade: sharpness (Laplacian variance), exposure (mean grey level),
    shelf fill. A weak frame is kept as a partial, never refused.
 2. Score = 0.5 sharpness + 0.3 exposure + 0.2 fill (fill is neutral if the
