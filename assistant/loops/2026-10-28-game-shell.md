@@ -79,3 +79,28 @@ Verification: suite 367 OK (1 skipped), new `test_offline_hunt.py`
 a refused queued op dropped). Playwright with the browser set offline
 mid-hunt: two grabs counted and paid points offline, the banner
 showed 2 waiting, and after reconnecting the server held both grabs.
+
+# Part 4: learn to play — one view, How to play
+
+User feedback via the owner: "don't understand how to play. What is
+3D, Aisle, Photos, Strip?" Owner: "even I don't understand what and
+why we need those 4 modes." Ruling (decision card): one automatic
+view, 3D kept as a demo link.
+
+- The four-chip view switch is gone. A mapped store shows its real
+  photos; any other store shows shelf cards; a caption under the view
+  says what it is. "See it in 3D ›" swaps to the point-cloud scan
+  and "‹ Back to the photos" returns; only the picture changes. The
+  Aisle map is retired from the hunt (scene.js keeps the driver).
+  Old stored view choices are ignored.
+- How to play: a sheet with three steps (find it, grab it, snap the
+  receipt), shown once on the first Quest hunt on a device, reopened
+  from "?". Skip, the button, the backdrop or Esc close it.
+- "?" and the sound toggle moved to the end of the tools row so the
+  store name fits the HUD at 390px.
+- Service worker arya-v40.
+
+Verification: suite 370 OK (1 skipped); new `test_howto.py`,
+`test_photo_driver.py` rewritten for one view. Playwright: guide on
+first hunt only, ? reopens, Esc closes; no switch, photo caption,
+3D peek mounts the canvas and returns, the hunt still plays.

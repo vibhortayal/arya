@@ -104,21 +104,15 @@ QUEST_DRIVER = r"""
 ;(async () => {
   const out = {};
   const TJ = "Trader Joe's", CS = "Corner Store";
-  localStorage.removeItem("arya-scene-driver");
-  out.mapped_default = qResolveDriver(TJ, null) === "photo";
-  out.legacy_cloud_opens_photo = qResolveDriver(TJ, "cloud") === "photo";
-  out.recorded_strip_is_default_not_choice = qResolveDriver(TJ, "strip") === "photo";
-  out.session_aisle_kept = qResolveDriver(TJ, "aisle") === "aisle";
-  out.unmapped_default = qResolveDriver(CS, null) === "strip";
-  out.unmapped_session = qResolveDriver(CS, "strip") === "strip";
-  localStorage.setItem("arya-scene-driver", "strip");
-  out.stored_strip_wins = qResolveDriver(TJ, "cloud") === "strip";
-  localStorage.setItem("arya-scene-driver", "cloud");
-  out.stored_choice_wins = qResolveDriver(TJ, "photo") === "cloud";
-  out.stored_cloud_unmapped_falls_back = qResolveDriver(CS, null) === "strip";
-  localStorage.setItem("arya-scene-driver", "photo");
-  out.stored_photo_unmapped_falls_back = qResolveDriver(CS, null) === "strip";
-  localStorage.removeItem("arya-scene-driver");
+  // One view, picked by the store (owner, 2026-10-28).
+  out.mapped_default = qResolveDriver(TJ) === "photo";
+  out.unmapped_default = qResolveDriver(CS) === "strip";
+  localStorage.setItem("arya-scene-driver", "aisle");
+  out.old_stored_choice_ignored = qResolveDriver(TJ) === "photo";
+  Q.peek3D = true;
+  out.peek_3d_mapped = qResolveDriver(TJ) === "cloud";
+  out.peek_3d_unmapped_stays_strip = qResolveDriver(CS) === "strip";
+  Q.peek3D = false;
   console.log(JSON.stringify(out));
   process.exit(0);
 })().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
@@ -170,23 +164,24 @@ class TestPhotoAssets(unittest.TestCase):
 
 
 class TestPhotoWiring(unittest.TestCase):
-    def test_driver_and_toggle(self):
+    def test_driver_and_one_view(self):
         js = read("scene.js")
         self.assertIn("SceneDrivers.photo = function (el)", js)
         self.assertIn("photoFrameForU", js)
         q = read("quest.js")
-        self.assertIn('qStorePhotos(Q.draft.store) ? "photo" : Q.driverName', q)
+        self.assertIn('qStorePhotos(Q.draft.store) ? "photo" : "strip"', q)
         self.assertIn("mount.dataset.photos", q)
-        self.assertIn("qResolveDriver(sess.store, sess.driver)", q)
+        self.assertIn("Q.driverName = qResolveDriver(sess.store);", q)
         html = read("index.html")
-        toggle = html.split('id="scene-toggle"')[1].split("</div>")[0]
-        self.assertIn('data-driver="photo"', toggle)
-        self.assertIn(">Photos</button>", toggle)
-        self.assertIn('data-driver="cloud"', toggle)
+        # No view switch: the store picks; 3D is one link away.
+        self.assertNotIn('id="scene-toggle"', html)
+        self.assertNotIn('data-driver="aisle"', html)
+        self.assertIn('id="btn-3d"', html)
+        self.assertIn('id="scene-cap"', html)
 
-    def test_switch_preserves_the_session(self):
+    def test_3d_peek_preserves_the_session(self):
         q = read("quest.js")
-        handler = q.split('$("#scene-toggle").addEventListener')[1]
+        handler = q.split('$("#btn-3d").addEventListener')[1]
         handler = handler.split("addEventListener")[0]
         self.assertIn("mountScene();", handler)
         self.assertIn("renderHunt();", handler)
@@ -195,9 +190,11 @@ class TestPhotoWiring(unittest.TestCase):
 
     def test_honest_labels(self):
         # Nowhere is the photo view called a 3D model or a live
-        # view; the map note names it a photo walk.
+        # view; the caption names them real photos and a 3D scan.
         q = read("quest.js")
-        self.assertIn("unlock its photo walk and 3D view", q)
+        cap = q.split("const QSCENE_CAPTION = {")[1].split("};")[0]
+        self.assertIn("Real photos from a walk through this store", cap)
+        self.assertNotIn("live", cap.split("cloud:")[0].lower())
         scene = read("scene.js")
         flat = " ".join(scene.split()).replace("* ", "")
         self.assertIn('never a "3D model", never a live view', flat)
