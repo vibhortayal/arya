@@ -194,3 +194,71 @@ class TestRouteErrorMapping(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStructuredAndRetry(unittest.TestCase):
+    def setUp(self):
+        import api.meta_client as mc
+        self.mc = mc
+        self._sleep = mc.time.sleep
+        mc.time.sleep = lambda s: None
+
+    def tearDown(self):
+        self.mc.time.sleep = self._sleep
+
+    def test_schema_and_cache_key_in_body(self):
+        cap = {}
+        c = MetaClient(api_key="k", transport=fake_transport(cap))
+        c.chat([{"role": "user", "content": "x"}], schema=("S", {"type": "object"}),
+               cache_key="arya-test")
+        self.assertEqual(cap["body"]["prompt_cache_key"], "arya-test")
+        rf = cap["body"]["response_format"]
+        self.assertEqual(rf["type"], "json_schema")
+        self.assertEqual(rf["json_schema"]["name"], "S")
+
+    def test_schema_refused_falls_back_without_it(self):
+        bodies = []
+
+        def t(method, url, headers, body):
+            bodies.append(dict(body))
+            if "response_format" in body:
+                return 400, {"error": "unsupported response_format"}
+            return 200, {"choices": [{"message": {"content": "{}"}}], "usage": {}}
+        c = MetaClient(api_key="k", transport=t)
+        c.chat([], schema=("S", {}))
+        self.assertEqual(len(bodies), 2)
+        self.assertNotIn("response_format", bodies[1])
+
+    def test_retries_429_then_succeeds(self):
+        calls = []
+
+        def t(method, url, headers, body):
+            calls.append(1)
+            if len(calls) < 3:
+                return 429, {"error": "slow down"}
+            return 200, {"choices": [{"message": {"content": "ok"}}], "usage": {}}
+        c = MetaClient(api_key="k", transport=t)
+        text, _u, _c = c.chat([])
+        self.assertEqual((text, len(calls)), ("ok", 3))
+
+    def test_gives_up_after_bounded_retries(self):
+        calls = []
+
+        def t(method, url, headers, body):
+            calls.append(1)
+            return 503, {"error": "overloaded"}
+        c = MetaClient(api_key="k", transport=t)
+        with self.assertRaises(RuntimeError):
+            c.chat([])
+        self.assertEqual(len(calls), self.mc.MAX_RETRIES + 1)
+
+    def test_other_4xx_not_retried(self):
+        calls = []
+
+        def t(method, url, headers, body):
+            calls.append(1)
+            return 401, {"error": "bad key"}
+        c = MetaClient(api_key="k", transport=t)
+        with self.assertRaises(RuntimeError):
+            c.chat([])
+        self.assertEqual(len(calls), 1)

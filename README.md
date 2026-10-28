@@ -98,6 +98,20 @@ owner's purchase history, imported as data; it is not code.
 
 MIT, see `LICENSE`. Third-party code and asset notes are in `NOTICE.md`.
 
+## Meta API features used
+
+| Feature | Where |
+|---|---|
+| Muse Spark 1.3 Standard (chat, low reasoning effort) | staple judge, Curator, text and order decode, shelf matching, Ask Arya |
+| Structured output (`response_format` json_schema) | judge, Curator, text and order decode; falls back to the tolerant parser if refused |
+| Prompt caching (`prompt_cache_key`, stable prefixes first) | the same four prompts; cached tokens show in the cost ledger |
+| Muse Wonder 1.0 (vision) | receipt photo decode, with a Spark fallback |
+| SAM 3.1 | people scrub of shelf frames, shelf graph build |
+| Muse Voice Transcribe | voice list entry |
+| Muse Image | celebration characters (offline tool) |
+| MCP connector (`custom.arya`) | the user's own Muse files receipts into Arya |
+| Retry policy | 429, 500, 502, 503 retried twice with jittered backoff, other 4xx never |
+
 ## Rules that hold
 
 Personal data is Standard mode only, enforced in

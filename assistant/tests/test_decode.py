@@ -110,7 +110,7 @@ class TestPdfIntake(unittest.TestCase):
             def __init__(self, ledger=None):
                 pass
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 payload = {"merchant": "Costco Example City", "purchased_at": "2026-10-20",
                            "lines": [{"raw": "spinach", "sku": "1", "line_type": "item",
                                       "qty": 1, "line_total": 5.39, "confidence": 0.95},
