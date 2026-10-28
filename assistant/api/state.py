@@ -14,6 +14,8 @@ from api.cart.build import prepare
 
 import contextvars
 
+from api import pgstore
+
 _current_user = contextvars.ContextVar("arya_user", default=None)
 # The demo sandbox (review 2026-10-28): a demo visitor's writes land in
 # an in-memory overlay keyed by file path, never on disk. Reads see the
@@ -92,11 +94,18 @@ def in_sandbox():
     return _overlay.get() is not None
 
 
+def _owner():
+    return _current_user.get() or ""
+
+
 def _load(name, default):
     p = os.path.join(data_dir(), name)
     ov = _overlay.get()
     if ov is not None and p in ov:
         return copy.deepcopy(ov[p])
+    if pgstore.mode() == "pg" and pgstore.uses_pg(_owner(), name):
+        v = pgstore.read(_owner(), name)
+        return default if v is pgstore._MISSING else v
     if os.path.exists(p):
         with open(p) as fh:
             return json.load(fh)
@@ -110,6 +119,13 @@ def _save(name, obj):
         if len(json.dumps(obj)) > OVERLAY_MAX_BYTES:
             raise ValueError("the demo sandbox is full — sign out and open the demo again")
         ov[p] = copy.deepcopy(obj)
+        return
+    if pgstore.uses_pg(_owner(), name):
+        if pgstore.mode() == "pg":
+            pgstore.write(_owner(), name, obj)
+            return
+        write_json_atomic(p, obj)
+        pgstore.mirror(_owner(), name, obj)
         return
     write_json_atomic(p, obj)
 

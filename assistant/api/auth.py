@@ -21,7 +21,16 @@ def _path(name):
     return os.path.join(_root(), name)
 
 
+def _owner():
+    from api.state import _owner
+    return _owner()
+
+
 def _load(name, default):
+    from api import pgstore
+    if pgstore.mode() == "pg" and pgstore.uses_pg(_owner(), name):
+        v = pgstore.read(_owner(), name)
+        return default if v is pgstore._MISSING else v
     p = _path(name)
     if os.path.exists(p):
         with open(p) as fh:
@@ -33,6 +42,14 @@ def _save(name, obj):
     # Same durability contract as the household store (state.py):
     # temp file + os.replace, serialized per file.
     from api.state import write_json_atomic
+    from api import pgstore
+    if pgstore.uses_pg(_owner(), name):
+        if pgstore.mode() == "pg":
+            pgstore.write(_owner(), name, obj)
+            return
+        write_json_atomic(_path(name), obj)
+        pgstore.mirror(_owner(), name, obj)
+        return
     write_json_atomic(_path(name), obj)
 
 
