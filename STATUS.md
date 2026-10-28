@@ -16,7 +16,7 @@ removed, primary-action chrome, Brain back links) and the
 collect celebration (Discussion 32: Muse Image characters with
 a verified fun-fact bank, Quest mode only) are built and
 committed locally — deploy is a separate step. Test suite:
-**220 green**.
+**267 green**.
 
 **Gate 0 (photo receipt decode): PASS.** Public set 91.84%
 (90/98 lines, 9 public receipts); owner subset 32/32; combined
@@ -24,6 +24,19 @@ committed locally — deploy is a separate step. Test suite:
 One silent price rotation in the public set got through. It is
 recorded here, not hidden; the review queue is the mitigation.
 Full record: the research repo's GATE-REPORT.md.
+
+**Photo decode model (2026-10-27).** Judge-facing photo decode
+reads with Muse Wonder 1.0, per the MODEL-POLICY hackathon
+amendment. The attempt has a 90-second bound and an automatic
+fallback to Spark Standard on timeout or error; each photo
+receipt records its reader in `decoded_by`. Live proof: the
+Gate 0 public set through the production path scored 97/98
+identity+price after hand adjudication (automatic scorer 87/98),
+price errors 0, arithmetic 7/7, one extra line on pub-09; the
+proof run cost $1.12. **The amendment expires Nov 4, 2026** —
+photo decode returns to Spark Standard then unless the owner
+extends it. The staple judge and Ask Arya stay on Spark
+Standard. Detail: `assistant/loops/2026-10-27-wonder-decode.md`.
 
 **Remaining for submission:** the demo video and the final
 submission package (owner go-ahead required). This repo goes

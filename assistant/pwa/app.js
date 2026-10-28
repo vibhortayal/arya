@@ -556,7 +556,7 @@ async function renderIntake() {
 /* File a receipt photo (image only): the one receipt path the
  * Receipts view and the Add camera's receipt offer share. */
 async function fileReceiptPhoto(file, statusEl, previewEl) {
-  statusEl.textContent = "Reading the receipt with Spark…";
+  statusEl.textContent = "Reading the receipt — this can take up to a minute.";
   if (previewEl) previewEl.innerHTML = "";
   try {
     const r = await fetch("/decode/photo", {
@@ -853,6 +853,8 @@ $("#rc-late-photo").addEventListener("change", async ev => {
   if (!f || !lateSessionId) return;
   const sid = lateSessionId;
   lateSessionId = null;
+  const st = $("#rc-photo-status");
+  if (st) st.textContent = "Reading the receipt — this can take up to a minute.";
   try {
     const r = await fetch("/decode/photo", {
       method: "POST",
@@ -863,9 +865,11 @@ $("#rc-late-photo").addEventListener("change", async ev => {
     const out = await r.json();
     await post(`/api/quest/sessions/${sid}/receipt`,
                { receipt_id: out.receipt.receipt_id });
+    if (st) st.textContent = "";
     toast("Receipt filed — hunt settled.");
     renderReceipts().catch(showErr);
   } catch (e) {
+    if (st) st.textContent = "";
     toast("Could not file that photo: " + e.message);
   }
 });

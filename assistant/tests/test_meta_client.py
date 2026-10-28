@@ -28,6 +28,50 @@ class TestMetaClient(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.chat([], mode="contributor", personal=True)
 
+    def test_wonder_shape_no_reasoning_effort(self):
+        # Wonder's production configuration (WONDER-EVAL): the
+        # reasoning_effort key is not sent at all.
+        cap = {}
+        c = MetaClient(api_key="test-key", transport=fake_transport(cap))
+        text, usage, cost = c.chat([{"role": "user", "content": "hi"}],
+                                   mode="wonder", personal=True,
+                                   reasoning_effort=None, timeout=90)
+        self.assertEqual(cap["body"]["model"], "muse-wonder-1.0")
+        self.assertNotIn("reasoning_effort", cap["body"])
+        self.assertAlmostEqual(cost, estimate_cost("wonder", 1000, 400, 200), places=9)
+
+    def test_timeout_reaches_urlopen(self):
+        import io, json as _json, urllib.request
+        from unittest import mock
+        import api.meta_client as mc
+
+        class Resp:
+            status = 200
+
+            def read(self):
+                return _json.dumps(
+                    {"choices": [{"message": {"content": "{}"}}],
+                     "usage": {"prompt_tokens": 1, "completion_tokens": 1}}).encode()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+        seen = {}
+
+        def fake_urlopen(req, timeout=None):
+            seen["timeout"] = timeout
+            return Resp()
+
+        c = MetaClient(api_key="k")
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
+            c.chat([{"role": "user", "content": "hi"}], timeout=90)
+            self.assertEqual(seen["timeout"], 90)
+            c.chat([{"role": "user", "content": "hi"}])
+            self.assertEqual(seen["timeout"], 120)  # unchanged default
+
     def test_generate_image_shape_and_cost(self):
         import base64
         cap = {}
