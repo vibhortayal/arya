@@ -29,8 +29,22 @@ async function api(path, opts) {
     // keys on it) but reads as what it is.
     throw new TypeError("No connection right now — try again when you're back online.");
   }
-  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+  if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
   return r.json();
+}
+/* Server details are short codes for developers; the person reads
+ * a sentence (QA 2026-10-28). */
+const FRIENDLY = {
+  "no such session": "That hunt is gone — the demo resets now and then. Go back to Today and start it again.",
+  "no account with that handle": "No one has that handle. Check the spelling and try again.",
+  "this needs a real account": "This needs a real account — the demo keeps nothing.",
+};
+function friendlyError(d) {
+  const s = typeof d === "string" ? d : "Something went wrong.";
+  const key = s.toLowerCase().replace(/[.\s]+$/, "");
+  if (FRIENDLY[key]) return FRIENDLY[key];
+  if (key.startsWith("this needs a real account")) return FRIENDLY["this needs a real account"];
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function post(path, body) {
   return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
@@ -526,7 +540,7 @@ async function renderProfile() {
   paintMissingReceipts($("#pf-missing"), archive.unsettled || [], () => renderProfile().catch(showErr));
   const eagle = (profile.badges || []).find(b => b.id === "eagle_eye");
   $("#pf-spots").innerHTML =
-    row("Spots reported", "Points land only when a spot verifies", String(s.spots_reported || 0)) +
+    row("Store changes you spotted", "Points land only when a change is verified", String(s.spots_reported || 0)) +
     (eagle ? row("Eagle Eye", esc(eagle.detail || eagle.criteria), eagle.earned ? "Earned ✓" : "Locked") : "");
   $("#pf-badges").innerHTML = (profile.badges || []).map(b =>
     `<div class="badgetile${b.earned ? "" : " locked"}">${BADGE_ART[b.id] ? `<img class="bdgimg" src="assets/characters/${BADGE_ART[b.id]}" alt="">` : ""}<h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
@@ -553,6 +567,7 @@ let fbKind = "idea";
 $("#btn-feedback").addEventListener("click", () => {
   show("view-feedback");
   $("#fb-status").textContent = isDemo ? "Sign in with a real account to send a note." : "";
+  $("#fb-send").disabled = isDemo;
   paintFeedbackInbox().catch(() => {});
 });
 $("#fb-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
@@ -759,11 +774,13 @@ function bindAdd() {
     btn.disabled = true;
     try {
       const r = await post("/api/list/from-text", { text });
-      field.value = "";
+      // Text typed while the request ran stays; only the sent text clears.
+      if (field.value.trim() === text) field.value = "";
       paintAddSplit();
       $("#add-status").textContent = "";
-      toast(r.added === 1 ? "Added 1 item to your list."
-        : `Added ${r.added} items to your list.`);
+      const dup = r.already ? ` ${r.already} already on it.` : "";
+      toast((r.added === 1 ? "Added 1 item to your list."
+        : `Added ${r.added} items to your list.`) + dup);
       renderList().catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
