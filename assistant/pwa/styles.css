@@ -91,6 +91,11 @@ a.name { color: var(--label); }
 .return { color: var(--danger); }
 
 .btn {
+  /* display is explicit: a <label class="btn"> is inline by default,
+     which collapsed the receipt buttons onto the text below them
+     (owner phone pass, 2026-10-28). Every .btn now takes its own box. */
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; text-align: center; cursor: pointer;
   background: var(--fill); color: var(--label);
   border: none; border-radius: 980px; padding: 10px 20px; min-height: 44px;
   font-weight: 600; font-size: 16px; transition: background 0.15s ease, transform 0.1s ease;
@@ -839,3 +844,17 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 @keyframes mp-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .mp-reward .pts, .mp-title { animation: none; } .mp-reward .bar { transition: none; } }
 label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
+/* List composer (owner, 2026-10-28): the paste split, shown as
+   removable chips before anything is added. */
+.splitpreview { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.splitpreview .spchip {
+  background: var(--fill); border-radius: 999px; padding: 6px 8px 6px 12px;
+  font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+}
+.splitpreview .spchip button {
+  background: none; border: none; color: var(--secondary); font-size: 15px;
+  padding: 2px 4px; cursor: pointer; line-height: 1;
+}
+.listfoot { font-size: 13px; margin-top: 16px; }
+.asklater { color: var(--accent-text); font-weight: 600; }
+#composer .btn { white-space: nowrap; }
