@@ -1662,6 +1662,33 @@ function openSpotSheet() {
 }
 function closeSpotSheet() { $("#spot-sheet").hidden = true; }
 $("#btn-nothere").addEventListener("click", openSpotSheet);
+
+/* Wild finds, caught live (owner, 2026-10-28): an impulse grab
+ * joins the hunt from the tools row — it is already in the cart,
+ * so it lands collected and flagged wild. The receipt diff at the
+ * Score catches the ones nobody declared. */
+$("#btn-wild").addEventListener("click", () => {
+  const form = $("#wild-form");
+  form.hidden = !form.hidden;
+  if (!form.hidden) $("#wild-name").focus();
+});
+if (window.wireRecordButton) wireRecordButton($("#wild-mic"), $("#wild-status"), text => {
+  $("#wild-name").value = text;
+});
+$("#wild-add").addEventListener("click", async () => {
+  const sess = Q.current;
+  const name = $("#wild-name").value.trim();
+  if (!sess || !name) return;
+  try {
+    const out = await post(`/api/quest/sessions/${encodeURIComponent(sess.id)}/items`,
+      { name, qty: 1, wild: true });
+    Q.current = out;
+    $("#wild-name").value = "";
+    $("#wild-form").hidden = true;
+    renderCurrent();
+    toast(`Wild find: ${name} is in the haul.`);
+  } catch (e) { toast(e.message); }
+});
 $("#spot-close").addEventListener("click", closeSpotSheet);
 $("#spot-sheet").addEventListener("click", ev => {
   if (ev.target.id === "spot-sheet") closeSpotSheet();
@@ -2462,6 +2489,12 @@ function qHuntDuration(sess, receipt) {
  * being finished, says plainly whether its receipt is attached, and
  * offers Add receipt when it is not. */
 async function openScore(sess) {
+  if (sess.state === "done") {
+    // The view carries what the raw session does not: wild finds
+    // (receipt lines no hunt item claims) and my reports.
+    const fresh = await api(`/api/quest/sessions/${encodeURIComponent(sess.id)}`).catch(() => null);
+    if (fresh) sess = fresh;
+  }
   Q.current = sess;
   questShow("view-score");
   const body = $("#score-body");
@@ -2515,10 +2548,67 @@ async function openScore(sess) {
     localStorage.setItem("arya-seen-badges",
       JSON.stringify(profile.badges.filter(b => b.earned).map(b => b.id)));
   }
+  const wildNames = [...new Set([...(sess.wild_finds || []),
+    ...sess.items.filter(i => i.wild).map(i => i.name)])];
+  if (attached && wildNames.length) {
+    html += `<h3 class="sect">Wild finds</h3><div class="group"><div class="row">` +
+      wildNames.map(n => { const f = qFaceFor(n); return f ? `<img class="rowface" src="assets/characters/${f}" alt="">` : ""; }).join("") +
+      `<div class="grow"><span class="name">${esc(wildNames.join(", "))}</span><span class="sub">Not on the list — grabbed anyway. The receipt catches them and Arya counts them like everything else.</span></div></div></div>`;
+  }
+  if (attached || (sess.my_reports || []).length) {
+    html += `<h3 class="sect">Share this run</h3><div class="group pad">
+      <p style="display:flex; gap:8px; flex-wrap:wrap; margin:0">
+        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share your haul</button>
+        <button class="btn grow" id="share-love" type="button">Loved something?</button>` : ""}
+        ${(sess.my_reports || []).length ? `<button class="btn grow" id="share-sos" type="button">Shelf SOS</button>` : ""}
+      </p>
+      <p style="margin-top:10px"><label class="btn wide" for="haul-photo" style="text-align:center">Snap your haul</label>
+      <input type="file" id="haul-photo" accept="image/*" hidden></p>
+      <p class="muted nomargin" id="haul-status">A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.</p>
+      <div id="haul-result"></div>
+    </div>`;
+  }
   body.innerHTML = html;
   qAfterHaul(sess, profile, attached);
   const ch = $("#score-challenge");
   if (ch) ch.addEventListener("click", () => { Q.raceStore = sess.store; questGo("view-race"); });
+  const shareCtx = () => ({ sess, profile, haulPhotoURL: Q.haulPhotoURL || null });
+  const shB = $("#share-haul"); if (shB) shB.addEventListener("click", () => ShareUI.open("haul", shareCtx()));
+  const slB = $("#share-love"); if (slB) slB.addEventListener("click", () => ShareUI.open("love", shareCtx()));
+  const ssB = $("#share-sos"); if (ssB) ssB.addEventListener("click", () => ShareUI.open("sos", shareCtx()));
+  const hpIn = $("#haul-photo");
+  if (hpIn) hpIn.addEventListener("change", async ev => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const status = $("#haul-status"), out = $("#haul-result");
+    status.textContent = "Reading your haul with Spark…";
+    try {
+      if (Q.haulPhotoURL) URL.revokeObjectURL(Q.haulPhotoURL);
+      Q.haulPhotoURL = URL.createObjectURL(f);
+      const r = await fetch(`/api/quest/haul-photo?session=${encodeURIComponent(sess.id)}`, {
+        method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+      const d = await r.json();
+      status.textContent = "";
+      const face = n => { const x = qFaceFor(n); return x ? `<img class="rowface" src="assets/characters/${x}" alt="">` : ""; };
+      let h = "";
+      if (d.seen.length) h += `<div class="row">${d.seen.map(s2 => face(s2.item)).join("")}<div class="grow"><span class="name">Spotted ${d.seen.length} of your items</span><span class="sub">${esc(d.seen.map(s2 => s2.item).join(", "))}</span></div></div>`;
+      if (d.extras.length) h += `<div class="row"><div class="grow"><span class="name">Also in the photo: ${esc(d.extras.join(", "))}</span><span class="sub">Not on the list — wild finds, caught by the camera.</span></div><button class="btn" id="haul-addextra" type="button">Add to my list</button></div>`;
+      if (d.not_seen.length) h += `<p class="muted">Could not spot: ${esc(d.not_seen.join(", "))} — a photo never proves an item is missing.</p>`;
+      if (!d.seen.length && !d.extras.length) h += `<p class="muted">No products spotted in that photo. Try the haul spread out, in good light.</p>`;
+      out.innerHTML = h;
+      const ax = $("#haul-addextra");
+      if (ax) ax.addEventListener("click", async () => {
+        await post("/api/list/from-text", { text: d.extras.join("\n") }).catch(() => {});
+        ax.remove();
+        toast("Added to your list.");
+      });
+    } catch (e) {
+      status.textContent = "";
+      toast("Could not read that photo: " + e.message);
+    }
+    ev.target.value = "";
+  });
   const add = $("#score-addreceipt");
   if (add) add.addEventListener("click", () =>
     openAddReceipt(sess.id, sess.store, s => { Object.assign(sess, s); openScore(sess); }));
