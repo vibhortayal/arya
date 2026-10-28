@@ -90,7 +90,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v17"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v18"', read("sw.js"))
 
 
 class TestLensData(unittest.TestCase):
