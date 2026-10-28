@@ -372,7 +372,9 @@ function qOpenSession(sess) {
 }
 function qRailHtml(currentId) {
   return Q.sessions.map(s => {
-    const p = qProgress(s);
+    // Q.current is replaced by each server reply; Q.sessions keeps the
+    // older copy, so progress for the open hunt comes from Q.current.
+    const p = qProgress(Q.current && Q.current.id === s.id ? Q.current : s);
     return `<button class="chip" data-rail="${esc(s.id)}" aria-pressed="${String(s.id === currentId)}" type="button">${esc(s.store)} · ${p.done}/${p.total}</button>`;
   }).join("");
 }
@@ -2908,7 +2910,15 @@ $("#score-done").addEventListener("click", () => {
 
 /* ---------------- Community ---------------- */
 
+// Badges the player has seen on Crew or Profile are not "New" on the Score.
+function qMarkBadgesSeen(badges) {
+  try {
+    localStorage.setItem("arya-seen-badges",
+      JSON.stringify((badges || []).filter(b => b.earned).map(b => b.id)));
+  } catch (e) {}
+}
 function qBadgeRows(badges) {
+  qMarkBadgesSeen(badges);
   return badges.map(b => `
     <div class="row">
       <div class="grow"><span class="name">${esc(b.name)}</span>

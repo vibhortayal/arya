@@ -543,6 +543,7 @@ async function renderProfile() {
   $("#pf-spots").innerHTML =
     row("Store changes you spotted", "Points land only when a change is verified", String(s.spots_reported || 0)) +
     (eagle ? row("Eagle Eye", esc(eagle.detail || eagle.criteria), eagle.earned ? "Earned ✓" : "Locked") : "");
+  if (window.qMarkBadgesSeen) qMarkBadgesSeen(profile.badges);
   $("#pf-badges").innerHTML = (profile.badges || []).map(b =>
     `<div class="badgetile${b.earned ? "" : " locked"}">${BADGE_ART[b.id] ? `<img class="bdgimg" src="assets/characters/${BADGE_ART[b.id]}" alt="">` : ""}<h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
      <span class="b-state">${b.earned ? "Earned ✓" : `Locked · ${esc(b.detail || "")}`}</span></div>`).join("");
