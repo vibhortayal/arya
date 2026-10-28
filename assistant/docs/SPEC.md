@@ -258,7 +258,7 @@ Real receipts and home photos go to Standard mode models only.
 A Contributor mode model can be trained on inputs. Meta terms bar personal data on Contributor mode.
 Contributor mode is for synthetic data in development loops only.
 The demo states one fact in plain words: photos and receipts go to the Meta API for processing, in Standard mode, with no training on the data.
-Demo data is the data of the owner. The owner gives consent. No data of a third party is in the demo.
+The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
 
 ### 7.4 Connectivity and degradation
 
@@ -271,11 +271,13 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-PWA-core has four screens.
+PWA-core has five tabs: Today, List, Add, Ask, Profile. Receipts and
+Analysis are reached from Profile. Item and category detail opens from
+any list.
 
-1. Home. Running low is first. Each item shows a date range. The list draft sits below. One tap confirms, edits, or adds.
-2. Scan. The camera takes a receipt photo, a cart photo, or an Eyes photo. The review queue sits in this screen.
-3. Dashboard. Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
+1. Today. Running low is first. Each item shows a date range. The list draft sits below. One tap confirms, edits, or adds.
+2. List and Add. The Add tab is one surface: a text field, a mic, a camera, and the pointer to Muse in chat. Receipts enter by image only. The review queue sits with the receipts.
+3. Analysis (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
 4. Item and category detail. Purchase timeline. Cadence. Pack sizes. Price trend by store. Run-out range. Purchase and return history. Controls: add to list now, snooze suggestion, never suggest, change allocation.
 
 Honesty rules for all screens:
@@ -294,8 +296,8 @@ Targets in the store are 64 pixels or more. No text input is required in the sto
 
 ### Gate 0 — photo-receipt gate (before the build commits)
 
-Set: 20 real paper receipts. Stores are mixed. Light is mixed.
-Composition (owner amendment, 2026-10-27): 4 receipts from the owner and 16 public receipts.
+Set as planned: 20 real paper receipts, stores and light mixed.
+As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus the owner subset (32 lines), reported separately, as below.
 Data isolation is a hard rule. Public receipts are test fixtures only.
 A public receipt never enters the ledger of the owner.
 A public receipt never enters the dictionary of the owner.
@@ -310,7 +312,7 @@ Fallback after a failure: PDF receipts and e-receipts only. Photo intake leaves 
 Status of the evidence:
 
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
-- The photo gate is open. The gate needs the 20 paper receipts from the owner.
+- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). Owner subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
 
 ### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
 
@@ -398,7 +400,7 @@ Groceries are the first domain. Groceries are not the final domain.
 
 ## 12. Out of scope for the MVP
 
-- A product name. The name is parked.
+- A product name. Decided: the app is Arya; the hackathon entry name is Arya Quest.
 - Nutrition, health, or dietary advice. This exclusion is permanent.
 - Multiple users and shared lists.
 - A real order or a real payment. The cart is a sandbox.
@@ -406,7 +408,7 @@ Groceries are the first domain. Groceries are not the final domain.
 - Retailer planogram data and retailer integrations.
 - Live guidance on glasses. Glasses record video only.
 - Always-listening voice. Turn-by-turn indoor positioning.
-- Muse Wonder in the pipeline.
+- Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback) and it authored the hunt localizer. Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
 - The mapper network and consensus maps. Section 11 covers these items as vision.
 
 Design flags live in IMPLEMENTATION.md Section 9: F1 to F8.
