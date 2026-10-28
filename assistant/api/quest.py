@@ -152,13 +152,23 @@ def _add_item(items, name, qty=1, group=None):
 
 
 def make_items(raw_items):
+    from api.list.intake import split_list_text
     items = []
     for raw in raw_items or []:
         if isinstance(raw, str):
-            _add_item(items, raw, 1)
+            name, qty, group = raw, 1, None
         elif isinstance(raw, dict) and raw.get("name"):
-            _add_item(items, raw["name"], raw.get("qty", 1),
-                      group=raw.get("group"))
+            name, qty, group = raw["name"], raw.get("qty", 1), raw.get("group")
+        else:
+            continue
+        # A whole sentence is a list, not an item ("I need some eggs,
+        # eggs, bananas"): split it the way the Add box does.
+        pieces = split_list_text(str(name)) if "," in str(name) else []
+        if len(pieces) > 1:
+            for piece in pieces:
+                _add_item(items, piece, 1)
+        else:
+            _add_item(items, name, qty, group=group)
     return items
 
 
