@@ -105,6 +105,23 @@ body { background: var(--page); color: var(--ink); font-family: var(--font); pad
 .tap { outline: 2px dashed transparent; }
 .hint .tap { outline-color: rgba(228,87,46,.55); outline-offset: 2px; }
 .viewhud { position: absolute; top: 40px; left: 14px; }
+.stores { display: flex; flex-direction: column; gap: 8px; }
+.store { background: var(--panel); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; text-align: left; font: 14px var(--font); color: var(--ink); cursor: pointer; }
+.store.on { border: 2px solid var(--acc); background: var(--acc-soft); }
+.store b { font-size: 16px; display: flex; justify-content: space-between; }
+.store .why2 { font-size: 12.5px; color: var(--ink2); }
+.badge { font-size: 11px; font-weight: 800; color: var(--acc-ink); background: var(--acc-soft); border-radius: 6px; padding: 2px 6px; }
+.pick { background: var(--panel); border-radius: 14px; }
+.pick .sec { margin: 0; padding: 10px 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); }
+.pi { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 14px; }
+.pi .bx { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #fff; }
+.pi.in .bx { background: var(--acc); border-color: var(--acc); }
+.pi .nm { flex: 1; font-weight: 600; min-width: 0; }
+.pi .where { font-size: 12px; color: var(--ink3); white-space: nowrap; }
+.pi.out .nm { color: var(--ink3); }
+.stepper { display: flex; gap: 4px; }
+.stepper i { flex: 1; height: 4px; border-radius: 4px; background: var(--fill); }
+.stepper i.on { background: var(--acc); }
 @media (prefers-reduced-motion: reduce) { .sweep, .found, .float, .lvl i { animation: none; transition: none; } }
 button:focus-visible, .flow button:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
 </style>
@@ -136,12 +153,53 @@ const list = (done) => `<div class="list">${done.map(n => `<div class="row done"
 
 function def(id, group, name, why, html, isNew) { S[id] = { group, name, why, html, isNew }; }
 
-def("today", "Start", "Today", "Home. The level chip shows progress that only ever goes up. Start a hunt from today's list.",
+def("today", "Start", "Today", "Home. The level chip shows progress that only ever goes up. Plan a hunt from your Arya list.",
 `<p class="eyebrow" style="margin-top:6px">Wed, Oct 28</p>
 <div style="display:flex;justify-content:space-between;align-items:center"><h1 class="title">Today</h1><span class="chip pts">Level 2 · 115 pts</span></div>
-<div class="next" style="border-width:1.5px"><p class="k">Shopping list · 8 items</p><h2>Trader Joe's run</h2><p class="small">Milk, bananas, sourdough, yogurt, eggs and 3 more.</p><button class="btn primary tap" data-go="howto">Start the hunt</button></div>
+<div class="next" style="border-width:1.5px"><p class="k">Your Arya list · 11 items</p><h2>Time for a run?</h2><p class="small">Milk, bananas, sourdough, yogurt, eggs and 6 more.</p><button class="btn primary tap" data-go="pickstore">Plan a hunt</button></div>
 <div class="list"><div class="row">Spend this week<span style="margin-left:auto">$84.10</span></div><div class="row">Receipts to return by Fri<span style="margin-left:auto">1</span></div></div>
 <p class="small">Tap the orange button to start.</p>`);
+
+def("pickstore", "Plan the trip", "1 · Pick your store", "Store first. Each store shows what you usually buy there, learned from your receipts, so the right one is obvious.",
+`<div class="hud"><button class="round tap" data-go="today" aria-label="Back">‹</button><span class="chip grow">Plan a hunt</span></div>
+<div class="stepper"><i class="on"></i><i></i><i></i></div>
+<h1 class="title">Where are you shopping?</h1>
+<div class="stores">
+<button class="store on tap" data-go="buildquest"><b>Trader Joe's <span class="badge">7 of your 11</span></b><span class="why2">Usually: milk, sourdough, bananas, spinach, yogurt…</span><span class="why2">Mapped store · real photos</span></button>
+<button class="store"><b>Costco <span class="badge">3 of your 11</span></b><span class="why2">Usually: eggs, paper towels, AA batteries</span></button>
+<button class="store"><b>Safeway</b><span class="why2">Last trip 3 weeks ago</span></button>
+</div>
+<button class="link" style="align-self:flex-start">+ Find or add a store</button>
+<p class="small">Learned from 24 receipts. Tap Trader Joe's.</p>`, true);
+
+def("buildquest", "Plan the trip", "2 · Move items into the quest", "Your Arya list, sorted for this store. Items you usually buy here start ticked; items you usually get elsewhere stay on your list for that trip. One tap moves anything either way.",
+`<div class="hud"><button class="round tap" data-go="pickstore" aria-label="Back">‹</button><span class="chip grow">Trader Joe's</span></div>
+<div class="stepper"><i class="on"></i><i class="on"></i><i></i></div>
+<h1 class="title" style="font-size:22px">Your quest at Trader Joe's</h1>
+<div class="pick">
+<p class="sec">Usually bought here · 7</p>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Whole Milk</span><span class="where">every week</span></div>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Sourdough Loaf</span><span class="where">every week</span></div>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Bananas</span></div>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Greek Yogurt</span></div>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Baby Spinach</span></div>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Avocados · Pasta</span><span class="where">2 items</span></div>
+<p class="sec">New on your list · 1</p>
+<div class="pi in"><span class="bx">✓</span><span class="nm">Oat Milk</span><span class="where">no history yet</span></div>
+<p class="sec">Usually from Costco · 3</p>
+<div class="pi out"><span class="bx"></span><span class="nm">Pasture Eggs 12 ct</span><span class="where">Costco 5 of 6</span></div>
+<div class="pi out"><span class="bx"></span><span class="nm">Paper Towels · AA Batteries</span><span class="where">Costco</span></div>
+</div>
+<button class="btn primary tap" data-go="checklist">Start quest · 8 items</button>
+<p class="small">The 3 Costco items stay on your Arya list for that trip.</p>`, true);
+
+def("checklist", "Plan the trip", "3 · Check my list (only if needed)", "Shown only when Arya has a question, like which milk. With nothing to ask, the quest starts straight away.",
+`<div class="hud"><button class="round tap" data-go="buildquest" aria-label="Back">‹</button><span class="chip grow">Trader Joe's</span></div>
+<div class="stepper"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+<h1 class="title" style="font-size:22px">One quick question</h1>
+<div class="next" style="border-width:1.5px"><p class="k">Oat Milk</p><h2 style="font-size:17px">Which one?</h2>
+<div class="choice"><button class="btn ghost tap" data-go="howto">TJ's Oat Beverage 64 oz</button><button class="btn ghost tap" data-go="howto">Oatly Barista 32 oz</button></div></div>
+<button class="btn primary tap" data-go="howto">Skip, start the quest</button>`, true);
 
 def("howto", "Start", "How to play", "Shown once, on the first Quest hunt on a phone. The ? in the tools row opens it again. Three steps, no clock, no way to lose.",
 `${hud(0, 0)}${view(1, "Store photos")}
@@ -237,7 +295,7 @@ def("missing", "After", "Score: receipt missing", "No receipt yet: the points ar
 <div class="haul"><div><span>8 items × 10</span><span>+80</span></div><div><span>Full haul</span><span>+25</span></div><div class="tot"><span>Waiting on the receipt</span><span>+50</span></div></div>
 <button class="btn primary tap" data-go="banked">Add receipt</button><button class="btn ghost tap" data-go="today">Later</button>`);
 
-const GROUPS = ["Start", "Hunt", "Find it for me", "After"];
+const GROUPS = ["Start", "Plan the trip", "Hunt", "Find it for me", "After"];
 const order = Object.keys(S).sort((a, b) => GROUPS.indexOf(S[a].group) - GROUPS.indexOf(S[b].group));
 let cur = null; const back = [];
 function go(id, push = true) {
