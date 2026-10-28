@@ -10,8 +10,34 @@ status is auto at confidence >= 0.8, else unverified; totals_reconcile
 is computed, never taken from the model.
 """
 import hashlib, json, os
+from datetime import datetime
 
 from api.meta_client import MODELS
+
+
+def _iso_day(v):
+    """Normalize a source date to ISO YYYY-MM-DD for the store.
+
+    Sources print dates their own way: Costco JSON is ISO, a photo
+    read returns what the receipt shows ('07/29/26'). Every consumer
+    downstream parses ISO only (patterns, ledger, boards) — a US
+    format stored verbatim crashed /api/home and the decode route's
+    judge step with ValueError (live, 2026-10-28). Unparseable values
+    pass through unchanged; consumers tolerate them (see
+    patterns.engine._d)."""
+    if not v:
+        return v
+    s = str(v).strip()
+    try:
+        return datetime.fromisoformat(s).strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+    for fmt in ("%m/%d/%y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return v
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "decode_v2.md")
 AUTO_THRESHOLD = 0.8
@@ -91,7 +117,7 @@ def normalize_costco_json(obj):
     return {"receipt_id": obj.get("transactionBarcode"),
             "source_type": "grocery",
             "merchant": f"Costco {obj.get('warehouseName', '')}".strip(),
-            "purchased_at": obj.get("transactionDate"),
+            "purchased_at": _iso_day(obj.get("transactionDate")),
             "lines": lines, "subtotal": obj.get("subTotal"),
             "tax": obj.get("taxes"), "total": obj.get("total"),
             "totals_reconcile": reconcile, "image_ref": None}
@@ -110,7 +136,7 @@ def decode_text(text, client):
     lines, reconcile = _finish(dec.get("lines", []), dec.get("subtotal"))
     rid = "dec-" + hashlib.sha1(text.encode()).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "grocery",
-            "merchant": dec.get("merchant"), "purchased_at": dec.get("purchased_at"),
+            "merchant": dec.get("merchant"), "purchased_at": _iso_day(dec.get("purchased_at")),
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
             "image_ref": None}
@@ -195,7 +221,7 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
     lines, reconcile = _finish(lines, dec.get("subtotal"))
     rid = "dec-" + hashlib.sha1(image_bytes).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "grocery",
-            "merchant": dec.get("store"), "purchased_at": dec.get("date"),
+            "merchant": dec.get("store"), "purchased_at": _iso_day(dec.get("date")),
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
             "image_ref": None, "decoded_by": decoded_by}
@@ -224,7 +250,7 @@ def decode_order_text(text, client):
     lines, reconcile = _finish(dec.get("lines", []), dec.get("subtotal"))
     rid = "ord-" + hashlib.sha1(text.encode()).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "order",
-            "merchant": dec.get("merchant"), "purchased_at": dec.get("purchased_at"),
+            "merchant": dec.get("merchant"), "purchased_at": _iso_day(dec.get("purchased_at")),
             "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
             "total": dec.get("total"), "totals_reconcile": reconcile,
             "image_ref": None}
