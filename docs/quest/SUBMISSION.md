@@ -11,7 +11,7 @@
 | Impact | 30% | The weekly shop, made play: parents and kids first; a contribution flywheel that maps the world's stores from shoppers' phones |
 | Use of Meta AI Tooling | 25% | VGGT builds the stores, SAM 3.1 places the products, Muse Spark reads the lists/labels/receipts, Spark 1.3 judges — every intelligent step is a Meta model (see META-PRODUCTS.md) |
 | Demo | 25% | A playable hunt in a real store's 3D model, filmed end to end: note photo → hunt → receipt finish |
-| Technical Depth | 20% | Crowdsourced 3D store models + shelf graphs; verified receipt pipeline (arithmetic-checked, returns netted); a pattern engine with an LLM judge; per-account vs platform data planes |
+| Technical Depth | 20% | Crowdsourced 3D store models + shelf graphs; verified receipt pipeline (arithmetic-checked, returns netted); a pattern engine with an LLM judge (precision 0.79 against a purchase-cadence proxy on the owner's 114 receipts — eval method and disagreement lists in the research repo); per-account vs platform data planes |
 
 ## Demo video beats
 
