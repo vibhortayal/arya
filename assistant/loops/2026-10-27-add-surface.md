@@ -64,3 +64,19 @@ fallback call; adds land on the list), from-photo routing (list
 -> added; receipt -> nothing added, nothing filed). Parity tests
 gained the demo list-photo preview + from-text 403. SW cache
 arya-v19. Suite: **180 green**. No live model calls were run.
+
+---
+
+## Addendum — light mode only (owner, same evening)
+
+"i dont like dark mode - use only light mode." The Appearance
+section (System/Light/Dark segmented control) is removed from
+Profile entirely; there is no theme toggle anywhere. The token
+architecture stays — the :root light token set is simply the
+only theme now: the prefers-color-scheme dark media block and
+the [data-theme="dark"] block are deleted from styles.css, the
+dark theme-color meta is gone, and the boot script pins
+data-theme="light" unconditionally while clearing any persisted
+arya-theme preference (a stored dark choice is reset, never
+applied). Pinned by test_light_mode_only in
+tests/test_brain_restyle.py. SW cache arya-v20. Suite: 181 green.

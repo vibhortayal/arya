@@ -273,3 +273,11 @@ same evening — see Intake parity below.)
   SW cache arya-v19.
 - Suite: **180 green** (13 new in tests/test_add_surface.py,
   parity tests extended). **Not deployed** — separate owner step.
+
+## Light mode only (2026-10-27)
+
+- Owner: no dark mode. The Appearance switch is removed from
+  Profile; the :root light token set is the only theme (dark
+  media/data-theme blocks deleted); the boot script pins
+  data-theme="light" and clears any stored theme preference.
+  SW cache arya-v20. Suite: **181 green**. Not deployed.
