@@ -104,6 +104,8 @@ class TestDemoHousehold(unittest.TestCase):
         self.assertEqual([ln["name"] for ln in rec["lines"]],
                          [sess["items"][0]["name"]])
         self.assertGreater(rec["total"], 0)
+        # The brain still reads the household after a sample settles.
+        self.assertEqual(self.c.get("/api/home").status_code, 200)
         self.assertEqual(self._disk(), before)
 
     def test_demo_household_lives_in_the_present_week(self):

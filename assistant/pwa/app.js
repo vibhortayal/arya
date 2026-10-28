@@ -95,7 +95,7 @@ async function verifiedReceipts() {
  * the list as one plain-text line. No money, no Community/Profile
  * cards — those live behind the Profile tab. */
 
-const QSTATE_LBL = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished — add the receipt", done: "Done" };
+const QSTATE_LBL = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished · Receipt missing", done: "Finished · Receipt attached ✓" };
 const QMODE_LBL = { quest: "Quest", express: "Express" };
 const BASKET_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.8 13 11 7.2M15.2 13 13 7.2"/><path d="M3.5 13h17l-1.8 6a2 2 0 0 1-1.9 1.4H7.2A2 2 0 0 1 5.3 19L3.5 13z"/><path d="M9 16.2v2.3M12 16.2v2.3M15 16.2v2.3"/></svg>`;
 
@@ -112,14 +112,22 @@ function openSess(id) {
 
 function paintTodayHero(sessions) {
   const el = $("#today-hero");
-  const rank = { playing: 0, paused: 1, finished: 2, not_started: 3 };
-  const hero = sessions.filter(s => s.state !== "done")
-    .sort((a, b) => (rank[a.state] ?? 9) - (rank[b.state] ?? 9))[0];
-  if (!hero) { el.innerHTML = ""; return; }
+  // Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
+  // The hero carries only a hunt that still wants play.
+  const rank = { playing: 0, paused: 1, not_started: 2 };
+  const hero = sessions.filter(s => s.state in rank)
+    .sort((a, b) => rank[a.state] - rank[b.state])[0];
+  if (!hero) {
+    el.innerHTML = `<article class="herocard quiet">
+      <p class="hero-k">No quest in progress</p>
+      <p class="hero-sub nomargin">Nothing is waiting on you.</p>
+    </article>`;
+    return;
+  }
   const p = sessProgress(hero);
   const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
   const kicker = hero.state === "not_started" ? "Up next — your next game" : "In progress — your next action";
-  const btn = hero.state === "finished" ? "Add the receipt ▸" : hero.state === "not_started" ? "Start ▸" : "Resume ▸";
+  const btn = hero.state === "not_started" ? "Start ▸" : "Resume ▸";
   el.innerHTML = `<article class="herocard">
     <p class="hero-k">${kicker}</p>
     <h3 class="hero-title">${esc(hero.store)} · ${QMODE_LBL[hero.mode] || esc(hero.mode)}</h3>
@@ -131,19 +139,26 @@ function paintTodayHero(sessions) {
   el.querySelector("[data-hero]").addEventListener("click", ev => openSess(ev.currentTarget.dataset.hero));
 }
 
+function gameRow(s) {
+  const p = sessProgress(s);
+  const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  const bar = (s.state === "playing" || s.state === "paused")
+    ? `<span class="track g-bar"><span class="bar" style="width:${pct}%"></span></span>` : "";
+  return `<button class="gamerow" data-sess="${esc(s.id)}" type="button">
+    <span class="storeic">${BASKET_SVG}</span>
+    <span class="g-main"><span class="g-name">${esc(s.store)} — ${QMODE_LBL[s.mode] || esc(s.mode)}</span>
+    <span class="g-meta">${QSTATE_LBL[s.state] || esc(s.state)} · ${p.done} of ${p.total}</span></span>
+    ${bar}<span class="chev">›</span></button>`;
+}
+/* Open hunts first; each finished hunt appears once, under Finished. */
 function paintTodayGames(sessions) {
   const el = $("#quest-sessions");
-  el.innerHTML = sessions.length ? sessions.map(s => {
-    const p = sessProgress(s);
-    const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
-    const bar = (s.state === "playing" || s.state === "paused")
-      ? `<span class="track g-bar"><span class="bar" style="width:${pct}%"></span></span>` : "";
-    return `<button class="gamerow" data-sess="${esc(s.id)}" type="button">
-      <span class="storeic">${BASKET_SVG}</span>
-      <span class="g-main"><span class="g-name">${esc(s.store)} — ${QMODE_LBL[s.mode] || esc(s.mode)}</span>
-      <span class="g-meta">${QSTATE_LBL[s.state] || esc(s.state)} · ${p.done} of ${p.total}</span></span>
-      ${bar}<span class="chev">›</span></button>`;
-  }).join("") : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
+  const closed = s => s.state === "finished" || s.state === "done";
+  const open = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
+  el.innerHTML = sessions.length
+    ? open.map(gameRow).join("") +
+      (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
+    : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
 
 async function renderHome() {
@@ -412,9 +427,11 @@ async function renderProfile() {
   $("#pf-card").innerHTML = `<p class="nomargin"><strong style="font-size:19px">@${esc(profile.handle)}</strong></p>
     <p class="muted nomargin">Your public player card — boards and badges only. Lists, receipts and spend stay private.</p>`;
   $("#pf-stats").innerHTML =
-    `<div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Hunts finished</div></div>
+    `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
+     <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
      <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
      <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
+  paintMissingReceipts($("#pf-missing"), archive.unsettled || [], () => renderProfile().catch(showErr));
   const eagle = (profile.badges || []).find(b => b.id === "eagle_eye");
   $("#pf-spots").innerHTML =
     row("Spots reported", "Points land only when a spot verifies", String(s.spots_reported || 0)) +
@@ -833,7 +850,7 @@ async function renderReceipts() {
       <span class="grow"><span class="name">${esc(e.store)}</span>
       <span class="sub">${fmtShort(String(e.finished_at || "").slice(0, 10))} · ${e.items_collected} of ${e.items_total} items collected</span></span>
       <span class="misstag">Receipt missing</span>
-      <button class="btn" data-upload="${esc(e.session_id)}" type="button">Upload the receipt</button>
+      <button class="btn" data-upload="${esc(e.session_id)}" data-store="${esc(e.store)}" type="button">Add receipt</button>
     </div>`).join("");
   const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
@@ -845,46 +862,33 @@ async function renderReceipts() {
     ? unsettled + rows : empty("No receipts filed yet.");
 }
 
-let lateSessionId = null;
+/* Finished hunts still missing their receipt, each with its own
+ * Add receipt (the sheet in quest.js — it attaches this trip's
+ * receipt and never reopens the hunt). Used by Profile. */
+function paintMissingReceipts(el, unsettled, after) {
+  if (!el) return;
+  el.hidden = !unsettled.length;
+  el.innerHTML = unsettled.length
+    ? unsettled.map(e => `<div class="sessrow">
+        <span class="grow"><span class="name">${esc(e.store)}</span>
+        <span class="sub">Finished · Receipt missing · ${e.items_collected} of ${e.items_total} collected</span></span>
+        <button class="btn" data-upload="${esc(e.session_id)}" data-store="${esc(e.store)}" type="button">Add receipt</button>
+      </div>`).join("")
+    : "";
+  el.onclick = ev => {
+    const up = ev.target.closest("[data-upload]");
+    if (up && window.openAddReceipt) openAddReceipt(up.dataset.upload, up.dataset.store, after);
+  };
+}
 $("#rc-archive").addEventListener("click", ev => {
   const up = ev.target.closest("[data-upload]");
   if (up) {
-    lateSessionId = up.dataset.upload;
-    $("#rc-late-photo").click();
+    if (window.openAddReceipt)
+      openAddReceipt(up.dataset.upload, up.dataset.store, () => renderReceipts().catch(showErr));
     return;
   }
   const b = ev.target.closest("[data-receipt]");
   if (b && window.openReceipt) openReceipt(b.dataset.receipt).catch(showErr);
-});
-
-// The late receipt: this trip's own photo, filed through the
-// normal decode, then attached to its own hunt — which settles
-// it and clears the tag. Never a picker over old receipts.
-$("#rc-late-photo").addEventListener("change", async ev => {
-  const f = ev.target.files[0];
-  ev.target.value = "";
-  if (!f || !lateSessionId) return;
-  const sid = lateSessionId;
-  lateSessionId = null;
-  const st = $("#rc-photo-status");
-  if (st) st.textContent = "Reading the receipt — this can take up to a minute.";
-  try {
-    const r = await fetch("/decode/photo", {
-      method: "POST",
-      headers: { "Content-Type": f.type || "image/jpeg" },
-      body: f
-    });
-    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
-    const out = await r.json();
-    await post(`/api/quest/sessions/${sid}/receipt`,
-               { receipt_id: out.receipt.receipt_id });
-    if (st) st.textContent = "";
-    toast("Receipt filed — hunt settled.");
-    renderReceipts().catch(showErr);
-  } catch (e) {
-    if (st) st.textContent = "";
-    toast("Could not file that photo: " + e.message);
-  }
 });
 
 /* ---------------- Analysis (B5) ----------------
