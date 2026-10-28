@@ -65,6 +65,14 @@ class TestHuntFrameShell(unittest.TestCase):
         self.assertIn("overflow: hidden", box)
         self.assertIn("height: 44vh", box)
 
+    def test_cloud_view_shows_one_target(self):
+        js = read("scene.js")
+        cloud = js.split("function cloudView(")[1]
+        self.assertIn('host.closest(".storeview")', cloud)
+        self.assertIn("m.visible = !oneTarget || i === nextIdx;", cloud)
+        # A hidden marker cannot be tapped.
+        self.assertIn("markerGroup.children.filter(m => m.visible)", cloud)
+
     def test_tools_row_and_next_card(self):
         hunt, css = self.hunt(), read("styles.css")
         tools = section(hunt, 'class="hunt-tools"', "</div>")
