@@ -15,26 +15,31 @@
   <span class="wordmark">Arya</span>
   <p id="userbar" class="muted" hidden><span id="username"></span> · <a href="#" id="signout">Sign out</a></p>
 </header>
-<p id="demobar" class="note" hidden>Demo household — fictional data, read-only.</p>
+<p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
 
 <section id="view-login" class="view" hidden>
-  <h2 class="largetitle" id="login-title">Sign in</h2>
-  <form id="login-form" class="group pad">
-    <label class="field">Username
-      <input type="text" id="login-user" autocomplete="username" required>
-    </label>
-    <label class="field">Password
-      <input type="password" id="login-pass" autocomplete="current-password" required>
-    </label>
-    <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
-    <p id="login-error" class="muted"></p>
-  </form>
-  <div class="group pad">
-    <p class="nomargin">Just looking?</p>
-    <p><button id="demo-btn" class="btn secondary" type="button">Try the demo household</button></p>
-    <p class="muted nomargin">The demo is a fictional household; its data never changes. The camera and microphone on the Add tab do call the Meta API live, so you can watch them work.</p>
+  <div class="hero">
+    <img class="heroimg" src="models/trader-joes/frames-web/f030.jpg" alt="An aisle of the mapped Trader Joe's, a frame from the walkthrough video" width="1600" height="900">
+    <h2 class="largetitle herotitle">Your grocery list, as a treasure hunt in your real store.</h2>
+    <p class="nomargin">Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
+    <p class="muted herometa">Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab.</p>
+    <p><button id="demo-btn" class="btn primary wide" type="button">Try the demo &mdash; play the Trader Joe&rsquo;s hunt</button></p>
+    <p class="muted nomargin">Opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
   </div>
+  <details class="group pad signin">
+    <summary id="login-title">Sign in</summary>
+    <form id="login-form">
+      <label class="field">Username
+        <input type="text" id="login-user" autocomplete="username" required>
+      </label>
+      <label class="field">Password
+        <input type="password" id="login-pass" autocomplete="current-password" required>
+      </label>
+      <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
+    </form>
+  </details>
+  <p id="login-error" class="muted"></p>
 </section>
 
 
@@ -127,7 +132,7 @@
 
   <section id="view-chat" class="view" hidden>
     <h2 class="largetitle">Ask Arya</h2>
-    <p id="chat-demo-note" class="note" hidden>Chat works on the owner&rsquo;s account. The demo household is read-only, so Ask is view-only here.</p>
+    <p id="chat-demo-note" class="note" hidden>Demo: Ask answers from the demo household and applies what you tell it for this visit only. Try &ldquo;We finished the milk&rdquo; or &ldquo;What do we spend on coffee?&rdquo;</p>
     <div id="chat-log"></div>
     <form id="chat-form">
       <button id="btn-mic" type="button" class="iconbtn" aria-label="Speak your message">
