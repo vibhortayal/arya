@@ -432,9 +432,26 @@ def home():
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
             f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
            for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3 and p.get("admitted")]
+    # Store affinity for the list ships with this payload: the List
+    # view used to make one /api/items/{id} call per list item just
+    # for these keys (review 2026-10-28, M9). Same aggregation as
+    # state.item_detail, computed once over the derived entries.
+    gm = state.group_map()
+    pbs = {}
+    for item in d["smart_list"]["items"]:
+        iid = gm.get(item["item_id"], item["item_id"])
+        prices = {}
+        for e in d["entries"]:
+            if e["item_id"] == iid and e["event_type"] == "purchase":
+                prices.setdefault(e["store_id"], []).append(e["price"])
+        if prices:
+            pbs[item["item_id"]] = {
+                s: {"min": min(v), "median": sorted(v)[len(v) // 2],
+                    "max": max(v), "count": len(v)}
+                for s, v in prices.items()}
     return {"as_of": state.as_of(), "running_low": low,
             "list": d["smart_list"], "cart": state.get_cart(),
-            "seen": seen, "checks": checks}
+            "seen": seen, "checks": checks, "price_by_store": pbs}
 
 
 @app.get("/api/dashboard")

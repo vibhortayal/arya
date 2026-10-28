@@ -169,7 +169,9 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .bubble.arya { align-self: flex-start; background: var(--fill); border-bottom-left-radius: 4px; }
 .bubble.sys { align-self: center; background: transparent; color: var(--secondary); font-size: 14px; padding: 2px 8px; }
 #chat-form { display: flex; gap: 8px; align-items: center; }
-#chat-form input { flex: 1; border-radius: 980px; padding: 11px 16px; }
+#chat-form input { flex: 1; min-width: 0; border-radius: 980px; padding: 11px 16px; }
+#chat-send { padding-left: 14px; padding-right: 14px; flex: none; }
+#chat-empty { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 6px 0; }
 .iconbtn {
   flex: none; width: 44px; height: 44px; border: none; border-radius: 50%;
   background: var(--fill); color: var(--secondary); display: grid; place-items: center;
@@ -188,6 +190,10 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 }
 
 .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+/* The store lens is one row: chips scroll sideways instead of
+   stacking into a block above the list (review U1). */
+#store-filter { flex-wrap: nowrap; overflow-x: auto; }
+#store-filter .chip { flex: 0 0 auto; }
 /* Picked chips wear the wireframes' soft treatment (acc-soft
    ground, acc text and ring) — store lens, community scopes,
    optimizer answers. */

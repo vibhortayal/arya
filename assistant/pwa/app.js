@@ -179,24 +179,20 @@ async function renderHome() {
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
 
 /* ---------------- List (B1: one list, a store lens) ----------------
- * Store affinity comes from purchase history: /api/items/{id}
- * price_by_store is the honest source (the dictionary tracks
- * store-varying prices). An item with no history at a store sits in
- * "Could grab here too" under that store's lens. Check-off is the
- * same global flag in every lens — the lens never duplicates. */
+ * Store affinity comes from purchase history: /api/home carries
+ * price_by_store for every list item (the dictionary tracks
+ * store-varying prices), so painting the list costs no extra
+ * requests. An item with no history at a store sits in "Could
+ * grab here too" under that store's lens. Check-off is the same
+ * global flag in every lens — the lens never duplicates. */
 
 let listLens = "All";
 let listData = null;
 const itemStores = {};
 
-async function loadItemStores(items) {
-  await Promise.all(items.map(async i => {
-    if (itemStores[i.item_id]) return;
-    try {
-      const d = await api(`/api/items/${encodeURIComponent(i.item_id)}`);
-      itemStores[i.item_id] = Object.keys(d.price_by_store || {});
-    } catch (e) { itemStores[i.item_id] = []; }
-  }));
+function loadItemStores(items) {
+  const pbs = (listData && listData.price_by_store) || {};
+  for (const i of items) itemStores[i.item_id] = Object.keys(pbs[i.item_id] || {});
 }
 
 function paintStoreFilter(items) {
@@ -219,7 +215,10 @@ function paintListGroups() {
   const box = $("#smart-list");
   if (!items.length) { box.innerHTML = empty("The list is empty. Nothing is due yet."); return; }
   if (listLens === "All") {
-    box.innerHTML = `<div class="group">${items.map(i => listRow(i, itemStores[i.item_id] || [])).join("")}</div>`;
+    // No per-store tags in the All lens — at household scale every
+    // row wore three, and the row drowned (review U1). Store
+    // detail lives in the item view; the lens still groups by it.
+    box.innerHTML = `<div class="group">${items.map(i => listRow(i, [])).join("")}</div>`;
   } else {
     const mine = items.filter(i => (itemStores[i.item_id] || []).includes(listLens));
     const rest = items.filter(i => !(itemStores[i.item_id] || []).includes(listLens));
@@ -314,11 +313,14 @@ function paintCart(h) {
 }
 
 async function renderList() {
+  // A slow home payload must never face the user with the
+  // previous list (or a blank): say what is happening (review M9).
+  $("#smart-list").innerHTML = empty("Loading your list…");
   const h = await api("/api/home");
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
   $("#list-line").textContent = staplesLine(h.list.items, await verifiedReceipts());
-  await loadItemStores(h.list.items);
+  loadItemStores(h.list.items);
   paintStoreFilter(h.list.items);
   paintListGroups();
   paintListNotes(h);
@@ -785,6 +787,12 @@ async function renderEyes() {
   const data = await api("/api/eyes").catch(() => ({ records: [] }));
   const box = $("#eyes-records");
   if (!box) return;
+  if (!data.records.length) {
+    // No sightings yet is a state, not a blank (review U2's
+    // empty-state rule, applied to Eyes).
+    box.innerHTML = empty("No sightings yet. Photograph the fridge, pantry, freezer, or fruit bowl and Arya reads what it sees.");
+    return;
+  }
   box.innerHTML = data.records.map(rec => `
     <div class="eyes-record">
       <img src="/eyes/photos/${rec.id}" alt="Eyes photo">
@@ -985,12 +993,35 @@ function refresh(view) {
   if (view === "view-receipts") renderReceipts().catch(showErr);
   if (view === "view-analysis") renderAnalysis().catch(showErr);
   if (view === "view-profile") renderProfile().catch(showErr);
+  if (view === "view-chat") paintChatEmpty();
 }
 
 /* ---------------- Ask Arya + voice ---------------- */
 
 const chatHistory = [];
+/* A first-run Ask screen must not be an empty box with a bare
+ * input (review 2026-10-28, U2): an empty log paints a prompt
+ * line and three tappable questions. The block removes itself
+ * the moment the conversation starts. */
+function paintChatEmpty() {
+  const log = $("#chat-log");
+  if (!log || log.children.length) return;
+  const el = document.createElement("div");
+  el.id = "chat-empty";
+  el.innerHTML = `<p class="muted">Ask about your list, your spending, or what is running low.</p>` +
+    ["What's running low?", "What did I spend this month?", "Add eggs to my list"]
+      .map(q => `<button class="chip" type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("");
+  log.appendChild(el);
+  el.querySelectorAll("[data-ask]").forEach(b =>
+    b.addEventListener("click", () => {
+      $("#chat-input").value = b.dataset.ask;
+      $("#chat-form").requestSubmit();
+    }));
+}
+
 function chatLine(kind, text) {
+  const stale = $("#chat-empty");
+  if (stale) stale.remove();
   const el = document.createElement("div");
   el.className = "bubble " + kind;
   el.textContent = text;
