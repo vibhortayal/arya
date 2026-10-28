@@ -888,6 +888,7 @@ async function renderMyStores() {
   const rowHtml = s => `
     <div class="row"><div class="grow"><span class="name">${esc(s.name)}</span>
     <span class="sub">${qStoreMeta(s)}</span></div>
+    <button class="chip" data-remove="${esc(s.id)}" type="button">Remove</button>
     <button class="starbtn ${s.favorite ? "on" : ""}" data-fav="${esc(s.id)}" data-on="${String(s.favorite)}" aria-pressed="${String(s.favorite)}" aria-label="${s.favorite ? "Remove from favorites" : "Add to favorites"}" type="button">${qStarSvg(s.favorite)}</button></div>`;
   let html = "";
   if (favs.length) html += `<h3 class="sect">Favorites</h3><div class="group">` + favs.map(rowHtml).join("") + `</div>`;
@@ -905,6 +906,17 @@ document.addEventListener("click", async ev => {
     renderStorePick();
     renderMyStores().catch(() => {});
     toast(on ? "Added to favorites." : "Removed from favorites.");
+  } catch (e) { toast(e.message); }
+});
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-remove]");
+  if (!b) return;
+  try {
+    await post("/api/stores/mine/remove", { store_id: b.dataset.remove });
+    await qLoadMine().catch(() => {});
+    renderStorePick();
+    renderMyStores().catch(() => {});
+    toast("Removed from your stores.");
   } catch (e) { toast(e.message); }
 });
 
@@ -3489,10 +3501,21 @@ async function openReceipt(receiptId) {
     ${r.photo ? `<p class="nomargin">${String(r.media_type || "").startsWith("image/")
       ? `<button class="btn" id="rc-view-btn" type="button">View receipt</button>
          <img id="rc-view-img" class="receiptimg" src="/api/quest/receipts/${encodeURIComponent(r.receipt_id)}/original" alt="The filed receipt photo" hidden>`
-      : `<a class="btn" href="/api/quest/receipts/${encodeURIComponent(r.receipt_id)}/original" target="_blank" rel="noopener">View receipt</a>`}</p>` : ""}`;
+      : `<a class="btn" href="/api/quest/receipts/${encodeURIComponent(r.receipt_id)}/original" target="_blank" rel="noopener">View receipt</a>`}</p>` : ""}
+    <p class="nomargin" style="margin-top:10px"><button class="btn danger" id="rc-del-btn" type="button">Delete receipt</button></p>`;
   const viewBtn = $("#rc-view-btn");
   if (viewBtn) viewBtn.addEventListener("click", () => {
     const img = $("#rc-view-img");
     img.hidden = !img.hidden;
+  });
+  const delBtn = $("#rc-del-btn");
+  if (delBtn) delBtn.addEventListener("click", async () => {
+    if (!confirm("Delete this receipt? Its lines leave your ledger, patterns, and points. This cannot be undone.")) return;
+    try {
+      await post(`/api/quest/receipts/${encodeURIComponent(receiptId)}/delete`, {});
+      toast("Receipt deleted.");
+      if (window.renderReceipts) renderReceipts().catch(() => {});
+      questShow("view-receipts");
+    } catch (e) { toast(e.message); }
   });
 }

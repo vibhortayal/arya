@@ -326,9 +326,10 @@ async def auth_delete_account(req: Request):
     feedback._root_call idiom)."""
     body = await _json_obj(req)
     from api import auth, feedback, social, state
-    user = state._current_user.get()
-    if not user or user == state.DEMO_USER:
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info or info["demo"]:
         raise HTTPException(403, "the demo household has no account to delete")
+    user = info["user"]
 
     def _root_call(fn):
         tok = state._current_user.set(None)
