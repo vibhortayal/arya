@@ -495,7 +495,7 @@ def _prompt_for(seg, status, item=None, walk=False):
                       "Hold the phone upright, at chest height.",
                       point,
                       "Walk slowly to the end. It takes about 15 seconds.",
-                      "Stop, then tap Done. We pick the sharpest frames."]}
+                      "The app picks the sharp frames for you."]}
     why = {"unmapped": "This part of the map is empty.",
            "aging": "Mapped once, from an old walkthrough video. Shelves change.",
            "stale": "A shopper said this part is out of date.",
@@ -510,8 +510,8 @@ def _prompt_for(seg, status, item=None, walk=False):
         "steps": [f"Stand about 1.5 m (5 ft) from {label}.",
                   "Hold the phone upright and level.",
                   "Get the whole shelf in the frame, top to bottom.",
-                  "Wait one second. Then tap Take photo.",
-                  "If a shopper is in view, wait. We blur people before we save anything."]}
+                  "Hold still. The app takes the photo for you.",
+                  "We blur people before we save anything."]}
 
 
 NEED = {"stale": 3.0, "unmapped": 2.0, "aging": 1.0}

@@ -24,9 +24,9 @@ ol.steps{padding-left:22px;margin:6px 0;font-size:15.5px;line-height:1.45}.chip{
 .note{font-size:12.5px;color:var(--ink3);margin-top:10px}
 </style></head><body>
 <aside><h1>Map my store</h1>
-<p>Clickable wireframe. A guided mapper: the app says exactly what to capture; the engine keeps the best frames. Tap through the six screens, or use the list.</p>
+<p>Clickable wireframe. A guided mapper: the app says exactly what to capture; the engine keeps the best frames. Tap through the screens, or use the list.</p>
 <ol id="nav"></ol>
-<p><strong>Rules this shows:</strong> map only your aisles; many partial maps merge; “not found” asks for one specific capture; weak shots are refused with a one-line fix; people are blurred before anything is saved.</p></aside>
+<p><strong>Rules this shows:</strong> map only your aisles; many partial maps merge; “not found” asks for one specific capture; no shutter and no rejection screens: the live camera coaches and picks the frames itself; people are blurred before anything is saved.</p></aside>
 <div class="phone" id="ph"></div>
 <script>
 const S={
@@ -41,18 +41,22 @@ const S={
 <div class="row"><span class="st" style="background:var(--ink);color:#fff">Mine</span><span class="g">Frozen Pizza</span><span class="st ok">Mapped</span></div>
 <div class="row"><span class="st">+</span><span class="g">Dairy wall</span><span class="st">Not mapped</span></div></div>
 <button class="btn">Add an aisle</button><p class="note">“Mine” = just the aisles I use. The next capture comes from there first.</p>`},
-3:{t:"Guided photo",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2><p class="muted">Someone could not find Spaghetti here. A fresh photo helps.</p>
-<div class="card"><ol class="steps"><li>Stand about 1.5 m (5 ft) from Pasta.</li><li>Hold the phone upright and level.</li><li>Get the whole shelf in the frame, top to bottom.</li><li>Wait one second. Then tap Take photo.</li><li>If a shopper is in view, wait. We blur people before we save anything.</li></ol></div>
-<div class="shot"><div class="guide"></div>shelf outline guide</div>
-<button class="btn p" data-go="4">Take photo</button><button class="btn" data-go="6">This part of the map is out of date</button>`},
-4:{t:"Weak shot refused",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
-<div class="card" style="border-color:var(--acc)"><b>Try again.</b> Too blurry. Hold the phone still for one second, then try again.</div>
-<p class="note">Graded on the phone's upload by the engine (sharpness, exposure, shelf fill). A weak frame costs no model call and is never stored.</p>
-<button class="btn p" data-go="5">Retake — sharp this time</button>`},
-5:{t:"Saved, next",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
-<div class="card" style="border-color:var(--ok);background:var(--okbg)"><b>Saved. This is now the best photo of this shelf.</b><div class="muted">People blurred first. 7 of 22 aisles mapped.</div></div>
-<button class="btn p" data-go="3">Next capture</button><button class="btn" data-go="2">Done for today</button>
-<p class="note">Same view as one we hold? “Thanks. That confirms this shelf still looks the same.” — it refreshes the old photo.</p>`},
+3:{t:"Live guided camera",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2><p class="muted">Someone could not find Spaghetti here. A fresh photo helps.</p>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Hold still on the shelf.</p>
+<p style="text-align:center;margin:0 0 10px"><span class="chip">&nbsp;</span></p>
+<button class="btn p" data-go="4">(the app watches for a steady, sharp frame)</button><button class="btn" data-go="2">Done for today</button><button class="btn" data-go="6">This part of the map is out of date</button>
+<p class="note">No shutter, no verdict. One short live line: “A little dark. Face the shelf light.” / “Slow down a little.” / “Good. Hold still.”</p>`},
+4:{t:"It captures itself",h:`<h2 style="font-size:23px">Photo of Pasta, left side</h2>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Mapped. Thank you.</p><p style="text-align:center"><span class="chip on">&nbsp;</span></p>
+<p class="note">Sharpness and light are checked on the phone BEFORE upload. A frame that is not good is never sent, never shown, never mentioned. Nothing asks for a retake.</p>
+<button class="btn p" data-go="5">Moves on by itself…</button>`},
+5:{t:"Next, or the map",h:`<h2 style="font-size:23px">Photo of Frozen Pizza</h2><p class="muted">Mapped once, from an old walkthrough video.</p>
+<div class="shot" style="height:300px"><div class="guide"></div>live camera</div>
+<p style="text-align:center;font-weight:650;font-size:18px;margin:8px 0">Good. Hold still.</p>
+<button class="btn" data-go="2">Done for today</button>
+<p class="note">After ~1.5 s the app opens the next capture the engine wants (your aisles first), or returns to the map when none is left. After 30 s with nothing usable: “No worries. Try again another time.” No retake request. A walk works the same: “Start walking slowly.” and six dots fill as good frames are kept.</p>`},
 6:{t:"Hunt: Not here? → refresh",h:`<h2 style="font-size:23px">Hunt · Spaghetti</h2>
 <div class="card"><b>Not here</b><div class="row"><span class="g">Empty shelf — its tag is still there</span></div><div class="row"><span class="g">Something else here now</span></div></div>
 <div class="card" style="border-color:var(--acc);background:var(--accbg)">Reported — other hunters will confirm.<br><b>Help refresh the map?</b><button class="btn p" data-go="3">Take the photo</button></div>
