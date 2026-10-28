@@ -156,3 +156,17 @@ for now; a Maps/Places lookup is a separate, undecided step.
     public corpus: 32/32 labels, 32/32 seat verdicts. The hosted-vs-open
     agreement rate is measured on the VM once the key is provisioned
     there. Suite 502.
+
+57. **Share belongs to the finish, not the receipt (owner,
+    2026-10-28).** His phone test: a 10/10 Trader Joe's haul finished
+    with Skip offered nothing to share — Discussion 54's buttons were
+    gated on the receipt being attached, so the win moment passed in
+    silence. His ruling: "if someone doesn't want to share receipt,
+    it's fine — we should still allow them to experience the joy of
+    using Arya and share it." Share your haul and Loved something?
+    now render on every finished hunt. The card carries the honesty
+    instead of the gate: settled hauls keep "receipt-verified" and
+    banked points; unsettled cards say "pts to bank — receipt still
+    to add" and never claim verification. Points still bank only on
+    the receipt (Discussion 41 unchanged) — banking is the brain's
+    rule; joy is not gated.

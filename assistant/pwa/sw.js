@@ -1,4 +1,4 @@
-const CACHE = "arya-v53";
+const CACHE = "arya-v54";
 const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/mapper.js", "/share.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
   "/assets/scenes/hero.webp",
   "/assets/scenes/score-party.webp", "/assets/scenes/aisle-art.webp",

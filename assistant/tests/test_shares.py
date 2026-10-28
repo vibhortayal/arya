@@ -162,3 +162,15 @@ class TestShareClient(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_share_at_finish_settled_or_not(self):
+        # Owner's phone test (2026-10-28): a 10/10 haul finished with
+        # Skip offered nothing to share — the buttons were gated on
+        # the receipt. Share belongs to the finish; the CARD carries
+        # the honesty: receipt-verified only once settled.
+        q = read("quest.js")
+        self.assertNotIn('${attached ? `<button class="btn primary grow" id="share-haul"', q)
+        js = read("share.js")
+        self.assertIn('sess.state === "done"', js)
+        self.assertIn("pts to bank", js)
+        self.assertIn("receipt still to add", js)
