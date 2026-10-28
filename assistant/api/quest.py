@@ -239,9 +239,17 @@ def _mutate(session_id, fn):
     return None
 
 
-def add_item(session_id, name, qty=1):
+def add_item(session_id, name, qty=1, wild=False):
     def fn(sess):
         _add_item(sess["items"], name, qty)
+        if wild:
+            # A wild find (owner, 2026-10-28): grabbed on impulse,
+            # already in the cart — it joins the hunt collected.
+            key = _item_key(name or "")
+            for it in sess["items"]:
+                if it["group"] == key:
+                    it["wild"] = True
+                    it["checked"] = True
     return _mutate(session_id, fn)
 
 
@@ -433,6 +441,117 @@ def finish_time(sess):
 # The opponent must still be a real registered account (review
 # 2026-10-28, M10) — a race against a handle nobody owns can
 # never be joined, finished, or verified.
+
+def my_avatar():
+    return _store().get("avatar")
+
+
+def set_avatar(filename):
+    """The player's character (owner, 2026-10-28): one of the cast
+    portraits on disk, nothing else. Stored on the account's quest
+    store; the client falls back to the basket when unset."""
+    import os, re
+    if not filename or not re.fullmatch(r"[a-z0-9_\-]+\.webp", filename):
+        return None
+    here = os.path.join(os.path.dirname(__file__), "..", "pwa",
+                        "assets", "characters")
+    if filename not in os.listdir(here):
+        return None
+    with state.file_lock("quest.json"):
+        s = _store()
+        s["avatar"] = filename
+        _save_store(s)
+    return filename
+
+
+def sos_count(store_name, item_name):
+    """How many of the player's own trips to this store ended with
+    this item reported not there — distinct sessions, their reports
+    only. The Shelf SOS card quotes this number, so it counts only
+    what the reports prove."""
+    me = my_handle()
+    key = _item_key(item_name or "")
+    sessions = {r["session_id"] for r in _store()["reports"]
+                if r.get("reporter") == me
+                and _same_store(r.get("store"), store_name)
+                and (r.get("item_group") == key
+                     or state._norm_name(r.get("item") or "") == state._norm_name(item_name or ""))}
+    return {"store": store_name, "item": item_name, "trips": len(sessions)}
+
+
+def _name_match(a, b):
+    """Receipt-line / sighting vs hunt item: token Jaccard >= 0.5.
+    'Greek Yogurt' matches 'Greek Yogurt 32 oz' (size tokens drop
+    out); 'Oat Milk Chocolate' does NOT match 'Milk' — a longer
+    product name that merely contains the word is a different
+    product, and calling it the hunt item would hide a wild find."""
+    import re as _re
+    def toks(n):
+        return {t for t in _re.split(r"[^a-z0-9]+", (n or "").lower())
+                if len(t) > 2}
+    ta, tb = toks(a), toks(b)
+    if not ta or not tb or not (ta & tb):
+        return False
+    return len(ta & tb) / len(ta | tb) >= 0.5
+
+
+def session_view(sess):
+    """The session as the client sees it, plus its wild finds: when
+    a receipt settled the hunt, the receipt lines that match no hunt
+    item are the impulse buys — caught by the receipt, named, never
+    guessed (a line that matches nothing was really bought)."""
+    if sess is None:
+        return None
+    out = dict(sess)
+    wild = []
+    if sess.get("settled") and sess.get("receipt_id"):
+        receipt = next((r for r in state.receipts()
+                        if r["receipt_id"] == sess["receipt_id"]), None)
+        if receipt:
+            names = [it["name"] for it in sess.get("items", [])]
+            for ln in receipt.get("lines", []):
+                nm = ln.get("decoded_name") or ln.get("raw") or ""
+                if nm and not any(_name_match(nm, n) for n in names) \
+                        and nm not in wild:
+                    wild.append(nm)
+    out["wild_finds"] = wild
+    me = my_handle()
+    out["my_reports"] = [r["item"] for r in _store()["reports"]
+                         if r.get("session_id") == sess.get("id")
+                         and r.get("reporter") == me]
+    return out
+
+
+def haul_check(session_id, sightings):
+    """Snap your haul (owner, 2026-10-28): the Eyes read of the
+    haul photo, matched against the hunt. Sightings that match a
+    hunt item are seen; the rest are extras the list never knew
+    (impulse buys, caught by the camera); hunt items not sighted
+    stay 'not seen' — a photo never proves an absence. The read is
+    saved on the session; the photo itself is not kept."""
+    sess = get_session(session_id)
+    if sess is None:
+        return None
+    items = sess.get("items", [])
+    seen, extras, used = [], [], set()
+    for sg in sightings:
+        nm = sg.get("name") or ""
+        hit = next((i for i, it in enumerate(items)
+                    if i not in used and _name_match(nm, it["name"])), None)
+        if hit is None:
+            extras.append(nm)
+        else:
+            used.add(hit)
+            seen.append({"item": items[hit]["name"], "read": nm})
+    result = {"seen": seen, "extras": extras,
+              "not_seen": [it["name"] for i, it in enumerate(items)
+                           if i not in used],
+              "at": _now()}
+    def fn(s):
+        s["haul_check"] = result
+    _mutate(session_id, fn)
+    return result
+
 
 def my_handle():
     user = state._current_user.get() or ""
