@@ -1415,11 +1415,12 @@ async def storemap_set_focus(req: Request):
 
 
 @app.get("/api/storemap/next")
-def storemap_next(store: str = "", segment: str = ""):
+def storemap_next(store: str = "", segment: str = "", items: str = ""):
     from api import storemap
     name = _map_store(store)
     prompt = storemap.next_prompt(
-        name, focus=storemap.get_focus(name), seg_id=segment or None)
+        name, focus=storemap.get_focus(name), seg_id=segment or None,
+        hint_items=[i for i in items.split(",") if i.strip()][:30])
     return {"prompt": prompt}
 
 
@@ -1473,14 +1474,10 @@ async def storemap_capture(req: Request):
     kind = req.query_params.get("kind", "photo")
     if seg_id not in storemap.load_map(name)["segments"]:
         raise HTTPException(404, "no such part of the map")
-    # Grade BEFORE any model call: a blurry frame costs nothing.
     try:
-        pre = storemap.score_image(body)
+        storemap.score_image(body)
     except Exception:
         raise HTTPException(400, "that file is not a readable photo")
-    if pre["fix"] and "Too far" not in pre["fix"]:
-        return {"accepted": False, "fix": pre["fix"],
-                "score": pre["score"], "segment": seg_id}
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
@@ -1505,10 +1502,30 @@ async def storemap_capture(req: Request):
     except Exception:
         fill = None   # neutral: the fill check never blocks a capture
     try:
-        return storemap.ingest(name, seg_id, jpeg, kind=kind,
-                               shelf_fill=fill, people=people)
+        out = storemap.ingest(name, seg_id, jpeg, kind=kind,
+                              shelf_fill=fill, people=people)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    out["reward"] = storemap.award(name, out)
+    return out
+
+
+@app.post("/api/storemap/split")
+async def storemap_split(req: Request):
+    """The app timed a walk and asks for the aisle to be split into
+    sections. Idempotent: an already-split aisle returns its sections."""
+    from api import storemap
+    body = await _json_obj(req)
+    try:
+        kids, created = storemap.split_segment(
+            _map_store(body.get("store")), str(body.get("segment") or ""),
+            body.get("parts"))
+    except KeyError:
+        raise HTTPException(404, "no such part of the map")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"created": created,
+            "segments": [{"id": k["id"], "label": k["label"]} for k in kids]}
 
 
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")

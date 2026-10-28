@@ -1570,9 +1570,16 @@ $("#spot-send").addEventListener("click", async () => {
       photo: f ? f.name : undefined
     });
     closeSpotSheet();
-    toast("Reported — other hunters will confirm.");
-    // Map my store: a "not found" asks for one specific photo.
-    if (window.mapperOffer) mapperOffer(sess.store, rep && rep.map_task);
+    // Teach Arya your store: "can't find it" is the best moment to
+    // learn this shelf. A photo already attached to the report maps
+    // it with no extra step; otherwise one tap opens the live camera.
+    const task = rep && rep.map_task;
+    if (f && task && task.segment && window.mapperQuietCapture) {
+      mapperQuietCapture(sess.store, task.segment, f);
+    } else {
+      toast("Reported — other hunters will confirm.");
+      if (window.mapperOffer) mapperOffer(sess.store, task);
+    }
     await qLoadStoreReports(sess.store);
     renderHunt();
   } catch (e) { toast(e.message); btn.disabled = false; }
@@ -2389,6 +2396,7 @@ async function openScore(sess) {
   }
   body.innerHTML = html;
   qAfterHaul(sess, profile, attached);
+  if (window.mapperOfferAfterHunt) mapperOfferAfterHunt(sess);
   const add = $("#score-addreceipt");
   if (add) add.addEventListener("click", () =>
     openAddReceipt(sess.id, sess.store, s => { Object.assign(sess, s); openScore(sess); }));
