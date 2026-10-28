@@ -31,8 +31,9 @@ class OpenClient:
     def __init__(self, api_key=None, transport=None, model=None):
         self.api_key = api_key if api_key is not None else os.environ.get(
             "BASETEN_API_KEY", "")
-        self.model = model or os.environ.get("ARYA_OPEN_MODEL",
-                                             DEFAULT_MODEL)
+        # An env var set-but-empty (compose ${VAR:-}) means unset.
+        self.model = model or os.environ.get("ARYA_OPEN_MODEL") \
+            or DEFAULT_MODEL
         self.transport = transport  # tests: fn(url, body, headers) -> dict
 
     def _post(self, body, timeout):
