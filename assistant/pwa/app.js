@@ -35,6 +35,9 @@ async function api(path, opts) {
 function post(path, body) {
   return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 }
+function put(path, body) {
+  return api(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+}
 let toastTimer = null;
 function toast(msg, opts) {
   const t = $("#toast");
@@ -1329,9 +1332,73 @@ function openShell() {
   $("#app-main").hidden = false;
   $("#tabs").hidden = false;
   $("#avatar-btn").hidden = false;
+  loadAvatar();
   show("view-home");
   refresh("view-home");
 }
+/* ---------------- Avatar ----------------
+ * A cast character, a Muse Image drawing from a description, or a
+ * drawing made from the player's own photo (the photo is dropped
+ * server-side). A made picture waits as a candidate until Use this. */
+let AV = { preset: null, image: false, version: 0, presets: [] };
+function paintAvatar() {
+  const src = AV.image ? `/api/quest/avatar/image?v=${AV.version}`
+    : AV.preset ? `assets/characters/${AV.preset}.webp` : "";
+  for (const id of ["avatar", "pf-avatar"]) {
+    const img = $(`#${id}-img`);
+    if (!img) continue;
+    img.hidden = !src;
+    if (src) img.src = src;
+  }
+  document.querySelectorAll("#av-presets button").forEach(b =>
+    b.setAttribute("aria-pressed", String(!AV.image && b.dataset.preset === AV.preset)));
+}
+async function loadAvatar() {
+  try { AV = await api("/api/quest/avatar"); } catch (e) { return; }
+  const box = $("#av-presets");
+  if (box && !box.children.length) {
+    box.innerHTML = AV.presets.map(p =>
+      `<button type="button" data-preset="${esc(p)}" aria-label="${esc(p)}" aria-pressed="false"><img src="assets/characters/${esc(p)}.webp" alt=""></button>`).join("");
+  }
+  const initial = ($("#avatar-initial").textContent || "A");
+  $("#pf-avatar-initial").textContent = initial;
+  paintAvatar();
+}
+function avStatus(msg) { $("#av-status").textContent = msg || ""; }
+function avShowCandidate() {
+  $("#av-cand-img").src = `/api/quest/avatar/image?candidate=true&t=${Date.now()}`;
+  $("#av-candidate").hidden = false;
+}
+$("#av-presets").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-preset]");
+  if (!b) return;
+  try { AV = { ...AV, ...(await put("/api/quest/avatar", { preset: b.dataset.preset })) }; paintAvatar(); avStatus(""); }
+  catch (e) { toast(e.message); }
+});
+$("#av-make").addEventListener("click", async () => {
+  const prompt = $("#av-prompt").value.trim();
+  if (!prompt) { toast("Describe your avatar first."); return; }
+  const btn = $("#av-make"); btn.disabled = true; avStatus("Drawing it…");
+  try { await post("/api/quest/avatar/generate", { prompt }); avStatus(""); avShowCandidate(); }
+  catch (e) { avStatus(isDemo ? "Making an avatar needs a real account. Pick a character instead." : e.message); }
+  btn.disabled = false;
+});
+$("#av-photo").addEventListener("change", async ev => {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = "";
+  if (!file) return;
+  avStatus("Drawing you as a cartoon…");
+  try {
+    const r = await fetch("/api/quest/avatar/photo", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || "Could not make it");
+    avStatus(""); avShowCandidate();
+  } catch (e) { avStatus(isDemo ? "Making an avatar needs a real account. Pick a character instead." : e.message); }
+});
+$("#av-use").addEventListener("click", async () => {
+  try { AV = { ...AV, ...(await post("/api/quest/avatar/use", {})) }; $("#av-candidate").hidden = true; paintAvatar(); toast("Avatar saved."); }
+  catch (e) { toast(e.message); }
+});
+
 /* The avatar (top right) is the way to Profile: Profile is not a
  * tab. Back returns to the tab the player left. */
 let avatarFrom = "view-home";
@@ -1340,6 +1407,7 @@ $("#avatar-btn").addEventListener("click", () => {
   avatarFrom = cur && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
   show("view-profile");
   refresh("view-profile");
+  loadAvatar();
   window.scrollTo(0, 0);
 });
 $("#pf-back").addEventListener("click", ev => {
