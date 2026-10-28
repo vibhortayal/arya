@@ -1,6 +1,6 @@
 # Business — Arya Quest
 
-How the product makes money, and in what order. Companion to PITCH.md (the story) and LEGAL.md (the constraints). Written 2026-10-27.
+How the product makes money, and in what order. Companion to PITCH.md (the story). Written 2026-10-27.
 
 ## The owner's four pillars (his words, 2026-10-27)
 
