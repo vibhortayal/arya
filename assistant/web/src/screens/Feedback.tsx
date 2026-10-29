@@ -10,7 +10,7 @@ import { useTranslation } from "../i18n";
  * username rides the session. Demo visitors see the form but the send
  * is disabled; the owner also sees what came in. */
 type Kind = "idea" | "bug" | "question";
-type Note = { text: string; kind: string; user: string; at: number };
+type Note = { text: string; kind: string; user: string; at: number; contact?: string };
 
 export function Feedback() {
   const { t } = useTranslation();
@@ -66,7 +66,7 @@ export function Feedback() {
             <div className="group">
               {notes.length
                 ? notes.map((n, i) => (
-                  <Row key={i} name={n.text} sub={`${n.kind} · ${n.user} · ${new Date(n.at * 1000).toLocaleDateString()}`} />
+                  <Row key={i} name={n.text} sub={`${n.kind} · ${n.user}${n.contact ? " · " + n.contact : ""} · ${new Date(n.at * 1000).toLocaleDateString()}`} />
                 ))
                 : <Empty>{t("feedback.nothingYet")}</Empty>}
             </div>
