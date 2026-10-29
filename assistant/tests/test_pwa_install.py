@@ -120,7 +120,7 @@ class TestServedAtRoot(unittest.TestCase):
         # is what the React app loads at runtime.
         for name in ("index.html", "app.js", "quest.js", "lists.js", "sw.js", "styles.css", "powers.js"):
             self.assertFalse(os.path.exists(os.path.join(STATIC, name)), name)
-        for name in ("scene.js", "manifest.json", "icon.svg", "vendor/three.module.js"):
+        for name in ("scene.js", "manifest.json", "icons/favicon.ico", "vendor/three.module.js"):
             self.assertTrue(os.path.exists(os.path.join(STATIC, name)), name)
 
 
