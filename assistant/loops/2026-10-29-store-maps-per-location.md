@@ -32,3 +32,16 @@ Mapped.
 
 Tests: test_storemap (+6), test_album/test_teach on the walk ref,
 appSource tests (+3), full Python suite 1226, vitest 218, all e2e.
+
+## Correction (same evening, PR after #179)
+Owner: "where the argonaut photos? i never uploaded that one". The
+walk was never filmed on Argonaut; #179 guessed that from the store
+the owner asked about. Nobody recorded the real store.
+- `walk_location()` is `ARYA_WALK_STORE_ID` only. Unset: no store has
+  the walk as its map; every Trader Joe's, Argonaut included, plays
+  it as the typical layout.
+- Hunt, Express and the Start-shopping sheet ask `lib/stores.ts` with
+  the session's store id: the walk's photos and 3D model show only at
+  the walk's store, and "has pictures" there means the location's own
+  captures (`captured_at`). A caller with no store id (the demo's
+  store list) keeps the chain answer.

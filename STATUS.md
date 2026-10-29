@@ -68,8 +68,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
-  One map per store location: only the Trader Joe's on Argonaut has
-  the shipped walk; other Trader Joe's play a labelled typical layout.
+  One map per store location. Nobody recorded which Trader Joe's the
+  shipped walk was filmed in, so no store has it as its map (until
+  `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
+  labelled typical layout, and Hunt shows its photos only there.
   `2026-10-29-store-maps-per-location.md`.
   Map my store is one tap from the Quest home and Ask Arya, and offered
   once after a trip at a store not fully mapped.
