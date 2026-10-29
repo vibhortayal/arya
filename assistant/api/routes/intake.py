@@ -270,9 +270,12 @@ async def transcribe_route(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio
+    from api.chat_service import LANGUAGES, _language_setting
+    lang = _language_setting()
     client = new_client()
     try:
-        out = await run_in_threadpool(transcribe_audio, body, client)
+        out = await run_in_threadpool(transcribe_audio, body, client,
+                                      LANGUAGES.get(lang))
     except ValueError as e:
         raise HTTPException(422, str(e))
     except RuntimeError as e:

@@ -355,18 +355,24 @@ class MetaClient:
             raise RuntimeError(f"Meta API unreachable: {e}") from e
         return status, self._parse_body(raw, status)
 
-    def transcribe(self, wav_bytes, duration_s, filename="voice.wav"):
+    def transcribe(self, wav_bytes, duration_s, filename="voice.wav", language=None):
         """Muse Voice Transcribe, batch endpoint (POST /v1/asr/transcribe).
         Input contract (Meta docs): mono 16-bit PCM WAV at 16 or 24 kHz;
         32 MB and 10 minutes per request. Auth is the Bearer header
         (unlike the realtime WebSocket, which authenticates in-band).
         Returns (payload, cost_usd); the caller pulls the text out of
-        the payload — see api/voice/service.py."""
+        the payload — see api/voice/service.py.
+
+        `language` is an English language name ("Spanish"); it goes in
+        as languageBias, a list of names (Meta docs via the LiveKit
+        plugin: omit it for automatic detection)."""
+        req = {"model": MODELS["voice"], "audioEncoding": "WAV"}
+        if language:
+            req["languageBias"] = [language]
         status, payload = self._send_multipart(
             "/asr/transcribe", {},
             ("audio", filename, "audio/wav", wav_bytes),
-            json_fields={"request": {"model": MODELS["voice"],
-                                     "audioEncoding": "WAV"}})
+            json_fields={"request": req})
         if status != 200 or not isinstance(payload, dict):
             raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
         cost = transcribe_cost(duration_s)

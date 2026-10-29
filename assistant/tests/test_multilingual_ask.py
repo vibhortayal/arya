@@ -130,5 +130,30 @@ class TestMultilingual(unittest.TestCase):
         self.assertEqual((len(Spy.calls), r["names"]), (1, ["leche"]))
 
 
+class TestVoiceHint(unittest.TestCase):
+    def test_hint_sent_only_when_given_and_retried_without_on_refusal(self):
+        from api.voice.service import transcribe_audio
+        from tests.test_intake_parity import wav_bytes
+
+        class C:
+            def __init__(self, fail):
+                self.fail, self.langs = fail, []
+
+            def transcribe(self, wav, duration, language=None):
+                self.langs.append(language)
+                if language and self.fail:
+                    raise RuntimeError("Meta API HTTP 400")
+                return {"text": "hola"}, 0.0
+        c = C(False)
+        transcribe_audio(wav_bytes(), c)
+        self.assertEqual(c.langs, [None])
+        c = C(False)
+        transcribe_audio(wav_bytes(), c, "Spanish")
+        self.assertEqual(c.langs, ["Spanish"])
+        c = C(True)
+        self.assertEqual(transcribe_audio(wav_bytes(), c, "Hindi")["text"], "hola")
+        self.assertEqual(c.langs, ["Hindi", None])
+
+
 if __name__ == "__main__":
     unittest.main()
