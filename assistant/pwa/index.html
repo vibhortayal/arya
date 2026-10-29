@@ -23,6 +23,7 @@
 <p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
 <div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
+<div id="ask-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden><div class="sheet" id="ask-body"></div></div>
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
 
 <section id="view-login" class="view" hidden>
@@ -114,6 +115,7 @@
       <p class="muted nomargin" id="add-status"></p>
       <div id="add-receipt-offer"></div>
     </div>
+    <div id="list-answer"></div>
     <div id="list-eyes" hidden>
       <h3 class="sect">Eyes — sightings to confirm</h3>
       <div class="group pad"><div id="eyes-records"></div></div>
@@ -482,6 +484,7 @@
       <button id="btn-gyro" class="btn" type="button" aria-pressed="false" hidden>Look around with your phone</button>
       <button id="btn-steps" class="chip" type="button" aria-pressed="false" hidden>Steps advance · experiment</button>
     </p>
+    <button id="hunt-askbar" class="askbar" type="button">Ask Arya…<span class="askmic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></span></button>
     <div id="hunt-rail" class="rail" aria-label="Today's hunts"></div>
     <div id="scan-overlay" class="scanoverlay" hidden>
       <div class="scanbar">
@@ -705,6 +708,8 @@
 
 <script src="app.js"></script>
 <script src="lists.js"></script>
+<script src="aryaask.js"></script>
+<script src="huntask.js"></script>
 <script src="pack.js"></script>
 <script src="scene.js"></script>
 <script src="quest.js"></script>

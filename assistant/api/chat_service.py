@@ -64,7 +64,10 @@ def _list_for(name):
     return next((l for l in state.named_lists() if l["name"].lower() == want), None)
 
 
-def apply_actions(actions):
+def apply_actions(actions, added=None):
+    """Apply validated actions. `added`, when given, collects
+    {item_id, name} for each item that newly joined the list, so a
+    caller can offer Undo."""
     from api import state
     applied, skipped = [], []
     today = date.today().isoformat()
@@ -83,6 +86,8 @@ def apply_actions(actions):
             slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
             if slug:
                 fl = dict(state.flags().get("manual-" + slug, {}))
+                if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
+                    added.append({"item_id": "manual-" + slug, "name": name})
                 fl.update({"manual": True, "name": name, "dismissed_on": None})
                 if target:
                     fl["list"] = target["id"]
@@ -96,6 +101,8 @@ def apply_actions(actions):
         fl = dict(state.flags().get(item_id, {}))
         t = a.get("type")
         if t == "add_to_list":
+            if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
+                added.append({"item_id": item_id, "name": nm})
             fl["manual"] = True
             if target:
                 fl["list"] = target["id"]
@@ -119,10 +126,33 @@ def apply_actions(actions):
     return applied, skipped
 
 
-def chat(history, client):
+RISKY = {"ran_out", "mark_expired", "never_suggest", "snooze"}
+
+
+def _risky_text(a, name):
+    t = a.get("type")
+    if t == "ran_out":
+        return f"Mark {name} as out? It goes on your list as due now."
+    if t == "mark_expired":
+        return f"Mark {name} as expired? It goes on your list as due now."
+    if t == "never_suggest":
+        return f"Stop suggesting {name}?"
+    return f"Snooze {name} for {int(a.get('days') or 14)} days?"
+
+
+def chat(history, client, surface=None, context=None):
+    """One Ask Arya turn. On the Ask tab every action applies at once.
+    From the List or a hunt (surface "list"/"hunt"; owner, 2026-10-29)
+    adds still apply at once, with the added items returned so the
+    client can offer Undo, but the riskier actions (out, expired,
+    never, snooze) come back as `proposed` and wait for a yes."""
+    from api import state
     system = open(PROMPT_PATH).read().split("SYSTEM:", 1)[1].strip()
+    ctx = context if isinstance(context, dict) else {}
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())}]
+    if surface and ctx:
+        messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
     for h in (history or [])[-10:]:
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": str(h["content"])[:2000]})
@@ -131,5 +161,34 @@ def chat(history, client):
         dec = json.loads(out)
     except Exception:
         dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
-    applied, skipped = apply_actions(dec.get("actions"))
-    return {"reply": dec.get("reply", ""), "applied": applied, "skipped": skipped}
+    actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)]
+    if surface:
+        # Viewing a named list: an add that names no list goes there.
+        here = next((l for l in state.named_lists() if l["id"] == ctx.get("list_id")), None)
+        if here:
+            for a in actions:
+                if a.get("type") == "add_to_list" and not a.get("list"):
+                    a["list"] = here["name"]
+    proposed, now = [], actions
+    if surface:
+        now = [a for a in actions if a.get("type") not in RISKY]
+        for a in actions:
+            if a.get("type") in RISKY:
+                iid = _resolve(a.get("item"))
+                if iid:
+                    proposed.append({"action": a, "text": _risky_text(a, state.names().get(iid, a.get("item")))})
+    added = []
+    applied, skipped = apply_actions(now, added)
+    if surface:
+        for a in actions:
+            if a.get("type") in RISKY and not _resolve(a.get("item")):
+                skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
+    return {"reply": dec.get("reply", ""), "applied": applied, "skipped": skipped,
+            "added": added, "proposed": proposed}
+
+
+def apply_confirmed(actions):
+    """The yes to a proposed action: only the risky types apply here."""
+    ok = [a for a in actions or [] if isinstance(a, dict) and a.get("type") in RISKY]
+    applied, skipped = apply_actions(ok)
+    return {"applied": applied, "skipped": skipped}

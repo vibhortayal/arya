@@ -1049,3 +1049,22 @@ input[type=file]::file-selector-button {
 .sheet .sheetacts .btn { flex: 1; }
 .sheet .field { margin: 8px 0; }
 .filetag { font: inherit; border: 1.5px solid var(--sep); background: transparent; }
+.addline input.askish { box-shadow: inset 0 0 0 1.5px var(--acc); }
+.answercard .sheetacts { display: flex; gap: 8px; margin-top: 10px; }
+.answercard .sheetacts .btn { flex: 1; }
+.answercard .sub { display: block; margin-top: 4px; }
+
+/* Ask Arya bar on the hunt (owner, 2026-10-29): pinned above the
+   bottom edge, hunt only. */
+.askbar { display: none; }
+body.hunting #view-hunt.full .askbar {
+  display: flex; align-items: center; justify-content: space-between;
+  position: fixed; left: 16px; right: 16px; z-index: 6;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  min-height: 48px; padding: 0 16px; border-radius: 24px;
+  border: 1px solid var(--sep); background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px);
+  color: var(--secondary, #6b7280); font: inherit; font-size: 16px; text-align: left;
+}
+.askbar .askmic { display: grid; } .askbar .askmic svg { width: 22px; height: 22px; }
+#view-hunt.full { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
