@@ -10,10 +10,10 @@ import datetime, hashlib, json, math, os
 from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from api import state, auth
+from api import state, auth, supabase_auth
 from api.decode.service import decode_order_text, decode_photo, decode_text, extract_pdf_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
@@ -29,6 +29,8 @@ _LEDGER = os.path.join(os.environ.get(
 
 _login_fails = {}
 _register_hits = {}
+_code_hits = {}
+_verify_hits = {}
 
 
 def _client_ip(req):
@@ -253,7 +255,8 @@ def _registration_open():
 @app.get("/auth/status")
 def auth_status():
     return {"has_users": len(auth.users()) > 0,
-            "registration_open": _registration_open()}
+            "registration_open": _registration_open(),
+            "email_signin": supabase_auth.configured()}
 
 
 @app.post("/auth/setup")
@@ -308,6 +311,99 @@ async def auth_login(req: Request):
         _login_fails[ip] = fails + [_t.time()]
         raise HTTPException(401, "wrong email or password")
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+def _federated_login(email):
+    """Sign in (or create) the account for a Supabase-verified email.
+    ARYA_SUPABASE_SIGNUP=0 limits it to accounts that already exist."""
+    try:
+        name, created = auth.ensure_federated_user(email) \
+            if os.environ.get("ARYA_SUPABASE_SIGNUP") != "0" or email in auth.users() \
+            else (None, False)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not name:
+        raise HTTPException(403, "sign-up is closed")
+    return _set_session_cookie(JSONResponse({"user": name, "created": created}),
+                               auth.new_session(name))
+
+
+def _email_guard(req, bucket, limit):
+    import time as _t
+    ip = _client_ip(req)
+    hits = [t for t in bucket.get(ip, []) if _t.time() - t < 900]
+    if len(hits) >= limit:
+        raise HTTPException(429, "too many attempts, try again in 15 minutes")
+    bucket[ip] = hits + [_t.time()]
+
+
+def _need_supabase():
+    if not supabase_auth.configured():
+        raise HTTPException(404, "email sign-in is not set up")
+
+
+@app.post("/auth/email/start")
+async def auth_email_start(req: Request):
+    _need_supabase()
+    _email_guard(req, _code_hits, 5)
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    if "@" not in email or len(email) > 254:
+        raise HTTPException(400, "enter a valid email")
+    try:
+        await run_in_threadpool(supabase_auth.send_code, email)
+    except supabase_auth.AuthError as e:
+        raise HTTPException(502, str(e))
+    return {"ok": True}
+
+
+@app.post("/auth/email/verify")
+async def auth_email_verify(req: Request):
+    _need_supabase()
+    _email_guard(req, _verify_hits, 10)
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    code = str(body.get("code") or "").strip()
+    try:
+        verified = await run_in_threadpool(supabase_auth.verify_code, email, code)
+    except supabase_auth.AuthError as e:
+        raise HTTPException(401, str(e))
+    return _federated_login(verified)
+
+
+@app.get("/auth/google")
+def auth_google(req: Request):
+    _need_supabase()
+    return RedirectResponse(supabase_auth.google_url(
+        str(req.base_url).rstrip("/") + "/auth/callback"))
+
+
+@app.get("/auth/callback")
+def auth_callback():
+    """Supabase returns the token in the URL fragment, which only the
+    browser can read. This page hands it to /auth/supabase and goes home."""
+    return HTMLResponse(
+        "<!doctype html><meta charset=utf-8><title>Signing in</title>"
+        "<p>Signing you in...</p><script>"
+        "const t=new URLSearchParams(location.hash.slice(1)).get('access_token');"
+        "history.replaceState(null,'','/auth/callback');"
+        "fetch('/auth/supabase',{method:'POST',headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({access_token:t})})"
+        ".then(r=>{location.replace(r.ok?'/':'/?signin=failed')})"
+        ".catch(()=>{location.replace('/?signin=failed')});</script>")
+
+
+@app.post("/auth/supabase")
+async def auth_supabase(req: Request):
+    _need_supabase()
+    _email_guard(req, _verify_hits, 10)
+    body = await _json_obj(req)
+    try:
+        verified = await run_in_threadpool(
+            supabase_auth.email_for_token, str(body.get("access_token") or ""))
+    except supabase_auth.AuthError as e:
+        raise HTTPException(401, str(e))
+    return _federated_login(verified)
 
 
 @app.post("/auth/logout")

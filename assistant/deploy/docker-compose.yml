@@ -26,6 +26,10 @@ services:
       ARYA_OPEN_MODEL: ${ARYA_OPEN_MODEL:-}
       ARYA_STORE: ${ARYA_STORE:-json}
       DATABASE_URL: ${DATABASE_URL:-}
+      ARYA_SUPABASE_AUTH: ${ARYA_SUPABASE_AUTH:-0}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      ARYA_SUPABASE_SIGNUP: ${ARYA_SUPABASE_SIGNUP:-1}
     volumes:
       - arya-data:/app/data
     depends_on:
