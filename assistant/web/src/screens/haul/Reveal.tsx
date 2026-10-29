@@ -6,9 +6,9 @@ import { money } from "../../lib/format";
 import { Q, qBossStatus, type Session } from "../hunt/model";
 import { qConfetti, qShowMilestone, qTone } from "../hunt/fx";
 import { countStep, privateLines, revealFinal } from "./core";
-import { H, afterFinish, artSrc, canReview, enter, faceReady, fetchHaul, loadProfile, openScore, plural, reduced,
+import { H, afterFinish, artSrc, canReview, enter, faceReady, fetchHaul, loadProfile, openScore, reduced,
   stickersFor, tileSrc, type HaulView, type Sticker } from "./state";
-import { useTranslation } from "../../i18n";
+import { t, useTranslation } from "../../i18n";
 
 /* Port of pwa/haul.js #view-reveal (openReveal, revealRows, play,
  * skipReveal, levelBurst, onRevealClick): the haul appears tile by
@@ -35,7 +35,7 @@ async function levelBurst(sess: Session, d: HaulView) {
     const seen = Number(localStorage.getItem("arya-level") || 0);
     localStorage.setItem("arya-level", String(p.level));
     if (!(seen && p.level > seen)) return;
-    qShowMilestone(`Level up! Level ${p.level}`);
+    qShowMilestone(t("haul.levelUp", { level: p.level }));
     qConfetti();
     qTone([523, 784, 1047, 1319], 0.1);
   } catch { /* a missing opt-in effect never blocks the reveal */ }
@@ -68,7 +68,7 @@ export function Reveal() {
   const tiles = () => Array.from(box.current?.querySelectorAll<HTMLElement>("#rv-loot .rv-tile") || []);
   const setNumber = (n: number) => { const el = box.current?.querySelector("#rv-pts"); if (el) el.textContent = String(n); };
   /* Screen readers hear the total once, when the count ends. */
-  const announce = (n: number) => { const el = box.current?.querySelector("#rv-pts-sr"); if (el) el.textContent = `${n} points`; };
+  const announce = (n: number) => { const el = box.current?.querySelector("#rv-pts-sr"); if (el) el.textContent = t("haul.points", { n }); };
   const showAll = () => tiles().forEach(t => { t.style.transitionDelay = "0ms"; t.classList.add("in"); });
 
   // play(): runs once the tiles are on the page.
@@ -124,14 +124,14 @@ export function Reveal() {
   const allNew = items.length > 0 && items.every(isNew);
   const status = bossStatus(sess, d);
   const target = d.settled ? d.points.total : d.points.total - d.points.receipt;
-  const title = allNew ? `Your first ${items.length === 1 ? "sticker" : items.length + " stickers"}` : "Your haul";
+  const title = allNew ? t("haul.yourFirst", { count: items.length }) : t("haul.yourHaul");
   const p = d.points;
   const m = (n: number) => money(n, currency);
 
   return (
     <div id="rv-reveal" ref={box}>
       <div className="rv-head"><h2 className="largetitle" style={{ fontSize: 28 }}>{title}</h2>
-        <p className="muted nomargin">{t("haul.fromThisTripTapAnywhere", { plural: plural(items.length, "sticker") })}</p></div>
+        <p className="muted nomargin">{t("haul.fromThisTripTapAnywhere", { count: items.length })}</p></div>
       <div className="rv-loot" id="rv-loot">
         {items.map((it, i) => (
           <div key={it.key + i} className={"rv-tile" + (it.boss && status === "found" ? " rv-boss" : "")} style={{ transitionDelay: `${i * 160}ms` }}>
@@ -144,7 +144,7 @@ export function Reveal() {
       </div>
       <p className="rv-pts" id="rv-pts" data-target={target} aria-hidden="true">0</p>
       <p className="rv-sr" id="rv-pts-sr" role="status" aria-live="polite"></p>
-      <p className="muted rv-ptsub">{d.settled ? "Points banked." : "Points. They bank when you add the receipt."}</p>
+      <p className="muted rv-ptsub">{d.settled ? t("haul.banked") : t("haul.bankLater")}</p>
       <div className="group rv-lines">
         <div className="rv-row"><span>{t("haul.items2")}</span><b>+{p.items}</b></div>
         {!!p.full_haul && <div className="rv-row"><span>{t("haul.fullHaul")}</span><b>+{p.full_haul}</b></div>}

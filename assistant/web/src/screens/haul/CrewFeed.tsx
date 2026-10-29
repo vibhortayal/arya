@@ -4,7 +4,7 @@ import { useToast } from "../../ui/Toast";
 import { Sheet } from "../../ui/Sheet";
 import { api, get, post } from "../../lib/api";
 import { queuePick, queuedCount, sameToast, sampleHaul, type FeedPost, type PickRow } from "./core";
-import { H, artSrc, errMsg, faceReady, plural } from "./state";
+import { H, artSrc, errMsg, faceReady } from "./state";
 import { useTranslation } from "../../i18n";
 
 /* Port of pwa/haul.js paintFeed, feedCard, onFeedClick and the
@@ -12,10 +12,11 @@ import { useTranslation } from "../../i18n";
  * reaction is one of three stickers, and Same haul queues a post's
  * items for the next hunt. Rendered as the old paintFeed inserts it:
  * <h3 class="sect">Crew hauls</h3><div id="comm-hauls" class="group">. */
+/* Reaction names are en.json keys. */
 const REACTIONS: [string, string, string][] = [
-  ["yum", "Yum", "banana.webp"],
-  ["me_too", "Me too", "basket.webp"],
-  ["teach_me", "Teach me", "binoculars.webp"],
+  ["yum", "haul.react.yum", "banana.webp"],
+  ["me_too", "haul.react.meToo", "basket.webp"],
+  ["teach_me", "haul.react.teachMe", "binoculars.webp"],
 ];
 
 export function CrewFeed() {
@@ -57,7 +58,7 @@ export function CrewFeed() {
         for (const id of H.queuedIds[p.post_id]) await api(`/api/quest/queued/${encodeURIComponent(id)}`, { method: "DELETE" });
         H.queuedIds[p.post_id] = [];
         repaint();
-        toast("Taken out of your next hunt.");
+        toast(t("haul.takenOut"));
       } catch (e) { toast(errMsg(e)); }
       return;
     }
@@ -91,16 +92,16 @@ export function CrewFeed() {
       <div className="hl-fcard" data-post={p.post_id} data-author={p.author} key={p.post_id}>
         <div className="hl-fhead"><img className="hl-av" src={artSrc(avatar)} alt="" />
           <div className="grow"><b>@{p.author}</b>{sample && <span className="samplepill">{t("common.sample")}</span>}
-            <span className="sub">{p.name} · {plural(p.items.length, "item")}</span></div></div>
+            <span className="sub">{p.name} · {t("common.itemCount", { count: p.items.length })}</span></div></div>
         <div className="hl-fflat">{p.items.map((i, n) => <img key={n} src={artSrc(i.art || "basket.webp")} alt={i.name} />)}</div>
         <div className="hl-reacts">
           {REACTIONS.map(([k, label, file]) => (
             <button key={k} className="hl-react" type="button" data-react={k} aria-pressed={p.my_reaction === k} onClick={() => react(p, k)}>
-              <img src={artSrc(file)} alt="" /><span>{label}</span></button>
+              <img src={artSrc(file)} alt="" /><span>{t(label)}</span></button>
           ))}
           {sample && !demo
             ? <button className="hl-react hl-same" type="button" disabled>{t("haul.exampleOnly")}</button>
-            : <button className="hl-react hl-same" type="button" data-same={p.post_id} aria-pressed={queued} onClick={() => onSame(p)}>{queued ? "In next hunt · Undo" : "Same haul"}</button>}
+            : <button className="hl-react hl-same" type="button" data-same={p.post_id} aria-pressed={queued} onClick={() => onSame(p)}>{queued ? t("haul.inNextHunt") : t("haul.sameHaul")}</button>}
         </div>
       </div>
     );
