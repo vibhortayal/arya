@@ -3,7 +3,7 @@ import { useNav } from "../app/nav";
 import { Row, Empty } from "../ui/kit";
 import { qtyFmt } from "../lib/format";
 import { packExtrasOf, packSessionItem, type NewListDraft } from "./NewList";
-import { useTranslation } from "../i18n";
+import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-optimize and quest.js renderOptimize /
  * the #opt-body click handlers / qOptProceed. The draft (old Q.draft)
@@ -40,11 +40,11 @@ export function Optimize() {
     );
   }
 
-  const parts = [`${rep.in} in`];
-  if (rep.merged.length) parts.push(`${rep.merged.length} merged`);
-  if (rep.corrected.length) parts.push(`${rep.corrected.length} corrected`);
-  if (rep.questions.length) parts.push(`${rep.questions.length} to ask`);
-  if (rep.unresolved.length) parts.push(`${rep.unresolved.length} kept as typed`);
+  const parts = [t("optimize.sum.in", { n: rep.in })];
+  if (rep.merged.length) parts.push(t("optimize.sum.merged", { n: rep.merged.length }));
+  if (rep.corrected.length) parts.push(t("optimize.sum.corrected", { n: rep.corrected.length }));
+  if (rep.questions.length) parts.push(t("optimize.sum.toAsk", { n: rep.questions.length }));
+  if (rep.unresolved.length) parts.push(t("optimize.sum.kept", { n: rep.unresolved.length }));
 
   const seenQ = new Set<string>();
   const questions = rep.questions.filter((q: any) => !seenQ.has(q.item) && seenQ.add(q.item));
@@ -112,7 +112,7 @@ export function Optimize() {
             <h3 className="sect">{t("optimize.merged")}</h3>
             <div className="group">
               {rep.merged.map((m: any, i: number) => (
-                <Row key={i} name={m.name} sub={`added as ${m.from.join(", ")}`} right={`× ${qtyFmt(m.qty)}`} />
+                <Row key={i} name={m.name} sub={t("optimize.addedAs", { names: m.from.join(", ") })} right={`× ${qtyFmt(m.qty)}`} />
               ))}
             </div>
           </>
@@ -127,10 +127,10 @@ export function Optimize() {
                   <div key={ci} className={"row optrow" + (kept ? " kept" : "")}>
                     <div className="grow">
                       <span className="name"><span className="opt-from">{c.from}</span> → <span className="opt-to">{c.to}</span></span>
-                      <span className="sub">{kept ? "Kept as you typed it." : "Matched to your dictionary."}</span>
+                      <span className="sub">{kept ? t("optimize.keptAsYouTyped") : t("optimize.matched")}</span>
                     </div>
                     <button className="chip" type="button" {...(kept ? { "data-redo": ci } : { "data-undo": ci })}
-                      onClick={() => (kept ? redo(ci) : undo(ci))}>{kept ? "Use match" : "Undo"}</button>
+                      onClick={() => (kept ? redo(ci) : undo(ci))}>{kept ? t("optimize.useMatch") : t("common.undo")}</button>
                   </div>
                 );
               })}
@@ -149,18 +149,18 @@ export function Optimize() {
               // A swap (a candidate or Both) strikes the typed word and shows
               // what replaces it; Keep as typed highlights without a strike.
               const swapped = !!ans && ans !== "typed";
-              const pick = !swapped ? "" : ans === "both" ? "Both" : ans!.slice(5);
+              const pick = !swapped ? "" : ans === "both" ? t("optimize.both") : ans!.slice(5);
               return (
                 <div key={q.item} className="group pad optq">
                   <p className="nomargin">
                     {swapped
                       ? <><span className="opt-from">{q.item}</span> → <strong>{pick}</strong></>
-                      : <><strong>{q.item}</strong>{" "}{t("optimize.whichOne")}</>}
+                      : <Trans i18nKey="optimize.whichOne" values={{ item: q.item }} components={{ b: <strong /> }} />}
                   </p>
                   <div className={"actions optchips" + (ans ? " has-pick" : "")} style={{ paddingBottom: 0 }}>
                     {q.candidates.map((c: any) => chip("cand:" + c.name, c.name))}
-                    {chip("both", "Both")}
-                    {chip("typed", "Keep as typed")}
+                    {chip("both", t("optimize.both"))}
+                    {chip("typed", t("optimize.keepAsTyped"))}
                   </div>
                   {ans ? <button className="opt-undo" data-qundo={q.item} type="button"
                     onClick={() => { delete D.answers[q.item]; bump(); }}>{t("common.undo")}</button> : null}

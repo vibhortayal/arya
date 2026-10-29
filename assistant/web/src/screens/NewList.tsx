@@ -7,7 +7,7 @@ import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../l
 import { clearOnSignOut } from "../app/session";
 import { asset } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -115,7 +115,6 @@ function sameStore(a: unknown, b: unknown) {
 const storeCount = (stores: Record<string, number> | undefined, store: string) =>
   Object.entries(stores || {}).reduce((n, [s, c]) => n + (sameStore(s, store) ? c : 0), 0);
 const titleCase1 = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 function reduced() {
   try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch { return false; }
 }
@@ -267,7 +266,7 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
   for (const c of carried) {
     if (!c || !c.name) continue;
     add({ id: cardId("carried", norm(c.name)), key: norm(c.name), name: c.name, qty: Math.max(1, Number(c.qty) || 1),
-      kind: "carried", src: "carried", chip: "Left from last trip",
+      kind: "carried", src: "carried", chip: t("newList.src.carried"),
       note: c.note || "", variant: c.variant || "", by: c.by || "", aisle: c.aisle || "" });
   }
   const satisfied: string[] = [];
@@ -277,7 +276,7 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
     if (q.id && seen.has(squashName(q.name))) { satisfied.push(q.id); continue; }
     add({ id: cardId("queued", norm(q.name)), key: norm(q.name), name: q.name, qty: Math.max(1, Number(q.qty) || 1),
       kind: "queued", src: "queued", queued_id: q.id, from,
-      chip: from ? `From @${from}'s haul` : "From a friend's haul" });
+      chip: from ? t("newList.src.fromHaul", { from }) : t("newList.src.fromFriendHaul") });
   }
   for (const r of list) {
     if (!r.added_by || r.approved) continue;
@@ -286,7 +285,7 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
     if (cards.some(c => squashName(c.name) === squashName(r.name))) continue;
     seen.delete(squashName(r.name));
     add({ id: cardId("added", key), key, name: r.name, qty: Math.max(1, Number(r.qty) || 1),
-      kind: "added", src: "added", by: r.added_by, itemId: r.item_id, chip: `Added by ${r.added_by}` });
+      kind: "added", src: "added", by: r.added_by, itemId: r.item_id, chip: t("newList.src.addedBy", { name: r.added_by }) });
   }
   if (plan.has_history) {
     const here = (plan.items || [])
@@ -299,7 +298,7 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
       add({ id: cardId(i.due ? "due" : "usual", key), key, name: i.name,
         qty: Math.max(1, Math.round(Number(i.typical_qty) || 1)),
         kind: i.due ? "due" : "usual", src: i.due ? "due" : "usual",
-        chip: i.due ? "Due now" : "Usual here",
+        chip: i.due ? t("newList.src.due") : t("newList.src.usual"),
         every_days: i.every_days || null, days_since: i.days_since == null ? null : i.days_since,
         typical_qty: i.typical_qty || null, here: n, itemId: i.item_id });
     }
@@ -310,14 +309,14 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
 
 export function reasonFor(c: Card) {
   if (!c) return "";
-  if (c.kind === "carried") return "Left from last trip.";
-  if (c.kind === "queued") return c.from ? `From @${c.from}'s haul.` : "From a friend's haul.";
-  if (c.kind === "added") return `${c.by || "Someone"} added this.`;
+  if (c.kind === "carried") return t("newList.why.carried");
+  if (c.kind === "queued") return c.from ? t("newList.why.fromHaul", { from: c.from }) : t("newList.why.fromFriendHaul");
+  if (c.kind === "added") return c.by ? t("newList.why.addedBy", { name: c.by }) : t("newList.why.someoneAdded");
   const out: string[] = [];
-  if (c.every_days) out.push(`You buy this about every ${Math.round(c.every_days)} days.`);
-  if (c.days_since != null) out.push(`Last bought ${Math.round(c.days_since)} ${plural(Math.round(c.days_since), "day", "days")} ago.`);
-  if (c.typical_qty && c.typical_qty > 1) out.push(`You usually get ${Math.round(c.typical_qty)}.`);
-  if (c.here) out.push(`Bought here ${c.here} ${plural(c.here, "time", "times")}.`);
+  if (c.every_days) out.push(t("newList.why.every", { days: Math.round(c.every_days) }));
+  if (c.days_since != null) out.push(t("newList.why.lastBought", { count: Math.round(c.days_since) }));
+  if (c.typical_qty && c.typical_qty > 1) out.push(t("newList.why.usuallyGet", { n: Math.round(c.typical_qty) }));
+  if (c.here) out.push(t("newList.why.boughtHere", { count: c.here }));
   return out.slice(0, 3).join(" ");
 }
 
@@ -352,18 +351,17 @@ export function estimate(rows: { name: string; qty: number; itemId?: string }[],
 }
 export function estimateLine(est: { total: number; priced: number; count: number }) {
   if (!est || !est.priced) return "";
-  const t = "$" + Math.round(est.total);
-  const part = est.priced === est.count
-    ? `your ${est.count} ${plural(est.count, "item", "items")}`
-    : `${est.priced} of your ${est.count} items`;
-  return `About ${t} for ${part}. Only you see this.`;
+  const total = "$" + Math.round(est.total);
+  return est.priced === est.count
+    ? t("newList.estimateAll", { total, count: est.count })
+    : t("newList.estimateSome", { total, priced: est.priced, n: est.count });
 }
 export function budgetLine(total: number, budget: string) {
   const b = Number(budget);
   if (!(b > 0) || !(total > 0)) return "";
   const over = Math.round(total - b);
   if (over < 1) return "";
-  return `About $${over} over your budget. Want to leave something for next trip?`;
+  return t("newList.overBudget", { over });
 }
 
 /* ---------------- session shape ---------------- */
@@ -450,7 +448,6 @@ function newPack(store: string): Pack {
   };
 }
 
-const NOTE = "Pack what you need. Tap a row to take it in or out.";
 
 export function NewList() {
   const { t } = useTranslation();
@@ -516,14 +513,14 @@ export function NewList() {
 
   const undo = () => {
     const s = snaps.current.pop();
-    if (!s) { toast("Nothing to undo."); return false; }
+    if (!s) { toast(t("newList.nothingToUndo")); return false; }
     const o = JSON.parse(s);
     dRef.current.pick = o.pick; dRef.current.pack = o.pack;
     busy.current = false;
     closeEdit(true);
     force();
     save();
-    toast("Undone.");
+    toast(t("common.undone"));
     return true;
   };
   /* After a change: draw, save, and offer Undo. */
@@ -535,7 +532,7 @@ export function NewList() {
     }
     force();
     save();
-    if (msg) toast(msg, { action: "Undo", onAction: undo });
+    if (msg) toast(msg, { action: t("common.undo"), onAction: undo });
   };
 
   const openPack = () => {
@@ -548,7 +545,7 @@ export function NewList() {
       D.pick = saved.pick;
       D.pack = saved.pack;
       D.pack.budget = lsGet(KEY_BUDGET) || D.pack.budget || "";
-      toast("Welcome back. Your bag is saved.", { action: "Start over", onAction: reset });
+      toast(t("newList.welcomeBack"), { action: t("newList.startOver"), onAction: reset });
       return;
     }
     D.pack = newPack(store);
@@ -650,7 +647,7 @@ export function NewList() {
     const had = applyCard(kind, c);
     pk.decisions.push({ cardId: c.id, kind, key: c.key, had });
     pk.deal += 1;
-    done(kind === "pack" ? `${c.name} packed.` : `${c.name} skipped.`, { card: c, dir: kind === "pack" ? "r" : "l" });
+    done(kind === "pack" ? t("newList.packed", { name: c.name }) : t("newList.skippedOne", { name: c.name }), { card: c, dir: kind === "pack" ? "r" : "l" });
     return true;
   };
   const backOne = () => {
@@ -660,7 +657,7 @@ export function NewList() {
     const x = pk.decisions.pop()!;
     if (x.had) dRef.current.pick[x.key] = x.had; else delete dRef.current.pick[x.key];
     pk.deal = Math.max(0, pk.deal - 1);
-    done("Back one card.");
+    done(t("newList.backOneCardDot"));
     return true;
   };
   const sweep = (kind: string) => {
@@ -674,8 +671,8 @@ export function NewList() {
       pk.decisions.push({ cardId: c.id, kind, key: c.key, had });
     }
     pk.deal = pk.deck.length;
-    done(kind === "pack" ? `All ${rest.length} ${plural(rest.length, "card", "cards")} packed.`
-      : "The rest are skipped. You can find them under Skipped.");
+    done(kind === "pack" ? t("newList.allPacked", { count: rest.length })
+      : t("newList.restSkipped"));
     return true;
   };
   const restore = (key: string) => {
@@ -683,7 +680,7 @@ export function NewList() {
     if (!r || !r.skipped) return;
     snap();
     r.on = true; delete r.skipped;
-    done(`${r.name} is in your bag.`);
+    done(t("newList.inBag", { name: r.name }));
   };
   const setCardQty = (delta: number) => {
     const pk = P();
@@ -709,13 +706,13 @@ export function NewList() {
         r.qty = Math.min(99, (r.qty || 1) + p.qty);
         if (p.note && !r.note) r.note = p.note;
         dropPending(m.key);
-        return `${r.name} is already in your bag. Now x${r.qty}.`;
+        return t("newList.alreadyInBag", { name: r.name, qty: r.qty });
       }
       r.on = true; delete r.skipped;
       r.qty = Math.max(r.qty || 1, p.qty);
       if (p.note && !r.note) r.note = p.note;
       dropPending(m.key);
-      return `${r.name} is back in your bag.`;
+      return t("newList.backInBag", { name: r.name });
     }
     const key = norm(p.name);
     const row: Pick = { name: p.name, qty: p.qty, on: true, extra: true, src, joinList: true };
@@ -726,15 +723,15 @@ export function NewList() {
     if (hit && hit.item_id) row.itemId = hit.item_id;
     D.pick[key] = row;
     dropPending(key);
-    return `${p.name}${p.qty > 1 ? " x" + p.qty : ""} is in your bag.`;
+    return t("newList.inBag", { name: p.name + (p.qty > 1 ? " x" + p.qty : "") });
   };
-  const addFromText = (t: string, src?: string) => {
+  const addFromText = (txt: string, src?: string) => {
     if (!P()) return null;
-    const parsed = splitInput(t).map(parseLine).filter(p => p.name);
-    if (!parsed.length) { toast("Type an item first."); return null; }
+    const parsed = splitInput(txt).map(parseLine).filter(p => p.name);
+    if (!parsed.length) { toast(t("newList.typeFirst")); return null; }
     snap();
     const msgs = parsed.map(p => addParsed(p, src || "typed"));
-    done(parsed.length === 1 ? msgs[0] : `${parsed.length} items are in your bag.`);
+    done(parsed.length === 1 ? msgs[0] : t("newList.nInBag", { n: parsed.length }));
     return { added: parsed.length };
   };
   const addStarter = (name: string) => {
@@ -753,7 +750,7 @@ export function NewList() {
     editState.current = null;
     setEditKey(null);
     if (quiet) { if (!E.dirty) snaps.current.length = Math.min(snaps.current.length, E.snapDepth - 1); }
-    else if (E.dirty) done(msg || "Saved.");
+    else if (E.dirty) done(msg || t("newList.saved"));
     else snaps.current.length = Math.min(snaps.current.length, E.snapDepth - 1);
   }
   const openEdit = (key: string) => {
@@ -775,14 +772,14 @@ export function NewList() {
     const input = ev.target;
     const f = input.files?.[0];
     if (!f) return;
-    setStatus("Reading the photo with Spark…");
+    setStatus(t("newList.readingPhoto"));
     try {
       const r = await fetch("/api/list/from-photo", { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
       setStatus("");
       if (out.kind === "receipt") {
-        toast("That looks like a receipt — file it from the List tab.");
+        toast(t("newList.looksLikeReceipt"));
       } else if (out.names && out.names.length) {
         const D = dRef.current;
         try {
@@ -796,13 +793,13 @@ export function NewList() {
         }
         for (const key of Object.keys(D.pick)) dropPending(key);
         force();
-        toast(out.names.length === 1 ? "Added 1 item to the quest." : `Added ${out.names.length} items to the quest.`);
+        toast(t("newList.addedToQuest", { count: out.names.length }));
       } else {
-        toast("No list items found in that photo.");
+        toast(t("newList.noItemsInPhoto"));
       }
     } catch (e) {
       setStatus("");
-      toast("Could not read that photo: " + errMsg(e));
+      toast(t("common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
     }
     input.value = "";
   };
@@ -813,32 +810,32 @@ export function NewList() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus("Transcribing with Muse Voice Transcribe…");
+      setStatus(t("common.voice.transcribing"));
       try {
-        const t = await transcribeBlob(wav);
-        setStatus(t ? "" : "That did not come through. Try again, closer to the mic.");
-        if (t) {
+        const said = await transcribeBlob(wav);
+        setStatus(said ? "" : t("common.voice.empty"));
+        if (said) {
           const cur = textRef.current;
-          const merged = cur.trim() ? `${cur.trim()}, ${t}` : t;
+          const merged = cur.trim() ? `${cur.trim()}, ${said}` : said;
           setText(merged);
           nlAdd(merged);
         }
       } catch (e) {
         setStatus("");
-        toast("Transcription failed: " + errMsg(e));
+        toast(t("common.voice.failed", { error: errMsg(e) }));
       }
       return;
     }
     if (!voiceSupported()) {
-      setStatus("Voice input is not available in this browser. The microphone on your keyboard works too.");
+      setStatus(t("common.voice.unsupported"));
       return;
     }
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus("Listening…");
+      setStatus(t("common.voice.listening"));
     } catch {
-      setStatus("Microphone access was refused. You can type instead.");
+      setStatus(t("common.voice.refused"));
     }
   };
 
@@ -859,7 +856,7 @@ export function NewList() {
     D.plan.list = D.plan.list.filter(i => i !== li);
     delete D.pick[key];
     force();
-    toast(`${li.name} is off your list.`, { action: "Undo", onAction: async () => {
+    toast(t("newList.offList", { name: li.name }), { action: t("common.undo"), onAction: async () => {
       try {
         await post("/api/list/add", { item_id: itemId });
         D.plan!.list.push(li);
@@ -896,7 +893,7 @@ export function NewList() {
     // Text still in the box becomes bag rows first.
     if (textRef.current.trim()) { addFromText(textRef.current); setText(""); textRef.current = ""; }
     const raw = pickedRows().map(r => rawItem(r));
-    if (!raw.length) { toast("Add an item to start."); return; }
+    if (!raw.length) { toast(t("newList.addToStartDot")); return; }
     D.creating = true;
     setCreating(true);
     try {
@@ -987,19 +984,19 @@ export function NewList() {
 
   const srcChip = (r: Pick) => {
     switch (r.src) {
-      case "carried": return "Left from last trip";
-      case "queued": return r.from ? `From @${r.from}'s haul` : "From a haul";
-      case "added": return r.by ? `Added by ${r.by}` : "Added";
-      case "typed": return r.by ? `Added by ${r.by}` : "You added";
-      case "starter": return "You added";
-      case "usual": return "Usual here";
-      case "due": return "Due now";
+      case "carried": return t("newList.src.carried");
+      case "queued": return r.from ? t("newList.src.fromHaul", { from: r.from }) : t("newList.src.fromAHaul");
+      case "added": return r.by ? t("newList.src.addedBy", { name: r.by }) : t("newList.src.added");
+      case "typed": return r.by ? t("newList.src.addedBy", { name: r.by }) : t("newList.src.youAdded");
+      case "starter": return t("newList.src.youAdded");
+      case "usual": return t("newList.src.usual");
+      case "due": return t("newList.src.due");
       default: return "";
     }
   };
   const missingNote = (name: string, note: string) => {
     if (!d.missing || !d.missing.has(qSing(name))) return note;
-    return (note ? note + " · " : "") + "reported missing here";
+    return (note ? note + " · " : "") + t("newList.reportedMissingHere");
   };
   const bagRow = (key: string, row: Pick, o?: { name?: string; note?: string; itemId?: string }) => {
     const on = !!row.on;
@@ -1018,8 +1015,8 @@ export function NewList() {
             {chips.length ? <span className="packchips">{chips.map((c, i) =>
               <span key={i} className={"packchip" + (i === 0 && chip ? " src" : "")}>{c}</span>)}</span> : null}</span>
         </button>
-        <button className="packedit" data-packedit={key} aria-label={`Edit ${name}`} type="button" onClick={() => openEdit(key)}>{t("newList.edit")}</button>
-        {o?.itemId ? <button className="planrm" data-planrm={key} data-item={o.itemId} aria-label={`Remove ${name} from your list`} type="button"
+        <button className="packedit" data-packedit={key} aria-label={t("newList.editName", { name })} type="button" onClick={() => openEdit(key)}>{t("newList.edit")}</button>
+        {o?.itemId ? <button className="planrm" data-planrm={key} data-item={o.itemId} aria-label={t("newList.removeName", { name })} type="button"
           onClick={ev => removeFromList(key, o.itemId!, ev.currentTarget)}>✕</button> : null}
       </div>
     );
@@ -1033,27 +1030,27 @@ export function NewList() {
   const car = extras.filter(r => r.src === "carried");
   const que = extras.filter(r => r.src === "queued");
   const froms = [...new Set(que.map(r => r.from).filter(Boolean))];
-  const qTitle = froms.length === 1 ? `From @${froms[0]}'s haul` : "From a friend's haul";
+  const qTitle = froms.length === 1 ? t("newList.src.fromHaul", { from: froms[0] }) : t("newList.src.fromFriendHaul");
   const mine = extras.filter(r => r.src !== "carried" && r.src !== "queued");
   const skipped = rows.filter(r => r.skipped);
 
   const sections: ReactNode[] = ready ? [
-    sect(`Left from last trip · ${car.length}`, car.map(r => bagRow(r.key, r))),
-    sect(`${qTitle} · ${que.length}`, que.map(r => bagRow(r.key, r))),
-    sect(`Usually bought here · ${groups.here.length}`, groups.here.map(r => listRow(r, `${r.b.here} of ${r.b.total} times here`))),
-    sect(`New on your list · ${groups.new.length}`, groups.new.map(r => listRow(r, "No history yet"))),
+    sect(t("newList.sect.carried", { n: car.length }), car.map(r => bagRow(r.key, r))),
+    sect(t("newList.sect.queued", { title: qTitle, n: que.length }), que.map(r => bagRow(r.key, r))),
+    sect(t("newList.sect.here", { n: groups.here.length }), groups.here.map(r => listRow(r, t("newList.timesHere", { n: r.b.here, total: r.b.total })))),
+    sect(t("newList.sect.new", { n: groups.new.length }), groups.new.map(r => listRow(r, t("newList.noHistory")))),
     ...Object.entries(groups.elsewhere).map(([st, rs]) =>
-      sect(`Usually from ${st} · ${rs.length}`, rs.map(r => listRow(r, `${st} ${r.b.n} of ${r.b.total} times · stays on your list if unticked`)))),
-    sect(`Added for this trip · ${mine.length}`, mine.map(r => bagRow(r.key, r))),
+      sect(t("newList.sect.elsewhere", { store: st, n: rs.length }), rs.map(r => listRow(r, t("newList.timesElsewhere", { store: st, n: r.b.n, total: r.b.total }))))),
+    sect(t("newList.sect.mine", { n: mine.length }), mine.map(r => bagRow(r.key, r))),
     skipped.length && pk ? (
-      <div key="skipped"><h3 className="sect">{t("newList.skipped", { skippedCount: skipped.length })}</h3>
+      <div key="skipped"><h3 className="sect">{t("newList.skipped", { n: skipped.length })}</h3>
         <div className="group packskipped">
           <button className="packlink packfold" data-packfold="skipped" aria-expanded={!!pk.expanded.skipped} type="button"
             onClick={() => { pk.expanded.skipped = !pk.expanded.skipped; force(); save(); }}>
-            {pk.expanded.skipped ? "Hide skipped items" : `Show ${skipped.length} skipped ${plural(skipped.length, "item", "items")}`}</button>
+            {pk.expanded.skipped ? t("newList.hideSkipped") : t("newList.showSkipped", { count: skipped.length })}</button>
           {pk.expanded.skipped ? skipped.map(r => (
             <div className="planrow packrow" key={r.key}><span className="grow packskipname"><span className="name">{r.name}</span>{r.qty > 1 ? <span className="packx">x{r.qty}</span> : null}</span>
-              <button className="packback" data-packrestore={r.key} aria-label={`Pack ${r.name}`} type="button" onClick={() => restore(r.key)}>{t("newList.pack")}</button></div>
+              <button className="packback" data-packrestore={r.key} aria-label={t("newList.packName", { name: r.name })} type="button" onClick={() => restore(r.key)}>{t("newList.pack")}</button></div>
           )) : null}
         </div>
       </div>
@@ -1061,8 +1058,8 @@ export function NewList() {
   ].filter(Boolean) : [];
   const planBody = !ready ? null : sections.length ? sections
     : <div className="group"><p className="empty">{plan.has_history
-      ? "Your bag is empty. Add something above or bring back a skipped item."
-      : "Your bag is empty. Type what you need above."}</p></div>;
+      ? t("newList.emptyHistory")
+      : t("newList.emptyNew")}</p></div>;
 
   // The deck: the card, or the first-run start, or a short note.
   let deck: ReactNode = null;
@@ -1073,14 +1070,14 @@ export function NewList() {
       const left = n - pk.deal;
       deck = (
         <>
-          <div className="packhead"><span className="packcount" aria-live="polite">{t("newList.card")}{" "}{pk.deal + 1}{" "}{t("newList.of", { n })}</span></div>
+          <div className="packhead"><span className="packcount" aria-live="polite">{t("newList.cardOf", { i: pk.deal + 1, n })}</span></div>
           <div className="packlinks">
             {pk.decisions.length ? <button className="packlink" data-pack="back" type="button" onClick={backOne}>{t("newList.backOneCard")}</button> : <span></span>}
             <span className="packlinkgroup"><button className="packlink" data-pack="all" type="button" onClick={() => sweep("pack")}>{t("newList.packAll", { left })}</button>
               <button className="packlink" data-pack="rest" type="button" onClick={() => sweep("skip")}>{t("newList.skipTheRest")}</button></span></div>
           <div className="packdeck">
             <div className="packcard" id="pack-card" data-card={c.id} tabIndex={0} role="group" key={c.id}
-              aria-label={`${c.name}. Card ${pk.deal + 1} of ${n}. Press the right arrow to pack it. Press the left arrow to skip it.`}
+              aria-label={t("newList.cardAria", { name: c.name, i: pk.deal + 1, n })}
               onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
               <span className="packchip src">{c.chip}</span>
               <img className="packart" src={asset(`assets/characters/${faceFor(c.name)}`)} alt="" />
@@ -1141,7 +1138,7 @@ export function NewList() {
 
   // The Start button counts the bag and any text not added yet.
   const count = ready && pk ? pickedRows().length + splitInput(text).length : 0;
-  const startLabel = !ready || !pk ? "Start the quest →" : count ? `Start the quest · ${count} ${plural(count, "item", "items")} →` : "Add an item to start";
+  const startLabel = !ready || !pk ? t("newList.startQuest") : count ? t("newList.startQuestN", { count }) : t("newList.addToStart");
 
   const ed = editKey ? dRef.current.pick[editKey] : null;
   const showAisle = !!ed && !!ed.extra && (ed.src === "typed" || ed.src === "starter");
@@ -1154,16 +1151,16 @@ export function NewList() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? `Your quest at ${store}` : "Your quest"}</h2>
-      <p className="muted" id="nl-sub">{NOTE}</p>
+      <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h2>
+      <p className="muted" id="nl-sub">{t("newList.note2")}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>
       <div className="group pad packcomposer">
         <label className="field" htmlFor="nl-text">{t("newList.addSomethingElse")}</label>
-        <textarea id="nl-text" rows={2} placeholder={"oat milk\n2x tortillas"} aria-label={t("newList.addSomethingElse")} value={text}
+        <textarea id="nl-text" rows={2} placeholder={t("newList.placeholder")} aria-label={t("newList.addSomethingElse")} value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); nlAdd(); } }} />
         <p className="packaddrow">
-          <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? "Stop & transcribe" : "Record"}</button>
+          <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? t("common.voice.stopTranscribe") : t("common.voice.record")}</button>
           <label className="btn grow" htmlFor="nl-photo" style={{ textAlign: "center" }}>{t("newList.photo")}</label>
           <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>{t("common.add")}</button>
           <input type="file" id="nl-photo" accept="image/*" hidden onChange={photo} />
@@ -1189,7 +1186,7 @@ export function NewList() {
               <input type="text" id="pack-edit-note" ref={noteRef} maxLength={60} autoComplete="off" placeholder={t("newList.sizeRipenessAReminder")} defaultValue={ed.note || ""}
                 onChange={e => { ed.note = clip(e.target.value, 60); touch(); }} /></label>
             <div className="packfield"><span className="packlabel">{t("newList.brand")}</span>
-              <span className="packchips" id="pack-edit-brands">{brandChip("Any brand", "")}{brands.map(b => brandChip(b, b))}</span>
+              <span className="packchips" id="pack-edit-brands">{brandChip(t("newList.anyBrand"), "")}{brands.map(b => brandChip(b, b))}</span>
               <input type="text" id="pack-edit-variant" ref={variantRef} maxLength={60} autoComplete="off" placeholder={t("newList.otherBrand")} aria-label={t("newList.otherBrand")} defaultValue={ed.variant || ""}
                 onChange={e => { ed.variant = clip(e.target.value, 60); touch(); }} /></div>
             {showAisle ? <div className="packfield"><span className="packlabel">{t("newList.aisle")}</span><span className="packchips">{AISLES.map(a =>
@@ -1199,7 +1196,7 @@ export function NewList() {
               const name = ed.name, key = editKey;
               if (ed.extra) delete dRef.current.pick[key]; else ed.on = false;
               if (editState.current) editState.current.dirty = true;
-              closeEdit(false, `${name} is out of this trip.`);
+              closeEdit(false, t("newList.outOfTrip", { name }));
             }}>{t("newList.takeOutOfThisTrip")}</button>
               <button type="button" className="packbtn pack" data-edit="done" data-first onClick={() => closeEdit()}>{t("common.done")}</button></div>
           </div>
