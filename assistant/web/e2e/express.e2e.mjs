@@ -16,7 +16,7 @@ export default async function (page, base) {
   await page.waitForSelector("#view-express #exp-items .exprow", { timeout: 8000 });
   const rows = () => page.$$("#view-express #exp-items .exprow");
   if ((await rows()).length !== 3) throw new Error("expected three rows");
-  if (!(await page.textContent("#exp-store")).includes("Express")) throw new Error("store chip");
+  if (!(await page.textContent("#exp-store")).includes("Trip")) throw new Error("store chip");
   if ((await page.textContent("#exp-count")).trim() !== "0/3") throw new Error("count");
   if (!(await page.isDisabled("#exp-finish"))) throw new Error("finish should wait for the first tap");
   if (!(await page.$("#exp-items #exp-help:not([hidden])"))) throw new Error("help row missing under next item");
@@ -79,7 +79,7 @@ export default async function (page, base) {
   if (await page.isVisible("#exp-show")) throw new Error("Show me should be gone for an item with no data");
   if (!(await page.isVisible("#exp-nothere")) || !(await page.isVisible("#exp-find"))) throw new Error("Not here? and Find with camera stay");
   const nudge = (await page.textContent("#exp-nodata")).replace(/\s+/g, " ").trim();
-  if (nudge !== "Arya has no photo of this aisle yet. Found it? Snap the aisle so other Arya Shoppers can find it too.") throw new Error("nudge: " + nudge);
+  if (nudge !== "No photo of this aisle yet. Found it? Map this aisle so other Arya shoppers can find it.") throw new Error("nudge: " + nudge);
   await page.click("#exp-snap");
   await page.waitForSelector("#view-capture #cp-title");
   await page.waitForFunction(() => document.querySelector("#cp-title").textContent.startsWith("Snap the aisle with"));

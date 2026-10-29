@@ -31,9 +31,10 @@ export default async function (page, base) {
   await page.click("#view-reveal [data-act=summary]");
   await page.waitForSelector("#view-score #score-body .scorehero");
   const hero = await page.textContent(".hero-k");
-  if (!hero.includes("Receipt attached")) throw new Error("hero: " + hero);
+  if (!hero.includes("Receipt added")) throw new Error("hero: " + hero);
   await page.waitForSelector("#haul-photo", { state: "attached" });
-  await page.waitForSelector("#score-challenge");
+  // Race is hidden until cross-account races work (labels audit).
+  if (await page.$("#score-challenge")) throw new Error("Race challenge shows");
   const hunt = await page.textContent("#score-body");
   if (!hunt.includes("Items found")) throw new Error("rows missing");
   await page.waitForFunction(() => Number(document.querySelector("#haul-n").textContent) > 0);

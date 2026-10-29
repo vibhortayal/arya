@@ -2,6 +2,7 @@ import { useReducer } from "react";
 import { useNav } from "../app/nav";
 import { Row, Empty } from "../ui/kit";
 import { qtyFmt } from "../lib/format";
+import { SHOW_RACE } from "../lib/flags";
 import { packExtrasOf, packSessionItem, type NewListDraft } from "./NewList";
 import { Trans, useTranslation } from "../i18n";
 
@@ -33,7 +34,7 @@ export function Optimize() {
   if (!D || !rep) {
     return (
       <>
-        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
         <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
         <div className="group"><Empty>{t("optimize.nothingToCheckYet")}</Empty></div>
       </>
@@ -103,7 +104,7 @@ export function Optimize() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
       <p id="opt-summary" className="subtitle">{parts.join(" · ")}</p>
       <div id="opt-body">
@@ -181,7 +182,7 @@ export function Optimize() {
         )}
         {!hasBody && <div className="group"><Empty>{t("optimize.cleanListNothingToMerge")}</Empty></div>}
       </div>
-      <p className="muted nomargin">{t("optimize.optional")}{" "}<a href="#" id="opt-race" onClick={ev => { ev.preventDefault(); nav.show("race"); }}>{t("optimize.raceAFriendOnThis")}</a>.</p>
+      {SHOW_RACE && <p className="muted nomargin">{t("optimize.optional")}{" "}<a href="#" id="opt-race" onClick={ev => { ev.preventDefault(); nav.show("race"); }}>{t("optimize.raceAFriendOnThis")}</a>.</p>}
       <p><button id="opt-next" className="btn primary wide" type="button" onClick={proceed}>{t("optimize.looksRight")}</button></p>
       <p><button id="opt-skip" className="btn secondary wide" type="button" hidden={pending === 0} onClick={proceed}>{t("optimize.skipForNowKeepThe")}</button></p>
     </>

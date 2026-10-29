@@ -208,7 +208,7 @@ class TestPowersPlainWords(unittest.TestCase):
         self.assertLess(b, c)
         self.assertIn("working, false)", js)
         self.assertIn('className="pwneed"', js)
-        self.assertIn('name: "Your spending"', js)
+        self.assertIn('name: "Spending"', js)
         self.assertNotIn('name: "Patterns"', js)
 
     def test_turn_on_is_a_button(self):
@@ -216,4 +216,4 @@ class TestPowersPlainWords(unittest.TestCase):
         js = src("screens/Powers.tsx")
         self.assertIn('<button className="pwneed" type="button" data-pw-act="share" onClick={() => setSheet({ kind: "share" })}>', js)
         # Arya Shoppers has no opt-in yet, so it says so instead of "Turn on".
-        self.assertIn('name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Coming soon"', js)
+        self.assertIn('name: "Arya shoppers", sub: "See how busy a store is right now.", need: "Coming soon"', js)

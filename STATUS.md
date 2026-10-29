@@ -7,6 +7,8 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 
+- **Labels audit (2026-10-29, branch feat/labels-audit, not merged):** one word per idea across the app (quest, trip, Arya shoppers, friends, username, map this store, Spending, To check, points), plural and currency fixes, glyphs out of strings; Race, sample boards, sample crew hauls, Deals/Arya Shoppers tips and "Coming soon" rungs hidden (keys kept, `web/src/lib/flags.ts`). `assistant/loops/2026-10-29-labels-audit.md`.
+
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account
   group, owner only): GET/POST `/auth/registration`; the choice is

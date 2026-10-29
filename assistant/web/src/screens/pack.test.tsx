@@ -100,8 +100,8 @@ describe("pure helpers", () => {
     expect(reasonFor(deck.find(c => c.name === "Pasture Eggs 12 ct")!)).toBe("You buy this about every 10 days. Last bought 12 days ago. You usually get 2.");
     expect(reasonFor(deck[0])).toBe("Left from last trip.");
     const q = deck.find(c => c.kind === "queued")!;
-    expect(reasonFor(q)).toBe("From @priya's haul.");
-    expect(q.chip).toBe("From @priya's haul");
+    expect(reasonFor(q)).toBe("From @priya's shared trip.");
+    expect(q.chip).toBe("From @priya's shared trip");
   });
 
   test("drag boundaries", () => {
@@ -115,10 +115,10 @@ describe("pure helpers", () => {
     expect(est).toEqual({ total: 12, priced: 2, count: 4 });
     expect(estimate([{ name: "Pasta 1 lb", qty: 1 }], plan, "Nowhere").total).toBe(2);
     expect([estimateLine(est), estimateLine({ total: 74.4, priced: 9, count: 9 }), estimateLine({ total: 0, priced: 0, count: 3 })]).toEqual([
-      "About $12 for 2 of your 4 items. Only you see this.", "About $74 for your 9 items. Only you see this.", ""]);
+      "About $12.00 for 2 of your 4 items. Only you see this.", "About $74.00 for your 9 items. Only you see this.", ""]);
     const b = [budgetLine(74, "80"), budgetLine(74, ""), budgetLine(74, "0"), budgetLine(80, "74"), budgetLine(74.4, "74")];
     expect(b.slice(0, 3)).toEqual(["", "", ""]);
-    expect(b[3]).toBe("About $6 over your budget. Want to leave something for next trip?");
+    expect(b[3]).toBe("About $6.00 over your budget. Want to leave something for next trip?");
     expect(b[4]).toBe("");
     for (const l of b) expect(l.toLowerCase()).not.toMatch(/alert|warning|error|exceed|stop|!/);
   });
@@ -214,7 +214,7 @@ describe("the deck", () => {
     await settle();
     for (let i = 0; i < 3; i++) { names.push(deckName()!); fireEvent.click($('[data-pack="skip"]')!); await settle(); }
     expect(names).toEqual(["Pasture Eggs 12 ct", "Pasta 1 lb", "Black Beans"]);
-    expect($(".packcount")!.textContent).toBe("That was the last card. Your bag is below.");
+    expect($(".packcount")!.textContent).toBe("That was the last card. This trip's items are below.");
   });
 
   test("Back one card undoes the last decision, then the one before", async () => {
@@ -237,14 +237,14 @@ describe("the deck", () => {
     fireEvent.click($('[data-pack="pack"]')!); await settle();
     fireEvent.click($('[data-pack="rest"]')!);
     expect(toastText()).toContain("The rest are skipped.");
-    expect($(".packcount")!.textContent).toBe("That was the last card. Your bag is below.");
+    expect($(".packcount")!.textContent).toBe("That was the last card. This trip's items are below.");
     fireEvent.click($('[data-packfold="skipped"]')!);
     expect(document.querySelectorAll("[data-packrestore]").length).toBe(4);
     fireEvent.click($("#toast .toastact")!); // Undo the sweep
     expect(deckName()).toBe("Hummus");
     expect(bagNames()).toContain("Tortillas");
     fireEvent.click($('[data-pack="all"]')!);
-    expect(toastText()).toContain("All 4 cards packed.");
+    expect(toastText()).toContain("All 4 cards added.");
     for (const n of ["Tortillas", "Hummus", "Pasture Eggs 12 ct", "Pasta 1 lb", "Black Beans", "Whole Milk 1 gal"]) expect(bagNames()).toContain(n);
     fireEvent.click($("#toast .toastact")!);
     fireEvent.click($('[data-pack="rest"]')!);
@@ -274,11 +274,11 @@ describe("typed rows", () => {
     await waitFor(() => expect(deckName()).toBe("Tortillas"));
     await addText("2x tortillas");
     expect(xOf("Tortillas")).toBe("x2");
-    expect(toastText()).toContain("Tortillas x2 is in your bag.");
+    expect(toastText()).toContain("Tortillas x2 is on this trip.");
     // The pending card for the same thing is dropped.
     expect(deckName()).toBe("Hummus");
     await addText("tortillas");
-    expect(toastText()).toContain("Tortillas is already in your bag. Now x3.");
+    expect(toastText()).toContain("Tortillas is already on this trip. Now x3.");
     expect(bagNames().filter(n => /tortilla/i.test(n!)).length).toBe(1);
     await addText("milk");
     expect(bagNames()).toContain("Milk");
@@ -286,7 +286,7 @@ describe("typed rows", () => {
     await addText("whole milk");
     expect(xOf("Whole Milk 1 gal")).toBe("x2");
     await addText("bread, salsa 16oz; 3 apples");
-    expect(toastText()).toContain("3 items are in your bag.");
+    expect(toastText()).toContain("3 items are on this trip.");
     expect(xOf("Apples")).toBe("x3");
     const salsa = [...document.querySelectorAll("#nl-plan .packrow")].find(r => r.querySelector(".name")?.textContent === "Salsa")!;
     expect(salsa.querySelector(".packnote")!.textContent).toBe("16oz");
@@ -295,7 +295,7 @@ describe("typed rows", () => {
     // Taken out, then typed again: back in.
     fireEvent.click($('[data-plan="salsa"]')!);
     await addText("salsa");
-    expect(toastText()).toContain("Salsa is back in your bag.");
+    expect(toastText()).toContain("Salsa is back on this trip.");
     expect($('[data-plan="salsa"]')!.getAttribute("aria-pressed")).toBe("true");
   });
 
@@ -309,7 +309,7 @@ describe("typed rows", () => {
     mount("S");
     await waitFor(() => expect(bagNames()).toContain("Oat Milk 1 L"));
     await addText("milk");
-    expect(toastText()).toContain("Milk is in your bag.");
+    expect(toastText()).toContain("Milk is on this trip.");
     expect(xOf("Oat Milk 1 L")).toBe("x1");
     await addText("butter");
     await addText("banana");
@@ -331,7 +331,7 @@ describe("typed rows", () => {
     expect($("#nl-next")!.getAttribute("aria-disabled")).toBe("true");
     fireEvent.change($("#nl-text")!, { target: { value: "milk" } });
     expect($("#nl-next")!.getAttribute("aria-disabled")).toBe("false");
-    expect($("#nl-next")!.textContent).toBe("Start the quest · 1 item →");
+    expect($("#nl-next")!.textContent).toBe("Start quest · 1 item");
   });
 
   test("names are text, never markup", async () => {
@@ -357,7 +357,7 @@ describe("the saved draft, the budget, the end", () => {
     r.unmount();
     r = mount();
     await waitFor(() => expect(deckName()).toBe("Hummus"));
-    expect(toastText()).toContain("Welcome back. Your bag is saved.");
+    expect(toastText()).toContain("Welcome back. Your trip is saved.");
     r.unmount();
     r = mount("Costco");
     await waitFor(() => expect(deckName()).toBe("Tortillas"));

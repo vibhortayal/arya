@@ -27,7 +27,9 @@ class CrewVisibility(unittest.TestCase):
         # from the game's home, with Back to the game.
         crew = frontend.src("screens/Quest.tsx")
         self.assertIn(">Your trips</h2>", crew)
-        self.assertIn(">Crew</h3>", crew)
+        self.assertIn(">Friends</h3>", crew)
+        # Race is hidden until cross-account races work (labels audit).
+        self.assertIn('{SHOW_RACE && <button className="navrow" data-qnav="view-race"', crew)
         self.assertLess(crew.index('data-qnav="view-race"'), crew.index('id="comm-board"'))
         self.assertLess(crew.index('data-qnav="view-friends"'), crew.index('id="comm-board"'))
         self.assertIn('nav.back("community")', crew)

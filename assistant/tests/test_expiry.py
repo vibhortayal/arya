@@ -232,8 +232,8 @@ class TestClientWiring(unittest.TestCase):
     def test_copy_follows_the_wireframe(self):
         from tests import frontend
         js = frontend.src("screens/Today.tsx")  # expiry.js was ported into Today
-        for phrase in ("Arya can keep track of expiry dates", "Snap an expiry date", "+ Snap a date",
-                       "Nothing is saved until you tap", "Past the date. Your call.",
+        for phrase in ("Arya tracks use-by dates", "Add a use-by date", "Add a date",
+                       "Nothing is saved until you tap", "Past the date. Still good, or toss it?",
                        "Add it to your list?", "Try a sample date"):
             self.assertIn(phrase, js)
         self.assertNotIn("danger", js)   # a date is information, never an alarm

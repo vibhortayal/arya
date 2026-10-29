@@ -60,7 +60,7 @@ export function QuestProgress() {
 
   return (
     <>
-      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.questProgress")}</h2>
       <div id="pf-stats" className="stattiles" hidden={!active}>
         {profile && s && (
@@ -78,7 +78,7 @@ export function QuestProgress() {
         {profile && s && (
           <>
             <Row name={t("questProgress.storeChangesYouSpotted")} sub={t("questProgress.pointsLandOnlyWhenA")} right={String(s.spots_reported || 0)} />
-            {eagle && <Row name={t("questProgress.eagleEye")} sub={eagle.detail || eagle.criteria} right={eagle.earned ? t("questProgress.earnedTick") : t("score.locked")} />}
+            {eagle && <Row name={t("questProgress.eagleEye")} sub={eagle.detail || eagle.criteria} right={eagle.earned ? <>{t("questProgress.earnedTick")}<span aria-hidden="true"> ✓</span></> : t("score.locked")} />}
           </>
         )}
       </div>
@@ -88,7 +88,7 @@ export function QuestProgress() {
           <div key={b.id} className={"badgetile" + (b.earned ? "" : " locked")}>
             {BADGE_ART[b.id] ? <img className="bdgimg" src={asset("assets/characters/" + BADGE_ART[b.id])} alt="" /> : null}
             <h4>{b.name}</h4><p>{b.criteria}</p>
-            <span className="b-state">{b.earned ? t("questProgress.earnedTick") : t("questProgress.lockedDetail", { detail: b.detail || "" })}</span>
+            <span className="b-state">{b.earned ? <>{t("questProgress.earnedTick")}<span aria-hidden="true"> ✓</span></> : t("questProgress.lockedDetail", { detail: b.detail || "" })}</span>
           </div>
         ))}
       </div>

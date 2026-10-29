@@ -4,8 +4,8 @@ import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
-import { clearOnSignOut } from "../app/session";
-import { asset } from "../lib/format";
+import { clearOnSignOut, useSession } from "../app/session";
+import { asset, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
 import { t, useTranslation } from "../i18n";
 
@@ -349,19 +349,20 @@ export function estimate(rows: { name: string; qty: number; itemId?: string }[],
   }
   return { total: Math.round(total * 100) / 100, priced, count: (rows || []).length };
 }
-export function estimateLine(est: { total: number; priced: number; count: number }) {
+export function estimateLine(est: { total: number; priced: number; count: number }, cur?: Currency) {
   if (!est || !est.priced) return "";
-  const total = "$" + Math.round(est.total);
+  const total = money(Math.round(est.total), cur);
   return est.priced === est.count
     ? t("newList.estimateAll", { total, count: est.count })
     : t("newList.estimateSome", { total, priced: est.priced, n: est.count });
 }
-export function budgetLine(total: number, budget: string) {
+export function budgetLine(total: number, budget: string, cur?: Currency) {
   const b = Number(budget);
   if (!(b > 0) || !(total > 0)) return "";
   const over = Math.round(total - b);
   if (over < 1) return "";
-  return t("newList.overBudget", { over });
+  // money() follows the Currency setting (no hard-coded "$").
+  return t("newList.overBudget", { amount: money(over, cur) });
 }
 
 /* ---------------- session shape ---------------- */
@@ -452,6 +453,7 @@ function newPack(store: string): Pack {
 export function NewList() {
   const { t } = useTranslation();
   const nav = useNav();
+  const { currency } = useSession();
   const { toast } = useToast();
   const d = draftFor(nav.params);
   const dRef = useRef(d);
@@ -731,7 +733,7 @@ export function NewList() {
     if (!parsed.length) { toast(t("newList.typeFirst")); return null; }
     snap();
     const msgs = parsed.map(p => addParsed(p, src || "typed"));
-    done(parsed.length === 1 ? msgs[0] : t("newList.nInBag", { n: parsed.length }));
+    done(parsed.length === 1 ? msgs[0] : t("newList.nInBag", { count: parsed.length }));
     return { added: parsed.length };
   };
   const addStarter = (name: string) => {
@@ -1050,7 +1052,7 @@ export function NewList() {
             {pk.expanded.skipped ? t("newList.hideSkipped") : t("newList.showSkipped", { count: skipped.length })}</button>
           {pk.expanded.skipped ? skipped.map(r => (
             <div className="planrow packrow" key={r.key}><span className="grow packskipname"><span className="name">{r.name}</span>{r.qty > 1 ? <span className="packx">x{r.qty}</span> : null}</span>
-              <button className="packback" data-packrestore={r.key} aria-label={t("newList.packName", { name: r.name })} type="button" onClick={() => restore(r.key)}>{t("newList.pack")}</button></div>
+              <button className="packback" data-packrestore={r.key} aria-label={t("newList.packName", { name: r.name })} type="button" onClick={() => restore(r.key)}><span aria-hidden="true">+ </span>{t("newList.pack")}</button></div>
           )) : null}
         </div>
       </div>
@@ -1121,18 +1123,18 @@ export function NewList() {
 
   // The foot: estimate and budget.
   const est = ready && pk ? estimate(pickedRows(), plan, store) : null;
-  const estLine = est ? estimateLine(est) : "";
+  const estLine = est ? estimateLine(est, currency) : "";
   const foot = pk && est && estLine ? (
     <>
       <p className="packestimate" id="nl-estimate">{estLine}</p>
       <div className="budgetrow"><label htmlFor="nl-budget">{t("newList.budgetForThisTripOptional")}</label>
-        <input type="text" id="nl-budget" inputMode="decimal" autoComplete="off" placeholder="$" value={pk.budget}
+        <input type="text" id="nl-budget" inputMode="decimal" autoComplete="off" placeholder={currency?.symbol || "$"} value={pk.budget}
           onChange={e => {
             pk.budget = e.target.value.replace(/[^0-9.]/g, "").slice(0, 7);
             if (pk.budget) lsSet(KEY_BUDGET, pk.budget); else lsDel(KEY_BUDGET);
             force();
           }} /></div>
-      <p className="budgetline" id="nl-budgetline" role="status">{budgetLine(est.total, pk.budget)}</p>
+      <p className="budgetline" id="nl-budgetline" role="status">{budgetLine(est.total, pk.budget, currency)}</p>
     </>
   ) : null;
 
@@ -1150,7 +1152,7 @@ export function NewList() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h2>
       <p className="muted" id="nl-sub">{t("newList.intro")}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>

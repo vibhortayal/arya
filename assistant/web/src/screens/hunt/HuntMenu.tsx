@@ -25,7 +25,7 @@ type Props = {
   sess: Session;
   /* Find it for me on this item (the Shelf Scan aimed at it). */
   onFind: (name: string) => void;
-  /* "Tell other shoppers it is gone": the Not here report sheet. */
+  /* "Tell other Arya shoppers it is gone": the Not here report sheet. */
   onTell: (idx: number) => void;
   /* After the leave sheet's Check out (opens Finish). */
   onCheckout: (n: number, undo: () => Promise<void>) => void;

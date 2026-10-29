@@ -145,7 +145,7 @@ class TestFinishClient(unittest.TestCase):
         # own hunt, which settles it and clears the tag.
         from tests import frontend
         js = frontend.src("screens/Receipts.tsx")
-        self.assertIn("Receipt missing", js)
+        self.assertIn("No receipt yet", js)
         self.assertIn(">Add receipt</button>", js)
         self.assertIn("archive.unsettled", js)
         self.assertIn("setAr({ sessionId: e.session_id, label: e.store })", js)

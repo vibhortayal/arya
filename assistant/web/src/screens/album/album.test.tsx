@@ -118,7 +118,7 @@ describe("level up", () => {
     { level: 2, title: "Avatar extras", kind: "expression", live: false, reached: true },
     { level: 4, title: "Pin a badge on your card", kind: "expression", live: false, reached: false },
   ];
-  const prof = { level: 2, unlocks: { ladder: LADDER, open_to_all: ["Shop-Off race with friends", "Celebration sound"], never_locked: ["Find it for me", "Receipts", "Lists", "Shop together", "Split the List"] } };
+  const prof = { level: 2, next_level_at: 300, unlocks: { ladder: LADDER, open_to_all: ["Shop-Off race with friends", "Celebration sound"], never_locked: ["Find it for me", "Receipts", "Lists", "Shop together", "Split the List"] } };
 
   test("first run is silent, then each new level shows once and never lowers", () => {
     localStorage.removeItem("arya-album-level");
@@ -131,12 +131,16 @@ describe("level up", () => {
     const text = card.textContent || "";
     expect(text).toContain("Level up");
     expect(card.querySelector(".levelnum")!.textContent).toBe("2");
-    expect(text).toContain("New at this level");
-    expect(text).toContain("Avatar extras");
-    expect(text).toContain("Coming soon");
+    // Only unlocks that work today show (labels audit): no "Coming soon"
+    // rungs, one "Next level at N points" line, one "Always free" line.
+    expect(text).not.toContain("New at this level");
+    expect(text).not.toContain("Avatar extras");
+    expect(text).not.toContain("Coming soon");
     expect(text).not.toContain("Live");
-    expect(text).toContain("Open to everyone: Shop-Off race with friends, Celebration sound.");
-    expect(text).toContain("Never locked by level: Find it for me, Receipts, Lists, Shop together, Split the List.");
+    expect(text).toContain("Keep going. Next level is close.");
+    expect(text).toContain("Next level at 300 points");
+    expect(text).toContain("Always free: Celebration sound, Find it for me, Receipts, Lists, Shop together, Split the List.");
+    expect(text).not.toContain("Shop-Off");
     expect(/padlock|\u{1F512}/u.test(card.innerHTML)).toBe(false);
     expect(BANNED.test(text)).toBe(false);
     expect(localStorage.getItem("arya-album-level")).toBe("2");
@@ -170,7 +174,7 @@ describe("the Album screen", () => {
     expect((body.querySelector(".albprog i") as HTMLElement).style.width).toBe("38%");
     expect(body.textContent).toContain("Dairy Royalty");
     expect(body.textContent).toContain("5 to go. No rush.");
-    expect(body.textContent).toContain("Community chapter");
+    expect(body.textContent).toContain("Stickers from other Arya shoppers");
     expect(body.textContent).toContain("71%");
     expect(body.innerHTML).toContain("compass.webp");
     expect(body.innerHTML).toContain("/api/quest/stickers/c/image?v=1");
@@ -189,7 +193,7 @@ describe("the Album screen", () => {
     const sheet = document.getElementById("alb-sheet")!;
     expect(sheet.textContent).toContain("Cheese");
     expect(sheet.textContent).toContain("First found Oct 28, 2026 at Trader Joe's");
-    expect(sheet.textContent).toContain("Found in 1 hunt");
+    expect(sheet.textContent).toContain("Found in 1 quest");
     expect(sheet.textContent).toContain("Only the product is kept in your album. No people.");
     fireEvent.click(sheet.querySelector("[data-alb-close]")!);
     fireEvent.click(body.querySelector('[data-alb-slot="stk-Milk"]')!);

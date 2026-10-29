@@ -91,8 +91,8 @@ export function Receipts() {
   const mineCount = archive.receipts.filter(r => r.mine).length;
   const count = !archive.receipts.length ? ""
     : shared && people.length
-      ? t("receipts.countShared", { n: archive.receipts.length, people: people.length + 1, mine: mineCount })
-      : t("receipts.countMine", { n: archive.receipts.length });
+      ? t("receipts.countShared", { count: archive.receipts.length, people: people.length + 1, mine: mineCount })
+      : t("receipts.countMine", { count: archive.receipts.length });
   const shown = archive.receipts.filter(r => whoNow === "all" || (whoNow === "mine" ? r.mine : r.by === whoNow));
   const unsettled = archive.unsettled || [];
 
@@ -145,7 +145,7 @@ export function Receipts() {
       if (res.duplicate) dup++; else if (res.ok) filed++; else failed++;
     }
     setStatus("");
-    toast(t("receipts.bulkDone", { filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "", failed: failed ? t("receipts.bulkFailed", { n: failed }) : "" }));
+    toast(t("receipts.bulkDone", { count: filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "", failed: failed ? t("receipts.bulkFailed", { n: failed }) : "" }));
     loadScan().catch(showErr);
     loadArchive().catch(() => {});
   };
@@ -161,7 +161,7 @@ export function Receipts() {
 
   return (
     <>
-      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h2>
       <p id="rc-count" className="subtitle">{count}</p>
       <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>

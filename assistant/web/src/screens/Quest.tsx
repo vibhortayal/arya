@@ -2,9 +2,9 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
-import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { asset, fmtShort } from "../lib/format";
+import { SHOW_RACE } from "../lib/flags";
 import { CrewFeed } from "./haul/CrewFeed";
 import { qModeLabel } from "./hunt/model";
 import { t, useTranslation } from "../i18n";
@@ -28,17 +28,14 @@ const HAS_COMM_NEWS = false;
 type SItem = { name: string; checked?: boolean; wild?: boolean };
 type Sess = { id: string; store: string; mode: string; state: string; items: SItem[]; created_at?: string;
   started_at?: string; finished_at?: string; receipt_id?: string; shopoff_id?: string };
-type Scope = "household" | "friends" | "store" | "global";
 
-/* State, mode and board scope names: en.json keys. */
+/* State and mode names: en.json keys. */
 const QSTATE_KEY: Record<string, string> = { not_started: "quest.state.notStarted", playing: "quest.state.playing", paused: "hunt.paused", finished: "common.finishedReceiptMissing", done: "quest.state.done" };
 const stateLabel = (st: string) => (QSTATE_KEY[st] ? t(QSTATE_KEY[st]) : st);
-const SCOPES: [Scope, string][] = [["household", "quest.scope.household"], ["friends", "common.friends"], ["store", "quest.scope.store"], ["global", "quest.scope.global"]];
-const SAMPLES: Record<string, [string, number][]> = {
-  friends: [["@sample-mina", 33], ["@sample-dev", 38]],
-  store: [["@sample-ana", 31], ["@sample-ravi", 36]],
-  global: [["@sample-ana", 31], ["@sample-mina", 33], ["@sample-dev", 38]],
-};
+/* Fastest Hands shows only real household quests. The friends, store
+ * and everyone boards were made-up sample players, so they stay
+ * hidden (keys quest.scope.* kept) until real boards exist (labels
+ * audit, judgement call 1). The Race entry follows lib/flags SHOW_RACE. */
 
 const BasketSvg = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -75,7 +72,6 @@ export function Quest() {
   const [albumSub, setAlbumSub] = useState(() => t("quest.albumSub"));
   const [times, setTimes] = useState<Record<string, string>>({});
   const [crew, setCrew] = useState<{ acc: number; pend: number; raceN: number } | null>(null);
-  const [scope, setScope] = useState<Scope>("household");
 
   const load = useCallback(async () => {
     let list: Sess[] = [];
@@ -168,7 +164,7 @@ export function Quest() {
         <p className="hero-sub">{t("quest.fromYourList", { count: p.total, store: hero.store })}</p>
         <span className="track"><span className="bar" style={{ width: pct + "%" }} /></span>
         <span className="hero-state">{t("quest.stateCollected", { state: stateLabel(hero.state), done: p.done, total: p.total })}</span>
-        <button className="btn primary wide" data-hero={hero.id} type="button" onClick={() => open(hero)}>{fresh ? t("quest.start") : t("quest.resume")}</button>
+        <button className="btn primary wide" data-hero={hero.id} type="button" onClick={() => open(hero)}>{fresh ? t("quest.start") : t("quest.resume")}<span aria-hidden="true"> ▸</span></button>
         <button className="linkbtn hero-end" data-hero-end={hero.id} type="button" onClick={() => abandon(hero)}>{t("quest.endThisQuest")}</button>
       </article>
     );
@@ -207,36 +203,28 @@ export function Quest() {
         {showCrew && crew && (
           <div className="row"><div className="grow">
             <span className="name">{t("quest.crewLine.friends", { count: crew.acc })}{crew.pend ? " · " + t("quest.crewLine.requests", { count: crew.pend }) : ""}</span>
-            <span className="sub">{crew.raceN ? t("quest.crewLine.shopOffsOn", { count: crew.raceN }) : t("quest.crewLine.noShopOff")}</span></div></div>
+            {SHOW_RACE || crew.raceN ? <span className="sub">{crew.raceN ? t("quest.crewLine.shopOffsOn", { count: crew.raceN }) : t("quest.crewLine.noShopOff")}</span> : null}</div></div>
         )}
       </div>
       <div className="group">
-        <button className="navrow" data-qnav="view-race" type="button" onClick={() => nav.show("race")}><span className="grow">{t("common.shopOff")}<span className="sub">{t("quest.raceAFriendOnThe")}</span></span><span className="chev">›</span></button>
+        {SHOW_RACE && <button className="navrow" data-qnav="view-race" type="button" onClick={() => nav.show("race")}><span className="grow">{t("common.shopOff")}<span className="sub">{t("quest.raceAFriendOnThe")}</span></span><span className="chev">›</span></button>}
         <button className="navrow" data-qnav="view-friends" type="button" onClick={() => nav.show("friends")}><span className="grow">{t("common.friends")}<span className="sub" id="crew-friends-sub">{crew && crew.pend ? t("quest.crewLine.requestsWaiting", { count: crew.pend }) : t("quest.crewLine.addByHandle")}</span></span><span className="chev">›</span></button>
         <button className="navrow" data-qnav="view-album" type="button" onClick={() => nav.show("album")}><span className="grow">{t("common.album")}<span className="sub" id="album-nav-sub">{albumSub}</span></span><span className="chev">›</span></button>
       </div>
       {HAS_COMM_NEWS && <CrewFeed />}
-      <div id="comm-fastest" hidden={!qualifying.length}>
-        <div className="seg" id="comm-scopes">
-          {SCOPES.map(([k, label]) => (
-            <button key={k} className="chip" data-scope={k} aria-pressed={scope === k} type="button" onClick={() => setScope(k)}>{t(label)}</button>
-          ))}
-        </div>
+      {/* Hidden for a new user (empty-noise sweep); after a first finished
+        * quest it shows the real board, or one line on how to get on it. */}
+      <div id="comm-fastest" hidden={!done.length}>
         <h3 className="sect">{t("quest.fastestHands")}</h3>
-        <div id="comm-board" className="group">
-          {scope !== "household"
-            ? (SAMPLES[scope] || []).map(([h, per], i) => (
-              <div className="row" key={h}><div className="grow"><span className="name">{i + 1}. {h}<span className="samplepill">{t("common.sample")}</span></span>
-                <span className="sub">{t("quest.exampleOnlyRealBoardsFill")}</span></div>
-                <div className="money">{t("quest.perItem", { s: per })}</div></div>))
-            : qualifying.length
-              ? qualifying.map((x, i) => (
-                <div className="row" key={x.s.id}><div className="grow"><span className="name">{i + 1}. {x.s.store}</span>
-                  <span className="sub">{t("quest.boardRow", { count: x.s.items.length, time: durText(x.ms), date: fmtShort(String(x.s.started_at).slice(0, 10)) })}</span></div>
-                  <div className="money">{t("quest.perItem", { s: Math.round(x.per / 1000) })}</div></div>))
-              : <Empty>{t("quest.noQualifyingHuntsYetFinish")}</Empty>}
-        </div>
-        <p className="muted">{t("quest.fastestFullHuntsScoredAs")}</p>
+        {qualifying.length ? <>
+          <div id="comm-board" className="group">
+            {qualifying.map((x, i) => (
+              <div className="row" key={x.s.id}><div className="grow"><span className="name">{i + 1}. {x.s.store}</span>
+                <span className="sub">{t("quest.boardRow", { count: x.s.items.length, time: durText(x.ms), date: fmtShort(String(x.s.started_at).slice(0, 10)) })}</span></div>
+                <div className="money">{t("quest.perItem", { s: Math.round(x.per / 1000) })}</div></div>))}
+          </div>
+          <p className="muted">{t("quest.fastestFullHuntsScoredAs")}</p>
+        </> : <p className="muted" id="comm-board-empty">{t("quest.noQualifyingHuntsYetFinish")}</p>}
       </div>
     </>
   );

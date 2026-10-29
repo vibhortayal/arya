@@ -94,7 +94,7 @@ class TestPackShell(unittest.TestCase):
     def test_pack_is_a_safe_module(self):
         nl = newlist()
         for s in ("onPointerDown", "onPointerMove", "onPointerUp", "onPointerCancel", "busy.current",
-                  "Back one card", "Pack all", "Skip the rest", "Pack it",
+                  "Back one card", "Add all", "Skip the rest", "Add it",
                   "Any brand", "Take out of this trip",
                   "arya-pack-draft", "arya-pack-budget", "arya-helper-name",
                   "/api/pack/variants", "/api/quest/queued/finish"):

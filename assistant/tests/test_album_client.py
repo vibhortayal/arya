@@ -34,7 +34,7 @@ class TestAlbumPins(unittest.TestCase):
 
     def test_nav_row_in_the_crew_group(self):
         quest = frontend.src("screens/Quest.tsx")
-        crew = quest.split('<h3 className="sect">Crew</h3>')[1]
+        crew = quest.split('<h3 className="sect">Friends</h3>')[1]
         row = crew.split('data-qnav="view-album"')[0].rsplit("<button", 1)[1]
         self.assertIn("navrow", row)
         self.assertIn('id="album-nav-sub"', crew)
@@ -85,7 +85,7 @@ class TestAlbumPins(unittest.TestCase):
 
     def test_copy(self):
         js = strip_js_comments(album_src())
-        for s in ("New sticker", "Other finds", "No rush", "Seasonal",
+        for s in ("New sticker", "Other finds", "No rush", "This season's stickers",
                   "Only the product is kept in your album. No people."):
             self.assertIn(s, js, s)
         self.assertNotRegex(js, r"(?i)frame deleted")

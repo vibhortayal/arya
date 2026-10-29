@@ -20,6 +20,8 @@ type Facts = { receipts: number; stores: number; share_prices: boolean };
 type Power = {
   id: string; group: "next" | "new" | "on"; name: string; sub: string; need?: string; what: string;
   unlock?: string; when?: string; share?: boolean; soon?: boolean; on?: (f: Facts) => boolean; tip?: string;
+  /* Not live yet: the row stays out of the list (keys kept) until it ships. */
+  hidden?: boolean;
 };
 
 /* Text fields are en.json keys; the screen runs them through t(). */
@@ -28,9 +30,9 @@ const POWERS: Power[] = [
     unlock: "powers.p.community.unlock",
     when: "powers.p.community.when", share: true },
   { id: "deals", group: "next", name: "powers.p.deals.name", sub: "powers.p.deals.sub", need: "powers.p.deals.need", what: "powers.p.deals.what",
-    unlock: "powers.p.deals.unlock", when: "powers.p.deals.when", share: true },
+    unlock: "powers.p.deals.unlock", when: "powers.p.deals.when", share: true, hidden: true },
   { id: "shoppers", group: "next", name: "powers.p.shoppers.name", sub: "powers.p.shoppers.sub", need: "powers.p.shoppers.need", soon: true, what: "powers.p.shoppers.what",
-    unlock: "powers.p.shoppers.unlock", when: "powers.p.shoppers.when", share: true },
+    unlock: "powers.p.shoppers.unlock", when: "powers.p.shoppers.when", share: true, hidden: true },
   { id: "compare", group: "new", name: "powers.p.compare.name", sub: "powers.p.compare.sub", need: "powers.p.compare.need", what: "powers.p.compare.what",
     unlock: "powers.p.compare.unlock", on: f => f.stores >= 2, tip: "powers.p.compare.tip" },
   { id: "trends", group: "new", name: "powers.p.trends.name", sub: "powers.p.trends.sub", need: "powers.p.trends.need", what: "powers.p.trends.what",
@@ -107,9 +109,10 @@ export function Powers() {
       <div className="group">{items.map(row)}</div></details>
   );
 
-  const working = [...POWERS.filter(p => p.group === "on"), ...POWERS.filter(p => p.group === "new" && isOn(p))];
-  const later = POWERS.filter(p => p.group === "new" && !isOn(p));
-  const choose = POWERS.filter(p => p.share);
+  const shown = POWERS.filter(p => !p.hidden);
+  const working = [...shown.filter(p => p.group === "on"), ...shown.filter(p => p.group === "new" && isOn(p))];
+  const later = shown.filter(p => p.group === "new" && !isOn(p));
+  const choose = shown.filter(p => p.share);
 
   const closeBtn = (label = t("common.close")) => <button className="btn secondary" type="button" data-pw="close" onClick={close}>{label}</button>;
   let sheetBody: ReactNode = null;
@@ -148,10 +151,10 @@ export function Powers() {
 
   return (
     <>
-      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.aryaSPowers")}</h2>
       <p className="subtitle">{t("powers.whatAryaAlreadyDoesFor")}</p>
-      <button className="linkbtn" id="pw-guide" type="button" onClick={() => guide.open()}>{t("powers.seeHowItWorks")} ›</button>
+      <button className="linkbtn" id="pw-guide" type="button" onClick={() => guide.open()}>{t("powers.seeHowItWorks")}<span aria-hidden="true"> ›</span></button>
       <div id="powers-body">
         {group(t("powers.working", { n: working.length }), working, false)}
         {group(t("powers.later"), later)}

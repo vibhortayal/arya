@@ -30,7 +30,7 @@ class TestLows(unittest.TestCase):
         self.assertIn('if (textRef.current.trim() === txt) changeText("");', src("screens/Lists.tsx"))
 
     def test_grab_before_start_explains(self):
-        self.assertIn("Tap Start the hunt first.", src("screens/Hunt.tsx"))
+        self.assertIn("Tap Start the quest first.", src("screens/Hunt.tsx"))
 
     def test_demo_feedback_send_is_disabled(self):
         self.assertIn('id="fb-send" className="btn primary wide" type="button" disabled={demo || busy}',

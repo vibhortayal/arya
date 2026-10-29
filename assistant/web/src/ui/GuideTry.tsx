@@ -68,7 +68,7 @@ function TryList({ onRealList }: { onRealList: () => void }) {
           </div>
         ))}
       </div>
-      <button className="btn secondary wide" id="gd-real-list" type="button" onClick={onRealList}>{t("guide.try.list.real")}</button>
+      <button className="btn secondary wide" id="gd-real-list" type="button" onClick={onRealList}>{t("guide.try.list.real")}<span aria-hidden="true"> ▸</span></button>
     </>
   );
 }
