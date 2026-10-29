@@ -66,8 +66,7 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
-    import re as _re
-    from api.list.intake import existing_item_id
+    from api.list.intake import existing_item_id, item_slug
     name = (name or "").strip()
     known = existing_item_id(name, state.dictionary()["entries"], state.flags())
     if known:
@@ -80,7 +79,7 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
         _merge_flag(known, flag)
         return {"item_id": known, "name": state.flags().get(known, {}).get("name")
                 or state.names().get(known, name)}
-    item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    item_id = "manual-" + item_slug(name)
     flag = {"manual": True, "name": name, "dismissed_on": None}
     if qty and qty > 1:
         flag["qty_override"] = qty
@@ -172,8 +171,16 @@ async def list_from_text(req: Request):
     list_id = (body.get("list_id") or None)
     if list_id and not any(l["id"] == list_id for l in state.named_lists()):
         raise HTTPException(404, "no such list")
-    from api.list.intake import split_list_items_units, extract_items_model, skipped_pieces
-    typed = split_list_items_units(text)
+    from api.list.intake import (split_list_items_units, extract_items_model,
+                                 skipped_pieces, has_non_latin)
+    from api.chat_service import _language_setting
+    # The splitter is English-shaped ("add", "and", "some"). Non-Latin
+    # script, or a fixed non-English language, goes to the one Spark
+    # call instead so "agrega leche" files "leche"; English on auto
+    # keeps the $0 split (assistant/docs/MULTILINGUAL-ASK.md §3).
+    by_model = bool(os.environ.get("MODEL_API_KEY")) and (
+        has_non_latin(text) or _language_setting() in ("es", "hi"))
+    typed = [] if by_model else split_list_items_units(text)
     skipped = skipped_pieces(text) if typed else []
     names = [n for n, _q, _u in typed]
     source = "split"

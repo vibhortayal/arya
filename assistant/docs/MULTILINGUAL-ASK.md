@@ -22,6 +22,18 @@ beyond §2's reply surface.
 **Tested languages for v1:** English, Spanish (es), Hindi (hi).
 The mechanism is language-general; these three are what we verify.
 
+## Build status (2026-10-29)
+
+Backend and Ask logic are built (this spec's §1, §2, §3 server side).
+All front-end work (Profile Language row, the one-time "Reply in
+Español?" offer, speech-output language, strings) is handed to the
+React port ("Improve Arya look and feel" thread), by the owner's rule.
+Found while building: item ids and the dedupe key were ASCII-only, so
+every Hindi item shared the id `manual-` (and Ask could not add one);
+`item_slug` in `api/list/intake.py` fixes both. §3 is done server side
+in `/api/list/from-text` (the PWA needs no change). §4 voice stays open
+until a real Spanish and Hindi clip has been tried.
+
 ## 1. Reply language
 
 - `prompts/chat_v1.md` gains, near the top:
