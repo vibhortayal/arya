@@ -102,7 +102,7 @@ so next week's list writes itself.
 - Store maps: earned from shoppers' guided scans. A section counts as
   mapped only with a usable, fresh picture; no store ships mapped.
 - Test suite: 1,235 Python tests, green on `main` at #198.
-- Live at https://arya-pilot.duckdns.org — "Try the demo" opens a
+- Live at https://arya-pilot.duckdns.org — "Try it now" opens a
   fictional household with no account. Judges can play the whole
   loop: list in by typing, photo or voice; a quest from a list; the
   receipt finish; and Ask Arya. Each

@@ -26,7 +26,7 @@ The video follows Path A beats; the narration is Path B safe.
 
 ## Judge path (no narration)
 
-Open the site. Tap "Try the demo." The household is fictional. Today
+Open the site. Tap "Try it now." The household is fictional. Today
 shows items due and the list. Spending shows the netted
 return and the gift card under "Bought for others." The judge can add
 items (type, photo, voice), start a quest from a list, finish on a

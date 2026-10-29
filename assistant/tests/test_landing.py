@@ -1,7 +1,9 @@
-"""Landing page (owner, 2026-10-28): first screen is punchy. Sign in is
-in the header, Try the demo is the one big button, the long copy and the
-Meta credit sit behind "How it works". Pins web/src/screens/Login.tsx;
-web/e2e/login.e2e.mjs taps it."""
+"""Landing (owner, 2026-10-29, B1 flip cards): a plain Sign in link in
+the header, "Your grocery run, smarter.", a 2x2 grid of flip cards that
+wobble until tapped, and Try it now plus Start my own list pinned at the
+bottom. The peek rows, the How it works sheet and the Quest line are
+gone. Pins web/src/screens/Login.tsx; web/src/screens/login.test.tsx
+checks the flip and the register rule; web/e2e/login.e2e.mjs taps it."""
 import unittest
 
 from tests import frontend
@@ -10,30 +12,48 @@ from tests import frontend
 class TestLanding(unittest.TestCase):
     def setUp(self):
         self.login = frontend.src("screens/Login.tsx").split('<section id="view-login"')[1].split("</section>")[0]
+        self.front = self.login.split('id="signin-sheet"')[0]
 
-    def test_sign_in_is_in_the_header(self):
+    def test_sign_in_is_a_link_in_the_header(self):
         header = self.login.split('className="landtop"')[1].split("</header>")[0]
         self.assertIn('id="signin-open"', header)
+        self.assertIn('className="linkbtn landsign"', header)
         self.assertIn('id="login-user"', self.login)  # Email or username, #64
         self.assertIn("Email or username", self.login)
 
-    def test_first_screen_is_short(self):
-        front = self.login.split('id="signin-sheet"')[0]
-        self.assertIn('id="demo-btn"', front)
-        self.assertIn(">Try the demo<", front)
-        # List first, Quest second (owner, 2026-10-29).
-        self.assertIn("Groceries, <em>sorted.</em>", front)
-        self.assertNotIn("treasure hunt.</em>", front)
-        self.assertLess(front.index('id="demo-btn"'), front.index('className="questline"'))
-        for long_copy in ("Quest turns the list", "Meta API live", "Meta AI Developer Hackathon"):
-            self.assertNotIn(long_copy, front)
+    def test_headline_cards_and_buttons(self):
+        self.assertIn("Your grocery run, <em>smarter.</em>", self.front)
+        self.assertIn("One app for the list, the store and the trip.", self.front)
+        self.assertIn('className="landcards"', self.front)
+        self.assertIn("aria-pressed=", self.front)
+        self.assertIn(">Try it now<", self.front)
+        self.assertIn(">Start my own list<", self.front)
+        self.assertIn("status.registration_open && (", self.front)
+        self.assertIn("The demo needs no sign-up.", self.front)
+        self.assertLess(self.front.index('className="landcards"'), self.front.index('id="demo-btn"'))
+        self.assertLess(self.front.index('id="demo-btn"'), self.front.index('id="register-open"'))
 
-    def test_details_behind_how_it_works(self):
-        how = self.login.split('id="how-sheet"')[1]
-        for text in ("Quest turns the list", "Meta API live", "Meta AI Developer Hackathon"):
-            self.assertIn(text, how)
-        for word in ("clock", "timer", "countdown"):
+    def test_card_words(self):
+        en = frontend.en()["landing"]["cards"]
+        self.assertEqual([en[k]["title"] for k in ("habits", "news", "quest", "map")],
+                         ["Learns your habits", "Store news", "Quest", "Map your store"])
+        self.assertIn("Arya shoppers", en["news"]["sub"])
+        for card in en.values():
+            for text in card.values():
+                self.assertNotIn("fellow", text.lower())
+        self.assertNotIn("blur", en["map"]["back"].lower())
+
+    def test_old_landing_is_gone(self):
+        for gone in ("peek", "questline", "landmeta", "how-open", "how-sheet", "treasure hunt", "Meta API live"):
+            self.assertNotIn(gone, self.login)
+        for word in ("clock", "countdown"):
             self.assertNotIn(word, self.login.lower())
+
+    def test_landing_drops_the_tab_bar_padding(self):
+        css = frontend.read("styles.css")
+        self.assertIn("body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }", css)
+        self.assertIn("100svh", css)
+        self.assertIn('document.body.classList.add("landing")', frontend.src("screens/Login.tsx"))
 
 
 if __name__ == "__main__":

@@ -47,7 +47,7 @@ her head and forgets milk.
 
 | Step | What Priya does | What Arya shows |
 |---|---|---|
-| 1 | Opens the app, taps **Try the demo** or creates an account. | Landing: "Groceries, sorted." Three real rows (Whole Milk "Running low"). |
+| 1 | Opens the app, taps **Try it now** or creates an account. | Landing: "Your grocery run, smarter." Three real rows (Whole Milk "Running low"). |
 | 2 | Settings, **Receipts**, **Choose Files**. She picks the Costco PDF from Oct 17. More than one file is fine. | One progress line per file, then one summary: filed, already filed, could not read. |
 | 3 | Waits a few seconds. | Muse Spark reads the lines. Code adds them up. The receipt shows a check mark and its total only if the lines match the printed total. |
 | 4 | Files the same PDF again by mistake. | "Already filed." Arya compares a fingerprint (store, date, lines, total) and does not count the trip twice. |

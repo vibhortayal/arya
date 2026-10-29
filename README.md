@@ -15,7 +15,7 @@ your receipt.
 Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift,
 Indie track). Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
-**Live demo:** https://arya-pilot.duckdns.org. Tap "Try the demo". It opens a
+**Live demo:** https://arya-pilot.duckdns.org. Tap "Try it now". It opens a
 fictional household with no account. Your changes live in a sandbox for your
 visit only; nothing reaches disk or another visitor.
 
@@ -97,7 +97,7 @@ cd assistant/web && npm ci && npm run build && cd ..
 MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
 ```
 
-Open http://localhost:8000 and tap "Try the demo". For front-end work,
+Open http://localhost:8000 and tap "Try it now". For front-end work,
 `npm run dev` in `assistant/web` starts Vite. The full Docker setup (API and
 Caddy) is in `assistant/deploy/`; settings are listed in
 [`assistant/deploy/.env.example`](assistant/deploy/.env.example).

@@ -12,6 +12,12 @@ on `main`. A merge is not a deploy: the live site changes only after
   sample boards, sample crew hauls, Deals and Arya shoppers tips, and
   "Coming soon" rungs are hidden; their keys stay (`web/src/lib/flags.ts`).
   `assistant/loops/2026-10-29-labels-audit.md`.
+- **Landing (merged, #199):** the logged-out landing says "Your grocery run,
+  smarter." It has four flip cards that wobble until first tapped, a "Try it
+  now" button, and "Start my own list" (shown only when registration is open).
+- **Trips save on first grab (merged, #200):** a quest saves a trip when the
+  first item is grabbed, not when the quest opens.
+  `assistant/loops/2026-10-29-quest-trip-on-grab.md`.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account
@@ -32,7 +38,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest · Settings (Settings opens Profile). Landing
-headline: "Groceries, sorted." The app is the React app (`assistant/web/`),
+headline: "Your grocery run, smarter." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
@@ -103,6 +109,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   A quest never starts on an empty list (Add items instead), and Leave on
   a real trip offers End quest, which closes it for good.
   `2026-10-29-quest-empty-and-leave.md`.
+  A real trip is saved on its first grab, so one opened and left never
+  shows as Resume. `2026-10-29-quest-trip-on-grab.md`.
   A list for a store shops there: Start shopping on it opens the trip at
   that store, the Quest home says "Start at <store>" with "Shop somewhere
   else", and the store pick leads with it under Your stores.

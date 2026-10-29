@@ -22,7 +22,7 @@ microphone and chat call the Meta API live.
 ## Demo (25%)
 
 ### 1. Front door
-Tap **Try the demo**. You land on **Today** with a bar that says the
+Tap **Try it now**. You land on **Today** with a bar that says the
 household is a demo. Today lists what is running low and why, store
 alerts, and what to use soon.
 
