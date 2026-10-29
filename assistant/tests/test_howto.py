@@ -19,7 +19,7 @@ class TestHowto(unittest.TestCase):
         sheet = h.split('id="howto-sheet"')[1].split("</Sheet>")[0]
         for step in ("<b>Find it</b>", "<b>Grab it</b>", "<b>Snap the receipt</b>"):
             self.assertIn(step, sheet)
-        self.assertIn("No clock, no way to lose", sheet)
+        self.assertIn("That's when your points count.", sheet)
         tools = h.split('className="hunt-tools"')[1].split('<div id="wild-form"')[0]
         self.assertIn('id="btn-howto"', tools)
 

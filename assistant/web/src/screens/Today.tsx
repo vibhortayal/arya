@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -38,6 +38,8 @@ const isoToday = () => {
   const n = new Date();
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
 };
+/* Where a pantry photo was taken (api/routes/eyes.py kinds). */
+const PLACES = ["fridge", "pantry", "freezer", "fruit"];
 const cap = (t: unknown) => String(t || "").replace(/^./, c => c.toUpperCase());
 
 /* app.js storeAlertRows: up to three "not there" reports, then price
@@ -61,8 +63,8 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
     stores.sort((a, b) => a[1].median - b[1].median);
     const [lo, hi] = [stores[0], stores[stores.length - 1]];
     if (hi[1].median - lo[1].median < 0.25) continue; // not worth a detour
-    rows.push({ key: "p" + id, kind: "price", name: t("today.alertPrice", { name: names[id], price: money(lo[1].median, currency), store: lo[0] }),
-      sub: t("today.alertUsuallyPay", { price: money(hi[1].median, currency), store: hi[0] }) });
+    rows.push({ key: "p" + id, kind: "price", name: t("today.alertPrice", { name: names[id], store: lo[0] }),
+      sub: t("today.alertUsuallyPay", { price: money(lo[1].median, currency), usual: money(hi[1].median, currency), store: hi[0] }) });
   }
   return rows;
 }
@@ -212,7 +214,7 @@ export function Today() {
 
   /* ---- Store alerts ---- */
   const alertRows = h && news ? storeAlerts(h, news, currency) : [];
-  const lowCap = capRows(low, lowOpen), alertCap = capRows(alertRows, alertsOpen);
+  const lowCap = capRows(low, lowOpen);
 
   /* ---- Still good? ---- */
   const checks: any[] = h?.checks || [];
@@ -301,9 +303,15 @@ export function Today() {
         )}
       </div>
       <div id="today-alerts">
-        {alertRows.length > 0 && <><h3 className="sect">{t("today.storeAlerts")}</h3><div className="group">{alertCap.shown.map(r => (
-          <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
-            <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={alertCap.more} onOpen={() => setAlertsOpen(true)} /></div></>}
+        {/* Out-of-stock reports and price tips are two kinds of row, so
+          * each gets its own heading (labels audit, 2026-10-29). */}
+        {([["report", "today.storeAlerts"], ["price", "today.cheaperElsewhere"]] as const).map(([kind, head]) => {
+          const rows = alertRows.filter(r => r.kind === kind);
+          const capped = capRows(rows, alertsOpen);
+          return rows.length > 0 && <Fragment key={kind}><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
+            <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
+              <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></Fragment>;
+        })}
       </div>
       <div id="today-expiry">
         {h && !(firstRun && !soon.length) && (
@@ -325,7 +333,7 @@ export function Today() {
               ))}
               {seen.map((s, k) => (
                 <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
-                  <span className="sub">{t("today.seenInTheInStock", { kind: s.kind, date: fmtShort(s.date) })}</span></div></div>
+                  <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
               ))}
             </div>
           </div>
@@ -334,7 +342,7 @@ export function Today() {
       <div id="today-eye">
         {eyeCount > 0 && (
           <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
-            <span className="hr-label">{t("today.needsYourEye")}</span><span className="countbadge">{eyeCount}</span><span className="chev">›</span></button>
+            <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
         )}
       </div>
       <div id="today-patterns">
@@ -377,12 +385,14 @@ export function Today() {
 
 /* ---------------- Did you know? (powers.js todaysTip) ---------------- */
 type Facts = { receipts: number; stores: number; share_prices: boolean };
-type Tip = { id: string; titleKey: string; share?: boolean; on?: (f: Facts) => boolean };
+type Tip = { id: string; titleKey: string; share?: boolean; on?: (f: Facts) => boolean; hidden?: boolean };
 /* The powers that carry a tip or a share prompt, in powers.js order. */
 const TIPS: Tip[] = [
   { id: "community", titleKey: "today.tip.community", share: true },
-  { id: "deals", titleKey: "today.tip.deals", share: true },
-  { id: "shoppers", titleKey: "today.tip.shoppers", share: true },
+  // Deals and Arya Shoppers are not built yet: their tips stay hidden
+  // (keys kept) until they are (labels audit, judgement call 1).
+  { id: "deals", titleKey: "today.tip.deals", share: true, hidden: true },
+  { id: "shoppers", titleKey: "today.tip.shoppers", share: true, hidden: true },
   { id: "compare", titleKey: "today.tip.compare" },
   { id: "trends", titleKey: "today.tip.trends" },
   { id: "similar", titleKey: "today.tip.similar" },
@@ -402,9 +412,10 @@ function todaysTip(): Tip | null {
   const today = new Date().toISOString().slice(0, 10);
   const hid = hiddenTips();
   if (Object.values(hid).includes(today)) return null; // one a day, and Not now means not today
-  const start = Math.floor(Date.now() / 864e5) % TIPS.length;
-  for (let k = 0; k < TIPS.length; k++) {
-    const p = TIPS[(start + k) % TIPS.length];
+  const tips = TIPS.filter(p => !p.hidden);
+  const start = Math.floor(Date.now() / 864e5) % tips.length;
+  for (let k = 0; k < tips.length; k++) {
+    const p = tips[(start + k) % tips.length];
     if (!hid[p.id]) return p;
   }
   return null;
@@ -493,7 +504,7 @@ function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) =>
   const capped = capRows(soon, soonOpen);
   return (
     <>
-      <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}>{t("today.snapADate")}</button></div>
+      <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}><span aria-hidden="true">+ </span>{t("today.snapADate")}</button></div>
       <div className="group usesoon">
         {capped.shown.map(s => (
           <div className="row" key={s.item_id} tabIndex={0} role="button" data-ex-item={s.item_id}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNav } from "../app/nav";
-import { clearOnSignOut, useSession } from "../app/session";
+import { clearOnSignOut } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { SceneView, type SceneDriver } from "../ui/Scene";
 import { Sheet } from "../ui/Sheet";
@@ -15,7 +15,7 @@ import {
   qPinFound, qPlanUsuals, qProgress, qRetarget, qSetState, qStops, qnorm, type Fresh, type Session,
 } from "./hunt/model";
 import { qCelebHide, qCelebLoad, qOnCollected, qRewardGrab, QFX, setSound } from "./hunt/fx";
-import { M, gyroAvailable, initMotion, stepAnchorTo, stepSync, stopHuntMotion, toggleGyro, toggleSteps } from "./hunt/motion";
+import { M, gyroAvailable, initMotion, stepAnchorTo, stepSync, stepsDebug, stopHuntMotion, toggleGyro, toggleSteps } from "./hunt/motion";
 import { bringBack, nrm, offline, submitForgot } from "./hunt/menu";
 import { StickerCard, cardOpen, stickerUndoIndex } from "./album/StickerCard";
 import { HuntMenu, openItems, type MenuState } from "./hunt/HuntMenu";
@@ -137,7 +137,6 @@ export function Hunt() {
   const { t } = useTranslation();
   const nav = useNav();
   useStoreData();
-  const { demo } = useSession();
   const { toast, hide: hideToast } = useToast();
   useCharacters();
   const sess = nav.params.session as Session | undefined;
@@ -657,7 +656,7 @@ export function Hunt() {
   if (!sess) {
     return (
       <>
-        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>{t("common.back")}</a></p>
+        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
         <Empty>{t("hunt.thatHuntIsGoneThe")}</Empty>
       </>
     );
@@ -682,7 +681,9 @@ export function Hunt() {
   const offlineText = qOfflineText();
   const stillOpen = openItems(sess).length > 0;
   const gyro = gyroAvailable() && !M.gyroGone;
-  const stepsVis = demo;
+  // Step-advance is an experiment: its toggle shows only in a debug
+  // build or with ?debug=1, or while the flag is on so it can go off.
+  const stepsVis = stepsDebug() || M.stepsOn;
 
   let popKicker = "", popBody: React.ReactNode = null, collectLabel = t("hunt.grab"), collectDisabled = false;
   let findHidden = true, notHereDisabled = false;
@@ -806,7 +807,7 @@ export function Hunt() {
           const peek = driverName !== "cloud";
           drv.current = resolveDriver(sess, peek);
           setPeek3D(peek);
-        }}>{driverName === "cloud" ? t("hunt.backToPhotos") : t("hunt.seeIn3d")}</button>
+        }}>{driverName === "cloud" ? <><span aria-hidden="true">‹ </span>{t("hunt.backToPhotos")}</> : <>{t("hunt.seeIn3d")}<span aria-hidden="true"> ›</span></>}</button>
       </div>
       <div id="milestone" className="milestone" role="status" />
       <p id="hunt-mapnote" className="muted small" hidden />
@@ -817,7 +818,7 @@ export function Hunt() {
         <button id="btn-nothere" className="btn toolbtn" type="button" hidden={allIn} disabled={notHereDisabled}
           onClick={() => { const s = Q.current; const i = s ? qCurrentIndex(s) : -1; if (s && i >= 0) setMenu({ kind: "moved", name: s.items[i].name }); }}>{t("common.notHere")}</button>
         <button id="btn-wild" className="btn toolbtn" type="button"
-          onClick={() => { const o = !wildOpen; setWildOpen(o); if (o) setTimeout(() => wildRef.current?.focus(), 0); }}>{t("hunt.wildFind")}</button>
+          onClick={() => { const o = !wildOpen; setWildOpen(o); if (o) setTimeout(() => wildRef.current?.focus(), 0); }}><span aria-hidden="true">+ </span>{t("hunt.wildFind")}</button>
         <button id="btn-teach" className="btn toolbtn" type="button" hidden={!teach}
           onClick={() => { if (teach) nav.show("capture", { prompt: teach, store }); }}>
           <img className="toolimg" src={asset("assets/characters/compass.webp")} alt="" /><span>{t("hunt.teachArya")}</span></button>
@@ -882,7 +883,7 @@ export function Hunt() {
         ) : null}
       </div>
       <div id="hunt-add" className="hm-add group pad">
-        <label className="hm-addlabel" htmlFor="hm-add-input">{t("hunt.forgotSomething")}</label>
+        <label className="hm-addlabel" htmlFor="hm-add-input"><span aria-hidden="true">+ </span>{t("hunt.forgotSomething")}</label>
         <div className="hm-addrow">
           <input type="text" id="hm-add-input" className="hm-addinput" placeholder={t("hunt.2xTortillas")} autoComplete="off" enterKeyHint="done"
             value={addText} onChange={e => setAddText(e.target.value)}

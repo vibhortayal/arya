@@ -1,5 +1,6 @@
 import { createRoot, type Root } from "react-dom/client";
 import { Sheet } from "../../ui/Sheet";
+import { SHOW_RACE } from "../../lib/flags";
 import { useTranslation } from "../../i18n";
 
 /* Port of albumLevelHtml / albumLevelSeen / albumMaybeLevelUp /
@@ -11,7 +12,7 @@ const ALB_LEVEL_KEY = "arya-album-level";
 const mem: { level: number | null } = { level: null };
 
 type Rung = { level: number; title: string; live?: boolean; reached?: boolean };
-type Profile = { level?: number; unlocks?: { ladder?: Rung[]; never_locked?: string[]; open_to_all?: string[] } };
+type Profile = { level?: number; next_level_at?: number; unlocks?: { ladder?: Rung[]; never_locked?: string[]; open_to_all?: string[] } };
 
 function levelSeen(): number | null {
   try {
@@ -31,14 +32,19 @@ function LevelCard({ profile, prev, onClose }: { profile: Profile; prev: number 
   const u = profile.unlocks || {};
   const ladder = u.ladder || [];
   const from = prev == null ? level - 1 : prev;
-  const gained = ladder.filter(r => r.level > from && r.level <= level);
-  const next = ladder.find(r => r.level > level) || null;
+  /* Only unlocks that work today show (labels audit, judgement call 1):
+   * a rung that is not live yet stays hidden (album.comingSoon and
+   * album.live are kept for when they ship), and the next rung becomes
+   * one line, "Next level at N points". */
+  const gained = ladder.filter(r => r.live && r.level > from && r.level <= level);
+  const nextAt = Number(profile.next_level_at) || 0;
   const row = (r: Rung) => (
-    <div className={"ladderrow" + (r.reached === false ? " ahead" : "")} key={r.level}><b>L{r.level}</b><span className="ladderttl">{r.title}</span>
-      {r.live ? <span className="ladderchip live">{t("album.live")}</span> : <span className="ladderchip">{t("album.comingSoon")}</span>}</div>
+    <div className="ladderrow" key={r.level}><b>{t("quest.level", { level: r.level })}</b><span className="ladderttl">{r.title}</span></div>
   );
-  const never = (u.never_locked || []).join(", ");
-  const open = (u.open_to_all || []).join(", ");
+  // "Never locked by level" and "Open to everyone" said the same thing: one line.
+  // The server's list names Shop-Off; it stays out while Race is hidden (lib/flags).
+  const free = [...new Set([...(u.open_to_all || []), ...(u.never_locked || [])])]
+    .filter(x => SHOW_RACE || !/shop-off/i.test(x)).join(", ");
   return (
     <div className="levelcard">
       <p className="levelkick">{t("album.levelUp")}</p>
@@ -47,9 +53,8 @@ function LevelCard({ profile, prev, onClose }: { profile: Profile; prev: number 
       {gained.length
         ? <><h4 className="levelhead">{t("album.newAtThisLevel")}</h4><div className="ladder">{gained.map(row)}</div></>
         : <p className="levelsub">{t("album.keepHuntingYourNextRung")}</p>}
-      {next && <><h4 className="levelhead">{t("album.next")}</h4><div className="ladder">{row({ ...next, reached: false })}</div></>}
-      {open && <p className="levelnever">{t("album.openToEveryone", { open })}</p>}
-      {never && <p className="levelnever">{t("album.neverLockedByLevel", { never })}</p>}
+      {nextAt > 0 && <p className="levelsub" id="alb-next-level">{t("album.nextLevelAt", { points: nextAt })}</p>}
+      {free && <p className="levelnever">{t("album.alwaysFree", { list: free })}</p>}
       <button type="button" className="btn primary wide" data-alb-close data-first onClick={onClose}>{t("album.keepGoing")}</button>
     </div>
   );

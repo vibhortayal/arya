@@ -130,10 +130,15 @@ class TestNewsAndSamples(unittest.TestCase):
     def test_samples_are_labelled(self):
         from tests import frontend
         quest, feed = frontend.src("screens/Quest.tsx"), frontend.src("screens/haul/CrewFeed.tsx")
-        # The sample leaderboard and the sample crew post both say so.
-        self.assertIn('className="samplepill">Sample', quest)
-        self.assertIn('className="samplepill">Sample', feed)
-        self.assertIn("Example only", quest)
+        # Labels audit (owner-approved 2026-10-29, judgement call 1): the
+        # sample leaderboard and the sample crew post are hidden, not
+        # labelled. The board shows only real household quests, and the
+        # feed shows only real friends' posts.
+        self.assertNotIn("@sample-", quest)
+        self.assertNotIn("samplepill", quest)
+        self.assertIn("Finish a quest of 8+ items with its receipt to get on the board.", quest)
+        self.assertIn("H.feed = f;", feed)
+        self.assertIn("if (!feed || !feed.length) return null;", feed)
 
 
 if __name__ == "__main__":

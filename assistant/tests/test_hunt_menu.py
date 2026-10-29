@@ -96,13 +96,13 @@ class TestHuntMenuShell(unittest.TestCase):
         self.assertLess(h.index('id="hunt-left"'), h.index('id="hunt-add"'))
         self.assertLess(h.index('id="hunt-add"'), h.index('id="btn-finish"'))
         self.assertIn('<button id="btn-finish" className={stillOpen ? "btn secondary wide" : "btn primary wide"}', h)
-        self.assertIn("+ Forgot something?", h)
+        self.assertIn('<span aria-hidden="true">+ </span>Forgot something?', h)
 
     def test_row_markup_carries_every_action(self):
         h = hunt()
         row = h[h.index("const listRows = sess.items.map("):h.index("const left = sess.left || [];")]
         for pin in ("data-more={i}", "data-grab={i}", "data-putback={i}", "data-foundit={i}", "data-unfind={i}",
-                    'aria-label="More for {{name}}"', "Found it after all", "Put back", "Boss", "Just added",
+                    'aria-label="More for {{name}}"', "Found it after all", "Put back", "Golden", "Just added",
                     "findline"):
             self.assertIn(pin, row)
         # Design pass (2026-10-29): the check is the grab; its label
@@ -129,8 +129,8 @@ class TestHuntMenuShell(unittest.TestCase):
     def test_copy_has_the_required_lines_and_no_banned_words(self):
         text = menu() + "\n" + hunt()
         for line in ("Leave {{n}} for next time?", "Nothing is lost. Saved items come first on your next trip.",
-                     "Keep hunting", "Check out", "Next trip", "Drop", "Find it for me",
-                     "Tell other shoppers it is gone", "Keep looking", "Type my own",
+                     "Keep going", "Check out", "Next trip", "Drop", "Find it for me",
+                     "Tell other Arya shoppers it is gone", "Keep looking", "Type my own",
                      "Your quantity carries over.", "is saved for next trip.", "Last seen:",
                      "Check the end caps too.", "Left for next time (", "Saved for next trip",
                      "Not needed today", "Bring back", "I'm done shopping", "Done. Add receipt",
@@ -138,7 +138,7 @@ class TestHuntMenuShell(unittest.TestCase):
                      "already on the list, now x", "in your cart"):
             self.assertIn(line, text)
         for line in ("Welcome back. {{done}} of {{total}} in your cart.",
-                     "Reported missing on {{reports}} earlier trips. Find it for +{{boss}}.",
+                     "Others couldn't find it on {{reports}} trips. Find it for +{{boss}}.",
                      "Nothing left to grab. Tap Done when you are ready.",
                      "No signal. Tap it again when you are back online."):
             self.assertIn(line, hunt())

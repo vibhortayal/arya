@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { get, post } from "../lib/api";
 import { Empty } from "../ui/kit";
+import { SHOW_RACE } from "../lib/flags";
 import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-friends and quest.js renderFriends.
@@ -53,7 +54,7 @@ export function Friends() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.friends")}</h2>
       <div className="group pad">
         <label className="field">{t("friends.addByHandle")}<input type="text" id="fr-handle" placeholder={t("friends.handle")} autoComplete="off" value={handle} onChange={e => setHandle(e.target.value)} />
@@ -74,7 +75,7 @@ export function Friends() {
         ) : (
           <div className="row" key={f.handle}><div className="grow"><span className="name">@{f.handle}</span>
             <span className="sub">{f.top_badge ? t("friends.topBadge", { badge: f.top_badge }) : t("friends.noBadges")}{f.last_hunt ? t("friends.lastHunt", { when: f.last_hunt }) : t("friends.noHunts")}</span></div>
-            <button className="chip" data-challenge={f.handle} type="button" onClick={() => nav.show("race", { opponent: f.handle })}>{t("friends.challenge")}</button>
+            {SHOW_RACE && <button className="chip" data-challenge={f.handle} type="button" onClick={() => nav.show("race", { opponent: f.handle })}>{t("friends.challenge")}</button>}
             <button className="chip" data-remove={f.handle} data-confirm="1" type="button" onClick={() => remove(f.handle, true)}>{t("common.remove")}</button></div>
         ))}
       </div>

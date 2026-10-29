@@ -43,7 +43,7 @@ export function Feedback() {
 
   return (
     <>
-      <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("feedback.featureRequestContactUs")}</h2>
       <div className="group pad">
         <p className="muted nomargin">{t("feedback.weReadEveryNoteIt")}</p>

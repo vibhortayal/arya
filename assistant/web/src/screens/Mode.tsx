@@ -71,7 +71,7 @@ export function Mode() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("mode.howAreYouShopping")}</h2>
       <div>
         <button className="modecard" data-mode="quest" type="button" hidden={noQuest} disabled={busy} onClick={() => create("quest")}><span className="name">{t("common.quest")}</span><span className="sub">{t("mode.playTheHuntCharactersPoints")}</span></button>

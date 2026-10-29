@@ -96,7 +96,7 @@ export function Finish() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("finish.backToTheHunt")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("finish.backToTheHunt")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("finish.addYourReceipt")}</h2>
       <p className="muted" id="fin-sub">{sub}</p>
       <p className="muted">{t("finish.aryaReadsItemsAndThe")}</p>

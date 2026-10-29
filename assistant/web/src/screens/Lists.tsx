@@ -78,6 +78,11 @@ function ago(sec: number) {
 
 type Sighting = { name: string; state: string; judge_agree?: boolean };
 type EyesRec = { id: string; kind: string; date: string; sightings: Sighting[] };
+/* A pantry photo's kind (api/routes/eyes.py) and a sighting's state
+ * show as words, never the server's raw value (labels audit). */
+const PHOTO_KINDS = ["fridge", "pantry", "freezer", "fruit"];
+const SIGHTING_STATES = ["pending", "confirmed", "rejected"];
+const sightingLine = (sg: Sighting) => (SIGHTING_STATES.includes(sg.state) ? t(`lists.sighting.${sg.state}`) : "");
 
 /* ---------------- one list row ---------------- */
 
@@ -791,7 +796,7 @@ export function Lists() {
 
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
-          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>{t("lists.backToLists")}</button>
+          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
           <div className="lhead">
             <h2 className="largetitle" id="lp-title">
               {renaming
@@ -850,10 +855,10 @@ export function Lists() {
               {eyes.map(rec => (
                 <div className="eyes-record" key={rec.id}>
                   <img src={`/eyes/photos/${rec.id}`} alt={t("lists.eyesPhoto")} />
-                  <p className="muted">{rec.kind} · {fmtDate(rec.date)}</p>
+                  <p className="muted">{PHOTO_KINDS.includes(rec.kind) ? t(`lists.photoKind.${rec.kind}`) : rec.kind} · {fmtDate(rec.date)}</p>
                   {rec.sightings.map((sg, i) => (
                     <div className="row" key={i}><div className="grow"><span className="name">{sg.name}</span>
-                      <span className="sub">{sg.judge_agree ? "" : t("lists.readsDisagreed")}{sg.state}</span></div>
+                      <span className="sub">{sightingLine(sg)}</span></div>
                       {sg.state === "pending" ? <div>
                         <button className="chip eyes-confirm" type="button" onClick={() => eyeDecide(rec.id, i, "confirmed")}>{t("lists.yesItSThere")}</button>{" "}
                         <button className="chip eyes-reject" type="button" onClick={() => eyeDecide(rec.id, i, "rejected")}>{t("lists.notThere")}</button></div> : null}
@@ -886,7 +891,7 @@ export function Lists() {
                     {c ? <img className="rowface" src={`/assets/characters/${c}`} alt="" /> : null}
                     <div className="grow"><span className="name">{i.name}</span><span className="why"><IconSpark />{suggestWhy(i)}</span></div>
                     <button className="addchip" type="button" data-sugg-add={i.item_id} aria-label={t("lists.addName", { name: i.name })}
-                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}>{t("lists.add")}</button>
+                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}><span aria-hidden="true">+ </span>{t("lists.add")}</button>
                   </div>);
               })}</div>
             </> : null}
@@ -896,7 +901,7 @@ export function Lists() {
             {done.length && !selEff ? (
               <div className="group">
                 <div className="row donerow">
-                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}>{t("lists.checkedOff", { doneCount: done.length })}{" "}{doneOpen ? "▴" : "▾"}</button>
+                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}><span aria-hidden="true">✓ </span>{t("lists.checkedOff", { doneCount: done.length })}{" "}{doneOpen ? "▴" : "▾"}</button>
                   <button className="linkbtn" type="button" data-done-clear onClick={e => { e.stopPropagation(); removeItems(done.map(i => i.item_id)); }}>{t("lists.clear")}</button>
                 </div>
                 {doneOpen ? done.map(i => <ListRow key={i.item_id} {...rowProps(i)} />) : null}

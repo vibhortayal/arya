@@ -9,7 +9,7 @@ export default async function (page, base) {
   const title = await page.textContent("#nl-title");
   if (title !== "Your quest at Trader Joe's") throw new Error("title: " + title);
   // The plan loads and the bag opens.
-  await page.waitForFunction(() => /Add an item to start|Start the quest ·/.test(document.querySelector("#nl-next")?.textContent || ""));
+  await page.waitForFunction(() => /Add an item to start|Start quest ·/.test(document.querySelector("#nl-next")?.textContent || ""));
   for (const id of ["#nl-text", "#nl-mic", "#nl-add", "#nl-plan", "#nl-next"]) {
     if (!(await page.$(id))) throw new Error("missing " + id);
   }
@@ -20,7 +20,7 @@ export default async function (page, base) {
   await page.waitForSelector('#nl-plan [data-plan="zzz oat milk"]');
   if ((await page.getAttribute('#nl-plan [data-plan="zzz oat milk"]', "aria-pressed")) !== "true") throw new Error("new row is not ticked");
   if (!(await page.textContent(`#nl-plan [data-plan="zzz oat milk"] .packx`))?.includes("x2")) throw new Error("quantity chip missing");
-  if (!/Start the quest · \d+ items? →/.test(await page.textContent("#nl-next"))) throw new Error("start label: " + (await page.textContent("#nl-next")));
+  if (!/Start quest · \d+ items?$/.test(await page.textContent("#nl-next"))) throw new Error("start label: " + (await page.textContent("#nl-next")));
   if ((await page.inputValue("#nl-text")) !== "") throw new Error("text box not cleared");
 
   // Edit sheet: more, note, done.

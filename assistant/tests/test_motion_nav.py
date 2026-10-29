@@ -24,7 +24,7 @@ class TestMotionShell(unittest.TestCase):
     def test_hunt_carries_motion_controls_hidden(self):
         hunt = src("screens/Hunt.tsx")
         self.assertIn('id="btn-gyro"', hunt)
-        self.assertIn("Look around with your phone", hunt)
+        self.assertIn("Look around by tilting your phone", hunt)
         self.assertIn('id="btn-steps"', hunt)
         # Both stay hidden until the hunt knows the capability.
         gyro = hunt.split('id="btn-gyro"')[1].split("\n")[0]
@@ -53,8 +53,11 @@ class TestMotionShell(unittest.TestCase):
         m = src("screens/hunt/motion.ts")
         self.assertIn('localStorage.getItem("arya-steps") === "1"', m)
         self.assertIn('localStorage.setItem("arya-steps", "1")', m)
-        # The toggle chip shows only on the demo account.
-        self.assertIn("const stepsVis = demo;", src("screens/Hunt.tsx"))
+        # The toggle chip is a lab tool: it shows only in a debug build or
+        # with ?debug=1 (labels audit, owner-approved 2026-10-29), or while
+        # the flag is on so it can be turned off.
+        self.assertIn("const stepsVis = stepsDebug() || M.stepsOn;", src("screens/Hunt.tsx"))
+        self.assertIn('import.meta.env?.DEV || new URLSearchParams(location.search).has("debug")', m)
         # The devicemotion listener is only ever added under the flag.
         self.assertIn("const want = M.stepsOn && huntOpen", m)
 
@@ -78,7 +81,7 @@ class TestMotionShell(unittest.TestCase):
     def test_gyro_wiring_and_denied_path(self):
         js, m = src("screens/Hunt.tsx"), src("screens/hunt/motion.ts")
         self.assertIn("g.createMotionLook(() => Q.scene", m)
-        self.assertIn('if (!ok) toast("Phone look is not available', js)
+        self.assertIn('if (!ok) toast("Tilt-to-look isn\'t available here', js)
         # Leaving the hunt stops the sensors.
         self.assertIn("stopHuntMotion();", js)
         self.assertIn('window.removeEventListener("devicemotion", onMotion);', m)

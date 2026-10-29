@@ -72,7 +72,7 @@ export function GroupJoin() {
 
   return (
     <>
-      <p><a href="#" id="gj-back" onClick={ev => { ev.preventDefault(); nav.show("profile"); }}>{t("groupJoin.back")}</a></p>
+      <p><a href="#" id="gj-back" onClick={ev => { ev.preventDefault(); nav.show("profile"); }}><span aria-hidden="true">‹ </span>{t("groupJoin.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("groupJoin.joinAGroup")}</h2>
       <div className="group pad">
         <label className="field">{t("groupJoin.inviteCode")}<input type="text" id="gj-code" className="gjcode" maxLength={9} autoComplete="off" autoCapitalize="characters"

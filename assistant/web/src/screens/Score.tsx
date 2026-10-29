@@ -6,6 +6,7 @@ import { AddReceiptSheet } from "../ui/AddReceiptSheet";
 import { Row } from "../ui/kit";
 import { api, get } from "../lib/api";
 import { asset, money } from "../lib/format";
+import { SHOW_RACE } from "../lib/flags";
 import { faceFor, useCharacters } from "../lib/characters";
 import { Q, qModeLabel, QPTS, qBossStatus, qHaulPoints, qLoadStoreReports, qProgress, type Session } from "./hunt/model";
 import { qConfetti, qShowMilestone, qTone } from "./hunt/fx";
@@ -154,13 +155,13 @@ export function Score() {
     <div id="score-body">
       {attached && !plain && <img className="scoreparty" src={asset("assets/scenes/score-party.webp")} alt={t("score.theCastCelebratesAroundThe")} />}
       <div className="scorehero">
-        <p className="hero-k">{attached ? t("score.receiptAttached") : t("common.finishedReceiptMissing")}</p>
+        <p className="hero-k">{attached ? <>{t("score.receiptAttached")}<span aria-hidden="true"> ✓</span></> : t("common.finishedReceiptMissing")}</p>
         <h2 className="largetitle" style={{ fontSize: 28 }}>{t(plain ? "score.titleShoppingDone" : "score.titleHuntFinished", { store: sess.store })}</h2>
         <p className="muted nomargin">{t(plain ? "score.progressGot" : "score.progressCollected", { mode: qModeLabel(sess.mode), done: p.done, total: p.total })}</p>
       </div>
       {!plain && (
         <div className="haul">
-          <p className="haul-k">{attached ? t("score.haulBanked") : t("score.yourHaul")}</p>
+          <p className="haul-k">{attached ? <>{t("score.haulBanked")}<span aria-hidden="true"> ✓</span></> : t("score.yourHaul")}</p>
           <p className="haul-pts"><CountUp to={pts} />{" "}{t("common.pts")}</p>
           <p className="muted nomargin">{parts.join(" · ")}</p>
           {attached && profile && profile.level ? (
@@ -181,15 +182,16 @@ export function Score() {
           right={m(receipt.total)} />}
         {receipt && !receipt.totals_reconcile && <p className="muted">{t("score.theTotalDidNotReconcile")}</p>}
       </div>
-      {attached && !plain && (
+      {/* Hidden with Race until cross-account races work (labels audit). */}
+      {SHOW_RACE && attached && !plain && (
         <p><button id="score-challenge" className="btn secondary wide" type="button"
-          onClick={() => nav.show("race", { store: sess.store })}>{t("score.challengeAFriendToBeat")}</button></p>
+          onClick={() => nav.show("race", { store: sess.store })}>{t("score.challengeAFriendToBeat")}<span aria-hidden="true"> ›</span></button></p>
       )}
       <p className="closenote">{t(plain ? "score.tripClosed" : "score.huntClosed")}</p>
       {!attached && (
         <>
           <p className="muted">{t("score.noReceiptYetAddThis")}</p>
-          <p><button id="score-addreceipt" className="btn wide" type="button" onClick={() => setAr(true)}>{t("score.addTheReceipt")}</button></p>
+          <p><button id="score-addreceipt" className="btn wide" type="button" onClick={() => setAr(true)}>{t("score.addTheReceipt")}<span aria-hidden="true"> ›</span></button></p>
         </>
       )}
       <HaulPhoto sess={sess} plain={plain} attached={attached} onShare={openShare} />

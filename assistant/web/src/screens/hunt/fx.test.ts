@@ -87,7 +87,7 @@ describe("rewards", () => {
     const s = mk(8);
     for (let i = 0; i < 8; i++) grab(s, i);
     expect(shown.slice(0, 2)).toEqual(["Halfway there!", "One to go!"]);
-    expect(shown[shown.length - 1]).toBe("All collected! Full haul!");
+    expect(shown[shown.length - 1]).toBe("All in your cart! Full haul!");
     expect(bursts).toBe(1);
     expect(qHaulPoints(s, false)).toBe(105);
     expect(qHaulPoints(s, true)).toBe(155);

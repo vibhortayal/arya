@@ -94,7 +94,7 @@ function Card({ card, onTry }: { card: GuideCard; onTry: (k: TryKind) => void })
           ))}
         </div>
       )}
-      {card.try && <button className="try" id="gd-try" type="button" data-try={card.try.kind} onClick={() => onTry(card.try!.kind)}>{t(card.try.labelKey)}</button>}
+      {card.try && <button className="try" id="gd-try" type="button" data-try={card.try.kind} onClick={() => onTry(card.try!.kind)}>{t(card.try.labelKey)}<span aria-hidden="true"> ▸</span></button>}
     </>
   );
 }

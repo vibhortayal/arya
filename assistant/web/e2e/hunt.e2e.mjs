@@ -31,7 +31,7 @@ export default async function (page, base) {
 
   if ((await rows()) !== 3) throw new Error("expected 3 rows, got " + (await rows()));
   if (!/Trader Joe's · Quest/.test(await text("#hunt-store"))) throw new Error("store chip: " + (await text("#hunt-store")));
-  if ((await text("#btn-collect")) !== "Start the hunt") throw new Error("collect: " + (await text("#btn-collect")));
+  if ((await text("#btn-collect")) !== "Start the quest") throw new Error("collect: " + (await text("#btn-collect")));
   if (!(await page.$eval("#btn-finish", b => b.disabled))) throw new Error("Done should wait for the start");
 
   // Start, then grab the suggested stop.
@@ -39,7 +39,7 @@ export default async function (page, base) {
   await waitText("#btn-collect", /^Grab/);
   await page.click("#btn-collect");
   await waitText("#hunt-count", /^1 of 3$/);
-  await waitText("#hunt-pts", /^10 pts$/);
+  await waitText("#hunt-pts", /^10 points$/);
   await page.waitForSelector("#hunt-list .huntrow.got");
 
   // The New sticker card (#stk-card) shows when /check returns a first-time

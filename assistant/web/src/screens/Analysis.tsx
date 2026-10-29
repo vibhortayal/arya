@@ -109,7 +109,7 @@ export function Analysis() {
 
   return (
     <>
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.analysis")}</h2>
       <div id="an-prices">{cards.length > 0 && <><h3 className="sect">{t("analysis.yourPrices")}</h3>{cards}</>}</div>
       <p id="an-none" className="muted" hidden={show}>{t("analysis.fileAReceiptAndYour")}</p>

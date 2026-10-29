@@ -138,7 +138,7 @@ class TestPhotoWiring(unittest.TestCase):
         # view; the caption names them real photos and a 3D scan.
         hunt = src("screens/Hunt.tsx")
         cap = hunt.split("const QSCENE_CAPTION: Record<string, string> = {")[1].split("};")[0]
-        self.assertIn("Real photos from a walk through this store", cap)
+        self.assertIn("Real photos from this store", cap)
         self.assertNotIn("live", cap.split("cloud:")[0].lower())
         scene = read("scene.js")
         flat = " ".join(scene.split()).replace("* ", "")

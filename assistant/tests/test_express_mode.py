@@ -42,8 +42,8 @@ class TestExpressScreen(unittest.TestCase):
 
     def test_chooser_says_what_express_keeps(self):
         mode = frontend.src("screens/Mode.tsx")
-        self.assertIn("Same help from Arya, no game", mode)
-        self.assertIn("No characters, points or badges", mode)
+        self.assertIn("Your list in aisle order, with the same camera help.", mode)
+        self.assertIn("No points.", mode)
 
     def test_client_wiring(self):
         # Show me toggles the photo; Not here? opens the moved sheet
@@ -66,9 +66,10 @@ class TestExpressFinish(unittest.TestCase):
         score = frontend.src("screens/Score.tsx")
         self.assertIn('const plain = sess.mode === "express";', score)
         self.assertIn("if (plain) profile = null;", score)
-        self.assertIn("{attached && !plain && (", score)            # no friend challenge
-        self.assertIn('id="score-challenge"', score.split("{attached && !plain && (")[-1])
-        self.assertIn('t(plain ? "{{store}} — shopping done" : "{{store}} — hunt finished"', score)
+        # no friend challenge (and none at all while Race is hidden)
+        self.assertIn("{SHOW_RACE && attached && !plain && (", score)
+        self.assertIn('id="score-challenge"', score.split("{SHOW_RACE && attached && !plain && (")[-1])
+        self.assertIn('t(plain ? "{{store}} — shopping done" : "{{store}} — quest finished"', score)
         # Receipt, haul card and haul share stay.
         self.assertIn("<ScoreRow sess={sess} attached={attached} />", score)
         self.assertIn("<HaulPhoto sess={sess} plain={plain}", score)

@@ -38,8 +38,8 @@ class TestRewardsShell(unittest.TestCase):
 
     def test_haul_banks_with_the_receipt(self):
         score = src("screens/Score.tsx")
-        self.assertIn('{attached ? "Haul banked ✓" : "Your haul"}', score)
-        self.assertIn("that's when the haul banks", score)
+        self.assertIn('{attached ? <>Points added<span aria-hidden="true"> ✓</span></> : "Your haul"}', score)
+        self.assertIn("That's when your points count.", score)
 
     def test_reduced_motion_and_theme(self):
         css = read("styles.css")
@@ -53,7 +53,7 @@ class TestRewardsShell(unittest.TestCase):
         quest = src("screens/Quest.tsx")
         self.assertIn('get("/api/quest/profile").then(p => {', quest)
         self.assertIn('<span id="today-level" className="bandchip"', quest)
-        self.assertIn("Level · {{points}} pts", src("screens/QuestProgress.tsx"))
+        self.assertIn("Level · {{points}} points", src("screens/QuestProgress.tsx"))
 
 
 class TestRewardsUnderVitest(unittest.TestCase):
@@ -80,7 +80,7 @@ class TestFindItForMe(unittest.TestCase):
         h = hunt()
         pop = h.split('id="hunt-pop"')[1].split('id="hunt-done-note"')[0]
         self.assertIn('id="hunt-fresh"', pop)
-        self.assertIn("We never keep pictures of people, only products", src("screens/hunt/Scan.tsx"))
+        self.assertIn("People are blurred out; Arya keeps only products.", src("screens/hunt/Scan.tsx"))
         self.assertIn("/api/quest/shelf-photo?store=", h)
         self.assertIn("People are blurred out; we only keep products.", h)
 

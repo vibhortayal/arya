@@ -17,6 +17,9 @@ type Detail = {
   totals_reconcile?: boolean; photo?: boolean; media_type?: string;
 };
 
+/* Where a receipt came from (receipt.source_type), as words. */
+const SOURCES = ["photo", "grocery", "order", "muse", "sample"];
+
 export function Receipt() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -51,11 +54,11 @@ export function Receipt() {
 
   return (
     <>
-      <p><a href="#" id="rcd-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("receipts"); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="rcd-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("receipts"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <div id="rc-body">
         {r && <>
           <h2 className="largetitle" style={{ fontSize: 28 }}>{r.merchant}</h2>
-          <p className="subtitle">{t("receipt.filedFrom", { when: String(r.purchased_at).replace("T", " "), source: r.source_type || t("receipt.aReceipt") })}</p>
+          <p className="subtitle">{t("receipt.filedFrom", { when: String(r.purchased_at).replace("T", " "), source: SOURCES.includes(String(r.source_type)) ? t(`receipt.source.${r.source_type}`) : t("receipt.aReceipt") })}</p>
           <div className="group">
             {r.lines.length ? r.lines.map((ln, i) => {
               if (ln.line_type === "return") return <Row key={i} name={ln.name} sub={t("receipt.returned")} right={signed(ln.line_total)} />;
@@ -72,7 +75,7 @@ export function Receipt() {
             {r.returns_total ? <Row name={t("receipt.returnsNetted")} right={<span className="return">−{m(r.returns_total)}</span>} /> : null}
           </div>
           <p className="muted">{r.totals_reconcile
-            ? t("receipt.verified", { total: m(r.total) })
+            ? <><span aria-hidden="true">✓ </span>{t("receipt.verified", { total: m(r.total) })}</>
             : t("receipt.notReconciled")}</p>
           {r.photo && <p className="nomargin">{String(r.media_type || "").startsWith("image/")
             ? <>

@@ -4,9 +4,9 @@
 /* Server details are short codes for developers; the person reads
  * a sentence (QA 2026-10-28). */
 const FRIENDLY: Record<string, string> = {
-  "no such session": "That hunt is gone — the demo resets now and then. Go back to Today and start it again.",
-  "no account with that handle": "No one has that handle. Check the spelling and try again.",
-  "this needs a real account": "This needs a real account — the demo keeps nothing.",
+  "no such session": "This quest ended when the demo reset. Start it again from Today.",
+  "no account with that handle": "No one has that username. Check the spelling and try again.",
+  "this needs a real account": "Create an account to do this. The demo keeps nothing.",
 };
 
 export function friendlyError(d: unknown): string {

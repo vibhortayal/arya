@@ -10,7 +10,7 @@ export default async function (page, base) {
   await page.waitForSelector("#rc-archive");
   await page.waitForFunction(() => document.querySelector("#rc-archive .sessrow, #rc-archive .empty"));
   const heads = await page.$$eval("#view-receipts h3.sect", h => h.map(x => x.textContent));
-  if (!heads.includes("Archive")) throw new Error("Archive heading missing: " + heads);
+  if (!heads.includes("All receipts")) throw new Error("All receipts heading missing: " + heads);
   const row = await page.$("#rc-archive [data-receipt]");
   if (row) {
     await row.click();

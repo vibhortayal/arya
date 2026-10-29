@@ -21,7 +21,7 @@ import os
 import tempfile
 import unittest
 
-from tests.frontend import src  # noqa: E402
+from tests.frontend import src, src_raw  # noqa: E402
 ALICE = "alice@test.arya"
 
 
@@ -92,8 +92,9 @@ class TestUploadShell(unittest.TestCase):
     def test_receipts_picker_accepts_bulk(self):
         js = src("screens/Receipts.tsx")
         self.assertIn('id="rc-photo" accept="application/pdf,image/*" multiple', js)
-        self.assertIn("Bulk upload done", js)
-        self.assertIn("Already filed", js)
+        self.assertIn("Added {{count}} receipts.", js)
+        self.assertIn('t("receipts.bulkDup", { n: dup })', src_raw("screens/Receipts.tsx"))
+        self.assertIn("You already added this", js)
 
 
 if __name__ == "__main__":

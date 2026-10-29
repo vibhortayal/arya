@@ -52,7 +52,7 @@ describe("HaulCore", () => {
     expect(rows[2].checked).toBe(false);
     expect(H.queuePick(["a", "b"], [], []).every(r => r.checked)).toBe(true);
     const rq = H.queuePick(["Kiwi", "Pears", "Whole Milk"], ["milk"], ["kiwi!"]);
-    expect(rq[0]).toMatchObject({ checked: false, note: "Already in your next hunt" });
+    expect(rq[0]).toMatchObject({ checked: false, note: "Already in your next quest" });
     expect(rq[1]).toMatchObject({ checked: true, note: "" });
     expect(rq[2]).toMatchObject({ checked: false, note: "Already on your list" });
   });
@@ -63,9 +63,9 @@ describe("HaulCore", () => {
     expect(H.queuedCount(q, "z")).toBe(0);
     expect(H.queuedCount(null, "a")).toBe(0);
     expect(H.sameToast(0, 3)).toMatch(/Nothing new/);
-    expect(H.sameToast(3, 3)).toBe("3 items added to your next hunt.");
-    expect(H.sameToast(1, 1)).toBe("1 item added to your next hunt.");
-    expect(H.sameToast(2, 3).startsWith("2 items added to your next hunt.")).toBe(true);
+    expect(H.sameToast(3, 3)).toBe("3 items added to your next quest.");
+    expect(H.sameToast(1, 1)).toBe("1 item added to your next quest.");
+    expect(H.sameToast(2, 3).startsWith("2 items added to your next quest.")).toBe(true);
     expect(H.sameToast(2, 3)).toMatch(/rest were there already/);
   });
 
@@ -169,7 +169,7 @@ describe("Finish: the e-receipt door", () => {
     stubFetch({ attachFails: true });
     mount();
     choose(pdf);
-    const t = await screen.findByText(/^Arya read the file, but could not attach it: /);
+    const t = await screen.findByText(/^Arya read the file, but could not add it to this trip: /);
     expect(t.textContent).not.toMatch(/Could not read/);
   });
 
@@ -193,7 +193,7 @@ describe("Finish: the line under the title (test_hunt_menu.py QUEST_DRIVER)", ()
     expect(show({ id: "s1", store: "TJ", mode: "quest", state: "playing", items, left: [{ name: "X", how: "saved" }, { name: "Y", how: "saved" }] }))
       .toMatch(/^1 in your cart, 2 left for next time at TJ\./);
     cleanup();
-    expect(show({ id: "s1", store: "TJ", mode: "quest", state: "playing", items, left: [] })).toMatch(/^1 of 3 collected at TJ\./);
+    expect(show({ id: "s1", store: "TJ", mode: "quest", state: "playing", items, left: [] })).toMatch(/^1 of 3 in your cart at TJ\./);
   });
 });
 

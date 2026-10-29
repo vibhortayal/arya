@@ -145,16 +145,16 @@ class TestCopyAndWords(unittest.TestCase):
     def test_review_and_reveal_copy(self):
         js = haul().lower()
         for needle in ("Check your receipt", "Fix anything that looks off.",
-                       "+ Add another receipt", "Looks right", "Add to album",
+                       "Add another receipt", "Looks right", "Add to album",
                        "Leave out", "Paid another way? Keep it.",
                        "Remove from haul", "tap anywhere", "It never expires",
-                       "Boss item: next time", "Make my haul card",
+                       "Golden item: next time", "Make my haul card",
                        "Add receipt now", "Trip summary", "Named by Arya",
-                       "Save as image", "Post to Crew", "Delete post",
-                       "You have no Crew yet.", "Add a friend",
+                       "Save as image", "Share with friends", "Delete post",
+                       "No friends added yet.", "Add a friend",
                        "No prices, no store photos, no people.",
-                       "Posted to your Crew", "Same haul", "Example only",
-                       "In next hunt · Undo", "Estimate vs actual (only you)",
+                       "Shared with your friends", "Same haul", "Example only",
+                       "In next quest · Undo", "Estimate vs receipt (only you see this)",
                        "Replay the reveal", "See my album",
                        "Receipt bonus waiting."):
             self.assertIn(needle.lower(), js, needle)

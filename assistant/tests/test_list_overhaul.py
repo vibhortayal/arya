@@ -105,7 +105,7 @@ class TestListsClient(unittest.TestCase):
         self.assertIn("due now", model)
         self.assertIn("Suggested for", ls)
         self.assertIn("function WhySheet(", sheets)
-        self.assertIn("Never suggest this", sheets)
+        self.assertIn("Stop suggesting this", sheets)
         self.assertIn("Last 8 weeks", sheets)
 
     def test_swipe_shows_move_and_remove_instead_of_removing(self):
@@ -119,7 +119,7 @@ class TestListsClient(unittest.TestCase):
         js, sheets = src("screens/Lists.tsx"), src("screens/lists/ListSheets.tsx")
         self.assertIn("function MoveSheet(", sheets)
         self.assertIn("here now", sheets)
-        self.assertIn("+ New list…", sheets)
+        self.assertIn('<span aria-hidden="true">+ </span>New list…', sheets)
         self.assertIn('post("/api/list/move"', js)
         self.assertIn('action: "Undo"', js)
 

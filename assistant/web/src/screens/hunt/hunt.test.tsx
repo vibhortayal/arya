@@ -312,7 +312,7 @@ describe("the hunt menu and the row", () => {
     expect($("#btn-finish")!.className).toContain("secondary");
     fireEvent.click($("#btn-finish")!);
     await waitFor(() => expect(sheetText()).toContain("Leave 2 for next time?"));
-    for (const t of ["Nothing is lost. Saved items come first on your next trip.", "Keep hunting", "Check out", "Next trip", "Drop"])
+    for (const t of ["Nothing is lost. Saved items come first on your next trip.", "Keep going", "Check out", "Next trip", "Drop"])
       expect(sheetText()).toContain(t);
     expect(sheetText().toLowerCase()).not.toContain("incomplete");
     const rows = [...document.querySelectorAll("#hunt-sheet .hm-leaverow .name")].map(e => e.textContent);
@@ -364,13 +364,13 @@ describe("the hunt menu and the row", () => {
     posts.length = 0;
     fireEvent.click($("#btn-nothere")!);
     await waitFor(() => expect(sheetText()).toContain("Can't find B?"));
-    for (const t of ["Last seen: Aisle 4. Check the end caps too.", "Find it for me", "Tell other shoppers it is gone", "Keep looking"])
+    for (const t of ["Last seen: Aisle 4. Check the end caps too.", "Find it for me", "Tell other Arya shoppers it is gone", "Keep looking"])
       expect(sheetText()).toContain(t);
     expect(posts).toEqual([]);
     fireEvent.click($('#hunt-sheet [data-act="tell"]')!);
     await waitFor(() => expect($("#spot-sheet")).not.toBeNull());
     expect($("#hunt-sheet")).toBeNull();
-    expect($("#spot-item")!.textContent).toBe("At the stop for B — what do you see?");
+    expect($("#spot-item")!.textContent).toBe("At the shelf for B: what do you see?");
     expect(posts).toEqual([]);
   });
 
@@ -394,7 +394,7 @@ describe("the hunt menu and the row", () => {
     await waitFor(() => expect($('#hunt-sheet [data-act="save"]')).not.toBeNull());
     expect($('#hunt-sheet [data-act="drop"]')).not.toBeNull();
     for (const a of ["find", "swap", "edit"]) expect($(`#hunt-sheet [data-act="${a}"]`)).toBeNull();
-    expect(sheetText()).toContain("You told other shoppers it is gone.");
+    expect(sheetText()).toContain("You told other Arya shoppers it is gone.");
     expect(sheetText()).toContain("Your report stays.");
     posts.length = 0;
     fireEvent.click($('#hunt-sheet [data-act="save"]')!);
@@ -482,7 +482,7 @@ describe("the hunt menu and the row", () => {
     } finally { Date.now = realNow; }
     await waitFor(() => expect(Q.grabbing.size).toBe(0));
     await waitFor(() => expect($("#hunt-combo")!.hidden).toBe(false));
-    expect($("#hunt-combo")!.textContent).toBe("Combo x2");
+    expect($("#hunt-combo")!.textContent).toBe("2 in a row");
     fireEvent.click($('[data-putback="1"]')!);
     await waitFor(() => expect(checks().slice(-1)).toEqual([["B", false]]));
     expect(Q.combo).toBe(2);
@@ -541,7 +541,7 @@ describe("the hunt menu and the row", () => {
     expect(pair.querySelector(".hqty")!.textContent).toBe("x2");
     expect(pair.querySelector('[data-grab="2"]')!.getAttribute("aria-label")).toBe("Grab x2 Pair");
     expect(pair.textContent).toContain("ripe");
-    expect(row("Boss").querySelector(".hunt-badge.boss")!.textContent).toBe("Boss");
+    expect(row("Boss").querySelector(".hunt-badge.boss")!.textContent).toBe("Golden");
     expect(row("New").textContent).toContain("Just added");
     expect(/[←-⇿☀-➿\u{1F000}-\u{1FAFF}]/u.test($("#hunt-list")!.textContent!)).toBe(false);
     fireEvent.click($('[data-unfind="0"]')!);
@@ -563,7 +563,7 @@ describe("the hunt menu and the row", () => {
     s.left = [{ name: "Z", qty: 1, how: "saved" }];
     mount(s);
     await ready();
-    expect($("#pop-body")!.textContent).toContain("Boss item: B. Reported missing on 2 earlier trips. Find it for +40.");
+    expect($("#pop-body")!.textContent).toContain("Golden item: B. Others couldn't find it on 2 trips. Find it for +40.");
     expect($("#hunt-count")!.textContent).toBe("1 of 4"); // the item left is handled
   });
 

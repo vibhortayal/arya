@@ -10,7 +10,7 @@ describe("store alerts", () => {
     const h = { list: { items: [{ item_id: "e", name: "Eggs", checked: false, on_list: true }] }, price_by_store: {} };
     const rows = storeAlerts(h, [{ store: "Costco", item: "eggs", count: 2, reported_at: "2026-10-28T10:00" }]);
     expect(rows).toHaveLength(1);
-    expect(rows[0].name).toContain("Costco: eggs not there");
+    expect(rows[0].name).toContain("eggs: out at Costco");
     expect(rows[0].sub).toContain("2 reports");
     expect(rows[0].sub).toContain("on your list");
     // not on the list: no mark
@@ -26,8 +26,8 @@ describe("store alerts", () => {
       b: { Costco: { median: 3.0 } } } };
     const rows = storeAlerts(h, []);
     expect(rows).toHaveLength(1);
-    expect(rows[0].name).toContain("Milk: $4.29 at Costco");
-    expect(rows[0].sub).toContain("$4.79 at Trader Joe's");
+    expect(rows[0].name).toContain("Milk is cheaper at Costco");
+    expect(rows[0].sub).toContain("$4.29 there, $4.79 at Trader Joe's");
     h.price_by_store.m["Trader Joe's"].median = 4.39; // 10 cents: not news
     expect(storeAlerts(h, [])).toEqual([]);
   });

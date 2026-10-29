@@ -138,7 +138,7 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
         <input type="text" id="ls-find" maxLength={80} placeholder={t("lists.findAStoreNameOr")} autoComplete="off" aria-label={t("lists.findAStore")}
           value={find} onChange={e => onFind(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} />
-        <button className="chip" type="button" data-ls="near" onClick={nearMe}>{t("lists.nearMe")}</button>
+        <button className="chip" type="button" data-ls="near" onClick={nearMe}><span className="pinic" aria-hidden="true" />{t("lists.nearMe")}</button>
       </div>
       <div id="ls-goog" className="gdrop" hidden={!goog}>
         {goog && ((goog.d.suggestions || []).length
@@ -247,7 +247,7 @@ function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: stri
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.moveTitle", { what: one ? one : t("common.itemCount", { count: ids.length }) })}</h3>
       {lists.map(l => dest(l.id, l.name))}{dest("else", t("common.everythingElse"))}
-      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow">{t("lists.newListMenu")}</span></button>
+      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow"><span aria-hidden="true">+ </span>{t("lists.newListMenu")}</span></button>
     </>
   );
 }

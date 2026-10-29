@@ -13,7 +13,7 @@ export default async function (page, base) {
   await page.fill("#fb-text", "hello");
   if ((await page.textContent("#fb-count")).trim() !== "5 / 1000") throw new Error("counter");
   if (!(await page.isDisabled("#fb-send"))) throw new Error("send should be disabled in the demo");
-  if (!(await page.textContent("#fb-status")).includes("Sign in with a real account")) throw new Error("demo status");
+  if (!(await page.textContent("#fb-status")).includes("Create an account to send feedback")) throw new Error("demo status");
   await page.click("#fb-back");
   await page.waitForFunction(() => !document.querySelector("#view-feedback"));
 }
