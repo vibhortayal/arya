@@ -12,7 +12,7 @@ is computed, never taken from the model.
 import hashlib, json, os
 from datetime import datetime
 
-from api.meta_client import MODELS
+from api.meta_client import MODELS, parse_json
 
 
 def _iso_day(v):
@@ -143,10 +143,7 @@ def decode_text(text, client):
     out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
                                      schema=RECEIPT_SCHEMA,
                                      cache_key="arya-decode-text-v2")
-    try:
-        dec = json.loads(out)
-    except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    dec = parse_json(out)
     lines, reconcile = _finish(dec.get("lines", []), dec.get("subtotal"))
     rid = "dec-" + hashlib.sha1(text.encode()).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "grocery",
@@ -197,10 +194,7 @@ def photo_reader():
 
 def _photo_read(messages, client, **kw):
     out, _usage, _cost = client.chat(messages, personal=True, **kw)
-    try:
-        return json.loads(out)
-    except Exception:
-        return json.loads(out[out.find("{"): out.rfind("}") + 1])
+    return parse_json(out)
 
 
 def decode_photo(image_bytes, client, media_type="image/jpeg"):
@@ -270,10 +264,7 @@ def decode_order_text(text, client):
     out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
                                      schema=RECEIPT_SCHEMA,
                                      cache_key="arya-order-text-v1")
-    try:
-        dec = json.loads(out)
-    except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    dec = parse_json(out)
     lines, reconcile = _finish(dec.get("lines", []), dec.get("subtotal"))
     rid = "ord-" + hashlib.sha1(text.encode()).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "order",

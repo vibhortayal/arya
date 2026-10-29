@@ -16,6 +16,7 @@ Receipts view, or chat), never through here. Two paths:
   totals, so there is no arithmetic here.
 """
 import base64, json, os, re
+from api.meta_client import parse_json
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..",
                            "prompts", "list_photo_v1.md")
@@ -47,10 +48,7 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
                      "image_url": {"url": data_uri}}]}]
     out, _usage, _cost = client.chat(messages, mode="standard",
                                      personal=True)
-    try:
-        dec = json.loads(out)
-    except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    dec = parse_json(out)
     kind = dec.get("kind")
     if kind not in ("list", "receipt"):
         kind = "list"

@@ -11,6 +11,7 @@ import hashlib, json, os, re
 from collections import Counter, defaultdict
 
 from api import state
+from api.meta_client import parse_json
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts",
                            "curator_v1.md")
@@ -132,10 +133,7 @@ def run_curator(client):
                  "Judge these product clusters:\n\n" + "\n\n".join(blocks)}]
     out, _usage, _cost = client.chat(messages, mode="standard", personal=True,
                                      schema=SCHEMA, cache_key="arya-curator-v1")
-    try:
-        verdict = json.loads(out)
-    except Exception:
-        verdict = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    verdict = parse_json(out)
     cluster_of = {}
     for c in cls:
         for iid in c:
