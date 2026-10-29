@@ -115,6 +115,18 @@ class TestQuestSessions(unittest.TestCase):
         assert sess["mode"] == "quest"  # default
         assert len(sess["items"]) == 1 and sess["items"][0]["qty"] == 2
 
+    def test_draft_is_not_saved(self):
+        # Quest game (2026-10-29): a draft gives the trip its shelf
+        # hints; nothing lands on Your trips until the first grab
+        # creates the real session.
+        c = self.c
+        r = c.post("/api/quest/sessions", json={
+            "store": "Trader Joe's", "items": ["milk"], "draft": True})
+        assert r.status_code == 200, r.text
+        assert r.json()["draft"] is True and len(r.json()["items"]) == 1
+        assert c.get("/api/quest/sessions").json()["sessions"] == []
+        assert c.get(f"/api/quest/sessions/{r.json()['id']}").status_code == 404
+
     def test_done_is_receipt_closed_only(self):
         # Live test 2026-10-28: a client could post state "done" and
         # bank a verified hunt (hunts, streak, Shop-Off win) with no

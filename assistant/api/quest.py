@@ -182,7 +182,7 @@ def make_items(raw_items):
 
 def create_session(store_name, mode="quest", raw_items=None, extra=None,
                    driver="strip", store_id=None, store_address=None,
-                   client=None):
+                   client=None, persist=True):
     if mode not in MODES:
         raise ValueError("mode must be quest or express")
     if driver not in DRIVERS:
@@ -214,6 +214,12 @@ def create_session(store_name, mode="quest", raw_items=None, extra=None,
         sess["store_address"] = store_address
     if extra:
         sess.update(extra)
+    if not persist:
+        # A draft (Quest game, 2026-10-29): the shelf hints for a trip
+        # not yet begun. Nothing is saved until the first grab, so a
+        # trip opened and left never sits on Your trips.
+        sess["draft"] = True
+        return sess
     with state.file_lock("quest.json"):
         s = _store()
         s["sessions"].append(sess)
