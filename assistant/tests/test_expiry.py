@@ -99,8 +99,9 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        main.MetaClient = FakeVision
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeVision
+        deps._login_fails.clear()
         self.state = state
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
@@ -186,6 +187,7 @@ class TestDemo(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
+        from api import deps
         self.c = TestClient(main.app)
         self.c.post("/auth/demo")
 

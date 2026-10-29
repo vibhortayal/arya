@@ -79,7 +79,7 @@ class TestHealthAndBuckets(unittest.TestCase):
 
     def test_rate_buckets_drop_idle_ips(self):
         import time
-        from api import main
+        from api import deps as main
         old = main.RATE_BUCKET_MAX
         main.RATE_BUCKET_MAX = 2
         try:

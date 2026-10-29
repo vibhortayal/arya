@@ -18,12 +18,13 @@ def read(name):
 
 class TestPush(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         for k in ("ARYA_PUSH_REMINDERS", "ARYA_VAPID_PUBLIC_KEY", "ARYA_VAPID_PRIVATE_KEY"):
             os.environ.pop(k, None)
         from fastapi.testclient import TestClient
         import api.main as main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "alice@example.com", "password": "pw-alice"})
         assert r.status_code == 200, r.text

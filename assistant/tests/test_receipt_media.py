@@ -59,8 +59,9 @@ class TestReceiptMedia(unittest.TestCase):
         self.base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = self.base
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main = main
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner",
@@ -151,6 +152,7 @@ class TestDemoFilesNothing(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
+        from api import deps
         c = TestClient(main.app)
         c.post("/auth/demo")
         archive = c.get("/api/quest/receipts").json()["receipts"]

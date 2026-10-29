@@ -39,8 +39,9 @@ class TestAskSurfaces(unittest.TestCase):
         os.environ["ARYA_DATA_DIR"] = base
         seed_owner(base)
         from api import main
-        main.MetaClient = StubChat
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = StubChat
+        deps._login_fails.clear()
         StubChat.actions = []
         self.c = TestClient(main.app)
         assert self.c.post("/auth/setup", json={"username": "owner", "password": "pw"}).status_code == 200

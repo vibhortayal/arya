@@ -1,0 +1,119 @@
+"""Demo-household guard: the in-memory sandbox a demo visitor plays
+in, the per-IP caps on the demo's open doors, and the login
+middleware that ties sessions, tokens and the sandbox to a request."""
+import os
+from collections import OrderedDict
+
+from fastapi.responses import JSONResponse
+
+from api import state, auth
+from api.deps import _client_ip, _prune
+
+# Per-IP sliding-window caps on the demo's unauthenticated surface:
+# session minting and the live doors. Generous for a human judge,
+# a hard stop for a script (review 2026-10-28, H4).
+_demo_auth_hits = {}
+_demo_door_hits = {}
+
+
+def _demo_rate(bucket, key, limit_env, default):
+    import time as _t
+    limit = int(os.environ.get(limit_env, str(default)))
+    now = _t.time()
+    _prune(bucket, 3600)
+    hits = [t for t in bucket.get(key, []) if now - t < 3600]
+    if len(hits) >= limit:
+        return False
+    bucket[key] = hits + [now]
+    return True
+
+# The demo household is a sandbox (review 2026-10-28): a judge can play
+# the whole loop — list, hunt in every mode and view, receipt finish,
+# Ask — and every write lands in an in-memory overlay for that visitor
+# alone (state.set_overlay). Nothing a demo visitor does reaches disk,
+# the shipped household, or another visitor; the overlay is dropped
+# when the session ages out of the LRU below. Routes that write
+# outside the state layer, or only exist to run batch model jobs,
+# stay closed to the demo.
+_DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
+                "/api/curator/run", "/api/judge/run", "/api/review/suggest",
+                "/api/intake/", "/api/quest/avatar/generate",
+                "/api/quest/avatar/photo", "/api/feedback", "/api/push/")
+# Doors that can call the Meta API: the per-IP live-door cap applies.
+_DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
+                    "/api/list/from-photo", "/api/list/from-text",
+                    "/api/expiry/read",
+                    "/api/quest/scan-shelf", "/api/quest/locate",
+                    "/api/quest/share-look",
+                    "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
+                    "/api/storemap")
+# The haul writes (fix, hide, post, second receipt) sit under the
+# sessions prefix but never call a model, so they spend no door budget.
+_DEMO_FREE_DOORS = ("/api/quest/sessions/",)
+
+
+def _demo_live_door(path):
+    if not path.startswith(_DEMO_LIVE_DOORS):
+        return False
+    return not (path.startswith(_DEMO_FREE_DOORS) and "/haul/" in path)
+
+
+DEMO_SANDBOXES_MAX = 500
+_demo_sandboxes = OrderedDict()   # session cookie -> overlay dict
+
+
+def _demo_sandbox(token):
+    box = _demo_sandboxes.get(token)
+    if box is None:
+        box = _demo_sandboxes[token] = {}
+        while len(_demo_sandboxes) > DEMO_SANDBOXES_MAX:
+            _demo_sandboxes.popitem(last=False)
+    else:
+        _demo_sandboxes.move_to_end(token)
+    return box
+
+
+async def require_login(request, call_next):
+    path = request.url.path
+    protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
+    state.set_overlay(None)
+    if protected:
+        info = None
+        authz = request.headers.get("authorization", "")
+        if authz.startswith("Bearer "):
+            user = auth.api_token_user(authz[7:])
+            if user:
+                info = {"user": user, "demo": False}
+        cookie = request.cookies.get(auth.COOKIE)
+        if not info:
+            info = auth.session_info(cookie)
+        if not info:
+            return JSONResponse({"detail": "login required"}, status_code=401)
+        if info["demo"]:
+            if request.method != "GET":
+                if path.startswith(_DEMO_CLOSED):
+                    return JSONResponse(
+                        {"detail": "this needs a real account — the demo household keeps nothing"},
+                        status_code=403)
+                if _demo_live_door(path) and not _demo_rate(
+                        _demo_door_hits, _client_ip(request),
+                        "ARYA_DEMO_DOOR_RATE", 240):
+                    return JSONResponse(
+                        {"detail": "demo rate limit — try again in a bit"},
+                        status_code=429)
+            state.set_overlay(_demo_sandbox(cookie))
+        state.set_current_user(info["user"])
+    return await call_next(request)
+
+
+def _is_demo(req):
+    """Demo sessions ride the cookie; connector tokens are never demo
+    (minting one requires a real account). Sessions live in the root
+    store, so read them with the per-user context cleared — the
+    middleware has already set it by the time a route runs."""
+    tok = state._current_user.set(None)
+    try:
+        info = auth.session_info(req.cookies.get(auth.COOKIE))
+    finally:
+        state._current_user.reset(tok)
+    return bool(info and info["demo"])

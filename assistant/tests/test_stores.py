@@ -19,8 +19,9 @@ class FakeClient:
 
 def make_client(case):
     from api import main
-    main.MetaClient = FakeClient
-    main._login_fails.clear()
+    from api import deps
+    deps.MetaClient = FakeClient
+    deps._login_fails.clear()
     case.c = TestClient(main.app)
     case.main = main
     return case.c
@@ -298,7 +299,7 @@ class TestStoreShell(unittest.TestCase):
         self.assertNotIn("⭐", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('arya-v80', self.read("sw.js"))
+        self.assertIn('arya-v81', self.read("sw.js"))
 
 
 if __name__ == "__main__":

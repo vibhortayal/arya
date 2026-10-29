@@ -30,8 +30,9 @@ class FakeClient:
 def fresh_client():
     os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
     from api import main
-    main.MetaClient = FakeClient
-    main._login_fails.clear()
+    from api import deps
+    deps.MetaClient = FakeClient
+    deps._login_fails.clear()
     c = TestClient(main.app)
     r = c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
@@ -98,7 +99,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v80"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v81"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,

@@ -159,6 +159,7 @@ class TestRouteErrorMapping(unittest.TestCase):
     """A Meta failure inside a route answers 502, never a bare 500."""
 
     def test_photo_decode_timeout_is_502(self):
+        from api import deps
         import os, tempfile
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -180,7 +181,7 @@ class TestRouteErrorMapping(unittest.TestCase):
             def chat(self, messages, **kw):
                 return self._inner.chat(messages, **kw)
 
-        main.MetaClient = WrappingClient
+        deps.MetaClient = WrappingClient
         try:
             c = TestClient(main.app)
             c.post("/auth/setup", json={"username": "t@example.com",
@@ -189,7 +190,7 @@ class TestRouteErrorMapping(unittest.TestCase):
                        headers={"Content-Type": "image/jpeg"})
             self.assertEqual(r.status_code, 502, r.text)
         finally:
-            main.MetaClient = MetaClient
+            deps.MetaClient = MetaClient
 
 
 if __name__ == "__main__":

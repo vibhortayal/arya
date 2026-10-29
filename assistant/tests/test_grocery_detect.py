@@ -138,8 +138,9 @@ class RouteTest(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = JudgeFake
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = JudgeFake
+        deps._login_fails.clear()
         JudgeFake.calls = 0
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y",

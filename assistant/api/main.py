@@ -7,7 +7,6 @@ or judge_pending, which calls the judge — on the event loop.
 Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
 import datetime, hashlib, json, logging, math, os
-from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -15,11 +14,14 @@ from fastapi.staticfiles import StaticFiles
 
 from api import state, auth, supabase_auth
 from api.decode.service import decode_order_text, decode_photo, decode_text, extract_pdf_text, normalize_costco_json
-from api.meta_client import MetaClient
-from api.cost_ledger import CostLedger
+from api.deps import (_budget_guard, _client_ip, _int_field, _json_body, _json_obj,
+                      _login_fails, _prune, _register_hits, _code_hits, _verify_hits,
+                      _registration_open, _set_session_cookie, new_client)
+from api.demo_guard import _demo_auth_hits, _demo_rate, _is_demo, require_login
 from api.cart.build import approve
 
 app = FastAPI(title="Arya API")
+app.middleware("http")(require_login)
 _log = logging.getLogger("arya.api")
 
 
@@ -34,250 +36,7 @@ async def _model_failure(request, exc):
     return JSONResponse({"detail": "Arya could not finish that read. Try again."},
                         status_code=502)
 from api import pack as pack_api; app.include_router(pack_api.router)  # noqa: E402,E702
-# The cost ledger is an operator artifact: it lives in the data root so it
-# survives container redeploys (the app layer is ephemeral; /app/data is not).
-_LEDGER = os.path.join(os.environ.get(
-    "ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data")),
-    "cost-ledger.jsonl")
 
-_login_fails = {}
-_register_hits = {}
-_code_hits = {}
-_verify_hits = {}
-
-
-def _client_ip(req):
-    """The client address for rate limiting. The app sits behind
-    one proxy hop (Caddy), which APPENDS the address it saw to
-    X-Forwarded-For — so the LAST entry is the trustworthy one and
-    the first entries are client-supplied and spoofable. Keying a
-    limiter on the first entry lets an attacker reset their bucket
-    at will (review 2026-10-28, M5). No header: the peer address."""
-    parts = [p.strip() for p in
-             (req.headers.get("x-forwarded-for") or "").split(",")
-             if p.strip()]
-    if parts:
-        return parts[-1]
-    return req.client.host if req.client else "?"
-
-
-def _budget_guard(demo=False):
-    """Stage 6 hardening: a daily ceiling on model spend (default $10),
-    far above real household use, bounding any single bad day. The
-    demo household has its own smaller bucket (default $2): a crowd
-    of judges can exhaust the demo's day, never the real accounts'
-    (review 2026-10-28, H4)."""
-    if demo or state.in_sandbox():
-        box = state._overlay.get()
-        share = float(os.environ.get("ARYA_DEMO_SESSION_BUDGET_USD", "0.40"))
-        if box is not None and box.get(_DEMO_SPENT_KEY, 0.0) >= share:
-            raise HTTPException(503, "You've used this demo visit's live reads. "
-                                "Everything else still works; sign in with a real "
-                                "account for more.")
-        cap = float(os.environ.get("ARYA_DEMO_DAILY_BUDGET_USD", "2"))
-        spent = CostLedger(_LEDGER).spent_today("demo")
-        if spent >= cap:
-            raise HTTPException(503, "The demo's live reads are paused for today. "
-                                "Everything else still works.")
-    else:
-        cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
-        spent = CostLedger(_LEDGER).spent_today("app")
-    if spent >= cap:
-        raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
-
-
-# Spend a demo visit has caused, kept in that visitor's in-memory sandbox
-# (not in the storage layer), so one visitor cannot drain the day's
-# demo bucket (review 2026-10-28, item 1).
-_DEMO_SPENT_KEY = "__demo_spent_usd"
-
-
-class _SessionLedger(CostLedger):
-    def record(self, *a, **k):
-        row = super().record(*a, **k)
-        box = state._overlay.get()
-        if box is not None:
-            box[_DEMO_SPENT_KEY] = box.get(_DEMO_SPENT_KEY, 0.0) + row["cost_usd"]
-        return row
-
-
-def _ledger():
-    """The cost ledger for this request: demo sandbox calls spend from
-    the demo bucket (and count against the visit's own share),
-    everything else from the app bucket."""
-    if state.in_sandbox():
-        return _SessionLedger(_LEDGER, bucket="demo")
-    return CostLedger(_LEDGER, bucket="app")
-
-
-# Per-IP sliding-window caps on the demo's unauthenticated surface:
-# session minting and the live doors. Generous for a human judge,
-# a hard stop for a script (review 2026-10-28, H4).
-_demo_auth_hits = {}
-_demo_door_hits = {}
-
-
-RATE_BUCKET_MAX = 10_000
-
-
-def _prune(bucket, window):
-    """Per-IP hit lists live in memory. Once a bucket holds many IPs,
-    drop the ones with no hit inside the window, so a scan from many
-    addresses cannot grow it without bound (codebase map 2026-10-29)."""
-    if len(bucket) <= RATE_BUCKET_MAX:
-        return
-    import time as _t
-    now = _t.time()
-    for ip in [ip for ip, hits in bucket.items()
-               if not hits or now - hits[-1] >= window]:
-        bucket.pop(ip, None)
-
-
-def _demo_rate(bucket, key, limit_env, default):
-    import time as _t
-    limit = int(os.environ.get(limit_env, str(default)))
-    now = _t.time()
-    _prune(bucket, 3600)
-    hits = [t for t in bucket.get(key, []) if now - t < 3600]
-    if len(hits) >= limit:
-        return False
-    bucket[key] = hits + [now]
-    return True
-
-# The demo household is a sandbox (review 2026-10-28): a judge can play
-# the whole loop — list, hunt in every mode and view, receipt finish,
-# Ask — and every write lands in an in-memory overlay for that visitor
-# alone (state.set_overlay). Nothing a demo visitor does reaches disk,
-# the shipped household, or another visitor; the overlay is dropped
-# when the session ages out of the LRU below. Routes that write
-# outside the state layer, or only exist to run batch model jobs,
-# stay closed to the demo.
-_DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
-                "/api/curator/run", "/api/judge/run", "/api/review/suggest",
-                "/api/intake/", "/api/quest/avatar/generate",
-                "/api/quest/avatar/photo", "/api/feedback", "/api/push/")
-# Doors that can call the Meta API: the per-IP live-door cap applies.
-_DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
-                    "/api/list/from-photo", "/api/list/from-text",
-                    "/api/expiry/read",
-                    "/api/quest/scan-shelf", "/api/quest/locate",
-                    "/api/quest/share-look",
-                    "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
-                    "/api/storemap")
-# The haul writes (fix, hide, post, second receipt) sit under the
-# sessions prefix but never call a model, so they spend no door budget.
-_DEMO_FREE_DOORS = ("/api/quest/sessions/",)
-
-
-def _demo_live_door(path):
-    if not path.startswith(_DEMO_LIVE_DOORS):
-        return False
-    return not (path.startswith(_DEMO_FREE_DOORS) and "/haul/" in path)
-
-
-DEMO_SANDBOXES_MAX = 500
-_demo_sandboxes = OrderedDict()   # session cookie -> overlay dict
-
-
-def _demo_sandbox(token):
-    box = _demo_sandboxes.get(token)
-    if box is None:
-        box = _demo_sandboxes[token] = {}
-        while len(_demo_sandboxes) > DEMO_SANDBOXES_MAX:
-            _demo_sandboxes.popitem(last=False)
-    else:
-        _demo_sandboxes.move_to_end(token)
-    return box
-
-
-@app.middleware("http")
-async def require_login(request, call_next):
-    path = request.url.path
-    protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
-    state.set_overlay(None)
-    if protected:
-        info = None
-        authz = request.headers.get("authorization", "")
-        if authz.startswith("Bearer "):
-            user = auth.api_token_user(authz[7:])
-            if user:
-                info = {"user": user, "demo": False}
-        cookie = request.cookies.get(auth.COOKIE)
-        if not info:
-            info = auth.session_info(cookie)
-        if not info:
-            return JSONResponse({"detail": "login required"}, status_code=401)
-        if info["demo"]:
-            if request.method != "GET":
-                if path.startswith(_DEMO_CLOSED):
-                    return JSONResponse(
-                        {"detail": "this needs a real account — the demo household keeps nothing"},
-                        status_code=403)
-                if _demo_live_door(path) and not _demo_rate(
-                        _demo_door_hits, _client_ip(request),
-                        "ARYA_DEMO_DOOR_RATE", 240):
-                    return JSONResponse(
-                        {"detail": "demo rate limit — try again in a bit"},
-                        status_code=429)
-            state.set_overlay(_demo_sandbox(cookie))
-        state.set_current_user(info["user"])
-    return await call_next(request)
-
-
-def _is_demo(req):
-    """Demo sessions ride the cookie; connector tokens are never demo
-    (minting one requires a real account). Sessions live in the root
-    store, so read them with the per-user context cleared — the
-    middleware has already set it by the time a route runs."""
-    tok = state._current_user.set(None)
-    try:
-        info = auth.session_info(req.cookies.get(auth.COOKIE))
-    finally:
-        state._current_user.reset(tok)
-    return bool(info and info["demo"])
-
-
-async def _json_body(req):
-    """Parse a request body as JSON. Malformed JSON is a client
-    error (400), never a 500 (review 2026-10-28, M6)."""
-    try:
-        return await req.json()
-    except Exception:
-        raise HTTPException(400, "request body must be valid JSON")
-
-
-async def _json_obj(req):
-    """_json_body, plus the shape the JSON routes expect: an
-    object. An array or scalar body is a 400, not an
-    AttributeError 500 downstream."""
-    body = await _json_body(req)
-    if not isinstance(body, dict):
-        raise HTTPException(400, "request body must be a JSON object")
-    return body
-
-
-def _int_field(body, key, default=None):
-    """Coerce an integer body field; a non-numeric value is a
-    client error (400), not a ValueError 500."""
-    try:
-        return int(body.get(key, default))
-    except (TypeError, ValueError):
-        raise HTTPException(400, f"{key} must be an integer")
-
-
-def _set_session_cookie(resp, token):
-    resp.set_cookie(auth.COOKIE, token, httponly=True, samesite="lax",
-                    secure=os.environ.get("ARYA_INSECURE_COOKIE") != "1",
-                    max_age=auth.SESSION_TTL)
-    return resp
-
-
-def _registration_open():
-    """New-account creation is locked by default (owner locked it
-    2026-10-28, reversing the same-day open). The operator reopens it
-    by setting ARYA_REGISTRATION_OPEN=1 in the service environment —
-    no code change. Existing accounts and the demo are unaffected."""
-    return os.environ.get("ARYA_REGISTRATION_OPEN") == "1"
 
 
 @app.get("/auth/status")
@@ -532,7 +291,7 @@ async def import_costco_json(req: Request):
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return dec
 
 
@@ -543,7 +302,7 @@ async def import_bulk(req: Request):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
     added = state.add_receipts(decs)
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return {"received": len(decs), "added": added, "total_receipts": len(state.receipts())}
 
 
@@ -553,10 +312,10 @@ async def decode_text_route(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return dec
 
 
@@ -580,11 +339,11 @@ async def intake_order_text(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     dec = await run_in_threadpool(decode_order_text, text, client)
     _need_receipt_date(dec)
     state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
             "purchased_at": dec["purchased_at"], "lines": len(dec["lines"]),
             "total": dec["total"], "totals_reconcile": dec["totals_reconcile"]}
@@ -629,7 +388,7 @@ async def intake_structured(req: Request):
            "tax": body.get("tax"), "total": body.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
     added = state.add_receipts([dec])
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     # The ledger counts a line only when it has a sku, so a line
     # without one is kept on the receipt but never reaches patterns,
     # running low or spend. Say so instead of returning a clean success.
@@ -676,7 +435,7 @@ def curator_run():
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     from api.curator import run_curator
-    n = run_curator(MetaClient(ledger=_ledger()))
+    n = run_curator(new_client())
     return {"proposals": n}
 
 
@@ -847,12 +606,12 @@ async def decode_pdf(req: Request):
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     receipt = await run_in_threadpool(decode_text, text, client)
     _need_receipt_date(receipt)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -870,7 +629,7 @@ async def decode_photo_route(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         receipt = await run_in_threadpool(decode_photo, body, client,
                                           media_type=media)
@@ -885,7 +644,7 @@ async def decode_photo_route(req: Request):
         return {"demo": True, "added": added, "receipt": receipt}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
-    await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
+    await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
 
@@ -909,7 +668,7 @@ async def transcribe_route(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         out = await run_in_threadpool(transcribe_audio, body, client)
     except ValueError as e:
@@ -937,7 +696,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
     _budget_guard()
     from api.eyes.service import detect, match_item
     from datetime import date as _d
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
@@ -1075,7 +834,7 @@ def _mcp_file_receipt(args):
            "tax": args.get("tax"), "total": args.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
     added = state.add_receipts([dec])
-    state.judge_pending(MetaClient(ledger=_ledger()))
+    state.judge_pending(new_client())
     return {"receipt_id": rid, "merchant": merchant, "added": added,
             "lines": len(lines), "totals_reconcile": reconcile}
 
@@ -1205,7 +964,7 @@ async def chat_route(req: Request):
     _budget_guard()
     body = await _json_obj(req)
     from api.chat_service import chat as run_chat
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         surface = body.get("surface") if body.get("surface") in ("list", "hunt") else None
         return await run_in_threadpool(run_chat, body.get("messages", []), client,
@@ -1273,7 +1032,7 @@ def judge_run():
         # Over today's budget: judge nothing, quietly, like a host
         # with no key. Verdicts catch up on the next run.
         return {"judged": 0, "paused": True}
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     return {"judged": state.judge_pending(client)}
 
 
@@ -1422,7 +1181,7 @@ async def list_from_text(req: Request):
         if not os.environ.get("MODEL_API_KEY"):
             raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
         _budget_guard()
-        client = MetaClient(ledger=_ledger())
+        client = new_client()
         names = extract_items_model(text, client)
         typed = [(n, 1, "") for n in names]
         source = "model"
@@ -1458,7 +1217,7 @@ async def list_judge(req: Request):
         return {"judged": 0, "flagged": []}
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     found = await run_in_threadpool(grocery.judge_unknown, unknown, client)
     if found:
         verdicts = grocery.save_verdicts(found)
@@ -1508,7 +1267,7 @@ async def list_from_photo(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.list.intake import read_list_photo
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         read = await run_in_threadpool(read_list_photo, body, client,
                                        media_type=media)
@@ -1557,7 +1316,7 @@ async def expiry_read(req: Request, sample: int = 0):
         if not os.environ.get("MODEL_API_KEY"):
             raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
         _budget_guard(demo=demo)
-        client = MetaClient(ledger=_ledger())
+        client = new_client()
         try:
             read = await run_in_threadpool(expiry.read_expiry_photo, body, client,
                                            media_type=media, today=today)
@@ -1973,7 +1732,7 @@ async def quest_create_session(req: Request):
     from api import quest
     try:
         _budget_guard()
-        match_client = MetaClient(ledger=_ledger())
+        match_client = new_client()
     except HTTPException:
         match_client = None  # over budget: shelf matching stays code-only
     try:
@@ -2104,7 +1863,7 @@ async def scan_shelf_route(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         out = await run_in_threadpool(shelfscan.scan, body, remaining,
                                       client, media_type=media)
@@ -2221,7 +1980,7 @@ async def quest_create_shopoff(req: Request):
         race = await run_in_threadpool(
             quest.create_shopoff, store, body.get("items") or [],
             body.get("opponent_handle", ""),
-            client=MetaClient(ledger=_ledger()))
+            client=new_client())
     except ValueError as e:
         raise HTTPException(400, str(e))
     return race
@@ -2398,7 +2157,7 @@ async def quest_avatar_generate(req: Request):
     _budget_guard()
     try:
         await run_in_threadpool(avatar.make_from_prompt, body.get("prompt", ""),
-                                MetaClient(ledger=_ledger()))
+                                new_client())
     except ValueError as e:
         raise HTTPException(400, str(e))
     except RuntimeError as e:
@@ -2424,7 +2183,7 @@ async def quest_avatar_photo(req: Request):
     _budget_guard()
     try:
         await run_in_threadpool(avatar.make_from_photo, photo, media,
-                                MetaClient(ledger=_ledger()))
+                                new_client())
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     return avatar.get()
@@ -2448,7 +2207,7 @@ async def quest_share_look(req: Request, look: str = ""):
     _budget_guard()
     try:
         img, _ = await run_in_threadpool(sharelook.make, look, art,
-                                         MetaClient(ledger=_ledger()))
+                                         new_client())
     except ValueError as e:
         raise HTTPException(400, str(e))
     except RuntimeError as e:
@@ -2597,7 +2356,7 @@ async def quest_haul_photo(req: Request, session: str = ""):
         raise HTTPException(404, "no such session")
     _budget_guard(demo=_is_demo(req))
     from api.eyes.service import detect
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     try:
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
@@ -2721,7 +2480,7 @@ async def storemap_capture(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     jpeg, people = await run_in_threadpool(
         shelfscan.scrub_people, body, client, media_type=media)
     if jpeg is None:
@@ -2784,7 +2543,7 @@ async def storemap_teach(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=_ledger())
+    client = new_client()
     jpeg, people = await run_in_threadpool(
         shelfscan.scrub_people, body, client, media_type=media)
     if jpeg is None:

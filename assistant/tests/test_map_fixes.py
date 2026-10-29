@@ -69,16 +69,19 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
+        from api import deps
+        from api import demo_guard
         self.main = main
-        self._orig = main.MetaClient
-        main.MetaClient = _Client
+        self._orig = deps.MetaClient
+        deps.MetaClient = _Client
         _Client.answer = "not json"
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
         assert r.status_code == 200, r.text
 
     def tearDown(self):
-        self.main.MetaClient = self._orig
+        from api import deps
+        deps.MetaClient = self._orig
 
     def test_unreadable_chat_answer_is_502(self):
         r = self.c.post("/api/chat", json={"messages": [{"role": "user", "content": "hi"}]})
@@ -128,17 +131,19 @@ class TestDemoShare(unittest.TestCase):
     def test_photo_door_counts_against_the_visit(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        orig = main.MetaClient
-        main.MetaClient = _Client
+        from api import deps
+        from api import demo_guard
+        orig = deps.MetaClient
+        deps.MetaClient = _Client
         _Client.answer = "not json"
         try:
             c = TestClient(main.app)
             self.assertEqual(c.post("/auth/demo").status_code, 200)
             c.post("/decode/photo", content=b"\xff\xd8x", headers={"Content-Type": "image/jpeg"})
-            box = main._demo_sandboxes[c.cookies.get("arya_session")]
-            self.assertGreater(box.get(main._DEMO_SPENT_KEY, 0), 0)
+            box = demo_guard._demo_sandboxes[c.cookies.get("arya_session")]
+            self.assertGreater(box.get(deps._DEMO_SPENT_KEY, 0), 0)
         finally:
-            main.MetaClient = orig
+            deps.MetaClient = orig
             state.set_overlay(None)
 
 

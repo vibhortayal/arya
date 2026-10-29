@@ -48,8 +48,9 @@ class TestArchitecture(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main = main
         self.c = TestClient(main.app)
         seed_dictionary()  # seeded at the root; the first account adopts it
@@ -105,8 +106,9 @@ class TestResolver(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         from api import state
         state._save("dictionary.json", {"entries": [
@@ -151,8 +153,9 @@ class TestDiscountLinesNeverQueue(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "o@x.y", "password": "long-password"})
         assert r.status_code == 200, r.text
@@ -177,8 +180,9 @@ class TestCuratorReconcile(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         from api import state
         state._save("dictionary.json", {"entries": [

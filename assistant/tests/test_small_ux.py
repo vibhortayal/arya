@@ -21,10 +21,11 @@ def read(name):
 
 class TestAuthMe(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
 
     def test_signed_out_me_is_200_with_null_user(self):

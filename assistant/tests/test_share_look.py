@@ -56,12 +56,13 @@ class TestShareLookModule(unittest.TestCase):
 
 class TestShareLookRoute(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         FakeClient.calls = []
-        self.p = mock.patch.object(main, "MetaClient", FakeClient)
+        self.p = mock.patch.object(deps, "MetaClient", FakeClient)
         self.p.start()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "a@example.com", "password": "pw-a"})
@@ -90,8 +91,9 @@ class TestShareLookRoute(unittest.TestCase):
         self.assertEqual(FakeClient.calls, [])
 
     def test_demo_counts_as_a_live_door(self):
+        from api import demo_guard
         import api.main as main
-        self.assertTrue(main._demo_live_door("/api/quest/share-look"))
+        self.assertTrue(demo_guard._demo_live_door("/api/quest/share-look"))
 
 
 class TestShareLookClient(unittest.TestCase):
