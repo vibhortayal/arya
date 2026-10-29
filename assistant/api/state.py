@@ -569,18 +569,42 @@ def _reported_out(p, f):
     return not (p.get("last_bought") and p["last_bought"] >= day)
 
 
+# Fallback when the staple judge has no verdict: 4+ kept buys, a
+# steady rhythm (longest gap at most twice the shortest), and in
+# season when the buys bunch into four months. Stricter than the
+# judge on purpose: precision over recall (AGENTS.md).
+CADENCE_MIN_BUYS = 4
+CADENCE_MAX_SPREAD = 2.0
+
+
+def _cadence_staple(p):
+    a = p.get("analysis") or {}
+    spread = a.get("gap_spread")
+    return (p.get("history_state") == "pattern"
+            and p["purchase_count"] >= CADENCE_MIN_BUYS
+            and spread is not None and spread <= CADENCE_MAX_SPREAD
+            and (p.get("median_interval_days") or 0) >= 2)
+
+
 def _admitted(p, judged, fl):
     """May this pattern appear on the list? Judge says yes (or the user
-    added it by hand); unresolved names and unjudged items stay off."""
+    added it by hand); unresolved names stay off. An unjudged item is
+    admitted only on a steady cadence (_cadence_staple)."""
     f = fl.get(p["item_id"], {})
     if f.get("manual") or _reported_out(p, f):
         return True  # explicit user intent beats the judge
     v = judged.get(p["item_id"])
-    if not v or not v.get("list_ok"):
+    if not v:
+        # No verdict yet (no model key, or the judge call failed):
+        # an item with an unmistakable rhythm still counts, so Today,
+        # List and Ask are not empty. A verdict, once it lands, wins.
+        if not _cadence_staple(p):
+            return False
+    elif not v.get("list_ok"):
         return False
     if p.get("history_state") == "lapsed":
         return False  # silent for over 4x its rhythm: not due, just gone
-    if v.get("class") == "SEASONAL":
+    if not v or v.get("class") == "SEASONAL":
         months = (p.get("analysis") or {}).get("seasonal_months")
         if months and as_of():
             now_month = int(today_ref()[5:7])

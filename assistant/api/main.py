@@ -614,9 +614,19 @@ async def intake_structured(req: Request):
            "totals_reconcile": reconcile, "image_ref": None}
     added = state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
-    return {"receipt_id": rid, "merchant": dec["merchant"], "added": added,
-            "lines": len(lines), "totals_reconcile": reconcile,
-            "unverified": sum(1 for l in lines if l["status"] != "auto")}
+    # The ledger counts a line only when it has a sku, so a line
+    # without one is kept on the receipt but never reaches patterns,
+    # running low or spend. Say so instead of returning a clean success.
+    no_sku = [l["decoded_name"] for l in lines
+              if l["line_type"] != "discount" and not l.get("sku")]
+    out = {"receipt_id": rid, "merchant": dec["merchant"], "added": added,
+           "lines": len(lines), "totals_reconcile": reconcile,
+           "unverified": sum(1 for l in lines if l["status"] != "auto")}
+    if no_sku:
+        out["no_sku"] = no_sku
+        out["warning"] = (f"{len(no_sku)} line(s) have no sku, so they are saved "
+                          "but not counted toward patterns or running low.")
+    return out
 
 
 @app.post("/api/review/suggest")
