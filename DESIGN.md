@@ -8,47 +8,52 @@ the Apple UI design system (impeccable.style skill vendored at
 
 ## World
 
-A native-feeling iOS surface. Arya is an Operate surface: the user is
+A native-feeling phone surface. Arya is an Operate surface: the user is
 mid-task, often one-handed, often in a store. The interface uses the
 patterns the user's hand already knows: large titles, grouped inset
 lists, a translucent tab bar, pill actions. Nothing on screen performs;
 every element is a control or a fact.
 
 Scene that forces the choices: a shopper in a bright store aisle,
-phone in one hand, cart in the other. Light mode is the store; dark
-mode is the kitchen at night. The system follows the phone's setting.
+phone in one hand, cart in the other. Light theme only: no dark variant
+is defined or applied (`color-scheme: light`). The theme tokens come from
+the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
 
 ## Tokens (assistant/pwa/styles.css)
 
-- Type: system stack (-apple-system, SF Pro Text). Large title 34/700,
-  section label 13/600 uppercase secondary, body 17, row sub 14.
-- Colors (semantic, both modes): --bg #f2f2f7 / #000; --group #fff /
-  #1c1c1e; --label #1c1c1e / #f2f2f7; --secondary #636366 / #aeaeb2;
-  --sep hairline rgba; --fill for inputs and chips.
-- Accent: one deep green (--accent #1c6b3c light, #1e7a3e dark;
-  --accent-text #176b36 / #52c878). Green is the household's color:
-  groceries, go, fresh. It is the only saturated color except danger
-  (#c81e1e / #ff6961) for returns and recording state.
+- Type scale (design pass, 2026-10-29): 34 title, 22 card title, 17 row
+  and button, 15 body, 13 section label, 12 tag and chip, 11 tab label.
+  Weights 400 / 600 / 700; 800 only for big numbers and kickers. System
+  stack (-apple-system, SF Pro Text).
+- Colors: greyscale is structure. --bg #EFEFF1; --panel/--group #FFFFFF;
+  --ink/--label #1B1B1E; --ink2/--secondary #55555C; --ink3 #8B8B93;
+  --line #D9D9DE; --fill #F4F4F6.
+- Accent: one orange (--acc #E4572E, soft #FDEEE8). It marks the active
+  tab, primary pills, links and the game. The only other saturated color
+  is danger (#c81e1e) for returns and recording state.
 - Shape: groups radius 14, inputs radius 10, buttons and chips are
-  pills (980). No shadows in dark mode; a 1px soft shadow in light.
+  pills (980). A 1px soft shadow on cards.
 - Spacing: 4/8/16/24 rhythm; groups inset 16 from the screen edge;
   more space above a section label than below it.
 
 ## Components
 
-- Grouped list: white (or #1c1c1e) rounded group, hairline row
-  separators, rows min-height 44. The last row carries no separator.
-- List row (the signature control): check circle (30px, fills green
-  with a drawn check when bought; the name strikes through), name +
-  reason line, quantity stepper (36px round buttons, tabular qty),
-  remove (×). Every part is a target; the name opens the item page.
-- Tab bar: fixed, backdrop blur saturate(180%), four tabs with drawn
-  SVG icons (1.7 stroke, one weight) + 10px labels. Active = accent.
-- Chat: bubbles (green right for the user, fill left for Arya, small
-  centered system lines for applied actions), round input, mic and
-  speaker icon buttons (44px). Mic turns danger-red while listening.
+- Grouped list: white rounded group, hairline row separators, rows
+  min-height 44. The last row carries no separator.
+- List row (the signature control): check circle (fills with a drawn
+  check when bought; the name strikes through), name + reason line,
+  quantity (tap the amount to change it), swipe to Move or Remove. Every
+  part is a target; the name opens the item page. In a hunt, tapping the
+  circle grabs the item.
+- Tab bar: fixed, backdrop blur, five tabs (Today, Lists, Ask, Quest,
+  Settings) with drawn SVG icons (1.8 stroke, one weight) + 11px labels.
+  Active = accent. The tab bar hides during a hunt. The avatar floats
+  top-right.
+- Chat: bubbles, round input, mic and speaker icon buttons (44px). Mic
+  turns danger-red while listening.
 - Buttons: primary pill = accent with white text; secondary pill =
-  fill. Chips = small pills for queue actions.
+  fill. Chips = small pills for queue actions. Sheets drag down to
+  dismiss.
 
 ## Motion
 
@@ -58,8 +63,8 @@ button presses. prefers-reduced-motion removes it.
 
 ## Rules that hold
 
-- Body and secondary text meet 4.5:1 in both modes (secondary is
-  #636366 on #f2f2f7, #aeaeb2 on #1c1c1e — not the lighter system grays).
+- Body and secondary text meet 4.5:1 on the light theme (secondary is
+  #55555C on #EFEFF1; use --ink3 only for decoration and placeholders).
 - No emoji as icons; icons are drawn SVG in one stroke weight.
 - No gradient text, no side-tab borders, no card-inside-card.
 - Errors go to the toast (a dark pill under the header), never into

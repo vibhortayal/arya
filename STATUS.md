@@ -7,17 +7,20 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 
-## Price intelligence and Arya's powers (2026-10-29, PR pending)
+## Price intelligence and Arya's powers (2026-10-29, merged)
 - Prices from the household's own receipts only: why-sheet trend, cheaper
   store and similar items with (i) caveats; Analysis "Your prices" (own
   inflation, split smarter, food waste); Ask answers price questions from
-  precomputed facts. Profile > Arya's powers; one "Did you know?" card a day.
+  precomputed facts. Settings > Arya's powers (grouped: working for you, turns on as you add
+  receipts, you choose to turn on); one "Did you know?" card a day.
 - Community prices, Deals and Arya Shoppers are opt-in and not live yet
   (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
-Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
-Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
+Today · Lists · Ask · Quest · Settings (Settings opens Profile). Landing
+headline: "Groceries, sorted." Service worker cache: arya-v93. Suite: 1,187
+tests, all green, 2 skipped (run 2026-10-29). Architecture diagram and
+technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -48,6 +51,12 @@ Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
   `2026-10-29-express-mode.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
+- **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,
+  a Start-shopping sheet into a hunt, tap-to-grab hunt rows, Today lists first.
+  Add to Home Screen: one dismissible card on Today, a row in Settings; iPhone
+  gets four steps. New-user screens have no sample store alerts.
+- **PDF receipts:** digital PDFs use the text layer; scanned PDFs (up to 5
+  pages) are rendered with `pypdfium2` and read by the photo reader.
 - **Accounts:** password accounts; registration is closed unless
   `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
   Muse step). Account names are letters, digits and `. _ % + - @` only.
@@ -100,7 +109,9 @@ Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
   notifications: designed (Discussion 24), not built.
 - An email sign-in account (no password) cannot delete itself yet: the
   Profile delete asks for a password.
-- `api/main.py` holds most routes in one file (about 2,700 lines).
+- `quest.js` (about 3.6k lines) and `app.js` are not split; 38 test files read
+  `quest.js` as text. `api/main.py` is split (routes live in `api/routes/`).
+- The demo bar is still tall on small phones (design pass follow-up).
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
   (Actions tab, Run workflow), by the owner's choice.
 - Photo opt-in and privacy policy: after the hackathon (owner).

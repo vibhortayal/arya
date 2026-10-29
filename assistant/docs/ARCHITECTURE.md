@@ -1,8 +1,183 @@
 # Arya — Architecture (as built)
 
-Status: living document, revised 2026-10-29. SPEC.md states the product rules. This document states
+Status: living document, revised 2026-10-29. Section 0 is the one-page map with the diagram; sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
 how the built system is put together. Where the two disagree, SPEC.md
 wins for behavior and this document wins for structure.
+
+## 0. The whole app on one page
+
+![Arya architecture diagram](architecture.svg)
+
+*The diagram is `assistant/docs/architecture.svg` (plain SVG, light and dark).
+The sections below say what each box does. Facts here are checked against
+`main` on 2026-10-29.*
+
+**In one paragraph.** A phone-first PWA (plain JavaScript, no build step)
+talks to one FastAPI process. Caddy fronts it with TLS. Code does the
+money, timing and list logic at $0. Meta models read photos, judge
+staples and answer questions, and every call to them goes through one
+module (`api/meta_client.py`). State is one JSON document per area, kept
+on a Docker volume, in Supabase Postgres, or both.
+
+### 0.1 Front end (`assistant/pwa/`)
+
+- Plain JS files loaded by `index.html`; no bundler, no framework. The
+  shell is cached by `sw.js` (`CACHE` is bumped, and new files are added
+  to `SHELL`, whenever the shell changes).
+- Five tabs: **Today**, **Lists**, **Ask**, **Quest**, **Settings**.
+  Settings opens the Profile page (account, Group, Reminders, Arya's
+  powers, Add to Home Screen, feedback).
+- Per area: `lists.js` (named lists, add row), `aryaask.js` and
+  `huntask.js` (Ask Arya), `quest.js` with `scene.js`, `huntmenu.js`,
+  `pack.js`, `album.js`, `haul.js`, `share.js`, `mapper.js` (hunts, the
+  three.js store model, Express checklist, haul photo), `expiry.js`,
+  `group.js` (shared home and the live stream), `push.js`, `powers.js`
+  (price powers and the daily "Did you know?" card), `a2hs.js` (install
+  prompt on Android and desktop, four steps on iPhone).
+- Security: one inline theme script allowed by its SHA-256 hash in the
+  CSP (`tests/test_csp.py` keeps the hash in step); every other script is
+  a file; no inline handlers.
+- Style: light theme, greyscale structure and one orange accent; see
+  `DESIGN.md`.
+
+### 0.2 API (`assistant/api/`)
+
+`api/main.py` is about 55 lines: the app, the `require_login` middleware,
+a handler that turns a model failure (`RuntimeError`) into a 502 with a
+plain sentence, `/health`, one ordered router list, and the static mount
+for the PWA. Routes live in `api/routes/`, one router per area:
+
+| Router | What it serves |
+|---|---|
+| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
+| `intake`, `review` | receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue |
+| `lists`, `items`, `expiry` | named lists, add by text or photo, check, move, judge runs, item pages and flags, expiry dates |
+| `home`, `chat` | the Today payload, Ask Arya and its apply step |
+| `prices` | own-receipt prices, Analysis insights, Arya's powers |
+| `groups` | shared home: create, invite, join, leave, live stream |
+| `quest`, `receipts`, `shelf`, `storemap`, `stores`, `avatar`, `friends` | hunts, receipts with originals, shelf scan and "Where am I?", Map my store, store directory, avatar, friends |
+| `mcp_connector` | `/api/mcp`, the tool surface for a Muse agent |
+
+Older siblings stay beside the package: `album_routes`, `hunt_routes`,
+`haul_routes`, `pack`. Shared plumbing is in `api/deps.py` (cost ledger,
+budget guard, `new_client()`, rate-limit buckets, JSON helpers) and
+`api/demo_guard.py` (login middleware, demo sandbox, door caps).
+
+### 0.3 Engines in code ($0)
+
+`decode/service.py` (PDF text layer, scanned PDF pages rendered with
+`pypdfium2` and sent to the photo reader, arithmetic reconcile),
+`ledger/` (returns netted FIFO, allocations), `patterns/` (cadence and
+price by store), `list/` (the derived list and its reasons),
+`state.running_low` (one rule for Today and Ask), `prices.py` (see §0.7),
+`expiry.py`, `dictionary/`, `optimizer.py` (merges duplicate adds and fixes typos before a hunt) and `cart/` (a sandbox cart proposal; approval is a state change only, and the app no longer shows it).
+
+### 0.4 Models
+
+All calls go through `api/meta_client.py`; the personal-data rule is
+enforced there. `open_client.py` is the only other model client.
+
+| Job | Model | Notes |
+|---|---|---|
+| Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard) | cached prefixes, low effort |
+| Receipt photo reader (default) | `muse-wonder-1.0`, 90 s bound | any failure falls back to Spark; `decoded_by` records which read it |
+| Receipt photo reader after Nov 4 | Spark | set `ARYA_PHOTO_READER=spark` in `deploy/.env` and rebuild; no code change |
+| Avatar and look images | `muse-image-1.0` | |
+| Voice in | `muse-voice-transcribe-1.0` | |
+| Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
+| Second judge seat, dictionary enrichment | Spark Open on Baseten | platform data only; the client refuses personal data |
+
+### 0.5 Storage
+
+`api/state.py` keeps one JSON document per former file (receipts,
+dictionary, flags, lists, quest, push...). `ARYA_STORE` picks the
+backend: `json` (default; files under `data/users/<account>/`),
+`dual` (files are the truth, each save mirrors to Postgres) or `pg`
+(Supabase table `arya.user_docs`, keyed by owner and document name,
+role `arya_app`, via `DATABASE_URL`). The demo account always uses files,
+and its visitors write only to an in-memory sandbox overlay. Caches and
+big blobs (`shelf_matches.json`, `storemap_img.json`) stay on disk in
+every mode. A receipt's original photo or PDF is kept per account.
+
+### 0.6 Auth
+
+Password accounts (PBKDF2 hashes, throttled sign-in, cookie sessions
+whose tokens are stored as SHA-256 hashes). Account names allow only
+letters, digits and `. _ % + - @`. Supabase Auth (email code and Google)
+only proves an email address; Arya keeps its own account and cookie
+(`api/supabase_auth.py`, flag `ARYA_SUPABASE_AUTH`). The Muse connector
+uses a bearer token whose hash is stored.
+
+### 0.7 Price intelligence
+
+`api/prices.py` is deterministic and uses only the household's own
+receipts: per-store unit prices, a cheaper-store hint when the gap is
+real, a trend only with enough buys over enough days, the household's own
+basket inflation, a split-the-list suggestion, food waste in dollars.
+Nothing is fetched from a store, a flyer, an API or the web. Ask Arya
+answers price questions from these precomputed facts. Community prices,
+Deals and Arya Shoppers are opt-in, recorded only, and not live.
+
+### 0.8 Groups and live sync
+
+With `ARYA_GROUPS=1` (on in compose), an account in a group reads and
+writes the shared stores (lists, flags, product knowledge) in the group's
+plane; receipts stay with the account that filed them and every member
+sees them. Invites are a 6-letter code valid 48 hours. Leaving copies
+the lists. Live sync: every shared save calls `live.changed(group_id)`;
+each open app holds one Server-Sent Events stream (`/api/group/live`)
+and reloads when its group changes. With `DATABASE_URL` set the change is
+a Postgres `NOTIFY arya_group` and one listener thread per process wakes
+its streams; without it, or with `ARYA_LIVE_PG=0`, the wake stays
+in-process.
+
+### 0.9 Push reminders
+
+Flag `ARYA_PUSH_REMINDERS=1` plus VAPID keys. A phone opts in from
+Settings; the subscription is saved in `push.json`. A daily cron line
+runs `python -m api.reminders`, which sends at most one push per account
+per day for staples that run out inside the notice window. No model
+calls. Steps: `PUSH-REMINDERS.md`.
+
+### 0.10 Deploy
+
+One Oracle VM, Docker Compose with two services: `api` (uvicorn,
+`deploy/Dockerfile.api`) and `caddy` (TLS, security headers, CSP, plain
+HTTP redirects to HTTPS). Data lives in the `arya-data` volume. Settings
+come from `deploy/.env` (VM only); compose lists every variable the app
+reads, and `tests/test_compose_env.py` fails if one is missing. Deploy is
+`git pull` then `docker compose up -d --build` in `assistant/deploy`
+(`deploy.sh`); never rsync `--delete`. `backup.sh` and `restore.sh`
+handle the nightly backup. CI is manual only
+(`.github/workflows/tests.yml`).
+
+### 0.11 Feature flags and settings
+
+| Variable | Default in compose | Effect |
+|---|---|---|
+| `ARYA_STORE` | `json` | `json`, `dual` or `pg` storage |
+| `DATABASE_URL` | empty | Supabase Postgres connection (role `arya_app`) |
+| `ARYA_GROUPS` | `1` | shared households (code default is off) |
+| `ARYA_LIVE_PG` | `1` | live sync through Postgres NOTIFY when `DATABASE_URL` is set |
+| `ARYA_PUSH_REMINDERS` | `0` | push reminders; needs `ARYA_VAPID_*` keys |
+| `ARYA_SUPABASE_AUTH` | `0` | email code and Google sign-in; needs `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
+| `ARYA_SUPABASE_SIGNUP` | `1` | `0` limits Supabase sign-in to existing accounts |
+| `ARYA_REGISTRATION_OPEN` | `0` | open password sign-up |
+| `ARYA_PHOTO_READER` | `wonder` | receipt photo reader; `spark` from Nov 4 |
+| `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
+| `ARYA_DEMO_DAILY_BUDGET_USD` | `2` | demo household's day bucket |
+| `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
+| `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
+| `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
+| `MODEL_API_KEY`, `BASETEN_API_KEY`, `ARYA_OPEN_MODEL`, `GOOGLE_PLACES_API_KEY` | empty | model keys and the store picker |
+
+### 0.12 Cost guards
+
+Every model call writes a row to the cost ledger. The app, the demo
+household and each demo visit spend from separate buckets (§10). Live
+doors, batch judge runs and hunt creation pass the guard first; the
+demo's live doors also have per-IP caps. Deterministic code never calls a
+model.
 
 ## 1. The shape: two layers
 
