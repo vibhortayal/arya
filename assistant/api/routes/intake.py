@@ -197,6 +197,13 @@ async def decode_pdf(req: Request):
                 "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
+    if not added:
+        # The decode id is content-derived, so an exact re-upload
+        # lands here rather than in the fingerprint check above.
+        dup = next((r for r in state.receipts()
+                    if r["receipt_id"] == receipt["receipt_id"]), receipt)
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
@@ -234,6 +241,11 @@ async def decode_photo_route(req: Request):
                 "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
+    if not added:
+        dup = next((r for r in state.receipts()
+                    if r["receipt_id"] == receipt["receipt_id"]), receipt)
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 

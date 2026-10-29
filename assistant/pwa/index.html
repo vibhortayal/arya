@@ -25,6 +25,15 @@
 <div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
 <div id="ask-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden><div class="sheet" id="ask-body"></div></div>
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
+<div id="a2hs-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="a2hs-title" hidden><div class="sheet">
+  <div class="sheethead"><h3 id="a2hs-title" class="nomargin">Add Arya to your Home Screen</h3><button id="a2hs-close" class="linkbtn" type="button">Close</button></div>
+  <ol class="steps">
+    <li><span>Tap <b>Share</b> at the bottom of Safari.</span></li>
+    <li><span>Scroll and tap <b>Add to Home Screen</b>.</span></li>
+    <li><span>Leave <b>Open as Web App</b> <i class="tog" aria-hidden="true"></i> switched <b>on</b>.<span class="keepon">If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.</span></span></li>
+    <li><span>Tap <b>Add</b>, then open Arya from your Home Screen.</span></li>
+  </ol>
+</div></div>
 <div id="shop-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="shop-title" hidden><div class="sheet">
   <div class="sheethead"><h3 id="shop-title" class="nomargin">Start shopping</h3><button id="shop-close" class="linkbtn" type="button">Close</button></div>
   <div class="group shopmodes">
@@ -111,6 +120,7 @@
          grocery shopping"; the list is the hero, Quest has its own tab). -->
     <!-- Design pass (2026-10-29): what you came for first (running low,
          your lists), then alerts and use soon; extras fold to one line. -->
+    <div id="today-a2hs"></div>
     <div id="today-low"></div>
     <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
     <div id="today-lists"></div>
@@ -250,6 +260,7 @@
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-quest-progress" type="button"><span class="grow">Quest progress<span class="sub" id="pf-quest-sub">Hunts, badges and mapped stores</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-a2hs" type="button" hidden><span class="grow">Add to Home Screen<span class="sub">Opens full screen and lets reminders work</span></span><span class="chev">›</span></button>
     </div>
     <div id="pf-reminders" hidden>
       <h3 class="sect">Reminders</h3>
@@ -849,5 +860,6 @@
 <script src="group.js"></script>
 <script src="push.js"></script>
 <script src="powers.js"></script>
+<script src="a2hs.js"></script>
 </body>
 </html>
