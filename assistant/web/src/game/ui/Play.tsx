@@ -331,17 +331,17 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
         </div>
       </Sheet>
       <Sheet open={sheet === "quit"} onClose={() => setSheet(null)} title="Leave this quest?">
-        <p className="qg-p">{trip.practice ? "Practice never saves, so nothing is lost." : `You have ${got} of ${total} in the cart. Finish now to keep your points, or keep going.`}</p>
+        <p className="qg-p">{trip.practice ? "Practice never saves, so nothing is lost." : !got ? "Nothing is in the cart yet, so this trip is not saved." : `You have ${got} of ${total} in the cart. Finish now to keep your points, or keep going.`}</p>
         <div className="qg-opts">
           <button className="qg-btn primary" onClick={() => setSheet(null)}>Keep playing</button>
           {!trip.practice && got > 0 && <button className="qg-btn" onClick={() => onFinish(trip)}>Finish with what I have</button>}
-          {!trip.practice && onEnd
+          {!trip.practice && onEnd && got > 0
             ? <>
                 <button id="qg-endquest" className="qg-btn" onClick={onEnd}>End quest</button>
                 <button className="qg-btn ghost" onClick={onQuit}>Keep it for later</button>
                 <p className="qg-small">End quest closes this trip. Anything you grabbed stays checked off on your list.</p>
               </>
-            : <button className="qg-btn ghost" onClick={onQuit}>Leave</button>}
+            : <button className="qg-btn ghost" onClick={!trip.practice && onEnd ? onEnd : onQuit}>Leave</button>}
         </div>
       </Sheet>
     </div>
