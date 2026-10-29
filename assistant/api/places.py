@@ -56,8 +56,11 @@ def _http_json(url, method="GET", body=None, field_mask=None):
 # The picker is for grocery shopping: suggestions are stores,
 # never streets or addresses (owner, 2026-10-28: typing "14 st"
 # suggested 14th Street itself, and filing it failed for want of
-# a ZIP). Five primary types is Google's cap for the parameter.
-GROCERY_TYPES = ["grocery_store", "supermarket", "wholesale_store",
+# a ZIP). wholesale_store is a real place type but NOT a
+# supported autocomplete filter - including it makes Google
+# reject the whole request (verified live, 2026-10-28). Costco
+# still matches the filter: its types include grocery_store.
+GROCERY_TYPES = ["grocery_store", "supermarket",
                  "convenience_store", "department_store"]
 
 def autocomplete(text, session_token=None, lat=None, lng=None):
