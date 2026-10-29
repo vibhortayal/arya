@@ -32,14 +32,25 @@
     <button id="signin-open" class="landsign" type="button">Sign in</button>
   </header>
   <div class="hero">
-    <h2 class="largetitle herotitle">Your grocery list, <em>as a treasure hunt.</em></h2>
-    <p class="herosub nomargin">Arya writes the list. You find it, fast.</p>
-    <img class="heroimg" src="assets/scenes/hero.webp" alt="Arya's cast of grocery characters follows the orange route through a store to a chest of groceries" width="1600" height="900">
-    <div class="caststrip" aria-hidden="true">
-      <img src="assets/characters/milk.webp" alt=""><img src="assets/characters/banana.webp" alt=""><img src="assets/characters/egg.webp" alt=""><img src="assets/characters/blueberry.webp" alt=""><img src="assets/characters/pizza.webp" alt=""><img src="assets/characters/pantry.webp" alt="">
+    <h2 class="largetitle herotitle">Groceries, <em>sorted.</em></h2>
+    <p class="herosub nomargin">Arya keeps your list, knows what&rsquo;s running low, and tells you what&rsquo;s up at your store before you go.</p>
+    <!-- The picture is the product (owner, 2026-10-29: list first,
+         Quest second): three kinds of row Arya really shows. -->
+    <div class="group peek" aria-label="What Arya shows you">
+      <div class="row"><img class="rowface" src="assets/characters/milk.webp" alt="">
+        <div class="grow"><span class="name">Whole Milk</span><span class="sub">Every ~7 days, last bought 10 days ago</span></div>
+        <span class="peektag low">Running low</span></div>
+      <div class="row"><img class="rowface" src="assets/characters/egg.webp" alt="">
+        <div class="grow"><span class="name">Organic Eggs</span><span class="sub">Trader Joe&rsquo;s: shoppers say out today</span></div>
+        <span class="peektag alert">Store alert</span></div>
+      <div class="row"><img class="rowface" src="assets/characters/vegetable.webp" alt="">
+        <div class="grow"><span class="name">Baby Spinach</span><span class="sub">Use by Friday</span></div>
+        <span class="peektag">Use soon</span></div>
     </div>
+    <p class="peekcap">From your receipts. No typing it all in.</p>
     <p class="landcta"><button id="demo-btn" class="btn primary wide" type="button">Try the demo</button></p>
     <p class="landmeta muted"><span>No account needed &middot; fictional household</span><button id="how-open" class="linkbtn" type="button">How it works</button></p>
+    <p class="questline"><img src="assets/scenes/hero.webp" alt=""><span><b>Want it fun?</b> Quest turns your list into a treasure hunt through the store.</span></p>
   </div>
 
   <div id="signin-sheet" class="sheetwrap signin" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
@@ -76,7 +87,8 @@
   <div id="how-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="how-title" hidden>
     <div class="sheet">
       <div class="sheethead"><h3 id="how-title" class="nomargin">How it works</h3><button id="how-close" class="linkbtn" type="button">Close</button></div>
-      <p>Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
+      <p>Arya learns what your household buys from its receipts and keeps your lists. It tells you what is running low and why, what is out or cheaper at your store, and what to use soon.</p>
+      <p>When you want it fun, Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
       <p class="muted">The demo opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
       <p class="muted nomargin">Built on Meta models. Entry in the Meta AI Developer Hackathon.</p>
     </div>
@@ -88,17 +100,17 @@
     <p id="today-dow" class="dow"></p>
     <div class="titlerow"><h2 class="largetitle">Today</h2></div>
     <p id="today-through" class="muted nomargin"></p>
-    <div class="todayband"><img src="assets/scenes/hero.webp" alt=""><span id="today-level" class="bandchip" hidden></span></div>
-    <div id="today-hero"></div>
-    <div id="today-crew"></div>
+    <!-- Today is the shopping dashboard (owner, 2026-10-29: "Waze for
+         grocery shopping"; the list is the hero, Quest has its own tab). -->
+    <div id="today-low"></div>
+    <div id="today-alerts"></div>
     <div id="today-expiry"></div>
-    <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
-    <h3 class="sect">Your games</h3>
-    <div id="quest-sessions"></div>
-    <button id="btn-map-store" class="gamerow newrow" type="button"><img class="rowimg" src="assets/scenes/storefront.webp" alt=""><span class="g-main"><span class="g-name">Teach Arya your store</span><span class="g-sub">20 seconds an aisle. Your next hunt gets faster.</span></span><span class="chev">›</span></button>
+    <div id="today-checks"></div>
     <div id="today-eye"></div>
-    <div id="today-lineup"></div>
-    <button id="today-listline" class="hubrow" type="button"><span id="today-listline-text"></span></button>
+    <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
+    <div id="today-lists"></div>
+    <div id="today-patterns"></div>
+    <button id="today-quest" class="gamerow newrow" type="button"><img class="rowimg" src="assets/scenes/storefront.webp" alt=""><span class="g-main"><span class="g-name">Make your next run a Quest</span><span class="g-sub">Optional. Turn the list into a treasure hunt.</span></span><span class="chev">›</span></button>
   </section>
 
   <section id="view-list" class="view" hidden>
@@ -590,7 +602,15 @@
   </section>
 
   <section id="view-community" class="view" hidden>
-    <h2 class="largetitle">Crew</h2>
+    <h2 class="largetitle">Quest</h2>
+    <p class="muted nomargin">Your list, as a treasure hunt through the store.</p>
+    <div class="todayband"><img src="assets/scenes/hero.webp" alt=""><span id="today-level" class="bandchip" hidden></span></div>
+    <div id="today-hero"></div>
+    <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New hunt</span></span><span class="chev">›</span></button>
+    <h3 class="sect">Your games</h3>
+    <div id="quest-sessions"></div>
+    <button id="btn-map-store" class="gamerow newrow" type="button"><img class="rowimg" src="assets/scenes/storefront.webp" alt=""><span class="g-main"><span class="g-name">Teach Arya your store</span><span class="g-sub">20 seconds an aisle. Your next hunt gets faster.</span></span><span class="chev">›</span></button>
+    <h3 class="sect">Crew</h3>
     <div id="crew-summary" class="group"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-race" type="button"><span class="grow">Shop-Off<span class="sub">Race a friend on the same list</span></span><span class="chev">›</span></button>
@@ -603,8 +623,6 @@
       <button class="chip" data-scope="store" aria-pressed="false" type="button">Store</button>
       <button class="chip" data-scope="global" aria-pressed="false" type="button">Global</button>
     </div>
-    <h3 class="sect">Store news</h3>
-    <div id="comm-news" class="group"></div>
     <h3 class="sect">Fastest Hands</h3>
     <div id="comm-board" class="group"></div>
     <p class="muted">Fastest full hunts, scored as time per item. A hunt needs 8 or more items to qualify. Times come from the receipt — the receipt is the referee.</p>
@@ -717,15 +735,15 @@
   </button>
   <button data-view="view-list">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.4 6.2 5 7.8 7.6 4.9M3.4 12.2 5 13.8 7.6 10.9M3.4 18.2 5 19.8 7.6 16.9"/></svg>
-    <span>List</span>
+    <span>Lists</span>
   </button>
   <button data-view="view-chat">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.2A2.7 2.7 0 0 1 6.7 3.5h10.6A2.7 2.7 0 0 1 20 6.2v7.6a2.7 2.7 0 0 1-2.7 2.7h-5L7.6 20.5v-4H6.7A2.7 2.7 0 0 1 4 13.8V6.2z"/><path d="M12 6.6l.85 2 2 .85-2 .85-.85 2-.85-2-2-.85 2-.85.85-2z" fill="currentColor" stroke="none"/></svg>
     <span>Ask</span>
   </button>
   <button data-view="view-community">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9.2" r="2.9"/><path d="M3.6 18.4a5.6 5.6 0 0 1 10.8 0"/><circle cx="16.8" cy="10" r="2.3"/><path d="M15.6 14.6a4.6 4.6 0 0 1 5.4 3.6"/></svg>
-    <span>Crew</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4.5h11.5l-2.2 3.7 2.2 3.8H5"/></svg>
+    <span>Quest</span>
   </button>
 </nav>
 

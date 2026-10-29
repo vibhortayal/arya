@@ -57,7 +57,9 @@ class TestShellContract(unittest.TestCase):
         html = read("index.html")
         nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
         labels = re.findall(r"<span>([^<]+)</span>", nav)
-        self.assertEqual(labels, ["Today", "List", "Ask", "Crew"])
+        # List first, Quest second (owner, 2026-10-29): Crew folded
+        # into the Quest tab; its view id stays view-community.
+        self.assertEqual(labels, ["Today", "Lists", "Ask", "Quest"])
         views = re.findall(r'data-view="([^"]+)"', nav)
         self.assertEqual(views, ["view-home", "view-list",
                                  "view-chat", "view-community"])
@@ -96,7 +98,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v75"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v76"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,

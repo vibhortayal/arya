@@ -28,11 +28,14 @@ class TestLanding(unittest.TestCase):
         self.assertIn('src="assets/scenes/hero.webp"', html)
         self.assertNotIn('class="heroimg" src="models/trader-joes/frames-web', html)
 
-    def test_cast_strip_reuses_shipped_portraits(self):
+    def test_landing_shows_rows_not_the_cast_strip(self):
+        # List first (owner, 2026-10-29): the landing shows three real
+        # kinds of row; the cast strip left with the treasure-hunt pitch.
         html = read("index.html")
-        self.assertIn('class="caststrip"', html)
-        for c in ("milk", "banana", "egg", "blueberry", "pizza", "pantry"):
-            self.assertIn(f"assets/characters/{c}.webp", html)
+        login = html.split('id="view-login"')[1].split('id="signin-sheet"')[0]
+        self.assertNotIn('class="caststrip"', login)
+        for c in ("milk", "egg", "vegetable"):
+            self.assertIn(f"assets/characters/{c}.webp", login)
 
     def test_scene_assets_exist(self):
         for f in ("hero.webp", "score-party.webp", "storefront.webp"):
@@ -62,13 +65,16 @@ class TestFaces(unittest.TestCase):
         self.assertIn('class="popface"', q)
         self.assertIn("qFaceFor(it.name)", q)
 
-    def test_today_band_and_lineup(self):
+    def test_quest_band_and_today_faces(self):
+        # The band moved to the Quest tab; Today's running-low rows wear
+        # the characters (list-first pass, owner 2026-10-29).
         html = read("index.html")
-        self.assertIn('class="todayband"', html)
-        self.assertIn('id="today-lineup"', html)
+        quest = html.split('id="view-community"')[1].split("</section>")[0]
+        self.assertIn('class="todayband"', quest)
         a = read("app.js")
-        self.assertIn("function paintLineup(items)", a)
-        self.assertIn("paintLineup(TODAY_DUE)", a)
+        low = a.split("function paintTodayLow(h)")[1].split("\n}\n")[0]
+        self.assertIn("charFor(i.name)", low)
+        self.assertIn("if (TODAY_HOME) paintTodayLow(TODAY_HOME)", a)
 
     def test_express_wears_no_art(self):
         html = read("index.html")
@@ -122,11 +128,12 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_teach_row_and_mapper_wear_the_storefront(self):
         html = read("index.html")
-        self.assertEqual(html.count("assets/scenes/storefront.webp"), 2)
+        # Teach row (Quest), mapper, and Today's quiet Quest row.
+        self.assertEqual(html.count("assets/scenes/storefront.webp"), 3)
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v75"', sw)
+        self.assertIn('CACHE = "arya-v76"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",

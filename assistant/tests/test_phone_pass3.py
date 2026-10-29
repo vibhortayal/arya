@@ -35,7 +35,7 @@ class TestAbandonQuest(unittest.TestCase):
     def test_abandon_wiring(self):
         q = read("quest.js")
         for needle in ('qSetState(sess, "abandoned")',
-                       "End this quest? It leaves Today and cannot be resumed.",
+                       "End this quest? It leaves Quest and cannot be resumed.",
                        '"abandoned"'):
             self.assertIn(needle, q)
 

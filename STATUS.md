@@ -4,6 +4,12 @@ Live: https://arya-pilot.duckdns.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions
 live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
 
+## List first, Quest second (2026-10-29, PR pending)
+- Tabs Today · Lists · Ask · Quest; Crew folded into Quest. Today is the
+  shopping dashboard (running low, store alerts, use soon, lists,
+  patterns). Landing: "Groceries, sorted." See
+  assistant/loops/2026-10-29-list-first.md. SW arya-v76.
+
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge,
