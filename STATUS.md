@@ -1,104 +1,66 @@
-# STATUS — where Arya stands (2026-10-28)
+# STATUS — where Arya stands (2026-10-29)
 
 Live: https://arya-pilot.duckdns.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions
-live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
+live in `docs/quest/DISCUSSION.md`. This page says only what is true now
+on `main`. A merge is not a deploy: the live site changes only after
+`git pull` and a rebuild on the VM.
 
-## List first, Quest second (2026-10-29, PR pending)
-- Tabs Today · Lists · Ask · Quest; Crew folded into Quest. Today is the
-  shopping dashboard (running low, store alerts, use soon, lists,
-  patterns). Landing: "Groceries, sorted." See
-  assistant/loops/2026-10-29-list-first.md. SW arya-v77.
+## The product on main
+Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
+Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
+Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
 
-## List overhaul (2026-10-29, PR #105)
-- Lists tab opens on one card per list plus Everything else. A list
-  shows only what the household added; due staples are suggestions
-  under the list of the store they come from, with a reason and a
-  "why" sheet. Swipe → Move / Remove; Select → Move to…. Prepared cart
-  and the List footer lines are gone. Demo ships Costco and Trader
-  Joe's lists (rerun `python -m harness.make_demo_household data`).
-  A pencil on the list name renames it in place. Snap an expiry date
-  moved from the List to Today's Use soon section.
-  See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v79.
+- **Today:** running low, store alerts, use soon (expiry dates, with
+  "+ Snap a date"), still-good checks, your lists, your patterns, one
+  quiet Quest row. `assistant/loops/2026-10-29-list-first.md`.
+- **Lists:** one card per named list plus Everything else. A list shows
+  only what the household added; due staples show as suggestions under
+  the list of their usual store, with a reason and a "why" sheet. Swipe
+  to Move or Remove, Select to move many, a pencil renames a list.
+  Prepared cart is gone. A "Start shopping · N items" bar on an open
+  list leads to the Quest or Express choice. `2026-10-29-list-overhaul.md`,
+  `2026-10-29-named-lists.md`, `2026-10-29-start-shopping.md`.
+- **Adding:** one row (field, mic, camera). Adds apply at once with Undo;
+  riskier changes (out, never, snooze) ask first. A typed name links to
+  the tracked item ("milk" finds "Whole Milk", "mlik" fixes itself).
+  Non-grocery items are kept and grouped under Other errands.
+  `2026-10-29-typed-name-links.md`, `2026-10-29-grocery-detect.md`.
+- **Running low:** one rule for Today and Ask (`state.running_low`).
+  It works before the staple judge has run; intake warns on receipt
+  lines with no item number.
+- **Brain:** intake (photo, PDF, order text, JSON, voice, Muse
+  connector), ledger with returns netted, patterns, the staple judge
+  with the open-weights second seat, Eyes, Ask Arya, Receipts with the
+  original kept, Analysis (groceries vs other purchases).
+- **Quest tab:** Quest hunts (points, stickers, album, badges, haul card
+  and share) and Express (a plain checklist with Show me, Not here? and
+  Find with camera; no points or badges). Stores directory, Map my
+  store, Shelf Scan, Where am I?, Shop-Off and friends.
+  `2026-10-29-express-mode.md`.
+- **Demo:** a fictional household in a per-visitor sandbox; nothing a
+  visitor does reaches disk. Ships Costco and Trader Joe's lists.
+- **Accounts:** password accounts; registration is closed unless
+  `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
+  Muse step). Account names are letters, digits and `. _ % + - @` only.
 
-## Start shopping (2026-10-29, PR #111)
-- A "Start shopping · N items" bar sits above the tabs on an open
-  list and leads to the Quest or Express choice. SW arya-v81. See
-  assistant/loops/2026-10-29-start-shopping.md.
+## Built but switched off (flags)
+- **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
+  plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
+  `2026-10-29-supabase-signin.md`. Not tried against the live project.
+- **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
+  cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
+- **Postgres storage:** `ARYA_STORE=json|dual|pg` (`api/pgstore.py`).
+- Every setting the app reads now reaches the container through
+  `assistant/deploy/docker-compose.yml` (PR #106). Set them in
+  `deploy/.env` and rebuild.
 
-## Express mode (2026-10-29, PR #107, merged)
-- Express is a plain checklist with Show me (photo only on request),
-  Not here?, Find with camera and More help; its finish shows no points,
-  badges or album. See assistant/loops/2026-10-29-express-mode.md.
-  SW arya-v80.
-
-## Built and deployed (main)
-- **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
-  connector), ledger with returns netted, patterns, the staple judge,
-  the smart list with a store lens, Eyes, Ask Arya, Receipts with the
-  original image kept, Analysis (Spend, with an Other purchases split),
-  grocery detection (rules and aisle map first, one cached model look for
-  unknown names, never blocks).
-- **Quest:** sessions, the Optimizer, Quest and Express hunts, receipt
-  finish and Score, Shop-Off (single account), friends and badges,
-  Spotter "Not here?" reports, the stores directory, item-to-shelf
-  matching, Shelf Scan (SAM 3.1 + Spark verify), Where am I? (the
-  local localizer), photo-walk view of Trader Joe's.
-- **Share a haul (photo only):** Score's Share opens a preview with
-  Story/Post size, handle and level toggles, and optional Muse looks
-  (badge, cast joins in, storybook). Still PNG through the phone's share
-  sheet; no video. Footer says Made with Arya, plus Powered by Meta Muse
-  only on a painted card. Not yet tried against live Muse.
-- **Demo:** a fictional household in a per-visitor sandbox; demo
-  writes never reach disk. Light mode only.
-- **Accounts:** registration LOCKED (owner, 2026-10-28) —
-  `POST /auth/register` refuses new accounts unless the operator
-  sets `ARYA_REGISTRATION_OPEN=1`; login, bootstrap setup, existing
-  accounts, and the demo are unchanged. SW arya-v50.
-- **Hunt v2** (PR #16, merged): one-column hunt, put back in place,
-  nothing auto-finishes, Back is a stack, Finish closes the hunt.
-
-## PR #18 (game shell): merged and deployed 2026-10-28
-- Installable PWA (manifest, icons, offline grabs that sync later).
-- No clock, no lives: +10 a grab, +25 full haul, +50 receipt; levels;
-  milestones, confetti, opt-in sound and buzz.
-- How to play on the first hunt; one automatic store view (photos or
-  shelf cards) with a 3D peek.
-- Find it for me: the camera scans for the next item; tap to grab.
-  Verified sightings feed the map. Frames are kept as fresh shelf
-  photos only after SAM blurs every person in them.
-- Plan a hunt: store first, the list sorted by where each item is
-  usually bought, list management in the same screen.
-- Wireframes (`docs/quest/wireframes.html`) and the tap-through
-  prototype (`docs/quest/game-flow-prototype.html`) match the build.
-- Suite: 382 green. Service worker arya-v42.
-
-**Owner steps after merging PR #18:** deploy (`git pull` on the VM);
-`python -m harness.make_demo_household data` (the demo gains Costco
-trips); `MODEL_API_KEY=… python -m harness.scrub_walk_frames` (blurs
-shoppers in the 90 walk photos, about $0.45). Git history still holds
-the unblurred originals.
-
-## Game loop upgrade (branch `feat/game-loop`, not yet merged)
-One upgrade of the existing hunt. No new game. No lives, no timers, no
-streaks, no retake loop. Wireframe: `docs/quest/` and the owner's
-game-loop wireframe.
-- **Pack:** the plan deals cards. Pack it or skip it. Quantity, brand,
-  note, and a private cost estimate stay on the phone. Items left last
-  trip come first.
-- **Hunt:** a row menu: swap, it moved, save for next trip, drop, edit.
-  Done early asks what to do with the rest. Grab takes a quantity.
-  A combo count only goes up. A boss item appears only after two real
-  reports. Toasts have a close button and stay longer.
-- **Haul:** receipt check, then a reveal of stickers and points, then a
-  haul card with a trip name. Fixes change the haul view only, never
-  points. Posts go to accepted friends and show stock art, never a
-  price or a photo. A saved list from a friend's haul waits in the plan.
-- **Album:** one sticker for each product grabbed. New means first found
-  on that trip. Level-up card lists what is new. Levels never lock
-  anything that makes shopping faster.
-- Service worker arya-v49 precaches the four new scripts and styles.
-- Suite: 764 green, 1 skipped. Phone pass by the owner is still open.
+## Owner steps to ship what is merged
+1. On the VM: `git pull`, then `docker compose up -d --build` in
+   `assistant/deploy`.
+2. `python -m harness.make_demo_household data` (demo gains its lists).
+3. **Nov 4:** the Wonder amendment ends. Set `ARYA_PHOTO_READER=spark`
+   in `deploy/.env` and rebuild.
 
 ## Measured results
 - Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), owner
@@ -111,34 +73,23 @@ game-loop wireframe.
 - Shelf graph build: $0.24 (SAM 36 images + Spark 55 calls).
 
 ## Remaining for submission
-- Owner phone pass on PR #18, then merge and deploy.
 - Demo video and the final submission package (owner go-ahead).
-- Public flip of this repo with the submission freeze (Discussion 28),
-  after the pre-flip scrub (VM internals out of docs, secrets grep).
+- Owner phone pass on the list-first build after deploy.
 
 ## Known gaps
-- Store news and the Friends/Store/Global boards read this account only; cross-account data shows labelled samples.
-- Split the list (kids or partner) is not built.
-- Friend run notifications: designed (Discussion 24), not built.
-- Shop-Off and Spotter reports are single-account.
-- Deferred: stale-staple curation (M8), /health receipt count (M11),
-  deny-by-default route guard (L12).
+- Store news and the Friends/Store/Global boards read this account
+  only; cross-account data shows labelled samples. Shop-Off and Spotter
+  reports are single-account.
+- Split the list (kids or partner) is not built. Friend run
+  notifications: designed (Discussion 24), not built.
+- An email sign-in account (no password) cannot delete itself yet: the
+  Profile delete asks for a password.
+- `api/main.py` holds most routes in one file (about 2,700 lines).
+- Tests run by hand: `.github/workflows/tests.yml` is manual only
+  (Actions tab, Run workflow), by the owner's choice.
 - Photo opt-in and privacy policy: after the hackathon (owner).
 
 ## Owner data (not in this repo)
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged
 in the Hatch workspace `meta-hackathon-2026/imports/costco-json/`.
 Raw files stay out of git.
-
-## Open: phone-pass batch PR (fix/phone-pass-batch) — awaiting owner review
-- Seven owner phone-pass fixes in one PR: store-picker tap-to-advance
-  + receipts fold, skippable Check-the-list, character popups off,
-  receipt-sheet button layout, Add folded into List (four tabs),
-  New session on top of Today, compact staples line. SW arya-v43.
-- Known pre-existing failure on main: test_photo_driver frame budgets
-  (the scrub commit pushed the walk frames over the size guide).
-
-## Open: expiry dates (feat/expiry-dates) — awaiting owner review
-- Snap the date on a package; Spark reads it; the user confirms; "Use soon"
-  on Today and List. Demo has a "Try a sample date" button (no model call).
-  SW arya-v69. Not yet tried with a live read on a real package.
