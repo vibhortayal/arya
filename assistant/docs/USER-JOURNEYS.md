@@ -370,4 +370,4 @@ an **Add to Home Screen** row while installing is possible.
 | Add to Home Screen | Shipped |
 | Supabase sign-in | Shipped, flag `ARYA_SUPABASE_AUTH` (off) |
 | Community prices, Deals, Arya Shoppers | Planned (opt-in choice saved, nothing built) |
-| React rewrite at `/next/` | In progress (PR #139), not the live app |
+| React app (`web/`) at `/` | Shipped, needs deploy (`/next/...` answers 302 to `/...`) |

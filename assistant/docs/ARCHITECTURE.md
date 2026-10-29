@@ -12,31 +12,45 @@ wins for behavior and this document wins for structure.
 The sections below say what each box does. Facts here are checked against
 `main` on 2026-10-29.*
 
-**In one paragraph.** A phone-first PWA (plain JavaScript, no build step)
-talks to one FastAPI process. Caddy fronts it with TLS. Code does the
+**In one paragraph.** A phone-first PWA (React, built with Vite) talks
+to one FastAPI process, which also serves the built app at `/`. Caddy fronts it with TLS. Code does the
 money, timing and list logic at $0. Meta models read photos, judge
 staples and answer questions, and every call to them goes through one
 module (`api/meta_client.py`). State is one JSON document per area, kept
 on a Docker volume, in Supabase Postgres, or both.
 
-### 0.1 Front end (`assistant/pwa/`)
+### 0.1 Front end (`assistant/web/`)
 
-- Plain JS files loaded by `index.html`; no bundler, no framework. The
-  shell is cached by `sw.js` (`CACHE` is bumped, and new files are added
-  to `SHELL`, whenever the shell changes).
+- React 19 and TypeScript, built by Vite into `web/dist`. The API serves
+  the build at `/` and the static folder `assistant/pwa/` (images, store
+  models, three.js, `scene.js`, the manifest, icons) beside it; the build
+  wins on a name clash. `index.html` and `sw.js` are sent with
+  `Cache-Control: no-cache`. The old address `/next/...` answers 302 to
+  the same path at `/`.
+- One screen per file in `web/src/screens/`, listed in
+  `screens/registry.tsx`. Navigation is a stack (`app/nav.tsx`); the
+  session (user, demo, currency, language) is `app/session.tsx`. Shared
+  parts: `web/src/ui/` (sheet, toast, info sheet, the store view) and
+  `web/src/lib/` (API calls, formats, stores, language).
+- The hunt, Express, Pack, haul, album, share, mapper, group live sync
+  (`app/groupLive.ts`), push reminders, powers and the install prompt
+  are ported one to one from the old plain-JS files. The store view is
+  `scene.js` (three.js), loaded as a classic script.
 - Five tabs: **Today**, **Lists**, **Ask**, **Quest**, **Settings**.
   Settings opens the Profile page (account, Group, Reminders, Arya's
   powers, Add to Home Screen, feedback).
-- Per area: `lists.js` (named lists, add row), `aryaask.js` and
-  `huntask.js` (Ask Arya), `quest.js` with `scene.js`, `huntmenu.js`,
-  `pack.js`, `album.js`, `haul.js`, `share.js`, `mapper.js` (hunts, the
-  three.js store model, Express checklist, haul photo), `expiry.js`,
-  `group.js` (shared home and the live stream), `push.js`, `powers.js`
-  (price powers and the daily "Did you know?" card), `a2hs.js` (install
-  prompt on Android and desktop, four steps on iPhone).
-- Security: one inline theme script allowed by its SHA-256 hash in the
-  CSP (`tests/test_csp.py` keeps the hash in step); every other script is
-  a file; no inline handlers.
+- Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
+  injectManifest). It precaches the built shell and the runtime files of
+  the static folder. It is network first. It sends `/api/`, `/auth/`,
+  `/decode`, `/import` and `/eyes` straight to the network, never touches
+  a write (non-GET) or the live stream `/api/group/live`, and shows push
+  reminders. It takes control at once and deletes every other cache,
+  the old `arya-v*` caches too.
+- Security: no inline script (the CSP has `script-src 'self'`;
+  `tests/test_csp.py` checks `web/index.html`); no inline handlers.
+- Tests: string pins in `assistant/tests/` (they read `web/src` through
+  `tests/frontend.py`), vitest tests beside the code
+  (`web/src/**/*.test.ts*`), and browser runs in `web/e2e/`.
 - Style: light theme, greyscale structure and one orange accent; see
   `DESIGN.md`.
 
@@ -147,7 +161,8 @@ HTTP redirects to HTTPS). Data lives in the `arya-data` volume. Settings
 come from `deploy/.env` (VM only); compose lists every variable the app
 reads, and `tests/test_compose_env.py` fails if one is missing. Deploy is
 `git pull` then `docker compose up -d --build` in `assistant/deploy`
-(`deploy.sh`); never rsync `--delete`. `backup.sh` and `restore.sh`
+(`deploy.sh`); never rsync `--delete`. The api image builds the app
+(`web/`) in a node stage and copies `web/dist` in. `backup.sh` and `restore.sh`
 handle the nightly backup. CI is manual only
 (`.github/workflows/tests.yml`).
 

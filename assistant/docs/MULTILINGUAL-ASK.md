@@ -81,7 +81,7 @@ The unified add/ask field files plain English adds in code ($0).
 That parser is English-shaped; a non-English add must never
 misfire through it.
 
-- In the `#add-submit` flow (`pwa/app.js`): if the input contains
+- In the `#add-submit` flow (`web/src/screens/Lists.tsx`): if the input contains
   non-Latin script, or the account language setting is a non-English
   fixed language, skip the code fast-path and route the text to
   Ask (one Spark call, the same class as any Ask question — the

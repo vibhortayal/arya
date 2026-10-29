@@ -25,8 +25,14 @@ only wires them. Shared request plumbing (ledger, budget guard, `new_client()`, 
 helpers) is in `api/deps.py`; the demo sandbox and login middleware in `api/demo_guard.py`.
 `assistant/harness/` eval loops; `assistant/prompts/` versioned prompts;
 `assistant/golden/` golden fixtures; `assistant/loops/` work-session logs.
-`assistant/pwa/` is the app (plain JS, no build step); bump `CACHE` in
-`pwa/sw.js` and list new files in its `SHELL` when the shell changes.
+`assistant/web/` is the app (React + Vite, TypeScript): screens in
+`web/src/screens/`, shared parts in `web/src/ui/` and `web/src/lib/`,
+styles in `web/src/styles/`, the service worker in `web/src/sw.js`.
+The API serves the build (`web/dist`) at `/`. Do not bump a cache name:
+the build gives each shell file a hashed name and the worker precaches
+the list. `assistant/pwa/` is now the static folder only (images, store
+models, three.js, `scene.js`, the manifest, icons); the API serves it at
+`/` beside the build. Rules for app work: `web/PORTING.md`.
 
 ## Hard rules (no exceptions without the owner's word)
 1. **Personal data is Standard mode only.** Contributor mode is eval-only,

@@ -19,7 +19,7 @@ phone in one hand, cart in the other. Light theme only: no dark variant
 is defined or applied (`color-scheme: light`). The theme tokens come from
 the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
 
-## Tokens (assistant/pwa/styles.css)
+## Tokens (assistant/web/src/styles/styles.css)
 
 - Type scale (design pass, 2026-10-29): 34 title, 22 card title, 17 row
   and button, 15 body, 13 section label, 12 tag and chip, 11 tab label.

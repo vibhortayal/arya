@@ -18,9 +18,14 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest · Settings (Settings opens Profile). Landing
-headline: "Groceries, sorted." Service worker cache: arya-v93. Suite: 1,187
-tests, all green, 2 skipped (run 2026-10-29). Architecture diagram and
-technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
+headline: "Groceries, sorted." The app is the React app (`assistant/web/`),
+served at `/`; the plain-JS app is retired (it stays in git history: tag
+`plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
+service worker (`web/src/sw.js`) precaches the build, so no cache name is
+bumped by hand. Tests: Python suite 1,195 (2 skipped; 3 test_decode errors
+only in the sandbox), vitest 152, e2e 34 screens (run 2026-10-29).
+Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
+section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -87,6 +92,8 @@ technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
 1. On the VM: `git pull`, then `docker compose up -d --build` in
    `assistant/deploy`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
+   The first load after the deploy installs the new service worker; it
+   deletes the old `arya-v*` cache and takes over the open page.
 3. **Nov 4:** the Wonder amendment ends. Set `ARYA_PHOTO_READER=spark`
    in `deploy/.env` and rebuild.
 
@@ -112,8 +119,9 @@ technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
   notifications: designed (Discussion 24), not built.
 - An email sign-in account (no password) cannot delete itself yet: the
   Profile delete asks for a password.
-- `quest.js` (about 3.6k lines) and `app.js` are not split; 38 test files read
-  `quest.js` as text. `api/main.py` is split (routes live in `api/routes/`).
+- `scene.js` (three.js store view, about 930 lines) is still a classic
+  script in the static folder, not a module. `api/main.py` is split
+  (routes live in `api/routes/`).
 - The demo bar is still tall on small phones (design pass follow-up).
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
   (Actions tab, Run workflow), by the owner's choice.
