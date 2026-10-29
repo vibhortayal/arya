@@ -89,6 +89,13 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             {rewards.levelUp && <p className="qg-up">⬆ Level up! You reached level {rewards.levelUp}.</p>}
           </motion.div>
 
+          {Object.keys(trip.subs).length > 0 && (
+            <motion.div className="qg-card" {...stagger(1)}>
+              <h3>Swapped</h3>
+              {Object.entries(trip.subs).map(([k, instead]) => <p key={k} className="qg-p">{instead} <span className="qg-small">for {trip.items.find(i => i.key === k)?.name}</span></p>)}
+            </motion.div>
+          )}
+
           {(rewards.newStickers.length > 0 || rewards.mystery) && (
             <motion.div className="qg-card" {...stagger(1)}>
               <h3>New stickers</h3>

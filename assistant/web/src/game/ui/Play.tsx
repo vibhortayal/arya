@@ -155,7 +155,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
     play(nxt.events, nxt);
     if (!nxt.practice && (a.type === "grab" || a.type === "scout" || a.type === "ungrab")) {
       const it = nxt.items.find(i => i.key === a.key);
-      if (it) source.progress?.({ kind: a.type === "ungrab" ? "ungrab" : "grab", item: it.name });
+      if (it) source.progress?.({ kind: a.type === "ungrab" ? "ungrab" : "grab", item: it.name, instead: a.type === "grab" ? nxt.subs[a.key] : undefined });
     }
     if (a.type === "grab" || a.type === "scout") {
       const it = nxt.items.find(i => i.key === a.key)!;
@@ -255,7 +255,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
                 <label className="qg-sub"><span>What are you taking instead? (optional)</span>
                   <input value={subName} onChange={e => setSubName(e.target.value)} placeholder={`Another ${item.name.toLowerCase()}`} />
                 </label>
-                <button className="qg-got" onClick={() => act({ type: "grab", key: item.key })}>Add substitute <small>+{SCORE.item}</small></button>
+                <button className="qg-got" onClick={() => { act({ type: "grab", key: item.key, instead: subName.trim() || undefined }); setSubName(""); }}>Add substitute <small>+{SCORE.item}</small></button>
                 <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
               </div>
             )}

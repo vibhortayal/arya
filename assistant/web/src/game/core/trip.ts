@@ -11,7 +11,7 @@ export const SCORE = { item: 10, golden: 2, clear: 20, sweep: 10, scout: 25, rep
 export type ReportKind = "empty" | "elsewhere";
 
 export type GameEvent =
-  | { t: "grab"; key: string; pts: number; golden: boolean; chain: number; firstInSection: boolean }
+  | { t: "grab"; key: string; pts: number; golden: boolean; chain: number; firstInSection: boolean; instead?: string }
   | { t: "ungrab"; key: string; pts: number }
   | { t: "scout"; section: string; key: string; pts: number }
   | { t: "report"; key: string; kind: ReportKind; pts: number }
@@ -25,6 +25,7 @@ export type Trip = {
   skipped: string[];             // sections the player skipped (items stay on the list)
   got: string[];                 // item keys, in grab order
   passed: string[];              // items set aside for now
+  subs: Record<string, string>;  // item key -> what the shopper took instead (Substitute)
   reports: { key: string; kind: ReportKind }[];
   scouted: string[];             // fog sections the player put on the map this trip
   cleared: string[];             // sections finished with at least one item got
@@ -40,7 +41,7 @@ export type Trip = {
 
 export type Action =
   | { type: "enter"; section: string }
-  | { type: "grab"; key: string }
+  | { type: "grab"; key: string; instead?: string }
   | { type: "ungrab"; key: string }
   | { type: "scout"; key: string }
   | { type: "report"; key: string; kind: ReportKind }
@@ -62,7 +63,7 @@ export function pickGolden(layout: StoreLayout, items: QuestItem[], seed: number
 
 export function newTrip(layout: StoreLayout, items: QuestItem[], o: { seed?: number; practice?: boolean; golden?: string | null } = {}): Trip {
   return {
-    layout, items, order: aryaOrder(layout, items), skipped: [], got: [], passed: [], reports: [], scouted: [], cleared: [], clearPts: {},
+    layout, items, order: aryaOrder(layout, items), skipped: [], got: [], passed: [], subs: {}, reports: [], scouted: [], cleared: [], clearPts: {},
     golden: o.golden !== undefined ? o.golden : pickGolden(layout, items, o.seed ?? 0),
     points: 0, here: null, chain: 0, leftEarly: [], events: [], practice: !!o.practice,
   };
@@ -109,7 +110,9 @@ export function reduce(trip: Trip, a: Action): Trip {
         t.events.push({ t: "scout", section: item.section, key: a.key, pts: SCORE.scout });
         pts += SCORE.scout;
       }
-      t.events.unshift({ t: "grab", key: a.key, pts: SCORE.item * (golden ? SCORE.golden : 1), golden, chain: t.chain, firstInSection });
+      const instead = a.type === "grab" ? a.instead?.trim().slice(0, 80) : undefined;
+      if (instead) t.subs = { ...t.subs, [a.key]: instead };
+      t.events.unshift({ t: "grab", key: a.key, pts: SCORE.item * (golden ? SCORE.golden : 1), golden, chain: t.chain, firstInSection, ...(instead ? { instead } : {}) });
       t.points += pts;
       return afterHandle(t, item.section);
     }
@@ -134,6 +137,7 @@ export function reduce(trip: Trip, a: Action): Trip {
       const item = t.items.find(i => i.key === a.key)!;
       const pts = SCORE.item * (a.key === t.golden ? SCORE.golden : 1);
       t.got = t.got.filter(k => k !== a.key);
+      if (t.subs[a.key]) { const { [a.key]: _s, ...keep } = t.subs; t.subs = keep; }
       t.points = Math.max(0, t.points - pts);
       t.chain = Math.max(0, t.chain - 1);
       if (t.cleared.includes(item.section)) {

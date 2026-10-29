@@ -14,6 +14,8 @@ import { get, post } from "../../lib/api";
 import { charFor, loadCharacters } from "../../lib/characters";
 import { artFor, type FieldReport, type QuestSource } from "../../game/core/source";
 import { buildLayout, sectionFor, SECTIONS } from "../../game/core/template";
+import { TEMPLATE, type StoreGraph } from "../../game/map/graph";
+import { knownZone } from "../../game/map/classify";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
 type PlanRow = { name: string; qty?: number; list?: string | null };
@@ -110,13 +112,27 @@ export class AppSource implements QuestSource {
     return this.summaries((r.stores || []).slice(0, 8));
   }
 
+  /* Items the words do not know go to Arya (one Spark call, cached per
+   * item); anything it cannot place keeps its word guess. */
+  private async zonesFor(names: string[], g: StoreGraph): Promise<Record<string, string>> {
+    const unknown = names.filter(n => !knownZone(n, g));
+    if (!unknown.length) return {};
+    const zones = g.zones.map(z => ({ id: z.id, label: z.label, categories: (z.categories || []).slice(0, 8) }));
+    const r = await post<{ zones: Record<string, string> }>("/api/quest/zones", { graph: g.id, items: unknown, zones }).catch(() => ({ zones: {} }));
+    return r.zones || {};
+  }
+
   async open(storeId: string, list: ShoppingList): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[] }> {
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
-    this.sess = await post<Session>("/api/quest/sessions", { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) });
+    const [sess, zoned] = await Promise.all([
+      post<Session>("/api/quest/sessions", { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) }),
+      this.zonesFor(list.items.map(i => i.name), TEMPLATE),
+    ]);
+    this.sess = sess;
     void post(`/api/quest/sessions/${this.sess.id}/state`, { state: "playing" }).catch(() => {});
     const shelf = new Map(this.sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
-    const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: sectionFor(it.name) }));
+    const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name) }));
     const ids = await this.mapOf(name);
     const kind = kindFor(ids, [...new Set(base.map(b => b.section))]);
     const items: QuestItem[] = base.map(b => {
@@ -141,9 +157,9 @@ export class AppSource implements QuestSource {
     } catch { /* a report never blocks play */ }
   }
 
-  progress(e: { kind: "grab" | "ungrab"; item: string }) {
+  progress(e: { kind: "grab" | "ungrab"; item: string; instead?: string }) {
     const s = this.sess; if (!s) return;
-    void post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab" }).catch(() => {});
+    void post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) }).catch(() => {});
   }
 
   async finish(): Promise<void> {

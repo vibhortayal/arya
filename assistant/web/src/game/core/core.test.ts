@@ -189,3 +189,18 @@ describe("progression", () => {
     expect(bundleProgress(["eggs", "sourdough"], BUNDLES[0])).toEqual({ met: [true, true, false], done: false });
   });
 });
+
+describe("substitutes", () => {
+  it("a substitute scores like a grab and keeps its name until put back", async () => {
+    let t = await practiceTrip();
+    const milk = key(t, "Milk");
+    t = reduce(t, { type: "grab", key: milk, instead: "  Oat milk " });
+    expect(t.subs[milk]).toBe("Oat milk");
+    expect(t.events[0]).toMatchObject({ t: "grab", key: milk, instead: "Oat milk" });
+    expect(t.got).toContain(milk);
+    t = reduce(t, { type: "ungrab", key: milk });
+    expect(t.subs[milk]).toBeUndefined();
+    t = reduce(t, { type: "grab", key: milk, instead: "   " });
+    expect(t.subs[milk]).toBeUndefined();
+  });
+});

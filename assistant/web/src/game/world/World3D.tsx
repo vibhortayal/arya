@@ -108,7 +108,7 @@ const softTex = () => canvasTex(128, 128, c => {
 /* ------------------------------------------------------------ the world */
 export function World3D(p: Props) {
   return (
-    <Canvas className="qg-world" shadows dpr={[1, 2]} gl={{ antialias: true, powerPreference: "high-performance" }}
+    <Canvas className="qg-world" shadows dpr={[1, 1.5]} gl={{ antialias: true, powerPreference: "high-performance" }}
       camera={{ fov: 42, near: 0.5, far: 200, position: [10, 30, 40] }} onCreated={({ gl }) => { gl.toneMapping = THREE.NoToneMapping; }}>
       <Store {...p} />
     </Canvas>
@@ -131,7 +131,8 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
   const sim = useRef({
     me: { p: { ...ENTRY_AT }, heading: Math.PI, path: [] as V2[], walk: 0, moving: false, speed: 3.6, pause: 0 } as Walker,
     goal: null as Goal | null,
-    npcs: [
+    // Other shoppers stroll only in practice: in a real store they would be one more thing to watch.
+    npcs: !trip.practice ? [] : [
       { p: nearestOpen(G, { x: FL.w * 0.37, z: FL.d * 0.41 }), heading: 0, path: [], walk: 0, moving: false, speed: 1.1, pause: 1 },
       { p: nearestOpen(G, { x: FL.w * 0.8, z: 2.6 }), heading: 0, path: [], walk: 2, moving: false, speed: 0.9, pause: 3 },
       { p: nearestOpen(G, { x: FL.w * 0.67, z: FL.d * 0.76 }), heading: 0, path: [], walk: 1, moving: false, speed: 1.0, pause: 0 },

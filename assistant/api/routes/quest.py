@@ -132,7 +132,8 @@ async def quest_check(session_id: str, req: Request):
         raise HTTPException(400, "item is required")
     from api import quest
     checked = body.get("checked", True)
-    sess = quest.check_item(session_id, body["item"], checked)
+    instead = body.get("instead") if isinstance(body.get("instead"), str) else None
+    sess = quest.check_item(session_id, body["item"], checked, instead)
     if sess is None:
         raise HTTPException(404, "no such item in this session")
     # Album: a grab mints a sticker (a put back retracts one). Stickers

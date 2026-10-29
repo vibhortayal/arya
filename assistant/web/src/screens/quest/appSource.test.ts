@@ -71,6 +71,23 @@ describe("AppSource", () => {
   });
 });
 
+describe("AppSource zones", () => {
+  it("asks Arya only about items the words do not know, and uses its answer", async () => {
+    replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };
+    replies["/api/storemap"] = { segments: [] };
+    replies["/api/quest/zones"] = { zones: { "Dish brush": "aisle4" } };
+    replies["/api/quest/sessions"] = { id: "q2", store: "Safeway", state: "not_started", mode: "quest", items: [] };
+    const src = new AppSource();
+    await src.nearbyStores();
+    const { items } = await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Milk" }, { name: "Dish brush" }] });
+    const ask = calls.find(c => c.url === "/api/quest/zones");
+    expect(ask?.body.items).toEqual(["Dish brush"]);
+    expect(ask?.body.graph).toBe("template");
+    expect(items.find(i => i.name === "Dish brush")?.section).toBe("aisle4");
+    expect(items.find(i => i.name === "Milk")?.section).toBe("dairy");
+  });
+});
+
 describe("3D store walk", () => {
   const L0 = buildLayout({ id: "t", name: "T", area: "", kind: "mapped", items: [], mapped: [] });
   const F = fixtures(L0), g = grid(F, floorOf(L0));
