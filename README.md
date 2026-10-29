@@ -2,22 +2,25 @@
 
 **She remembers the list.** *(Winter is coming.)*
 
-Arya is a grocery assistant with a memory and a game. She keeps a
-living model of your household's purchases — every receipt, every
-return, every rhythm — until the list writes itself. Then she turns
-the weekly shop into a treasure hunt through a model of your own
-store: follow her route, grab the goods, and finish with the receipt
-that scores the run and feeds her brain. One product, one app, one
-account.
+Groceries, sorted. Arya is a grocery list that learns. She keeps a
+living model of your household's purchases (every receipt, every
+return, every rhythm) so the list mostly writes itself: what is
+running low, what to use soon, and which store you usually buy it at.
+Think of it as Waze for grocery shopping. When you want it, the Quest
+tab turns the shop into a treasure hunt through a model of your own
+store; Express gives the same in-store help as a plain checklist. One
+product, one app, one account.
 
-![Tests: 503 passing](https://img.shields.io/badge/tests-503%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
+![Tests: 1,102 passing](https://img.shields.io/badge/tests-1%2C102%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
 
 **Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
 
 **Play her live:** https://arya-pilot.duckdns.org — "Try the demo"
 opens a fictional household, no account needed. The whole loop is
-there: build a list by typing, photo or voice, hunt the Trader Joe's
-aisles, settle on a receipt photo, Ask Arya anything. Demo writes
+there: Today shows what is running low, Lists hold your Costco and
+Trader Joe's lists (add by typing, photo or voice), Ask Arya anything,
+and the Quest tab hunts the Trader Joe's aisles and settles on a
+receipt photo. Demo writes
 live in a per-visitor sandbox; nothing reaches disk or another
 visitor. The owner's data stays behind the owner's account.
 
@@ -62,11 +65,12 @@ Every item on your list has a face. Hers is a whole company of them:
   answers from your data and applies stated facts as server-validated
   actions.
 
-## Her game (Quest)
+## Her game (Quest), opt-in
 
-**List → Store → Play → Receipt.** Pick a store from the directory
-(search by name, address or ZIP; favorites first; add one with its
-address). A mapped store carries a model built from a shopper's
+The list is the product; Quest is its own tab for when shopping
+should feel like play. **List → Store → Play → Receipt.** Pick a
+store from the directory (search by name, address or ZIP; favorites
+first; add one with its address). A mapped store carries a model built from a shopper's
 walkthrough video: VGGT builds the geometry, SAM 3.1 segments the
 shelves, Muse Spark labels them, and every hunt stop sits at its
 item's matched shelf.
@@ -75,7 +79,9 @@ Every person in every walkthrough frame is pixelated by SAM before
 the frame ships — 476 shoppers, zero faces.
 
 No map yet? In Quest she draws you an illustrated aisle and leads
-anyway; Express mode skips the art and just gets you out fast.
+anyway. Express is the same help as a plain checklist: Show me (the
+shelf photo, only when you ask), Not here?, and Find with camera; no
+points, badges or characters.
 **Find it for me** aims your camera at one item: SAM 3.1 boxes it,
 Muse Spark verifies it, and no picture of a person is ever kept.
 Points bank only when the receipt settles — and every settled
@@ -83,11 +89,11 @@ receipt teaches her what your household actually eats. Design and
 decisions: `docs/quest/`.
 
 <p align="center">
-  <img src="docs/images/today.png" alt="Today — your level, your points, your games" width="230">
-  <img src="docs/images/hunt.png" alt="The hunt — inside the real store, the orange dot is your next item" width="230">
-  <img src="docs/images/score.png" alt="The score — the cast celebrates a settled hunt" width="230">
+  <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
+  <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
+  <img src="docs/images/hunt.png" alt="The Quest hunt: inside the real store, the orange dot is your next item" width="230">
 </p>
-<p align="center"><em>Today, the hunt, and the score — the demo household, live build.</em></p>
+<p align="center"><em>Today, Lists, and a Quest hunt: the demo household, live build.</em></p>
 
 ## Measured results
 
@@ -121,7 +127,7 @@ decisions: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** 500+ and green — `cd assistant && python -m unittest
+- **Tests:** 1,102 and green — `cd assistant && python -m unittest
   discover -s tests` (exact count in `STATUS.md`).
 
 ## How this was built
