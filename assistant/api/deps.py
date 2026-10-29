@@ -139,3 +139,8 @@ def new_client():
 
 
 _PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
+
+
+def _d_today():
+    from datetime import date as _date
+    return _date.fromisoformat(state.today_ref())
