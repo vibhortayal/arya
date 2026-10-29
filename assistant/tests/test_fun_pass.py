@@ -1,7 +1,7 @@
 """Fun pass (owner, 2026-10-28): the cast is the game, and the
 teach ask moves to the briefing + the hunt.
 
-Pins: the landing wears generated key art (not a raw walk frame);
+Pins: the landing cards wear shipped character portraits;
 the cast strip reuses shipped portraits; Today carries the scene
 band and the due lineup; hunt rows and the suggested-next card wear
 faces resolved by the ladder (exact -> category -> basket); the
@@ -28,19 +28,16 @@ src = frontend.src
 
 
 class TestLanding(unittest.TestCase):
-    def test_hero_is_cast_key_art_not_a_walk_frame(self):
+    def test_landing_cards_wear_shipped_characters(self):
+        # B1 flip cards (owner, 2026-10-29): each card wears a shipped
+        # character portrait; no walk frame, no cast strip.
         login = src("screens/Login.tsx")
-        self.assertIn('asset("assets/scenes/hero.webp")', login)
         self.assertNotIn("models/trader-joes/frames-web", login)
-
-    def test_landing_shows_rows_not_the_cast_strip(self):
-        # List first (owner, 2026-10-29): the landing shows three real
-        # kinds of row; the cast strip left with the treasure-hunt pitch.
-        login = src("screens/Login.tsx")
         self.assertNotIn("caststrip", login)
-        self.assertIn("src={asset(`assets/characters/${img}.webp`)}", login)
-        for c in ("milk", "egg", "vegetable"):
-            self.assertIn(f'<Peek img="{c}"', login)
+        self.assertIn("src={asset(`assets/characters/${c.face}.webp`)}", login)
+        for c in ("milk", "egg", "compass", "binoculars"):
+            self.assertIn(f'face: "{c}"', login)
+            self.assertTrue((PWA / "assets" / "characters" / f"{c}.webp").exists(), c)
 
     def test_scene_assets_exist(self):
         for f in ("hero.webp", "score-party.webp", "storefront.webp"):
