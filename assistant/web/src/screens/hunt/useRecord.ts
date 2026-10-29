@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../../lib/recorder";
 import { useToast } from "../../ui/Toast";
+import { t } from "../../i18n";
 
 /* pwa/app.js wireRecordButton as a hook: one tap starts listening, the
  * next stops and transcribes; the status line says what is happening.
@@ -35,21 +36,21 @@ export function useRecord(onText: (text: string) => void) {
       const wav = cap.current.stop();
       cap.current = null;
       setListening(false);
-      setStatus("Transcribing with Muse Voice Transcribe…");
+      setStatus(t("common.voice.transcribing"));
       try {
         const text = await transcribeBlob(wav);
         if (dead.current || my !== seq.current) return;
-        setStatus(text ? "" : "That did not come through. Try again, closer to the mic.");
+        setStatus(text ? "" : t("common.voice.empty"));
         if (text) cb.current(text);
       } catch (e) {
         if (dead.current || my !== seq.current) return;
         setStatus("");
-        toast("Transcription failed: " + (e instanceof Error ? e.message : String(e)));
+        toast(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
       return;
     }
     if (!voiceSupported()) {
-      setStatus("Voice input is not available in this browser. The microphone on your keyboard works too.");
+      setStatus(t("common.voice.unsupported"));
       return;
     }
     try {
@@ -57,9 +58,9 @@ export function useRecord(onText: (text: string) => void) {
       if (dead.current || my !== seq.current) { c.cancel(); return; }
       cap.current = c;
       setListening(true);
-      setStatus("Listening…");
+      setStatus(t("common.voice.listening"));
     } catch {
-      setStatus("Microphone access was refused. You can type instead.");
+      setStatus(t("common.voice.refused"));
     }
   };
   return { listening, status, click, cancel };

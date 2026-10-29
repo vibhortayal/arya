@@ -36,6 +36,19 @@ serves it at `/` beside the build. The build wins on a name clash.
    `STATIC` in `src/sw.js`.
 7. **No inline script** in `index.html`: the CSP allows script files
    only (`tests/test_csp.py`).
+8. **No literal English in components; use t('key') and add the string
+   to en.json.** Strings live in `src/i18n/en.json`, keyed by screen
+   (`today.*`, `lists.*`, `quest.*`, `hunt.*`, `settings.*`, ...) with
+   shared words under `common.*`. In a component, call
+   `const { t } = useTranslation()` (import it from `src/i18n`); in a
+   helper outside a component, import `t` from `src/i18n`. Build
+   sentences with interpolation (`t("x", { name })`) and plurals
+   (`t("x", { count })` with `x_one` / `x_other` keys), never by
+   joining pieces; use `<Trans>` when a sentence holds markup. Server
+   text, user data, and store or item names are not keys.
+   `src/i18n/i18n.test.ts` fails on JSX text with two or more letters
+   under `src/screens` or `src/ui`, and on a literal key missing from
+   en.json. Its `ALLOWED` list (a brand or a name) stays small.
 
 ## Checks for every change
 

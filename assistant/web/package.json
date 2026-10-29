@@ -13,8 +13,10 @@
     "e2e": "node e2e/run.mjs"
   },
   "dependencies": {
+    "i18next": "26.4.5",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-i18next": "17.0.16"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",

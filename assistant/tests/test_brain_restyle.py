@@ -58,7 +58,7 @@ class TestShellContract(unittest.TestCase):
         app = frontend.src("App.tsx")
         labels = re.search(r"TAB_LABEL[^{]*\{([^}]*)\}", app).group(1)
         self.assertEqual(re.findall(r':\s*"([^"]+)"', labels), ["Today", "Lists", "Ask", "Quest", "Settings"])
-        self.assertIn('data-view={"view-" + t}', app)
+        self.assertIn('data-view={"view-" + v}', app)
         self.assertNotIn('"scan"', views)
 
     def test_new_views_exist_dashboard_gone(self):

@@ -4,6 +4,7 @@
  * (reveal, rreview, haul), the Score's haul row and the share cards
  * read one copy, as the old module did. */
 import { get, post } from "../../lib/api";
+import { t } from "../../i18n";
 import { asset } from "../../lib/format";
 import { faceFor, loadCharacters } from "../../lib/characters";
 import { clearOnSignOut } from "../../app/session";
@@ -48,7 +49,6 @@ clearOnSignOut(() => {
   H.haulPhotoURL = null; H.newBadge = null;
 });
 
-export const plural = (n: number, one: string, many?: string) => `${n} ${n === 1 ? one : (many || one + "s")}`;
 export const art = (name: string) => faceFor(name);
 export const artSrc = (file: string) => asset("assets/characters/" + file);
 export const reduced = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -159,7 +159,7 @@ export async function shareReady(sess: Session, toast: (m: string) => void): Pro
     if (!H.cache[sess.id]) await fetchHaul(sess);
     await loadProfile();
   } catch {
-    toast("Could not load your haul. Check your connection. Then tap Share your haul once more.");
+    toast(t("haul.couldNotLoad"));
     return null;
   }
   return shareCtx(sess);

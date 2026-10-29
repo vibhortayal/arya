@@ -23,7 +23,8 @@ served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
 bumped by hand. Tests: Python suite 1,195 (2 skipped; 3 test_decode errors
-only in the sandbox), vitest 152, e2e 34 screens (run 2026-10-29).
+only in the sandbox), vitest 159, e2e 34 screens (run 2026-10-29). All
+UI text lives in `web/src/i18n/en.json` (i18next; English only for now).
 Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
 section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 

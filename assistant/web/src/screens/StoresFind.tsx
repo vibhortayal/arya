@@ -5,6 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { storeMeta, type MyStore } from "./StoresMine";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-stores-find and quest.js renderFindStores
  * (+ the Google suggestions drop, qSuggestInto / data-gpick). The Shell
@@ -60,7 +61,7 @@ export function usePlacesDrop(q: string) {
       const row = await post("/api/stores/places/pick", { place_id: r.place_id, name: r.name });
       endPlacesSession(); // the pick ends the billing session
       hide();
-      toast(`${row.name} is in your stores.`);
+      toast(t("storesFind.inYourStores", { name: row.name }));
       nav.show("stores-mine");
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); btn.disabled = false; }
   };
@@ -69,9 +70,10 @@ export function usePlacesDrop(q: string) {
 }
 
 export function PlacesRows({ rows, pick }: { rows: Sugg[]; pick: (r: Sugg, b: HTMLButtonElement) => void }) {
+  const { t } = useTranslation();
   return (
     <>
-      <div className="ghead">From Google</div>
+      <div className="ghead">{t("common.fromGoogle")}</div>
       {rows.map(r => (
         <button className="gitem" key={r.place_id} data-gpick={r.place_id} data-gname={r.name} data-gmode="add" type="button"
           onClick={ev => pick(r, ev.currentTarget)}>
@@ -84,6 +86,7 @@ export function PlacesRows({ rows, pick }: { rows: Sugg[]; pick: (r: Sugg, b: HT
 }
 
 export function StoresFind() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [q, setQ] = useState("");
@@ -136,38 +139,37 @@ export function StoresFind() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Find stores</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.findStores")}</h2>
       <form id="sf-form" className="group pad dropanchor" onSubmit={submit}>
-        <label className="field">ZIP, address, or name
-          <input type="text" id="sf-q" placeholder="91709" autoComplete="off" value={q} onChange={e => setQ(e.target.value)} />
+        <label className="field">{t("storesFind.zipAddressOrName")}<input type="text" id="sf-q" placeholder="91709" autoComplete="off" value={q} onChange={e => setQ(e.target.value)} />
         </label>
         <div id="sf-goog" className="gdrop" hidden={!drop.rows.length}>
           {drop.rows.length > 0 && <PlacesRows rows={drop.rows} pick={drop.pick} />}
         </div>
-        <p style={{ marginBottom: 0 }}><button className="btn primary wide" type="submit">Search</button></p>
+        <p style={{ marginBottom: 0 }}><button className="btn primary wide" type="submit">{t("storesFind.search")}</button></p>
       </form>
       <div className="seg" id="sf-chips" style={{ margin: "12px 0" }}>
-        {chip("all", "All")}
-        {chip("quests", "With quests")}
-        {chip("zip", "Near this ZIP")}
+        {chip("all", t("storesFind.all"))}
+        {chip("quests", t("storesFind.withQuests"))}
+        {chip("zip", t("storesFind.nearZip"))}
       </div>
       <div id="sf-results">
-        {rows && !rows.length && <div className="group"><Empty>No stores match. Add it — a new store joins the directory for everyone.</Empty></div>}
+        {rows && !rows.length && <div className="group"><Empty>{t("storesFind.noStoresMatchAddIt")}</Empty></div>}
         {rows && rows.length > 0 && (
           <div className="group">
             {rows.map(s => (
               <div className="row" key={s.id}>
                 <div className="grow"><span className="name">{s.name}</span>
                   <span className="sub">{storeMeta(s)}</span></div>
-                {s.in_mine ? <span className="sub">Added ✓</span>
-                  : <button className="chip" data-addstore={s.id} type="button" onClick={ev => add(s.id, ev.currentTarget)}>Add</button>}
+                {s.in_mine ? <span className="sub">{t("storesFind.added")}</span>
+                  : <button className="chip" data-addstore={s.id} type="button" onClick={ev => add(s.id, ev.currentTarget)}>{t("common.add")}</button>}
               </div>
             ))}
           </div>
         )}
       </div>
-      <p className="muted">The directory is shared by every player. Add a store to your stores to pick it for a hunt.</p>
+      <p className="muted">{t("storesFind.theDirectoryIsSharedBy")}</p>
     </>
   );
 }

@@ -4,16 +4,17 @@ import { useToast } from "../../ui/Toast";
 import { post } from "../../lib/api";
 import { Q, type Session } from "../hunt/model";
 import { fixLabel, type Bucket } from "./core";
-import { H, decodeAny, errMsg, fetchHaul, haulPost, next, openScore, plural, type Entry, type HaulView } from "./state";
+import { H, decodeAny, errMsg, fetchHaul, haulPost, next, openScore, type Entry, type HaulView } from "./state";
+import { t, useTranslation } from "../../i18n";
 
 /* Port of pwa/haul.js #view-rreview (openReview, reviewHtml,
  * onReviewClick, onReviewChange): check the receipt against the hunt.
  * A fix is a note on the haul record; it never changes points.
  * Opened with nav.reset("rreview", { session, data? }). */
 const FIX_TOAST: Record<string, (n: string) => string> = {
-  extra_add: n => `${n} added to your haul.`, extra_drop: n => `${n} left out.`,
-  grabbed_keep: n => `${n} kept.`, grabbed_drop: n => `${n} removed from your haul.`,
-  swap_ok: () => "Swap noted.", swap_no: () => "Not a swap.",
+  extra_add: n => t("haul.fixToast.added", { name: n }), extra_drop: n => t("haul.fixToast.leftOut", { name: n }),
+  grabbed_keep: n => t("haul.fixToast.kept", { name: n }), grabbed_drop: n => t("haul.fixToast.removed", { name: n }),
+  swap_ok: () => t("haul.fixToast.swapNoted"), swap_no: () => t("haul.fixToast.notSwap"),
 };
 function findEntry(d: HaulView, key: string): { bucket: Bucket; entry: Entry } | null {
   for (const b of ["swapped", "on_receipt_only", "grabbed_only"] as Bucket[]) {
@@ -24,6 +25,7 @@ function findEntry(d: HaulView, key: string): { bucket: Bucket; entry: Entry } |
 }
 
 export function ReceiptReview() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const sess = (nav.params.session as Session | undefined) || Q.current;
@@ -63,8 +65,8 @@ export function ReceiptReview() {
         delete H.stk[sess.id];
       }
       const undoKind = before || L.none;
-      toast(send === L.none ? "Choice taken back." : FIX_TOAST[send](found.entry.name), {
-        action: "Undo",
+      toast(send === L.none ? t("haul.choiceTakenBack") : FIX_TOAST[send](found.entry.name), {
+        action: t("common.undo"),
         onAction: () => { applyFix(undoKind, key).catch(showErr); },
       });
     } catch (e) { toast(errMsg(e)); }
@@ -72,16 +74,16 @@ export function ReceiptReview() {
   const onMore = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f) return;
-    setStatus("Reading the receipt. This can take up to a minute.");
+    setStatus(t("finish.readingFile"));
     try {
       const rid = await decodeAny(f);
       const v = await haulPost(sess, "/receipts", { receipt_id: rid });
       setD(v);
       setStatus("");
-      toast("Second receipt added.");
+      toast(t("haul.secondReceipt"));
     } catch (e) {
       setStatus("");
-      toast("Could not add that receipt: " + errMsg(e));
+      toast(t("haul.couldNotAddReceipt", { error: errMsg(e) }));
     }
     ev.target.value = "";
   };
@@ -107,36 +109,36 @@ export function ReceiptReview() {
 
   return (
     <div id="rv-review">
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Check your receipt</h2>
-      <p className="muted">Arya read {plural(r.read, "line")}. Fix anything that looks off.</p>
-      <p className="muted">Arya matches by name. These are suggestions. You decide.</p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("haul.checkYourReceipt")}</h2>
+      <p className="muted">{t("haul.aryaReadFixAnythingThat", { count: r.read })}</p>
+      <p className="muted">{t("haul.aryaMatchesByNameThese")}</p>
       {r.matched.length > 0 && <>
-        <h3 className="sect">Matched ({r.matched.length})</h3>
+        <h3 className="sect">{t("haul.matched", { matchedCount: r.matched.length })}</h3>
         <div className="group">{r.matched.map(e => row("matched", e, "", false))}</div>
       </>}
       {r.swapped.length > 0 && <>
-        <h3 className="sect">Swapped ({r.swapped.length})</h3>
+        <h3 className="sect">{t("haul.swapped", { swappedCount: r.swapped.length })}</h3>
         <div className="group">{r.swapped.map(e => row("swapped", e,
-          e.suggested ? `Looks like a swap for ${e.from}. Is it? It stays in your haul either way.` : `Instead of ${e.from}`, e.suggested))}</div>
+          e.suggested ? t("haul.looksLikeSwap", { from: e.from }) : t("haul.insteadOf", { from: e.from }), e.suggested))}</div>
       </>}
       {r.on_receipt_only.length > 0 && <>
-        <h3 className="sect">On receipt, not on your list ({r.on_receipt_only.length})</h3>
+        <h3 className="sect">{t("haul.onReceiptNotOnYour", { on_receipt_onlyCount: r.on_receipt_only.length })}</h3>
         <div className="group">{r.on_receipt_only.map(e => row("on_receipt_only", e, "", true))}</div>
       </>}
       {n > 0 && <>
         {/* A grab with no receipt line stays in the haul. Leaving it out
             is the shopper's choice, never the default. */}
-        <h3 className="sect">Grabbed, not on receipt ({n})</h3>
-        <p className="muted">{n === 1 ? "1 grabbed item is" : n + " grabbed items are"} not on the receipt. They stay in your haul.</p>
-        <p className="muted">Paid another way? Keep it. Tap Remove from haul to leave one out.</p>
+        <h3 className="sect">{t("haul.grabbedNotOnReceipt", { n })}</h3>
+        <p className="muted">{t("haul.grabbedNotOn", { count: n })}</p>
+        <p className="muted">{t("haul.paidAnotherWayKeepIt")}</p>
         <div className="group">{r.grabbed_only.map(e => row("grabbed_only", e,
-          e.fix === "grabbed_drop" ? "Left out of your haul" : "In your haul", "no"))}</div>
+          e.fix === "grabbed_drop" ? t("haul.leftOutOfHaul") : t("haul.inYourHaul"), "no"))}</div>
       </>}
-      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more">+ Add another receipt</label>
-        <input type="file" id="rv-more" accept="application/pdf,image/*" aria-label="Another receipt" hidden onChange={onMore} /></p>
-      <p className="muted rv-more-note">Paid in two parts? Add the other receipt.</p>
+      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more">{t("haul.addAnotherReceipt")}</label>
+        <input type="file" id="rv-more" accept="application/pdf,image/*" aria-label={t("haul.anotherReceipt")} hidden onChange={onMore} /></p>
+      <p className="muted rv-more-note">{t("haul.paidInTwoPartsAdd")}</p>
       <p id="rv-status" className="muted">{status}</p>
-      <p><button className="btn primary wide" type="button" data-act="looks-right" onClick={() => next(nav, sess)}>Looks right</button></p>
+      <p><button className="btn primary wide" type="button" data-act="looks-right" onClick={() => next(nav, sess)}>{t("common.looksRight")}</button></p>
     </div>
   );
 }

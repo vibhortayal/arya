@@ -6,8 +6,9 @@ import { api, get } from "../../lib/api";
 import { Q, type Session } from "../hunt/model";
 import { postPayload, sheetAudienceText, toggleHidden } from "./core";
 import { ShareSheet, type ShareReq } from "./Share";
-import { H, art, artSrc, errMsg, faceReady, fetchHaul, haulPost, hiddenKeys, loadProfile, openScore, plural, shareCtx,
+import { H, art, artSrc, errMsg, faceReady, fetchHaul, haulPost, hiddenKeys, loadProfile, openScore, shareCtx,
   stickersFor, type HaulView } from "./state";
+import { useTranslation } from "../../i18n";
 
 /* Port of pwa/haul.js #view-haul (openCard, paintCard, onCardClick,
  * unpost) and the #hl-post-sheet (openPostSheet, paintPostSheet,
@@ -17,6 +18,7 @@ import { H, art, artSrc, errMsg, faceReady, fetchHaul, haulPost, hiddenKeys, loa
 type Card = { d: HaulView; fresh: number };
 
 export function HaulCard() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const sess = (nav.params.session as Session | undefined) || Q.current;
@@ -48,12 +50,12 @@ export function HaulCard() {
   }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!sess) return <div id="hl-card-body" />;
-  if (!card) return <div id="hl-card-body"><div className="group"><p className="empty">Making your card…</p></div></div>;
+  if (!card) return <div id="hl-card-body"><div className="group"><p className="empty">{t("haul.makingYourCard")}</p></div></div>;
 
   const toggleHide = async (key: string) => {
     const keys = toggleHidden(hiddenKeys(H.cache[sess.id]), key);
     const d = await haulPost(sess, "/hide", { key, hidden: keys.has(key) });
-    if (d.post && d.post.taken_down) toast("Post taken down. Nothing is left to show.");
+    if (d.post && d.post.taken_down) toast(t("haul.takenDown"));
     return d;
   };
   const onHide = async (key: string) => {
@@ -63,7 +65,7 @@ export function HaulCard() {
     try {
       const d = await api<HaulView>(`/api/quest/sessions/${encodeURIComponent(sess.id)}/haul/post`, { method: "DELETE" });
       H.cache[sess.id] = d;
-      if (!quiet) toast("Post deleted.");
+      if (!quiet) toast(t("haul.postDeleted"));
       await paintCard(sess);
     } catch (e) { toast(errMsg(e)); }
   };
@@ -82,7 +84,7 @@ export function HaulCard() {
       await haulPost(sess, "/post", payload);
       setSheet(null);
       await paintCard(sess);
-      toast("Posted to your Crew", { action: "Undo", onAction: () => { unpost(true); } });
+      toast(t("haul.postedToast"), { action: t("common.undo"), onAction: () => { unpost(true); } });
     } catch (e) { setGoing(false); toast(errMsg(e)); }
   };
 
@@ -91,15 +93,15 @@ export function HaulCard() {
   const p = H.profile || {};
   const posted = d.post && d.post.posted;
   const reacts = posted && d.post.reactions ? d.post.reactions : null;
-  const label = (i: { hidden?: boolean; name: string }) => `${i.hidden ? "Show" : "Hide"} ${i.name} ${i.hidden ? "in" : "from"} this post`;
+  const label = (i: { hidden?: boolean; name: string }) => (i.hidden ? t("haul.showIn", { name: i.name }) : t("haul.hideFrom", { name: i.name }));
   const left = d.items.filter(i => !i.hidden).length;
 
   return (
     <div id="hl-card-body">
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Your haul card</h2>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("haul.yourHaulCard")}</h2>
       <div className="hl-card">
-        <div className="hl-top"><span className="hl-chip">Named by Arya</span>
-          {posted && <button type="button" className="rv-link" data-act="delpost" onClick={() => unpost(false)}>Delete post</button>}</div>
+        <div className="hl-top"><span className="hl-chip">{t("haul.namedByArya")}</span>
+          {posted && <button type="button" className="rv-link" data-act="delpost" onClick={() => unpost(false)}>{t("haul.deletePost")}</button>}</div>
         <h3 className="hl-name">{d.name}</h3>
         <div className="hl-flat" id="hl-flat">
           {d.items.map(i => (
@@ -107,41 +109,41 @@ export function HaulCard() {
               aria-label={label(i)} onClick={() => onHide(i.key)}><img src={artSrc(art(i.name))} alt="" /></button>
           ))}
         </div>
-        <p className="hl-hint">Tap a sticker to hide it from the post.</p>
-        <div className="hl-stats"><div><b>{shown}</b><span>items</span></div><div><b>{fresh}</b><span>new finds</span></div><div><b>{d.stats.level}</b><span>level</span></div></div>
-        {d.boss && d.boss.found && <p className="hl-bosschip"><span className="hl-chip">Boss item</span></p>}
-        <p className="hl-foot">{p.handle ? "@" + p.handle + " · " : ""}Level {d.stats.level} · no prices</p>
+        <p className="hl-hint">{t("haul.tapAStickerToHide")}</p>
+        <div className="hl-stats"><div><b>{shown}</b><span>{t("haul.items")}</span></div><div><b>{fresh}</b><span>{t("haul.newFinds")}</span></div><div><b>{d.stats.level}</b><span>{t("haul.level")}</span></div></div>
+        {d.boss && d.boss.found && <p className="hl-bosschip"><span className="hl-chip">{t("haul.bossItem")}</span></p>}
+        <p className="hl-foot">{p.handle ? "@" + p.handle + " · " : ""}{t("haul.levelNoPrices", { level: d.stats.level })}</p>
       </div>
       <div className="hl-actions">
         <button className="btn" type="button" data-act="save"
-          onClick={() => setShare({ kind: "haul", ctx: { ...shareCtx(sess), newBadge: H.newBadge || null } })}>Save as image</button>
-        <button className="btn primary" type="button" data-act="post" onClick={openPostSheet}>{posted ? "Update post" : "Post to Crew"}</button>
+          onClick={() => setShare({ kind: "haul", ctx: { ...shareCtx(sess), newBadge: H.newBadge || null } })}>{t("haul.saveAsImage")}</button>
+        <button className="btn primary" type="button" data-act="post" onClick={openPostSheet}>{posted ? t("haul.updatePost") : t("haul.postToCrew")}</button>
       </div>
       <p className="muted">{posted
-        ? "Posted to your Crew. Hide or show a sticker and the post updates."
-        : "Nothing posts until you tap Post to Crew."}{reacts && (reacts.yum + reacts.me_too + reacts.teach_me)
-        ? ` Reactions: ${reacts.yum} Yum, ${reacts.me_too} Me too, ${reacts.teach_me} Teach me.` : ""}</p>
-      <p><button className="btn secondary wide" type="button" data-act="done" onClick={() => openScore(nav, sess)}>Done</button></p>
+        ? t("haul.postedNote")
+        : t("haul.notPostedNote")}{reacts && (reacts.yum + reacts.me_too + reacts.teach_me)
+        ? t("haul.reactions", { yum: reacts.yum, meToo: reacts.me_too, teachMe: reacts.teach_me }) : ""}</p>
+      <p><button className="btn secondary wide" type="button" data-act="done" onClick={() => openScore(nav, sess)}>{t("common.done")}</button></p>
 
       <Sheet open={sheet !== null} onClose={() => setSheet(null)} id="hl-post-sheet" labelledBy="hl-post-title">
-        <div className="row"><span className="name" id="hl-post-title">Post to Crew</span><button id="hl-post-x" className="btn" type="button" onClick={() => setSheet(null)}>Cancel</button></div>
+        <div className="row"><span className="name" id="hl-post-title">{t("haul.postToCrew")}</span><button id="hl-post-x" className="btn" type="button" onClick={() => setSheet(null)}>{t("common.cancel")}</button></div>
         <div id="hl-post-body">
-          {sheet === "loading" ? <p className="empty">Checking your Crew…</p>
+          {sheet === "loading" ? <p className="empty">{t("haul.checkingYourCrew")}</p>
             : sheet && !sheet.length ? <>
-              <p>You have no Crew yet.</p>
-              <p className="muted">Add a friend by handle. Then you can post your haul to them.</p>
-              <p><button className="btn primary wide" type="button" data-act="addfriend" onClick={() => { setSheet(null); nav.show("friends"); }}>Add a friend</button></p>
+              <p>{t("haul.youHaveNoCrewYet")}</p>
+              <p className="muted">{t("haul.addAFriendByHandle")}</p>
+              <p><button className="btn primary wide" type="button" data-act="addfriend" onClick={() => { setSheet(null); nav.show("friends"); }}>{t("haul.addAFriend")}</button></p>
             </> : sheet ? <>
-              <p>Shared with Crew: {sheetAudienceText(sheet)}. No prices, no store photos, no people.</p>
+              <p>{t("haul.sharedWithCrewNoPrices", { who: sheetAudienceText(sheet) })}</p>
               <div className="hl-flat" id="hl-post-flat">
                 {d.items.map(i => (
                   <span className="hl-xwrap" key={i.key}><button type="button" className={"hl-st" + (i.hidden ? " hid" : "")} data-hide={i.key} aria-pressed={!!i.hidden}
                     aria-label={label(i)} onClick={() => onHide(i.key)}><img src={artSrc(art(i.name))} alt="" /><span className="hl-x" aria-hidden="true">{i.hidden ? "+" : "×"}</span></button></span>
                 ))}
               </div>
-              <p className="muted">Tap a sticker to hide it from this post. {plural(left, "sticker")} will go out.</p>
-              <p className="hl-btnrow"><button className="btn primary" type="button" data-act="postgo" disabled={!left || going} onClick={postGo}>Post</button>
-                <button className="btn" type="button" data-act="postcancel" onClick={() => setSheet(null)}>Cancel</button></p>
+              <p className="muted">{t("haul.postSheetHint", { count: left })}</p>
+              <p className="hl-btnrow"><button className="btn primary" type="button" data-act="postgo" disabled={!left || going} onClick={postGo}>{t("haul.post")}</button>
+                <button className="btn" type="button" data-act="postcancel" onClick={() => setSheet(null)}>{t("common.cancel")}</button></p>
             </> : null}
         </div>
       </Sheet>
