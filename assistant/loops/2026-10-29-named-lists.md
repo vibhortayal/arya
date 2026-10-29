@@ -20,3 +20,6 @@ apply_confirmed; CURRENT SCREEN context), api/main.py (/api/chat surface and
 context, /api/chat/apply, item_ids from from-text), pwa/aryaask.js (answer
 card, Undo, confirm), app.js (smart field, mic to Arya), sw.js (arya-v69).
 tests/test_ask_in_list.py. The Ask tab behaves as before.
+
+## PR 3: Ask bar on the hunt
+Pinned "Ask Arya…" bar (hunt only) opens a sheet: three quick questions, a field and a mic. Uses AryaAsk with surface "hunt" and a context of store, next item, aisle and what is left. Adds apply with Undo, risky changes confirm, and nothing here tells the crew an item is missing (that stays on "Not here?"). Cache bumped to arya-v70. Not checked on a live hunt or with the real model.
