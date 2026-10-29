@@ -13,8 +13,7 @@ low, what to use soon, and where it is usually bought.
 
 Quest is the second layer, and it is optional. It is its own tab, for when
 shopping should feel like play: a hunt through a model of the shopper's
-store that ends on a receipt photo. Express gives the same in-store help as
-a plain checklist, with no points. Shared households (Groups) let several
+store that ends on a receipt photo. Shared households (Groups) let several
 people keep one set of lists.
 
 ## Who uses it

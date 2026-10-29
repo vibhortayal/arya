@@ -26,7 +26,8 @@ their real shelves. Mobile first; the keyboard is for the demo only.
    are suggested. ✕ removes an item from the list (Undo). Typed extras
    join the list. Planning is list management, not a second list.
 3. **Check my list** appears only when Arya has a question.
-4. **Mode:** Quest (play) or Express (rush). Same list, same store.
+4. A quest starts. Express, the plain-checklist mode, has no entry point
+   any more; see Modes below.
 
 ## The hunt (Quest)
 
@@ -59,14 +60,14 @@ Offline grabs queue on the phone and sync when the signal returns.
 
 ## Modes
 
-| | Quest (play) | Express (rush) |
-| --- | --- | --- |
-| For | Time to play, alone or with kids | In and out |
-| Shows | The hunt, points, milestones | The list in walking order, big checks |
-| Ends with | The receipt | The receipt |
+Quest was designed with a second mode, Express: the same list as a
+plain checklist in walking order, with no points. Express no longer has
+an entry point (see `STATUS.md`); its screen stays only for runs that
+started before. The list works without Quest, and shopping from the
+list needs no game.
 
-The mode is a mood, not an age. With a child holding the phone, the
-kid hunts and grabs while the adult handles quantities and checkout.
+Quest is a mood, not an age. With a child holding the phone, the kid
+hunts and grabs while the adult handles quantities and checkout.
 
 ## Store drift: Spotter
 

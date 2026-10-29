@@ -11,19 +11,18 @@ Arya
 
 ## Tagline
 
-Arya keeps a living model of your grocery world: every receipt read and
-verified, every return netted, every pattern learned — so the list
-writes itself. Quest, its play layer, turns the weekly shop into a
-treasure hunt in your own store — a photo-walk of its real aisles,
-with the 3D model one tap away.
+Waze for grocery shopping. Arya reads and verifies every receipt, nets out
+returns and learns your patterns, so your list writes itself. Quest, its
+optional game, turns the weekly shop into a hunt through a model of your
+own store.
 
 ## What it is
 
-One product, two layers, one account.
+One product, one account. The list comes first; Quest is optional.
 
-Arya does not compete with your list app — it collects from all of
-them, through your own assistant, and gives you back one list that
-writes itself. The agent connector is a standard MCP server: any
+Arya does not compete with your list app. It collects from all of them,
+through your own assistant, and gives you back one list that writes
+itself. The agent connector is a standard MCP server: any
 MCP-capable assistant connects with your account token to read the
 list, add items, and file receipts it has read. Muse Spark is the
 showcased client.
@@ -39,24 +38,21 @@ pattern facts may suggest. The Curator proposes product merges and
 splits and applies nothing until the user taps. The Resolver researches
 names Arya cannot resolve and shows its sources; the user settles. Ask
 Arya answers from the model and applies stated facts ("we finished the
-yogurt") as server-validated actions. A prepared cart waits for a human
-tap. Nothing buys itself. A per-account token also connects the user's
+yogurt") as server-validated actions. Nothing buys itself. A per-account token also connects the user's
 Muse: a forwarded order or a sentence in chat becomes structured
 intake that Arya verifies the same way.
 
-Quest is the play layer. The shopper picks a store, and Arya sorts
-the list by where each item is usually bought, from the receipts. A
-mapped store plays over real photos from a shopper's walkthrough
-video, with a VGGT point cloud as a 3D peek; any other store plays as
-shelf cards. Each grab earns points (no clock, no way to lose). Find
-it for me points the camera at the shelf: SAM 3.1 boxes candidates,
-Muse Spark verifies the crop, and the item lights up for one tap.
-SAM also finds every person in a frame so they are blurred before
-anything is kept: Arya keeps pictures of products, never of people.
-Every grab, sighting and "Not here?" report feeds a live store map.
-The receipt photo ends the hunt: it banks the points, settles Shop-Off
-races by receipt timestamp, and feeds the brain, so next week's list
-writes itself.
+Quest is the play layer. The shopper starts a quest from a list, and
+Arya opens it at that list's store. A store plays as a labelled typical
+layout until shoppers map it: a guided camera scan, where the shopper
+pans along the shelves, SAM 3.1 blurs every person, and Muse Spark reads
+the sections, aisle signs and prices. Each grab earns points (no clock,
+no way to lose). Find it for me points the camera at the shelf: SAM 3.1
+boxes candidates, Muse Spark verifies the crop, and the item lights up
+for one tap. Arya keeps pictures of products, never of people. Every
+grab, sighting and "Not here?" report feeds a live store map. The
+receipt photo ends the quest: it banks the points and feeds the brain,
+so next week's list writes itself.
 
 ## How Meta models are used
 
@@ -66,26 +62,23 @@ writes itself.
   judge.
 - Muse Wonder 1.0 reads receipt photos — the primary photo reader
   (98.98% of lines correct on the Gate 0 public set, against Spark's
-  93.88%; price errors 0 against 4). Wonder also authored the hunt's
-  localizer (the "Where am I?" matcher: 42 of 45 held-out frames from
-  the mapping video at the right stop, 45 of 45 in the right
-  neighborhood; not yet measured on fresh shopper photos).
+  93.88%; price errors 0 against 4). Muse Spark Open (open weights, on Baseten) is the staple
+  judge's second seat: it re-judges from item names alone and never sees
+  personal data.
 - Muse Image paints the collect-celebration characters (Quest mode).
 - Muse Voice Transcribe takes voice intake in the app: dictation for
   list adds and voice in Ask Arya.
-- SAM 3.1 segments shelves in walkthrough frames (the store's shelf
-  graph), boxes items for Shelf Scan and Find it for me, and finds
-  people so they are blurred before any frame is kept.
-- VGGT (Meta AI + Oxford) builds 3D geometry and the camera path from
-  walkthrough video. It runs on Modal; its output ships as a web asset.
+- SAM 3.1 finds shelves and signs in the guided store scan, boxes items
+  for Find it for me, and finds people so they are blurred before any
+  frame is kept.
 - Personal data runs in Standard mode only. Contributor mode is used
   only on synthetic or public fixtures in eval loops. This rule is
   enforced in code, not in policy text.
 - All math — ledger, returns netting, cadence, spend — is deterministic
   code. The model reads and speaks; it never calculates.
-- Measured cost: a receipt decode costs 0.5–3 cents. A household costs
-  roughly 20–60 cents a month. The full build ran on the $150 credit
-  with a per-day budget guard in the server.
+- Cost: every model call is written to a cost ledger, and a daily budget
+  guard stops app spend. The Wonder proof run over the 9 public receipts
+  cost $1.12.
 
 ## Evidence
 
@@ -106,14 +99,13 @@ writes itself.
   the owner's 114 receipts. The eval method and the disagreement
   lists are in the research repo.
 - PDF corpus: 114 real receipts, 1,226 lines, 114/114 arithmetic match.
-- Store model: one Trader Joe's stretch (Chino Hills, CA) rebuilt from
-  a walkthrough video — a 373,630-point web asset and an 18-stop shelf
-  graph (SAM 3.1 segments, Spark labels), live in the app.
-- Test suite: 336 tests, green.
-- Live at https://arya-pilot.duckdns.org — "Try the demo" opens a
+- Store maps: earned from shoppers' guided scans. A section counts as
+  mapped only with a usable, fresh picture; no store ships mapped.
+- Test suite: 1,235 Python tests, green on `main` at #198.
+- Live at https://arya-pilot.duckdns.org — "Try it now" opens a
   fictional household with no account. Judges can play the whole
-  loop: list in by typing, photo or voice; the Trader Joe's hunt in
-  every mode and view; the receipt finish; and Ask Arya. Each
+  loop: list in by typing, photo or voice; a quest from a list; the
+  receipt finish; and Ask Arya. Each
   visitor's changes live in a sandbox for that visit only.
 
 ## Team

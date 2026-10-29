@@ -3,7 +3,7 @@
  * first; a returning player at their next real trip. */
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { BUNDLES, bundleProgress, levelOf, stageOf, streak, type Profile } from "../core/meta";
+import { levelOf, stageOf, streak, type Profile } from "../core/meta";
 import { ALL_STICKERS, PRACTICE_STORE, type QuestSource } from "../core/source";
 import type { ShoppingList, StoreSummary } from "../core/types";
 import { charArt, img } from "../assets";
@@ -81,10 +81,6 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
           <div className="qg-tile-art">{ALL_STICKERS.slice(0, 3).map(s => <img key={s} src={charArt(s)} alt="" className={profile.stickers.includes(s) ? "" : "locked"} />)}</div>
           <b>Sticker album</b><small>{profile.stickers.length} of {ALL_STICKERS.length}</small>
         </button>
-        <div className="qg-tile">
-          <b>Bundles</b>
-          {BUNDLES.map(b => { const p = bundleProgress(profile.found, b); return <small key={b.id}>{p.done ? "✓ " : `${p.met.filter(Boolean).length}/${b.slots.length} `}{b.name.replace(" bundle", "")}</small>; })}
-        </div>
       </div>
 
       {stores.length > 0 && (

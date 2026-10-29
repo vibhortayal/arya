@@ -51,7 +51,7 @@
 .qg-streak { font-weight: 800; font-size: 14px; }
 .qg-cta { margin-top: 14px; padding: 18px; border-radius: 22px; background: var(--q-panel); box-shadow: 0 2px 0 var(--q-line), 0 8px 24px rgba(0,0,0,.05); }
 .qg-cta h2 { font-size: 22px; font-weight: 800; margin: 4px 0 6px; }
-.qg-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.qg-tiles { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
 .qg-tile { text-align: left; padding: 14px; border-radius: 18px; background: var(--q-panel); display: flex; flex-direction: column; gap: 3px; box-shadow: 0 2px 0 var(--q-line); }
 .qg-tile b { font-size: 15px; }
 .qg-tile small { font-size: 13px; color: var(--q-ink2); }

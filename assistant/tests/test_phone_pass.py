@@ -43,7 +43,8 @@ class TestPhonePassBatch(unittest.TestCase):
 
     def test_today_order_and_compact_line(self):
         quest = src("screens/Quest.tsx")
-        self.assertLess(quest.index('id="btn-new-hunt"'), quest.index('id="quest-sessions"'))
+        # Your trips is history only: a new quest starts in Quest itself.
+        self.assertNotIn('id="btn-new-hunt"', quest)
         # Usability pass (owner 2026-10-29): no "Open Lists" link on
         # Today; the list cards and the Lists tab open lists.
         today = src("screens/Today.tsx")
