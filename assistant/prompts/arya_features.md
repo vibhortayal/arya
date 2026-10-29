@@ -1,4 +1,4 @@
-Tabs: Today, Lists, Ask, Quest. Profile is the avatar at the top.
+Tabs: Today, Lists, Ask, Quest, Settings. Settings opens Profile, as does the avatar at the top.
 Today: running low, store alerts, use soon (snap an expiry date from a row there), your lists, your patterns.
 Lists: one card per list, such as Costco. Add by typing, the mic or the camera. Open a list for suggestions with a why; swipe a row to Move or Remove; Select moves several; the pencil renames.
 Ask (this chat): answers from the household's own data and can add to a list, mark out or expired, never suggest, snooze. Typing or talking in the Lists add row works the same.

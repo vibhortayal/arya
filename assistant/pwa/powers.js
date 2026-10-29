@@ -42,33 +42,33 @@
   /* The powers. Quest is not listed (owner). `unlock` says what the
    * household does to turn a power on; `on` reads the facts. */
   const POWERS = [
-    { id: "community", group: "next", name: "Community prices", what: "See what other Arya households paid for the same item at other stores.",
+    { id: "community", group: "next", name: "Community prices", sub: "See what other Arya shoppers paid at other stores.", need: "Turn on", what: "See what other Arya households paid for the same item at other stores.",
       unlock: "Turn on Share anonymous prices. You give item, store and price by the week, never your name, list or receipt photo.",
       when: "You need to opt in first. A price then shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified.", share: true },
-    { id: "deals", group: "next", name: "Deals for you", what: "A heads-up when an item you buy is cheaper than usual somewhere near you.",
+    { id: "deals", group: "next", name: "Deals for you", sub: "Hear when something you buy is cheaper nearby.", need: "Needs Community prices", what: "A heads-up when an item you buy is cheaper than usual somewhere near you.",
       unlock: "Needs Community prices. Only items you already buy.", when: "Built from shared prices, never from store sites or flyers.", share: true },
-    { id: "shoppers", group: "next", name: "Arya Shoppers", what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
+    { id: "shoppers", group: "next", name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Turn on", what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
       unlock: "Opt in to be counted while you shop. Nobody is shown by name or on a map.", when: "Under 3 Arya Shoppers there, it only says Quiet.", share: true },
-    { id: "compare", group: "new", name: "Compare your stores", what: "Ask \"how much was milk at Costco?\" in the aisle, and see the cheaper store on any item.",
+    { id: "compare", group: "new", name: "Compare your stores", sub: "See which of your stores is cheaper for an item.", need: "After receipts from 2 stores", what: "Ask \"how much was milk at Costco?\" in the aisle, and see the cheaper store on any item.",
       unlock: "Add receipts from 2 different stores.", on: f => f.stores >= 2, tip: "Arya can tell you which of your stores is cheaper for an item." },
-    { id: "trends", group: "new", name: "Price trends", what: "See when an item you buy gets dearer or cheaper, and your own inflation in Analysis.",
+    { id: "trends", group: "new", name: "Price trends", sub: "See which items you buy are getting dearer or cheaper.", need: "After 3 receipts", what: "See when an item you buy gets dearer or cheaper, and your own inflation in Analysis.",
       unlock: "Add 3 receipts.", on: f => f.receipts >= 3, tip: "Arya can tell you which of your usual items are getting pricier." },
-    { id: "similar", group: "new", name: "Similar items", what: "Other items of the same kind you bought, with what you paid, per ounce when sizes are known.",
+    { id: "similar", group: "new", name: "Similar items", sub: "Compare what you paid for similar items, per ounce.", need: "After 1 receipt", what: "Other items of the same kind you bought, with what you paid, per ounce when sizes are known.",
       unlock: "Add 1 receipt.", on: f => f.receipts >= 1, tip: "Arya can compare similar items you have bought, per ounce." },
-    { id: "split", group: "new", name: "Split smarter", what: "Which store to buy what at, and what that saves you a month.",
+    { id: "split", group: "new", name: "Split smarter", sub: "Know which store to buy each item at, and what it saves a month.", need: "After receipts from 2 stores", what: "Which store to buy what at, and what that saves you a month.",
       unlock: "Add receipts from 2 different stores.", on: f => f.stores >= 2, tip: "Arya can show which store to buy what at, and what it saves." },
-    { id: "waste", group: "new", name: "Food waste", what: "What expired this month, in dollars, from the items you mark \"It expired\".",
+    { id: "waste", group: "new", name: "Food waste", sub: "See what expired food cost you this month.", what: "What expired this month, in dollars, from the items you mark \"It expired\".",
       unlock: "Tap It expired when food goes off.", on: () => true, tip: "Tap It expired on Today and Arya counts what food waste costs you." },
-    { id: "low", group: "on", name: "Running low", what: "What is about to run out, from how often you buy it." },
-    { id: "lists", group: "on", name: "Lists for each store", what: "One list per store. Add by typing, voice or photo." },
-    { id: "usesoon", group: "on", name: "Use soon", what: "Snap an expiry date and Arya reminds you before it goes off." },
-    { id: "plan", group: "on", name: "Plan a shop", what: "Your list sorted by where you usually buy each item." },
-    { id: "receipts", group: "on", name: "Receipt check", what: "One photo files a receipt. Arya checks the total and nets returns." },
-    { id: "patterns", group: "on", name: "Patterns", what: "What you spend, by month, store and item." },
-    { id: "ask", group: "on", name: "Ask Arya", what: "Ask about your food and spending, by text or voice." },
-    { id: "find", group: "on", name: "Find it for me", what: "The camera looks for the next item on your list." },
-    { id: "alerts", group: "on", name: "Store alerts", what: "\"Not here?\" reports from other shoppers, before you walk the aisle." },
-    { id: "haul", group: "on", name: "Share a haul", what: "A photo of what you bought, through your phone's share sheet." },
+    { id: "low", group: "on", name: "Running low", sub: "Tells you what is about to run out, from how often you buy it.", what: "What is about to run out, from how often you buy it." },
+    { id: "lists", group: "on", name: "A list for each store", sub: "One list per store. Add items by typing, talking or a photo.", what: "One list per store. Add by typing, voice or photo." },
+    { id: "usesoon", group: "on", name: "Use soon", sub: "Snap a date and Arya reminds you before food goes off.", what: "Snap an expiry date and Arya reminds you before it goes off." },
+    { id: "plan", group: "on", name: "Plan a shop", sub: "Sorts your list by the store you usually buy each item at.", what: "Your list sorted by where you usually buy each item." },
+    { id: "receipts", group: "on", name: "Receipt check", sub: "Snap a receipt. Arya files it and checks the total.", what: "One photo files a receipt. Arya checks the total and nets returns." },
+    { id: "patterns", group: "on", name: "Your spending", sub: "What you spend each month, by store and by item.", what: "What you spend, by month, store and item." },
+    { id: "ask", group: "on", name: "Ask Arya", sub: "Ask about your food or spending, by typing or talking.", what: "Ask about your food and spending, by text or voice." },
+    { id: "find", group: "on", name: "Find it for me", sub: "Point your camera and Arya spots the next item on your list.", what: "The camera looks for the next item on your list." },
+    { id: "alerts", group: "on", name: "Store alerts", sub: "See when other shoppers could not find an item at a store.", what: "\"Not here?\" reports from other shoppers, before you walk the aisle." },
+    { id: "haul", group: "on", name: "Share a haul", sub: "Share a photo of what you bought.", what: "A photo of what you bought, through your phone's share sheet." },
   ];
 
   const isOn = p => p.group === "on" || (p.on ? p.on(facts) : false);
@@ -155,25 +155,30 @@
   /* ---- The Powers page: one line per power, groups collapse. ---- */
   function powRow(p) {
     const on = isOn(p);
-    const state = on ? "" : (p.share && facts.share_prices ? "Waiting" : (p.share ? "Opt in" : "Locked"));
+    const need = on ? "" : (p.share && facts.share_prices ? "Waiting for 5 households" : p.need || "");
     return `<div class="row powrow"><span class="pwdot${on ? " on" : " off"}" aria-hidden="true">${on ? "✓" : LOCK_SVG}</span>
-      <div class="grow"><span class="name">${esc(p.name)}</span></div>
-      ${state ? `<span class="pwstate">${state}</span>` : ""}${infoBtn(p.id)}</div>`;
+      <div class="grow"><span class="name">${esc(p.name)}</span><span class="sub">${esc(p.sub || p.what)}</span>${need ? `<span class="pwneed">${esc(need)}</span>` : ""}</div>
+      ${infoBtn(p.id)}</div>`;
   }
 
-  function group(id, title, items, openNow) {
+  function group(title, items, openNow = true) {
     if (!items.length) return "";
     return `<details class="pwgroup" ${openNow ? "open" : ""}><summary><h3 class="sect">${esc(title)}</h3><span class="pwchev" aria-hidden="true">›</span></summary>
       <div class="group">${items.map(powRow).join("")}</div></details>`;
   }
 
+  /* Owner 2026-10-29: what already works first (folded by default),
+   * in plain words; a
+   * receipt power moves up into Working for you once it turns on. */
   async function paintPowers() {
     await loadFacts();
-    const g = k => POWERS.filter(p => p.group === k);
+    const working = [...POWERS.filter(p => p.group === "on"), ...POWERS.filter(p => p.group === "new" && isOn(p))];
+    const later = POWERS.filter(p => p.group === "new" && !isOn(p));
+    const choose = POWERS.filter(p => p.share);
     $("#powers-body").innerHTML =
-      group("next", "Unlock next", g("next"), true) +
-      group("new", "New", g("new"), true) +
-      group("on", `Working for you (${g("on").length})`, g("on"), false);
+      group(`Working for you (${working.length})`, working, false) +
+      group("Turns on as you add receipts", later) +
+      group("You choose to turn on", choose);
   }
 
   /* ---- Today: one "Did you know?" card a day. ---- */

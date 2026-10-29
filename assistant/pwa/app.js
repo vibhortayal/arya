@@ -1853,7 +1853,12 @@ function show(id) {
   if (id !== "view-item") lastView = id;
 }
 document.querySelectorAll("#tabs button").forEach(b =>
-  b.addEventListener("click", () => { show(b.dataset.view); refresh(b.dataset.view); }));
+  b.addEventListener("click", () => {
+    // Settings tab (owner, 2026-10-29) opens the same Profile page as
+    // the avatar; as a tab it has no Back link.
+    if (b.dataset.view === "view-profile") { $("#pf-back").parentElement.hidden = true; avEdit(false); loadAvatar(); }
+    show(b.dataset.view); refresh(b.dataset.view);
+  }));
 $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(lastView); refresh(lastView); });
 
 function refresh(view) {
@@ -2180,7 +2185,8 @@ $("#av-use").addEventListener("click", async () => {
 let avatarFrom = "view-home";
 $("#avatar-btn").addEventListener("click", () => {
   const cur = [...document.querySelectorAll(".view")].find(v => !v.hidden);
-  avatarFrom = cur && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
+  avatarFrom = cur && cur.id !== "view-profile" && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
+  if (!cur || cur.id !== "view-profile") $("#pf-back").parentElement.hidden = false;
   show("view-profile");
   refresh("view-profile");
   avEdit(false);
