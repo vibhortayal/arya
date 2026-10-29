@@ -25,32 +25,46 @@
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
 
 <section id="view-login" class="view" hidden>
+  <header class="landtop">
+    <span class="landlogo">Arya</span>
+    <button id="signin-open" class="landsign" type="button">Sign in</button>
+  </header>
   <div class="hero">
+    <h2 class="largetitle herotitle">Your grocery list, <em>as a treasure hunt.</em></h2>
+    <p class="herosub nomargin">Arya writes the list. You find it, fast.</p>
     <img class="heroimg" src="assets/scenes/hero.webp" alt="Arya's cast of grocery characters follows the orange route through a store to a chest of groceries" width="1600" height="900">
-    <h2 class="largetitle herotitle">Your grocery list, as a treasure hunt in your real store.</h2>
-    <p class="nomargin">Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
-    <p><button id="demo-btn" class="btn primary wide" type="button">Try the demo &mdash; play the Trader Joe&rsquo;s hunt</button></p>
-    <p class="muted nomargin">Opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
     <div class="caststrip" aria-hidden="true">
       <img src="assets/characters/milk.webp" alt=""><img src="assets/characters/banana.webp" alt=""><img src="assets/characters/egg.webp" alt=""><img src="assets/characters/blueberry.webp" alt=""><img src="assets/characters/pizza.webp" alt=""><img src="assets/characters/pantry.webp" alt="">
     </div>
-    <p class="castlbl">THE CAST — EVERY ITEM ON YOUR LIST HAS A FACE</p>
-    <p class="muted herometa">Built on Meta models.</p>
+    <p class="landcta"><button id="demo-btn" class="btn primary wide" type="button">Try the demo</button></p>
+    <p class="landmeta muted"><span>No account needed &middot; fictional household</span><button id="how-open" class="linkbtn" type="button">How it works</button></p>
   </div>
-  <details class="group pad signin">
-    <summary id="login-title" class="btn secondary wide">Sign in</summary>
-    <form id="login-form">
-      <label class="field">Email or username
-        <input type="text" id="login-user" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required>
-      </label>
-      <label class="field">Password
-        <input type="password" id="login-pass" autocomplete="current-password" required>
-      </label>
-      <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
-      <p id="login-error" class="muted loginerr" role="alert"></p>
-    </form>
-    <p class="nomargin"><button type="button" id="login-toggle" class="linkbtn">New here? Create account</button></p>
-  </details>
+
+  <div id="signin-sheet" class="sheetwrap signin" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
+    <div class="sheet">
+      <div class="sheethead"><h3 id="login-title" class="nomargin">Sign in</h3><button id="signin-close" class="linkbtn" type="button">Close</button></div>
+      <form id="login-form">
+        <label class="field">Email or username
+          <input type="text" id="login-user" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required>
+        </label>
+        <label class="field">Password
+          <input type="password" id="login-pass" autocomplete="current-password" required>
+        </label>
+        <p><button type="submit" id="login-btn" class="btn primary wide">Sign in</button></p>
+        <p id="login-error" class="muted loginerr" role="alert"></p>
+      </form>
+      <p class="nomargin"><button type="button" id="login-toggle" class="linkbtn">New here? Create account</button></p>
+    </div>
+  </div>
+
+  <div id="how-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="how-title" hidden>
+    <div class="sheet">
+      <div class="sheethead"><h3 id="how-title" class="nomargin">How it works</h3><button id="how-close" class="linkbtn" type="button">Close</button></div>
+      <p>Arya learns what your household buys from its receipts and writes the list. Quest turns the list into a hunt through the real store: you walk it in photos from one shopper's walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
+      <p class="muted">The demo opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
+      <p class="muted nomargin">Built on Meta models. Entry in the Meta AI Developer Hackathon.</p>
+    </div>
+  </div>
 </section>
 
 
