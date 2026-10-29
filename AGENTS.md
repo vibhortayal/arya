@@ -94,8 +94,6 @@ If a guideline conflicts with these, these win:
   `STATUS.md` + the stage issue checklist. Docs-only PRs are exempt from all
   three; code changes keep the full duty.
 - Stage starts, any paid spend, and deploys need the owner's go-ahead.
-- If a spec and the code disagree, the spec wins — fix the code, or flag it
-  in the issue and let the owner decide.
 
 ## Design work
 
