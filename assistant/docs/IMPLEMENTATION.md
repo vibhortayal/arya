@@ -159,7 +159,7 @@ WalkthroughGrade { walkthrough_id, recency_days, clarity,
 | 1 Decode API | Done. Dictionary v1: 458 entries. |
 | 2 Patterns, list, cart | Done. Returns netted; list needs 3 kept purchases. |
 | 3 PWA-core | Done and live; demo household is a per-visitor sandbox. |
-| 4 Eyes + Ask | Done and live. |
+| 4 Ask | Done and live. (Fridge/pantry photo Eyes was never shipped in the app.) |
 | 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
 | 6 Hardening and demo | Hardening deployed; game upgrade on PR #18; demo video and package pending. |
 
@@ -184,7 +184,6 @@ prompt or contract change re-runs the affected sets.
 | golden/receipts-synthetic | Fabricated receipts: return lines, a duplicate, discount lines, a gift-card line, a for-others candidate, a blurry photo | Stage 1 loops |
 | golden/ledger | The Stage 1 output as frozen data, with hand-computed pattern values | Stage 2 gate |
 | golden/trips | Scripted reconciliation trips: one clean trip, one mismatch, one return, one for-others line | Stage 2 gate |
-| golden/eyes | Fridge and pantry photos with hand-labeled visible items; each photo has one obvious item | Stage 4 gate |
 | golden/relocalize | 10 fresh store photos with zone labels, plus 5 negatives: wrong store, parking lot, home kitchen | Stage 5 gate |
 | golden/shelf | 10 shelf photos with hand-labeled target boxes | Stage 5 SAM check |
 | golden/voice | About 40 recorded commands, clean audio and store-noise mixes, with expected intent and slots | Stage 5 voice check |

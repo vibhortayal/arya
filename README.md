@@ -58,9 +58,6 @@ Every item on your list has a face. Hers is a whole company of them:
   curation signal. The Curator proposes product merges and splits;
   you apply them — no silent edits. The Resolver researches names
   Arya cannot place and shows its sources; you settle.
-- **Eyes.** Show her the fridge, the pantry, the freezer. A photo
-  produces sightings; you confirm before her model changes. What she
-  has not seen, she calls unknown — never absent.
 - **Ask Arya.** A chat grounded in a snapshot of her model. She
   answers from your data and applies stated facts as server-validated
   actions.

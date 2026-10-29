@@ -113,8 +113,8 @@ becomes an action the server validates before it applies.
   fresh shopper photos.
 - Open weights are not used; we do not claim that bonus. VGGT builds
   the 3D geometry but is not on the event's model list.
-- Closed in the demo: bulk imports, PDF and text decode, fridge
-  photos, Curator and judge runs.
+- Closed in the demo: bulk imports, PDF and text decode,
+  Curator and judge runs.
 - Shop-Off and Friends are single-account.
 - Live calls can be slow (receipts up to 90 s). A daily budget and a
   per-IP limit protect the account.
