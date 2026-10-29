@@ -468,13 +468,17 @@ $("#quest-sessions").addEventListener("click", async ev => {
   const s = qSessionById(b.dataset.sess);
   if (s) qOpenSession(s);
 });
-async function qStartNewHunt(fromList) {
+async function qStartNewHunt(fromList, mode) {
   // Plan a hunt (owner, 2026-10-28): store first, then move items
   // from the Arya list into the quest, sorted by where each one is
   // usually bought. From a named list (owner, 2026-10-29) the plan
   // holds that list's items only.
   Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {},
-              fromList: fromList ? { id: fromList.id, name: fromList.name, stores: fromList.stores || [] } : null };
+              fromList: fromList ? { id: fromList.id, name: fromList.name, stores: fromList.stores || [] } : null,
+              // Start shopping on a list (design pass, 2026-10-29): the
+              // mode is picked on the list's sheet, so the trip skips the
+              // bag and the mode screen and opens the hunt started.
+              fastMode: mode || null };
   $("#st-name").value = "";
   $("#nl-text").value = "";
   // One-shot location for biasing Google suggestions toward the
@@ -505,7 +509,7 @@ async function qStartNewHunt(fromList) {
   questShow("view-store");
 }
 $("#btn-new-hunt").addEventListener("click", () => qStartNewHunt(null));
-window.startHuntFromList = list => qStartNewHunt(list).catch(e => toast(e.message));
+window.startHuntFromList = (list, mode) => qStartNewHunt(list, mode).catch(e => toast(e.message));
 
 /* The plan payload. From a named list the list rows narrow to that
  * list, so every step after (picks, the bag, usuals) sees one list. */
@@ -1046,9 +1050,30 @@ function qPickStore() {
   }
   if (Q.draft.store !== store) { Q.draft.pick = {}; Q.draft.pack = null; }
   Q.draft.store = store;
+  qLoadMissing(store);
+  if (Q.draft.fastMode) { qFastStart().catch(e => toast(e.message)); return; }
   renderPlan();
   questShow("view-newlist");
-  qLoadMissing(store);
+}
+
+/* The list is the plan: its open rows go to the trip as they are.
+ * An empty list falls back to the bag, where items can be added. */
+async function qFastStart() {
+  const d = Q.draft;
+  const raw = ((Q.plan && Q.plan.list) || []).filter(li => li.on_list !== false && !li.checked).map(li => {
+    const r = { name: li.name, qty: li.qty || 1 };
+    if (li.unit) r.unit = li.unit;
+    if (li.added_by) { r.by = li.added_by; r.src = "added"; }
+    return r;
+  });
+  if (!raw.length) {
+    d.fastMode = null;
+    renderPlan();
+    questShow("view-newlist");
+    return;
+  }
+  d.raw = raw;
+  await qOptimizeDraft();
 }
 $("#st-name").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); qPickStore(); }
@@ -1160,6 +1185,7 @@ async function qOptimizeDraft() {
   if (!rep.merged.length && !rep.corrected.length && !rep.questions.length) {
     Q.draft.finalItems = Q.draft.baseItems.map(i => typeof PACK !== "undefined"
       ? PACK.sessionItem(i) : ({ name: i.name, qty: i.qty, group: i.group }));
+    if (Q.draft.fastMode) { await qCreateSession(Q.draft.fastMode); return; }
     questShow("view-mode");
     return;
   }
@@ -1322,6 +1348,7 @@ function qOptProceed() {
   }
   qAskLaterSave();
   Q.draft.finalItems = items;
+  if (Q.draft.fastMode) { qCreateSession(Q.draft.fastMode); return; }
   questShow("view-mode");
 }
 $("#opt-next").addEventListener("click", qOptProceed);
@@ -1329,33 +1356,42 @@ $("#opt-skip").addEventListener("click", qOptProceed);
 
 /* ---------------- New hunt: mode choose ---------------- */
 
-document.querySelectorAll(".modecard").forEach(b =>
-  b.addEventListener("click", async () => {
-    const mode = b.dataset.mode;
-    // One tap makes one session: a second tap while the first is in
-    // flight does nothing.
-    const draft = Q.draft;
-    if (!draft || draft.creating) return;
-    draft.creating = true;
-    b.disabled = true;
-    try {
-      const sess = await post("/api/quest/sessions",
-        { store: Q.draft.store, mode, items: Q.draft.finalItems,
-          store_id: Q.draft.storeId || undefined,
-          driver: qStorePhotos(Q.draft.store) ? "photo"
-            : mode === "quest" ? "art" : "strip" });
-      // The draft is done: PACK clears the saved bag and tells the
-      // Same-haul queue which cards were dealt.
-      if (typeof PACK !== "undefined") PACK.finish();
-      await qLoadSessions().catch(() => {});
-      toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
-      // The set-up screens are done with: Back from the new hunt
-      // returns to the Quest tab, not into the mode picker again.
-      Q.stack = ["view-community"];
+/* One tap makes one session: a second tap while the first is in
+ * flight does nothing. From the list's Start shopping sheet the hunt
+ * opens already started; the mode screen still opens it ready. */
+async function qCreateSession(mode, b) {
+  const draft = Q.draft;
+  if (!draft || draft.creating) return;
+  draft.creating = true;
+  if (b) b.disabled = true;
+  try {
+    const sess = await post("/api/quest/sessions",
+      { store: Q.draft.store, mode, items: Q.draft.finalItems,
+        store_id: Q.draft.storeId || undefined,
+        driver: qStorePhotos(Q.draft.store) ? "photo"
+          : mode === "quest" ? "art" : "strip" });
+    // The draft is done: PACK clears the saved bag and tells the
+    // Same-haul queue which cards were dealt.
+    if (typeof PACK !== "undefined") PACK.finish();
+    await qLoadSessions().catch(() => {});
+    // The set-up screens are done with: Back from the new hunt
+    // returns to the Quest tab, not into the mode picker again.
+    Q.stack = ["view-community"];
+    if (draft.fastMode && sess.mode === "quest" && sess.state === "not_started") {
       qOpenSession(sess);
-    } catch (e) { toast(e.message); }
-    finally { draft.creating = false; b.disabled = false; }
-  }));
+      await qSetState(sess, "playing");
+      renderHunt();
+      startHuntTimer(sess);
+      qWalkStart(qCurrentIndex(sess));
+      return;
+    }
+    toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
+    qOpenSession(sess);
+  } catch (e) { toast(e.message); }
+  finally { draft.creating = false; if (b) b.disabled = false; }
+}
+document.querySelectorAll(".modecard").forEach(b =>
+  b.addEventListener("click", () => qCreateSession(b.dataset.mode, b)));
 
 /* ---------------- Navigation-first hunt (Discussion 35 + 36) ----
  * The hunt is navigation, not a viewer. The scene follows the

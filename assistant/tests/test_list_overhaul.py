@@ -143,12 +143,29 @@ class TestStartShopping(unittest.TestCase):
     """Start shopping (owner, 2026-10-29): one bar above the tabs on an
     open list; it leads to the store, the plan, then Quest or Express."""
 
+    def test_shop_sheet_picks_the_mode(self):
+        # Design pass (2026-10-29): Start shopping opens one sheet with
+        # Quest and Express; the pick goes straight to the trip.
+        html, js, q = read("index.html"), read("app.js"), read("quest.js")
+        self.assertIn('id="shop-sheet" class="sheetwrap"', html)
+        self.assertIn('data-shop="quest"', html)
+        self.assertIn('data-shop="express"', html)
+        self.assertIn('id="shop-sugg"', html)
+        self.assertIn("paintShopSheet()", js)
+        self.assertIn("data-shop-add", js)
+        self.assertIn("fastMode: mode || null", q)
+        self.assertIn("if (Q.draft.fastMode) { qFastStart()", q)
+        # The fast trip skips the bag and the mode screen, and a Quest
+        # opens already playing.
+        fast = q.split("async function qCreateSession(")[1].split("\n}\n")[0]
+        self.assertIn('await qSetState(sess, "playing")', fast)
+
     def test_bar_markup_and_wiring(self):
         html, js, css = read("index.html"), read("app.js"), read("styles.css")
         self.assertIn('id="list-startbar"', html)
         self.assertIn('id="list-hunt" class="btn primary wide"', html)
         self.assertNotIn("Shopping now?", html)
         self.assertIn("Start shopping · ${open.length} item", js)
-        self.assertIn("startHuntFromList(lensList() || null)", js)
+        self.assertIn("startHuntFromList(lensList() || null, b.dataset.shop)", js)
         self.assertIn(".startbar {", css)
         self.assertNotIn(".huntline", css)

@@ -25,6 +25,14 @@
 <div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
 <div id="ask-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden><div class="sheet" id="ask-body"></div></div>
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
+<div id="shop-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="shop-title" hidden><div class="sheet">
+  <div class="sheethead"><h3 id="shop-title" class="nomargin">Start shopping</h3><button id="shop-close" class="linkbtn" type="button">Close</button></div>
+  <div class="group shopmodes">
+    <button class="hubrow" type="button" data-shop="quest"><img class="rowface" src="assets/scenes/storefront.webp" alt=""><span class="hr-label">Quest<span class="sub">A treasure hunt with points and badges</span></span><span class="chev">›</span></button>
+    <button class="hubrow" type="button" data-shop="express"><img class="rowface" src="assets/characters/basket.webp" alt=""><span class="hr-label">Express<span class="sub">Just the list, with aisle help</span></span><span class="chev">›</span></button>
+  </div>
+  <p id="shop-sugg" class="muted shopsugg" hidden></p>
+</div></div>
 
 <section id="view-login" class="view" hidden>
   <header class="landtop">

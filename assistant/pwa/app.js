@@ -628,9 +628,47 @@ $("#ls-remove").addEventListener("click", () => {
 $("#ls-move").addEventListener("click", () => {
   if (listSel && listSel.size && window.ListSheets) ListSheets.openMove([...listSel]);
 });
+/* Start shopping (design pass, 2026-10-29): one sheet picks Quest or
+ * Express and the trip opens straight from the list. Suggestions the
+ * list already shows get one "Add" line here, not a second deck. */
+function paintShopSheet() {
+  const open = onListItems().filter(i => !i.checked && itemHome(i) === (lensList() ? lensList().id : "else"));
+  const where = lensList() ? lensList().name : "Everything else";
+  $("#shop-title").textContent = `Shop ${where} · ${open.length} item${open.length === 1 ? "" : "s"}`;
+  const sugg = suggestions().filter(i => suggestHome(i) === (lensList() ? lensList().id : "else"));
+  const el = $("#shop-sugg");
+  el.hidden = !sugg.length;
+  if (!sugg.length) { el.innerHTML = ""; return; }
+  const names = sugg.slice(0, 2).map(i => esc(i.name));
+  const more = sugg.length > 2 ? ` and ${sugg.length - 2} more` : "";
+  el.innerHTML = `Arya also suggests ${names.join(" and ")}${more}. <button type="button" class="linkbtn" data-shop-add>Add ${sugg.length === 1 ? "it" : sugg.length === 2 ? "both" : "all"}</button>`;
+}
+function closeShopSheet() { $("#shop-sheet").hidden = true; }
 $("#list-hunt").addEventListener("click", () => {
+  paintShopSheet();
+  $("#shop-sheet").hidden = false;
+  const first = $("#shop-sheet [data-shop]");
+  if (first) first.focus();
+});
+$("#shop-close").addEventListener("click", closeShopSheet);
+$("#shop-sheet").addEventListener("keydown", ev => { if (ev.key === "Escape") closeShopSheet(); });
+$("#shop-sheet").addEventListener("click", async ev => {
+  if (ev.target.id === "shop-sheet") { closeShopSheet(); return; }
+  if (ev.target.closest("[data-shop-add]")) {
+    const lid = lensList() ? lensList().id : "else";
+    const ids = suggestions().filter(i => suggestHome(i) === lid).map(i => i.item_id);
+    try {
+      for (const id of ids) await post("/api/list/add", lid === "else" ? { item_id: id } : { item_id: id, list_id: lid });
+      await renderList();
+      paintShopSheet();
+    } catch (e) { toast(e.message); }
+    return;
+  }
+  const b = ev.target.closest("[data-shop]");
+  if (!b) return;
+  closeShopSheet();
   // A named list plans from its own items; Everything else plans from the whole list.
-  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null);
+  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null, b.dataset.shop);
 });
 $("#list-done").addEventListener("click", async ev => {
   if (ev.target.closest("[data-done-toggle]")) { listDoneOpen = !listDoneOpen; paintListPage(); return; }

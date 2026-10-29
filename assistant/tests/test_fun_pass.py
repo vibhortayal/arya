@@ -128,12 +128,13 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_teach_row_and_mapper_wear_the_storefront(self):
         html = read("index.html")
-        # Teach row (Quest), mapper, and Today's quiet Quest row.
-        self.assertEqual(html.count("assets/scenes/storefront.webp"), 3)
+        # Teach row (Quest), mapper, Today's quiet Quest row, and the
+        # Quest row of the Start shopping sheet.
+        self.assertEqual(html.count("assets/scenes/storefront.webp"), 4)
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v83"', sw)
+        self.assertIn('CACHE = "arya-v84"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",
