@@ -14,6 +14,11 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   Spotter "Not here?" reports, the stores directory, item-to-shelf
   matching, Shelf Scan (SAM 3.1 + Spark verify), Where am I? (the
   local localizer), photo-walk view of Trader Joe's.
+- **Share a haul (photo only):** Score's Share opens a preview with
+  Story/Post size, handle and level toggles, and optional Muse looks
+  (badge, cast joins in, storybook). Still PNG through the phone's share
+  sheet; no video. Footer says Made with Arya, plus Powered by Meta Muse
+  only on a painted card. Not yet tried against live Muse.
 - **Demo:** a fictional household in a per-visitor sandbox; demo
   writes never reach disk. Light mode only.
 - **Accounts:** registration LOCKED (owner, 2026-10-28) —

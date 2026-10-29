@@ -651,11 +651,30 @@
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="share-title">
         <h3 id="share-title" style="margin-top:0">Share</h3>
     <div id="share-chips"></div>
-        <canvas id="share-canvas" width="1080" height="1350" style="width:100%; border-radius:16px; display:block" hidden></canvas>
+        <canvas id="share-canvas" width="1080" height="1920" style="display:block; max-width:100%; max-height:46vh; width:auto; margin:0 auto; border-radius:16px; border:1px solid var(--line)" hidden></canvas>
+        <div id="share-opts" hidden>
+          <div class="seg" id="share-size" style="margin-top:10px">
+            <button class="chip" type="button" data-size="story" aria-pressed="true">Story</button>
+            <button class="chip" type="button" data-size="post" aria-pressed="false">Post</button>
+          </div>
+          <p style="margin:10px 0 2px"><label><input type="checkbox" id="opt-handle" checked> Show my handle</label></p>
+          <p style="margin:2px 0"><label><input type="checkbox" id="opt-level" checked> Show my level</label></p>
+          <p style="margin:2px 0" id="opt-photo-row" hidden><label><input type="checkbox" id="opt-photo"> Add my haul photo</label><br><span class="muted">Off by default. Check that nobody is in it before you share.</span></p>
+          <h4 style="margin:12px 0 6px">Make it special with Arya</h4>
+          <div class="seg" id="share-looks">
+            <button class="chip" type="button" data-look="plain" aria-pressed="true">Plain</button>
+            <button class="chip" type="button" data-look="badge" aria-pressed="false">Add my badge</button>
+            <button class="chip" type="button" data-look="friends" aria-pressed="false">Cast joins in</button>
+            <button class="chip" type="button" data-look="story" aria-pressed="false">Storybook</button>
+          </div>
+          <p class="muted" id="share-look-hint" style="margin:6px 0 0"></p>
+          <p style="margin:6px 0 0"><button class="btn" id="share-again" type="button" hidden>Try another</button></p>
+        </div>
         <p class="muted" id="share-caption" style="margin-top:10px"></p>
-        <p style="display:flex; gap:8px">
+        <p style="display:flex; gap:8px; flex-wrap:wrap">
           <button class="btn primary grow" id="share-go" type="button" hidden>Share</button>
-          <button class="btn grow" id="share-png" type="button" hidden>Save still</button>
+          <button class="btn grow" id="share-png" type="button" hidden>Save image</button>
+          <button class="btn grow" id="share-copy" type="button" hidden>Copy caption</button>
           <button class="btn grow" id="share-close" type="button">Close</button>
         </p>
         <p class="muted nomargin" id="share-status"></p>

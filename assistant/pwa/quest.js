@@ -3176,7 +3176,7 @@ async function openScore(sess) {
   {
     html += `<h3 class="sect">Share this run</h3><div class="group pad">
       <p style="display:flex; gap:8px; flex-wrap:wrap; margin:0">
-        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share as video</button>
+        ${attached ? `<button class="btn primary grow" id="share-haul" type="button">Share your haul</button>
         <button class="btn grow" id="share-love" type="button">Loved something?</button>` : ""}
         ${(sess.my_reports || []).length ? `<button class="btn grow" id="share-sos" type="button">Shelf SOS</button>` : ""}
       </p>
@@ -3188,6 +3188,8 @@ async function openScore(sess) {
   }
   if (profile) {
     const seen = new Set(JSON.parse(localStorage.getItem("arya-seen-badges") || "[]"));
+    const fresh = profile.badges.find(b => b.earned && !seen.has(b.id));
+    if (fresh) Q.newBadge = { id: fresh.id, name: fresh.name };   // the share card's badge look
     html += `<h3 class="sect">Badges</h3><div class="group">` + profile.badges.map((b, i) => {
       const isNew = b.earned && !seen.has(b.id);
       return `<div class="row${b.earned ? " badgepop" : ""}" style="animation-delay:${i * 90}ms">
@@ -3211,11 +3213,11 @@ async function openScore(sess) {
   const ch = $("#score-challenge");
   if (ch) ch.addEventListener("click", () => { Q.raceStore = sess.store; questGo("view-race"); });
   const shareCtx = () => ({ sess, profile, haulPhotoURL: Q.haulPhotoURL || null });
-  // Share as video waits for the haul view, so a hidden or removed
+  // Share waits for the haul view, so a hidden or removed
   // sticker never reaches the card (HaulUI.shareReady, not the plain hunt).
   const haulCtx = async () => {
     const base = window.HaulUI ? await HaulUI.shareReady(sess) : { sess };
-    return base && Object.assign(base, { profile, haulPhotoURL: Q.haulPhotoURL || null });
+    return base && Object.assign(base, { profile, haulPhotoURL: Q.haulPhotoURL || null, newBadge: Q.newBadge || null });
   };
   const shB = $("#share-haul"); if (shB) shB.addEventListener("click", async () => {
     const c = await haulCtx();

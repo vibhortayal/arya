@@ -56,7 +56,7 @@ class TestHaulHooks(unittest.TestCase):
         # Share as video waits for the haul view; it never falls back to
         # the plain hunt, which would show hidden and removed stickers.
         self.assertNotIn("HaulUI.shareCtx(sess) : { sess }", score)
-        self.assertIn(">Share as video</button>", score)
+        self.assertIn(">Share your haul</button>", score)
         self.assertIn('id="share-haul"', score)
         # The late receipt walks the same road as the first one.
         self.assertIn("HaulUI.afterFinish(sess)", score)

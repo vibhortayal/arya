@@ -130,6 +130,7 @@ _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
                     "/api/quest/scan-shelf", "/api/quest/locate",
+                    "/api/quest/share-look",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
                     "/api/storemap")
 # The haul writes (fix, hide, post, second receipt) sit under the
@@ -1874,6 +1875,33 @@ async def quest_avatar_photo(req: Request):
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     return avatar.get()
+
+
+@app.post("/api/quest/share-look")
+async def quest_share_look(req: Request, look: str = ""):
+    """One paint pass for the haul card's art layer ($0.01). The body is
+    the PNG; the answer is the painted WebP. Nothing is stored."""
+    from api import sharelook
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if media != "image/png":
+        raise HTTPException(415, "send the card art as image/png")
+    art = await req.body()
+    if look not in sharelook.LOOKS:
+        raise HTTPException(400, "unknown look")
+    if not art or len(art) > sharelook.MAX_BYTES:
+        raise HTTPException(413, "card art must be under 4 MB")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    _budget_guard()
+    try:
+        img, _ = await run_in_threadpool(sharelook.make, look, art,
+                                         MetaClient(ledger=_ledger()))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
+    return Response(img, media_type="image/webp",
+                    headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/quest/avatar/use")
