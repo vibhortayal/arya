@@ -365,12 +365,25 @@ function paintTodayChecks(h) {
   // Eyes sightings ("in stock, left off the list") came along from
   // the List with the List overhaul: the list holds only what you add.
   const seen = (h.seen || []).map(s => `<div class="row"><div class="grow"><span class="checktext">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`);
-  $("#today-checks").innerHTML = checks.length || seen.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
+  // Design pass (2026-10-29): one row that names what to check; the
+  // questions open under it on tap.
+  const n = checks.length + seen.length;
+  const names = [...checks.map(c => c.name || ""), ...(h.seen || []).map(s => s.name)].filter(Boolean);
+  const label = names.length ? names.slice(0, 2).join(", ") + (names.length > 2 ? ` and ${names.length - 2} more` : "") : "";
+  $("#today-checks").innerHTML = n ? `<div class="group checkfold${todayChecksOpen ? " open" : ""}">
+    <button class="hubrow" type="button" data-checks-fold aria-expanded="${String(todayChecksOpen)}"><span class="hr-label">Still good? · ${n} to check${label ? `<span class="sub">${esc(label)}</span>` : ""}</span><span class="chev">›</span></button>
+    <div class="checkrows"${todayChecksOpen ? "" : " hidden"}>${checks.map(c =>
     `<div class="row"><div class="grow"><span class="checktext">${esc(c.text)}</span>
-      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div>` : "";
+      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div></div>` : "";
 }
+let todayChecksOpen = false;
 
 $("#today-checks").addEventListener("click", async ev => {
+  if (ev.target.closest("[data-checks-fold]")) {
+    todayChecksOpen = !todayChecksOpen;
+    if (TODAY_HOME) paintTodayChecks(TODAY_HOME);
+    return;
+  }
   const ok = ev.target.closest("[data-check-ok]");
   const ex = ev.target.closest("[data-check-expired]");
   if (!ok && !ex) return;

@@ -107,18 +107,20 @@
   <section id="view-home" class="view">
     <p id="today-dow" class="dow"></p>
     <div class="titlerow"><h2 class="largetitle">Today</h2></div>
-    <p id="today-through" class="muted nomargin"></p>
     <!-- Today is the shopping dashboard (owner, 2026-10-29: "Waze for
          grocery shopping"; the list is the hero, Quest has its own tab). -->
+    <!-- Design pass (2026-10-29): what you came for first (running low,
+         your lists), then alerts and use soon; extras fold to one line. -->
     <div id="today-low"></div>
-    <div id="today-tip"></div>
+    <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
+    <div id="today-lists"></div>
     <div id="today-alerts"></div>
     <div id="today-expiry"></div>
     <div id="today-checks"></div>
     <div id="today-eye"></div>
-    <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
-    <div id="today-lists"></div>
     <div id="today-patterns"></div>
+    <p id="today-through" class="muted small throughline"></p>
+    <div id="today-tip"></div>
     <button id="today-quest" class="gamerow newrow" type="button"><img class="rowimg" src="assets/scenes/storefront.webp" alt=""><span class="g-main"><span class="g-name">Make your next run a Quest</span><span class="g-sub">Optional. Turn the list into a treasure hunt.</span></span><span class="chev">›</span></button>
   </section>
 

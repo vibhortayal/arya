@@ -22,10 +22,20 @@ def fn(src, name):
 class TestTodayIsTheShoppingDashboard(unittest.TestCase):
     def test_today_sections_in_order(self):
         home = read("index.html").split('id="view-home"')[1].split("</section>")[0]
-        order = ["today-low", "today-alerts", "today-expiry", "today-checks",
-                 "today-lists", "today-patterns", "today-quest"]
+        # Design pass (2026-10-29): Your lists moved up under Running low;
+        # the tip folded to one line at the foot.
+        order = ["today-low", "today-lists", "today-alerts", "today-expiry",
+                 "today-checks", "today-patterns", "today-tip", "today-quest"]
         at = [home.index(f'id="{el}"') for el in order]
         self.assertEqual(at, sorted(at))
+
+    def test_today_extras_fold_to_one_line(self):
+        js, pw = read("app.js"), read("powers.js")
+        checks = fn(js, "paintTodayChecks")
+        self.assertIn("data-checks-fold", checks)
+        self.assertIn("to check", checks)
+        self.assertIn('class="tipline"', pw)
+        self.assertNotIn("tipcard", pw)
 
     def test_still_good_checks_left_the_list(self):
         js = read("app.js")

@@ -18,3 +18,10 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
   after all). The quantity reads "Pasta 1 lb x2". The big Grab on the card is
   the one orange button.
 - SW arya-v84. Tests: 1138 OK. Checked in Chromium: grab, row menu, put back.
+
+## C. Today, calmer
+- Your lists moved up under Running low. Still good? folds to one row
+  ("Still good? · 2 to check", names under it) that opens the questions.
+  "Did you know?" is one line at the foot (× hides it, tap opens Powers).
+  "Data through" moved under Your patterns.
+- SW arya-v85. Tests: 1139 OK.
