@@ -10,4 +10,5 @@ export const VIEWS = [
 export type ViewId = (typeof VIEWS)[number];
 export type ViewParams = Record<string, unknown>;
 
-export const TABS: ViewId[] = ["home", "list", "chat", "community"];
+/* Settings (owner, 2026-10-29) is the Profile page as a fifth tab. */
+export const TABS: ViewId[] = ["home", "list", "chat", "community", "profile"];

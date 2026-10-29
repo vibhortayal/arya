@@ -3,7 +3,7 @@ import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TABS, type ViewId } from "./app/views";
 import { ToastProvider } from "./ui/Toast";
-import { TabAsk, TabLists, TabQuest, TabToday } from "./ui/icons";
+import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { SCREENS } from "./screens/registry";
 
@@ -24,8 +24,8 @@ function Root() {
   return <NavProvider initial="home"><Shell /></NavProvider>;
 }
 
-const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest };
-const TAB_LABEL: Record<string, string> = { home: "Today", list: "Lists", chat: "Ask", community: "Quest" };
+const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
+const TAB_LABEL: Record<string, string> = { home: "Today", list: "Lists", chat: "Ask", community: "Quest", profile: "Settings" };
 
 /* pwa/index.html's shell: the floating avatar (the way to Profile),
  * the demo bar, one view at a time, and the four-tab bar. */
@@ -37,7 +37,7 @@ function Shell() {
     <>
       {nav.chrome && (
         <button id="avatar-btn" className="avatar floating" type="button" aria-label="Profile"
-          onClick={() => nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
+          onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
           <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>
         </button>
       )}
