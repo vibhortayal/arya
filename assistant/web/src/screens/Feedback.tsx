@@ -18,7 +18,7 @@ export function Feedback() {
   const { demo } = useSession();
   const [kind, setKind] = useState<Kind>("idea");
   const [text, setText] = useState("");
-  const [status, setStatus] = useState(demo ? "Sign in with a real account to send a note." : "");
+  const [status, setStatus] = useState(demo ? t("feedback.signInToSend") : "");
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState<Note[] | null>(null);
 
@@ -26,7 +26,7 @@ export function Feedback() {
     get<{ notes: Note[] }>("/api/feedback").then(d => setNotes(d.notes), () => setNotes(null));
   };
   useEffect(() => {
-    setStatus(demo ? "Sign in with a real account to send a note." : "");
+    setStatus(demo ? t("feedback.signInToSend") : "");
     loadInbox();
   }, [nav.key, demo]);
 
@@ -35,7 +35,7 @@ export function Feedback() {
     try {
       await post("/api/feedback", { kind, text });
       setText("");
-      setStatus("Sent. Thank you.");
+      setStatus(t("feedback.sent"));
       loadInbox();
     } catch (e) { setStatus(e instanceof Error ? e.message : String(e)); }
     setBusy(false);

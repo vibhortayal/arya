@@ -25,7 +25,8 @@ clearOnSignOut(() => {
   lines.length = 0; history.length = 0; epoch++; offered = false;
   if ("speechSynthesis" in window) speechSynthesis.cancel();
 });
-const SUGGEST = ["What's running low?", "What did I spend this month?", "Add eggs to my list"];
+/* Suggested questions: en.json keys, sent as the question text. */
+const SUGGEST = ["ask.suggest.runningLow", "ask.suggest.spend", "ask.suggest.addEggs"];
 
 const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
 
@@ -83,7 +84,7 @@ export function Chat() {
 
   const send = async (raw: string) => {
     const q = raw.trim();
-    if (!q) { toast("Type a question first."); input.current?.focus(); return; }
+    if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
     history.push({ role: "user", content: q });
     add({ kind: "me", text: q });
@@ -101,7 +102,7 @@ export function Chat() {
       speak(res.reply);
     } catch (e) {
       if (mine !== epoch) return;
-      add({ kind: "arya", text: "I could not answer that: " + (e instanceof Error ? e.message : String(e)) });
+      add({ kind: "arya", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }) });
     }
   };
 
@@ -110,26 +111,26 @@ export function Chat() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setNote("Transcribing with Muse Voice Transcribe…");
+      setNote(t("common.voice.transcribing"));
       try {
-        const t = await transcribeBlob(wav);
-        if (t) { setNote(null); send(t); }
-        else setNote("That did not come through. Try again, or type it.");
+        const said = await transcribeBlob(wav);
+        if (said) { setNote(null); send(said); }
+        else setNote(t("ask.voiceEmpty"));
       } catch (e) {
-        setNote("Transcription failed: " + (e instanceof Error ? e.message : String(e)));
+        setNote(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
       return;
     }
     if (!voiceSupported()) {
-      setNote("Voice input is not available in this browser. The microphone on your keyboard works too.");
+      setNote(t("common.voice.unsupported"));
       return;
     }
     try {
       capture.current = await startCapture();
       setListening(true);
-      setNote("Listening… tap the mic again to send.");
+      setNote(t("ask.listening"));
     } catch {
-      setNote("Microphone access was refused. You can type instead.");
+      setNote(t("common.voice.refused"));
     }
   };
 
@@ -141,7 +142,7 @@ export function Chat() {
         {log.length === 0 ? (
           <div id="chat-empty">
             <p className="muted">{t("ask.askAboutYourListYour")}</p>
-            {SUGGEST.map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
+            {SUGGEST.map(k => t(k)).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (
           <div key={i} className="bubble arya offer" id="lang-offer">

@@ -12,7 +12,7 @@ import { get, post } from "../lib/api";
 import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
 import { characterManifest } from "../lib/characters";
 import { languageToast } from "../lib/language";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -64,16 +64,16 @@ export function Profile() {
   const earned = (profile?.badges || []).filter(b => b.earned).length;
   const mapped = profile?.mapped_stores || [];
   const level = profile && s
-    ? `Level ${profile.level || 1} · ${profile.points || 0} pts` + (s.streak_weeks ? ` · ${s.streak_weeks} wk streak` : "") : "";
+    ? t("settings.levelLine", { level: profile.level || 1, points: profile.points || 0 }) + (s.streak_weeks ? t("settings.streak", { n: s.streak_weeks }) : "") : "";
   const questSub = profile && s
-    ? `${s.hunts} hunt${s.hunts === 1 ? "" : "s"} · ${earned} of ${(profile.badges || []).length} badges`
-      + (mapped.length ? ` · ${mapped.length} store${mapped.length === 1 ? "" : "s"} mapped` : "")
-    : "Hunts, badges and mapped stores";
+    ? t("settings.questHunts", { count: s.hunts }) + t("settings.questBadges", { earned, total: (profile.badges || []).length })
+      + (mapped.length ? t("settings.questMapped", { count: mapped.length }) : "")
+    : t("settings.questSubEmpty");
 
   const dismiss = (sid: string) => attempt(async () => {
-    if (!confirm("Dismiss this hunt? It leaves your Receipts list. This cannot be undone.")) return;
+    if (!confirm(t("receipts.confirmDismiss"))) return;
     await post(`/api/quest/sessions/${encodeURIComponent(sid)}/delete`, {});
-    toast("Hunt dismissed.");
+    toast(t("receipts.huntDismissed"));
     load().catch(showErr);
   });
 
@@ -82,7 +82,7 @@ export function Profile() {
     try {
       const r = await post("/api/settings", { currency: code });
       setCurrency({ code: r.currency, symbol: r.symbol });
-      toast(`Prices now show in ${r.currency}.`);
+      toast(t("settings.pricesIn", { currency: r.currency }));
     } catch (e) { setCurrency(prev); throw e; }
   });
 
@@ -97,7 +97,7 @@ export function Profile() {
   });
 
   const eraseAccount = () => attempt(async () => {
-    if (!delPw) { toast("Enter your password to confirm."); return; }
+    if (!delPw) { toast(t("settings.enterPassword")); return; }
     await post("/auth/account/delete", { password: delPw });
     await leave();
   });
@@ -136,7 +136,7 @@ export function Profile() {
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
         <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
         <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"
-          sub={archive.receipts.length ? `${archive.receipts.length} receipts · the private archive` : "The private archive"} />
+          sub={archive.receipts.length ? t("settings.receiptsSub", { n: archive.receipts.length }) : t("settings.privateArchive")} />
         <NavRow id="btn-quest-progress" view="quest-progress" title={t("common.questProgress")} subId="pf-quest-sub" sub={questSub} />
         <A2hsRow demo={demo} />
       </div>
@@ -215,8 +215,8 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
   };
   const make = async () => {
     const p = prompt.trim();
-    if (!p) { toast("Describe your avatar first."); return; }
-    setMaking(true); setStatus("Drawing it…");
+    if (!p) { toast(t("settings.describeFirst")); return; }
+    setMaking(true); setStatus(t("settings.drawingIt"));
     try { await post("/api/quest/avatar/generate", { prompt: p }); setStatus(""); showCand(); }
     catch (e) { setStatus(errMsg(e)); }
     setMaking(false);
@@ -225,15 +225,15 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
     const file = ev.target.files?.[0];
     ev.target.value = "";
     if (!file) return;
-    setStatus("Drawing you as a cartoon…");
+    setStatus(t("settings.drawingYou"));
     try {
       const r = await fetch("/api/quest/avatar/photo", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
-      if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || "Could not make it");
+      if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || t("settings.couldNotMake"));
       setStatus(""); showCand();
     } catch (e) { setStatus(errMsg(e)); }
   };
   const use = async () => {
-    try { const r = await post("/api/quest/avatar/use", {}); setAv(r); setCand(null); toast("Avatar saved."); }
+    try { const r = await post("/api/quest/avatar/use", {}); setAv(r); setCand(null); toast(t("settings.avatarSaved")); }
     catch (e) { toast(errMsg(e)); }
   };
 
@@ -265,14 +265,13 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
         </div>
       </div>
       <p id="av-status" className="muted nomargin" style={{ textAlign: "center" }}>{status}</p>
-      <p className="nomargin" style={{ textAlign: "center", marginTop: 10 }}><button className="btn compact" id="av-edit-label" type="button" onClick={() => setOpen(o => !o)}>{open ? "Done" : "Edit avatar"}</button></p>
+      <p className="nomargin" style={{ textAlign: "center", marginTop: 10 }}><button className="btn compact" id="av-edit-label" type="button" onClick={() => setOpen(o => !o)}>{open ? t("common.done") : t("settings.editAvatar")}</button></p>
     </div>
   );
 }
 
 /* ---------------- Reminders (push.js) ---------------- */
 type PushCfg = { enabled: boolean; notice_days: number; subscribed: boolean; public_key?: string };
-const DEFAULT_NOTE = "One push a day at most, and only when something is due. Turn it off any time.";
 const keyBytes = (b64: string) => {
   const pad = "=".repeat((4 - (b64.length % 4)) % 4);
   const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
@@ -282,7 +281,7 @@ const keyBytes = (b64: string) => {
 function Reminders() {
   const { t } = useTranslation();
   const [cfg, setCfg] = useState<PushCfg>({ enabled: false, notice_days: 2, subscribed: false });
-  const [note, setNote] = useState(DEFAULT_NOTE);
+  const [note, setNote] = useState(() => t("settings.remNote"));
   const [busy, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
   const [noSwitch, setNoSwitch] = useState(false);
@@ -303,8 +302,7 @@ function Reminders() {
       }
       setCfg(c);
       if (!supported || (ios && !standalone)) {
-        setNote(ios ? "On iPhone, add Arya to your Home Screen first (iOS 16.4 or newer), then open it from there."
-          : "This browser cannot show push reminders.");
+        setNote(ios ? t("settings.remIos") : t("settings.remUnsupported"));
         setNoSwitch(!supported);
       }
     })();
@@ -312,15 +310,15 @@ function Reminders() {
 
   const pushPost = (path: string, body?: unknown) => post<PushCfg>(path, body || {});
   const turnOn = async () => {
-    if (Notification.permission === "denied") { setNote("Blocked in phone settings. Allow notifications for Arya there, then try again."); return; }
+    if (Notification.permission === "denied") { setNote(t("settings.remBlocked")); return; }
     const perm = await Notification.requestPermission();
-    if (perm !== "granted") { setNote("Reminders need notification permission. You can allow it in phone settings."); return; }
+    if (perm !== "granted") { setNote(t("settings.remNeedPermission")); return; }
     const reg = await navigator.serviceWorker.ready;
     const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({
       userVisibleOnly: true, applicationServerKey: keyBytes(cfg.public_key || ""),
     });
     setCfg(await pushPost("/api/push/subscribe", { subscription: sub.toJSON() }));
-    setNote(DEFAULT_NOTE);
+    setNote(t("settings.remNote"));
   };
   const turnOff = async () => {
     const reg = await navigator.serviceWorker.getRegistration();
@@ -332,7 +330,7 @@ function Reminders() {
   const toggle = async () => {
     setBusy(true);
     try { await (cfg.subscribed ? turnOff() : turnOn()); }
-    catch (e) { setNote(errMsg(e) || "Could not change reminders."); }
+    catch (e) { setNote(errMsg(e) || t("settings.remCouldNotChange")); }
     setBusy(false);
   };
   const days = async (delta: number) => {
@@ -342,8 +340,8 @@ function Reminders() {
   };
   const test = async () => {
     setTestBusy(true);
-    try { await pushPost("/api/push/test"); setNote("Test reminder sent. Check your notifications."); }
-    catch (e) { setNote(errMsg(e) || "Could not send the test."); }
+    try { await pushPost("/api/push/test"); setNote(t("settings.remTestSent")); }
+    catch (e) { setNote(errMsg(e) || t("settings.remTestFailed")); }
     setTestBusy(false);
   };
 
@@ -353,11 +351,11 @@ function Reminders() {
       <h3 className="sect">{t("settings.reminders")}</h3>
       <div className="group">
         <div className="row"><span className="grow"><span className="name" style={{ fontWeight: 550 }}>{t("settings.remindMe")}</span>
-          <span className="sub" id="rem-sub">{on ? "On. You will get a push when something is due" : "A push when something is about to run out"}</span></span>
+          <span className="sub" id="rem-sub">{on ? t("settings.remOn") : t("settings.remOff")}</span></span>
           <button className="sw" id="rem-switch" type="button" role="switch" aria-checked={on} aria-label={t("settings.remindMe")} disabled={busy || noSwitch} onClick={toggle}><i></i></button></div>
         <div id="rem-more" hidden={!on}>
           <div className="row"><span className="grow"><span className="name" style={{ fontWeight: 550 }}>{t("settings.headsUp")}</span>
-            <span className="sub" id="rem-days-sub">{cfg.notice_days} {cfg.notice_days === 1 ? "day" : "days"}{" "}{t("settings.beforeItRunsOut")}</span></span>
+            <span className="sub" id="rem-days-sub">{t("settings.daysBefore", { count: cfg.notice_days })}</span></span>
             <span className="stepper"><button type="button" id="rem-dm" aria-label={t("settings.fewerDays")} onClick={() => days(-1)}>&minus;</button>
               <span className="qty" id="rem-dq">{cfg.notice_days}</span>
               <button type="button" id="rem-dp" aria-label={t("settings.moreDays")} onClick={() => days(1)}>+</button></span></div>
@@ -378,7 +376,7 @@ type GSheet = null | { k: "start" } | { k: "rename" } | { k: "invite"; code: str
   | { k: "member"; handle: string } | { k: "leave"; p: Leave };
 
 const fmtCode = (c: string) => (c.length === 6 ? c.slice(0, 3) + " " + c.slice(3) : c);
-const joinedOn = (sec: number) => { const d = new Date(sec * 1000); return `Joined ${MONTHS[d.getMonth()]} ${d.getDate()}`; };
+const joinedOn = (sec: number) => { const d = new Date(sec * 1000); return t("settings.joined", { date: `${MONTHS[d.getMonth()]} ${d.getDate()}` }); };
 
 function Bul({ icon, title, sub }: { icon: string; title: ReactNode; sub?: ReactNode }) {
   return <div className="gbul"><span className="gico" aria-hidden="true">{icon}</span><span className="grow"><b>{title}</b>{sub ? <span className="sub">{sub}</span> : null}</span></div>;
@@ -414,7 +412,7 @@ function GroupSection() {
     const r = await post("/api/group/invite", {});
     setSheet({ k: "invite", code: r.code, hours: r.hours });
   });
-  const startOpen = () => { const me = (user || "").split("@")[0]; setName(me ? cap(me) + "'s home" : "Our home"); setSheet({ k: "start" }); };
+  const startOpen = () => { const me = (user || "").split("@")[0]; setName(me ? t("settings.homeOf", { name: cap(me) }) : t("settings.ourHome")); setSheet({ k: "start" }); };
   const renameOpen = () => { setName(g.group?.name || ""); setSheet({ k: "rename" }); };
   const leaveOpen = () => attempt(async () => { setSheet({ k: "leave", p: await get<Leave>("/api/group/leave-preview") }); });
 
@@ -433,9 +431,9 @@ function GroupSection() {
       </> : <>
         <h3 className="sect">{t("settings.group")}</h3>
         <div className="group">
-          <button className="navrow" type="button" data-g="rename" onClick={renameOpen}><span className="grow"><span className="gname">{grp.name}</span><span className="sub">{n} {n === 1 ? "person" : "people"}{" "}{t("settings.listsAndReceiptsShared")}</span></span><span className="chev"><IconPen /></span></button>
+          <button className="navrow" type="button" data-g="rename" onClick={renameOpen}><span className="grow"><span className="gname">{grp.name}</span><span className="sub">{t("settings.peopleShared", { count: n })}</span></span><span className="chev"><IconPen /></span></button>
           {grp.members.map(m => {
-            const role = m.me ? <> <span className="grole">{t("settings.you")}{m.owner ? " · owner" : ""}</span></> : <> <span className="grole">· {m.owner ? "owner" : "member"}</span></>;
+            const role = m.me ? <> <span className="grole">{m.owner ? t("settings.youOwner") : t("settings.you")}</span></> : <> <span className="grole">{m.owner ? t("settings.roleOwner") : t("settings.roleMember")}</span></>;
             const tap = grp.is_owner && !m.me;
             const body = <>{face(m)}<span className="grow"><span className="name">@{m.handle}{role}</span>{m.me ? null : <span className="sub">{joinedOn(m.joined)}</span>}</span>{tap && <span className="chev">›</span>}</>;
             return tap
@@ -463,17 +461,17 @@ function GroupSection() {
       {sh?.k === "invite" && grp && (() => {
         const link = `${location.origin}/?join=${sh.code}`;
         return (
-          <Sheet open onClose={close} title={"Invite to " + grp.name} id="group-sheet">
+          <Sheet open onClose={close} title={t("settings.inviteTo", { name: grp.name })} id="group-sheet">
             <p className="muted nomargin gcenter">{t("settings.sendThisCodeItWorks", { hours: sh.hours })}</p>
-            <div className="gcode" aria-label={"Invite code " + sh.code.split("").join(" ")}>{fmtCode(sh.code)}</div>
-            <p className="muted small nomargin gcenter glink">{t("settings.orOpen", { replace: link.replace(/^https?:\/\//, "") })}</p>
-            <div className="sheetacts"><button className="btn" type="button" id="g-copy" onClick={() => copy(sh.code, "Code copied.")}>{t("settings.copyCode")}</button>
+            <div className="gcode" aria-label={t("settings.inviteCodeAria", { code: sh.code.split("").join(" ") })}>{fmtCode(sh.code)}</div>
+            <p className="muted small nomargin gcenter glink">{t("settings.orOpen", { link: link.replace(/^https?:\/\//, "") })}</p>
+            <div className="sheetacts"><button className="btn" type="button" id="g-copy" onClick={() => copy(sh.code, t("settings.codeCopied"))}>{t("settings.copyCode")}</button>
               <button className="btn primary" type="button" id="g-share" data-first onClick={async () => {
-                const text = `Join ${grp.name} on Arya: code ${fmtCode(sh.code)}`;
+                const text = t("settings.joinText", { name: grp.name, code: fmtCode(sh.code) });
                 if (navigator.share) {
                   try { await navigator.share({ title: "Arya", text, url: link }); return; } catch (e) { if (e && (e as Error).name === "AbortError") return; }
                 }
-                copy(link, "Link copied.");
+                copy(link, t("settings.linkCopied"));
               }}>{t("settings.shareLink")}</button></div>
             <p className="muted small">{t("settings.anyoneWithTheCodeCan", { max_members: grp.max_members })}</p>
             <button className="linkbtn" type="button" id="g-newcode" onClick={invite}>{t("settings.makeANewCode")}</button>
@@ -481,32 +479,32 @@ function GroupSection() {
         );
       })()}
       {sh?.k === "member" && (
-        <Sheet open onClose={close} title={`Remove @${sh.handle}?`} closeLabel={t("common.cancel")} id="group-sheet">
+        <Sheet open onClose={close} title={t("settings.removeHandle", { handle: sh.handle })} closeLabel={t("common.cancel")} id="group-sheet">
           <p className="muted">{t("settings.theyKeepACopyOf")}</p>
           <div className="sheetacts"><button className="btn" type="button" onClick={close}>{t("settings.keep")}</button>
             <button className="btn danger" type="button" id="g-remove" onClick={() => attempt(async () => {
               await post("/api/group/remove", { handle: sh.handle });
-              toast(`@${sh.handle} is out of the group.`); close(); await load();
+              toast(t("settings.handleOut", { handle: sh.handle })); close(); await load();
             })}>{t("common.remove")}</button></div>
         </Sheet>
       )}
       {sh?.k === "leave" && (() => {
         const p = sh.p, nl = p.lists.length;
         return (
-          <Sheet open onClose={close} title={`Leave ${p.name}?`} closeLabel={t("common.cancel")} id="group-sheet">
+          <Sheet open onClose={close} title={t("settings.leaveName", { name: p.name })} closeLabel={t("common.cancel")} id="group-sheet">
             <div className="gbuls">
-              <Bul icon="📋" title={nl ? `You keep a copy of ${nl === 1 ? "the list" : `all ${nl} lists`}` : "You keep a copy of everything on the list"}
-                sub={`${nl ? p.lists.join(", ") + ". " : ""}The group keeps its own.`} />
-              <Bul icon="🧾" title={`Your ${p.my_receipts} receipt${p.my_receipts === 1 ? "" : "s"} go${p.my_receipts === 1 ? "es" : ""} with you`}
-                sub={p.last_one ? "" : `The ${p.other_receipts} the others added stay with the group.`} />
-              <Bul icon="🔄" title={t("settings.runningLowPatternsAndSpend")} sub={p.last_one ? "" : "Same for the group, from what is left."} />
+              <Bul icon="📋" title={nl ? (nl === 1 ? t("settings.keepCopyOne") : t("settings.keepCopyAll", { n: nl })) : t("settings.keepCopyEverything")}
+                sub={(nl ? p.lists.join(", ") + ". " : "") + t("settings.groupKeepsOwn")} />
+              <Bul icon="🧾" title={t("settings.yourReceiptsGo", { count: p.my_receipts })}
+                sub={p.last_one ? "" : t("settings.othersStay", { n: p.other_receipts })} />
+              <Bul icon="🔄" title={t("settings.runningLowPatternsAndSpend")} sub={p.last_one ? "" : t("settings.sameForGroup")} />
               {p.last_one ? <Bul icon="👋" title={t("settings.youAreTheLastOne")} sub={t("settings.theGroupClosesYourLists")} />
-                : p.next_owner ? <Bul icon="👑" title={`@${p.next_owner} becomes the owner`} /> : null}
+                : p.next_owner ? <Bul icon="👑" title={t("settings.becomesOwner", { handle: p.next_owner })} /> : null}
             </div>
             <div className="sheetacts"><button className="btn" type="button" onClick={close}>{t("settings.stay")}</button>
               <button className="btn danger" type="button" id="g-leave" onClick={() => attempt(async () => {
                 await post("/api/group/leave", {});
-                close(); toast(`You left ${p.name}. Your lists are a copy now.`); await load();
+                close(); toast(t("settings.youLeft", { name: p.name })); await load();
               })}>{t("settings.leaveGroup")}</button></div>
           </Sheet>
         );

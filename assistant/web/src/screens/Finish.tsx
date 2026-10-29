@@ -33,11 +33,11 @@ export function Finish() {
   const p = qProgress(sess);
   const nLeft = (sess.left || []).length;
   const sub = (nLeft
-    ? `${p.done} in your cart, ${nLeft} left for next time at ${sess.store}.`
+    ? t("finish.inCartLeft", { done: p.done, left: nLeft, store: sess.store })
     : p.left === 0
-    ? `Every item collected at ${sess.store}.`
-    : `${p.done} of ${p.total} collected at ${sess.store}.`) +
-    (sess.mode === "express" ? " Snap the receipt and the trip is done." : " The receipt is the scorecard — snap it and the hunt is settled.");
+    ? t("finish.everyItem", { store: sess.store })
+    : t("finish.collectedAt", { done: p.done, total: p.total, store: sess.store })) +
+    (sess.mode === "express" ? t("finish.snapExpress") : t("finish.snapQuest"));
 
   const closeToScore = async (settle: (() => Promise<Session>) | null) => {
     if (going.current) return;
@@ -55,33 +55,33 @@ export function Finish() {
   const onPhoto = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f) return;
-    setStatus("Reading the receipt — this can take up to a minute.");
+    setStatus(t("common.receiptFile.reading"));
     try {
       const rid = (await decode(f)).receipt.receipt_id;
       setStatus("");
       await closeToScore(attach(rid));
     } catch (e) {
       setStatus("");
-      toast("Could not file that photo: " + errMsg(e));
+      toast(t("finish.couldNotFilePhoto", { error: errMsg(e) }));
     }
     ev.target.value = "";
   };
   const onEreceipt = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f) return;
-    setStatus("Reading the receipt. This can take up to a minute.");
+    setStatus(t("finish.readingFile"));
     let rid: string;
     try {
       rid = (await decode(f)).receipt.receipt_id;
     } catch (e) {
       setStatus("");
       ev.target.value = "";
-      toast("Could not read that file: " + errMsg(e) + " You can add the receipt later from Receipts.");
+      toast(t("finish.couldNotReadFile", { error: errMsg(e) }));
       return;
     }
     setStatus("");
     try { await closeToScore(attach(rid)); }
-    catch (e) { toast("Arya read the file, but could not attach it: " + errMsg(e)); }
+    catch (e) { toast(t("finish.couldNotAttach", { error: errMsg(e) })); }
     ev.target.value = "";
   };
   const sample = async () => {
