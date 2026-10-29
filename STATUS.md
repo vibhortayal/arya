@@ -8,7 +8,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
 - Tabs Today · Lists · Ask · Quest; Crew folded into Quest. Today is the
   shopping dashboard (running low, store alerts, use soon, lists,
   patterns). Landing: "Groceries, sorted." See
-  assistant/loops/2026-10-29-list-first.md. SW arya-v76.
+  assistant/loops/2026-10-29-list-first.md. SW arya-v77.
 
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse

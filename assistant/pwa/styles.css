@@ -1049,6 +1049,17 @@ input[type=file]::file-selector-button {
 .sheet .navrow[aria-pressed="true"] .tick { visibility: visible; }
 .sheet .navrow small { display: block; color: var(--secondary); font-size: 14px; }
 .sheet .navrow.dangerrow { color: var(--danger); }
+/* Find a store inside the list sheets: a field + Near me chip, then
+ * suggestions in flow (the sheet scrolls, so no floating dropdown). */
+.sheet .findrow { display: flex; gap: 8px; align-items: center; }
+.sheet .findrow input { flex: 1; min-width: 0; margin: 0; }
+.sheet .findrow .chip { flex: none; }
+.sheet .gdrop { position: static; box-shadow: none; margin: 6px 0 4px; }
+.sheet .srow { display: flex; align-items: center; border-bottom: 1px solid var(--sep); }
+.sheet .srow:last-child { border-bottom: none; }
+.sheet .srow .navrow { flex: 1; min-width: 0; border-bottom: none; }
+.sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 14px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
+.sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; }
 .sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
 .sheet .sheetacts .btn { flex: 1; }
 .sheet .field { margin: 8px 0; }
@@ -1155,3 +1166,10 @@ body.hunting #view-hunt.full .askbar {
 .chip.onlist { color: var(--ink3); cursor: default; }
 #today-patterns .hubrow, #today-quest { margin-top: 4px; }
 #today-quest { margin-top: 14px; }
+
+/* Profile: the avatar wears a pencil; the choices open on Edit. */
+.avwrap { position: relative; width: 96px; margin: 0 auto 6px; }
+.avwrap .avatar.big { margin: 0; }
+.avedit { position: absolute; right: -6px; bottom: 0; width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; background: var(--accent); color: #fff; font-size: 14px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.avedit::after { content: ""; position: absolute; inset: -4px; }
+#av-panel { margin-top: 6px; }

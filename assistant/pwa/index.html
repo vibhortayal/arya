@@ -207,32 +207,30 @@
     <p><a href="#" id="pf-back">&larr; Back</a></p>
     <h2 class="largetitle">Profile</h2>
     <div id="pf-avatar" class="group pad">
-      <div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div>
+      <div class="avwrap"><div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div><button class="avedit" id="av-edit-btn" type="button" aria-label="Edit avatar" aria-expanded="false">&#9998;</button></div>
       <p class="nomargin" style="text-align:center"><strong id="pf-handle" style="font-size:19px"></strong></p>
-      <p class="muted nomargin" style="text-align:center">Also hosts the haul cards you share. Public: boards and badges only.</p>
-      <div id="av-presets" class="presetrow"></div>
-      <div id="av-make-box" hidden>
-        <div class="avrow"><input type="text" id="av-prompt" maxlength="200" placeholder="Describe it: a fox with a cart" aria-label="Describe your avatar" autocomplete="off"><button id="av-make" class="btn compact primary" type="button">Make</button></div>
-        <p class="nomargin avalt"><label class="linkbtn" for="av-photo">or use my photo</label><input type="file" id="av-photo" accept="image/*" hidden><span class="muted"> Drawn as a cartoon, then dropped.</span></p>
-        <div id="av-candidate" class="avcand" hidden>
-          <img id="av-cand-img" class="candimg" alt="Your new avatar">
-          <button id="av-use" class="btn compact primary" type="button">Use this</button>
+      <p class="muted nomargin" id="pf-level" style="text-align:center"></p>
+      <div id="av-panel" hidden>
+        <p class="muted nomargin small" style="text-align:center">Also hosts the haul cards you share. Public: boards and badges only.</p>
+        <div id="av-presets" class="presetrow"></div>
+        <div id="av-make-box" hidden>
+          <div class="avrow"><input type="text" id="av-prompt" maxlength="200" placeholder="Describe it: a fox with a cart" aria-label="Describe your avatar" autocomplete="off"><button id="av-make" class="btn compact primary" type="button">Make</button></div>
+          <p class="nomargin avalt"><label class="linkbtn" for="av-photo">or use my photo</label><input type="file" id="av-photo" accept="image/*" hidden><span class="muted"> Drawn as a cartoon, then dropped.</span></p>
+          <div id="av-candidate" class="avcand" hidden>
+            <img id="av-cand-img" class="candimg" alt="Your new avatar">
+            <button id="av-use" class="btn compact primary" type="button">Use this</button>
+          </div>
         </div>
       </div>
       <p id="av-status" class="muted nomargin" style="text-align:center"></p>
+      <p class="nomargin" style="text-align:center;margin-top:10px"><button class="btn compact" id="av-edit-label" type="button">Edit avatar</button></p>
     </div>
-    <div id="pf-stats" class="stattiles"></div>
-    <p class="muted small">Points, levels and some badges count hunts that have their receipt attached.</p>
     <div id="pf-missing" class="group"></div>
-    <div id="pf-spots" class="group"></div>
-    <h3 class="sect">Badge shelf</h3>
-    <div id="pf-badges" class="badgetiles"></div>
-    <h3 class="sect">Mapped by you</h3>
-    <div id="pf-stores" class="group"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-quest-progress" type="button"><span class="grow">Quest progress<span class="sub" id="pf-quest-sub">Hunts, badges and mapped stores</span></span><span class="chev">›</span></button>
     </div>
     <div id="pf-reminders" hidden>
       <h3 class="sect">Reminders</h3>
@@ -247,8 +245,13 @@
       </div>
       <p class="muted small remnote" id="rem-note">One push a day at most, and only when something is due. Turn it off any time.</p>
     </div>
-    <h3 class="sect">Account</h3>
+    <h3 class="sect">Settings</h3>
     <div class="group" id="profile-account"></div>
+    <div class="group">
+      <button class="navrow" id="btn-feedback" type="button"><span class="grow">Feature request / Contact us<span class="sub">Tell us what to build, what broke, or ask a question</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-muse" type="button"><span class="grow">Connect Muse<span class="sub">Link a code to file receipts by chat</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-about" type="button"><span class="grow">About<span class="sub">Built on Meta models</span></span><span class="chev">›</span></button>
+    </div>
     <div class="group">
       <a class="navrow" href="/api/account/export"><span class="grow">Export my data<span class="sub">Everything Arya holds for you, as one file</span></span><span class="chev">›</span></a>
       <button class="navrow" id="btn-del-account" type="button"><span class="grow">Delete my account<span class="sub">Erase your account and all of its data</span></span><span class="chev">›</span></button>
@@ -258,21 +261,42 @@
         <p style="margin-top:10px"><button class="btn danger" id="btn-del-account-go" type="button">Erase everything</button></p>
       </div>
     </div>
-    <div class="group">
-      <button class="navrow" id="btn-feedback" type="button"><span class="grow">Feature request / Contact us<span class="sub">Tell us what to build, what broke, or ask a question</span></span><span class="chev">›</span></button>
-    </div>
-    <h3 class="sect">About</h3>
-    <div class="group pad">
-      <p class="nomargin">Built by <a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>.</p>
-      <p class="muted" style="margin-top:8px">Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab.</p>
-    </div>
-    <h3 class="sect">Connect Muse</h3>
+    <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
+  </section>
+
+  <section id="view-quest-progress" class="view" hidden>
+    <p><a href="#" id="pfq-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Quest progress</h2>
+    <div id="pf-stats" class="stattiles"></div>
+    <p class="muted small">Points, levels and some badges count hunts that have their receipt attached.</p>
+    <div id="pf-spots" class="group"></div>
+    <h3 class="sect">Badge shelf</h3>
+    <div id="pf-badges" class="badgetiles"></div>
+    <h3 class="sect">Mapped by you</h3>
+    <div id="pf-stores" class="group"></div>
+    <h3 class="sect">Badge shelf</h3>
+    <div id="pf-badges" class="badgetiles"></div>
+    <h3 class="sect">Mapped by you</h3>
+    <div id="pf-stores" class="group"></div>
+  </section>
+
+  <section id="view-muse" class="view" hidden>
+    <p><a href="#" id="pfm-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Connect Muse</h2>
     <div class="group pad">
       <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Link Muse once with a code to file receipts and orders by chat or WhatsApp; the camera and microphone on the List tab work right here. The code is shown once; making a new one replaces it.</p>
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
-    <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
+  </section>
+
+  <section id="view-about" class="view" hidden>
+    <p><a href="#" id="pfa-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">About</h2>
+    <div class="group pad">
+      <p class="nomargin">Built by <a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>.</p>
+      <p class="muted" style="margin-top:8px">Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab.</p>
+    </div>
   </section>
 
   <section id="view-feedback" class="view" hidden>

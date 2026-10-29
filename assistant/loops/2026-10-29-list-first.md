@@ -23,7 +23,7 @@ https://claude.ai/artifact/2cJpSnvyKCknaZ2XnpHk7y
   picture; the cast strip is gone; Quest is one line under the button.
   How it works leads with the list.
 - Back from a hunt lands on the Quest tab; ending a hunt returns there.
-- SW arya-v76.
+- SW arya-v77.
 
 **Verification.** Suite: 1059 green (1050 + 9 new in
 tests/test_list_first.py). Ran the demo household locally with

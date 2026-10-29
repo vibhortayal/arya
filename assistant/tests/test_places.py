@@ -164,6 +164,36 @@ class TestPlacesEndpoints(unittest.TestCase):
         finally:
             os.environ.pop("GOOGLE_PLACES_API_KEY", None)
 
+    def test_near_me_lists_stores_around_the_phone(self):
+        os.environ["GOOGLE_PLACES_API_KEY"] = "test-places-key"
+        try:
+            from api import places
+            calls = []
+            def fake(url, method="GET", body=None, field_mask=None):
+                calls.append((url, body))
+                return SEARCH
+            places._http_json = fake
+            r = self.c.get("/api/stores/places?q=&lat=34.1&lng=-117.6")
+            self.assertEqual(len(r.json()["suggestions"]), 1)
+            self.assertIn("searchText", calls[0][0])
+            self.assertEqual(calls[0][1]["textQuery"], "grocery store")
+            # No location and no text: still a quiet no-op.
+            r = self.c.get("/api/stores/places?q=")
+            self.assertEqual(r.json()["suggestions"], [])
+            self.assertEqual(len(calls), 1)
+        finally:
+            os.environ.pop("GOOGLE_PLACES_API_KEY", None)
+
+
+class TestListSheetFindStore(unittest.TestCase):
+    def test_list_sheets_carry_the_google_picker_and_remove(self):
+        l = (PWA / "lists.js").read_text()
+        for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
+                       "/api/stores/mine/remove", "data-ls-pick",
+                       "data-ls-rm", 'id="ls-find"', "Near you"):
+            self.assertIn(needle, l)
+        self.assertEqual(l.count("${findBlock()}"), 2)  # New list + Link stores
+
 
 class TestPickerClient(unittest.TestCase):
     def test_picker_wiring(self):
