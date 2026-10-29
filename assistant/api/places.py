@@ -52,10 +52,19 @@ def _http_json(url, method="GET", body=None, field_mask=None):
         raise PlacesError(f"Google Places unreachable: {e}")
 
 
+
+# The picker is for grocery shopping: suggestions are stores,
+# never streets or addresses (owner, 2026-10-28: typing "14 st"
+# suggested 14th Street itself, and filing it failed for want of
+# a ZIP). Five primary types is Google's cap for the parameter.
+GROCERY_TYPES = ["grocery_store", "supermarket", "wholesale_store",
+                 "convenience_store", "department_store"]
+
 def autocomplete(text, session_token=None, lat=None, lng=None):
     """Picker suggestions: [{place_id, name, secondary}] — the
     branch's name and its address line, straight from Google."""
-    body = {"input": text, "includedRegionCodes": ["US"]}
+    body = {"input": text, "includedRegionCodes": ["US"],
+            "includedPrimaryTypes": GROCERY_TYPES}
     if session_token:
         body["sessionToken"] = session_token
     if lat is not None and lng is not None:
