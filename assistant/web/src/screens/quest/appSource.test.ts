@@ -9,7 +9,7 @@ vi.mock("../../lib/api", () => ({
 }));
 vi.mock("../../lib/characters", () => ({ loadCharacters: async () => {}, charFor: () => "" }));
 
-import { AppSource, kindFor, shelfHint, mappedSections, sectionOfLabel } from "./appSource";
+import { AppSource, coverageOf, shelfHint, mappedSections, sectionOfLabel } from "./appSource";
 import { buildLayout, sectionFor } from "../../game/core/template";
 import { findPath, fixtures, floorOf, grid, isOpen, pathLength, spots } from "../../game/world/layout3d";
 
@@ -28,14 +28,31 @@ describe("store map labels", () => {
     expect(shelfHint("Rice & Olives Shelf")).toBe("Near the Rice & Olives shelf");
     expect(shelfHint("Milk")).toBe("Near the Milk shelf");
   });
-  it("counts only fresh sightings, never stale ones", () => {
-    const segs = [{ label: "Produce", status: "mapped" as const }, { label: "Frozen", status: "stale" as const }, { label: "Bakery", status: "aging" as const }];
+  it("reads the Trader Joe's walk labels as the right sections", () => {
+    const want: Record<string, string> = {
+      "Canned Goods": "aisle2", "Condiments": "aisle2", "Personal Care": "aisle4", "Rice & Olives": "aisle2",
+      "Nuts & Dried Fruit": "aisle3", "Salad Dressing": "aisle2", "Salad & Greens": "produce", "Butter & Cheese": "dairy",
+      "Dips & Hummus": "deli", "Frozen Pizza": "frozen", "Chips & Snacks": "aisle1", "Peanut Butter & Jam": "aisle3",
+    };
+    for (const [l, id] of Object.entries(want)) expect(sectionOfLabel(l), l).toBe(id);
+  });
+  it("counts only located segments: a usable, fresh picture", () => {
+    const segs = [
+      { label: "Produce", status: "mapped" as const, located: true },
+      { label: "Frozen", status: "stale" as const, located: false },
+      { label: "Bakery", status: "aging" as const, located: true },
+      { label: "Dairy", status: "aging" as const, located: false }, // a weak shot, or a label with no picture
+    ];
     expect(mappedSections(segs).sort()).toEqual(["bakery", "produce"]);
   });
-  it("names the store kind from what the trip needs", () => {
-    expect(kindFor([], ["produce"])).toBe("simulated");
-    expect(kindFor(["produce", "dairy"], ["produce"])).toBe("mapped");
-    expect(kindFor(["produce"], ["produce", "dairy"])).toBe("partial");
+  it("mapped is earned: 8 of 10 sections mapped, 3 part mapped, less is simulated", () => {
+    const seg = (label: string) => ({ label, status: "mapped" as const, located: true });
+    const tj = ["Fresh Produce", "Bread & Bakery", "Dips & Hummus", "Milk & Dairy", "Frozen Pizza", "Chips & Snacks", "Pasta", "Peanut Butter", "Personal Care"];
+    expect(coverageOf(tj.map(seg))).toMatchObject({ kind: "mapped" });
+    expect(coverageOf(tj.slice(0, 3).map(seg)).kind).toBe("partial");
+    // One uploaded video that located two sections does not make a map.
+    expect(coverageOf(tj.slice(0, 2).map(seg)).kind).toBe("simulated");
+    expect(coverageOf(tj.map(l => ({ label: l, status: "aging" as const, located: false }))).kind).toBe("simulated");
   });
 });
 
@@ -49,7 +66,7 @@ describe("AppSource", () => {
 
   it("a real trip is a hunt session: grabs check, misses report, finish closes", async () => {
     replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway", city: "Seattle" }] };
-    replies["/api/storemap"] = { segments: [{ label: "Dairy", status: "mapped" }] };
+    replies["/api/storemap"] = { segments: ["Dairy", "Produce", "Bakery"].map(label => ({ label, status: "mapped", located: true })) };
     replies["/api/quest/sessions/q1/state"] = { id: "q1", store: "Safeway", state: "finished", items: [], mode: "quest" };
     replies["/api/quest/sessions"] = { id: "q1", store: "Safeway", state: "not_started", mode: "quest", items: [{ name: "Milk", shelf_label: "Milk" }, { name: "Chips" }] };
     const src = new AppSource();

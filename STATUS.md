@@ -65,6 +65,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   My map of a real store (used on your next quest there) or a dream
   store. Dream-store sharing, the grid editor and map versions are cut
   for Nov 4 (#170).
+  Store status is earned: only located sections (a usable, fresh
+  picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
+  Simulated. `2026-10-29-earned-coverage.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.

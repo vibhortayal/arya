@@ -162,12 +162,23 @@ def _walkthrough_seed(key):
             graph = json.load(fh)
     except (OSError, ValueError):
         return None
+    # The shipped frames are a thinned copy of the walk (90 of ~180),
+    # so a stop's own frame number does not name a shipped file: the
+    # stop's path fraction u does, the same way the photo driver picks
+    # it (pwa/scene.js photoFrameForU). Using the number gave half the
+    # stops no picture and the rest the wrong one.
+    try:
+        shipped = len([f for f in os.listdir(frames_dir) if f.endswith(".jpg")])
+    except OSError:
+        shipped = 0
     segs = {}
     for stop in graph.get("stops", []):
-        m = re.search(r"(\d+)", stop.get("frame", ""))
-        frame = f"f{int(m.group(1)):03d}.jpg" if m else None
-        if frame and not os.path.exists(os.path.join(frames_dir, frame)):
-            frame = None
+        u = stop.get("u")
+        frame = None
+        if shipped and isinstance(u, (int, float)):
+            frame = f"f{round(max(0.0, min(1.0, u)) * (shipped - 1)) + 1:03d}.jpg"
+            if not os.path.exists(os.path.join(frames_dir, frame)):
+                frame = None
         for sh in stop.get("shelves", []):
             label = (sh.get("label") or "").strip()
             if not label or label.lower().startswith("unidentified"):
@@ -199,10 +210,17 @@ def load_map(name):
     first real change saves it."""
     key = store_key(name)
     doc = _all().get(key)
+    seed = _walkthrough_seed(key)
     if doc is None:
         doc = {"store": (name or "").strip(), "key": key,
-               "segments": _walkthrough_seed(key) or {},
+               "segments": seed or {},
                "unplaced": []}
+    elif seed:
+        # A walk's baseline frame is derived, never edited: a map saved
+        # before the frame fix (2026-10-29) takes the corrected one.
+        for sid, seg in doc["segments"].items():
+            if sid in seed and seg.get("baseline") is not None:
+                seg["baseline"] = seed[sid]["baseline"]
     return doc
 
 
@@ -817,6 +835,22 @@ def my_credit():
 
 # --- the shared view -------------------------------------------------------
 
+def located(seg, status=None, best=None):
+    """Whether this segment counts toward a store being mapped: Arya
+    has a usable picture of it that is not stale. A shopper capture
+    counts unless it was weak (a partial frame Arya asked to retake
+    later); a shipped walkthrough counts only where the walk has a
+    frame of it. An upload alone, a label with no picture, a weak
+    shot or a stale spot never counts (owner, 2026-10-29: mapped is
+    earned, not granted by an upload)."""
+    st = status or segment_status(seg)
+    if st not in ("mapped", "aging"):
+        return False
+    if best is not None:
+        return not best.get("weak")
+    return bool((seg.get("baseline") or {}).get("frame"))
+
+
 def view(name, focus=None):
     """The map as the app shows it: each segment with its status,
     the coverage numbers, and the next prompt."""
@@ -836,6 +870,7 @@ def view(name, focus=None):
             "best_at": best["at"] if best else None,
             "has_photo": bool(best) or bool(
                 (seg.get("baseline") or {}).get("frame")),
+            "located": located(seg, st, best),
             "contributors": len({c["by"] for c in seg["captures"]}),
             "items": len(seg["items"]),
             "stale_item": (seg.get("stale") or {}).get("item"),

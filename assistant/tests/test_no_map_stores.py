@@ -187,7 +187,7 @@ class TestWebNoMap(unittest.TestCase):
         src = read(WEB, "screens", "Lists.tsx")
         self.assertNotIn('id="shop-nomap"', src)
         game = read(WEB, "screens", "quest", "appSource.ts")
-        self.assertIn('if (!mapped.length) return "simulated";', game)
+        self.assertIn('seen.length >= MAPPED_AT ? "mapped" : seen.length >= PART_AT ? "partial" : "simulated"', game)
 
     def test_express_nudge(self):
         src = read(WEB, "screens", "Express.tsx")
