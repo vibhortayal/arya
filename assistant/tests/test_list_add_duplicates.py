@@ -26,9 +26,25 @@ class TestExistingItemId(unittest.TestCase):
             self.assertEqual(existing_item_id(t, ENTRIES, {}), "costco-2002", t)
 
     def test_looser_matches_stay_separate(self):
-        self.assertIsNone(existing_item_id("milk", ENTRIES, {}))
         self.assertIsNone(existing_item_id("egg whites", ENTRIES, {}))
+        self.assertIsNone(existing_item_id("chocolate milk", ENTRIES, {}))
         self.assertIsNone(existing_item_id("", ENTRIES, {}))
+
+    def test_inside_one_tracked_name_links_but_never_picks_between_two(self):
+        self.assertEqual(existing_item_id("milk", ENTRIES, {}), "costco-2001")
+        self.assertEqual(existing_item_id("Whole Milk", ENTRIES, {}), "costco-2001")
+        two = ENTRIES + [{"item_id": "costco-2003", "canonical_name": "Almond Milk",
+                          "aliases": []}]
+        self.assertIsNone(existing_item_id("milk", two, {}))
+        long_ = [{"item_id": "x", "canonical_name": "Chocolate Almond Milk", "aliases": []}]
+        self.assertIsNone(existing_item_id("milk", long_, {}))
+
+    def test_one_slip_typos_link(self):
+        self.assertEqual(existing_item_id("mlik", ENTRIES, {}), "costco-2001")
+        self.assertEqual(existing_item_id("Whole Mlik", ENTRIES, {}), "costco-2001")
+        pea = [{"item_id": "p", "canonical_name": "Peas", "aliases": []}]
+        self.assertIsNone(existing_item_id("pear", pea, {}))
+        self.assertIsNone(existing_item_id("zzzz", ENTRIES, {}))
 
     def test_typed_item_is_reused(self):
         fl = {"manual-bagels": {"manual": True, "name": "Bagels"}}
@@ -59,6 +75,18 @@ class TestAddRoutes(unittest.TestCase):
         for t in ("eggs", "Egg"):
             self.c.post("/api/list/add", json={"name": t})
         self.assertEqual(self.rows(), [("costco-2002", "Eggs")])
+
+    def test_milk_and_mlik_land_on_whole_milk_not_new_rows(self):
+        from api import state
+        state.set_current_user("t@x.y")
+        state._save("dictionary.json", {"entries": ENTRIES})
+        state.set_current_user(None)
+        for t in ("milk", "mlik", "Whole Milk"):
+            self.c.post("/api/list/add", json={"name": t})
+        self.assertEqual(self.rows(), [("costco-2001", "Whole Milk")])
+        r = self.c.post("/api/list/add", json={"name": "oat milk"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(self.rows()), 2)
 
     def test_repeat_typing_collapses_and_qty_rides(self):
         self.c.post("/api/list/from-text", json={"text": "bagel x3, Bagels"})

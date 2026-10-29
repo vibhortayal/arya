@@ -241,19 +241,83 @@ def _key(name):
                     and not w.endswith("ss") else w for w in words)
 
 
+def _names_of(e):
+    return [n for n in [e.get("canonical_name")] + list(e.get("aliases") or []) if n]
+
+
+def _transposed_or_one_edit(a, b):
+    """True when b is a with two neighbouring letters swapped
+    ("mlik" / "milk"), or, for words of six letters or more, one
+    letter added, dropped or changed. Short words need the swap:
+    "pear" is not "peas"."""
+    if a == b or abs(len(a) - len(b)) > 1:
+        return False
+    if len(a) == len(b):
+        diff = [i for i in range(len(a)) if a[i] != b[i]]
+        if len(diff) == 2 and diff[1] == diff[0] + 1 \
+                and a[diff[0]] == b[diff[1]] and a[diff[1]] == b[diff[0]]:
+            return True
+        return len(diff) == 1 and len(a) >= 6
+    if min(len(a), len(b)) < 6:
+        return False
+    short, long_ = sorted((a, b), key=len)
+    return any(long_[:i] + long_[i + 1:] == short for i in range(len(long_)))
+
+
+def _fix_typos(key, vocab):
+    """Each typed word that is no tracked word, but is one slip from
+    exactly one tracked word, becomes that word."""
+    out = []
+    for w in key.split():
+        if w in vocab or len(w) < 4:
+            out.append(w)
+            continue
+        near = {v for v in vocab if _transposed_or_one_edit(w, v)}
+        out.append(near.pop() if len(near) == 1 else w)
+    return " ".join(out)
+
+
+def _link(key, tracked):
+    """tracked: [(item_id, key)]. Exact key first. Else the typed words
+    must be inside exactly one tracked name and be at least half of it:
+    "milk" finds "whole milk" but not "chocolate almond milk", and two
+    candidates ("whole milk", "almond milk") mean no link at all."""
+    for item_id, k in tracked:
+        if k == key:
+            return item_id
+    words = set(key.split())
+    hits = {item_id for item_id, k in tracked
+            if words < set(k.split()) and len(words) * 2 >= len(k.split())}
+    return hits.pop() if len(hits) == 1 else None
+
+
 def existing_item_id(name, dictionary_entries, flags):
     """The item a typed name already is, or None. A tracked item
     (canonical name or alias) wins; then a typed item already on the
-    list. Exact after normalizing only: a looser match would merge
-    "milk" into "almond milk"."""
+    list. Exact after normalizing first; then a typed name that is
+    wholly inside one tracked name ("milk" -> "Whole Milk"); then the
+    same after fixing a one-slip typo ("mlik"). It never picks between
+    two candidates, so "milk" is not guessed into "almond milk"."""
     key = _key(name)
     if not key:
         return None
-    for e in dictionary_entries:
-        for known in [e.get("canonical_name")] + list(e.get("aliases") or []):
-            if known and _key(known) == key:
-                return e["item_id"]
-    for item_id, f in flags.items():
-        if item_id.startswith("manual-") and _key(f.get("name")) == key:
-            return item_id
+    tracked = [(e["item_id"], _key(n)) for e in dictionary_entries
+               for n in _names_of(e)]
+    typed = [(item_id, _key(f.get("name"))) for item_id, f in flags.items()
+             if item_id.startswith("manual-") and f.get("name")]
+    for pool in (tracked, typed):   # tracked wins, then typed items
+        for item_id, k in pool:
+            if k == key:
+                return item_id
+    hit = _link(key, tracked)
+    if hit:
+        return hit
+    vocab = {w for _i, k in tracked + typed for w in k.split()}
+    fixed = _fix_typos(key, vocab)
+    if fixed != key:
+        for pool in (tracked, typed):
+            for item_id, k in pool:
+                if k == fixed:
+                    return item_id
+        return _link(fixed, tracked)
     return None
