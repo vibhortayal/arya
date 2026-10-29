@@ -148,9 +148,9 @@ function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: bo
 export function listsEmpty(data: HomeData | null): boolean {
   return !!data && !namedLists(data).length && !onListItems(data).length && !suggestions(data).length;
 }
-/* The owner may still pick the bare card (image and button only):
- * false drops the title and the line. */
-const EMPTY_CARD_TEXT = true;
+/* Owner 2026-10-29: new accounts see the bare card (image and button).
+ * true adds the title and a one-line explanation back. */
+const EMPTY_CARD_TEXT = false;
 
 /* ---------------- the screen ---------------- */
 
