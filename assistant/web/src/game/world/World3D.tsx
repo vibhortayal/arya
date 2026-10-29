@@ -38,15 +38,22 @@ const hex = (n: number) => "#" + n.toString(16).padStart(6, "0");
 
 /* ---------------------------------------------------------------- palette */
 type Pal = ReturnType<typeof palette>;
-function palette(bp: boolean) {
-  return bp ? {
+function palette(bp: boolean, look?: Trip["layout"]["look"]) {
+  if (bp) return {
     bp, floorA: "#EAF1FB", floorB: "#E1EAF7", grout: "#C8D8EE", wall: "#E6EEF9", trim: "#9DB8E0", wood: "#DCE7F7", metal: "#D3E1F4",
     glass: "#BFD6F2", product: ["#CFDDF2", "#DCE7F7", "#C3D5EF", "#E6EEF9"], fruit: ["#C9DAF1", "#D9E5F6"], ink: "#3E6FB8", sky: "#F3F7FD",
-  } : {
+  };
+  const base = {
     bp, floorA: "#F4EBD6", floorB: "#EEE3CB", grout: "#E2D6BC", wall: "#F1E7D3", trim: "#C9B48C", wood: "#C99A62", metal: "#A9B8B2",
     glass: "#CFEAF2", product: ["#E4572E", "#F2C14E", "#3FA66B", "#4A8FE0", "#F28AB2", "#FFF4D6", "#8E6CCF", "#F08A3C"],
     fruit: ["#E9443A", "#F5B800", "#4FB23B", "#FF9A1F", "#7CC23B", "#C2185B"], ink: "#2E3B33", sky: "#FBF4E6",
   };
+  // Build's looks (map/answers.ts): the same store, another mood.
+  if (look === "modern") return { ...base, floorA: "#FAFAFA", floorB: "#EFF1F3", grout: "#E1E4E8", wall: "#FFFFFF", trim: "#B8C2CC", wood: "#E8EBEE", metal: "#CBD3DA", sky: "#F4F7FA", ink: "#1F2933" };
+  if (look === "farm") return { ...base, floorA: "#E9DCC2", floorB: "#DCCAA8", grout: "#C9B38A", wall: "#B5452F", trim: "#7A2E1F", wood: "#9C6B3E", metal: "#8A9A7B", sky: "#F3EBDA", ink: "#3B2A1A" };
+  if (look === "neon") return { ...base, floorA: "#2A2340", floorB: "#231C38", grout: "#3B3160", wall: "#3A2F63", trim: "#FF4FD8", wood: "#5B3FA8", metal: "#47D7FF", glass: "#7DF9FF", sky: "#1A1530", ink: "#FFFFFF",
+    product: ["#FF4FD8", "#47D7FF", "#B8FF3C", "#FFE14F", "#FF8A3C", "#9B7CFF"], fruit: ["#FF4FD8", "#B8FF3C", "#FFE14F", "#47D7FF"] };
+  return base;
 }
 
 /* ----------------------------------------------------------- textures */
@@ -120,7 +127,7 @@ type Walker = { p: V2; heading: number; path: V2[]; walk: number; moving: boolea
 function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) {
   const L = trip.layout;
   const bp = L.kind === "simulated";
-  const P = useMemo(() => palette(bp), [bp]);
+  const P = useMemo(() => palette(bp, L.look), [bp, L.look]);
   const FL = useMemo(() => floorOf(L), [L]);
   const F = useMemo(() => fixtures(L), [L]);
   const G = useMemo(() => grid(F, FL), [F, FL]);
@@ -280,7 +287,7 @@ function Floor({ P, L, FL, trip, onTap }: { P: Pal; L: Trip["layout"]; FL: Floor
       {/* Ground outside the store, so the edges never float in space. */}
       <mesh rotation-x={-Math.PI / 2} position={[FL.w / 2, -0.02, FL.d / 2]}>
         <planeGeometry args={[120, 120]} />
-        <meshBasicMaterial color={P.bp ? "#E8EFF9" : "#E6DCC5"} />
+        <meshBasicMaterial color={P.bp ? "#E8EFF9" : P.sky === "#FBF4E6" ? "#E6DCC5" : P.sky} />
       </mesh>
       {L.sections.map(s => {
         const v = sectionView(trip, s.id);

@@ -47,3 +47,26 @@ Next
   session item's `instead`), shown on the finish card as "Swapped".
 - Real trips are calmer: no strolling shoppers outside practice, DPR
   capped at 1.5.
+
+## Part 4: Build (three answers -> a whole store -> My map)
+- Quest home has Play | Build. Build: "Draw my store" (a store you shop
+  at; its type guessed from the name) or "Dream store" (named, played
+  only as practice). Three questions: store type (presets, a cuisine, or
+  one kind of food), look (market, modern, farm, neon), what should be
+  big (+ an optional sentence). Text answers have a mic (Voice Transcribe
+  via `/api/transcribe`).
+- `map/answers.ts` `fromAnswers()`: deterministic store from the answers;
+  always valid (falls back to the base preset). Then `POST /api/quest/build`
+  (`api/questbuild.py`): one Spark structured call adapts it; output is
+  checked by a Python port of `problems()`; bad output -> the base stands.
+  `POST /api/quest/build/change`: one change said in a sentence, same check.
+- Saved maps: `GET/PUT /api/quest/maps`, per account, 20 max, keys
+  `store:<id>` / `dream:<slug>`. A saved My map replaces the shared map for
+  that player: the store pick says "Your map", the trip uses its zones.
+- Looks recolour the 3D store. Walked built stores show their own name.
+- Cut for Nov 4 (kept in #170): grid editor, map versions/revert,
+  corroboration, dream-store sharing, postcards.
+- Tests: `tests/test_quest_build.py` (11), `map/answers.test.ts`,
+  AppSource Build tests, `e2e/build.e2e.mjs`. Full Python suite 1212 OK,
+  vitest 203 pass, all 35 e2e specs pass. Spark path not live-tested
+  (no key in this session).

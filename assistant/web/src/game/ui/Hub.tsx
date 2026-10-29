@@ -10,9 +10,9 @@ import { charArt, img } from "../assets";
 import { Bar, KindBadge, Sheet } from "./bits";
 import { HowTo } from "./Play";
 
-export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra }: {
+export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild }: {
   profile: Profile; newbie: boolean; list: ShoppingList | null; lists?: ShoppingList[]; onList?: (l: ShoppingList) => void;
-  onPractice: () => void; onQuest: () => void; onAlbum: () => void; onExit?: () => void; extra?: ReactNode;
+  onPractice: () => void; onQuest: () => void; onAlbum: () => void; onExit?: () => void; extra?: ReactNode; onBuild?: () => void;
 }) {
   const lv = levelOf(profile.xp), st = streak(profile.weeks, new Date());
   const [how, setHow] = useState(false);
@@ -24,6 +24,12 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
         <h1>Quest</h1>
         <button className="qg-ic" onClick={() => setHow(true)} aria-label="How to play">?</button>
       </header>
+      {onBuild && (
+        <div className="qg-seg" role="tablist" aria-label="Quest mode">
+          <button role="tab" aria-selected="true" className="on">Play</button>
+          <button role="tab" aria-selected="false" onClick={onBuild}>Build</button>
+        </div>
+      )}
 
       <div className="qg-hero">
         <img src={img("scenes/storefront.webp")} alt="" />

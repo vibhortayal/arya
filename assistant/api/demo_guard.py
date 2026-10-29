@@ -47,7 +47,7 @@ _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/quest/scan-shelf", "/api/quest/locate",
                     "/api/quest/share-look",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
-                    "/api/storemap")
+                    "/api/storemap", "/api/quest/zones", "/api/quest/build")
 # The haul writes (fix, hide, post, second receipt) sit under the
 # sessions prefix but never call a model, so they spend no door budget.
 _DEMO_FREE_DOORS = ("/api/quest/sessions/",)

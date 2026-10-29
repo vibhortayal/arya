@@ -4,6 +4,7 @@
  * user's lists and the store map API and posts finds and reports. */
 import { buildLayout, sectionFor } from "./template";
 import type { StoreGraph } from "../map/graph";
+import type { Answers } from "../map/answers";
 import { PRESETS } from "../map/presets";
 import type { QuestItem, ShoppingList, StoreLayout, StoreSummary } from "./types";
 
@@ -23,7 +24,22 @@ export interface QuestSource {
    * Arya app: the hunt session). Practice never calls them. */
   progress?(e: { kind: "grab" | "ungrab"; item: string; instead?: string }): void;
   finish?(e: { got: string[]; points: number }): Promise<void>;
+  /* Build (optional). build: Arya's pass over the store the answers
+   * made (names, a cuisine's items); it answers the store it was given
+   * when it cannot do better. change: one edit said in a sentence.
+   * maps/saveMap: the player's saved stores (My map for a real store,
+   * or a dream store). voice: record and transcribe one answer. */
+  build?(answers: Answers, base: StoreGraph): Promise<StoreGraph>;
+  change?(graph: StoreGraph, say: string): Promise<{ graph: StoreGraph; say: string }>;
+  maps?(): Promise<SavedMap[]>;
+  saveMap?(m: Omit<SavedMap, "key" | "savedAt">): Promise<SavedMap>;
+  voice?(): Promise<{ stop(): Promise<string>; cancel(): void }>;
 }
+
+/* A store the player built: "store" is their own map of a real store
+ * (it stays theirs until others agree), "dream" is made up and only
+ * ever played as practice. */
+export type SavedMap = { key: string; kind: "store" | "dream"; storeId?: string; name: string; graph: StoreGraph; savedAt?: string };
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -110,6 +126,17 @@ export class SampleSource implements QuestSource {
     return { layout, items };
   }
   async report(r: FieldReport) { this.sent.push(r); }
+  /* The lab keeps built stores for the visit only. */
+  private saved: SavedMap[] = [];
+  async build(_a: Answers, base: StoreGraph) { return base; }
+  async change(graph: StoreGraph) { return { graph, say: "In the app, Arya can change your store when you say what to move." }; }
+  async maps() { return this.saved; }
+  async saveMap(m: Omit<SavedMap, "key" | "savedAt">) {
+    const key = m.kind === "store" ? `store:${m.storeId}` : `dream:${m.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    const row = { ...m, key, savedAt: new Date().toISOString() };
+    this.saved = [row, ...this.saved.filter(x => x.key !== key)];
+    return row;
+  }
 }
 
 /* Practice never reports anything: its finds are pretend. */

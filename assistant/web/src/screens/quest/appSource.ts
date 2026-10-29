@@ -9,13 +9,19 @@
  * - A real trip is a hunt session (POST /api/quest/sessions), so
  *   grabs check items off, "not here" files the existing shortage
  *   report, and the receipt step settles it like any hunt.
+ * - Build: Arya adapts a store made from three answers
+ *   (POST /api/quest/build), changes it from a sentence, and saves it
+ *   (PUT /api/quest/maps). A saved My map is the store's shape from
+ *   then on, for this player only.
  * Practice never reaches this file (the game uses its silent source). */
-import { get, post } from "../../lib/api";
+import { get, post, put } from "../../lib/api";
+import { startCapture, transcribeBlob, voiceSupported } from "../../lib/recorder";
 import { charFor, loadCharacters } from "../../lib/characters";
-import { artFor, type FieldReport, type QuestSource } from "../../game/core/source";
+import { artFor, type FieldReport, type QuestSource, type SavedMap } from "../../game/core/source";
 import { buildLayout, sectionFor, SECTIONS } from "../../game/core/template";
 import { TEMPLATE, type StoreGraph } from "../../game/map/graph";
 import { knownZone } from "../../game/map/classify";
+import type { Answers } from "../../game/map/answers";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
 type PlanRow = { name: string; qty?: number; list?: string | null };
@@ -62,8 +68,9 @@ const area = (s: StoreRow) => [s.street, s.city].filter(Boolean).join(" · ") ||
 
 export class AppSource implements QuestSource {
   private stores = new Map<string, StoreRow>();
-  private maps = new Map<string, string[]>();
+  private seen = new Map<string, string[]>();
   private sess: Session | null = null;
+  private saved: SavedMap[] | null = null;
 
   /* The live hunt, for the receipt step. */
   session() { return this.sess; }
@@ -85,16 +92,18 @@ export class AppSource implements QuestSource {
   }
 
   private async mapOf(name: string): Promise<string[]> {
-    const hit = this.maps.get(name); if (hit) return hit;
+    const hit = this.seen.get(name); if (hit) return hit;
     const m = await get<{ segments: MapSeg[] }>(`/api/storemap?store=${encodeURIComponent(name)}`).catch(() => ({ segments: [] as MapSeg[] }));
     const ids = mappedSections(m.segments || []);
-    this.maps.set(name, ids);
+    this.seen.set(name, ids);
     return ids;
   }
 
   private async summaries(rows: StoreRow[]): Promise<StoreSummary[]> {
     rows.forEach(r => this.stores.set(r.id, r));
+    const mine = await this.maps().catch(() => [] as SavedMap[]);
     return Promise.all(rows.map(async r => {
+      if (mine.some(m => m.key === `store:${r.id}`)) return { id: r.id, name: r.name, area: area(r), kind: "mapped" as MapKind, seen: "Your map" };
       const ids = await this.mapOf(r.name);
       const kind = kindFor(ids, SECTIONS.map(s => s.id));
       const seen = ids.length ? `${ids.length} of ${SECTIONS.length} sections seen by shoppers` : "Nobody has mapped it yet";
@@ -125,23 +134,52 @@ export class AppSource implements QuestSource {
   async open(storeId: string, list: ShoppingList): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[] }> {
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
+    // The player's own map of this store, if they built one: its zones are the store's shape.
+    const own = (await this.maps().catch(() => [] as SavedMap[])).find(m => m.key === `store:${storeId}`)?.graph;
     const [sess, zoned] = await Promise.all([
       post<Session>("/api/quest/sessions", { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) }),
-      this.zonesFor(list.items.map(i => i.name), TEMPLATE),
+      this.zonesFor(list.items.map(i => i.name), own || TEMPLATE),
     ]);
     this.sess = sess;
     void post(`/api/quest/sessions/${this.sess.id}/state`, { state: "playing" }).catch(() => {});
     const shelf = new Map(this.sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
-    const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name) }));
-    const ids = await this.mapOf(name);
-    const kind = kindFor(ids, [...new Set(base.map(b => b.section))]);
+    const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name, own) }));
+    const ids = own ? own.zones.map(z => z.id) : await this.mapOf(name);
+    const kind = own ? "mapped" : kindFor(ids, [...new Set(base.map(b => b.section))]);
     const items: QuestItem[] = base.map(b => {
       const label = shelf.get(b.name.toLowerCase());
       // A shelf the store's walk matched is a real hint, only where the section is real.
       return label && kind !== "simulated" && (kind === "mapped" || ids.includes(b.section)) ? { ...b, spot: { hint: shelfHint(label) } } : b;
     });
-    const layout = buildLayout({ id: storeId, name, area: st ? area(st) : "", kind, items, mapped: ids });
+    const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : st ? area(st) : "", kind, items, mapped: ids, graph: own });
     return { layout, items };
+  }
+
+  async build(answers: Answers, base: StoreGraph): Promise<StoreGraph> {
+    const r = await post<{ graph: StoreGraph }>("/api/quest/build", { answers, base });
+    return r.graph || base;
+  }
+
+  async change(graph: StoreGraph, say: string): Promise<{ graph: StoreGraph; say: string }> {
+    const r = await post<{ graph: StoreGraph; say: string }>("/api/quest/build/change", { graph, say });
+    return { graph: r.graph || graph, say: r.say || "" };
+  }
+
+  async maps(): Promise<SavedMap[]> {
+    if (!this.saved) this.saved = (await get<{ maps: SavedMap[] }>("/api/quest/maps")).maps || [];
+    return this.saved;
+  }
+
+  async saveMap(m: Omit<SavedMap, "key" | "savedAt">): Promise<SavedMap> {
+    const row = await put<SavedMap>("/api/quest/maps", m);
+    this.saved = [row, ...(this.saved || []).filter(x => x.key !== row.key)];
+    return row;
+  }
+
+  async voice(): Promise<{ stop(): Promise<string>; cancel(): void }> {
+    if (!voiceSupported()) throw new Error("no microphone");
+    const cap = await startCapture();
+    return { stop: () => transcribeBlob(cap.stop()), cancel: () => cap.cancel() };
   }
 
   async report(r: FieldReport): Promise<void> {

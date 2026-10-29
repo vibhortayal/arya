@@ -187,7 +187,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
       <header className="qg-hud">
         <button className="qg-ic" onClick={() => setSheet("quit")} aria-label="Leave the quest">‹</button>
         <div className="qg-where">
-          <b>{trip.practice ? "Practice Market" : L.name}</b>
+          <b>{trip.practice && L.id === "practice" ? "Practice Market" : L.name}</b>
           <KindBadge kind={L.kind} practice={trip.practice} />
         </div>
         <button className="qg-basket" onClick={() => setSheet("list")} aria-label={`Cart: ${got} of ${total}. ${trip.points} points. Open the list`}>
