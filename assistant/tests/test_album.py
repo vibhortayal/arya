@@ -279,14 +279,17 @@ class TestChaptersAndFirstMapper(unittest.TestCase):
 
     def test_walkthrough_seeded_sections_never_count(self):
         from api import state
-        doc = self.sm.load_map("Trader Joe's")
+        TJ = "Trader Joe's|tj-argonaut"
+        os.environ["ARYA_WALK_STORE_ID"] = "tj-argonaut"  # the walk's own store
+        self.addCleanup(os.environ.pop, "ARYA_WALK_STORE_ID", None)
+        doc = self.sm.load_map(TJ)
         seeded = next(iter(doc["segments"]))
         self.assertEqual(doc["segments"][seeded]["created_by"], "walkthrough")
-        self.sm.ingest("Trader Joe's", seeded, jpeg(7))
+        self.sm.ingest(TJ, seeded, jpeg(7))
         self.assertEqual(self.album.first_mapped_stores(), [])
         # A real section of her own, with a capture, is a real first map.
-        self.sm.add_segment("Trader Joe's", "Aisle 99", "left")
-        self.sm.ingest("Trader Joe's", "aisle-99:left", jpeg(8))
+        self.sm.add_segment(TJ, "Aisle 99", "left")
+        self.sm.ingest(TJ, "aisle-99:left", jpeg(8))
         self.assertEqual(self.album.first_mapped_stores(), ["Trader Joe's"])
         state.set_current_user("ben")
         self.assertEqual(self.album.first_mapped_stores(), [])
