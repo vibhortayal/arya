@@ -43,3 +43,6 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
 ## Store alerts hide until real (owner, 2026-10-29)
 - New users no longer see the SAMPLE "Costco: Oat milk not there" card on Today; the section appears with the first real alert. Quest tab sample kept.
 - SW arya-v86.
+
+## New-user sweep removals + info/lock icons (owner approved 2026-10-29)
+- Empty cards hidden for a new user on Today, Quest, Quest progress, Analysis; badges live only in Quest progress; duplicate shelves fixed; Lists/Ask/Profile copy trimmed; Powers uses an info icon and a lock; community price copy says to opt in first. SW arya-v90.
