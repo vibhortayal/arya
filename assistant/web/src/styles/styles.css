@@ -1067,6 +1067,7 @@ input[type=file]::file-selector-button {
 /* Grab waits for Start: muted, but a tap still answers (first-timer play-test). */
 .rowact.notlive { opacity: .5; }
 .earlierrow { display: flex; align-items: center; gap: 8px; }
+.herocard .hero-end { display: block; margin: 4px auto 0; color: var(--secondary); font-weight: 500; }
 .earlierrow .gamerow { flex: 1; min-width: 0; }
 .earlierrow .btn { flex: none; min-height: 36px; padding: 6px 10px; font-size: 13px; }
 

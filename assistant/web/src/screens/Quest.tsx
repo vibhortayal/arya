@@ -48,9 +48,11 @@ const BasketSvg = () => (
 const progress = (s: Sess) => ({ total: s.items.length, done: s.items.filter(i => i.checked).length });
 const closed = (s: Sess) => s.state === "finished" || s.state === "done";
 
-/* The newest hunt that still wants play. */
+/* The newest hunt that still wants play. A hunt with nothing on it is
+ * never "your next action" (owner 2026-10-29); it stays in Your games
+ * with End. */
 function heroSession(sessions: Sess[]): Sess | undefined {
-  return sessions.filter(s => s.state === "playing" || s.state === "paused" || s.state === "not_started")
+  return sessions.filter(s => (s.state === "playing" || s.state === "paused" || s.state === "not_started") && s.items.length > 0)
     .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))[0];
 }
 
@@ -126,8 +128,9 @@ export function Quest() {
 
   const hero = heroSession(sessions);
   const openS = sessions.filter(s => !closed(s)), done = sessions.filter(closed);
-  const heroOpen = heroSession(openS);
-  const rest = openS.filter(s => s !== heroOpen);
+  // Every open hunt can be ended from its row (owner 2026-10-29): the
+  // newest leads, the rest fold away.
+  const [firstOpen, ...rest] = [...openS].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const qualifying = sessions.filter(s => s.state === "done" && s.items.length >= 8)
     .map(s => ({ s, ms: finishMs(s) })).filter(x => x.ms != null)
     .map(x => ({ ...x, ms: x.ms as number, per: (x.ms as number) / x.s.items.length }))
@@ -148,6 +151,11 @@ export function Quest() {
     );
   };
 
+  const openRow = (s: Sess) => (
+    <div className="earlierrow">{gameRow(s)}
+      <button className="btn danger" data-abandon={s.id} type="button" onClick={() => abandon(s)}>{t("quest.abandon")}</button></div>
+  );
+
   const heroCard = () => {
     if (!hero) return null;
     const p = progress(hero);
@@ -161,6 +169,7 @@ export function Quest() {
         <span className="track"><span className="bar" style={{ width: pct + "%" }} /></span>
         <span className="hero-state">{t("quest.stateCollected", { state: stateLabel(hero.state), done: p.done, total: p.total })}</span>
         <button className="btn primary wide" data-hero={hero.id} type="button" onClick={() => open(hero)}>{fresh ? t("quest.start") : t("quest.resume")}</button>
+        <button className="linkbtn hero-end" data-hero-end={hero.id} type="button" onClick={() => abandon(hero)}>{t("quest.endThisQuest")}</button>
       </article>
     );
   };
@@ -179,11 +188,10 @@ export function Quest() {
       <div id="quest-sessions">
         {sessions.length > 0 && (
           <>
-            {heroOpen && gameRow(heroOpen)}
-            {heroOpen && rest.length > 0 && (
+            {firstOpen && openRow(firstOpen)}
+            {firstOpen && rest.length > 0 && (
               <details className="g-fold"><summary>{t("quest.otherOpenHunt", { count: rest.length })}</summary>
-                {rest.map(s => <div className="earlierrow" key={s.id}>{gameRow(s)}
-                  <button className="btn danger" data-abandon={s.id} type="button" onClick={() => abandon(s)}>{t("quest.abandon")}</button></div>)}
+                {rest.map(s => <Fragment key={s.id}>{openRow(s)}</Fragment>)}
               </details>
             )}
             {done.length > 0 && <><p className="g-group">{t("quest.finished")}</p>{done.map(s => <Fragment key={s.id}>{gameRow(s)}</Fragment>)}</>}
