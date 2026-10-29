@@ -4,7 +4,7 @@ cart.json, flags.json. Derived state (ledger/patterns/list) is recomputed
 on read — at household scale that is milliseconds, and it can never drift
 from the stored receipts. Postgres replaces the files when volume demands.
 """
-import copy, json, os, tempfile, threading
+import copy, hashlib, json, os, tempfile, threading
 from datetime import date, timedelta
 
 from api.ledger.build import build_ledger
@@ -322,6 +322,49 @@ def receipt_media(receipt_id):
         return fh.read()
 
 
+def receipt_fingerprint(r):
+    """Content identity of a receipt: merchant + date + the lines
+    (sku or printed text, qty, line total) + total. Two decodes of
+    the SAME receipt — the same PDF filed twice, or a photo of the
+    same paper — produce the same fingerprint even though each
+    decode mints a fresh receipt_id."""
+    def amt(v):
+        try:
+            return f"{float(v):.2f}"
+        except (TypeError, ValueError):
+            return ""
+    def qty(v):
+        try:
+            f = float(v)
+            return str(int(f)) if f == int(f) else str(f)
+        except (TypeError, ValueError):
+            return str(v or 1)
+    lines = sorted("|".join([
+        str(l.get("sku") or l.get("raw") or l.get("decoded_name") or ""),
+        qty(l.get("qty")), amt(l.get("line_total"))])
+        for l in r.get("lines", []))
+    basis = "\n".join([(r.get("merchant") or "").strip().lower(),
+                        (r.get("purchased_at") or "")[:10],
+                        amt(r.get("total"))] + lines)
+    return hashlib.sha256(basis.encode("utf-8")).hexdigest()
+
+
+def _fp(r):
+    return r.get("fp") or receipt_fingerprint(r)
+
+
+def find_duplicate(r):
+    """The already-filed receipt this one duplicates, or None.
+    Compares against everything the account can see, group
+    members' receipts included (owner, 2026-10-29: a duplicate
+    upload must never count a trip twice)."""
+    fp = receipt_fingerprint(r)
+    for old in receipts():
+        if old.get("receipt_id") != r.get("receipt_id") and _fp(old) == fp:
+            return old
+    return None
+
+
 def add_receipts(new, media=None):
     """File decoded receipts. media maps receipt_id -> (bytes,
     media_type): the original upload for receipts filed from a
@@ -336,12 +379,24 @@ def add_receipts(new, media=None):
     with file_lock("receipts.json"):
         cur = own_receipts()
         # A receipt another group member already filed is not filed twice.
-        seen = {r["receipt_id"] for r in receipts()}
+        visible = receipts()
+        seen = {r["receipt_id"] for r in visible}
+        media = media or {}
+        # An uploaded original whose content is already on file is
+        # the same receipt filed twice — skip it, whatever fresh id
+        # the decode minted (owner, 2026-10-29). Doors that file
+        # without an upload (text, JSON import, synthetic records)
+        # keep the id-based rule above.
+        fps = {_fp(r) for r in visible}
+        def _dup_upload(r):
+            return (media.get(r["receipt_id"]) is not None
+                    and receipt_fingerprint(r) in fps)
         # A receipt with no date cannot be placed in the ledger; it is refused
         # at the door rather than breaking pattern math later.
-        added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
-        media = media or {}
+        added = [r for r in new if r["receipt_id"] not in seen
+                 and r.get("purchased_at") and not _dup_upload(r)]
         for r in added:
+            r.setdefault("fp", receipt_fingerprint(r))
             m = media.get(r["receipt_id"])
             if m and not in_sandbox():
                 data, media_type = m
