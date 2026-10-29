@@ -20,6 +20,9 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 ## Layout (IMPLEMENTATION §2.1)
 `assistant/api/` one module per spec component; ALL Meta API calls go
 through `assistant/api/meta_client.py` (no other module calls the API).
+Routes live in `assistant/api/routes/` (one FastAPI router per area); `api/main.py`
+only wires them. Shared request plumbing (ledger, budget guard, `new_client()`, JSON
+helpers) is in `api/deps.py`; the demo sandbox and login middleware in `api/demo_guard.py`.
 `assistant/harness/` eval loops; `assistant/prompts/` versioned prompts;
 `assistant/golden/` golden fixtures; `assistant/loops/` work-session logs.
 `assistant/pwa/` is the app (plain JS, no build step); bump `CACHE` in

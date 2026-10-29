@@ -16,6 +16,7 @@ class TestEventLoopFree(unittest.IsolatedAsyncioTestCase):
     async def test_health_answers_while_decode_in_flight(self):
         import httpx
         import api.main as main
+        from api.routes import intake
 
         def slow_decode(body, client, media_type=None):
             time.sleep(2.0)
@@ -23,8 +24,8 @@ class TestEventLoopFree(unittest.IsolatedAsyncioTestCase):
                     "purchased_at": "2026-10-27", "lines": [],
                     "returns": [], "total_cents": 0, "tenders": []}
 
-        orig_decode, orig_judge = main.decode_photo, main.state.judge_pending
-        main.decode_photo = slow_decode
+        orig_decode, orig_judge = intake.decode_photo, main.state.judge_pending
+        intake.decode_photo = slow_decode
         main.state.judge_pending = lambda client: 0
         transport = httpx.ASGITransport(app=main.app)
         try:
@@ -51,7 +52,7 @@ class TestEventLoopFree(unittest.IsolatedAsyncioTestCase):
                                 "health waited behind the photo decode — "
                                 "the model call is on the event loop")
         finally:
-            main.decode_photo, main.state.judge_pending = orig_decode, orig_judge
+            intake.decode_photo, main.state.judge_pending = orig_decode, orig_judge
 
 
 if __name__ == "__main__":
