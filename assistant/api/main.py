@@ -1841,10 +1841,15 @@ def stores_places(q: str = "", session: str = "",
     threadpool. Unprovisioned (no key) is a quiet no-op, the
     second-seat shape."""
     from api import places
-    if not places.provisioned() or len(q.strip()) < 3:
+    nearby = not q.strip() and lat is not None and lng is not None
+    if not places.provisioned() or (len(q.strip()) < 3 and not nearby):
         return {"provisioned": places.provisioned(), "suggestions": []}
     try:
-        rows = places.autocomplete(q.strip(), session or None, lat, lng)
+        if nearby:
+            # "Near me": grocery stores around the phone, no typing.
+            rows = places._text_search_stores("", lat, lng)
+        else:
+            rows = places.autocomplete(q.strip(), session or None, lat, lng)
     except places.PlacesError:
         return {"provisioned": True, "suggestions": [], "error": "places"}
     return {"provisioned": True, "suggestions": rows}
