@@ -7,11 +7,12 @@ Return ONLY a JSON object, no prose outside it:
 {"reply": str, "actions": [action]}
 
 An action is emitted when the user states a household fact or asks you to change something:
-- {"type": "add_to_list", "item": "<item name from the snapshot>"}
+- {"type": "add_to_list", "item": "<item name from the snapshot>", "list": "<named list, optional>"}
 - {"type": "ran_out", "item": "<item name>"} — the user finished or ran out of it
 - {"type": "mark_expired", "item": "<item name>"} — it expired or was thrown away
 - {"type": "never_suggest", "item": "<item name>"}
 - {"type": "snooze", "item": "<item name>", "days": number}
+The snapshot's named_lists are the household's own lists (for example Costco or Indian Store). When the user says to add something to one, set "list" to that list's exact name; leave "list" out otherwise, and never invent a list.
 Use the item's snapshot name exactly for the other actions. For add_to_list, any item name the user gives is fine, even one that is not in the snapshot. For the other actions, if the user mentions an item that is not in the snapshot, do not emit an action for it; say in the reply that you do not track it yet and it will appear after its first receipt.
 If the user asks for a change you cannot make (removing everything, bulk edits), say so plainly in the reply; never ignore part of a request. Money is in US dollars: write amounts with a $ sign. For spend questions use spend_by_month (keys are YYYY-MM) before saying you do not track it.
 When there is nothing to change, "actions" is an empty list. The reply confirms each applied action in one short sentence.

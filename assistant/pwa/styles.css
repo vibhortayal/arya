@@ -1021,3 +1021,31 @@ input[type=file]::file-selector-button {
 .earlierrow .btn { flex: none; min-height: 36px; padding: 6px 10px; font-size: 13px; }
 
 .sheetgrip { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--sep); margin: 4px auto 10px; }
+
+/* Named lists (owner, 2026-10-29; wireframe v9). One row of list
+ * chips with a + beside it, a one-row composer like the Ask input,
+ * and a list header (name, pencil, hunt, options). */
+.chiprow { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.chiprow #store-filter { flex: 1; min-width: 0; }
+.addline { display: flex; gap: 8px; align-items: center; margin: 12px 0 8px; }
+.addline input[type="text"] { flex: 1; min-width: 0; border-radius: 980px; padding: 11px 16px; }
+.addline .btn { flex: none; padding: 11px 16px; }
+.addline label.iconbtn { cursor: pointer; }
+#list-new { font-size: 26px; line-height: 1; }
+.listhead { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
+.listhead h3 { flex: 1; min-width: 0; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; }
+.listhead h3 span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.listhead .btn.compact { padding: 8px 16px; min-height: 44px; }
+.listhead .iconbtn { color: var(--label); background: var(--fill2); }
+.listhead .iconbtn svg { width: 24px; height: 24px; }
+.pen { flex: none; width: 36px; height: 36px; border: none; background: transparent; color: var(--secondary); display: grid; place-items: center; }
+.pen svg { width: 18px; height: 18px; }
+.liststores { color: var(--secondary); font-size: 14px; margin: 0 0 8px; }
+.sheet .navrow .tick { margin-left: auto; color: var(--accent-text); font-weight: 700; visibility: hidden; }
+.sheet .navrow[aria-pressed="true"] .tick { visibility: visible; }
+.sheet .navrow small { display: block; color: var(--secondary); font-size: 14px; }
+.sheet .navrow.dangerrow { color: var(--danger); }
+.sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
+.sheet .sheetacts .btn { flex: 1; }
+.sheet .field { margin: 8px 0; }
+.filetag { font: inherit; border: 1.5px solid var(--sep); background: transparent; }

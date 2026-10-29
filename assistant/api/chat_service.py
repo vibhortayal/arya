@@ -30,6 +30,13 @@ def snapshot():
                         if not i.get("checked") and i.get("source") != "user"],
         "on_list": [i.get("name") or nm.get(i["item_id"], i["item_id"])
                     for i in d["smart_list"]["items"] if not i.get("checked")],
+        # Named lists (Costco, Indian Store...) and what sits on each.
+        "named_lists": [
+            {"name": l["name"], "stores": l.get("stores", []),
+             "items": [i.get("name") or nm.get(i["item_id"], i["item_id"])
+                       for i in d["smart_list"]["items"]
+                       if i.get("list") == l["id"] and not i.get("checked")]}
+            for l in state.named_lists()],
         "currency": "USD (dollars)",
         "spend_total": dash["spend_total"], "returns_total": dash["returns_total"],
         "spend_by_month": dash["spend_by_month"],
@@ -48,12 +55,25 @@ def _resolve(name):
     return match_item(name or "", state.name_index())
 
 
+def _list_for(name):
+    """A named list by the name the user said (case-blind), or None."""
+    from api import state
+    want = " ".join(str(name or "").split()).lower()
+    if not want:
+        return None
+    return next((l for l in state.named_lists() if l["name"].lower() == want), None)
+
+
 def apply_actions(actions):
     from api import state
     applied, skipped = [], []
     today = date.today().isoformat()
     for a in actions or []:
         item_id = _resolve(a.get("item"))
+        target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
+        if a.get("type") == "add_to_list" and a.get("list") and target is None:
+            skipped.append(f"You have no list called {a['list']}, so {a.get('item')} went to Everything else.")
+        dest = f" to {target['name']}" if target else " to your list"
         if not item_id and a.get("type") == "add_to_list":
             # Add is a list act, not a history lookup: a name Arya
             # has never seen joins the list as a typed item, the same
@@ -64,8 +84,10 @@ def apply_actions(actions):
             if slug:
                 fl = dict(state.flags().get("manual-" + slug, {}))
                 fl.update({"manual": True, "name": name, "dismissed_on": None})
+                if target:
+                    fl["list"] = target["id"]
                 state.set_flag("manual-" + slug, fl)
-                applied.append(f"Added {name} to your list.")
+                applied.append(f"Added {name}{dest}.")
                 continue
         if not item_id:
             skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
@@ -75,7 +97,9 @@ def apply_actions(actions):
         t = a.get("type")
         if t == "add_to_list":
             fl["manual"] = True
-            applied.append(f"Added {nm} to your list.")
+            if target:
+                fl["list"] = target["id"]
+            applied.append(f"Added {nm}{dest}.")
         elif t == "ran_out":
             fl["out"] = today
             applied.append(f"Marked {nm} as out — it's on the list.")

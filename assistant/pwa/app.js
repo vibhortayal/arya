@@ -102,12 +102,12 @@ let isDemo = false;
 
 const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg>`;
 
-function listRow(i, tags) {
+function listRow(i, tags, fileable) {
   const reason = [i.due_reason, i.judge_reason].filter(Boolean).join(" · ");
   const tagHtml = (tags || []).map(t => `<span class="storetag">${esc(t)}</span>`).join("");
   return `<div class="row listrow${i.checked ? " checked" : ""}" tabindex="0" data-row-id="${esc(i.item_id)}">
     <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
-    <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}
+    <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}${fileable ? `<button class="storetag filetag" type="button" data-list-act="file" data-id="${esc(i.item_id)}">File under ›</button>` : ""}
     ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
     ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}</div>
     <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${qtyFmt(i.qty)}. Tap to change.">× ${qtyFmt(i.qty)}</button>
@@ -331,55 +331,74 @@ async function renderHome() {
 
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
 
-/* ---------------- List (B1: one list, a store lens) ----------------
- * Store affinity comes from purchase history: /api/home carries
- * price_by_store for every list item (the dictionary tracks
- * store-varying prices), so painting the list costs no extra
- * requests. An item with no history at a store sits in "Could
- * grab here too" under that store's lens. Check-off is the same
- * global flag in every lens — the lens never duplicates. */
+/* ---------------- List: named lists (owner, 2026-10-29) ----------------
+ * The household's own lists (Costco, Indian Store, Party...) replace
+ * the old store lens. An item sits on one list at a time; items on
+ * no list show under "Everything else" (or flat, when the household
+ * has made no lists yet). Check-off is the same global flag in every
+ * view — a list never duplicates an item. Create / rename / delete /
+ * hunt live in lists.js. */
 
-let listLens = "All";
+let listLens = "all";          // "all" or a named list's id
 let listData = null;
-const itemStores = {};
 
-function loadItemStores(items) {
-  const pbs = (listData && listData.price_by_store) || {};
-  for (const i of items) itemStores[i.item_id] = Object.keys(pbs[i.item_id] || {});
-}
+const namedLists = () => (listData && listData.lists) || [];
+const lensList = () => namedLists().find(l => l.id === listLens) || null;
 
-function paintStoreFilter(items) {
-  const stores = [...new Set(items.flatMap(i => itemStores[i.item_id] || []))].sort();
-  if (listLens !== "All" && !stores.includes(listLens)) listLens = "All";
-  $("#store-filter").innerHTML = ["All", ...stores].map(s =>
-    `<button class="chip" data-lens="${esc(s)}" aria-pressed="${String(listLens === s)}" type="button">${esc(s)}</button>`).join("");
+function paintStoreFilter() {
+  const lists = namedLists();
+  if (listLens !== "all" && !lists.some(l => l.id === listLens)) listLens = "all";
+  $("#store-filter").innerHTML = [{ id: "all", name: "All" }, ...lists].map(l =>
+    `<button class="chip" data-lens="${esc(l.id)}" aria-pressed="${String(listLens === l.id)}" type="button">${esc(l.name)}</button>`).join("");
+  const here = lensList();
+  const field = $("#add-text");
+  if (field) {
+    field.placeholder = here ? `Add to ${here.name}` : "Add an item";
+    field.setAttribute("aria-label", here ? `Add to ${here.name}` : "Add to your list");
+  }
 }
 
 $("#store-filter").addEventListener("click", ev => {
   const b = ev.target.closest("[data-lens]");
   if (!b) return;
   listLens = b.dataset.lens;
-  paintStoreFilter(listData.list.items);
+  paintStoreFilter();
   paintListGroups();
 });
+
+const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19l-4 1z"/><path d="M14.5 6.5l3 3"/></svg>`;
+const DOTS_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="18.5" cy="12" r="2.1"/></svg>`;
+
+function listHeader(l) {
+  const linked = (l.stores || []).length;
+  return `<div class="listhead"><h3><span>${esc(l.name)}</span><button class="pen" data-list-act="rename" type="button" aria-label="Rename list">${PEN_SVG}</button></h3>
+    <button class="btn ${linked ? "primary" : "secondary"} compact" data-list-act="hunt" type="button">${linked ? "Start a hunt" : "Hunt"}</button>
+    <button class="iconbtn" data-list-act="menu" type="button" aria-label="List options">${DOTS_SVG}</button></div>` +
+    (linked ? `<p class="liststores">${l.stores.map(esc).join(" · ")}</p>` : "");
+}
 
 function paintListGroups() {
   const items = listData.list.items;
   const box = $("#smart-list");
-  if (!items.length) { box.innerHTML = `<div class="emptyface-wrap"><img class="emptyface" src="assets/characters/pantry.webp" alt="">${empty("The list is empty. Nothing is due yet.")}</div>`; return; }
-  if (listLens === "All") {
-    // No per-store tags in the All lens — at household scale every
-    // row wore three, and the row drowned (review U1). Store
-    // detail lives in the item view; the lens still groups by it.
+  const lists = namedLists();
+  const here = lensList();
+  if (here) {
+    const mine = items.filter(i => i.list === here.id);
+    box.innerHTML = listHeader(here) + (mine.length
+      ? `<div class="group">${mine.map(i => listRow(i, [])).join("")}</div>`
+      : `<div class="group pad">${empty(`Nothing on ${here.name} yet. Add something above.`)}</div>`);
+  } else if (!items.length) {
+    box.innerHTML = `<div class="emptyface-wrap"><img class="emptyface" src="assets/characters/pantry.webp" alt="">${empty("The list is empty. Nothing is due yet.")}</div>`;
+  } else if (!lists.length) {
     box.innerHTML = `<div class="group">${items.map(i => listRow(i, [])).join("")}</div>`;
   } else {
-    const mine = items.filter(i => (itemStores[i.item_id] || []).includes(listLens));
-    const rest = items.filter(i => !(itemStores[i.item_id] || []).includes(listLens));
-    box.innerHTML =
-      `<p class="grouplabel">Your ${esc(listLens)} list</p>` +
-      (mine.length ? `<div class="group">${mine.map(i => listRow(i, [])).join("")}</div>`
-                   : empty(`Nothing on your list is usually bought at ${esc(listLens)}.`)) +
-      (rest.length ? `<p class="grouplabel">Could grab here too</p><div class="grabgroup"><div class="group">${rest.map(i => listRow(i, [])).join("")}</div></div>` : "");
+    const ids = new Set(lists.map(l => l.id));
+    const rest = items.filter(i => !ids.has(i.list));
+    box.innerHTML = lists.map(l => {
+      const mine = items.filter(i => i.list === l.id);
+      return mine.length ? `<p class="grouplabel">${esc(l.name)}</p><div class="group">${mine.map(i => listRow(i, [])).join("")}</div>` : "";
+    }).join("") + (rest.length
+      ? `<p class="grouplabel">Everything else</p><div class="group">${rest.map(i => listRow(i, [], true)).join("")}</div>` : "");
   }
   bindItemLinks(box);
 }
@@ -531,8 +550,7 @@ async function renderList() {
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
   $("#list-line").textContent = staplesLine(h.list.items);
-  loadItemStores(h.list.items);
-  paintStoreFilter(h.list.items);
+  paintStoreFilter();
   paintListGroups();
   paintListNotes(h);
   paintCart(h);
@@ -791,13 +809,14 @@ async function transcribeBlob(wav) {
  * transcribe. onText receives the transcript. */
 function wireRecordButton(btn, statusEl, onText) {
   let capture = null;
-  const label = btn.textContent;
+  const label = btn.innerHTML;
+  const iconOnly = btn.classList.contains("iconbtn");
   btn.addEventListener("click", async () => {
     if (capture) {
       const wav = capture.stop();
       capture = null;
       btn.classList.remove("listening");
-      btn.textContent = label;
+      btn.innerHTML = label;
       statusEl.textContent = "Transcribing with Muse Voice Transcribe…";
       try {
         const text = await transcribeBlob(wav);
@@ -816,7 +835,7 @@ function wireRecordButton(btn, statusEl, onText) {
     try {
       capture = await startCapture();
       btn.classList.add("listening");
-      btn.textContent = "Stop & transcribe";
+      if (!iconOnly) btn.textContent = "Stop & transcribe";
       statusEl.textContent = "Listening…";
     } catch (e) {
       statusEl.textContent = "Microphone access was refused. You can type instead.";
@@ -890,7 +909,8 @@ function bindAdd() {
     const btn = $("#add-submit");
     btn.disabled = true;
     try {
-      const r = await post("/api/list/from-text", { text });
+      const here = lensList();
+      const r = await post("/api/list/from-text", here ? { text, list_id: here.id } : { text });
       // Text typed while the request ran stays; only the sent text clears.
       if (field.value.trim() === text) field.value = "";
       paintAddSplit();
@@ -898,8 +918,9 @@ function bindAdd() {
       const dup = r.already ? ` ${r.already} already on it.` : "";
       const skip = (r.skipped || []).length
         ? ` Left out (not items): ${r.skipped.join(", ")}.` : "";
-      toast((r.added === 1 ? "Added 1 item to your list."
-        : `Added ${r.added} items to your list.`) + dup + skip);
+      const where = here ? here.name : "your list";
+      toast((r.added === 1 ? `Added 1 item to ${where}.`
+        : `Added ${r.added} items to ${where}.`) + dup + skip);
       renderList().then(() => flashNewRows(r.names)).catch(() => {});
     } catch (e) { toast(e.message); }
     btn.disabled = false;
@@ -950,14 +971,26 @@ function bindAdd() {
     if (!b) return;
     const items = splitPreview($("#add-text").value);
     items.splice(Number(b.dataset.spx), 1);
-    $("#add-text").value = items.join("\n");
+    $("#add-text").value = items.join("; ");
     paintAddSplit();
+  });
+  /* The field is one line now, and a one-line input flattens a pasted
+   * list's line breaks. Keep them as semicolons, which the server
+   * split reads as item breaks. */
+  $("#add-text").addEventListener("paste", ev => {
+    const t = (ev.clipboardData && ev.clipboardData.getData("text")) || "";
+    if (!/[\r\n]/.test(t)) return;
+    ev.preventDefault();
+    const f = $("#add-text");
+    const clean = t.split(/[\r\n]+/).map(x => x.trim()).filter(Boolean).join("; ");
+    f.setRangeText(clean, f.selectionStart, f.selectionEnd, "end");
+    f.dispatchEvent(new Event("input"));
   });
   /* One line + Enter adds at once (the old quick-add's speed);
    * Enter inside a multi-line paste just adds a line. */
   $("#add-text").addEventListener("keydown", ev => {
     if (ev.key !== "Enter" || ev.shiftKey) return;
-    if (!$("#add-text").value.includes("\n")) { ev.preventDefault(); $("#add-submit").click(); }
+    ev.preventDefault(); $("#add-submit").click();
   });
 
   wireRecordButton($("#add-mic"), $("#add-status"), text => {

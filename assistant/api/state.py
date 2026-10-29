@@ -254,6 +254,24 @@ def flags():
     return _load("flags.json", {})
 
 
+MAX_LISTS = 30
+MAX_LIST_STORES = 8
+
+
+def named_lists():
+    """The household's named lists (Costco, Indian Store, Party...), in
+    creation order. A list is {id, name, stores}; stores are the store
+    names a hunt from that list may start at. An item belongs to at
+    most one list through its flag's "list" key; an id that matches no
+    list here means "Everything else"."""
+    return _load("lists.json", {"lists": []}).get("lists", [])
+
+
+def save_named_lists(rows):
+    with file_lock("lists.json"):
+        _save("lists.json", {"lists": rows})
+
+
 def set_flag(item_id, flag):
     with file_lock("flags.json"):
         f = flags()
@@ -388,6 +406,7 @@ def derived():
                     row["approved"] = True
             smart["items"].append(row)
     kept = []
+    list_ids = {l["id"] for l in named_lists()}
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         if item.get("source") == "pattern" and f.get("dismissed_on") == today:
@@ -400,6 +419,8 @@ def derived():
                 item["approved"] = True
         if f.get("checked_on") and f.get("checked_on") == today:
             item["checked"] = True
+        if f.get("list") in list_ids:
+            item["list"] = f["list"]
         kept.append(item)
     smart["items"] = kept
     for item in smart["items"]:

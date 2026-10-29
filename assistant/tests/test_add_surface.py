@@ -64,7 +64,7 @@ class TestShellContract(unittest.TestCase):
     def test_single_surface_no_doors(self):
         html, app = read("index.html"), read("app.js")
         assert 'id="add-text"' in html
-        assert "paste a list as text" in html
+        assert 'class="addline"' in html  # one row, like the Ask input
         assert 'id="add-mic"' in html and 'id="add-photo"' in html
         assert "You can also add from Muse chat" in html
         assert 'id="doors"' not in html
