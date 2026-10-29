@@ -21,7 +21,10 @@ class TestLanding(unittest.TestCase):
         front = self.login.split('id="signin-sheet"')[0]
         self.assertIn('id="demo-btn"', front)
         self.assertIn(">Try the demo<", front)
-        self.assertIn("Arya writes the list. You find it, fast.", front)
+        # List first, Quest second (owner, 2026-10-29).
+        self.assertIn("Groceries, <em>sorted.</em>", front)
+        self.assertNotIn("treasure hunt.</em>", front)
+        self.assertLess(front.index('id="demo-btn"'), front.index('class="questline"'))
         for long_copy in ("Quest turns the list", "Meta API live", "Meta AI Developer Hackathon"):
             self.assertNotIn(long_copy, front)
 

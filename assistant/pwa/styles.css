@@ -935,10 +935,6 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 .todayband img { width: 100%; height: 104px; object-fit: cover; object-position: 50% 62%; display: block; }
 .bandchip { position: absolute; left: 10px; bottom: 10px; background: rgba(255,255,255,.94); border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 13.5px; color: var(--ink); }
 .bandchip span { color: var(--acc); }
-.duelineup { display: flex; gap: 8px; margin: 10px 0 2px; }
-.duelineup figure { margin: 0; text-align: center; width: 68px; }
-.duelineup img { width: 60px; height: 60px; border-radius: 16px; border: 1px solid var(--line2); background: #FBF5E6; object-fit: cover; }
-.duelineup figcaption { font-size: 11px; color: var(--ink2); margin-top: 3px; line-height: 1.3; overflow-wrap: anywhere; }
 .rowimg { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; margin-right: 10px; flex: none; }
 .rowface { width: 40px; height: 40px; border-radius: 11px; object-fit: cover; background: #FBF5E6; border: 1px solid var(--line2); flex: none; }
 .popflex { display: flex; gap: 12px; align-items: center; }
@@ -1138,6 +1134,38 @@ body.hunting #view-hunt.full .askbar {
 .accenttext { color: var(--accent-text); }
 .accenttext .sub { color: var(--secondary); }
 .remnote { margin: -4px 16px 0; }
+
+/* List-first pass (owner, 2026-10-29: "Waze for grocery shopping";
+ * the list is the hero, Quest has its own tab). Landing peek rows,
+ * Today's store alerts, list cards and the Still good? checks. */
+.peek { margin: 14px 0 4px; }
+.peek .row, #view-home .row { gap: 12px; }
+.rowface { width: 40px; height: 40px; border-radius: 10px; background: #FBF5E6; flex: none; object-fit: cover; }
+.peektag { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; flex: none;
+  background: var(--fill); color: var(--ink2); }
+.peektag.low { background: var(--acc-soft); color: var(--acc); }
+.peektag.alert { background: #FFF4D6; color: #8A5A00; }
+.peekcap { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 6px 0 0; }
+.questline { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; padding: 12px 14px;
+  background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius);
+  font-size: 14.5px; line-height: 1.4; color: var(--ink2); }
+.questline img { width: 56px; height: 40px; object-fit: cover; border-radius: 8px; flex: none; }
+.questline b { color: var(--ink); }
+.sectrow .linkbtn { margin-left: auto; font-size: 15px; padding: 0 0 1px; min-height: 44px; display: flex; align-items: flex-end; }
+.alertic { width: 40px; height: 40px; border-radius: 10px; flex: none; display: grid; place-items: center;
+  font-size: 19px; font-weight: 700; background: #FFF4D6; color: #8A5A00; }
+.alertic.good { background: #E6F4EA; color: #1E6B34; }
+.listcards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.listcard { background: var(--panel); border-radius: var(--radius); padding: 12px 14px; border: none;
+  text-align: left; box-shadow: var(--shadow); min-height: 44px; min-width: 0; }
+.listcard .lc-name { font-weight: 700; display: block; overflow-wrap: anywhere; }
+.listcard .lc-count { font-size: 13px; color: var(--acc); font-weight: 700; display: block; margin-top: 1px; }
+.listcard .lc-items { font-size: 13px; color: var(--ink2); display: block; margin-top: 4px; line-height: 1.35; }
+.chipset { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.checktext { font-size: 15px; display: block; }
+.chip.onlist { color: var(--ink3); cursor: default; }
+#today-patterns .hubrow, #today-quest { margin-top: 4px; }
+#today-quest { margin-top: 14px; }
 
 /* Profile: the avatar wears a pencil; the choices open on Edit. */
 .avwrap { position: relative; width: 96px; margin: 0 auto 6px; }

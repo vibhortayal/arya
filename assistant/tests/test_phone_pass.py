@@ -48,9 +48,9 @@ class TestPhonePassBatch(unittest.TestCase):
 
     def test_today_order_and_compact_line(self):
         html = read("index.html")
-        home = html.split('id="view-home"')[1].split("</section>")[0]
-        self.assertLess(home.index('id="btn-new-hunt"'),
-                        home.index('id="quest-sessions"'))
+        quest = html.split('id="view-community"')[1].split("</section>")[0]
+        self.assertLess(quest.index('id="btn-new-hunt"'),
+                        quest.index('id="quest-sessions"'))
         js = read("app.js")
         line = js.split("function staplesLine(")[1].split("\n}")[0]
         self.assertIn("staple", line)

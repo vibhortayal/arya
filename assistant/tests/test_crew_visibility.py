@@ -1,5 +1,6 @@
-"""Crew visibility (owner, 2026-10-28): Crew is a tab, Profile opens
-from the top-right avatar, and Today carries a Crew card."""
+"""Crew visibility (owner, 2026-10-28): Profile opens from the top-right
+avatar. Since the list-first pass (owner, 2026-10-29) Crew lives inside
+the Quest tab, and Today carries no game or Crew card."""
 import re
 import unittest
 from pathlib import Path
@@ -25,17 +26,18 @@ class CrewVisibility(unittest.TestCase):
     def test_crew_view_leads_with_friends_and_race(self):
         html = read("index.html")
         crew = html.split('id="view-community"')[1].split("</section>")[0]
-        self.assertIn(">Crew</h2>", crew)
+        self.assertIn(">Quest</h2>", crew)
+        self.assertIn(">Crew</h3>", crew)
         self.assertLess(crew.index("view-race"), crew.index("comm-board"))
         self.assertLess(crew.index("view-friends"), crew.index("comm-board"))
         self.assertNotIn("qback", crew)
 
-    def test_today_crew_card_has_no_pressure_words(self):
-        js = read("app.js")
-        self.assertIn('id="today-crew"', read("index.html"))
-        body = js.split("async function paintTodayCrew")[1].split("async function renderHome")[0]
-        for word in ("lose", "behind", "last place", "penalty", "hurry"):
-            self.assertNotIn(word, body.lower())
+    def test_today_has_no_crew_or_game_card(self):
+        html = read("index.html")
+        home = html.split('id="view-home"')[1].split("</section>")[0]
+        for el in ("today-crew", "today-hero", "quest-sessions", "btn-new-hunt", "today-level"):
+            self.assertNotIn(f'id="{el}"', home)
+        self.assertNotIn("paintTodayCrew", read("app.js"))
 
     def test_plan_and_score_invite_a_race(self):
         self.assertIn('id="opt-race"', read("index.html"))

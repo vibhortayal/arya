@@ -155,10 +155,10 @@ function staplesLine(items) {
  * basket fallback. The brain settles what an item IS; this only maps
  * that identity to art and never guesses a match of its own. */
 let CHARM = null;
-let TODAY_DUE = [];
+let TODAY_HOME = null;  // the last /api/home Today painted
 fetch("assets/characters/manifest.json").then(r => r.json()).then(m => {
   CHARM = m;
-  paintLineup(TODAY_DUE);
+  if (TODAY_HOME) paintTodayLow(TODAY_HOME);  // faces arrive late: repaint
 }).catch(() => {});
 function charMatch(tokens, kw) {
   const kt = kw.split(" ");
@@ -174,15 +174,6 @@ function charFor(name) {
   for (const c of CHARM.categories || [])
     if ((c.keywords || []).some(k => charMatch(tokens, k))) return c.char;
   return CHARM.fallback || null;
-}
-function paintLineup(items) {
-  const el = $("#today-lineup");
-  if (!el) return;
-  const due = (items || []).filter(i => i && i.name).slice(0, 4);
-  el.innerHTML = due.length ? `<div class="duelineup">${due.map(i => {
-    const c = charFor(i.name);
-    return `<figure>${c ? `<img src="assets/characters/${c}" alt="">` : ""}<figcaption>${esc(i.name)}${i.due_reason ? `<br>${esc(i.due_reason)}` : ""}</figcaption></figure>`;
-  }).join("")}</div>` : "";
 }
 
 /* ---------------- Today (decluttered) ----------------
@@ -285,33 +276,152 @@ function paintTodayGames(sessions) {
     : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
 }
 
-/* The Crew card: one line of social state and one action. It
- * never nags: no friends means a soft invite, and it names no
- * clock, rank or penalty. */
-async function paintTodayCrew(sessions) {
-  const el = $("#today-crew");
-  const d = await api("/api/quest/friends").catch(() => ({ friends: [] }));
-  const friends = d.friends || [];
-  const incoming = friends.filter(f => f.status === "pending_in");
-  const accepted = friends.filter(f => f.status === "accepted");
-  const racing = (sessions || []).filter(s => s.shopoff_id && s.state !== "done" && s.state !== "finished");
-  let line, label;
-  if (incoming.length) {
-    line = `@${esc(incoming[0].handle)} wants to hunt with you.`; label = "See request";
-  } else if (racing.length) {
-    line = `Shop-Off at ${esc(racing[0].store)} is on. Race at your own pace.`; label = "Open Crew";
-  } else if (accepted.length) {
-    line = `Crew: ${accepted.length} friend${accepted.length === 1 ? "" : "s"}. Challenge one to a Shop-Off.`; label = "Open Crew";
-  } else {
-    line = "Shop with someone. Invite a friend and race the same list.";  label = "Invite a friend";
+/* ---------------- Quest tab hub ----------------
+ * The list-first pass (owner, 2026-10-29: "Quest is the Pokemon Go
+ * part of our app. we should not make quest as the hero"): the hunt
+ * hero card, the games and the level chip moved from Today to the
+ * Quest tab, above the Crew rows that tab already had. */
+async function renderQuestHub() {
+  let sessions = [];
+  if (window.qLoadSessions) {
+    try { sessions = await qLoadSessions(); } catch (e) { sessions = []; }
   }
-  el.innerHTML = `<button class="hubrow crewcard" id="today-crew-btn" type="button"><span class="hr-label">${line}</span>${incoming.length ? `<span class="countbadge">${incoming.length}</span>` : ""}<span class="hr-action">${label}</span><span class="chev">›</span></button>`;
-  $("#today-crew-btn").addEventListener("click", () => {
-    show("view-community");
-    refresh("view-community");
-    if (!incoming.length && !accepted.length && !racing.length && window.questGo) questGo("view-friends");
-    else if (incoming.length && window.questGo) questGo("view-friends");
+  paintTodayHero(sessions);
+  paintTodayGames(sessions);
+  api("/api/quest/profile").then(paintLevelChip).catch(() => {});
+}
+
+/* ---------------- Today: the shopping dashboard ----------------
+ * Waze for grocery shopping (owner, 2026-10-29): what is running
+ * low and why, what is up at your stores, what to use soon, your
+ * lists and your month. Every row is a fact Arya already holds; no
+ * new model calls. */
+
+function paintTodayLow(h) {
+  const low = (h.running_low || []).slice(0, 5);
+  const onList = new Set((h.list.items || []).filter(i => !i.checked).map(i => i.item_id));
+  const cap = t => String(t || "").replace(/^./, c => c.toUpperCase());
+  const el = $("#today-low");
+  if (!low.length) {
+    el.innerHTML = `<h3 class="sect">Running low</h3><div class="group pad">${empty("Nothing is running low. Arya learns your rhythm from receipts.")}</div>`;
+    return;
+  }
+  el.innerHTML = `<h3 class="sect">Running low</h3><div class="group">${low.map(i => {
+    const c = charFor(i.name);
+    const act = onList.has(i.item_id)
+      ? `<span class="chip onlist" aria-label="On your list">On list</span>`
+      : `<button class="chip" data-low-add="${esc(i.item_id)}" type="button" aria-label="Add ${esc(i.name)} to your list">Add</button>`;
+    return `<div class="row">${c ? `<img class="rowface" src="assets/characters/${c}" alt="">` : ""}
+      <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a><span class="sub">${esc(cap(i.reason))}</span></div>${act}</div>`;
+  }).join("")}</div>`;
+  bindItemLinks(el);
+}
+
+$("#today-low").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-low-add]");
+  if (!b) return;
+  b.disabled = true;
+  try {
+    await post("/api/list/add", { item_id: b.dataset.lowAdd });
+    b.outerHTML = `<span class="chip onlist">On list</span>`;
+    toast("Added to your list.");
+  } catch (e) { b.disabled = false; toast(e.message); }
+});
+
+/* Store alerts: the crew's "not here" reports, and where an item on
+ * your list costs less (median price per store, from your own
+ * receipts). Nothing is guessed: no report, no price, no row. */
+function storeAlertRows(h, news) {
+  const onList = new Set((h.list.items || []).filter(i => !i.checked).map(i => String(i.name || "").toLowerCase()));
+  const rows = (news || []).slice(0, 3).map(n => {
+    const mine = onList.has(String(n.item || "").toLowerCase());
+    return `<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
+      <span class="name">${esc(n.store)}: ${esc(n.item)} not there</span>
+      <span class="sub">${n.count} report${n.count === 1 ? "" : "s"} · ${fmtShort(String(n.reported_at || "").slice(0, 10))}${mine ? " · it's on your list" : ""}</span></div></div>`;
   });
+  const names = Object.fromEntries((h.list.items || []).map(i => [i.item_id, i.name]));
+  const pbs = h.price_by_store || {};
+  for (const [id, by] of Object.entries(pbs)) {
+    if (rows.length >= 4) break;
+    const stores = Object.entries(by).filter(([, p]) => p && p.median > 0);
+    if (stores.length < 2 || !names[id]) continue;
+    stores.sort((a, b) => a[1].median - b[1].median);
+    const [lo, hi] = [stores[0], stores[stores.length - 1]];
+    if (hi[1].median - lo[1].median < 0.25) continue;  // not worth a detour
+    rows.push(`<div class="row"><span class="alertic good" aria-hidden="true">$</span><div class="grow">
+      <span class="name">${esc(names[id])}: ${money(lo[1].median)} at ${esc(lo[0])}</span>
+      <span class="sub">You usually pay ${money(hi[1].median)} at ${esc(hi[0])}</span></div></div>`);
+  }
+  return rows;
+}
+
+async function paintStoreAlerts(h) {
+  const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
+  const rows = storeAlertRows(h, nw.news);
+  // No report and no price gap yet: one labelled example, as Crew's
+  // store news showed it, never dressed as real data.
+  if (!rows.length) rows.push(`<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
+      <span class="name">Costco: Oat milk not there<span class="samplepill">Sample</span></span>
+      <span class="sub">Example only. Tap Not here? on a hunt and it shows up here.</span></div></div>`);
+  $("#today-alerts").innerHTML = `<h3 class="sect">Store alerts</h3><div class="group">${rows.join("")}</div>`;
+}
+
+/* "Still good?" checks (the usual-shelf-life guess) live on Today,
+ * beside Use soon, since the list-first pass. */
+function paintTodayChecks(h) {
+  const checks = h.checks || [];
+  $("#today-checks").innerHTML = checks.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
+    `<div class="row"><div class="grow"><span class="checktext">${esc(c.text)}</span>
+      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}</div>` : "";
+}
+
+$("#today-checks").addEventListener("click", async ev => {
+  const ok = ev.target.closest("[data-check-ok]");
+  const ex = ev.target.closest("[data-check-expired]");
+  if (!ok && !ex) return;
+  try {
+    if (ok) {
+      await post("/api/list/check-ok", { item_id: ok.dataset.checkOk });
+      toast("Still good — Arya will ask again next cycle.");
+    } else {
+      await post(`/api/items/${encodeURIComponent(ex.dataset.checkExpired)}/expired`);
+      toast("Marked expired. It's on your list.");
+    }
+    renderHome().catch(showErr);
+  } catch (e) { toast(e.message); }
+});
+
+/* Your lists: one card per named list, what is still to get. */
+function paintTodayLists(h) {
+  const items = (h.list.items || []).filter(i => !i.checked && !i.not_grocery);
+  const lists = h.lists || [];
+  const cards = lists.map(l => ({ id: l.id, name: l.name, items: items.filter(i => i.list === l.id) }));
+  const rest = items.filter(i => !i.list || !lists.some(l => l.id === i.list));
+  if (rest.length || !cards.length) cards.push({ id: "all", name: lists.length ? "Everything else" : "Your list", items: rest });
+  $("#today-lists").innerHTML = `<div class="listcards">${cards.map(c => `
+    <button class="listcard" data-open-list="${esc(c.id)}" type="button"><span class="lc-name">${esc(c.name)}</span>
+    <span class="lc-count">${c.items.length} item${c.items.length === 1 ? "" : "s"}</span>
+    <span class="lc-items">${c.items.length ? c.items.slice(0, 3).map(i => esc(i.name)).join(", ") + (c.items.length > 3 ? "…" : "") : "Nothing to get"}</span></button>`).join("")}</div>`;
+}
+
+$("#today-lists").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-open-list]");
+  if (!b) return;
+  listLens = b.dataset.openList;
+  show("view-list"); refresh("view-list");
+});
+
+/* Your month: the spend Analysis already shows, one line, one tap. */
+let analysisFrom = "view-profile";
+async function paintTodayPatterns() {
+  const d = await api("/api/dashboard").catch(() => null);
+  const months = d ? Object.keys(d.spend_by_month || {}).sort() : [];
+  const el = $("#today-patterns");
+  if (!months.length) { el.innerHTML = ""; return; }
+  const k = months[months.length - 1];
+  el.innerHTML = `<h3 class="sect">Your patterns</h3><button class="hubrow" id="today-patterns-btn" type="button">
+    <span class="hr-label">${esc(MONTHS[Number(k.slice(5, 7)) - 1])}: ${money(d.spend_by_month[k])} spent</span><span class="hr-action">Patterns</span><span class="chev">›</span></button>`;
+  $("#today-patterns-btn").addEventListener("click", () => { analysisFrom = "view-home"; show("view-analysis"); refresh("view-analysis"); });
 }
 
 async function renderHome() {
@@ -325,14 +435,13 @@ async function renderHome() {
   const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   $("#today-dow").textContent = `${days[now.getDay()]} · ${fmtDate(iso)}`;
   $("#today-through").textContent = h.as_of ? `Data through ${fmtDate(h.as_of)}` : "";
-  let sessions = [];
-  if (window.qLoadSessions) {
-    try { sessions = await qLoadSessions(); } catch (e) { sessions = []; }
-  }
-  paintTodayHero(sessions);
-  paintTodayGames(sessions);
-  api("/api/quest/profile").then(paintLevelChip).catch(() => {});
-  paintTodayCrew(sessions).catch(() => {});
+  paintTodayLow(h);
+  paintStoreAlerts(h).catch(() => {});
+  paintTodayChecks(h);
+  paintTodayLists(h);
+  paintTodayPatterns().catch(() => {});
+  if (window.Expiry) Expiry.paintToday(h.use_soon);
+  TODAY_HOME = h;
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
     api("/api/curator").catch(() => ({ proposals: [] }))
@@ -343,13 +452,10 @@ async function renderHome() {
     : "";
   const eyeBtn = $("#today-eye-btn");
   if (eyeBtn) eyeBtn.addEventListener("click", () => { receiptsFrom = "view-home"; show("view-receipts"); refresh("view-receipts"); });
-  $("#today-listline-text").textContent = staplesLine(h.list.items);
-  if (window.Expiry) Expiry.paintToday(h.use_soon);
-  TODAY_DUE = h.list.items || [];
-  paintLineup(TODAY_DUE);
 }
 
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
+$("#today-quest").addEventListener("click", () => { show("view-community"); refresh("view-community"); });
 
 /* ---------------- List: named lists (owner, 2026-10-29) ----------------
  * The household's own lists (Costco, Indian Store, Party...) replace
@@ -543,30 +649,11 @@ function paintListNotes(h) {
   if (h.seen && h.seen.length) {
     notes += h.seen.map(s => `<div class="row"><div class="grow"><span class="name">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`).join("");
   }
-  if (h.checks && h.checks.length) {
-    notes += h.checks.map(c => `<div class="row"><div class="grow"><span style="font-size:15px">${esc(c.text)}</span></div><div>
-      <button class="chip" data-check-ok="${esc(c.item_id)}">Still good</button>
-      <button class="chip" data-check-expired="${esc(c.item_id)}">It expired</button></div></div>`).join("");
-  }
+  // The "still good?" checks moved to Today (list-first pass,
+  // owner 2026-10-29); the list keeps only what is on it.
   $("#list-notes").innerHTML = notes ? `<h3 class="sect">Worth a look</h3><div class="group">${notes}</div>` : "";
   bindItemLinks($("#list-notes"));
 }
-
-$("#list-notes").addEventListener("click", async ev => {
-  const ok = ev.target.closest("[data-check-ok]");
-  const ex = ev.target.closest("[data-check-expired]");
-  if (!ok && !ex) return;
-  try {
-    if (ok) {
-      await post("/api/list/check-ok", { item_id: ok.dataset.checkOk });
-      toast("Still good — Arya will ask again next cycle.");
-    } else {
-      await post(`/api/items/${encodeURIComponent(ex.dataset.checkExpired)}/expired`);
-      toast("Marked expired. It's on your list.");
-    }
-    renderList().catch(showErr);
-  } catch (e) { toast(e.message); }
-});
 
 function paintCart(h) {
   const c = h.cart;
@@ -732,7 +819,7 @@ for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", 
 }
 /* Analysis is reached only from Profile, and the wireframe's back
  * arrow returns there — not through the quest view stack. */
-$("#an-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
+$("#an-back").addEventListener("click", ev => { ev.preventDefault(); const to = analysisFrom; analysisFrom = "view-profile"; show(to); refresh(to); });
 $("#btn-receipts").addEventListener("click", () => { receiptsFrom = "view-profile"; show("view-receipts"); refresh("view-receipts"); });
 // Receipts back returns to the Brain view that opened it,
 // through that tab's own entry so tab state stays in sync.
@@ -1524,7 +1611,7 @@ function refresh(view) {
   if (view === "view-receipts") renderReceipts().catch(showErr);
   if (view === "view-analysis") renderAnalysis().catch(showErr);
   if (view === "view-profile" || view === "view-quest-progress" || view === "view-muse") renderProfile().catch(showErr);
-  if (view === "view-community") renderCommunity().catch(showErr);
+  if (view === "view-community") { renderQuestHub().catch(showErr); renderCommunity().catch(showErr); }
   if (view === "view-chat") paintChatEmpty();
 }
 

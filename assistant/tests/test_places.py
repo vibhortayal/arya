@@ -229,7 +229,7 @@ class TestPickerRefreshOnBack(unittest.TestCase):
               "current:null};const calls=[];"
               "const document={querySelectorAll:()=>({forEach(){}})};"
               "const window={scrollTo(){}};"
-              "function stopHuntTimer(){}function stopHuntMotion(){}"
+              "function stopHuntTimer(){}function stopHuntMotion(){}function qMarkTab(){}"
               "function paintHuntFrame(){}function refresh(){}"
               "function renderCommunity(){return Promise.resolve()}"
               "function showErr(){}"

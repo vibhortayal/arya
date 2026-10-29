@@ -116,8 +116,17 @@ function qResolveDriver(store) {
 
 /* ---------------- navigation ---------------- */
 
+/* Landing back on a tab's own view lights that tab (Quest has its
+ * own tab since the list-first pass, owner 2026-10-29). */
+function qMarkTab(id) {
+  const tabs = document.querySelectorAll("#tabs button");
+  if (![...tabs].some(b => b.dataset.view === id)) return;
+  tabs.forEach(b => b.classList.toggle("active", b.dataset.view === id));
+}
+
 function questShow(id) {
   document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== id; });
+  qMarkTab(id);
   if (id !== "view-hunt") { stopHuntTimer(); stopHuntMotion(); }
   paintHuntFrame(id);
   if (Q.stack[Q.stack.length - 1] !== id) Q.stack.push(id);
@@ -133,12 +142,15 @@ function questBack() {
     if (prev === "view-hunt") openHunt(Q.current); else openExpress(Q.current);
     return;
   }
-  document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== (prev || "view-home"); });
+  // Hunts live on the Quest tab: with nothing left on the stack,
+  // Back lands there, not on Today.
+  const to = prev || "view-community";
+  document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== to; });
+  qMarkTab(to);
   stopHuntTimer(); stopHuntMotion();
-  paintHuntFrame(prev || "view-home");
+  paintHuntFrame(to);
   window.scrollTo(0, 0);
-  if (!prev || prev === "view-home") refresh("view-home");
-  if (prev === "view-community") renderCommunity().catch(showErr);
+  if (to === "view-home" || to === "view-community") refresh(to);
   // The picker was drawn before Find / Add a store sent the player
   // away: a store added there is not in that stale list, so it could
   // not be selected. Redraw it from My Stores on the way back.
@@ -168,7 +180,7 @@ document.querySelectorAll("#tabs button").forEach(b =>
   b.addEventListener("click", () => { Q.stack = b.dataset.view === "view-community" ? ["view-community"] : []; stopHuntTimer(); stopHuntMotion(); paintHuntFrame(""); }));
 
 function questGo(id) {
-  if (id === "view-community") renderCommunity().catch(showErr);
+  if (id === "view-community") refresh("view-community");
   if (id === "view-race") renderRace().catch(showErr);
   if (id === "view-friends") renderFriends().catch(showErr);
   if (id === "view-stores-mine") renderMyStores().catch(showErr);
@@ -445,10 +457,10 @@ $("#quest-sessions").addEventListener("click", async ev => {
   const ab = ev.target.closest("[data-abandon]");
   if (ab) {
     const s = qSessionById(ab.dataset.abandon);
-    if (!s || !window.confirm("End this hunt? It leaves Today and cannot be resumed.")) return;
+    if (!s || !window.confirm("End this hunt? It leaves Quest and cannot be resumed.")) return;
     try { await qSetState(s, "abandoned"); toast("Hunt ended."); }
     catch (e) { toast(e.message); }
-    refresh("view-home");
+    refresh("view-community");
     return;
   }
   const b = ev.target.closest("[data-sess]");
@@ -1338,8 +1350,8 @@ document.querySelectorAll(".modecard").forEach(b =>
       await qLoadSessions().catch(() => {});
       toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
       // The set-up screens are done with: Back from the new hunt
-      // returns to Today, not into the mode picker again.
-      Q.stack = [];
+      // returns to the Quest tab, not into the mode picker again.
+      Q.stack = ["view-community"];
       qOpenSession(sess);
     } catch (e) { toast(e.message); }
     finally { draft.creating = false; b.disabled = false; }
@@ -2296,12 +2308,12 @@ $("#btn-pause").addEventListener("click", async () => {
 $("#btn-abandon").addEventListener("click", async () => {
   const sess = Q.current;
   if (!sess) return;
-  if (!window.confirm("End this quest? It leaves Today and cannot be resumed.")) return;
+  if (!window.confirm("End this quest? It leaves Quest and cannot be resumed.")) return;
   try {
     await qSetState(sess, "abandoned");
     Q.sessions = Q.sessions.filter(x => x.id !== sess.id);
     toast("Quest ended.");
-    questGo("view-home");
+    questGo("view-community");
   } catch (e) { toast(e.message); }
 });
 $("#btn-finish").addEventListener("click", () => {
@@ -3405,8 +3417,9 @@ async function renderCommunity() {
     ? `<div class="row"><div class="grow"><span class="name">${acc} friend${acc === 1 ? "" : "s"}${pend ? ` · ${pend} request${pend === 1 ? "" : "s"}` : ""}</span><span class="sub">${raceN ? `${raceN} Shop-Off${raceN === 1 ? "" : "s"} on` : "No Shop-Off on right now"}</span></div></div>`
     : empty("Hunting is better with company. Add a friend to race the same list.");
   $("#crew-friends-sub").textContent = pend ? `${pend} request${pend === 1 ? "" : "s"} waiting` : "Add by handle, accept requests";
-  const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
-  $("#comm-news").innerHTML = (nw.news || []).length
+  const newsEl = $("#comm-news");  // Store news moved to Today (Store alerts)
+  const nw = newsEl ? await api("/api/quest/news").catch(() => ({ news: [] })) : { news: [] };
+  if (newsEl) newsEl.innerHTML = (nw.news || []).length
     ? nw.news.map(n => `<div class="row"><div class="grow"><span class="name">${esc(n.item)} is not at ${esc(n.store)}</span>
       <span class="sub">${n.count} report${n.count === 1 ? "" : "s"} · ${fmtShort(String(n.reported_at || "").slice(0, 10))}</span></div></div>`).join("")
     : `<div class="row"><div class="grow"><span class="name">Oat milk is not at Costco<span class="samplepill">Sample</span></span>

@@ -285,7 +285,8 @@ DRIVER = r"""
   out.back_finish_to_run = calls.express === 1;
   Q.stack = ["view-hunt"];
   questBack();
-  out.back_hunt_to_today = calls.refresh.includes("view-home");
+  // Hunts live on the Quest tab (list-first pass, 2026-10-29).
+  out.back_hunt_to_today = calls.refresh.includes("view-community");
   // --- resume route: a finished hunt opens on its Score ---
   const fin = mkSess(["A"]); fin.state = "finished";
   qOpenSession(fin);
