@@ -68,6 +68,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
+  One map per store location: only the Trader Joe's on Argonaut has
+  the shipped walk; other Trader Joe's play a labelled typical layout.
+  `2026-10-29-store-maps-per-location.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.

@@ -24,7 +24,7 @@ export function sectionFor(name: string, graph: StoreGraph = TEMPLATE): string {
 
 /* A store layout from the template. `mapped` lists the sections Arya
  * has seen (all of them for a mapped store, none for a guess). */
-export function buildLayout(o: { id: string; name: string; area: string; kind: MapKind; items: QuestItem[]; mapped?: string[]; shoppers?: number; graph?: StoreGraph; all?: boolean }): StoreLayout {
+export function buildLayout(o: { id: string; name: string; area: string; kind: MapKind; items: QuestItem[]; mapped?: string[]; shoppers?: number; graph?: StoreGraph; all?: boolean; typicalOf?: string }): StoreLayout {
   const P = o.graph ? solve(o.graph) : T;
   const need = new Set(o.items.map(i => i.section));
   // Centre aisles the list does not need stay as bare racks; wall sections always show.
@@ -33,7 +33,7 @@ export function buildLayout(o: { id: string; name: string; area: string; kind: M
   const mapped = o.kind === "mapped" && !o.mapped ? sections.map(s => s.id)
     : o.kind !== "simulated" ? (o.mapped || []).filter(id => sections.some(s => s.id === id))
       : [];
-  return { id: o.id, name: o.name, area: o.area, kind: o.kind, sections, mapped, entry: P.entry, checkout: P.checkout, shoppers: o.shoppers, plan: { w: P.w, h: P.h }, racks: P.racks, ...(o.graph?.look ? { look: o.graph.look } : {}) };
+  return { id: o.id, name: o.name, area: o.area, kind: o.kind, sections, mapped, entry: P.entry, checkout: P.checkout, shoppers: o.shoppers, plan: { w: P.w, h: P.h }, racks: P.racks, ...(o.typicalOf && o.kind === "simulated" ? { typicalOf: o.typicalOf } : {}), ...(o.graph?.look ? { look: o.graph.look } : {}) };
 }
 
 /* What a section looks like to the player: real, fog (partly mapped,

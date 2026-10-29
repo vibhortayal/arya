@@ -3,9 +3,12 @@
  *
  * - Lists come from the plan (GET /api/quest/plan + /api/lists): the
  *   unchecked list, as a whole ("Everything") and per named list.
- * - A store's look comes from its shared map (GET /api/storemap):
- *   only sections Arya has located count (coverageOf below); the rest
- *   are fog or a labelled guess. Never a guess passed as fact.
+ * - A store's look comes from its shared map (GET /api/storemap),
+ *   one map per location ("name|store id"): only sections Arya has
+ *   located there count (coverageOf below); the rest are fog or a
+ *   labelled guess. Never a guess passed as fact. Another location of
+ *   a chain Arya has walked (Trader Joe's) plays the chain's typical
+ *   layout, labelled as such, with its shelves as "usually" hints.
  * - A real trip is a hunt session (POST /api/quest/sessions), so
  *   grabs check items off, "not here" files the existing shortage
  *   report, and the receipt step settles it like any hunt.
@@ -27,9 +30,10 @@ import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/
 type PlanRow = { name: string; qty?: number; list?: string | null };
 type NamedList = { id: string; name: string };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
+type Coverage = { kind: MapKind; seen: string[]; typical?: string };
 type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
 type SessItem = { name: string; shelf_label?: string | null };
-export type Session = { id: string; store: string; state: string; items: SessItem[]; mode: string };
+export type Session = { id: string; store: string; store_id?: string | null; state: string; items: SessItem[]; mode: string };
 
 const BASE = ["produce", "bakery", "deli", "meat", "dairy", "frozen"];
 
@@ -85,13 +89,27 @@ export function mappedSections(segs: MapSeg[]): string[] {
 }
 
 /* "Rice & Olives Shelf" -> "Near the Rice & Olives shelf" (never "Shelf shelf"). */
-export const shelfHint = (label: string) => `Near the ${label.replace(/\s+shel(f|ves)\s*$/i, "")} shelf`;
+const shelfWord = (label: string) => label.replace(/\s+shel(f|ves)\s*$/i, "");
+export const shelfHint = (label: string) => `Near the ${shelfWord(label)} shelf`;
+/* At a location nobody mapped, the chain's shelf is only what is usual. */
+export const typicalHint = (label: string, chain: string) => `Usually near the ${shelfWord(label)} shelf at ${chain}`;
+
+/* The store map's address: one map per location when the id is known. */
+export const mapRef = (name: string, id?: string) => (id ? `${name}|${id}` : name);
+
+/* The line under a store in the list. */
+export function seenLine(c: Coverage): string {
+  const n = c.seen.length;
+  if (c.kind !== "simulated") return `${n} of ${SECTIONS.length} sections located`;
+  if (c.typical) return `Typical ${c.typical} layout · not mapped here yet`;
+  return n ? "Not enough of it located yet" : "Nobody has mapped it yet";
+}
 
 const area = (s: StoreRow) => [s.street, s.city].filter(Boolean).join(" · ") || "";
 
 export class AppSource implements QuestSource {
   private stores = new Map<string, StoreRow>();
-  private seen = new Map<string, { kind: MapKind; seen: string[] }>();
+  private seen = new Map<string, Coverage>();
   private sess: Session | null = null;
   private saved: SavedMap[] | null = null;
 
@@ -114,11 +132,11 @@ export class AppSource implements QuestSource {
     return out;
   }
 
-  private async mapOf(name: string): Promise<{ kind: MapKind; seen: string[] }> {
-    const hit = this.seen.get(name); if (hit) return hit;
-    const m = await get<{ segments: MapSeg[] }>(`/api/storemap?store=${encodeURIComponent(name)}`).catch(() => ({ segments: [] as MapSeg[] }));
-    const cov = coverageOf(m.segments || []);
-    this.seen.set(name, cov);
+  private async mapOf(ref: string): Promise<Coverage> {
+    const hit = this.seen.get(ref); if (hit) return hit;
+    const m = await get<{ segments: MapSeg[]; typical?: string | null }>(`/api/storemap?store=${encodeURIComponent(ref)}`).catch(() => ({ segments: [] as MapSeg[], typical: null }));
+    const cov: Coverage = { ...coverageOf(m.segments || []), ...(m.typical ? { typical: m.typical } : {}) };
+    this.seen.set(ref, cov);
     return cov;
   }
 
@@ -127,10 +145,8 @@ export class AppSource implements QuestSource {
     const mine = await this.maps().catch(() => [] as SavedMap[]);
     return Promise.all(rows.map(async r => {
       if (mine.some(m => m.key === `store:${r.id}`)) return { id: r.id, name: r.name, area: area(r), kind: "mapped" as MapKind, seen: "Your map" };
-      const { kind, seen: ids } = await this.mapOf(r.name);
-      const n = ids.length, of = SECTIONS.length;
-      const seen = kind !== "simulated" ? `${n} of ${of} sections located` : n ? "Not enough of it located yet" : "Nobody has mapped it yet";
-      return { id: r.id, name: r.name, area: area(r), kind, seen };
+      const cov = await this.mapOf(mapRef(r.name, r.id));
+      return { id: r.id, name: r.name, area: area(r), kind: cov.kind, seen: seenLine(cov) };
     }));
   }
 
@@ -167,14 +183,18 @@ export class AppSource implements QuestSource {
     void post(`/api/quest/sessions/${this.sess.id}/state`, { state: "playing" }).catch(() => {});
     const shelf = new Map(this.sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
     const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name, own) }));
-    const cov = own ? { kind: "mapped" as MapKind, seen: own.zones.map(z => z.id) } : await this.mapOf(name);
+    const cov: Coverage = own ? { kind: "mapped", seen: own.zones.map(z => z.id) } : await this.mapOf(mapRef(name, st ? storeId : undefined));
     const ids = cov.kind === "simulated" ? [] : cov.seen, kind = cov.kind;
+    const typical = kind === "simulated" ? cov.typical : undefined;
     const items: QuestItem[] = base.map(b => {
       const label = shelf.get(b.name.toLowerCase());
-      // A shelf the store's walk matched is a real hint, only where the section is real.
-      return label && ids.includes(b.section) ? { ...b, spot: { hint: shelfHint(label) } } : b;
+      // A shelf the store's walk matched is a real hint, only where the section is real;
+      // at another location of the chain it is only what is usual there.
+      if (label && ids.includes(b.section)) return { ...b, spot: { hint: shelfHint(label) } };
+      if (label && typical) return { ...b, spot: { hint: typicalHint(label, typical) } };
+      return b;
     });
-    const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : st ? area(st) : "", kind, items, mapped: ids, graph: own });
+    const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : st ? area(st) : "", kind, items, mapped: ids, graph: own, typicalOf: typical });
     return { layout, items };
   }
 
@@ -213,7 +233,7 @@ export class AppSource implements QuestSource {
       } else if (r.kind === "found") {
         // Fog cleared: make sure the section is on the store's map, so the next capture prompt can ask for it.
         const sec = SECTIONS.find(x => x.id === r.section);
-        if (sec) await post("/api/storemap/segments", { store: s.store, label: sec.short, side: "both" });
+        if (sec) await post("/api/storemap/segments", { store: mapRef(s.store, s.store_id || undefined), label: sec.short, side: "both" });
       }
     } catch { /* a report never blocks play */ }
   }
