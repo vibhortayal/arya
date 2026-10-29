@@ -201,7 +201,7 @@ class TestPowersPlainWords(unittest.TestCase):
 
     def test_groups_order_and_fold(self):
         js = src("screens/Powers.tsx")
-        a = js.index("group(`Working for you")
+        a = js.index('group("Working for you')
         b = js.index('group("Turns on as you add receipts"')
         c = js.index('group("You choose to turn on"')
         self.assertLess(a, b)

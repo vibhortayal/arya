@@ -50,7 +50,7 @@ class TestExpressScreen(unittest.TestCase):
         # (huntmenu.js movedSheet) with Find it for me; Teach Arya is
         # mapper.js mapperTeachNow.
         self.assertIn("onClick={() => setShow(v => !v)}", self.exp)
-        self.assertIn("Can&apos;t find {moved}?", self.exp)
+        self.assertIn("Can't find {{name}}?", self.exp)
         self.assertIn("findWithCamera(moved)", self.exp)
         self.assertIn('id="exp-teach" className="chip" type="button" onClick={teach}', self.exp)
         # Express repaints itself after a scan grab, a report or a withdraw.
@@ -68,7 +68,7 @@ class TestExpressFinish(unittest.TestCase):
         self.assertIn("if (plain) profile = null;", score)
         self.assertIn("{attached && !plain && (", score)            # no friend challenge
         self.assertIn('id="score-challenge"', score.split("{attached && !plain && (")[-1])
-        self.assertIn('plain ? "shopping done" : "hunt finished"', score)
+        self.assertIn('t(plain ? "{{store}} — shopping done" : "{{store}} — hunt finished"', score)
         # Receipt, haul card and haul share stay.
         self.assertIn("<ScoreRow sess={sess} attached={attached} />", score)
         self.assertIn("<HaulPhoto sess={sess} plain={plain}", score)

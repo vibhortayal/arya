@@ -30,8 +30,11 @@ SHEET_NOTE = ("Quest needs aisle photos of this store, and Arya has none yet. "
 
 
 def read(*parts):
+    """A file; a screen's t("key") calls read from en.json (frontend.english)."""
+    from tests import frontend
     with open(os.path.join(*parts), encoding="utf-8") as fh:
-        return fh.read()
+        text = fh.read()
+    return frontend.english(text) if parts[-1].endswith((".ts", ".tsx")) else text
 
 
 def jpeg(seed=1, w=640, h=480):
@@ -183,13 +186,14 @@ class TestWebNoMap(unittest.TestCase):
         self.assertIn('id="shop-nomap"', src)
         self.assertIn("Quest needs aisle photos of this store, and Arya has none yet. "
                       "In Express, snap a photo or a short video of the aisles you pass. "
-                      "Once ${shopStore} is mapped, Quest turns on here.", src)
+                      "Once {{store}} is mapped, Quest turns on here.", src)
 
     def test_express_nudge(self):
         src = read(WEB, "screens", "Express.tsx")
         self.assertIn('id="exp-nodata"', src)
         self.assertIn("Arya has no photo of this aisle yet. Found it?", src)
-        self.assertIn(">Snap the aisle</button> so other Arya Shoppers can find it too.", src)
+        self.assertIn("<snap>Snap the aisle</snap> so other Arya Shoppers can find it too.", src)
+        self.assertIn('snap: <button id="exp-snap" className="linkbtn snapaisle"', src)
         self.assertIn('nav.show("capture", { prompt', src)
 
     def test_mode_falls_back(self):
@@ -202,7 +206,7 @@ class TestSettingsRename(unittest.TestCase):
         self.assertIn('<h2 className="largetitle">Settings</h2>', src)
         self.assertIn('<h3 className="sect">Account</h3>', src)
         self.assertNotIn('<h2 className="largetitle">Profile</h2>', src)
-        self.assertIn("`Settings, level ${ring.level}` : \"Settings\"", read(WEB, "App.tsx"))
+        self.assertIn('ring ? "Settings, level {{level}}" : "Settings"', read(WEB, "App.tsx"))
 
 
 if __name__ == "__main__":
