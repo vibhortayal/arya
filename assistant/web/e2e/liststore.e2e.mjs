@@ -27,7 +27,8 @@ export default async function (page, base) {
   if (!(await v.textContent('.qg[data-screen="play"]')).includes(store)) throw new Error("trip is not at " + store);
   await v.locator(".qg-mission .qg-btn", { hasText: "Let's go" }).click();
   await page.click('#view-community [aria-label="Leave the quest"]');
-  await page.click("#qg-endquest");
+  // Nothing grabbed: End quest, or Leave once an ungrabbed trip is not saved.
+  await page.locator('#view-community .qg-opts .qg-btn', { hasText: /^(End quest|Leave)$/ }).first().click();
   await page.waitForSelector("#view-community .qg-home");
 
   // The home names the store; Shop somewhere else leads with it.
