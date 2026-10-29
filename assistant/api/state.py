@@ -338,7 +338,10 @@ def derived():
     today = as_of()
     def hidden(pid):
         f = fl.get(pid, {})
-        return f.get("never") or (f.get("snoozed_until") and today and f["snoozed_until"] >= today)
+        # A snooze runs to its date on the calendar, not to the last
+        # receipt: measured from as_of() it never ended while no new
+        # receipt landed.
+        return f.get("never") or (f.get("snoozed_until") and f["snoozed_until"] >= today_ref())
     # Stage 4: Eyes corrections + user reports adjust the patterns.
     from datetime import date as _date
     gm = group_map()
@@ -359,7 +362,7 @@ def derived():
             if since < p["median_interval_days"]:
                 p["due"] = False
         f = fl.get(p["item_id"], {})
-        if f.get("expired") or f.get("out"):
+        if _reported_out(p, f):
             p["due"] = True
             p["user_report"] = ("expired " + f["expired"]) if f.get("expired") else "you said you're out"
     unresolved_ids = {e["item_id"] for e in dictionary()["entries"]
@@ -466,11 +469,23 @@ def judge_pending(client, limit=60):
     return done
 
 
+def _reported_out(p, f):
+    """Did the user say this item is out or expired, and has no
+    purchase landed since? A purchase dated on or after the report
+    answers it: the flag stays in the store but stops counting, so a
+    restocked item does not stay on the list as "last bought 0 days
+    ago"."""
+    day = f.get("expired") or f.get("out")
+    if not day:
+        return False
+    return not (p.get("last_bought") and p["last_bought"] >= day)
+
+
 def _admitted(p, judged, fl):
     """May this pattern appear on the list? Judge says yes (or the user
     added it by hand); unresolved names and unjudged items stay off."""
     f = fl.get(p["item_id"], {})
-    if f.get("manual") or f.get("out") or f.get("expired"):
+    if f.get("manual") or _reported_out(p, f):
         return True  # explicit user intent beats the judge
     v = judged.get(p["item_id"])
     if not v or not v.get("list_ok"):
@@ -480,7 +495,7 @@ def _admitted(p, judged, fl):
     if v.get("class") == "SEASONAL":
         months = (p.get("analysis") or {}).get("seasonal_months")
         if months and as_of():
-            now_month = int(as_of()[5:7])
+            now_month = int(today_ref()[5:7])
             grace = {((m) % 12) + 1 for m in months}
             if now_month not in months and now_month not in grace:
                 return False
