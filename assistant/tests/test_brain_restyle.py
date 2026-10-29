@@ -100,7 +100,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v94"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v95"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
@@ -188,8 +188,11 @@ class TestAnalysisAndTodayData(unittest.TestCase):
 
 
 class TestCuratorCardGating(unittest.TestCase):
-    """The Curator card shows only when proposals are pending
-    (owner, 2026-10-29 — an idle explainer card is clutter)."""
+    """The discrepancy card shows only when proposals are pending
+    (owner, 2026-10-29 — an idle explainer card is clutter), and
+    when it shows it is the approved wireframe: one card per
+    question, Arya's voice only, no internal names, no manual
+    trigger on Receipts."""
 
     def test_card_hidden_without_proposals(self):
         from pathlib import Path
@@ -199,7 +202,24 @@ class TestCuratorCardGating(unittest.TestCase):
         self.assertIn("if (!d.proposals.length)", fn)
         self.assertIn("el.hidden = true", fn)
         html = (pwa / "index.html").read_text()
-        self.assertIn('id="curator" class="group eyegroup" hidden', html)
+        self.assertIn('id="curator" hidden', html)
+
+    def test_card_is_the_approved_wireframe(self):
+        from pathlib import Path
+        pwa = Path(__file__).resolve().parents[1] / "pwa"
+        app = (pwa / "app.js").read_text()
+        self.assertIn("Are these the same item?", app)
+        self.assertIn("Should these stay separate?", app)
+        self.assertIn("Yes, same item", app)
+        self.assertIn("No, keep separate", app)
+        self.assertIn("Arya is asking because the names look alike.", app)
+        # No internal subsystem names in user-facing copy, and no
+        # manual run button on the Receipts card (owner: "for user
+        # perspective it's all arya"; wireframe has no trigger).
+        self.assertNotIn("Ask the Curator", app)
+        self.assertNotIn("The Curator reasons", app)
+        self.assertNotIn("The Curator proposed", app)
+        self.assertNotIn("btn-curator-run", app)
 
 
 if __name__ == "__main__":

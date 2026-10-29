@@ -500,6 +500,9 @@ textarea {
   text-decoration: none;
 }
 .eyegroup { border: 1.5px solid #E8A33D; }
+.askq { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
+.askitem { background: #EFEFF1; border-radius: 9px; padding: 7px 10px; margin: 0 0 6px; font-size: 15px; }
+.askcard .sub { display: block; margin: 10px 0 14px; line-height: 1.4; }
 .bubble.actionchip {
   align-self: flex-start; max-width: 92%; background: var(--fill);
   border: 1.5px solid var(--accent); color: var(--accent-text);
