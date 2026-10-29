@@ -67,6 +67,27 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
   return rows;
 }
 
+/* Adaptive Today (#156): a row section shows three rows at most, then
+ * a "See N more" row that opens the rest in place; Your lists shows
+ * four tiles at most when there are more than four lists, then
+ * "See all N lists". Three rows or fewer, four lists or fewer: as
+ * before. */
+export const ROW_CAP = 3;
+export const LIST_CAP = 4;
+export function capRows<T>(rows: T[], open: boolean): { shown: T[]; more: number } {
+  if (open || rows.length <= ROW_CAP) return { shown: rows, more: 0 };
+  return { shown: rows.slice(0, ROW_CAP), more: rows.length - ROW_CAP };
+}
+export function capLists<T>(cards: T[], nLists: number): { shown: T[]; seeAll: boolean } {
+  if (nLists <= LIST_CAP) return { shown: cards, seeAll: false };
+  return { shown: cards.slice(0, LIST_CAP), seeAll: true };
+}
+
+function MoreRow({ more, onOpen }: { more: number; onOpen: () => void }) {
+  const { t } = useTranslation();
+  return more > 0 ? <button className="morerow" type="button" data-see-more onClick={onOpen}>{t("today.seeMore", { count: more })}</button> : null;
+}
+
 /* ---------------- Get started (#163) ----------------
  * A new account's Today: one card with three first steps instead of
  * empty sections. The server sends get_started only for an account
@@ -123,6 +144,8 @@ export function Today() {
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [ex, setEx] = useState<ExState>(null);
   const [gs, setGs] = useState<GetStarted>(null);
+  const [lowOpen, setLowOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const live = useRef(true);
 
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
@@ -189,6 +212,7 @@ export function Today() {
 
   /* ---- Store alerts ---- */
   const alertRows = h && news ? storeAlerts(h, news, currency) : [];
+  const lowCap = capRows(low, lowOpen), alertCap = capRows(alertRows, alertsOpen);
 
   /* ---- Still good? ---- */
   const checks: any[] = h?.checks || [];
@@ -216,6 +240,7 @@ export function Today() {
   const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));
   if (rest.length || !cards.length) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
   const noLists = !listItems.length && !lists.length;
+  const listCap = capLists(cards, lists.length);
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
@@ -236,7 +261,7 @@ export function Today() {
           <>
             <h3 className="sect">{t("common.runningLow")}</h3>
             <div className="group">
-              {low.map(i => (
+              {lowCap.shown.map(i => (
                 <div className="row" key={i.item_id}>
                   <Face name={i.name} />
                   <div className="grow">
@@ -249,18 +274,19 @@ export function Today() {
                       disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
                 </div>
               ))}
+              <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
             </div>
           </>
         )}
       </div>
       <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
         <h3 className="sect">{t("today.yourLists")}</h3>
-        <button id="today-listline" className="linkbtn" type="button" onClick={() => nav.show("list")}><span id="today-listline-text">{t("today.openLists")}</span> ›</button>
+        <button id="today-listline" className={"linkbtn" + (listCap.seeAll ? " gone" : "")} type="button" onClick={() => nav.show("list")}><span id="today-listline-text">{t("today.openLists")}</span> ›</button>
       </div>
       <div id="today-lists">
         {h && !noLists && (
           <div className="listcards">
-            {cards.map(c => (
+            {listCap.shown.map(c => (
               <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
                 <span className="lc-name">{c.name}</span>
                 <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span>
@@ -269,11 +295,15 @@ export function Today() {
             ))}
           </div>
         )}
+        {h && listCap.seeAll && (
+          <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
+            <span>{t("today.seeAllLists", { count: lists.length })}</span><span aria-hidden="true">›</span></button>
+        )}
       </div>
       <div id="today-alerts">
-        {alertRows.length > 0 && <><h3 className="sect">{t("today.storeAlerts")}</h3><div className="group">{alertRows.map(r => (
+        {alertRows.length > 0 && <><h3 className="sect">{t("today.storeAlerts")}</h3><div className="group">{alertCap.shown.map(r => (
           <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
-            <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}</div></>}
+            <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={alertCap.more} onOpen={() => setAlertsOpen(true)} /></div></>}
       </div>
       <div id="today-expiry">
         {h && !(firstRun && !soon.length) && (
@@ -450,6 +480,7 @@ function when(days: number) {
 function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) => void; onDone: (s: Soon) => void }) {
   const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
+  const [soonOpen, setSoonOpen] = useState(false);
   if (!soon.length) {
     return (
       <>
@@ -459,11 +490,12 @@ function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) =>
     );
   }
   const open = (id: string) => setEx({ k: "item", id });
+  const capped = capRows(soon, soonOpen);
   return (
     <>
       <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}>{t("today.snapADate")}</button></div>
       <div className="group usesoon">
-        {soon.map(s => (
+        {capped.shown.map(s => (
           <div className="row" key={s.item_id} tabIndex={0} role="button" data-ex-item={s.item_id}
             onClick={() => open(s.item_id)}
             onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => { if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(s.item_id); } }}>
@@ -471,6 +503,7 @@ function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) =>
             <div className="grow"><span className="name">{s.name}</span><span className="sub"><b>{fmtLong(s.date)}</b> · {when(s.days)}</span></div>
             <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>{t("today.usedIt")}</button></div>
         ))}
+        <MoreRow more={capped.more} onOpen={() => setSoonOpen(true)} />
       </div>
       <p className="muted small listhint">{t("today.tapARowToSnooze")}</p>
     </>
