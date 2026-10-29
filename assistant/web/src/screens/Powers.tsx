@@ -3,12 +3,18 @@ import { useNav } from "../app/nav";
 import { get, post } from "../lib/api";
 import { InfoBtn, INFO, infoEntry, InfoSheetFrame, WhyRows } from "../ui/Info";
 import { useToast } from "../ui/Toast";
+import { useGuide } from "../ui/Guide";
+import { GUIDE_FOR_POWER } from "../guide/cards";
 import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-powers and pwa/powers.js (POWERS, powRow,
  * group, paintPowers, the (i) sheets and the Share anonymous prices
  * opt-in). LOCK_SVG is from pwa/app.js. The Today tip and Analysis
- * cards of powers.js live in their own screens. */
+ * cards of powers.js live in their own screens.
+ * The Arya guide (#154) is linked both ways: "See how it works" at
+ * the top opens it, and a power with a guide card (GUIDE_FOR_POWER)
+ * links to that card from its (i) sheet. Powers stays a status list;
+ * the guide stays the story. */
 
 type Facts = { receipts: number; stores: number; share_prices: boolean };
 type Power = {
@@ -57,6 +63,7 @@ export function Powers() {
   const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
+  const guide = useGuide();
   const [facts, setFacts] = useState<Facts>({ receipts: 0, stores: 0, share_prices: false });
   const [sheet, setSheet] = useState<SheetState>(null);
 
@@ -115,6 +122,7 @@ export function Powers() {
       <InfoSheetFrame open onClose={close} title={t(p.name)}>
         <WhyRows rows={rows} />
         <div className="sheetacts">{closeBtn()}
+          {GUIDE_FOR_POWER[p.id] && <button className="btn primary" type="button" data-pw="guide" onClick={() => { close(); guide.open(GUIDE_FOR_POWER[p.id]); }}>{t("powers.seeItInTheGuide")}</button>}
           {p.share && <button className="btn primary" type="button" data-pw="share" onClick={() => setSheet({ kind: "share" })}>{facts.share_prices ? t("powers.sharingOn") : t("common.sharing.start")}</button>}
         </div>
       </InfoSheetFrame>);
@@ -143,6 +151,7 @@ export function Powers() {
       <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.aryaSPowers")}</h2>
       <p className="subtitle">{t("powers.whatAryaAlreadyDoesFor")}</p>
+      <button className="linkbtn" id="pw-guide" type="button" onClick={() => guide.open()}>{t("powers.seeHowItWorks")} ›</button>
       <div id="powers-body">
         {group(t("powers.working", { n: working.length }), working, false)}
         {group(t("powers.later"), later)}

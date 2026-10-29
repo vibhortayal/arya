@@ -15,6 +15,9 @@ import { useTranslation } from "../i18n";
  *   onEnter    runs before the target is measured (e.g. nav.show(view));
  *              the tour waits up to a second for the target to appear
  *   placement  "above" | "below" | "auto" (default: the side with room)
+ *   more       optional link under the line, { labelKey, onClick }: it
+ *              ends the tour as Done does, then runs onClick (the
+ *              first-run tour's "Want the full guide?")
  *
  * Each step draws a dark scrim with a rounded hole around the target
  * (one element with a huge box-shadow) and a bubble with title, line,
@@ -32,6 +35,7 @@ export type TourStep = {
   bodyKey: string;
   onEnter?: () => void;
   placement?: "above" | "below" | "auto";
+  more?: { labelKey: string; onClick: () => void };
 };
 export type TourOptions = { onDone?: () => void; onSkip?: () => void };
 type Tour = { active: boolean; startTour: (steps: TourStep[], opts?: TourOptions) => void; stopTour: () => void };
@@ -151,6 +155,10 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
       <div className={"fr-tip" + (lay && !lay.above ? " below" : "")} style={tipStyle}>
         <h4 id="fr-tip-title">{t(step.titleKey)}</h4>
         <p id="fr-tip-line">{t(step.bodyKey)}</p>
+        {step.more && (
+          <button className="linkbtn fr-more" id="fr-tour-more" type="button"
+            onClick={() => { const go = step.more!.onClick; onDone(); go(); }}>{t(step.more.labelKey)}</button>
+        )}
         <div className="fr-row">
           <span className="fr-pips" role="img" aria-label={t("tour.stepOf", { n: i + 1, total: steps.length })}>
             {steps.map((s, k) => <i key={s.id} className={k === i ? "on" : undefined} />)}

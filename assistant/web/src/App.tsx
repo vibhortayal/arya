@@ -3,6 +3,7 @@ import { AvatarProvider, useAvatar } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TourProvider, useTour } from "./ui/Tour";
+import { GuideProvider } from "./ui/Guide";
 import { FIRST_RUN_TOUR } from "./onboarding/firstRunTour";
 import { useGroupLive } from "./app/groupLive";
 import { TABS, type ViewId } from "./app/views";
@@ -29,7 +30,7 @@ function Root() {
   const s = useSession();
   if (!s.ready) return null;
   if (!s.user) return <Login />;
-  return <AvatarProvider><NavProvider initial="home"><TourProvider><Shell /></TourProvider></NavProvider></AvatarProvider>;
+  return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
 }
 
 const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
