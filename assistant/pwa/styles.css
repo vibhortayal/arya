@@ -1342,3 +1342,13 @@ button.gmember { cursor: pointer; }
 .shopmodes { margin-top: 12px; }
 .shopsugg { margin: 12px 0 4px; }
 .shopsugg .linkbtn { font-weight: 600; }
+
+/* Today, calmer (design pass, 2026-10-29). */
+.checkfold .hubrow { border-bottom: 0; }
+.checkfold .checkrows { border-top: 1px solid var(--sep); }
+.checkfold.open .hubrow .chev { transform: rotate(90deg); }
+.throughline { margin: 14px 4px 0; }
+.tipline { display: flex; align-items: center; border-top: 1px solid var(--sep); margin-top: 8px; }
+.tipline .hubrow { flex: 1; min-width: 0; border-bottom: 0; }
+.tipkick { display: block; font-size: 13px; font-weight: 600; color: var(--accent-text); }
+.tipx { flex: none; width: 44px; height: 44px; border: 0; background: transparent; color: var(--tertiary); font-size: 22px; cursor: pointer; }

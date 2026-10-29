@@ -214,9 +214,11 @@
     const go = p.share && !facts.share_prices
       ? `<button class="btn primary" type="button" data-tip="share">Share prices</button>`
       : `<button class="btn primary" type="button" data-tip="all">See all powers</button>`;
-    el.innerHTML = `<div class="group pad tipcard"><span class="samplepill tippill">Did you know?</span>
-      <p class="name tiptitle">${esc(title)}</p>${step}
-      <div class="sheetacts"><button class="btn secondary" type="button" data-tip="hide" data-tip-id="${esc(p.id)}">Not now</button>${go}</div></div>`;
+    // Design pass (2026-10-29): the tip is one quiet line at the foot of
+    // Today, not a card in the middle of it. The full card (step and
+    // buttons) is the Powers page the line opens.
+    const act = p.share && !facts.share_prices ? "share" : "all";
+    el.innerHTML = `<div class="tipline"><button class="hubrow" type="button" data-tip="${act}"><span class="hr-label"><span class="tipkick">Did you know?</span>${esc(title)}</span><span class="chev">›</span></button><button class="tipx" type="button" data-tip="hide" data-tip-id="${esc(p.id)}" aria-label="Not now">×</button></div>`;
   }
 
   document.addEventListener("click", ev => {
