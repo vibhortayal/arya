@@ -21,6 +21,11 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   moved from the List to Today's Use soon section.
   See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v79.
 
+## Start shopping (2026-10-29, PR pending)
+- A "Start shopping · N items" bar sits above the tabs on an open
+  list and leads to the Quest or Express choice. SW arya-v81. See
+  assistant/loops/2026-10-29-start-shopping.md.
+
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge,
