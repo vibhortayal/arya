@@ -156,6 +156,9 @@ class TestServiceWorker(unittest.TestCase):
         # The live-sync stream is never touched, before any other rule.
         self.assertLess(fetch.index('if (url.pathname === "/api/group/live") return;'), fetch.index("BYPASS.some"))
         self.assertIn('const BYPASS = ["/api/", "/auth/", "/decode", "/import", "/eyes"];', w)
+        # A bypass is a true bypass: the worker does not answer it.
+        self.assertIn("if (BYPASS.some(p => url.pathname.startsWith(p))) return;", fetch)
+        self.assertEqual(fetch.count("e.respondWith("), 1)
         # Network first; the cache is only the offline fallback, and a
         # page load offline gets the shell.
         self.assertLess(fetch.index("fetch(e.request)\n    .then"), fetch.index("caches.match(e.request"))

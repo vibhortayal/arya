@@ -5,7 +5,9 @@
  * runtime; the rules are the old pwa/sw.js rules:
  *   - network first for every GET it handles, so a new build is never
  *     masked by an old cache; the cache is only the offline fallback;
- *   - API, sign-in, uploads and Eyes go straight to the network;
+ *   - API, sign-in, uploads and Eyes are not answered by the worker at
+ *     all (the old worker re-fetched them itself; the browser now
+ *     sends them as if no worker were there);
  *   - the live-sync stream (/api/group/live) is never touched;
  *   - non-GET requests are never touched (iOS sent forwarded POSTs
  *     with an empty body: the 2026-10-29 "empty upload" bug);
@@ -57,10 +59,9 @@ self.addEventListener("fetch", e => {
   // The live-sync stream stays a plain browser request: no worker in
   // the middle of a connection that is meant to stay open.
   if (url.pathname === "/api/group/live") return;
-  if (BYPASS.some(p => url.pathname.startsWith(p))) {
-    e.respondWith(fetch(e.request));
-    return;
-  }
+  // API, sign-in, uploads and Eyes: the worker does not answer, so the
+  // browser sends them as if there were no worker (no cache, no copy).
+  if (BYPASS.some(p => url.pathname.startsWith(p))) return;
   // Network first for the shell: a new build is never masked by an old cache.
   e.respondWith(fetch(e.request)
     .then(resp => {

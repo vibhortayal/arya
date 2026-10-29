@@ -1,4 +1,4 @@
-/* Powers: groups render (Working for you folded), an (i) sheet opens and closes, the share flow opens, Back returns. */
+/* Powers: groups render (Working for you folded), an (i) sheet opens and closes, the share flow opens (from the sheet and from "Turn on"), Back returns. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
@@ -19,6 +19,12 @@ export default async function (page, base) {
   await page.click('#powers-body .infobtn[data-info="community"]');
   await page.waitForSelector("#info-sheet .whyrow");
   await page.click("#info-sheet [data-pw=share]");
+  await page.waitForSelector("#info-sheet >> text=Shop smarter together");
+  await page.click("#info-sheet [data-pw=close]");
+  await page.waitForSelector("#info-sheet", { state: "detached" });
+  // "Turn on" on a locked power is a button that opens the same share
+  // sheet (#151: "nothing happened when I click turn on").
+  await page.click('#powers-body button.pwneed[data-pw-act="share"]');
   await page.waitForSelector("#info-sheet >> text=Shop smarter together");
   await page.click("#info-sheet [data-pw=close]");
   await page.waitForSelector("#info-sheet", { state: "detached" });
