@@ -3,12 +3,39 @@ The model answers from a compact snapshot of the household model and may
 emit validated actions. All numbers come from the deterministic engines;
 the model never does math. Actions resolve items by name against the
 user's own index; an unresolvable action is reported, never guessed."""
-import json, os
+import json, os, re
 from datetime import date, timedelta
 
 from api.meta_client import parse_json
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "chat_v1.md")
+
+
+FEATURES_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "arya_features.md")
+
+
+def _feature_flags():
+    from api import reminders, supabase_auth
+    return {"push_reminders": reminders.flag_on(),
+            "supabase_auth": supabase_auth.enabled(),
+            "registration_open": os.environ.get("ARYA_REGISTRATION_OPEN") == "1"}
+
+
+def feature_sheet(flags=None):
+    """What Arya can do, for questions about Arya itself. Lines tagged
+    [if flag] appear only when that switch is on, so Ask never claims
+    a feature that is off."""
+    flags = _feature_flags() if flags is None else flags
+    out = []
+    with open(FEATURES_PATH, encoding="utf-8") as fh:
+        for line in fh.read().splitlines():
+            m = re.match(r"\[if (\w+)\]\s*(.*)", line)
+            if m:
+                if flags.get(m.group(1)):
+                    out.append(m.group(2))
+            elif line.strip():
+                out.append(line)
+    return "\n".join(out)
 
 
 def snapshot():
@@ -164,7 +191,8 @@ def chat(history, client, surface=None, context=None):
     system = open(PROMPT_PATH).read().split("SYSTEM:", 1)[1].strip()
     ctx = context if isinstance(context, dict) else {}
     messages = [{"role": "system", "content": system},
-                {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())}]
+                {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())},
+                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet()}]
     if surface and ctx:
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
     for h in (history or [])[-10:]:
