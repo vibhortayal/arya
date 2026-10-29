@@ -17,7 +17,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   "why" sheet. Swipe → Move / Remove; Select → Move to…. Prepared cart
   and the List footer lines are gone. Demo ships Costco and Trader
   Joe's lists (rerun `python -m harness.make_demo_household data`).
-  See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v76.
+  See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v78.
 
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse

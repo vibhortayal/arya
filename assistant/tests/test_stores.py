@@ -298,7 +298,7 @@ class TestStoreShell(unittest.TestCase):
         self.assertNotIn("⭐", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('arya-v77', self.read("sw.js"))
+        self.assertIn('arya-v78', self.read("sw.js"))
 
 
 if __name__ == "__main__":
