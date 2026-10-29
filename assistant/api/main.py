@@ -10,10 +10,10 @@ import datetime, hashlib, json, math, os
 from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from api import state, auth
+from api import state, auth, supabase_auth
 from api.decode.service import decode_order_text, decode_photo, decode_text, extract_pdf_text, normalize_costco_json
 from api.meta_client import MetaClient
 from api.cost_ledger import CostLedger
@@ -29,6 +29,8 @@ _LEDGER = os.path.join(os.environ.get(
 
 _login_fails = {}
 _register_hits = {}
+_code_hits = {}
+_verify_hits = {}
 
 
 def _client_ip(req):
@@ -125,10 +127,11 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
                 "/api/curator/run", "/api/judge/run", "/api/review/suggest",
                 "/api/intake/", "/api/quest/avatar/generate",
-                "/api/quest/avatar/photo", "/api/feedback")
+                "/api/quest/avatar/photo", "/api/feedback", "/api/push/")
 # Doors that can call the Meta API: the per-IP live-door cap applies.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
+                    "/api/expiry/read",
                     "/api/quest/scan-shelf", "/api/quest/locate",
                     "/api/quest/share-look",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
@@ -252,7 +255,8 @@ def _registration_open():
 @app.get("/auth/status")
 def auth_status():
     return {"has_users": len(auth.users()) > 0,
-            "registration_open": _registration_open()}
+            "registration_open": _registration_open(),
+            "email_signin": supabase_auth.configured()}
 
 
 @app.post("/auth/setup")
@@ -307,6 +311,99 @@ async def auth_login(req: Request):
         _login_fails[ip] = fails + [_t.time()]
         raise HTTPException(401, "wrong email or password")
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+def _federated_login(email):
+    """Sign in (or create) the account for a Supabase-verified email.
+    ARYA_SUPABASE_SIGNUP=0 limits it to accounts that already exist."""
+    try:
+        name, created = auth.ensure_federated_user(email) \
+            if os.environ.get("ARYA_SUPABASE_SIGNUP") != "0" or email in auth.users() \
+            else (None, False)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not name:
+        raise HTTPException(403, "sign-up is closed")
+    return _set_session_cookie(JSONResponse({"user": name, "created": created}),
+                               auth.new_session(name))
+
+
+def _email_guard(req, bucket, limit):
+    import time as _t
+    ip = _client_ip(req)
+    hits = [t for t in bucket.get(ip, []) if _t.time() - t < 900]
+    if len(hits) >= limit:
+        raise HTTPException(429, "too many attempts, try again in 15 minutes")
+    bucket[ip] = hits + [_t.time()]
+
+
+def _need_supabase():
+    if not supabase_auth.configured():
+        raise HTTPException(404, "email sign-in is not set up")
+
+
+@app.post("/auth/email/start")
+async def auth_email_start(req: Request):
+    _need_supabase()
+    _email_guard(req, _code_hits, 5)
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    if "@" not in email or len(email) > 254:
+        raise HTTPException(400, "enter a valid email")
+    try:
+        await run_in_threadpool(supabase_auth.send_code, email)
+    except supabase_auth.AuthError as e:
+        raise HTTPException(502, str(e))
+    return {"ok": True}
+
+
+@app.post("/auth/email/verify")
+async def auth_email_verify(req: Request):
+    _need_supabase()
+    _email_guard(req, _verify_hits, 10)
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    code = str(body.get("code") or "").strip()
+    try:
+        verified = await run_in_threadpool(supabase_auth.verify_code, email, code)
+    except supabase_auth.AuthError as e:
+        raise HTTPException(401, str(e))
+    return _federated_login(verified)
+
+
+@app.get("/auth/google")
+def auth_google(req: Request):
+    _need_supabase()
+    return RedirectResponse(supabase_auth.google_url(
+        str(req.base_url).rstrip("/") + "/auth/callback"))
+
+
+@app.get("/auth/callback")
+def auth_callback():
+    """Supabase returns the token in the URL fragment, which only the
+    browser can read. This page hands it to /auth/supabase and goes home."""
+    return HTMLResponse(
+        "<!doctype html><meta charset=utf-8><title>Signing in</title>"
+        "<p>Signing you in...</p><script>"
+        "const t=new URLSearchParams(location.hash.slice(1)).get('access_token');"
+        "history.replaceState(null,'','/auth/callback');"
+        "fetch('/auth/supabase',{method:'POST',headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({access_token:t})})"
+        ".then(r=>{location.replace(r.ok?'/':'/?signin=failed')})"
+        ".catch(()=>{location.replace('/?signin=failed')});</script>")
+
+
+@app.post("/auth/supabase")
+async def auth_supabase(req: Request):
+    _need_supabase()
+    _email_guard(req, _verify_hits, 10)
+    body = await _json_obj(req)
+    try:
+        verified = await run_in_threadpool(
+            supabase_auth.email_for_token, str(body.get("access_token") or ""))
+    except supabase_auth.AuthError as e:
+        raise HTTPException(401, str(e))
+    return _federated_login(verified)
 
 
 @app.post("/auth/logout")
@@ -555,6 +652,11 @@ async def curator_decide(req: Request):
     return {"id": p["id"], "status": p["status"]}
 
 
+def _d_today():
+    from datetime import date as _date
+    return _date.fromisoformat(state.today_ref())
+
+
 @app.get("/api/home")
 def home():
     d = state.derived()
@@ -571,6 +673,8 @@ def home():
         if prior and p.get("last_bought") and not p["due"]:
             if _fl.get(p["item_id"], {}).get("check_ok") == state.as_of():
                 continue  # the user already answered this cycle
+            if _fl.get(p["item_id"], {}).get("use_by"):
+                continue  # a real printed date beats the usual-shelf-life guess
             from datetime import date as _d
             age = (_d.fromisoformat(state.today_ref()) - _d.fromisoformat(p["last_bought"])).days
             if age >= prior:
@@ -599,9 +703,13 @@ def home():
                 s: {"min": min(v), "median": sorted(v)[len(v) // 2],
                     "max": max(v), "count": len(v)}
                 for s, v in prices.items()}
+    from api import expiry
+    last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
+    use_soon = expiry.use_soon(_fl, nm, last_bought, _d_today())
     return {"as_of": state.as_of(), "running_low": low,
             "list": d["smart_list"], "lists": state.named_lists(),
-            "cart": state.get_cart(), "seen": seen, "checks": checks, "price_by_store": pbs}
+            "cart": state.get_cart(), "seen": seen, "checks": checks, "price_by_store": pbs,
+            "use_soon": use_soon}
 
 
 @app.get("/api/quest/plan")
@@ -1083,7 +1191,7 @@ def approve_route():
 # probe POST once left a junk record behind).
 _FLAG_KEYS = {"manual", "never", "out", "expired", "snoozed_until",
               "dismissed_on", "checked_on", "check_ok", "qty_override",
-              "name", "list", "unit"}
+              "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze", "unit"}
 
 
 @app.post("/api/items/{item_id}/flag")
@@ -1278,6 +1386,57 @@ async def list_from_text(req: Request):
             "item_ids": [a["item_id"] for a in added if a["item_id"] not in on_list]}
 
 
+@app.post("/api/list/judge")
+async def list_judge(req: Request):
+    """Settle the list's unknown names: the typed items the rules and
+    the aisle map do not know. One batched Spark Standard call at most,
+    and each name is asked once ever (the verdict is cached). Nothing
+    is removed or blocked; the client shows "Not a grocery item?
+    Added anyway" for what comes back flagged. No key or a failed
+    call just leaves the names unknown (treated as groceries)."""
+    from api.list import grocery
+    verdicts = grocery.load_verdicts()
+    unknown = []
+    for i in state.derived()["smart_list"]["items"]:
+        if i.get("source") != "user":
+            continue
+        if grocery.classify(i["name"], verdicts)["kind"] == "unknown" \
+                and not verdicts.get(_key_of(i["name"])):
+            unknown.append(i["name"])
+    if not unknown or not os.environ.get("MODEL_API_KEY"):
+        return {"judged": 0, "flagged": []}
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
+    found = await run_in_threadpool(grocery.judge_unknown, unknown, client)
+    if found:
+        verdicts = grocery.save_verdicts(found)
+    flagged = [i["item_id"] for i in state.derived()["smart_list"]["items"]
+               if i.get("not_grocery")]
+    return {"judged": len(found), "flagged": flagged}
+
+
+def _key_of(name):
+    from api.list.intake import _key
+    return _key(name)
+
+
+@app.post("/api/list/grocery-verdict")
+async def list_grocery_verdict(req: Request):
+    """The user's word on one item: kind "grocery" (Keep: it is fine)
+    or "other". Saved by name, beats every rule and model verdict."""
+    body = await _json_obj(req)
+    item = next((i for i in state.derived()["smart_list"]["items"]
+                 if i["item_id"] == body.get("item_id")), None)
+    kind = body.get("kind")
+    if not item or kind not in ("grocery", "other"):
+        raise HTTPException(400, "item_id on the list and kind grocery|other required")
+    from api.list.grocery import set_user_verdict
+    set_user_verdict(item["name"], kind)
+    return {"item_id": item["item_id"], "kind": kind}
+
+
 @app.post("/api/list/from-photo")
 async def list_from_photo(req: Request):
     """The Add tab's camera: one Spark vision read. A list photo
@@ -1312,6 +1471,101 @@ async def list_from_photo(req: Request):
     added = [_add_name_to_list(n) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],
             "added": len(added), "demo": demo}
+
+
+# --- Expiry dates (owner, 2026-10-29) ----------------------------------
+
+def _known_item_name(item_id):
+    return (state.flags().get(item_id, {}).get("name")
+            or state.names().get(item_id) or item_id)
+
+
+@app.post("/api/expiry/read")
+async def expiry_read(req: Request, sample: int = 0):
+    """One Spark vision read of the date on a package. Nothing is saved:
+    the client shows what Arya read and the user confirms through
+    /api/expiry/save. ?sample=1 (demo only) returns a canned read with
+    no model call, so a visitor with no package can try the flow."""
+    from api import expiry
+    today = _d_today()
+    demo = _is_demo(req)
+    if sample:
+        if not demo:
+            raise HTTPException(400, "sample reads are for the demo")
+        from datetime import timedelta as _td
+        read = {"readable": True, "name": "Whole Milk 1 gal",
+                "date": (today + _td(days=5)).isoformat(), "kind": "use_by",
+                "confidence": 1.0, "raw": "USE BY (sample)"}
+    else:
+        media = (req.headers.get("content-type") or "").split(";")[0].strip()
+        if not media.startswith("image/"):
+            raise HTTPException(415, "send a photo (image)")
+        body = await req.body()
+        if not body:
+            raise HTTPException(400, "empty upload")
+        if len(body) > 12_000_000:
+            raise HTTPException(413, "photo too large (12 MB max)")
+        if not os.environ.get("MODEL_API_KEY"):
+            raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+        _budget_guard(demo=demo)
+        client = MetaClient(ledger=CostLedger(
+            _LEDGER, bucket="demo" if demo else "app"))
+        try:
+            read = await run_in_threadpool(expiry.read_expiry_photo, body, client,
+                                           media_type=media, today=today)
+        except RuntimeError as e:
+            raise HTTPException(502, str(e)[:200])
+    item_id = expiry.match_item(read["name"], state.dictionary()["entries"], state.flags())
+    read["match"] = ({"item_id": item_id, "name": _known_item_name(item_id)}
+                     if item_id else None)
+    read["demo"] = demo
+    return read
+
+
+@app.post("/api/expiry/save")
+async def expiry_save(req: Request):
+    """The user confirmed a date. Tracks it on the item (a known one by
+    item_id, else a new tracked-only item by name — it does not join
+    the shopping list)."""
+    import re as _re
+    from api import expiry
+    body = await _json_obj(req)
+    d = expiry.parse_iso(body.get("date"))
+    today = _d_today()
+    if not expiry.sane_date(d, today):
+        raise HTTPException(400, "date must be a real date within the next five years")
+    item_id = body.get("item_id")
+    name = " ".join(str(body.get("name") or "").split())[:80]
+    if item_id:
+        if item_id not in state.flags() and item_id not in state.names():
+            raise HTTPException(404, "unknown item")
+    elif name:
+        item_id = expiry.match_item(name, state.dictionary()["entries"], state.flags())
+        if not item_id:
+            item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+            _merge_flag(item_id, {"name": name})
+    else:
+        raise HTTPException(400, "item_id or name is required")
+    _merge_flag(item_id, expiry.track_fields(d, body.get("kind"), today))
+    return {"item_id": item_id, "name": _known_item_name(item_id),
+            "date": d.isoformat()}
+
+
+@app.post("/api/expiry/{item_id}/{action}")
+def expiry_action(item_id: str, action: str):
+    """done (used it) and stop both untrack; snooze waits two days."""
+    from datetime import timedelta as _td
+    from api import expiry
+    if not expiry.tracked(state.flags().get(item_id)):
+        raise HTTPException(404, "that item has no tracked date")
+    if action in ("done", "stop"):
+        _merge_flag(item_id, expiry.untrack_fields())
+    elif action == "snooze":
+        until = (_d_today() + _td(days=expiry.SNOOZE_DAYS)).isoformat()
+        _merge_flag(item_id, {"use_by_snooze": until})
+    else:
+        raise HTTPException(404, "unknown action")
+    return {"item_id": item_id, "name": _known_item_name(item_id), "action": action}
 
 
 @app.post("/api/list/remove")
@@ -1964,6 +2218,60 @@ async def feedback_submit(req: Request):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return {"ok": True}
+
+
+# --- push reminders (flag ARYA_PUSH_REMINDERS=1, off by default) -----------
+def _push_guard(req):
+    from api import reminders
+    if not reminders.configured():
+        raise HTTPException(404, "reminders are not turned on")
+    return reminders
+
+
+@app.get("/api/push/config")
+def push_config(req: Request):
+    from api import reminders
+    if _is_demo(req):
+        return {"enabled": False}
+    return reminders.config()
+
+
+@app.post("/api/push/subscribe")
+async def push_subscribe(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    try:
+        r.subscribe(body.get("subscription"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return r.config()
+
+
+@app.post("/api/push/unsubscribe")
+async def push_unsubscribe(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    r.unsubscribe(body.get("endpoint"))
+    return r.config()
+
+
+@app.post("/api/push/settings")
+async def push_settings(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    try:
+        r.set_notice_days(body.get("notice_days"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return r.config()
+
+
+@app.post("/api/push/test")
+def push_test(req: Request):
+    r = _push_guard(req)
+    if not r.config()["subscribed"]:
+        raise HTTPException(400, "turn reminders on first")
+    return {"sent": r.send(r.compose([], test=True))}
 
 
 @app.get("/api/feedback")

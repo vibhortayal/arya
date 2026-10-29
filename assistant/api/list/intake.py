@@ -133,12 +133,13 @@ def piece_qty(piece):
 
 
 def _sensible(name):
-    """A split piece is an item, not chatter: it has a letter, is at
-    most five words (an item is short; a sentence is prose), is not
-    a known chatter line, and does not open with a greeting."""
+    """A split piece is an item, not chatter: it has a letter (any
+    script), is at most five words (an item is short; a sentence is
+    prose), is not a known chatter line, and does not open with a
+    greeting."""
     if not name or len(name) > 60:
         return False
-    if not re.search(r"[A-Za-z]", name):
+    if not re.search(r"[^\W\d_]", name):  # any script, not only A-Z
         return False
     if name.lower().strip(":") in _CHATTER_LINES:
         return False

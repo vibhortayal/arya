@@ -102,6 +102,27 @@ def _adopt_household_data(username):
             shutil.move(src, os.path.join(dest, name))
 
 
+def ensure_federated_user(email):
+    """Account for an email that Supabase has verified. An existing
+    account with that name is the same person, so it is reused; a new
+    one is created with no password (password sign-in refuses it).
+    Returns (name, created)."""
+    name = (email or "").strip().lower()
+    if not name or name in RESERVED:
+        raise ValueError("that email cannot sign in")
+    with _file_lock("users.json"):
+        all_users = users()
+        if name in all_users:
+            return name, False
+        first = len(all_users) == 0
+        all_users[name] = {"salt": None, "hash": None, "via": "supabase",
+                           "created": int(time.time())}
+        _save("users.json", all_users)
+    if first:
+        _adopt_household_data(name)
+    return name, True
+
+
 def delete_user(username):
     """Erase an account (Tranche 1, register #2): the user record,
     every session, the connector tokens, and the whole per-user
@@ -142,7 +163,7 @@ def resolve_login_name(name):
 
 def verify(username, password):
     u = users().get(resolve_login_name(username))
-    if not u:
+    if not u or not u.get("hash"):
         return False
     _, digest = hash_password(password, u["salt"])
     return hmac.compare_digest(digest, u["hash"])

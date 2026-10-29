@@ -1,6 +1,6 @@
-const CACHE = "arya-v72";
+const CACHE = "arya-v75";
 const SHELL = ["/", "/index.html", "/styles.css", "/hunt.css", "/pack.css", "/album.css", "/haul.css",
-  "/app.js", "/lists.js", "/aryaask.js", "/huntask.js", "/pack.js", "/scene.js", "/quest.js", "/huntmenu.js", "/album.js", "/mapper.js", "/share.js", "/haul.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
+  "/app.js", "/lists.js", "/aryaask.js", "/huntask.js", "/pack.js", "/scene.js", "/quest.js", "/huntmenu.js", "/album.js", "/mapper.js", "/share.js", "/haul.js", "/expiry.js", "/push.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
   "/assets/scenes/hero.webp",
   "/assets/scenes/score-party.webp", "/assets/scenes/aisle-art.webp",
   "/assets/scenes/storefront.webp",
@@ -41,4 +41,25 @@ self.addEventListener("fetch", e => {
       return resp;
     })
     .catch(() => caches.match(e.request)));
+});
+
+/* Push reminders: show the notification, open the list on tap. The
+ * server only sends when the reminders flag is on. */
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = {}; }
+  e.waitUntil(self.registration.showNotification(d.title || "Arya", {
+    body: d.body || "", tag: d.tag || "arya", icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png", data: { url: d.url || "/#list" }
+  }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "/#list";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => {
+    for (const c of cs) {
+      if ("focus" in c) { c.navigate(url).catch(() => {}); return c.focus(); }
+    }
+    return self.clients.openWindow(url);
+  }));
 });
