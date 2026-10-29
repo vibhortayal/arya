@@ -96,6 +96,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   A quest never starts on an empty list (Add items instead), and Leave on
   a real trip offers End quest, which closes it for good.
   `2026-10-29-quest-empty-and-leave.md`.
+  A real trip is saved on its first grab, so one opened and left never
+  shows as Resume. `2026-10-29-quest-trip-on-grab.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
 - **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,

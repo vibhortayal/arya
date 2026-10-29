@@ -22,7 +22,7 @@ export default async function (page, base) {
   await endQuest(page);
 }
 
-/* End quest on a real trip closes the server session. */
+/* A real trip is saved on its first grab; End quest closes it. */
 export async function endQuest(page) {
   await page.evaluate(() => fetch("/api/list/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Milk" }) }));
   await page.evaluate(() => window.__aryaShow("home"));
@@ -40,10 +40,18 @@ export async function endQuest(page) {
     return (r.sessions || r).filter(s => s.state !== "abandoned" && s.state !== "done").length;
   });
   const before = await open();
-  if (!before) throw new Error("a real quest should open a session");
   await v.locator(".qg-mission .qg-btn", { hasText: "Let's go" }).click();
+  // Nothing is saved until the first grab.
+  if ((await open()) !== before) throw new Error("a trip with no grab must not be saved");
+  await page.click("#view-community .qg-basket");
+  await v.locator(".qg-list-h").first().click();
+  await v.locator(".qg-shelf .qg-got").click({ timeout: 30000 });
+  await page.waitForFunction(async n => {
+    const r = await (await fetch("/api/quest/sessions")).json();
+    return r.sessions.filter(s => s.state !== "abandoned" && s.state !== "done").length === n;
+  }, before + 1, { polling: 300 });
   await page.click('#view-community [aria-label="Leave the quest"]');
   await page.click("#qg-endquest");
   await page.waitForSelector("#view-community .qg-home");
-  if ((await open()) !== before - 1) throw new Error("End quest left the session open");
+  if ((await open()) !== before) throw new Error("End quest left the session open");
 }

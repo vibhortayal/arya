@@ -111,6 +111,13 @@ export class AppSource implements QuestSource {
   private stores = new Map<string, StoreRow>();
   private seen = new Map<string, Coverage>();
   private sess: Session | null = null;
+  /* The trip's session is created on the first grab (usability audit
+   * 2026-10-29): a trip opened and left never sits on Your trips.
+   * pending is what to create; creating is the one create in flight;
+   * queue keeps grabs and put-backs in order. */
+  private pending: Record<string, unknown> | null = null;
+  private creating: Promise<Session | null> | null = null;
+  private queue: Promise<void> = Promise.resolve();
   private saved: SavedMap[] | null = null;
 
   /* The live hunt, for the receipt step. */
@@ -178,13 +185,14 @@ export class AppSource implements QuestSource {
     const name = st?.name || storeId;
     // The player's own map of this store, if they built one: its zones are the store's shape.
     const own = (await this.maps().catch(() => [] as SavedMap[])).find(m => m.key === `store:${storeId}`)?.graph;
-    const [sess, zoned] = await Promise.all([
-      post<Session>("/api/quest/sessions", { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) }),
+    const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) };
+    // A draft gives the shelf hints; nothing is saved until the first grab.
+    const [draft, zoned] = await Promise.all([
+      post<Session>("/api/quest/sessions", { ...body, draft: true }),
       this.zonesFor(list.items.map(i => i.name), own || TEMPLATE),
     ]);
-    this.sess = sess;
-    void post(`/api/quest/sessions/${this.sess.id}/state`, { state: "playing" }).catch(() => {});
-    const shelf = new Map(this.sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
+    this.sess = null; this.creating = null; this.pending = body;
+    const shelf = new Map(draft.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
     const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name, own) }));
     const cov: Coverage = own ? { kind: "mapped", seen: own.zones.map(z => z.id) } : await this.mapOf(mapRef(name, st ? storeId : undefined));
     const ids = cov.kind === "simulated" ? [] : cov.seen, kind = cov.kind;
@@ -228,32 +236,55 @@ export class AppSource implements QuestSource {
     return { stop: () => transcribeBlob(cap.stop()), cancel: () => cap.cancel() };
   }
 
+  /* The trip's session, created now if it is not yet (once). */
+  private ensure(): Promise<Session | null> {
+    if (this.sess) return Promise.resolve(this.sess);
+    if (!this.pending) return Promise.resolve(null);
+    if (!this.creating) {
+      this.creating = post<Session>("/api/quest/sessions", this.pending).then(s => {
+        this.sess = s;
+        void post(`/api/quest/sessions/${s.id}/state`, { state: "playing" }).catch(() => {});
+        return s;
+      }).catch(() => { this.creating = null; return null; });
+    }
+    return this.creating;
+  }
+
   async report(r: FieldReport): Promise<void> {
-    const s = this.sess; if (!s) return;
     try {
       if (r.kind === "empty" || r.kind === "elsewhere") {
+        const s = await this.ensure(); if (!s) return;
         await post(`/api/quest/sessions/${s.id}/report-missing`, { item: r.item, kind: r.kind === "empty" ? "empty_shelf" : "wrong_aisle" });
       } else if (r.kind === "found") {
         // Fog cleared: make sure the section is on the store's map, so the next capture prompt can ask for it.
+        const at = this.sess || this.pending as { store?: string; store_id?: string } | null; if (!at?.store) return;
         const sec = SECTIONS.find(x => x.id === r.section);
-        if (sec) await post("/api/storemap/segments", { store: mapRef(s.store, s.store_id || undefined), label: sec.short, side: "both" });
+        if (sec) await post("/api/storemap/segments", { store: mapRef(at.store, at.store_id || undefined), label: sec.short, side: "both" });
       }
     } catch { /* a report never blocks play */ }
   }
 
   progress(e: { kind: "grab" | "ungrab"; item: string; instead?: string }) {
-    const s = this.sess; if (!s) return;
-    void post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) }).catch(() => {});
+    if (!this.sess && !this.pending) return;
+    this.queue = this.queue.then(async () => {
+      // The first grab saves the trip; a put-back before any grab has nothing to undo.
+      const s = e.kind === "grab" ? await this.ensure() : this.sess || await this.creating;
+      if (!s) return;
+      await post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) }).catch(() => {});
+    });
   }
 
   async end(): Promise<void> {
-    const s = this.sess; if (!s) return;
-    this.sess = null;
-    await post(`/api/quest/sessions/${s.id}/state`, { state: "abandoned" }).catch(() => {});
+    this.pending = null;
+    await this.queue;
+    const s = this.sess || await this.creating;
+    this.sess = null; this.creating = null;
+    if (s) await post(`/api/quest/sessions/${s.id}/state`, { state: "abandoned" }).catch(() => {});
   }
 
   async finish(): Promise<void> {
-    const s = this.sess; if (!s) return;
+    await this.queue;
+    const s = await this.ensure(); if (!s) return;
     try { this.sess = await post<Session>(`/api/quest/sessions/${s.id}/state`, { state: "finished" }); } catch { /* the receipt step can still close it */ }
   }
 }
