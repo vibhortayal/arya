@@ -19,17 +19,62 @@ CURRENCIES = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
               "CAD": "C$", "AUD": "A$"}
 
 
+# ---- First run (#153, #163). "onboarded" in settings.json says the
+# account saw the welcome sheet (either choice sets it). An account
+# that already holds anything (a list, an item, a receipt, a Quest
+# session) counts as onboarded without the flag, so an existing
+# account never sees the welcome. The demo household never does.
+# "get_started" is set only when the welcome is answered by an empty
+# account: Today then shows the three first steps until all three are
+# done or the user closes the card ("get_started_dismissed").
+def _has_data():
+    from api import quest
+    return bool(state.named_lists() or state.flags() or state.receipts()
+                or quest._store()["sessions"])
+
+
+def _get_started_steps():
+    from api import expiry
+    fl = state.flags()
+    return {"list": bool(state.named_lists()) or any(f.get("manual") for f in fl.values()),
+            "expiry": any(expiry.tracked(f) for f in fl.values()),
+            "receipt": bool(state.receipts())}
+
+
+def first_run(cur):
+    """{"onboarded": bool, "get_started": None | {list, expiry, receipt}}."""
+    if state._current_user.get() == state.DEMO_USER:
+        return {"onboarded": True, "get_started": None}
+    onboarded = bool(cur.get("onboarded")) or _has_data()
+    gs = None
+    if not onboarded:
+        # Still new: Today shows the card behind the welcome sheet.
+        gs = {"list": False, "expiry": False, "receipt": False}
+    elif cur.get("get_started") and not cur.get("get_started_dismissed"):
+        gs = _get_started_steps()
+        if all(gs.values()):
+            # All three done: the card goes for good.
+            with state.file_lock("settings.json"):
+                now = state._load("settings.json", {})
+                now["get_started_dismissed"] = True
+                state._save("settings.json", now)
+            gs = None
+    return {"onboarded": onboarded, "get_started": gs}
+
+
 @router.get("/api/settings")
 def settings_get():
-    code = state._load("settings.json", {}).get("currency", "USD")
+    cur = state._load("settings.json", {})
+    code = cur.get("currency", "USD")
     if code not in CURRENCIES:
         code = "USD"
-    lang = state._load("settings.json", {}).get("language", "auto")
+    lang = cur.get("language", "auto")
     if lang not in LANGUAGES:
         lang = "auto"
     return {"currency": code, "symbol": CURRENCIES[code], "language": lang,
             "languages": [{"code": c, "name": n} for c, n in LANGUAGES.items()],
-            "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()]}
+            "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()],
+            **first_run(cur)}
 
 
 @router.post("/api/settings")
@@ -37,8 +82,10 @@ async def settings_set(req: Request):
     body = await _json_obj(req)
     code = str(body["currency"]).upper() if "currency" in body else None
     lang = str(body["language"]).lower() if "language" in body else None
-    if code is None and lang is None:
-        raise HTTPException(400, "send currency or language")
+    onboard = body.get("onboarded") is True
+    dismiss = body.get("get_started_dismissed") is True
+    if code is None and lang is None and not onboard and not dismiss:
+        raise HTTPException(400, "send currency, language, onboarded or get_started_dismissed")
     if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
     if lang is not None and lang not in LANGUAGES:
@@ -49,6 +96,12 @@ async def settings_set(req: Request):
             cur["currency"] = code
         if lang is not None:
             cur["language"] = lang
+        if onboard and not cur.get("onboarded"):
+            # Only an empty account gets the Get started card.
+            cur["get_started"] = not _has_data()
+            cur["onboarded"] = True
+        if dismiss:
+            cur["get_started_dismissed"] = True
         state._save("settings.json", cur)
     return settings_get()
 

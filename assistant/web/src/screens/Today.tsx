@@ -65,6 +65,45 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
   return rows;
 }
 
+/* ---------------- Get started (#163) ----------------
+ * A new account's Today: one card with three first steps instead of
+ * empty sections. The server sends get_started only for an account
+ * that was empty when it answered the welcome, until all three are
+ * done or the card is closed (api/routes/account.py first_run). */
+export type GetStarted = { list: boolean; expiry: boolean; receipt: boolean } | null | undefined;
+export const GS_STEPS = ["list", "expiry", "receipt"] as const;
+export type GsStep = (typeof GS_STEPS)[number];
+export function getStartedView(gs: GetStarted): { show: boolean; done: number; steps: { key: GsStep; done: boolean }[] } {
+  const steps = GS_STEPS.map(key => ({ key, done: !!gs?.[key] }));
+  const done = steps.filter(x => x.done).length;
+  return { show: !!gs && done < steps.length, done, steps };
+}
+
+export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onStep: (k: GsStep) => void; onDismiss: () => void }) {
+  const { t } = useTranslation();
+  const v = getStartedView(gs);
+  return (
+    <article className="fr-card" id="today-getstarted" aria-labelledby="gs-title">
+      <button className="tipx fr-x" type="button" id="gs-dismiss" aria-label={t("today.gs.dismiss")} onClick={onDismiss}>×</button>
+      <p className="fr-k">{t("today.gs.kicker", { n: v.done, total: v.steps.length })}</p>
+      <h3 className="fr-h" id="gs-title">{t("today.gs.title")}</h3>
+      <p className="fr-s">{t("today.gs.line")}</p>
+      <ul className="fr-steps">
+        {v.steps.map((st, k) => (
+          <li key={st.key} className={st.done ? "done" : undefined}>
+            <button type="button" data-gs={st.key} aria-label={st.done ? t("today.gs.doneAria", { step: t(`today.gs.${st.key}`) }) : undefined}
+              onClick={() => onStep(st.key)}>
+              <span className="fr-dot" aria-hidden="true">{st.done ? "✓" : k + 1}</span>
+              <span className="grow"><b>{t(`today.gs.${st.key}`)}</b><small>{t(`today.gs.${st.key}Sub`)}</small></span>
+              <span className="chev" aria-hidden="true">›</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -80,15 +119,19 @@ export function Today() {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [ex, setEx] = useState<ExState>(null);
+  const [gs, setGs] = useState<GetStarted>(null);
   const live = useRef(true);
 
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
   useCharacters();
 
   const load = useCallback(async () => {
-    let home: Home;
-    try { home = await get("/api/home"); } catch (e) { showErr(e); return; }
+    let home: Home, st: { get_started?: GetStarted } | null;
+    try {
+      [home, st] = await Promise.all([get("/api/home"), demo ? null : get("/api/settings").catch(() => null)]);
+    } catch (e) { showErr(e); return; }
     if (!live.current) return;
+    setGs(st?.get_started ?? null);
     setH(home);
     setAdded(new Set());
     get("/api/quest/news").then(n => live.current && setNews(n.news || []), () => live.current && setNews([]));
@@ -110,8 +153,20 @@ export function Today() {
       const pct = Math.max(0, Math.min(100, Math.round((p.points - p.level_floor) / span * 100)));
       setRing({ pct, level: p.level });
     }).catch(() => {});
-  }, [showErr, setRing]);
+  }, [showErr, setRing, demo]);
   useEffect(() => { load(); }, [load]);
+
+  /* ---- Get started ---- */
+  const firstRun = !!h && getStartedView(gs).show;
+  function gsStep(k: GsStep) {
+    if (k === "list") nav.show("list", { newList: true });
+    else if (k === "expiry") setEx({ k: "capture" });
+    else nav.show("receipts", { from: "home" });
+  }
+  function gsDismiss() {
+    setGs(null);
+    post("/api/settings", { get_started_dismissed: true }).catch(e => toast(e instanceof Error ? e.message : String(e)));
+  }
 
   const now = new Date();
   const items: any[] = h?.list?.items || [];
@@ -170,6 +225,7 @@ export function Today() {
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
       <div className="titlerow"><h2 className="largetitle">{t("today.today")}</h2></div>
+      {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
       <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
       <div id="today-low">
         {low.length > 0 && (
@@ -216,7 +272,7 @@ export function Today() {
             <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}</div></>}
       </div>
       <div id="today-expiry">
-        {h && (
+        {h && !(firstRun && !soon.length) && (
           <UseSoon soon={soon} setEx={setEx} onDone={s => doneWith(s)} />
         )}
       </div>
@@ -258,11 +314,13 @@ export function Today() {
         )}
       </div>
       <p id="today-through" className="muted small throughline">{h?.as_of ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
-      <div id="today-tip">{facts && <TipLine facts={facts} setFacts={setFacts} />}</div>
-      <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
-        <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-        <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>
-        <span className="chev">›</span></button>
+      <div id="today-tip">{facts && !firstRun && <TipLine facts={facts} setFacts={setFacts} />}</div>
+      {!(firstRun && noLists) && (
+        <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+          <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
+          <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>
+          <span className="chev">›</span></button>
+      )}
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
     </>
   );
