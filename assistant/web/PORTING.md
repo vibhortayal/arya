@@ -50,6 +50,25 @@ serves it at `/` beside the build. The build wins on a name clash.
    under `src/screens` or `src/ui`, and on a literal key missing from
    en.json. Its `ALLOWED` list (a brand or a name) stays small.
 
+## Coach-mark tours (`src/ui/Tour.tsx`)
+
+Any screen can run a tour over any part of the page:
+
+```ts
+const { startTour } = useTour();
+startTour(steps, { onDone, onSkip });
+```
+
+A step is data: `{ id, target, titleKey, bodyKey, onEnter?, placement? }`.
+`target` is a CSS selector or a function that returns the element.
+`titleKey` and `bodyKey` are en.json keys. `onEnter` runs before the
+target is measured (for example `nav.show(view)`); the tour waits up to
+a second for the target to appear. `placement` is `"above"`, `"below"`
+or `"auto"` (the side with more room). The tour scrolls the target into
+view and follows resize and scroll. Esc and Skip call `onSkip`; Done on
+the last step calls `onDone`. Keep a tour's steps in one file, as
+`src/onboarding/firstRunTour.ts` does for the first-run tour.
+
 ## Checks for every change
 
 ```sh

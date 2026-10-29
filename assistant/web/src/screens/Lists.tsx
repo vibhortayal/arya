@@ -8,7 +8,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconPen, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { fmtDate, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState } from "./lists/ListSheets";
@@ -143,6 +143,18 @@ function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picki
   );
 }
 
+/* ---------------- first run (#163) ----------------
+ * An account with no named lists, nothing on a list and nothing
+ * suggested sees one card (the basket and Create your first list) in
+ * place of Everything else and the New list button (owner,
+ * 2026-10-29). Once anything exists the screen is as before. */
+export function listsEmpty(data: HomeData | null): boolean {
+  return !!data && !namedLists(data).length && !onListItems(data).length && !suggestions(data).length;
+}
+/* Owner 2026-10-29: new accounts see the bare card (image and button).
+ * true adds the title and a one-line explanation back. */
+const EMPTY_CARD_TEXT = false;
+
 /* ---------------- the screen ---------------- */
 
 export function Lists() {
@@ -158,13 +170,17 @@ export function Lists() {
   const [lens, setLensState] = useState(() => {
     const want = nav.params.lens;
     if (typeof want === "string" && want) lensState.lens = want;
+    if (nav.params.newList) lensState.lens = "home";
     return lensState.lens;
   });
   const [sel, setSel] = useState<Set<string> | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState("");
   const [doneOpen, setDoneOpen] = useState(false);
-  const [sheet, setSheet] = useState<SheetState | null>(null);
+  // Today's Get started step 1 opens the new-list sheet (once).
+  const [sheet, setSheet] = useState<SheetState | null>(() => (nav.params.newList ? { kind: "new", moving: null } : null));
+  // Back to this entry must not open it again.
+  useEffect(() => { nav.params.newList = undefined; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [shopOpen, setShopOpen] = useState(false);
   const town = useTown();
   const [townItem, setTownItem] = useState<string | null>(null);
@@ -664,6 +680,18 @@ export function Lists() {
             </p>
           ) : null}
           <p id="list-line" className="subtitle">{homeLine}</p>
+          {listsEmpty(data) ? (
+            <div id="list-cards">
+              <div className="fr-card fr-empty" id="list-empty">
+                <img src={asset("assets/characters/basket.webp")} alt="" />
+                {EMPTY_CARD_TEXT && <>
+                  <h3 className="fr-h">{t("lists.firstListTitle")}</h3>
+                  <p className="fr-s">{t("lists.firstListLine")}</p>
+                </>}
+                <button className="btn primary wide" id="list-first" type="button" onClick={() => setSheet({ kind: "new", moving: null })}>{t("lists.createFirstList")}</button>
+              </div>
+            </div>
+          ) : <>
           <div id="list-cards">
             {data ? <>
               {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
@@ -671,6 +699,7 @@ export function Lists() {
             </> : <p className="empty">{t("lists.loadingYourList")}</p>}
           </div>
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
+          </>}
         </div>
       )}
 

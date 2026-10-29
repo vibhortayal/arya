@@ -11,11 +11,14 @@
  * server placed the item on a shelf (shelf_u). */
 import { useEffect, useSyncExternalStore } from "react";
 
-export type StoreRow = { store: string; key: string; photos: string | null; model: string | null; has_pictures: boolean };
+export type StoreRow = { store: string; key: string; photos: string | null; model: string | null; has_pictures: boolean;
+  /* A shipped walk belongs to one location (its store id; null = none
+   * known), and captured_at lists the locations with their own photos. */
+  location?: string | null; captured_at?: string[] };
 
 const BUILTIN: StoreRow[] = [
   { store: "Trader Joe's", key: "traderjoes", photos: "models/trader-joes/frames-web",
-    model: "models/trader-joes/manifest.json", has_pictures: true },
+    model: "models/trader-joes/manifest.json", has_pictures: true, location: null, captured_at: [] },
 ];
 const CACHE = "arya-store-data";
 
@@ -66,13 +69,21 @@ export function useStoreData(): number {
     () => version);
 }
 
-const info = (store: unknown): StoreRow | null => rows[squash(store)] || null;
+/* The row for a store; with its store id, for that location only
+ * (owner, 2026-10-29: a walk shows only where it was filmed). Another
+ * location of the chain has no walk photos or model, and pictures only
+ * if shoppers captured some there. No id: the chain's row. */
+export function storeAt(store: unknown, storeId?: string | null): StoreRow | null {
+  const r = rows[squash(store)] || null;
+  if (!r || !storeId || r.location === undefined || r.location === storeId) return r;
+  return { ...r, photos: null, model: null, has_pictures: (r.captured_at || []).includes(storeId) };
+}
 /* quest.js qStorePhotos: the store's photo-walk frames, or null. */
-export const storePhotos = (store: unknown): string | null => info(store)?.photos || null;
+export const storePhotos = (store: unknown, storeId?: string | null): string | null => storeAt(store, storeId)?.photos || null;
 /* quest.js qStoreModel: the store's 3D model manifest, or null. */
-export const storeModel = (store: unknown): string | null => info(store)?.model || null;
+export const storeModel = (store: unknown, storeId?: string | null): string | null => storeAt(store, storeId)?.model || null;
 /* A photo walk, a 3D model or captured aisle photos: Quest can run. */
-export const storeHasPictures = (store: unknown): boolean => !!info(store)?.has_pictures;
+export const storeHasPictures = (store: unknown, storeId?: string | null): boolean => !!storeAt(store, storeId)?.has_pictures;
 /* The item can be shown: store pictures and a shelf match. */
-export const itemHasData = (store: unknown, item: { shelf_u?: number | null } | null | undefined): boolean =>
-  storeHasPictures(store) && !!item && item.shelf_u !== undefined && item.shelf_u !== null;
+export const itemHasData = (store: unknown, item: { shelf_u?: number | null } | null | undefined, storeId?: string | null): boolean =>
+  storeHasPictures(store, storeId) && !!item && item.shelf_u !== undefined && item.shelf_u !== null;

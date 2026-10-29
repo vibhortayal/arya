@@ -2,6 +2,8 @@ import { useEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider, useAvatar } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
+import { TourProvider, useTour } from "./ui/Tour";
+import { FIRST_RUN_TOUR } from "./onboarding/firstRunTour";
 import { useGroupLive } from "./app/groupLive";
 import { TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
@@ -11,6 +13,7 @@ import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { SCREENS } from "./screens/registry";
+import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
 import { t } from "./i18n";
 
 export function App() {
@@ -27,7 +30,7 @@ function Root() {
   const s = useSession();
   if (!s.ready) return null;
   if (!s.user) return <Login />;
-  return <AvatarProvider><NavProvider initial="home"><Shell /></NavProvider></AvatarProvider>;
+  return <AvatarProvider><NavProvider initial="home"><TourProvider><Shell /></TourProvider></NavProvider></AvatarProvider>;
 }
 
 const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
@@ -82,6 +85,7 @@ function Shell() {
   const town = useTown();
   const Screen = SCREENS[nav.view];
   const { src: avatar, ring } = useAvatar();
+  const tour = useTour();
   useInviteLink();
   useListFromHash();
   useGroupLive();
@@ -114,6 +118,9 @@ function Shell() {
             );
           })}
         </nav>
+      )}
+      {showWelcome(s.user, s.demo, s.onboarded) && (
+        <WelcomeSheet onTour={() => { s.markOnboarded(); tour.startTour(FIRST_RUN_TOUR); }} onSkip={s.markOnboarded} />
       )}
     </>
   );

@@ -68,6 +68,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
+  One map per store location. Nobody recorded which Trader Joe's the
+  shipped walk was filmed in, so no store has it as its map (until
+  `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
+  labelled typical layout, and Hunt shows its photos only there.
+  `2026-10-29-store-maps-per-location.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
@@ -80,6 +85,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Accounts:** password accounts; registration is closed unless
   `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
   Muse step). Account names are letters, digits and `. _ % + - @` only.
+- **First run (#153, #163; branch `feat/first-run`, not merged):** a new account gets a welcome sheet, a 5-step tour, a Get started card on Today and one first-list card on Lists; accounts with data and the demo never see them. `assistant/loops/2026-10-29-first-run.md`.
 
 ## Built but switched off (flags)
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`

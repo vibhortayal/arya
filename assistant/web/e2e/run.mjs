@@ -4,6 +4,8 @@
  * the build (npm run build), which the API serves at /. friends and
  * race need a second account to add or
  * race: ARYA_DATA_DIR=<dir> python -c "from api import auth; auth.create_user('cartqueen', 'cartqueen-pass-1')".
+ * firstrun signs up a fresh account each run: start the API with
+ * ARYA_REGISTRATION_OPEN=1.
  * Usage: npm run e2e [-- name ...] */
 import { createRequire } from "node:module";
 import { readdirSync } from "node:fs";
