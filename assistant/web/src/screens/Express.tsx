@@ -120,10 +120,10 @@ export function Express() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sess, reports, sess?.items.map(i => (i.checked ? 1 : 0) + i.name).join("|")]);
   useStoreData();
-  const photos = sess ? storePhotos(sess.store) : null;
+  const photos = sess ? storePhotos(sess.store, sess.store_id) : null;
   // An item with no data (no store pictures, or no shelf match): Show
   // me goes, the Snap the aisle nudge comes (owner, 2026-10-29).
-  const hasData = !!sess && next >= 0 && itemHasData(sess.store, sess.items[next]);
+  const hasData = !!sess && next >= 0 && itemHasData(sess.store, sess.items[next], sess.store_id);
   const sceneOn = show && hasData;
 
   /* ---- the run ---- */

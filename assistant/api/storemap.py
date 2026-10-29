@@ -202,21 +202,11 @@ WALK_CHAIN = "traderjoes"
 
 
 def walk_location():
-    """The one store the shipped walk was filmed in: the Trader Joe's
-    on Argonaut (ARYA_WALK_STORE_ID overrides). None until that store
-    is in the directory."""
-    sid = os.environ.get("ARYA_WALK_STORE_ID", "").strip()
-    if sid:
-        return sid
-    try:
-        from api import stores
-        for s in stores.directory():
-            if chain_key(s.get("name")) == WALK_CHAIN and "argonaut" in (
-                    f"{s.get('street', '')} {s.get('city', '')}").lower():
-                return s["id"]
-    except Exception:
-        pass
-    return None
+    """The one store the shipped walk was filmed in, by its store id
+    (ARYA_WALK_STORE_ID). Nobody recorded which Trader Joe's that was
+    (owner, 2026-10-29: it was not Argonaut), so unset means no store:
+    every Trader Joe's plays the walk as a labelled typical layout."""
+    return os.environ.get("ARYA_WALK_STORE_ID", "").strip() or None
 
 
 def is_walk_key(key):
@@ -349,6 +339,11 @@ def stores_with_pictures():
         key = chain_key(b["store"])
         out[key] = {"store": b["store"], "key": key, "photos": photos,
                     "model": model, "has_pictures": bool(photos or model)}
+        if key == WALK_CHAIN:
+            # The walk's photos and model show only at the store it was
+            # filmed in (lib/stores.ts storeAt); None = no store.
+            out[key]["location"] = walk_location()
+            out[key]["captured_at"] = []
     blobs = _image_blobs()
     # Keyed by chain: the app asks by store name (lib/stores.ts).
     for mkey, doc in _all().items():
@@ -357,6 +352,8 @@ def stores_with_pictures():
                    for seg in (doc.get("segments") or {}).values()
                    for c in seg.get("captures") or [])
         key = mkey.split("@")[0]
+        if kept and is_location(mkey) and "captured_at" in out.get(key, {}):
+            out[key]["captured_at"].append(mkey.split("@", 1)[1])
         if key in out:
             out[key]["has_pictures"] = out[key]["has_pictures"] or kept
             continue
