@@ -3,7 +3,7 @@ import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-stores-mine and quest.js renderMyStores
  * (+ the data-fav / data-remove handlers). The Shell already renders
@@ -12,7 +12,8 @@ import { useTranslation } from "../i18n";
 export type MyStore = { id: string; name: string; street: string; city: string; state: string; zip: string;
   scene?: string; favorite?: boolean };
 
-const SCENE_LABEL: Record<string, string> = { cloud: "3D mapped · Quest ready", strip: "Walk-through view" };
+/* Scene names are en.json keys. */
+const SCENE_LABEL: Record<string, string> = { cloud: "storesMine.scene.cloud", strip: "storesMine.scene.strip" };
 
 export function StarSvg({ filled }: { filled: boolean }) {
   return (
@@ -24,7 +25,7 @@ export function StarSvg({ filled }: { filled: boolean }) {
 
 /* quest.js qStoreMeta */
 export const storeMeta = (s: MyStore) =>
-  `${s.street}, ${s.city}, ${s.state} ${s.zip} · ${(s.scene && SCENE_LABEL[s.scene]) || ""}`;
+  `${s.street}, ${s.city}, ${s.state} ${s.zip} · ${(s.scene && SCENE_LABEL[s.scene] && t(SCENE_LABEL[s.scene])) || ""}`;
 
 export function StoresMine() {
   const { t } = useTranslation();
@@ -51,11 +52,11 @@ export function StoresMine() {
       <div className="grow"><span className="name">{s.name}</span>
         <span className="sub">{storeMeta(s)}</span></div>
       <button className="chip" data-remove={s.id} type="button"
-        onClick={() => act("/api/stores/mine/remove", { store_id: s.id }, "Removed from your stores.")}>{t("common.remove")}</button>
+        onClick={() => act("/api/stores/mine/remove", { store_id: s.id }, t("storesMine.removed"))}>{t("common.remove")}</button>
       <button className={"starbtn " + (s.favorite ? "on" : "")} data-fav={s.id} data-on={String(!!s.favorite)}
-        aria-pressed={!!s.favorite} aria-label={s.favorite ? "Remove from favorites" : "Add to favorites"} type="button"
+        aria-pressed={!!s.favorite} aria-label={s.favorite ? t("common.fav.remove") : t("common.fav.add")} type="button"
         onClick={() => act("/api/stores/favorite", { store_id: s.id, favorite: !s.favorite },
-          !s.favorite ? "Added to favorites." : "Removed from favorites.")}>
+          !s.favorite ? t("common.fav.added") : t("common.fav.removed"))}>
         <StarSvg filled={!!s.favorite} />
       </button>
     </div>

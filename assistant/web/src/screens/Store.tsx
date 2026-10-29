@@ -6,7 +6,7 @@ import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { storeHasPictures, useStoreData } from "../lib/stores";
 import { StarSvg, storeMeta, type MyStore } from "./StoresMine";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-store and quest.js: qStartNewHunt (store
  * half), renderStorePick, qPickStore, the Google Places picker and the
@@ -59,8 +59,8 @@ function storeFit(plan: Plan, store: string) {
   const usual = plan.items.filter(i => storeCount(i, store) >= 2)
     .sort((a, b) => storeCount(b, store) - storeCount(a, store)).slice(0, 3).map(i => i.name);
   if (!usual.length) return "";
-  const lead = here.length ? `${here.length} of your ${plan.list.length} list items usually here · ` : "";
-  return `${lead}Usually: ${usual.join(", ")}`;
+  const lead = here.length ? t("store.fitLead", { n: here.length, total: plan.list.length }) : "";
+  return lead + t("store.usually", { names: usual.join(", ") });
 }
 function historyStores(plan: Plan) {
   const seen: Record<string, number> = {};
@@ -155,7 +155,7 @@ export function Store() {
   /* qPickStore: a tap on any store row (or Enter) starts the plan. */
   const pickStore = (nm: string, storeId: string | null) => {
     const store = nm.trim();
-    if (!store) { toast("Pick or name the store first."); return; }
+    if (!store) { toast(t("store.pickFirst")); return; }
     if (!storeId) {
       const toks = norm(store).split(" ").filter(Boolean);
       const hits = toks.length < 2 ? [] : mine.filter(s => {
@@ -165,7 +165,7 @@ export function Store() {
       if (hits.length === 1) { setName(hits[0].name); setSelId(hits[0].id); go(hits[0].name, hits[0].id); return; }
       const known = mine.some(s => sameStore(s.name, store)) || historyStores(plan).some(h => sameStore(h, store));
       if (!known) {
-        toast("Pick the store from the list — Arya needs its real address from Google.");
+        toast(t("store.pickFromList"));
         suggest(store).catch(() => {});
         return;
       }
@@ -200,7 +200,7 @@ export function Store() {
     try {
       await post("/api/stores/favorite", { store_id: s.id, favorite: on });
       await loadMine().catch(() => {});
-      toast(on ? "Added to favorites." : "Removed from favorites.");
+      toast(on ? t("common.fav.added") : t("common.fav.removed"));
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   };
 
@@ -225,7 +225,7 @@ export function Store() {
             {fit ? <span className="sub fit">{fit}</span> : null}</span>
         </button>
         <button className={"starbtn " + (s.favorite ? "on" : "")} data-fav={s.id} data-on={String(!!s.favorite)}
-          aria-pressed={!!s.favorite} aria-label={s.favorite ? "Remove from favorites" : "Add to favorites"} type="button"
+          aria-pressed={!!s.favorite} aria-label={s.favorite ? t("common.fav.remove") : t("common.fav.add")} type="button"
           onClick={() => toggleFav(s)}><StarSvg filled={!!s.favorite} /></button>
       </div>
     );

@@ -39,10 +39,10 @@ export function Receipt() {
     n != null && n < 0 ? <span className="return">−{m(n)}</span> : (n != null ? m(n) : "");
 
   const del = async () => {
-    if (!confirm("Delete this receipt? Its lines leave your ledger, patterns, and points. This cannot be undone.")) return;
+    if (!confirm(t("receipt.confirmDelete"))) return;
     try {
       await post(`/api/quest/receipts/${encodeURIComponent(id)}/delete`, {});
-      toast("Receipt deleted.");
+      toast(t("receipt.deleted"));
       nav.back("receipts");
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   };
@@ -55,13 +55,13 @@ export function Receipt() {
       <div id="rc-body">
         {r && <>
           <h2 className="largetitle" style={{ fontSize: 28 }}>{r.merchant}</h2>
-          <p className="subtitle">{t("receipt.filedFrom", { replace: String(r.purchased_at).replace("T", " ") })}{" "}{r.source_type || "a receipt"}</p>
+          <p className="subtitle">{t("receipt.filedFrom", { when: String(r.purchased_at).replace("T", " "), source: r.source_type || t("receipt.aReceipt") })}</p>
           <div className="group">
             {r.lines.length ? r.lines.map((ln, i) => {
               if (ln.line_type === "return") return <Row key={i} name={ln.name} sub={t("receipt.returned")} right={signed(ln.line_total)} />;
               if (ln.line_type === "discount") return <Row key={i} name={ln.name} sub={t("receipt.savingsOnTheItemAbove")} right={signed(ln.line_total)} />;
               return <Row key={i} name={<>{ln.name}{(ln.qty ?? 0) > 1 ? ` × ${qtyFmt(ln.qty)}` : ""}</>}
-                sub={ln.status === "unverified" ? "Unverified — in your review queue" : ""}
+                sub={ln.status === "unverified" ? t("receipt.unverified") : ""}
                 right={ln.line_total != null ? m(ln.line_total) : ""} />;
             }) : <Empty>{t("receipt.noLinesOnThisReceipt")}</Empty>}
           </div>
@@ -72,8 +72,8 @@ export function Receipt() {
             {r.returns_total ? <Row name={t("receipt.returnsNetted")} right={<span className="return">−{m(r.returns_total)}</span>} /> : null}
           </div>
           <p className="muted">{r.totals_reconcile
-            ? `Total verified ✓ — the lines add up to ${m(r.total)}.`
-            : "The total did not reconcile — unverified lines wait in your review queue."}</p>
+            ? t("receipt.verified", { total: m(r.total) })
+            : t("receipt.notReconciled")}</p>
           {r.photo && <p className="nomargin">{String(r.media_type || "").startsWith("image/")
             ? <>
                 <button className="btn" id="rc-view-btn" type="button" onClick={() => setShowImg(s => !s)}>{t("receipt.viewReceipt")}</button>

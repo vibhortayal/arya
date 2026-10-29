@@ -5,7 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { storeMeta, type MyStore } from "./StoresMine";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-stores-find and quest.js renderFindStores
  * (+ the Google suggestions drop, qSuggestInto / data-gpick). The Shell
@@ -61,7 +61,7 @@ export function usePlacesDrop(q: string) {
       const row = await post("/api/stores/places/pick", { place_id: r.place_id, name: r.name });
       endPlacesSession(); // the pick ends the billing session
       hide();
-      toast(`${row.name} is in your stores.`);
+      toast(t("storesFind.inYourStores", { name: row.name }));
       nav.show("stores-mine");
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); btn.disabled = false; }
   };
@@ -150,9 +150,9 @@ export function StoresFind() {
         <p style={{ marginBottom: 0 }}><button className="btn primary wide" type="submit">{t("storesFind.search")}</button></p>
       </form>
       <div className="seg" id="sf-chips" style={{ margin: "12px 0" }}>
-        {chip("all", "All")}
-        {chip("quests", "With quests")}
-        {chip("zip", "Near this ZIP")}
+        {chip("all", t("storesFind.all"))}
+        {chip("quests", t("storesFind.withQuests"))}
+        {chip("zip", t("storesFind.nearZip"))}
       </div>
       <div id="sf-results">
         {rows && !rows.length && <div className="group"><Empty>{t("storesFind.noStoresMatchAddIt")}</Empty></div>}

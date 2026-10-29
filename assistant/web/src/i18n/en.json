@@ -95,11 +95,10 @@
       "demo": "Read live — kept for this demo visit only.",
       "duplicate": "Already filed — {{merchant}}, {{date}}. Skipped, so the trip is not counted twice.",
       "thatReceipt": "that receipt",
-      "filed_one": "Filed {{merchant}} — {{count}} line. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.",
-      "filed_other": "Filed {{merchant}} — {{count}} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.",
       "theReceipt": "the receipt",
       "couldNotReadFile": "Could not read that file: {{error}}",
-      "couldNotReadPhoto": "Could not read that photo: {{error}}"
+      "couldNotReadPhoto": "Could not read that photo: {{error}}",
+      "filed": "Filed {{merchant}} — {{n}} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye."
     },
     "doneDot": "Done.",
     "undone": "Undone.",
@@ -126,7 +125,13 @@
       "m": "{{m}} min"
     },
     "couldNotLoad": "Could not load: {{error}}",
-    "finishedReceiptMissing": "Finished · Receipt missing"
+    "finishedReceiptMissing": "Finished · Receipt missing",
+    "fav": {
+      "added": "Added to favorites.",
+      "removed": "Removed from favorites.",
+      "remove": "Remove from favorites",
+      "add": "Add to favorites"
+    }
   },
   "about": {
     "builtBy": "Built by",
@@ -1113,7 +1118,6 @@
     "sameStoreSameListThe": "Same store, same list. The first verified receipt wins — its timestamp is the photo finish. Until real cross-account races land, your opponent’s hunt is a placeholder in this account; run it from its session card."
   },
   "receipt": {
-    "filedFrom": "{{replace}} · filed from",
     "returned": "Returned",
     "savingsOnTheItemAbove": "Savings on the item above",
     "noLinesOnThisReceipt": "No lines on this receipt.",
@@ -1122,7 +1126,14 @@
     "returnsNetted": "Returns netted",
     "viewReceipt": "View receipt",
     "theFiledReceiptPhoto": "The filed receipt photo",
-    "deleteReceipt": "Delete receipt"
+    "deleteReceipt": "Delete receipt",
+    "confirmDelete": "Delete this receipt? Its lines leave your ledger, patterns, and points. This cannot be undone.",
+    "deleted": "Receipt deleted.",
+    "aReceipt": "a receipt",
+    "unverified": "Unverified — in your review queue",
+    "verified": "Total verified ✓ — the lines add up to {{total}}.",
+    "notReconciled": "The total did not reconcile — unverified lines wait in your review queue.",
+    "filedFrom": "{{when}} · filed from {{source}}"
   },
   "receipts": {
     "correctName": "Correct name",
@@ -1142,7 +1153,35 @@
     "whoseReceipts": "Whose receipts",
     "noReceiptsFiledYet": "No receipts filed yet.",
     "ofItemsCollected": "{{slice}} · {{items_collected}} of {{items_total}} items collected",
-    "receiptMissing": "Receipt missing"
+    "receiptMissing": "Receipt missing",
+    "settledAs": "Settled as {{name}}.",
+    "countShared": "{{n}} receipts from {{people}} people · {{mine}} yours",
+    "countMine": "{{n}} receipts · every one digitized, total-checked, returns netted",
+    "confirmDismiss": "Dismiss this hunt? It leaves your Receipts list. This cannot be undone.",
+    "huntDismissed": "Hunt dismissed.",
+    "readingN": "Reading {{i}} of {{n}} — {{name}}…",
+    "bulkDone": "Bulk upload done: {{filed}} filed{{dup}}{{failed}}.",
+    "bulkDup": " · {{n}} already filed, skipped",
+    "bulkFailed": " · {{n}} could not be read",
+    "typeNameFirst": "Type the correct name first.",
+    "confirmed": "Confirmed. It leaves the queue.",
+    "setTo": "Set to {{name}}. The dictionary learned it.",
+    "sameItemQ": "Are these the same item?",
+    "staySeparateQ": "Should these stay separate?",
+    "mergeWhy": "Arya is asking because the names look alike. Nothing changes unless you choose.",
+    "splitWhy": "Arya thinks these are different items that only look alike. Nothing changes unless you choose.",
+    "oneItemNow": "They are one item now.",
+    "keptSeparate": "Kept separate.",
+    "yesSame": "Yes, same item",
+    "yesSeparate": "Yes, keep separate",
+    "leftAsOne": "Left as one item.",
+    "noSeparate": "No, keep separate",
+    "noSame": "No, same item",
+    "everyone": "Everyone",
+    "mine": "Mine",
+    "noLinesRead": "no lines read",
+    "returns": " · returns −{{amount}}",
+    "byYou": " · you"
   },
   "score": {
     "scoringTheHunt": "Scoring the hunt…",
@@ -1203,7 +1242,11 @@
     "fromYourReceipts": "From your receipts",
     "showAllStores": "Show all {{histCount}} stores",
     "searchByZipAddressOr": "Search by ZIP, address, or name",
-    "aStoreThatIsNot": "A store that is not in the directory yet"
+    "aStoreThatIsNot": "A store that is not in the directory yet",
+    "fitLead": "{{n}} of your {{total}} list items usually here · ",
+    "usually": "Usually: {{names}}",
+    "pickFirst": "Pick or name the store first.",
+    "pickFromList": "Pick the store from the list — Arya needs its real address from Google."
   },
   "storesAdd": {
     "searchGoogleForTheStore": "Search Google for the store",
@@ -1215,14 +1258,23 @@
     "search": "Search",
     "noStoresMatchAddIt": "No stores match. Add it — a new store joins the directory for everyone.",
     "added": "Added ✓",
-    "theDirectoryIsSharedBy": "The directory is shared by every player. Add a store to your stores to pick it for a hunt."
+    "theDirectoryIsSharedBy": "The directory is shared by every player. Add a store to your stores to pick it for a hunt.",
+    "inYourStores": "{{name}} is in your stores.",
+    "all": "All",
+    "withQuests": "With quests",
+    "nearZip": "Near this ZIP"
   },
   "storesMine": {
     "myStores": "My stores",
     "noStoresYetFindOne": "No stores yet. Find one or add one below.",
     "allMyStores": "All my stores",
     "searchTheDirectoryByZip": "Search the directory by ZIP, address, or name",
-    "aStoreThatIsNot": "A store that is not in the directory yet"
+    "aStoreThatIsNot": "A store that is not in the directory yet",
+    "scene": {
+      "cloud": "3D mapped · Quest ready",
+      "strip": "Walk-through view"
+    },
+    "removed": "Removed from your stores."
   },
   "today": {
     "today": "Today",

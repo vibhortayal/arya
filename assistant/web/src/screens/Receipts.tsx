@@ -70,7 +70,7 @@ export function Receipts() {
   });
   const resolve = (item_id: string, name: string) => attempt(async () => {
     await post("/api/review/resolve", { item_id, name });
-    toast(`Settled as ${name}.`);
+    toast(t("receipts.settledAs", { name }));
     loadScan().catch(() => {});
   });
   // Opening an editor focuses its field, every time (old renderScan).
@@ -91,45 +91,45 @@ export function Receipts() {
   const mineCount = archive.receipts.filter(r => r.mine).length;
   const count = !archive.receipts.length ? ""
     : shared && people.length
-      ? `${archive.receipts.length} receipts from ${people.length + 1} people · ${mineCount} yours`
-      : `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted`;
+      ? t("receipts.countShared", { n: archive.receipts.length, people: people.length + 1, mine: mineCount })
+      : t("receipts.countMine", { n: archive.receipts.length });
   const shown = archive.receipts.filter(r => whoNow === "all" || (whoNow === "mine" ? r.mine : r.by === whoNow));
   const unsettled = archive.unsettled || [];
 
   const dismiss = (sid: string) => attempt(async () => {
-    if (!confirm("Dismiss this hunt? It leaves your Receipts list. This cannot be undone.")) return;
+    if (!confirm(t("receipts.confirmDismiss"))) return;
     await post(`/api/quest/sessions/${encodeURIComponent(sid)}/delete`, {});
-    toast("Hunt dismissed.");
+    toast(t("receipts.huntDismissed"));
     loadArchive().catch(showErr);
   });
 
   /* ---- Filing a photo or PDF ---- */
   const fileOne = async (file: File, label: string | undefined, withPreview: boolean, quiet: boolean) => {
     if (!file || !file.size) {
-      if (!quiet) toast("That file arrived empty — if it is still downloading, wait for it to finish, then try again.");
+      if (!quiet) toast(t("common.receiptFile.empty"));
       return { ok: false } as { ok: boolean; duplicate?: boolean };
     }
-    setStatus(label || "Reading the receipt — this can take up to a minute.");
+    setStatus(label || t("common.receiptFile.reading"));
     if (withPreview) setPreview(null);
     try {
       const out = await decode(file);
       const rec = out.receipt || {};
       setStatus("");
       if (out.demo) {
-        if (withPreview) setPreview(rec); else setStatus("Read live — kept for this demo visit only.");
+        if (withPreview) setPreview(rec); else setStatus(t("common.receiptFile.demo"));
         return { ok: true };
       }
       if (out.duplicate) {
-        if (!quiet) toast(`Already filed — ${rec.merchant || "that receipt"}, ${fmtDate(rec.purchased_at)}. Skipped, so the trip is not counted twice.`);
+        if (!quiet) toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) }));
         return { ok: true, duplicate: true };
       }
-      if (!quiet) toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
+      if (!quiet) toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
       loadScan().catch(showErr);
       loadArchive().catch(() => {});
       return { ok: true };
     } catch (e) {
       setStatus("");
-      if (!quiet) toast(`Could not read that ${isPdfFile(file) ? "file" : "photo"}: ` + errMsg(e));
+      if (!quiet) toast(t(isPdfFile(file) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
       return { ok: false };
     }
   };
@@ -141,11 +141,11 @@ export function Receipts() {
     if (files.length === 1) { await fileOne(files[0], undefined, true, false); return; }
     let filed = 0, dup = 0, failed = 0;
     for (let i = 0; i < files.length; i++) {
-      const res = await fileOne(files[i], `Reading ${i + 1} of ${files.length} — ${files[i].name}…`, false, true);
+      const res = await fileOne(files[i], t("receipts.readingN", { i: i + 1, n: files.length, name: files[i].name }), false, true);
       if (res.duplicate) dup++; else if (res.ok) filed++; else failed++;
     }
     setStatus("");
-    toast(`Bulk upload done: ${filed} filed${dup ? ` · ${dup} already filed, skipped` : ""}${failed ? ` · ${failed} could not be read` : ""}.`);
+    toast(t("receipts.bulkDone", { filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "", failed: failed ? t("receipts.bulkFailed", { n: failed }) : "" }));
     loadScan().catch(showErr);
     loadArchive().catch(() => {});
   };
@@ -155,7 +155,7 @@ export function Receipts() {
       <input type="text" placeholder={t("receipts.correctName")} aria-label={t("receipts.correctName")} value={draft[key] || ""}
         onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))} />
       <button className="chip" {...{ [saveAttr]: saveVal }} type="button"
-        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast("Type the correct name first."); return; } onSave(n); }}>{t("common.save")}</button>
+        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast(t("receipts.typeNameFirst")); return; } onSave(n); }}>{t("common.save")}</button>
     </div>
   );
 
@@ -173,19 +173,19 @@ export function Receipts() {
               <div className="row"><div className="grow"><span className="name">{l.decoded_name || l.raw}</span>
                 <span className="sub">{t("receipts.unverifiedFrom", { date: fmtDate(l.date), raw: l.raw })}</span></div></div>
               <div className="actions">
-                <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, "Confirmed. It leaves the queue.")}>{t("common.looksRight")}</button>
+                <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, t("receipts.confirmed"))}>{t("common.looksRight")}</button>
                 {l.suggested && <>
                   <button className="chip" data-alt={key} data-name={l.suggested.name}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: l.suggested!.name }, `Set to ${l.suggested!.name}. The dictionary learned it.`)}>{t("receipts.researched", { name: l.suggested.name })}</button>
+                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: l.suggested!.name }, t("receipts.setTo", { name: l.suggested!.name }))}>{t("receipts.researched", { name: l.suggested.name })}</button>
                   {l.suggested.source && <a className="sub" href={l.suggested.source} target="_blank" rel="noopener">{t("receipts.source")}</a>}
                 </>}
                 {(l.alternatives || []).map(a => (
                   <button key={a} className="chip" data-alt={key} data-name={a}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, `Set to ${a}. The dictionary learned it.`)}>{t("receipts.itIs", { a })}</button>
+                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, t("receipts.setTo", { name: a }))}>{t("receipts.itIs", { a })}</button>
                 ))}
                 <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.fixTheName")}</button>
               </div>
-              {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, `Set to ${name}. The dictionary learned it.`), "data-save-line", key)}
+              {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, t("receipts.setTo", { name })), "data-save-line", key)}
             </div>
           );
         })}
@@ -220,22 +220,22 @@ export function Receipts() {
           const merge = p.kind === "merge";
           return (
             <div key={p.id} className="group pad askcard">
-              <p className="askq">{merge ? "Are these the same item?" : "Should these stay separate?"}</p>
+              <p className="askq">{merge ? t("receipts.sameItemQ") : t("receipts.staySeparateQ")}</p>
               {p.names.map((n: string) => <p className="askitem" key={n}>{n}</p>)}
               <p className="sub">{merge
-                ? "Arya is asking because the names look alike. Nothing changes unless you choose."
-                : "Arya thinks these are different items that only look alike. Nothing changes unless you choose."}</p>
+                ? t("receipts.mergeWhy")
+                : t("receipts.splitWhy")}</p>
               <div className="actions">
                 <button className="btn primary" data-curator-apply={p.id} data-kind={p.kind} onClick={() => attempt(async () => {
                   await post("/api/curator/decide", { id: p.id, action: "apply" });
-                  toast(merge ? "They are one item now." : "Kept separate.");
+                  toast(merge ? t("receipts.oneItemNow") : t("receipts.keptSeparate"));
                   loadCurator();
-                })}>{merge ? "Yes, same item" : "Yes, keep separate"}</button>
+                })}>{merge ? t("receipts.yesSame") : t("receipts.yesSeparate")}</button>
                 <button className="btn" data-curator-dismiss={p.id} data-kind={p.kind} onClick={() => attempt(async () => {
                   await post("/api/curator/decide", { id: p.id, action: "dismiss" });
-                  toast(merge ? "Kept separate." : "Left as one item.");
+                  toast(merge ? t("receipts.keptSeparate") : t("receipts.leftAsOne"));
                   loadCurator();
-                })}>{merge ? "No, keep separate" : "No, same item"}</button>
+                })}>{merge ? t("receipts.noSeparate") : t("receipts.noSame")}</button>
               </div>
             </div>
           );
@@ -248,7 +248,7 @@ export function Receipts() {
         <div id="rc-photo-preview">
           {preview && (
             <div className="group pad" style={{ marginTop: 10 }}>
-              <p className="nomargin"><strong>{preview.merchant || "Receipt"}</strong> <span className="sub">{t("receipts.readLiveKeptForThis")}</span></p>
+              <p className="nomargin"><strong>{preview.merchant || t("common.receipt")}</strong> <span className="sub">{t("receipts.readLiveKeptForThis")}</span></p>
               {(preview.lines || []).map((l: any, i: number) => (
                 <Row key={i} name={l.decoded_name || l.raw || "line"} right={l.line_total != null ? money(l.line_total, currency) : ""} />
               ))}
@@ -259,7 +259,7 @@ export function Receipts() {
       </div>
       <h3 className="sect">{t("receipts.archive")}</h3>
       <div id="rc-who" className="segs" role="group" aria-label={t("receipts.whoseReceipts")} hidden={!people.length}>
-        {people.length > 0 && ([["all", "Everyone"], ["mine", "Mine"], ...people.map(p => [p, cap(p)])] as string[][]).map(([k, label]) => (
+        {people.length > 0 && ([["all", t("receipts.everyone")], ["mine", t("receipts.mine")], ...people.map(p => [p, cap(p)])] as string[][]).map(([k, label]) => (
           <button key={k} type="button" className={whoNow === k ? "on" : ""} data-rc-who={k} aria-pressed={whoNow === k} onClick={() => setWho(k)}>{label}</button>
         ))}
       </div>
@@ -279,9 +279,9 @@ export function Receipts() {
             <button key={r.receipt_id} className="sessrow" data-receipt={r.receipt_id} type="button"
               onClick={() => nav.show("receipt", { receipt_id: r.receipt_id, id: r.receipt_id })}>
               <span className="grow"><span className="name">{r.merchant}</span>
-                <span className="sub">{fmtShort(String(r.purchased_at).slice(0, 10))} · {r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}
-                  {r.returns_total ? ` · returns −${money(r.returns_total, currency)}` : ""}
-                  {r.by ? (r.mine ? " · you" : <> · <span className="byp">{cap(r.by)}</span></>) : ""}</span></span>
+                <span className="sub">{fmtShort(String(r.purchased_at).slice(0, 10))} · {r.items ? t("common.itemCount", { count: r.items }) : t("receipts.noLinesRead")}
+                  {r.returns_total ? t("receipts.returns", { amount: money(r.returns_total, currency) }) : ""}
+                  {r.by ? (r.mine ? t("receipts.byYou") : <> · <span className="byp">{cap(r.by)}</span></>) : ""}</span></span>
               <span className="money">{r.totals_reconcile ? "✓ " : ""}{r.total != null ? money(r.total, currency) : ""}</span>
             </button>
           ))}

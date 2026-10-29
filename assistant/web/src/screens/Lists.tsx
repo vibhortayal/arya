@@ -568,7 +568,7 @@ export function Lists() {
       setStatus("");
       if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
       if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
-      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), count: (rec.lines || []).length }));
+      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
     } catch (e) {
       setStatus("");
       toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
