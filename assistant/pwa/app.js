@@ -911,7 +911,7 @@ async function mintInto(el) {
   try {
     const t = await post("/auth/token");
     el.innerHTML = `<input class="grow" data-token-value readonly value="${esc(t.token)}"><button class="btn" data-copy="1">Copy</button>
-      <span class="sub">Copy it now — it is not shown again. Paste it into Muse's secure form.</span>`;
+      <span class="sub">Copy it now — it is not shown again. Paste it into your agent's secure form.</span>`;
   } catch (e) { toast(e.message); }
 }
 
@@ -1001,7 +1001,7 @@ async function renderProfile() {
 }
 
 $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refresh("view-analysis"); });
-/* Quest progress, Connect Muse and About are one tap from Profile
+/* Quest progress, Connect your agent and About are one tap from Profile
  * (owner, 2026-10-29: Profile too busy). Each Back lands on Profile. */
 for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", "#pfq-back"],
     ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"],
