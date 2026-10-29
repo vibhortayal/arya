@@ -121,6 +121,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).
+- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; owner turns it on and reruns the demo household.
 - Owner phone pass on the list-first build after deploy.
 
 ## Known gaps

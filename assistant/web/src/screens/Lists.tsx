@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
+import { HeadsUp, StoreNotice, TownChip, TownItemSheet } from "../ui/Town";
+import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconPen, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
@@ -120,8 +122,8 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
   );
 }
 
-function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: boolean; picked: boolean;
-  onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void }) {
+function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picking: boolean; picked: boolean;
+  onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void; chip?: ReactNode }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
   return (
@@ -132,6 +134,7 @@ function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: bo
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
+          {chip ? <span className="sub">{chip}</span> : null}
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
           {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
         {picking ? null : <QtyBtn item={i} onCommit={onQty} onCancel={onReload} />}
@@ -163,6 +166,8 @@ export function Lists() {
   const [doneOpen, setDoneOpen] = useState(false);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
+  const town = useTown();
+  const [townItem, setTownItem] = useState<string | null>(null);
   const [g, setG] = useState<GState>({ enabled: false, group: null, recent: {} });
   const [eyes, setEyes] = useState<EyesRec[]>([]);
 
@@ -597,7 +602,16 @@ export function Lists() {
   const eyesPending = eyes.some(r => (r.sightings || []).some(s => s.state === "pending"));
 
   /* ---- paint ---- */
-  const rowProps = (i: Item) => ({ i, picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: setQty, onReload: reloadQuiet });
+  const listStores = here ? here.stores || [] : [];
+  const rowProps = (i: Item) => ({ i, picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: setQty, onReload: reloadQuiet,
+    chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
+  /* Demo Town: send items to the list of another store, making it when there is none. */
+  const toStoreList = async (ids: string[], store: string) => {
+    let l = lists.find(x => (x.stores || []).some(s => sameStore(s, store)));
+    if (!l) { l = await post<{ id: string; name: string }>("/api/lists", { name: store, stores: [store] }); await reload(); }
+    await moveTo(ids, l.id);
+    return l.id;
+  };
 
   // The group line and who-changed-what (group.js decorateLists).
   const grp = g.enabled ? g.group : null;
@@ -689,6 +703,7 @@ export function Lists() {
             {selEff ? t("lists.nSelected", { n: selEff.size }) : [open.length ? t("lists.nToGet", { n: open.length }) : t("lists.nothingToGet"), ...((here && here.stores) || [])].join(" · ")}
           </p>
 
+          {town && !selEff ? <HeadsUp town={town} itemIds={open.map(i => i.item_id)} listStores={listStores} /> : null}
           <div id="composer" hidden={!!selEff}>
             <div className="addline">
               <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label={t("lists.speakYourList")} onClick={mic}><IconMic /></button>
@@ -792,8 +807,16 @@ export function Lists() {
             onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest }} />
       )}
 
+      {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
+        onMove={store => guard(async () => { const id = townItem!; setTownItem(null); await toStoreList([id], store); })} /> : null}
+
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
         <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
+        {town ? <StoreNotice town={town} listStores={listStores} onSwitch={store => guard(async () => {
+          const id = await toStoreList(open.map(i => i.item_id), store);
+          setShopOpen(false);
+          openLens(id);
+        })} /> : null}
         <div className="group shopmodes">
           <button className="hubrow" type="button" data-shop="quest" data-first onClick={startHunt}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("common.quest")}<span className="sub">{t("lists.questWalksYou")}</span></span><span className="chev">›</span></button>
         </div>

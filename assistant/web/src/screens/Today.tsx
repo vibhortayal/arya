@@ -9,6 +9,8 @@ import { A2hsCard } from "../ui/A2hs";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
+import { TownFeed } from "../ui/Town";
+import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
@@ -69,6 +71,7 @@ export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
   const { currency, demo } = useSession();
+  const town = useTown();
   const { toast, showErr } = useToast();
   const { setRing } = useAvatar();
   const [h, setH] = useState<Home | null>(null);
@@ -171,6 +174,7 @@ export function Today() {
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
       <div className="titlerow"><h2 className="largetitle">{t("today.today")}</h2></div>
       <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+      {town ? <TownFeed town={town} /> : null}
       <div id="today-low">
         {low.length > 0 && (
           <>

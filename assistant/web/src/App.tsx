@@ -6,6 +6,7 @@ import { useGroupLive } from "./app/groupLive";
 import { TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
+import { useTown } from "./lib/town";
 import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
@@ -78,6 +79,7 @@ function useListFromHash() {
 function Shell() {
   const nav = useNav();
   const s = useSession();
+  const town = useTown();
   const Screen = SCREENS[nav.view];
   const { src: avatar, ring } = useAvatar();
   useInviteLink();
@@ -94,7 +96,7 @@ function Shell() {
           <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />
         </button>
       )}
-      {nav.chrome && s.demo && <p id="demobar" className="note">{t("common.demoBar")}</p>}
+      {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}</p>}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
           <Screen />

@@ -4,6 +4,8 @@ import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
+import { DirectorPanel } from "../ui/Town";
+import { useTown } from "../lib/town";
 import { A2hsRow } from "../ui/A2hs";
 import { Row } from "../ui/kit";
 import { IconPen } from "../ui/icons";
@@ -33,6 +35,7 @@ type Archive = { receipts: unknown[]; unsettled?: Unsettled[] };
 export function Profile() {
   const { t } = useTranslation();
   const nav = useNav();
+  const town = useTown();
   const { demo, user, currency, setCurrency, language, languages, setLanguage, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
@@ -119,6 +122,7 @@ export function Profile() {
       {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}>{t("common.back")}</a></p>}
       <h2 className="largetitle">{t("settings.settings")}</h2>
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
+      {town ? <DirectorPanel /> : null}
       <GroupSection />
       <div id="pf-missing" className="group" hidden={!unsettled.length}>
         {unsettled.map(e => (
