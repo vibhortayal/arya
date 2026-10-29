@@ -1051,9 +1051,22 @@ async def chat_route(req: Request):
     from api.chat_service import chat as run_chat
     client = MetaClient(ledger=_ledger())
     try:
-        return await run_in_threadpool(run_chat, body.get("messages", []), client)
+        surface = body.get("surface") if body.get("surface") in ("list", "hunt") else None
+        return await run_in_threadpool(run_chat, body.get("messages", []), client,
+                                       surface=surface, context=body.get("context"))
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+
+
+@app.post("/api/chat/apply")
+async def chat_apply_route(req: Request):
+    """The yes to an action Arya proposed from the List or a hunt."""
+    body = await _json_obj(req)
+    actions = body.get("actions")
+    if not isinstance(actions, list) or not actions:
+        raise HTTPException(400, "actions are required")
+    from api.chat_service import apply_confirmed
+    return await run_in_threadpool(apply_confirmed, actions[:10])
 
 
 @app.post("/api/cart/approve")
@@ -1244,7 +1257,9 @@ async def list_from_text(req: Request):
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
             "names": [a["name"] for a in added], "source": source,
-            "skipped": skipped}
+            "skipped": skipped,
+            # Only what newly joined the list: the client's Undo.
+            "item_ids": [a["item_id"] for a in added if a["item_id"] not in on_list]}
 
 
 @app.post("/api/list/from-photo")

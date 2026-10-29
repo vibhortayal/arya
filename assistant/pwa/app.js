@@ -910,6 +910,21 @@ function bindAdd() {
     btn.disabled = true;
     try {
       const here = lensList();
+      // One field for adding and asking (owner, 2026-10-29): "add naan
+      // to Indian Store" files it ($0, no model); a question or a
+      // command ("I'm out of milk") goes to Arya; anything else is an
+      // item. Adds from Arya apply at once and offer Undo.
+      const parsed = AryaAsk.parseAddToList(text, namedLists());
+      if (parsed || AryaAsk.looksLikeAsk(text)) {
+        field.value = ""; paintAddSplit();
+        const box = $("#list-answer");
+        if (parsed) await AryaAsk.addToList(box, text, parsed, () => { renderList().catch(() => {}); });
+        else await AryaAsk.run(text, { box, surface: "list",
+          context: here ? { list: here.name, list_id: here.id } : {},
+          onChange: () => { renderList().catch(() => {}); } });
+        btn.disabled = false;
+        return;
+      }
       const r = await post("/api/list/from-text", here ? { text, list_id: here.id } : { text });
       // Text typed while the request ran stays; only the sent text clears.
       if (field.value.trim() === text) field.value = "";
@@ -963,7 +978,11 @@ function bindAdd() {
     box.hidden = items.length < 2;
     box.innerHTML = items.map((n, i) =>
       `<span class="spchip">${esc(n)}<button type="button" data-spx="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join("");
-    if (btn) btn.textContent = items.length > 1 ? `Add ${items.length} items` : "Add";
+    const asking = AryaAsk.looksLikeAsk(field.value) || !!AryaAsk.parseAddToList(field.value, namedLists());
+    if (btn) btn.textContent = asking ? (AryaAsk.looksLikeAsk(field.value) ? "Ask" : "Add") : (items.length > 1 ? `Add ${items.length} items` : "Add");
+    field.classList.toggle("askish", AryaAsk.looksLikeAsk(field.value));
+    // A question or command is not an item list: no split chips.
+    if (AryaAsk.looksLikeAsk(field.value) || AryaAsk.parseAddToList(field.value, namedLists())) box.hidden = true;
   }
   $("#add-text").addEventListener("input", paintAddSplit);
   $("#add-split").addEventListener("click", ev => {
@@ -993,10 +1012,20 @@ function bindAdd() {
     ev.preventDefault(); $("#add-submit").click();
   });
 
-  wireRecordButton($("#add-mic"), $("#add-status"), text => {
-    const field = $("#add-text");
-    field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
-    field.dispatchEvent(new Event("input"));
+  /* The mic talks to Arya (owner, 2026-10-29): what you say is read as
+   * a person would hear it, so a list is added (with Undo) and a
+   * question is answered. If Arya cannot answer, the words land in the
+   * field so nothing said is lost. */
+  wireRecordButton($("#add-mic"), $("#add-status"), async text => {
+    const here = lensList();
+    const ok = await AryaAsk.run(text, { box: $("#list-answer"), surface: "list",
+      context: here ? { list: here.name, list_id: here.id } : {},
+      onChange: () => { renderList().catch(() => {}); } });
+    if (!ok) {
+      const field = $("#add-text");
+      field.value = field.value.trim() ? `${field.value.trim()}, ${text}` : text;
+      field.dispatchEvent(new Event("input"));
+    }
   });
 
   let receiptFile = null;

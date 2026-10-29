@@ -12,3 +12,11 @@ Models run: none. Cost: $0.
 Left out on purpose: per-item store inside a list (Party), the quiet
 "could grab here too" group (the old store lens is gone), smart Add field,
 mic to Arya, hunt Ask bar (next PRs).
+
+## PR 2: Ask from the List
+Changed: api/chat_service.py (surface "list"/"hunt": adds apply with the
+added items returned for Undo, risky actions come back as proposals;
+apply_confirmed; CURRENT SCREEN context), api/main.py (/api/chat surface and
+context, /api/chat/apply, item_ids from from-text), pwa/aryaask.js (answer
+card, Undo, confirm), app.js (smart field, mic to Arya), sw.js (arya-v69).
+tests/test_ask_in_list.py. The Ask tab behaves as before.
