@@ -35,4 +35,10 @@ export default async function (page, base) {
   await page.waitForSelector("#pf-back");
   await page.click("#pf-back");
   await page.waitForFunction(() => !document.querySelector("#view-profile"));
+  // Sign out lands on the Login screen without a reload.
+  await page.evaluate(() => window.__aryaShow("profile"));
+  await page.waitForSelector("#btn-signout2");
+  await page.click("#btn-signout2");
+  await page.waitForSelector("#view-login");
+  if (await page.$("#tabs")) throw new Error("tabs should be gone after sign out");
 }

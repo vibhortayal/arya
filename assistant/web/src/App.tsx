@@ -1,6 +1,5 @@
-import { useEffect, useState, type ComponentType } from "react";
-import { get } from "./lib/api";
-import { asset } from "./lib/format";
+import type { ComponentType } from "react";
+import { AvatarProvider, useAvatar } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TABS, type ViewId } from "./app/views";
@@ -23,7 +22,7 @@ function Root() {
   const s = useSession();
   if (!s.ready) return null;
   if (!s.user) return <Login />;
-  return <NavProvider initial="home"><Shell /></NavProvider>;
+  return <AvatarProvider><NavProvider initial="home"><Shell /></NavProvider></AvatarProvider>;
 }
 
 const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
@@ -35,7 +34,7 @@ function Shell() {
   const nav = useNav();
   const s = useSession();
   const Screen = SCREENS[nav.view];
-  const avatar = useAvatar();
+  const avatar = useAvatar().src;
   return (
     <>
       {nav.chrome && (
@@ -66,17 +65,4 @@ function Shell() {
       )}
     </>
   );
-}
-
-/* The player's avatar (app.js loadAvatar/avatarSrc): a cast
- * character or a made picture. The level ring (--pct) is painted by
- * Today in the old app and comes with the Today port. */
-function useAvatar(): string | null {
-  const [src, setSrc] = useState<string | null>(null);
-  useEffect(() => {
-    get<{ file?: string; image?: boolean; version?: number }>("/api/quest/avatar")
-      .then(av => setSrc(av.image ? `/api/quest/avatar/image?v=${av.version}` : asset(`assets/characters/${av.file || "basket.webp"}`)))
-      .catch(() => {});
-  }, []);
-  return src;
 }

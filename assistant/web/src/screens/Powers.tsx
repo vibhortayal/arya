@@ -133,7 +133,7 @@ export function Powers() {
 
   return (
     <>
-      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
+      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>Arya's powers</h2>
       <p className="subtitle">What Arya already does for you, and what turns on next.</p>
       <div id="powers-body">

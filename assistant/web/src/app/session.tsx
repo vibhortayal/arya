@@ -11,6 +11,10 @@ type Session = {
   currency: Currency;
   enter: (user: string, demo: boolean) => void;
   setCurrency: (c: Currency) => void;
+  /* After sign out or account delete: back to the Login screen
+   * (the old app reloaded the page). Re-reads /auth/status, since
+   * deleting the last account opens first-run setup. */
+  leave: () => Promise<void>;
 };
 
 const Ctx = createContext<Session | null>(null);
@@ -42,7 +46,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency }}>{children}</Ctx.Provider>;
+  const leave = useCallback(async () => {
+    const st = await get<AuthStatus>("/auth/status").catch(() => null);
+    if (st) setStatus(st);
+    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" });
+    (window as any).__aryaUser = undefined;
+  }, []);
+
+  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, leave }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

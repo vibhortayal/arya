@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
+import { useAvatar } from "../app/avatar";
+import { useInstallPrompt } from "../app/a2hs";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { Row } from "../ui/kit";
@@ -20,14 +22,13 @@ import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
 
-type Av = { file?: string | null; image?: boolean; version?: number };
-type QProfile = { handle: string; level?: number; points?: number; stats: { hunts: number; streak_weeks?: number }; badges?: { earned?: boolean }[]; mapped_stores?: string[] };
+type QProfile = { handle: string; level?: number; points?: number; stats: { hunts: number; streak_weeks?: number }; badges?: { id: string; earned?: boolean }[]; mapped_stores?: string[] };
 type Unsettled = { session_id: string; store: string; finished_at?: string; items_collected: number; items_total: number };
 type Archive = { receipts: unknown[]; unsettled?: Unsettled[] };
 
 export function Profile() {
   const nav = useNav();
-  const { demo, user, currency, setCurrency } = useSession();
+  const { demo, user, currency, setCurrency, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
@@ -43,6 +44,11 @@ export function Profile() {
     ]);
     setProfile(p);
     setArchive(a);
+    // renderProfile marked the earned badges seen (quest.js qMarkBadgesSeen).
+    if (p) {
+      try { localStorage.setItem("arya-seen-badges", JSON.stringify((p.badges || []).filter(b => b.earned).map(b => b.id))); }
+      catch { /* storage unavailable */ }
+    }
   }, []);
   useEffect(() => { load().catch(showErr); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -78,8 +84,14 @@ export function Profile() {
   const eraseAccount = () => attempt(async () => {
     if (!delPw) { toast("Enter your password to confirm."); return; }
     await post("/auth/account/delete", { password: delPw });
-    location.href = import.meta.env.BASE_URL || "/";
+    await leave();
   });
+  const signOut = async () => {
+    await fetch("/auth/logout", { method: "POST" }).catch(() => {});
+    await leave();
+  };
+  // The box focuses its password field when it opens (app.js).
+  useEffect(() => { if (delOpen) (document.getElementById("del-account-pw") as HTMLInputElement | null)?.focus(); }, [delOpen]);
 
   const go = (view: Parameters<typeof nav.show>[0]) => () => nav.show(view);
   const NavRow = ({ id, view, title, sub, subId }: { id?: string; view: Parameters<typeof nav.show>[0]; title: string; sub: string; subId?: string }) => (
@@ -134,13 +146,12 @@ export function Profile() {
         <div id="del-account-box" className="pad" hidden={!delOpen}>
           <p className="muted">This erases your receipts, lists, hunts, photos, and sign-in — for good. Enter your password to confirm.</p>
           <input type="password" id="del-account-pw" autoComplete="current-password" placeholder="Your password" value={delPw}
-            ref={el => { if (el && delOpen && document.activeElement !== el && !delPw) el.focus(); }}
             onChange={e => setDelPw(e.target.value)} />
           <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>Erase everything</button></p>
         </div>
       </div>
       <p style={{ marginTop: 22 }}><button id="btn-signout2" className="btn secondary wide" type="button"
-        onClick={async () => { await fetch("/auth/logout", { method: "POST" }); location.reload(); }}>Sign out</button></p>
+        onClick={signOut}>Sign out</button></p>
 
       <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => load().catch(showErr)} />
     </>
@@ -151,8 +162,8 @@ export function Profile() {
 function AvatarCard({ handle, level }: { handle: string; level: string }) {
   const { demo, user } = useSession();
   const { toast } = useToast();
-  const [av, setAv] = useState<Av>({ file: null, image: false, version: 0 });
-  const [loaded, setLoaded] = useState(false);
+  const { av, src: avSrc, reload, set: setAv } = useAvatar();
+  const loaded = avSrc !== null;
   const [presets, setPresets] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -161,28 +172,25 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
   const [cand, setCand] = useState<string | null>(null);
 
   useEffect(() => {
+    // Each Profile open re-reads the avatar (app.js loadAvatar).
     (async () => {
-      try {
-        const a = await get<Av>("/api/quest/avatar");
-        setAv(a); setLoaded(true);
-        try { localStorage.setItem("arya-avatar", a.file || "basket.webp"); } catch { /* private window */ }
-      } catch { return; }
+      await reload();
       try {
         const c = await (await fetch(asset("assets/characters/manifest.json"))).json();
         setPresets([...new Set([...(c.items || []).map((i: any) => i.char), ...(c.categories || []).map((x: any) => x.char),
           ...Object.values(c.roles || {}), c.fallback].filter(Boolean))] as string[]);
       } catch { /* no presets */ }
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const src = av.image ? `/api/quest/avatar/image?v=${av.version}` : asset(`assets/characters/${av.file || "basket.webp"}`);
+  const src = avSrc || "";
   const current = av.file || "basket.webp";
   const showCand = () => setCand(`/api/quest/avatar/image?candidate=true&t=${Date.now()}`);
 
   const choose = async (f: string) => {
     try {
       await post("/api/quest/avatar", { file: f });
-      setAv(a => ({ ...a, file: f, image: false }));
+      setAv({ file: f, image: false });
       try { localStorage.setItem("arya-avatar", f); } catch { /* ignore */ }
       setStatus("");
     } catch (e) { toast(errMsg(e)); }
@@ -207,7 +215,7 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
     } catch (e) { setStatus(errMsg(e)); }
   };
   const use = async () => {
-    try { const r = await post("/api/quest/avatar/use", {}); setAv(a => ({ ...a, ...r })); setCand(null); toast("Avatar saved."); }
+    try { const r = await post("/api/quest/avatar/use", {}); setAv(r); setCand(null); toast("Avatar saved."); }
     catch (e) { toast(errMsg(e)); }
   };
 
@@ -246,21 +254,14 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
 
 /* ---------------- Add to Home Screen row (a2hs.js) ---------------- */
 function A2hsRow({ demo }: { demo: boolean }) {
-  const [deferred, setDeferred] = useState<any>(null);
+  const { prompt: deferred, take } = useInstallPrompt();
   const [steps, setSteps] = useState(false);
-  useEffect(() => {
-    const onPrompt = (ev: Event) => { ev.preventDefault(); setDeferred(ev); };
-    const onInstalled = () => setDeferred(null);
-    window.addEventListener("beforeinstallprompt", onPrompt);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("appinstalled", onInstalled); };
-  }, []);
   const installed = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const available = !installed && !demo && (!!deferred || ios);
   const go = async () => {
     if (deferred) {
-      const ev = deferred; setDeferred(null);
+      const ev = take();
       try { await ev.prompt(); await ev.userChoice; } catch { /* closed */ }
       return;
     }
@@ -413,12 +414,9 @@ function GroupSection() {
   const copy = (text: string, done: string) => {
     try { navigator.clipboard.writeText(text).then(() => toast(done), () => toast(text)); } catch { toast(text); }
   };
-  const myAvatar = () => {
-    const img = document.getElementById("avatar-img") as HTMLImageElement | null;
-    return img && !img.hidden && img.src ? img.src : "";
-  };
+  const myAvatar = useAvatar().src || "";
   const face = (m: Member) => {
-    const src = m.me ? myAvatar() : "";
+    const src = m.me ? myAvatar : "";
     return src ? <span className="gm"><img src={src} alt="" /></span>
       : <span className={"gm" + (m.me ? "" : " other")}>{(m.handle || "?").charAt(0).toUpperCase()}</span>;
   };
@@ -464,7 +462,7 @@ function GroupSection() {
         <label className="field">Group name<input type="text" id="g-name" maxLength={40} autoComplete="off" data-first value={name} onChange={e => setName(e.target.value)} /></label>
         <p className="muted small">Your lists become the group's lists. Next you can invite people with a code.</p>
         <div className="sheetacts"><button className="btn primary" type="button" id="g-create" onClick={() => attempt(async () => {
-          setG(await post("/api/group", { name })); await invite();
+          setG(await post("/api/group", { name })); close(); await invite();
         })}>Start group</button></div>
       </Sheet>
       <Sheet open={sh?.k === "rename"} onClose={close} title="Rename group" closeLabel="Cancel" id="group-sheet">
