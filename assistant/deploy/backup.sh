@@ -7,6 +7,11 @@
 #
 #   17 3 * * *  /path/to/arya/assistant/deploy/backup.sh >> /var/log/arya-backup.log 2>&1
 #
+# Off-VM copy: set ARYA_BACKUP_REMOTE in deploy/.env to an rclone
+# destination (for example `arya-offvm:arya-backups`, set up once with
+# `rclone config`). Each run then copies the new files there. Nothing
+# is copied, and the script still succeeds, when it is unset.
+#
 # Restore: ./restore.sh <data-archive.tar.gz>
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -32,6 +37,20 @@ if [ -n "${ARYA_BACKUP_DATABASE_URL:-}" ]; then
   echo "arya schema -> $BACKUP_DIR/arya-pg-$STAMP.sql.gz"
 else
   echo "ARYA_BACKUP_DATABASE_URL not set: skipping the Postgres dump"
+fi
+
+# --- off-VM copy (optional, see header) ---
+if [ -n "${ARYA_BACKUP_REMOTE:-}" ]; then
+  if command -v rclone >/dev/null 2>&1; then
+    rclone copy --include "*-$STAMP.*" \
+      "$BACKUP_DIR" "$ARYA_BACKUP_REMOTE" \
+      && echo "copied to $ARYA_BACKUP_REMOTE" \
+      || { echo "OFF-VM COPY FAILED" >&2; exit 1; }
+  else
+    echo "ARYA_BACKUP_REMOTE is set but rclone is not installed" >&2; exit 1
+  fi
+else
+  echo "ARYA_BACKUP_REMOTE not set: backups stay on this VM only"
 fi
 
 # --- retention ---
