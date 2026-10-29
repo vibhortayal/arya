@@ -46,6 +46,9 @@ services:
       - "8081:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Owner concept pages, served at /p/ (see Caddyfile). VM-only
+      # directory: files are dropped in by hand, never committed.
+      - /home/ubuntu/arya-pages:/srv/pages:ro
     depends_on:
       - api
 volumes:

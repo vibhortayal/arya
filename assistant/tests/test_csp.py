@@ -16,8 +16,22 @@ def read(*parts):
 
 class TestCsp(unittest.TestCase):
     def csp(self):
-        return re.search(r'Content-Security-Policy "([^"]+)"',
-                         read("deploy", "Caddyfile")).group(1)
+        # The app's policy is the one carrying worker-src. The /p/*
+        # concept-pages path has its own relaxed policy (inline
+        # scripts in single-file mockups); it is pinned separately
+        # below and must stay scoped to that handle.
+        for policy in re.findall(r'Content-Security-Policy "([^"]+)"',
+                                 read("deploy", "Caddyfile")):
+            if "worker-src" in policy:
+                return policy
+        self.fail("app CSP not found in the Caddyfile")
+
+    def test_pages_override_stays_scoped(self):
+        text = read("deploy", "Caddyfile")
+        self.assertIn("handle_path /p/*", text)
+        relaxed = [p for p in re.findall(r'Content-Security-Policy "([^"]+)"', text)
+                   if "worker-src" not in p]
+        self.assertEqual(len(relaxed), 1, "exactly one scoped /p override")
 
     def test_no_unsafe_inline_script(self):
         script = re.search(r"script-src ([^;]+)", self.csp()).group(1)
