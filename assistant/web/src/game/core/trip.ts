@@ -45,6 +45,7 @@ export type Action =
   | { type: "scout"; key: string }
   | { type: "report"; key: string; kind: ReportKind }
   | { type: "pass"; key: string }
+  | { type: "unpass"; key: string }
   | { type: "skipSection"; section: string }
   | { type: "unskipSection"; section: string }
   | { type: "move"; section: string; by: -1 | 1 }
@@ -127,6 +128,7 @@ export function reduce(trip: Trip, a: Action): Trip {
       t.chain = 0;
       return afterHandle(t, item.section);
     }
+    case "unpass": return t.passed.includes(a.key) ? { ...t, passed: t.passed.filter(k => k !== a.key) } : trip;
     case "ungrab": {
       if (!t.got.includes(a.key)) return trip;
       const item = t.items.find(i => i.key === a.key)!;

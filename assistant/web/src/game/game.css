@@ -57,7 +57,7 @@
 .qg-tile small { font-size: 13px; color: var(--q-ink2); }
 .qg-tile-art { display: flex; margin-bottom: 4px; }
 .qg-tile-art img { width: 38px; height: 38px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; margin-right: -8px; background: #FBF4E6; }
-.qg-tile-art img.locked { filter: grayscale(1) brightness(1.4) opacity(.5); }
+.qg-tile-art img.locked { filter: brightness(0) opacity(.14); background: #EAE5DB; }
 .qg-card { margin-top: 12px; padding: 16px; border-radius: 20px; background: var(--q-panel); box-shadow: 0 2px 0 var(--q-line); }
 .qg-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
 .qg-growth { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; font-size: 14px; padding: 4px 0; }
@@ -156,7 +156,7 @@
 .qg-art { width: min(44%, 180px); aspect-ratio: 1; object-fit: cover; border-radius: 28px; border: 6px solid #fff; background: #FBF4E6; box-shadow: 0 14px 28px rgba(0,0,0,.22); rotate: -3deg; animation: qg-bob 2.4s ease-in-out infinite; z-index: 2; }
 .qg-art.golden { border-color: var(--q-gold); box-shadow: 0 0 0 4px #fff, 0 0 34px 8px rgba(255,200,61,.9), 0 14px 28px rgba(0,0,0,.2); }
 @keyframes qg-bob { 50% { translate: 0 -8px; } }
-.qg-target { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 4px solid var(--q-gold); box-shadow: 0 0 0 6px rgba(255,200,61,.35), 0 0 24px rgba(255,200,61,.8); animation: qg-ring 1.4s ease-out infinite; z-index: 1; }
+.qg-target { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 4px solid var(--q-gold); box-shadow: 0 0 0 6px rgba(255,200,61,.35), 0 0 24px rgba(255,200,61,.8); animation: qg-ring 1.4s ease-out infinite; z-index: 3; pointer-events: none; }
 .qg-target.find { animation: qg-ring .5s ease-out 6; border-color: var(--q-acc); }
 @keyframes qg-ring { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 .qg-guess { position: absolute; bottom: 12px; left: 50%; translate: -50% 0; font-size: 12px; font-weight: 700; color: var(--q-blue); background: rgba(255,255,255,.9); padding: 5px 10px; border-radius: 99px; white-space: nowrap; }
@@ -288,3 +288,19 @@
 @media (prefers-reduced-motion: reduce) {
   .qg-art, .qg-target, .qg-fog i, .qg-hand.on, .qg-mystery .front { animation: none !important; }
 }
+
+/* mission card (trip start) */
+.qg-mission { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; background: rgba(20,20,24,.55); }
+.qg-mission-c { width: 100%; max-width: 380px; border-radius: 26px; background: var(--q-panel); padding: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.qg-mission-c .qg-kicker { margin-bottom: 4px; }
+.qg-mission-c h2 { font-size: 26px; font-weight: 900; }
+.qg-mission-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+.qg-mission-stats div { border-radius: 14px; background: #F6F2EA; padding: 10px 4px; display: flex; flex-direction: column; }
+.qg-mission-stats b { font-size: 22px; font-weight: 900; }
+.qg-mission-stats small { font-size: 12px; color: var(--q-ink2); }
+.qg-mission-gold { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border-radius: 16px; background: #FFF6D6; box-shadow: inset 0 0 0 2px var(--q-gold); }
+.qg-mission-gold img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; }
+.qg-mission-gold span { font-size: 14px; color: var(--q-ink2); }
+.qg-mission-gold b { display: block; font-size: 16px; color: var(--q-ink); }
+.qg-aside { font-size: 13px; color: var(--q-ink2); margin-top: 6px; }
+.qg-link { color: var(--q-acc) !important; font-weight: 800; text-decoration: underline; min-height: 32px; }

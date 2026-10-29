@@ -11,7 +11,7 @@ import {
   type Action, type GameEvent, type Trip,
 } from "../core/trip";
 import type { QuestItem } from "../core/types";
-import { buzz, chime, feel, goldChime, say, soft, stinger, whoosh, type FeelPrefs } from "../fx/feel";
+import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
 import { charArt } from "../assets";
 import { GhostHand, KindBadge, MiniMap, Sheet } from "./bits";
@@ -31,6 +31,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
   const [banner, setBanner] = useState<Banner>(null);
   const [findIt, setFindIt] = useState(0);
   const [prefs, setPrefs] = useState<FeelPrefs>(feel.prefs);
+  const [briefing, setBriefing] = useState(!trip.got.length && !trip.here);
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
   const map = useRef<MapHandle>(null);
@@ -73,9 +74,12 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
 
   const backToMap = () => { setView("map"); setFocus(null); };
 
-  /* Plays what the reducer reports. */
+  /* Plays what the reducer reports. In a real store the game stays
+   * quiet (a tick and the points; eyes go back to the shelf) and the
+   * big moments wait for checkout. Practice gets the full show. */
   const play = (events: GameEvent[], next: Trip, from: { x: number; y: number }) => {
     const j = juice.current!;
+    const quiet = !next.practice;
     const basket = root.current?.querySelector(".qg-basket") || null;
     let delay = 0;
     for (const e of events) {
@@ -83,7 +87,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         const it = next.items.find(i => i.key === e.key)!;
         j.splat(from.x, from.y, it.art, e.golden);
         j.float(from.x, from.y - 30, e.golden ? `+${e.pts} GOLDEN` : `+${e.pts}`, e.golden ? "gold" : "pts");
-        if (e.chain > 1 && !e.golden) later(() => j.float(from.x + 46, from.y - 8, `x${e.chain} combo`, "chain"), 140);
+        if (e.chain > 1 && !e.golden && !events.some(x => x.t === "scout")) later(() => j.float(from.x + 46, from.y - 8, `x${e.chain} combo`, "chain"), 140);
         j.fly(from, basket, charArt(it.art));
         if (e.golden) { goldChime(); buzz([20, 40, 20, 40, 60]); } else { chime(e.chain); buzz(18); }
       } else if (e.t === "scout") {
@@ -91,8 +95,10 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         delay = Math.max(delay, 900);
         const s = next.layout.sections.find(x => x.id === e.section)!;
         void source.report({ kind: "found", store: next.layout.id, section: e.section, item: next.items.find(i => i.key === e.key)!.name });
-        later(() => { setBanner({ title: "Fog cleared!", sub: `${s.short} is on the map now`, kind: "map" }); }, 300);
-        later(() => setBanner(b => (b?.kind === "map" ? null : b)), 1500);
+        if (!quiet) {
+          later(() => { setBanner({ title: "Fog cleared!", sub: `${s.short} is on your map`, kind: "map" }); }, 300);
+          later(() => setBanner(b => (b?.kind === "map" ? null : b)), 1700);
+        }
       } else if (e.t === "report") {
         soft(); buzz(12);
         j.float(from.x, from.y - 30, `+${e.pts} thanks!`, "scout");
@@ -100,6 +106,11 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         void source.report({ kind: e.kind, store: next.layout.id, section: it.section, item: it.name });
       } else if (e.t === "clear") {
         const s = next.layout.sections.find(x => x.id === e.section)!;
+        if (quiet) {
+          later(() => { tick(7); j.float(from.x, from.y - 70, `${e.sweep ? "Sweep! " : ""}${s.short} done +${e.pts}`, "chain"); }, delay + 300);
+          later(() => { setView("map"); setFocus(null); }, delay + 1100);
+          continue;
+        }
         later(() => {
           stinger(false); buzz([30, 50, 30]);
           setBanner({ title: e.sweep ? "CLEAN SWEEP!" : "SECTION CLEAR!", sub: `${s.short}  +${e.pts}`, kind: e.sweep ? "sweep" : "clear" });
@@ -118,7 +129,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
     const from = j ? j.at(fromEl || root.current!.querySelector(".qg-art"), 0.45) : { x: 0, y: 0 };
     onTrip(next);
     play(next.events, next, from);
-    if (a.type === "grab" || a.type === "scout") {
+    if (a.type === "grab") {
       const it = next.items.find(i => i.key === a.key)!;
       setUndo({ key: a.key, name: it.name });
       clearTimeout(undoTimer.current);
@@ -129,7 +140,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
     if (sec && !leftIn(next, sec).length && !next.events.some(e => e.t === "clear")) later(backToMap, 700);
   };
 
-  const coach = trip.practice ? coachFor(trip, view, item, view_) : null;
+  const coach = trip.practice && !briefing ? coachFor(trip, view, item, view_) : null;
 
   return (
     <div className={"qg-play " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
@@ -163,7 +174,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
                 onReveal={p => { const j = juice.current; if (j) { const q = j.local(p); j.sparkle(q.x, q.y, 18); } }} />
               {L.kind === "partial" && <span className="qg-legend"><i className="fog" /> Fog: not mapped yet. Find things there to map it.</span>}
             </div>
-            <Dock trip={trip} cur={cur} done={done} onGo={() => (cur ? goSection(cur) : onFinish(trip))} onRoute={() => setSheet("route")} onList={() => setSheet("list")} undo={undo} onUndo={() => { if (undo) act({ type: "ungrab", key: undo.key }); setUndo(null); }} />
+            <Dock trip={trip} cur={cur} done={done} onGo={() => (cur ? goSection(cur) : onFinish(trip))} onRoute={() => setSheet("route")} onList={() => setSheet("list")} onRetry={k => { const it = trip.items.find(i => i.key === k)!; onTrip(reduce(tripRef.current, { type: "unpass", key: k })); later(() => goSection(it.section), 0); }} undo={undo} onUndo={() => { if (undo) act({ type: "ungrab", key: undo.key }); setUndo(null); }} />
           </motion.section>
         <AnimatePresence initial={false}>
         {view === "section" && section && (
@@ -228,6 +239,10 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
       </AnimatePresence>
 
 
+      <AnimatePresence>
+        {briefing && <Mission trip={trip} onStart={() => { setBriefing(false); stinger(false); }} />}
+      </AnimatePresence>
+
       {/* ---- sheets ---- */}
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
         <ListSheet trip={trip} onGo={goSection} />
@@ -240,6 +255,9 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
           <div className="qg-opts">
             <button className="qg-opt" onClick={() => { setSheet(null); setFindIt(n => n + 1); say(hintFor(item, view_, section.typical)); }}>
               <b>🔎 Find it for me</b><span>{item.spot ? `Arya shows the shelf: ${item.spot.hint}.` : view_ === "real" ? "Arya has not pinned this shelf yet. Staff can point you to it." : `A guess: ${section.typical.toLowerCase()}. Staff can point you to it.`}</span>
+            </button>
+            <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "grab", key: item.key }); }}>
+              <b>🔁 I got a substitute</b><span>Another brand or size counts. +{SCORE.item}</span>
             </button>
             <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "report", key: item.key, kind: "empty" }); }}>
               <b>🫙 The shelf is empty</b><span>Tell other shoppers. +{SCORE.report}</span>
@@ -305,7 +323,7 @@ function FogLayer() {
   );
 }
 
-function Dock({ trip, cur, done, onGo, onRoute, onList, undo, onUndo }: { trip: Trip; cur: string | null; done: boolean; onGo: () => void; onRoute: () => void; onList: () => void; undo: { name: string } | null; onUndo: () => void }) {
+function Dock({ trip, cur, done, onGo, onRoute, onList, onRetry, undo, onUndo }: { trip: Trip; cur: string | null; done: boolean; onGo: () => void; onRoute: () => void; onList: () => void; onRetry: (key: string) => void; undo: { name: string } | null; onUndo: () => void }) {
   const live = liveStops(trip);
   const s = cur ? trip.layout.sections.find(x => x.id === cur)! : null;
   const left = cur ? leftIn(trip, cur) : [];
@@ -328,6 +346,9 @@ function Dock({ trip, cur, done, onGo, onRoute, onList, undo, onUndo }: { trip: 
             <span className="qg-step">{done ? "Everything is handled" : `${passed + skipped ? "Some items are set aside" : "All stops done"}`}</span>
             <b>Head to the checkout</b>
           </div>
+          {passed > 0 && (() => { const first = trip.items.find(i => trip.passed.includes(i.key))!; return (
+            <p className="qg-aside">Set aside: {trip.items.filter(i => trip.passed.includes(i.key)).map(i => i.name).join(", ")}. <button className="qg-link" onClick={() => onRetry(first.key)}>Look for {first.name} again</button></p>
+          ); })()}
           <button className="qg-go fin" onClick={onGo}>Finish trip <span aria-hidden="true">🏁</span></button>
         </>
       )}
@@ -416,5 +437,33 @@ export function HowTo() {
         <div key={t} className="qg-how"><img src={charArt(a)} alt="" /><div><b>{i + 1}. {t}</b><p>{d}</p></div></div>
       ))}
     </div>
+  );
+}
+
+/* The mission card (GTA's mission intro): what this trip is, in three
+ * numbers, and today's golden item. One tap to start. */
+function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
+  const g = trip.items.find(i => i.key === trip.golden);
+  const fog = liveStops(trip).filter(id => sectionView(trip, id) === "fog").length;
+  return (
+    <motion.div className="qg-mission" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <motion.div className="qg-mission-c" initial={{ scale: 0.7, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 14, stiffness: 220 }}>
+        <p className="qg-kicker">{trip.practice ? "Practice quest" : `${trip.layout.name} · ${trip.layout.area}`}</p>
+        <h2>{trip.practice ? "Learn the moves" : "Today's quest"}</h2>
+        <div className="qg-mission-stats">
+          <div><b>{trip.items.length}</b><small>items</small></div>
+          <div><b>{liveStops(trip).length}</b><small>stops</small></div>
+          <div><b>{fog}</b><small>in fog</small></div>
+        </div>
+        {g && (
+          <div className="qg-mission-gold">
+            <img src={charArt(g.art)} alt="" />
+            <span><b>★ Golden: {g.name}</b>Worth double today.</span>
+          </div>
+        )}
+        <p className="qg-p" style={{ marginTop: 12 }}>No timer and nothing to lose. Shop at your own pace.</p>
+        <button className="qg-btn primary big" onClick={onStart}>Let's go</button>
+      </motion.div>
+    </motion.div>
   );
 }

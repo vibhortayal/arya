@@ -113,6 +113,13 @@ describe("trip rules", () => {
     expect(currentStop(t)).toBe("bakery");
     expect(t.items.some(i => i.name === "Bananas")).toBe(true);
   });
+  it("an item set aside comes back to the route", async () => {
+    let t = await practiceTrip();
+    t = reduce(t, { type: "pass", key: key(t, "Bananas") });
+    expect(currentStop(t)).toBe("bakery");
+    t = reduce(t, { type: "unpass", key: key(t, "Bananas") });
+    expect(currentStop(t)).toBe("produce");
+  });
   it("adding an item slots its section into the route", async () => {
     let t = await practiceTrip();
     t = reduce(t, { type: "addItem", item: { key: "x-pb", name: "Peanut butter", art: "peanut-butter.webp", section: "aisle3" } });
