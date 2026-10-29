@@ -118,6 +118,28 @@ def quest_profile():
     return social.profile()
 
 
+@router.get("/api/quest/game")
+def quest_game_get():
+    """The Quest game's profile (stickers, xp, weeks), or null, with
+    what the game adds to it for display: base_points (receipt-closed
+    hunts) and weeks (every played week, "2026-W44")."""
+    from api import game_profile, social
+    prof = social.profile()
+    return {"profile": game_profile.load(),
+            "base_points": max(0, prof["points"] - game_profile.xp()),
+            "weeks": sorted(f"{y}-W{w:02d}" for y, w in social.played_weeks())}
+
+
+@router.put("/api/quest/game")
+async def quest_game_put(req: Request):
+    body = await _json_obj(req)
+    from api import game_profile
+    try:
+        return {"profile": game_profile.save(body.get("profile"))}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
 @router.post("/api/quest/avatar")
 async def quest_set_avatar(req: Request):
     body = await _json_obj(req)

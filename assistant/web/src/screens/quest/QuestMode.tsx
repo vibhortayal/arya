@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNav } from "../../app/nav";
 import { useSession } from "../../app/session";
 import { useAvatar } from "../../app/avatar";
-import { localProfileStore } from "../../game/store";
+import { loadGameDoc, serverProfileStore, type GameDoc } from "./serverProfile";
 import { AppSource } from "./appSource";
 import { FindStorePanel } from "../StoresFind";
 import { useTranslation } from "../../i18n";
@@ -26,7 +26,10 @@ export function QuestMode() {
   const avatar = useAvatar().src;
   const s = useSession();
   const source = useMemo(() => new AppSource(), []);
-  const store = useMemo(() => localProfileStore(`arya-quest:${s.user || "guest"}`), [s.user]);
+  // One level, streak and album: the game's profile lives on the server.
+  const [doc, setDoc] = useState<GameDoc | null | undefined>(undefined);
+  useEffect(() => { void loadGameDoc().then(setDoc); }, [s.user]);
+  const store = useMemo(() => doc === undefined ? null : serverProfileStore(`arya-quest:${s.user || "guest"}`, doc), [s.user, doc]);
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
   // The Arya guide's Quest "Try it" (#154) starts the Practice Market.
   const practice = nav.params.practice === true;
@@ -80,7 +83,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} />
+        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} />}
       </Suspense>
     </div>
   );

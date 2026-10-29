@@ -30,9 +30,9 @@ helpers) is in `api/deps.py`; the demo sandbox and login middleware in `api/demo
 styles in `web/src/styles/`, the service worker in `web/src/sw.js`.
 The API serves the build (`web/dist`) at `/`. Do not bump a cache name:
 the build gives each shell file a hashed name and the worker precaches
-the list. `assistant/pwa/` is now the static folder only (images, store
-models, three.js, `scene.js`, the manifest, icons); the API serves it at
-`/` beside the build. Rules for app work: `web/PORTING.md`.
+the list. `assistant/pwa/` is the static folder only (images, store
+models, three.js, `scene.js`, the manifest, icons), served beside the
+build. Rules for app work: `web/PORTING.md`.
 
 ## Hard rules (no exceptions without the owner's word)
 1. **Personal data is Standard mode only.** Contributor mode is eval-only,
@@ -45,7 +45,7 @@ models, three.js, `scene.js`, the manifest, icons); the API serves it at
 4. **Returns semantics:** patterns count kept items only; a returned item is
    never re-suggested; refunds reconcile into the spend ledger.
 5. **No secrets in the repo.** The API key comes from env `MODEL_API_KEY`.
-   The owner provisions the Oracle runtime key himself. Never ask for it in
+   The owner provisions the Oracle runtime key. Never ask for it in
    an issue or commit it anywhere.
 6. **Product documents are written in ASD-STE100** (controlled language).
 7. **Raw owner data is not in this repo** (no real receipts/JSON dumps).

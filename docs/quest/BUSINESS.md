@@ -2,7 +2,7 @@
 
 How the product makes money, and in what order. Companion to PITCH.md (the story). Written 2026-10-27.
 
-## The owner's four pillars (his words, 2026-10-27)
+## The owner's four pillars (their words, 2026-10-27)
 
 1. **Gamification** — it makes a chore fun.
 2. **Google Maps, but for a grocery store** — the indoor map layer.
