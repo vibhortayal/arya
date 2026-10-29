@@ -138,20 +138,39 @@
       <div class="sheetacts"><button class="btn secondary" type="button" data-ls="close">Cancel</button><button class="btn primary" type="button" data-ls="create">Create list</button></div>`);
   }
 
-  async function openRename(l) {
-    sheetState = { kind: "rename", id: l.id };
-    open(`<h3 id="ls-title" class="largetitle" style="font-size:22px">Rename list</h3>
-      <label class="field">Name<input type="text" id="ls-name" maxlength="40" value="${esc(l.name)}" autocomplete="off"></label>
-      <div class="sheetacts"><button class="btn secondary" type="button" data-ls="close">Cancel</button><button class="btn primary" type="button" data-ls="saverename">Save</button></div>`);
+  // Rename in place (owner, 2026-10-29): the title becomes a field and
+  // Select becomes Save. Enter saves, Escape puts the name back.
+  function startRename() {
+    const l = lensList();
+    if (!l || listSel) return;
+    listRenaming = true;
+    $("#lp-title").innerHTML = `<input type="text" id="lp-name-input" class="titleinput" maxlength="40" value="${esc(l.name)}" autocomplete="off" aria-label="List name">`;
+    paintListPage();
+    const f = $("#lp-name-input");
+    f.focus(); f.select();
+    f.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); guarded(saveTitle); }
+      else if (ev.key === "Escape") { ev.preventDefault(); stopRename(); }
+    });
+  }
+
+  function stopRename() { listRenaming = false; paintListPage(); }
+
+  async function saveTitle() {
+    const l = lensList(), f = $("#lp-name-input");
+    if (!l || !f) { stopRename(); return; }
+    const name = f.value.trim();
+    if (!name) { toast("Give the list a name."); f.focus(); return; }
+    if (name !== l.name) await post("/api/lists/update", { id: l.id, name });
+    listRenaming = false;
+    await renderList();
   }
 
   function openMenu(l) {
     sheetState = { kind: "menu", id: l ? l.id : null };
     const n = l ? listData.list.items.filter(i => i.on_list && i.list === l.id).length : 0;
     open(`<h3 id="ls-title" class="largetitle" style="font-size:22px">${esc(l ? l.name : "Everything else")}</h3>
-      ${l ? `<button class="navrow" type="button" data-ls="rename"><span class="grow">Rename list</span><span class="chev">›</span></button>
-      <button class="navrow" type="button" data-ls="stores"><span class="grow">${(l.stores || []).length ? "Change stores" : "Link stores"}<small>${(l.stores || []).length ? esc(l.stores.join(", ")) : "Suggestions and hunts use them"}</small></span><span class="chev">›</span></button>` : ""}
-      <button class="navrow" type="button" data-ls="expiry"><span class="grow">Snap an expiry date<small>Arya reminds you before it goes off</small></span><span class="chev">›</span></button>
+      ${l ? `<button class="navrow" type="button" data-ls="stores"><span class="grow">${(l.stores || []).length ? "Change stores" : "Link stores"}<small>${(l.stores || []).length ? esc(l.stores.join(", ")) : "Suggestions and hunts use them"}</small></span><span class="chev">›</span></button>` : ""}
       ${l ? `<button class="navrow dangerrow" type="button" data-ls="delete"><span class="grow">Delete list<small>${n ? `Its ${n} item${n === 1 ? "" : "s"} move to Everything else` : "It has no items"}</small></span></button>` : ""}
       <div class="sheetacts"><button class="btn secondary" type="button" data-ls="close">Done</button></div>`);
   }
@@ -257,15 +276,6 @@
     toast(`Created ${l.name}.`);
   }
 
-  async function saveRename() {
-    const name = $("#ls-name").value.trim();
-    if (!name) { toast("Give the list a name."); return; }
-    const id = sheetState.id;
-    await post("/api/lists/update", { id, name });
-    close();
-    await renderList();
-  }
-
   async function saveStores() {
     const id = sheetState.id;
     await post("/api/lists/update", { id, stores: sheetState.picked });
@@ -309,14 +319,11 @@
     const act = b.dataset.ls, l = lensList();
     if (act === "close") close();
     else if (act === "near") nearMe();
-    else if (act === "rename" && l) openRename(l);
-    else if (act === "expiry") { close(); const x = $("#btn-expiry"); if (x) x.click(); }
     else if (act === "movenew" && sheetState) { const ids = sheetState.ids; guarded(() => openNew(ids)); }
     else if (act === "whyadd" && sheetState) { const id = sheetState.id; close(); addSuggestion(id); }
     else if (act === "whynot" && sheetState) { const id = sheetState.id; close(); guarded(() => dismissSuggestion(id)); }
     else if (act === "whynever" && sheetState) { const id = sheetState.id; close(); guarded(() => neverSuggest(id)); }
     else if (act === "create") guarded(create);
-    else if (act === "saverename") guarded(saveRename);
     else if (act === "savestores") guarded(saveStores);
     else if (act === "stores" && l) guarded(() => openStores(l));
     else if (act === "delete" && l) guarded(() => del(l));
@@ -333,12 +340,13 @@
     if (ev.key === "Enter" && ev.target.id === "ls-find") { ev.preventDefault(); return; }
     if (ev.key === "Enter" && ev.target.id === "ls-name") {
       ev.preventDefault();
-      guarded(sheetState && sheetState.kind === "rename" ? saveRename : create);
+      guarded(create);
     }
   });
 
   $("#list-new").addEventListener("click", () => guarded(() => openNew()));
   $("#lp-menu").addEventListener("click", () => openMenu(lensList()));
+  $("#lp-title").addEventListener("click", ev => { if (ev.target.closest("#lp-pen")) startRename(); });
 
   async function dismissSuggestion(id) {
     const it = listItems[id];
@@ -360,5 +368,5 @@
     }) });
   }
 
-  window.ListSheets = { openMove, openWhy };
+  window.ListSheets = { openMove, openWhy, saveTitle };
 })();

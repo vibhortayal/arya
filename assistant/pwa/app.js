@@ -120,6 +120,7 @@ let isDemo = false;
 
 const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg>`;
 
+const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>`;
 const SPARK_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3L2.5 12l7.3-2.2L12 2.5z"/></svg>`;
 
 function bindItemLinks(root) {
@@ -464,6 +465,7 @@ $("#today-quest").addEventListener("click", () => { show("view-community"); refr
 let listLens = "home";         // "home", "else", or a named list's id
 let listData = null;
 let listSel = null;            // Set of picked item ids while selecting
+let listRenaming = false;      // the title is an input (rename in place)
 let listDoneOpen = false;      // checked rows shown, not just counted
 
 const namedLists = () => (listData && listData.lists) || [];
@@ -557,12 +559,16 @@ function paintListPage() {
   const open = rows.filter(i => !i.checked), done = rows.filter(i => i.checked);
   const groceries = open.filter(i => !i.not_grocery), errands = open.filter(i => i.not_grocery);
   if (listSel) for (const x of [...listSel]) if (!open.some(i => i.item_id === x)) listSel.delete(x);
-  $("#lp-title").textContent = name;
+  // The pencil sits on the name itself (owner, 2026-10-29): tap it to
+  // rename in place. Everything else has no name to change.
+  if (!listRenaming) $("#lp-title").innerHTML = here && !listSel
+    ? `<span id="lp-name">${esc(name)}</span><button class="pen" id="lp-pen" type="button" aria-label="Rename ${esc(name)}">${PEN_SVG}</button>`
+    : esc(name);
   $("#lp-sub").textContent = listSel ? `${listSel.size} selected`
     : [open.length ? `${open.length} to get` : "Nothing to get", ...((here && here.stores) || [])].join(" · ");
-  $("#lp-select").textContent = listSel ? "Done" : "Select";
-  $("#lp-select").hidden = !listSel && !open.length;
-  $("#lp-menu").hidden = !!listSel;
+  $("#lp-select").textContent = listRenaming ? "Save" : listSel ? "Done" : "Select";
+  $("#lp-select").hidden = !listRenaming && !listSel && !open.length;
+  $("#lp-menu").hidden = !here || !!listSel || listRenaming;
   $("#composer").hidden = !!listSel;
   const field = $("#add-text");
   field.placeholder = name.length <= 8 ? `Add to ${name}` : "Add an item";
@@ -595,7 +601,7 @@ function paintListGroups() {
 }
 
 function openListLens(id) {
-  listLens = id; listSel = null; listDoneOpen = false;
+  listLens = id; listSel = null; listDoneOpen = false; listRenaming = false;
   paintListGroups();
   window.scrollTo(0, 0);
 }
@@ -606,6 +612,7 @@ $("#list-cards").addEventListener("click", ev => {
 });
 $("#list-back").addEventListener("click", () => openListLens("home"));
 $("#lp-select").addEventListener("click", () => {
+  if (listRenaming) { if (window.ListSheets) ListSheets.saveTitle().catch(e => toast(e.message)); return; }
   listSel = listSel ? null : new Set();
   paintListPage();
 });
@@ -804,7 +811,6 @@ async function renderList() {
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
   paintListGroups();
-  if (window.Expiry) Expiry.paintList(h.use_soon);
 }
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.

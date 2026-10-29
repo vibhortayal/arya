@@ -123,6 +123,17 @@ class TestListsClient(unittest.TestCase):
         self.assertIn('"/api/list/move"', ls)
         self.assertIn('action: "Undo"', ls)
 
+    def test_pencil_on_the_name_renames_in_place(self):
+        # Owner, 2026-10-29: no second copy of the name in a sheet; the
+        # pencil sits on the title and the title becomes the field.
+        js, ls = read("app.js"), read("lists.js")
+        self.assertIn('id="lp-pen"', js)
+        self.assertIn('listRenaming ? "Save"', js)
+        self.assertIn("function startRename()", ls)
+        self.assertIn('id="lp-name-input"', ls)
+        self.assertNotIn('data-ls="rename"', ls)
+        self.assertNotIn("Rename list", ls)
+
 
 if __name__ == "__main__":
     unittest.main()

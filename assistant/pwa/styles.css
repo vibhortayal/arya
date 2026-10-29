@@ -1198,6 +1198,17 @@ body.hunting #view-hunt.full .askbar {
 .lhead .linkbtn { padding: 8px 4px; }
 .lhead .iconbtn { color: var(--label); background: var(--fill2); }
 .lhead .iconbtn svg { width: 24px; height: 24px; }
+/* Pencil on the list name; tap it to rename in place. */
+#lp-title .pen { display: inline-grid; place-items: center; vertical-align: middle; width: 34px; height: 34px; margin-left: 4px;
+  border: none; border-radius: 50%; background: transparent; color: var(--secondary); padding: 0; }
+#lp-title .pen svg { width: 20px; height: 20px; }
+#lp-title .titleinput { width: 100%; font: inherit; color: inherit; letter-spacing: inherit; border: none;
+  border-bottom: 2px solid var(--accent); background: transparent; padding: 0 0 2px; outline: none; }
+.snaprow { border-bottom: none; font-size: 17px; }
+#today-expiry .sectrow { margin: 26px 4px 8px 16px; align-items: center; }
+#today-expiry .sectrow .sect { margin: 0; }
+#today-expiry .sectrow .linkbtn { min-height: 0; display: block; padding: 0; font-weight: 600; }
+.snaprow .sub { display: block; color: var(--secondary); font-size: 14px; font-weight: 400; margin-top: 1px; }
 .sectrow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 22px 4px 8px 16px; }
 .sectrow .sect { margin: 0; }
 .sectrow .muted { font-size: 13.5px; white-space: nowrap; }

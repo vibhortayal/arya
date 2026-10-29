@@ -10,14 +10,16 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   patterns). Landing: "Groceries, sorted." See
   assistant/loops/2026-10-29-list-first.md. SW arya-v77.
 
-## List overhaul (2026-10-29, PR pending, stacked on List first)
+## List overhaul (2026-10-29, PR #105)
 - Lists tab opens on one card per list plus Everything else. A list
   shows only what the household added; due staples are suggestions
   under the list of the store they come from, with a reason and a
   "why" sheet. Swipe → Move / Remove; Select → Move to…. Prepared cart
   and the List footer lines are gone. Demo ships Costco and Trader
   Joe's lists (rerun `python -m harness.make_demo_household data`).
-  See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v78.
+  A pencil on the list name renames it in place. Snap an expiry date
+  moved from the List to Today's Use soon section.
+  See assistant/loops/2026-10-29-list-overhaul.md. SW arya-v79.
 
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse

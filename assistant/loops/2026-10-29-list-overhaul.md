@@ -38,5 +38,15 @@ Changes:
 
 Tests: 1068 green (new tests/test_list_overhaul.py). Cost: $0.
 
-Next: owner items 2 and 3 from the same message (a home for "Snap an
-expiry date", an edit icon on the list name) — wireframe first.
+Follow-up (owner "go" on wireframe
+https://claude.ai/artifact/BrbN4DTxZyEJXRPd5LF6xH):
+- List name: a pencil sits on the title. Tap it, the title becomes a
+  field and Select becomes Save (Enter saves, Escape cancels). Rename
+  is gone from the ⋯ menu, and Everything else has no ⋯ menu now.
+- Expiry: "Snap an expiry date" left the List, its ⋯ menu and the
+  hidden #btn-expiry. Today's Use soon section is its home: with dates
+  tracked it lists them with "+ Snap a date" in the header; with none it
+  is one "Snap an expiry date" row. The one-time "New" hint card and the
+  Lists tab dot are gone. SW arya-v79.
+
+Tests: 1074 green.

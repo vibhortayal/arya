@@ -223,15 +223,19 @@ class TestClientWiring(unittest.TestCase):
 
     def test_shell_loads_the_expiry_script_and_hooks(self):
         html, app, sw = self.read("index.html"), self.read("app.js"), self.read("sw.js")
-        for hook in ('id="today-expiry"', 'id="list-use"', 'id="btn-expiry"', 'src="expiry.js"'):
+        for hook in ('id="today-expiry"', 'src="expiry.js"'):
             self.assertIn(hook, html)
         self.assertIn("Expiry.paintToday(h.use_soon)", app)
-        self.assertIn("Expiry.paintList(h.use_soon)", app)
+        # Expiry lives on Today only (owner, 2026-10-29): not on the List.
+        for gone in ('id="list-use"', 'id="btn-expiry"'):
+            self.assertNotIn(gone, html)
+        self.assertNotIn("Expiry.paintList", app)
+        self.assertNotIn('data-ls="expiry"', self.read("lists.js"))
         self.assertIn('"/expiry.js"', sw)
 
     def test_copy_follows_the_wireframe(self):
         js = self.read("expiry.js")
-        for phrase in ("Arya can keep track of expiry dates", "Snap the date on the package",
+        for phrase in ("Arya can keep track of expiry dates", "Snap an expiry date", "+ Snap a date",
                        "Nothing is saved until you tap", "Past the date. Your call.",
                        "Add it to your list?", "Try a sample date"):
             self.assertIn(phrase, js)
