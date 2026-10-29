@@ -164,9 +164,6 @@ StoreIndex { store_id, version, zones: [], sightings: [], coverage_pct, item_cov
 RoutePlan { route_id, store_id, index_version,
   stops: [ { item_id, zone_id, confidence, evidence_age_days } ],
   unknowns: [ { item_id, ask } ] }
-RelocalizationResult { zone_id (or null), confidence, landmarks_seen: [], needs }
-WalkthroughGrade { walkthrough_id, recency_days, clarity,
-  completeness_zones, completeness_items, overall }
 ```
 
 ## 4. Stages
@@ -177,7 +174,7 @@ WalkthroughGrade { walkthrough_id, recency_days, clarity,
 | 0.5 Spikes | Gate 0 photo decode PASS (93.85% combined, arithmetic 7/7). Costco pull: plan B (uploads and exports). |
 | 1 Decode API | Done. Dictionary v1: 458 entries. |
 | 2 Patterns, list | Done. Returns netted; list needs 3 kept purchases. The prepared cart was removed in PR #105. |
-| 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar, Express mode (#107). Demo household is a per-visitor sandbox. |
+| 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar. Express mode (#107) lost its entry points when Quest mode landed (#172). Demo household is a per-visitor sandbox. |
 | 4 Ask | Done. Ask Arya answers about Arya and about prices. Fridge/pantry photos were never shipped; expiry-date photos (#96) replace them. |
 | 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
 | 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video and package pending. |
@@ -209,7 +206,6 @@ prompt or contract change re-runs the affected sets.
 | golden/receipts-synthetic | Fabricated receipts: return lines, a duplicate, discount lines, a gift-card line, a for-others candidate, a blurry photo | Stage 1 loops |
 | golden/ledger | The Stage 1 output as frozen data, with hand-computed pattern values | Stage 2 gate |
 | golden/trips | Scripted reconciliation trips: one clean trip, one mismatch, one return, one for-others line | Stage 2 gate |
-| golden/relocalize | 10 fresh store photos with zone labels, plus 5 negatives: wrong store, parking lot, home kitchen | Stage 5 gate |
 | golden/shelf | 10 shelf photos with hand-labeled target boxes | Stage 5 SAM check |
 | golden/voice | About 40 recorded commands, clean audio and store-noise mixes, with expected intent and slots | Stage 5 voice check |
 

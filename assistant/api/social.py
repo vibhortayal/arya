@@ -384,8 +384,13 @@ def receipt_detail(receipt_id):
 
 # --- profile -----------------------------------------------------------------
 
-def _streak_weeks(done):
-    weeks = set()
+def played_weeks(done=None):
+    """Every (year, week) with a real trip: receipts, closed hunts and
+    the game's own weeks."""
+    from api import game_profile
+    if done is None:
+        done = _done_sessions()
+    weeks = set(game_profile.weeks())
     for r in state.receipts():
         try:
             weeks.add(date.fromisoformat(r["purchased_at"][:10])
@@ -400,13 +405,13 @@ def _streak_weeks(done):
                 except Exception:
                     pass
                 break
-    streak, cur = 0, date.today()
-    if cur.isocalendar()[:2] not in weeks:
-        cur -= timedelta(days=7)  # last week's streak is still alive
-    while cur.isocalendar()[:2] in weeks:
-        streak += 1
-        cur -= timedelta(days=7)
-    return streak
+    return weeks
+
+
+def _streak_weeks(done):
+    # One rule with the game (two rest weeks), so every screen agrees.
+    from api import game_profile
+    return game_profile.streak(played_weeks(done))
 
 
 # Points and levels (owner, 2026-10-28: dopamine, never pressure).
@@ -469,7 +474,9 @@ def level_for(points):
 def profile():
     done = _done_sessions()
     reports = quest._store().get("reports", [])
-    points = sum(hunt_points(s, reports) for s in done)
+    # One level everywhere: receipt-closed hunts plus the game's points.
+    from api import game_profile
+    points = sum(hunt_points(s, reports) for s in done) + game_profile.xp()
     return {"handle": quest.my_handle(),
             "avatar": quest.my_avatar(),
             "points": points, **level_for(points),

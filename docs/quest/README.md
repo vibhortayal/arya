@@ -1,10 +1,11 @@
-# Arya Quest — doc pack
+# Arya Quest: doc pack
 
-**Pokémon GO for your grocery list.** Team Nightshift · Meta Global AI
-Developer Hackathon · Indie track · submission Nov 4, 2026, 9:00 PM ET.
+Quest is the optional game layer of Arya, a grocery list that learns
+("Waze for grocery shopping"; see the root `README.md`). Team Nightshift,
+Meta Global AI Developer Hackathon, Indie track, submission Nov 4, 2026,
+9:00 PM ET.
 
-Arya Quest turns your grocery list into a treasure hunt in your real
-store. Pick the store; Arya sorts your list by where you usually buy
+Quest turns your grocery list into a treasure hunt in your real store. Pick the store; Arya sorts your list by where you usually buy
 each thing. Walk the hunt through real photos of the aisles, grab each
 item (points only go up, no clock), and let **Find it for me** point
 the camera at the shelf. Snap the receipt at checkout: it banks your
@@ -21,8 +22,8 @@ camera scan maps it for every shopper after you.
 1. **Plan.** The list arrives in any form (photo, paste, typing, voice,
    Muse chat). Pick the store; the list is sorted for it from your
    receipts.
-2. **Find.** Real photos of a mapped store (people blurred by SAM 3.1),
-   shelf cards elsewhere. Find it for me: SAM 3.1 boxes candidates,
+2. **Find.** Shoppers' photos where a store section is mapped (people
+   blurred by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
    Muse Spark verifies.
 3. **Grab.** +10 a grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.

@@ -18,7 +18,7 @@ Arya Quest is a collection game played in the player's own store, mapped by the 
 - **Personal spawns.** Your list items are the treasures, on their real shelves.
 - **A list that plans itself.** Pick the store; Arya sorts your list by where you usually buy each thing.
 - **No stress.** Points only go up; no clock, no way to lose. Find it for me points the camera at the shelf.
-- **Two moods.** Quest mode hunts; a kid can hold the phone while the adult runs checkout. Express mode drops the game. Same list.
+- **Optional.** A kid can hold the phone and hunt while the adult runs checkout. The list works without the game.
 - **A finish ritual.** The receipt photo scores the haul and settles the quest — and feeds the household model that pre-loads next week's hunt.
 
 ## Audience
