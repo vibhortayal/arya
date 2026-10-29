@@ -44,10 +44,10 @@ export function Muse() {
   const copy = () => {
     inputRef.current?.select();
     if (navigator.clipboard) navigator.clipboard.writeText(inputRef.current?.value ?? "").catch(() => { /* selected; copy by hand */ });
-    toast("Token copied.");
+    toast(t("muse.tokenCopied"));
   };
   const revoke = async () => {
-    try { await api("/auth/token", { method: "DELETE" }); toast("Link code revoked."); paint(); }
+    try { await api("/auth/token", { method: "DELETE" }); toast(t("muse.revoked")); paint(); }
     catch (e) { toast(errMsg(e)); }
   };
 
@@ -66,8 +66,8 @@ export function Muse() {
             </>
           ) : has === null ? null : (
             <>
-              <span className="sub grow">{has ? "Your link code is active." : "No link code yet."}</span>
-              <button className="btn" data-mint="1" onClick={mint}>{has ? "Make a new code" : "Make my link code"}</button>
+              <span className="sub grow">{has ? t("muse.active") : t("muse.noCode")}</span>
+              <button className="btn" data-mint="1" onClick={mint}>{has ? t("muse.newCode") : t("muse.makeCode")}</button>
               {has && <button className="btn danger" data-revoke="1" onClick={revoke}>{t("muse.revoke")}</button>}
             </>
           )}
@@ -75,7 +75,7 @@ export function Muse() {
         <p style={{ marginTop: 10 }}>
           <button className="btn" data-copy-prompt="1" type="button" onClick={() => {
             if (navigator.clipboard) navigator.clipboard.writeText(SETUP_PROMPT).catch(() => { /* not allowed here */ });
-            toast("Setup prompt copied.");
+            toast(t("muse.promptCopied"));
           }}>{t("muse.copySetupPrompt")}</button> <span className="sub">{t("muse.pasteItIntoYourAssistant")}</span>
         </p>
       </div>

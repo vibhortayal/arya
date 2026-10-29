@@ -26,26 +26,26 @@ export function Friends() {
   useEffect(() => { load().catch(showErr); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = async (h: string, confirmFirst: boolean) => {
-    if (confirmFirst && !confirm(`Remove @${h} from your friends?`)) return;
+    if (confirmFirst && !confirm(t("friends.confirmRemove", { handle: h }))) return;
     try {
       await post("/api/quest/friends/remove", { handle: h });
-      toast(`@${h} removed.`);
+      toast(t("friends.removed", { handle: h }));
       load().catch(showErr);
     } catch (e) { toast(errMsg(e)); }
   };
   const accept = async (h: string) => {
     try {
       await post("/api/quest/friends/accept", { handle: h });
-      toast("Friends. Their boards and badges are yours to chase.");
+      toast(t("friends.accepted"));
       load().catch(showErr);
     } catch (e) { toast(errMsg(e)); }
   };
   const add = async () => {
     const h = handle.trim();
-    if (!h) { toast("Type a handle first."); return; }
+    if (!h) { toast(t("friends.typeHandle")); return; }
     try {
       const f = await post<Friend>("/api/quest/friends", { handle: h });
-      toast(f.status === "accepted" ? `@${f.handle} is already your friend.` : `Request sent to @${f.handle}.`);
+      toast(f.status === "accepted" ? t("friends.already", { handle: f.handle }) : t("friends.requestSentTo", { handle: f.handle }));
       setHandle("");
       load().catch(showErr);
     } catch (e) { toast(errMsg(e)); }
@@ -73,7 +73,7 @@ export function Friends() {
             <button className="chip" data-remove={f.handle} type="button" onClick={() => remove(f.handle, false)}>{t("common.cancel")}</button></div>
         ) : (
           <div className="row" key={f.handle}><div className="grow"><span className="name">@{f.handle}</span>
-            <span className="sub">{f.top_badge ? `Top badge: ${f.top_badge}` : "No badges yet"}{f.last_hunt ? ` · Last hunt: ${f.last_hunt}` : " · No hunts yet"}</span></div>
+            <span className="sub">{f.top_badge ? t("friends.topBadge", { badge: f.top_badge }) : t("friends.noBadges")}{f.last_hunt ? t("friends.lastHunt", { when: f.last_hunt }) : t("friends.noHunts")}</span></div>
             <button className="chip" data-challenge={f.handle} type="button" onClick={() => nav.show("race", { opponent: f.handle })}>{t("friends.challenge")}</button>
             <button className="chip" data-remove={f.handle} data-confirm="1" type="button" onClick={() => remove(f.handle, true)}>{t("common.remove")}</button></div>
         ))}

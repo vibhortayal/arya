@@ -45,7 +45,7 @@ export function GroupJoin() {
       .then(p => {
         if (stale) return;
         setPv(p);
-        if (p.full && warned.current !== code) { warned.current = code; toast("That group is full."); }
+        if (p.full && warned.current !== code) { warned.current = code; toast(t("groupJoin.full")); }
       })
       .catch(e => { if (!stale) setErr(e.message); });
     return () => { stale = true; };
@@ -60,7 +60,7 @@ export function GroupJoin() {
   const join = async () => {
     try {
       const g = await post("/api/group/join", { code });
-      toast(`You joined ${g.group.name}. Your lists are shared now.`);
+      toast(t("groupJoin.joined", { name: g.group.name }));
       nav.show("profile");
     } catch (e: any) { toast(e.message); warned.current = ""; }
   };
@@ -86,19 +86,19 @@ export function GroupJoin() {
             <div className="group"><div className="row">
               <span className="gm other">{initial(pv.name)}</span>
               <span className="grow"><span className="name gname">{pv.name}</span>
-                <span className="sub">{t("groupJoin.invitedYou", { invited_by: pv.invited_by, people: pv.people })}{" "}{pv.people === 1 ? "person" : "people"}{" "}{t("groupJoin.list", { count: pv.lists })}</span></span>
+                <span className="sub">{t("groupJoin.invitedYou", { by: pv.invited_by, count: pv.people })}{" "}{t("groupJoin.list", { count: pv.lists })}</span></span>
             </div></div>
             <h3 className="sect">{t("groupJoin.whatChanges")}</h3>
             <div className="group pad">
-              {bul("📋", pv.my_lists ? (pv.my_lists === 1 ? "Your list joins the group" : `Your ${pv.my_lists} lists join the group`) : "You share the group's lists", "Lists with the same name merge. Everyone can add and tick.")}
-              {bul("🧾", "Your receipts stay yours", "The group can see them while you are in it.")}
-              {bul("📈", "Running low and patterns use everyone's trips", "")}
-              {bul("🙂", "Profile, avatar, badges and reminders stay yours", "")}
+              {bul("📋", pv.my_lists ? t("groupJoin.listsJoin", { count: pv.my_lists }) : t("groupJoin.shareLists"), t("groupJoin.listsMerge"))}
+              {bul("🧾", t("groupJoin.receiptsStay"), t("groupJoin.groupSees"))}
+              {bul("📈", t("groupJoin.patterns"), "")}
+              {bul("🙂", t("groupJoin.profileStays"), "")}
             </div>
           </>
         )}
       </div>
-      <p style={{ marginTop: 16 }}><button className="btn primary wide" id="gj-go" type="button" disabled={!pv || !!pv.full} onClick={join}>{pv ? `Join ${pv.name}` : "Join"}</button></p>
+      <p style={{ marginTop: 16 }}><button className="btn primary wide" id="gj-go" type="button" disabled={!pv || !!pv.full} onClick={join}>{pv ? t("groupJoin.joinName", { name: pv.name }) : t("groupJoin.join")}</button></p>
       <p className="muted small" style={{ textAlign: "center" }}>{t("groupJoin.youCanLeaveAnyTime")}</p>
     </>
   );

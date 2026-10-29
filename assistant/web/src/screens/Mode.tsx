@@ -5,6 +5,7 @@ import { post } from "../lib/api";
 import { loadStoreData, storeHasPictures, storePhotos, useStoreData } from "../lib/stores";
 import { packFinish, type NewListDraft } from "./NewList";
 import { useTranslation } from "../i18n";
+import { qModeLabel } from "./hunt/model";
 
 /* Port of pwa/index.html #view-mode and quest.js qCreateSession / the
  * .modecard handler / qFastStart's session half. One tap makes one
@@ -15,7 +16,6 @@ import { useTranslation } from "../i18n";
  * Back from the new hunt lands on the Quest tab (quest.js
  * Q.stack = ["view-community"]), never in this picker again. */
 
-const LABEL: Record<string, string> = { quest: "Quest", express: "Express" };
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Mode() {
@@ -51,7 +51,7 @@ export function Mode() {
         try { Object.assign(sess, await post(`/api/quest/sessions/${sess.id}/state`, { state: "playing" })); }
         catch (e) { toast(errMsg(e)); }
       } else {
-        toast(`${LABEL[mode]} at ${sess.store} — ready when you are.`);
+        toast(t("mode.readyAt", { mode: qModeLabel(mode), store: sess.store }));
       }
       nav.reset(sess.mode === "express" ? "express" : "hunt", { session: sess }, "community");
     } catch (e) {

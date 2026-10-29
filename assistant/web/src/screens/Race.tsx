@@ -57,13 +57,13 @@ export function Race() {
     const handle = opp.trim().replace(/^@/, "");
     const st = store.trim();
     const list = qParseLines(items);
-    if (!handle) { toast("Name your opponent's handle."); return; }
-    if (!st) { toast("Name the store."); return; }
-    if (!list.length) { toast("The race needs a list."); return; }
+    if (!handle) { toast(t("race.nameOpponent")); return; }
+    if (!st) { toast(t("race.nameStore")); return; }
+    if (!list.length) { toast(t("race.needsList")); return; }
     setBusy(true);
     try {
       await post("/api/quest/shopoff", { store: st, items: list, opponent_handle: handle });
-      toast("Race on. Both hunts are on Today.");
+      toast(t("race.raceOn"));
       load().catch(showErr);
     } catch (e) { toast(errMsg(e)); }
     setBusy(false);
@@ -77,20 +77,20 @@ export function Race() {
         {races && !races.length && <div className="group"><Empty>{t("race.noRacesYetStartOne")}</Empty></div>}
         {(races || []).map((race, ri) => (
           <div className="group pad" key={ri}>
-            <p className="nomargin"><strong>{race.store}</strong> · {race.state === "finished" ? "Finished" : "Racing"}</p>
+            <p className="nomargin"><strong>{race.store}</strong> · {race.state === "finished" ? t("race.finished") : t("race.racing")}</p>
             {race.players.map(p => {
               const pct = p.progress && p.progress.total ? Math.round(p.progress.checked / p.progress.total * 100) : 0;
               return (
                 <div className="row" key={p.session_id}>
-                  <div className="grow"><span className="name">@{p.handle}{p.placeholder ? " (placeholder)" : ""}</span>
+                  <div className="grow"><span className="name">@{p.handle}{p.placeholder ? t("race.placeholder") : ""}</span>
                     <span className="track"><span className="bar" style={{ width: `${pct}%` }} /></span>
-                    <span className="sub">{p.progress ? `${p.progress.checked}/${p.progress.total} collected` : ""}{p.done && p.finish_time ? ` · receipt ${String(p.finish_time).replace("T", " ")}` : ""}</span></div>
+                    <span className="sub">{p.progress ? t("race.collected", { n: p.progress.checked, total: p.progress.total }) : ""}{p.done && p.finish_time ? t("race.receiptAt", { time: String(p.finish_time).replace("T", " ") }) : ""}</span></div>
                   <button className="chip" data-open-sess={p.session_id} type="button" onClick={() => open(p.session_id).catch(showErr)}>{t("race.open")}</button>
                 </div>
               );
             })}
             {race.state === "finished"
-              ? <p className="nomargin" style={{ marginTop: 8 }}><strong>{race.winner ? `Winner: @${race.winner} — by receipt time.` : "Dead heat — identical receipt times."}</strong></p>
+              ? <p className="nomargin" style={{ marginTop: 8 }}><strong>{race.winner ? t("race.winner", { handle: race.winner }) : t("race.deadHeat")}</strong></p>
               : <p className="muted nomargin" style={{ marginTop: 8 }}>{t("race.firstVerifiedReceiptWins")}</p>}
           </div>
         ))}
