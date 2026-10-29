@@ -79,15 +79,10 @@ class TestListClientPins(unittest.TestCase):
         self.assertNotIn("/api/items/", render)
         self.assertEqual(render.count("api("), 1)
 
-    def test_loading_state_and_tag_free_all_lens(self):
+    def test_loading_state_and_list_rows(self):
         js = read("app.js")
         self.assertIn('empty("Loading your list…")', js)
-        self.assertIn("listRow(i, [])", js)
-
-    def test_store_filter_is_one_row(self):
-        css = read("styles.css")
-        self.assertIn("#store-filter { flex-wrap: nowrap; overflow-x: auto; }",
-                      css)
+        self.assertIn("groceries.map(listRow)", js)
 
     def test_ask_and_eyes_empty_states(self):
         js = read("app.js")

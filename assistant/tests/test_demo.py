@@ -69,16 +69,16 @@ class TestDemoHousehold(unittest.TestCase):
     def test_demo_writes_land_in_a_sandbox_not_on_disk(self):
         before = self._disk()
         self.assertEqual(self.c.post("/api/cart/approve").status_code, 200)
-        r = self.c.post("/api/list/add", json={"name": "Hummus"})
+        r = self.c.post("/api/list/add", json={"name": "Tahini"})
         self.assertEqual(r.status_code, 200)
         names = [i["name"] for i in self.c.get("/api/home").json()["list"]["items"]]
-        self.assertIn("Hummus", names)
+        self.assertIn("Tahini", names)
         self.assertEqual(self._disk(), before)
         # A second demo visitor starts from the shipped household.
         c2 = TestClient(self.c.app)
         c2.post("/auth/demo")
         names2 = [i["name"] for i in c2.get("/api/home").json()["list"]["items"]]
-        self.assertNotIn("Hummus", names2)
+        self.assertNotIn("Tahini", names2)
 
     def test_demo_plays_a_hunt_end_to_end(self):
         before = self._disk()

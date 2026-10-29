@@ -66,7 +66,8 @@ class TestShellContract(unittest.TestCase):
         assert 'id="add-text"' in html
         assert 'class="addline"' in html  # one row, like the Ask input
         assert 'id="add-mic"' in html and 'id="add-photo"' in html
-        assert "You can also add from Muse chat" in html
+        # The owner dropped the "add from Muse chat" footer (2026-10-29).
+        assert "You can also add from Muse chat" not in html
         assert 'id="doors"' not in html
         assert "doorCard" not in app and "door-" not in app
         assert "/api/list/from-text" in app

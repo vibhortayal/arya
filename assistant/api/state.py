@@ -420,10 +420,23 @@ def derived():
             smart["items"].append(row)
     kept = []
     list_ids = {l["id"] for l in named_lists()}
+    pats = {p["item_id"]: p for p in patterns}
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         if item.get("source") == "pattern" and f.get("dismissed_on") == today:
             continue  # removed for this cycle; returns when a new receipt lands
+        # The List overhaul (owner, 2026-10-29): a list shows only what
+        # the household put on it. Arya's due staples are suggestions
+        # until the user adds one. "I'm out" is the user's own word and
+        # goes straight on; an expired item stays a suggestion.
+        p = pats.get(item["item_id"])
+        out_now = bool(f.get("out")) and not f.get("expired") and (p is None or _reported_out(p, f))
+        item["on_list"] = bool(f.get("manual")) or item.get("source") == "user" or out_now
+        if p and p.get("median_interval_days"):
+            item["every_days"] = round(p["median_interval_days"])
+            item["days_since"] = p.get("days_since_last")
+        if f.get("expired") and p is not None and _reported_out(p, f):
+            item["expired_on"] = f["expired"]
         if f.get("qty_override"):
             item["qty"] = f["qty_override"]
         if f.get("unit"):
