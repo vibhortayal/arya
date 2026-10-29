@@ -810,21 +810,7 @@
   },
   "login": {
     "signIn": "Sign in",
-    "aryaKeepsYourListKnows": "Arya keeps your list, knows what’s running low, and tells you what’s up at your store before you go.",
-    "whatAryaShowsYou": "What Arya shows you",
-    "every7DaysLastBought": "Every ~7 days, last bought 10 days ago",
-    "traderJoeSShoppersSay": "Trader Joe’s: shoppers say out today",
-    "storeAlert": "Store alert",
-    "useByFriday": "Use by Friday",
-    "fromYourReceiptsNoTyping": "From your receipts. No typing it all in.",
-    "tryTheDemo": "Try the demo",
-    "noAccountNeededFictionalHousehold": "No account needed · fictional household",
-    "howItWorks": "How it works",
     "password": "Password",
-    "aryaLearnsWhatYourHousehold": "Arya learns what your household buys from its receipts and keeps your lists. It tells you what is running low and why, what is out or cheaper at your store, and what to use soon.",
-    "whenYouWantItFun": "When you want it fun, Quest turns the list into a hunt through the real store: you walk it in photos from one shopper’s walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.",
-    "theDemoOpensAFictional": "The demo opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.",
-    "builtOnMetaModelsEntry": "Built on Meta models. Entry in the Meta AI Developer Hackathon.",
     "continueWithGoogle": "Continue with Google",
     "email": "Email",
     "codeFromYourEmail": "Code from your email",
@@ -832,7 +818,6 @@
     "signInFailed": "Sign-in failed.",
     "couldNotCreate": "Could not create the account.",
     "demoFailed": "The demo did not open. Try again.",
-    "questLine": "<b>Want it fun?</b> Quest turns your list into a treasure hunt through the store.",
     "createTitle": "Create your account",
     "username": "Username",
     "emailOrUsername": "Email or username",
@@ -842,8 +827,37 @@
     "googleFailed": "Google sign-in did not finish. Try again.",
     "wentWrong": "Something went wrong. Try again in a moment.",
     "emailedCode": "We emailed you a code. Enter it here.",
-    "emailMeCode": "Email me a code",
-    "hero": "Groceries, <em>sorted.</em>"
+    "emailMeCode": "Email me a code"
+  },
+  "landing": {
+    "signIn": "Sign in",
+    "headline": "Your grocery run, <em>smarter.</em>",
+    "subhead": "One app for the list, the store and the trip.",
+    "cards": {
+      "habits": {
+        "title": "Learns your habits",
+        "sub": "Knows when milk runs low",
+        "back": "Snap a receipt and Arya learns what you buy and how often. Milk goes on the list before you run out."
+      },
+      "news": {
+        "title": "Store news",
+        "sub": "What Arya shoppers report",
+        "back": "Arya shoppers report what's out or back in stock before you go. Pay it back: report what you see or update your store map as you shop."
+      },
+      "quest": {
+        "title": "Quest",
+        "sub": "Earn points and level up as you shop",
+        "back": "Turn the trip into a game. Grab items, earn points, level up and unlock badges. No timers, no pressure."
+      },
+      "map": {
+        "title": "Map your store",
+        "sub": "Help others find every item",
+        "back": "Pan your phone along the aisles and Arya maps them, so you find things faster. Your aisle pictures help Arya shoppers too."
+      }
+    },
+    "tryIt": "Try it now",
+    "startOwnList": "Start my own list",
+    "demoNote": "The demo needs no sign-up."
   },
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your quest, the exact aisle for each item, and fewer “can't find it” moments. Map the aisles you use, a little at a time. Arya shoppers fill in the rest.",

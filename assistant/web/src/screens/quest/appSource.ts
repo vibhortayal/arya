@@ -28,7 +28,7 @@ import type { Answers } from "../../game/map/answers";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
 type PlanRow = { name: string; qty?: number; list?: string | null };
-type NamedList = { id: string; name: string };
+type NamedList = { id: string; name: string; stores?: string[] };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
 type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
@@ -127,7 +127,7 @@ export class AppSource implements QuestSource {
     const out: ShoppingList[] = [{ id: "all", name: "Everything", items: rows.map(item) }];
     for (const l of named.lists || []) {
       const its = rows.filter(r => r.list === l.id);
-      if (its.length) out.push({ id: l.id, name: l.name, items: its.map(item) });
+      if (its.length) out.push({ id: l.id, name: l.name, items: its.map(item), ...(l.stores?.[0] ? { store: l.stores[0] } : {}) });
     }
     return out;
   }

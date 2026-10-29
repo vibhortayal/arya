@@ -385,6 +385,27 @@ Each agent has a narrow job and a named limit.
   every PR (owner's choice). Small commits to main, named by
   stage; a session log goes to loops/ and STATUS.md is updated.
 
+### 11.1 Logs and backups (VM runbook)
+
+- **Log caps.** Compose caps each container's log at 5 files of 10 MB
+  (`x-logging` in `docker-compose.yml`), so logs cannot fill the disk.
+  The cap applies when a container is recreated: `docker compose up -d`.
+- **Nightly backup.** `deploy/backup.sh` archives the data volume (and
+  the `arya` Postgres schema when `ARYA_BACKUP_DATABASE_URL` is set in
+  `deploy/.env`) into `~/arya-backups`, keeping the newest 7 of each.
+  Install once on the VM with `crontab -e`:
+  `17 3 * * * /home/ubuntu/arya/assistant/deploy/backup.sh >> /home/ubuntu/arya-backup.log 2>&1`
+  Check it with `ls -l ~/arya-backups` the next morning.
+- **Off-VM copy.** A backup on the same disk dies with the VM. Install
+  rclone (`sudo apt install rclone`), run `rclone config` once to add a
+  remote you own (Oracle Object Storage, Google Drive, any S3), then add
+  `ARYA_BACKUP_REMOTE=<remote>:arya-backups` to `deploy/.env`. The script
+  then copies each night's files there and exits non-zero (so the log
+  shows it) if the copy fails.
+- **Restore.** `deploy/restore.sh <arya-data-*.tar.gz>` stops the api,
+  replaces the data volume and starts it again. The Postgres dump is
+  restored by hand with `psql`.
+
 ## 12. Quest storage
 
 Per account, in `quest.json`: sessions, Shop-Offs, friends, Spotter

@@ -133,10 +133,11 @@ class TestQuestTab(unittest.TestCase):
                       src("app/nav.test.tsx"))
 
     def test_landing_leads_with_the_list(self):
+        # B1 flip cards (owner, 2026-10-29): the list card comes first,
+        # Quest third.
         login = src("screens/Login.tsx")
-        for tag in ("Running low", "Store alert", "Use soon"):
-            self.assertIn(tag, login)
-        self.assertLess(login.index("Groceries"), login.index("treasure hunt"))
+        self.assertLess(login.index('id: "habits"'), login.index('id: "quest"'))
+        self.assertIn("Your grocery run, <em>smarter.</em>", login)
 
 
 if __name__ == "__main__":

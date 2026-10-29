@@ -1,14 +1,36 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
 
-/* Port of the landing page and boot() sign-in (pwa/index.html
- * #view-login, app.js boot). Three modes: bootstrap (no accounts yet,
+/* The logged-out landing (B1 flip cards, owner 2026-10-29) and
+ * sign-in. Three modes: bootstrap (no accounts yet,
  * setup), sign in, and public registration, which shows only when the
  * server reports it open. Optional email-code and Google sign-in. */
 type Mode = "setup" | "login" | "register";
+
+/* Landing flip cards (B1, owner 2026-10-29): each card wobbles until
+ * it is first tapped; a tap flips it to its back. The cards a visitor
+ * has tapped stay still for good (localStorage, per browser). */
+export const CARDS = [
+  { id: "habits", face: "milk" },
+  { id: "news", face: "egg" },
+  { id: "quest", face: "compass" },
+  { id: "map", face: "binoculars" },
+] as const;
+export const SEEN_KEY = "arya.landing.seen";
+
+export function loadSeen(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch { return []; }
+}
+
+function saveSeen(seen: string[]) {
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch { /* storage unavailable */ }
+}
 
 const postJson = (path: string, body?: unknown) =>
   fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
@@ -19,11 +41,16 @@ export function Login() {
   const { status, enter } = useSession();
   const [mode, setMode] = useState<Mode>(status.has_users ? "login" : "setup");
   const [signin, setSignin] = useState(!status.has_users || location.search.includes("signin=failed"));
-  const [how, setHow] = useState(false);
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
   const create = mode !== "login";
+
+  // No tab bar here, so no room kept for one at the bottom.
+  useEffect(() => {
+    document.body.classList.add("landing");
+    return () => document.body.classList.remove("landing");
+  }, []);
 
   const submit = async (ev: FormEvent) => {
     ev.preventDefault();
@@ -40,26 +67,52 @@ export function Login() {
     setSignin(true);
   };
 
+  const [seen, setSeen] = useState<string[]>(loadSeen);
+  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
+  const tap = (id: string) => {
+    setFlipped(f => ({ ...f, [id]: !f[id] }));
+    if (!seen.includes(id)) { const next = [...seen, id]; setSeen(next); saveSeen(next); }
+  };
+
+  const openSignin = (m: "login" | "register") => {
+    if (mode !== "setup") setMode(m);
+    setErr("");
+    setSignin(true);
+  };
+
   return (
     <section id="view-login" className="view">
-      <header className="landtop">
-        <span className="landlogo">Arya</span>
-        <button id="signin-open" className="landsign" type="button" onClick={() => setSignin(true)}>{t("login.signIn")}</button>
-      </header>
-      <div className="hero">
-        <h2 className="largetitle herotitle"><Trans i18nKey="login.hero" components={{ em: <em /> }} /></h2>
-        <p className="herosub nomargin">{t("login.aryaKeepsYourListKnows")}</p>
-        <div className="group peek" aria-label={t("login.whatAryaShowsYou")}>
-          <Peek img="milk" name="Whole Milk" sub={t("login.every7DaysLastBought")} tag={t("common.runningLow")} kind="low" />
-          <Peek img="egg" name="Organic Eggs" sub={t("login.traderJoeSShoppersSay")} tag={t("login.storeAlert")} kind="alert" />
-          <Peek img="vegetable" name="Baby Spinach" sub={t("login.useByFriday")} tag={t("common.useSoon")} />
+      <div className="landpage">
+        <header className="landtop">
+          <span className="landlogo">Arya</span>
+          <button id="signin-open" className="linkbtn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
+        </header>
+        <div className="hero landhero">
+          <h2 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h2>
+          <p className="herosub nomargin landsub">{t("landing.subhead")}</p>
+          <div className="landcards">
+            {CARDS.map(c => (
+              <button key={c.id} id={"land-" + c.id} type="button" aria-pressed={!!flipped[c.id]}
+                className={"ftile" + (seen.includes(c.id) ? " seen" : "") + (flipped[c.id] ? " on" : "")}
+                onClick={() => tap(c.id)}>
+                <span className="in">
+                  <span className="face front" aria-hidden={!!flipped[c.id]}><span className="flipi" aria-hidden="true">↻</span>
+                    <img src={asset(`assets/characters/${c.face}.webp`)} alt="" />
+                    <b>{t(`landing.cards.${c.id}.title`)}</b><span className="s">{t(`landing.cards.${c.id}.sub`)}</span></span>
+                  <span className="face back" aria-hidden={!flipped[c.id]}>
+                    <b>{t(`landing.cards.${c.id}.title`)}</b><span className="s">{t(`landing.cards.${c.id}.back`)}</span></span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="peekcap">{t("login.fromYourReceiptsNoTyping")}</p>
-        <p className="landcta"><button id="demo-btn" className="btn primary wide" type="button" onClick={demo}>{t("login.tryTheDemo")}</button></p>
-        <p className="landmeta muted"><span>{t("login.noAccountNeededFictionalHousehold")}</span>
-          <button id="how-open" className="linkbtn" type="button" onClick={() => setHow(true)}>{t("login.howItWorks")}</button></p>
-        <p className="questline"><img src={asset("assets/scenes/hero.webp")} alt="" />
-          <span><Trans i18nKey="login.questLine" components={{ b: <b /> }} /></span></p>
+        <div className="landfoot">
+          <button id="demo-btn" className="btn primary wide" type="button" onClick={demo}>{t("landing.tryIt")}</button>
+          {status.registration_open && (
+            <button id="register-open" className="btn secondary wide" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
+          )}
+          <p className="landnote">{t("landing.demoNote")}</p>
+        </div>
       </div>
 
       <Sheet open={signin} onClose={() => setSignin(false)} id="signin-sheet" className="signin"
@@ -82,22 +135,7 @@ export function Login() {
             {create ? t("login.haveAccount") : t("login.newHere")}</button></p>
         )}
       </Sheet>
-
-      <Sheet open={how} onClose={() => setHow(false)} id="how-sheet" title={t("login.howItWorks")}>
-        <p>{t("login.aryaLearnsWhatYourHousehold")}</p>
-        <p>{t("login.whenYouWantItFun")}</p>
-        <p className="muted">{t("login.theDemoOpensAFictional")}</p>
-        <p className="muted nomargin">{t("login.builtOnMetaModelsEntry")}</p>
-      </Sheet>
     </section>
-  );
-}
-
-function Peek({ img, name, sub, tag, kind }: { img: string; name: string; sub: string; tag: string; kind?: string }) {
-  return (
-    <div className="row"><img className="rowface" src={asset(`assets/characters/${img}.webp`)} alt="" />
-      <div className="grow"><span className="name">{name}</span><span className="sub">{sub}</span></div>
-      <span className={"peektag" + (kind ? " " + kind : "")}>{tag}</span></div>
   );
 }
 

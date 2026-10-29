@@ -2,7 +2,7 @@
  * source and a place to keep the profile; everything else lives in
  * this folder. Screens: hub -> pick a store -> play -> finish.
  * Practice runs on a silent source and never touches the profile. */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useRef, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { applyTrip, type Profile, type Rewards } from "./core/meta";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
@@ -80,6 +80,26 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     const layout = buildLayout({ id: graph.id, name, area: graph.source === "dream" ? "Dream store" : "Your map", kind: "mapped", items, graph });
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, seed: Math.floor(Math.random() * 1e6) }) });
   };
+  /* The list's own store: one of the player's stores by that name, else
+   * the first search hit. null sends the player to the store pick. */
+  const listStore = async (l: ShoppingList | null): Promise<StoreSummary | null> => {
+    if (!l?.store) return null;
+    const want = l.store.trim().toLowerCase();
+    const hit = (rows: StoreSummary[]) => rows.find(s => s.name.trim().toLowerCase() === want) || null;
+    return hit(await source.nearbyStores().catch(() => [])) || hit(await source.findStores(l.store).catch(() => []));
+  };
+  const quest = async () => {
+    const st = await listStore(list);
+    if (st) void startQuest(st); else setScreen({ s: "pick" });
+  };
+  /* Start shopping on a list (the Lists tab) goes straight to that
+   * list's store, once; a first-timer still sees practice first. */
+  const went = useRef(false);
+  useEffect(() => {
+    if (went.current || practice || newbie || !listId || list?.id !== listId || !list.items.length || !list.store) return;
+    went.current = true;
+    void listStore(list).then(st => { if (st) void startQuest(st); });
+  }, [list]); // eslint-disable-line react-hooks/exhaustive-deps
   const startQuest = async (st: StoreSummary) => {
     if (!list?.items.length) { setScreen({ s: "home" }); return; }
     setScreen({ s: "loading" });
@@ -101,9 +121,9 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
+          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
           {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
-          {screen.s === "pick" && <Pick source={source} newbie={newbie} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
+          {screen.s === "pick" && <Pick source={source} newbie={newbie} first={list?.store} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "loading" && <div className="qg-loading" role="status">Opening the store…</div>}
           {screen.s === "play" && (
