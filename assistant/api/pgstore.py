@@ -90,6 +90,11 @@ def mirror(owner, name, obj):
         log.exception("pg mirror failed for %s/%s", owner, name)
 
 
+def delete_owner(owner):
+    """Drop every document of one owner (a group that closed)."""
+    _run(lambda c: c.execute("delete from user_docs where owner=%s", (owner,)))
+
+
 def list_docs(owner=None):
     def go(c):
         q = "select owner, name from user_docs"

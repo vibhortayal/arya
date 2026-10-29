@@ -27,8 +27,8 @@ def quest_receipt_detail(receipt_id: str):
 def quest_receipt_original(receipt_id: str):
     """The kept original upload for a filed receipt (Discussion
     42): the caller's own bytes, served at their recorded media
-    type. The lookup runs over the caller's receipts — no
-    cross-account access — and the demo files nothing. A
+    type. The lookup runs over the receipts the caller can see
+    (their own, and each group member's) and the demo files nothing. A
     receipt filed without an upload (seeded history, order
     text) has no original and 404s honestly."""
     rec = next((r for r in state.receipts()
@@ -52,6 +52,12 @@ def quest_delete_receipt(receipt_id: str):
     from api import quest, state
     if state.in_sandbox():
         raise HTTPException(403, "the demo household files nothing")
+    owner = state.receipt_owner(receipt_id)
+    if owner and owner != state._current_user.get():
+        # A receipt belongs to the account that filed it (owner,
+        # 2026-10-29); group members can see it but not delete it.
+        from api.groups import handle
+        raise HTTPException(403, f"only @{handle(owner)} can delete this receipt")
     rec = state.delete_receipt(receipt_id)
     if rec is None:
         raise HTTPException(404, "no such receipt")

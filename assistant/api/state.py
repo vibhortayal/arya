@@ -28,20 +28,87 @@ _WRITE_THROUGH = {"shelf_matches.json"}
 OVERLAY_MAX_BYTES = 2_000_000
 
 
+def base_dir():
+    return os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
+
+
+def user_dir(user):
+    # Belt and braces for auth.valid_name: a name that could
+    # leave data/users/ never becomes a path.
+    if os.sep in user or "/" in user or user.startswith("."):
+        raise ValueError("invalid account name")
+    return os.path.join(base_dir(), "users", user)
+
+
 def data_dir():
-    base = os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
     user = _current_user.get()
     if user:
-        # Belt and braces for auth.valid_name: a name that could
-        # leave data/users/ never becomes a path.
-        if os.sep in user or "/" in user or user.startswith("."):
-            raise ValueError("invalid account name")
-        return os.path.join(base, "users", user)
-    return base
+        return user_dir(user)
+    return base_dir()
+
+
+# --- groups (owner, 2026-10-29) ---------------------------------------------
+# People in one group share one set of lists. The stores below live in
+# the group's plane (data/groups/<id>/, Postgres owner "group:<id>")
+# while the account is in a group: the lists, the flags on items
+# (list membership, ticks, quantities, "I'm out", expiry dates), the
+# cart, and what Arya has learned about products. Receipts stay in
+# each account's own plane and are read across every member
+# (receipts()); everything else (profile, Quest, reminders, settings,
+# photos) stays personal. api/groups.py owns joining and leaving.
+GROUP_DOCS = {"lists.json", "flags.json", "cart.json", "dictionary.json",
+              "judged.json", "grocery_verdicts.json", "curator.json",
+              "second_seat.json"}
+_current_group = contextvars.ContextVar("arya_group", default=None)
+
+
+def group_dir(group_id):
+    if not group_id or not all(c.isalnum() for c in group_id):
+        raise ValueError("invalid group id")
+    return os.path.join(base_dir(), "groups", group_id)
+
+
+def group_owner(group_id):
+    return "group:" + group_id
+
+
+def current_group():
+    return _current_group.get()
+
+
+def _plane(name):
+    """(directory, Postgres owner) a store name reads and writes."""
+    gid = _current_group.get()
+    if gid and name in GROUP_DOCS:
+        return group_dir(gid), group_owner(gid)
+    return data_dir(), _owner()
 
 
 def set_current_user(name):
     _current_user.set(name)
+    gid = None
+    if name and name != DEMO_USER:
+        from api import groups
+        gid = groups.group_id_for(name)
+    _current_group.set(gid)
+
+
+class as_user:
+    """Run a block as another account (a group member whose receipt is
+    being changed, or a member being copied out on leave). The group
+    follows the account."""
+    def __init__(self, name, group_id=None):
+        self.name, self.group_id = name, group_id
+
+    def __enter__(self):
+        self._t = (_current_user.set(self.name),
+                   _current_group.set(self.group_id))
+        return self
+
+    def __exit__(self, *exc):
+        _current_user.reset(self._t[0])
+        _current_group.reset(self._t[1])
+        return False
 
 
 # --- store durability -------------------------------------------------------
@@ -68,7 +135,12 @@ def lock_for(path):
 def file_lock(name):
     """Hold the store lock for one file (by store name) across a
     load-modify-save cycle."""
-    return lock_for(os.path.join(data_dir(), name))
+    return lock_for(os.path.join(_plane(name)[0], name))
+
+
+def file_lock_at(d, name):
+    """The same lock for a store in an explicit plane."""
+    return lock_for(os.path.join(d, name))
 
 
 def write_json_atomic(path, obj):
@@ -102,13 +174,15 @@ def _owner():
     return _current_user.get() or ""
 
 
-def _load(name, default):
-    p = os.path.join(data_dir(), name)
+def load_at(d, owner, name, default):
+    """Read one store from an explicit plane (directory + Postgres
+    owner). _load is this for the current account or group."""
+    p = os.path.join(d, name)
     ov = _overlay.get()
     if ov is not None and p in ov:
         return copy.deepcopy(ov[p])
-    if pgstore.mode() == "pg" and pgstore.uses_pg(_owner(), name):
-        v = pgstore.read(_owner(), name)
+    if pgstore.mode() == "pg" and pgstore.uses_pg(owner, name):
+        v = pgstore.read(owner, name)
         return default if v is pgstore._MISSING else v
     if os.path.exists(p):
         with open(p) as fh:
@@ -116,22 +190,32 @@ def _load(name, default):
     return default
 
 
-def _save(name, obj):
-    p = os.path.join(data_dir(), name)
+def save_at(d, owner, name, obj):
+    p = os.path.join(d, name)
     ov = _overlay.get()
     if ov is not None and name not in _WRITE_THROUGH:
         if len(json.dumps(obj)) > OVERLAY_MAX_BYTES:
             raise ValueError("the demo sandbox is full — sign out and open the demo again")
         ov[p] = copy.deepcopy(obj)
         return
-    if pgstore.uses_pg(_owner(), name):
+    if pgstore.uses_pg(owner, name):
         if pgstore.mode() == "pg":
-            pgstore.write(_owner(), name, obj)
+            pgstore.write(owner, name, obj)
             return
         write_json_atomic(p, obj)
-        pgstore.mirror(_owner(), name, obj)
+        pgstore.mirror(owner, name, obj)
         return
     write_json_atomic(p, obj)
+
+
+def _load(name, default):
+    d, owner = _plane(name)
+    return load_at(d, owner, name, default)
+
+
+def _save(name, obj):
+    d, owner = _plane(name)
+    save_at(d, owner, name, obj)
 
 
 DEMO_USER = "demo"
@@ -165,11 +249,50 @@ def _demo_shift(rs):
     return out
 
 
-def receipts():
+def own_receipts():
+    """This account's own receipts: the ones it filed."""
     rs = _load("receipts.json", [])
     if _current_user.get() == DEMO_USER:
         return _demo_shift(rs)
     return rs
+
+
+def group_members():
+    """Account names in the current group, oldest member first; []
+    outside a group."""
+    gid = _current_group.get()
+    if not gid:
+        return []
+    from api import groups
+    return groups.member_names(gid)
+
+
+def receipts():
+    """Every receipt the account can see: its own, plus each group
+    member's while it is in a group (owner, 2026-10-29: a receipt
+    belongs to whoever filed it; the group sees all of them). In a
+    group each one carries "member", the account that filed it.
+    Patterns, spend and running low read this, so they recompute
+    on their own when someone joins or leaves."""
+    me = _current_user.get()
+    members = group_members()
+    if not members:
+        return own_receipts()
+    out = []
+    for m in members:
+        rs = own_receipts() if m == me else load_at(user_dir(m), m, "receipts.json", [])
+        out += [dict(r, member=m) for r in rs]
+    return out
+
+
+def receipt_owner(receipt_id):
+    """The account that filed a receipt the caller can see, or None."""
+    me = _current_user.get()
+    for m in group_members() or [me]:
+        rs = own_receipts() if m == me else load_at(user_dir(m), m, "receipts.json", [])
+        if any(r["receipt_id"] == receipt_id for r in rs):
+            return m
+    return None
 
 
 def _media_dir():
@@ -179,9 +302,14 @@ def _media_dir():
 def receipt_media(receipt_id):
     """The kept original's bytes, or None. The id is a server-minted
     slug; anything carrying a path separator is refused outright,
-    so a crafted id can never walk out of the media store."""
+    so a crafted id can never walk out of the media store. In a
+    group the bytes are read from the member who filed it."""
     if not receipt_id or os.path.basename(receipt_id) != receipt_id:
         return None
+    owner = receipt_owner(receipt_id)
+    if owner and owner != _current_user.get():
+        with as_user(owner, _current_group.get()):
+            return receipt_media(receipt_id)
     p = os.path.join(_media_dir(), receipt_id)
     if not os.path.exists(p):
         return None
@@ -201,8 +329,9 @@ def add_receipts(new, media=None):
     the filing path, so every door that files an uploaded
     original keeps it."""
     with file_lock("receipts.json"):
-        cur = receipts()
-        seen = {r["receipt_id"] for r in cur}
+        cur = own_receipts()
+        # A receipt another group member already filed is not filed twice.
+        seen = {r["receipt_id"] for r in receipts()}
         # A receipt with no date cannot be placed in the ledger; it is refused
         # at the door rather than breaking pattern math later.
         added = [r for r in new if r["receipt_id"] not in seen and r.get("purchased_at")]
@@ -760,9 +889,29 @@ def review_queue():
     return {"lines": lines, "unresolved": unresolved}
 
 
+class _as_receipt_owner:
+    """Edit a receipt in the plane of the member who filed it: in a
+    group a line fix from anyone lands in the filer's own store."""
+    def __init__(self, receipt_id):
+        self.owner = receipt_owner(receipt_id)
+
+    def __enter__(self):
+        me = _current_user.get()
+        self._ctx = as_user(self.owner, _current_group.get()) \
+            if self.owner and self.owner != me else None
+        if self._ctx:
+            self._ctx.__enter__()
+        return self
+
+    def __exit__(self, *exc):
+        if self._ctx:
+            self._ctx.__exit__(*exc)
+        return False
+
+
 def update_receipt_line(receipt_id, idx, fields):
-    with file_lock("receipts.json"):
-        rs = receipts()
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
         for r in rs:
             if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
                 r["lines"][idx].update(fields)
@@ -808,8 +957,8 @@ def suggest_line(receipt_id, idx, name, source):
     """A researched name for one unverified receipt line, with its
     source. A proposal only: the line stays unverified until the user
     confirms or renames it."""
-    with file_lock("receipts.json"):
-        rs = receipts()
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
         for r in rs:
             if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
                 ln = r["lines"][idx]

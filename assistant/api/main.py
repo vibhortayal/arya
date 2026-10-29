@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from api import album_routes, haul_routes, hunt_routes, pack, state
 from api.demo_guard import require_login
 from api.deps import _PWA
-from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, home,
+from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
                         intake, items, lists, mcp_connector, prices, quest,
                         receipts, review, shelf, storemap, stores)
 
@@ -50,7 +50,8 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 expiry.router, account.router, stores.router,
                 album_routes.router, shelf.router, friends.router,
                 avatar.router, receipts.router, hunt_routes.router,
-                storemap.router, haul_routes.router, prices.router):
+                storemap.router, haul_routes.router, prices.router,
+                groups.router):
     app.include_router(_router)
 
 if os.path.isdir(_PWA):

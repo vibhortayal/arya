@@ -525,6 +525,7 @@ function paintListsHome() {
   $("#list-line").textContent = open.length
     ? `${open.length} thing${open.length === 1 ? "" : "s"} to get${used > 1 ? ` across ${used} lists` : ""}`
     : "Nothing to get yet";
+  if (window.aryaGroup) aryaGroup.decorateLists();
 }
 
 function listRow(i) {
@@ -816,6 +817,7 @@ async function renderList() {
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
   paintListGroups();
+  if (window.aryaGroup) aryaGroup.refreshLists().catch(() => {});
 }
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
@@ -878,6 +880,7 @@ document.addEventListener("click", async ev => {
  * There is no second, brain-only profile. The app is light theme
  * only (owner 2026-10-27) — there is no theme switch. */
 async function renderProfile() {
+  if (window.aryaGroup) aryaGroup.paintProfile().catch(() => {});
   await loadCurrency();
   $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")))
     + `<div class="row"><div class="grow"><span class="name">Currency</span><span class="sub">How prices show. Arya does not convert.</span></div>
@@ -1536,11 +1539,25 @@ async function renderEyes() {
  * moved), then the archive. Rows open the receipt detail. No spend
  * content lives here; spend is Analysis, reached from Profile. */
 
+let rcWho = "all";
 async function renderReceipts() {
   await Promise.all([renderScan().catch(() => {}), renderCurator().catch(() => {})]);
   const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
-  $("#rc-count").textContent = archive.receipts.length
-    ? `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted` : "";
+  // In a group (owner, 2026-10-29) every member's receipts show here,
+  // each with who filed it, and a switch narrows to one person.
+  const people = [...new Set(archive.receipts.filter(r => r.by && !r.mine).map(r => r.by))];
+  const shared = archive.receipts.some(r => r.by);
+  if (!shared || (rcWho !== "all" && rcWho !== "mine" && !people.includes(rcWho))) rcWho = "all";
+  const mineCount = archive.receipts.filter(r => r.mine).length;
+  $("#rc-count").textContent = !archive.receipts.length ? ""
+    : shared && people.length
+      ? `${archive.receipts.length} receipts from ${people.length + 1} people · ${mineCount} yours`
+      : `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted`;
+  const segs = $("#rc-who");
+  segs.hidden = !people.length;
+  segs.innerHTML = people.length ? [["all", "Everyone"], ["mine", "Mine"], ...people.map(p => [p, p.charAt(0).toUpperCase() + p.slice(1)])]
+    .map(([k, label]) => `<button type="button" class="${rcWho === k ? "on" : ""}" data-rc-who="${esc(k)}" aria-pressed="${rcWho === k}">${esc(label)}</button>`).join("") : "";
+  archive.receipts = archive.receipts.filter(r => rcWho === "all" || (rcWho === "mine" ? r.mine : r.by === rcWho));
   // Unsettled hunts (Discussion 41): a hunt finished without its
   // receipt is logged here as its own entry, tagged "Receipt
   // missing", until this trip's receipt is uploaded against it.
@@ -1555,7 +1572,7 @@ async function renderReceipts() {
   const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
       <span class="grow"><span class="name">${esc(r.merchant)}</span>
-      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
+      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}${r.by ? (r.mine ? " · you" : ` · <span class="byp">${esc(r.by.charAt(0).toUpperCase() + r.by.slice(1))}</span>`) : ""}</span></span>
       <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
     </button>`).join("");
   $("#rc-archive").innerHTML = (unsettled || rows)
@@ -1591,6 +1608,12 @@ function paintMissingReceipts(el, unsettled, after) {
     if (up && window.openAddReceipt) openAddReceipt(up.dataset.upload, up.dataset.store, after);
   };
 }
+$("#rc-who").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-rc-who]");
+  if (!b) return;
+  rcWho = b.dataset.rcWho;
+  renderReceipts().catch(showErr);
+});
 $("#rc-archive").addEventListener("click", async ev => {
   const dis = ev.target.closest("[data-dismiss]");
   if (dis) {
@@ -1948,6 +1971,7 @@ function enterApp(user, demo) {
   // Every account opens on Today; Muse is linked from Profile.
   if (demo) $("#chat-demo-note").hidden = false;
   openShell();
+  if (!demo && window.aryaGroup) aryaGroup.afterSignIn().catch(() => {});
 }
 
 function openShell() {

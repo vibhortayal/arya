@@ -4,7 +4,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
-from api import state
+from api import groups, state
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _int_field, _json_obj, new_client
 from api.routes.items import _merge_flag
@@ -151,9 +151,11 @@ async def list_add(req: Request):
         unit = clean_unit(body["unit"]) if "unit" in body else unit
         item_id = _add_name_to_list(name, qty, unit=unit)["item_id"]
         _list_add_extras(item_id, body, fields)
+        groups.note("added", item_id)
         return {"item_id": item_id}
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
     _list_add_extras(item_id, body, fields)
+    groups.note("added", item_id)
     return {"item_id": item_id}
 
 
@@ -286,6 +288,7 @@ async def list_remove(req: Request):
     if not item_id:
         raise HTTPException(400, "item_id is required")
     _merge_flag(item_id, {"manual": False, "dismissed_on": state.as_of()})
+    groups.note("removed", item_id)
     return {"ok": True}
 
 
@@ -425,6 +428,8 @@ async def list_check(req: Request):
         raise HTTPException(400, "item_id is required")
     _merge_flag(body["item_id"],
                 {"checked_on": state.as_of() if body.get("checked") else None})
+    if body.get("checked"):
+        groups.note("ticked", body["item_id"])
     return {"ok": True}
 
 

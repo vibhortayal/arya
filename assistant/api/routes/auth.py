@@ -198,6 +198,10 @@ async def auth_delete_account(req: Request):
     if not _root_call(lambda: auth.verify(user, body.get("password", ""))):
         raise HTTPException(401, "that password does not match this account")
     social.scrub_handle(user.split("@")[0], everyone, skip=user)
+    # Leave any group first, so the others keep their lists and the
+    # group's owner passes on (owner, 2026-10-29).
+    from api import groups
+    groups.leave(user)
     _root_call(lambda: auth.delete_user(user))
     feedback.anonymize_user(user)
     resp = JSONResponse({"ok": True})
