@@ -29,6 +29,7 @@ services:
       # default, so an unset value behaves exactly as before.
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
+      ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}
       ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
       # $20 a day for the judging window (about 50 full demo visits at
       # the $0.40 per-visit cap), paid from the hackathon credits. The
