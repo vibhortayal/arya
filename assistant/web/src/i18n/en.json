@@ -806,7 +806,8 @@
   },
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.",
-    "pickAStoreFromMy": "Pick a store from My Stores first.",
+    "pickAStoreFromMy": "Find your store above to start.",
+    "findAnotherStore": "+ Find or add a store",
     "teachTheAislesYouUse": "Teach the aisles you use. You never need all of them.",
     "noAislesHereYetWalk": "No aisles here yet. Walk the store and Arya builds the map from what it sees.",
     "zeroTyping": "Zero typing",

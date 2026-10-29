@@ -77,6 +77,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   once after a trip at a store not fully mapped.
   `2026-10-29-map-my-store-up-front.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
+  Find or add a store right where one is needed (Teach Arya your store,
+  Build a store), one shared search. `2026-10-29-find-store-everywhere.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
 - **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,

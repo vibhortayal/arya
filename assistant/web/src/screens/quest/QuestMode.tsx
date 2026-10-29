@@ -4,6 +4,7 @@ import { useSession } from "../../app/session";
 import { useAvatar } from "../../app/avatar";
 import { localProfileStore } from "../../game/store";
 import { AppSource } from "./appSource";
+import { FindStorePanel } from "../StoresFind";
 import { useTranslation } from "../../i18n";
 
 /* The Quest tab: the 3D shopping game on the user's own lists, stores
@@ -58,6 +59,9 @@ export function QuestMode() {
   // Map my store after a trip: the store's map screen, for that store.
   const onMapStore = useCallback((st: { name: string }) => nav.show("mapper", { store: st.name }), [nav]);
 
+  // Build a store's "Which store?": the same search and add as Find stores.
+  const findStore = useCallback((onAdded: () => void) => <FindStorePanel onAdded={onAdded} />, []);
+
   const extra = (
     <div className="qm-links">
       <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
@@ -72,7 +76,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} />
+        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} />
       </Suspense>
     </div>
   );

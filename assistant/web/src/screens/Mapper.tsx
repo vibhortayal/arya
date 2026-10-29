@@ -4,6 +4,7 @@ import { clearOnSignOut } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
+import { FindStorePanel } from "./StoresFind";
 import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
@@ -50,6 +51,10 @@ export function Mapper() {
   const [focus, setFocus] = useState<string[]>([]);
   const [side, setSide] = useState("both");
   const [label, setLabel] = useState("");
+  // Find or add a store right here (owner 2026-10-29): open on its own
+  // when My Stores is empty, since there is nothing else to pick.
+  const [finding, setFinding] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const seq = useRef(0);
   const paramStore = typeof nav.params.store === "string" ? nav.params.store : "";
 
@@ -63,6 +68,7 @@ export function Mapper() {
     const s = pick || chosen || (fav ? fav.name : "");
     chosen = s;
     setMine(list);
+    setLoaded(true);
     setStore(s);
     if (!s) { setView(null); return; }
     const v: MapView = await get(`/api/storemap?store=${q(s)}`);
@@ -77,6 +83,7 @@ export function Mapper() {
   }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const names = [...new Set(mine.map(s => s.name))];
+  const showFind = finding || (loaded && !mine.length);
   if (store && !names.includes(store)) names.unshift(store);
 
   const openCapture = (prompt: Prompt) => nav.show("capture", { prompt, store, from: "mapper" });
@@ -128,9 +135,16 @@ export function Mapper() {
       <div id="mp-stores" className="rail">
         {names.map(n => (
           <button key={n} className="chip" data-mstore={n} aria-pressed={n === store} type="button"
-            onClick={() => { chosen = n; setStore(n); setView(null); load(n).catch(showErr); }}>{n}</button>
+            onClick={() => { chosen = n; setStore(n); setView(null); setFinding(false); load(n).catch(showErr); }}>{n}</button>
         ))}
+        <button id="mp-findstore" className="chip" type="button" aria-expanded={showFind}
+          onClick={() => setFinding(!showFind)}>{t("mapper.findAnotherStore")}</button>
       </div>
+      {showFind && (
+        <div id="mp-find">
+          <FindStorePanel onAdded={n => { chosen = n; setFinding(false); setView(null); load(n).catch(showErr); }} />
+        </div>
+      )}
       <div id="mp-cover" className="group pad">
         {!store ? <Empty>{t("mapper.pickAStoreFromMy")}</Empty> : v && (v.total ? (
           <>

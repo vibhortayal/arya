@@ -405,3 +405,5 @@
 .qg-made-acts .qg-btn { flex: 1; }
 .qg-reply { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--q-acc-soft); color: var(--q-ink); }
 @media (prefers-reduced-motion: reduce) { .qg-mic.on, .qg-making i { animation: none; } }
+.qg-findstore { margin-top: 8px; }
+#qg-findstore { width: 100%; margin-top: 4px; }

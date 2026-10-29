@@ -3,7 +3,7 @@
  * builds the whole store, and you walk it, change it by saying what to
  * move, and keep it: as My map for a real store you shop at, or as a
  * dream store that is only ever played as practice. */
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import type { QuestSource, SavedMap } from "../core/source";
 import type { StoreSummary } from "../core/types";
@@ -38,14 +38,20 @@ export function guessType(name: string): StoreType {
   return "supermarket";
 }
 
-export function Build({ source, onBack, onWalk }: { source: QuestSource; onBack: () => void; onWalk: (graph: StoreGraph, name: string) => void }) {
+/* findStore: the app's own store search (owner 2026-10-29: find and
+ * add a store right here, not only in Lists). It calls onAdded once a
+ * store joins My stores. */
+export function Build({ source, onBack, onWalk, findStore }: { source: QuestSource; onBack: () => void; onWalk: (graph: StoreGraph, name: string) => void;
+  findStore?: (onAdded: () => void) => ReactNode }) {
   const [step, setStep] = useState<Step>({ s: "home" });
   const [target, setTarget] = useState<Target | null>(null);
   const [a, setA] = useState<Answers>({ type: "supermarket", look: "market", focus: [] });
   const [saved, setSaved] = useState<SavedMap[]>([]);
-  const [stores, setStores] = useState<StoreSummary[]>([]);
+  const [stores, setStores] = useState<StoreSummary[] | null>(null);
+  const [finding, setFinding] = useState(false);
+  const loadStores = () => void source.nearbyStores().then(setStores).catch(() => setStores([]));
   useEffect(() => { void source.maps?.().then(setSaved).catch(() => {}); }, [source]);
-  useEffect(() => { if (step.s === "which") void source.nearbyStores().then(setStores).catch(() => {}); }, [step.s, source]);
+  useEffect(() => { if (step.s === "which") loadStores(); }, [step.s, source]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const name = target?.kind === "store" ? target.store.name : target?.name || "My store";
   const make = async () => {
@@ -95,11 +101,15 @@ export function Build({ source, onBack, onWalk }: { source: QuestSource; onBack:
 
       {step.s === "which" && (
         <Q kicker="Draw my store" title="Which store?">
-          {stores.length ? stores.map(st => (
+          {(stores || []).map(st => (
             <button key={st.id} className="qg-store" onClick={() => { setTarget({ kind: "store", store: st }); setA(x => ({ ...x, type: guessType(st.name) })); setStep({ s: "type" }); }}>
               <span><b>{st.name}</b><small>{st.area}</small></span>
             </button>
-          )) : <p className="qg-p">Add a store you shop at in Lists first, or build a dream store.</p>}
+          ))}
+          {stores && !stores.length && <p className="qg-p">{findStore ? "Find the store you shop at, or build a dream store." : "Add a store you shop at in Lists first, or build a dream store."}</p>}
+          {findStore && stores && (finding || !stores.length
+            ? <div className="qg-findstore">{findStore(() => { setFinding(false); loadStores(); })}</div>
+            : <button id="qg-findstore" className="qg-btn ghost" onClick={() => setFinding(true)}>+ Find or add a store</button>)}
         </Q>
       )}
 

@@ -26,7 +26,7 @@ clearOnSignOut(endPlacesSession);
 /* The Google suggestions drop under a text input: debounced fetch
  * (300 ms, 3+ chars, stale answers dropped), Escape or a click outside
  * the .dropanchor hides it, a pick adds the store to My stores. */
-export function usePlacesDrop(q: string) {
+export function usePlacesDrop(q: string, onPicked?: (name: string) => void) {
   const { toast } = useToast();
   const nav = useNav();
   const [rows, setRows] = useState<Sugg[]>([]);
@@ -62,7 +62,7 @@ export function usePlacesDrop(q: string) {
       endPlacesSession(); // the pick ends the billing session
       hide();
       toast(t("storesFind.inYourStores", { name: row.name }));
-      nav.show("stores-mine");
+      if (onPicked) onPicked(row.name); else nav.show("stores-mine");
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); btn.disabled = false; }
   };
 
@@ -85,14 +85,18 @@ export function PlacesRows({ rows, pick }: { rows: Sugg[]; pick: (r: Sugg, b: HT
   );
 }
 
-export function StoresFind() {
+/* The store search and add: the directory (Add) and Google's
+ * suggestions. One flow, used by Find stores and wherever a screen
+ * needs a store the shopper does not have yet (Teach Arya your store,
+ * Quest's Build a store). onAdded: a store just joined My stores. */
+export function FindStorePanel({ onAdded }: { onAdded?: (name: string) => void }) {
   const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [rows, setRows] = useState<Found[] | null>(null);
-  const drop = usePlacesDrop(q);
+  const drop = usePlacesDrop(q, onAdded);
 
   const load = useCallback(async (query: string, f: Filter) => {
     let found: Found[] = [];
@@ -125,11 +129,12 @@ export function StoresFind() {
     load(q.trim(), filter).catch(showErr);
   };
 
-  const add = async (id: string, btn: HTMLButtonElement) => {
+  const add = async (s: Found, btn: HTMLButtonElement) => {
     btn.disabled = true;
     try {
-      await post("/api/stores/mine", { store_id: id });
+      await post("/api/stores/mine", { store_id: s.id });
       load(q.trim(), filter).catch(showErr);
+      onAdded?.(s.name);
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); btn.disabled = false; }
   };
 
@@ -138,9 +143,7 @@ export function StoresFind() {
   );
 
   return (
-    <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.findStores")}</h2>
+    <div className="findstore">
       <form id="sf-form" className="group pad dropanchor" onSubmit={submit}>
         <label className="field">{t("storesFind.zipAddressOrName")}<input type="text" id="sf-q" placeholder="91709" autoComplete="off" value={q} onChange={e => setQ(e.target.value)} />
         </label>
@@ -163,12 +166,24 @@ export function StoresFind() {
                 <div className="grow"><span className="name">{s.name}</span>
                   <span className="sub">{storeMeta(s)}</span></div>
                 {s.in_mine ? <span className="sub">{t("storesFind.added")}</span>
-                  : <button className="chip" data-addstore={s.id} type="button" onClick={ev => add(s.id, ev.currentTarget)}>{t("common.add")}</button>}
+                  : <button className="chip" data-addstore={s.id} type="button" onClick={ev => add(s, ev.currentTarget)}>{t("common.add")}</button>}
               </div>
             ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export function StoresFind() {
+  const { t } = useTranslation();
+  const nav = useNav();
+  return (
+    <>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.findStores")}</h2>
+      <FindStorePanel />
       <p className="muted">{t("storesFind.theDirectoryIsSharedBy")}</p>
     </>
   );
