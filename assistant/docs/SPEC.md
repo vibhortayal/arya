@@ -42,7 +42,7 @@ Food gets the deep functions because food expires and food is visible in the hom
 The MVP has one user and one household.
 The MVP uses the real data of the owner.
 The MVP closes the core loop of Section 3 with no store map.
-Quest (Section 6.8) is the play layer. Express is the same trip with no game. It feeds the core and is not on its critical path.
+Quest (Section 6.8) is the play layer. It feeds the core and is not on its critical path.
 
 ## 3. The core loop
 
@@ -55,7 +55,7 @@ The core loop has eight steps. The loop repeats with each trip.
 5. Patterns. The system computes cadence and quantity for each repeat item.
 6. Reconciliation. The system compares the list, the receipt, and the cart photo. The system asks about differences only.
 7. The list. The system writes the next list from the patterns. The user edits the list with taps.
-8. The trip. The user starts shopping from a named list. A hunt (Quest or Express, Section 6.8) takes the user through the store. A receipt settles the hunt and closes the loop. Arya places no order and takes no payment.
+8. The trip. The user starts shopping from a named list. A quest (Section 6.8) takes the user through the store. A receipt settles the quest and closes the loop. Arya places no order and takes no payment.
 
 The receipt is the sensor. The list is the surface.
 A return changes the ledger. A return changes the patterns. A return changes the next list.
@@ -92,7 +92,7 @@ The primary user is the owner. The data is the data of the owner.
 | US-5 | I photograph the printed date on a package. The assistant reads it, I confirm it, and the assistant tells me what to use soon. A date never saves without my confirmation. |
 | US-6 | The assistant warns me before an item expires or runs low. The warning shows a date range and the reason. |
 | US-7 | I return an item. The assistant removes the item from my patterns and from future lists. |
-| US-8 | I keep named lists, one for each store or errand. I tap "Start shopping" on a list and choose Quest or Express. |
+| US-8 | I keep named lists, one for each store or errand. I tap "Start shopping" on a list and a quest opens at that store. |
 | US-9 | I ask what I have. The assistant answers from the model and shows the evidence. |
 | US-10 | At a store, the assistant shows me the aisle for each item and finds the item on the shelf with the camera. |
 | US-11 | I share my lists and receipts with the people in my home. I can leave the group at any time. |
@@ -187,12 +187,13 @@ Allocation (a field on each ledger line):
 Quest turns a store trip into a game. It feeds the core; it never
 replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
-- FR-8.1 A hunt is one store trip: one store, one list, one mode
-  (Quest or Express). A receipt settles it. "Start shopping · N items"
-  on an open list leads to a sheet that picks the mode.
-- FR-8.1a Express is the same help with no game: a clean checklist,
-  "Show me" for the aisle image, "Not here?", and "Find it with the
-  camera". Express has no characters, no points, and no badges.
+- FR-8.1 A quest is one store trip: one store and one list. A receipt
+  settles it. "Start shopping · N items" on an open list opens a quest
+  at the store of that list. A list with no items does not start a
+  quest. The user can end a quest for good.
+- FR-8.1a Express (a plain checklist with no game) was removed as an
+  entry point. Its screen stays only for runs that started before the
+  removal.
 - FR-8.2 Planning starts from the store. The list is sorted by where
   each item is usually bought, counted from the ledger. Unticked items
   stay on the list. Removing an item removes it from the list.
@@ -201,8 +202,11 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   bank when the receipt lands.
 - FR-8.4 Any stop can be grabbed in any order. A grab can be put back.
   Nothing finishes by itself.
-- FR-8.5 A store with a walkthrough plays over its photos; any other
-  store plays as shelf cards. The system invents no location.
+- FR-8.5 A store plays from its map. A section counts as mapped only
+  with a usable, fresh picture. A store with 8 of 10 sections mapped is
+  "Mapped", 3 to 7 is "Part mapped", and fewer is "Simulated". A
+  simulated store is labelled. No store ships mapped. The system
+  invents no location.
 - FR-8.6 Shelf Scan and Find it for me: SAM 3.1 proposes boxes, Spark
   verifies each crop. Only a verified item highlights. A miss never
   says the item is absent.
@@ -213,6 +217,12 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   it: a later grab means a stockout; a confirmed new spot means a move.
 - FR-8.9 Every board and badge is receipt-verified.
 - FR-8.10 A hunt row taps to grab with a circle. Tapping again puts the grab back.
+- FR-8.11 "Map my store" is a guided camera scan. The user pans and does
+  not tap. Every few seconds a frame goes up, SAM 3.1 blurs each person,
+  and Spark reads the section, the aisle signs, the items, and (if the
+  user chooses) shelf prices. A daily frame cap bounds the cost.
+- FR-8.12 One map belongs to one store location. The user can save a
+  built or scanned store as "My map" for a real store.
 
 ### 6.9 Named lists and Today (C5)
 
@@ -234,7 +244,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
 - FR-11.1 Prices come only from the receipts and lists of the user. The system calls no retailer API, scrapes no site, reads no flyer, and uses no web search. A model never finds or guesses a price.
 - FR-11.2 The system shows the own-receipt price trend of an item, the cheaper store, and similar items. Trends show as words and up or down percentages. No line graphs.
-- FR-11.3 Analysis has "Your prices": personal inflation, split smarter, and food waste.
+- FR-11.3 Spending has "Your prices": personal inflation, split smarter, and food waste.
 - FR-11.4 Ask answers price questions from precomputed facts.
 - FR-11.5 Settings has "Arya's powers": one screen, one line per power, in the groups "Working for you," "Turns on as you add receipts," and "You choose to turn on." Quest is not listed. An (i) button on each power holds the caveats. A card states the fact in one line.
 - FR-11.6 Today shows one "Did you know?" card a day.
@@ -258,7 +268,6 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
 | Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
-| Quest: Where am I?, one photo | about 1 s | Local matcher, no model call |
 
 Spark is a reasoning model. Default effort is slow.
 In-store calls use low reasoning effort, short prompts, and cached prefixes.
@@ -296,12 +305,12 @@ Manual check-off always works.
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
 The app is list first. It has five tabs: Today, Lists, Ask, Quest,
 Settings. Settings opens Profile (account, Group, Reminders, Arya's
-powers, Add to Home Screen, feedback). Receipts and Analysis are
+powers, Add to Home Screen, feedback). Receipts and Spending are
 reached from Profile. Item and category detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
 2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own.
-3. Analysis (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
+3. Spending (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
 4. Item and category detail. Purchase timeline. Cadence. Pack sizes. Price trend by store. Run-out range. Purchase and return history. Controls: add to list now, snooze suggestion, never suggest, change allocation.
 
 Honesty rules for all screens:
@@ -359,8 +368,9 @@ Status of the evidence:
 ### Gate 3 — superseded
 
 The store add-on became Quest (Discussion 29). Quest is measured by
-its own evidence: the localizer (42/45 held-out frames) and Shelf Scan
-(0 false pops in the spike).
+its own evidence: Shelf Scan (0 false pops in the spike). The
+localizer that was measured here (42/45 held-out frames) was removed
+with the walkthrough data on 2026-10-29.
 
 ## 10. Positioning and demo requirements
 
@@ -423,7 +433,7 @@ Groceries are the first domain. Groceries are not the final domain.
 - Retailer planogram data and retailer integrations.
 - Live guidance on glasses. Glasses record video only.
 - Always-listening voice. Turn-by-turn indoor positioning.
-- Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback) and it authored the hunt localizer. Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
+- Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback). Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
 - The mapper network and consensus maps. Section 11 covers these items as vision.
 
 Design flags live in IMPLEMENTATION.md Section 8.

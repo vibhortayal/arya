@@ -50,5 +50,5 @@ Nobody is named. A visitor's own report counts as one household, so a judge can 
 
 ## Known limit
 
-The Trader Joe's walkthrough map is keyed by the real store name. "Trader Jill's" plays as a
-typical layout until the store-map thread's per-location change lands (see the PR notes).
+No store ships with a map, so a Demo Town store such as "Trader Jill's" plays as a labelled
+typical layout, like every other unmapped store.
