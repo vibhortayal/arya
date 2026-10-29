@@ -78,10 +78,11 @@ class TestStoreAlerts(unittest.TestCase):
         h["price_by_store"]["m"]["Trader Joe's"]["median"] = 4.39  # 10 cents: not news
         self.assertEqual(self.run_rows(h, []), [])
 
-    def test_empty_alerts_show_a_labelled_sample(self):
+    def test_empty_alerts_hide_the_section(self):
         body = read("app.js").split("async function paintStoreAlerts")[1].split("\n}\n")[0]
-        self.assertIn("samplepill", body)
-        self.assertIn("Example only", body)
+        self.assertNotIn("samplepill", body)
+        self.assertNotIn("Example only", body)
+        self.assertIn('if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }', body)
 
 
 class TestQuestTab(unittest.TestCase):

@@ -35,3 +35,7 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
   loading (still under reduced motion). Suggestion "why" line wraps cleanly.
 - Not done: the demo bar shrink (left as is).
 - SW arya-v85. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.
+
+## Store alerts hide until real (owner, 2026-10-29)
+- New users no longer see the SAMPLE "Costco: Oat milk not there" card on Today; the section appears with the first real alert. Quest tab sample kept.
+- SW arya-v86.

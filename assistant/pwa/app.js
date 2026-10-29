@@ -356,11 +356,9 @@ function storeAlertRows(h, news) {
 async function paintStoreAlerts(h) {
   const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
   const rows = storeAlertRows(h, nw.news);
-  // No report and no price gap yet: one labelled example, as Crew's
-  // store news showed it, never dressed as real data.
-  if (!rows.length) rows.push(`<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
-      <span class="name">Costco: Oat milk not there<span class="samplepill">Sample</span></span>
-      <span class="sub">Example only. Tap Not here? on a hunt and it shows up here.</span></div></div>`);
+  // Owner, 2026-10-29: nothing to say, nothing shown. No sample card
+  // for new users; the section appears with the first real alert.
+  if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }
   $("#today-alerts").innerHTML = `<h3 class="sect">Store alerts</h3><div class="group">${rows.join("")}</div>`;
 }
 
