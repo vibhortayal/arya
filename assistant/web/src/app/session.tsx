@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { get } from "../lib/api";
 import type { Currency } from "../lib/format";
 import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
+import { applyLanguage } from "../i18n";
 
 export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean };
 type Session = {
@@ -62,6 +63,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (s.languages?.length) setLanguages(s.languages);
       }).catch(() => {});
   }, [user]);
+
+  // The UI language follows the same setting. Only English has
+  // strings yet, so every choice reads English (the fallback).
+  useEffect(() => { applyLanguage(language); }, [language]);
 
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
 
