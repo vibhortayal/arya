@@ -15,7 +15,7 @@ export default async function (page, base) {
   await page.evaluate(() => window.__aryaShow("community"));
   await page.waitForSelector("#view-community .qg-home");
   const cta = page.locator("#view-community .qg-cta");
-  if (await cta.locator(".qg-btn", { hasText: /real quest|Start a quest/ }).count())
+  if (await cta.locator(".qg-btn", { hasText: /real quest|Start a quest|Start at/ }).count())
     throw new Error("an empty list must not offer a quest");
   await cta.locator(".qg-btn", { hasText: /Add items/ }).first().click();
   await page.waitForSelector("#view-list", { state: "visible" });

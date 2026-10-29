@@ -7,7 +7,9 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 
-- **Labels audit (2026-10-29, branch feat/labels-audit, not merged):** one word per idea across the app (quest, trip, Arya shoppers, friends, username, map this store, Spending, To check, points), plural and currency fixes, glyphs out of strings; Race, sample boards, sample crew hauls, Deals/Arya Shoppers tips and "Coming soon" rungs hidden (keys kept, `web/src/lib/flags.ts`). `assistant/loops/2026-10-29-labels-audit.md`.
+## Landing B1 flip cards (2026-10-29, branch feat/landing-b)
+- Logged-out landing is "Your grocery run, smarter.": four flip cards (wobble until first tapped), Try it now + Start my own list (only when registration is open) pinned to fit 390x664.
+- **Labels audit (2026-10-29, PR #197 merged):** one word per idea across the app (quest, trip, Arya shoppers, friends, username, map this store, Spending, To check, points), plural and currency fixes, glyphs out of strings; Race, sample boards, sample crew hauls, Deals/Arya Shoppers tips and "Coming soon" rungs hidden (keys kept, `web/src/lib/flags.ts`). `assistant/loops/2026-10-29-labels-audit.md`.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account
@@ -28,7 +30,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest · Settings (Settings opens Profile). Landing
-headline: "Groceries, sorted." The app is the React app (`assistant/web/`),
+headline: "Your grocery run, smarter." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
@@ -98,6 +100,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `2026-10-29-quest-empty-and-leave.md`.
   A real trip is saved on its first grab, so one opened and left never
   shows as Resume. `2026-10-29-quest-trip-on-grab.md`.
+  A list for a store shops there: Start shopping on it opens the trip at
+  that store, the Quest home says "Start at <store>" with "Shop somewhere
+  else", and the store pick leads with it under Your stores.
+  `2026-10-29-quest-list-store.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
 - **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,
