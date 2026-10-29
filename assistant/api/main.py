@@ -1139,7 +1139,17 @@ def _add_name_to_list(name, qty=1):
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
     import re as _re
+    from api.list.intake import existing_item_id
     name = (name or "").strip()
+    known = existing_item_id(name, state.dictionary()["entries"], state.flags())
+    if known:
+        # Already tracked, or already typed in: the same row, not a twin.
+        flag = {"manual": True, "dismissed_on": None}
+        if qty and qty > 1:
+            flag["qty_override"] = qty
+        _merge_flag(known, flag)
+        return {"item_id": known, "name": state.flags().get(known, {}).get("name")
+                or state.names().get(known, name)}
     item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     flag = {"manual": True, "name": name, "dismissed_on": None}
     if qty and qty > 1:
