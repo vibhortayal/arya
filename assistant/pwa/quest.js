@@ -456,11 +456,13 @@ $("#quest-sessions").addEventListener("click", async ev => {
   const s = qSessionById(b.dataset.sess);
   if (s) qOpenSession(s);
 });
-$("#btn-new-hunt").addEventListener("click", async () => {
+async function qStartNewHunt(fromList) {
   // Plan a hunt (owner, 2026-10-28): store first, then move items
   // from the Arya list into the quest, sorted by where each one is
-  // usually bought.
-  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {} };
+  // usually bought. From a named list (owner, 2026-10-29) the plan
+  // holds that list's items only.
+  Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {},
+              fromList: fromList ? { id: fromList.id, name: fromList.name, stores: fromList.stores || [] } : null };
   $("#st-name").value = "";
   $("#nl-text").value = "";
   // One-shot location for biasing Google suggestions toward the
@@ -472,10 +474,35 @@ $("#btn-new-hunt").addEventListener("click", async () => {
       () => {}, { timeout: 4000, maximumAge: 600000 });
   }
   try { await qLoadMine(); } catch (e) { Q.mine = []; }
-  try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
+  await qLoadPlan();
+  // One linked store that the household already knows: straight to
+  // the plan. Several, or none known: the picker opens with the
+  // list's stores first.
+  const one = fromList && (fromList.stores || []).length === 1 ? fromList.stores[0] : "";
+  if (one) {
+    const mine = (Q.mine || []).find(s2 => qSameStore(s2.name, one));
+    const hist = qHistoryStores().find(h => qSameStore(h, one));
+    if (mine || hist) {
+      Q.draft.storeId = mine ? mine.id : null;
+      $("#st-name").value = mine ? mine.name : hist;
+      qPickStore();
+      return;
+    }
+  }
   renderStorePick();
   questShow("view-store");
-});
+}
+$("#btn-new-hunt").addEventListener("click", () => qStartNewHunt(null));
+window.startHuntFromList = list => qStartNewHunt(list).catch(e => toast(e.message));
+
+/* The plan payload. From a named list the list rows narrow to that
+ * list, so every step after (picks, the bag, usuals) sees one list. */
+async function qLoadPlan() {
+  try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
+  const fl = Q.draft && Q.draft.fromList;
+  if (fl) Q.plan = { ...Q.plan, list: (Q.plan.list || []).filter(li => li.list === fl.id) };
+  return Q.plan;
+}
 
 /* ---------------- Plan a hunt: where things are usually bought ----
  * Counting only, from the receipts (/api/quest/plan). For the picked
@@ -704,7 +731,7 @@ $("#nl-photo").addEventListener("change", async ev => {
     if (out.kind === "receipt") {
       toast("That looks like a receipt — file it from the List tab.");
     } else if (out.names && out.names.length) {
-      try { Q.plan = await api("/api/quest/plan"); } catch (e) {}
+      await qLoadPlan().catch(() => {});
       for (const n of out.names) {
         const key = qnorm(n);
         Q.draft.pick[key] = { name: n, qty: (Q.draft.pick[key] || {}).qty || 1, on: true };
@@ -739,13 +766,14 @@ $("#nl-next").addEventListener("click", async () => {
   try {
     draft.raw = raw;
     // Typed extras join the Arya list too: one list everywhere.
+    const lid = draft.fromList ? { list_id: draft.fromList.id } : {};
     for (const r of qParseText($("#nl-text").value)) {
-      post("/api/list/add", { name: r.name }).catch(() => {});
+      post("/api/list/add", { name: r.name, ...lid }).catch(() => {});
     }
     // Typed and starter rows from the bag join it with their count
     // and who added them. Left-over and haul items never do.
     if (typeof PACK !== "undefined") {
-      for (const body of PACK.listJoins()) post("/api/list/add", body).catch(() => {});
+      for (const body of PACK.listJoins()) post("/api/list/add", { ...body, ...lid }).catch(() => {});
     }
     await qOptimizeDraft();
   } catch (e) { toast(e.message); }
@@ -773,6 +801,18 @@ async function qLoadMine() {
 function renderStorePick() {
   const box = $("#st-mine");
   if (!box) return;
+  // A hunt from a named list: that list's stores come first, one
+  // tap each (a store of yours opens by id, a receipt store by name).
+  const fl = $("#st-fromlist");
+  const lf = Q.draft && Q.draft.fromList;
+  if (fl) {
+    fl.innerHTML = lf && (lf.stores || []).length
+      ? `<h3 class="sect">${esc(lf.name)} stores</h3><div class="group">` + lf.stores.map(name => {
+          const mine = (Q.mine || []).find(s2 => qSameStore(s2.name, name));
+          return `<button class="sessrow pickrow" type="button" ${mine ? `data-pick="${esc(mine.id)}"` : `data-histstore="${esc(name)}"`}>
+            <span class="grow"><span class="name">${esc(name)}</span></span></button>`;
+        }).join("") + `</div>` : "";
+  }
   // Stores from the receipts that are not in My Stores yet: one tap
   // names the store for this trip.
   const hist = qHistoryStores()
