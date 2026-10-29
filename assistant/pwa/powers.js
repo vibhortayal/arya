@@ -47,7 +47,7 @@
       when: "You need to opt in first. A price then shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified.", share: true },
     { id: "deals", group: "next", name: "Deals for you", sub: "Hear when something you buy is cheaper nearby.", need: "Needs Community prices", what: "A heads-up when an item you buy is cheaper than usual somewhere near you.",
       unlock: "Needs Community prices. Only items you already buy.", when: "Built from shared prices, never from store sites or flyers.", share: true },
-    { id: "shoppers", group: "next", name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Turn on", what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
+    { id: "shoppers", group: "next", name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Coming soon", soon: true, what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
       unlock: "Opt in to be counted while you shop. Nobody is shown by name or on a map.", when: "Under 3 Arya Shoppers there, it only says Quiet.", share: true },
     { id: "compare", group: "new", name: "Compare your stores", sub: "See which of your stores is cheaper for an item.", need: "After receipts from 2 stores", what: "Ask \"how much was milk at Costco?\" in the aisle, and see the cheaper store on any item.",
       unlock: "Add receipts from 2 different stores.", on: f => f.stores >= 2, tip: "Arya can tell you which of your stores is cheaper for an item." },
@@ -138,6 +138,12 @@
     else if (a === "unshare") setShare(false).catch(e => toast(e.message));
   });
 
+  // The Powers page's own "Turn on" buttons.
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest && ev.target.closest("[data-pw-act]");
+    if (b && b.dataset.pwAct === "share") openShare();
+  });
+
   // Any (i) anywhere in the app opens its sheet.
   document.addEventListener("click", ev => {
     const b = ev.target.closest && ev.target.closest("[data-info]");
@@ -155,9 +161,15 @@
   /* ---- The Powers page: one line per power, groups collapse. ---- */
   function powRow(p) {
     const on = isOn(p);
-    const need = on ? "" : (p.share && facts.share_prices ? "Waiting for 5 households" : p.need || "");
+    const need = on ? "" : (p.share && !p.soon && facts.share_prices ? "Waiting for 5 households" : p.need || "");
+    // Owner bug 2026-10-29: "Turn on" looked like a link and did nothing.
+    // A price-sharing power that is still off opens the Share prices sheet.
+    const act = p.share && !p.soon && !facts.share_prices;
+    const needEl = !need ? "" : act
+      ? `<button class="pwneed" type="button" data-pw-act="share">${esc(need)}</button>`
+      : `<span class="pwneed">${esc(need)}</span>`;
     return `<div class="row powrow"><span class="pwdot${on ? " on" : " off"}" aria-hidden="true">${on ? "✓" : LOCK_SVG}</span>
-      <div class="grow"><span class="name">${esc(p.name)}</span><span class="sub">${esc(p.sub || p.what)}</span>${need ? `<span class="pwneed">${esc(need)}</span>` : ""}</div>
+      <div class="grow"><span class="name">${esc(p.name)}</span><span class="sub">${esc(p.sub || p.what)}</span>${needEl}</div>
       ${infoBtn(p.id)}</div>`;
   }
 
