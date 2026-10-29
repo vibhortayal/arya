@@ -4,6 +4,7 @@ import { get } from "../../lib/api";
 import { asset } from "../../lib/format";
 import { faceFor } from "../../lib/characters";
 import type { ShareCtx } from "./state";
+import { useTranslation } from "../../i18n";
 
 /* Port of pwa/share.js ShareUI and index.html #share-sheet: the haul
  * card, the love note and the Shelf SOS. Every card is built from the
@@ -273,6 +274,7 @@ function download(blob: Blob, name: string) {
 type Pick = { items: string[]; hint: string; done: (item: string) => void } | { none: true } | null;
 
 export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("Share");
   const [pick, setPick] = useState<Pick>(null);
   const [card, setCard] = useState<Card | null>(null);
@@ -395,7 +397,7 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
     <Sheet open={!!req} onClose={onClose} id="share-sheet" labelledBy="share-title">
       <h3 id="share-title" style={{ marginTop: 0 }}>{title}</h3>
       <div id="share-chips">
-        {pick && "none" in pick && <p className="muted">Nothing to pick from this hunt.</p>}
+        {pick && "none" in pick && <p className="muted">{t("haul.nothingToPickFromThis")}</p>}
         {pick && "items" in pick && <>
           <p className="muted">{pick.hint}</p>
           <p style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -419,15 +421,15 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
           ))}
         </div>
         <p style={{ margin: "10px 0 2px" }}><label><input type="checkbox" id="opt-handle" checked={o.handle}
-          onChange={e => setO({ ...o, handle: e.target.checked })} /> Show my handle</label></p>
+          onChange={e => setO({ ...o, handle: e.target.checked })} />{" "}{t("haul.showMyHandle")}</label></p>
         <p style={{ margin: "2px 0" }}><label><input type="checkbox" id="opt-level" checked={o.level}
-          onChange={e => setO({ ...o, level: e.target.checked })} /> Show my level</label></p>
+          onChange={e => setO({ ...o, level: e.target.checked })} />{" "}{t("haul.showMyLevel")}</label></p>
         <p style={{ margin: "2px 0" }} id="opt-photo-row" hidden={!card || !card.photo}><label><input type="checkbox" id="opt-photo" checked={!!o.photo}
           onChange={e => {
             const photo = e.target.checked;
             setO(photo && o.look !== "plain" ? { ...o, photo, look: "plain", painted: null } : { ...o, photo });
-          }} /> Add my haul photo</label><br /><span className="muted">Off by default. Check that nobody is in it before you share.</span></p>
-        <h4 style={{ margin: "12px 0 6px" }}>Make it special with Arya</h4>
+          }} />{" "}{t("haul.addMyHaulPhoto")}</label><br /><span className="muted">{t("haul.offByDefaultCheckThat")}</span></p>
+        <h4 style={{ margin: "12px 0 6px" }}>{t("haul.makeItSpecialWithArya")}</h4>
         <div className="seg" id="share-looks">
           {([["plain", "Plain"], ["badge", "Add my badge"], ["friends", "Cast joins in"], ["story", "Storybook"]] as const).map(([l, label]) => (
             <button key={l} className="chip" type="button" data-look={l} aria-pressed={o.look === l} disabled={lookOff(l)}
@@ -436,14 +438,14 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
         </div>
         <p className="muted" id="share-look-hint" style={{ margin: "6px 0 0" }}>{hint}</p>
         <p style={{ margin: "6px 0 0" }}><button className="btn" id="share-again" type="button" hidden={o.look === "plain"} disabled={o.busy}
-          onClick={() => setLook(o.look, { ...o, tries: o.tries + 1 })}>Try another</button></p>
+          onClick={() => setLook(o.look, { ...o, tries: o.tries + 1 })}>{t("haul.tryAnother")}</button></p>
       </div>
       <p className="muted" id="share-caption" style={{ marginTop: 10 }}>{card ? card.caption : ""}</p>
       <p style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button className="btn primary grow" id="share-go" type="button" hidden={!ready} onClick={() => { doShare().catch(() => {}); }}>Share</button>
-        <button className="btn grow" id="share-png" type="button" hidden={!ready} onClick={() => { doSave().catch(() => {}); }}>Save image</button>
-        <button className="btn grow" id="share-copy" type="button" hidden={!ready} onClick={() => { doCopy(); }}>Copy caption</button>
-        <button className="btn grow" id="share-close" type="button" onClick={onClose}>Close</button>
+        <button className="btn primary grow" id="share-go" type="button" hidden={!ready} onClick={() => { doShare().catch(() => {}); }}>{t("common.share")}</button>
+        <button className="btn grow" id="share-png" type="button" hidden={!ready} onClick={() => { doSave().catch(() => {}); }}>{t("haul.saveImage")}</button>
+        <button className="btn grow" id="share-copy" type="button" hidden={!ready} onClick={() => { doCopy(); }}>{t("haul.copyCaption")}</button>
+        <button className="btn grow" id="share-close" type="button" onClick={onClose}>{t("common.close")}</button>
       </p>
       <p className="muted nomargin" id="share-status">{status}</p>
     </Sheet>

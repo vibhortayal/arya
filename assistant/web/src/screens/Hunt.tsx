@@ -22,6 +22,7 @@ import { HuntMenu, openItems, type MenuState } from "./hunt/HuntMenu";
 import { ScanView, type Pop } from "./hunt/Scan";
 import { AskSheet } from "./hunt/AskSheet";
 import { useRecord } from "./hunt/useRecord";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-hunt and its sheets (Not here, How to
  * play, the hunt menu, Ask Arya, the Shelf Scan) with the hunt half of
@@ -132,6 +133,7 @@ const SPOT_KINDS: [string, string][] = [
 ];
 
 export function Hunt() {
+  const { t } = useTranslation();
   const nav = useNav();
   useStoreData();
   const { demo } = useSession();
@@ -673,8 +675,8 @@ export function Hunt() {
   if (!sess) {
     return (
       <>
-        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ Back</a></p>
-        <Empty>That hunt is gone — the demo resets now and then. Go back to Today and start it again.</Empty>
+        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>{t("common.back")}</a></p>
+        <Empty>{t("hunt.thatHuntIsGoneThe")}</Empty>
       </>
     );
   }
@@ -707,9 +709,9 @@ export function Hunt() {
     const b = sess.boss;
     popKicker = "Ready when you are";
     popBody = <>
-      <p className="pop-name">{p.total} item{p.total === 1 ? "" : "s"}</p>
-      <p className="pop-shelf">First stop: {first ? first.name : "—"}.</p>
-      {b ? <p className="pop-shelf hunt-boss">Boss item: {b.name}. Reported missing on {b.reports} earlier trips. Find it for +{QPTS.boss}.</p> : null}
+      <p className="pop-name">{t("hunt.item", { total: p.total })}{p.total === 1 ? "" : "s"}</p>
+      <p className="pop-shelf">{t("hunt.firstStop")}{" "}{first ? first.name : "—"}.</p>
+      {b ? <p className="pop-shelf hunt-boss">{t("hunt.bossItemReportedMissingOn", { name: b.name, reports: b.reports, boss: QPTS.boss })}</p> : null}
     </>;
     collectLabel = "Start the hunt";
     notHereDisabled = true;
@@ -722,8 +724,8 @@ export function Hunt() {
       <div className="popflex"><img className="popface" src={asset("assets/characters/" + faceFor(it.name))} alt="" />
         <div><p className="pop-name">{it.name}{it.unit ? ` · ${qtyTag(it)}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       {stop.shelfLabel ? <p className="pop-shelf">{stop.shelfLabel}</p> : null}
-      {itemHasData(store, it) ? null : <p className="pop-shelf nodata">Arya has no photo of this aisle yet. Found it? <button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)}>Snap the aisle</button> so other Arya Shoppers can find it too.</p>}
-      {rep ? <p style={{ margin: "6px 0 0" }}><span className="repflag">You reported this missing here.</span></p> : null}
+      {itemHasData(store, it) ? null : <p className="pop-shelf nodata">{t("hunt.aryaHasNoPhotoOf")}{" "}<button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)}>{t("hunt.snapTheAisle")}</button>{" "}{t("hunt.soOtherAryaShoppersCan")}</p>}
+      {rep ? <p style={{ margin: "6px 0 0" }}><span className="repflag">{t("hunt.youReportedThisMissingHere")}</span></p> : null}
     </>;
     collectLabel = it.unit || it.qty > 1 ? `Grab ${qtyTag(it)} - ${it.name}` : `Grab · ${it.name}`;
     collectDisabled = state !== "playing";
@@ -765,8 +767,8 @@ export function Hunt() {
         <div className="grow"><span className="name">{it.name}{qty ? <> <span className="hqty">{qty}</span></> : null}</span>
           {(bossGroup && it.group === bossGroup) || it.added_mid_hunt
             ? <span className="hunt-badges">
-                {bossGroup && it.group === bossGroup ? <span className="hunt-badge boss">Boss</span> : null}
-                {it.added_mid_hunt ? <span className="hunt-badge">Just added</span> : null}
+                {bossGroup && it.group === bossGroup ? <span className="hunt-badge boss">{t("hunt.boss")}</span> : null}
+                {it.added_mid_hunt ? <span className="hunt-badge">{t("hunt.justAdded")}</span> : null}
               </span>
             : null}
           {note ? <span className="sub hunt-note">{note}</span> : null}
@@ -776,7 +778,7 @@ export function Hunt() {
                 <button type="button" className="hunt-unfind" data-unfind={i} aria-label={`Dismiss the spotted note for ${it.name}`} onClick={() => unfind(i)}>{CLOSE}</button></span>
             : null}
         </div>
-        {rep ? <button type="button" className="btn rowact" data-foundit={i} disabled={!live} onClick={() => foundIt(i)}>Found it after all</button> : null}
+        {rep ? <button type="button" className="btn rowact" data-foundit={i} disabled={!live} onClick={() => foundIt(i)}>{t("hunt.foundItAfterAll")}</button> : null}
         {it.checked ? null : <button type="button" className="morechev" data-more={i} aria-label={`More for ${it.name}`} onClick={openMenu}>›</button>}
       </div>
     );
@@ -790,24 +792,24 @@ export function Hunt() {
   return (
     <>
       <div className="hunthud">
-        <a href="#" className="qback hudback" aria-label="Back" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
+        <a href="#" className="qback hudback" aria-label={t("common.back2")} onClick={ev => { ev.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
         <span className="hchip grow" id="hunt-store">{`${store} · ${QMODE_LABEL[sess.mode] || sess.mode}`}</span>
         <span className="hchip" id="hunt-timer" ref={timerEl} hidden>0:00</span>
-        <span className="hchip pts" id="hunt-pts" aria-live="polite">{qHaulPoints(sess, false)} pts</span>
+        <span className="hchip pts" id="hunt-pts" aria-live="polite">{t("hunt.pts", { qHaulPoints: qHaulPoints(sess, false) })}</span>
         <span className="hchip prog" id="hunt-count">{`${hd.handled} of ${hd.total}`}</span>
-        <span className="hchip combo" id="hunt-combo" hidden={!(Q.combo >= 2)}>Combo x{Q.combo || 0}</span>
+        <span className="hchip combo" id="hunt-combo" hidden={!(Q.combo >= 2)}>{t("hunt.comboX")}{Q.combo || 0}</span>
         <button id="btn-pause" className="hudbtn" type="button" aria-label={state === "paused" ? "Resume" : "Pause"}
           disabled={state === "not_started"} onClick={onPause}>{state === "paused" ? PLAY : PAUSE}</button>
       </div>
       <div id="q-brief">
         {brief ? (
           <div className="group pad mp-offer">
-            <span className="eyebrow">Bonus · +10 pts</span>
-            <div className="name">Got {brief.est_seconds} seconds? Teach Arya {brief.title.replace(/^(Photo of|Walk)\s+/, "")}.</div>
-            <p className="muted nomargin">Your next hunt here gets faster. Open the camera and walk; Arya does the rest.</p>
+            <span className="eyebrow">{t("hunt.bonus10Pts")}</span>
+            <div className="name">{t("hunt.gotSecondsTeachArya", { est_seconds: brief.est_seconds, replace: brief.title.replace(/^(Photo of|Walk)\s+/, "") })}</div>
+            <p className="muted nomargin">{t("hunt.yourNextHuntHereGets")}</p>
             <div className="rail">
-              <button className="btn primary" data-mapoffer="go" type="button" onClick={() => nav.show("capture", { prompt: brief, store })}>Teach Arya</button>
-              <button className="btn" data-mapoffer="later" type="button" onClick={() => { mapperMute(store); setBrief(null); }}>Not now</button>
+              <button className="btn primary" data-mapoffer="go" type="button" onClick={() => nav.show("capture", { prompt: brief, store })}>{t("hunt.teachArya")}</button>
+              <button className="btn" data-mapoffer="later" type="button" onClick={() => { mapperMute(store); setBrief(null); }}>{t("common.notNow")}</button>
             </div>
           </div>
         ) : null}
@@ -827,33 +829,33 @@ export function Hunt() {
       <div id="milestone" className="milestone" role="status" />
       <p id="hunt-mapnote" className="muted small" hidden />
       <p id="hunt-offline" className="offlinenote" role="status" hidden={!offlineText}>{offlineText}</p>
-      <div className="hunt-tools" role="group" aria-label="Hunt tools">
+      <div className="hunt-tools" role="group" aria-label={t("hunt.huntTools")}>
         <button id="btn-scan" className="btn toolbtn" type="button" hidden={driverName !== "strip"} onClick={() => openScan(null)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.4" /></svg><span>Scan shelf</span></button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.4" /></svg><span>{t("hunt.scanShelf")}</span></button>
         <button id="btn-locate" className="btn toolbtn" type="button" hidden={!(driverName === "cloud" || driverName === "photo")}
           onClick={() => locateRef.current?.click()}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none" /></svg><span>Where am I?</span></button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none" /></svg><span>{t("hunt.whereAmI")}</span></button>
         <button id="btn-nothere" className="btn toolbtn" type="button" hidden={allIn} disabled={notHereDisabled}
-          onClick={() => { const s = Q.current; const i = s ? qCurrentIndex(s) : -1; if (s && i >= 0) setMenu({ kind: "moved", name: s.items[i].name }); }}>Not here?</button>
+          onClick={() => { const s = Q.current; const i = s ? qCurrentIndex(s) : -1; if (s && i >= 0) setMenu({ kind: "moved", name: s.items[i].name }); }}>{t("common.notHere")}</button>
         <button id="btn-wild" className="btn toolbtn" type="button"
-          onClick={() => { const o = !wildOpen; setWildOpen(o); if (o) setTimeout(() => wildRef.current?.focus(), 0); }}>+ Wild find</button>
+          onClick={() => { const o = !wildOpen; setWildOpen(o); if (o) setTimeout(() => wildRef.current?.focus(), 0); }}>{t("hunt.wildFind")}</button>
         <button id="btn-teach" className="btn toolbtn" type="button" hidden={!teach}
           onClick={() => { if (teach) nav.show("capture", { prompt: teach, store }); }}>
-          <img className="toolimg" src={asset("assets/characters/compass.webp")} alt="" /><span>Teach Arya</span></button>
+          <img className="toolimg" src={asset("assets/characters/compass.webp")} alt="" /><span>{t("hunt.teachArya")}</span></button>
         <span className="toolspacer" />
         <span className="hudgroup">
-          <button id="btn-howto" className="hudbtn" type="button" aria-label="How to play" onClick={() => setHowto(true)}>?</button>
-          <button id="btn-sound" className="hudbtn" type="button" aria-label="Sound and buzz" aria-pressed={QFX.on}
+          <button id="btn-howto" className="hudbtn" type="button" aria-label={t("hunt.howToPlay")} onClick={() => setHowto(true)}>?</button>
+          <button id="btn-sound" className="hudbtn" type="button" aria-label={t("hunt.soundAndBuzz")} aria-pressed={QFX.on}
             onClick={() => { setSound(!QFX.on); repaint(); }}>{QFX.on ? SOUND_ON : SOUND_OFF}</button>
         </span>
       </div>
       <div id="wild-form" className="group pad" hidden={!wildOpen}>
-        <label className="field" htmlFor="wild-name">Wild find — already in your cart?</label>
-        <input type="text" id="wild-name" ref={wildRef} placeholder="e.g. oat milk chocolate" autoComplete="off"
+        <label className="field" htmlFor="wild-name">{t("hunt.wildFindAlreadyInYour")}</label>
+        <input type="text" id="wild-name" ref={wildRef} placeholder={t("hunt.eGOatMilkChocolate")} autoComplete="off"
           value={wildName} onChange={e => setWildName(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addWild(); } }} />
         <p style={{ display: "flex", gap: 8, margin: "8px 0 0" }}>
-          <button className="btn primary grow" id="wild-add" type="button" onClick={addWild}>Add to the haul</button>
+          <button className="btn primary grow" id="wild-add" type="button" onClick={addWild}>{t("hunt.addToTheHaul")}</button>
           <button className={"btn grow" + (wildRec.listening ? " listening" : "")} id="wild-mic" type="button" onClick={wildRec.click}>
             {wildRec.listening ? "Stop & transcribe" : "Record"}</button>
         </p>
@@ -878,14 +880,14 @@ export function Hunt() {
         <p className="nomargin"><button id="btn-collect" className="btn primary wide grabbtn" type="button" disabled={collectDisabled} onClick={onCollect}>{collectLabel}</button></p>
         <p className="nomargin findrow"><button id="btn-findit" className="btn wide" type="button" hidden={findHidden || allIn}
           onClick={() => { const s = Q.current; const i = s ? qCurrentIndex(s) : -1; if (s && i >= 0) openScan(s.items[i].name); }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg><span>Find it for me</span></button></p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></svg><span>{t("hunt.findItForMe")}</span></button></p>
       </div>
       <p id="hunt-done-note" className="donenote" hidden={!allIn} style={allIn && popH.current ? { minHeight: popH.current } : undefined}>
         {p.total > 0 && p.left === 0
           ? "All collected. Nothing moves you on by itself. Tap Done when you are ready. You can still put any item back."
           : "Nothing left to grab. Tap Done when you are ready."}
       </p>
-      <h3 className="sect">The list</h3>
+      <h3 className="sect">{t("hunt.theList")}</h3>
       <div id="hunt-list" className="group">
         {listRows.length ? listRows : <Empty>{left.length ? "Nothing left on this hunt. Tap Done when you are ready." : "The list is empty."}</Empty>}
       </div>
@@ -893,26 +895,26 @@ export function Hunt() {
         {left.length ? (
           <div className="group hm-leftgroup">
             <button type="button" className="hm-leftbar" data-act="fold" aria-expanded={leftOpen} onClick={() => setLeftOpen(o => !o)}>
-              <span>Left for next time ({left.length})</span>
+              <span>{t("hunt.leftForNextTime", { leftCount: left.length })}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={"hm-chev" + (leftOpen ? " open" : "")}><path d="M6 9l6 6 6-6" /></svg>
             </button>
             {leftOpen ? left.map((e, k) => (
               <div key={e.name + k} className="row hm-leftrow">
                 <div className="grow"><span className="name">{e.name}{qtyTag(e) ? ` - ${qtyTag(e)}` : ""}</span>
                   <span className="sub">{e.how === "dropped" ? "Not needed today" : "Saved for next trip"}</span></div>
-                <button type="button" className="btn" data-back={k} aria-label={`Bring back ${e.name}`} onClick={() => bringBack(toast, sess, k)}>Bring back</button>
+                <button type="button" className="btn" data-back={k} aria-label={`Bring back ${e.name}`} onClick={() => bringBack(toast, sess, k)}>{t("hunt.bringBack")}</button>
               </div>
             )) : null}
           </div>
         ) : null}
       </div>
       <div id="hunt-add" className="hm-add group pad">
-        <label className="hm-addlabel" htmlFor="hm-add-input">+ Forgot something?</label>
+        <label className="hm-addlabel" htmlFor="hm-add-input">{t("hunt.forgotSomething")}</label>
         <div className="hm-addrow">
-          <input type="text" id="hm-add-input" className="hm-addinput" placeholder="2x tortillas" autoComplete="off" enterKeyHint="done"
+          <input type="text" id="hm-add-input" className="hm-addinput" placeholder={t("hunt.2xTortillas")} autoComplete="off" enterKeyHint="done"
             value={addText} onChange={e => setAddText(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addForgot(addText); } }} />
-          <button id="hm-add-btn" className="btn primary" type="button" onClick={() => addForgot(addText)}>Add</button>
+          <button id="hm-add-btn" className="btn primary" type="button" onClick={() => addForgot(addText)}>{t("common.add")}</button>
           <button id="hm-add-mic" className={"btn hm-mic" + (addRec.listening ? " listening" : "")} type="button" onClick={addRec.click}>
             {addRec.listening ? "Stop & transcribe" : "Record"}</button>
         </div>
@@ -924,7 +926,7 @@ export function Hunt() {
       <p><button id="btn-finish" className={stillOpen ? "btn secondary wide" : "btn primary wide"} type="button"
         disabled={state === "not_started"} onClick={onFinish}>{stillOpen ? "I'm done shopping" : "Done. Add receipt"}</button></p>
       <p style={{ textAlign: "center" }}><button id="btn-abandon" className="btn" type="button"
-        hidden={!["playing", "paused", "not_started"].includes(state)} onClick={onAbandon}>End this quest</button></p>
+        hidden={!["playing", "paused", "not_started"].includes(state)} onClick={onAbandon}>{t("hunt.endThisQuest")}</button></p>
       <p id="motion-row" className="motionrow" hidden={!(gyro || stepsVis)}>
         <button id="btn-gyro" className="btn" type="button" aria-pressed={!!(M.motion && M.motion.on)} hidden={!gyro}
           onClick={async () => {
@@ -940,9 +942,9 @@ export function Hunt() {
             repaint();
           }}>{M.stepsOn ? "Steps advance · on (experiment)" : "Steps advance · experiment"}</button>
       </p>
-      <button id="hunt-askbar" className="askbar" type="button" onClick={() => setAsk(true)}>Ask Arya…<span className="askmic">
+      <button id="hunt-askbar" className="askbar" type="button" onClick={() => setAsk(true)}>{t("hunt.askArya")}<span className="askmic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" /></svg></span></button>
-      <div id="hunt-rail" className="rail" aria-label="Today's hunts">
+      <div id="hunt-rail" className="rail" aria-label={t("common.todaySHunts")}>
         {Q.sessions.map(s0 => {
           const s = s0.id === sess.id ? sess : s0;
           const pr = qProgress(s);
@@ -957,7 +959,7 @@ export function Hunt() {
 
       <Sheet open={!!spot} onClose={() => setSpot(null)} id="spot-sheet">
         <span className="sheetgrip" aria-hidden="true" />
-        <div className="row"><span className="name">Not here</span></div>
+        <div className="row"><span className="name">{t("common.notHere2")}</span></div>
         <p className="muted" id="spot-item">{spot && sess.items[spot.idx] ? `At the stop for ${sess.items[spot.idx].name} — what do you see?` : ""}</p>
         <div className="actions" style={{ flexDirection: "column", alignItems: "stretch" }}>
           {SPOT_KINDS.map(([kind, label]) => (
@@ -965,19 +967,19 @@ export function Hunt() {
               onClick={() => sendSpotReport(kind)}>{label}</button>
           ))}
         </div>
-        <p className="muted nomargin">Tap what you see and the report is sent. Tap outside or drag down to close. A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
+        <p className="muted nomargin">{t("hunt.tapWhatYouSeeAnd")}</p>
       </Sheet>
 
       <Sheet open={howto} onClose={closeHowto} id="howto-sheet" labelledBy="howto-title">
-        <div className="row"><span className="name" id="howto-title">How to play · 3 steps</span>
-          <button id="howto-skip" className="btn" type="button" onClick={closeHowto}>Skip</button></div>
+        <div className="row"><span className="name" id="howto-title">{t("hunt.howToPlay3Steps")}</span>
+          <button id="howto-skip" className="btn" type="button" onClick={closeHowto}>{t("common.skip")}</button></div>
         <ol className="howto">
-          <li><b>Find it</b><span>The orange card shows your next item and its shelf; the picture shows where it is in the store. Get any item in any order — the route is just a suggestion.</span></li>
-          <li><b>Grab it</b><span>In your cart? Tap Grab: +10 points. Changed your mind? Put back. Shelf empty? Tap &ldquo;Not here?&rdquo; and warn the next shopper.</span></li>
-          <li><b>Snap the receipt</b><span>Tap Finish and photograph the receipt: +50, and your points bank. No clock, no way to lose.</span></li>
+          <li><b>{t("hunt.findIt")}</b><span>{t("hunt.theOrangeCardShowsYour")}</span></li>
+          <li><b>{t("hunt.grabIt")}</b><span>{t("hunt.inYourCartTapGrab")}</span></li>
+          <li><b>{t("hunt.snapTheReceipt")}</b><span>{t("hunt.tapFinishAndPhotographThe")}</span></li>
         </ol>
-        <p className="nomargin"><button id="howto-go" className="btn primary wide" type="button" data-first onClick={closeHowto}>Got it — let&rsquo;s hunt</button></p>
-        <p className="muted nomargin">The &ldquo;?&rdquo; on the hunt screen opens this again.</p>
+        <p className="nomargin"><button id="howto-go" className="btn primary wide" type="button" data-first onClick={closeHowto}>{t("hunt.gotItLetSHunt")}</button></p>
+        <p className="muted nomargin">{t("hunt.theOnTheHuntScreen")}</p>
       </Sheet>
 
       <StickerCard onUndo={(key, name) => {

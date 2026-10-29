@@ -6,6 +6,7 @@ import { useToast } from "../ui/Toast";
 import { IconMic, IconSpeaker } from "../ui/icons";
 import { languageToast, offerFor, offerRefused, refuseOffer, voiceLang } from "../lib/language";
 import "../ui/language.css";
+import { useTranslation } from "../i18n";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -29,6 +30,7 @@ const SUGGEST = ["What's running low?", "What did I spend this month?", "Add egg
 const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
 
 export function Chat() {
+  const { t } = useTranslation();
   const { demo, language, languages, setLanguage } = useSession();
   const { toast } = useToast();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
@@ -133,34 +135,34 @@ export function Chat() {
 
   return (
     <>
-      <h2 className="largetitle">Ask Arya</h2>
-      {demo && <p id="chat-demo-note" className="note">Demo: Ask answers from the demo household and applies what you tell it for this visit only. Try &ldquo;We finished the milk&rdquo; or &ldquo;What do we spend on coffee?&rdquo;</p>}
+      <h2 className="largetitle">{t("common.askArya")}</h2>
+      {demo && <p id="chat-demo-note" className="note">{t("ask.demoAskAnswersFromThe")}</p>}
       <div id="chat-log" ref={logEl}>
         {log.length === 0 ? (
           <div id="chat-empty">
-            <p className="muted">Ask about your list, your spending, or what is running low.</p>
+            <p className="muted">{t("ask.askAboutYourListYour")}</p>
             {SUGGEST.map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (
           <div key={i} className="bubble arya offer" id="lang-offer">
             <div className="group"><div className="row">
-              <span className="name">Reply in {l.text} from now on?</span>
-              <span className="sub">You can change this any time in Settings › Language.</span>
+              <span className="name">{t("ask.replyInFromNowOn", { text: l.text })}</span>
+              <span className="sub">{t("ask.youCanChangeThisAny")}</span>
               <div className="offer-btns">
-                <button className="btn secondary" type="button" id="lang-offer-no" onClick={offerNo}>No, thanks</button>
-                <button className="btn primary" type="button" id="lang-offer-yes" onClick={() => offerYes(l.code!)}>Yes, {l.text}</button>
+                <button className="btn secondary" type="button" id="lang-offer-no" onClick={offerNo}>{t("ask.noThanks")}</button>
+                <button className="btn primary" type="button" id="lang-offer-yes" onClick={() => offerYes(l.code!)}>{t("ask.yes", { text: l.text })}</button>
               </div>
             </div></div>
           </div>
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
       <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); send(text); }}>
-        <button id="btn-mic" type="button" className={"iconbtn" + (listening ? " listening" : "")} aria-label="Speak your message" onClick={mic}><IconMic /></button>
-        <input type="text" id="chat-input" ref={input} placeholder="Ask Arya" autoComplete="off" aria-label="Message"
+        <button id="btn-mic" type="button" className={"iconbtn" + (listening ? " listening" : "")} aria-label={t("ask.speakYourMessage")} onClick={mic}><IconMic /></button>
+        <input type="text" id="chat-input" ref={input} placeholder={t("common.askArya")} autoComplete="off" aria-label={t("ask.message")}
           value={text} onChange={e => setText(e.target.value)} />
-        <button id="btn-speak" type="button" className={"iconbtn" + (speakOn ? " on" : "")} aria-label="Toggle spoken replies"
+        <button id="btn-speak" type="button" className={"iconbtn" + (speakOn ? " on" : "")} aria-label={t("ask.toggleSpokenReplies")}
           aria-pressed={speakOn} onClick={toggleSpeak}><IconSpeaker /></button>
-        <button type="submit" className="btn primary" id="chat-send">Send</button>
+        <button type="submit" className="btn primary" id="chat-send">{t("common.send")}</button>
       </form>
       <p id="voice-note" className="muted" hidden={note === null}>{note}</p>
     </>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { api, post } from "../lib/api";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-muse ("Connect an AI agent") plus
  * app.js paintTokenRow / mintInto / SETUP_PROMPT. Back lands on Profile.
@@ -21,6 +22,7 @@ My connector token lives in your secure credential store — the one I pasted wh
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Muse() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   // null = not loaded (row empty); a string = a freshly minted token shown once.
@@ -51,22 +53,22 @@ export function Muse() {
 
   return (
     <>
-      <p><a href="#" id="pfm-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Connect an AI agent</h2>
+      <p><a href="#" id="pfm-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("muse.connectAnAiAgent")}</h2>
       <div className="group pad">
-        <p className="muted nomargin">Use Arya from an AI assistant you already talk to. It can add to your list, tell you what is running low and file receipts it reads. It works with any assistant that supports MCP connectors. Make a link code, then paste it into your assistant. The code is shown once; making a new one replaces it.</p>
+        <p className="muted nomargin">{t("muse.useAryaFromAnAi")}</p>
         <div className="row" id="profile-token-row" style={{ marginTop: 10 }}>
           {token !== null ? (
             <>
               <input className="grow" data-token-value readOnly value={token} ref={inputRef} />
-              <button className="btn" data-copy="1" onClick={copy}>Copy</button>
-              <span className="sub">Copy it now — it is not shown again. Paste it into your assistant's connector settings.</span>
+              <button className="btn" data-copy="1" onClick={copy}>{t("muse.copy")}</button>
+              <span className="sub">{t("muse.copyItNowItIs")}</span>
             </>
           ) : has === null ? null : (
             <>
               <span className="sub grow">{has ? "Your link code is active." : "No link code yet."}</span>
               <button className="btn" data-mint="1" onClick={mint}>{has ? "Make a new code" : "Make my link code"}</button>
-              {has && <button className="btn danger" data-revoke="1" onClick={revoke}>Revoke</button>}
+              {has && <button className="btn danger" data-revoke="1" onClick={revoke}>{t("muse.revoke")}</button>}
             </>
           )}
         </div>
@@ -74,7 +76,7 @@ export function Muse() {
           <button className="btn" data-copy-prompt="1" type="button" onClick={() => {
             if (navigator.clipboard) navigator.clipboard.writeText(SETUP_PROMPT).catch(() => { /* not allowed here */ });
             toast("Setup prompt copied.");
-          }}>Copy setup prompt</button> <span className="sub">Paste it into your assistant so it knows how to use Arya.</span>
+          }}>{t("muse.copySetupPrompt")}</button> <span className="sub">{t("muse.pasteItIntoYourAssistant")}</span>
         </p>
       </div>
     </>

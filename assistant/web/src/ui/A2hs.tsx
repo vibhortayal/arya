@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useInstallPrompt } from "../app/a2hs";
 import { asset } from "../lib/format";
 import { Sheet } from "./Sheet";
+import { useTranslation } from "../i18n";
 
 /* Add to Home Screen (pwa/a2hs.js): one copy for Today's card and
  * Profile's row. Android and desktop Chrome: the button runs the
@@ -38,13 +39,14 @@ function useA2hs(demo: boolean) {
 }
 
 function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
-    <Sheet open={open} onClose={onClose} id="a2hs-sheet" title="Add Arya to your Home Screen">
+    <Sheet open={open} onClose={onClose} id="a2hs-sheet" title={t("a2hs.addAryaToYourHome")}>
       <ol className="steps">
-        <li><span>Tap <b>Share</b> at the bottom of Safari.</span></li>
-        <li><span>Scroll and tap <b>Add to Home Screen</b>.</span></li>
-        <li><span>Leave <b>Open as Web App</b> <i className="tog" aria-hidden="true"></i> switched <b>on</b>.<span className="keepon">If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.</span></span></li>
-        <li><span>Tap <b>Add</b>, then open Arya from your Home Screen.</span></li>
+        <li><span>{t("a2hs.tap")}{" "}<b>{t("common.share")}</b>{" "}{t("a2hs.atTheBottomOfSafari")}</span></li>
+        <li><span>{t("a2hs.scrollAndTap")}{" "}<b>{t("a2hs.addToHomeScreen")}</b>.</span></li>
+        <li><span>{t("a2hs.leave")}{" "}<b>{t("a2hs.openAsWebApp")}</b> <i className="tog" aria-hidden="true"></i>{" "}{t("a2hs.switched")}{" "}<b>{t("a2hs.on")}</b>.<span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
+        <li><span>{t("a2hs.tap")}{" "}<b>{t("common.add")}</b>{t("a2hs.thenOpenAryaFromYour")}</span></li>
       </ol>
     </Sheet>
   );
@@ -53,6 +55,7 @@ function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
 /* Today: one dismissible card once there is a list and it is the
  * second visit or later; a dismiss holds for 30 days. */
 export function A2hsCard({ hasList, demo }: { hasList: boolean; demo: boolean }) {
+  const { t } = useTranslation();
   const a = useA2hs(demo);
   const [, bump] = useState(0);
   const dismissed = !!st.dismissed && Date.now() - st.dismissed < DISMISS_DAYS * 864e5;
@@ -62,9 +65,9 @@ export function A2hsCard({ hasList, demo }: { hasList: boolean; demo: boolean })
       {show && (
         <div className="group a2hs">
           <img className="rowface" src={asset("assets/characters/basket.webp")} alt="" />
-          <div className="grow"><b>Add Arya to your Home Screen</b><span className="sub">Full screen, with reminders.</span></div>
+          <div className="grow"><b>{t("a2hs.addAryaToYourHome")}</b><span className="sub">{t("a2hs.fullScreenWithReminders")}</span></div>
           <button className="chip" type="button" data-a2hs-go onClick={a.go}>{a.deferred ? "Install" : "Show how"}</button>
-          <button className="a2hs-x" type="button" data-a2hs-x aria-label="Dismiss"
+          <button className="a2hs-x" type="button" data-a2hs-x aria-label={t("common.dismiss")}
             onClick={() => { st.dismissed = Date.now(); save(); bump(n => n + 1); }}>&times;</button>
         </div>
       )}
@@ -75,11 +78,12 @@ export function A2hsCard({ hasList, demo }: { hasList: boolean; demo: boolean })
 
 /* Profile: an always-there row while there is something to offer. */
 export function A2hsRow({ demo }: { demo: boolean }) {
+  const { t } = useTranslation();
   const a = useA2hs(demo);
   return (
     <>
       <button className="navrow" id="btn-a2hs" type="button" hidden={!a.available} onClick={a.go}>
-        <span className="grow">Add to Home Screen<span className="sub">Opens full screen and lets reminders work</span></span><span className="chev">›</span></button>
+        <span className="grow">{t("a2hs.addToHomeScreen")}<span className="sub">{t("a2hs.opensFullScreenAndLets")}</span></span><span className="chev">›</span></button>
       <A2hsSteps open={a.steps} onClose={a.closeSteps} />
     </>
   );

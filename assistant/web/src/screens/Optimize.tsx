@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { Row, Empty } from "../ui/kit";
 import { qtyFmt } from "../lib/format";
 import { packExtrasOf, packSessionItem, type NewListDraft } from "./NewList";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-optimize and quest.js renderOptimize /
  * the #opt-body click handlers / qOptProceed. The draft (old Q.draft)
@@ -24,6 +25,7 @@ function askLaterSave(s: Set<string>) {
 }
 
 export function Optimize() {
+  const { t } = useTranslation();
   const nav = useNav();
   const [, bump] = useReducer((n: number) => n + 1, 0);
   const D = nav.params.draft as NewListDraft | undefined;
@@ -31,9 +33,9 @@ export function Optimize() {
   if (!D || !rep) {
     return (
       <>
-        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-        <h2 className="largetitle" style={{ fontSize: 28 }}>Check the list</h2>
-        <div className="group"><Empty>Nothing to check yet.</Empty></div>
+        <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+        <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
+        <div className="group"><Empty>{t("optimize.nothingToCheckYet")}</Empty></div>
       </>
     );
   }
@@ -101,13 +103,13 @@ export function Optimize() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Check the list</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
       <p id="opt-summary" className="subtitle">{parts.join(" · ")}</p>
       <div id="opt-body">
         {rep.merged.length > 0 && (
           <>
-            <h3 className="sect">Merged</h3>
+            <h3 className="sect">{t("optimize.merged")}</h3>
             <div className="group">
               {rep.merged.map((m: any, i: number) => (
                 <Row key={i} name={m.name} sub={`added as ${m.from.join(", ")}`} right={`× ${qtyFmt(m.qty)}`} />
@@ -117,7 +119,7 @@ export function Optimize() {
         )}
         {rep.corrected.length > 0 && (
           <>
-            <h3 className="sect">Corrected</h3>
+            <h3 className="sect">{t("optimize.corrected")}</h3>
             <div className="group">
               {rep.corrected.map((c: any, ci: number) => {
                 const kept = !!D.undone[ci];
@@ -137,7 +139,7 @@ export function Optimize() {
         )}
         {questions.length > 0 && (
           <>
-            <h3 className="sect">One choice each</h3>
+            <h3 className="sect">{t("optimize.oneChoiceEach")}</h3>
             {questions.map((q: any) => {
               const ans = D.answers[q.item] as string | undefined;
               const chip = (val: string, label: string) => (
@@ -153,7 +155,7 @@ export function Optimize() {
                   <p className="nomargin">
                     {swapped
                       ? <><span className="opt-from">{q.item}</span> → <strong>{pick}</strong></>
-                      : <><strong>{q.item}</strong> — which one?</>}
+                      : <><strong>{q.item}</strong>{" "}{t("optimize.whichOne")}</>}
                   </p>
                   <div className={"actions optchips" + (ans ? " has-pick" : "")} style={{ paddingBottom: 0 }}>
                     {q.candidates.map((c: any) => chip("cand:" + c.name, c.name))}
@@ -161,7 +163,7 @@ export function Optimize() {
                     {chip("typed", "Keep as typed")}
                   </div>
                   {ans ? <button className="opt-undo" data-qundo={q.item} type="button"
-                    onClick={() => { delete D.answers[q.item]; bump(); }}>Undo</button> : null}
+                    onClick={() => { delete D.answers[q.item]; bump(); }}>{t("common.undo")}</button> : null}
                 </div>
               );
             })}
@@ -169,19 +171,19 @@ export function Optimize() {
         )}
         {rep.unresolved.length > 0 && (
           <>
-            <h3 className="sect">Kept as typed</h3>
+            <h3 className="sect">{t("optimize.keptAsTyped")}</h3>
             <div className="group">
               {rep.unresolved.map((u: string, i: number) => (
-                <Row key={i} name={u} sub="Not in your dictionary — it goes on the list exactly as written" />
+                <Row key={i} name={u} sub={t("optimize.notInYourDictionaryIt")} />
               ))}
             </div>
           </>
         )}
-        {!hasBody && <div className="group"><Empty>Clean list. Nothing to merge, fix, or ask.</Empty></div>}
+        {!hasBody && <div className="group"><Empty>{t("optimize.cleanListNothingToMerge")}</Empty></div>}
       </div>
-      <p className="muted nomargin">Optional: <a href="#" id="opt-race" onClick={ev => { ev.preventDefault(); nav.show("race"); }}>race a friend on this list</a>.</p>
-      <p><button id="opt-next" className="btn primary wide" type="button" onClick={proceed}>Looks right &rarr;</button></p>
-      <p><button id="opt-skip" className="btn secondary wide" type="button" hidden={pending === 0} onClick={proceed}>Skip for now — keep the rest as typed</button></p>
+      <p className="muted nomargin">{t("optimize.optional")}{" "}<a href="#" id="opt-race" onClick={ev => { ev.preventDefault(); nav.show("race"); }}>{t("optimize.raceAFriendOnThis")}</a>.</p>
+      <p><button id="opt-next" className="btn primary wide" type="button" onClick={proceed}>{t("optimize.looksRight")}</button></p>
+      <p><button id="opt-skip" className="btn secondary wide" type="button" hidden={pending === 0} onClick={proceed}>{t("optimize.skipForNowKeepThe")}</button></p>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-stores-mine and quest.js renderMyStores
  * (+ the data-fav / data-remove handlers). The Shell already renders
@@ -26,6 +27,7 @@ export const storeMeta = (s: MyStore) =>
   `${s.street}, ${s.city}, ${s.state} ${s.zip} · ${(s.scene && SCENE_LABEL[s.scene]) || ""}`;
 
 export function StoresMine() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [mine, setMine] = useState<MyStore[] | null>(null);
@@ -49,7 +51,7 @@ export function StoresMine() {
       <div className="grow"><span className="name">{s.name}</span>
         <span className="sub">{storeMeta(s)}</span></div>
       <button className="chip" data-remove={s.id} type="button"
-        onClick={() => act("/api/stores/mine/remove", { store_id: s.id }, "Removed from your stores.")}>Remove</button>
+        onClick={() => act("/api/stores/mine/remove", { store_id: s.id }, "Removed from your stores.")}>{t("common.remove")}</button>
       <button className={"starbtn " + (s.favorite ? "on" : "")} data-fav={s.id} data-on={String(!!s.favorite)}
         aria-pressed={!!s.favorite} aria-label={s.favorite ? "Remove from favorites" : "Add to favorites"} type="button"
         onClick={() => act("/api/stores/favorite", { store_id: s.id, favorite: !s.favorite },
@@ -64,16 +66,16 @@ export function StoresMine() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>My stores</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("storesMine.myStores")}</h2>
       <div id="sm-list">
-        {mine && !mine.length && <div className="group"><Empty>No stores yet. Find one or add one below.</Empty></div>}
-        {favs.length > 0 && <><h3 className="sect">Favorites</h3><div className="group">{favs.map(row)}</div></>}
-        {rest.length > 0 && <><h3 className="sect">All my stores</h3><div className="group">{rest.map(row)}</div></>}
+        {mine && !mine.length && <div className="group"><Empty>{t("storesMine.noStoresYetFindOne")}</Empty></div>}
+        {favs.length > 0 && <><h3 className="sect">{t("common.favorites")}</h3><div className="group">{favs.map(row)}</div></>}
+        {rest.length > 0 && <><h3 className="sect">{t("storesMine.allMyStores")}</h3><div className="group">{rest.map(row)}</div></>}
       </div>
       <div className="group">
-        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">Find stores<span className="sub">Search the directory by ZIP, address, or name</span></span><span className="chev">›</span></button>
-        <button className="navrow" type="button" onClick={() => nav.show("stores-add")}><span className="grow">Add a store<span className="sub">A store that is not in the directory yet</span></span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">{t("common.findStores")}<span className="sub">{t("storesMine.searchTheDirectoryByZip")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("stores-add")}><span className="grow">{t("common.addAStore")}<span className="sub">{t("storesMine.aStoreThatIsNot")}</span></span><span className="chev">›</span></button>
       </div>
     </>
   );

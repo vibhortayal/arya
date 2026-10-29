@@ -6,6 +6,7 @@ import { faceFor, useCharacters } from "../../lib/characters";
 import type { Session } from "../hunt/model";
 import { H } from "../haul/state";
 import type { ShareKind } from "../haul/Share";
+import { useTranslation } from "../../i18n";
 
 /* The Score's "Snap your haul" (quest.js openScore, haul-photo): Arya
  * spots the products in a photo, extras included. The photo itself is
@@ -17,6 +18,7 @@ type Result = { seen: Seen[]; extras: string[]; not_seen: string[] };
 
 export function HaulPhoto({ sess, plain, attached, onShare }:
   { sess: Session; plain: boolean; attached: boolean; onShare: (kind: ShareKind) => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   useCharacters();
   const [status, setStatus] = useState("A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.");
@@ -51,29 +53,29 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
 
   return (
     <>
-      <h3 className="sect">Share this run</h3>
+      <h3 className="sect">{t("score.shareThisRun")}</h3>
       <div className="group pad">
         <p style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: 0 }}>
           {attached && <>
-            <button className="btn primary grow" id="share-haul" type="button" onClick={() => onShare("haul")}>Share your haul</button>
-            <button className="btn grow" id="share-love" type="button" onClick={() => onShare("love")}>Loved something?</button>
+            <button className="btn primary grow" id="share-haul" type="button" onClick={() => onShare("haul")}>{t("score.shareYourHaul")}</button>
+            <button className="btn grow" id="share-love" type="button" onClick={() => onShare("love")}>{t("score.lovedSomething")}</button>
           </>}
           {((sess.my_reports as string[] | undefined) || []).length > 0 &&
-            <button className="btn grow" id="share-sos" type="button" onClick={() => onShare("sos")}>Shelf SOS</button>}
+            <button className="btn grow" id="share-sos" type="button" onClick={() => onShare("sos")}>{t("score.shelfSos")}</button>}
         </p>
-        <p style={{ marginTop: 10 }}><label className="btn wide" htmlFor="haul-photo" style={{ textAlign: "center" }}>Snap your haul</label>
+        <p style={{ marginTop: 10 }}><label className="btn wide" htmlFor="haul-photo" style={{ textAlign: "center" }}>{t("score.snapYourHaul")}</label>
           <input type="file" id="haul-photo" accept="image/*" hidden onChange={onPhoto} /></p>
         <p className="muted nomargin" id="haul-status">{status}</p>
         <div id="haul-result">
           {res && (
             <>
               {res.seen.length > 0 && <div className="row">{res.seen.map(s => face(s.item))}<div className="grow">
-                <span className="name">Spotted {res.seen.length} of your items</span><span className="sub">{res.seen.map(s => s.item).join(", ")}</span></div></div>}
+                <span className="name">{t("score.spottedOfYourItems", { seenCount: res.seen.length })}</span><span className="sub">{res.seen.map(s => s.item).join(", ")}</span></div></div>}
               {res.extras.length > 0 && <div className="row"><div className="grow">
-                <span className="name">Also in the photo: {res.extras.join(", ")}</span><span className="sub">Not on the list — wild finds, caught by the camera.</span></div>
-                {!added && <button className="btn" id="haul-addextra" type="button" onClick={addExtras}>Add to my list</button>}</div>}
-              {res.not_seen.length > 0 && <p className="muted">Could not spot: {res.not_seen.join(", ")} — a photo never proves an item is missing.</p>}
-              {!res.seen.length && !res.extras.length && <p className="muted">No products spotted in that photo. Try the haul spread out, in good light.</p>}
+                <span className="name">{t("score.alsoInThePhoto", { join: res.extras.join(", ") })}</span><span className="sub">{t("score.notOnTheListWild")}</span></div>
+                {!added && <button className="btn" id="haul-addextra" type="button" onClick={addExtras}>{t("score.addToMyList")}</button>}</div>}
+              {res.not_seen.length > 0 && <p className="muted">{t("score.couldNotSpotAPhoto", { join: res.not_seen.join(", ") })}</p>}
+              {!res.seen.length && !res.extras.length && <p className="muted">{t("score.noProductsSpottedInThat")}</p>}
             </>
           )}
         </div>

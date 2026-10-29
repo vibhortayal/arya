@@ -6,6 +6,7 @@ import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/Ad
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { fmtDate, fmtShort, money } from "../lib/format";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-receipts and app.js renderReceipts,
  * renderScan (review queue), renderCurator, fileReceiptPhoto and the
@@ -25,6 +26,7 @@ type Unsettled = { session_id: string; store: string; finished_at?: string; item
 type Archive = { receipts: Rec[]; unsettled?: Unsettled[] };
 
 export function Receipts() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { currency } = useSession();
   const { toast, showErr } = useToast();
@@ -150,38 +152,38 @@ export function Receipts() {
 
   const editor = (key: string, onSave: (name: string) => void, saveAttr: string, saveVal: string) => (
     <div className="editor" data-editor={key} hidden={!open[key]}>
-      <input type="text" placeholder="Correct name" aria-label="Correct name" value={draft[key] || ""}
+      <input type="text" placeholder={t("receipts.correctName")} aria-label={t("receipts.correctName")} value={draft[key] || ""}
         onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))} />
       <button className="chip" {...{ [saveAttr]: saveVal }} type="button"
-        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast("Type the correct name first."); return; } onSave(n); }}>Save</button>
+        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast("Type the correct name first."); return; } onSave(n); }}>{t("common.save")}</button>
     </div>
   );
 
   return (
     <>
-      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Receipts</h2>
+      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h2>
       <p id="rc-count" className="subtitle">{count}</p>
-      <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>Needs your eye</h3>
+      <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>
       <div id="review" className="group eyegroup" hidden={!hasReview}>
         {queue.lines.map(l => {
           const key = `${l.receipt_id}:${l.idx}`;
           return (
             <div key={key} style={{ display: "contents" }}>
               <div className="row"><div className="grow"><span className="name">{l.decoded_name || l.raw}</span>
-                <span className="sub">Unverified · {fmtDate(l.date)} · from “{l.raw}”</span></div></div>
+                <span className="sub">{t("receipts.unverifiedFrom", { date: fmtDate(l.date), raw: l.raw })}</span></div></div>
               <div className="actions">
-                <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, "Confirmed. It leaves the queue.")}>Looks right</button>
+                <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, "Confirmed. It leaves the queue.")}>{t("common.looksRight")}</button>
                 {l.suggested && <>
                   <button className="chip" data-alt={key} data-name={l.suggested.name}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: l.suggested!.name }, `Set to ${l.suggested!.name}. The dictionary learned it.`)}>Researched: {l.suggested.name}</button>
-                  {l.suggested.source && <a className="sub" href={l.suggested.source} target="_blank" rel="noopener">source</a>}
+                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: l.suggested!.name }, `Set to ${l.suggested!.name}. The dictionary learned it.`)}>{t("receipts.researched", { name: l.suggested.name })}</button>
+                  {l.suggested.source && <a className="sub" href={l.suggested.source} target="_blank" rel="noopener">{t("receipts.source")}</a>}
                 </>}
                 {(l.alternatives || []).map(a => (
                   <button key={a} className="chip" data-alt={key} data-name={a}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, `Set to ${a}. The dictionary learned it.`)}>It is {a}</button>
+                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, `Set to ${a}. The dictionary learned it.`)}>{t("receipts.itIs", { a })}</button>
                 ))}
-                <button className="chip" data-fix={key} onClick={() => toggle(key)}>Fix the name</button>
+                <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.fixTheName")}</button>
               </div>
               {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, `Set to ${name}. The dictionary learned it.`), "data-save-line", key)}
             </div>
@@ -193,15 +195,15 @@ export function Receipts() {
           return (
             <div key={key} style={{ display: "contents" }}>
               <div className="row"><div className="grow"><span className="name">{u.name}</span>
-                <span className="sub">Name not settled — kept off your list until you settle it</span></div></div>
+                <span className="sub">{t("receipts.nameNotSettledKeptOff")}</span></div></div>
               <div className="actions">
                 {(u.candidates || []).map(cn => (
-                  <button key={cn} className="chip" data-resolve={u.item_id} data-name={cn} onClick={() => resolve(u.item_id, cn)}>It is {cn}</button>
+                  <button key={cn} className="chip" data-resolve={u.item_id} data-name={cn} onClick={() => resolve(u.item_id, cn)}>{t("receipts.itIs2", { cn })}</button>
                 ))}
-                <button className="chip" data-fix={key} onClick={() => toggle(key)}>Set the name</button>
+                <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.setTheName")}</button>
               </div>
               {srcs.length > 0 && (
-                <div className="row"><span className="sub">Researched: {srcs.map(([n, href], i) => (
+                <div className="row"><span className="sub">{t("receipts.researched2")}{" "}{srcs.map(([n, href], i) => (
                   <span key={n}>{i > 0 && " · "}<a href={href} target="_blank" rel="noopener">{n}</a></span>))}</span></div>
               )}
               {editor(key, name => resolve(u.item_id, name), "data-save-resolve", u.item_id)}
@@ -240,38 +242,37 @@ export function Receipts() {
         })}
       </div>
       <div className="group pad">
-        <label className="field">Add a receipt photo or PDF
-          <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple onChange={onFiles} />
+        <label className="field">{t("receipts.addAReceiptPhotoOr")}<input type="file" id="rc-photo" accept="application/pdf,image/*" multiple onChange={onFiles} />
         </label>
         <p className="muted nomargin" id="rc-photo-status">{status}</p>
         <div id="rc-photo-preview">
           {preview && (
             <div className="group pad" style={{ marginTop: 10 }}>
-              <p className="nomargin"><strong>{preview.merchant || "Receipt"}</strong> <span className="sub">read live · kept for this demo visit only</span></p>
+              <p className="nomargin"><strong>{preview.merchant || "Receipt"}</strong> <span className="sub">{t("receipts.readLiveKeptForThis")}</span></p>
               {(preview.lines || []).map((l: any, i: number) => (
                 <Row key={i} name={l.decoded_name || l.raw || "line"} right={l.line_total != null ? money(l.line_total, currency) : ""} />
               ))}
-              {preview.total != null && <Row name="Total" right={money(preview.total, currency)} />}
+              {preview.total != null && <Row name={t("common.total")} right={money(preview.total, currency)} />}
             </div>
           )}
         </div>
       </div>
-      <h3 className="sect">Archive</h3>
-      <div id="rc-who" className="segs" role="group" aria-label="Whose receipts" hidden={!people.length}>
+      <h3 className="sect">{t("receipts.archive")}</h3>
+      <div id="rc-who" className="segs" role="group" aria-label={t("receipts.whoseReceipts")} hidden={!people.length}>
         {people.length > 0 && ([["all", "Everyone"], ["mine", "Mine"], ...people.map(p => [p, cap(p)])] as string[][]).map(([k, label]) => (
           <button key={k} type="button" className={whoNow === k ? "on" : ""} data-rc-who={k} aria-pressed={whoNow === k} onClick={() => setWho(k)}>{label}</button>
         ))}
       </div>
       <div id="rc-archive" className="group">
-        {!loaded ? null : !unsettled.length && !shown.length ? <Empty>No receipts filed yet.</Empty> : <>
+        {!loaded ? null : !unsettled.length && !shown.length ? <Empty>{t("receipts.noReceiptsFiledYet")}</Empty> : <>
           {unsettled.map(e => (
             <div key={e.session_id} className="sessrow">
               <span className="grow"><span className="name">{e.store}</span>
-                <span className="sub">{fmtShort(String(e.finished_at || "").slice(0, 10))} · {e.items_collected} of {e.items_total} items collected</span></span>
-              <span className="misstag">Receipt missing</span>
+                <span className="sub">{t("receipts.ofItemsCollected", { slice: fmtShort(String(e.finished_at || "").slice(0, 10)), items_collected: e.items_collected, items_total: e.items_total })}</span></span>
+              <span className="misstag">{t("receipts.receiptMissing")}</span>
               <button className="btn" data-upload={e.session_id} data-store={e.store} type="button"
-                onClick={() => { setAr({ sessionId: e.session_id, label: e.store }); }}>Add receipt</button>
-              <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>Dismiss</button>
+                onClick={() => { setAr({ sessionId: e.session_id, label: e.store }); }}>{t("common.addReceipt")}</button>
+              <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>{t("common.dismiss")}</button>
             </div>
           ))}
           {shown.map(r => (

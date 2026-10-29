@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { get, post } from "../lib/api";
 import { InfoBtn, INFO, InfoSheetFrame, WhyRows } from "../ui/Info";
 import { useToast } from "../ui/Toast";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-powers and pwa/powers.js (POWERS, powRow,
  * group, paintPowers, the (i) sheets and the Share anonymous prices
@@ -52,6 +53,7 @@ const LockSvg = () => (
 type SheetState = { kind: "power" | "info"; key: string } | { kind: "share" } | null;
 
 export function Powers() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const [facts, setFacts] = useState<Facts>({ receipts: 0, stores: 0, share_prices: false });
@@ -124,22 +126,22 @@ export function Powers() {
       </InfoSheetFrame>);
   } else if (sheet?.kind === "share") {
     sheetBody = (
-      <InfoSheetFrame open onClose={close} title="Shop smarter together" sub="Every receipt and report makes prices better for you and for other Arya households.">
+      <InfoSheetFrame open onClose={close} title={t("powers.shopSmarterTogether")} sub={t("powers.everyReceiptAndReportMakes")}>
         <WhyRows rows={[
           ["You give", "Item, store and price, by the week. Never your name, your list, your receipt photo or what else you bought."],
           ["You get", "Prices at other stores from real shoppers near you, and deals on items you buy."],
           ["Reports matter too", "\"Not here?\" tells the next shopper before they walk the aisle."]]} />
         <div className="sheetacts">{closeBtn("Not now")}
           <button className="btn primary" type="button" data-pw={facts.share_prices ? "unshare" : "doshare"} onClick={() => setShare(!facts.share_prices)}>{facts.share_prices ? "Stop sharing" : "Share prices"}</button></div>
-        <p className="sub nomargin" style={{ textAlign: "center", fontSize: 13 }}>Optional. You can turn it off here any time.</p>
+        <p className="sub nomargin" style={{ textAlign: "center", fontSize: 13 }}>{t("powers.optionalYouCanTurnIt")}</p>
       </InfoSheetFrame>);
   }
 
   return (
     <>
-      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Arya's powers</h2>
-      <p className="subtitle">What Arya already does for you, and what turns on next.</p>
+      <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.aryaSPowers")}</h2>
+      <p className="subtitle">{t("powers.whatAryaAlreadyDoesFor")}</p>
       <div id="powers-body">
         {group(`Working for you (${working.length})`, working, false)}
         {group("Turns on as you add receipts", later)}

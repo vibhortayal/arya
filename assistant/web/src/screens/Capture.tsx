@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { get, post } from "../lib/api";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-capture and pwa/mapper.js (openCapture,
  * the cam* functions, upload, teach confirm, reward card). The Shell
@@ -106,6 +107,7 @@ function teachPicks(frames: { blob: Blob }[]) {
 }
 
 export function Capture() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const param = nav.params.prompt as Prompt | undefined;
@@ -425,7 +427,7 @@ export function Capture() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={back}>‹ Back</a></p>
+      <p><a href="#" className="qback" onClick={back}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h2>
       <p className="muted" id="cp-why">{prompt.why || ""}</p>
       <div className="cp-cam" id="cp-cam" hidden={!camOn}>
@@ -441,7 +443,7 @@ export function Capture() {
       </div>
       <p id="cp-controls" hidden={!controls}>
         <button className="btn primary wide" id="cp-go" type="button" disabled={goDisabled} onClick={() => go()}>{goLabel}</button>
-        <button className="btn wide" id="cp-govideo" type="button" hidden={!videoOpt} onClick={() => go(true)}>Record a short video</button>
+        <button className="btn wide" id="cp-govideo" type="button" hidden={!videoOpt} onClick={() => go(true)}>{t("capture.recordAShortVideo")}</button>
         <input type="file" id="cp-photo" ref={photoRef} accept="image/*" capture="environment" hidden onChange={onPhoto} />
         <input type="file" id="cp-video" ref={videoInRef} accept="video/*" capture="environment" hidden onChange={onVideo} />
       </p>
@@ -451,7 +453,7 @@ export function Capture() {
       <p id="cp-after" hidden={after === null}>
         <button id="cp-next" className="btn primary wide" type="button" onClick={next}>{after}</button>
       </p>
-      <p><button id="cp-outdated" className="btn wide" type="button" hidden={!prompt.segment} onClick={outdated}>This part of the map is out of date</button></p>
+      <p><button id="cp-outdated" className="btn wide" type="button" hidden={!prompt.segment} onClick={outdated}>{t("capture.thisPartOfTheMap")}</button></p>
     </>
   );
 }
@@ -460,30 +462,31 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
   r: Result; view: StoreView | null; barW: number | null; segLabel: (id: string) => string;
   onPick: (id: string) => void; onDiscard: (seg: string) => void;
 }) {
+  const { t } = useTranslation();
   if (r.t === "text") return <>{r.text}</>;
-  if (r.t === "gentle") return <p className="nomargin"><strong>Thanks!</strong> We could not save this one just now, so nothing was kept. No need to redo it. We will ask again another time.</p>;
+  if (r.t === "gentle") return <p className="nomargin"><strong>{t("capture.thanks")}</strong>{" "}{t("capture.weCouldNotSaveThis")}</p>;
   if (r.t === "pick") {
     const segs = view?.segments || [];
     return segs.length ? (
       <>
-        <p className="nomargin">Tap the aisle you are in:</p>
+        <p className="nomargin">{t("capture.tapTheAisleYouAre")}</p>
         <div className="rail">{segs.map(s => <button key={s.id} className="chip" data-mpick={s.id} type="button" onClick={() => onPick(s.id)}>{s.label}</button>)}</div>
       </>
-    ) : <p className="nomargin">Arya does not know this store&apos;s aisles yet. Add the one you are in from Teach Arya your store.</p>;
+    ) : <p className="nomargin">{t("capture.aryaDoesNotKnowThis")}</p>;
   }
   if (r.t === "teach") {
     return (
       <div className="mp-reward">
-        <div className="what">Arya found {r.found.length} section{r.found.length === 1 ? "" : "s"}</div>
-        <p className="muted">Check them — a wrong one comes straight back out. Everything here came from your walk. You typed nothing.</p>
+        <div className="what">{t("capture.aryaFoundSection", { foundCount: r.found.length })}{r.found.length === 1 ? "" : "s"}</div>
+        <p className="muted">{t("capture.checkThemAWrongOne")}</p>
         {r.found.map(f => (
           <div className="row mp-seg" key={f.segment}>
             <span className="grow"><span className="name">{f.label}</span><span className="sub">{f.created ? "new section" : "already on the map"}</span></span>
-            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>Not a section ✕</button>
+            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>{t("capture.notASection")}</button>
           </div>
         ))}
         {r.pts ? <div className="pts">+{r.pts}</div> : null}
-        {r.title ? <div className="mp-title">You&apos;re now a {r.title}</div> : null}
+        {r.title ? <div className="mp-title">{t("capture.youReNowA", { title: r.title })}</div> : null}
       </div>
     );
   }
@@ -500,12 +503,12 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
     <div className="mp-reward">
       <div className="pts">+{pts}</div>
       <div className="what">{what}</div>
-      <div className="muted">Arya knows {a}% → <strong>{b}%</strong> of this store</div>
+      <div className="muted">{t("capture.aryaKnows", { a })}{" "}<strong>{b}%</strong>{" "}{t("capture.ofThisStore")}</div>
       <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>
       <div className="muted">{goal}</div>
-      {last.new_title ? <div className="mp-title">You&apos;re now a {last.new_title}</div> : null}
-      {fresh.length ? <p className="muted">Next hunt here, this aisle shows a real shelf photo, so you spot things faster.</p> : null}
-      {partial ? <p className="muted">Some of it was a little soft. That is fine; it still helps, and a later shopper will sharpen it.</p> : null}
+      {last.new_title ? <div className="mp-title">{t("capture.youReNowA2", { new_title: last.new_title })}</div> : null}
+      {fresh.length ? <p className="muted">{t("capture.nextHuntHereThisAisle")}</p> : null}
+      {partial ? <p className="muted">{t("capture.someOfItWasA")}</p> : null}
     </div>
   );
 }

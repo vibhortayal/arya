@@ -4,6 +4,7 @@ import { Sheet } from "../../ui/Sheet";
 import { useToast } from "../../ui/Toast";
 import { Q, qCurrentIndex } from "./model";
 import { useRecord } from "./useRecord";
+import { useTranslation } from "../../i18n";
 
 /* Ask Arya during a hunt (pwa/huntask.js + aryaask.js run/show with
  * surface "hunt"): three quick questions and a field plus mic. The
@@ -31,6 +32,7 @@ type Card = { q: string; res: Res | null };
 const MIC = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" /></svg>;
 
 export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: () => void; onChange: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [text, setText] = useState("");
   const [card, setCard] = useState<Card | null>(null);
@@ -87,16 +89,16 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
       if (proposed.length) {
         body = <>{skipped}<strong>{proposed.map(p => p.text).join(" ")}</strong></>;
         buttons = <>
-          <button className="btn secondary" type="button" data-aa="no" onClick={() => setCard(null)}>Not now</button>
+          <button className="btn secondary" type="button" data-aa="no" onClick={() => setCard(null)}>{t("common.notNow")}</button>
           <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? "Yes, do these" : "Yes, do it"}</button></>;
       } else if (added.length) {
         body = <>{said}{skipped}</>;
         buttons = <>
-          <button className="btn secondary" type="button" data-aa="undo" disabled={busy} onClick={() => act(res, "undo")}>Undo</button>
-          <button className="btn primary" type="button" data-aa="done" onClick={() => setCard(null)}>Done</button></>;
+          <button className="btn secondary" type="button" data-aa="undo" disabled={busy} onClick={() => act(res, "undo")}>{t("common.undo")}</button>
+          <button className="btn primary" type="button" data-aa="done" onClick={() => setCard(null)}>{t("common.done")}</button></>;
       } else {
         body = <>{said}{skipped}</>;
-        buttons = <button className="btn secondary" type="button" data-aa="done" onClick={() => setCard(null)}>Got it</button>;
+        buttons = <button className="btn secondary" type="button" data-aa="done" onClick={() => setCard(null)}>{t("common.gotIt")}</button>;
       }
     }
     answer = (
@@ -112,22 +114,22 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
   return (
     <Sheet open={open} onClose={close} id="ask-sheet" labelledBy="ask-title">
       <span className="sheetgrip" />
-      <h3 id="ask-title" className="largetitle" style={{ fontSize: 22 }}>Ask Arya</h3>
+      <h3 id="ask-title" className="largetitle" style={{ fontSize: 22 }}>{t("common.askArya")}</h3>
       <div className="chiprow">
         {QUICK.map(q => q.replace("{item}", (ctx.next_item as string) || "next item")).map(q => (
           <button key={q} className="chip" type="button" data-q={q} onClick={() => send(q)}>{q}</button>
         ))}
       </div>
       <div className="addline">
-        <input type="text" id="ask-text" placeholder="Ask anything…" autoComplete="off" enterKeyHint="send" data-first
+        <input type="text" id="ask-text" placeholder={t("common.askAnything")} autoComplete="off" enterKeyHint="send" data-first
           value={text} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); send(text); } }} />
-        <button id="ask-mic" className={"iconbtn" + (rec.listening ? " listening" : "")} type="button" aria-label="Ask by voice" onClick={rec.click}>{MIC}</button>
-        <button id="ask-go" className="btn primary" type="button" onClick={() => send(text)}>Ask</button>
+        <button id="ask-mic" className={"iconbtn" + (rec.listening ? " listening" : "")} type="button" aria-label={t("hunt.askByVoice")} onClick={rec.click}>{MIC}</button>
+        <button id="ask-go" className="btn primary" type="button" onClick={() => send(text)}>{t("common.ask")}</button>
       </div>
       <p id="ask-status" className="muted nomargin">{rec.status}</p>
       <div id="ask-answer">{answer}</div>
-      <div className="sheetacts"><button className="btn secondary" type="button" data-ask="close" onClick={close}>Close</button></div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ask="close" onClick={close}>{t("common.close")}</button></div>
     </Sheet>
   );
 }

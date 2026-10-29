@@ -6,6 +6,7 @@ import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { storeHasPictures, useStoreData } from "../lib/stores";
 import { StarSvg, storeMeta, type MyStore } from "./StoresMine";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-store and quest.js: qStartNewHunt (store
  * half), renderStorePick, qPickStore, the Google Places picker and the
@@ -68,6 +69,7 @@ function historyStores(plan: Plan) {
 }
 
 export function Store() {
+  const { t } = useTranslation();
   useStoreData();
   const nav = useNav();
   const { demo } = useSession();
@@ -231,17 +233,16 @@ export function Store() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Where are you shopping?</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("store.whereAreYouShopping")}</h2>
       <div className="group pad dropanchor">
-        <label className="field">Type a store — or tap one below
-          <input type="text" id="st-name" placeholder="Trader Joe’s" autoComplete="off" value={name}
+        <label className="field">{t("store.typeAStoreOrTap")}<input type="text" id="st-name" placeholder="Trader Joe’s" autoComplete="off" value={name}
             onChange={ev => onType(ev.target.value)}
             onKeyDown={ev => { if (ev.key === "Enter") { ev.preventDefault(); pickStore(name, selId); } }} />
         </label>
-        <p className="muted nomargin" style={{ fontSize: 13 }}>Stores come from Google, with their real addresses — tap yours to start the plan.</p>
+        <p className="muted nomargin" style={{ fontSize: 13 }}>{t("store.storesComeFromGoogleWith")}</p>
         <div id="st-goog" className="gdrop" hidden={!sugg.length}>
-          {sugg.length > 0 && <div className="ghead">From Google</div>}
+          {sugg.length > 0 && <div className="ghead">{t("common.fromGoogle")}</div>}
           {sugg.map(r => (
             <button className="gitem" key={r.place_id} data-gpick={r.place_id} data-gname={r.name} data-gmode="hunt" type="button"
               onClick={() => gpick(r)}>
@@ -254,7 +255,7 @@ export function Store() {
       <div id="st-fromlist">
         {fromList && (fromList.stores || []).length > 0 && (
           <>
-            <h3 className="sect">{fromList.name} stores</h3>
+            <h3 className="sect">{t("store.stores", { name: fromList.name })}</h3>
             <div className="group">
               {fromList.stores.map(nm => {
                 const mn = mine.find(s2 => sameStore(s2.name, nm));
@@ -271,16 +272,16 @@ export function Store() {
       </div>
       <div id="st-mine">
         {loaded && !mine.length
-          ? <div className="group"><Empty>No stores in your stores yet. Find one or add one below.</Empty></div>
+          ? <div className="group"><Empty>{t("store.noStoresInYourStores")}</Empty></div>
           : <>
-              {favs.length > 0 && <><h3 className="sect">Favorites</h3><div className="group">{favs.map(rowEl)}</div></>}
-              {rest.length > 0 && <><h3 className="sect">All my stores</h3><div className="group">{rest.map(rowEl)}</div></>}
+              {favs.length > 0 && <><h3 className="sect">{t("common.favorites")}</h3><div className="group">{favs.map(rowEl)}</div></>}
+              {rest.length > 0 && <><h3 className="sect">{t("store.allMyStores")}</h3><div className="group">{rest.map(rowEl)}</div></>}
             </>}
       </div>
       <div id="st-history">
         {hist.length > 0 && (
           <>
-            <h3 className="sect">From your receipts</h3>
+            <h3 className="sect">{t("store.fromYourReceipts")}</h3>
             <div className="group">
               {shown.map(s => {
                 const fit = storeFit(plan, s);
@@ -293,15 +294,15 @@ export function Store() {
               })}
               {!histAll && hist.length > 3 && (
                 <button className="sessrow pickrow" data-histall="1" type="button" onClick={() => setHistAll(true)}>
-                  <span className="grow"><span className="name">Show all {hist.length} stores</span></span><span className="chev">›</span></button>
+                  <span className="grow"><span className="name">{t("store.showAllStores", { histCount: hist.length })}</span></span><span className="chev">›</span></button>
               )}
             </div>
           </>
         )}
       </div>
       <div className="group">
-        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">Find stores<span className="sub">Search by ZIP, address, or name</span></span><span className="chev">›</span></button>
-        <button className="navrow" type="button" onClick={() => nav.show("stores-add")}><span className="grow">Add a store<span className="sub">A store that is not in the directory yet</span></span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">{t("common.findStores")}<span className="sub">{t("store.searchByZipAddressOr")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("stores-add")}><span className="grow">{t("common.addAStore")}<span className="sub">{t("store.aStoreThatIsNot")}</span></span><span className="chev">›</span></button>
       </div>
     </>
   );

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
+import { useTranslation } from "../i18n";
 
 /* Port of the landing page and boot() sign-in (pwa/index.html
  * #view-login, app.js boot). Three modes: bootstrap (no accounts yet,
@@ -14,6 +15,7 @@ const postJson = (path: string, body?: unknown) =>
 const detail = async (r: Response) => ((await r.json().catch(() => ({}))) as { detail?: string }).detail;
 
 export function Login() {
+  const { t } = useTranslation();
   const { status, enter } = useSession();
   const [mode, setMode] = useState<Mode>(status.has_users ? "login" : "setup");
   const [signin, setSignin] = useState(!status.has_users || location.search.includes("signin=failed"));
@@ -42,22 +44,22 @@ export function Login() {
     <section id="view-login" className="view">
       <header className="landtop">
         <span className="landlogo">Arya</span>
-        <button id="signin-open" className="landsign" type="button" onClick={() => setSignin(true)}>Sign in</button>
+        <button id="signin-open" className="landsign" type="button" onClick={() => setSignin(true)}>{t("login.signIn")}</button>
       </header>
       <div className="hero">
-        <h2 className="largetitle herotitle">Groceries, <em>sorted.</em></h2>
-        <p className="herosub nomargin">Arya keeps your list, knows what&rsquo;s running low, and tells you what&rsquo;s up at your store before you go.</p>
-        <div className="group peek" aria-label="What Arya shows you">
-          <Peek img="milk" name="Whole Milk" sub="Every ~7 days, last bought 10 days ago" tag="Running low" kind="low" />
-          <Peek img="egg" name="Organic Eggs" sub="Trader Joe’s: shoppers say out today" tag="Store alert" kind="alert" />
-          <Peek img="vegetable" name="Baby Spinach" sub="Use by Friday" tag="Use soon" />
+        <h2 className="largetitle herotitle">{t("login.groceries")}{" "}<em>{t("login.sorted")}</em></h2>
+        <p className="herosub nomargin">{t("login.aryaKeepsYourListKnows")}</p>
+        <div className="group peek" aria-label={t("login.whatAryaShowsYou")}>
+          <Peek img="milk" name="Whole Milk" sub={t("login.every7DaysLastBought")} tag={t("common.runningLow")} kind="low" />
+          <Peek img="egg" name="Organic Eggs" sub={t("login.traderJoeSShoppersSay")} tag={t("login.storeAlert")} kind="alert" />
+          <Peek img="vegetable" name="Baby Spinach" sub={t("login.useByFriday")} tag={t("common.useSoon")} />
         </div>
-        <p className="peekcap">From your receipts. No typing it all in.</p>
-        <p className="landcta"><button id="demo-btn" className="btn primary wide" type="button" onClick={demo}>Try the demo</button></p>
-        <p className="landmeta muted"><span>No account needed &middot; fictional household</span>
-          <button id="how-open" className="linkbtn" type="button" onClick={() => setHow(true)}>How it works</button></p>
+        <p className="peekcap">{t("login.fromYourReceiptsNoTyping")}</p>
+        <p className="landcta"><button id="demo-btn" className="btn primary wide" type="button" onClick={demo}>{t("login.tryTheDemo")}</button></p>
+        <p className="landmeta muted"><span>{t("login.noAccountNeededFictionalHousehold")}</span>
+          <button id="how-open" className="linkbtn" type="button" onClick={() => setHow(true)}>{t("login.howItWorks")}</button></p>
         <p className="questline"><img src={asset("assets/scenes/hero.webp")} alt="" />
-          <span><b>Want it fun?</b> Quest turns your list into a treasure hunt through the store.</span></p>
+          <span><b>{t("login.wantItFun")}</b>{" "}{t("login.questTurnsYourListInto")}</span></p>
       </div>
 
       <Sheet open={signin} onClose={() => setSignin(false)} id="signin-sheet" className="signin"
@@ -68,8 +70,7 @@ export function Login() {
             <input type="text" id="login-user" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
               inputMode="email" required data-first value={user} onChange={e => setUser(e.target.value)} />
           </label>
-          <label className="field">Password
-            <input type="password" id="login-pass" autoComplete={create ? "new-password" : "current-password"} required
+          <label className="field">{t("login.password")}<input type="password" id="login-pass" autoComplete={create ? "new-password" : "current-password"} required
               value={pass} onChange={e => setPass(e.target.value)} />
           </label>
           <p><button type="submit" id="login-btn" className="btn primary wide">{create ? "Create account" : "Sign in"}</button></p>
@@ -82,11 +83,11 @@ export function Login() {
         )}
       </Sheet>
 
-      <Sheet open={how} onClose={() => setHow(false)} id="how-sheet" title="How it works">
-        <p>Arya learns what your household buys from its receipts and keeps your lists. It tells you what is running low and why, what is out or cheaper at your store, and what to use soon.</p>
-        <p>When you want it fun, Quest turns the list into a hunt through the real store: you walk it in photos from one shopper&rsquo;s walkthrough video, with a 3D model of the aisle one tap away. The receipt at checkout settles the score.</p>
-        <p className="muted">The demo opens a fictional household, no account needed. Your hunts, list changes and chats last only for this visit. The camera and microphone call the Meta API live.</p>
-        <p className="muted nomargin">Built on Meta models. Entry in the Meta AI Developer Hackathon.</p>
+      <Sheet open={how} onClose={() => setHow(false)} id="how-sheet" title={t("login.howItWorks")}>
+        <p>{t("login.aryaLearnsWhatYourHousehold")}</p>
+        <p>{t("login.whenYouWantItFun")}</p>
+        <p className="muted">{t("login.theDemoOpensAFictional")}</p>
+        <p className="muted nomargin">{t("login.builtOnMetaModelsEntry")}</p>
       </Sheet>
     </section>
   );
@@ -101,6 +102,7 @@ function Peek({ img, name, sub, tag, kind }: { img: string; name: string; sub: s
 }
 
 function EmailSignin({ onDone }: { onDone: (user: string) => void }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
@@ -118,22 +120,20 @@ function EmailSignin({ onDone }: { onDone: (user: string) => void }) {
 
   return (
     <div id="email-signin">
-      <p><a id="google-btn" className="btn wide" href="/auth/google">Continue with Google</a></p>
+      <p><a id="google-btn" className="btn wide" href="/auth/google">{t("login.continueWithGoogle")}</a></p>
       <form id="code-form" onSubmit={submit}>
-        <label className="field">Email
-          <input type="email" id="code-email" autoComplete="email" autoCapitalize="none" spellCheck={false} required
+        <label className="field">{t("login.email")}<input type="email" id="code-email" autoComplete="email" autoCapitalize="none" spellCheck={false} required
             value={email} onChange={e => setEmail(e.target.value)} />
         </label>
         {sent && (
-          <label className="field" id="code-field">Code from your email
-            <input type="text" id="code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus
+          <label className="field" id="code-field">{t("login.codeFromYourEmail")}<input type="text" id="code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus
               value={code} onChange={e => setCode(e.target.value)} />
           </label>
         )}
         <p><button type="submit" id="code-btn" className="btn wide">{sent ? "Sign in" : "Email me a code"}</button></p>
         <p id="code-msg" className="muted loginerr" role="alert">{msg}</p>
       </form>
-      <p className="muted">Or use a password:</p>
+      <p className="muted">{t("login.orUseAPassword")}</p>
     </div>
   );
 }

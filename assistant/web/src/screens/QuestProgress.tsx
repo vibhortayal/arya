@@ -4,6 +4,7 @@ import { useToast } from "../ui/Toast";
 import { Row, Empty } from "../ui/kit";
 import { get } from "../lib/api";
 import { asset } from "../lib/format";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-quest-progress and the quest half of
  * app.js renderProfile. Back lands on Profile. The Shell already
@@ -24,6 +25,7 @@ type QProfile = {
 type Archive = { receipts: unknown[]; unsettled?: unknown[] };
 
 export function QuestProgress() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { showErr } = useToast();
   const [profile, setProfile] = useState<QProfile | null>(null);
@@ -58,29 +60,29 @@ export function QuestProgress() {
 
   return (
     <>
-      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Quest progress</h2>
+      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.questProgress")}</h2>
       <div id="pf-stats" className="stattiles" hidden={!active}>
         {profile && s && (
           <>
-            <div className="stattile"><div className="sv">{s.hunts + unsettled}</div><div className="sl">Hunts finished</div></div>
-            <div className="stattile"><div className="sv">{s.hunts}</div><div className="sl">Receipt attached</div></div>
-            <div className="stattile"><div className="sv">{profile.level || 1}</div><div className="sl">Level · {profile.points || 0} pts</div></div>
-            <div className="stattile"><div className="sv">{s.receipts}</div><div className="sl">Receipts</div></div>
-            <div className="stattile"><div className="sv">{s.streak_weeks} wk{s.streak_weeks === 1 ? "" : "s"}</div><div className="sl">Streak</div></div>
+            <div className="stattile"><div className="sv">{s.hunts + unsettled}</div><div className="sl">{t("questProgress.huntsFinished")}</div></div>
+            <div className="stattile"><div className="sv">{s.hunts}</div><div className="sl">{t("questProgress.receiptAttached")}</div></div>
+            <div className="stattile"><div className="sv">{profile.level || 1}</div><div className="sl">{t("questProgress.level")}{" "}{profile.points || 0}{" "}{t("common.pts")}</div></div>
+            <div className="stattile"><div className="sv">{s.receipts}</div><div className="sl">{t("common.receipts")}</div></div>
+            <div className="stattile"><div className="sv">{t("questProgress.wk", { streak_weeks: s.streak_weeks })}{s.streak_weeks === 1 ? "" : "s"}</div><div className="sl">{t("questProgress.streak")}</div></div>
           </>
         )}
       </div>
-      <p className="muted small">Points, levels and some badges count hunts that have their receipt attached.</p>
+      <p className="muted small">{t("questProgress.pointsLevelsAndSomeBadges")}</p>
       <div id="pf-spots" className="group" hidden={!showSpots}>
         {profile && s && (
           <>
-            <Row name="Store changes you spotted" sub="Points land only when a change is verified" right={String(s.spots_reported || 0)} />
-            {eagle && <Row name="Eagle Eye" sub={eagle.detail || eagle.criteria} right={eagle.earned ? "Earned ✓" : "Locked"} />}
+            <Row name={t("questProgress.storeChangesYouSpotted")} sub={t("questProgress.pointsLandOnlyWhenA")} right={String(s.spots_reported || 0)} />
+            {eagle && <Row name={t("questProgress.eagleEye")} sub={eagle.detail || eagle.criteria} right={eagle.earned ? "Earned ✓" : "Locked"} />}
           </>
         )}
       </div>
-      <h3 className="sect">Badge shelf</h3>
+      <h3 className="sect">{t("questProgress.badgeShelf")}</h3>
       <div id="pf-badges" className="badgetiles">
         {badges.map(b => (
           <div key={b.id} className={"badgetile" + (b.earned ? "" : " locked")}>
@@ -90,11 +92,11 @@ export function QuestProgress() {
           </div>
         ))}
       </div>
-      <h3 className="sect">Mapped by you</h3>
+      <h3 className="sect">{t("questProgress.mappedByYou")}</h3>
       <div id="pf-stores" className="group">
         {profile && (stores.length
-          ? stores.map(st => <Row key={st} name={st} sub="Mapped by you" right="✓" />)
-          : <Empty>No stores mapped yet. Mapping a store is how its 3D view gets built.</Empty>)}
+          ? stores.map(st => <Row key={st} name={st} sub={t("questProgress.mappedByYou")} right="✓" />)
+          : <Empty>{t("questProgress.noStoresMappedYetMapping")}</Empty>)}
       </div>
     </>
   );

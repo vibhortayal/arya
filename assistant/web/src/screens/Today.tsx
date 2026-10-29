@@ -9,6 +9,7 @@ import { A2hsCard } from "../ui/A2hs";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -65,6 +66,7 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
 }
 
 export function Today() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { currency, demo } = useSession();
   const { toast, showErr } = useToast();
@@ -167,12 +169,12 @@ export function Today() {
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <div className="titlerow"><h2 className="largetitle">Today</h2></div>
+      <div className="titlerow"><h2 className="largetitle">{t("today.today")}</h2></div>
       <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
       <div id="today-low">
         {low.length > 0 && (
           <>
-            <h3 className="sect">Running low</h3>
+            <h3 className="sect">{t("common.runningLow")}</h3>
             <div className="group">
               {low.map(i => (
                 <div className="row" key={i.item_id}>
@@ -182,9 +184,9 @@ export function Today() {
                       onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
                     <span className="sub">{cap(i.reason)}</span></div>
                   {onList.has(i.item_id) || added.has(i.item_id)
-                    ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : "On your list"}>On list</span>
+                    ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : "On your list"}>{t("today.onList")}</span>
                     : <button className="chip" data-low-add={i.item_id} type="button" aria-label={`Add ${i.name} to your list`}
-                      disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>Add</button>}
+                      disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
                 </div>
               ))}
             </div>
@@ -192,8 +194,8 @@ export function Today() {
         )}
       </div>
       <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
-        <h3 className="sect">Your lists</h3>
-        <button id="today-listline" className="linkbtn" type="button" onClick={() => nav.show("list")}><span id="today-listline-text">Open Lists</span> ›</button>
+        <h3 className="sect">{t("today.yourLists")}</h3>
+        <button id="today-listline" className="linkbtn" type="button" onClick={() => nav.show("list")}><span id="today-listline-text">{t("today.openLists")}</span> ›</button>
       </div>
       <div id="today-lists">
         {h && !noLists && (
@@ -201,7 +203,7 @@ export function Today() {
             {cards.map(c => (
               <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
                 <span className="lc-name">{c.name}</span>
-                <span className="lc-count">{c.items.length} item{c.items.length === 1 ? "" : "s"}</span>
+                <span className="lc-count">{t("today.item", { itemsCount: c.items.length })}{c.items.length === 1 ? "" : "s"}</span>
                 <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : "Nothing to get"}</span>
               </button>
             ))}
@@ -209,7 +211,7 @@ export function Today() {
         )}
       </div>
       <div id="today-alerts">
-        {alertRows.length > 0 && <><h3 className="sect">Store alerts</h3><div className="group">{alertRows.map(r => (
+        {alertRows.length > 0 && <><h3 className="sect">{t("today.storeAlerts")}</h3><div className="group">{alertRows.map(r => (
           <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
             <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}</div></>}
       </div>
@@ -223,17 +225,17 @@ export function Today() {
           <div className={"group checkfold" + (checksOpen ? " open" : "")}>
             <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen) as "true" | "false"}
               onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
-              <span className="hr-label">Still good? · {nChecks} to check{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
+              <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
             <div className="checkrows" hidden={!checksOpen}>
               {checks.map(c => (
                 <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
                   <span className="chipset">
-                    <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>Still good</button>
-                    <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>It expired</button></span></div></div>
+                    <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
+                    <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
               ))}
               {seen.map((s, k) => (
                 <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
-                  <span className="sub">Seen in the {s.kind} · {fmtShort(s.date)} — in stock, left off the list.</span></div></div>
+                  <span className="sub">{t("today.seenInTheInStock", { kind: s.kind, date: fmtShort(s.date) })}</span></div></div>
               ))}
             </div>
           </div>
@@ -242,16 +244,16 @@ export function Today() {
       <div id="today-eye">
         {eyeCount > 0 && (
           <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
-            <span className="hr-label">Needs your eye</span><span className="countbadge">{eyeCount}</span><span className="chev">›</span></button>
+            <span className="hr-label">{t("today.needsYourEye")}</span><span className="countbadge">{eyeCount}</span><span className="chev">›</span></button>
         )}
       </div>
       <div id="today-patterns">
         {lastMonth && months && (
           <>
-            <h3 className="sect">Your patterns</h3>
+            <h3 className="sect">{t("today.yourPatterns")}</h3>
             <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
-              <span className="hr-label">{MONTHS[Number(lastMonth.slice(5, 7)) - 1]}: {money(months.spend[lastMonth], currency)} spent</span>
-              <span className="hr-action">Patterns</span><span className="chev">›</span></button>
+              <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
+              <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
           </>
         )}
       </div>
@@ -259,7 +261,7 @@ export function Today() {
       <div id="today-tip">{facts && <TipLine facts={facts} setFacts={setFacts} />}</div>
       <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
         <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-        <span className="g-main"><span className="g-name">Make your next run a Quest</span><span className="g-sub">Optional. Turn the list into a treasure hunt.</span></span>
+        <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>
         <span className="chev">›</span></button>
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
     </>
@@ -317,6 +319,7 @@ function todaysTip(): Tip | null {
 }
 
 function TipLine({ facts, setFacts }: { facts: Facts; setFacts: (f: Facts) => void }) {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const [tip, setTip] = useState<Tip | null>(() => todaysTip());
@@ -337,19 +340,19 @@ function TipLine({ facts, setFacts }: { facts: Facts; setFacts: (f: Facts) => vo
       {tip && (
         <div className="tipline">
           <button className="hubrow" type="button" data-tip={act} onClick={() => (act === "share" ? setShare(true) : nav.show("powers"))}>
-            <span className="hr-label"><span className="tipkick">Did you know?</span>{tip.title}</span><span className="chev">›</span></button>
-          <button className="tipx" type="button" data-tip="hide" data-tip-id={tip.id} aria-label="Not now"
+            <span className="hr-label"><span className="tipkick">{t("today.didYouKnow")}</span>{tip.title}</span><span className="chev">›</span></button>
+          <button className="tipx" type="button" data-tip="hide" data-tip-id={tip.id} aria-label={t("common.notNow")}
             onClick={() => { hideTip(tip.id); setTip(null); }}>×</button>
         </div>
       )}
-      <InfoSheetFrame open={share} onClose={() => setShare(false)} title="Shop smarter together" sub="Every receipt and report makes prices better for you and for other Arya households.">
+      <InfoSheetFrame open={share} onClose={() => setShare(false)} title={t("today.shopSmarterTogether")} sub={t("today.everyReceiptAndReportMakes")}>
         <WhyRows rows={[
           ["You give", "Item, store and price, by the week. Never your name, your list, your receipt photo or what else you bought."],
           ["You get", "Prices at other stores from real shoppers near you, and deals on items you buy."],
           ["Reports matter too", "\"Not here?\" tells the next shopper before they walk the aisle."]]} />
-        <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={() => setShare(false)}>Not now</button>
+        <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={() => setShare(false)}>{t("common.notNow")}</button>
           <button className="btn primary" type="button" data-pw={facts.share_prices ? "unshare" : "doshare"} onClick={() => setSharing(!facts.share_prices)}>{facts.share_prices ? "Stop sharing" : "Share prices"}</button></div>
-        <p className="sub nomargin" style={{ textAlign: "center", fontSize: 13 }}>Optional. You can turn it off here any time.</p>
+        <p className="sub nomargin" style={{ textAlign: "center", fontSize: 13 }}>{t("today.optionalYouCanTurnIt")}</p>
       </InfoSheetFrame>
     </>
   );
@@ -383,19 +386,20 @@ function when(days: number) {
 }
 
 function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) => void; onDone: (s: Soon) => void }) {
+  const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
   if (!soon.length) {
     return (
       <>
-        <div className="sectrow"><h3 className="sect">Use soon</h3></div>
-        <div className="group"><button className="hubrow snaprow" type="button" data-ex-snap onClick={snap}><img className="rowface" src={asset("assets/characters/pantry.webp")} alt="" /><span className="hr-label">Snap an expiry date<span className="sub">Arya can keep track of expiry dates and tell you what to use soon.</span></span><span className="chev">›</span></button></div>
+        <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3></div>
+        <div className="group"><button className="hubrow snaprow" type="button" data-ex-snap onClick={snap}><img className="rowface" src={asset("assets/characters/pantry.webp")} alt="" /><span className="hr-label">{t("today.snapAnExpiryDate")}<span className="sub">{t("today.aryaCanKeepTrackOf")}</span></span><span className="chev">›</span></button></div>
       </>
     );
   }
   const open = (id: string) => setEx({ k: "item", id });
   return (
     <>
-      <div className="sectrow"><h3 className="sect">Use soon</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}>+ Snap a date</button></div>
+      <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}>{t("today.snapADate")}</button></div>
       <div className="group usesoon">
         {soon.map(s => (
           <div className="row" key={s.item_id} tabIndex={0} role="button" data-ex-item={s.item_id}
@@ -403,10 +407,10 @@ function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) =>
             onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => { if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(s.item_id); } }}>
             <Face name={s.name} />
             <div className="grow"><span className="name">{s.name}</span><span className="sub"><b>{fmtLong(s.date)}</b> · {when(s.days)}</span></div>
-            <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>Used it</button></div>
+            <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>{t("today.usedIt")}</button></div>
         ))}
       </div>
-      <p className="muted small listhint">Tap a row to snooze, fix the date or stop tracking.</p>
+      <p className="muted small listhint">{t("today.tapARowToSnooze")}</p>
     </>
   );
 }
@@ -423,6 +427,7 @@ async function itemOptions(match?: { item_id: string; name: string } | null): Pr
 }
 
 function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (s: ExState) => void; soon: Soon[]; demo: boolean; reload: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const close = useCallback(() => setEx(null), [setEx]);
   const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -454,31 +459,31 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
   if (ex?.k === "capture") {
     body = (
       <>
-        <h3 className="hm-title" id="ex-title">Snap the date</h3>
-        <p className="muted">Point your camera at the date on the package. Arya reads it, and you check it before anything is saved.</p>
+        <h3 className="hm-title" id="ex-title">{t("today.snapTheDate")}</h3>
+        <p className="muted">{t("today.pointYourCameraAtThe")}</p>
         <label className="btn primary wide" htmlFor="ex-photo" data-first tabIndex={0} role="button"
-          onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById("ex-photo")?.click(); } }}>Take a photo</label>
+          onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById("ex-photo")?.click(); } }}>{t("today.takeAPhoto")}</label>
         <input type="file" id="ex-photo" accept="image/*" capture="environment" hidden
           onChange={ev => { const f = ev.target.files?.[0]; if (f) readPhoto(f); }} />
-        {demo && <button className="btn wide" id="ex-sample" type="button" onClick={readSample}>Try a sample date</button>}
-        <p className="exlinks"><button className="linkbtn" id="ex-type" type="button" onClick={() => typeSheet()}>Type the date instead</button></p>
+        {demo && <button className="btn wide" id="ex-sample" type="button" onClick={readSample}>{t("today.tryASampleDate")}</button>}
+        <p className="exlinks"><button className="linkbtn" id="ex-type" type="button" onClick={() => typeSheet()}>{t("today.typeTheDateInstead")}</button></p>
       </>
     );
   } else if (ex?.k === "reading") {
     body = (
       <>
-        <h3 className="hm-title" id="ex-title">Reading the date…</h3>
-        <p className="muted" role="status">Spark is looking at the photo.</p>
+        <h3 className="hm-title" id="ex-title">{t("today.readingTheDate")}</h3>
+        <p className="muted" role="status">{t("today.sparkIsLookingAtThe")}</p>
       </>
     );
   } else if (ex?.k === "cant") {
     body = (
       <>
-        <h3 className="hm-title" id="ex-title">Arya couldn't read that date</h3>
+        <h3 className="hm-title" id="ex-title">{t("today.aryaCouldnTReadThat")}</h3>
         <p className="muted">{ex.why ? ex.why : "Glare or a curved label can hide it. No harm done."}</p>
-        <button className="btn primary wide" id="ex-again" type="button" data-first onClick={() => setEx({ k: "capture" })}>Try again</button>
-        <button className="btn wide" id="ex-type" type="button" onClick={() => typeSheet()}>Type the date</button>
-        <p className="exlinks"><button className="linkbtn" id="ex-skip" type="button" onClick={close}>Skip for now</button></p>
+        <button className="btn primary wide" id="ex-again" type="button" data-first onClick={() => setEx({ k: "capture" })}>{t("common.tryAgain")}</button>
+        <button className="btn wide" id="ex-type" type="button" onClick={() => typeSheet()}>{t("today.typeTheDate")}</button>
+        <p className="exlinks"><button className="linkbtn" id="ex-skip" type="button" onClick={close}>{t("today.skipForNow")}</button></p>
       </>
     );
   } else if (ex?.k === "confirm" || ex?.k === "type") {
@@ -502,18 +507,18 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
               catch (e) { toast(errMsg(e)); }
             },
           });
-        }}>Used it</button>
+        }}>{t("today.usedIt")}</button>
         <button className="btn wide" id="ex-snooze" type="button" onClick={async () => {
           close();
           try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/snooze`); toast(`${s.name}: Arya will check in again in 2 days.`); reload(); }
           catch (e) { toast(errMsg(e)); }
-        }}>Remind me in 2 days</button>
-        <button className="btn wide" id="ex-fix" type="button" onClick={() => typeSheet(s)}>Fix the date</button>
+        }}>{t("today.remindMeIn2Days")}</button>
+        <button className="btn wide" id="ex-fix" type="button" onClick={() => typeSheet(s)}>{t("today.fixTheDate")}</button>
         <p className="exlinks"><button className="linkbtn" id="ex-stop" type="button" onClick={async () => {
           close();
           try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/stop`); toast(`Stopped tracking ${s.name}.`); reload(); }
           catch (e) { toast(errMsg(e)); }
-        }}>Stop tracking this</button></p>
+        }}>{t("today.stopTrackingThis")}</button></p>
       </>
     );
   }
@@ -530,6 +535,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
  * share the item picker, the date and the save (expiry.js confirmSheet,
  * typeSheet, save). */
 function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "confirm" | "type" }>; onSaved: (msg: string) => void; onError: (m: string) => void }) {
+  const { t } = useTranslation();
   const read = ex.k === "confirm" ? ex.read : null;
   const fix = ex.k === "type" ? ex.item : undefined;
   const opts = ex.opts;
@@ -553,17 +559,17 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
 
   const picker = (
     <>
-      <select id="ex-item" aria-label="Item" value={sel}
+      <select id="ex-item" aria-label={t("today.item2")} value={sel}
         onChange={ev => { setSel(ev.target.value); if (!ev.target.value) setTimeout(() => nameRef.current?.focus()); }}>
         {opts.map(o => <option key={o.id} value={o.id}>{o.name + o.tag}</option>)}
         <option value="">{opts.length ? "A different item…" : "Name the item…"}</option>
       </select>
-      <input type="text" id="ex-name" ref={nameRef} placeholder="What is it?" value={name} hidden={sel !== ""} aria-label="Item name" autoComplete="off"
+      <input type="text" id="ex-name" ref={nameRef} placeholder={t("today.whatIsIt")} value={name} hidden={sel !== ""} aria-label={t("today.itemName")} autoComplete="off"
         onChange={ev => setName(ev.target.value)} />
     </>
   );
   const dateRow = (
-    <div className="exkv"><span className="exk">Date</span><span className="exv"><input type="date" id="ex-date" value={date} aria-label="Date" onChange={ev => setDate(ev.target.value)} /></span></div>
+    <div className="exkv"><span className="exk">{t("today.date")}</span><span className="exv"><input type="date" id="ex-date" value={date} aria-label={t("today.date")} onChange={ev => setDate(ev.target.value)} /></span></div>
   );
 
   if (read) {
@@ -571,23 +577,23 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
     const word = KIND_WORD[read.kind || ""] || "date";
     return (
       <>
-        <p className="dow nomargin">Arya read</p>
+        <p className="dow nomargin">{t("today.aryaRead")}</p>
         {read.raw ? <div className="excrop">{read.raw}</div> : null}
         <h3 className="bigdate" id="ex-title">{name0}, {word} {fmtMD(read.date)}</h3>
         <p className="muted nomargin">{fmtLong(read.date)} · {when(Math.round((dateObj(read.date).getTime() - dateObj(isoToday()).getTime()) / 864e5))}</p>
-        <div className="exkv"><span className="exk">Item</span><span className="exv">{picker}</span></div>
+        <div className="exkv"><span className="exk">{t("today.item2")}</span><span className="exv">{picker}</span></div>
         {dateRow}
-        <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>Looks right, track it</button>
-        <p className="muted small excenter">Nothing is saved until you tap. Arya keeps the date, not the photo.</p>
+        <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.looksRightTrackIt")}</button>
+        <p className="muted small excenter">{t("today.nothingIsSavedUntilYou")}</p>
       </>
     );
   }
   return (
     <>
       <h3 className="hm-title" id="ex-title">{fix ? "Fix the date" : "Type the date"}</h3>
-      <div className="exkv"><span className="exk">Item</span><span className="exv">{picker}</span></div>
+      <div className="exkv"><span className="exk">{t("today.item2")}</span><span className="exv">{picker}</span></div>
       {dateRow}
-      <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>Track it</button>
+      <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.trackIt")}</button>
     </>
   );
 }

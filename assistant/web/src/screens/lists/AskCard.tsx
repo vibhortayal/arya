@@ -2,6 +2,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { post } from "../../lib/api";
 import { useToast } from "../../ui/Toast";
 import type { NamedList } from "./model";
+import { t } from "../../i18n";
 
 /* Port of pwa/aryaask.js: the Lists field and mic talk to Arya from
  * where you already are. The answer is a small card under the field. */
@@ -85,16 +86,16 @@ export function useAsk(onChange: () => void) {
       if (proposed.length) {
         body = <>{skipped}<strong>{proposed.map(p => p.text).join(" ")}</strong></>;
         buttons = <>
-          <button className="btn secondary" type="button" data-aa="no" onClick={() => act(res, "no")}>Not now</button>
+          <button className="btn secondary" type="button" data-aa="no" onClick={() => act(res, "no")}>{t("common.notNow")}</button>
           <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? "Yes, do these" : "Yes, do it"}</button></>;
       } else if (added.length) {
         body = <>{said}{skipped}</>;
         buttons = <>
-          <button className="btn secondary" type="button" data-aa="undo" disabled={busy} onClick={() => act(res, "undo")}>Undo</button>
-          <button className="btn primary" type="button" data-aa="done" onClick={() => act(res, "done")}>Done</button></>;
+          <button className="btn secondary" type="button" data-aa="undo" disabled={busy} onClick={() => act(res, "undo")}>{t("common.undo")}</button>
+          <button className="btn primary" type="button" data-aa="done" onClick={() => act(res, "done")}>{t("common.done")}</button></>;
       } else {
         body = <>{said}{skipped}</>;
-        buttons = <button className="btn secondary" type="button" data-aa="done" onClick={() => act(res, "done")}>Got it</button>;
+        buttons = <button className="btn secondary" type="button" data-aa="done" onClick={() => act(res, "done")}>{t("common.gotIt")}</button>;
       }
     }
     node = (

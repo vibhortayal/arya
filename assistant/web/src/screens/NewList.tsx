@@ -7,6 +7,7 @@ import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../l
 import { clearOnSignOut } from "../app/session";
 import { asset } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -452,6 +453,7 @@ function newPack(store: string): Pack {
 const NOTE = "Pack what you need. Tap a row to take it in or out.";
 
 export function NewList() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const d = draftFor(nav.params);
@@ -1016,7 +1018,7 @@ export function NewList() {
             {chips.length ? <span className="packchips">{chips.map((c, i) =>
               <span key={i} className={"packchip" + (i === 0 && chip ? " src" : "")}>{c}</span>)}</span> : null}</span>
         </button>
-        <button className="packedit" data-packedit={key} aria-label={`Edit ${name}`} type="button" onClick={() => openEdit(key)}>Edit</button>
+        <button className="packedit" data-packedit={key} aria-label={`Edit ${name}`} type="button" onClick={() => openEdit(key)}>{t("newList.edit")}</button>
         {o?.itemId ? <button className="planrm" data-planrm={key} data-item={o.itemId} aria-label={`Remove ${name} from your list`} type="button"
           onClick={ev => removeFromList(key, o.itemId!, ev.currentTarget)}>✕</button> : null}
       </div>
@@ -1044,14 +1046,14 @@ export function NewList() {
       sect(`Usually from ${st} · ${rs.length}`, rs.map(r => listRow(r, `${st} ${r.b.n} of ${r.b.total} times · stays on your list if unticked`)))),
     sect(`Added for this trip · ${mine.length}`, mine.map(r => bagRow(r.key, r))),
     skipped.length && pk ? (
-      <div key="skipped"><h3 className="sect">Skipped · {skipped.length}</h3>
+      <div key="skipped"><h3 className="sect">{t("newList.skipped", { skippedCount: skipped.length })}</h3>
         <div className="group packskipped">
           <button className="packlink packfold" data-packfold="skipped" aria-expanded={!!pk.expanded.skipped} type="button"
             onClick={() => { pk.expanded.skipped = !pk.expanded.skipped; force(); save(); }}>
             {pk.expanded.skipped ? "Hide skipped items" : `Show ${skipped.length} skipped ${plural(skipped.length, "item", "items")}`}</button>
           {pk.expanded.skipped ? skipped.map(r => (
             <div className="planrow packrow" key={r.key}><span className="grow packskipname"><span className="name">{r.name}</span>{r.qty > 1 ? <span className="packx">x{r.qty}</span> : null}</span>
-              <button className="packback" data-packrestore={r.key} aria-label={`Pack ${r.name}`} type="button" onClick={() => restore(r.key)}>+ Pack</button></div>
+              <button className="packback" data-packrestore={r.key} aria-label={`Pack ${r.name}`} type="button" onClick={() => restore(r.key)}>{t("newList.pack")}</button></div>
           )) : null}
         </div>
       </div>
@@ -1071,11 +1073,11 @@ export function NewList() {
       const left = n - pk.deal;
       deck = (
         <>
-          <div className="packhead"><span className="packcount" aria-live="polite">Card {pk.deal + 1} of {n}</span></div>
+          <div className="packhead"><span className="packcount" aria-live="polite">{t("newList.card")}{" "}{pk.deal + 1}{" "}{t("newList.of", { n })}</span></div>
           <div className="packlinks">
-            {pk.decisions.length ? <button className="packlink" data-pack="back" type="button" onClick={backOne}>Back one card</button> : <span></span>}
-            <span className="packlinkgroup"><button className="packlink" data-pack="all" type="button" onClick={() => sweep("pack")}>Pack all {left}</button>
-              <button className="packlink" data-pack="rest" type="button" onClick={() => sweep("skip")}>Skip the rest</button></span></div>
+            {pk.decisions.length ? <button className="packlink" data-pack="back" type="button" onClick={backOne}>{t("newList.backOneCard")}</button> : <span></span>}
+            <span className="packlinkgroup"><button className="packlink" data-pack="all" type="button" onClick={() => sweep("pack")}>{t("newList.packAll", { left })}</button>
+              <button className="packlink" data-pack="rest" type="button" onClick={() => sweep("skip")}>{t("newList.skipTheRest")}</button></span></div>
           <div className="packdeck">
             <div className="packcard" id="pack-card" data-card={c.id} tabIndex={0} role="group" key={c.id}
               aria-label={`${c.name}. Card ${pk.deal + 1} of ${n}. Press the right arrow to pack it. Press the left arrow to skip it.`}
@@ -1084,7 +1086,7 @@ export function NewList() {
               <img className="packart" src={asset(`assets/characters/${faceFor(c.name)}`)} alt="" />
               <h3>{c.name}</h3>
               <p className="packwhy">{reasonFor(c)}</p>
-              <span className="packqty" role="group" aria-label="Quantity"><button type="button" data-packq="-1" aria-label="One less" onClick={() => setCardQty(-1)}>−</button><b aria-live="polite">{c.qty || 1}</b><button type="button" data-packq="1" aria-label="One more" onClick={() => setCardQty(1)}>+</button></span>
+              <span className="packqty" role="group" aria-label={t("common.quantity")}><button type="button" data-packq="-1" aria-label={t("newList.oneLess")} onClick={() => setCardQty(-1)}>−</button><b aria-live="polite">{c.qty || 1}</b><button type="button" data-packq="1" aria-label={t("common.oneMore")} onClick={() => setCardQty(1)}>+</button></span>
             </div>
             {leave && (
               <div className={"packcard leaving" + (leave.go ? (leave.dir === "r" ? " out-r" : " out-l") : "")} aria-hidden="true">
@@ -1096,26 +1098,26 @@ export function NewList() {
               </div>
             )}
           </div>
-          <div className="packbtns"><button className="packbtn skip" data-pack="skip" type="button" onClick={() => decide("skip", c.id)}>Skip</button>
-            <button className="packbtn pack" data-pack="pack" type="button" onClick={() => decide("pack", c.id)}>Pack it</button></div>
+          <div className="packbtns"><button className="packbtn skip" data-pack="skip" type="button" onClick={() => decide("skip", c.id)}>{t("common.skip")}</button>
+            <button className="packbtn pack" data-pack="pack" type="button" onClick={() => decide("pack", c.id)}>{t("newList.packIt")}</button></div>
         </>
       );
     } else if (n && pk.decisions.length) {
       deck = (
         <>
-          <div className="packhead"><span className="packcount">That was the last card. Your bag is below.</span></div>
-          <div className="packlinks"><button className="packlink" data-pack="back" type="button" onClick={backOne}>Back one card</button><span></span></div>
+          <div className="packhead"><span className="packcount">{t("newList.thatWasTheLastCard")}</span></div>
+          <div className="packlinks"><button className="packlink" data-pack="back" type="button" onClick={backOne}>{t("newList.backOneCard")}</button><span></span></div>
         </>
       );
     } else if (!plan.has_history) {
       const have = new Set(allRows().filter(r => r.on).map(r => squashName(r.name)));
       const chips = STARTERS.filter(s => !have.has(squashName(s)));
       deck = (
-        <div className="packfirst"><h3>Start your list</h3>
-          <p className="muted">No receipts yet. Type what you need above. After your first receipt, Arya deals cards for you.</p>
-          {chips.length ? <p className="packchips" aria-label="Common starters">{chips.map(s =>
+        <div className="packfirst"><h3>{t("newList.startYourList")}</h3>
+          <p className="muted">{t("newList.noReceiptsYetTypeWhat")}</p>
+          {chips.length ? <p className="packchips" aria-label={t("newList.commonStarters")}>{chips.map(s =>
             <button key={s} className="chip packstarter" data-packstarter={s} type="button" onClick={() => addStarter(s)}>+ {s}</button>)}</p> : null}
-          <button className="packlink" data-packscan="1" type="button" onClick={() => nav.show("list")}>Scan an old receipt</button></div>
+          <button className="packlink" data-packscan="1" type="button" onClick={() => nav.show("list")}>{t("newList.scanAnOldReceipt")}</button></div>
       );
     }
   }
@@ -1126,7 +1128,7 @@ export function NewList() {
   const foot = pk && est && estLine ? (
     <>
       <p className="packestimate" id="nl-estimate">{estLine}</p>
-      <div className="budgetrow"><label htmlFor="nl-budget">Budget for this trip (optional)</label>
+      <div className="budgetrow"><label htmlFor="nl-budget">{t("newList.budgetForThisTripOptional")}</label>
         <input type="text" id="nl-budget" inputMode="decimal" autoComplete="off" placeholder="$" value={pk.budget}
           onChange={e => {
             pk.budget = e.target.value.replace(/[^0-9.]/g, "").slice(0, 7);
@@ -1151,19 +1153,19 @@ export function NewList() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>‹ Back</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? `Your quest at ${store}` : "Your quest"}</h2>
       <p className="muted" id="nl-sub">{NOTE}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>
       <div className="group pad packcomposer">
-        <label className="field" htmlFor="nl-text">Add something else</label>
-        <textarea id="nl-text" rows={2} placeholder={"oat milk\n2x tortillas"} aria-label="Add something else" value={text}
+        <label className="field" htmlFor="nl-text">{t("newList.addSomethingElse")}</label>
+        <textarea id="nl-text" rows={2} placeholder={"oat milk\n2x tortillas"} aria-label={t("newList.addSomethingElse")} value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); nlAdd(); } }} />
         <p className="packaddrow">
           <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? "Stop & transcribe" : "Record"}</button>
-          <label className="btn grow" htmlFor="nl-photo" style={{ textAlign: "center" }}>Photo</label>
-          <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>Add</button>
+          <label className="btn grow" htmlFor="nl-photo" style={{ textAlign: "center" }}>{t("newList.photo")}</label>
+          <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>{t("common.add")}</button>
           <input type="file" id="nl-photo" accept="image/*" hidden onChange={photo} />
         </p>
         <p className="muted nomargin" id="nl-status">{status}</p>
@@ -1178,19 +1180,19 @@ export function NewList() {
         {ed && editKey && (
           <div className="packsheet" role="group" aria-labelledby="pack-edit-title" key={editKey}>
             <h3 id="pack-edit-title">{ed.name}</h3>
-            <div className="packfield"><span className="packlabel" id="pack-q-label">Quantity</span>
+            <div className="packfield"><span className="packlabel" id="pack-q-label">{t("common.quantity")}</span>
               <span className="packqty" role="group" aria-labelledby="pack-q-label">
-                <button type="button" data-edit="qty-" aria-label="One less" onClick={() => { ed.qty = Math.min(99, Math.max(1, (ed.qty || 1) - 1)); touch(); }}>−</button>
+                <button type="button" data-edit="qty-" aria-label={t("newList.oneLess")} onClick={() => { ed.qty = Math.min(99, Math.max(1, (ed.qty || 1) - 1)); touch(); }}>−</button>
                 <b id="pack-edit-qty" aria-live="polite">{ed.qty || 1}</b>
-                <button type="button" data-edit="qty+" aria-label="One more" onClick={() => { ed.qty = Math.min(99, Math.max(1, (ed.qty || 1) + 1)); touch(); }}>+</button></span></div>
-            <label className="packfield" htmlFor="pack-edit-note"><span className="packlabel">Note</span>
-              <input type="text" id="pack-edit-note" ref={noteRef} maxLength={60} autoComplete="off" placeholder="Size, ripeness, a reminder" defaultValue={ed.note || ""}
+                <button type="button" data-edit="qty+" aria-label={t("common.oneMore")} onClick={() => { ed.qty = Math.min(99, Math.max(1, (ed.qty || 1) + 1)); touch(); }}>+</button></span></div>
+            <label className="packfield" htmlFor="pack-edit-note"><span className="packlabel">{t("newList.note")}</span>
+              <input type="text" id="pack-edit-note" ref={noteRef} maxLength={60} autoComplete="off" placeholder={t("newList.sizeRipenessAReminder")} defaultValue={ed.note || ""}
                 onChange={e => { ed.note = clip(e.target.value, 60); touch(); }} /></label>
-            <div className="packfield"><span className="packlabel">Brand</span>
+            <div className="packfield"><span className="packlabel">{t("newList.brand")}</span>
               <span className="packchips" id="pack-edit-brands">{brandChip("Any brand", "")}{brands.map(b => brandChip(b, b))}</span>
-              <input type="text" id="pack-edit-variant" ref={variantRef} maxLength={60} autoComplete="off" placeholder="Other brand" aria-label="Other brand" defaultValue={ed.variant || ""}
+              <input type="text" id="pack-edit-variant" ref={variantRef} maxLength={60} autoComplete="off" placeholder={t("newList.otherBrand")} aria-label={t("newList.otherBrand")} defaultValue={ed.variant || ""}
                 onChange={e => { ed.variant = clip(e.target.value, 60); touch(); }} /></div>
-            {showAisle ? <div className="packfield"><span className="packlabel">Aisle</span><span className="packchips">{AISLES.map(a =>
+            {showAisle ? <div className="packfield"><span className="packlabel">{t("newList.aisle")}</span><span className="packchips">{AISLES.map(a =>
               <button type="button" className="chip" data-edit="aisle" data-aisle={a} key={a} aria-pressed={ed.aisle === a}
                 onClick={() => { ed.aisle = ed.aisle === a ? "" : a; touch(); }}>{a}</button>)}</span></div> : null}
             <div className="packsheetbtns"><button type="button" className="packlink" data-edit="remove" onClick={() => {
@@ -1198,8 +1200,8 @@ export function NewList() {
               if (ed.extra) delete dRef.current.pick[key]; else ed.on = false;
               if (editState.current) editState.current.dirty = true;
               closeEdit(false, `${name} is out of this trip.`);
-            }}>Take out of this trip</button>
-              <button type="button" className="packbtn pack" data-edit="done" data-first onClick={() => closeEdit()}>Done</button></div>
+            }}>{t("newList.takeOutOfThisTrip")}</button>
+              <button type="button" className="packbtn pack" data-edit="done" data-first onClick={() => closeEdit()}>{t("common.done")}</button></div>
           </div>
         )}
       </Sheet>

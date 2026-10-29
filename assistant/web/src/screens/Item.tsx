@@ -5,6 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Row } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { MONTHS, fmtDate, money } from "../lib/format";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-item and app.js renderItem. Opened with
  * nav.show("item", { id }). */
@@ -17,6 +18,7 @@ type Detail = {
 };
 
 export function Item() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { currency } = useSession();
   const { toast, showErr } = useToast();
@@ -43,30 +45,30 @@ export function Item() {
 
   return (
     <>
-      <p><a href="#" id="item-back" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
+      <p><a href="#" id="item-back" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
       <div id="item-detail">
         {d && <>
           <h2 className="largetitle" style={{ fontSize: 28 }}>{e ? e.canonical_name : id}</h2>
           {p && p.history_state !== "not-enough-history" ? (
             <div className="group">
-              <Row name="Buys" right={String(p.purchase_count)} />
-              <Row name="Rhythm" right={`every ~${Math.round(p.median_interval_days)} days`} />
-              <Row name="Last bought" right={fmtDate(p.last_bought)} />
-              <Row name="Total spend" right={money(p.total_spend, currency)} />
+              <Row name={t("item.buys")} right={String(p.purchase_count)} />
+              <Row name={t("item.rhythm")} right={`every ~${Math.round(p.median_interval_days)} days`} />
+              <Row name={t("common.lastBought")} right={fmtDate(p.last_bought)} />
+              <Row name={t("item.totalSpend")} right={money(p.total_spend, currency)} />
             </div>
-          ) : <p className="muted">Not enough history yet for a pattern.</p>}
+          ) : <p className="muted">{t("item.notEnoughHistoryYetFor")}</p>}
           {p && p.judge && <>
-            <h3 className="sect">Why Arya {onList ? "suggests it" : "leaves it off"}</h3>
+            <h3 className="sect">{t("item.whyArya")}{" "}{onList ? "suggests it" : "leaves it off"}</h3>
             <div className="group">
               <Row name={String(p.judge.class).replace("_", " ")} sub={p.judge.reason} right={onList ? "On the list" : "Off the list"} />
             </div>
           </>}
           {p && p.analysis && p.analysis.verdict && (
-            <p className="muted">Pattern check: {p.analysis.verdict}{p.analysis.seasonal_months
+            <p className="muted">{t("item.patternCheck", { verdict: p.analysis.verdict })}{p.analysis.seasonal_months
               ? ` · bought mostly in ${p.analysis.seasonal_months.map((m: number) => MONTHS[m - 1]).join(", ")}` : ""}.</p>
           )}
           {stores.length > 0 && <>
-            <h3 className="sect">Price by store</h3>
+            <h3 className="sect">{t("item.priceByStore")}</h3>
             <div className="group">
               {stores.map(([s, v]) => (
                 <Row key={s} name={s} sub={`${v.count} buys`}
@@ -75,7 +77,7 @@ export function Item() {
             </div>
           </>}
           {d.history.length > 0 && <>
-            <h3 className="sect">Recent history</h3>
+            <h3 className="sect">{t("item.recentHistory")}</h3>
             <div className="group">
               {d.history.slice(0, 10).map((h, i) => {
                 const ret = h.event_type === "return";
@@ -86,11 +88,11 @@ export function Item() {
           </>}
           <p style={{ marginTop: 20, display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="btn secondary" id="btn-add" type="button"
-              onClick={() => act(() => post("/api/list/add", { item_id: id }), "Added to your list.")}>Add to list</button>
+              onClick={() => act(() => post("/api/list/add", { item_id: id }), "Added to your list.")}>{t("item.addToList")}</button>
             <button className="btn secondary" id="btn-never" type="button"
-              onClick={() => act(() => post(`/api/items/${eid}/flag`, { never: true }), "Arya will not suggest this again.")}>Never suggest</button>
+              onClick={() => act(() => post(`/api/items/${eid}/flag`, { never: true }), "Arya will not suggest this again.")}>{t("item.neverSuggest")}</button>
             <button className="btn secondary" id="btn-expired" type="button"
-              onClick={() => act(() => post(`/api/items/${eid}/expired`), "Marked expired. It's on your list.")}>This expired</button>
+              onClick={() => act(() => post(`/api/items/${eid}/expired`), "Marked expired. It's on your list.")}>{t("item.thisExpired")}</button>
           </p>
           <p id="flag-result" className="muted">{result}</p>
         </>}

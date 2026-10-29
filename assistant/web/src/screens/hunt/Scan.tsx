@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QFRESH, freshKey, type Session } from "./model";
+import { useTranslation } from "../../i18n";
 
 /* Shelf Scan (quest.js Discussion 37: openScanView .. closeScan), shared
  * by the hunt and Express. SAM proposes boxes for the remaining list,
@@ -74,6 +75,7 @@ type Props = {
 };
 
 export function ScanView({ open, sess, target, onClose, collect, onPops }: Props) {
+  const { t } = useTranslation();
   const [mode, setModeS] = useState<"starting" | "live" | "still">("still");
   const [url, setUrl] = useState("");
   const [pops, setPops] = useState<ScanPop[]>([]);
@@ -287,13 +289,13 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
       <div id="scan-overlay" className="scanoverlay" hidden={!open}>
         <div className="scanbar">
           <div className="grow">
-            <span className="name">Shelf scan</span>
-            <span className="sub">Spots items from your list in a photo — each one verified by a second model before it highlights. We never keep pictures of people, only products: Meta SAM blurs out anyone in the frame first.</span>
+            <span className="name">{t("hunt.shelfScan")}</span>
+            <span className="sub">{t("hunt.spotsItemsFromYourList")}</span>
             <span className="sub" id="scan-last">{lastLine}</span>
           </div>
-          <button id="scan-usephoto" className="btn" type="button" hidden={isLive} onClick={() => photo.current?.click()}>Take a photo</button>
-          <button id="scan-stop" className="btn" type="button" hidden={!isLive} onClick={() => { stopLive(); setStatus("Live scan stopped."); }}>Stop</button>
-          <button id="scan-close" className="cornerbtn" type="button" aria-label="Close scan"
+          <button id="scan-usephoto" className="btn" type="button" hidden={isLive} onClick={() => photo.current?.click()}>{t("hunt.takeAPhoto")}</button>
+          <button id="scan-stop" className="btn" type="button" hidden={!isLive} onClick={() => { stopLive(); setStatus("Live scan stopped."); }}>{t("hunt.stop")}</button>
+          <button id="scan-close" className="cornerbtn" type="button" aria-label={t("hunt.closeScan")}
             onClick={() => { stopLive(); if (photo.current) photo.current.value = ""; onClose(); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
@@ -301,7 +303,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
         <div className="scanstage">
           <div className="scanwrap">
             <video id="scan-video" ref={video} playsInline muted hidden={!isLive} />
-            <img id="scan-img" alt="Your shelf photo" hidden={isLive || !url} src={url || undefined} />
+            <img id="scan-img" alt={t("hunt.yourShelfPhoto")} hidden={isLive || !url} src={url || undefined} />
             <div id="scan-boxes">
               {pops.map((p, k) => {
                 const [x1, y1, x2, y2] = p.box;

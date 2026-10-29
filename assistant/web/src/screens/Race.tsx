@@ -4,6 +4,7 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { Q, qLoadSessions, qParseLines, type Session } from "./hunt/model";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-race and quest.js renderRace (Shop-Off).
  * nav.params.store prefills the store (old Q.raceStore); nav.params.opponent
@@ -17,6 +18,7 @@ type RaceData = { store: string; state: string; players: Player[]; winner?: stri
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Race() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [opp, setOpp] = useState("");
@@ -69,10 +71,10 @@ export function Race() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Shop-Off</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.shopOff")}</h2>
       <div id="race-body">
-        {races && !races.length && <div className="group"><Empty>No races yet. Start one below, or challenge a friend.</Empty></div>}
+        {races && !races.length && <div className="group"><Empty>{t("race.noRacesYetStartOne")}</Empty></div>}
         {(races || []).map((race, ri) => (
           <div className="group pad" key={ri}>
             <p className="nomargin"><strong>{race.store}</strong> · {race.state === "finished" ? "Finished" : "Racing"}</p>
@@ -83,30 +85,27 @@ export function Race() {
                   <div className="grow"><span className="name">@{p.handle}{p.placeholder ? " (placeholder)" : ""}</span>
                     <span className="track"><span className="bar" style={{ width: `${pct}%` }} /></span>
                     <span className="sub">{p.progress ? `${p.progress.checked}/${p.progress.total} collected` : ""}{p.done && p.finish_time ? ` · receipt ${String(p.finish_time).replace("T", " ")}` : ""}</span></div>
-                  <button className="chip" data-open-sess={p.session_id} type="button" onClick={() => open(p.session_id).catch(showErr)}>Open</button>
+                  <button className="chip" data-open-sess={p.session_id} type="button" onClick={() => open(p.session_id).catch(showErr)}>{t("race.open")}</button>
                 </div>
               );
             })}
             {race.state === "finished"
               ? <p className="nomargin" style={{ marginTop: 8 }}><strong>{race.winner ? `Winner: @${race.winner} — by receipt time.` : "Dead heat — identical receipt times."}</strong></p>
-              : <p className="muted nomargin" style={{ marginTop: 8 }}>First verified receipt wins.</p>}
+              : <p className="muted nomargin" style={{ marginTop: 8 }}>{t("race.firstVerifiedReceiptWins")}</p>}
           </div>
         ))}
       </div>
-      <h3 className="sect">New race</h3>
+      <h3 className="sect">{t("race.newRace")}</h3>
       <div className="group pad">
-        <label className="field">Opponent handle
-          <input type="text" id="race-opp" placeholder="cartqueen" autoComplete="off" value={opp} onChange={e => setOpp(e.target.value)} />
+        <label className="field">{t("race.opponentHandle")}<input type="text" id="race-opp" placeholder="cartqueen" autoComplete="off" value={opp} onChange={e => setOpp(e.target.value)} />
         </label>
-        <label className="field">Store
-          <input type="text" id="race-store" placeholder="Trader Joe’s" autoComplete="off" value={store} onChange={e => setStore(e.target.value)} />
+        <label className="field">{t("race.store")}<input type="text" id="race-store" placeholder="Trader Joe’s" autoComplete="off" value={store} onChange={e => setStore(e.target.value)} />
         </label>
-        <label className="field">The list — one item per line
-          <textarea id="race-items" rows={5} placeholder={"milk\neggs"} value={items} onChange={e => setItems(e.target.value)} />
+        <label className="field">{t("race.theListOneItemPer")}<textarea id="race-items" rows={5} placeholder={"milk\neggs"} value={items} onChange={e => setItems(e.target.value)} />
         </label>
-        <p style={{ marginBottom: 0 }}><button id="race-create" className="btn primary wide" type="button" disabled={busy} onClick={create}>Start the race</button></p>
+        <p style={{ marginBottom: 0 }}><button id="race-create" className="btn primary wide" type="button" disabled={busy} onClick={create}>{t("race.startTheRace")}</button></p>
       </div>
-      <p className="muted">Same store, same list. The first verified receipt wins — its timestamp is the photo finish. Until real cross-account races land, your opponent’s hunt is a placeholder in this account; run it from its session card.</p>
+      <p className="muted">{t("race.sameStoreSameListThe")}</p>
     </>
   );
 }

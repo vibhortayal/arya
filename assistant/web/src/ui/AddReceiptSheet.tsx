@@ -6,6 +6,7 @@ import { post } from "../lib/api";
 import { useNav } from "../app/nav";
 import { afterFinish } from "../screens/haul/state";
 import { qLoadSessions, type Session } from "../screens/hunt/model";
+import { useTranslation } from "../i18n";
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
  * attaches this trip's receipt to a finished hunt. Moved out of
@@ -31,6 +32,7 @@ export type ReceiptTarget = { sessionId: string; label: string };
  * the toast carries See haul (haul.js afterFinish). */
 export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
   { target: ReceiptTarget | null; onClose: () => void; onDone: (sess?: Session) => void; goesToHaul?: boolean }) {
+  const { t } = useTranslation();
   const nav = useNav();
   const { demo } = useSession();
   const { toast } = useToast();
@@ -75,13 +77,13 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
 
   return (
     <Sheet open={!!target} onClose={close} id="ar-sheet">
-      <div className="row"><span className="name">Add receipt</span><button id="ar-close" className="btn" type="button" onClick={close}>Not now</button></div>
+      <div className="row"><span className="name">{t("common.addReceipt")}</span><button id="ar-close" className="btn" type="button" onClick={close}>{t("common.notNow")}</button></div>
       <p className="muted" id="ar-for">{target ? `${target.label} · Finished · Receipt missing` : ""}</p>
-      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label="This trip's receipt photo" hidden onChange={photo} />
-      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo">Snap the receipt photo</label></p>
-      <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>Use a sample receipt <span className="demotag">Demo</span></button></p>
+      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label={t("addReceiptSheet.thisTripSReceiptPhoto")} hidden onChange={photo} />
+      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo">{t("addReceiptSheet.snapTheReceiptPhoto")}</label></p>
+      <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("addReceiptSheet.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
       <p id="ar-status" className="muted nomargin">{status}</p>
-      <p className="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
+      <p className="muted nomargin">{t("addReceiptSheet.theHuntStaysClosedAttaching")}</p>
     </Sheet>
   );
 }

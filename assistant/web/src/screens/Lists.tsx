@@ -16,6 +16,7 @@ import {
   askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
   suggestHome, suggestions, suggestWhy, type HomeData, type Item,
 } from "./lists/model";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -78,6 +79,7 @@ type EyesRec = { id: string; kind: string; date: string; sightings: Sighting[] }
 /* ---------------- one list row ---------------- */
 
 function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: string, q: number, u: string) => Promise<void>; onCancel: () => void }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [q, setQ] = useState("");
   const [u, setU] = useState("");
@@ -112,9 +114,9 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
         if (ev.key === "Enter") { ev.preventDefault(); commit(); }
         if (ev.key === "Escape") { done.current = true; setEditing(false); onCancel(); }
       }}>
-      <input type="number" min="1" step="1" inputMode="numeric" className="qtyinput" aria-label="Quantity" ref={qInput}
+      <input type="number" min="1" step="1" inputMode="numeric" className="qtyinput" aria-label={t("common.quantity")} ref={qInput}
         value={q} onChange={e => setQ(e.target.value)} />
-      <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder="unit" aria-label="Unit, for example kg or L"
+      <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder={t("lists.unit")} aria-label={t("lists.unitForExampleKgOr")}
         value={u} onChange={e => setU(e.target.value)} />
     </span>
   );
@@ -122,17 +124,18 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
 
 function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: boolean; picked: boolean;
   onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void }) {
+  const { t } = useTranslation();
   const sub = i.added_by ? `Added by ${i.added_by}` : "";
   return (
     <div className="swipewrap" data-wrap-id={i.item_id}>
-      <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>Move</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>Remove</button></div>
+      <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>{t("lists.move")}</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>{t("common.remove")}</button></div>
       <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={`Check off ${i.name}`}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
-          {askLaterHas(i.name) ? <span className="sub asklater">To ask — kept as typed; asked again at the next plan.</span> : null}
-          {i.not_grocery && !picking ? <span className="sub notgrocery">Not a grocery item? Added anyway. <button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>It is groceries</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>Remove</button></span> : null}</div>
+          {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
+          {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
         {picking ? null : <QtyBtn item={i} onCommit={onQty} onCancel={onReload} />}
       </div>
     </div>
@@ -146,6 +149,7 @@ const shopNomapNote = (shopStore: string) =>
   `Quest needs aisle photos of this store, and Arya has none yet. In Express, snap a photo or a short video of the aisles you pass. Once ${shopStore} is mapped, Quest turns on here.`;
 
 export function Lists() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
@@ -626,7 +630,7 @@ export function Lists() {
         {r ? <span className="lc-store gact"><b className="byp">{cap(r.by)}</b> {r.action} {r.name} · {ago(r.at)}</span> : null}
         {sub ? <span className="lc-store">{sub}</span> : null}
         <span className="lc-items">{rs.length ? names : "Nothing on it yet"}</span>
-        {n ? <span className="lc-sugg"><IconSpark />{n} suggestion{n === 1 ? "" : "s"}</span> : null}
+        {n ? <span className="lc-sugg"><IconSpark />{t("lists.suggestion", { n })}{n === 1 ? "" : "s"}</span> : null}
       </button>
     );
   };
@@ -646,14 +650,14 @@ export function Lists() {
     <>
       {!onPage && (
         <div id="lists-home">
-          <h2 className="largetitle">Lists</h2>
+          <h2 className="largetitle">{t("lists.lists")}</h2>
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
-              <span>{grp.name} · shared with {(() => {
+              <span>{t("lists.sharedWith", { name: grp.name, value: (() => {
                 const ns = others.map(m => cap(m.handle));
                 return ns.length <= 2 ? ns.join(" and ") : `${ns.slice(0, 2).join(", ")} and ${ns.length - 2} more`;
-              })()}</span>
+              })() })}</span>
             </p>
           ) : null}
           <p id="list-line" className="subtitle">{homeLine}</p>
@@ -661,19 +665,19 @@ export function Lists() {
             {data ? <>
               {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : "No store linked"))}
               {card("else", "Everything else", lists.length ? "Not on a list yet" : "Make a list for each store you shop at")}
-            </> : <p className="empty">Loading your list…</p>}
+            </> : <p className="empty">{t("lists.loadingYourList")}</p>}
           </div>
-          <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>New list</button>
+          <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
         </div>
       )}
 
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
-          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>‹ Lists</button>
+          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>{t("lists.lists2")}</button>
           <div className="lhead">
             <h2 className="largetitle" id="lp-title">
               {renaming
-                ? <input type="text" id="lp-name-input" className="titleinput" maxLength={40} autoComplete="off" aria-label="List name" autoFocus
+                ? <input type="text" id="lp-name-input" className="titleinput" maxLength={40} autoComplete="off" aria-label={t("lists.listName")} autoFocus
                     value={renameVal} onChange={e => setRenameVal(e.target.value)} onFocus={e => e.currentTarget.select()}
                     onKeyDown={e => {
                       if (e.key === "Enter") { e.preventDefault(); saveTitle(); }
@@ -687,7 +691,7 @@ export function Lists() {
               onClick={() => { if (renaming) { saveTitle(); return; } setSel(selEff ? null : new Set()); }}>
               {renaming ? "Save" : selEff ? "Done" : "Select"}
             </button>
-            <button className="iconbtn" id="lp-menu" type="button" aria-label="List options" hidden={!here || !!selEff || renaming}
+            <button className="iconbtn" id="lp-menu" type="button" aria-label={t("lists.listOptions")} hidden={!here || !!selEff || renaming}
               onClick={() => setSheet({ kind: "menu" })}>
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2.1" /><circle cx="12" cy="12" r="2.1" /><circle cx="18.5" cy="12" r="2.1" /></svg>
             </button>
@@ -698,11 +702,11 @@ export function Lists() {
 
           <div id="composer" hidden={!!selEff}>
             <div className="addline">
-              <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label="Speak your list" onClick={mic}><IconMic /></button>
+              <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label={t("lists.speakYourList")} onClick={mic}><IconMic /></button>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
                 placeholder={name.length <= 8 ? `Add to ${name}` : "Add an item"} autoComplete="off" aria-label={`Add to ${name}`}
                 value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste} />
-              <label className="iconbtn" htmlFor="add-photo" aria-label="Add from a photo">
+              <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.addFromAPhoto")}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
               </label>
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
@@ -714,28 +718,28 @@ export function Lists() {
             <p className="muted nomargin" id="add-status">{status}</p>
             <div id="add-receipt-offer">
               {receiptFile ? <>
-                <p className="nomargin" style={{ marginTop: 10 }}>This looks like a receipt.</p>
-                <p style={{ marginBottom: 0 }}><button className="btn primary" id="add-file-receipt" type="button" onClick={fileReceipt}>File it as a receipt</button></p>
+                <p className="nomargin" style={{ marginTop: 10 }}>{t("lists.thisLooksLikeAReceipt")}</p>
+                <p style={{ marginBottom: 0 }}><button className="btn primary" id="add-file-receipt" type="button" onClick={fileReceipt}>{t("lists.fileItAsAReceipt")}</button></p>
               </> : null}
             </div>
           </div>
           <div id="list-answer">{ask.node}</div>
 
           <div id="list-eyes" hidden={!eyesPending}>
-            <h3 className="sect">Eyes — sightings to confirm</h3>
+            <h3 className="sect">{t("lists.eyesSightingsToConfirm")}</h3>
             <div className="group pad"><div id="eyes-records">
               {eyes.map(rec => (
                 <div className="eyes-record" key={rec.id}>
-                  <img src={`/eyes/photos/${rec.id}`} alt="Eyes photo" />
+                  <img src={`/eyes/photos/${rec.id}`} alt={t("lists.eyesPhoto")} />
                   <p className="muted">{rec.kind} · {fmtDate(rec.date)}</p>
                   {rec.sightings.map((sg, i) => (
                     <div className="row" key={i}><div className="grow"><span className="name">{sg.name}</span>
                       <span className="sub">{sg.judge_agree ? "" : "two reads disagreed · "}{sg.state}</span></div>
                       {sg.state === "pending" ? <div>
-                        <button className="chip eyes-confirm" type="button" onClick={() => eyeDecide(rec.id, i, "confirmed")}>Yes, it’s there</button>{" "}
-                        <button className="chip eyes-reject" type="button" onClick={() => eyeDecide(rec.id, i, "rejected")}>Not there</button></div> : null}
+                        <button className="chip eyes-confirm" type="button" onClick={() => eyeDecide(rec.id, i, "confirmed")}>{t("lists.yesItSThere")}</button>{" "}
+                        <button className="chip eyes-reject" type="button" onClick={() => eyeDecide(rec.id, i, "rejected")}>{t("lists.notThere")}</button></div> : null}
                     </div>))}
-                  <p className="nomargin" style={{ marginTop: 6 }}><button className="chip eyes-del" type="button" onClick={() => eyeDelete(rec.id)}>Delete photo</button></p>
+                  <p className="nomargin" style={{ marginTop: 6 }}><button className="chip eyes-del" type="button" onClick={() => eyeDelete(rec.id)}>{t("lists.deletePhoto")}</button></p>
                 </div>))}
             </div></div>
           </div>
@@ -744,16 +748,16 @@ export function Lists() {
             {groceries.length ? <div className="group">{groceries.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
               : errands.length ? null
                 : <div className="group pad"><div className="emptyface-wrap"><img className="emptyface" src="/assets/characters/pantry.webp" alt="" />
-                  <p className="empty">Nothing on {name} yet. Type, speak or snap a list above.</p></div></div>}
+                  <p className="empty">{t("lists.nothingOnYetTypeSpeak", { name })}</p></div></div>}
             {errands.length ? <>
-              <p className="grouplabel">Other errands</p>
+              <p className="grouplabel">{t("lists.otherErrands")}</p>
               <div className="group">{errands.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
             </> : null}
           </div>
 
           <div id="list-suggest">
             {sugg.length ? <>
-              <div className="sectrow"><h3 className="sect">{lid === "else" ? "Suggested" : `Suggested for ${name}`}</h3><span className="muted">Tap to see why</span></div>
+              <div className="sectrow"><h3 className="sect">{lid === "else" ? "Suggested" : `Suggested for ${name}`}</h3><span className="muted">{t("lists.tapToSeeWhy")}</span></div>
               <div className="group">{sugg.map(i => {
                 const c = charFor(i.name);
                 return (
@@ -763,7 +767,7 @@ export function Lists() {
                     {c ? <img className="rowface" src={`/assets/characters/${c}`} alt="" /> : null}
                     <div className="grow"><span className="name">{i.name}</span><span className="why"><IconSpark />{suggestWhy(i)}</span></div>
                     <button className="addchip" type="button" data-sugg-add={i.item_id} aria-label={`Add ${i.name}`}
-                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}>+ Add</button>
+                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}>{t("lists.add")}</button>
                   </div>);
               })}</div>
             </> : null}
@@ -773,22 +777,22 @@ export function Lists() {
             {done.length && !selEff ? (
               <div className="group">
                 <div className="row donerow">
-                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}>✓ {done.length} checked off {doneOpen ? "▴" : "▾"}</button>
-                  <button className="linkbtn" type="button" data-done-clear onClick={e => { e.stopPropagation(); removeItems(done.map(i => i.item_id)); }}>Clear</button>
+                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}>{t("lists.checkedOff", { doneCount: done.length })}{" "}{doneOpen ? "▴" : "▾"}</button>
+                  <button className="linkbtn" type="button" data-done-clear onClick={e => { e.stopPropagation(); removeItems(done.map(i => i.item_id)); }}>{t("lists.clear")}</button>
                 </div>
                 {doneOpen ? done.map(i => <ListRow key={i.item_id} {...rowProps(i)} />) : null}
               </div>) : null}
           </div>
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
-            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => setShopOpen(true)}>Start shopping · {open.length} item{open.length === 1 ? "" : "s"}</button>
+            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => setShopOpen(true)}>{t("lists.startShoppingItem", { openCount: open.length })}{open.length === 1 ? "" : "s"}</button>
           </div>
         </div>
       )}
 
       {onPage && selEff && (
         <div id="list-selbar" className="selbar">
-          <button className="btn secondary dangertext" id="ls-remove" type="button" disabled={!nSel} onClick={() => removeItems([...selEff])}>Remove</button>
+          <button className="btn secondary dangertext" id="ls-remove" type="button" disabled={!nSel} onClick={() => removeItems([...selEff])}>{t("common.remove")}</button>
           <button className="btn primary" id="ls-move" type="button" disabled={!nSel} onClick={() => setSheet({ kind: "move", ids: [...selEff] })}>{nSel ? `Move ${nSel} to…` : "Move to…"}</button>
         </div>
       )}
@@ -800,14 +804,14 @@ export function Lists() {
       )}
 
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
-        <div className="sheethead"><h3 id="shop-title" className="nomargin">Shop {here ? here.name : "Everything else"} · {open.length} item{open.length === 1 ? "" : "s"}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>Close</button></div>
+        <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shop")}{" "}{here ? here.name : "Everything else"}{" "}{t("lists.item", { openCount: open.length })}{open.length === 1 ? "" : "s"}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
         <div className="group shopmodes">
-          {!shopNoMap && <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => startHunt("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">Quest<span className="sub">A treasure hunt with points and badges</span></span><span className="chev">›</span></button>}
-          <button className="hubrow" type="button" data-shop="express" data-first={shopNoMap ? true : undefined} onClick={() => startHunt("express")}><img className="rowface" src="/assets/characters/basket.webp" alt="" /><span className="hr-label">Express<span className="sub">Just the list, with aisle help</span></span><span className="chev">›</span></button>
+          {!shopNoMap && <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => startHunt("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("common.quest")}<span className="sub">{t("lists.aTreasureHuntWithPoints")}</span></span><span className="chev">›</span></button>}
+          <button className="hubrow" type="button" data-shop="express" data-first={shopNoMap ? true : undefined} onClick={() => startHunt("express")}><img className="rowface" src="/assets/characters/basket.webp" alt="" /><span className="hr-label">{t("common.express")}<span className="sub">{t("lists.justTheListWithAisle")}</span></span><span className="chev">›</span></button>
         </div>
         <p id="shop-nomap" className="muted shopnomap" hidden={!shopNoMap}>{shopNoMap ? shopNomapNote(shopNoMap) : null}</p>
         <p id="shop-sugg" className="muted shopsugg" hidden={!shopSugg.length}>
-          {shopSugg.length ? <>Arya also suggests {shopSugg.slice(0, 2).map(i => i.name).join(" and ")}{shopSugg.length > 2 ? ` and ${shopSugg.length - 2} more` : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>Add {shopSugg.length === 1 ? "it" : shopSugg.length === 2 ? "both" : "all"}</button></> : null}
+          {shopSugg.length ? <>{t("lists.aryaAlsoSuggests", { join: shopSugg.slice(0, 2).map(i => i.name).join(" and ") })}{shopSugg.length > 2 ? ` and ${shopSugg.length - 2} more` : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>{t("common.add")}{" "}{shopSugg.length === 1 ? "it" : shopSugg.length === 2 ? "both" : "all"}</button></> : null}
         </p>
       </Sheet>
     </>

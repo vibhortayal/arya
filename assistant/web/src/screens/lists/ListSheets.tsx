@@ -7,6 +7,7 @@ import { MONTHS, fmtShort, money } from "../../lib/format";
 import { clearOnSignOut, useSession } from "../../app/session";
 import { charFor } from "../../lib/characters";
 import { namedLists, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
+import { useTranslation } from "../../i18n";
 
 /* Port of pwa/lists.js: the sheets behind the Lists tab (new list,
  * list options, link stores, move, and "why Arya suggests it"). The
@@ -62,6 +63,7 @@ clearOnSignOut(() => { placesSession = ""; geo = null; });
 const session = () => placesSession || (placesSession = `l${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`);
 
 function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: string[]; setPicked: (p: string[]) => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [choices, setChoices] = useState<Choice[] | null>(null);
   const [find, setFind] = useState("");
@@ -133,10 +135,10 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
   return (
     <>
       <div className="findrow">
-        <input type="text" id="ls-find" maxLength={80} placeholder="Find a store (name or ZIP)" autoComplete="off" aria-label="Find a store"
+        <input type="text" id="ls-find" maxLength={80} placeholder={t("lists.findAStoreNameOr")} autoComplete="off" aria-label={t("lists.findAStore")}
           value={find} onChange={e => onFind(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} />
-        <button className="chip" type="button" data-ls="near" onClick={nearMe}>📍 Near me</button>
+        <button className="chip" type="button" data-ls="near" onClick={nearMe}>{t("lists.nearMe")}</button>
       </div>
       <div id="ls-goog" className="gdrop" hidden={!goog}>
         {goog && ((goog.d.suggestions || []).length
@@ -152,13 +154,13 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
       </div>
       <div id="ls-stores">
         {choices && (!choices.length
-          ? <p className="sub">No stores yet. Find one above, then tick it.</p>
+          ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>
           : choices.map(c => (
             <div className="srow" key={c.id || c.name}>
               <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={picked.includes(c.name)} onClick={() => toggle(c.name)}>
-                <span className="grow">{c.name}{c.fresh ? <span className="newtag">NEW</span> : null}{c.where ? <small>{c.where}</small> : null}</span><span className="tick">✓</span>
+                <span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span><span className="tick">✓</span>
               </button>
-              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={`Remove ${c.name} from my stores`} onClick={() => removeStore(c.id)}>Remove</button> : null}
+              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={`Remove ${c.name} from my stores`} onClick={() => removeStore(c.id)}>{t("common.remove")}</button> : null}
             </div>)))}
       </div>
     </>
@@ -177,6 +179,7 @@ type Common = {
 };
 
 function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "run"> & { moving: string[] | null; onCreate: (name: string, stores: string[], moving: string[] | null) => Promise<void> }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
@@ -188,17 +191,18 @@ function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "
   return (
     <>
       <span className="sheetgrip" />
-      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>New list</h3>
-      <label className="field">Name<input type="text" id="ls-name" maxLength={40} placeholder="Costco, Indian Store, Party…" autoComplete="off" data-first
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.newList")}</h3>
+      <label className="field">{t("lists.name")}<input type="text" id="ls-name" maxLength={40} placeholder={t("lists.costcoIndianStoreParty")} autoComplete="off" data-first
         value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); create(); } }} /></label>
-      <p className="sub">Link stores (optional). Find one, or pick from yours. A hunt from this list can start at any of them.</p>
+      <p className="sub">{t("lists.linkStoresOptionalFindOne")}</p>
       <StorePicker picked={picked} setPicked={setPicked} />
-      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>Cancel</button><button className="btn primary" type="button" data-ls="create" onClick={create}>Create list</button></div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button><button className="btn primary" type="button" data-ls="create" onClick={create}>{t("lists.createList")}</button></div>
     </>
   );
 }
 
 function MenuSheet({ data, lens, onClose, onStores, onDelete }: Common & { onStores: () => void; onDelete: (l: NamedList) => void }) {
+  const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens) || null;
   const n = l ? data.list.items.filter(i => i.on_list && i.list === l.id).length : 0;
   return (
@@ -206,42 +210,44 @@ function MenuSheet({ data, lens, onClose, onStores, onDelete }: Common & { onSto
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{l ? l.name : "Everything else"}</h3>
       {l ? <button className="navrow" type="button" data-ls="stores" onClick={onStores}><span className="grow">{(l.stores || []).length ? "Change stores" : "Link stores"}<small>{(l.stores || []).length ? l.stores!.join(", ") : "Suggestions and hunts use them"}</small></span><span className="chev">›</span></button> : null}
-      {l ? <button className="navrow dangerrow" type="button" data-ls="delete" onClick={() => onDelete(l)}><span className="grow">Delete list<small>{n ? `Its ${n} item${n === 1 ? "" : "s"} move to Everything else` : "It has no items"}</small></span></button> : null}
-      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>Done</button></div>
+      {l ? <button className="navrow dangerrow" type="button" data-ls="delete" onClick={() => onDelete(l)}><span className="grow">{t("lists.deleteList")}<small>{n ? `Its ${n} item${n === 1 ? "" : "s"} move to Everything else` : "It has no items"}</small></span></button> : null}
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.done")}</button></div>
     </>
   );
 }
 
 function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (id: string, stores: string[]) => Promise<void> }) {
+  const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens);
   const [picked, setPicked] = useState<string[]>([...((l && l.stores) || [])]);
   if (!l) return null;
   return (
     <>
       <span className="sheetgrip" />
-      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>Link stores</h3>
-      <p className="sub">Pick one or more. Hunts from {l.name} can start at any of them.</p>
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.linkStores")}</h3>
+      <p className="sub">{t("lists.pickOneOrMoreHunts", { name: l.name })}</p>
       <StorePicker extra={l.stores} picked={picked} setPicked={setPicked} />
-      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>Cancel</button><button className="btn primary" type="button" data-ls="savestores" onClick={() => run(() => onSave(l.id, picked))}>Save</button></div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button><button className="btn primary" type="button" data-ls="savestores" onClick={() => run(() => onSave(l.id, picked))}>{t("common.save")}</button></div>
     </>
   );
 }
 
 function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: string[]; onMove: (ids: string[], listId: string) => Promise<void>; onNew: (ids: string[]) => void }) {
+  const { t } = useTranslation();
   const here = lens === "home" ? "else" : lens;
   const lists = namedLists(data);
   const count = (id: string) => data.list.items.filter(i => i.on_list && !i.checked && (id === "else"
     ? !lists.some(l => l.id === i.list) : i.list === id)).length;
   const one = ids.length === 1 ? (data.list.items.find(i => i.item_id === ids[0]) || ({} as Partial<Item>)).name : "";
   const dest = (id: string, name: string) => id === here
-    ? <button key={id} className="navrow here" type="button" disabled><span className="grow">{name}<small>{ids.length === 1 ? "It's" : "They're"} here now</small></span></button>
-    : <button key={id} className="navrow" type="button" data-ls-move={id} onClick={() => run(() => onMove(ids, id))}><span className="grow">{name}<small>{count(id)} item{count(id) === 1 ? "" : "s"}</small></span><span className="chev">›</span></button>;
+    ? <button key={id} className="navrow here" type="button" disabled><span className="grow">{name}<small>{ids.length === 1 ? "It's" : "They're"}{" "}{t("lists.hereNow")}</small></span></button>
+    : <button key={id} className="navrow" type="button" data-ls-move={id} onClick={() => run(() => onMove(ids, id))}><span className="grow">{name}<small>{t("lists.item2", { count: count(id) })}{count(id) === 1 ? "" : "s"}</small></span><span className="chev">›</span></button>;
   return (
     <>
       <span className="sheetgrip" />
-      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>Move {one ? one : `${ids.length} items`} to</h3>
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.move")}{" "}{one ? one : `${ids.length} items`}{" "}{t("lists.to")}</h3>
       {lists.map(l => dest(l.id, l.name))}{dest("else", "Everything else")}
-      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow">+ New list…</span></button>
+      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow">{t("lists.newList2")}</span></button>
     </>
   );
 }
@@ -257,6 +263,7 @@ type Prices = { trend?: { pct: number; since_month: string; from_price: number; 
   per_price?: number; per?: string };
 
 function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "data" | "onClose"> & { id: string; onAdd: (id: string) => void; onNot: (id: string) => void; onNever: (id: string) => void }) {
+  const { t } = useTranslation();
   const { currency } = useSession();
   const $ = (n: number) => money(n, currency);
   const it = data.list.items.find(i => i.item_id === id);
@@ -286,7 +293,7 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
   const p = d && d.pattern;
   const hist = ((d && d.history) || []).filter(h => h.event_type === "purchase");
   const rows: ReactNode[] = [];
-  if (it.expired_on) rows.push(<div className="whyrow" key="exp"><Ic k="clock" /><div><b>You marked it expired</b><span className="sub">On {fmtShort(it.expired_on)}.</span></div></div>);
+  if (it.expired_on) rows.push(<div className="whyrow" key="exp"><Ic k="clock" /><div><b>{t("lists.youMarkedItExpired")}</b><span className="sub">{t("lists.on", { expired_on: fmtShort(it.expired_on) })}</span></div></div>);
   if (p && p.median_interval_days) {
     const now = Date.now(), day = 864e5;
     const dots: ReactNode[] = [];
@@ -296,26 +303,26 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
       dots.push(w === 0 && !got ? <i className="now" key={w} /> : <i className={got ? "" : "gap"} key={w} />);
     }
     const first = hist.length ? hist[hist.length - 1].date : null;
-    rows.push(<div className="whyrow" key="rhythm"><Ic k="cal" /><div><b>You buy it every ~{Math.round(p.median_interval_days)} days</b><span className="sub">{p.purchase_count} time{p.purchase_count === 1 ? "" : "s"}{first ? ` since ${MONTHS[Number(first.slice(5, 7)) - 1]}` : ""}. Last 8 weeks:</span><span className="dots" aria-hidden="true">{dots}</span></div></div>);
+    rows.push(<div className="whyrow" key="rhythm"><Ic k="cal" /><div><b>{t("lists.youBuyItEveryDays", { median_interval_days: Math.round(p.median_interval_days) })}</b><span className="sub">{t("lists.time", { purchase_count: p.purchase_count })}{p.purchase_count === 1 ? "" : "s"}{first ? ` since ${MONTHS[Number(first.slice(5, 7)) - 1]}` : ""}{t("lists.last8Weeks")}</span><span className="dots" aria-hidden="true">{dots}</span></div></div>);
   }
   if (p && p.last_bought) {
     const last = hist[0];
     const late = (p.days_since_last || 0) - Math.round(p.median_interval_days || 0);
-    rows.push(<div className="whyrow" key="last"><Ic k="clock" /><div><b>Last bought {p.days_since_last === 0 ? "today" : `${p.days_since_last} day${p.days_since_last === 1 ? "" : "s"} ago`}</b><span className="sub">{fmtShort(p.last_bought)}{last && last.store_id ? ` at ${last.store_id}` : ""}.{late > 0 ? ` That's ${late} day${late === 1 ? "" : "s"} past your usual.` : ""}</span></div></div>);
+    rows.push(<div className="whyrow" key="last"><Ic k="clock" /><div><b>{t("common.lastBought")}{" "}{p.days_since_last === 0 ? "today" : `${p.days_since_last} day${p.days_since_last === 1 ? "" : "s"} ago`}</b><span className="sub">{fmtShort(p.last_bought)}{last && last.store_id ? ` at ${last.store_id}` : ""}.{late > 0 ? ` That's ${late} day${late === 1 ? "" : "s"} past your usual.` : ""}</span></div></div>);
   }
   const tr = pr && pr.trend;
-  if (tr) rows.push(<div className="whyrow" key="trend"><span className="ic" aria-hidden="true"><b>{tr.pct > 0 ? "↗" : "↘"}</b></span><div><b>{tr.pct > 0 ? "Up" : "Down"} {Math.abs(Math.round(tr.pct))}% since {tr.since_month}</b><span className="sub">{$(tr.from_price)} then, {$(tr.to_price)} now, at {tr.store}.</span></div><InfoBtn k="trend" onOpen={setInfo} /></div>);
+  if (tr) rows.push(<div className="whyrow" key="trend"><span className="ic" aria-hidden="true"><b>{tr.pct > 0 ? "↗" : "↘"}</b></span><div><b>{tr.pct > 0 ? "Up" : "Down"}{" "}{t("lists.since", { pct: Math.abs(Math.round(tr.pct)), since_month: tr.since_month })}</b><span className="sub">{t("lists.thenNowAt", { from_price: $(tr.from_price), to_price: $(tr.to_price), store: tr.store })}</span></div><InfoBtn k="trend" onOpen={setInfo} /></div>);
   const ch = pr && pr.cheaper;
-  if (ch) rows.push(<div className="whyrow" key="cheaper"><Ic k="tag" /><div><b>Cheaper at {ch.store}: {$(ch.price)}</b><span className="sub">You paid {$(ch.vs_price)} at {ch.vs_store}. {ch.store} on {fmtShort(ch.date)}.</span></div><InfoBtn k="cheaper" onOpen={setInfo} /></div>);
+  if (ch) rows.push(<div className="whyrow" key="cheaper"><Ic k="tag" /><div><b>{t("lists.cheaperAt", { store: ch.store, price: $(ch.price) })}</b><span className="sub">{t("lists.youPaidAtOn", { vs_price: $(ch.vs_price), vs_store: ch.vs_store, store: ch.store, date: fmtShort(ch.date) })}</span></div><InfoBtn k="cheaper" onOpen={setInfo} /></div>);
   const sim = (pr && pr.similar) || [];
   const perOz = (v: number, u?: string) => u === "oz" ? `${(v * 100).toFixed(1)}¢/oz` : `${$(v)} each`;
-  if (sim.length) rows.push(<div className="whyrow" key="sim"><Ic k="tag" /><div><b>Similar items you bought</b>{pr!.per_price ? <span className="sub">This one: {perOz(pr!.per_price, pr!.per)}.</span> : null}{sim.map((s, i) =>
+  if (sim.length) rows.push(<div className="whyrow" key="sim"><Ic k="tag" /><div><b>{t("lists.similarItemsYouBought")}</b>{pr!.per_price ? <span className="sub">{t("lists.thisOne", { per_price: perOz(pr!.per_price, pr!.per) })}</span> : null}{sim.map((s, i) =>
     <span className="sub simrow" key={i}><span>{s.name}<br />{s.store}, {fmtShort(s.date)}</span><span>{$(s.price)}{s.per_price ? <><br />{perOz(s.per_price, s.per)}</> : null}</span></span>)}</div><InfoBtn k="similar" onOpen={setInfo} /></div>);
   const stores = ch ? [] : Object.entries((d && d.price_by_store) || {}).sort((a, b) => b[1].count - a[1].count);
   if (stores.length) {
     const [s0, v0] = stores[0];
     const others = stores.slice(1, 3).map(([s, v]) => `${$(v.median)} at ${s}`).join(" · ");
-    rows.push(<div className="whyrow" key="usual"><Ic k="tag" /><div><b>Usually from {s0}, {$(v0.median)}</b><span className="sub">{others || `${v0.count} buy${v0.count === 1 ? "" : "s"} there`}</span></div></div>);
+    rows.push(<div className="whyrow" key="usual"><Ic k="tag" /><div><b>{t("lists.usuallyFrom", { s0, median: $(v0.median) })}</b><span className="sub">{others || `${v0.count} buy${v0.count === 1 ? "" : "s"} there`}</span></div></div>);
   }
   if (!rows.length) rows.push(<div className="whyrow" key="why"><Ic k="cal" /><div><b>{suggestWhy(it)}</b>{it.judge_reason ? <span className="sub">{it.judge_reason}</span> : null}</div></div>);
   const c = charFor(it.name);
@@ -323,10 +330,10 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
     <>
       <Sheet open onClose={onClose} id="list-sheet" labelledBy="ls-title">
         <span className="sheetgrip" />
-        <div className="whyhead">{c ? <img className="popface" src={`/assets/characters/${c}`} alt="" /> : null}<div><h3 id="ls-title" className="largetitle" style={{ ...TITLE_STYLE, margin: 0 }}>{it.name}</h3><span className="sub">Why Arya suggests it{target === "else" ? "" : ` for ${tname}`}</span></div></div>
+        <div className="whyhead">{c ? <img className="popface" src={`/assets/characters/${c}`} alt="" /> : null}<div><h3 id="ls-title" className="largetitle" style={{ ...TITLE_STYLE, margin: 0 }}>{it.name}</h3><span className="sub">{t("lists.whyAryaSuggestsIt")}{target === "else" ? "" : ` for ${tname}`}</span></div></div>
         {rows}
-        <div className="sheetacts"><button className="btn secondary" type="button" data-ls="whynot" onClick={() => onNot(id)}>Not now</button><button className="btn primary" type="button" data-ls="whyadd" onClick={() => onAdd(id)}>{tname.length <= 10 ? `Add to ${tname}` : "Add to list"}</button></div>
-        <p className="nomargin whynever"><button className="linkbtn" type="button" data-ls="whynever" onClick={() => onNever(id)}>Never suggest this</button></p>
+        <div className="sheetacts"><button className="btn secondary" type="button" data-ls="whynot" onClick={() => onNot(id)}>{t("common.notNow")}</button><button className="btn primary" type="button" data-ls="whyadd" onClick={() => onAdd(id)}>{tname.length <= 10 ? `Add to ${tname}` : "Add to list"}</button></div>
+        <p className="nomargin whynever"><button className="linkbtn" type="button" data-ls="whynever" onClick={() => onNever(id)}>{t("lists.neverSuggestThis")}</button></p>
       </Sheet>
       <InfoSheet k={info} onClose={() => setInfo(null)} />
     </>

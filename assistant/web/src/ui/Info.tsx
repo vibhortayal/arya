@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Sheet } from "./Sheet";
+import { useTranslation } from "../i18n";
 
 /* The (i) button and its how-it-works sheet (pwa/powers.js INFO,
  * infoBtn, openInfo; INFO_SVG from pwa/app.js). */
@@ -34,8 +35,9 @@ export const INFO: Record<string, InfoEntry> = {
 };
 
 export function InfoBtn({ k, onOpen }: { k: string; onOpen: (k: string) => void }) {
+  const { t } = useTranslation();
   return (
-    <button className="infobtn" type="button" data-info={k} aria-label="How this works" onClick={() => onOpen(k)}>
+    <button className="infobtn" type="button" data-info={k} aria-label={t("common.howThisWorks")} onClick={() => onOpen(k)}>
       <svg className="infoic" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="10" cy="6.2" r="1.15" fill="currentColor" /><path d="M10 9v5.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
     </button>
   );
@@ -60,11 +62,12 @@ export function InfoSheetFrame({ open, onClose, title, sub, children }:
 
 /* The plain how-it-works sheet for an INFO key. */
 export function InfoSheet({ k, onClose }: { k: string | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const i = k ? INFO[k] : null;
   return (
     <InfoSheetFrame open={!!i} onClose={onClose} title={i?.t ?? ""} sub={i?.s}>
       {i && <WhyRows rows={i.rows} />}
-      <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={onClose}>Close</button></div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={onClose}>{t("common.close")}</button></div>
     </InfoSheetFrame>
   );
 }

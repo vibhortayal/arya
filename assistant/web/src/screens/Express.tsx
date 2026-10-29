@@ -15,6 +15,7 @@ import {
 } from "./hunt/model";
 import { leaveItems, restoreItems } from "./hunt/menu";
 import { ScanView } from "./hunt/Scan";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-express with quest.js openExpress,
  * renderExpress, qExpPaintHelp, qExpToggle, qExpEnsurePlaying and
@@ -44,6 +45,7 @@ const PauseSvg = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const PlaySvg = () => <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5l11 7-11 7z" /></svg>;
 
 export function Express() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, hide: hideToast } = useToast();
   const sessRef = useRef<Session | undefined>(nav.params.session as Session | undefined);
@@ -290,7 +292,7 @@ export function Express() {
         <span className="check" aria-hidden="true"><IconCheck /></span>
         <span className="grow"><span className="name">{it.name}</span>
           {s?.shelfLabel ? <span className="sub">{s.shelfLabel}</span> : null}
-          {s?.flagged ? <span className="repflag">Reported missing at this store.</span> : null}</span>
+          {s?.flagged ? <span className="repflag">{t("express.reportedMissingAtThisStore")}</span> : null}</span>
         <span className="money">{it.unit ? qtyTag(it) : "× " + qtyFmt(it.qty)}</span>
       </button>
     );
@@ -300,11 +302,11 @@ export function Express() {
     <div key="help" id="exp-help" className="exphelp" hidden={next < 0}>
       <div className="exphelp-btns">
         <button id="exp-show" className="chip" type="button" hidden={!hasData} aria-pressed={sceneOn} onClick={() => setShow(v => !v)}>{sceneOn ? "Hide" : "Show me"}</button>
-        <button id="exp-nothere" className="chip" type="button" onClick={notHere}>Not here?</button>
+        <button id="exp-nothere" className="chip" type="button" onClick={notHere}>{t("common.notHere")}</button>
         <button id="exp-find" className="chip" type="button" onClick={() => findWithCamera()}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>Find with camera</button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>{t("express.findWithCamera")}</button>
       </div>
-      <p id="exp-nodata" className="expnodata" hidden={next < 0 || hasData}>Arya has no photo of this aisle yet. Found it? <button id="exp-snap" className="linkbtn snapaisle" type="button" onClick={snapAisle}>Snap the aisle</button> so other Arya Shoppers can find it too.</p>
+      <p id="exp-nodata" className="expnodata" hidden={next < 0 || hasData}>{t("express.aryaHasNoPhotoOf")}{" "}<button id="exp-snap" className="linkbtn snapaisle" type="button" onClick={snapAisle}>{t("express.snapTheAisle")}</button>{" "}{t("express.soOtherAryaShoppersCan")}</p>
       <div id="exp-photo" hidden={!sceneOn}>
         {sceneOn && (
           <SceneView id="exp-mount" className="storeview mini" driver={photos ? "photo" : "strip"} photos={photos} model={null}
@@ -326,25 +328,25 @@ export function Express() {
   return (
     <>
       <div className="hunthud" ref={root}>
-        <a href="#" className="qback hudback" aria-label="Back" onClick={e => { e.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
+        <a href="#" className="qback hudback" aria-label={t("common.back2")} onClick={e => { e.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
         <span className="hchip grow" id="exp-store">{`${sess.store} · ${QMODE_LABEL[sess.mode] || sess.mode}`}</span>
         <span className="hchip prog" id="exp-count">{`${prog.done}/${prog.total}`}</span>
         <button id="exp-pause" className="hudbtn" type="button" aria-label={paused ? "Resume" : "Pause"}
           disabled={sess.state === "not_started"} onClick={pause}>{paused ? <PlaySvg /> : <PauseSvg />}</button>
       </div>
-      <p className="walk-label">In walking order. Tap a row to check it off.</p>
+      <p className="walk-label">{t("express.inWalkingOrderTapA")}</p>
       <div id="exp-items" className="group">
-        {listChildren.length ? listChildren : <Empty>The list is empty.</Empty>}
+        {listChildren.length ? listChildren : <Empty>{t("express.theListIsEmpty")}</Empty>}
       </div>
       {next < 0 && helpRow}
       <p className="nomargin"><button id="exp-more" className="linkbtn" type="button" aria-expanded={more} aria-controls="exp-more-list"
-        onClick={() => setMore(v => !v)}>More help</button></p>
+        onClick={() => setMore(v => !v)}>{t("express.moreHelp")}</button></p>
       <div id="exp-more-list" className="exphelp-btns" hidden={!more}>
-        <button id="exp-ask" className="chip" type="button" onClick={() => setAskOpen(true)}>Ask Arya</button>
-        <button id="exp-teach" className="chip" type="button" onClick={teach}>Teach Arya your store</button>
+        <button id="exp-ask" className="chip" type="button" onClick={() => setAskOpen(true)}>{t("common.askArya")}</button>
+        <button id="exp-teach" className="chip" type="button" onClick={teach}>{t("common.teachAryaYourStore")}</button>
       </div>
-      <p><button id="exp-finish" className="btn primary wide" type="button" disabled={sess.state === "not_started"} onClick={finish}>Finish &rarr;</button></p>
-      <div id="exp-rail" className="rail" aria-label="Today's hunts">
+      <p><button id="exp-finish" className="btn primary wide" type="button" disabled={sess.state === "not_started"} onClick={finish}>{t("express.finish")}</button></p>
+      <div id="exp-rail" className="rail" aria-label={t("common.todaySHunts")}>
         {rail.map(s0 => {
           const s = s0.id === sess.id ? sess : s0;
           const p = qProgress(s);
@@ -367,13 +369,13 @@ export function Express() {
           const stop = i >= 0 ? stops[i] : null;
           return (
             <>
-              <h3 className="hm-title" id="hm-title">Can&apos;t find {moved}?</h3>
-              <p className="sub hm-sub">Last seen: {stop && stop.shelfLabel ? stop.shelfLabel : "not placed on the map yet"}. Check the end caps too.</p>
+              <h3 className="hm-title" id="hm-title">{t("express.canTFind", { moved })}</h3>
+              <p className="sub hm-sub">{t("express.lastSeen")}{" "}{stop && stop.shelfLabel ? stop.shelfLabel : "not placed on the map yet"}{t("express.checkTheEndCapsToo")}</p>
               <button type="button" className="btn primary wide hm-main" data-act="find" data-first
-                onClick={() => { setMoved(null); findWithCamera(moved); }}>Find it for me</button>
+                onClick={() => { setMoved(null); findWithCamera(moved); }}>{t("express.findItForMe")}</button>
               <button type="button" className="btn wide" data-act="tell"
-                onClick={() => { setMoved(null); setSpot(moved); }}>Tell other shoppers it is gone</button>
-              <button type="button" className="btn wide" data-act="keep" onClick={() => setMoved(null)}>Keep looking</button>
+                onClick={() => { setMoved(null); setSpot(moved); }}>{t("express.tellOtherShoppersItIs")}</button>
+              <button type="button" className="btn wide" data-act="keep" onClick={() => setMoved(null)}>{t("common.keepLooking")}</button>
             </>
           );
         })()}
@@ -381,27 +383,27 @@ export function Express() {
 
       <Sheet open={spot !== null} onClose={() => setSpot(null)} id="spot-sheet">
         <span className="sheetgrip" aria-hidden="true"></span>
-        <div className="row"><span className="name">Not here</span></div>
-        <p className="muted" id="spot-item">At the stop for {spot} — what do you see?</p>
+        <div className="row"><span className="name">{t("common.notHere2")}</span></div>
+        <p className="muted" id="spot-item">{t("express.atTheStopForWhat", { spot })}</p>
         <div className="actions" style={{ flexDirection: "column", alignItems: "stretch" }}>
           {SPOT_KINDS.map(([kind, label], k) => (
             <button key={kind} className="chip" data-kind={kind} aria-pressed={spotBusy === kind} type="button"
               data-first={k === 0 ? true : undefined} onClick={() => sendSpot(kind)}>{label}</button>
           ))}
         </div>
-        <p className="muted nomargin">Tap what you see and the report is sent. Tap outside or drag down to close. A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
+        <p className="muted nomargin">{t("express.tapWhatYouSeeAnd")}</p>
       </Sheet>
 
       <Sheet open={leave !== null} onClose={() => setLeave(null)} id="hunt-sheet" labelledBy="hm-title">
         {leave && (
           <>
-            <h3 className="hm-title" id="hm-title">Leave {leave.length} for next time?</h3>
-            <p className="sub hm-sub">Nothing is lost. Saved items come first on your next trip.</p>
+            <h3 className="hm-title" id="hm-title">{t("express.leaveForNextTime", { leaveCount: leave.length })}</h3>
+            <p className="sub hm-sub">{t("express.nothingIsLostSavedItems")}</p>
             <div className="group hm-leavelist">
               {leave.map(it => (
                 <div className="row hm-leaverow" key={it.name}>
                   <div className="grow"><span className="name">{it.name}{qtyTag(it) ? ` - ${qtyTag(it)}` : ""}</span>
-                    {qIsReportedByMe(sess, it) ? <span className="sub">Reported missing</span> : null}</div>
+                    {qIsReportedByMe(sess, it) ? <span className="sub">{t("common.reportedMissing")}</span> : null}</div>
                   <div className="hm-seg" role="group" aria-label={`What to do with ${it.name}`}>
                     {([["saved", "Next trip"], ["dropped", "Drop"]] as const).map(([how, label]) => (
                       <button key={how} type="button" className="hm-segbtn" data-act="how" data-how={how}
@@ -411,8 +413,8 @@ export function Express() {
                 </div>
               ))}
             </div>
-            <button type="button" className="btn primary wide hm-main" data-act="checkout" disabled={leaveBusy} onClick={checkout}>Check out</button>
-            <button type="button" className="btn wide" data-act="keep" data-first onClick={() => setLeave(null)}>Keep hunting</button>
+            <button type="button" className="btn primary wide hm-main" data-act="checkout" disabled={leaveBusy} onClick={checkout}>{t("common.checkOut")}</button>
+            <button type="button" className="btn wide" data-act="keep" data-first onClick={() => setLeave(null)}>{t("common.keepHunting")}</button>
           </>
         )}
       </Sheet>
@@ -427,6 +429,7 @@ export function Express() {
 type AskRes = { reply?: string; applied?: string[]; skipped?: string[]; added?: { item_id: string }[]; proposed?: { text: string; action: unknown }[] };
 
 function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose: () => void; context: () => Record<string, unknown>; onChange: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [text, setText] = useState("");
   const [card, setCard] = useState<{ q: string; res: AskRes | null } | null>(null);
@@ -491,15 +494,15 @@ function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose
   return (
     <Sheet open={open} onClose={onClose} id="ask-sheet" labelledBy="ask-title">
       <span className="sheetgrip"></span>
-      <h3 id="ask-title" className="largetitle" style={{ fontSize: 22 }}>Ask Arya</h3>
+      <h3 id="ask-title" className="largetitle" style={{ fontSize: 22 }}>{t("common.askArya")}</h3>
       <div className="chiprow">
         {quick.map(q => <button key={q} className="chip" type="button" data-q={q} onClick={() => send(q)}>{q}</button>)}
       </div>
       <div className="addline">
-        <input type="text" id="ask-text" placeholder="Ask anything…" autoComplete="off" enterKeyHint="send" value={text} data-first
+        <input type="text" id="ask-text" placeholder={t("common.askAnything")} autoComplete="off" enterKeyHint="send" value={text} data-first
           onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); send(text); } }} />
-        <button id="ask-mic" className="iconbtn" type="button" aria-label="Ask by voice" aria-pressed={rec} onClick={mic}><IconMic /></button>
-        <button id="ask-go" className="btn primary" type="button" onClick={() => send(text)}>Ask</button>
+        <button id="ask-mic" className="iconbtn" type="button" aria-label={t("express.askByVoice")} aria-pressed={rec} onClick={mic}><IconMic /></button>
+        <button id="ask-go" className="btn primary" type="button" onClick={() => send(text)}>{t("common.ask")}</button>
       </div>
       <p id="ask-status" className="muted nomargin">{status}</p>
       <div id="ask-answer">
@@ -516,16 +519,16 @@ function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose
               <div className="sheetacts">
                 {(card.res.proposed || []).length ? (
                   <>
-                    <button className="btn secondary" type="button" onClick={() => act(card.res!, "no")}>Not now</button>
+                    <button className="btn secondary" type="button" onClick={() => act(card.res!, "no")}>{t("common.notNow")}</button>
                     <button className="btn primary" type="button" disabled={busy} onClick={() => act(card.res!, "yes")}>{card.res.proposed!.length > 1 ? "Yes, do these" : "Yes, do it"}</button>
                   </>
-                ) : <button className="btn secondary" type="button" onClick={() => act(card.res!, "done")}>Got it</button>}
+                ) : <button className="btn secondary" type="button" onClick={() => act(card.res!, "done")}>{t("common.gotIt")}</button>}
               </div>
             )}
           </div>
         )}
       </div>
-      <div className="sheetacts"><button className="btn secondary" type="button" data-ask="close" onClick={onClose}>Close</button></div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ask="close" onClick={onClose}>{t("common.close")}</button></div>
     </Sheet>
   );
 }

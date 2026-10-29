@@ -8,6 +8,7 @@ import { qConfetti, qShowMilestone, qTone } from "../hunt/fx";
 import { countStep, privateLines, revealFinal } from "./core";
 import { H, afterFinish, artSrc, canReview, enter, faceReady, fetchHaul, loadProfile, openScore, plural, reduced,
   stickersFor, tileSrc, type HaulView, type Sticker } from "./state";
+import { useTranslation } from "../../i18n";
 
 /* Port of pwa/haul.js #view-reveal (openReveal, revealRows, play,
  * skipReveal, levelBurst, onRevealClick): the haul appears tile by
@@ -41,6 +42,7 @@ async function levelBurst(sess: Session, d: HaulView) {
 }
 
 export function Reveal() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { currency } = useSession();
   const sess = (nav.params.session as Session | undefined) || Q.current;
@@ -114,7 +116,7 @@ export function Reveal() {
   }, []);
 
   if (!sess) return <div id="rv-reveal" ref={box} />;
-  if (!data) return <div id="rv-reveal" ref={box}><div className="group"><p className="empty">Opening your haul…</p></div></div>;
+  if (!data) return <div id="rv-reveal" ref={box}><div className="group"><p className="empty">{t("haul.openingYourHaul")}</p></div></div>;
 
   const { d, stickers, fresh } = data;
   const items = d.items;
@@ -129,14 +131,14 @@ export function Reveal() {
   return (
     <div id="rv-reveal" ref={box}>
       <div className="rv-head"><h2 className="largetitle" style={{ fontSize: 28 }}>{title}</h2>
-        <p className="muted nomargin">{plural(items.length, "sticker")} from this trip. Tap anywhere to skip.</p></div>
+        <p className="muted nomargin">{t("haul.fromThisTripTapAnywhere", { plural: plural(items.length, "sticker") })}</p></div>
       <div className="rv-loot" id="rv-loot">
         {items.map((it, i) => (
           <div key={it.key + i} className={"rv-tile" + (it.boss && status === "found" ? " rv-boss" : "")} style={{ transitionDelay: `${i * 160}ms` }}>
             {/* A missing sticker falls back to the basket art. */}
             <img src={tileSrc(stickers, it)} alt={it.name}
               onError={ev => { const img = ev.currentTarget; const fb = artSrc("basket.webp"); if (!img.src.endsWith(fb)) img.src = fb; }} />
-            {!allNew && isNew(it) && <span className="rv-new">NEW</span>}
+            {!allNew && isNew(it) && <span className="rv-new">{t("common.new")}</span>}
           </div>
         ))}
       </div>
@@ -144,22 +146,22 @@ export function Reveal() {
       <p className="rv-sr" id="rv-pts-sr" role="status" aria-live="polite"></p>
       <p className="muted rv-ptsub">{d.settled ? "Points banked." : "Points. They bank when you add the receipt."}</p>
       <div className="group rv-lines">
-        <div className="rv-row"><span>Items</span><b>+{p.items}</b></div>
-        {!!p.full_haul && <div className="rv-row"><span>Full haul</span><b>+{p.full_haul}</b></div>}
+        <div className="rv-row"><span>{t("haul.items2")}</span><b>+{p.items}</b></div>
+        {!!p.full_haul && <div className="rv-row"><span>{t("haul.fullHaul")}</span><b>+{p.full_haul}</b></div>}
         {d.boss && (status === "found"
-          ? <div className="rv-row"><span>Boss item</span><b>+{p.boss}</b></div>
-          : <div className="rv-row rv-grey"><span>Boss item: next time</span><b></b></div>)}
+          ? <div className="rv-row"><span>{t("haul.bossItem")}</span><b>+{p.boss}</b></div>
+          : <div className="rv-row rv-grey"><span>{t("haul.bossItemNextTime")}</span><b></b></div>)}
         {d.settled
-          ? <div className="rv-row"><span>Receipt</span><b>+{p.receipt}</b></div>
-          : <div className="rv-row rv-grey"><span>Receipt waiting. Add it any time. It never expires.</span><b>+{p.receipt}</b></div>}
+          ? <div className="rv-row"><span>{t("common.receipt")}</span><b>+{p.receipt}</b></div>
+          : <div className="rv-row rv-grey"><span>{t("haul.receiptWaitingAddItAny")}</span><b>+{p.receipt}</b></div>}
         {privateLines(d.private, m).map(r => (
           <div className="rv-row rv-private" key={r.label}><span>{r.label}</span><span className="rv-priv-n">{r.text}</span></div>
         ))}
       </div>
-      <p><button className="btn primary wide" type="button" data-act="card" onClick={() => enter(nav, "haul", sess)}>Make my haul card</button></p>
-      {canReview(sess, d) && <p><button className="btn wide" type="button" data-act="review" onClick={() => enter(nav, "rreview", sess)}>Check your receipt</button></p>}
-      {!d.settled && <p><button className="btn wide" type="button" data-act="addreceipt" onClick={() => setAr(true)}>Add receipt now</button></p>}
-      <p className="rv-sum"><button className="rv-link" type="button" data-act="summary" onClick={() => openScore(nav, sess)}>Trip summary</button></p>
+      <p><button className="btn primary wide" type="button" data-act="card" onClick={() => enter(nav, "haul", sess)}>{t("haul.makeMyHaulCard")}</button></p>
+      {canReview(sess, d) && <p><button className="btn wide" type="button" data-act="review" onClick={() => enter(nav, "rreview", sess)}>{t("haul.checkYourReceipt")}</button></p>}
+      {!d.settled && <p><button className="btn wide" type="button" data-act="addreceipt" onClick={() => setAr(true)}>{t("haul.addReceiptNow")}</button></p>}
+      <p className="rv-sum"><button className="rv-link" type="button" data-act="summary" onClick={() => openScore(nav, sess)}>{t("haul.tripSummary")}</button></p>
       <AddReceiptSheet target={ar ? { sessionId: sess.id, label: sess.store } : null} goesToHaul onClose={() => setAr(false)}
         onDone={s => { setAr(false); if (s) Object.assign(sess, s); afterFinish(nav, sess); }} />
     </div>

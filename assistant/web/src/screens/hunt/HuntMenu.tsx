@@ -8,6 +8,7 @@ import {
   NAME_MAX, NOTE_MAX, QTY_MAX, QTY_MIN, afterMutation, applyEdit, huntSubstitutes, leaveItems, mutate, nrm,
   offline, online, restoreItems,
 } from "./menu";
+import { useTranslation } from "../../i18n";
 
 /* The hunt menu sheet (pwa/huntmenu.js #hunt-sheet): the row menu
  * (find, swap, it moved, save, drop, quantity and note), "Can't find
@@ -41,6 +42,7 @@ export function openItems(sess: Session) {
 }
 
 export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Props) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const close = () => setMenu(null);
   const idx = menu ? sess.items.findIndex(i => i.name === menu.name) : -1;
@@ -102,28 +104,28 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
     body = <>
       <div className="hm-opts">
         {reported ? <>
-          <Opt act="save" title="Save for next trip" desc="It comes first on your next trip." onClick={() => leaveOne("saved")} />
-          <Opt act="drop" title="Don't need it today" desc="Your report stays. Nothing is lost." onClick={() => leaveOne("dropped")} />
+          <Opt act="save" title={t("hunt.saveForNextTrip")} desc={t("hunt.itComesFirstOnYour")} onClick={() => leaveOne("saved")} />
+          <Opt act="drop" title={t("hunt.donTNeedItToday")} desc={t("hunt.yourReportStaysNothingIs")} onClick={() => leaveOne("dropped")} />
         </> : <>
-          <Opt act="find" title="Find it for me" desc="Point your camera at the shelf." onClick={find} />
-          <Opt act="swap" title="Swap it" desc="Pick a substitute. Your quantity carries over."
+          <Opt act="find" title={t("hunt.findItForMe")} desc={t("hunt.pointYourCameraAtThe")} onClick={find} />
+          <Opt act="swap" title={t("hunt.swapIt")} desc={t("hunt.pickASubstituteYourQuantity")}
             onClick={() => { if (offline()) { toast("No signal. A swap needs a connection."); return; } setMenu({ kind: "swap", name }); }} />
-          <Opt act="moved" title="It moved" desc="Look again, or tell other shoppers." onClick={() => setMenu({ kind: "moved", name })} />
-          <Opt act="save" title="Save for next trip" desc="It comes first on your next trip." onClick={() => leaveOne("saved")} />
-          <Opt act="drop" title="Don't need it today" desc="No report. Nothing is lost." onClick={() => leaveOne("dropped")} />
-          <Opt act="edit" title="Change quantity or note" desc="Fix how many, or add a note." onClick={() => setMenu({ kind: "edit", name })} />
+          <Opt act="moved" title={t("hunt.itMoved")} desc={t("hunt.lookAgainOrTellOther")} onClick={() => setMenu({ kind: "moved", name })} />
+          <Opt act="save" title={t("hunt.saveForNextTrip")} desc={t("hunt.itComesFirstOnYour")} onClick={() => leaveOne("saved")} />
+          <Opt act="drop" title={t("hunt.donTNeedItToday")} desc={t("hunt.noReportNothingIsLost")} onClick={() => leaveOne("dropped")} />
+          <Opt act="edit" title={t("hunt.changeQuantityOrNote")} desc={t("hunt.fixHowManyOrAdd")} onClick={() => setMenu({ kind: "edit", name })} />
         </>}
       </div>
-      <button type="button" className="btn wide" data-act="close" onClick={close}>Close</button>
+      <button type="button" className="btn wide" data-act="close" onClick={close}>{t("common.close")}</button>
     </>;
   } else if (menu.kind === "moved" && it) {
     const stop = qStops(sess)[idx];
     title = `Can't find ${name}?`;
     sub = `Last seen: ${stop && stop.shelfLabel ? stop.shelfLabel : "not placed on the map yet"}. Check the end caps too.`;
     body = <>
-      <button type="button" className="btn primary wide hm-main" data-act="find" data-first onClick={find}>Find it for me</button>
-      <button type="button" className="btn wide" data-act="tell" onClick={() => { close(); onTell(idx); }}>Tell other shoppers it is gone</button>
-      <button type="button" className="btn wide" data-act="keep" onClick={close}>Keep looking</button>
+      <button type="button" className="btn primary wide hm-main" data-act="find" data-first onClick={find}>{t("hunt.findItForMe")}</button>
+      <button type="button" className="btn wide" data-act="tell" onClick={() => { close(); onTell(idx); }}>{t("hunt.tellOtherShoppersItIs")}</button>
+      <button type="button" className="btn wide" data-act="keep" onClick={close}>{t("common.keepLooking")}</button>
     </>;
   } else if (menu.kind === "swap" && it) {
     const subs = Q.plan && Q.plan.items ? huntSubstitutes(sess, Q.plan.items, name, sess.store, 3) : [];
@@ -149,15 +151,15 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
           <button key={k} type="button" className="hm-opt" data-act="pick" data-k={k} onClick={() => doSwap(s.name)}><b>{s.name}</b>
             <span className="sub">{s.here ? `You bought it here ${s.here} time${s.here === 1 ? "" : "s"}.` : "You bought it at another store."}</span></button>
         ))}</div>
-        : <p className="sub">Your receipts show no close match. Type your own.</p>}
-      <label className="hm-label" htmlFor="hm-own">Type my own</label>
+        : <p className="sub">{t("hunt.yourReceiptsShowNoClose")}</p>}
+      <label className="hm-label" htmlFor="hm-own">{t("hunt.typeMyOwn")}</label>
       <div className="hm-addrow">
         <input type="text" id="hm-own" className="hm-addinput" maxLength={NAME_MAX} autoComplete="off" enterKeyHint="done"
           value={own} onChange={e => setOwn(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); doSwap(own); } }} />
-        <button type="button" className="btn primary" data-act="own" onClick={() => doSwap(own)}>Use</button>
+        <button type="button" className="btn primary" data-act="own" onClick={() => doSwap(own)}>{t("hunt.use")}</button>
       </div>
-      <button type="button" className="btn wide" data-act="close" onClick={close}>Cancel</button>
+      <button type="button" className="btn wide" data-act="close" onClick={close}>{t("common.cancel")}</button>
     </>;
   } else if (menu.kind === "edit" && it) {
     const prev = { qty: Number(it.qty) || 1, note: it.note || "" };
@@ -179,18 +181,18 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
     title = name;
     sub = "Fix how many, or add a note.";
     body = <>
-      <div className="row hm-stepper"><span className="name" id="hm-qlabel">Quantity</span>
+      <div className="row hm-stepper"><span className="name" id="hm-qlabel">{t("common.quantity")}</span>
         <div className="hm-step" role="group" aria-labelledby="hm-qlabel">
-          <button type="button" className="hm-stepbtn" data-act="minus" aria-label="One fewer" onClick={() => setQty(q => Math.max(QTY_MIN, q - 1))}>-</button>
+          <button type="button" className="hm-stepbtn" data-act="minus" aria-label={t("hunt.oneFewer")} onClick={() => setQty(q => Math.max(QTY_MIN, q - 1))}>-</button>
           <b id="hm-qty" aria-live="polite">{qty}</b>
-          <button type="button" className="hm-stepbtn" data-act="plus" aria-label="One more" onClick={() => setQty(q => Math.min(QTY_MAX, q + 1))}>+</button>
+          <button type="button" className="hm-stepbtn" data-act="plus" aria-label={t("common.oneMore")} onClick={() => setQty(q => Math.min(QTY_MAX, q + 1))}>+</button>
         </div></div>
-      <label className="hm-label" htmlFor="hm-note">Note (size, brand, for whom)</label>
+      <label className="hm-label" htmlFor="hm-note">{t("hunt.noteSizeBrandForWhom")}</label>
       <input type="text" id="hm-note" className="hm-addinput hm-wide" maxLength={NOTE_MAX} autoComplete="off"
         value={note} onChange={e => setNote(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); save(); } }} />
-      <button type="button" className="btn primary wide hm-main" data-act="save" onClick={save}>Save</button>
-      <button type="button" className="btn wide" data-act="close" onClick={close}>Cancel</button>
+      <button type="button" className="btn primary wide hm-main" data-act="save" onClick={save}>{t("common.save")}</button>
+      <button type="button" className="btn wide" data-act="close" onClick={close}>{t("common.cancel")}</button>
     </>;
   } else if (menu.kind === "leave") {
     const open = sess.items.filter(i => !i.checked);
@@ -209,7 +211,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
         {open.map((i, k) => (
           <div key={i.name} className="row hm-leaverow">
             <div className="grow"><span className="name">{i.name}{qtyTag(i) ? ` - ${qtyTag(i)}` : ""}</span>
-              {qIsReportedByMe(sess, i) ? <span className="sub">Reported missing</span> : null}</div>
+              {qIsReportedByMe(sess, i) ? <span className="sub">{t("common.reportedMissing")}</span> : null}</div>
             <div className="hm-seg" role="group" aria-label={`What to do with ${i.name}`}>
               {(["saved", "dropped"] as const).map(how => (
                 <button key={how} type="button" className="hm-segbtn" data-act="how" data-k={k} data-how={how}
@@ -220,8 +222,8 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
           </div>
         ))}
       </div>
-      <button type="button" className="btn primary wide hm-main" data-act="checkout" disabled={leaveBusy} onClick={checkout}>Check out</button>
-      <button type="button" className="btn wide" data-act="keep" data-first onClick={close}>Keep hunting</button>
+      <button type="button" className="btn primary wide hm-main" data-act="checkout" disabled={leaveBusy} onClick={checkout}>{t("common.checkOut")}</button>
+      <button type="button" className="btn wide" data-act="keep" data-first onClick={close}>{t("common.keepHunting")}</button>
     </>;
   }
 

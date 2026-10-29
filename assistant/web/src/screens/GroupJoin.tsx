@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { get, post } from "../lib/api";
 import { useToast } from "../ui/Toast";
+import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-group-join + group.js (openJoin,
  * preview, joinNow). The invite code comes from nav.params.code; an
@@ -18,6 +19,7 @@ export function joinCodeFromUrl(): string {
 type Preview = { name: string; invited_by: string; people: number; lists: number; my_lists: number; full?: boolean };
 
 export function GroupJoin() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const paramCode = typeof nav.params.code === "string" ? nav.params.code : "";
@@ -70,11 +72,10 @@ export function GroupJoin() {
 
   return (
     <>
-      <p><a href="#" id="gj-back" onClick={ev => { ev.preventDefault(); nav.show("profile"); }}>&larr; Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Join a group</h2>
+      <p><a href="#" id="gj-back" onClick={ev => { ev.preventDefault(); nav.show("profile"); }}>{t("groupJoin.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("groupJoin.joinAGroup")}</h2>
       <div className="group pad">
-        <label className="field">Invite code
-          <input type="text" id="gj-code" className="gjcode" maxLength={9} autoComplete="off" autoCapitalize="characters"
+        <label className="field">{t("groupJoin.inviteCode")}<input type="text" id="gj-code" className="gjcode" maxLength={9} autoComplete="off" autoCapitalize="characters"
             spellCheck={false} placeholder="K7Q 4MX" ref={input} value={value} onChange={e => onInput(e.target.value)} />
         </label>
       </div>
@@ -85,9 +86,9 @@ export function GroupJoin() {
             <div className="group"><div className="row">
               <span className="gm other">{initial(pv.name)}</span>
               <span className="grow"><span className="name gname">{pv.name}</span>
-                <span className="sub">@{pv.invited_by} invited you · {pv.people} {pv.people === 1 ? "person" : "people"} · {pv.lists} list{pv.lists === 1 ? "" : "s"}</span></span>
+                <span className="sub">{t("groupJoin.invitedYou", { invited_by: pv.invited_by, people: pv.people })}{" "}{pv.people === 1 ? "person" : "people"}{" "}{t("groupJoin.list", { lists: pv.lists })}{pv.lists === 1 ? "" : "s"}</span></span>
             </div></div>
-            <h3 className="sect">What changes</h3>
+            <h3 className="sect">{t("groupJoin.whatChanges")}</h3>
             <div className="group pad">
               {bul("📋", pv.my_lists ? (pv.my_lists === 1 ? "Your list joins the group" : `Your ${pv.my_lists} lists join the group`) : "You share the group's lists", "Lists with the same name merge. Everyone can add and tick.")}
               {bul("🧾", "Your receipts stay yours", "The group can see them while you are in it.")}
@@ -98,7 +99,7 @@ export function GroupJoin() {
         )}
       </div>
       <p style={{ marginTop: 16 }}><button className="btn primary wide" id="gj-go" type="button" disabled={!pv || !!pv.full} onClick={join}>{pv ? `Join ${pv.name}` : "Join"}</button></p>
-      <p className="muted small" style={{ textAlign: "center" }}>You can leave any time from Profile.</p>
+      <p className="muted small" style={{ textAlign: "center" }}>{t("groupJoin.youCanLeaveAnyTime")}</p>
     </>
   );
 }
