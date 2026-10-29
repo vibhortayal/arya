@@ -1138,3 +1138,10 @@ body.hunting #view-hunt.full .askbar {
 .accenttext { color: var(--accent-text); }
 .accenttext .sub { color: var(--secondary); }
 .remnote { margin: -4px 16px 0; }
+
+/* Profile: the avatar wears a pencil; the choices open on Edit. */
+.avwrap { position: relative; width: 96px; margin: 0 auto 6px; }
+.avwrap .avatar.big { margin: 0; }
+.avedit { position: absolute; right: -6px; bottom: 0; width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; background: var(--accent); color: #fff; font-size: 14px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.avedit::after { content: ""; position: absolute; inset: -4px; }
+#av-panel { margin-top: 6px; }

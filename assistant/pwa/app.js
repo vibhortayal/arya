@@ -687,6 +687,8 @@ async function renderProfile() {
     ? `${archive.receipts.length} receipts · the private archive` : "The private archive";
   if (!profile) {
     $("#pf-handle").textContent = "";
+    $("#pf-level").textContent = "";
+    $("#pf-quest-sub").textContent = "Hunts, badges and mapped stores";
     $("#pf-stats").innerHTML = "";
     $("#pf-spots").innerHTML = "";
     $("#pf-badges").innerHTML = "";
@@ -695,6 +697,11 @@ async function renderProfile() {
   }
   const s = profile.stats;
   $("#pf-handle").textContent = "@" + profile.handle;
+  const earned = (profile.badges || []).filter(b => b.earned).length;
+  $("#pf-level").textContent = `Level ${profile.level || 1} · ${profile.points || 0} pts`
+    + (s.streak_weeks ? ` · ${s.streak_weeks} wk streak` : "");
+  $("#pf-quest-sub").textContent = `${s.hunts} hunt${s.hunts === 1 ? "" : "s"} · ${earned} of ${(profile.badges || []).length} badges`
+    + ((profile.mapped_stores || []).length ? ` · ${profile.mapped_stores.length} store${profile.mapped_stores.length === 1 ? "" : "s"} mapped` : "");
   $("#pf-stats").innerHTML =
     `<div class="stattile"><div class="sv">${s.hunts + (archive.unsettled || []).length}</div><div class="sl">Hunts finished</div></div>
      <div class="stattile"><div class="sv">${s.hunts}</div><div class="sl">Receipt attached</div></div>
@@ -716,6 +723,13 @@ async function renderProfile() {
 }
 
 $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refresh("view-analysis"); });
+/* Quest progress, Connect Muse and About are one tap from Profile
+ * (owner, 2026-10-29: Profile too busy). Each Back lands on Profile. */
+for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", "#pfq-back"],
+    ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"]]) {
+  $(btn).addEventListener("click", () => { show(view); refresh(view); });
+  $(back).addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
+}
 /* Analysis is reached only from Profile, and the wireframe's back
  * arrow returns there — not through the quest view stack. */
 $("#an-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
@@ -1509,7 +1523,7 @@ function refresh(view) {
   if (view === "view-list") { renderList().catch(showErr); renderIntake().catch(showErr); renderEyes().catch(showErr); }
   if (view === "view-receipts") renderReceipts().catch(showErr);
   if (view === "view-analysis") renderAnalysis().catch(showErr);
-  if (view === "view-profile") renderProfile().catch(showErr);
+  if (view === "view-profile" || view === "view-quest-progress" || view === "view-muse") renderProfile().catch(showErr);
   if (view === "view-community") renderCommunity().catch(showErr);
   if (view === "view-chat") paintChatEmpty();
 }
@@ -1774,6 +1788,14 @@ async function loadAvatar() {
   $("#pf-avatar-initial").textContent = ($("#avatar-initial").textContent || "A");
   paintAvatar();
 }
+/* The avatar choices stay shut until the player taps Edit. */
+function avEdit(open) {
+  $("#av-panel").hidden = !open;
+  $("#av-edit-btn").setAttribute("aria-expanded", String(open));
+  $("#av-edit-label").textContent = open ? "Done" : "Edit avatar";
+}
+$("#av-edit-btn").addEventListener("click", () => avEdit($("#av-panel").hidden));
+$("#av-edit-label").addEventListener("click", () => avEdit($("#av-panel").hidden));
 function avStatus(msg) { $("#av-status").textContent = msg || ""; }
 function avShowCandidate() {
   $("#av-cand-img").src = `/api/quest/avatar/image?candidate=true&t=${Date.now()}`;
@@ -1821,6 +1843,7 @@ $("#avatar-btn").addEventListener("click", () => {
   avatarFrom = cur && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
   show("view-profile");
   refresh("view-profile");
+  avEdit(false);
   loadAvatar();
   window.scrollTo(0, 0);
 });
