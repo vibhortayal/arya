@@ -1271,3 +1271,43 @@ body.selecting #tabs { display: none; }
 .checkrow { flex-wrap: wrap; }
 .checkrow .grow { flex: 1 1 100%; }
 .checkacts { display: flex; gap: 8px; }
+
+/* Arya's powers, the daily "Did you know?" card, (i) buttons and the
+   price cards (price intelligence, owner 2026-10-29). Caveats live
+   behind (i); no line graphs. */
+.infobtn {
+  flex: none; width: 26px; height: 26px; border-radius: 50%; padding: 0; margin-left: auto;
+  border: 1.5px solid var(--tertiary); background: transparent; color: var(--secondary);
+  font: 700 13px/1 Georgia, "Times New Roman", serif; font-style: italic;
+  display: grid; place-items: center; position: relative;
+}
+.infobtn::after { content: ""; position: absolute; inset: -9px; }  /* 44 pt target */
+.whyrow .infobtn { margin-top: 2px; }
+.whyrow > div { flex: 1; min-width: 0; }
+.powrow { min-height: 48px; gap: 12px; }
+.pwdot {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; box-shadow: inset 0 0 0 2px var(--sep); color: var(--secondary);
+}
+.pwdot.on { background: #E6F4EA; color: #1E6B34; box-shadow: none; }
+.pwstate { font-size: 13px; font-weight: 600; color: #9A5B00; white-space: nowrap; }
+.pwgroup summary { list-style: none; display: flex; align-items: flex-end; cursor: pointer; }
+.pwgroup summary::-webkit-details-marker { display: none; }
+.pwgroup summary .sect { margin-bottom: 6px; }
+.pwchev { margin-left: auto; color: var(--tertiary); font-size: 20px; transform: rotate(90deg); transition: transform .2s; padding: 0 4px 4px; }
+.pwgroup:not([open]) .pwchev { transform: none; }
+.tipcard { margin-top: 12px; }
+.tippill { margin-left: 0; color: var(--accent-text); background: #FFF1E8; }
+.tiptitle { display: block; font-weight: 700; font-size: 17px; margin: 6px 0 2px; }
+.tipstep { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; }
+.tipstep b { display: block; font-weight: 600; }
+.pricecard { margin-bottom: 10px; }
+.pchead { display: flex; align-items: flex-start; gap: 10px; }
+.pchead .name { font-weight: 700; font-size: 17px; flex: 1; }
+.pricerows { border-top: 1px solid var(--sep); margin-top: 10px; padding-top: 8px; display: grid; gap: 6px; }
+.pricerow { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+.pricerow .up { color: #B23A1E; font-weight: 600; white-space: nowrap; }
+.pricerow .down { color: #1E6B34; font-weight: 600; white-space: nowrap; }
+.whyrow .simrow { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.whyrow .simrow span:last-child { text-align: right; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .pwchev { transition: none; } }

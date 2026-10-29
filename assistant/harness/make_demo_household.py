@@ -25,14 +25,34 @@ ITEMS = {
     "papertowel": ("Paper Towels 6 ct", 9.99, 4, 1),
     "batteries": ("AA Batteries 8 ct", 8.99, 8, 1),
     "avocado": ("Avocados 4 ct", 5.49, 2, 1),
+    # A second milk, bought at Costco now and then, so "Similar items"
+    # has a real comparison to show (owner, 2026-10-29).
+    "organicmilk": ("Kirkland Organic Milk 0.5 gal", 3.99, 6, 1),
 }
 
 
 # Bought at Costco on the same Saturday (owner, 2026-10-28: "my milk is
 # typically bought from TJ, eggs from costco"). One eggs trip stays at
 # the grocery store, so the pattern reads "Costco, most of the time".
-COSTCO = {"eggs", "rice", "papertowel", "batteries"}
+COSTCO = {"eggs", "rice", "papertowel", "batteries", "organicmilk"}
 EGGS_AT_GROCERY_TRIP = 10
+
+# Prices move a little, so the price-intelligence cards have something
+# true to say (owner, 2026-10-29): a store factor per item (milk and
+# bananas cheaper at Safeway, bread dearer, eggs cheaper at Costco) and a drift over the 26 weeks (eggs and milk
+# up, coffee down). Deterministic; cents are rounded.
+STORE_FACTOR = {("Safeway", "milk"): 0.92, ("Safeway", "bananas"): 0.88,
+                ("Safeway", "bread"): 1.08, ("Safeway", "yogurt"): 1.06,
+                ("Costco", "eggs"): 0.85}
+DRIFT = {"milk": 0.12, "eggs": 0.18, "bread": 0.08, "coffee": -0.06, "yogurt": 0.06,
+         "avocado": 0.10, "chicken": 0.06, "bananas": 0.05, "organicmilk": 0.04}
+TRIPS = 26
+
+
+def price_for(key, merchant, t):
+    base = ITEMS[key][1]
+    factor = STORE_FACTOR.get((merchant, key), 1.0)
+    return round(base * factor * (1 + DRIFT.get(key, 0.0) * t / (TRIPS - 1)), 2)
 
 
 def line(sku_key, price=None, qty=None, ltype="item", total=None, alloc="HOUSEHOLD", parent=None):
@@ -58,7 +78,7 @@ def receipt(rid, merchant, day, lines):
 def build():
     receipts = []
     start = date(2026, 5, 2)          # first Saturday
-    trips = 26                        # Saturdays through Oct 24, 2026
+    trips = TRIPS                     # Saturdays through Oct 24, 2026
     for t in range(trips):
         day = start + timedelta(days=7 * t)
         merchant = "Trader Joe's" if t % 3 else "Safeway"
@@ -69,7 +89,7 @@ def build():
             if t == trips - 1 and key not in ("eggs", "bananas", "coffee"):
                 continue              # the last trip is small: staples lapse -> due
             costco = key in COSTCO and not (key == "eggs" and t == EGGS_AT_GROCERY_TRIP)
-            (bulk if costco else lines).append(line(key))
+            (bulk if costco else lines).append(line(key, price=price_for(key, "Costco" if costco else merchant, t)))
         if t == 8:                    # one folded discount on spinach
             lines.append(line("spinach", ltype="discount", total=-1.00, parent="demo-spinach"))
         if t == 12:                   # a gift card for someone else
