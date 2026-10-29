@@ -11,6 +11,7 @@ import { AddReceiptSheet, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { get, post } from "../lib/api";
 import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
 import { characterManifest } from "../lib/characters";
+import { languageToast } from "../lib/language";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -30,7 +31,7 @@ type Archive = { receipts: unknown[]; unsettled?: Unsettled[] };
 
 export function Profile() {
   const nav = useNav();
-  const { demo, user, currency, setCurrency, leave } = useSession();
+  const { demo, user, currency, setCurrency, language, languages, setLanguage, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
@@ -81,6 +82,16 @@ export function Profile() {
       setCurrency({ code: r.currency, symbol: r.symbol });
       toast(`Prices now show in ${r.currency}.`);
     } catch (e) { setCurrency(prev); throw e; }
+  });
+
+  const pickLanguage = (code: string) => attempt(async () => {
+    const prev = language;
+    setLanguage(code);
+    try {
+      const r = await post<{ language: string }>("/api/settings", { language: code });
+      setLanguage(r.language);
+      toast(languageToast(r.language, languages));
+    } catch (e) { setLanguage(prev); throw e; }
   });
 
   const eraseAccount = () => attempt(async () => {
@@ -134,6 +145,10 @@ export function Profile() {
         <div className="row"><div className="grow"><span className="name">Currency</span><span className="sub">How prices show. Arya does not convert.</span></div>
           <select id="pf-currency" className="curpick" aria-label="Currency" value={currency.code} onChange={ev => pickCurrency(ev.target.value)}>
             {["USD", "EUR", "GBP", "INR", "CAD", "AUD"].map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+          </select></div>
+        <div className="row"><div className="grow"><span className="name">Language</span><span className="sub">What Arya answers in. Auto matches how you write.</span></div>
+          <select id="pf-language" className="curpick" aria-label="Language" value={language} onChange={ev => pickLanguage(ev.target.value)}>
+            {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select></div>
       </div>
       <div className="group">

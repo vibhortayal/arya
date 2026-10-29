@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { get } from "../lib/api";
 import type { Currency } from "../lib/format";
+import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
 
 export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean };
 type Session = {
@@ -11,6 +12,10 @@ type Session = {
   currency: Currency;
   enter: (user: string, demo: boolean) => void;
   setCurrency: (c: Currency) => void;
+  /* Ask Arya's reply language: "auto" or a code from `languages`. */
+  language: string;
+  languages: Language[];
+  setLanguage: (code: string) => void;
   /* After sign out or account delete: back to the Login screen
    * (the old app reloaded the page). Re-reads /auth/status, since
    * deleting the last account opens first-run setup. */
@@ -32,6 +37,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [demo, setDemo] = useState(false);
   const [status, setStatus] = useState<AuthStatus>({ has_users: true, registration_open: false });
   const [currency, setCurrency] = useState<Currency>({ code: "USD", symbol: "$" });
+  const [language, setLanguage] = useState("auto");
+  const [languages, setLanguages] = useState<Language[]>(DEFAULT_LANGUAGES);
 
   useEffect(() => {
     (async () => {
@@ -44,11 +51,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // The account's currency (Profile > Account): display only, amounts
-  // are never converted. USD until the settings load.
+  // are never converted. USD until the settings load. The Language
+  // setting comes with it (Auto until then).
   useEffect(() => {
     if (!user) return;
-    get<{ currency: string; symbol: string }>("/api/settings")
-      .then(s => setCurrency({ code: s.currency, symbol: s.symbol })).catch(() => {});
+    get<{ currency: string; symbol: string; language?: string; languages?: Language[] }>("/api/settings")
+      .then(s => {
+        setCurrency({ code: s.currency, symbol: s.symbol });
+        if (s.language) setLanguage(s.language);
+        if (s.languages?.length) setLanguages(s.languages);
+      }).catch(() => {});
   }, [user]);
 
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
@@ -57,11 +69,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     runLeaveHooks();
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
-    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" });
+    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto");
     (window as any).__aryaUser = undefined;
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, leave }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, leave }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

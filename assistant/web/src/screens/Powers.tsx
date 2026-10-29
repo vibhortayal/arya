@@ -12,7 +12,7 @@ import { useToast } from "../ui/Toast";
 type Facts = { receipts: number; stores: number; share_prices: boolean };
 type Power = {
   id: string; group: "next" | "new" | "on"; name: string; sub: string; need?: string; what: string;
-  unlock?: string; when?: string; share?: boolean; on?: (f: Facts) => boolean; tip?: string;
+  unlock?: string; when?: string; share?: boolean; soon?: boolean; on?: (f: Facts) => boolean; tip?: string;
 };
 
 const POWERS: Power[] = [
@@ -21,7 +21,7 @@ const POWERS: Power[] = [
     when: "You need to opt in first. A price then shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified.", share: true },
   { id: "deals", group: "next", name: "Deals for you", sub: "Hear when something you buy is cheaper nearby.", need: "Needs Community prices", what: "A heads-up when an item you buy is cheaper than usual somewhere near you.",
     unlock: "Needs Community prices. Only items you already buy.", when: "Built from shared prices, never from store sites or flyers.", share: true },
-  { id: "shoppers", group: "next", name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Turn on", what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
+  { id: "shoppers", group: "next", name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Coming soon", soon: true, what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
     unlock: "Opt in to be counted while you shop. Nobody is shown by name or on a map.", when: "Under 3 Arya Shoppers there, it only says Quiet.", share: true },
   { id: "compare", group: "new", name: "Compare your stores", sub: "See which of your stores is cheaper for an item.", need: "After receipts from 2 stores", what: "Ask \"how much was milk at Costco?\" in the aisle, and see the cheaper store on any item.",
     unlock: "Add receipts from 2 different stores.", on: f => f.stores >= 2, tip: "Arya can tell you which of your stores is cheaper for an item." },
@@ -79,11 +79,15 @@ export function Powers() {
 
   const row = (p: Power) => {
     const on = isOn(p);
-    const need = on ? "" : (p.share && facts.share_prices ? "Waiting for 5 households" : p.need || "");
+    const need = on ? "" : (p.share && !p.soon && facts.share_prices ? "Waiting for 5 households" : p.need || "");
+    // A price-sharing power that is still off opens the Share prices sheet.
+    const act = p.share && !p.soon && !facts.share_prices;
     return (
       <div className="row powrow" key={p.id}>
         <span className={"pwdot" + (on ? " on" : " off")} aria-hidden="true">{on ? "✓" : <LockSvg />}</span>
-        <div className="grow"><span className="name">{p.name}</span><span className="sub">{p.sub || p.what}</span>{need && <span className="pwneed">{need}</span>}</div>
+        <div className="grow"><span className="name">{p.name}</span><span className="sub">{p.sub || p.what}</span>{need && (act
+          ? <button className="pwneed" type="button" data-pw-act="share" onClick={() => setSheet({ kind: "share" })}>{need}</button>
+          : <span className="pwneed">{need}</span>)}</div>
         <InfoBtn k={p.id} onOpen={openInfo} />
       </div>
     );

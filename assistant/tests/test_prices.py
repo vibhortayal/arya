@@ -203,3 +203,11 @@ class TestPowersPlainWords(unittest.TestCase):
         self.assertIn('class="pwneed"', js)
         self.assertIn('name: "Your spending"', js)
         self.assertNotIn('name: "Patterns"', js)
+
+    def test_turn_on_is_a_button(self):
+        # Owner bug 2026-10-29: "nothing happened when I click turn on".
+        js = open(os.path.join(PWA, "powers.js"), encoding="utf-8").read()
+        self.assertIn('<button class="pwneed" type="button" data-pw-act="share">', js)
+        self.assertIn('b.dataset.pwAct === "share") openShare()', js)
+        # Arya Shoppers has no opt-in yet, so it says so instead of "Turn on".
+        self.assertIn('name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Coming soon"', js)
