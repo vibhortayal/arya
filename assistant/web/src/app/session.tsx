@@ -19,6 +19,13 @@ type Session = {
 
 const Ctx = createContext<Session | null>(null);
 
+/* Module-level state that belongs to one account (the Ask log, a
+ * held plan draft) registers here and is cleared on sign out, so the
+ * next account never sees it (the old app reloaded the page). */
+const onLeave = new Set<() => void>();
+export function clearOnSignOut(fn: () => void): void { onLeave.add(fn); }
+function runLeaveHooks() { onLeave.forEach(fn => { try { fn(); } catch { /* keep going */ } }); }
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<string | null>(null);
@@ -47,6 +54,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
 
   const leave = useCallback(async () => {
+    runLeaveHooks();
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
     setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" });

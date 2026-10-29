@@ -9,12 +9,32 @@ import { GroupJoin } from "./GroupJoin";
 import { NewList } from "./NewList";
 import { Store } from "./Store";
 import { StoresMine } from "./StoresMine";
+import { Capture } from "./Capture";
 import { Item } from "./Item";
+import { Mapper } from "./Mapper";
+import { Mode } from "./Mode";
+import { Muse } from "./Muse";
+import { Optimize } from "./Optimize";
+import { Lists } from "./Lists";
+import { Quest } from "./Quest";
+import { StoresAdd } from "./StoresAdd";
+import { StoresFind } from "./StoresFind";
+import { Today } from "./Today";
 import { Powers } from "./Powers";
 import { Profile } from "./Profile";
 import { QuestProgress } from "./QuestProgress";
 import { Receipt } from "./Receipt";
 import { Receipts } from "./Receipts";
+import { Album } from "./Album";
+import { Express } from "./Express";
+import { Finish } from "./Finish";
+import { Friends } from "./Friends";
+import { Hunt } from "./Hunt";
+import { Race } from "./Race";
+import { Score } from "./Score";
+import { HaulCard } from "./haul/HaulCard";
+import { ReceiptReview } from "./haul/ReceiptReview";
+import { Reveal } from "./haul/Reveal";
 
 /* One entry per screen. A screen not ported yet shows NotPorted,
  * which links to the same screen in the current app. Porting a
@@ -28,12 +48,32 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   newlist: NewList,
   store: Store,
   "stores-mine": StoresMine,
+  capture: Capture,
+  community: Quest,
+  mapper: Mapper,
+  mode: Mode,
+  muse: Muse,
+  optimize: Optimize,
+  home: Today,
   item: Item,
+  list: Lists,
+  "stores-add": StoresAdd,
+  "stores-find": StoresFind,
   powers: Powers,
   profile: Profile,
   "quest-progress": QuestProgress,
   receipt: Receipt,
   receipts: Receipts,
+  album: Album,
+  express: Express,
+  finish: Finish,
+  friends: Friends,
+  hunt: Hunt,
+  race: Race,
+  score: Score,
+  reveal: Reveal,
+  rreview: ReceiptReview,
+  haul: HaulCard,
 };
 
 export const SCREENS = Object.fromEntries(

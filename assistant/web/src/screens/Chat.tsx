@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useSession } from "../app/session";
+import { clearOnSignOut, useSession } from "../app/session";
 import { post } from "../lib/api";
+import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
 import { IconMic, IconSpeaker } from "../ui/icons";
 
@@ -10,68 +11,14 @@ type Line = { kind: "me" | "arya" | "sys" | "actionchip"; text: string };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
 const history: Msg[] = [];
+/* Bumps on sign out: the log and history are this account's only, and
+ * a reply still in flight from before must not land in the next one. */
+let epoch = 0;
+clearOnSignOut(() => {
+  lines.length = 0; history.length = 0; epoch++;
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+});
 const SUGGEST = ["What's running low?", "What did I spend this month?", "Add eggs to my list"];
-
-/* Local helpers (the old recorder lives in app.js): mic capture to
- * mono 16-bit 16 kHz WAV, then POST /api/transcribe. */
-async function startCapture() {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const AC = window.AudioContext || (window as any).webkitAudioContext;
-  const ctx = new AC();
-  const src = ctx.createMediaStreamSource(stream);
-  const proc = ctx.createScriptProcessor(4096, 1, 1);
-  const chunks: Float32Array[] = [];
-  proc.onaudioprocess = ev => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
-  src.connect(proc);
-  proc.connect(ctx.destination);
-  return {
-    stop() {
-      proc.disconnect();
-      src.disconnect();
-      stream.getTracks().forEach(t => t.stop());
-      const wav = encodeWav(chunks, ctx.sampleRate);
-      ctx.close();
-      return wav;
-    },
-  };
-}
-
-function encodeWav(chunks: Float32Array[], srcRate: number) {
-  const target = 16000;
-  let len = 0;
-  chunks.forEach(c => { len += c.length; });
-  const flat = new Float32Array(len);
-  let off = 0;
-  chunks.forEach(c => { flat.set(c, off); off += c.length; });
-  const ratio = srcRate / target;
-  const n = Math.floor(flat.length / ratio);
-  const buf = new ArrayBuffer(44 + n * 2);
-  const v = new DataView(buf);
-  const wstr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-  wstr(0, "RIFF");
-  v.setUint32(4, 36 + n * 2, true);
-  wstr(8, "WAVEfmt ");
-  v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true);
-  v.setUint16(22, 1, true);
-  v.setUint32(24, target, true);
-  v.setUint32(28, target * 2, true);
-  v.setUint16(32, 2, true);
-  v.setUint16(34, 16, true);
-  wstr(36, "data");
-  v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) {
-    const s = Math.max(-1, Math.min(1, flat[Math.floor(i * ratio)]));
-    v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-  return new Blob([buf], { type: "audio/wav" });
-}
-
-async function transcribeBlob(wav: Blob) {
-  const r = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
-  return ((await r.json()) as { text?: string }).text || "";
-}
 
 const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
 
@@ -83,7 +30,7 @@ export function Chat() {
   const [speakOn, setSpeakOn] = useState(readSpeak);
   const [listening, setListening] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const capture = useRef<Awaited<ReturnType<typeof startCapture>> | null>(null);
+  const capture = useRef<Capture | null>(null);
   const speakRef = useRef(speakOn);
   const input = useRef<HTMLInputElement>(null);
   const logEl = useRef<HTMLDivElement>(null);
@@ -92,6 +39,9 @@ export function Chat() {
   useEffect(() => {
     (logEl.current?.lastElementChild as HTMLElement | null | undefined)?.scrollIntoView?.({ block: "end" });
   }, [log]);
+
+  // The mic never outlives the screen.
+  useEffect(() => () => { capture.current?.cancel(); capture.current = null; }, []);
 
   const add = (...l: Line[]) => { lines.push(...l); setLog(lines.slice()); };
 
@@ -113,14 +63,17 @@ export function Chat() {
     setText("");
     history.push({ role: "user", content: q });
     add({ kind: "me", text: q });
+    const mine = epoch;
     try {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", { messages: history });
+      if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply });
       add({ kind: "arya", text: res.reply },
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })));
       speak(res.reply);
     } catch (e) {
+      if (mine !== epoch) return;
       add({ kind: "arya", text: "I could not answer that: " + (e instanceof Error ? e.message : String(e)) });
     }
   };
@@ -140,7 +93,7 @@ export function Chat() {
       }
       return;
     }
-    if (!navigator.mediaDevices || !(window.AudioContext || (window as any).webkitAudioContext)) {
+    if (!voiceSupported()) {
       setNote("Voice input is not available in this browser. The microphone on your keyboard works too.");
       return;
     }

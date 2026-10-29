@@ -4,7 +4,12 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
  * Errors go here, never into content labels. */
 type Opts = { action?: string; onAction?: () => void };
 type ToastFn = (msg: string, opts?: Opts) => void;
-const Ctx = createContext<{ toast: ToastFn; showErr: (e: unknown) => void } | null>(null);
+const Ctx = createContext<{ toast: ToastFn; showErr: (e: unknown) => void; hide: () => void } | null>(null);
+
+/* The toast for code outside React (the hunt outbox's "Back online"
+ * when no hunt screen is up). A no-op until the provider mounts. */
+let current: ToastFn = () => {};
+export const toastGlobal: ToastFn = (msg, opts) => current(msg, opts);
 
 /* How long a toast stays up: 60 ms a character, at least 4 s, and at
  * least 7 s when it carries an action (Undo). */
@@ -13,17 +18,18 @@ export const toastMs = (msg: string, hasAction: boolean) => Math.max(hasAction ?
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [t, setT] = useState<{ msg: string; opts?: Opts; n: number } | null>(null);
   const timer = useRef<number | undefined>(undefined);
-  const hide = () => { clearTimeout(timer.current); setT(null); };
+  const hide = useCallback(() => { clearTimeout(timer.current); setT(null); }, []);
 
   const toast = useCallback<ToastFn>((msg, opts) => {
     clearTimeout(timer.current);
     setT(prev => ({ msg, opts, n: (prev?.n || 0) + 1 }));
     timer.current = window.setTimeout(() => setT(null), toastMs(msg, !!opts?.action));
   }, []);
+  current = toast;
   const showErr = useCallback((e: unknown) => toast("Could not load: " + (e instanceof Error ? e.message : String(e))), [toast]);
 
   return (
-    <Ctx.Provider value={{ toast, showErr }}>
+    <Ctx.Provider value={{ toast, showErr, hide }}>
       {children}
       <div id="toast" role="status" aria-live="polite" hidden={!t}>
         {t?.msg}

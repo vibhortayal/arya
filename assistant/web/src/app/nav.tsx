@@ -12,6 +12,9 @@ type Nav = {
   key: number;
   show: (view: ViewId, params?: ViewParams) => void;
   replace: (view: ViewId, params?: ViewParams) => void;
+  /* Drop the whole stack: Back from `view` lands on `under`
+   * (quest.js `Q.stack = ["view-community"]` once a hunt is made). */
+  reset: (view: ViewId, params?: ViewParams, under?: ViewId) => void;
   back: (fallback?: ViewId) => void;
   /* Full-screen modes (the hunt) hide the tab bar, avatar and demo bar. */
   chrome: boolean;
@@ -26,11 +29,17 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
   const [chrome, setChrome] = useState(true);
   const top = stack[stack.length - 1];
 
+  // Re-showing the view on top replaces it (quest.js questShow pushes
+  // only a new id; app.js never kept an item page as lastView), so one
+  // Back always leaves the screen.
   const show = useCallback((view: ViewId, params: ViewParams = {}) => {
-    setStack(s => [...s.slice(-20), { view, params, key: ++seq.current }]);
+    setStack(s => [...(s[s.length - 1].view === view ? s.slice(0, -1) : s).slice(-20), { view, params, key: ++seq.current }]);
   }, []);
   const replace = useCallback((view: ViewId, params: ViewParams = {}) => {
     setStack(s => [...s.slice(0, -1), { view, params, key: ++seq.current }]);
+  }, []);
+  const reset = useCallback((view: ViewId, params: ViewParams = {}, under: ViewId = "community") => {
+    setStack([{ view: under, params: {}, key: ++seq.current }, { view, params, key: ++seq.current }]);
   }, []);
   const back = useCallback((fallback: ViewId = "home") => {
     setStack(s => (s.length > 1 ? s.slice(0, -1).map((e, i, a) => (i === a.length - 1 ? { ...e, key: ++seq.current } : e))
@@ -41,8 +50,8 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
   // (QA 2026-10-28).
   useEffect(() => { window.scrollTo(0, 0); }, [top.view, top.key]);
 
-  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, back, chrome, setChrome }),
-    [top, show, replace, back, chrome]);
+  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, reset, back, chrome, setChrome }),
+    [top, show, replace, reset, back, chrome]);
 
   // Test and parity hook: tools/parity.mjs opens screens directly.
   useEffect(() => { (window as any).__aryaShow = show; }, [show]);

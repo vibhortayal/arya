@@ -1,7 +1,9 @@
 /* Tiny e2e runner: every e2e/*.e2e.mjs exports default async (page, base)
  * and throws on failure. Each gets a fresh phone-sized context.
  * Needs the API running (ARYA_URL, default http://localhost:8000) and
- * a build at /next/. Usage: npm run e2e [-- name ...] */
+ * a build at /next/. friends and race need a second account to add or
+ * race: ARYA_DATA_DIR=<dir> python -c "from api import auth; auth.create_user('cartqueen', 'cartqueen-pass-1')".
+ * Usage: npm run e2e [-- name ...] */
 import { createRequire } from "node:module";
 import { readdirSync } from "node:fs";
 

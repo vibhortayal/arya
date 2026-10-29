@@ -3,6 +3,9 @@ import { useSession } from "../app/session";
 import { Sheet } from "./Sheet";
 import { useToast } from "./Toast";
 import { post } from "../lib/api";
+import { useNav } from "../app/nav";
+import { afterFinish } from "../screens/haul/state";
+import { qLoadSessions, type Session } from "../screens/hunt/model";
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
  * attaches this trip's receipt to a finished hunt. Moved out of
@@ -23,8 +26,12 @@ export async function decode(file: File) {
 
 export type ReceiptTarget = { sessionId: string; label: string };
 
-export function AddReceiptSheet({ target, onClose, onDone }:
-  { target: ReceiptTarget | null; onClose: () => void; onDone: () => void }) {
+/* goesToHaul: the caller already opens the haul review, so the toast
+ * offers no second way there (quest.js openAddReceipt opts). Otherwise
+ * the toast carries See haul (haul.js afterFinish). */
+export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
+  { target: ReceiptTarget | null; onClose: () => void; onDone: (sess?: Session) => void; goesToHaul?: boolean }) {
+  const nav = useNav();
   const { demo } = useSession();
   const { toast } = useToast();
   const [status, setStatus] = useState("");
@@ -34,12 +41,14 @@ export function AddReceiptSheet({ target, onClose, onDone }:
   live.current = target;
 
   const close = () => { setStatus(""); onClose(); };
-  const settle = async (run: () => Promise<unknown>) => {
+  const settle = async (run: () => Promise<Session>) => {
     if (!live.current) return;
-    await run();
+    const sess = await run();
     close();
-    toast("Receipt attached — the hunt is settled.");
-    onDone();
+    toast("Receipt attached — the hunt is settled.",
+      goesToHaul ? undefined : { action: "See haul", onAction: () => { afterFinish(nav, sess); } });
+    await qLoadSessions().catch(() => {});
+    onDone(sess);
   };
   const photo = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
@@ -50,7 +59,7 @@ export function AddReceiptSheet({ target, onClose, onDone }:
     try {
       const rid = (await decode(f)).receipt.receipt_id;
       setStatus("");
-      await settle(() => post(`/api/quest/sessions/${sid}/receipt`, { receipt_id: rid }));
+      await settle(() => post<Session>(`/api/quest/sessions/${sid}/receipt`, { receipt_id: rid }));
     } catch (e) {
       setStatus("");
       toast("Could not file that photo: " + errMsg(e));
@@ -60,7 +69,7 @@ export function AddReceiptSheet({ target, onClose, onDone }:
     if (!target) return;
     const sid = target.sessionId;
     setBusy(true);
-    try { await settle(() => post(`/api/quest/sessions/${sid}/sample-receipt`, {})); } catch (e) { toast(errMsg(e)); }
+    try { await settle(() => post<Session>(`/api/quest/sessions/${sid}/sample-receipt`, {})); } catch (e) { toast(errMsg(e)); }
     setBusy(false);
   };
 

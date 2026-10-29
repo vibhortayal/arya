@@ -17,12 +17,18 @@ type Props = {
   id?: string;
   labelledBy?: string;
   closeLabel?: string;
+  /* A sheet that changes its content in place (capture -> type the
+   * date, list options -> link stores) passes a new key per step, so
+   * focus moves into the new step as the old openSheet() did; else the
+   * focused control is gone, focus falls to <body> and Escape no
+   * longer reaches the sheet. */
+  focusKey?: string;
   children: ReactNode;
 };
 
 const FOCUSABLE = "button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])";
 
-export function Sheet({ open, onClose, title, className, id, labelledBy, closeLabel = "Close", children }: Props) {
+export function Sheet({ open, onClose, title, className, id, labelledBy, closeLabel = "Close", focusKey, children }: Props) {
   const sheet = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const titleId = useId();
@@ -37,6 +43,15 @@ export function Sheet({ open, onClose, title, className, id, labelledBy, closeLa
     first?.focus();
     return () => { (opener.current as HTMLElement | null)?.focus?.(); };
   }, [open]);
+
+  const lastKey = useRef(focusKey);
+  useEffect(() => {
+    if (!open || focusKey === lastKey.current) return;
+    lastKey.current = focusKey;
+    const el = sheet.current;
+    const first = el?.querySelector<HTMLElement>("[data-first]") || el?.querySelector<HTMLElement>(FOCUSABLE);
+    first?.focus();
+  }, [open, focusKey]);
 
   // Drag down to dismiss (was quest.js, load-time only).
   const y0 = useRef<number | null>(null);
