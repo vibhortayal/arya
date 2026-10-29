@@ -612,7 +612,7 @@ async function mintInto(el) {
 }
 
 document.addEventListener("click", async ev => {
-  const rowEl = ev.target.closest("#profile-token-row, #connect-token-row");
+  const rowEl = ev.target.closest("#profile-token-row");
   if (!rowEl) return;
   const b = ev.target.closest("button");
   if (!b) return;
@@ -1677,28 +1677,9 @@ function enterApp(user, demo) {
   $("#view-login").hidden = true;
   $("#avatar-initial").textContent = (demo ? "demo" : String(user || "A")).charAt(0).toUpperCase();
   $("#demobar").hidden = !demo;
-  if (demo) {
-    $("#chat-demo-note").hidden = false;
-    openShell();
-    return;
-  }
-  const skipKey = "arya-connect-skipped:" + user;
-  let skipped = false;
-  try { skipped = localStorage.getItem(skipKey) === "1"; } catch (e) {}
-  api("/auth/token").then(t => {
-    if (t.has_token || skipped) { openShell(); return; }
-    // Connecting Muse is the first step of a new account.
-    $("#view-connect").hidden = false;
-    paintTokenRow($("#connect-token-row"));
-    const finish = () => {
-      try { localStorage.setItem(skipKey, "1"); } catch (e) {}
-      $("#view-connect").hidden = true; openShell();
-    };
-    const skip = finish;
-    $("#connect-done").onclick = finish;
-    $("#connect-skip").onclick = skip;
-    $("#connect-skip-top").onclick = skip;
-  }).catch(() => openShell());
+  // Every account opens on Today; Muse is linked from Profile.
+  if (demo) $("#chat-demo-note").hidden = false;
+  openShell();
 }
 
 function openShell() {
