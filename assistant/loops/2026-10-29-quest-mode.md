@@ -36,3 +36,14 @@ Next
   helpers removed. Lab has Costco (warehouse) and Patel Brothers (Indian).
 - Tests: every preset solves, nothing overlaps, every item has an open
   spot reachable from the doors, one walk covers every zone with cold last.
+
+## Part 3: Arya files unknown items; substitutes keep their name
+- `POST /api/quest/zones` (`api/questmap.py`): items the game's words do
+  not know go to one Spark structured-output call (Standard, personal)
+  with the store's zones; answers cached per account by graph and item.
+  No key, over budget, a failed call or unknown zone ids: word guesses
+  stand, nothing raises. Not live-tested here (no key in this session).
+- Substitute: the grab keeps "what you took instead" (trip.subs, the
+  session item's `instead`), shown on the finish card as "Swapped".
+- Real trips are calmer: no strolling shoppers outside practice, DPR
+  capped at 1.5.

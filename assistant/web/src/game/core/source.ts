@@ -21,7 +21,7 @@ export interface QuestSource {
   report(r: FieldReport): Promise<void>;
   /* Optional trip hooks for a host that keeps its own records (the
    * Arya app: the hunt session). Practice never calls them. */
-  progress?(e: { kind: "grab" | "ungrab"; item: string }): void;
+  progress?(e: { kind: "grab" | "ungrab"; item: string; instead?: string }): void;
   finish?(e: { got: string[]; points: number }): Promise<void>;
 }
 

@@ -277,9 +277,12 @@ def add_item(session_id, name, qty=1, wild=False):
     return _mutate(session_id, fn)
 
 
-def check_item(session_id, item_name, checked):
+def check_item(session_id, item_name, checked, instead=None):
     """Find the item by display name (or by merge identity) and set its
-    checked flag. Returns the session, or None if no such item."""
+    checked flag. Returns the session, or None if no such item.
+    `instead` names a substitute the shopper took in its place (Quest
+    "Substitute", 2026-10-29): kept on the item so the trip records
+    what was really bought; a put back clears it."""
     key = _item_key(item_name or "")
     norm = state._norm_name(item_name or "")
     found = []
@@ -288,6 +291,11 @@ def check_item(session_id, item_name, checked):
         for it in sess["items"]:
             if it["group"] == key or state._norm_name(it["name"]) == norm:
                 it["checked"] = bool(checked)
+                sub = (instead or "").strip()[:80] if checked else ""
+                if sub:
+                    it["instead"] = sub
+                else:
+                    it.pop("instead", None)
                 found.append(it)
                 return
     sess = _mutate(session_id, fn)
