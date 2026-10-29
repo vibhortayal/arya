@@ -405,14 +405,29 @@ def derived():
             item["checked"] = True
         kept.append(item)
     smart["items"] = kept
+    verdicts = grocery_verdicts()
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
+        # Deterministic and cached only, never a model call here: the
+        # list shows "Not a grocery item? Added anyway" for these.
+        g = classify_grocery(item["name"], verdicts)
+        if g["kind"] == "other":
+            item["not_grocery"] = g["sub"] or "other"
         j = judged.get(item["item_id"])
         if j:
             item["judge_reason"] = j.get("reason", "")
             item["judge_class"] = j.get("class", "")
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
+
+
+def grocery_verdicts():
+    return _load("grocery_verdicts.json", {})
+
+
+def classify_grocery(name, verdicts=None):
+    from api.list.grocery import classify
+    return classify(name, grocery_verdicts() if verdicts is None else verdicts)
 
 
 def judgments():
@@ -590,18 +605,41 @@ def dashboard():
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
     by_month, by_store, by_item = {}, {}, {}
+    nm = names()
+    for r in rs:  # a receipt line not yet in the dictionary still has a name
+        for ln in r["lines"]:
+            if ln.get("line_type") == "discount" or not ln.get("sku"):
+                continue
+            iid = ln.get("item_id") or f"costco-{ln['sku']}"
+            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
+    verdicts = grocery_verdicts()
+    kind_of = {}      # item_id -> "other" sub, or None for groceries
+    for e in entries:
+        iid = e["item_id"]
+        if iid not in kind_of:
+            g = classify_grocery(nm.get(iid, iid), verdicts)
+            kind_of[iid] = (g["sub"] or "other") if g["kind"] == "other" else None
+    other_total, other_by_kind = 0.0, {}
     for e in entries:
         if e["event_type"] != "purchase":
             continue
         by_month[e["date"][:7]] = round(by_month.get(e["date"][:7], 0) + e["price"], 2)
         by_store[e["store_id"]] = round(by_store.get(e["store_id"], 0) + e["price"], 2)
         by_item[e["item_id"]] = round(by_item.get(e["item_id"], 0) + e["price"], 2)
-    nm = names()
+        sub = kind_of[e["item_id"]]
+        if sub:
+            other_total += e["price"]
+            other_by_kind[sub] = round(other_by_kind.get(sub, 0) + e["price"], 2)
     net_by_item = {}
     for e in entries:  # top items are net of returns, matching item pages
         net_by_item[e["item_id"]] = round(net_by_item.get(e["item_id"], 0) + e["price"], 2)
-    top = sorted(((k, v) for k, v in net_by_item.items() if v > 0), key=lambda kv: -kv[1])[:10]
+    # Top items are groceries; the rest is counted under "other", never dropped.
+    top = sorted(((k, v) for k, v in net_by_item.items()
+                  if v > 0 and not kind_of.get(k)), key=lambda kv: -kv[1])[:10]
+    other_total = round(other_total, 2)
     return {"spend_total": spend, "returns_total": returns, "for_others_total": others,
+            "spend_groceries": round(spend - other_total, 2),
+            "spend_other": other_total, "other_by_kind": other_by_kind,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),
             "spend_by_store": by_store,
             "top_items": [{"item_id": k, "name": nm.get(k, k), "spend": v} for k, v in top]}

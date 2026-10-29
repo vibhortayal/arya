@@ -71,7 +71,10 @@ def apply_actions(actions):
                 if target.startswith("manual-"):
                     fl.setdefault("name", name)
                 state.set_flag(target, fl)
-                applied.append(f"Added {name} to your list.")
+                note = ""
+                if state.classify_grocery(name)["kind"] == "other":
+                    note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
+                applied.append(f"Added {name} to your list.{note}")
                 continue
         if not item_id:
             skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")

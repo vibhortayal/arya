@@ -1035,3 +1035,5 @@ input[type=file]::file-selector-button {
 .optrow.kept .opt-from { text-decoration: none; color: var(--label); font-weight: 700; }
 .optrow.kept .opt-to { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--tertiary); font-weight: 600; }
 .opt-undo { background: none; border: 0; padding: 6px 0; min-height: 40px; font: inherit; font-weight: 600; color: var(--accent-text); cursor: pointer; }
+.notgrocery { display: block; }
+.notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
