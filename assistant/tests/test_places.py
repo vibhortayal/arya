@@ -53,6 +53,16 @@ def make_client(case):
 class TestPlacesParsing(unittest.TestCase):
     def test_autocomplete_and_details_shapes(self):
         from api import places
+        bodies = []
+        def capture(*a, **k):
+            bodies.append(k.get("body") or {})
+            return AUTO
+        places._http_json = capture
+        rows = places.autocomplete("trader")
+        types = bodies[0].get("includedPrimaryTypes") or []
+        self.assertIn("grocery_store", types)
+        self.assertIn("supermarket", types)
+        self.assertLessEqual(len(types), 5)
         places._http_json = lambda *a, **k: AUTO
         rows = places.autocomplete("trader")
         self.assertEqual(rows, [{"place_id": "ChIJ-test-place",
