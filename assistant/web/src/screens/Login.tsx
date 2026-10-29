@@ -47,7 +47,7 @@ export function Login() {
         <button id="signin-open" className="landsign" type="button" onClick={() => setSignin(true)}>{t("login.signIn")}</button>
       </header>
       <div className="hero">
-        <h2 className="largetitle herotitle">{t("login.groceries")}{" "}<em>{t("login.sorted")}</em></h2>
+        <h2 className="largetitle herotitle"><Trans i18nKey="login.hero" components={{ em: <em /> }} /></h2>
         <p className="herosub nomargin">{t("login.aryaKeepsYourListKnows")}</p>
         <div className="group peek" aria-label={t("login.whatAryaShowsYou")}>
           <Peek img="milk" name="Whole Milk" sub={t("login.every7DaysLastBought")} tag={t("common.runningLow")} kind="low" />

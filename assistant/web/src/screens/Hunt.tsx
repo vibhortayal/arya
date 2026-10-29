@@ -22,7 +22,7 @@ import { HuntMenu, openItems, type MenuState } from "./hunt/HuntMenu";
 import { ScanView, type Pop } from "./hunt/Scan";
 import { AskSheet } from "./hunt/AskSheet";
 import { useRecord } from "./hunt/useRecord";
-import { t, useTranslation } from "../i18n";
+import { t, Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-hunt and its sheets (Not here, How to
  * play, the hunt menu, Ask Arya, the Shelf Scan) with the hunt half of
@@ -725,7 +725,7 @@ export function Hunt() {
       <div className="popflex"><img className="popface" src={asset("assets/characters/" + faceFor(it.name))} alt="" />
         <div><p className="pop-name">{it.name}{it.unit ? ` · ${qtyTag(it)}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       {stop.shelfLabel ? <p className="pop-shelf">{stop.shelfLabel}</p> : null}
-      {itemHasData(store, it) ? null : <p className="pop-shelf nodata">{t("hunt.aryaHasNoPhotoOf")}{" "}<button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)}>{t("hunt.snapTheAisle")}</button>{" "}{t("hunt.soOtherAryaShoppersCan")}</p>}
+      {itemHasData(store, it) ? null : <p className="pop-shelf nodata"><Trans i18nKey="common.noPhotoNudge" components={{ snap: <button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)} /> }} /></p>}
       {rep ? <p style={{ margin: "6px 0 0" }}><span className="repflag">{t("hunt.youReportedThisMissingHere")}</span></p> : null}
     </>;
     collectLabel = it.unit || it.qty > 1 ? t("hunt.grabQty", { qty: qtyTag(it), name: it.name }) : t("hunt.grabName", { name: it.name });

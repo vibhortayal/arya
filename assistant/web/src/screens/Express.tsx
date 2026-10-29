@@ -15,7 +15,7 @@ import {
 } from "./hunt/model";
 import { leaveItems, restoreItems } from "./hunt/menu";
 import { ScanView } from "./hunt/Scan";
-import { useTranslation } from "../i18n";
+import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-express with quest.js openExpress,
  * renderExpress, qExpPaintHelp, qExpToggle, qExpEnsurePlaying and
@@ -307,7 +307,7 @@ export function Express() {
         <button id="exp-find" className="chip" type="button" onClick={() => findWithCamera()}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>{t("express.findWithCamera")}</button>
       </div>
-      <p id="exp-nodata" className="expnodata" hidden={next < 0 || hasData}>{t("express.aryaHasNoPhotoOf")}{" "}<button id="exp-snap" className="linkbtn snapaisle" type="button" onClick={snapAisle}>{t("express.snapTheAisle")}</button>{" "}{t("express.soOtherAryaShoppersCan")}</p>
+      <p id="exp-nodata" className="expnodata" hidden={next < 0 || hasData}><Trans i18nKey="common.noPhotoNudge" components={{ snap: <button id="exp-snap" className="linkbtn snapaisle" type="button" onClick={snapAisle} /> }} /></p>
       <div id="exp-photo" hidden={!sceneOn}>
         {sceneOn && (
           <SceneView id="exp-mount" className="storeview mini" driver={photos ? "photo" : "strip"} photos={photos} model={null}

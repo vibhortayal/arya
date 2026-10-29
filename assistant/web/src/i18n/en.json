@@ -134,7 +134,8 @@
     "demoBar": "Demo household · resets when you leave",
     "backPlain": "Back",
     "notHereShort": "Not here",
-    "addedToList": "Added to your list."
+    "addedToList": "Added to your list.",
+    "noPhotoNudge": "Arya has no photo of this aisle yet. Found it? <snap>Snap the aisle</snap> so other Arya Shoppers can find it too."
   },
   "about": {
     "builtBy": "Built by",
@@ -280,9 +281,6 @@
   "express": {
     "reportedMissingAtThisStore": "Reported missing at this store.",
     "findWithCamera": "Find with camera",
-    "aryaHasNoPhotoOf": "Arya has no photo of this aisle yet. Found it?",
-    "soOtherAryaShoppersCan": "so other Arya Shoppers can find it too.",
-    "snapTheAisle": "Snap the aisle",
     "inWalkingOrderTapA": "In walking order. Tap a row to check it off.",
     "theListIsEmpty": "The list is empty.",
     "moreHelp": "More help",
@@ -386,9 +384,6 @@
   "hunt": {
     "thatHuntIsGoneThe": "That hunt is gone — the demo resets now and then. Go back to Today and start it again.",
     "bossItemReportedMissingOn": "Boss item: {{name}}. Reported missing on {{reports}} earlier trips. Find it for +{{boss}}.",
-    "aryaHasNoPhotoOf": "Arya has no photo of this aisle yet. Found it?",
-    "soOtherAryaShoppersCan": "so other Arya Shoppers can find it too.",
-    "snapTheAisle": "Snap the aisle",
     "youReportedThisMissingHere": "You reported this missing here.",
     "boss": "Boss",
     "justAdded": "Just added",
@@ -769,8 +764,6 @@
   },
   "login": {
     "signIn": "Sign in",
-    "groceries": "Groceries,",
-    "sorted": "sorted.",
     "aryaKeepsYourListKnows": "Arya keeps your list, knows what’s running low, and tells you what’s up at your store before you go.",
     "whatAryaShowsYou": "What Arya shows you",
     "every7DaysLastBought": "Every ~7 days, last bought 10 days ago",
@@ -803,7 +796,8 @@
     "googleFailed": "Google sign-in did not finish. Try again.",
     "wentWrong": "Something went wrong.",
     "emailedCode": "We emailed you a code. Enter it here.",
-    "emailMeCode": "Email me a code"
+    "emailMeCode": "Email me a code",
+    "hero": "Groceries, <em>sorted.</em>"
   },
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.",
