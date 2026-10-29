@@ -171,6 +171,7 @@
       <div id="rc-photo-preview"></div>
     </div>
     <h3 class="sect">Archive</h3>
+    <div id="rc-who" class="segs" role="group" aria-label="Whose receipts" hidden></div>
     <div id="rc-archive" class="group"></div>
   </section>
 
@@ -231,6 +232,7 @@
       <p id="av-status" class="muted nomargin" style="text-align:center"></p>
       <p class="nomargin" style="text-align:center;margin-top:10px"><button class="btn compact" id="av-edit-label" type="button">Edit avatar</button></p>
     </div>
+    <div id="pf-group" hidden></div>
     <div id="pf-missing" class="group"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
@@ -269,6 +271,21 @@
       </div>
     </div>
     <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
+  </section>
+
+  <!-- Join a group (owner, 2026-10-29): from "Join with a code" in
+       Profile or an invite link (/?join=CODE). Nothing moves until Join. -->
+  <section id="view-group-join" class="view" hidden>
+    <p><a href="#" id="gj-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Join a group</h2>
+    <div class="group pad">
+      <label class="field">Invite code
+        <input type="text" id="gj-code" class="gjcode" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7Q 4MX">
+      </label>
+    </div>
+    <div id="gj-preview"></div>
+    <p style="margin-top:16px"><button class="btn primary wide" id="gj-go" type="button" disabled>Join</button></p>
+    <p class="muted small" style="text-align:center">You can leave any time from Profile.</p>
   </section>
 
   <section id="view-quest-progress" class="view" hidden>
@@ -819,6 +836,7 @@
 <script src="share.js"></script>
 <script src="haul.js"></script>
 <script src="expiry.js"></script>
+<script src="group.js"></script>
 <script src="push.js"></script>
 <script src="powers.js"></script>
 </body>

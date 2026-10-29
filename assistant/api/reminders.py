@@ -193,14 +193,15 @@ def run_all(today=None, sender=None):
         names = list(auth.users())
     finally:
         state._current_user.reset(root)
+    from api import groups
     for u in names:
-        tok = state._current_user.set(u)
+        # In a group, "running low" reads the group's list and every
+        # member's receipts; the phone and the settings stay personal.
         try:
-            total += run_for_current_user(today, sender)
+            with state.as_user(u, groups.group_id_for(u)):
+                total += run_for_current_user(today, sender)
         except Exception as e:  # noqa: BLE001 - one account never stops the rest
             print(f"reminders: {u}: {type(e).__name__}")
-        finally:
-            state._current_user.reset(tok)
     return total
 
 

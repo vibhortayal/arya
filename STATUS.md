@@ -17,7 +17,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
-Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
+Service worker cache: arya-v83. Suite: 1,151 tests, all green, 2 skipped.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -58,6 +58,11 @@ Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
+- **Groups** (share lists and receipts with your home): `ARYA_GROUPS=1`.
+  Profile > Group: start, invite by a 6-letter code (48 h), join, leave.
+  Lists and product knowledge live in the group; receipts stay with whoever
+  filed them and every member sees them. Leaving copies the lists.
+  `2026-10-29-groups.md`.
 - **Postgres storage:** `ARYA_STORE=json|dual|pg` (`api/pgstore.py`).
 - Every setting the app reads now reaches the container through
   `assistant/deploy/docker-compose.yml` (PR #106). Set them in
