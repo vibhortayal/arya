@@ -13,10 +13,11 @@ import {
 import type { QuestItem } from "../core/types";
 import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
-import { charArt } from "../assets";
+import { charArt, img } from "../assets";
 import { GhostHand, KindBadge, MiniMap, Sheet } from "./bits";
 import { StoreMap, type MapHandle } from "./StoreMap";
 import { coachFor } from "./coach";
+import { AisleScene } from "./AisleScene";
 
 type Props = { trip: Trip; source: QuestSource; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void };
 type SheetName = null | "list" | "route" | "cant" | "help" | "quit";
@@ -180,7 +181,8 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         {view === "section" && section && (
           <motion.section key={"s-" + section.id} className={"qg-secview v-" + view_} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ type: "spring", damping: 24, stiffness: 300 }}>
             <div className="qg-scene" style={{ ["--tint" as string]: "#" + section.color.toString(16).padStart(6, "0") }}>
-              <div className="qg-shelves" aria-hidden="true"><i /><i /><i /></div>
+              <AisleScene kind={section.kind} seed={section.id} name={section.short} tint={section.color} look={view_} />
+              <SceneArt id={section.id} />
               <div className="qg-scene-h">
                 <h2>{section.name}</h2>
                 <span className={"qg-tag " + view_}>{view_ === "real" ? "Mapped" : view_ === "fog" ? "Fog" : "Simulated"}</span>
@@ -466,4 +468,13 @@ function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
       </motion.div>
     </motion.div>
   );
+}
+
+/* Painted scene art for a section, when the app has it (generated
+ * once, see tools/gen_quest_scenes.py). Without it the drawn aisle
+ * underneath shows through. */
+function SceneArt({ id }: { id: string }) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return null;
+  return <img className="qg-scene-art" src={img(`quest/${id}.webp`)} alt="" onError={() => setOk(false)} />;
 }
