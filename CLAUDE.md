@@ -29,9 +29,7 @@ If a guideline conflicts with these, these win:
 - **UI changes: wireframe first.** Show a phone-size mockup built from the
   real app CSS and wait for the owner's approval before writing UI code.
 - **PRs:** base every PR on `main`; no stacked PRs.
-- **Tests:** CI is manual-only; never add a `pull_request` trigger. Run tests
-  locally where the change touches logic (docs-only changes need none).
+- **Tests:** CI is manual-only; never add a `pull_request` trigger.
 - **Cost:** $0 per call for math, patterns, and list logic (see
   `assistant/docs/MODEL-POLICY.md`).
 - **Scope:** grocery only.
-- The hard rules in `AGENTS.md` stay in force.
