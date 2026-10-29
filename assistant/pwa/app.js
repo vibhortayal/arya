@@ -15,12 +15,30 @@ function fmtShort(iso) {
   // The year shows when it is not this year: an archive spans years.
   return y && y !== new Date().getFullYear() ? `${MONTHS[m - 1]} ${d}, ${y}` : `${MONTHS[m - 1]} ${d}`;
 }
+/* The account's currency (Profile > Account): the symbol prices show
+ * with. Display only: amounts are never converted. USD until the
+ * settings load. */
+let CURRENCY = { code: "USD", symbol: "$" };
+const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£", INR: "₹", CAD: "C$", AUD: "A$" };
 function money(n) {
-  return "$" + Math.abs(n).toFixed(2);
+  return CURRENCY.symbol + Math.abs(n).toFixed(2);
+}
+async function loadCurrency() {
+  try {
+    const s = await api("/api/settings");
+    CURRENCY = { code: s.currency, symbol: s.symbol };
+  } catch (e) { /* keep the default */ }
 }
 function qtyFmt(q) {
   const n = Number(q);
   return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+}
+/* The amount of a row as people say it: "x2", or "2 kg" when the row
+ * carries a free-text unit. "" for a plain single. */
+function qtyTag(it) {
+  const unit = String((it && it.unit) || "").trim();
+  if (unit) return `${qtyFmt(it.qty)} ${unit}`;
+  return it && it.qty > 1 ? `x${qtyFmt(it.qty)}` : "";
 }
 async function api(path, opts) {
   let r;
@@ -110,7 +128,7 @@ function listRow(i, tags, fileable) {
     <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}${fileable ? `<button class="storetag filetag" type="button" data-list-act="file" data-id="${esc(i.item_id)}">File under ›</button>` : ""}
     ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
     ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}</div>
-    <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${qtyFmt(i.qty)}. Tap to change.">× ${qtyFmt(i.qty)}</button>
+    <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>
   </div>`;
 }
 
@@ -424,23 +442,36 @@ $("#smart-list").addEventListener("click", async ev => {
 /* Tap the amount to change it: the button swaps for a number
  * field; Enter or leaving the field saves. */
 function editQty(btn, id, item) {
+  const wrap = document.createElement("span");
+  wrap.className = "qtyedit";
   const inp = document.createElement("input");
   inp.type = "number"; inp.min = "1"; inp.step = "1"; inp.inputMode = "numeric";
   inp.className = "qtyinput"; inp.value = item ? Number(item.qty) || 1 : 1;
   inp.setAttribute("aria-label", "Quantity");
-  btn.replaceWith(inp);
+  // The unit is free text ("kg", "L", "bunch"): no list, no conversion.
+  const unit = document.createElement("input");
+  unit.type = "text"; unit.maxLength = 16; unit.autocomplete = "off";
+  unit.className = "qtyinput qtyunit"; unit.placeholder = "unit";
+  unit.value = (item && item.unit) || "";
+  unit.setAttribute("aria-label", "Unit, for example kg or L");
+  wrap.append(inp, unit);
+  btn.replaceWith(wrap);
   inp.focus(); inp.select();
   let done = false;
   const commit = async () => {
     if (done) return; done = true;
     const q = Math.max(1, Math.round(Number(inp.value) || 1));
-    try { if (!item || q !== Number(item.qty)) await post("/api/list/qty", { item_id: id, qty: q }); }
+    const u = unit.value.trim();
+    try {
+      if (!item || q !== Number(item.qty) || u !== (item.unit || "")) await post("/api/list/qty", { item_id: id, qty: q, unit: u });
+    }
     catch (e) { toast(e.message); }
     renderList().catch(showErr);
   };
-  inp.addEventListener("blur", commit);
-  inp.addEventListener("keydown", ev => {
-    if (ev.key === "Enter") { ev.preventDefault(); inp.blur(); }
+  // Leaving both fields saves; tabbing from the number to the unit does not.
+  wrap.addEventListener("focusout", ev => { if (!wrap.contains(ev.relatedTarget)) commit(); });
+  wrap.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") { ev.preventDefault(); commit(); }
     if (ev.key === "Escape") { done = true; renderList().catch(showErr); }
   });
 }
@@ -529,7 +560,7 @@ function paintCart(h) {
   $("#cart").innerHTML =
     row(`${esc(c.store)} · ${c.items.length} item${c.items.length === 1 ? "" : "s"}`, c.state === "approved" ? "Approved" : "Waiting for your approval",
         c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`) +
-    c.items.map(i => `<div class="row"><div class="grow"><span>${esc(i.name)}</span></div><div class="money">× ${qtyFmt(i.qty)}</div></div>`).join("") +
+    c.items.map(i => `<div class="row"><div class="grow"><span>${esc(i.name)}</span></div><div class="money">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</div></div>`).join("") +
     `<p class="muted">Approving does not place an order. The cart is a list you take to the store.</p>`;
   const b = $("#btn-approve");
   if (b) b.addEventListener("click", async () => {
@@ -616,7 +647,18 @@ document.addEventListener("click", async ev => {
  * There is no second, brain-only profile. The app is light theme
  * only (owner 2026-10-27) — there is no theme switch. */
 async function renderProfile() {
-  $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")));
+  await loadCurrency();
+  $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")))
+    + `<div class="row"><div class="grow"><span class="name">Currency</span><span class="sub">How prices show. Arya does not convert.</span></div>
+      <select id="pf-currency" class="curpick" aria-label="Currency">${["USD", "EUR", "GBP", "INR", "CAD", "AUD"].map(c =>
+        `<option value="${c}"${c === CURRENCY.code ? " selected" : ""}>${esc(CURRENCY_SYMBOLS[c])} ${c}</option>`).join("")}</select></div>`;
+  $("#pf-currency").addEventListener("change", async ev => {
+    try {
+      const s = await post("/api/settings", { currency: ev.target.value });
+      CURRENCY = { code: s.currency, symbol: s.symbol };
+      toast(`Prices now show in ${s.currency}.`);
+    } catch (e) { toast(e.message); ev.target.value = CURRENCY.code; }
+  });
   paintTokenRow($("#profile-token-row"));
   const [profile, archive] = await Promise.all([
     api("/api/quest/profile").catch(() => null),
@@ -1654,6 +1696,7 @@ function openShell() {
   $("#tabs").hidden = false;
   $("#avatar-btn").hidden = false;
   loadAvatar();
+  loadCurrency();
   show("view-home");
   refresh("view-home");
 }

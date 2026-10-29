@@ -581,6 +581,7 @@ function renderPlan() {
     if (typeof PACK !== "undefined" && PACK.holds(key)) continue;
     if (!(key in pick)) {
       pick[key] = { name: li.name, qty: li.qty || 1, on: b.bucket !== "elsewhere" };
+      if (li.unit) pick[key].unit = li.unit;
       if (li.added_by) { pick[key].src = "added"; pick[key].by = li.added_by; }
       else pick[key].src = li.source === "pattern" ? "due" : "list";
     }
@@ -1451,12 +1452,11 @@ function qHuntListHtml(sess) {
     const lead = it.checked
       ? `<span class="hunt-lead got" aria-hidden="true">${QTICK_SVG}</span>`
       : `<button type="button" class="morebtn" data-more="${i}" aria-label="More for ${esc(it.name)}">${QDOTS_SVG}</button>`;
-    const qty = qtyFmt(it.qty);
     const act = it.checked
       ? `<button type="button" class="btn rowact putback" data-putback="${i}"${live || sess.state === "paused" ? "" : " disabled"}>Put back</button>`
       : rep
         ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
-        : `<button type="button" class="btn primary rowact${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"}>${it.qty > 1 ? `Grab x${qty}` : "Grab"}</button>`;
+        : `<button type="button" class="btn primary rowact${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"}>${qtyTag(it) ? `Grab ${esc(qtyTag(it))}` : "Grab"}</button>`;
     const badges = [bossGroup && it.group === bossGroup ? `<span class="hunt-badge boss">Boss</span>` : "",
                     it.added_mid_hunt ? `<span class="hunt-badge">Just added</span>` : ""].filter(Boolean).join("");
     const note = qNoteOf(it);
@@ -1467,7 +1467,7 @@ function qHuntListHtml(sess) {
     return `<div class="row huntrow${it.checked ? " got" : ""}${rep ? " reported" : ""}${i === cur ? " next" : ""}">
       ${lead}
       <img class="rowface" src="assets/characters/${qFaceFor(it.name)}" alt="" loading="lazy">
-      <div class="grow"><span class="name">${esc(it.name)}${it.qty > 1 ? ` - x${qty}` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
+      <div class="grow"><span class="name">${esc(it.name)}${qtyTag(it) ? ` - ${esc(qtyTag(it))}` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
       ${note ? `<span class="sub hunt-note">${esc(note)}</span>` : ""}
       ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}${find}</div>
       ${act}
@@ -1489,7 +1489,7 @@ function qExpListHtml(sess) {
       <span class="grow"><span class="name">${esc(it.name)}</span>
       ${s.shelfLabel ? `<span class="sub">${esc(s.shelfLabel)}</span>` : ""}
       ${s.flagged ? `<span class="repflag">Reported missing at this store.</span>` : ""}</span>
-      <span class="money">× ${qtyFmt(it.qty)}</span>
+      <span class="money">${it.unit ? esc(qtyTag(it)) : "× " + qtyFmt(it.qty)}</span>
     </button>`;
   }).join("") || empty("The list is empty.");
 }
@@ -2064,10 +2064,10 @@ function renderHunt() {
     const stop = qStops(sess)[next];
     const rep = Q.storeReports.find(r => (r.item_group && r.item_group === it.group) || qnorm(r.item) === qnorm(it.name));
     $("#pop-kicker").textContent = sess.state === "paused" ? "Paused" : "Suggested next — grab any stop";
-    $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
+    $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.unit ? ` · ${esc(qtyTag(it))}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
       ${rep ? `<p style="margin:6px 0 0"><span class="repflag">You reported this missing here.</span></p>` : ""}`;
-    btn.textContent = it.qty > 1 ? `Grab x${qtyFmt(it.qty)} - ${it.name}` : `Grab · ${it.name}`;
+    btn.textContent = it.unit || it.qty > 1 ? `Grab ${qtyTag(it)} - ${it.name}` : `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
     $("#btn-findit").hidden = sess.state !== "playing";
     try { qPaintFresh(sess.store, it.name); } catch (e) {}

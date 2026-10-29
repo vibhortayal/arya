@@ -109,7 +109,7 @@ class PackBase(unittest.TestCase):
 class TestItemMeta(unittest.TestCase):
     def test_clean_and_cap(self):
         from api.itemmeta import clean_extras, EXTRA_KEYS
-        self.assertEqual(EXTRA_KEYS, ("note", "variant", "by", "src", "aisle"))
+        self.assertEqual(EXTRA_KEYS, ("note", "variant", "by", "src", "aisle", "unit"))
         out = clean_extras({"note": "  12 ct  ", "variant": "x" * 90, "by": "M" * 40,
                             "aisle": "", "src": "typed", "checked": True, "qty": 3})
         self.assertEqual(out["note"], "12 ct")

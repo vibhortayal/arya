@@ -245,6 +245,7 @@ Object.defineProperty(globalThis, "navigator", { configurable: true, writable: t
 globalThis.$ = s => document.querySelector(s);
 globalThis.esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 globalThis.qtyFmt = q => { const n = Number(q); return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); };
+globalThis.qtyTag = it => { const u = String((it && it.unit) || "").trim(); return u ? qtyFmt(it.qty) + " " + u : (it && it.qty > 1 ? "x" + qtyFmt(it.qty) : ""); };
 globalThis.CHECK_SVG = "<svg></svg>";
 globalThis.empty = t => `<p class="empty">${t}</p>`;
 globalThis.row = () => "";

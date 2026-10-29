@@ -330,6 +330,7 @@ const PACK = (() => {
     const aisle = clip(p.aisle, 60) || aisleFor(p.name);
     if (clip(p.note, 60)) out.note = clip(p.note, 60);
     if (clip(p.variant, 60)) out.variant = clip(p.variant, 60);
+    if (clip(p.unit, 16)) out.unit = clip(p.unit, 16);
     if (clip(p.by, 24)) out.by = clip(p.by, 24);
     out.src = p.src || "list";
     if (aisle) out.aisle = aisle;
@@ -340,7 +341,7 @@ const PACK = (() => {
     const out = { name: i.name, qty: i.qty };
     if (i.group) out.group = i.group;
     const e = extras || {};
-    for (const k of ["note", "variant", "by", "src", "aisle"]) {
+    for (const k of ["note", "variant", "by", "src", "aisle", "unit"]) {
       const v = i[k] || e[k];
       if (v) out[k] = v;
     }
@@ -352,7 +353,7 @@ const PACK = (() => {
     const hit = (raw || []).find(r => norm(r.name) === n);
     if (!hit) return {};
     const out = {};
-    for (const k of ["note", "variant", "by", "src", "aisle"]) if (hit[k]) out[k] = hit[k];
+    for (const k of ["note", "variant", "by", "src", "aisle", "unit"]) if (hit[k]) out[k] = hit[k];
     return out;
   }
 

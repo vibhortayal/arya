@@ -748,7 +748,7 @@ SceneDrivers.strip = function (el) {
         <span class="strip-num">${i + 1}</span>
         <span class="strip-name">${esc(s.name)}</span>
         ${s.shelfLabel ? `<span class="strip-shelf">${esc(s.shelfLabel)}</span>` : s.unplaced ? `<span class="strip-shelf">Not placed on the map</span>` : ""}
-        <span class="strip-sub">${s.checked ? "Collected" : i === nextIdx ? "Next" : s.qty > 1 ? `× ${qtyFmt(s.qty)}` : "On the list"}</span>
+        <span class="strip-sub">${s.checked ? "Collected" : i === nextIdx ? "Next" : s.unit ? esc(qtyTag(s)) : s.qty > 1 ? `× ${qtyFmt(s.qty)}` : "On the list"}</span>
         ${s.flagged ? `<span class="strip-flag" title="Reported missing">!</span>` : ""}
       </button>`).join("");
     track.querySelectorAll(".strip-card").forEach(c =>

@@ -426,6 +426,8 @@ def derived():
             continue  # removed for this cycle; returns when a new receipt lands
         if f.get("qty_override"):
             item["qty"] = f["qty_override"]
+        if f.get("unit"):
+            item["unit"] = f["unit"]
         if f.get("added_by") and f.get("manual"):
             item["added_by"] = f["added_by"]
             if f.get("approved"):
