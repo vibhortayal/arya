@@ -8,7 +8,7 @@ import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { asset, qtyFmt, qtyTag } from "../lib/format";
 import { faceFor, useCharacters } from "../lib/characters";
-import { storeModel, storePhotos } from "../lib/stores";
+import { itemHasData, storeModel, storePhotos, useStoreData } from "../lib/stores";
 import {
   Q, QMODE_LABEL, QPTS, QFRESH, errMsg, qAgo, freshKey, qCheck, qClock, qCurrentIndex, qFlushOutbox, qHandled, qHaulPoints,
   qHuntUiLoad, qHuntUiSave, qIsReportedByMe, qLoadSessions, qLoadStoreReports, qNextIndex, qNoteOf, qOfflineText,
@@ -133,6 +133,7 @@ const SPOT_KINDS: [string, string][] = [
 
 export function Hunt() {
   const nav = useNav();
+  useStoreData();
   const { demo } = useSession();
   const { toast, showErr, hide: hideToast } = useToast();
   useCharacters();
@@ -678,6 +679,16 @@ export function Hunt() {
     );
   }
 
+  /* Snap the aisle (owner, 2026-10-29): the capture this item's aisle
+   * needs, on the guided capture screen (pwa/storedata.js snapAisle). */
+  const snapAisle = async (name: string) => {
+    try {
+      const out = await get(`/api/storemap/next?store=${encodeURIComponent(store)}&item=${encodeURIComponent(name)}`);
+      const prompt = out && out.prompt;
+      if (prompt) nav.show("capture", { prompt, store, from: "hunt" });
+    } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+  };
+
   /* ---- paint ---- */
   const p = qProgress(sess);
   const hd = qHandled(sess);
@@ -710,7 +721,8 @@ export function Hunt() {
     popBody = <>
       <div className="popflex"><img className="popface" src={asset("assets/characters/" + faceFor(it.name))} alt="" />
         <div><p className="pop-name">{it.name}{it.unit ? ` · ${qtyTag(it)}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
-      {stop.shelfLabel ? <p className="pop-shelf">{stop.shelfLabel}</p> : stop.unplaced ? <p className="pop-shelf">Not placed on the map</p> : null}
+      {stop.shelfLabel ? <p className="pop-shelf">{stop.shelfLabel}</p> : null}
+      {itemHasData(store, it) ? null : <p className="pop-shelf nodata">Arya has no photo of this aisle yet. Found it? <button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)}>Snap the aisle</button> so other Arya Shoppers can find it too.</p>}
       {rep ? <p style={{ margin: "6px 0 0" }}><span className="repflag">You reported this missing here.</span></p> : null}
     </>;
     collectLabel = it.unit || it.qty > 1 ? `Grab ${qtyTag(it)} - ${it.name}` : `Grab · ${it.name}`;

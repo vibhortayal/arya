@@ -12,7 +12,7 @@ import { get, post } from "../lib/api";
  * Teach Arya your store screen is underneath). */
 
 type Prompt = {
-  kind?: string; segment?: string; teach?: boolean; est_seconds?: number;
+  kind?: string; segment?: string; teach?: boolean; est_seconds?: number; media?: string; item?: string;
   title: string; why?: string; steps?: string[]; parts?: string[]; splittable?: boolean;
 };
 type Seg = { id: string; label: string };
@@ -117,6 +117,8 @@ export function Capture() {
   const [parts, setParts] = useState({ n: 0, on: 0 });
   const [goLabel, setGoLabel] = useState("Open camera");
   const [goDisabled, setGoDisabled] = useState(false);
+  // Snap the aisle (owner, 2026-10-29): a photo or a short video.
+  const [videoOpt, setVideoOpt] = useState(false);
   const [controls, setControls] = useState(true);
   const [result, setResult] = useState<Result | null>(null);
   const [barW, setBarW] = useState<number | null>(null);
@@ -155,6 +157,7 @@ export function Capture() {
     epoch.current++;
     setPrompt(p); P.current = p;
     setGoLabel("Open camera"); setGoDisabled(false);
+    setVideoOpt(p.media === "both");
     setCamOn(false); setControls(true); setResult(null); setAfter(null); setBarW(null);
     setParts({ n: 0, on: 0 }); setHint({ text: "", good: false });
     if (photoRef.current) photoRef.current.value = "";
@@ -183,7 +186,8 @@ export function Capture() {
 
   const mapperAfter = async () => {
     const v = await loadView(S.current).catch(() => V.current);
-    setAfter(v && v.next ? "Teach one more · about 20 s" : "Back to the map");
+    // Snapped from a shopping trip: the way on is back to the trip.
+    setAfter(P.current.item ? "Back to shopping" : v && v.next ? "Teach one more · about 20 s" : "Back to the map");
   };
 
   /* Upload, then celebrate. A failure never asks for a retake. */
@@ -213,7 +217,7 @@ export function Capture() {
 
   /* Send the walk's frames to the teach reader, then show the confirm
    * card: sections found, each removable with one tap. */
-  const teachSend = async (blobs: Blob[]) => {
+  const teachSend = async (blobs: Blob[], kind = "walk") => {
     busy.current = true;
     const ep = epoch.current;
     setControls(false); setCamOn(false);
@@ -222,7 +226,8 @@ export function Capture() {
     let pts = 0, newTitle: string | null = null;
     for (const blob of blobs) {
       try {
-        const out = await postBlob(`/api/storemap/teach?store=${encodeURIComponent(S.current)}&kind=walk`, blob);
+        const item = P.current.item || "";
+        const out = await postBlob(`/api/storemap/teach?store=${encodeURIComponent(S.current)}&kind=${kind}` + (item ? `&item=${encodeURIComponent(item)}` : ""), blob);
         const cur = found.get(out.segment) || { label: out.label, segment: out.segment, created: out.created, fresh: false };
         if (out.reward) {
           pts += out.reward.points;
@@ -312,6 +317,7 @@ export function Capture() {
         setHint({ text: "Got it ✓", good: true });
         const blob = await camBlob(best.c);
         camStop();
+        if (P.current.teach) { await teachSend([blob], "photo"); return; }
         await send([{ blob, segment: P.current.segment }], "photo");
       }
     }, CAM_TICK_MS);
@@ -342,15 +348,16 @@ export function Capture() {
     }, CAM_TICK_MS * 2);
   };
 
-  const go = async () => {
+  const go = async (asVideo = false) => {
     if (busy.current) return;
     if (walk.current) { finishWalk(); return; }      // the button is "Done" mid-walk
-    const isWalk = P.current.kind === "walk";
+    const isWalk = asVideo || P.current.kind === "walk";
     if (!(await camStart())) {
       // No live camera: fall back to the system camera. No retakes.
       (isWalk ? videoInRef : photoRef).current?.click();
       return;
     }
+    setVideoOpt(false);
     if (isWalk) camWalk(); else camPhoto();
   };
 
@@ -378,6 +385,7 @@ export function Capture() {
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f || busy.current) return;
+    if (P.current.teach) { await teachSend([f], "photo"); return; }
     await send([{ blob: f, segment: P.current.segment }], "photo");
   };
   const onVideo = async (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -392,6 +400,7 @@ export function Capture() {
   };
 
   const next = () => {
+    if (P.current.item) { nav.back(); return; }
     const n = V.current?.next;
     if (n) { openCapture(n); return; }
     // Back to the map: the mapper under us if it opened this screen,
@@ -431,7 +440,8 @@ export function Capture() {
         <p className="muted nomargin" id="cp-time">{`About ${prompt.est_seconds || 10} seconds.`}</p>
       </div>
       <p id="cp-controls" hidden={!controls}>
-        <button className="btn primary wide" id="cp-go" type="button" disabled={goDisabled} onClick={go}>{goLabel}</button>
+        <button className="btn primary wide" id="cp-go" type="button" disabled={goDisabled} onClick={() => go()}>{goLabel}</button>
+        <button className="btn wide" id="cp-govideo" type="button" hidden={!videoOpt} onClick={() => go(true)}>Record a short video</button>
         <input type="file" id="cp-photo" ref={photoRef} accept="image/*" capture="environment" hidden onChange={onPhoto} />
         <input type="file" id="cp-video" ref={videoInRef} accept="video/*" capture="environment" hidden onChange={onVideo} />
       </p>

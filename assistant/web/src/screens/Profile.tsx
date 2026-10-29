@@ -104,7 +104,7 @@ export function Profile() {
   return (
     <>
       {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}>‹ Back</a></p>}
-      <h2 className="largetitle">Profile</h2>
+      <h2 className="largetitle">Settings</h2>
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
       <GroupSection />
       <div id="pf-missing" className="group" hidden={!unsettled.length}>
@@ -128,7 +128,7 @@ export function Profile() {
         <A2hsRow demo={demo} />
       </div>
       <Reminders />
-      <h3 className="sect">Settings</h3>
+      <h3 className="sect">Account</h3>
       <div className="group" id="profile-account">
         <Row name="Signed in as" right={demo ? "demo" : user || ""} />
         <div className="row"><div className="grow"><span className="name">Currency</span><span className="sub">How prices show. Arya does not convert.</span></div>

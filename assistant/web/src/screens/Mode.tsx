@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { post } from "../lib/api";
-import { storePhotos } from "../lib/stores";
+import { loadStoreData, storeHasPictures, storePhotos, useStoreData } from "../lib/stores";
 import { packFinish, type NewListDraft } from "./NewList";
 
 /* Port of pwa/index.html #view-mode and quest.js qCreateSession / the
@@ -23,12 +23,19 @@ export function Mode() {
   const D = nav.params.draft as NewListDraft | undefined;
   const [busy, setBusy] = useState(false);
   const fast = useRef(false);
+  useStoreData();
+  // A store with no aisle pictures shows Express only (quest.js qShowModes).
+  const noQuest = !!(D && D.store) && !storeHasPictures(D.store);
 
   const create = async (mode: string) => {
     if (!D || D.creating) return;
     D.creating = true;
     setBusy(true);
     try {
+      // Quest needs aisle photos (owner, 2026-10-29): a store Arya has
+      // no pictures of runs as Express, from every way in.
+      await loadStoreData();
+      if (mode === "quest" && !storeHasPictures(D.store)) mode = "express";
       const sess = await post("/api/quest/sessions", {
         store: D.store, mode, items: D.finalItems,
         store_id: D.storeId || undefined,
@@ -65,7 +72,7 @@ export function Mode() {
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>How are you shopping?</h2>
       <div>
-        <button className="modecard" data-mode="quest" type="button" disabled={busy} onClick={() => create("quest")}><span className="name">Quest</span><span className="sub">Play the hunt: characters, points and badges. Arya helps you find each item.</span></button>
+        <button className="modecard" data-mode="quest" type="button" hidden={noQuest} disabled={busy} onClick={() => create("quest")}><span className="name">Quest</span><span className="sub">Play the hunt: characters, points and badges. Arya helps you find each item.</span></button>
         <button className="modecard" data-mode="express" type="button" disabled={busy} onClick={() => create("express")}><span className="name">Express</span><span className="sub">Same help from Arya, no game: show me the aisle, find it with the camera, report a problem. No characters, points or badges.</span></button>
       </div>
       <p className="muted">Both end the same way: add your receipt and share your haul. Either one can pause, and trips switch from the rail while you play.</p>

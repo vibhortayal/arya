@@ -162,4 +162,4 @@ class TestPlanAHunt(unittest.TestCase):
         js = read("quest.js")
         opt = js.split("async function qOptimizeDraft()")[1].split("\n}")[0]
         self.assertIn("!rep.merged.length && !rep.corrected.length && !rep.questions.length", opt)
-        self.assertIn('questShow("view-mode")', opt)
+        self.assertIn('qShowModes()', opt)

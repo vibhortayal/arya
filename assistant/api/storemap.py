@@ -212,6 +212,50 @@ def _save_map(doc):
     _root_save(MAP_FILE, data)
 
 
+# --- which stores have pictures ------------------------------------------
+# A store "has pictures" when Arya can show a shopper a real aisle:
+# a shipped photo walk (or 3D model) inside the PWA, or at least one
+# shopper capture kept on the shared map. Quest needs pictures; a
+# store without them offers Express only (owner, 2026-10-29).
+
+_PWA_DIR = os.path.join(os.path.dirname(__file__), "..", "pwa")
+BUILTIN_STORES = (
+    {"store": "Trader Joe's",
+     "photos": "models/trader-joes/frames-web",
+     "model": "models/trader-joes/manifest.json"},
+)
+
+
+def stores_with_pictures():
+    """Every store Arya holds pictures for, as
+    [{store, key, photos, model, has_pictures}]. photos and model are
+    PWA paths (the photo walk frames, the 3D manifest) or None. A
+    store known only from captures has has_pictures True and no
+    photos/model: its pictures live on the map, not in the PWA."""
+    out = {}
+    for b in BUILTIN_STORES:
+        photos = b["photos"] if os.path.isdir(
+            os.path.join(_PWA_DIR, b["photos"])) else None
+        model = b["model"] if os.path.isfile(
+            os.path.join(_PWA_DIR, b["model"])) else None
+        key = store_key(b["store"])
+        out[key] = {"store": b["store"], "key": key, "photos": photos,
+                    "model": model, "has_pictures": bool(photos or model)}
+    blobs = _image_blobs()
+    for key, doc in _all().items():
+        have = blobs.get(key) or {}
+        kept = any(c.get("id") in have
+                   for seg in (doc.get("segments") or {}).values()
+                   for c in seg.get("captures") or [])
+        if key in out:
+            out[key]["has_pictures"] = out[key]["has_pictures"] or kept
+            continue
+        if kept:
+            out[key] = {"store": doc.get("store") or key, "key": key,
+                        "photos": None, "model": None, "has_pictures": True}
+    return sorted(out.values(), key=lambda r: r["store"].lower())
+
+
 # --- adding aisles --------------------------------------------------------
 
 def add_segment(name, label, side):
@@ -668,6 +712,35 @@ def next_prompt(name, focus=None, seg_id=None, hint_items=None):
         prompt["splittable"] = len(peers) == 1 and not peers[0].get("parent")
     return prompt
 
+
+
+def snap_prompt(name, item):
+    """"Snap the aisle" from an item Arya has no photo for. When the
+    map knows the section the item was seen in, ask for a photo of
+    that section. Otherwise ask for a photo or a short video of the
+    aisle the shopper stands in: the teach reader names the section,
+    and the item is noted there (no typing, no aisle to pick)."""
+    doc = load_map(name)
+    group = state._norm_name(item or "")
+    seen = [(s["items"][group], s) for s in doc["segments"].values()
+            if group and group in s["items"]]
+    if seen:
+        seg = max(seen, key=lambda t: (t[0], t[1]["id"]))[1]
+        st = segment_status(seg)
+        prompt = _prompt_for(seg, "refresh" if st == "mapped" else st)
+        prompt["item"] = item
+        return prompt
+    what = (item or "").strip() or "this item"
+    return {
+        "kind": "photo", "segment": "", "teach": True, "media": "both",
+        "item": (item or "").strip(), "est_seconds": 10,
+        "title": f"Snap the aisle with {what}",
+        "why": "Arya has no photo of this aisle yet. One photo or a short "
+               "video teaches it, so other Arya Shoppers can find it too.",
+        "steps": ["Stand back so that the shelf is in the frame, top to bottom.",
+                  "Take one photo. Or record a short video as you walk the aisle.",
+                  "Arya reads the shelf and names the aisle. You type nothing.",
+                  "Shoppers in view are fine. We blur people before we save anything."]}
 
 
 # --- rewards: small, kind, never a penalty ---------------------------------

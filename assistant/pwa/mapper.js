@@ -167,6 +167,8 @@ function openCapture(prompt) {
   $("#cp-time").textContent = `About ${prompt.est_seconds || 10} seconds.`;
   $("#cp-go").textContent = "Open camera";
   $("#cp-go").disabled = false;
+  // Snap the aisle (owner, 2026-10-29): a photo or a short video.
+  $("#cp-govideo").hidden = prompt.media !== "both";
   $("#cp-howto").hidden = false;
   $("#cp-cam").hidden = true;
   $("#cp-controls").hidden = false;
@@ -307,18 +309,21 @@ function camStop() {
   const v = $("#cp-live"); if (v) v.srcObject = null;
 }
 
-$("#cp-go").addEventListener("click", async () => {
+$("#cp-go").addEventListener("click", () => mapperGo(M.prompt.kind === "walk"));
+/* Snap the aisle offers both: the video button walks the aisle. */
+$("#cp-govideo").addEventListener("click", () => mapperGo(true));
+async function mapperGo(walk) {
   if (M.busy) return;
   if (CAM.walk) { camFinishWalk(); return; }      // the button is "Done" mid-walk
-  const walk = M.prompt.kind === "walk";
   if (!(await camStart())) {
     // No live camera (old browser, permission denied): fall back to
     // the system camera. Still no retakes: we use what comes back.
     $(walk ? "#cp-video" : "#cp-photo").click();
     return;
   }
+  $("#cp-govideo").hidden = true;
   if (walk) camWalk(); else camPhoto();
-});
+}
 
 /* PHOTO: watch, hint, and snap the best frame once it has been
  * steady for a moment (or after a few seconds, whatever we have). */
@@ -344,6 +349,7 @@ function camPhoto() {
       hint.textContent = "Got it ✓"; hint.classList.add("good");
       const blob = await camBlob(best.c);
       camStop();
+      if (M.prompt.teach) { await mapperTeachSend([blob], "photo"); return; }
       await mapperSend([{ blob, segment: M.prompt.segment }], "photo");
     }
   }, CAM_TICK_MS);
@@ -401,8 +407,9 @@ function teachPicks(frames) {
   return out;
 }
 
-async function mapperTeachUpload(blob) {
-  const q = `store=${encodeURIComponent(M.store)}&kind=walk`;
+async function mapperTeachUpload(blob, kind) {
+  const item = (M.prompt && M.prompt.item) || "";
+  const q = `store=${encodeURIComponent(M.store)}&kind=${kind || "walk"}` + (item ? `&item=${encodeURIComponent(item)}` : "");
   const r = await fetch(`/api/storemap/teach?${q}`, {
     method: "POST", headers: { "Content-Type": blob.type || "image/jpeg" }, body: blob });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
@@ -413,7 +420,7 @@ async function mapperTeachUpload(blob) {
  * confirm card: the sections Arya found, each removable with one
  * tap while it is still only the teacher's. Unreadable frames are
  * skipped quietly — a walk never fails over one bad frame. */
-async function mapperTeachSend(blobs) {
+async function mapperTeachSend(blobs, kind) {
   M.busy = true;
   $("#cp-controls").hidden = true;
   $("#cp-cam").hidden = true;
@@ -422,7 +429,7 @@ async function mapperTeachSend(blobs) {
   let pts = 0, newTitle = null;
   for (const blob of blobs) {
     try {
-      const out = await mapperTeachUpload(blob);
+      const out = await mapperTeachUpload(blob, kind);
       const cur = found.get(out.segment) || { label: out.label, segment: out.segment, created: out.created, fresh: false };
       if (out.reward) {
         pts += out.reward.points;
@@ -539,13 +546,16 @@ function mapperRewardHtml(won, last) {
 async function mapperAfter() {
   M.view = await api(`/api/storemap?store=${encodeURIComponent(M.store)}`);
   $("#cp-after").hidden = false;
-  $("#cp-next").textContent = M.view.next ? "Teach one more · about 20 s" : "Back to the map";
+  // Snapped from a shopping trip: the way on is back to the trip.
+  $("#cp-next").textContent = M.prompt && M.prompt.item ? "Back to shopping"
+    : M.view.next ? "Teach one more · about 20 s" : "Back to the map";
 }
 
 /* Fallbacks when the live camera is not available. Same rules. */
 $("#cp-photo").addEventListener("change", async ev => {
   const f = ev.target.files[0];
   if (!f || M.busy) return;
+  if (M.prompt.teach) { await mapperTeachSend([f], "photo"); return; }
   await mapperSend([{ blob: f, segment: M.prompt.segment }], "photo");
 });
 function mapperSeek(video, t) {
@@ -579,6 +589,7 @@ $("#cp-video").addEventListener("change", async ev => {
 });
 
 $("#cp-next").addEventListener("click", () => {
+  if (M.prompt && M.prompt.item) { questBack(); return; }
   if (M.view && M.view.next) openCapture(M.view.next);
   else questGo("view-mapper");
 });

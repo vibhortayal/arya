@@ -55,10 +55,23 @@ async def storemap_set_focus(req: Request):
     return {"focus": storemap.set_focus(name, [str(i) for i in ids])}
 
 
+@router.get("/api/storemap/stores")
+def storemap_stores():
+    """The stores Arya holds pictures for (a photo walk, a 3D model,
+    or captured aisle photos on the shared map). Quest needs them;
+    the app reads this once instead of a hard-coded table."""
+    from api import storemap
+    return {"stores": storemap.stores_with_pictures()}
+
+
 @router.get("/api/storemap/next")
-def storemap_next(store: str = "", segment: str = "", items: str = ""):
+def storemap_next(store: str = "", segment: str = "", items: str = "",
+                  item: str = ""):
     from api import storemap
     name = _map_store(store)
+    if item.strip() and not segment:
+        # "Snap the aisle" from an item with no photo: always a prompt.
+        return {"prompt": storemap.snap_prompt(name, item.strip()[:80])}
     prompt = storemap.next_prompt(
         name, focus=storemap.get_focus(name), seg_id=segment or None,
         hint_items=[i for i in items.split(",") if i.strip()][:30])
@@ -176,6 +189,8 @@ async def storemap_teach(req: Request):
         raise HTTPException(413, "photo too large (12 MB max)")
     name = _map_store(req.query_params.get("store"))
     kind = req.query_params.get("kind", "walk")
+    # "Snap the aisle" names the item the shopper just found here.
+    item = (req.query_params.get("item") or "").strip()[:80]
     if kind not in storemap.KINDS:
         raise HTTPException(400, "kind must be photo or walk")
     try:
@@ -220,7 +235,9 @@ async def storemap_teach(req: Request):
                               shelf_fill=fill, people=people)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    for item in read["items"]:
+    for seen in read["items"]:
+        storemap.note_sighting(name, seen, read["label"])
+    if item:
         storemap.note_sighting(name, item, read["label"])
     out.update({"label": seg["label"], "created": created,
                 "items": read["items"]})
