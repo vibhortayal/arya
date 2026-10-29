@@ -4,8 +4,8 @@
  * - Lists come from the plan (GET /api/quest/plan + /api/lists): the
  *   unchecked list, as a whole ("Everything") and per named list.
  * - A store's look comes from its shared map (GET /api/storemap):
- *   sections seen by shoppers are real, the rest fog; a store nobody
- *   mapped is a labelled simulated store. Never a guess passed as fact.
+ *   only sections Arya has located count (coverageOf below); the rest
+ *   are fog or a labelled guess. Never a guess passed as fact.
  * - A real trip is a hunt session (POST /api/quest/sessions), so
  *   grabs check items off, "not here" files the existing shortage
  *   report, and the receipt step settles it like any hunt.
@@ -27,7 +27,7 @@ import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/
 type PlanRow = { name: string; qty?: number; list?: string | null };
 type NamedList = { id: string; name: string };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
-type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale" };
+type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
 type SessItem = { name: string; shelf_label?: string | null };
 export type Session = { id: string; store: string; state: string; items: SessItem[]; mode: string };
 
@@ -35,30 +35,53 @@ const BASE = ["produce", "bakery", "deli", "meat", "dairy", "frozen"];
 
 /* Which template section a store-map label means: "Aisle 3", "Produce
  * wall", "Frozen", "Pasta & Rice". Unknown labels map to nothing. */
+const LABEL_WORDS: [RegExp, string][] = [
+  [/peanut butter|almond butter/, "aisle3"],
+  [/frozen|ice cream/, "frozen"],
+  [/fish|seafood|butcher|meat/, "meat"],
+  [/bread|bake/, "bakery"],
+  [/milk|egg|cheese|yogurt|butter|dairy/, "dairy"],
+  [/dip|hummus|deli|prepared/, "deli"],
+  [/personal care|soap|shampoo|paper|household|clean|detergent|tissue/, "aisle4"],
+  [/canned|condiment|sauce|dressing|oil|vinegar|pasta|rice|olive|soup|spice/, "aisle2"],
+  [/peanut butter|jam|cereal|nut|dried fruit|coffee|tea|honey/, "aisle3"],
+  [/snack|chip|cookie|cracker|drink|soda|juice|water|candy/, "aisle1"],
+  [/produce|fruit|veg|salad|greens/, "produce"],
+];
 export function sectionOfLabel(label: string): string | null {
   const l = label.toLowerCase();
   const n = l.match(/aisle\s*(\d+)/);
   if (n) { const k = +n[1]; return k >= 1 && k <= 4 ? `aisle${k}` : null; }
+  for (const [re, id] of LABEL_WORDS) if (re.test(l)) return id;
   for (const id of BASE) if (l.includes(id)) return id;
-  if (/fish|seafood|butcher/.test(l)) return "meat";
-  if (/bread|bake/.test(l)) return "bakery";
-  if (/fruit|veg/.test(l)) return "produce";
-  if (/milk|egg|cheese|yogurt/.test(l)) return "dairy";
-  const s = sectionFor(l);
-  return s !== "aisle1" || /snack|drink|chip|soda|juice|water|cookie|cracker/.test(l) ? s : null;
+  return null;
 }
 
-/* What the shared map says about a store: sections shoppers have seen
- * (mapped or aging; stale ones went back to fog). */
-export function mappedSections(segs: MapSeg[]): string[] {
+/* How much of a store Arya has really located (owner, 2026-10-29:
+ * "mapped" is earned, never granted by an upload). A segment counts
+ * only when the server says it is located: a usable, non-stale
+ * picture of it (a shopper's capture that was not weak, or a frame of
+ * a shipped walk). Located segments are read as store sections, and:
+ *   mapped     8 or more of the 10 sections located
+ *   part mapped 3 to 7 located (the rest is fog until someone sees it)
+ *   simulated  fewer than 3: one video or a few photos do not make a
+ *              map; the store plays as a labelled guess. */
+export const MAPPED_AT = 8, PART_AT = 3;
+export function coverageOf(segs: MapSeg[]): { kind: MapKind; seen: string[] } {
   const out = new Set<string>();
-  for (const s of segs) if (s.status === "mapped" || s.status === "aging") { const id = sectionOfLabel(s.label); if (id) out.add(id); }
-  return [...out];
+  for (const s of segs) {
+    const ok = s.located ?? ((s.status === "mapped" || s.status === "aging") && !!s.has_photo);
+    const id = ok ? sectionOfLabel(s.label) : null;
+    if (id) out.add(id);
+  }
+  const seen = [...out];
+  const kind: MapKind = seen.length >= MAPPED_AT ? "mapped" : seen.length >= PART_AT ? "partial" : "simulated";
+  return { kind, seen };
 }
 
-export function kindFor(mapped: string[], need: string[]): MapKind {
-  if (!mapped.length) return "simulated";
-  return need.every(id => mapped.includes(id)) ? "mapped" : "partial";
+/* What the shared map says about a store: the sections located. */
+export function mappedSections(segs: MapSeg[]): string[] {
+  return coverageOf(segs).seen;
 }
 
 /* "Rice & Olives Shelf" -> "Near the Rice & Olives shelf" (never "Shelf shelf"). */
@@ -68,7 +91,7 @@ const area = (s: StoreRow) => [s.street, s.city].filter(Boolean).join(" · ") ||
 
 export class AppSource implements QuestSource {
   private stores = new Map<string, StoreRow>();
-  private seen = new Map<string, string[]>();
+  private seen = new Map<string, { kind: MapKind; seen: string[] }>();
   private sess: Session | null = null;
   private saved: SavedMap[] | null = null;
 
@@ -91,12 +114,12 @@ export class AppSource implements QuestSource {
     return out;
   }
 
-  private async mapOf(name: string): Promise<string[]> {
+  private async mapOf(name: string): Promise<{ kind: MapKind; seen: string[] }> {
     const hit = this.seen.get(name); if (hit) return hit;
     const m = await get<{ segments: MapSeg[] }>(`/api/storemap?store=${encodeURIComponent(name)}`).catch(() => ({ segments: [] as MapSeg[] }));
-    const ids = mappedSections(m.segments || []);
-    this.seen.set(name, ids);
-    return ids;
+    const cov = coverageOf(m.segments || []);
+    this.seen.set(name, cov);
+    return cov;
   }
 
   private async summaries(rows: StoreRow[]): Promise<StoreSummary[]> {
@@ -104,9 +127,9 @@ export class AppSource implements QuestSource {
     const mine = await this.maps().catch(() => [] as SavedMap[]);
     return Promise.all(rows.map(async r => {
       if (mine.some(m => m.key === `store:${r.id}`)) return { id: r.id, name: r.name, area: area(r), kind: "mapped" as MapKind, seen: "Your map" };
-      const ids = await this.mapOf(r.name);
-      const kind = kindFor(ids, SECTIONS.map(s => s.id));
-      const seen = ids.length ? `${ids.length} of ${SECTIONS.length} sections seen by shoppers` : "Nobody has mapped it yet";
+      const { kind, seen: ids } = await this.mapOf(r.name);
+      const n = ids.length, of = SECTIONS.length;
+      const seen = kind !== "simulated" ? `${n} of ${of} sections located` : n ? "Not enough of it located yet" : "Nobody has mapped it yet";
       return { id: r.id, name: r.name, area: area(r), kind, seen };
     }));
   }
@@ -144,12 +167,12 @@ export class AppSource implements QuestSource {
     void post(`/api/quest/sessions/${this.sess.id}/state`, { state: "playing" }).catch(() => {});
     const shelf = new Map(this.sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
     const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name, own) }));
-    const ids = own ? own.zones.map(z => z.id) : await this.mapOf(name);
-    const kind = own ? "mapped" : kindFor(ids, [...new Set(base.map(b => b.section))]);
+    const cov = own ? { kind: "mapped" as MapKind, seen: own.zones.map(z => z.id) } : await this.mapOf(name);
+    const ids = cov.kind === "simulated" ? [] : cov.seen, kind = cov.kind;
     const items: QuestItem[] = base.map(b => {
       const label = shelf.get(b.name.toLowerCase());
       // A shelf the store's walk matched is a real hint, only where the section is real.
-      return label && kind !== "simulated" && (kind === "mapped" || ids.includes(b.section)) ? { ...b, spot: { hint: shelfHint(label) } } : b;
+      return label && ids.includes(b.section) ? { ...b, spot: { hint: shelfHint(label) } } : b;
     });
     const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : st ? area(st) : "", kind, items, mapped: ids, graph: own });
     return { layout, items };

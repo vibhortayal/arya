@@ -29,17 +29,19 @@ export function buildLayout(o: { id: string; name: string; area: string; kind: M
   const need = new Set(o.items.map(i => i.section));
   // Centre aisles the list does not need stay as bare racks; wall sections always show.
   const sections = P.sections.filter(s => o.all || s.kind !== "aisle" || s.band !== "centre" || need.has(s.id));
-  const mapped = o.kind === "mapped" ? sections.map(s => s.id)
-    : o.kind === "partial" ? (o.mapped || []).filter(id => sections.some(s => s.id === id))
+  // A mapped store is real where it was located; a section nobody located is a labelled guess, not fog.
+  const mapped = o.kind === "mapped" && !o.mapped ? sections.map(s => s.id)
+    : o.kind !== "simulated" ? (o.mapped || []).filter(id => sections.some(s => s.id === id))
       : [];
   return { id: o.id, name: o.name, area: o.area, kind: o.kind, sections, mapped, entry: P.entry, checkout: P.checkout, shoppers: o.shoppers, plan: { w: P.w, h: P.h }, racks: P.racks, ...(o.graph?.look ? { look: o.graph.look } : {}) };
 }
 
 /* What a section looks like to the player: real, fog (partly mapped,
- * not seen yet) or a labelled guess (simulated or practice). A fog
+ * not seen yet) or a labelled guess (simulated or practice, or the odd
+ * section of a mapped store nobody has located). A fog
  * section the player has scouted this trip counts as real. */
 export type SectionView = "real" | "fog" | "guess";
 export function viewOf(layout: StoreLayout, sectionId: string, scouted: ReadonlySet<string> = new Set()): SectionView {
   if (layout.mapped.includes(sectionId) || scouted.has(sectionId)) return "real";
-  return layout.kind === "partial" ? "fog" : layout.kind === "mapped" ? "real" : "guess";
+  return layout.kind === "partial" ? "fog" : "guess";
 }

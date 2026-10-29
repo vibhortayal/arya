@@ -86,12 +86,15 @@ class TestEngine(unittest.TestCase):
         self.assertTrue(weak["weak"])
         self.assertIn("blurry", weak["hint"])
         self.assertEqual(weak["status"], "aging")      # partial, ask later
+        # A weak shot never counts toward the store being mapped.
+        self.assertFalse(self.sm.view("Corner Store")["segments"][0]["located"])
         ok = self.sm.ingest("Corner Store", sid, jpeg(1))
         self.assertTrue(ok["accepted"])
         self.assertTrue(ok["best"])
         self.assertEqual(ok["status"], "mapped")
         v = self.sm.view("Corner Store")
         self.assertEqual((v["total"], v["coverage_pct"]), (1, 100))
+        self.assertTrue(v["segments"][0]["located"])
         self.assertIsNotNone(self.sm.best_image("Corner Store", sid))
 
     def test_duplicates_are_dropped_and_only_the_best_few_kept(self):
@@ -210,6 +213,27 @@ class TestEngine(unittest.TestCase):
         self.assertEqual(v["counts"]["aging"], v["total"])
         self.assertTrue(any(s["has_photo"] for s in v["segments"]))
         self.assertIsNotNone(v["next"])
+
+    def test_walkthrough_frames_follow_the_path_not_the_frame_number(self):
+        # 2026-10-29: the shipped frames are a thinned copy of the walk,
+        # so the stop's path fraction picks the file (as the photo
+        # driver does). The frame number left half the stops with no
+        # picture and the rest with the wrong one.
+        segs = self.sm.load_map("Trader Joe's")["segments"]
+        self.assertEqual(segs["frozen-pizza:both"]["baseline"]["frame"], "f080.jpg")   # first seen at u 0.8894
+        self.assertEqual(segs["canned-goods:both"]["baseline"]["frame"], "f029.jpg")   # u 0.3196
+        v = self.sm.view("Trader Joe's")
+        self.assertTrue(all(s["located"] for s in v["segments"]))
+
+    def test_a_saved_map_takes_the_corrected_walk_frame(self):
+        doc = self.sm.load_map("Trader Joe's")
+        doc["segments"]["frozen-pizza:both"]["baseline"]["frame"] = None
+        self.sm._save_map(doc)
+        self.assertEqual(self.sm.load_map("Trader Joe's")["segments"]["frozen-pizza:both"]["baseline"]["frame"], "f080.jpg")
+
+    def test_a_label_with_no_picture_is_not_located(self):
+        self.sm.add_segment("Corner Store", "Aisle 4", "left")
+        self.assertFalse(self.sm.view("Corner Store")["segments"][0]["located"])
 
 
 class FakeClient:
