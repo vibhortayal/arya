@@ -6,12 +6,11 @@ export default async function (page, base) {
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");
-  // Empty every list the demo has, then open Quest.
+  // Empty the list the game reads (the demo household suggests items too).
   await page.evaluate(async () => {
-    const lists = await (await fetch("/api/lists")).json();
-    for (const l of (lists.lists || lists))
-      for (const it of l.items || [])
-        await fetch("/api/list/remove", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: it.item_id || it.id }) });
+    const plan = await (await fetch("/api/quest/plan")).json();
+    for (const it of plan.list || [])
+      await fetch("/api/list/remove", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: it.item_id }) });
   });
   await page.evaluate(() => window.__aryaShow("community"));
   await page.waitForSelector("#view-community .qg-home");
