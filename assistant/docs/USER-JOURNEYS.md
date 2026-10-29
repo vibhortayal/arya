@@ -126,37 +126,27 @@ ago. That is 3 days past your usual." Price lines follow in Journey 4.
 
 ---
 
-## Journey 3. In the store: Express or Quest
+## Journey 3. In the store with Quest
 
-**Person.** Priya, Saturday at Costco, then Trader Joe's.
+**Person.** Priya, Saturday at Trader Joe's.
 
-**Goal.** Get everything on the list fast, without walking back.
+**Goal.** Get everything on the list without walking back.
 
-**Status.** Shipped. Quest and Express need no model. "Find with
-camera" and the Where am I? check need a model.
-
-| Step | What Priya does | What Arya shows |
-|---|---|---|
-| 1 | Opens the Costco list. Taps **Start shopping · 2 items**. | One sheet, "Shop Costco · 2 items", with **Quest** and **Express**. If the list has suggestions, one line offers to add them. |
-| 2 | Taps **Express**. | A plain checklist in walking order: Paper Towels 6 ct, Jasmine Rice 10 lb. No points, no badges, no 3D. |
-| 3 | Taps the first row. | Three buttons: **Show me** (a photo of the shelf), **Not here?** (warns the next shopper), **Find with camera**. |
-| 4 | Checks off each item, taps **Finish**. | The list updates. She can add a receipt photo. |
-
-![Start shopping sheet](img/j-shop-sheet.png)
-![Express checklist](img/j-express.png)
-
-**At Trader Joe's she picks Quest instead.**
+**Status.** Shipped. A quest needs no model. "Find it for me" needs one.
+Express, the plain-checklist mode, no longer has an entry point; its
+screen stays only for runs started before it was removed.
 
 | Step | What Priya does | What Arya shows |
 |---|---|---|
-| 1 | Opens Trader Joe's. Taps **Start shopping**, then **Quest**. | A first-time how-to: Find it, Grab it, Snap the receipt. |
-| 2 | Taps **Got it**. | "Trader Joe's · Quest", points counter, "0 of 3". The store's labelled layout (photos once shoppers map it). A card says "Pasta 1 lb x2, Pasta Shelf". |
+| 1 | Opens the Trader Joe's list. Taps **Start shopping · 3 items**. | A first-time how-to: Find it, Grab it, Snap the receipt. A list with no items sends her to Add items instead. |
+| 2 | Taps **Got it**. | "Trader Joe's · Quest", a points counter, "0 of 3". The store's layout is labelled as a typical layout until shoppers map it. A card says "Pasta 1 lb x2, Pasta Shelf". |
 | 3 | Taps **Grab**. | +10 points. She can put an item back. |
-| 4 | An item is not on the shelf. She taps **Not here?** and confirms. | The crew sees a store alert. |
-| 5 | Taps **I'm done shopping**, then photographs the receipt. | +50 points. The receipt is filed with the same checks as Journey 1. |
+| 4 | An item is not on the shelf. She taps **Not here?** and confirms. | The report shows as a store alert for other shoppers. |
+| 5 | Taps **Find it for me** and aims the camera at a shelf. | SAM 3.1 boxes candidates, Muse Spark checks each one, and the match lights up for one tap. |
+| 6 | Taps **I'm done shopping**, then photographs the receipt. | +50 points. The receipt is filed with the same checks as Journey 1. |
 
-**Rules.** No clock. No lives. No way to lose. Quest is optional, and
-Express gives the same help as a clean list.
+**Rules.** No clock. No lives. No way to lose. Quest is optional; the
+list works without it.
 
 **Sample data.** "Trader Joe's · Quest", 3 items on the card: Avocados 4
 ct, Pasta 1 lb x2, Hummus.
@@ -195,7 +185,7 @@ at" line, because there is no better store in the data.
 
 ![Why sheet with price lines](img/j-why.png)
 
-**Analysis, "Your prices"** (Settings, **Analysis**)
+**Spending, "Your prices over time"** (the Spending page, called Analysis before the labels audit)
 
 | Card | What it says |
 |---|---|
@@ -359,13 +349,13 @@ an **Add to Home Screen** row while installing is possible.
 | Receipts (photo, PDF, many files), duplicate guard, returns netted | Shipped |
 | Running low, why sheet, patterns | Shipped |
 | Named lists, smart add, swipe to Move, Select | Shipped |
-| Start shopping sheet, Express, Quest | Shipped |
+| Start shopping, Quest | Shipped |
 | Prices from own receipts (store compare, trend, similar items, Your prices) | Shipped |
-| Groups with live sync and Leave | Shipped, on by default, needs deploy |
+| Groups with live sync and Leave | Shipped, on by default |
 | Expiry dates, Use soon, Still good? | Shipped |
 | Ask Arya (list, aisle) | Shipped, needs a model |
 | Push reminders | Shipped, flag `ARYA_PUSH_REMINDERS` (off) |
 | Add to Home Screen | Shipped |
 | Supabase sign-in | Shipped, flag `ARYA_SUPABASE_AUTH` (off) |
 | Community prices, Deals, Arya Shoppers | Planned (opt-in choice saved, nothing built) |
-| React app (`web/`) at `/` | Shipped, needs deploy (`/next/...` answers 302 to `/...`) |
+| React app (`web/`) at `/` | Shipped (`/next/...` answers 302 to `/...`) |

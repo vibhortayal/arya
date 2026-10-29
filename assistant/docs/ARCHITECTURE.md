@@ -69,7 +69,7 @@ for the PWA. Routes live in `api/routes/`, one router per area:
 | `home`, `chat` | the Today payload, Ask Arya and its apply step |
 | `prices` | own-receipt prices, Analysis insights, Arya's powers |
 | `groups` | shared home: create, invite, join, leave, live stream |
-| `quest`, `receipts`, `shelf`, `storemap`, `stores`, `avatar`, `friends` | hunts, receipts with originals, shelf scan and "Where am I?", Map my store, store directory, avatar, friends |
+| `quest`, `receipts`, `shelf`, `storemap`, `stores`, `avatar`, `friends` | hunts, receipts with originals, shelf scan, Map my store, store directory, avatar, friends |
 | `mcp_connector` | `/api/mcp`, the tool surface for a Muse agent |
 
 Older siblings stay beside the package: `album_routes`, `hunt_routes`,
@@ -180,10 +180,13 @@ handle the nightly backup. CI is manual only
 | `ARYA_REGISTRATION_OPEN` | `0` | open password sign-up |
 | `ARYA_PHOTO_READER` | `wonder` | receipt photo reader; `spark` from Nov 4 |
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
-| `ARYA_DEMO_DAILY_BUDGET_USD` | `2` (compose: `20`) | demo household's day bucket |
+| `ARYA_DEMO_DAILY_BUDGET_USD` | `20` (code default `2`) | demo household's day bucket |
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
+| `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
+| `ARYA_OWNER_USERNAME` | empty | the account that can flip registration in Settings |
+| `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |
 | `MODEL_API_KEY`, `BASETEN_API_KEY`, `ARYA_OPEN_MODEL`, `GOOGLE_PLACES_API_KEY` | empty | model keys and the store picker |
 
 ### 0.12 Cost guards
@@ -358,13 +361,13 @@ Each agent has a narrow job and a named limit.
 - Every model call is written to a cost ledger. The app's daily
   ceiling (`ARYA_DAILY_BUDGET_USD`, $10) stops app model spend; the
   demo household spends from a separate bucket
-  (`ARYA_DEMO_DAILY_BUDGET_USD`, $2/day) and each demo visit from its
+  (`ARYA_DEMO_DAILY_BUDGET_USD`, $20/day in compose) and each demo visit from its
   own share (`ARYA_DEMO_SESSION_BUDGET_USD`, $0.40), so demo use cannot
   drain the app. Every live door, batch judge run and hunt creation
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,
-  never a 500 (`meta_client.parse_json`). Per-user spend caps are required before public registration
-  opens; they are not yet built.
+  never a 500 (`meta_client.parse_json`). There is no per-user spend cap;
+  the owner decided on 2026-10-29 to go without one for now.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -380,10 +383,10 @@ Each agent has a narrow job and a named limit.
   variables it lists, so every setting the app reads is listed in
   `docker-compose.yml`; `tests/test_compose_env.py` fails if one is
   missing. `.env.example` names them.
-- The test suite runs before every commit. A GitHub Actions workflow
+- The full test suite runs before a PR merges. A GitHub Actions workflow
   (`.github/workflows/tests.yml`) runs it on demand only, not on
-  every PR (owner's choice). Small commits to main, named by
-  stage; a session log goes to loops/ and STATUS.md is updated.
+  every PR (owner's choice). Nothing is committed to `main` directly;
+  a session log goes to `loops/` and `STATUS.md` is updated.
 
 ### 11.1 Logs and backups (VM runbook)
 
@@ -418,10 +421,10 @@ memory. The store directory (`stores.json`) is platform-level.
 
 ## 13. Not built / held
 
-- Per-user spend caps (§10) — required before registration opens.
-- Public registration — closed. The plan: open after the hackathon,
-  once per-user spend caps exist (§10). Intake is not Muse-only:
-  every door runs on Meta models — Muse in chat, Spark on the Meta
-  API in the app.
+- Per-user spend caps (§10). Not built; the owner decided to go without
+  one for now.
+- Public registration is closed by default (`ARYA_REGISTRATION_OPEN`). The
+  owner can open it in Settings. Every door runs on Meta models: Muse in
+  chat, Spark on the Meta API in the app.
 - Forgot-password — not built. Once switched on, email code sign-in
   (§8) lets a person in without a password.

@@ -177,7 +177,7 @@ WalkthroughGrade { walkthrough_id, recency_days, clarity,
 | 0.5 Spikes | Gate 0 photo decode PASS (93.85% combined, arithmetic 7/7). Costco pull: plan B (uploads and exports). |
 | 1 Decode API | Done. Dictionary v1: 458 entries. |
 | 2 Patterns, list | Done. Returns netted; list needs 3 kept purchases. The prepared cart was removed in PR #105. |
-| 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar, Express mode (#107). Demo household is a per-visitor sandbox. |
+| 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar. Express mode (#107) lost its entry points when Quest mode landed (#172). Demo household is a per-visitor sandbox. |
 | 4 Ask | Done. Ask Arya answers about Arya and about prices. Fridge/pantry photos were never shipped; expiry-date photos (#96) replace them. |
 | 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
 | 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video and package pending. |

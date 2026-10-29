@@ -6,8 +6,12 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
-
-- **Labels audit (2026-10-29, branch feat/labels-audit, not merged):** one word per idea across the app (quest, trip, Arya shoppers, friends, username, map this store, Spending, To check, points), plural and currency fixes, glyphs out of strings; Race, sample boards, sample crew hauls, Deals/Arya Shoppers tips and "Coming soon" rungs hidden (keys kept, `web/src/lib/flags.ts`). `assistant/loops/2026-10-29-labels-audit.md`.
+- **Labels audit (merged, #197):** one word per idea across the app (quest,
+  trip, Arya shoppers, friends, username, map this store, Spending, To
+  check, points), plural and currency fixes, glyphs out of strings. Race,
+  sample boards, sample crew hauls, Deals and Arya shoppers tips, and
+  "Coming soon" rungs are hidden; their keys stay (`web/src/lib/flags.ts`).
+  `assistant/loops/2026-10-29-labels-audit.md`.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account
@@ -32,8 +36,9 @@ headline: "Groceries, sorted." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
-bumped by hand. Tests: Python suite 1,195 (2 skipped; 3 test_decode errors
-only in the sandbox), vitest 159, e2e 34 screens (run 2026-10-29). All
+bumped by hand. Tests: Python suite 1,235 (1 skipped; run 2026-10-29 on
+main at #198), vitest 159 and e2e 34 screens (last run 2026-10-29, before
+#191 to #198). All
 UI text lives in `web/src/i18n/en.json` (i18next; English only for now).
 Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
 section 0. `assistant/loops/2026-10-29-react-at-root.md`.
@@ -46,9 +51,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   the list of their usual store, with a reason and a "why" sheet. Swipe
   to Move or Remove, Select to move many, a pencil renames a list.
   Prepared cart is gone. A "Start shopping · N items" bar on an open
-  list leads to the Quest or Express choice. `2026-10-29-list-overhaul.md`,
+  list opens a quest on that list. `2026-10-29-list-overhaul.md`,
   `2026-10-29-named-lists.md`, `2026-10-29-start-shopping.md`.
-  Adaptive layout (#156, branch feat/adaptive-layout, not merged): large cards for 1-3 lists, tiles for 4-11, search + Recent + A to Z rows for 12+, a Cards | List switch; Today caps sections. `2026-10-29-adaptive-layout.md`.
+  Adaptive layout (merged, #191): large cards for 1 to 3 lists, tiles for 4
+  to 11, search, Recent and A to Z rows for 12 or more, and a Cards | List
+  switch. Today caps its sections. `2026-10-29-adaptive-layout.md`.
 - **Adding:** one row (field, mic, camera). Adds apply at once with Undo;
   riskier changes (out, never, snooze) ask first. A typed name links to
   the tracked item ("milk" finds "Whole Milk", "mlik" fixes itself).
@@ -101,7 +108,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   else", and the store pick leads with it under Your stores.
   `2026-10-29-quest-list-store.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
-  visitor does reaches disk. Ships Costco and Trader Joe's lists.
+  visitor does reaches disk. It has a Costco list and a Trader Joe's list
+  (store names only; no Trader Joe's map data ships).
+- **Demo Town (merged, #182; `ARYA_DEMO_TOWN=1`, off by default):** the demo
+  household shops at invented stores in a simulated neighborhood. The app
+  labels everything simulated. `assistant/docs/DEMO-TOWN.md`.
 - **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,
   a Start-shopping sheet into a hunt, tap-to-grab hunt rows, Today lists first.
   Add to Home Screen: one dismissible card on Today, a row in Settings; iPhone
@@ -111,10 +122,16 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Accounts:** password accounts; registration is closed unless
   `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
   Muse step). Account names are letters, digits and `. _ % + - @` only.
-- **First run (#153, #163; branch `feat/first-run`, not merged):** a new account gets a welcome sheet, a 5-step tour, a Get started card on Today and one first-list card on Lists; accounts with data and the demo never see them. `assistant/loops/2026-10-29-first-run.md`.
-- **Arya guide (#154; branch `feat/arya-guide`, not merged):** an 8-card swipeable guide with Try-it sheets on client-side sample data (nothing saved or sent), opened from Settings > Arya guide, Powers > See how it works, and the last first-run tour step; never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
+- **First run (merged, #180):** a new account gets a welcome sheet, a
+  5-step tour, a Get started card on Today and one first-list card on Lists.
+  Accounts with data, and the demo, never see them.
+  `assistant/loops/2026-10-29-first-run.md`.
+- **Arya guide (merged, #187):** an 8-card swipeable guide with Try-it sheets
+  on client-side sample data (nothing saved or sent). It opens from
+  Settings > Arya guide, Powers > See how it works, and the last first-run
+  tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
 
-## Built but switched off (flags)
+## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
@@ -129,6 +146,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   when another member changes a list (SSE `/api/group/live`; Postgres
   LISTEN/NOTIFY when `DATABASE_URL` is set, else in-process).
 - **Postgres storage:** `ARYA_STORE=json|dual|pg` (`api/pgstore.py`).
+- **Log caps and backups (#196):** compose caps each container log at 5 files
+  of 10 MB. `deploy/backup.sh` backs up the data volume nightly; the VM
+  runbook is `assistant/docs/ARCHITECTURE.md` section 11.1.
 - Every setting the app reads now reaches the container through
   `assistant/deploy/docker-compose.yml` (PR #106). Set them in
   `deploy/.env` and rebuild.
@@ -158,7 +178,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).
-- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; owner turns it on and reruns the demo household.
+- Deploy what is merged (owner steps above), including the Demo Town switch
+  if wanted.
 - Owner phone pass on the list-first build after deploy.
 
 ## Known gaps

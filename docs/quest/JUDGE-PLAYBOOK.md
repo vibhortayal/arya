@@ -1,96 +1,89 @@
-# Judge playbook — Arya
+# Judge playbook
 
-A path through the live demo in about 8 minutes, grouped by the
-judging criteria. Each step says what to do, what you see, and which
-Meta model is in play.
+An eight-minute path through the live demo, grouped by the judging
+criteria. Each step says what to do, what you see, and which Meta model
+is involved.
 
-**Live demo:** https://arya-pilot.duckdns.org/ — no account. Use a
-phone, or a browser window about 390 px wide. Allow the camera and the
-microphone for steps 3, 4, 6 and 7.
+**Live demo:** https://arya-pilot.duckdns.org/ (no account). Use a phone,
+or a browser window about 390 px wide. Allow the camera and microphone
+for the steps that use them.
 
-**What is real.** The demo household is fictional. Your changes live
-in an in-memory sandbox for your visit only; nothing reaches disk or
+**What is real.** The demo household is fictional. Your changes live in
+an in-memory sandbox for your visit only; nothing reaches disk or
 another visitor. No store ships pre-mapped: a store's map comes only
-from shoppers' guided scans, with people blurred by SAM. Camera, microphone and
-chat call the Meta API live.
+from shoppers' guided scans, with people blurred by SAM first. Camera,
+microphone and chat call the Meta API live.
 
-**What you need.** A receipt photo for step 7 (any grocery receipt).
-Without one, use **Use a sample receipt** or **Skip**.
+**What you need.** A grocery receipt photo for step 6. Without one, tap
+**Use a sample receipt** or **Skip**.
 
 ---
 
 ## Demo (25%)
 
 ### 1. Front door
-Tap **Try the demo — play the Trader Joe's hunt**. You land on Today
-with the banner "Demo household — fictional data." The server opens a
-private sandbox for your visit.
+Tap **Try the demo**. You land on **Today** with a bar that says the
+household is a demo. Today lists what is running low and why, store
+alerts, and what to use soon.
 
-### 2. Today and List
-Today shows items running low with reasons and your level. The List
-tab shows the list Arya wrote: plain math after three kept purchases,
-returns netted out, and a **Muse Spark 1.3** staple judge deciding what
-may go on the list (precision 0.79 against a cadence proxy).
+### 2. Lists
+Open **Lists**. The demo has a Costco list and a Trader Joe's list.
+Due staples show as suggestions under the list of the store where they
+are usually bought, with a reason and a "why" sheet. A **Muse Spark 1.3**
+staple judge decides which items may be suggested (precision 0.79
+against a purchase-cadence proxy on the owner's receipts).
 
 ---
 
 ## Meta tooling (25%)
 
-### 3. Dictate items — Muse Voice Transcribe
-**Add** → **Record** → say "two gallons of milk, eggs, and
-blueberries" → stop. The text lands in the box; tap **Add**.
+### 3. Add items by voice and photo
+In a list, use the add row: the mic (**Muse Voice Transcribe**) takes
+"two gallons of milk, eggs, and blueberries"; the camera (**Muse Spark**
+vision) reads a photo of a handwritten note. Adds apply at once, with
+Undo.
 
-### 4. Photograph a handwritten list — Muse Spark vision
-**Add** → **Photo** of a note or whiteboard. Spark reads it; code files
-the rows into the list.
+### 4. Start a quest
+Open a list and tap **Start shopping**. The quest opens at that list's
+store. **How to play** shows once.
 
-### 5. Plan a hunt
-**Today** → **New hunt**. Pick **Trader Joe's**: each store says what
-you usually buy there, counted from receipts. The next screen sorts
-your list for that store: milk and sourdough ticked ("usually here"),
-usuals such as spinach suggested. Pick **Costco** instead and milk
-moves to "Usually from Trader Joe's" while eggs and paper towels are
-suggested. Tap **Start the quest** → **Quest**. A clean list skips
-Check my list.
-
-### 6. Play — SAM 3.1, Muse Spark, Muse Image
-- **How to play** shows once: find it, grab it, snap the receipt.
-- An unmapped store plays as a labelled typical layout; the orange
-  dot is your next item. **Map my store** opens the guided scan.
-- Tap **Grab**: +10, a Muse Image character, a fun fact. Points only
-  go up; there is no clock and no way to lose.
-- **Find it for me** opens the camera aimed at the next item. SAM 3.1
-  boxes candidates and Muse Spark checks each crop; the item lights up
-  and one tap grabs it. Point it at any shelf photo on a second
-  screen if you are not in a store.
+- An unmapped store plays as a labelled typical layout.
+- Tap **Grab**: +10 points and a character painted with **Muse Image**.
+  There is no clock and no way to lose.
+- **Find it for me** opens the camera aimed at the next item. **SAM 3.1**
+  boxes candidates and **Muse Spark** checks each crop. Point it at any
+  shelf photo on a second screen if you are not in a store.
 - **Not here?** files a shortage report for the next shopper.
+- **Map this store** (on the Quest home) opens the guided scan: pan along
+  the shelves, SAM 3.1 blurs every person, and Muse Spark reads sections,
+  aisle signs and prices.
 
-### 7. Finish with a receipt — Muse Wonder
-**Finish** → **Snap the receipt**. Muse Wonder 1.0 reads each line;
-code checks that the lines add up to the printed total. Over 90 s,
-Arya falls back to Muse Spark and records which model read it. The
-Score counts the haul up (+80 items, +25 full haul, +50 receipt) and
-fills the level bar. Wonder scored 97/98 lines on the public set after
-adjudication, zero price errors.
+### 5. Ask Arya
+Open **Ask**. Type "What am I running low on?", then "We finished the
+Greek yogurt." The answer comes from the household data. The stated fact
+becomes an action that the server validates before it applies.
 
-### 8. Ask Arya — Muse Spark
-**Ask** → "What am I running low on?", then "We finished the Greek
-yogurt." The answer comes from the household data; the stated fact
-becomes an action the server validates before it applies.
+### 6. Finish with a receipt
+Tap **I'm done shopping**, then **Snap the receipt**. **Muse Wonder 1.0**
+reads each line, and code checks that the lines add up to the printed
+total. If Wonder takes more than 90 seconds, Arya falls back to Muse
+Spark and records which model read the receipt. On the Gate 0 public set,
+Wonder got 97 of 98 lines right after hand adjudication, with zero price
+errors.
 
 ---
 
 ## Impact (30%)
 
-- **Who:** every household that shops weekly; families get a list that
-  writes itself and a hunt kids can play.
-- **Problem:** receipts hold the truth about what a household buys,
-  and nobody reads them.
-- **What Arya does:** the receipt is a sensor; code checks every line;
-  returns are first class; the list is math plus a Spark judge.
-- **Flywheel:** every hunt is a shelf survey (grabs, sightings,
-  shortage reports), and one shopper's walk maps a store for the next.
-- **Limit:** one mapped store today; other stores play as shelf cards.
+- **Who:** households that shop every week. Families get a list that
+  writes itself, and a quest that kids can play.
+- **Problem:** receipts hold the truth about what a household buys, and
+  nobody reads them.
+- **What Arya does:** it reads each receipt, checks every line, nets out
+  returns, and builds the list from purchase patterns plus a Spark judge.
+- **Store maps:** every quest checks shelves (grabs, sightings, shortage
+  reports), and one shopper's guided scan maps a store for the next.
+- **Limit:** no store ships mapped yet. Maps depend on shoppers scanning.
 
 ## Technical depth (20%)
 
@@ -98,21 +91,24 @@ becomes an action the server validates before it applies.
 | --- | --- |
 | One module calls the Meta API | `assistant/api/meta_client.py` |
 | Receipts verified by arithmetic | `assistant/tests/test_receipt_math.py` |
-| Demo writes never reach disk | `state.set_overlay`; sandbox tests |
-| No pictures of people kept | `shelfscan.scrub_people` (SAM, fails closed) |
+| Demo writes never reach disk | `state.set_overlay` in `assistant/api/state.py`; sandbox tests |
+| People are blurred before a frame is kept | `shelfscan.scrub_people` in `assistant/api/shelfscan.py` (fails closed) |
 | Cost policy | `assistant/docs/MODEL-POLICY.md` |
-| Measured results | README, "Measured results" |
+| Measured results | `README.md`, "Measured results" |
 | Tests | `cd assistant && python -m unittest discover -s tests` |
 
 ## Known limits
 
 - No store ships pre-mapped; maps come from shoppers' scans.
-- Open weights are not used; we do not claim that bonus.
-- Closed in the demo: bulk imports, PDF and text decode,
-  Curator and judge runs.
-- Shop-Off and Friends are single-account.
-- Live calls can be slow (receipts up to 90 s). A daily budget and a
-  per-IP limit protect the account.
+- Open weights are used in one place: Muse Spark Open (on Baseten) is the
+  second seat of the staple judge. It sees item names only, never
+  personal data. Glimmer is not used.
+- Closed in the demo: bulk imports, PDF and text decode, Curator runs
+  and judge runs.
+- Friends are single-account. Community prices, Deals and Arya shoppers
+  are not live.
+- Live calls can be slow (receipts take up to 90 seconds). A daily budget
+  and a per-IP limit protect the account.
 
 ## If something fails
 
@@ -120,5 +116,5 @@ becomes an action the server validates before it applies.
 | --- | --- |
 | "demo rate limit" | Wait a minute and retry. |
 | Receipt spinner over 90 s | Wait for the Spark fallback, or Skip. |
-| Voice gives nothing | Check mic permission, or type. |
+| Voice gives nothing | Check microphone permission, or type. |
 | Page looks stale | Reload twice, or clear site data. |

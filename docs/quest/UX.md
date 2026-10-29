@@ -23,15 +23,13 @@ first.
 
 | Screen | Primary action | Rule |
 | --- | --- | --- |
-| Today | Resume / Plan a hunt | The hero holds only a hunt being played |
+| Today | Resume | One quiet Quest row; the hero holds only a hunt being played |
 | Pick store | Tap a store | Each store says what you usually buy there |
 | Plan (move items) | Start the quest | The Arya list sorted for this store; ✕ removes from the list |
 | Check my list | Answer, continue | Only when something needs a choice; Arya never guesses |
-| Mode | Quest or Express | The mood chooses |
 | Hunt (Quest) | Grab | One column, one target, rows never move, Put back in place |
 | How to play | Got it | First Quest hunt only; ? reopens |
 | Find it for me | Tap the lit item | Camera aimed at one item; a miss never says "not here" |
-| Express | Check rows | Walking order, big targets, no game layer |
 | Finish | Snap the receipt | Skip closes the hunt, never blocks |
 | Score | Back to Today | Haul counts up, receipt banks it, level bar |
 | Community, Shop-Off, Friends, Profile | — | Receipt-verified; no chat, no lists shared |
