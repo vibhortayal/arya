@@ -27,7 +27,7 @@ export function Mode() {
   const fast = useRef(false);
   useStoreData();
   // A store with no aisle pictures shows Express only (quest.js qShowModes).
-  const noQuest = !!(D && D.store) && !storeHasPictures(D.store);
+  const noQuest = !!(D && D.store) && !storeHasPictures(D.store, D.storeId);
 
   const create = async (mode: string) => {
     if (!D || D.creating) return;
@@ -37,11 +37,11 @@ export function Mode() {
       // Quest needs aisle photos (owner, 2026-10-29): a store Arya has
       // no pictures of runs as Express, from every way in.
       await loadStoreData();
-      if (mode === "quest" && !storeHasPictures(D.store)) mode = "express";
+      if (mode === "quest" && !storeHasPictures(D.store, D.storeId)) mode = "express";
       const sess = await post("/api/quest/sessions", {
         store: D.store, mode, items: D.finalItems,
         store_id: D.storeId || undefined,
-        driver: storePhotos(D.store) ? "photo" : mode === "quest" ? "art" : "strip",
+        driver: storePhotos(D.store, D.storeId) ? "photo" : mode === "quest" ? "art" : "strip",
       });
       packFinish(D);
       if (D.fastMode && sess.mode === "quest" && sess.state === "not_started") {

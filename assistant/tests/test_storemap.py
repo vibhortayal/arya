@@ -46,13 +46,13 @@ class TestZones(unittest.TestCase):
         self.assertEqual(sm.store_key("Trader Joe's"), sm.store_key("trader joes"))
 
 
-WALK = "Trader Joe's|tj-argonaut"   # the store the shipped walk was filmed in
+WALK = "Trader Joe's|tj-walk"   # the store the shipped walk was filmed in
 
 
 class TestEngine(unittest.TestCase):
     def setUp(self):
         fresh_data()
-        os.environ["ARYA_WALK_STORE_ID"] = "tj-argonaut"
+        os.environ["ARYA_WALK_STORE_ID"] = "tj-walk"
         self.addCleanup(os.environ.pop, "ARYA_WALK_STORE_ID", None)
         from api import state, storemap
         self.sm = storemap
@@ -272,22 +272,32 @@ class TestEngine(unittest.TestCase):
         finally:
             state._current_user.reset(tok)
         got = self.sm.load_map(WALK)
-        self.assertEqual(got["key"], "traderjoes@tj-argonaut")
+        self.assertEqual(got["key"], "traderjoes@tj-walk")
         self.assertEqual(len(got["segments"]["pasta:both"]["captures"]), 1)
         self.assertIsNotNone(self.sm.best_image(WALK, "pasta:both"))
         # Chino Hills does not inherit it.
         self.assertEqual(self.sm.view("Trader Joe's")["total"], 0)
 
-    def test_the_walk_store_is_found_by_its_street(self):
+    def test_no_store_has_the_walk_until_someone_says_which(self):
+        # Owner 2026-10-29: the walk was not filmed on Argonaut; nobody
+        # recorded where, so no store is mapped by it.
         os.environ.pop("ARYA_WALK_STORE_ID", None)
         from api import stores
+        stores.create_store("Trader Joe's", "1 Argonaut Way", "Somewhere", "CA", "90000", "ana")
         self.assertIsNone(self.sm.walk_location())
-        row, _ = stores.create_store("Trader Joe's", "1 Argonaut Way", "Somewhere", "CA", "90000", "ana")
-        self.assertEqual(self.sm.walk_location(), row["id"])
+        for ref in ("Trader Joe's", WALK):
+            v = self.sm.view(ref)
+            self.assertEqual((v["total"], v["typical"]), (0, "Trader Joe's"))
 
     def test_pictures_list_stays_keyed_by_chain(self):
         rows = {r["key"]: r for r in self.sm.stores_with_pictures()}
         self.assertTrue(rows["traderjoes"]["has_pictures"])
+        # The walk's photos belong to one location; captures name theirs.
+        self.assertEqual(rows["traderjoes"]["location"], "tj-walk")
+        self.sm.add_segment("Trader Joe's|tj-9", "Aisle 4", "left")
+        self.sm.ingest("Trader Joe's|tj-9", "aisle-4:left", jpeg(5))
+        rows = {r["key"]: r for r in self.sm.stores_with_pictures()}
+        self.assertIn("tj-9", rows["traderjoes"]["captured_at"])
 
     def test_a_label_with_no_picture_is_not_located(self):
         self.sm.add_segment("Corner Store", "Aisle 4", "left")
