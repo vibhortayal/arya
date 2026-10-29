@@ -127,7 +127,7 @@ _OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", 
 _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
                 "/api/curator/run", "/api/judge/run", "/api/review/suggest",
                 "/api/intake/", "/api/quest/avatar/generate",
-                "/api/quest/avatar/photo", "/api/feedback")
+                "/api/quest/avatar/photo", "/api/feedback", "/api/push/")
 # Doors that can call the Meta API: the per-IP live-door cap applies.
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
@@ -2179,6 +2179,60 @@ async def feedback_submit(req: Request):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return {"ok": True}
+
+
+# --- push reminders (flag ARYA_PUSH_REMINDERS=1, off by default) -----------
+def _push_guard(req):
+    from api import reminders
+    if not reminders.configured():
+        raise HTTPException(404, "reminders are not turned on")
+    return reminders
+
+
+@app.get("/api/push/config")
+def push_config(req: Request):
+    from api import reminders
+    if _is_demo(req):
+        return {"enabled": False}
+    return reminders.config()
+
+
+@app.post("/api/push/subscribe")
+async def push_subscribe(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    try:
+        r.subscribe(body.get("subscription"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return r.config()
+
+
+@app.post("/api/push/unsubscribe")
+async def push_unsubscribe(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    r.unsubscribe(body.get("endpoint"))
+    return r.config()
+
+
+@app.post("/api/push/settings")
+async def push_settings(req: Request):
+    r = _push_guard(req)
+    body = await _json_obj(req)
+    try:
+        r.set_notice_days(body.get("notice_days"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return r.config()
+
+
+@app.post("/api/push/test")
+def push_test(req: Request):
+    r = _push_guard(req)
+    if not r.config()["subscribed"]:
+        raise HTTPException(400, "turn reminders on first")
+    return {"sent": r.send(r.compose([], test=True))}
 
 
 @app.get("/api/feedback")

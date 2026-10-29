@@ -243,6 +243,19 @@
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
     </div>
+    <div id="pf-reminders" hidden>
+      <h3 class="sect">Reminders</h3>
+      <div class="group">
+        <div class="row"><span class="grow"><span class="name" style="font-weight:550">Remind me</span><span class="sub" id="rem-sub">A push when something is about to run out</span></span>
+          <button class="sw" id="rem-switch" type="button" role="switch" aria-checked="false" aria-label="Remind me"><i></i></button></div>
+        <div id="rem-more" hidden>
+          <div class="row"><span class="grow"><span class="name" style="font-weight:550">Heads-up</span><span class="sub" id="rem-days-sub">2 days before it runs out</span></span>
+            <span class="stepper"><button type="button" id="rem-dm" aria-label="Fewer days">&minus;</button><span class="qty" id="rem-dq">2</span><button type="button" id="rem-dp" aria-label="More days">+</button></span></div>
+          <button class="navrow" id="rem-test" type="button"><span class="grow accenttext">Send me a test reminder<span class="sub">Arrives in a few seconds</span></span><span class="chev">›</span></button>
+        </div>
+      </div>
+      <p class="muted small remnote" id="rem-note">One push a day at most, and only when something is due. Turn it off any time.</p>
+    </div>
     <h3 class="sect">Account</h3>
     <div class="group" id="profile-account"></div>
     <div class="group">
@@ -750,5 +763,6 @@
 <script src="share.js"></script>
 <script src="haul.js"></script>
 <script src="expiry.js"></script>
+<script src="push.js"></script>
 </body>
 </html>
