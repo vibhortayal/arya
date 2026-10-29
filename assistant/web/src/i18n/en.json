@@ -761,7 +761,10 @@
     "addToList": "Add to list",
     "backToLists": "‹ Lists",
     "newListMenu": "+ New list…",
-    "questWalksYou": "Arya walks you through the store, item by item"
+    "questWalksYou": "Arya walks you through the store, item by item",
+    "firstListTitle": "Create your first list",
+    "firstListLine": "One list per store you shop at. Type, talk or snap a photo.",
+    "createFirstList": "Create your first list"
   },
   "login": {
     "signIn": "Sign in",
@@ -1269,7 +1272,9 @@
     "othersStay": "The {{n}} the others added stay with the group.",
     "sameForGroup": "Same for the group, from what is left.",
     "becomesOwner": "@{{handle}} becomes the owner",
-    "youLeft": "You left {{name}}. Your lists are a copy now."
+    "youLeft": "You left {{name}}. Your lists are a copy now.",
+    "showMeAroundAgain": "Show me around again",
+    "replayTheTour": "Replay the 30-second tour"
   },
   "quest": {
     "yourListAsATreasure": "Your list, as a treasure hunt through the store.",
@@ -1631,7 +1636,20 @@
     "nameTheItem": "Name the item…",
     "thisItem": "This item",
     "readHeadline": "{{name}}, {{word}} {{date}}",
-    "itemHeading": "Item"
+    "itemHeading": "Item",
+    "gs": {
+      "kicker": "Get started · {{n}} of {{total}}",
+      "title": "Three things to try first",
+      "line": "Today fills up as you use Arya: what is running low, what to use soon, and what to buy where.",
+      "list": "Make your first list",
+      "listSub": "One per store. Type, talk or snap it.",
+      "expiry": "Snap an expiry date",
+      "expirySub": "Arya reminds you before food goes off.",
+      "receipt": "Add a receipt",
+      "receiptSub": "See your spending and price trends.",
+      "doneAria": "{{step}}, done",
+      "dismiss": "Hide Get started"
+    }
   },
   "haul": {
     "exampleOnly": "Example only",
@@ -1892,5 +1910,46 @@
     "quest": "Quest",
     "settings": "Settings",
     "settingsLevel": "Settings, level {{level}}"
+  },
+  "firstRun": {
+    "welcome": {
+      "title": "Hi, I'm Arya",
+      "line": "Your grocery helper. I keep your lists, tell you what's running low, and help you shop faster.",
+      "lists": "Lists",
+      "listsSub": "One per store",
+      "reminders": "Reminders",
+      "remindersSub": "Use it before it goes off",
+      "spending": "Spending",
+      "spendingSub": "From your receipts",
+      "showMe": "Show me around · 30 sec",
+      "skip": "Skip for now"
+    },
+    "tour": {
+      "today": {
+        "title": "Today",
+        "line": "What needs you today: running low, use soon, and tips."
+      },
+      "lists": {
+        "title": "Lists",
+        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list."
+      },
+      "ask": {
+        "title": "Ask",
+        "line": "Ask Arya anything about your groceries: what to cook, what you spent, or where to buy it."
+      },
+      "quest": {
+        "title": "Quest (optional)",
+        "line": "Turn a store trip into a treasure hunt: Arya walks you aisle by aisle. Try it once you have a list."
+      },
+      "settings": {
+        "title": "Settings",
+        "line": "Your stores, receipts and spending. Replay this tour any time here."
+      }
+    }
+  },
+  "tour": {
+    "skip": "Skip",
+    "next": "Next",
+    "stepOf": "Step {{n}} of {{total}}"
   }
 }

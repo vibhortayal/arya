@@ -83,6 +83,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Accounts:** password accounts; registration is closed unless
   `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
   Muse step). Account names are letters, digits and `. _ % + - @` only.
+- **First run (#153, #163; branch `feat/first-run`, not merged):** a new account gets a welcome sheet, a 5-step tour, a Get started card on Today and one first-list card on Lists; accounts with data and the demo never see them. `assistant/loops/2026-10-29-first-run.md`.
 
 ## Built but switched off (flags)
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
