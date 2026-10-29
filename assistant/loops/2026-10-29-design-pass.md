@@ -35,3 +35,6 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
   loading (still under reduced motion). Suggestion "why" line wraps cleanly.
 - Not done: the demo bar shrink (left as is).
 - SW arya-v85. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.
+
+## Receipts: Needs your eye only when needed (owner, 2026-10-29)
+- Heading and card hidden when no line or proposal needs a decision. SW arya-v86.

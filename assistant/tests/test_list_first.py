@@ -84,6 +84,16 @@ class TestStoreAlerts(unittest.TestCase):
         self.assertIn("Example only", body)
 
 
+class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
+    def test_needs_your_eye_shows_only_when_something_needs_it(self):
+        html, js = read("index.html"), read("app.js")
+        self.assertIn('id="eye-head" hidden', html)
+        self.assertIn('id="review" class="group eyegroup" hidden', html)
+        self.assertNotIn("Every line is verified", js)
+        self.assertIn('$("#review").hidden = !html;', js)
+        self.assertIn("function syncEyeHead()", js)
+
+
 class TestQuestTab(unittest.TestCase):
     def test_quest_tab_holds_the_game(self):
         quest = read("index.html").split('id="view-community"')[1].split("</section>")[0]
