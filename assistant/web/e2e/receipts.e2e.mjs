@@ -1,6 +1,6 @@
 /* Receipts: add-photo input, archive, back link, a receipt row opens the detail view. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

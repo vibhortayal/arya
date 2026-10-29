@@ -1,7 +1,7 @@
 /* Lists: cards, a list's page, add by typing, check/select/move sheet,
  * New list sheet, Start shopping sheet into the store picker. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

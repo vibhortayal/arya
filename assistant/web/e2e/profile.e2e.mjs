@@ -1,6 +1,6 @@
 /* Profile (Settings tab): avatar editor, account rows, currency, nav rows, delete box, sign out. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

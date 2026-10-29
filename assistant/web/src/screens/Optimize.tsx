@@ -10,7 +10,7 @@ import { packExtrasOf, packSessionItem, type NewListDraft } from "./NewList";
  * did, so Back from the next screen keeps the answers.
  * fastMode: the old qOptProceed created the session at once; here the
  * draft goes on to "mode" with draft.fastMode still set (as NewList
- * does), and the mode screen must honour it. */
+ * does), and the mode screen creates the session at once. */
 
 const norm = (s: unknown) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 

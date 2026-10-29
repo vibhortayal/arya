@@ -23,11 +23,11 @@ import { faceFor, loadCharacters } from "../lib/characters";
  * same plan. The voice recorder is lib/recorder.ts (shared with Ask);
  * the Pack logic below is local.
  *
- * fastMode ("Start shopping" on a list): the old qOptimizeDraft and
- * the Check-my-list screen created the session at once
- * (qCreateSession(fastMode)) instead of showing the mode screen. Here
- * the draft goes to "mode"/"optimize" with draft.fastMode still set;
- * those screens must honour it when they are ported. */
+ * fastMode ("Start shopping" on a list): the list is the plan, so the
+ * bag is skipped. The draft goes on to "optimize"/"mode" with
+ * draft.fastMode still set, and Mode creates the session at once
+ * (a Quest starts playing) instead of showing its picker, as
+ * quest.js qCreateSession(fastMode) did. */
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 

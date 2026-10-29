@@ -1,7 +1,7 @@
 /* Today: date line, Running low (Add flips to On list), Your lists cards,
  * Use soon with the item sheet, Still good fold, Quest row and Lists link. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

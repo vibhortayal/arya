@@ -1,7 +1,7 @@
 /* Teach Arya your store: store chips, coverage, walk start, aisles,
  * add an aisle, and opening the capture screen. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

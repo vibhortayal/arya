@@ -4,7 +4,7 @@
  * check comes first; the make/copy/revoke flow then runs against a
  * stand-in for a signed-in account's /auth/token (GET/POST/DELETE). */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

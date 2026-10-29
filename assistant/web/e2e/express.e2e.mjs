@@ -3,7 +3,7 @@
  * its sheets, More help shows Ask Arya / Teach, Finish leaves the items
  * sheet and goes to the finish screen. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

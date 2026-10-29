@@ -15,7 +15,7 @@ async function ask(page, base, q) {
 
 export default async function (page, base) {
   await page.route("**/api/chat", r => r.fulfill({ json: REPLY }));
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.evaluate(() => { try { localStorage.removeItem("arya-lang-offer-no"); } catch { /* ignore */ } });
   await page.reload();

@@ -16,9 +16,9 @@ const HAS_COMM_NEWS = false;
 
 /* Port of pwa/index.html #view-community with app.js renderQuestHub
  * (hero card, games, level chip) and quest.js renderCommunity (Crew
- * summary, Fastest Hands board). A game opens its hunt: the hunt,
- * Express and Score screens are not ported yet, so they get
- * nav.show("hunt" | "express" | "score", { session }). */
+ * summary, Fastest Hands board). A game opens its hunt, its Express
+ * run or (finished) its Score: nav.show("hunt" | "express" | "score",
+ * { session }). */
 
 type SItem = { name: string; checked?: boolean; wild?: boolean };
 type Sess = { id: string; store: string; mode: string; state: string; items: SItem[]; created_at?: string;

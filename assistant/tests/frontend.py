@@ -5,8 +5,9 @@ web/src/screens/*.tsx, shared pieces web/src/ui and web/src/app, and
 the stylesheets web/src/styles/*.css (moved unchanged from the
 plain-JS app). The static folder pwa/ keeps only what the app loads at
 runtime: scene.js, three.js, images, store models, the manifest and
-icons. The plain-JS app itself is archived on the branch
-archive/plain-js-app (tag plain-js-app).
+icons. The plain-JS app itself stays in git history: the tag
+plain-js-app, and every main commit before the React-at-root merge
+(the last one is 80bd79d, with #151 and #152).
 
 Behaviour that a string pin cannot show is checked by the vitest
 tests beside the code (web/src/**/*.test.ts) and by the browser tests
