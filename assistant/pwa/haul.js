@@ -465,7 +465,7 @@ const HaulUI = (() => {
       const boss = it.boss && status === "found";
       const badge = !allNew && isNew(it) ? `<span class="rv-new">NEW</span>` : "";
       return `<div class="rv-tile${boss ? " rv-boss" : ""}" style="transition-delay:${i * 160}ms">
-        <img src="${esc(tileSrc(stickers, it))}" alt="${esc(it.name)}" onerror="this.onerror=null;this.src='${artSrc("basket.webp")}'">${badge}</div>`;
+        <img src="${esc(tileSrc(stickers, it))}" alt="${esc(it.name)}" data-fallback="${esc(artSrc("basket.webp"))}">${badge}</div>`;
     }).join("");
     box.innerHTML = `<div class="rv-head"><h2 class="largetitle" style="font-size:28px">${esc(title)}</h2>
       <p class="muted nomargin">${plural(items.length, "sticker")} from this trip. Tap anywhere to skip.</p></div>
@@ -478,6 +478,10 @@ const HaulUI = (() => {
       ${canReview(sess, d) ? `<p><button class="btn wide" type="button" data-act="review">Check your receipt</button></p>` : ""}
       ${d.settled ? "" : `<p><button class="btn wide" type="button" data-act="addreceipt">Add receipt now</button></p>`}
       <p class="rv-sum"><button class="rv-link" type="button" data-act="summary">Trip summary</button></p>`;
+    // A missing sticker falls back to the basket art. A listener, not
+    // an inline onerror: the CSP refuses inline script.
+    box.querySelectorAll("img[data-fallback]").forEach(img =>
+      img.addEventListener("error", () => { img.src = img.dataset.fallback; }, { once: true }));
     play(sess, d, target);
   }
   function setNumber(n) { const el = q("#rv-pts"); if (el) el.textContent = String(n); }

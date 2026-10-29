@@ -184,7 +184,8 @@ Each agent has a narrow job and a named limit.
 ## 11. Deployment
 
 - One Oracle VM (Always Free; no new cloud resources). Docker Compose:
-  Postgres, the API, Caddy with Let's Encrypt. Public name:
+  the API and Caddy with Let's Encrypt. No database container: data is
+  JSON files, or Supabase with `ARYA_STORE`. Public name:
   arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.

@@ -6,7 +6,8 @@ open only while zero users exist; the first account adopts the household
 data already in the store (the seeded corpus).
 Data is per-user: state lives under data/users/<username>/.
 """
-import hashlib, hmac, json, os, re, secrets, time
+import hashlib, hmac, json, os, re, secrets, threading, time
+from collections import OrderedDict
 
 SESSION_TTL = 30 * 24 * 3600
 COOKIE = "arya_session"
@@ -188,8 +189,35 @@ def _session_key(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+# Demo sessions live in memory, like the demo sandbox they point at
+# (api/main.py): each "Try the demo" used to add a 30-day row to
+# sessions.json (and to Postgres in dual mode) that only expiry ever
+# removed (codebase map 2026-10-29). A restart drops them together with
+# their sandboxes; the visitor taps "Try the demo" again.
+DEMO_SESSIONS_MAX = 5000
+_demo_sessions = OrderedDict()   # token hash -> {"user", "demo", "expires"}
+_demo_lock = threading.Lock()
+
+
+def _demo_session(token):
+    key = _session_key(token)
+    with _demo_lock:
+        rec = _demo_sessions.get(key)
+        if rec is not None:
+            _demo_sessions.move_to_end(key)
+        return rec
+
+
 def new_session(username, demo=False):
     token = secrets.token_urlsafe(32)
+    if demo:
+        with _demo_lock:
+            _demo_sessions[_session_key(token)] = {
+                "user": username, "demo": True,
+                "expires": int(time.time()) + SESSION_TTL}
+            while len(_demo_sessions) > DEMO_SESSIONS_MAX:
+                _demo_sessions.popitem(last=False)
+        return token
     with _file_lock("sessions.json"):
         # Expired sessions are dead weight — prune them on write so
         # the store cannot grow without bound (review H4).
@@ -222,8 +250,10 @@ def _session_record(all_sessions, token):
 def session_info(token):
     if not token:
         return None
-    with _file_lock("sessions.json"):
-        s = _session_record(_load("sessions.json", {}), token)
+    s = _demo_session(token)
+    if s is None:
+        with _file_lock("sessions.json"):
+            s = _session_record(_load("sessions.json", {}), token)
     if not s or s["expires"] < time.time():
         return None
     return {"user": s["user"], "demo": bool(s.get("demo"))}
@@ -232,8 +262,10 @@ def session_info(token):
 def session_user(token):
     if not token:
         return None
-    with _file_lock("sessions.json"):
-        s = _session_record(_load("sessions.json", {}), token)
+    s = _demo_session(token)
+    if s is None:
+        with _file_lock("sessions.json"):
+            s = _session_record(_load("sessions.json", {}), token)
     if not s or s["expires"] < time.time():
         return None
     return s["user"]
@@ -279,6 +311,8 @@ def revoke_api_tokens(username):
 def drop_session(token):
     if not token:
         return
+    with _demo_lock:
+        _demo_sessions.pop(_session_key(token), None)
     with _file_lock("sessions.json"):
         all_sessions = _load("sessions.json", {})
         all_sessions.pop(token, None)            # pre-hardening key

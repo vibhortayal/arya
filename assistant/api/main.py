@@ -37,7 +37,9 @@ async def _model_failure(request, exc):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "arya-api", "stage": 3, "receipts": len(state.receipts())}
+    # No receipt count: /health runs with no account, so it counted the
+    # root plane, which holds none (review M11). Liveness only.
+    return {"status": "ok", "service": "arya-api", "stage": 3}
 
 
 # Order matters only where two paths could match the same request; this

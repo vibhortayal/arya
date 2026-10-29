@@ -20,6 +20,22 @@ _LEDGER = os.path.join(os.environ.get(
     "ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data")),
     "cost-ledger.jsonl")
 
+RATE_BUCKET_MAX = 10_000
+
+
+def _prune(bucket, window):
+    """Per-IP hit lists live in memory. Once a bucket holds many IPs,
+    drop the ones with no hit inside the window, so a scan from many
+    addresses cannot grow it without bound (codebase map 2026-10-29)."""
+    if len(bucket) <= RATE_BUCKET_MAX:
+        return
+    import time as _t
+    now = _t.time()
+    for ip in [ip for ip, hits in bucket.items()
+               if not hits or now - hits[-1] >= window]:
+        bucket.pop(ip, None)
+
+
 _login_fails = {}
 _register_hits = {}
 _code_hits = {}

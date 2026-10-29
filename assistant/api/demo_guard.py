@@ -7,7 +7,7 @@ from collections import OrderedDict
 from fastapi.responses import JSONResponse
 
 from api import state, auth
-from api.deps import _client_ip
+from api.deps import _client_ip, _prune
 
 # Per-IP sliding-window caps on the demo's unauthenticated surface:
 # session minting and the live doors. Generous for a human judge,
@@ -20,6 +20,7 @@ def _demo_rate(bucket, key, limit_env, default):
     import time as _t
     limit = int(os.environ.get(limit_env, str(default)))
     now = _t.time()
+    _prune(bucket, 3600)
     hits = [t for t in bucket.get(key, []) if now - t < 3600]
     if len(hits) >= limit:
         return False

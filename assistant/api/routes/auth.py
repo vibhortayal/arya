@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from api import auth, supabase_auth
 from api.demo_guard import _demo_auth_hits, _demo_rate
-from api.deps import (_client_ip, _code_hits, _json_obj, _login_fails, _register_hits, _registration_open,
+from api.deps import (_client_ip, _code_hits, _json_obj, _login_fails, _prune, _register_hits, _registration_open,
                       _set_session_cookie, _verify_hits)
 
 router = APIRouter()
@@ -44,6 +44,7 @@ async def auth_register(req: Request):
         raise HTTPException(403, "registration is closed")
     import time as _t
     ip = _client_ip(req)
+    _prune(_register_hits, 900)
     hits = [t for t in _register_hits.get(ip, []) if _t.time() - t < 900]
     if len(hits) >= 10:
         raise HTTPException(429, "too many account creations — try again later")
@@ -63,6 +64,7 @@ async def auth_register(req: Request):
 async def auth_login(req: Request):
     import time as _t
     ip = _client_ip(req)
+    _prune(_login_fails, 900)
     fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
@@ -92,6 +94,7 @@ def _federated_login(email):
 def _email_guard(req, bucket, limit):
     import time as _t
     ip = _client_ip(req)
+    _prune(bucket, 900)
     hits = [t for t in bucket.get(ip, []) if _t.time() - t < 900]
     if len(hits) >= limit:
         raise HTTPException(429, "too many attempts, try again in 15 minutes")
@@ -145,13 +148,7 @@ def auth_callback():
     browser can read. This page hands it to /auth/supabase and goes home."""
     return HTMLResponse(
         "<!doctype html><meta charset=utf-8><title>Signing in</title>"
-        "<p>Signing you in...</p><script>"
-        "const t=new URLSearchParams(location.hash.slice(1)).get('access_token');"
-        "history.replaceState(null,'','/auth/callback');"
-        "fetch('/auth/supabase',{method:'POST',headers:{'Content-Type':'application/json'},"
-        "body:JSON.stringify({access_token:t})})"
-        ".then(r=>{location.replace(r.ok?'/':'/?signin=failed')})"
-        ".catch(()=>{location.replace('/?signin=failed')});</script>")
+        "<p>Signing you in...</p><script src=\"/auth-callback.js\"></script>")
 
 
 @router.post("/auth/supabase")

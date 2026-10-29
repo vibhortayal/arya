@@ -71,6 +71,6 @@ helpers) is in `api/deps.py`; the demo sandbox and login middleware in `api/demo
   always beats the judge. Unjudged or unresolved-name items stay off the
   list — precision over recall, by the owner's word.
 - Deploy by `git pull` on the VM only. Never rsync --delete over the VM
-  tree: `assistant/deploy/.env` is VM-only (Postgres password + the owner's
+  tree: `assistant/deploy/.env` is VM-only (the owner's
   MODEL_API_KEY) and a --delete sync removed it on 2026-10-27; it was
   restored from the running containers' environment.
