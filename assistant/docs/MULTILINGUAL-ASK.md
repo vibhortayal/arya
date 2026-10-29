@@ -31,8 +31,12 @@ React port ("Improve Arya look and feel" thread), by the owner's rule.
 Found while building: item ids and the dedupe key were ASCII-only, so
 every Hindi item shared the id `manual-` (and Ask could not add one);
 `item_slug` in `api/list/intake.py` fixes both. §3 is done server side
-in `/api/list/from-text` (the PWA needs no change). §4 voice stays open
-until a real Spanish and Hindi clip has been tried.
+in `/api/list/from-text` (the PWA needs no change). §4 voice: the Meta
+docs (via the LiveKit plugin page) give `languageBias` as a list of
+English language names, and say to omit it for automatic detection.
+So `auto` sends nothing, and a fixed language sends `["Spanish"]`;
+if the API refuses the hint the call is repeated without it. Not yet
+tried against the live API with a real clip.
 
 ## 1. Reply language
 
