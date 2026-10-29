@@ -10,6 +10,12 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
   patterns). Landing: "Groceries, sorted." See
   assistant/loops/2026-10-29-list-first.md. SW arya-v77.
 
+## Express mode (2026-10-29, PR pending)
+- Express is a plain checklist with Show me (photo only on request),
+  Not here?, Find with camera and More help; its finish shows no points,
+  badges or album. See assistant/loops/2026-10-29-express-mode.md.
+  SW arya-v79.
+
 ## Built and deployed (main)
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge,
