@@ -69,7 +69,7 @@ export function QuestProgress() {
             <div className="stattile"><div className="sv">{s.hunts}</div><div className="sl">{t("questProgress.receiptAttached")}</div></div>
             <div className="stattile"><div className="sv">{profile.level || 1}</div><div className="sl">{t("questProgress.level")}{" "}{profile.points || 0}{" "}{t("common.pts")}</div></div>
             <div className="stattile"><div className="sv">{s.receipts}</div><div className="sl">{t("common.receipts")}</div></div>
-            <div className="stattile"><div className="sv">{t("questProgress.wk", { streak_weeks: s.streak_weeks })}{s.streak_weeks === 1 ? "" : "s"}</div><div className="sl">{t("questProgress.streak")}</div></div>
+            <div className="stattile"><div className="sv">{t("questProgress.wk", { count: s.streak_weeks })}</div><div className="sl">{t("questProgress.streak")}</div></div>
           </>
         )}
       </div>

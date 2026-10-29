@@ -173,7 +173,7 @@ function StickerSheet({ st, onClose }: { st: Sticker; onClose: () => void }) {
       <img className="albsheetimg" src={stickerSrc(st)} alt="" />
       <h3 className="albsheettitle" id="alb-sheet-title">{st.name}</h3>
       {st.first_found_at && <p className="sub">{t("album.firstFound", { albDate: albDate(st.first_found_at) })}{st.store ? ` at ${st.store}` : ""}</p>}
-      <p className="sub">{t("album.foundInHunt", { n })}{n === 1 ? "" : "s"}</p>
+      <p className="sub">{t("album.foundInHunt", { count: n })}</p>
       <p className="albtruth">{cut ? "Only the product is kept in your album. No people." : "This sticker uses stock art. Your album keeps no photo of it."}</p>
       <button type="button" className="btn secondary wide" data-alb-close onClick={onClose}>{t("common.close")}</button>
     </div>

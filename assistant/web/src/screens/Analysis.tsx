@@ -119,7 +119,7 @@ export function Analysis() {
           {d && latest && <>
             <p className="an-cap">{t("analysis.total", { monthName: monthName(latest) })}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
-            <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { receipts })}{receipts === 1 ? "" : "s"}{" "}{t("analysis.filedThisMonth")}</p>
+            <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}{" "}{t("analysis.filedThisMonth")}</p>
             <Row name={t("analysis.returnsNettedAllTime")} sub={t("analysis.allReceiptsRefundsReconcileInto")} right={"−" + money(d.returns_total)} />
             <Row name={t("analysis.allTimeSpend")} sub={`${d.trip_count} trips`} right={money(d.spend_total)} />
             {!!d.spend_other && <Row name={t("analysis.groceries")} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}

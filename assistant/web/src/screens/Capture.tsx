@@ -477,7 +477,7 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
   if (r.t === "teach") {
     return (
       <div className="mp-reward">
-        <div className="what">{t("capture.aryaFoundSection", { foundCount: r.found.length })}{r.found.length === 1 ? "" : "s"}</div>
+        <div className="what">{t("capture.aryaFoundSection", { count: r.found.length })}</div>
         <p className="muted">{t("capture.checkThemAWrongOne")}</p>
         {r.found.map(f => (
           <div className="row mp-seg" key={f.segment}>

@@ -176,7 +176,7 @@ export function Quest() {
           <>
             {heroOpen && gameRow(heroOpen)}
             {heroOpen && rest.length > 0 && (
-              <details className="g-fold"><summary>{t("quest.otherOpenHunt", { restCount: rest.length })}{rest.length === 1 ? "" : "s"}</summary>
+              <details className="g-fold"><summary>{t("quest.otherOpenHunt", { count: rest.length })}</summary>
                 {rest.map(s => <div className="earlierrow" key={s.id}>{gameRow(s)}
                   <button className="btn danger" data-abandon={s.id} type="button" onClick={() => abandon(s)}>{t("quest.abandon")}</button></div>)}
               </details>

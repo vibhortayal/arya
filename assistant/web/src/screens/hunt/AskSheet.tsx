@@ -12,7 +12,8 @@ import { useTranslation } from "../../i18n";
  * shared lists/AskCard useAsk always posts surface "list", so this
  * keeps its own copy of the answer card. */
 
-const QUICK = ["Where's the {item}?", "Is there a cheaper one?", "I can't find it"];
+/* The quick questions (en.json common.quickAsk); {{item}} is the next stop. */
+const QUICK = ["common.quickAsk.whereIs", "common.quickAsk.cheaper", "common.quickAsk.cantFind"];
 
 function context(): Record<string, unknown> {
   const sess = Q.current;
@@ -66,11 +67,11 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
       if (what === "yes") {
         const r = await post<{ applied?: string[] }>("/api/chat/apply", { actions: (res.proposed || []).map(p => p.action) });
         setCard(null);
-        toast((r.applied || []).join(" ") || "Done.");
+        toast((r.applied || []).join(" ") || t("common.doneDot"));
       } else {
         for (const a of res.added || []) await post("/api/list/remove", { item_id: a.item_id });
         setCard(null);
-        toast("Undone.");
+        toast(t("common.undone"));
       }
       onChange();
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
@@ -81,16 +82,16 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
   if (card) {
     let body: ReactNode, buttons: ReactNode = null;
     const res = card.res;
-    if (!res) body = "Arya is thinking…";
+    if (!res) body = t("common.aryaThinking");
     else {
       const added = res.added || [], proposed = res.proposed || [];
-      const said = res.reply || (res.applied || []).join(" ") || "Done.";
+      const said = res.reply || (res.applied || []).join(" ") || t("common.doneDot");
       const skipped = (res.skipped || []).map((s, i) => <span key={i} className="sub">{s}</span>);
       if (proposed.length) {
         body = <>{skipped}<strong>{proposed.map(p => p.text).join(" ")}</strong></>;
         buttons = <>
           <button className="btn secondary" type="button" data-aa="no" onClick={() => setCard(null)}>{t("common.notNow")}</button>
-          <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? "Yes, do these" : "Yes, do it"}</button></>;
+          <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? t("common.yesDoThese") : t("common.yesDoIt")}</button></>;
       } else if (added.length) {
         body = <>{said}{skipped}</>;
         buttons = <>
@@ -116,7 +117,7 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
       <span className="sheetgrip" />
       <h3 id="ask-title" className="largetitle" style={{ fontSize: 22 }}>{t("common.askArya")}</h3>
       <div className="chiprow">
-        {QUICK.map(q => q.replace("{item}", (ctx.next_item as string) || "next item")).map(q => (
+        {QUICK.map(k => t(k, { item: (ctx.next_item as string) || t("common.quickAsk.nextItem") })).map(q => (
           <button key={q} className="chip" type="button" data-q={q} onClick={() => send(q)}>{q}</button>
         ))}
       </div>

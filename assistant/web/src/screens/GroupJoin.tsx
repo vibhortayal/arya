@@ -86,7 +86,7 @@ export function GroupJoin() {
             <div className="group"><div className="row">
               <span className="gm other">{initial(pv.name)}</span>
               <span className="grow"><span className="name gname">{pv.name}</span>
-                <span className="sub">{t("groupJoin.invitedYou", { invited_by: pv.invited_by, people: pv.people })}{" "}{pv.people === 1 ? "person" : "people"}{" "}{t("groupJoin.list", { lists: pv.lists })}{pv.lists === 1 ? "" : "s"}</span></span>
+                <span className="sub">{t("groupJoin.invitedYou", { invited_by: pv.invited_by, people: pv.people })}{" "}{pv.people === 1 ? "person" : "people"}{" "}{t("groupJoin.list", { count: pv.lists })}</span></span>
             </div></div>
             <h3 className="sect">{t("groupJoin.whatChanges")}</h3>
             <div className="group pad">

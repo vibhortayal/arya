@@ -51,7 +51,7 @@ export function useAsk(onChange: () => void) {
     const r = await post<{ item_ids?: string[]; names?: string[] }>("/api/list/from-text", { text: parsed.items, list_id: parsed.list.id });
     const names = (r.names || []).join(", ");
     setCard({ q, kind: "show", res: {
-      reply: r.names && r.names.length ? `Added ${names} to ${parsed.list.name}.` : `That is already on ${parsed.list.name}.`,
+      reply: r.names && r.names.length ? t("lists.ask.addedTo", { names, list: parsed.list.name }) : t("lists.ask.alreadyOn", { list: parsed.list.name }),
       added: (r.item_ids || []).map(item_id => ({ item_id })) } });
     onChange();
   }, [onChange]);
@@ -63,11 +63,11 @@ export function useAsk(onChange: () => void) {
       if (what === "yes") {
         const r = await post<{ applied?: string[] }>("/api/chat/apply", { actions: (res.proposed || []).map(p => p.action) });
         clear();
-        toast((r.applied || []).join(" ") || "Done.");
+        toast((r.applied || []).join(" ") || t("common.doneDot"));
       } else {
         for (const a of res.added || []) await post("/api/list/remove", { item_id: a.item_id });
         clear();
-        toast("Undone.");
+        toast(t("common.undone"));
       }
       onChange();
     } catch (e) { toast(errMsg(e)); }
@@ -77,17 +77,17 @@ export function useAsk(onChange: () => void) {
   let node: ReactNode = null;
   if (card) {
     let body: ReactNode, buttons: ReactNode = null;
-    if (card.kind === "thinking") body = "Arya is thinking…";
+    if (card.kind === "thinking") body = t("common.aryaThinking");
     else {
       const res = card.res;
       const added = res.added || [], proposed = res.proposed || [];
-      const said = res.reply || (res.applied || []).join(" ") || "Done.";
+      const said = res.reply || (res.applied || []).join(" ") || t("common.doneDot");
       const skipped = (res.skipped || []).map((s, i) => <span key={i} className="sub">{s}</span>);
       if (proposed.length) {
         body = <>{skipped}<strong>{proposed.map(p => p.text).join(" ")}</strong></>;
         buttons = <>
           <button className="btn secondary" type="button" data-aa="no" onClick={() => act(res, "no")}>{t("common.notNow")}</button>
-          <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? "Yes, do these" : "Yes, do it"}</button></>;
+          <button className="btn primary" type="button" data-aa="yes" disabled={busy} onClick={() => act(res, "yes")}>{proposed.length > 1 ? t("common.yesDoThese") : t("common.yesDoIt")}</button></>;
       } else if (added.length) {
         body = <>{said}{skipped}</>;
         buttons = <>

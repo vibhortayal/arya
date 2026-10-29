@@ -21,7 +21,7 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
   const { t } = useTranslation();
   const { toast } = useToast();
   useCharacters();
-  const [status, setStatus] = useState("A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.");
+  const [status, setStatus] = useState(() => t("score.haulPhotoIntro"));
   const [res, setRes] = useState<Result | null>(null);
   const [added, setAdded] = useState(false);
 
@@ -29,7 +29,7 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
     const f = ev.target.files?.[0];
     ev.target.value = "";
     if (!f) return;
-    setStatus("Reading your haul with Spark…");
+    setStatus(t("score.readingHaul"));
     try {
       if (H.haulPhotoURL) URL.revokeObjectURL(H.haulPhotoURL);
       H.haulPhotoURL = URL.createObjectURL(f);
@@ -41,13 +41,13 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
       setStatus("");
     } catch (e) {
       setStatus("");
-      toast("Could not read that photo: " + (e instanceof Error ? e.message : String(e)));
+      toast(t("common.receiptFile.couldNotReadPhoto", { error: e instanceof Error ? e.message : String(e) }));
     }
   };
   const addExtras = async () => {
     await post("/api/list/from-text", { text: (res?.extras || []).join("\n") }).catch(() => {});
     setAdded(true);
-    toast("Added to your list.");
+    toast(t("today.addedToList"));
   };
   const face = (n: string) => plain ? null : <img key={n} className="rowface" src={asset("assets/characters/" + faceFor(n))} alt="" />;
 
