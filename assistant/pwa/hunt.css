@@ -24,6 +24,28 @@
 /* ---- The row: 44px leading cell, face, text, action ---- */
 .huntrow { gap: 10px; }
 .huntrow .rowface { width: 40px; height: 40px; }
+/* The check (design pass, 2026-10-29): the List's circle, 44px target. */
+.huntcheck {
+  flex: none; width: 44px; height: 44px; border: 0; padding: 0; background: transparent;
+  display: grid; place-items: center; color: var(--panel); cursor: pointer;
+}
+.huntcheck::before {
+  content: ""; grid-area: 1 / 1; width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--tertiary); box-sizing: border-box;
+}
+.huntcheck svg { grid-area: 1 / 1; width: 16px; height: 16px; opacity: 0; position: relative; }
+.huntcheck.got::before { background: var(--accent); border-color: var(--accent); }
+.huntcheck.got svg { opacity: 1; }
+.huntcheck.rep::before { border-style: dashed; }
+.huntcheck.notlive, .huntcheck:disabled { opacity: .5; }
+.huntcheck:not(:disabled):not(.notlive):active::before { background: var(--acc-soft); }
+.huntrow[data-row] { cursor: pointer; }
+.huntrow .grow { min-width: 0; }
+.hqty { color: var(--secondary); font-weight: 600; }
+.morechev {
+  flex: none; width: 32px; min-height: 44px; border: 0; padding: 0; background: transparent;
+  color: var(--tertiary); font-size: 22px; line-height: 1; cursor: pointer;
+}
 .morebtn, .hunt-lead {
   flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%;
   display: grid; place-items: center; background: transparent; color: var(--ink2); padding: 0;
