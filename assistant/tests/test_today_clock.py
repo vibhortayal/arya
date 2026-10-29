@@ -6,28 +6,25 @@ own label, "Data through". Before the fix the header printed
 as_of AS the date, so a quiet week showed last week's date as
 today. Client-source pins, in the house style.
 """
-import os, unittest
+import unittest
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name)) as fh:
-        return fh.read()
+from tests.frontend import src
 
 
 class TestTodayClock(unittest.TestCase):
     def test_header_uses_the_real_date(self):
-        js = read("app.js")
-        # The weekday comes from the live clock, not from as_of.
-        self.assertIn("days[now.getDay()]", js)
+        js = src("screens/Today.tsx")
+        # The weekday and date come from the live clock, not from as_of.
+        self.assertIn("const now = new Date();", js)
+        self.assertIn("{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : \"\"}", js)
         # The old line built the header date FROM as_of.
         self.assertNotIn("h.as_of ? new Date(", js)
         self.assertNotIn('h.as_of ? fmtDate(h.as_of) : ""', js)
 
     def test_data_through_is_labeled_as_data(self):
-        self.assertIn('id="today-through"', read("index.html"))
-        self.assertIn("Data through ${fmtDate(h.as_of)}", read("app.js"))
+        js = src("screens/Today.tsx")
+        self.assertIn('id="today-through"', js)
+        self.assertIn("`Data through ${fmtDate(h.as_of)}`", js)
 
 
 if __name__ == "__main__":

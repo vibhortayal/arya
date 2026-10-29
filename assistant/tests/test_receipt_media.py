@@ -167,16 +167,12 @@ class TestDemoFilesNothing(unittest.TestCase):
 
 class TestViewerClient(unittest.TestCase):
     def test_detail_view_gains_view_receipt_only_with_an_original(self):
-        here = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(here, "..", "pwa", "quest.js"),
-                  encoding="utf-8") as fh:
-            js = fh.read()
+        from tests.frontend import read, src
+        js = src("screens/Receipt.tsx")
         self.assertIn("View receipt", js)
         self.assertIn("/original", js)
-        self.assertIn("r.photo", js)   # gated on the original existing
-        with open(os.path.join(here, "..", "pwa", "styles.css"),
-                  encoding="utf-8") as fh:
-            self.assertIn(".receiptimg", fh.read())
+        self.assertIn("{r.photo && ", js)   # gated on the original existing
+        self.assertIn(".receiptimg", read("styles.css"))
 
 
 if __name__ == "__main__":

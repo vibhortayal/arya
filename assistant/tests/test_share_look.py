@@ -11,12 +11,6 @@ os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"x" * 64
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
 
 
 class FakeClient:
@@ -97,31 +91,40 @@ class TestShareLookRoute(unittest.TestCase):
 
 
 class TestShareLookClient(unittest.TestCase):
+    """Over web/src/screens/haul/Share.tsx (the port of share.js)."""
+
+    def share(self):
+        from tests.frontend import src
+        return src("screens/haul/Share.tsx")
+
     def test_credit_only_on_painted_cards(self):
-        js = read("share.js")
-        self.assertIn('"Made with Arya" + (opts && opts.painted ? " · Powered by Meta Muse" : "")', js)
+        js = self.share()
+        self.assertIn('"Made with Arya" + (o.painted ? " · Powered by Meta Muse" : "")', js)
         self.assertIn("/api/quest/share-look?look=", js)
 
     def test_art_layer_has_no_words_and_no_photo(self):
-        js = read("share.js")
-        art = js[js.index("async function paintLook"):js.index("  /* ---------- sheet")]
-        self.assertIn(", false);", art)          # names off
-        draw_art = js[js.index("function drawArt"):js.index("function draw(g, H)")]
+        js = self.share()
+        art = js[js.index("async function paintLook"):]
+        art = art[:art.index("\n}\n")]
+        self.assertIn(", look, false);", art)          # names off
+        draw_art = js[js.index("function drawArt"):js.index("function draw(g: G")]
         self.assertNotIn("c.title", draw_art)
         self.assertNotIn("c.photo", draw_art)
 
     def test_photo_off_by_default_and_switches_looks_off(self):
-        js = read("share.js")
+        js = self.share()
         self.assertIn("photo: false", js)
-        self.assertIn("!!opts.photo", js)
+        self.assertIn('(l !== "plain" && (!!o.photo', js)
 
     def test_sheet_surfaces(self):
-        html = read("index.html")
+        from tests.frontend import app
+        js = self.share()
         for needle in ('id="share-opts"', 'id="share-looks"', 'id="share-again"',
-                       'id="share-copy"', 'data-look="badge"', 'data-look="friends"',
-                       'data-look="story"', 'data-size="post"', ">Save image<"):
-            self.assertIn(needle, html)
-        self.assertNotIn("Share as video", html + read("quest.js"))
+                       'id="share-copy"', "data-look={l}", "data-size={sz}", ">Save image<"):
+            self.assertIn(needle, js)
+        for look in ('"badge"', '"friends"', '"story"', '"post"'):
+            self.assertIn(look, js)
+        self.assertNotIn("Share as video", app())
 
 
 if __name__ == "__main__":

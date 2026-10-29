@@ -16,12 +16,6 @@ from fastapi.testclient import TestClient  # noqa: E402
 TODAY = date.today().isoformat()
 
 
-def read(name):
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "pwa", name), encoding="utf-8") as fh:
-        return fh.read()
-
-
 class FakeClient:
     def __init__(self, *a, **k):
         pass
@@ -133,8 +127,12 @@ class TestShares(unittest.TestCase):
 
 
 class TestShareClient(unittest.TestCase):
+    """Over the React share engine (web/src/screens/haul/Share.tsx, the
+    port of share.js) and the screens that open it."""
+
     def test_share_engine_and_surfaces(self):
-        js = read("share.js")
+        from tests.frontend import app, src
+        js = src("screens/haul/Share.tsx")
         for needle in ("@traderjoes", "@costco",
                        "Arya keeps count", "Wild finds"):
             self.assertIn(needle, js)
@@ -143,39 +141,27 @@ class TestShareClient(unittest.TestCase):
             self.assertNotIn(banned, js)
         # A photo or a receipt is never called verified (haul slice).
         self.assertNotIn("receipt-verified", js)
-        q = read("quest.js")
-        for needle in ('id="share-haul"', 'id="share-love"',
-                       'id="share-sos"', 'id="haul-photo"',
-                       "Wild finds</h3>", '$("#btn-wild")',
+        hp = src("screens/score/HaulPhoto.tsx")
+        for needle in ('id="share-haul"', 'id="share-love"', 'id="share-sos"', 'id="haul-photo"',
                        "haul-photo?session="):
-            self.assertIn(needle, q)
-        html = read("index.html")
-        for needle in ('id="share-sheet"', 'id="share-canvas"',
-                       'id="wild-form"',
-                       'id="btn-wild"', 'src="share.js"'):
-            self.assertIn(needle, html)
-        a = read("app.js")
-        self.assertIn('post("/api/quest/avatar"', a)
-        self.assertNotIn("paintPlayerPicker", a)  # one avatar, no second picker
-        self.assertNotIn('id="pf-player"', html)
+            self.assertIn(needle, hp)
+        self.assertIn('<h3 className="sect">Wild finds</h3>', src("screens/Score.tsx"))
+        hunt = src("screens/Hunt.tsx")
+        for needle in ('id="wild-form"', 'id="btn-wild"'):
+            self.assertIn(needle, hunt)
+        for needle in ('id="share-sheet"', 'id="share-canvas"'):
+            self.assertIn(needle, js)
+        self.assertIn('post("/api/quest/avatar", { file: f })', src("screens/Profile.tsx"))
+        everything = app()
+        self.assertNotIn("PlayerPicker", everything)  # one avatar, no second picker
+        self.assertNotIn('id="pf-player"', everything)
 
     def test_no_spend_on_cards(self):
-        js = read("share.js")
+        from tests.frontend import src
+        js = src("screens/haul/Share.tsx")
         self.assertNotIn("receipt.total", js)
         self.assertNotIn("money(", js)
 
 
 if __name__ == "__main__":
     unittest.main()
-
-    def test_share_at_finish_settled_or_not(self):
-        # Owner's phone test (2026-10-28): a 10/10 haul finished with
-        # Skip offered nothing to share — the buttons were gated on
-        # the receipt. Share belongs to the finish; the CARD carries
-        # the honesty: receipt-verified only once settled.
-        q = read("quest.js")
-        self.assertNotIn('${attached ? `<button class="btn primary grow" id="share-haul"', q)
-        js = read("share.js")
-        self.assertIn('sess.state === "done"', js)
-        self.assertIn("pts to bank", js)
-        self.assertIn("receipt still to add", js)

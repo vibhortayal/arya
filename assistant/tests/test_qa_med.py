@@ -4,24 +4,21 @@ import os, tempfile, unittest
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name)) as f:
-        return f.read()
+from tests.frontend import read, src  # noqa: E402
 
 
 class TestFrontEnd(unittest.TestCase):
     def test_staples_count_skips_checked_and_typed(self):
-        js = read("app.js")
-        body = js.split("function staplesLine(")[1].split("\n}")[0]
-        self.assertIn('!i.checked && i.source !== "user"', body)
+        # app.js staplesLine counted due staples, never a ticked-off or
+        # hand-typed row; it was no longer called on main. The List
+        # overhaul shows due staples as suggestions: the rows the
+        # server sends with on_list false (a ticked or typed item is on
+        # the list), filed per list.
+        self.assertIn("export const suggestions = (d: HomeData) => d.list.items.filter(i => !i.on_list);",
+                      src("screens/lists/model.ts"))
 
     def test_tabs_open_at_the_top(self):
-        js = read("app.js")
-        body = js.split("function show(id)")[1].split("\n}")[0]
-        self.assertIn("window.scrollTo(0, 0)", body)
+        self.assertIn("useEffect(() => { window.scrollTo(0, 0); }, [top.view, top.key]);", src("app/nav.tsx"))
 
     def test_ask_bubbles_clear_the_composer(self):
         self.assertIn("#chat-log > .bubble { scroll-margin-bottom",

@@ -7,11 +7,7 @@ os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    return open(os.path.join(PWA, name)).read()
+from tests.frontend import src  # noqa: E402
 
 
 class TestTypedQuantity(unittest.TestCase):
@@ -51,10 +47,11 @@ class TestTypedQuantity(unittest.TestCase):
 
 class TestHuntSurvivesReset(unittest.TestCase):
     def test_client_rebuilds_a_lost_session(self):
-        js = read("quest.js")
-        self.assertIn("async function qRevive(", js)
-        body = js.split("async function qSetState(")[1].split("\n}")[0]
-        self.assertIn("qRevive(sess)", body)
+        js = src("screens/hunt/model.ts")
+        self.assertIn("export async function qRevive(sess: Session)", js)
+        body = js.split("export async function qSetState(")[1].split("\n}")[0]
+        self.assertIn("await qRevive(sess);", body)
         self.assertIn("Q_GONE", body)
-        check = js.split("async function qCheck(")[1].split("\nlet qFlushing")[0]
+        check = js.split("export async function qCheck(")[1].split("\n}")[0]
         self.assertIn("qSessionGone(e)", check)
+        self.assertIn("await qRevive(sess);", check)

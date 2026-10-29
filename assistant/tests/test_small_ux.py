@@ -11,12 +11,7 @@ import os, tempfile, unittest
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+from tests.frontend import read, src  # noqa: E402
 
 
 class TestAuthMe(unittest.TestCase):
@@ -44,11 +39,10 @@ class TestAuthMe(unittest.TestCase):
 
 class TestSmallUxPins(unittest.TestCase):
     def test_boot_branches_on_me_user(self):
-        self.assertIn("if (me && me.user)", read("app.js"))
+        self.assertIn("if (me && me.user)", src("app/session.tsx"))
 
     def test_hunts_tile_label(self):
-        js = read("app.js")
-        self.assertIn('<div class="sl">Hunts finished</div>', js)
+        self.assertIn('<div className="sl">Hunts finished</div>', src("screens/QuestProgress.tsx"))
 
     def test_token_rows_wrap_and_signout_target(self):
         css = read("styles.css")
