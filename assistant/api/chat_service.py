@@ -14,6 +14,7 @@ def snapshot():
     d = state.derived()
     nm = state.names()
     dash = state.dashboard()
+    checked = {i["item_id"] for i in d["smart_list"]["items"] if i.get("checked")}
     pats = []
     for p in d["patterns"]:
         if p["purchase_count"] >= 2:
@@ -23,11 +24,13 @@ def snapshot():
                          "due": p["due"], "seen_in_fridge": (p.get("seen") or {}).get("date")})
     return {
         "as_of": state.as_of(),
-        # Running low = what the patterns say is due: not the checked
-        # rows, not what the user typed in by hand (QA 2026-10-28).
-        "running_low": [i.get("name") or nm.get(i["item_id"], i["item_id"])
-                        for i in d["smart_list"]["items"]
-                        if not i.get("checked") and i.get("source") != "user"],
+        # Running low = what Today shows (state.running_low), minus the
+        # rows already checked off: not what the user typed in by hand
+        # (QA 2026-10-28). It does not depend on the list: removing a
+        # row from the list does not make the item stop running low.
+        "running_low": [nm.get(p["item_id"], p["item_id"])
+                        for p in state.running_low(d)
+                        if p["item_id"] not in checked],
         "on_list": [i.get("name") or nm.get(i["item_id"], i["item_id"])
                     for i in d["smart_list"]["items"] if not i.get("checked")],
         "currency": "USD (dollars)",
