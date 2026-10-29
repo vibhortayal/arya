@@ -96,7 +96,7 @@ def _adopt_household_data(username):
     dest = os.path.join(_root(), "users", username)
     os.makedirs(dest, exist_ok=True)
     for name in ("receipts.json", "dictionary.json", "cart.json", "flags.json",
-                 "curator.json", "quest.json", "lists.json"):
+                 "curator.json", "quest.json", "lists.json", "settings.json"):
         src = _path(name)
         if os.path.exists(src):
             shutil.move(src, os.path.join(dest, name))

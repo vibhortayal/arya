@@ -312,7 +312,7 @@
     ui.choice = {};
     open.forEach(it => { ui.choice[it.name] = "saved"; });
     const rows = open.map((it, k) => `<div class="row hm-leaverow">
-      <div class="grow"><span class="name">${esc(it.name)}${it.qty > 1 ? ` - x${qtyFmt(it.qty)}` : ""}</span>${qIsReportedByMe(sess, it) ? `<span class="sub">Reported missing</span>` : ""}</div>
+      <div class="grow"><span class="name">${esc(it.name)}${qtyTag(it) ? ` - ${esc(qtyTag(it))}` : ""}</span>${qIsReportedByMe(sess, it) ? `<span class="sub">Reported missing</span>` : ""}</div>
       <div class="hm-seg" role="group" aria-label="What to do with ${esc(it.name)}">
         <button type="button" class="hm-segbtn" data-act="how" data-k="${k}" data-how="saved" aria-pressed="true">Next trip</button>
         <button type="button" class="hm-segbtn" data-act="how" data-k="${k}" data-how="dropped" aria-pressed="false">Drop</button>
@@ -628,7 +628,7 @@
     if (left.length) {
       html = `<div class="group hm-leftgroup"><button type="button" class="hm-leftbar" data-act="fold" aria-expanded="${String(ui.leftOpen)}"><span>Left for next time (${left.length})</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="hm-chev${ui.leftOpen ? " open" : ""}"><path d="M6 9l6 6 6-6"/></svg></button>`;
       if (ui.leftOpen) {
-        html += left.map((e, k) => `<div class="row hm-leftrow"><div class="grow"><span class="name">${esc(e.name)}${e.qty > 1 ? ` - x${qtyFmt(e.qty)}` : ""}</span><span class="sub">${e.how === "dropped" ? "Not needed today" : "Saved for next trip"}</span></div><button type="button" class="btn" data-back="${k}" aria-label="Bring back ${esc(e.name)}">Bring back</button></div>`).join("");
+        html += left.map((e, k) => `<div class="row hm-leftrow"><div class="grow"><span class="name">${esc(e.name)}${qtyTag(e) ? ` - ${esc(qtyTag(e))}` : ""}</span><span class="sub">${e.how === "dropped" ? "Not needed today" : "Saved for next trip"}</span></div><button type="button" class="btn" data-back="${k}" aria-label="Bring back ${esc(e.name)}">Bring back</button></div>`).join("");
       }
       html += `</div>`;
     }

@@ -190,7 +190,7 @@ class TestHuntMenuShell(unittest.TestCase):
                     'data-foundit="${i}"', 'data-unfind="${i}"', 'aria-label="More for ${esc(it.name)}"',
                     "Found it after all", "Put back", "Boss", "Just added", "findline"):
             self.assertIn(pin, row)
-        self.assertIn("Grab x${qty}", row)
+        self.assertIn("Grab ${esc(qtyTag(it))}", row)
         self.assertEqual(EMOJI.findall(row), [])
 
     def test_no_emoji_in_new_markup_and_scripts(self):

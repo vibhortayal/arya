@@ -86,22 +86,50 @@ def _clean_piece(s):
             break
     if s.lower().startswith("some "):
         s = s[5:]
+    s = _QTY_UNIT_TAIL.sub("", s)                  # trailing qty: x2, 2 L, x 2 kg
+    s = _QTY_UNIT_HEAD.sub("", s)                  # leading qty: 2 x eggs, 2 kg rice
     s = re.sub(r"\s*[x×]\s*\d+\s*$", "", s)       # trailing qty: x2
     s = re.sub(r"^\d+\s*[x×]\s+", "", s)           # leading qty: 2 x eggs
     return s.strip(" :.!").strip()
 
 
+# A unit typed next to a count ("milk 2 L", "2 kg rice", "rice x 2 kg").
+# Free text once it is on the list; this set is only what the typed
+# parser trusts as a unit so "2 percent milk" stays a name.
+_UNITS = ("l|liter|liters|litre|litres|ml|kg|kgs|g|gram|grams|lb|lbs|oz|"
+          "gal|gallon|gallons|pack|packs|dozen|bunch|bunches|bag|bags|"
+          "box|boxes|can|cans|bottle|bottles|jar|jars")
+_UNIT_TAIL = (r"\s*(?:[x×]\s*)?(?<![\d.])(\d+)\s*(" + _UNITS + r")\b\.?\s*[.!]*\s*$")
+_UNIT_HEAD = (r"^(?<![\d.])(\d+)\s*(?:[x×]\s*)?(" + _UNITS + r")\b\.?\s+")
+_QTY_UNIT_TAIL = re.compile(_UNIT_TAIL, re.I)
+_QTY_UNIT_HEAD = re.compile(_UNIT_HEAD, re.I)
 _QTY_TAIL = re.compile(r"\s*[x×]\s*(\d+)\s*[.!]*\s*$")
 _QTY_HEAD = re.compile(r"^(\d+)\s*[x×]\s+")
+UNIT_MAX = 16
+
+
+def clean_unit(unit):
+    """A unit as stored: free text, one short line, no conversion."""
+    return " ".join(str(unit or "").split())[:UNIT_MAX].strip()
+
+
+def piece_qty_unit(piece):
+    """(quantity, unit) a typed piece carries: "eggs x 2" -> (2, ""),
+    "milk 2 L" -> (2, "L"), "2 kg rice" -> (2, "kg"). Quantity is 1 and
+    unit "" when it carries none. _clean_piece strips both from the
+    name; this reads them, so the two stay a pair."""
+    s = (piece or "").strip()
+    m = _QTY_UNIT_TAIL.search(s) or _QTY_UNIT_HEAD.match(s)
+    if m:
+        return max(1, min(int(m.group(1)), 99)), m.group(2)
+    m = _QTY_TAIL.search(s) or _QTY_HEAD.match(s)
+    return (max(1, min(int(m.group(1)), 99)), "") if m else (1, "")
 
 
 def piece_qty(piece):
     """The quantity a typed piece carries ("eggs x 2", "2 x eggs"),
-    1 when it carries none. _clean_piece strips the quantity from the
-    name; this reads it, so the two stay a pair."""
-    s = (piece or "").strip()
-    m = _QTY_TAIL.search(s) or _QTY_HEAD.match(s)
-    return max(1, min(int(m.group(1)), 99)) if m else 1
+    1 when it carries none."""
+    return piece_qty_unit(piece)[0]
 
 
 def _sensible(name):
@@ -142,18 +170,24 @@ def _pieces(text):
         yield from pieces
 
 
-def split_list_items(text):
-    """Typed or pasted list text -> item names. Splits on lines,
+def split_list_items_units(text):
+    """Typed or pasted list text -> (name, qty, unit). Splits on lines,
     semicolons, and commas; strips bullets, numbering, checkboxes,
-    lead-ins ("add", "please buy"), and trailing quantities.
+    lead-ins ("add", "please buy"), and trailing quantities and units.
     Duplicates collapse, order is kept."""
     out, seen = [], set()
     for piece in _pieces(text):
         name = _clean_piece(piece)
         if _sensible(name) and name.lower() not in seen:
             seen.add(name.lower())
-            out.append((name, piece_qty(piece)))
+            qty, unit = piece_qty_unit(piece)
+            out.append((name, qty, unit))
     return out
+
+
+def split_list_items(text):
+    """Same split as (name, qty) pairs."""
+    return [(n, q) for n, q, _u in split_list_items_units(text)]
 
 
 def skipped_pieces(text, limit=5):

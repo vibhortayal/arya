@@ -755,7 +755,8 @@ def quest_plan():
         if hid not in stores:
             hid = _quest.resolve_group(name) or hid
         lst.append({"item_id": iid, "history_id": hid, "name": name,
-                    "qty": i.get("qty") or 1, "list": i.get("list")})
+                    "qty": i.get("qty") or 1, "unit": i.get("unit") or "",
+                    "list": i.get("list")})
     return pack_api.enrich_plan({"list": lst, "items": items}, d)
 
 
@@ -1190,7 +1191,7 @@ def approve_route():
 # probe POST once left a junk record behind).
 _FLAG_KEYS = {"manual", "never", "out", "expired", "snoozed_until",
               "dismissed_on", "checked_on", "check_ok", "qty_override",
-              "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze"}
+              "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze", "unit"}
 
 
 @app.post("/api/items/{item_id}/flag")
@@ -1255,7 +1256,7 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name, qty=1, list_id=None):
+def _add_name_to_list(name, qty=1, list_id=None, unit=""):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
@@ -1268,6 +1269,8 @@ def _add_name_to_list(name, qty=1, list_id=None):
         flag = {"manual": True, "dismissed_on": None}
         if qty and qty > 1:
             flag["qty_override"] = qty
+        if unit:
+            flag["unit"] = unit
         _merge_flag(known, flag)
         return {"item_id": known, "name": state.flags().get(known, {}).get("name")
                 or state.names().get(known, name)}
@@ -1275,6 +1278,8 @@ def _add_name_to_list(name, qty=1, list_id=None):
     flag = {"manual": True, "name": name, "dismissed_on": None}
     if qty and qty > 1:
         flag["qty_override"] = qty
+    if unit:
+        flag["unit"] = unit
     if list_id:
         flag["list"] = list_id
     _merge_flag(item_id, flag)
@@ -1332,10 +1337,11 @@ async def list_add(req: Request):
     fields = _list_add_fields(body)  # a bad qty fails before any write
     if not item_id:
         # A typed quantity ("eggs x 2") rides along; a qty in the body wins.
-        from api.list.intake import split_list_items
-        typed = split_list_items(str(body["name"]))
-        name, qty = typed[0] if len(typed) == 1 else (body["name"], 1)
-        item_id = _add_name_to_list(name, qty)["item_id"]
+        from api.list.intake import split_list_items_units, clean_unit
+        typed = split_list_items_units(str(body["name"]))
+        name, qty, unit = typed[0] if len(typed) == 1 else (body["name"], 1, "")
+        unit = clean_unit(body["unit"]) if "unit" in body else unit
+        item_id = _add_name_to_list(name, qty, unit=unit)["item_id"]
         _list_add_extras(item_id, body, fields)
         return {"item_id": item_id}
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
@@ -1356,10 +1362,10 @@ async def list_from_text(req: Request):
     list_id = (body.get("list_id") or None)
     if list_id and not any(l["id"] == list_id for l in state.named_lists()):
         raise HTTPException(404, "no such list")
-    from api.list.intake import split_list_items, extract_items_model, skipped_pieces
-    typed = split_list_items(text)
+    from api.list.intake import split_list_items_units, extract_items_model, skipped_pieces
+    typed = split_list_items_units(text)
     skipped = skipped_pieces(text) if typed else []
-    names = [n for n, _q in typed]
+    names = [n for n, _q, _u in typed]
     source = "split"
     if not names:
         if not os.environ.get("MODEL_API_KEY"):
@@ -1367,10 +1373,10 @@ async def list_from_text(req: Request):
         _budget_guard()
         client = MetaClient(ledger=_ledger())
         names = extract_items_model(text, client)
-        typed = [(n, 1) for n in names]
+        typed = [(n, 1, "") for n in names]
         source = "model"
     on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
-    added = [_add_name_to_list(n, q, list_id) for n, q in typed]
+    added = [_add_name_to_list(n, q, list_id, u) for n, q, u in typed]
     # Already on the list: neither merged nor new, so not "added".
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
@@ -1579,8 +1585,41 @@ async def list_qty(req: Request):
     if not item_id:
         raise HTTPException(400, "item_id is required")
     qty = _int_field(body, "qty", 1)
-    _merge_flag(item_id, {"qty_override": max(1, qty)})
+    flag = {"qty_override": max(1, qty)}
+    if "unit" in body:
+        from api.list.intake import clean_unit
+        flag["unit"] = clean_unit(body["unit"])  # "" clears it
+    _merge_flag(item_id, flag)
     return {"ok": True}
+
+
+# ---- Account settings. Currency only so far (owner, 2026-10-29): it
+# changes the symbol prices show with, nothing else. No exchange rates
+# and no conversion: an amount is shown as it was read.
+CURRENCIES = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
+              "CAD": "C$", "AUD": "A$"}
+
+
+@app.get("/api/settings")
+def settings_get():
+    code = state._load("settings.json", {}).get("currency", "USD")
+    if code not in CURRENCIES:
+        code = "USD"
+    return {"currency": code, "symbol": CURRENCIES[code],
+            "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()]}
+
+
+@app.post("/api/settings")
+async def settings_set(req: Request):
+    body = await _json_obj(req)
+    code = str(body.get("currency") or "").upper()
+    if code not in CURRENCIES:
+        raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
+    with state.file_lock("settings.json"):
+        cur = state._load("settings.json", {})
+        cur["currency"] = code
+        state._save("settings.json", cur)
+    return settings_get()
 
 
 # ---- Named lists (owner, 2026-10-29): Costco, Trader Joe's, Indian
@@ -2159,7 +2198,7 @@ def account_export():
            "user": state._current_user.get()}
     for name in ("receipts.json", "dictionary.json", "flags.json",
                  "cart.json", "quest.json", "my_stores.json",
-                 "eyes.json", "curator.json", "lists.json"):
+                 "eyes.json", "curator.json", "lists.json", "settings.json"):
         out[name[:-5]] = state._load(name, None)
     return Response(_json.dumps(out, indent=1),
                     media_type="application/json",

@@ -145,6 +145,9 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .stepper .qty { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; }
 .qtybtn { flex: none; min-width: 52px; height: 36px; border: none; border-radius: 18px; background: var(--fill); font-size: 15px; font-weight: 600; color: var(--label); font-variant-numeric: tabular-nums; }
 .qtyinput { flex: none; width: 64px; height: 36px; padding: 0 8px; text-align: center; border-radius: 10px; }
+.qtyedit { flex: none; display: inline-flex; gap: 6px; }
+.qtyedit .qtyinput { width: 56px; }
+.qtyedit .qtyunit { width: 68px; }
 .listrow { transition: transform .15s ease-out; }
 .listrow.swipe-ready { background: rgba(200, 30, 30, 0.12); }
 .listhint { margin: 8px 4px 0; }
@@ -1012,6 +1015,7 @@ input[type=file]::file-selector-button {
   .listrow { flex-wrap: wrap; }
   .listrow .grow { flex: 1 1 130px; }
   .listrow .qtybtn { margin-left: 42px; }
+  .listrow .qtyedit { margin-left: auto; }
 }
 .listrow.flash { animation: rowflash 1.6s ease-out; }
 @keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }
@@ -1082,6 +1086,8 @@ body.hunting #view-hunt.full .askbar {
 .optrow.kept .opt-from { text-decoration: none; color: var(--label); font-weight: 700; }
 .optrow.kept .opt-to { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--tertiary); font-weight: 600; }
 .opt-undo { background: none; border: 0; padding: 6px 0; min-height: 40px; font: inherit; font-weight: 600; color: var(--accent-text); cursor: pointer; }
+
+.curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 16px; }
 .notgrocery { display: block; }
 .notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
 

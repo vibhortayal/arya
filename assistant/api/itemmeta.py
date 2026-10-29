@@ -7,11 +7,11 @@ through the Optimizer into the hunt session. Deterministic code only:
 no model, no Meta call, and no import of meta_client.
 """
 
-EXTRA_KEYS = ("note", "variant", "by", "src", "aisle")
+EXTRA_KEYS = ("note", "variant", "by", "src", "aisle", "unit")
 SRC_ALLOWED = ("list", "typed", "starter", "usual", "due", "carried",
                "queued", "added")
 MAX_LEN = 60
-_CAPS = {"by": 24}
+_CAPS = {"by": 24, "unit": 16}
 
 
 def clean_extras(raw):
