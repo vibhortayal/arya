@@ -9,7 +9,8 @@ they are structure, not identity, and never enter the review queue;
 status is auto at confidence >= 0.8, else unverified; totals_reconcile
 is computed, never taken from the model.
 """
-import hashlib, json, os
+import hashlib
+import re, json, os
 from datetime import datetime
 
 from api.meta_client import MODELS, parse_json
@@ -79,7 +80,35 @@ def _is_discount(ln):
             or (ln.get("raw") or "").lstrip().startswith("/"))
 
 
+_RETURN_LABEL = re.compile(r"^\W*(return(ed)?|refund(ed)?|void(ed)?|credit)\b", re.I)
+
+
+def _num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def sign_returns(lines):
+    """A return keeps a NEGATIVE amount and quantity (-4.99, -1) wherever
+    it is parsed, stored or shown. Readers often print the refund as a
+    positive number next to a return/refund/credit/void label, so a
+    line labelled that way becomes a return, and a return's amounts and
+    quantity are flipped to negative; one that is already negative keeps
+    its sign. Discounts are left as they are."""
+    for ln in lines:
+        if ln.get("line_type", "item") == "item" and _RETURN_LABEL.match(
+                ln.get("raw") or ln.get("decoded_name") or ""):
+            ln["line_type"] = "return"
+        if ln.get("line_type") != "return":
+            continue
+        for key in ("line_total", "unit_price"):
+            if _num(ln.get(key)):
+                ln[key] = -abs(ln[key])
+        ln["qty"] = -abs(ln["qty"]) if _num(ln.get("qty")) and ln["qty"] else -1
+    return lines
+
+
 def _finish(lines, subtotal):
+    sign_returns(lines)
     for ln in lines:
         ln.setdefault("allocation", "HOUSEHOLD")
         ln.setdefault("for_person", None)

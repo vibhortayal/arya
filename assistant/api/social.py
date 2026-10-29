@@ -321,7 +321,7 @@ def _receipt_summary(r):
             "items": sum(1 for ln in lines
                          if ln.get("line_type") == "item"),
             "returns_total": round(sum(
-                ln.get("line_total") or 0 for ln in lines
+                -abs(ln.get("line_total") or 0) for ln in lines
                 if ln.get("line_type") == "return"), 2),
             "photo": r.get("image_ref"),
             "media_type": r.get("media_type"),
@@ -363,13 +363,18 @@ def receipt_detail(receipt_id):
     for r in state.receipts():
         if r["receipt_id"] == receipt_id:
             out = _receipt_summary(r)
+
+            def signed(ln, key):  # a return reads negative, even filed before returns were signed
+                v = ln.get(key)
+                return -abs(v) if ln.get("line_type") == "return" \
+                    and isinstance(v, (int, float)) else v
             out.update({
                 "subtotal": r.get("subtotal"), "tax": r.get("tax"),
                 "source_type": r.get("source_type"),
                 "lines": [{"name": ln.get("decoded_name") or ln.get("raw"),
-                           "qty": ln.get("qty", 1),
-                           "unit_price": ln.get("unit_price"),
-                           "line_total": ln.get("line_total"),
+                           "qty": signed(ln, "qty") if ln.get("qty") is not None else 1,
+                           "unit_price": signed(ln, "unit_price"),
+                           "line_total": signed(ln, "line_total"),
                            "line_type": ln.get("line_type", "item"),
                            "status": ln.get("status")}
                           for ln in r.get("lines", [])]})

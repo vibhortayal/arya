@@ -40,7 +40,8 @@ class TestJsonImport(unittest.TestCase):
         r = normalize_costco_json(load("synthetic-costco-refund.json"))
         self.assertTrue(r["totals_reconcile"])
         self.assertEqual(r["lines"][0]["line_type"], "return")
-        self.assertEqual(r["lines"][0]["qty"], 1)
+        self.assertEqual(r["lines"][0]["qty"], -1)
+        self.assertLess(r["lines"][0]["line_total"], 0)
 
 
 class TestDecodeText(unittest.TestCase):

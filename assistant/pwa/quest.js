@@ -3698,7 +3698,7 @@ async function openReceipt(receiptId) {
   questShow("view-receipt");
   const lines = r.lines.map(ln => {
     if (ln.line_type === "return") {
-      return row(esc(ln.name), "Returned", qSigned(ln.line_total));
+      return row(esc(ln.name), Math.abs(ln.qty) > 1 ? `Returned × ${qtyFmt(Math.abs(ln.qty))}` : "Returned", qSigned(ln.line_total));
     }
     if (ln.line_type === "discount") {
       return row(esc(ln.name), "Savings on the item above", qSigned(ln.line_total));

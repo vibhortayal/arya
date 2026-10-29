@@ -887,7 +887,10 @@ def save_cart(cart):
 def dashboard():
     rs = receipts()
     entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
-    spend = round(sum(e["price"] for e in entries if e["event_type"] == "purchase"), 2)
+    # Spend is net: a return carries a negative price, so it comes off the
+    # month, store and total it was refunded against. returns_total stays a
+    # positive size (the app prints the minus).
+    spend = round(sum(e["price"] for e in entries), 2)
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
     by_month, by_store, by_item = {}, {}, {}
@@ -907,8 +910,6 @@ def dashboard():
             kind_of[iid] = (g["sub"] or "other") if g["kind"] == "other" else None
     other_total, other_by_kind = 0.0, {}
     for e in entries:
-        if e["event_type"] != "purchase":
-            continue
         by_month[e["date"][:7]] = round(by_month.get(e["date"][:7], 0) + e["price"], 2)
         by_store[e["store_id"]] = round(by_store.get(e["store_id"], 0) + e["price"], 2)
         by_item[e["item_id"]] = round(by_item.get(e["item_id"], 0) + e["price"], 2)
