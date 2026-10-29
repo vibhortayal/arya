@@ -22,12 +22,12 @@ import type { Goal, WorldApi } from "../world/World3D";
 
 const World3D = lazy(() => import("../world/World3D").then(m => ({ default: m.World3D })));
 
-type Props = { trip: Trip; source: QuestSource; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void };
+type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void };
 type SheetName = null | "list" | "route" | "help" | "quit";
 type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
 
-export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
+export function Play({ trip, source, avatar, onTrip, onFinish, onQuit }: Props) {
   const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
   const [page, setPage] = useState<Page>("main");
   const [walking, setWalking] = useState<Goal | null>(null);
@@ -179,7 +179,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
     <div className={"qg-play qg-live " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
       <div className="qg-worldwrap">
         <Suspense fallback={<div className="qg-loading">Opening the store…</div>}>
-          <World3D trip={trip} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} />
+          <World3D trip={trip} avatar={avatar} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} />
         </Suspense>
       </div>
 
@@ -271,7 +271,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
               {!left.length && <span className="qg-alldone">Everything on your list is decided ✓</span>}
             </div>
             {walking ? (
-              <div className="qg-walking">{walking.kind === "checkout" ? "Heading to the checkout…" : `Walking to ${trip.items.find(i => walking.kind === "item" && i.key === walking.key)?.name ?? "it"}… follow the dots`}</div>
+              <div className="qg-walking">{walking.kind === "checkout" ? "Heading to the checkout…" : `Zooming to ${trip.items.find(i => walking.kind === "item" && i.key === walking.key)?.name ?? "it"}…`}</div>
             ) : nextItem && !done ? (
               <button className="qg-go" onClick={() => walkTo({ kind: "item", key: nextItem.key })}>
                 Next: {nextItem.name} <span className="qg-go-sub">{(() => { const s = L.sections.find(x => x.id === nextItem.section)!; return sectionView(trip, s.id) === "fog" ? "in the fog" : s.short; })()}</span>

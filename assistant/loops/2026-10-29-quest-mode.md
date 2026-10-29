@@ -70,3 +70,18 @@ Next
   AppSource Build tests, `e2e/build.e2e.mjs`. Full Python suite 1212 OK,
   vitest 203 pass, all 35 e2e specs pass. Spark path not live-tested
   (no key in this session).
+
+## Part 5: the shopper zooms and wears your avatar
+- Owner: "make the shopper zoom instead of walking, reduce the time. and
+  shopper should look like the user avatar".
+- `world/motion.ts`: any trip takes about 0.6 s (speed = path length /
+  0.6, 8 to 45 units/s), easing into the stop; a fast zoom covers
+  several path points per frame. Reduced motion jumps there. The
+  shopper glides on the cart leaning in (no leg swing); the camera
+  keeps up while moving. Other shoppers still stroll (practice only).
+- The shopper's face is the player's Arya avatar (Profile), cut round
+  with a rim, always facing the camera. The flow is unchanged: go to the
+  shelf, then choose.
+- Tests: `world/motion.test.ts` (crosses a store in about a second,
+  many times faster than the old walk, one arrival exactly on the stop,
+  reduced motion). Full Python suite, vitest 214, all e2e specs pass.
