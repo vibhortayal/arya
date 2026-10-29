@@ -42,9 +42,11 @@ export type QuestGameProps = {
    * start that only informs, and one offer at the end. Never mid-trip,
    * where leaving the game would lose the trip. */
   onMapStore?: (store: { id: string; name: string }) => void;
+  /* Open straight into the Practice Market (the host's guide). */
+  practice?: boolean;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, practice }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -66,6 +68,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     const eggs = items.find(i => i.name === "Eggs")?.key ?? null;
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, golden: eggs }) });
   };
+  useEffect(() => { if (practice) void startPractice(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   /* Walk a built store: practice on its own layout with the player's list (nothing is saved). */
   const walkBuilt = (graph: StoreGraph, name: string) => {
     const src = list?.items.length ? list : PRACTICE_LIST;

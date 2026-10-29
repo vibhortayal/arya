@@ -916,6 +916,34 @@ body.questmode #avatar-btn { display: none; }
 .cp-parts { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; gap: 6px; }
 .cp-parts span { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: background .3s; }
 .cp-parts span.on { background: #fff; }
+/* Guided scan (owner, 2026-10-29): a panorama-style sweep, scan lines,
+ * and outlines only for what Arya read. People are never outlined. */
+.cp-cam.scanning { --scan: #5FE3C0; --sign: #FFC94D; }
+.cp-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(95,227,192,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(95,227,192,.10) 1px, transparent 1px); background-size: 28px 28px; }
+.cp-sweep { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--scan); box-shadow: 0 0 14px 3px rgba(95,227,192,.55); animation: cp-sweep 2.6s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes cp-sweep { from { left: 15%; } to { left: 85%; } }
+.cp-marks { position: absolute; inset: 0; pointer-events: none; animation: cp-fade 3.2s ease-out forwards; }
+@keyframes cp-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.cp-mark { position: absolute; border: 2px solid var(--scan); border-radius: 6px; }
+.cp-mark.sign { border-color: var(--sign); }
+.cp-mark span { position: absolute; left: 0; top: 2px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; background: var(--scan); color: #062a20; }
+.cp-mark.sign span { background: var(--sign); color: #3a2a00; }
+.cp-guide { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.cp-track { position: relative; height: 30px; border-radius: 9px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.18); overflow: hidden; }
+.cp-track span { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(95,227,192,.25), rgba(95,227,192,.5)); border-right: 2px solid var(--scan); transition: width .4s ease-out; }
+.cp-track b { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #fff; font-size: 12px; }
+.cp-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.cp-chips span { font-size: 12px; font-weight: 600; color: #fff; background: rgba(0,0,0,.5); border-radius: 980px; padding: 3px 9px; }
+.cp-chips span.ok::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--scan); margin-right: 5px; vertical-align: 1px; }
+.cp-coach { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(20,60,50,.88); color: #fff; display: flex; flex-direction: column; gap: 2px; }
+.cp-coach b { font-size: 16px; } .cp-coach span { font-size: 13px; color: #cdeee4; }
+.cp-coach.wait { background: rgba(60,60,66,.92); } .cp-coach.wait span { color: #d6d6dc; }
+.cp-opt { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: 15px; }
+.cp-opt input { margin-top: 3px; width: 20px; height: 20px; accent-color: var(--accent); }
+.cp-opt small { display: block; color: var(--secondary); font-size: 13px; }
+.cp-extra { text-align: left; margin: 8px 0; }
+.cp-extra .row .sub { margin-left: 8px; text-align: right; }
+@media (prefers-reduced-motion: reduce) { .cp-sweep { display: none; } .cp-marks { animation: none; } .cp-track span { transition: none; } }
 .mp-reward { text-align: center; }
 .mp-reward .pts { font-size: 34px; font-weight: 800; color: var(--accent); animation: mp-pop .5s ease-out; }
 .mp-reward .what { font-size: 17px; font-weight: 600; margin: 4px 0 10px; }
@@ -1454,4 +1482,87 @@ button.gmember { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .fr-hole { transition: none; }
   .fr-tip { animation: none; }
+}
+/* The tour's last step offers the guide (#154). */
+.fr-more { display: block; margin-top: 6px; padding: 4px 0; min-height: 32px; }
+
+/* The Arya guide (#154; owner-approved mockup 2026-10-29): a
+   full-screen card story with Try-it sheets on sample data. */
+.gd { position: fixed; inset: 0; z-index: 60; max-width: 680px; margin: 0 auto; background: var(--bg); display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 16px); touch-action: pan-y; }
+.gd-top { display: flex; align-items: center; justify-content: space-between; min-height: 44px; flex: none; }
+.gd-top .cnt { font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--secondary); }
+.gd-top .x { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--fill); font-size: 22px; color: var(--label); line-height: 1; }
+.gd-body { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -16px; padding: 0 16px; }
+.gd-card { display: flex; flex-direction: column; }
+.gd-card.fwd { animation: gdfwd .24s ease-out; }
+.gd-card.bwd { animation: gdbwd .24s ease-out; }
+@keyframes gdfwd { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes gdbwd { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.gd-art { margin: 8px 0 0; border-radius: 22px; overflow: hidden; height: 300px; flex: none; background: #FBF3E6; display: grid; place-items: center; position: relative; }
+.gd-art img.full { width: 100%; height: 100%; object-fit: cover; }
+.gd-art .chars { display: flex; gap: 6px; align-items: flex-end; }
+.gd-art .chars img { width: 84px; height: 84px; object-fit: cover; border-radius: 50%; }
+.gd-k { font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); margin: 18px 0 0; }
+.gd-card.noart .gd-k { margin-top: 6px; }
+.gd h2 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 4px 0 6px; line-height: 1.15; }
+.gd p.b { font-size: 17px; color: var(--secondary); margin: 0; }
+.gd ul.pts { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.gd ul.pts li { display: flex; gap: 10px; font-size: 16px; }
+.gd ul.pts li::before { content: ""; flex: 0 0 8px; height: 8px; border-radius: 50%; background: var(--acc); margin-top: 8px; }
+.gd .try { margin-top: 14px; align-self: flex-start; background: var(--acc-soft); color: var(--acc); border: none; border-radius: 999px;
+  padding: 11px 18px; min-height: 44px; font: inherit; font-weight: 700; font-size: 16px; }
+.gd-bot { display: flex; align-items: center; gap: 12px; padding-top: 12px; flex: none; }
+.gd-dots { display: flex; gap: 6px; margin-right: auto; }
+.gd-dots i { width: 7px; height: 7px; border-radius: 50%; background: #CFCFD4; display: block; }
+.gd-dots i.on { width: 20px; border-radius: 4px; background: var(--acc); }
+.gd-bot .linkbtn { font-size: 17px; padding: 8px 4px; min-height: 44px; }
+.gd-bot .btn { padding: 12px 26px; font-size: 17px; }
+.gd-howto { display: grid; gap: 10px; margin-top: 12px; }
+.gd-howto details { background: var(--group); border-radius: 14px; box-shadow: var(--shadow); padding: 12px 14px; }
+.gd-howto summary { font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 10px; cursor: pointer; }
+.gd-howto summary::-webkit-details-marker { display: none; }
+.gd-howto summary::after { content: "›"; color: var(--secondary); }
+.gd-howto details[open] summary::after { transform: rotate(90deg); }
+.gd-howto ol.howto { margin: 8px 0 2px; padding-left: 20px; color: var(--secondary); font-size: 15.5px; gap: 4px; }
+.samp { display: inline-block; vertical-align: middle; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  background: #E9F3FF; color: #1D5FAF; border-radius: 999px; padding: 3px 9px; line-height: 1.4; }
+.samp.new { background: #E7F6EC; color: #1E7A45; flex: none; }
+.mini { background: var(--group); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; width: 82%; text-align: left; }
+.mini.wide { width: 100%; margin-top: 12px; }
+.mini.wide .r { align-items: center; }
+.mini.wide .r b { display: block; font-size: 15px; font-weight: 600; }
+.mini.wide .r small { display: block; font-size: 13.5px; color: var(--secondary); }
+.mini.wide .r small.good { color: #1E7A45; }
+.mini .r { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--sep); font-size: 15px; }
+.mini .r:first-of-type { border-top: none; }
+.mini b { font-size: 16px; }
+.mini .good { color: #1E7A45; font-weight: 700; text-align: right; }
+.gd-trywrap { z-index: 70; }
+.gd-trywrap .sheet { max-height: 80vh; }
+.gd-tryline { margin: 0 0 10px; }
+.gd-addrow { display: flex; gap: 8px; }
+.gd-addrow input { flex: 1; min-width: 0; border: 1px solid var(--sep); border-radius: 12px; padding: 12px 14px; }
+.gd-sample { margin-top: 12px; }
+.gd-trywrap .btn.wide { margin-top: 12px; }
+.gd-photo { position: relative; margin: 12px 0 0; height: 210px; border-radius: 16px; background: #2B2B30; display: grid; place-items: center; overflow: hidden; }
+.gd-photo::before { content: ""; position: absolute; inset: 18px; border: 2px dashed rgba(255, 255, 255, .45); border-radius: 12px; }
+.gd-photo img { width: 128px; height: 128px; border-radius: 50%; object-fit: cover; background: #FBF3E6; }
+.gd-photo .stamp { position: absolute; bottom: 34px; background: #fff; color: var(--ink); font: 700 14px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .06em; text-transform: uppercase; padding: 6px 10px; border-radius: 6px; transform: rotate(-3deg); }
+.gd-receipt { padding: 12px 16px; margin: 0; font-size: 15px; }
+.gd-receipt .gd-store { font-weight: 700; margin: 0 0 4px; }
+.gd-line { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
+.gd-line.tot { border-top: 1px solid var(--sep); margin-top: 4px; padding-top: 8px; font-weight: 700; }
+.gd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gd-receipt.small { padding: 10px 12px; font-size: 13.5px; }
+.gd-receipt.small .gd-line { gap: 6px; padding: 2px 0; }
+.gd-ok { color: #1E7A45; font-weight: 700; margin: 12px 0 0; }
+.gd-trywrap .sect { margin-left: 0; }
+.gd-bars { padding: 4px 16px; }
+.gd-chips { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.gd-chips .chip { text-align: left; }
+.gd-chat { display: flex; flex-direction: column; gap: 8px; padding: 12px 0 4px; }
+@media (prefers-reduced-motion: reduce) {
+  .gd-card.fwd, .gd-card.bwd { animation: none; }
 }

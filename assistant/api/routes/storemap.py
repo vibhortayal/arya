@@ -238,6 +238,86 @@ async def storemap_teach(req: Request):
     return out
 
 
+@router.post("/api/storemap/scan")
+async def storemap_scan(req: Request):
+    """Guided scan (api/storescan.py): one frame the phone picked while
+    the shopper pans. People are scrubbed first and fail closed; a
+    frame mostly of people is paused, not read; the read names the
+    section, sign, items and (opt-in) shelf prices; SAM outlines what
+    was found. Lands on the map like a teach capture."""
+    from api import mapread, shelfscan, storemap, storescan  # noqa: F401
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    if not body:
+        raise HTTPException(400, "empty upload")
+    if len(body) > 12_000_000:
+        raise HTTPException(413, "photo too large (12 MB max)")
+    name = _map_store(req.query_params.get("store"))
+    prices = req.query_params.get("prices") == "1"
+    try:
+        storemap.score_image(body)
+    except Exception:
+        raise HTTPException(400, "that file is not a readable photo")
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    if storescan.frames_left() <= 0:
+        raise HTTPException(429, "You've mapped a lot today. Thank you! "
+                                 "Scanning opens again tomorrow.")
+    _budget_guard(demo=_is_demo(req))
+    client = new_client()
+    left = storescan.count_frame()
+    jpeg, people, share = await run_in_threadpool(
+        shelfscan.scrub_people_boxes, body, client, media_type=media)
+    if jpeg is None:
+        raise HTTPException(
+            503, "could not blur people out of the photo, so nothing was kept")
+    if share >= storescan.PEOPLE_PAUSE_SHARE:
+        return {"paused": "people", "kept": False, "frames_left": left}
+    try:
+        read = await run_in_threadpool(storescan.read_frame, client, jpeg, prices)
+    except ValueError:
+        read = {"label": "", "sign": "", "items": [], "prices": []}
+    if not read["label"]:
+        return {"kept": False, "label": "", "frames_left": left}
+    from PIL import Image
+    import io
+    W, H = Image.open(io.BytesIO(jpeg)).size
+    shelves, signs, fill = [], [], None
+    try:
+        shelves, _u, _c = await run_in_threadpool(
+            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
+        if shelves:
+            fill = min(1.0, sum((b["box"][2] - b["box"][0]) * (b["box"][3] - b["box"][1])
+                                for b in shelves) / float(W * H))
+    except Exception:
+        shelves = []
+    if read["sign"]:
+        try:
+            signs, _u, _c = await run_in_threadpool(
+                client.segment, jpeg, "aisle sign", media_type="image/jpeg")
+        except Exception:
+            signs = []
+    try:
+        seg, created = storemap.add_segment(name, read["label"], "both")
+        out = storemap.ingest(name, seg["id"], jpeg, kind="walk",
+                              shelf_fill=fill, people=len(people))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    for seen in read["items"]:
+        storemap.note_sighting(name, seen, read["label"])
+    kept_prices = storescan.save_prices(name, read["prices"]) if prices else []
+    out.update({"kept": True, "label": seg["label"], "created": created,
+                "sign": read["sign"], "items": read["items"],
+                "prices": [{"item": p["item"], "price": p["price"]} for p in kept_prices],
+                "people": len(people), "frames_left": left,
+                "boxes": {"shelf": storescan.norm_boxes(shelves, W, H),
+                          "sign": storescan.norm_boxes(signs, W, H, cap=3)}})
+    out["reward"] = storemap.award(name, out)
+    return out
+
+
 @router.post("/api/storemap/discard")
 async def storemap_discard(req: Request):
     """The confirm card's "Not a section": retract a section the
