@@ -99,6 +99,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   A quest never starts on an empty list (Add items instead), and Leave on
   a real trip offers End quest, which closes it for good.
   `2026-10-29-quest-empty-and-leave.md`.
+  A real trip is saved on its first grab, so one opened and left never
+  shows as Resume. `2026-10-29-quest-trip-on-grab.md`.
   A list for a store shops there: Start shopping on it opens the trip at
   that store, the Quest home says "Start at <store>" with "Shop somewhere
   else", and the store pick leads with it under Your stores.
