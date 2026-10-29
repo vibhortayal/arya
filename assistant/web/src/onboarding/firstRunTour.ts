@@ -1,8 +1,11 @@
 import type { TourStep } from "../ui/Tour";
+import { openGuide } from "../ui/Guide";
 
 /* The first-run tour (#153): one step per tab, in tab order. The
  * welcome sheet starts it; Settings > Show me around again replays it.
- * Run it with useTour().startTour(FIRST_RUN_TOUR). */
+ * Run it with useTour().startTour(FIRST_RUN_TOUR). The last step
+ * offers the Arya guide (#154): its "Want the full guide?" link ends
+ * the tour and opens the guide; Done alone just ends it. */
 const tab = (view: string, key: string): TourStep => ({
   id: key,
   target: `#tabs button[data-view="view-${view}"]`,
@@ -16,5 +19,5 @@ export const FIRST_RUN_TOUR: TourStep[] = [
   tab("list", "lists"),
   tab("chat", "ask"),
   tab("community", "quest"),
-  tab("profile", "settings"),
+  { ...tab("profile", "settings"), more: { labelKey: "firstRun.tour.guideLink", onClick: () => openGuide() } },
 ];

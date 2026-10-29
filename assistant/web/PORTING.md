@@ -67,7 +67,17 @@ a second for the target to appear. `placement` is `"above"`, `"below"`
 or `"auto"` (the side with more room). The tour scrolls the target into
 view and follows resize and scroll. Esc and Skip call `onSkip`; Done on
 the last step calls `onDone`. Keep a tour's steps in one file, as
-`src/onboarding/firstRunTour.ts` does for the first-run tour.
+`src/onboarding/firstRunTour.ts` does for the first-run tour. A step
+can also carry `more: { labelKey, onClick }`: a link under the line
+that ends the tour as Done does, then runs `onClick`.
+
+## The Arya guide (`src/ui/Guide.tsx`)
+
+`useGuide().open(id?)` opens the full-screen guide, at a card id from
+`src/guide/cards.ts` (the cards are data there; their text is in
+en.json under `guide.*`). Code outside React calls `openGuide(id)`.
+Try it (`src/ui/GuideTry.tsx`) runs on the sample data in `cards.ts`
+only: it never calls the server.
 
 ## Checks for every change
 
