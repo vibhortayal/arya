@@ -1111,3 +1111,13 @@ body.hunting #view-hunt.full .askbar {
 .exhead { display: flex; gap: 10px; align-items: center; }
 .exlinks, .excenter { text-align: center; margin: 4px 0 0; }
 .excenter { margin-top: 8px; }
+
+/* Push reminders (Profile, behind the server flag). */
+.sw { width: 51px; height: 31px; border-radius: 16px; border: 0; background: var(--fill2); position: relative; flex: none; transition: background .15s; }
+.sw i { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: left .15s; }
+.sw[aria-checked="true"] { background: var(--accent); }
+.sw[aria-checked="true"] i { left: 22px; }
+.sw:disabled { opacity: .5; }
+.accenttext { color: var(--accent-text); }
+.accenttext .sub { color: var(--secondary); }
+.remnote { margin: -4px 16px 0; }
