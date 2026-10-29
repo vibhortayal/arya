@@ -51,11 +51,16 @@ export default async function (page, base) {
     await page.waitForSelector("#today-checks .checkrows:not([hidden])");
   }
 
-  // The Quest row and the Lists link navigate.
+  // No "Open Lists" link (usability pass): the cards and the tab do it.
+  if (await page.$("#today-listline")) throw new Error("Open Lists link should be gone");
+
+  // The Quest row shows until this account first opens Quest, then retires.
+  await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith("arya-quest-opened:")).forEach(k => localStorage.removeItem(k)));
+  await page.evaluate(() => window.__aryaShow("list"));
+  await page.evaluate(() => window.__aryaShow("home"));
   await page.click("#today-quest");
   await page.waitForSelector("#view-community .qg-home");
   await page.evaluate(() => window.__aryaShow("home"));
-  await page.waitForSelector("#today-listline");
-  await page.click("#today-listline");
-  await page.waitForSelector("#view-list");
+  await page.waitForSelector("#today-expiry .sectrow");
+  if (await page.$("#today-quest")) throw new Error("Quest nudge should retire after Quest opens");
 }

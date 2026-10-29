@@ -8,15 +8,15 @@ from tests import frontend
 
 
 class CrewVisibility(unittest.TestCase):
-    def test_settings_tab_and_avatar_both_open_profile(self):
-        # Owner 2026-10-29: a Settings tab next to Quest opens the same
-        # Profile page; the avatar still does too.
+    def test_settings_tab_opens_profile(self):
+        # Owner 2026-10-29: a Settings tab next to Quest opens Profile.
         app = frontend.src("App.tsx")
         self.assertIn('profile: "Settings"', app)
         self.assertIn('"profile"]', frontend.src("app/views.ts").split("TABS")[1])
         self.assertNotIn("<header>", frontend.app())
-        self.assertIn('id="avatar-btn"', app)
-        self.assertIn('nav.show("profile"', app.split('id="avatar-btn"')[1].split("</button>")[0])
+        # Usability pass (owner 2026-10-29): no floating avatar; it did
+        # what the Settings tab does and covered page titles.
+        self.assertNotIn('id="avatar-btn"', app)
         self.assertNotIn('id="userbar"', frontend.app())
         profile = frontend.src("screens/Profile.tsx")
         self.assertIn('id="btn-signout2"', profile)

@@ -4,6 +4,8 @@ import { useNav } from "../app/nav";
 import { GUIDE_CARDS, guideIndex, type GuideArt, type GuideCard, type GuideId, type TryKind } from "../guide/cards";
 import { asset } from "../lib/format";
 import { GuideTry } from "./GuideTry";
+import { useTour } from "./Tour";
+import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
 import { useTranslation } from "../i18n";
 
 /* The Arya guide (#154, owner-approved mockup 2026-10-29): a
@@ -14,14 +16,16 @@ import { useTranslation } from "../i18n";
  *   guide.open("prices");    // at a card id (guide/cards.ts)
  *
  * Code outside React (a tour step) calls openGuide(id). It never shows
- * by itself: Settings > Arya guide, Powers > See how it works (and a
+ * by itself: Settings > Help and guide, Powers > See how it works (and a
  * power's (i) sheet), and the last first-run tour step open it.
  *
  * Next / Back, a left or right swipe, and the arrow keys move between
  * cards; Esc and the round x close it; Done on the last card closes
  * it. role="dialog", focus moves in, stays in, and goes back to the
  * control that opened it. Under prefers-reduced-motion the cards do
- * not slide. Try it opens a sheet over the card (ui/GuideTry.tsx). */
+ * not slide. Try it opens a sheet over the card (ui/GuideTry.tsx).
+ * "Replay the tour" on card 1 closes the guide and replays the
+ * first-run tour (it used to be its own Settings row; usability pass). */
 
 type Guide = { active: boolean; open: (at?: GuideId) => void; close: () => void };
 const Ctx = createContext<Guide | null>(null);
@@ -102,6 +106,7 @@ function Card({ card, onTry }: { card: GuideCard; onTry: (k: TryKind) => void })
 export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: () => void }) {
   const { t } = useTranslation();
   const nav = useNav();
+  const tour = useTour();
   const [i, setI] = useState(start);
   const [dir, setDir] = useState<"" | "fwd" | "bwd">("");
   const [tryKind, setTry] = useState<Exclude<TryKind, "quest"> | null>(null);
@@ -177,6 +182,7 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
     if (k === "quest") { onClose(); nav.show("community", { practice: true }); return; }
     setTry(k);
   };
+  const replay = () => { onClose(); tour.startTour(FIRST_RUN_TOUR); };
   const realList = () => { setTry(null); onClose(); nav.show("list", { newList: true }); };
 
   return createPortal(
@@ -190,6 +196,7 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
         <div className="gd-body">
           <div className={"gd-card" + (card.art ? "" : " noart") + (dir ? " " + dir : "")} key={card.id}>
             <Card card={card} onTry={onTry} />
+            {i === 0 && <button className="linkbtn gd-tour" id="gd-tour" type="button" onClick={replay}>{t("guide.replayTour")}</button>}
           </div>
         </div>
         <div className="gd-bot">

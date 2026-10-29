@@ -143,11 +143,14 @@ class TestStartShopping(unittest.TestCase):
         # Quest mode (#158, owner 2026-10-29): the sheet has one way to
         # shop, the Quest game on this list; Express is gone.
         js = src("screens/Lists.tsx")
-        self.assertIn('id="shop-sheet"', js)
+        # Usability pass (owner 2026-10-29): Start shopping goes straight
+        # to Quest; the one-option sheet opens only for Demo Town's store
+        # notice. Suggestions stay on the list itself (#list-suggest).
+        self.assertIn('onClick={() => (town ? setShopOpen(true) : startHunt())}', js)
         self.assertIn('data-shop="quest"', js)
         self.assertNotIn('data-shop="express"', js)
-        self.assertIn('id="shop-sugg"', js)
-        self.assertIn("data-shop-add", js)
+        self.assertNotIn('id="shop-sugg"', js)
+        self.assertIn('id="list-suggest"', js)
         self.assertIn('nav.show("community", { listId: here ? here.id : "all" });', js)
         self.assertIn("const params = { store, storeId, fromList, fastMode };", src("screens/Store.tsx"))
         self.assertIn("if (D.fastMode && !D.fastDone) {", src("screens/NewList.tsx"))

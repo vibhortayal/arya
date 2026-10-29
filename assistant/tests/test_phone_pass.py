@@ -44,13 +44,10 @@ class TestPhonePassBatch(unittest.TestCase):
     def test_today_order_and_compact_line(self):
         quest = src("screens/Quest.tsx")
         self.assertLess(quest.index('id="btn-new-hunt"'), quest.index('id="quest-sessions"'))
-        # The Today line is a link to the lists, never a dump of names
-        # (app.js staplesLine was a count only, and was no longer
-        # called on main).
+        # Usability pass (owner 2026-10-29): no "Open Lists" link on
+        # Today; the list cards and the Lists tab open lists.
         today = src("screens/Today.tsx")
-        line = today.split('id="today-listline"')[1].split("</button>")[0]
-        self.assertIn('<span id="today-listline-text">Open Lists</span>', line)
-        self.assertNotIn(".map(", line)
+        self.assertNotIn('id="today-listline"', today)
 
     def test_composer_on_list(self):
         js = src("screens/Lists.tsx")

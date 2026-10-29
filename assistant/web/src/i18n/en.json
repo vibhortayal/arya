@@ -739,11 +739,6 @@
     "moveTo": "Move to…",
     "shopTitle_one": "Shop {{name}} · {{count}} item",
     "shopTitle_other": "Shop {{name}} · {{count}} items",
-    "aryaAlsoSuggests": "Arya also suggests {{names}}",
-    "andNMore": " and {{n}} more",
-    "addIt": "Add it",
-    "addBoth": "Add both",
-    "addAll": "Add all",
     "why": {
       "expiredOn": "Expired on {{date}}",
       "every": "About every {{days}} days",
@@ -810,7 +805,8 @@
       "pantry": "Pantry",
       "freezer": "Freezer",
       "fruit": "Fruit bowl"
-    }
+    },
+    "tickHint": "Tap the circles to tick items off as you shop"
   },
   "login": {
     "signIn": "Sign in",
@@ -906,7 +902,11 @@
     "addMine": "Add to my aisles",
     "mine": "Mine",
     "shoppers_one": "{{count}} shopper",
-    "shoppers_other": "{{count}} shoppers"
+    "shoppers_other": "{{count}} shoppers",
+    "startMapping": "Start mapping",
+    "howTo": "Walk the aisles with your phone up. Arya reads the shelves and builds the map.",
+    "howItWorks": "How it works",
+    "more": "More"
   },
   "mode": {
     "howAreYouShopping": "How are you shopping?",
@@ -1326,13 +1326,11 @@
     "sameForGroup": "Same for the group, from what is left.",
     "becomesOwner": "@{{handle}} becomes the owner",
     "youLeft": "You left {{name}}. Your lists are a copy now.",
-    "showMeAroundAgain": "Show me around again",
-    "replayTheTour": "Replay the 30-second tour",
-    "aryaGuide": "Arya guide",
-    "aryaGuideSub": "What Arya does, with things to try",
     "receiptsSub_one": "{{count}} receipt · only you and your group see it",
     "receiptsSub_other": "{{count}} receipts · only you and your group see them",
-    "yourData": "Your data"
+    "yourData": "Your data",
+    "helpAndGuide": "Help and guide",
+    "helpAndGuideSub": "What Arya does, things to try, and the tour again"
   },
   "quest": {
     "yourListAsATreasure": "Your list, as a game through the store.",
@@ -1400,7 +1398,8 @@
     "tripsLinkSub": "Open quests, finished trips and friends",
     "openingQuest": "Opening Quest…",
     "mapMyStore": "Map this store",
-    "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles"
+    "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles",
+    "progressSub": "Quests, badges and mapped stores"
   },
   "questProgress": {
     "huntsFinished": "Quests finished",
@@ -1617,7 +1616,6 @@
     "today": "Today",
     "onList": "On list",
     "yourLists": "Your lists",
-    "openLists": "Open Lists",
     "storeAlerts": "Store alerts",
     "stillGoodToCheck": "Still good? · {{nChecks}} to check",
     "stillGood": "Still good",
@@ -1995,8 +1993,7 @@
     "lists": "Lists",
     "ask": "Ask",
     "quest": "Quest",
-    "settings": "Settings",
-    "settingsLevel": "Settings, level {{level}}"
+    "settings": "Settings"
   },
   "town": {
     "sim": "Simulated",
@@ -2293,6 +2290,7 @@
           "a": "Trader Joe's: $3.49 a dozen, against $4.29 at Safeway on your last receipts."
         }
       }
-    }
+    },
+    "replayTour": "Replay the tour"
   }
 }

@@ -1,13 +1,18 @@
-/* Quest progress: Back link, section headings, badge shelf and stores group render; Back returns to Profile. */
+/* Quest progress: opened from the Quest tab's home (usability pass);
+ * Back link, section headings, badge shelf and stores group render;
+ * Back returns to Quest. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");
-  // Reached from Profile, so Back returns there.
-  await page.evaluate(() => window.__aryaShow("profile", { from: "home" }));
-  await page.waitForSelector("#view-profile");
-  await page.evaluate(() => window.__aryaShow("quest-progress"));
+  // Settings no longer carries it; the Quest tab's home does.
+  await page.click('#tabs button[data-view="view-profile"]');
+  await page.waitForSelector("#btn-guide");
+  if (await page.$("#btn-quest-progress")) throw new Error("Quest progress should have left Settings");
+  await page.click('#tabs button[data-view="view-community"]');
+  await page.waitForSelector("#qm-progress", { timeout: 20000 });
+  await page.click("#qm-progress");
   await page.waitForSelector("#view-quest-progress");
   for (const sel of ["#pfq-back", "#pf-stats", "#pf-spots", "#pf-badges", "#pf-stores"])
     await page.waitForSelector(sel, { state: "attached" });
@@ -17,6 +22,6 @@ export default async function (page, base) {
   await page.waitForFunction(() => document.querySelectorAll("#pf-badges .badgetile").length > 0
     || document.querySelector("#pf-stores") !== null);
   await page.click("#pfq-back");
-  await page.waitForSelector("#view-profile");
+  await page.waitForSelector("#view-community");
   if (await page.$("#view-quest-progress")) throw new Error("quest-progress should be gone after Back");
 }

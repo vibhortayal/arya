@@ -74,7 +74,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("\U0001F514", app)
 
     def test_today_and_list_hooks(self):
-        where = {"screens/Today.tsx": ("today-eye", "today-listline"),
+        where = {"screens/Today.tsx": ("today-eye",),
                  "screens/Lists.tsx": ("list-cards", "composer", "add-text", "add-submit",
                                        "add-split", "list-eyes"),
                  "screens/Receipts.tsx": ("rc-archive",), "screens/Analysis.tsx": ("an-spend",),
@@ -87,7 +87,7 @@ class TestShellContract(unittest.TestCase):
         # name dump, no returns sentence. Today taps through to Lists.
         today = frontend.src("screens/Today.tsx")
         self.assertNotIn("never re-suggested", frontend.app())
-        self.assertIn('<span id="today-listline-text">Open Lists</span>', today)
+        self.assertNotIn('id="today-listline"', today)
 
     def test_list_actions_wired(self):
         js = frontend.app()
