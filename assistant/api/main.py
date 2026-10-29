@@ -581,7 +581,7 @@ def home():
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
             f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
-           for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3 and p.get("admitted")]
+           for p in state.running_low(d)]
     # Store affinity for the list ships with this payload: the List
     # view used to make one /api/items/{id} call per list item just
     # for these keys (review 2026-10-28, M9). Same aggregation as
@@ -600,8 +600,8 @@ def home():
                     "max": max(v), "count": len(v)}
                 for s, v in prices.items()}
     return {"as_of": state.as_of(), "running_low": low,
-            "list": d["smart_list"], "cart": state.get_cart(),
-            "seen": seen, "checks": checks, "price_by_store": pbs}
+            "list": d["smart_list"], "lists": state.named_lists(),
+            "cart": state.get_cart(), "seen": seen, "checks": checks, "price_by_store": pbs}
 
 
 @app.get("/api/quest/plan")
@@ -647,7 +647,7 @@ def quest_plan():
         if hid not in stores:
             hid = _quest.resolve_group(name) or hid
         lst.append({"item_id": iid, "history_id": hid, "name": name,
-                    "qty": i.get("qty") or 1})
+                    "qty": i.get("qty") or 1, "list": i.get("list")})
     return pack_api.enrich_plan({"list": lst, "items": items}, d)
 
 
@@ -1051,9 +1051,22 @@ async def chat_route(req: Request):
     from api.chat_service import chat as run_chat
     client = MetaClient(ledger=_ledger())
     try:
-        return await run_in_threadpool(run_chat, body.get("messages", []), client)
+        surface = body.get("surface") if body.get("surface") in ("list", "hunt") else None
+        return await run_in_threadpool(run_chat, body.get("messages", []), client,
+                                       surface=surface, context=body.get("context"))
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+
+
+@app.post("/api/chat/apply")
+async def chat_apply_route(req: Request):
+    """The yes to an action Arya proposed from the List or a hunt."""
+    body = await _json_obj(req)
+    actions = body.get("actions")
+    if not isinstance(actions, list) or not actions:
+        raise HTTPException(400, "actions are required")
+    from api.chat_service import apply_confirmed
+    return await run_in_threadpool(apply_confirmed, actions[:10])
 
 
 @app.post("/api/cart/approve")
@@ -1069,7 +1082,7 @@ def approve_route():
 # probe POST once left a junk record behind).
 _FLAG_KEYS = {"manual", "never", "out", "expired", "snoozed_until",
               "dismissed_on", "checked_on", "check_ok", "qty_override",
-              "name"}
+              "name", "list"}
 
 
 @app.post("/api/items/{item_id}/flag")
@@ -1134,7 +1147,7 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name, qty=1):
+def _add_name_to_list(name, qty=1, list_id=None):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
@@ -1154,6 +1167,8 @@ def _add_name_to_list(name, qty=1):
     flag = {"manual": True, "name": name, "dismissed_on": None}
     if qty and qty > 1:
         flag["qty_override"] = qty
+    if list_id:
+        flag["list"] = list_id
     _merge_flag(item_id, flag)
     return {"item_id": item_id, "name": name}
 
@@ -1163,6 +1178,11 @@ def _list_add_fields(body):
     Returns the flag fields to set; raises 400 on a bad quantity."""
     qty = body.get("qty")
     fields = {}
+    list_id = body.get("list_id")
+    if list_id:
+        if not any(l["id"] == list_id for l in state.named_lists()):
+            raise HTTPException(404, "no such list")
+        fields["list"] = list_id
     if qty is not None and not isinstance(qty, bool):
         try:
             n = int(qty)
@@ -1225,6 +1245,9 @@ async def list_from_text(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
+    list_id = (body.get("list_id") or None)
+    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
     from api.list.intake import split_list_items, extract_items_model, skipped_pieces
     typed = split_list_items(text)
     skipped = skipped_pieces(text) if typed else []
@@ -1239,12 +1262,14 @@ async def list_from_text(req: Request):
         typed = [(n, 1) for n in names]
         source = "model"
     on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
-    added = [_add_name_to_list(n, q) for n, q in typed]
+    added = [_add_name_to_list(n, q, list_id) for n, q in typed]
     # Already on the list: neither merged nor new, so not "added".
     already = sum(1 for a in added if a["item_id"] in on_list)
     return {"added": len(added) - already, "already": already,
             "names": [a["name"] for a in added], "source": source,
-            "skipped": skipped}
+            "skipped": skipped,
+            # Only what newly joined the list: the client's Undo.
+            "item_ids": [a["item_id"] for a in added if a["item_id"] not in on_list]}
 
 
 @app.post("/api/list/judge")
@@ -1352,6 +1377,120 @@ async def list_qty(req: Request):
         raise HTTPException(400, "item_id is required")
     qty = _int_field(body, "qty", 1)
     _merge_flag(item_id, {"qty_override": max(1, qty)})
+    return {"ok": True}
+
+
+# ---- Named lists (owner, 2026-10-29): Costco, Trader Joe's, Indian
+# Store, Party... An item sits on one list at a time (flag "list");
+# an item on no list shows under "Everything else". Deleting a list
+# never touches its items, so Undo is just restoring the list record.
+
+def _clean_list_fields(body, current=None):
+    """Validate a list's name and stores from a request body."""
+    out = {}
+    if "name" in body or current is None:
+        name = " ".join(str(body.get("name") or "").split())[:40]
+        if not name:
+            raise HTTPException(400, "give the list a name")
+        out["name"] = name
+    if "stores" in body or current is None:
+        raw = body.get("stores") or []
+        if not isinstance(raw, list):
+            raise HTTPException(400, "stores must be a list of names")
+        stores = []
+        for st in raw:
+            st = " ".join(str(st or "").split())[:60]
+            if st and st.lower() not in {x.lower() for x in stores}:
+                stores.append(st)
+        out["stores"] = stores[:state.MAX_LIST_STORES]
+    return out
+
+
+def _check_list_name_free(rows, name, own_id=None):
+    if any(l["id"] != own_id and l["name"].lower() == name.lower() for l in rows):
+        raise HTTPException(409, f"you already have a list called {name}")
+
+
+@app.get("/api/lists")
+def lists_get():
+    return {"lists": state.named_lists()}
+
+
+@app.post("/api/lists")
+async def lists_create(req: Request):
+    import uuid
+    body = await _json_obj(req)
+    fields = _clean_list_fields(body)
+    rows = state.named_lists()
+    if len(rows) >= state.MAX_LISTS:
+        raise HTTPException(400, f"{state.MAX_LISTS} lists is the most for now")
+    _check_list_name_free(rows, fields["name"])
+    row = {"id": "l-" + uuid.uuid4().hex[:8], **fields}
+    state.save_named_lists(rows + [row])
+    return row
+
+
+@app.post("/api/lists/update")
+async def lists_update(req: Request):
+    body = await _json_obj(req)
+    rows = state.named_lists()
+    row = next((l for l in rows if l["id"] == body.get("id")), None)
+    if row is None:
+        raise HTTPException(404, "no such list")
+    fields = _clean_list_fields(body, current=row)
+    if "name" in fields:
+        _check_list_name_free(rows, fields["name"], own_id=row["id"])
+    row.update(fields)
+    state.save_named_lists(rows)
+    return row
+
+
+@app.post("/api/lists/delete")
+async def lists_delete(req: Request):
+    body = await _json_obj(req)
+    rows = state.named_lists()
+    row = next((l for l in rows if l["id"] == body.get("id")), None)
+    if row is None:
+        raise HTTPException(404, "no such list")
+    state.save_named_lists([l for l in rows if l is not row])
+    # Items keep their (now dangling) list id, so restoring the same
+    # record brings them straight back; until then they read as
+    # "Everything else".
+    return {"deleted": row, "index": rows.index(row)}
+
+
+@app.post("/api/lists/restore")
+async def lists_restore(req: Request):
+    """Undo of a delete: put the same record back at its place."""
+    body = await _json_obj(req)
+    rec = body.get("list") or {}
+    fields = _clean_list_fields(rec)
+    lid = str(rec.get("id") or "")
+    if not lid.startswith("l-"):
+        raise HTTPException(400, "list id is required")
+    rows = state.named_lists()
+    if any(l["id"] == lid for l in rows):
+        return {"list": next(l for l in rows if l["id"] == lid)}
+    _check_list_name_free(rows, fields["name"])
+    row = {"id": lid, **fields}
+    idx = body.get("index")
+    idx = idx if isinstance(idx, int) and 0 <= idx <= len(rows) else len(rows)
+    rows.insert(idx, row)
+    state.save_named_lists(rows)
+    return {"list": row}
+
+
+@app.post("/api/list/move")
+async def list_move(req: Request):
+    """File an item under a list, or under no list (list_id null)."""
+    body = await _json_obj(req)
+    item_id = body.get("item_id")
+    if not item_id:
+        raise HTTPException(400, "item_id is required")
+    list_id = body.get("list_id") or None
+    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
+    _merge_flag(item_id, {"list": list_id})
     return {"ok": True}
 
 
@@ -1817,7 +1956,7 @@ def account_export():
            "user": state._current_user.get()}
     for name in ("receipts.json", "dictionary.json", "flags.json",
                  "cart.json", "quest.json", "my_stores.json",
-                 "eyes.json", "curator.json"):
+                 "eyes.json", "curator.json", "lists.json"):
         out[name[:-5]] = state._load(name, None)
     return Response(_json.dumps(out, indent=1),
                     media_type="application/json",
