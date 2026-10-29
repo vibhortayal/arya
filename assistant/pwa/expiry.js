@@ -7,13 +7,10 @@
  * memory: only the confirmed date is stored.
  * Wireframe: https://claude.ai/artifact/6g4tpYnWmo5M4gnuFCmUmr */
 (function () {
-  const HINT_KEY = "arya-expiry-hint";
   const KIND_WORD = { use_by: "use by", best_by: "best by", expires: "expires" };
   let SOON = [];
   let sheet = null;
 
-  const hintOff = () => { try { return localStorage.getItem(HINT_KEY) === "off"; } catch (e) { return false; } };
-  const setHintOff = () => { try { localStorage.setItem(HINT_KEY, "off"); } catch (e) { /* private mode */ } };
 
   function dateObj(iso) { return new Date(iso + "T12:00:00"); }
   function fmtLong(iso) {
@@ -61,58 +58,34 @@
     trigger = null;
   }
 
-  /* ---------- Today and List ---------- */
-  function paintTab() {
-    const tab = document.querySelector('#tabs [data-view="view-list"]');
-    if (!tab) return;
-    const dot = tab.querySelector(".tabdot");
-    if (SOON.length && !dot) tab.insertAdjacentHTML("beforeend", `<i class="tabdot" aria-hidden="true"></i>`);
-    if (!SOON.length && dot) dot.remove();
+  /* ---------- Today: Use soon ----------
+   * The expiry home (owner, 2026-10-29): Snap an expiry date left the
+   * List. Today shows what to use soon, with "+ Snap a date" in the
+   * header; with nothing tracked it is one row that opens the camera. */
+  function useRows() {
+    return SOON.map(s => {
+      const c = typeof charFor === "function" ? charFor(s.name) : "";
+      return `<div class="row" tabindex="0" role="button" data-ex-item="${esc(s.item_id)}">
+          ${c ? `<img class="rowface" src="assets/characters/${c}" alt="">` : ""}
+          <div class="grow"><span class="name">${esc(s.name)}</span><span class="sub"><b>${fmtLong(s.date)}</b> · ${when(s.days)}</span></div>
+          <button class="chip" data-ex-done="${esc(s.item_id)}" type="button">Used it</button></div>`;
+    }).join("");
   }
 
   function paintToday(soon) {
     SOON = soon || [];
-    paintTab();
     const el = $("#today-expiry");
     if (!el) return;
-    if (SOON.length) {
-      const names = SOON.slice(0, 3).map(s => esc(shortName(s.name))).join(", ");
-      el.innerHTML = `<button class="hubrow" id="today-use-btn" type="button"><span class="hr-label">Use soon: ${names}</span><span class="countbadge">${SOON.length}</span><span class="chev">›</span></button>`;
-      $("#today-use-btn").addEventListener("click", () => {
-        show("view-list"); refresh("view-list");
-        setTimeout(() => { const s = $("#list-use"); if (s && s.scrollIntoView) s.scrollIntoView({ block: "start" }); }, 350);
-      });
-    } else if (!hintOff()) {
-      el.innerHTML = `<div class="hintcard"><p class="dow nomargin">New</p>
-        <p class="nomargin"><strong>Arya can keep track of expiry dates.</strong> Snap the date on the package and Arya will tell you what to use soon.</p>
-        <div class="hintacts"><button class="btn primary compact" id="ex-hint-try" type="button">Try it</button><button class="linkbtn" id="ex-hint-no" type="button">Not now</button></div></div>`;
-      $("#ex-hint-try").addEventListener("click", captureSheet);
-      $("#ex-hint-no").addEventListener("click", () => { setHintOff(); el.innerHTML = ""; });
-    } else el.innerHTML = "";
-  }
-  // A short label for the Today row: "Whole Milk 1 gal" reads "whole milk".
-  const SIZE_WORDS = /^(\d[\w.]*|oz|lb|lbs|gal|ct|pk|pack|ml|l|g|kg|fl|qt|pt|dz|of)$/i;
-  function shortName(n) {
-    const w = String(n).split(/\s+/).filter(x => x && !SIZE_WORDS.test(x));
-    return (w.length > 2 ? w.slice(-2) : w).join(" ").toLowerCase() || String(n);
+    el.innerHTML = SOON.length
+      ? `<div class="sectrow"><h3 class="sect">Use soon</h3><button class="linkbtn" type="button" data-ex-snap>+ Snap a date</button></div>
+        <div class="group usesoon">${useRows()}</div>
+        <p class="muted small listhint">Tap a row to snooze, fix the date or stop tracking.</p>`
+      : `<div class="sectrow"><h3 class="sect">Use soon</h3></div>
+        <div class="group"><button class="hubrow snaprow" type="button" data-ex-snap><img class="rowface" src="assets/characters/pantry.webp" alt=""><span class="hr-label">Snap an expiry date<span class="sub">Arya can keep track of expiry dates and tell you what to use soon.</span></span><span class="chev">›</span></button></div>`;
   }
 
-  function paintList(soon) {
-    SOON = soon || [];
-    paintTab();
-    const el = $("#list-use");
-    if (!el) return;
-    if (!SOON.length) { el.innerHTML = ""; return; }
-    el.innerHTML = `<div class="sectrow"><h3 class="sect">Use soon</h3><span class="countbadge">${SOON.length}</span></div>
-      <div class="group usesoon">${SOON.map(s => {
-        const c = typeof charFor === "function" ? charFor(s.name) : "";
-        return `<div class="row" tabindex="0" role="button" data-ex-item="${esc(s.item_id)}">
-          ${c ? `<img class="rowface" src="assets/characters/${c}" alt="">` : ""}
-          <div class="grow"><span class="name">${esc(s.name)}</span><span class="sub"><b>${fmtLong(s.date)}</b> · ${when(s.days)}</span></div>
-          <button class="chip" data-ex-done="${esc(s.item_id)}" type="button">Used it</button></div>`;
-      }).join("")}</div>
-      <p class="muted small listhint">Tap a row to snooze, fix the date or stop tracking.</p>`;
-  }
+  // The List no longer shows Use soon; kept so older callers no-op.
+  function paintList(soon) { SOON = soon || []; }
 
   /* ---------- capture ---------- */
   function captureSheet() {
@@ -217,7 +190,6 @@
     const btn = $("#ex-save"); btn.disabled = true;
     try {
       const out = await post("/api/expiry/save", id ? { item_id: id, date, kind } : { name, date, kind });
-      setHintOff();
       closeSheet();
       toast(`Tracking ${out.name} until ${fmtMD(out.date)}.`);
       refresh(lastView);
@@ -267,7 +239,7 @@
     if (d) { const s = SOON.find(x => x.item_id === d.dataset.exDone); if (s) done(s); return; }
     const r = ev.target.closest("[data-ex-item]");
     if (r) { itemSheet(r.dataset.exItem); return; }
-    if (ev.target.closest("#btn-expiry")) captureSheet();
+    if (ev.target.closest("[data-ex-snap]")) captureSheet();
   });
   document.addEventListener("keydown", ev => {
     const r = ev.target.closest && ev.target.closest("[data-ex-item]");

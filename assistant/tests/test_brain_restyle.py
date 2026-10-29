@@ -80,7 +80,7 @@ class TestShellContract(unittest.TestCase):
     def test_today_and_list_hooks(self):
         html, js = read("index.html"), read("app.js")
         for el in ("today-hero", "today-eye", "today-listline",
-                   "store-filter", "composer", "add-text", "add-submit",
+                   "list-cards", "composer", "add-text", "add-submit",
                    "add-split", "list-eyes", "rc-archive",
                    "an-spend", "pf-avatar", "pf-badges"):
             self.assertIn(f'id="{el}"', html)
@@ -98,7 +98,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v79"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v80"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,

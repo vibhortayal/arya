@@ -32,6 +32,10 @@ def data_dir():
     base = os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
     user = _current_user.get()
     if user:
+        # Belt and braces for auth.valid_name: a name that could
+        # leave data/users/ never becomes a path.
+        if os.sep in user or "/" in user or user.startswith("."):
+            raise ValueError("invalid account name")
         return os.path.join(base, "users", user)
     return base
 
@@ -279,6 +283,19 @@ def set_flag(item_id, flag):
         _save("flags.json", f)
 
 
+def update_flag(item_id, fn):
+    """Read, change and save one item's flag under the flags lock, so
+    two quick writes to the same item cannot drop each other's fields
+    (codebase map 2026-10-29). fn takes the current flag dict (a copy)
+    and returns the new one. Returns the saved flag."""
+    with file_lock("flags.json"):
+        f = flags()
+        new = fn(dict(f.get(item_id, {})))
+        f[item_id] = new
+        _save("flags.json", f)
+        return new
+
+
 def as_of():
     rs = receipts()
     return max((r["purchased_at"] for r in rs), default=None)
@@ -420,10 +437,23 @@ def derived():
             smart["items"].append(row)
     kept = []
     list_ids = {l["id"] for l in named_lists()}
+    pats = {p["item_id"]: p for p in patterns}
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         if item.get("source") == "pattern" and f.get("dismissed_on") == today:
             continue  # removed for this cycle; returns when a new receipt lands
+        # The List overhaul (owner, 2026-10-29): a list shows only what
+        # the household put on it. Arya's due staples are suggestions
+        # until the user adds one. "I'm out" is the user's own word and
+        # goes straight on; an expired item stays a suggestion.
+        p = pats.get(item["item_id"])
+        out_now = bool(f.get("out")) and not f.get("expired") and (p is None or _reported_out(p, f))
+        item["on_list"] = bool(f.get("manual")) or item.get("source") == "user" or out_now
+        if p and p.get("median_interval_days"):
+            item["every_days"] = round(p["median_interval_days"])
+            item["days_since"] = p.get("days_since_last")
+        if f.get("expired") and p is not None and _reported_out(p, f):
+            item["expired_on"] = f["expired"]
         if f.get("qty_override"):
             item["qty"] = f["qty_override"]
         if f.get("unit"):

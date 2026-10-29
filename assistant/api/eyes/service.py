@@ -4,6 +4,7 @@ independent reads to agree; a disagreement is marked and the user decides.
 Unseen items stay unknown — a photo never removes an item by absence.
 Corrections apply only on the user's confirmation (no silent edits)."""
 import base64, json, os, re
+from api.meta_client import parse_json
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "eyes_v1.md")
 
@@ -38,10 +39,7 @@ def _read(image_bytes, client, media_type):
                     {"type": "text", "text": "List the items you can see in this photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
     out, _u, _c = client.chat(messages, mode="standard", personal=True)
-    try:
-        dec = json.loads(out)
-    except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    dec = parse_json(out)
     return dec.get("sightings", [])
 
 

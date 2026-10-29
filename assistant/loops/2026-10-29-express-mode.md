@@ -23,7 +23,7 @@ first (standing rule): https://claude.ai/artifact/6Vhf3TWkpRpW65WnTBmcAN
   badges or character art, and no "+50 bonus" line. Receipt, haul card,
   receipt check and Share your haul stay.
 - Mode chooser says what Express keeps and drops.
-- SW arya-v79.
+- SW arya-v80.
 
 **Left out on purpose.** "Where am I?" stays Quest-only (it needs the
 walking-photo tracker). A shelf photo on a report goes through the

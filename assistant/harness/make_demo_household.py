@@ -1,7 +1,7 @@
 """Build the synthetic demo household (owner decision 2026-10-27: BOTH —
 the owner's real data stays private; judges get a synthetic household).
-Deterministic, no model calls, $0. Writes receipts.json + dictionary.json
-into <data_dir>/users/demo/. The household is fictional: the Sharma family,
+Deterministic, no model calls, $0. Writes receipts.json, dictionary.json,
+judged.json, lists.json and flags.json into <data_dir>/users/demo/. The household is fictional: the Sharma family,
 two stores, weekly Saturday trips, May-Oct 2026. Designed outcomes:
 milk/spinach/bread due at the last trip, a returned chicken netted in the
 ledger, one FOR-OTHERS gift card, one folded discount. Bulk staples
@@ -99,6 +99,25 @@ def build():
     return receipts, dictionary
 
 
+def demo_lists():
+    """The demo opens on two named lists with a few things already on
+    them (List overhaul, owner 2026-10-29): with no lists the List tab
+    was a lone "All" chip. Arya's due staples (milk, bread, spinach)
+    stay suggestions under the list of the store they come from."""
+    lists = {"lists": [
+        {"id": "l-demo-costco", "name": "Costco", "stores": ["Costco"]},
+        {"id": "l-demo-tj", "name": "Trader Joe's", "stores": ["Trader Joe's"]}]}
+    flags = {
+        "demo-papertowel": {"manual": True, "list": "l-demo-costco"},
+        "demo-rice": {"manual": True, "list": "l-demo-costco"},
+        "demo-avocado": {"manual": True, "list": "l-demo-tj"},
+        "demo-pasta": {"manual": True, "list": "l-demo-tj", "qty_override": 2},
+        "manual-hummus": {"manual": True, "name": "Hummus", "list": "l-demo-tj"},
+        "manual-basil": {"manual": True, "name": "Basil"},
+    }
+    return lists, flags
+
+
 def main(out_root):
     receipts, dictionary = build()
     dest = os.path.join(out_root, "users", "demo")
@@ -112,6 +131,9 @@ def main(out_root):
         "demo-yogurt": {"class": "OCCASIONAL", "list_ok": False, "reason": "bought a few times a year", "buys": 3},
     }
     json.dump(judged, open(os.path.join(dest, "judged.json"), "w"), indent=1)
+    lists, flags = demo_lists()
+    json.dump(lists, open(os.path.join(dest, "lists.json"), "w"), indent=1)
+    json.dump(flags, open(os.path.join(dest, "flags.json"), "w"), indent=1)
     print(f"demo household: {len(receipts)} receipts -> {dest}")
 
 

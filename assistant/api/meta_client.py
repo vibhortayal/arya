@@ -51,6 +51,22 @@ MAX_RETRIES = 2
 BACKOFF_BASE_S = 0.5
 
 
+def parse_json(out):
+    """A model's JSON answer as a dict. Models sometimes wrap the JSON
+    in prose, so the outermost {...} is tried next. An answer that is
+    still not a JSON object is a RuntimeError, the same error a failed
+    call raises, so routes answer 502 instead of 500 (codebase map
+    2026-10-29)."""
+    for text in (out, out[out.find("{"): out.rfind("}") + 1]):
+        try:
+            dec = json.loads(text)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(dec, dict):
+            return dec
+    raise RuntimeError("the model's answer could not be read, try again")
+
+
 def transcribe_cost(duration_s):
     return duration_s / 3600 * ASR_USD_PER_HOUR
 

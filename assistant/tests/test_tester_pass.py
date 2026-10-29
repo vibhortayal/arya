@@ -29,11 +29,14 @@ class TestNewAccount(unittest.TestCase):
         # for what the patterns say is due (QA 2026-10-28).
         assert snap["running_low"] == [], snap["running_low"]
 
-    def test_empty_cart_offers_no_approve(self):
-        pwa = os.path.join(os.path.dirname(__file__), "..", "pwa", "app.js")
-        js = open(pwa, encoding="utf-8").read()
-        body = js[js.index("function paintCart"):]
-        assert body.index("!c.items.length") < body.index("btn-approve")
+    def test_list_has_no_prepared_cart(self):
+        # List overhaul (owner, 2026-10-29): the Prepared cart was one
+        # Costco cart that copied the list under every list. It is gone.
+        pwa = os.path.join(os.path.dirname(__file__), "..", "pwa")
+        js = open(os.path.join(pwa, "app.js"), encoding="utf-8").read()
+        html = open(os.path.join(pwa, "index.html"), encoding="utf-8").read()
+        assert "paintCart" not in js and "/api/cart/approve" not in js
+        assert "Prepared cart" not in html and 'id="cart"' not in html
 
 
 if __name__ == "__main__":
