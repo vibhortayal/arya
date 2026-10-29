@@ -33,12 +33,13 @@ class TestAlbumPins(unittest.TestCase):
         self.assertLess(main.index('import "./styles/styles.css"'), main.index('import "./styles/album.css"'))
 
     def test_nav_row_in_the_crew_group(self):
+    # Your trips is history only (usability audit, owner-approved 2026-10-29).
+        # The server album keeps its screen and route; Your trips no
+        # longer links it (one album: the game's).
         quest = frontend.src("screens/Quest.tsx")
-        crew = quest.split('<h3 className="sect">Friends</h3>')[1]
-        row = crew.split('data-qnav="view-album"')[0].rsplit("<button", 1)[1]
-        self.assertIn("navrow", row)
-        self.assertIn('id="album-nav-sub"', crew)
-        self.assertIn('nav.show("album")', crew)
+        self.assertNotIn('data-qnav="view-album"', quest)
+        self.assertNotIn('id="album-nav-sub"', quest)
+        self.assertIn("album: Album,", frontend.src("screens/registry.tsx"))
 
     def test_the_album_screen(self):
         js = frontend.src("screens/Album.tsx")
@@ -49,8 +50,8 @@ class TestAlbumPins(unittest.TestCase):
 
     def test_crew_paints_the_nav_count_from_the_profile_it_already_loaded(self):
         quest = frontend.src("screens/Quest.tsx")
-        self.assertEqual(quest.count('get("/api/quest/profile")'), 1)
-        self.assertIn("const n = p.album && p.album.stickers;", quest)
+        self.assertEqual(quest.count('get("/api/quest/profile")'), 1)  # the avatar ring only
+        self.assertNotIn("p.album", quest)
         self.assertNotIn("/api/quest/profile", strip_js_comments(frontend.src("screens/Album.tsx")))
 
     def test_badge_art_has_receipt_keeper(self):

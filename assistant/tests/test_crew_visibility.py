@@ -23,17 +23,18 @@ class CrewVisibility(unittest.TestCase):
         self.assertIn('id="profile-account"', profile)
 
     def test_crew_view_leads_with_friends_and_race(self):
-        # The Quest tab is the game (#158); the old hub is Trips, opened
-        # from the game's home, with Back to the game.
+        # The Quest tab is the game (#158); Trips, opened from the game's
+        # home with Back to it, is history only (usability audit,
+        # owner-approved 2026-10-29): Crew, Race and Fastest Hands wait
+        # for real cross-account play; their screens keep their routes.
         crew = frontend.src("screens/Quest.tsx")
         self.assertIn(">Your trips</h2>", crew)
-        self.assertIn(">Friends</h3>", crew)
-        # Race is hidden until cross-account races work (labels audit).
-        self.assertIn('{SHOW_RACE && <button className="navrow" data-qnav="view-race"', crew)
-        self.assertLess(crew.index('data-qnav="view-race"'), crew.index('id="comm-board"'))
-        self.assertLess(crew.index('data-qnav="view-friends"'), crew.index('id="comm-board"'))
+        for gone in (">Friends</h3>", 'data-qnav="view-race"', 'data-qnav="view-friends"', 'id="comm-board"'):
+            self.assertNotIn(gone, crew)
         self.assertIn('nav.back("community")', crew)
-        self.assertIn("community: QuestMode,", frontend.src("screens/registry.tsx"))
+        reg = frontend.src("screens/registry.tsx")
+        self.assertIn("community: QuestMode,", reg)
+        self.assertIn("friends: Friends,", reg)
 
     def test_today_has_no_crew_or_game_card(self):
         home = frontend.src("screens/Today.tsx")

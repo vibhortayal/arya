@@ -43,7 +43,8 @@ class TestPhonePassBatch(unittest.TestCase):
 
     def test_today_order_and_compact_line(self):
         quest = src("screens/Quest.tsx")
-        self.assertLess(quest.index('id="btn-new-hunt"'), quest.index('id="quest-sessions"'))
+        # Your trips is history only: a new quest starts in Quest itself.
+        self.assertNotIn('id="btn-new-hunt"', quest)
         # The Today line is a link to the lists, never a dump of names
         # (app.js staplesLine was a count only, and was no longer
         # called on main).
