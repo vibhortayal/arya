@@ -73,6 +73,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
   labelled typical layout, and Hunt shows its photos only there.
   `2026-10-29-store-maps-per-location.md`.
+  Map my store is one tap from the Quest home and Ask Arya, and offered
+  once after a trip at a store not fully mapped.
+  `2026-10-29-map-my-store-up-front.md`.
   Map my store's walk is a guided scan: pan, never tap; Arya reads
   sections, aisle signs, items and (opt-in) shelf prices every ~4 s,
   outlines what it found, and blurs people before anything is kept
@@ -131,6 +134,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).
+- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; owner turns it on and reruns the demo household.
 - Owner phone pass on the list-first build after deploy.
 
 ## Known gaps

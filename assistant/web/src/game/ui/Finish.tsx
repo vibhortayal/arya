@@ -16,12 +16,14 @@ type Props = {
   trip: Trip; rewards: Rewards; profile: Profile;
   onDone: () => void; onRealQuest: () => void; onAgain: () => void;
   onRoute: (notes: string[]) => void;
+  /* Map my store, offered once at the end of a trip at a store not fully mapped. */
+  onMap?: () => void;
   onReceipt?: () => void;
 };
 
 const NOTES = ["Great route", "Too much walking", "Order felt off", "A section has moved"];
 
-export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, onRoute, onReceipt }: Props) {
+export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, onRoute, onReceipt, onMap }: Props) {
   const lines = tally(trip);
   const [shown, setShown] = useState(0);
   const [count, setCount] = useState(0);
@@ -137,7 +139,14 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             {notes.length > 0 && !sent && <button className="qg-btn" onClick={() => { onRoute(notes); setSent(true); }}>Send to Arya</button>}
             {sent && <p className="qg-small">Thanks! Two shoppers saying the same thing updates the map.</p>}
           </motion.div>
-          <motion.div {...stagger(5)}>
+          {onMap && (
+            <motion.div className="qg-card qg-mapask" {...stagger(5)}>
+              <h3>Map the sections you walked?</h3>
+              <p className="qg-p">Pan your phone along the shelves. Arya reads them, and the next shopper here gets a real map.</p>
+              <button className="qg-btn" onClick={onMap}>Map this store</button>
+            </motion.div>
+          )}
+          <motion.div {...stagger(onMap ? 6 : 5)}>
             {onReceipt && <button className="qg-btn primary big" onClick={onReceipt}>Add your receipt</button>}
             <button className={"qg-btn big" + (onReceipt ? "" : " primary")} onClick={onDone}>Done</button>
           </motion.div>

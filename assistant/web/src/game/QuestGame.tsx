@@ -22,6 +22,9 @@ export type Screen =
   | { s: "play"; trip: Trip }
   | { s: "finish"; trip: Trip; rewards: Rewards };
 
+/* A real trip at a store Arya has not fully mapped: worth offering Map my store. */
+export const needsMap = (t: Trip) => !t.practice && t.layout.kind !== "mapped";
+
 export type QuestGameProps = {
   source: QuestSource; store: ProfileStore; onExit?: () => void; now?: () => Date;
   /* Start on this list (the app's "Shop this list"). */
@@ -34,9 +37,14 @@ export type QuestGameProps = {
   homeExtra?: ReactNode;
   /* The player's avatar picture: the shopper wears it as a face. */
   avatar?: string | null;
+  /* The host's Map my store (owner, 2026-10-29: easy to reach). Offered
+   * on a real trip at a store that is not fully mapped: a card at the
+   * start that only informs, and one offer at the end. Never mid-trip,
+   * where leaving the game would lose the trip. */
+  onMapStore?: (store: { id: string; name: string }) => void;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -94,11 +102,12 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
           {screen.s === "play" && (
             <Play trip={screen.trip} avatar={avatar} source={screen.trip.practice ? silent : source}
               onTrip={t => setScreen(sc => (sc.s === "play" ? { s: "play", trip: t } : sc))}
-              onFinish={finish} onQuit={() => setScreen({ s: "home" })} />
+              onFinish={finish} onQuit={() => setScreen({ s: "home" })} mapOffer={!!onMapStore && needsMap(screen.trip)} />
           )}
           {screen.s === "finish" && (
             <Finish trip={screen.trip} rewards={screen.rewards} profile={profile}
               onDone={() => setScreen({ s: "home" })} onReceipt={!screen.trip.practice ? onReceipt : undefined} onRealQuest={() => setScreen({ s: "pick" })} onAgain={startPractice}
+              onMap={onMapStore && needsMap(screen.trip) ? () => onMapStore({ id: screen.trip.layout.id, name: screen.trip.layout.name }) : undefined}
               onRoute={notes => void (screen.trip.practice ? silent : source).report({ kind: "route", store: screen.trip.layout.id, notes, text: "" })} />
           )}
         </motion.div>

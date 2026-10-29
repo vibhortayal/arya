@@ -65,14 +65,24 @@ def extract_transcript(payload):
     return ""
 
 
-def transcribe_audio(wav_bytes, client):
+def transcribe_audio(wav_bytes, client, language=None):
     """Validate, then transcribe. Returns {"text", "duration_s",
     "cost_usd"}. ValueError = a recording the endpoint would refuse;
     RuntimeError = the API answered without a transcript."""
     if len(wav_bytes) > MAX_BYTES:
         raise ValueError("that recording is too large (32 MB max)")
     duration, _rate = inspect_wav(wav_bytes)
-    payload, cost = client.transcribe(wav_bytes, duration)
+    if language:
+        # A fixed account language biases recognition toward it. If the
+        # API refuses the hint, the recording is sent once more without
+        # it (automatic detection), so a bad hint never costs the user
+        # their dictation.
+        try:
+            payload, cost = client.transcribe(wav_bytes, duration, language=language)
+        except RuntimeError:
+            payload, cost = client.transcribe(wav_bytes, duration)
+    else:
+        payload, cost = client.transcribe(wav_bytes, duration)
     text = extract_transcript(payload)
     if not text:
         raise RuntimeError("the transcription came back empty")

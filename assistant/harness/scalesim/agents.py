@@ -245,7 +245,7 @@ def run(users, weeks=WEEKS, seed=W.SEED, raw=None):
         lapse.append([storemap.segment_status(s, end) for s in sp.segs.values()])
 
     if raw is not None:
-        raw.update(purchases=purchases, households=households)
+        raw.update(purchases=purchases, households=households, trips=trips_log, stores=stores)
     return _summarise(users, weeks, households, group_hh, stores, purchases, reports, trips_log,
                       photos, notfound, grabs, subs, series, lapse, spotlight, item_by_id)
 
