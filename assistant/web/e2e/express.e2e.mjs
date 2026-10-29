@@ -1,5 +1,5 @@
 /* Express run: rows check off (first tap starts the run), the help row
- * follows the next item, Show me mounts the store view, Not here? opens
+ * follows the next item, Not here? opens
  * its sheets, More help shows Ask Arya / Teach, Finish leaves the items
  * sheet and goes to the finish screen. */
 export default async function (page, base) {
@@ -33,12 +33,9 @@ export default async function (page, base) {
   await page.click(`#exp-items [data-exp-check="${M}"]`);
   await page.waitForFunction(() => document.querySelector("#exp-count").textContent.trim() === "0/3");
 
-  // Show me / Hide.
-  await page.click("#exp-show");
-  await page.waitForSelector("#exp-mount");
-  if ((await page.textContent("#exp-show")) !== "Hide") throw new Error("Show me should read Hide");
-  await page.click("#exp-show");
-  await page.waitForFunction(() => !document.querySelector("#exp-mount"));
+  // Show me needs aisle pictures; no store ships with them (the
+  // no-data case is pinned at the end).
+  if (await page.isVisible("#exp-show")) throw new Error("Show me needs aisle pictures");
 
   // Not here? opens the Can't find sheet, then the report sheet.
   await page.click("#exp-nothere");

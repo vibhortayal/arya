@@ -14,10 +14,14 @@ export default async function (page, base) {
   if (!(await page.isVisible("#view-store"))) throw new Error("unknown typed store must not advance");
   const star = await page.$("#st-mine [data-fav]");
   if (star) {
+    // Starring moves the row between sections, so follow it by store id.
+    const id = await star.getAttribute("data-fav");
+    const sel = `#st-mine [data-fav="${id}"]`;
     const before = await star.getAttribute("aria-pressed");
     await star.click();
-    await page.waitForFunction(b => document.querySelector("#st-mine [data-fav]")?.getAttribute("aria-pressed") !== b, before);
-    await page.click("#st-mine [data-fav]"); // put it back
+    await page.waitForFunction(([sel, b]) => document.querySelector(sel)?.getAttribute("aria-pressed") !== b, [sel, before]);
+    await page.click(sel); // put it back
+    await page.waitForFunction(([sel, b]) => document.querySelector(sel)?.getAttribute("aria-pressed") === b, [sel, before]);
   }
   await page.click('#view-store .navrow:has-text("Add a store")');
   await page.waitForFunction(() => !document.querySelector("#view-store"));

@@ -19,7 +19,6 @@ web/src/screens/hunt/driver.test.ts.
 import json, os, subprocess, tempfile, unittest
 
 PWA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pwa")
-FRAMES = os.path.join(PWA, "models", "trader-joes", "frames-web")
 
 NODE = None
 for cand in ("/opt/node24/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
@@ -103,19 +102,6 @@ class TestDriverResolutionUnderVitest(unittest.TestCase):
 
 
 class TestPhotoAssets(unittest.TestCase):
-    def test_frames_ship_complete_and_under_the_guide(self):
-        files = sorted(f for f in os.listdir(FRAMES) if f.endswith(".jpg"))
-        self.assertEqual(len(files), 90)
-        self.assertEqual(files[0], "f001.jpg")
-        self.assertEqual(files[-1], "f090.jpg")
-        total = sum(os.path.getsize(os.path.join(FRAMES, f)) for f in files)
-        self.assertLess(total, 20_000_000)
-        # The rolling window that paints first (-1/+4) stays at
-        # the prototype's ~1.3 MB initial load.
-        first = sum(os.path.getsize(os.path.join(FRAMES, f))
-                    for f in files[:5])
-        self.assertLess(first, 1_400_000)
-
     def test_frames_are_not_precached(self):
         self.assertNotIn("frames-web", src("sw.js"))
         self.assertNotIn("models", src("sw.js").split("const STATIC = [")[1].split("];")[0])

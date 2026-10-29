@@ -79,13 +79,11 @@ and deploy notes: [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE
 The list is the product; Quest is its own tab for when shopping
 should feel like play. **List → Store → Play → Receipt.** Pick a
 store from the directory (search by name, address or ZIP; favorites
-first; add one with its address). A mapped store carries a model built from a shopper's
-walkthrough video: VGGT builds the geometry, SAM 3.1 segments the
-shelves, Muse Spark labels them, and every hunt stop sits at its
-item's matched shelf.
-
-Every person in every walkthrough frame is pixelated by SAM before
-the frame ships — 476 shoppers, zero faces.
+first; add one with its address). No store ships pre-mapped: shoppers
+map their store with a guided camera scan. They just pan; SAM 3.1
+blurs every person before anything is kept, then finds the shelves and
+signs, and Muse Spark reads the section, aisle numbers and prices. A
+section counts as mapped only with a usable, fresh picture.
 
 No map yet? In Quest she draws you an illustrated aisle and leads
 anyway. Express is the same help as a plain checklist: Show me (the
@@ -100,9 +98,8 @@ decisions: `docs/quest/`.
 <p align="center">
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
-  <img src="docs/images/hunt.png" alt="The Quest hunt: inside the real store, the orange dot is your next item" width="230">
 </p>
-<p align="center"><em>Today, Lists, and a Quest hunt: the demo household, live build.</em></p>
+<p align="center"><em>Today and Lists: the demo household, live build.</em></p>
 
 ## Measured results
 
@@ -126,11 +123,6 @@ decisions: `docs/quest/`.
   (Greek Yogurt: STAPLE by name, OCCASIONAL by purchase facts) is
   exactly why names advise and facts decide.
   `assistant/loops/2026-10-28-open-weights.md`.
-- **"Where am I?" localizer** (written by Muse Wonder): 42/45 stops
-  right, 45/45 within one stop, on held-out frames from the mapping
-  video (frames half a second from indexed ones, never indexed
-  themselves). It has not yet been measured on fresh shopper photos
-  taken on another day.
 - **Staple judge:** precision 0.79 against a purchase-cadence proxy
   on the owner's 114 receipts (eval method and disagreement lists
   in the research repo).

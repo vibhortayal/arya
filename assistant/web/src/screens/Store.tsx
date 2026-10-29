@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
-import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { storeHasPictures, useStoreData } from "../lib/stores";
+import { useStoreData } from "../lib/stores";
 import { StarSvg, storeMeta, type MyStore } from "./StoresMine";
 import { t, useTranslation } from "../i18n";
 
@@ -72,7 +71,6 @@ export function Store() {
   const { t } = useTranslation();
   useStoreData();
   const nav = useNav();
-  const { demo } = useSession();
   const { toast } = useToast();
   const fromList = (nav.params.fromList as FromList | undefined) || null;
   const fastMode = (nav.params.fastMode as string | undefined) || null;
@@ -207,12 +205,12 @@ export function Store() {
   /* ---- renderStorePick ---- */
   const histPick = (h: string) => { setSelId(null); setName(h); pickStore(h, null); };
   const hist = historyStores(plan)
-    .filter(h => !mine.some(s => sameStore(s.name, h)))
-    .filter(h => !demo || storeHasPictures(h));
+    .filter(h => !mine.some(s => sameStore(s.name, h)));
   const shown = histAll ? hist : hist.slice(0, 3);
-  const mineShown = demo ? mine.filter(s => storeHasPictures(s.name)) : mine;
-  const favs = mineShown.filter(s => s.favorite);
-  const rest = mineShown.filter(s => !s.favorite);
+  // No store ships with pictures (2026-10-29), so the demo picks from
+  // every store like anyone else; Quest falls back to Express.
+  const favs = mine.filter(s => s.favorite);
+  const rest = mine.filter(s => !s.favorite);
 
   const rowEl = (s: MyStore) => {
     const fit = storeFit(plan, s.name);

@@ -1,0 +1,184 @@
+{
+ "store": "sample-market",
+ "kind": "shelf-graph",
+ "version": 1,
+ "note": "Invented test fixture: a made-up store, not from any real walk.",
+ "stops": [
+  {
+   "u": 0.0,
+   "dist": 0.0,
+   "frame": null,
+   "pose": 0,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Cheese Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Cheese & Dip Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.2,
+   "dist": 1.2000000000000002,
+   "frame": null,
+   "pose": 1,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Bread & Bakery Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.4,
+   "dist": 2.4000000000000004,
+   "frame": null,
+   "pose": 2,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Pasta Sauce Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    },
+    {
+     "side": "left",
+     "label": "Unidentified Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.6,
+   "dist": 3.5999999999999996,
+   "frame": null,
+   "pose": 3,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Butter & Cheese Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.9,
+   "dist": 5.4,
+   "frame": null,
+   "pose": 4,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Frozen Pizza Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  },
+  {
+   "u": 0.94,
+   "dist": 5.64,
+   "frame": null,
+   "pose": 5,
+   "shelves": [
+    {
+     "side": "left",
+     "label": "Milk & Dairy Shelf",
+     "labelConfidence": "high",
+     "box": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "imageSize": [
+      100,
+      100
+     ],
+     "segments": 1
+    }
+   ]
+  }
+ ]
+}

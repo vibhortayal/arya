@@ -222,7 +222,9 @@ class TestArtScene(unittest.TestCase):
         # Express never gets the art rung
         self.assertIn('return sess.mode === "express" ? "strip" : "art";', q)
 
-    def test_demo_picker_hides_dataless_stores(self):
+    def test_demo_picker_shows_every_store(self):
+        # No store ships with pictures (2026-10-29): hiding dataless
+        # stores from the demo would leave it nothing to pick.
         q = src("screens/Store.tsx")
-        self.assertIn(".filter(h => !demo || storeHasPictures(h));", q)
-        self.assertIn("demo ? mine.filter(s => storeHasPictures(s.name)) : mine", q)
+        self.assertNotIn("!demo || storeHasPictures", q)
+        self.assertNotIn("mine.filter(s => storeHasPictures", q)

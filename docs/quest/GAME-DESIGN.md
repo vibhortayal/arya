@@ -31,14 +31,13 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 ## The hunt (Quest)
 
 - One store view, picked by the store: real photos of a mapped store
-  (people blurred by SAM), shelf cards anywhere else. "See it in 3D"
-  is a demo peek.
+  (people blurred by SAM), shelf cards anywhere else.
 - The next-item card suggests a stop; any stop can be grabbed in any
   order. A fresh shopper photo shows the item boxed when one exists.
 - **Find it for me:** the camera scans for that one item. SAM 3.1
   boxes candidates, Muse Spark checks each crop; the item lights up
   and one tap grabs it. A miss never says the item is not there.
-- Tools: Scan shelf, Where am I? (mapped stores), Not here?, How to
+- Tools: Scan shelf, Not here?, How to
   play (?), sound.
 - Put back any grab; nothing finishes by itself.
 - I'm done shopping works any time; leftovers are saved for next trip or dropped; nothing counts as failure.

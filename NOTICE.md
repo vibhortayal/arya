@@ -17,8 +17,6 @@ The items below are not covered by that grant, or need attribution.
   32 and 53).
 
 ## Store walkthrough data
-- `assistant/pwa/models/trader-joes/` (point cloud, frames, shelf graph) and
-  `assistant/models/trader-joes/localizer-index.npz` are derived from a Trader
-  Joe's walkthrough video. Shoppers in the shipped frames are blurred.
-- The point cloud was reconstructed with VGGT, whose released weights are
-  non-commercial; any commercial launch needs its own license path.
+- None ships. The Trader Joe's walkthrough data (frames, VGGT point cloud,
+  shelf graph, localizer index) was removed on 2026-10-29; it remains only
+  in git history.

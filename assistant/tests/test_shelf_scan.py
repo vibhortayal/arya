@@ -347,31 +347,3 @@ class TestPeopleScrub(unittest.TestCase):
             def segment(self, *a, **k):
                 raise RuntimeError("down")
         self.assertEqual(shelfscan.scrub_people(jpeg_bytes(), C()), (None, 0))
-
-
-class TestScrubWalkFrames(unittest.TestCase):
-    def test_rewrites_in_place_skips_done_and_fails_closed(self):
-        from PIL import Image
-        from harness import scrub_walk_frames
-        d = tempfile.mkdtemp()
-        for n in ("f001.jpg", "f002.jpg"):
-            Image.new("RGB", (160, 90), (9, 9, 9)).save(os.path.join(d, n), "JPEG")
-        before = open(os.path.join(d, "f002.jpg"), "rb").read()
-
-        class C:
-            calls = 0
-            def segment(self, b, prompt, media_type="image/jpeg"):
-                C.calls += 1
-                if C.calls > 2:  # f002's scrub fails
-                    raise RuntimeError("down")
-                return ([{"box": [0, 0, 80, 90]}] if prompt == "person" else []), {}, 0
-        rc = scrub_walk_frames.main([], client=C(), frames_dir=d)
-        self.assertEqual(rc, 1)
-        log = json.load(open(os.path.join(d, "scrub.json")))
-        self.assertEqual(log, {"f001.jpg": 1})
-        self.assertEqual(open(os.path.join(d, "f002.jpg"), "rb").read(), before)
-        self.assertEqual(Image.open(os.path.join(d, "f001.jpg")).size, (160, 90))
-        C.calls = -100  # a re-run only touches what is left
-        self.assertEqual(scrub_walk_frames.main([], client=C(), frames_dir=d), 0)
-        self.assertEqual(set(json.load(open(os.path.join(d, "scrub.json")))),
-                         {"f001.jpg", "f002.jpg"})

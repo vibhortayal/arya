@@ -13,7 +13,7 @@ List apps digitized the note. Nobody made the store itself playable, and nobody 
 
 ## Solution
 
-Arya Quest is a collection game played in the player's own store — walked in photos of the actual aisles (the photo-walk), with a 3D model of the store one tap away:
+Arya Quest is a collection game played in the player's own store, mapped by the shoppers who walk it:
 
 - **Personal spawns.** Your list items are the treasures, on their real shelves.
 - **A list that plans itself.** Pick the store; Arya sorts your list by where you usually buy each thing.
@@ -25,13 +25,13 @@ Arya Quest is a collection game played in the player's own store — walked in p
 
 1. **Parents first.** The pain is sharpest and most memorable: a child who begs to find the next item is a child following the list.
 2. **Households second.** The brain underneath (patterns, spend, returns) serves the person who plans the shopping.
-3. **Mappers.** Early adopters who film their store get first-mapper credit on it — status is the wage the game pays for labor.
+3. **Mappers.** Early adopters who scan their store get first-mapper credit on it — status is the wage the game pays for labor.
 
 ## The flywheel
 
 Play → contribute → platform learns → play improves.
 
-- Store videos (platform data) grow the map of the world, store by store.
+- Guided aisle scans (platform data, people scrubbed) grow the map of the world, store by store.
 - Receipts (private data) grow each household's brain.
 - More mapped stores = more hunts = more mappers.
 
@@ -39,9 +39,9 @@ Play → contribute → platform learns → play improves.
 
 Three Meta capabilities make this buildable in 2026 and not before:
 
-1. **VGGT** (Meta AI + Oxford, CVPR 2025 Best Paper) turns ordinary walkthrough video into 3D geometry and camera paths in one forward pass — no photogrammetry pipeline, no LiDAR, no store cooperation.
-2. **SAM 3.1** segments individual products out of shelf frames.
-3. **Muse Spark** reads the shelf labels, the handwritten lists, and the receipts — perception good enough to trust a household's record to, with arithmetic verification on every receipt.
+1. **SAM 3.1** finds shelves, signs and products in a phone camera frame, and finds people so they can be blurred before anything is kept.
+2. **Muse Spark** reads what the scanned aisle holds: the section, aisle numbers, signage and shelf prices.
+3. **Muse Spark and Wonder** read the handwritten lists and the receipts — perception good enough to trust a household's record to, with arithmetic verification on every receipt.
 
 ## Community — why it spreads
 
@@ -49,9 +49,9 @@ Every metric is receipt-verified, so the social layer needs no trust: leaderboar
 
 ## Rollout story
 
-- Shipped for the hackathon: one mapped Trader Joe's stretch (18 stops, 55 labeled regions), played in real photos with a 3D peek; any other store plays as shelf cards, on a live household brain.
+- Shipped for the hackathon: no store ships pre-mapped. Every store starts as a labelled typical layout and is mapped by its shoppers with the guided camera scan (pan, no taps; SAM blurs people first). Status is earned: only sections with a real, fresh picture count.
 - Mapping is crowdsourced from day one by design: a store is added by the first player who wants to hunt in it.
-- Depth path (post-hackathon): continuous camera relocalization — one-shot placement from a single photo ("Where am I?") is shipped; live tracking is the future item — more game skins (escape room), household analytics, mapper events and store leaderboards.
+- Depth path (post-hackathon): camera placement in the aisle, more game skins (escape room), household analytics, mapper events and store leaderboards.
 
 ## One line
 

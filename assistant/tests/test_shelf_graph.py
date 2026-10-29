@@ -9,7 +9,6 @@ import importlib.util, json, os, unittest
 
 HERE = os.path.dirname(__file__)
 ASSISTANT = os.path.abspath(os.path.join(HERE, ".."))
-TJ_MODEL = os.path.join(ASSISTANT, "pwa", "models", "trader-joes")
 
 
 def load_builder():
@@ -194,62 +193,6 @@ class TestLabelReplyParsing(unittest.TestCase):
     def test_garbage_is_unlabelled(self):
         assert self.b.parse_label_reply("no idea") == (None, None)
         assert self.b.parse_label_reply("") == (None, None)
-
-
-class TestShippedShelfGraph(unittest.TestCase):
-    """The committed Trader Joe's shelf graph: the pipeline's real
-    output, verified as data — stops on the path, labels carried as
-    proposals with their confidence and provenance."""
-
-    def setUp(self):
-        self.graph = json.load(open(os.path.join(
-            TJ_MODEL, "shelf-graph.json")))
-
-    def test_shape_and_path(self):
-        g = self.graph
-        assert g["store"] == "trader-joes"
-        assert g["kind"] == "shelf-graph"
-        assert g["source"]["segmentationModel"] == "sam-3.1"
-        assert g["source"]["labelModel"] == "muse-spark-1.3"
-        manifest = json.load(open(os.path.join(TJ_MODEL,
-                                               "manifest.json")))
-        assert g["pathLength"] == manifest["pathStats"]["length"]
-        stops = g["stops"]
-        assert len(stops) >= 10
-        us = [s["u"] for s in stops]
-        assert us == sorted(us) and 0.0 <= us[0] and us[-1] <= 1.0
-        for s in stops:
-            assert abs(s["dist"] - s["u"] * g["pathLength"]) < 0.01
-            assert s["frame"].startswith("frame_")
-            assert s["shelves"], s["frame"]
-
-    def test_labels_are_proposals_with_provenance(self):
-        labelled = 0
-        for s in self.graph["stops"]:
-            for sh in s["shelves"]:
-                assert sh["side"] in ("left", "right", None)
-                assert sh["imageSize"] == [W, H]
-                assert sh["segments"] >= 1
-                if sh["label"]:
-                    labelled += 1
-                    assert sh["labelConfidence"] in (
-                        "high", "medium", "low")
-                    assert sh["rawLabel"]
-        assert labelled >= 20
-
-    def test_walk_order_sanity(self):
-        # The spike walk runs cheese wall -> pasta/sauce aisle ->
-        # spreads -> bread -> the frozen/dairy perimeter. The first
-        # stop is the cheese wall; a pasta label lands in the first
-        # half; bread appears before the final stop.
-        stops = self.graph["stops"]
-        first = " ".join(sh["label"] or ""
-                         for sh in stops[0]["shelves"]).lower()
-        assert "cheese" in first
-        labels = [(s["u"], (sh["label"] or "").lower())
-                  for s in stops for sh in s["shelves"]]
-        assert any("pasta" in lab and u < 0.5 for u, lab in labels)
-        assert any("bread" in lab and u < 0.95 for u, lab in labels)
 
 
 if __name__ == "__main__":

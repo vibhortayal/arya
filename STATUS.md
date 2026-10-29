@@ -68,11 +68,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
-  One map per store location. Nobody recorded which Trader Joe's the
-  shipped walk was filmed in, so no store has it as its map (until
-  `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
-  labelled typical layout, and Hunt shows its photos only there.
-  `2026-10-29-store-maps-per-location.md`.
+  One map per store location. `2026-10-29-store-maps-per-location.md`.
+  The old Trader Joe's walk data (photos, 3D model, shelf graph,
+  localizer and Where am I?) is removed; no store ships mapped.
+  `2026-10-29-remove-old-trader-joes-walk.md`.
   Map my store is one tap from the Quest home and Ask Arya, and offered
   once after a trip at a store not fully mapped.
   `2026-10-29-map-my-store-up-front.md`.
@@ -131,8 +130,6 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - Photo decode reads with Muse Wonder 1.0 (90 s bound, Spark
   fallback) under the hackathon amendment, which **expires Nov 4,
   2026**. Proof run 97/98 after adjudication, $1.12.
-- Localizer: stop accuracy 42/45, neighborhood 45/45, ~1 s a query.
-- Shelf graph build: $0.24 (SAM 36 images + Spark 55 calls).
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).

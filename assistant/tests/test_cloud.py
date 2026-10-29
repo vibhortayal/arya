@@ -10,7 +10,6 @@ os.environ.setdefault("MODEL_API_KEY", "test-key")
 
 HERE = os.path.dirname(__file__)
 ASSISTANT = os.path.abspath(os.path.join(HERE, ".."))
-TJ_MODEL = os.path.join(ASSISTANT, "pwa", "models", "trader-joes")
 
 
 def load_prep():
@@ -101,31 +100,6 @@ class TestPrepPipeline(unittest.TestCase):
         n = len(pos) // 3
         assert 4_000 <= n <= 10_500, n
         assert len(col) == 3 * n
-
-
-class TestShippedTJModel(unittest.TestCase):
-    """The committed Trader Joe's asset: the band, the byte layout,
-    and a smoothed path with no step above a sane threshold."""
-
-    def setUp(self):
-        self.manifest = json.load(
-            open(os.path.join(TJ_MODEL, "manifest.json")))
-
-    def test_point_band_and_layout(self):
-        m = self.manifest
-        assert 300_000 <= m["points"] <= 500_000, m["points"]
-        assert m["layout"]["positionBytes"] == m["points"] * 6
-        assert m["layout"]["colorBytes"] == m["points"] * 3
-        size = os.path.getsize(os.path.join(TJ_MODEL, "cloud.bin"))
-        assert size == m["points"] * 9
-
-    def test_path_is_smooth(self):
-        m = self.manifest
-        assert len(m["path"]) >= 100
-        assert path_max_step(m) <= 0.2
-        assert m["pathStats"]["maxStep"] <= 0.2
-        # The spike's known mislocalized poses are out of the path.
-        assert 19 in m["pathStats"]["droppedPoses"]
 
 
 class TestCloudSession(unittest.TestCase):
