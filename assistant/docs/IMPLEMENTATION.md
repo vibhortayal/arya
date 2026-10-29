@@ -164,9 +164,6 @@ StoreIndex { store_id, version, zones: [], sightings: [], coverage_pct, item_cov
 RoutePlan { route_id, store_id, index_version,
   stops: [ { item_id, zone_id, confidence, evidence_age_days } ],
   unknowns: [ { item_id, ask } ] }
-RelocalizationResult { zone_id (or null), confidence, landmarks_seen: [], needs }
-WalkthroughGrade { walkthrough_id, recency_days, clarity,
-  completeness_zones, completeness_items, overall }
 ```
 
 ## 4. Stages
@@ -209,7 +206,6 @@ prompt or contract change re-runs the affected sets.
 | golden/receipts-synthetic | Fabricated receipts: return lines, a duplicate, discount lines, a gift-card line, a for-others candidate, a blurry photo | Stage 1 loops |
 | golden/ledger | The Stage 1 output as frozen data, with hand-computed pattern values | Stage 2 gate |
 | golden/trips | Scripted reconciliation trips: one clean trip, one mismatch, one return, one for-others line | Stage 2 gate |
-| golden/relocalize | 10 fresh store photos with zone labels, plus 5 negatives: wrong store, parking lot, home kitchen | Stage 5 gate |
 | golden/shelf | 10 shelf photos with hand-labeled target boxes | Stage 5 SAM check |
 | golden/voice | About 40 recorded commands, clean audio and store-noise mixes, with expected intent and slots | Stage 5 voice check |
 
