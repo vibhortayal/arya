@@ -547,6 +547,17 @@ body.hunting #tabs, body.hunting #avatar-btn, body.hunting #demobar { display: n
    viewport so the mobile URL bar never hides the HUD. */
 body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dvh; }
 #view-hunt.full, #view-express.full { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+/* Quest tab: the game fills the phone above the tab bar (its home,
+   store pick and album), and the whole phone during a trip. The
+   avatar hides here: Settings is a tab, and the game's ? sits there. */
+.questmode-host { position: fixed; left: 0; right: 0; top: 0; bottom: var(--tabs-h, 0px); z-index: 5; }
+body.hunting .questmode-host { bottom: 0; z-index: 20; }
+body.questmode #avatar-btn { display: none; }
+.questmode-host .qg { min-height: 0; height: 100%; }
+.qm-loading { display: grid; place-items: center; height: 100%; color: var(--secondary); font-weight: 600; background: #F6F2EA; }
+.qm-links { padding: 8px 0 0; }
+.qm-links .qg-store { justify-content: space-between; }
+.qm-links small { display: block; }
 .hunthud {
   position: sticky; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px;
   margin: 0 -16px 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px;

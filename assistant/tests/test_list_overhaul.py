@@ -140,15 +140,15 @@ class TestStartShopping(unittest.TestCase):
     open list; it leads to the store, the plan, then Quest or Express."""
 
     def test_shop_sheet_picks_the_mode(self):
-        # Design pass (2026-10-29): Start shopping opens one sheet with
-        # Quest and Express; the pick goes straight to the trip.
+        # Quest mode (#158, owner 2026-10-29): the sheet has one way to
+        # shop, the Quest game on this list; Express is gone.
         js = src("screens/Lists.tsx")
         self.assertIn('id="shop-sheet"', js)
         self.assertIn('data-shop="quest"', js)
-        self.assertIn('data-shop="express"', js)
+        self.assertNotIn('data-shop="express"', js)
         self.assertIn('id="shop-sugg"', js)
         self.assertIn("data-shop-add", js)
-        self.assertIn("fastMode: mode });", js)
+        self.assertIn('nav.show("community", { listId: here ? here.id : "all" });', js)
         self.assertIn("const params = { store, storeId, fromList, fastMode };", src("screens/Store.tsx"))
         self.assertIn("if (D.fastMode && !D.fastDone) {", src("screens/NewList.tsx"))
         # The fast trip skips the bag and the mode screen, and a Quest

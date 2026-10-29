@@ -91,7 +91,8 @@ class TestPlanAHunt(unittest.TestCase):
 
     def test_store_first_then_items(self):
         quest = src("screens/Quest.tsx")
-        self.assertIn('<button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("store")}>', quest)
+        # Quest mode (#158): a new trip starts in the game, which picks the store first.
+        self.assertIn('<button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>', quest)
         store = src("screens/Store.tsx")
         self.assertIn('try { p = await get("/api/quest/plan"); }', store)
         # Tap-to-advance (owner phone pass, 2026-10-28): picking a

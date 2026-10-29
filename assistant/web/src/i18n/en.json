@@ -760,7 +760,8 @@
     "moveTitle": "Move {{what}} to",
     "addToList": "Add to list",
     "backToLists": "‹ Lists",
-    "newListMenu": "+ New list…"
+    "newListMenu": "+ New list…",
+    "questWalksYou": "Arya walks you through the store, item by item"
   },
   "login": {
     "signIn": "Sign in",
@@ -1327,7 +1328,13 @@
     },
     "perItem": "{{s}}s / item",
     "boardRow_one": "{{count}} item · {{time}} · {{date}}",
-    "boardRow_other": "{{count}} items · {{time}} · {{date}}"
+    "boardRow_other": "{{count}} items · {{time}} · {{date}}",
+    "yourTrips": "Your trips",
+    "yourTripsSub": "Every hunt, its receipt, and your crew.",
+    "newQuest": "+ New quest",
+    "tripsLink": "Your trips and receipts",
+    "tripsLinkSub": "Open hunts, finished trips, Shop-Off and friends",
+    "openingQuest": "Opening Quest…"
   },
   "questProgress": {
     "huntsFinished": "Hunts finished",

@@ -16,7 +16,10 @@ import { t, useTranslation } from "../i18n";
  * news block comes back. */
 const HAS_COMM_NEWS = false;
 
-/* Port of pwa/index.html #view-community with app.js renderQuestHub
+/* Trips: the hunts behind the Quest game (open and finished, receipts),
+ * Crew and Fastest Hands. Reached from the game's home ("trips"); the
+ * Quest tab itself is the game (quest/QuestMode.tsx).
+ * Port of pwa/index.html #view-community with app.js renderQuestHub
  * (hero card, games, level chip) and quest.js renderCommunity (Crew
  * summary, Fastest Hands board). A game opens its hunt, its Express
  * run or (finished) its Score: nav.show("hunt" | "express" | "score",
@@ -164,13 +167,14 @@ export function Quest() {
 
   return (
     <>
-      <h2 className="largetitle">{t("common.quest")}</h2>
-      <p className="muted nomargin">{t("quest.yourListAsATreasure")}</p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ {t("common.quest")}</a></p>
+      <h2 className="largetitle">{t("quest.yourTrips")}</h2>
+      <p className="muted nomargin">{t("quest.yourTripsSub")}</p>
       <div className="todayband"><img src={asset("assets/scenes/hero.webp")} alt="" />
         <span id="today-level" className="bandchip" hidden={!level}>{level && <>{t("quest.level", { level: level.level })}{" "}<span>{t("quest.pts", { points: level.points })}</span></>}</span></div>
       <div id="today-hero">{heroCard()}</div>
-      <button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("store")}>
-        <span className="g-main"><span className="g-name">{t("quest.newHunt")}</span></span><span className="chev">›</span></button>
+      <button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+        <span className="g-main"><span className="g-name">{t("quest.newQuest")}</span></span><span className="chev">›</span></button>
       <h3 className="sect" id="games-head" hidden={!sessions.length}>{t("quest.yourGames")}</h3>
       <div id="quest-sessions">
         {sessions.length > 0 && (

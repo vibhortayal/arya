@@ -6,7 +6,7 @@ export const VIEWS = [
   "group-join", "quest-progress", "muse", "powers", "about", "feedback", "newlist", "store",
   "stores-find", "stores-mine", "stores-add", "mapper", "capture", "optimize",
   "mode", "hunt", "express", "finish", "score", "album", "community", "race",
-  "friends", "receipt", "reveal", "rreview", "haul",
+  "friends", "receipt", "reveal", "rreview", "haul", "trips",
 ] as const;
 export type ViewId = (typeof VIEWS)[number];
 export type ViewParams = Record<string, unknown>;

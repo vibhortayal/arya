@@ -53,7 +53,7 @@ export default async function (page, base) {
 
   // The Quest row and the Lists link navigate.
   await page.click("#today-quest");
-  await page.waitForSelector("#view-community");
+  await page.waitForSelector("#view-community .qg-home");
   await page.evaluate(() => window.__aryaShow("home"));
   await page.waitForSelector("#today-listline");
   await page.click("#today-listline");
