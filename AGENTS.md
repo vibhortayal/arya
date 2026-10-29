@@ -78,8 +78,9 @@ If a guideline conflicts with these, these win:
   real app CSS and wait for the owner's approval before writing UI code.
 - **PRs:** base every PR on `main`; no stacked PRs.
 - **Tests:** CI is manual-only; never add a `pull_request` trigger.
-- **Cost:** $0 per call for math, patterns, and list logic (see
-  `assistant/docs/MODEL-POLICY.md`).
+- **Cost:** math, patterns, and list logic stay deterministic code ($0 per call
+  because no model is needed). Model spend is allowed from hackathon credits
+  (see `assistant/docs/MODEL-POLICY.md`).
 - **Scope:** grocery only.
 - **Prices** come only from the user's own receipts and lists — no scraping,
   no retailer APIs, no web search (SPEC FR-11.1). Community price comparison
@@ -99,7 +100,10 @@ If a guideline conflicts with these, these win:
   (what changed, scores/costs if models ran, what's next) and update
   `STATUS.md` + the stage issue checklist. Docs-only PRs are exempt from all
   three; code changes keep the full duty.
-- Stage starts, any paid spend, and deploys need the owner's go-ahead.
+- Stage starts and deploys need the owner's go-ahead. Meta hackathon credits
+  (plus Baseten and Modal credits) cover model spend, including image
+  generation, so there is no $0 rule; still log spend in the ledger and keep
+  runs sensible (a capped test before a big batch).
 
 ## Design work
 
