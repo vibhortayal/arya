@@ -49,13 +49,15 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   connector), ledger with returns netted, patterns, the staple judge
   with the open-weights second seat, Ask Arya, Receipts with the
   original kept, Analysis (groceries vs other purchases).
-- **Quest tab:** Quest hunts (points, stickers, album, badges, haul card
-  and share) and Express (a plain checklist with Show me, Not here? and
-  Find with camera; no points or badges). Stores directory, Map my
-  store, Shelf Scan, Where am I?, Shop-Off and friends.
-  `2026-10-29-express-mode.md`. A store with no aisle pictures
-  (server list, `GET /api/storemap/stores`) offers Express only; an
-  item with no aisle photo gets "Snap the aisle" in place of Show me.
+- **Quest tab (Quest mode, #158):** the 3D shopping game on the user's
+  own lists and stores (`web/src/game`, host `screens/quest/`). A store's
+  look comes from the shared map: mapped, part mapped (fog) or a labelled
+  simulated store. A real trip is a hunt session (grabs check items off,
+  Not here files the shortage report) and ends at Add your receipt;
+  practice saves nothing. Express is gone from every entry point (its
+  screen stays only for runs started before). Older hunts, Shop-Off,
+  friends, album and Teach Arya your store are on Trips (from the game's
+  home). `2026-10-29-quest-mode.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.

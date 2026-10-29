@@ -23,12 +23,15 @@ class CrewVisibility(unittest.TestCase):
         self.assertIn('id="profile-account"', profile)
 
     def test_crew_view_leads_with_friends_and_race(self):
+        # The Quest tab is the game (#158); the old hub is Trips, opened
+        # from the game's home, with Back to the game.
         crew = frontend.src("screens/Quest.tsx")
-        self.assertIn(">Quest</h2>", crew)
+        self.assertIn(">Your trips</h2>", crew)
         self.assertIn(">Crew</h3>", crew)
         self.assertLess(crew.index('data-qnav="view-race"'), crew.index('id="comm-board"'))
         self.assertLess(crew.index('data-qnav="view-friends"'), crew.index('id="comm-board"'))
-        self.assertNotIn("qback", crew)
+        self.assertIn('nav.back("community")', crew)
+        self.assertIn("community: QuestMode,", frontend.src("screens/registry.tsx"))
 
     def test_today_has_no_crew_or_game_card(self):
         home = frontend.src("screens/Today.tsx")

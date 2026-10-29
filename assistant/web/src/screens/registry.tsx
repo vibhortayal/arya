@@ -32,6 +32,7 @@ import { Hunt } from "./Hunt";
 import { Race } from "./Race";
 import { Score } from "./Score";
 import { HaulCard } from "./haul/HaulCard";
+import { QuestMode } from "./quest/QuestMode";
 import { ReceiptReview } from "./haul/ReceiptReview";
 import { Reveal } from "./haul/Reveal";
 
@@ -47,7 +48,8 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   store: Store,
   "stores-mine": StoresMine,
   capture: Capture,
-  community: Quest,
+  community: QuestMode,
+  trips: Quest,
   mapper: Mapper,
   mode: Mode,
   muse: Muse,
@@ -63,7 +65,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   receipt: Receipt,
   receipts: Receipts,
   album: Album,
-  express: Express,
+  express: Express, // only for Express runs started before Quest mode (#158)
   finish: Finish,
   friends: Friends,
   hunt: Hunt,

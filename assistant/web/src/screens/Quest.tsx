@@ -14,7 +14,10 @@ import { CrewFeed } from "./haul/CrewFeed";
  * news block comes back. */
 const HAS_COMM_NEWS = false;
 
-/* Port of pwa/index.html #view-community with app.js renderQuestHub
+/* Trips: the hunts behind the Quest game (open and finished, receipts),
+ * Crew and Fastest Hands. Reached from the game's home ("trips"); the
+ * Quest tab itself is the game (quest/QuestMode.tsx).
+ * Port of pwa/index.html #view-community with app.js renderQuestHub
  * (hero card, games, level chip) and quest.js renderCommunity (Crew
  * summary, Fastest Hands board). A game opens its hunt, its Express
  * run or (finished) its Score: nav.show("hunt" | "express" | "score",
@@ -161,13 +164,14 @@ export function Quest() {
 
   return (
     <>
-      <h2 className="largetitle">Quest</h2>
-      <p className="muted nomargin">Your list, as a treasure hunt through the store.</p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ Quest</a></p>
+      <h2 className="largetitle">Your trips</h2>
+      <p className="muted nomargin">Every hunt, its receipt, and your crew.</p>
       <div className="todayband"><img src={asset("assets/scenes/hero.webp")} alt="" />
         <span id="today-level" className="bandchip" hidden={!level}>{level && <>Level {level.level} <span>· {level.points} pts</span></>}</span></div>
       <div id="today-hero">{heroCard()}</div>
-      <button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("store")}>
-        <span className="g-main"><span className="g-name">+ New hunt</span></span><span className="chev">›</span></button>
+      <button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+        <span className="g-main"><span className="g-name">+ New quest</span></span><span className="chev">›</span></button>
       <h3 className="sect" id="games-head" hidden={!sessions.length}>Your games</h3>
       <div id="quest-sessions">
         {sessions.length > 0 && (

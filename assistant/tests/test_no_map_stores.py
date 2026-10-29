@@ -179,11 +179,12 @@ class TestWebStoreData(unittest.TestCase):
 
 class TestWebNoMap(unittest.TestCase):
     def test_lists_sheet(self):
+        # Quest mode (#158): a store with no map still plays, as fog or
+        # a labelled simulated store, so the sheet needs no no-map note.
         src = read(WEB, "screens", "Lists.tsx")
-        self.assertIn('id="shop-nomap"', src)
-        self.assertIn("Quest needs aisle photos of this store, and Arya has none yet. "
-                      "In Express, snap a photo or a short video of the aisles you pass. "
-                      "Once ${shopStore} is mapped, Quest turns on here.", src)
+        self.assertNotIn('id="shop-nomap"', src)
+        game = read(WEB, "screens", "quest", "appSource.ts")
+        self.assertIn('if (!mapped.length) return "simulated";', game)
 
     def test_express_nudge(self):
         src = read(WEB, "screens", "Express.tsx")
