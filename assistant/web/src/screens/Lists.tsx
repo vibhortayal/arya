@@ -15,6 +15,7 @@ import {
   askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
   suggestHome, suggestions, suggestWhy, type HomeData, type Item,
 } from "./lists/model";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -62,10 +63,10 @@ type GState = { enabled?: boolean; group?: { name: string; members: Member[] } |
 
 function ago(sec: number) {
   const s = Math.max(0, Math.round(Date.now() / 1000 - sec));
-  if (s < 90) return "just now";
-  if (s < 3600) return `${Math.round(s / 60)} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
-  return Math.round(s / 86400) === 1 ? "yesterday" : `${Math.round(s / 86400)} days ago`;
+  if (s < 90) return t("common.ago.justNow");
+  if (s < 3600) return t("common.ago.minutes", { n: Math.round(s / 60) });
+  if (s < 86400) return t("common.ago.hours", { n: Math.round(s / 3600) });
+  return Math.round(s / 86400) === 1 ? t("common.ago.yesterday") : t("common.ago.days", { count: Math.round(s / 86400) });
 }
 
 /* ---------------- Eyes ---------------- */
@@ -76,6 +77,7 @@ type EyesRec = { id: string; kind: string; date: string; sightings: Sighting[] }
 /* ---------------- one list row ---------------- */
 
 function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: string, q: number, u: string) => Promise<void>; onCancel: () => void }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [q, setQ] = useState("");
   const [u, setU] = useState("");
@@ -87,7 +89,7 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
     const one = !item.unit && Number(item.qty || 1) === 1;
     return (
       <button className={"qtybtn" + (one ? " one" : "")} data-act="qty" data-id={item.item_id} type="button"
-        aria-label={`Quantity ${qtyTag(item) || "1"}. Tap to change.`}
+        aria-label={t("lists.qtyAria", { qty: qtyTag(item) || "1" })}
         onClick={() => { done.current = false; setQ(String(Number(item.qty) || 1)); setU(item.unit || ""); setEditing(true); }}>
         {item.unit ? qtyFmt(item.qty) + " " + item.unit : "× " + qtyFmt(item.qty)}
       </button>
@@ -110,9 +112,9 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
         if (ev.key === "Enter") { ev.preventDefault(); commit(); }
         if (ev.key === "Escape") { done.current = true; setEditing(false); onCancel(); }
       }}>
-      <input type="number" min="1" step="1" inputMode="numeric" className="qtyinput" aria-label="Quantity" ref={qInput}
+      <input type="number" min="1" step="1" inputMode="numeric" className="qtyinput" aria-label={t("common.quantity")} ref={qInput}
         value={q} onChange={e => setQ(e.target.value)} />
-      <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder="unit" aria-label="Unit, for example kg or L"
+      <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder={t("lists.unit")} aria-label={t("lists.unitForExampleKgOr")}
         value={u} onChange={e => setU(e.target.value)} />
     </span>
   );
@@ -120,17 +122,18 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
 
 function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: boolean; picked: boolean;
   onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void }) {
-  const sub = i.added_by ? `Added by ${i.added_by}` : "";
+  const { t } = useTranslation();
+  const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
   return (
     <div className="swipewrap" data-wrap-id={i.item_id}>
-      <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>Move</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>Remove</button></div>
+      <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>{t("lists.move")}</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>{t("common.remove")}</button></div>
       <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
-          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={`Check off ${i.name}`}><IconCheck /></button>}
+          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
-          {askLaterHas(i.name) ? <span className="sub asklater">To ask — kept as typed; asked again at the next plan.</span> : null}
-          {i.not_grocery && !picking ? <span className="sub notgrocery">Not a grocery item? Added anyway. <button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>It is groceries</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>Remove</button></span> : null}</div>
+          {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
+          {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
         {picking ? null : <QtyBtn item={i} onCommit={onQty} onCancel={onReload} />}
       </div>
     </div>
@@ -140,6 +143,7 @@ function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: bo
 /* ---------------- the screen ---------------- */
 
 export function Lists() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
@@ -234,9 +238,9 @@ export function Lists() {
     setSheet(null);
     setSel(null);
     const fresh = await reload();
-    const dest = listId === "else" ? "Everything else" : (namedLists(fresh).find(l => l.id === listId) || { name: "" }).name;
-    const what = ids.length === 1 ? ((before.list.items.find(i => i.item_id === ids[0]) || {} as Partial<Item>).name || "Item") : `${ids.length} items`;
-    toast(`Moved ${what} to ${dest}.`, { action: "Undo", onAction: () => guard(async () => {
+    const dest = listId === "else" ? t("common.everythingElse") : (namedLists(fresh).find(l => l.id === listId) || { name: "" }).name;
+    const what = ids.length === 1 ? ((before.list.items.find(i => i.item_id === ids[0]) || {} as Partial<Item>).name || t("lists.item")) : t("common.itemCount", { count: ids.length });
+    toast(t("lists.movedTo", { what, dest }), { action: t("common.undo"), onAction: () => guard(async () => {
       for (const [id, l] of back) await post("/api/list/move", { item_id: id, list_id: l });
       await reload();
     }) });
@@ -247,7 +251,7 @@ export function Lists() {
     setSheet(null);
     setLens(l.id);
     await reload();
-    toast(`Created ${l.name}.`);
+    toast(t("lists.created", { name: l.name }));
   };
   const saveStores = async (id: string, stores: string[]) => {
     await post("/api/lists/update", { id, stores });
@@ -259,7 +263,7 @@ export function Lists() {
     setSheet(null);
     setLens("home");
     await reload();
-    toast(`Deleted ${l.name}.`, { action: "Undo", onAction: () => guard(async () => {
+    toast(t("lists.deleted", { name: l.name }), { action: t("common.undo"), onAction: () => guard(async () => {
       await post("/api/lists/restore", { list: out.deleted, index: out.index });
       setLens(l.id);
       await reload();
@@ -271,7 +275,7 @@ export function Lists() {
     const target = it ? suggestHome(d, it) : "else";
     await post("/api/list/add", target === "else" ? { item_id: id } : { item_id: id, list_id: target });
     const fresh = await reload();
-    toast(`Added ${it ? it.name : "it"} to ${lensName(fresh, target)}.`, { action: "Undo", onAction: () => guard(async () => {
+    toast(t("lists.addedTo", { name: it ? it.name : t("lists.it"), list: lensName(fresh, target) }), { action: t("common.undo"), onAction: () => guard(async () => {
       // Back to a suggestion: not on the list, and not dismissed either.
       await post(`/api/items/${encodeURIComponent(id)}/flag`, { manual: false, list: it ? it.list || null : null });
       reloadQuiet();
@@ -281,7 +285,7 @@ export function Lists() {
     const it = dataRef.current!.list.items.find(i => i.item_id === id);
     await post("/api/list/remove", { item_id: id });
     await reload();
-    toast(`Skipped ${it ? it.name : "it"} for now.`, { action: "Undo", onAction: () => guard(async () => {
+    toast(t("lists.skippedForNow", { name: it ? it.name : t("lists.it") }), { action: t("common.undo"), onAction: () => guard(async () => {
       await post(`/api/items/${encodeURIComponent(id)}/flag`, { dismissed_on: null, manual: false });
       await reload();
     }) });
@@ -290,7 +294,7 @@ export function Lists() {
     const it = dataRef.current!.list.items.find(i => i.item_id === id);
     await post(`/api/items/${encodeURIComponent(id)}/flag`, { never: true });
     await reload();
-    toast(`Arya won't suggest ${it ? it.name : "it"} again.`, { action: "Undo", onAction: () => guard(async () => {
+    toast(t("lists.wontSuggest", { name: it ? it.name : t("lists.it") }), { action: t("common.undo"), onAction: () => guard(async () => {
       await post(`/api/items/${encodeURIComponent(id)}/flag`, { never: false });
       await reload();
     }) });
@@ -304,7 +308,7 @@ export function Lists() {
   const saveTitle = () => guard(async () => {
     if (!here) { setRenaming(false); return; }
     const n = renameVal.trim();
-    if (!n) { toast("Give the list a name."); return; }
+    if (!n) { toast(t("lists.giveName")); return; }
     if (n !== here.name) await post("/api/lists/update", { id: here.id, name: n });
     setRenaming(false);
     await reload();
@@ -314,12 +318,12 @@ export function Lists() {
   const removeItems = async (ids: string[]) => {
     if (!ids.length) return;
     const d = dataRef.current!;
-    const names = ids.map(id => (d.list.items.find(i => i.item_id === id) || {} as Partial<Item>).name || "Item");
+    const names = ids.map(id => (d.list.items.find(i => i.item_id === id) || {} as Partial<Item>).name || t("lists.item"));
     try {
       for (const id of ids) await post("/api/list/remove", { item_id: id });
       if (selRef.current) setSel(null);
       reloadQuiet();
-      toast(ids.length === 1 ? `${names[0]} removed.` : `${ids.length} items removed.`, { action: "Undo", onAction: async () => {
+      toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
         try { for (const id of ids) await post("/api/list/add", { item_id: id }); reloadQuiet(); }
         catch (e) { toast(errMsg(e)); }
       } });
@@ -428,7 +432,7 @@ export function Lists() {
   /* ---- the composer ---- */
   const items = splitPreview(text);
   const asking = looksLikeAsk(text) || !!parseAddToList(text, lists);
-  const addLabel = asking ? (looksLikeAsk(text) ? "Ask" : "Add") : (items.length > 1 ? `Add ${items.length} items` : "Add");
+  const addLabel = asking ? (looksLikeAsk(text) ? t("common.ask") : t("common.add")) : (items.length > 1 ? t("lists.addNItems", { count: items.length }) : t("common.add"));
   const changeText = (v: string) => { textRef.current = v; setText(v); };
 
   const flashNewRows = (names: string[]) => {
@@ -450,29 +454,29 @@ export function Lists() {
   };
 
   const submit = async () => {
-    const t = textRef.current.trim();
-    if (!t) { toast("Type or paste the items first."); return; }
+    const txt = textRef.current.trim();
+    if (!txt) { toast(t("lists.typeFirst")); return; }
     setAdding(true);
     try {
       // One field for adding and asking: "add naan to Indian Store" files
       // it ($0, no model); a question or a command goes to Arya; anything
       // else is an item.
-      const parsed = parseAddToList(t, lists);
-      if (parsed || looksLikeAsk(t)) {
+      const parsed = parseAddToList(txt, lists);
+      if (parsed || looksLikeAsk(txt)) {
         changeText("");
-        if (parsed) await ask.addToList(t, parsed);
-        else await ask.run(t, here ? { list: here.name, list_id: here.id } : {});
+        if (parsed) await ask.addToList(txt, parsed);
+        else await ask.run(txt, here ? { list: here.name, list_id: here.id } : {});
         setAdding(false);
         return;
       }
-      const r = await post<{ added: number; already?: number; skipped?: string[]; names?: string[] }>("/api/list/from-text", here ? { text: t, list_id: here.id } : { text: t });
+      const r = await post<{ added: number; already?: number; skipped?: string[]; names?: string[] }>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
       // Text typed while the request ran stays; only the sent text clears.
-      if (textRef.current.trim() === t) changeText("");
+      if (textRef.current.trim() === txt) changeText("");
       setStatus("");
-      const dup = r.already ? ` ${r.already} already on it.` : "";
-      const skip = (r.skipped || []).length ? ` Left out (not items): ${r.skipped!.join(", ")}.` : "";
-      const where = here ? here.name : "your list";
-      toast((r.added === 1 ? `Added 1 item to ${where}.` : `Added ${r.added} items to ${where}.`) + dup + skip);
+      const dup = r.already ? t("lists.alreadyOnIt", { n: r.already }) : "";
+      const skip = (r.skipped || []).length ? t("lists.leftOut", { names: r.skipped!.join(", ") }) : "";
+      const where = here ? here.name : t("lists.yourList");
+      toast(t("lists.addedNTo", { count: r.added, where }) + dup + skip);
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});
       judgeUnknown();
     } catch (e) { toast(errMsg(e)); }
@@ -485,11 +489,11 @@ export function Lists() {
   /* A one-line field flattens a pasted list's line breaks. Keep them as
    * semicolons, which the server split reads as item breaks. */
   const onPaste = (ev: ClipboardEvent<HTMLInputElement>) => {
-    const t = ev.clipboardData.getData("text") || "";
-    if (!/[\r\n]/.test(t)) return;
+    const txt = ev.clipboardData.getData("text") || "";
+    if (!/[\r\n]/.test(txt)) return;
     ev.preventDefault();
     const f = ev.currentTarget;
-    const clean = t.split(/[\r\n]+/).map(x => x.trim()).filter(Boolean).join("; ");
+    const clean = txt.split(/[\r\n]+/).map(x => x.trim()).filter(Boolean).join("; ");
     const s = f.selectionStart ?? f.value.length, e = f.selectionEnd ?? s;
     changeText(f.value.slice(0, s) + clean + f.value.slice(e));
     const at = s + clean.length;
@@ -504,23 +508,23 @@ export function Lists() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus("Transcribing with Muse Voice Transcribe…");
+      setStatus(t("common.voice.transcribing"));
       try {
         const spoken = await transcribeBlob(wav);
-        setStatus(spoken ? "" : "That did not come through. Try again, closer to the mic.");
+        setStatus(spoken ? "" : t("common.voice.empty"));
         if (spoken) {
           const ok = await ask.run(spoken, here ? { list: here.name, list_id: here.id } : {});
           if (!ok) { const cur = textRef.current.trim(); changeText(cur ? `${cur}, ${spoken}` : spoken); }
         }
-      } catch (e) { setStatus(""); toast("Transcription failed: " + errMsg(e)); }
+      } catch (e) { setStatus(""); toast(t("common.voice.failed", { error: errMsg(e) })); }
       return;
     }
-    if (!voiceSupported()) { setStatus("Voice input is not available in this browser. The microphone on your keyboard works too."); return; }
+    if (!voiceSupported()) { setStatus(t("common.voice.unsupported")); return; }
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus("Listening…");
-    } catch { setStatus("Microphone access was refused. You can type instead."); }
+      setStatus(t("common.voice.listening"));
+    } catch { setStatus(t("common.voice.refused")); }
   };
 
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -528,7 +532,7 @@ export function Lists() {
     const input = ev.target;
     if (!f) return;
     setReceiptFile(null);
-    setStatus("Reading the photo with Spark…");
+    setStatus(t("lists.readingPhoto"));
     try {
       const r = await fetch("/api/list/from-photo", { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
@@ -536,12 +540,12 @@ export function Lists() {
       setStatus("");
       if (out.kind === "receipt") setReceiptFile(f);
       else {
-        toast(out.added === 1 ? "Added 1 item to your list." : `Added ${out.added} items to your list.`);
+        toast(t("lists.addedNTo", { count: out.added, where: t("lists.yourList") }));
         reloadQuiet();
       }
     } catch (e) {
       setStatus("");
-      toast("Could not read that photo: " + errMsg(e));
+      toast(t("lists.couldNotReadPhoto", { error: errMsg(e) }));
     }
     input.value = "";
   };
@@ -550,18 +554,18 @@ export function Lists() {
     const f = receiptFile;
     setReceiptFile(null);
     if (!f) return;
-    if (!f.size) { toast("That file arrived empty — if it is still downloading, wait for it to finish, then try again."); return; }
-    setStatus("Reading the receipt — this can take up to a minute.");
+    if (!f.size) { toast(t("common.receiptFile.empty")); return; }
+    setStatus(t("common.receiptFile.reading"));
     try {
       const out = await decode(f);
       const rec = out.receipt || {};
       setStatus("");
-      if (out.demo) { setStatus("Read live — kept for this demo visit only."); return; }
-      if (out.duplicate) { toast(`Already filed — ${rec.merchant || "that receipt"}, ${fmtDate(rec.purchased_at)}. Skipped, so the trip is not counted twice.`); return; }
-      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
+      if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
+      if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
+      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
     } catch (e) {
       setStatus("");
-      toast(`Could not read that ${isPdfFile(f) ? "file" : "photo"}: ` + errMsg(e));
+      toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
     }
   };
 
@@ -585,9 +589,9 @@ export function Lists() {
     await loadEyes();
   });
   const eyeDelete = (rec: string) => guard(async () => {
-    if (!confirm("Delete this photo and its sightings? This cannot be undone.")) return;
+    if (!confirm(t("lists.confirmDeletePhoto"))) return;
     await post(`/api/eyes/${rec}/delete`, {});
-    toast("Photo deleted.");
+    toast(t("lists.photoDeleted"));
     await loadEyes();
   });
   const eyesPending = eyes.some(r => (r.sightings || []).some(s => s.state === "pending"));
@@ -614,8 +618,8 @@ export function Lists() {
         <span className="lc-top"><span className="lc-name">{cname}</span><span className="lc-count">{rs.length || ""}</span><span className="chev">›</span></span>
         {r ? <span className="lc-store gact"><b className="byp">{cap(r.by)}</b> {r.action} {r.name} · {ago(r.at)}</span> : null}
         {sub ? <span className="lc-store">{sub}</span> : null}
-        <span className="lc-items">{rs.length ? names : "Nothing on it yet"}</span>
-        {n ? <span className="lc-sugg"><IconSpark />{n} suggestion{n === 1 ? "" : "s"}</span> : null}
+        <span className="lc-items">{rs.length ? names : t("lists.nothingOnItYet")}</span>
+        {n ? <span className="lc-sugg"><IconSpark />{t("lists.suggestion", { count: n })}</span> : null}
       </button>
     );
   };
@@ -624,7 +628,7 @@ export function Lists() {
   if (data && !onPage) {
     const allOpen = onListItems(data).filter(i => !i.checked);
     const used = new Set(allOpen.map(i => itemHome(data, i))).size;
-    homeLine = allOpen.length ? `${allOpen.length} thing${allOpen.length === 1 ? "" : "s"} to get${used > 1 ? ` across ${used} lists` : ""}` : "";
+    homeLine = allOpen.length ? t("lists.thingsToGet", { count: allOpen.length }) + (used > 1 ? t("lists.acrossLists", { n: used }) : "") : "";
   }
 
   const sugg = data && !selEff && onPage ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
@@ -635,96 +639,96 @@ export function Lists() {
     <>
       {!onPage && (
         <div id="lists-home">
-          <h2 className="largetitle">Lists</h2>
+          <h2 className="largetitle">{t("lists.lists")}</h2>
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
-              <span>{grp.name} · shared with {(() => {
+              <span>{t("lists.sharedWith", { name: grp.name, value: (() => {
                 const ns = others.map(m => cap(m.handle));
-                return ns.length <= 2 ? ns.join(" and ") : `${ns.slice(0, 2).join(", ")} and ${ns.length - 2} more`;
-              })()}</span>
+                return ns.length <= 2 ? ns.join(t("lists.and")) : t("lists.namesAndMore", { names: ns.slice(0, 2).join(", "), n: ns.length - 2 });
+              })() })}</span>
             </p>
           ) : null}
           <p id="list-line" className="subtitle">{homeLine}</p>
           <div id="list-cards">
             {data ? <>
-              {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : "No store linked"))}
-              {card("else", "Everything else", lists.length ? "Not on a list yet" : "Make a list for each store you shop at")}
-            </> : <p className="empty">Loading your list…</p>}
+              {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
+              {card("else", t("common.everythingElse"), lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore"))}
+            </> : <p className="empty">{t("lists.loadingYourList")}</p>}
           </div>
-          <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>New list</button>
+          <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
         </div>
       )}
 
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
-          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>‹ Lists</button>
+          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>{t("lists.backToLists")}</button>
           <div className="lhead">
             <h2 className="largetitle" id="lp-title">
               {renaming
-                ? <input type="text" id="lp-name-input" className="titleinput" maxLength={40} autoComplete="off" aria-label="List name" autoFocus
+                ? <input type="text" id="lp-name-input" className="titleinput" maxLength={40} autoComplete="off" aria-label={t("lists.listName")} autoFocus
                     value={renameVal} onChange={e => setRenameVal(e.target.value)} onFocus={e => e.currentTarget.select()}
                     onKeyDown={e => {
                       if (e.key === "Enter") { e.preventDefault(); saveTitle(); }
                       else if (e.key === "Escape") { e.preventDefault(); setRenaming(false); }
                     }} />
                 : here && !selEff
-                  ? <><span id="lp-name">{name}</span><button className="pen" id="lp-pen" type="button" aria-label={`Rename ${name}`} onClick={startRename}><IconPen /></button></>
+                  ? <><span id="lp-name">{name}</span><button className="pen" id="lp-pen" type="button" aria-label={t("lists.rename", { name })} onClick={startRename}><IconPen /></button></>
                   : name}
             </h2>
             <button className="linkbtn" id="lp-select" type="button" hidden={!renaming && !selEff && !open.length}
               onClick={() => { if (renaming) { saveTitle(); return; } setSel(selEff ? null : new Set()); }}>
-              {renaming ? "Save" : selEff ? "Done" : "Select"}
+              {renaming ? t("common.save") : selEff ? t("common.done") : t("lists.select")}
             </button>
-            <button className="iconbtn" id="lp-menu" type="button" aria-label="List options" hidden={!here || !!selEff || renaming}
+            <button className="iconbtn" id="lp-menu" type="button" aria-label={t("lists.listOptions")} hidden={!here || !!selEff || renaming}
               onClick={() => setSheet({ kind: "menu" })}>
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2.1" /><circle cx="12" cy="12" r="2.1" /><circle cx="18.5" cy="12" r="2.1" /></svg>
             </button>
           </div>
           <p className="subtitle" id="lp-sub">
-            {selEff ? `${selEff.size} selected` : [open.length ? `${open.length} to get` : "Nothing to get", ...((here && here.stores) || [])].join(" · ")}
+            {selEff ? t("lists.nSelected", { n: selEff.size }) : [open.length ? t("lists.nToGet", { n: open.length }) : t("lists.nothingToGet"), ...((here && here.stores) || [])].join(" · ")}
           </p>
 
           <div id="composer" hidden={!!selEff}>
             <div className="addline">
-              <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label="Speak your list" onClick={mic}><IconMic /></button>
+              <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label={t("lists.speakYourList")} onClick={mic}><IconMic /></button>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
-                placeholder={name.length <= 8 ? `Add to ${name}` : "Add an item"} autoComplete="off" aria-label={`Add to ${name}`}
+                placeholder={name.length <= 8 ? t("lists.addTo", { name }) : t("lists.addAnItem")} autoComplete="off" aria-label={t("lists.addTo", { name })}
                 value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste} />
-              <label className="iconbtn" htmlFor="add-photo" aria-label="Add from a photo">
+              <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.addFromAPhoto")}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
               </label>
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
               <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit}>{addLabel}</button>
             </div>
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
-              {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={`Remove ${n}`} onClick={() => dropChip(i)}>×</button></span>)}
+              {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
             <p className="muted nomargin" id="add-status">{status}</p>
             <div id="add-receipt-offer">
               {receiptFile ? <>
-                <p className="nomargin" style={{ marginTop: 10 }}>This looks like a receipt.</p>
-                <p style={{ marginBottom: 0 }}><button className="btn primary" id="add-file-receipt" type="button" onClick={fileReceipt}>File it as a receipt</button></p>
+                <p className="nomargin" style={{ marginTop: 10 }}>{t("lists.thisLooksLikeAReceipt")}</p>
+                <p style={{ marginBottom: 0 }}><button className="btn primary" id="add-file-receipt" type="button" onClick={fileReceipt}>{t("lists.fileItAsAReceipt")}</button></p>
               </> : null}
             </div>
           </div>
           <div id="list-answer">{ask.node}</div>
 
           <div id="list-eyes" hidden={!eyesPending}>
-            <h3 className="sect">Eyes — sightings to confirm</h3>
+            <h3 className="sect">{t("lists.eyesSightingsToConfirm")}</h3>
             <div className="group pad"><div id="eyes-records">
               {eyes.map(rec => (
                 <div className="eyes-record" key={rec.id}>
-                  <img src={`/eyes/photos/${rec.id}`} alt="Eyes photo" />
+                  <img src={`/eyes/photos/${rec.id}`} alt={t("lists.eyesPhoto")} />
                   <p className="muted">{rec.kind} · {fmtDate(rec.date)}</p>
                   {rec.sightings.map((sg, i) => (
                     <div className="row" key={i}><div className="grow"><span className="name">{sg.name}</span>
-                      <span className="sub">{sg.judge_agree ? "" : "two reads disagreed · "}{sg.state}</span></div>
+                      <span className="sub">{sg.judge_agree ? "" : t("lists.readsDisagreed")}{sg.state}</span></div>
                       {sg.state === "pending" ? <div>
-                        <button className="chip eyes-confirm" type="button" onClick={() => eyeDecide(rec.id, i, "confirmed")}>Yes, it’s there</button>{" "}
-                        <button className="chip eyes-reject" type="button" onClick={() => eyeDecide(rec.id, i, "rejected")}>Not there</button></div> : null}
+                        <button className="chip eyes-confirm" type="button" onClick={() => eyeDecide(rec.id, i, "confirmed")}>{t("lists.yesItSThere")}</button>{" "}
+                        <button className="chip eyes-reject" type="button" onClick={() => eyeDecide(rec.id, i, "rejected")}>{t("lists.notThere")}</button></div> : null}
                     </div>))}
-                  <p className="nomargin" style={{ marginTop: 6 }}><button className="chip eyes-del" type="button" onClick={() => eyeDelete(rec.id)}>Delete photo</button></p>
+                  <p className="nomargin" style={{ marginTop: 6 }}><button className="chip eyes-del" type="button" onClick={() => eyeDelete(rec.id)}>{t("lists.deletePhoto")}</button></p>
                 </div>))}
             </div></div>
           </div>
@@ -733,26 +737,26 @@ export function Lists() {
             {groceries.length ? <div className="group">{groceries.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
               : errands.length ? null
                 : <div className="group pad"><div className="emptyface-wrap"><img className="emptyface" src="/assets/characters/pantry.webp" alt="" />
-                  <p className="empty">Nothing on {name} yet. Type, speak or snap a list above.</p></div></div>}
+                  <p className="empty">{t("lists.nothingOnYetTypeSpeak", { name })}</p></div></div>}
             {errands.length ? <>
-              <p className="grouplabel">Other errands</p>
+              <p className="grouplabel">{t("lists.otherErrands")}</p>
               <div className="group">{errands.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
             </> : null}
           </div>
 
           <div id="list-suggest">
             {sugg.length ? <>
-              <div className="sectrow"><h3 className="sect">{lid === "else" ? "Suggested" : `Suggested for ${name}`}</h3><span className="muted">Tap to see why</span></div>
+              <div className="sectrow"><h3 className="sect">{lid === "else" ? t("lists.suggested") : t("lists.suggestedFor", { name })}</h3><span className="muted">{t("lists.tapToSeeWhy")}</span></div>
               <div className="group">{sugg.map(i => {
                 const c = charFor(i.name);
                 return (
-                  <div className="row sugrow" key={i.item_id} data-why={i.item_id} tabIndex={0} role="button" aria-label={`Why Arya suggests ${i.name}`}
+                  <div className="row sugrow" key={i.item_id} data-why={i.item_id} tabIndex={0} role="button" aria-label={t("lists.whySuggests", { name: i.name })}
                     onClick={() => setSheet({ kind: "why", id: i.item_id })}
                     onKeyDown={ev => { if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); setSheet({ kind: "why", id: i.item_id }); } }}>
                     {c ? <img className="rowface" src={`/assets/characters/${c}`} alt="" /> : null}
                     <div className="grow"><span className="name">{i.name}</span><span className="why"><IconSpark />{suggestWhy(i)}</span></div>
-                    <button className="addchip" type="button" data-sugg-add={i.item_id} aria-label={`Add ${i.name}`}
-                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}>+ Add</button>
+                    <button className="addchip" type="button" data-sugg-add={i.item_id} aria-label={t("lists.addName", { name: i.name })}
+                      onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}>{t("lists.add")}</button>
                   </div>);
               })}</div>
             </> : null}
@@ -762,23 +766,23 @@ export function Lists() {
             {done.length && !selEff ? (
               <div className="group">
                 <div className="row donerow">
-                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}>✓ {done.length} checked off {doneOpen ? "▴" : "▾"}</button>
-                  <button className="linkbtn" type="button" data-done-clear onClick={e => { e.stopPropagation(); removeItems(done.map(i => i.item_id)); }}>Clear</button>
+                  <button className="linkbtn donetoggle" type="button" data-done-toggle aria-expanded={doneOpen} onClick={e => { e.stopPropagation(); setDoneOpen(!doneOpen); }}>{t("lists.checkedOff", { doneCount: done.length })}{" "}{doneOpen ? "▴" : "▾"}</button>
+                  <button className="linkbtn" type="button" data-done-clear onClick={e => { e.stopPropagation(); removeItems(done.map(i => i.item_id)); }}>{t("lists.clear")}</button>
                 </div>
                 {doneOpen ? done.map(i => <ListRow key={i.item_id} {...rowProps(i)} />) : null}
               </div>) : null}
           </div>
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
-            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => setShopOpen(true)}>Start shopping · {open.length} item{open.length === 1 ? "" : "s"}</button>
+            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => setShopOpen(true)}>{t("lists.startShoppingItem", { count: open.length })}</button>
           </div>
         </div>
       )}
 
       {onPage && selEff && (
         <div id="list-selbar" className="selbar">
-          <button className="btn secondary dangertext" id="ls-remove" type="button" disabled={!nSel} onClick={() => removeItems([...selEff])}>Remove</button>
-          <button className="btn primary" id="ls-move" type="button" disabled={!nSel} onClick={() => setSheet({ kind: "move", ids: [...selEff] })}>{nSel ? `Move ${nSel} to…` : "Move to…"}</button>
+          <button className="btn secondary dangertext" id="ls-remove" type="button" disabled={!nSel} onClick={() => removeItems([...selEff])}>{t("common.remove")}</button>
+          <button className="btn primary" id="ls-move" type="button" disabled={!nSel} onClick={() => setSheet({ kind: "move", ids: [...selEff] })}>{nSel ? t("lists.moveNTo", { n: nSel }) : t("lists.moveTo")}</button>
         </div>
       )}
 
@@ -789,12 +793,12 @@ export function Lists() {
       )}
 
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
-        <div className="sheethead"><h3 id="shop-title" className="nomargin">Shop {here ? here.name : "Everything else"} · {open.length} item{open.length === 1 ? "" : "s"}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>Close</button></div>
+        <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
         <div className="group shopmodes">
-          <button className="hubrow" type="button" data-shop="quest" data-first onClick={startHunt}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">Quest<span className="sub">Arya walks you through the store, item by item</span></span><span className="chev">›</span></button>
+          <button className="hubrow" type="button" data-shop="quest" data-first onClick={startHunt}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("common.quest")}<span className="sub">{t("lists.questWalksYou")}</span></span><span className="chev">›</span></button>
         </div>
         <p id="shop-sugg" className="muted shopsugg" hidden={!shopSugg.length}>
-          {shopSugg.length ? <>Arya also suggests {shopSugg.slice(0, 2).map(i => i.name).join(" and ")}{shopSugg.length > 2 ? ` and ${shopSugg.length - 2} more` : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>Add {shopSugg.length === 1 ? "it" : shopSugg.length === 2 ? "both" : "all"}</button></> : null}
+          {shopSugg.length ? <>{t("lists.aryaAlsoSuggests", { names: shopSugg.slice(0, 2).map(i => i.name).join(t("lists.and")) })}{shopSugg.length > 2 ? t("lists.andNMore", { n: shopSugg.length - 2 }) : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>{t(shopSugg.length === 1 ? "lists.addIt" : shopSugg.length === 2 ? "lists.addBoth" : "lists.addAll")}</button></> : null}
         </p>
       </Sheet>
     </>

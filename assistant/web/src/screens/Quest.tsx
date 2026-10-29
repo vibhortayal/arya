@@ -6,6 +6,8 @@ import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { asset, fmtShort } from "../lib/format";
 import { CrewFeed } from "./haul/CrewFeed";
+import { qModeLabel } from "./hunt/model";
+import { t, useTranslation } from "../i18n";
 
 /* haul.js paintFeed paints the Crew hauls feed above #comm-news and
  * returns at once when the page has no #comm-news. The current app's
@@ -28,9 +30,10 @@ type Sess = { id: string; store: string; mode: string; state: string; items: SIt
   started_at?: string; finished_at?: string; receipt_id?: string; shopoff_id?: string };
 type Scope = "household" | "friends" | "store" | "global";
 
-const QSTATE_LBL: Record<string, string> = { not_started: "Not started", playing: "Playing", paused: "Paused", finished: "Finished · Receipt missing", done: "Finished · Receipt attached ✓" };
-const QMODE_LBL: Record<string, string> = { quest: "Quest", express: "Express" };
-const SCOPES: [Scope, string][] = [["household", "Household"], ["friends", "Friends"], ["store", "Store"], ["global", "Global"]];
+/* State, mode and board scope names: en.json keys. */
+const QSTATE_KEY: Record<string, string> = { not_started: "quest.state.notStarted", playing: "quest.state.playing", paused: "hunt.paused", finished: "common.finishedReceiptMissing", done: "quest.state.done" };
+const stateLabel = (st: string) => (QSTATE_KEY[st] ? t(QSTATE_KEY[st]) : st);
+const SCOPES: [Scope, string][] = [["household", "quest.scope.household"], ["friends", "common.friends"], ["store", "quest.scope.store"], ["global", "quest.scope.global"]];
 const SAMPLES: Record<string, [string, number][]> = {
   friends: [["@sample-mina", 33], ["@sample-dev", 38]],
   store: [["@sample-ana", 31], ["@sample-ravi", 36]],
@@ -44,7 +47,6 @@ const BasketSvg = () => (
 
 const progress = (s: Sess) => ({ total: s.items.length, done: s.items.filter(i => i.checked).length });
 const closed = (s: Sess) => s.state === "finished" || s.state === "done";
-const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 /* The newest hunt that still wants play. */
 function heroSession(sessions: Sess[]): Sess | undefined {
@@ -55,10 +57,11 @@ function heroSession(sessions: Sess[]): Sess | undefined {
 function durText(ms: number): string {
   const sec = Math.max(0, Math.round(ms / 1000));
   const min = Math.floor(sec / 60);
-  return min >= 60 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${min} min`;
+  return min >= 60 ? t("common.duration.hm", { h: Math.floor(min / 60), m: min % 60 }) : t("common.duration.m", { m: min });
 }
 
 export function Quest() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const { setRing } = useAvatar();
@@ -67,7 +70,7 @@ export function Quest() {
 
   const [sessions, setSessions] = useState<Sess[]>([]);
   const [level, setLevel] = useState<{ level: number; points: number } | null>(null);
-  const [albumSub, setAlbumSub] = useState("Stickers from your hunts");
+  const [albumSub, setAlbumSub] = useState(() => t("quest.albumSub"));
   const [times, setTimes] = useState<Record<string, string>>({});
   const [crew, setCrew] = useState<{ acc: number; pend: number; raceN: number } | null>(null);
   const [scope, setScope] = useState<Scope>("household");
@@ -86,7 +89,7 @@ export function Quest() {
         setRing({ pct, level: p.level });
       }
       const n = p.album && p.album.stickers;
-      if (typeof n === "number") setAlbumSub(n === 0 ? "No stickers yet" : n === 1 ? "1 sticker" : `${n} stickers`);
+      if (typeof n === "number") setAlbumSub(n === 0 ? t("quest.noStickers") : t("quest.stickers", { count: n }));
     }).catch(() => {});
     const [archive, fr] = await Promise.all([
       get("/api/quest/receipts").catch(() => ({ receipts: [] })),
@@ -106,8 +109,8 @@ export function Quest() {
   };
 
   async function abandon(s: Sess) {
-    if (!confirm("End this hunt? It leaves Quest and cannot be resumed.")) return;
-    try { await post(`/api/quest/sessions/${s.id}/state`, { state: "abandoned" }); toast("Hunt ended."); }
+    if (!confirm(t("quest.confirmEnd"))) return;
+    try { await post(`/api/quest/sessions/${s.id}/state`, { state: "abandoned" }); toast(t("quest.huntEnded")); }
     catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     load().catch(showErr);
   }
@@ -137,8 +140,8 @@ export function Quest() {
     return (
       <button className="gamerow" data-sess={s.id} type="button" onClick={() => open(s)}>
         <span className="storeic"><BasketSvg /></span>
-        <span className="g-main"><span className="g-name">{s.store} — {QMODE_LBL[s.mode] || s.mode}</span>
-          <span className="g-meta">{QSTATE_LBL[s.state] || s.state} · {p.done} of {p.total}</span></span>
+        <span className="g-main"><span className="g-name">{t("quest.gameName", { store: s.store, mode: qModeLabel(s.mode) })}</span>
+          <span className="g-meta">{t("quest.stateProgress", { state: stateLabel(s.state), done: p.done, total: p.total })}</span></span>
         {(s.state === "playing" || s.state === "paused") && <span className="track g-bar"><span className="bar" style={{ width: pct + "%" }} /></span>}
         <span className="chev">›</span>
       </button>
@@ -152,80 +155,80 @@ export function Quest() {
     const fresh = hero.state === "not_started";
     return (
       <article className="herocard">
-        <p className="hero-k">{fresh ? "Up next — your next game" : "In progress — your next action"}</p>
-        <h3 className="hero-title">{hero.store} · {QMODE_LBL[hero.mode] || hero.mode}</h3>
-        <p className="hero-sub">{plural(p.total, "item")} · from your {hero.store} list</p>
+        <p className="hero-k">{fresh ? t("quest.upNext") : t("quest.inProgress")}</p>
+        <h3 className="hero-title">{t("quest.heroTitle", { store: hero.store, mode: qModeLabel(hero.mode) })}</h3>
+        <p className="hero-sub">{t("quest.fromYourList", { count: p.total, store: hero.store })}</p>
         <span className="track"><span className="bar" style={{ width: pct + "%" }} /></span>
-        <span className="hero-state">{QSTATE_LBL[hero.state] || hero.state} · {p.done} of {p.total} collected</span>
-        <button className="btn primary wide" data-hero={hero.id} type="button" onClick={() => open(hero)}>{fresh ? "Start ▸" : "Resume ▸"}</button>
+        <span className="hero-state">{t("quest.stateCollected", { state: stateLabel(hero.state), done: p.done, total: p.total })}</span>
+        <button className="btn primary wide" data-hero={hero.id} type="button" onClick={() => open(hero)}>{fresh ? t("quest.start") : t("quest.resume")}</button>
       </article>
     );
   };
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ Quest</a></p>
-      <h2 className="largetitle">Your trips</h2>
-      <p className="muted nomargin">Every hunt, its receipt, and your crew.</p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ {t("common.quest")}</a></p>
+      <h2 className="largetitle">{t("quest.yourTrips")}</h2>
+      <p className="muted nomargin">{t("quest.yourTripsSub")}</p>
       <div className="todayband"><img src={asset("assets/scenes/hero.webp")} alt="" />
-        <span id="today-level" className="bandchip" hidden={!level}>{level && <>Level {level.level} <span>· {level.points} pts</span></>}</span></div>
+        <span id="today-level" className="bandchip" hidden={!level}>{level && <>{t("quest.level", { level: level.level })}{" "}<span>{t("quest.pts", { points: level.points })}</span></>}</span></div>
       <div id="today-hero">{heroCard()}</div>
       <button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
-        <span className="g-main"><span className="g-name">+ New quest</span></span><span className="chev">›</span></button>
-      <h3 className="sect" id="games-head" hidden={!sessions.length}>Your games</h3>
+        <span className="g-main"><span className="g-name">{t("quest.newQuest")}</span></span><span className="chev">›</span></button>
+      <h3 className="sect" id="games-head" hidden={!sessions.length}>{t("quest.yourGames")}</h3>
       <div id="quest-sessions">
         {sessions.length > 0 && (
           <>
             {heroOpen && gameRow(heroOpen)}
             {heroOpen && rest.length > 0 && (
-              <details className="g-fold"><summary>{rest.length} other open hunt{rest.length === 1 ? "" : "s"}</summary>
+              <details className="g-fold"><summary>{t("quest.otherOpenHunt", { count: rest.length })}</summary>
                 {rest.map(s => <div className="earlierrow" key={s.id}>{gameRow(s)}
-                  <button className="btn danger" data-abandon={s.id} type="button" onClick={() => abandon(s)}>Abandon</button></div>)}
+                  <button className="btn danger" data-abandon={s.id} type="button" onClick={() => abandon(s)}>{t("quest.abandon")}</button></div>)}
               </details>
             )}
-            {done.length > 0 && <><p className="g-group">Finished</p>{done.map(s => <Fragment key={s.id}>{gameRow(s)}</Fragment>)}</>}
+            {done.length > 0 && <><p className="g-group">{t("quest.finished")}</p>{done.map(s => <Fragment key={s.id}>{gameRow(s)}</Fragment>)}</>}
           </>
         )}
       </div>
       <button id="btn-map-store" className="gamerow newrow" type="button" onClick={() => nav.show("mapper")}>
         <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-        <span className="g-main"><span className="g-name">Teach Arya your store</span><span className="g-sub">20 seconds an aisle. Your next hunt gets faster.</span></span>
+        <span className="g-main"><span className="g-name">{t("common.teachAryaYourStore")}</span><span className="g-sub">{t("quest.20SecondsAnAisleYour")}</span></span>
         <span className="chev">›</span></button>
-      <h3 className="sect">Crew</h3>
+      <h3 className="sect">{t("quest.crew")}</h3>
       <div id="crew-summary" className="group" hidden={!showCrew}>
         {showCrew && crew && (
           <div className="row"><div className="grow">
-            <span className="name">{plural(crew.acc, "friend")}{crew.pend ? ` · ${plural(crew.pend, "request")}` : ""}</span>
-            <span className="sub">{crew.raceN ? `${plural(crew.raceN, "Shop-Off")} on` : "No Shop-Off on right now"}</span></div></div>
+            <span className="name">{t("quest.crewLine.friends", { count: crew.acc })}{crew.pend ? " · " + t("quest.crewLine.requests", { count: crew.pend }) : ""}</span>
+            <span className="sub">{crew.raceN ? t("quest.crewLine.shopOffsOn", { count: crew.raceN }) : t("quest.crewLine.noShopOff")}</span></div></div>
         )}
       </div>
       <div className="group">
-        <button className="navrow" data-qnav="view-race" type="button" onClick={() => nav.show("race")}><span className="grow">Shop-Off<span className="sub">Race a friend on the same list</span></span><span className="chev">›</span></button>
-        <button className="navrow" data-qnav="view-friends" type="button" onClick={() => nav.show("friends")}><span className="grow">Friends<span className="sub" id="crew-friends-sub">{crew && crew.pend ? `${plural(crew.pend, "request")} waiting` : "Add by handle, accept requests"}</span></span><span className="chev">›</span></button>
-        <button className="navrow" data-qnav="view-album" type="button" onClick={() => nav.show("album")}><span className="grow">Album<span className="sub" id="album-nav-sub">{albumSub}</span></span><span className="chev">›</span></button>
+        <button className="navrow" data-qnav="view-race" type="button" onClick={() => nav.show("race")}><span className="grow">{t("common.shopOff")}<span className="sub">{t("quest.raceAFriendOnThe")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" data-qnav="view-friends" type="button" onClick={() => nav.show("friends")}><span className="grow">{t("common.friends")}<span className="sub" id="crew-friends-sub">{crew && crew.pend ? t("quest.crewLine.requestsWaiting", { count: crew.pend }) : t("quest.crewLine.addByHandle")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" data-qnav="view-album" type="button" onClick={() => nav.show("album")}><span className="grow">{t("common.album")}<span className="sub" id="album-nav-sub">{albumSub}</span></span><span className="chev">›</span></button>
       </div>
       {HAS_COMM_NEWS && <CrewFeed />}
       <div id="comm-fastest" hidden={!qualifying.length}>
         <div className="seg" id="comm-scopes">
           {SCOPES.map(([k, label]) => (
-            <button key={k} className="chip" data-scope={k} aria-pressed={scope === k} type="button" onClick={() => setScope(k)}>{label}</button>
+            <button key={k} className="chip" data-scope={k} aria-pressed={scope === k} type="button" onClick={() => setScope(k)}>{t(label)}</button>
           ))}
         </div>
-        <h3 className="sect">Fastest Hands</h3>
+        <h3 className="sect">{t("quest.fastestHands")}</h3>
         <div id="comm-board" className="group">
           {scope !== "household"
             ? (SAMPLES[scope] || []).map(([h, per], i) => (
-              <div className="row" key={h}><div className="grow"><span className="name">{i + 1}. {h}<span className="samplepill">Sample</span></span>
-                <span className="sub">Example only. Real boards fill in as friends play.</span></div>
-                <div className="money">{per}s / item</div></div>))
+              <div className="row" key={h}><div className="grow"><span className="name">{i + 1}. {h}<span className="samplepill">{t("common.sample")}</span></span>
+                <span className="sub">{t("quest.exampleOnlyRealBoardsFill")}</span></div>
+                <div className="money">{t("quest.perItem", { s: per })}</div></div>))
             : qualifying.length
               ? qualifying.map((x, i) => (
                 <div className="row" key={x.s.id}><div className="grow"><span className="name">{i + 1}. {x.s.store}</span>
-                  <span className="sub">{x.s.items.length} items · {durText(x.ms)} · {fmtShort(String(x.s.started_at).slice(0, 10))}</span></div>
-                  <div className="money">{Math.round(x.per / 1000)}s / item</div></div>))
-              : <Empty>No qualifying hunts yet — finish a hunt with 8 or more items and a receipt.</Empty>}
+                  <span className="sub">{t("quest.boardRow", { count: x.s.items.length, time: durText(x.ms), date: fmtShort(String(x.s.started_at).slice(0, 10)) })}</span></div>
+                  <div className="money">{t("quest.perItem", { s: Math.round(x.per / 1000) })}</div></div>))
+              : <Empty>{t("quest.noQualifyingHuntsYetFinish")}</Empty>}
         </div>
-        <p className="muted">Fastest full hunts, scored as time per item. A hunt needs 8 or more items to qualify. Times come from the receipt — the receipt is the referee.</p>
+        <p className="muted">{t("quest.fastestFullHuntsScoredAs")}</p>
       </div>
     </>
   );

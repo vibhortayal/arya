@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { get, post } from "../lib/api";
+import { t, Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-capture and pwa/mapper.js (openCapture,
  * the cam* functions, upload, teach confirm, reward card). The Shell
@@ -55,10 +56,10 @@ function sharpness(canvas: HTMLCanvasElement) {
   return { sharp: sq / n - (sum / n) * (sum / n), luma: luma / (w * h) };
 }
 function camHint(g: { sharp: number; luma: number }, rel: number, walk: boolean): [string, boolean] {
-  if (g.luma < 45) return ["A bit dark. Face the shelf light.", false];
-  if (g.luma > 225) return ["Tilt a little to lose the glare.", false];
-  if (rel < 0.5) return [walk ? "A little slower…" : "Hold still…", false];
-  return [walk ? "Nice and steady. Keep walking." : "Good. Holding…", true];
+  if (g.luma < 45) return [t("capture.hint.dark"), false];
+  if (g.luma > 225) return [t("capture.hint.glare"), false];
+  if (rel < 0.5) return [walk ? t("capture.hint.slower") : t("capture.hint.holdStill"), false];
+  return [walk ? t("capture.hint.steadyWalk") : t("capture.hint.holding"), true];
 }
 function camGrab(video: HTMLVideoElement) {
   const scale = Math.min(1, 1280 / (video.videoWidth || 1280));
@@ -83,7 +84,7 @@ async function videoFrames(file: File) {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
   video.muted = true; video.playsInline = true; video.src = url;
-  await new Promise<void>((res, rej) => { video.onloadedmetadata = () => res(); video.onerror = () => rej(new Error("Could not read that video.")); });
+  await new Promise<void>((res, rej) => { video.onloadedmetadata = () => res(); video.onerror = () => rej(new Error(t("capture.badVideo"))); });
   const dur = video.duration || 1;
   const n = Math.max(4, Math.min(24, Math.round(dur / (WALK_BUCKET_MS / 1000))));
   const frames: { blob: Blob; score: number }[] = [];
@@ -106,6 +107,7 @@ function teachPicks(frames: { blob: Blob }[]) {
 }
 
 export function Capture() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
   const param = nav.params.prompt as Prompt | undefined;
@@ -115,7 +117,7 @@ export function Capture() {
   const [camOn, setCamOn] = useState(false);
   const [hint, setHint] = useState<{ text: string; good: boolean }>({ text: "", good: false });
   const [parts, setParts] = useState({ n: 0, on: 0 });
-  const [goLabel, setGoLabel] = useState("Open camera");
+  const [goLabel, setGoLabel] = useState(() => t("capture.openCamera"));
   const [goDisabled, setGoDisabled] = useState(false);
   // Snap the aisle (owner, 2026-10-29): a photo or a short video.
   const [videoOpt, setVideoOpt] = useState(false);
@@ -156,7 +158,7 @@ export function Capture() {
     walk.current = null;
     epoch.current++;
     setPrompt(p); P.current = p;
-    setGoLabel("Open camera"); setGoDisabled(false);
+    setGoLabel(t("capture.openCamera")); setGoDisabled(false);
     setVideoOpt(p.media === "both");
     setCamOn(false); setControls(true); setResult(null); setAfter(null); setBarW(null);
     setParts({ n: 0, on: 0 }); setHint({ text: "", good: false });
@@ -187,7 +189,7 @@ export function Capture() {
   const mapperAfter = async () => {
     const v = await loadView(S.current).catch(() => V.current);
     // Snapped from a shopping trip: the way on is back to the trip.
-    setAfter(P.current.item ? "Back to shopping" : v && v.next ? "Teach one more · about 20 s" : "Back to the map");
+    setAfter(P.current.item ? t("capture.backToShopping") : v && v.next ? t("capture.teachOneMore") : t("capture.backToMap"));
   };
 
   /* Upload, then celebrate. A failure never asks for a retake. */
@@ -195,7 +197,7 @@ export function Capture() {
     busy.current = true;
     const ep = epoch.current;
     setControls(false); setCamOn(false);
-    setResult({ t: "text", text: "Blurring any people and adding it to the map…" });
+    setResult({ t: "text", text: t("capture.blurring") });
     const won: { out: any; seg: string }[] = [];
     let last: Reward | null = null;
     for (const p of picks) {
@@ -221,7 +223,7 @@ export function Capture() {
     busy.current = true;
     const ep = epoch.current;
     setControls(false); setCamOn(false);
-    setResult({ t: "text", text: "Reading the shelves and building the map…" });
+    setResult({ t: "text", text: t("capture.reading") });
     const found = new Map<string, Found>();
     let pts = 0, newTitle: string | null = null;
     for (const blob of blobs) {
@@ -297,7 +299,7 @@ export function Capture() {
   /* PHOTO: watch, hint, snap the best frame once steady. */
   const camPhoto = () => {
     const v = videoRef.current!;
-    setGoLabel("Snapping when steady…"); setGoDisabled(true); setParts({ n: 0, on: 0 });
+    setGoLabel(t("capture.snapping")); setGoDisabled(true); setParts({ n: 0, on: 0 });
     const t0 = Date.now();
     let best: Frame | null = null, maxSharp = 1, goodSince = 0, snapping = false;
     timer.current = window.setInterval(async () => {
@@ -314,7 +316,7 @@ export function Capture() {
         snapping = true;
         if (timer.current !== null) clearInterval(timer.current);
         timer.current = null;
-        setHint({ text: "Got it ✓", good: true });
+        setHint({ text: t("capture.gotIt"), good: true });
         const blob = await camBlob(best.c);
         camStop();
         if (P.current.teach) { await teachSend([blob], "photo"); return; }
@@ -326,7 +328,7 @@ export function Capture() {
   /* WALK: keep the sharpest frame of every 2 seconds. */
   const camWalk = () => {
     const v = videoRef.current!;
-    setGoLabel("Done"); setGoDisabled(false);
+    setGoLabel(t("capture.done")); setGoDisabled(false);
     const n0 = (P.current.parts || [P.current.segment]).length;
     walk.current = { t0: Date.now(), buckets: [], maxSharp: 1, shownParts: n0 };
     setParts({ n: n0, on: 0 });
@@ -372,14 +374,14 @@ export function Capture() {
     try {
       const out = await post("/api/storemap/discard", { store: S.current, segment: seg });
       setResult(r => (r && r.t === "teach" ? { ...r, found: r.found.filter(f => f.segment !== seg) } : r));
-      toast(`${out.label} taken back off the map.`);
+      toast(t("capture.takenOff", { label: out.label }));
       await loadView(S.current);
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   };
 
   const segLabel = (id: string) => {
     const s = (V.current?.segments || []).find(x => x.id === id);
-    return s ? s.label : P.current.title || "This aisle";
+    return s ? s.label : P.current.title || t("capture.thisAisle");
   };
 
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,7 +393,7 @@ export function Capture() {
   const onVideo = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f || busy.current) return;
-    setResult({ t: "text", text: "Picking the sharpest frames from your walk…" });
+    setResult({ t: "text", text: t("capture.picking") });
     try {
       const { frames, secs } = await videoFrames(f);
       if (P.current.teach) await teachSend(teachPicks(frames));
@@ -413,7 +415,7 @@ export function Capture() {
     if (!p.segment) return;
     try {
       const out = await post("/api/storemap/outdated", { store: S.current, segment: p.segment });
-      toast("Thanks. Marked out of date.");
+      toast(t("capture.markedOutOfDate"));
       if (out.prompt) openCapture(out.prompt);
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   };
@@ -425,7 +427,7 @@ export function Capture() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={back}>‹ Back</a></p>
+      <p><a href="#" className="qback" onClick={back}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h2>
       <p className="muted" id="cp-why">{prompt.why || ""}</p>
       <div className="cp-cam" id="cp-cam" hidden={!camOn}>
@@ -436,12 +438,12 @@ export function Capture() {
         </div>
       </div>
       <div className="group pad" id="cp-howto" hidden={camOn}>
-        <ol id="cp-steps" className="cpsteps">{(prompt.steps || []).map((t, i) => <li key={i}>{t}</li>)}</ol>
-        <p className="muted nomargin" id="cp-time">{`About ${prompt.est_seconds || 10} seconds.`}</p>
+        <ol id="cp-steps" className="cpsteps">{(prompt.steps || []).map((step, i) => <li key={i}>{step}</li>)}</ol>
+        <p className="muted nomargin" id="cp-time">{t("capture.aboutSeconds", { s: prompt.est_seconds || 10 })}</p>
       </div>
       <p id="cp-controls" hidden={!controls}>
         <button className="btn primary wide" id="cp-go" type="button" disabled={goDisabled} onClick={() => go()}>{goLabel}</button>
-        <button className="btn wide" id="cp-govideo" type="button" hidden={!videoOpt} onClick={() => go(true)}>Record a short video</button>
+        <button className="btn wide" id="cp-govideo" type="button" hidden={!videoOpt} onClick={() => go(true)}>{t("capture.recordAShortVideo")}</button>
         <input type="file" id="cp-photo" ref={photoRef} accept="image/*" capture="environment" hidden onChange={onPhoto} />
         <input type="file" id="cp-video" ref={videoInRef} accept="video/*" capture="environment" hidden onChange={onVideo} />
       </p>
@@ -451,7 +453,7 @@ export function Capture() {
       <p id="cp-after" hidden={after === null}>
         <button id="cp-next" className="btn primary wide" type="button" onClick={next}>{after}</button>
       </p>
-      <p><button id="cp-outdated" className="btn wide" type="button" hidden={!prompt.segment} onClick={outdated}>This part of the map is out of date</button></p>
+      <p><button id="cp-outdated" className="btn wide" type="button" hidden={!prompt.segment} onClick={outdated}>{t("capture.thisPartOfTheMap")}</button></p>
     </>
   );
 }
@@ -460,30 +462,31 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
   r: Result; view: StoreView | null; barW: number | null; segLabel: (id: string) => string;
   onPick: (id: string) => void; onDiscard: (seg: string) => void;
 }) {
+  const { t } = useTranslation();
   if (r.t === "text") return <>{r.text}</>;
-  if (r.t === "gentle") return <p className="nomargin"><strong>Thanks!</strong> We could not save this one just now, so nothing was kept. No need to redo it. We will ask again another time.</p>;
+  if (r.t === "gentle") return <p className="nomargin"><Trans i18nKey="capture.gentle" components={{ b: <strong /> }} /></p>;
   if (r.t === "pick") {
     const segs = view?.segments || [];
     return segs.length ? (
       <>
-        <p className="nomargin">Tap the aisle you are in:</p>
+        <p className="nomargin">{t("capture.tapTheAisleYouAre")}</p>
         <div className="rail">{segs.map(s => <button key={s.id} className="chip" data-mpick={s.id} type="button" onClick={() => onPick(s.id)}>{s.label}</button>)}</div>
       </>
-    ) : <p className="nomargin">Arya does not know this store&apos;s aisles yet. Add the one you are in from Teach Arya your store.</p>;
+    ) : <p className="nomargin">{t("capture.aryaDoesNotKnowThis")}</p>;
   }
   if (r.t === "teach") {
     return (
       <div className="mp-reward">
-        <div className="what">Arya found {r.found.length} section{r.found.length === 1 ? "" : "s"}</div>
-        <p className="muted">Check them — a wrong one comes straight back out. Everything here came from your walk. You typed nothing.</p>
+        <div className="what">{t("capture.aryaFoundSection", { count: r.found.length })}</div>
+        <p className="muted">{t("capture.checkThemAWrongOne")}</p>
         {r.found.map(f => (
           <div className="row mp-seg" key={f.segment}>
-            <span className="grow"><span className="name">{f.label}</span><span className="sub">{f.created ? "new section" : "already on the map"}</span></span>
-            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>Not a section ✕</button>
+            <span className="grow"><span className="name">{f.label}</span><span className="sub">{f.created ? t("capture.newSection") : t("capture.alreadyOnMap")}</span></span>
+            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>{t("capture.notASection")}</button>
           </div>
         ))}
         {r.pts ? <div className="pts">+{r.pts}</div> : null}
-        {r.title ? <div className="mp-title">You&apos;re now a {r.title}</div> : null}
+        {r.title ? <div className="mp-title">{t("capture.youReNowA", { title: r.title })}</div> : null}
       </div>
     );
   }
@@ -491,21 +494,21 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
   const pts = won.reduce((n, w) => n + w.out.reward.points, 0);
   const fresh = won.filter(w => w.out.reward.new_section);
   const partial = won.some(w => w.out.weak);
-  const what = fresh.length > 1 ? `Arya learned ${fresh.length} sections`
-    : fresh.length ? `Arya learned ${segLabel(fresh[0].seg)}`
-    : "Arya's picture of this shelf is fresh again";
+  const what = fresh.length > 1 ? t("capture.learnedSections", { n: fresh.length })
+    : fresh.length ? t("capture.learned", { name: segLabel(fresh[0].seg) })
+    : t("capture.freshAgain");
   const [a, b] = last.store_pct;
-  const goal = last.goal ? `${last.goal.sections_needed} more section${last.goal.sections_needed === 1 ? "" : "s"} to ${last.goal.pct}%` : "Arya knows the whole store!";
+  const goal = last.goal ? t("capture.moreSectionsTo", { count: last.goal.sections_needed, pct: last.goal.pct }) : t("capture.knowsWholeStore");
   return (
     <div className="mp-reward">
       <div className="pts">+{pts}</div>
       <div className="what">{what}</div>
-      <div className="muted">Arya knows {a}% → <strong>{b}%</strong> of this store</div>
+      <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>
       <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>
       <div className="muted">{goal}</div>
-      {last.new_title ? <div className="mp-title">You&apos;re now a {last.new_title}</div> : null}
-      {fresh.length ? <p className="muted">Next hunt here, this aisle shows a real shelf photo, so you spot things faster.</p> : null}
-      {partial ? <p className="muted">Some of it was a little soft. That is fine; it still helps, and a later shopper will sharpen it.</p> : null}
+      {last.new_title ? <div className="mp-title">{t("capture.youReNowA", { title: last.new_title })}</div> : null}
+      {fresh.length ? <p className="muted">{t("capture.nextHuntHereThisAisle")}</p> : null}
+      {partial ? <p className="muted">{t("capture.someOfItWasA")}</p> : null}
     </div>
   );
 }

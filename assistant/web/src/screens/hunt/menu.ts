@@ -3,6 +3,7 @@
  * on the phone as on the server later, and the online-first change
  * runner that falls back to the outbox. */
 import { post } from "../../lib/api";
+import { t } from "../../i18n";
 import { Q, qCheck, qFlushOutbox, qOutbox, qOutboxSave, qParseLines, type Item, type LeftEntry, type Session } from "./model";
 
 export const NAME_MAX = 80, NOTE_MAX = 60, QTY_MIN = 1, QTY_MAX = 99;
@@ -204,14 +205,14 @@ export async function mutate<R>(toast: Toast, sess: Session, op: string, body: R
 }
 /* Changes that need the server (a swap, a report taken back). */
 export async function online(toast: Toast, sess: Session, op: string, body: Record<string, unknown>): Promise<Session | null> {
-  if (offline()) { toast("No signal. This needs a connection."); return null; }
+  if (offline()) { toast(t("hunt.needsSignal")); return null; }
   try {
     const s = await post<Session>(`/api/quest/sessions/${sess.id}/${op}`, body);
     Object.assign(sess, s);
     delete sess.new_sticker;
     return s;
   } catch (e) {
-    toast(e instanceof TypeError ? "No signal. This needs a connection." : (e as Error).message);
+    toast(e instanceof TypeError ? t("hunt.needsSignal") : (e as Error).message);
     return null;
   }
 }
@@ -233,9 +234,9 @@ export async function restoreItems(toast: Toast, sess: Session, moved: Moved[]) 
 /* ---- Forgot something ---- */
 const forgotMsg = (r: ForgotRes, typed: string) => {
   const name = (r.item && r.item.name) || typed;
-  if (r.result === "merged") return `${name} already on the list, now x${r.item.qty}.`;
-  if (r.result === "restored") return `${name} is back on the list.`;
-  return `${name} added.`;
+  if (r.result === "merged") return t("hunt.forgot.merged", { name, qty: r.item.qty });
+  if (r.result === "restored") return t("hunt.forgot.restored", { name });
+  return t("hunt.forgot.added", { name });
 };
 async function forgotOne(toast: Toast, sess: Session, name: string, qty: number, note: string) {
   const body = { name, qty, note: note || "" };
@@ -280,8 +281,8 @@ export async function submitForgot(toast: Toast, sess: Session | null, text: str
   }
   if (!done.length) return;
   afterMutation(sess);
-  const msg = done.length === 1 ? done[0].msg : `${done.length} items added.`;
-  toast(msg, { action: "Undo", onAction: async () => { for (const d of done.slice().reverse()) await d.undo(); } });
+  const msg = done.length === 1 ? done[0].msg : t("hunt.forgot.addedMany", { count: done.length });
+  toast(msg, { action: t("common.undo"), onAction: async () => { for (const d of done.slice().reverse()) await d.undo(); } });
 }
 
 /* The left fold's Bring back. */
@@ -292,7 +293,7 @@ export async function bringBack(toast: Toast, sess: Session, k: number) {
   const r = await mutate(toast, sess, "restore", { item: name }, s => applyRestore(s, name));
   if (!r.ok) return;
   afterMutation(sess);
-  toast(`${name} is back on the list.`, { action: "Undo", onAction: async () => {
+  toast(t("hunt.forgot.restored", { name }), { action: t("common.undo"), onAction: async () => {
     const entries = [{ item: name, how }];
     await mutate(toast, sess, "leave", { entries }, s => applyLeave(s, entries));
     afterMutation(sess);

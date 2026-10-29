@@ -4,6 +4,7 @@ import { clearOnSignOut } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
+import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
  * paintMapper, focus toggle, add aisle, teach-walk start, open segment).
@@ -23,13 +24,14 @@ type MapView = {
 };
 type Mine = { name: string; favorite?: boolean };
 
+/* Status and side names are en.json keys. */
 const STATUS: Record<Seg["status"], [string, string]> = {
-  unmapped: ["New to Arya", "st-none"],
-  mapped: ["Mapped", "st-ok"],
-  aging: ["Getting old", "st-age"],
-  stale: ["Out of date", "st-stale"],
+  unmapped: ["mapper.status.unmapped", "st-none"],
+  mapped: ["mapper.status.mapped", "st-ok"],
+  aging: ["mapper.status.aging", "st-age"],
+  stale: ["mapper.status.stale", "st-stale"],
 };
-const SIDES: [string, string][] = [["left", "Left side"], ["right", "Right side"], ["both", "Both sides"]];
+const SIDES: [string, string][] = [["left", "mapper.side.left"], ["right", "mapper.side.right"], ["both", "mapper.side.both"]];
 
 /* The old M.store: the chosen store survives leaving and re-opening. */
 let chosen = "";
@@ -39,6 +41,7 @@ const q = (s: string) => encodeURIComponent(s);
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Mapper() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [mine, setMine] = useState<Mine[]>([]);
@@ -98,20 +101,17 @@ export function Mapper() {
 
   /* Zero-entry teach: the walk IS the form. */
   const startWalk = () => openCapture({ kind: "walk", segment: "", teach: true, est_seconds: 30,
-    title: `Walk ${store}`,
-    why: "Just walk the aisles you shop. Arya reads the shelves and builds the map — nothing to type, no aisles to name.",
-    steps: ["Hold the phone upright at chest height, shelves in view.",
-            "Walk slowly, the way you shop.",
-            "Pass the aisles you use. Skip the rest — other shoppers fill them in.",
-            "Tap Done at the end. Arya names each section it saw, and you check them."] });
+    title: t("mapper.walk.title", { store }),
+    why: t("mapper.walk.why"),
+    steps: [t("mapper.walk.step1"), t("mapper.walk.step2"), t("mapper.walk.step3"), t("mapper.walk.step4")] });
 
   const addAisle = async () => {
     const l = label.trim();
-    if (!l) { toast("Name the aisle first."); return; }
+    if (!l) { toast(t("mapper.nameFirst")); return; }
     try {
       const out = await post("/api/storemap/segments", { store, label: l, side });
       setLabel("");
-      toast(out.created ? "Added. Open the camera to teach it." : "Arya already has that aisle.");
+      toast(out.created ? t("mapper.addedTeach") : t("mapper.alreadyHas"));
       await load(store);
     } catch (e) { toast(msg(e)); }
   };
@@ -121,10 +121,10 @@ export function Mapper() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Teach Arya your store</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
       <img className="mapperhero" src="/assets/scenes/storefront.webp" alt="" />
-      <p className="muted">The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
+      <p className="muted">{t("mapper.theMoreOfYourStore")}</p>
       <div id="mp-stores" className="rail">
         {names.map(n => (
           <button key={n} className="chip" data-mstore={n} aria-pressed={n === store} type="button"
@@ -132,74 +132,73 @@ export function Mapper() {
         ))}
       </div>
       <div id="mp-cover" className="group pad">
-        {!store ? <Empty>Pick a store from My Stores first.</Empty> : v && (v.total ? (
+        {!store ? <Empty>{t("mapper.pickAStoreFromMy")}</Empty> : v && (v.total ? (
           <>
-            <div className="mp-count">Arya knows <strong>{v.coverage_pct}%</strong> of {v.store || store} <span className="muted">· {v.counts.mapped} of {v.total} sections</span></div>
+            <div className="mp-count"><Trans i18nKey="mapper.coverage" values={{ pct: v.coverage_pct, store: v.store || store, mapped: v.counts.mapped, total: v.total }} components={{ b: <strong />, m: <span className="muted" /> }} /></div>
             <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${v.coverage_pct}%` }} /></div>
-            <p className="muted nomargin">{v.counts.aging ? `${v.counts.aging} getting old. ` : ""}{v.counts.stale ? `${v.counts.stale} reported out of date. ` : ""}{v.counts.unmapped ? `${v.counts.unmapped} still new to Arya. ` : ""}Teach the aisles you use. You never need all of them.</p>
+            <p className="muted nomargin">{v.counts.aging ? t("mapper.countAging", { n: v.counts.aging }) : ""}{v.counts.stale ? t("mapper.countStale", { n: v.counts.stale }) : ""}{v.counts.unmapped ? t("mapper.countNew", { n: v.counts.unmapped }) : ""}{t("mapper.teachTheAislesYouUse")}</p>
             <div className="mp-me"><span className="muted">{v.goal
-              ? `${v.goal.sections_needed} more section${v.goal.sections_needed === 1 ? "" : "s"} and Arya knows ${v.goal.pct}%`
-              : "Arya knows this whole store."}</span>
-              {v.credit?.title ? <span><strong>{v.credit.title}</strong> · {v.credit.points} pts</span> : null}</div>
+              ? t("mapper.goal", { count: v.goal.sections_needed, pct: v.goal.pct })
+              : t("mapper.knowsWholeStore")}</span>
+              {v.credit?.title ? <span><Trans i18nKey="mapper.credit" values={{ title: v.credit.title, points: v.credit.points }} components={{ b: <strong /> }} /></span> : null}</div>
           </>
-        ) : <p className="nomargin">No aisles here yet. Walk the store and Arya builds the map from what it sees.</p>)}
+        ) : <p className="nomargin">{t("mapper.noAislesHereYetWalk")}</p>)}
       </div>
       <div id="mp-walk">
         {v && store && (
           <div className="group pad mp-nextcard">
-            <span className="eyebrow">Zero typing</span>
-            <div className="name">Walk your store</div>
-            <p className="muted">Just walk the aisles you shop, phone up. Arya reads the shelves, names each section, and builds the map. Afterwards you check what it found — that's all.</p>
-            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>Start the walk</button>
+            <span className="eyebrow">{t("mapper.zeroTyping")}</span>
+            <div className="name">{t("mapper.walkYourStore")}</div>
+            <p className="muted">{t("mapper.justWalkTheAislesYou")}</p>
+            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startTheWalk")}</button>
           </div>
         )}
       </div>
       <div id="mp-next">
         {v && store && (v.next ? (
           <div className="group pad mp-nextcard">
-            <span className="eyebrow">Teach Arya next</span>
+            <span className="eyebrow">{t("mapper.teachAryaNext")}</span>
             <div className="name">{v.next.title}</div>
             <p className="muted">{v.next.why}</p>
-            <button className="btn primary wide" id="mp-start" type="button" onClick={() => openCapture(v.next!)}>Open camera · about {v.next.est_seconds} s</button>
+            <button className="btn primary wide" id="mp-start" type="button" onClick={() => openCapture(v.next!)}>{t("mapper.openCameraAboutS", { est_seconds: v.next.est_seconds })}</button>
           </div>
         ) : v.total ? (
-          <div className="group pad"><p className="nomargin">Arya knows every aisle you picked. Your hunts here use real shelf photos now.</p></div>
+          <div className="group pad"><p className="nomargin">{t("mapper.aryaKnowsEveryAisleYou")}</p></div>
         ) : null)}
       </div>
-      <h3 className="sect">Aisles</h3>
+      <h3 className="sect">{t("mapper.aisles")}</h3>
       <div id="mp-segs" className="group">
         {v && store && (v.segments.length ? v.segments.map(s => {
-          const [text, cls] = STATUS[s.status];
+          const [statusKey, cls] = STATUS[s.status];
           const on = focusSet.has(s.id);
-          const sub = [s.side === "both" ? "both sides" : s.side + " side",
-            s.contributors > 1 ? `${s.contributors} shoppers` : "",
-            s.stale_item ? `${s.stale_item} not found` : ""].filter(Boolean).join(" · ");
+          const sub = [s.side === "both" ? t("mapper.bothSides") : t("mapper.oneSide", { side: s.side }),
+            s.contributors > 1 ? t("mapper.shoppers", { n: s.contributors }) : "",
+            s.stale_item ? t("mapper.notFound", { item: s.stale_item }) : ""].filter(Boolean).join(" · ");
           return (
             <div className="row mp-seg" key={s.id}>
               <button className={"mp-mine" + (on ? " on" : "")} data-mfocus={s.id} aria-pressed={on}
-                aria-label={on ? "Remove from my aisles" : "Add to my aisles"} type="button"
-                onClick={() => toggleFocus(s.id)}>{on ? "Mine" : "+"}</button>
+                aria-label={on ? t("mapper.removeMine") : t("mapper.addMine")} type="button"
+                onClick={() => toggleFocus(s.id)}>{on ? t("mapper.mine") : "+"}</button>
               <button className="grow mp-open" data-mseg={s.id} type="button" onClick={() => openSegment(s.id)}>
                 <span className="name">{s.label}</span><span className="sub">{sub}</span></button>
-              <span className={"mp-st " + cls}>{text}</span>
+              <span className={"mp-st " + cls}>{t(statusKey)}</span>
             </div>
           );
-        }) : <Empty>Nothing mapped yet.</Empty>)}
+        }) : <Empty>{t("mapper.nothingMappedYet")}</Empty>)}
       </div>
       <details className="group pad">
-        <summary>Fine-tune: add an aisle yourself</summary>
-        <label className="field">Add an aisle
-          <input type="text" id="mp-label" placeholder="Aisle 4, Frozen, Dairy wall" autoComplete="off" maxLength={60}
+        <summary>{t("mapper.fineTuneAddAnAisle")}</summary>
+        <label className="field">{t("mapper.addAnAisle")}<input type="text" id="mp-label" placeholder={t("mapper.aisle4FrozenDairyWall")} autoComplete="off" maxLength={60}
             value={label} onChange={e => setLabel(e.target.value)} />
         </label>
         <div className="rail" id="mp-side">
-          {SIDES.map(([k, t]) => (
-            <button key={k} className="chip" data-side={k} aria-pressed={side === k} type="button" onClick={() => setSide(k)}>{t}</button>
+          {SIDES.map(([k, key]) => (
+            <button key={k} className="chip" data-side={k} aria-pressed={side === k} type="button" onClick={() => setSide(k)}>{t(key)}</button>
           ))}
         </div>
-        <p><button id="mp-add" className="btn wide" type="button" onClick={addAisle}>Add this aisle</button></p>
+        <p><button id="mp-add" className="btn wide" type="button" onClick={addAisle}>{t("mapper.addThisAisle")}</button></p>
       </details>
-      <p className="muted">We blur every person before we save a photo. We keep pictures of products only.</p>
+      <p className="muted">{t("mapper.weBlurEveryPersonBefore")}</p>
     </>
   );
 }

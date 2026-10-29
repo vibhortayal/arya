@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { t } from "../i18n";
 
 /* The store view (hunt, Express "Show me") is pwa/scene.js, used as
  * is: 930 lines of three.js drivers (photo walk, point cloud, strip)
@@ -42,7 +43,7 @@ export function loadScene(): Promise<SceneGlobals> {
       const s = document.createElement("script");
       s.src = "/scene.js";
       s.onload = () => (w.createSceneView ? resolve(w) : reject(new Error("scene.js loaded without createSceneView")));
-      s.onerror = () => { loading = null; reject(new Error("The store view did not load.")); };
+      s.onerror = () => { loading = null; reject(new Error(t("common.sceneFailed"))); };
       document.head.appendChild(s);
     });
   }

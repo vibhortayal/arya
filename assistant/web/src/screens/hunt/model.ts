@@ -7,6 +7,7 @@ import { ApiError, get, post } from "../../lib/api";
 import { clearOnSignOut } from "../../app/session";
 import type { SceneDriver } from "../../ui/Scene";
 import { toastGlobal } from "../../ui/Toast";
+import { t } from "../../i18n";
 
 export type Item = {
   name: string; qty: number; checked?: boolean; group?: string; unit?: string; note?: string; variant?: string;
@@ -58,7 +59,9 @@ clearOnSignOut(() => {
   for (const k of Object.keys(QFRESH)) delete QFRESH[k];
 });
 
-export const QMODE_LABEL: Record<string, string> = { quest: "Quest", express: "Express" };
+const QMODE_KEY: Record<string, string> = { quest: "common.quest", express: "common.express" };
+/** The trip mode's name ("Quest", "Express"), or the raw mode. */
+export const qModeLabel = (mode: string): string => (QMODE_KEY[mode] ? t(QMODE_KEY[mode]) : mode);
 export const QPTS = { item: 10, haul: 25, receipt: 50, boss: 40 };
 
 export function qnorm(s: unknown): string { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
@@ -69,13 +72,13 @@ export function qClock(ms: number): string {
 }
 
 export function qAgo(iso?: string | null): string {
-  const t = Date.parse(iso || "");
-  if (!t) return "recently";
-  const m = Math.round((Date.now() - t) / 60000);
-  if (m < 2) return "just now";
-  if (m < 60) return `${m} min ago`;
+  const at = Date.parse(iso || "");
+  if (!at) return t("common.ago.recently");
+  const m = Math.round((Date.now() - at) / 60000);
+  if (m < 2) return t("common.ago.justNow");
+  if (m < 60) return t("common.ago.minutes", { n: m });
   const h = Math.round(m / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+  return h < 24 ? t("common.ago.hours", { n: h }) : t("common.ago.daysShort", { n: Math.round(h / 24) });
 }
 
 export function qParseLines(text: string): { name: string; qty: number }[] {
@@ -137,7 +140,7 @@ export function qNoteOf(it: Item): string {
 export function qSpottedLine(item: Item, now?: Date): string {
   const d = now || new Date();
   const h = d.getHours(), m = String(d.getMinutes()).padStart(2, "0");
-  return `Spotted ${h % 12 || 12}:${m} ${h < 12 ? "am" : "pm"}` + (item.shelf_label ? ` - ${item.shelf_label}` : "");
+  return t(h < 12 ? "hunt.spottedAm" : "hunt.spottedPm", { h: h % 12 || 12, m }) + (item.shelf_label ? ` - ${item.shelf_label}` : "");
 }
 export function qPinFound(item: Item, now?: Date): Found {
   Q.found[item.name] = { line: qSpottedLine(item, now), at: (now || new Date()).toISOString() };
@@ -242,7 +245,7 @@ export const freshKey = (store: string, name: string) => qnorm(store) + "|" + qn
 
 /* ---- server calls that survive a demo reset and a dropped signal ---- */
 
-const Q_GONE = "That hunt is gone — the demo resets now and then. Go back to Today and start it again.";
+const Q_GONE = () => t("hunt.gone");
 /* api.ts turns "no such session" into Q_GONE's sentence; match both. */
 export function qSessionGone(e: unknown): boolean {
   return !(e instanceof TypeError) && /no such session|that hunt is gone/i.test((e as Error)?.message || "");
@@ -278,7 +281,7 @@ export async function qSetState(sess: Session, state: string): Promise<Session> 
     try {
       await qRevive(sess);
       Object.assign(sess, await post(`/api/quest/sessions/${sess.id}/state`, { state }));
-    } catch { throw new Error(Q_GONE); }
+    } catch { throw new Error(Q_GONE()); }
   }
   return sess;
 }
@@ -304,7 +307,7 @@ export async function qCheck(sess: Session, itemName: string, checked: boolean):
         await qRevive(sess);
         Object.assign(sess, await post(`/api/quest/sessions/${sess.id}/check`, { item: itemName, checked }));
         return sess;
-      } catch { throw new Error(Q_GONE); }
+      } catch { throw new Error(Q_GONE()); }
     }
     if (!(e instanceof TypeError) || !it) throw e;
     it.checked = checked;
@@ -352,7 +355,7 @@ async function qFlushLoop() {
       }
     } catch { /* keep what the phone shows */ }
   }
-  if (synced) (Q.notify || toastGlobal)(`Back online. ${synced} change${synced === 1 ? "" : "s"} synced.`);
+  if (synced) (Q.notify || toastGlobal)(t("hunt.backOnline", { count: synced }));
 }
 /* quest.js: the outbox flushes on reconnect whatever screen is up. */
 if (typeof window !== "undefined") window.addEventListener("online", () => { qFlushOutbox(); });
@@ -361,8 +364,8 @@ export function qOfflineText(): string {
   const n = qOutbox().length, off = navigator.onLine === false;
   if (!off && !n) return "";
   return off
-    ? `Offline. Keep going. Changes save on this phone${n ? ` (${n} waiting)` : ""} and sync when you are back.`
-    : `Syncing ${n} change${n === 1 ? "" : "s"}…`;
+    ? (n ? t("hunt.offlineWaiting", { n }) : t("hunt.offline"))
+    : t("hunt.syncing", { count: n });
 }
 
 export const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));

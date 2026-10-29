@@ -1,4 +1,6 @@
 import { StrictMode } from "react";
+/* Strings first: every screen reads them on its first render. */
+import "./i18n";
 import { createRoot } from "react-dom/client";
 /* The plain-JS app's stylesheets, moved here unchanged at the
  * switch-over: the screens keep its class names and ids. */

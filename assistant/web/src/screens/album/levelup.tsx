@@ -1,5 +1,6 @@
 import { createRoot, type Root } from "react-dom/client";
 import { Sheet } from "../../ui/Sheet";
+import { useTranslation } from "../../i18n";
 
 /* Port of albumLevelHtml / albumLevelSeen / albumMaybeLevelUp /
  * albumShowLevel in pwa/album.js: the level-up card with the unlock
@@ -25,6 +26,7 @@ function levelSave(level: number) {
 }
 
 function LevelCard({ profile, prev, onClose }: { profile: Profile; prev: number | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const level = Number(profile.level) || 1;
   const u = profile.unlocks || {};
   const ladder = u.ladder || [];
@@ -33,22 +35,22 @@ function LevelCard({ profile, prev, onClose }: { profile: Profile; prev: number 
   const next = ladder.find(r => r.level > level) || null;
   const row = (r: Rung) => (
     <div className={"ladderrow" + (r.reached === false ? " ahead" : "")} key={r.level}><b>L{r.level}</b><span className="ladderttl">{r.title}</span>
-      {r.live ? <span className="ladderchip live">Live</span> : <span className="ladderchip">Coming soon</span>}</div>
+      {r.live ? <span className="ladderchip live">{t("album.live")}</span> : <span className="ladderchip">{t("album.comingSoon")}</span>}</div>
   );
   const never = (u.never_locked || []).join(", ");
   const open = (u.open_to_all || []).join(", ");
   return (
     <div className="levelcard">
-      <p className="levelkick">Level up</p>
+      <p className="levelkick">{t("album.levelUp")}</p>
       <div className="levelnum">{level}</div>
-      <p className="levelsub">You reached level {level}.</p>
+      <p className="levelsub">{t("album.youReachedLevel", { level })}</p>
       {gained.length
-        ? <><h4 className="levelhead">New at this level</h4><div className="ladder">{gained.map(row)}</div></>
-        : <p className="levelsub">Keep hunting. Your next rung is close.</p>}
-      {next && <><h4 className="levelhead">Next</h4><div className="ladder">{row({ ...next, reached: false })}</div></>}
-      {open && <p className="levelnever">Open to everyone: {open}.</p>}
-      {never && <p className="levelnever">Never locked by level: {never}.</p>}
-      <button type="button" className="btn primary wide" data-alb-close data-first onClick={onClose}>Keep going</button>
+        ? <><h4 className="levelhead">{t("album.newAtThisLevel")}</h4><div className="ladder">{gained.map(row)}</div></>
+        : <p className="levelsub">{t("album.keepHuntingYourNextRung")}</p>}
+      {next && <><h4 className="levelhead">{t("album.next")}</h4><div className="ladder">{row({ ...next, reached: false })}</div></>}
+      {open && <p className="levelnever">{t("album.openToEveryone", { open })}</p>}
+      {never && <p className="levelnever">{t("album.neverLockedByLevel", { never })}</p>}
+      <button type="button" className="btn primary wide" data-alb-close data-first onClick={onClose}>{t("album.keepGoing")}</button>
     </div>
   );
 }

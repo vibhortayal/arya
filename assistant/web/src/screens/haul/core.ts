@@ -2,6 +2,8 @@
  * (count-up, hide toggles, audience words, the Same haul pick, the
  * owner's private lines, the post payload and the sample card). */
 
+import { t } from "../../i18n";
+
 export const norm = (s: unknown) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 /* The count-up. k runs 0..1; the curve eases out and ends exactly
@@ -26,7 +28,7 @@ export function toggleHidden(set: Iterable<string> | null | undefined, key: stri
 
 export function statsLabel(stats?: { items?: number; new?: number; level?: number } | null) {
   const s = stats || {};
-  return `${s.items || 0} items · ${s.new || 0} new · level ${s.level || 1}`;
+  return t("haul.statsLabel", { items: s.items || 0, fresh: s.new || 0, level: s.level || 1 });
 }
 
 /* '@priya', '@priya and @dev', '@a, @b and @c', '@a, @b and 3 more'. */
@@ -34,9 +36,9 @@ export function sheetAudienceText(handles: string[] | null | undefined): string 
   const h = (handles || []).map(x => "@" + String(x).replace(/^@/, ""));
   if (h.length === 0) return "";
   if (h.length === 1) return h[0];
-  if (h.length === 2) return `${h[0]} and ${h[1]}`;
-  if (h.length === 3) return `${h[0]}, ${h[1]} and ${h[2]}`;
-  return `${h[0]}, ${h[1]} and ${h.length - 2} more`;
+  if (h.length === 2) return t("haul.audience2", { a: h[0], b: h[1] });
+  if (h.length === 3) return t("haul.audience3", { a: h[0], b: h[1], c: h[2] });
+  return t("haul.audienceMore", { a: h[0], b: h[1], n: h.length - 2 });
 }
 
 export type PickRow = { name: string; checked: boolean; note: string };
@@ -54,7 +56,7 @@ export function queuePick(items: (string | { name: string })[], onListNames: str
     const queued = (queuedNames || []).map(norm).includes(norm(name));
     const dupe = !queued && has(onListNames, name);
     return { name, checked: !(dupe || queued),
-             note: queued ? "Already in your next hunt" : dupe ? "Already on your list" : "" };
+             note: queued ? t("haul.alreadyQueued") : dupe ? t("haul.alreadyOnList") : "" };
   });
 }
 
@@ -66,9 +68,9 @@ export function queuedCount(rows: { post_id?: string }[] | null | undefined, pos
 /* The words after a Same haul tap. Counts come from the server, not
  * from the ticks, because the queue drops names it already holds. */
 export function sameToast(added: number, asked: number) {
-  if (added <= 0) return "Nothing new to add. Your next hunt has these already, or it is full.";
-  const one = `${added} ${added === 1 ? "item" : "items"} added to your next hunt.`;
-  return added < asked ? one + " The rest were there already." : one;
+  if (added <= 0) return t("haul.sameNothing");
+  const one = t("haul.sameAdded", { count: added });
+  return added < asked ? one + t("haul.sameRest") : one;
 }
 
 export type Bucket = "on_receipt_only" | "grabbed_only" | "swapped";
@@ -76,9 +78,9 @@ export type FixLabel = { yes: string; no: string; yesKind: string; noKind: strin
 /* Chip words per review section. */
 export function fixLabel(bucket: string): FixLabel | null {
   return ({
-    on_receipt_only: { yes: "Add to album", no: "Leave out", yesKind: "extra_add", noKind: "extra_drop", none: "extra_none" },
-    grabbed_only: { yes: "Keep", no: "Remove from haul", yesKind: "grabbed_keep", noKind: "grabbed_drop", none: "grabbed_none" },
-    swapped: { yes: "Yes, swapped", no: "No", yesKind: "swap_ok", noKind: "swap_no", none: "swap_none" },
+    on_receipt_only: { yes: t("haul.fix.addToAlbum"), no: t("haul.fix.leaveOut"), yesKind: "extra_add", noKind: "extra_drop", none: "extra_none" },
+    grabbed_only: { yes: t("haul.fix.keep"), no: t("haul.fix.removeFromHaul"), yesKind: "grabbed_keep", noKind: "grabbed_drop", none: "grabbed_none" },
+    swapped: { yes: t("haul.fix.yesSwapped"), no: t("haul.fix.no"), yesKind: "swap_ok", noKind: "swap_no", none: "swap_none" },
   } as Record<string, FixLabel>)[bucket] || null;
 }
 
@@ -92,12 +94,12 @@ export function privateLines(pv: Private | undefined, fmt: (n: number) => string
   const n = pv.estimate_items || 0, m = pv.grabbed_items || 0;
   const full = pv.estimate != null && m > 0 && n >= m;
   if (full || pv.estimate == null) {
-    const est = pv.estimate != null ? `About ${fmt(pv.estimate)}` : "";
-    const act = pv.actual != null ? `Receipt ${fmt(pv.actual)}` : "";
-    return [{ label: "Estimate vs actual (only you)", text: [est, act].filter(Boolean).join(" · ") }];
+    const est = pv.estimate != null ? t("haul.pv.about", { amount: fmt(pv.estimate) }) : "";
+    const act = pv.actual != null ? t("haul.pv.receipt", { amount: fmt(pv.actual) }) : "";
+    return [{ label: t("haul.pv.estVsActual"), text: [est, act].filter(Boolean).join(" · ") }];
   }
-  const rows = [{ label: "Estimate (only you)", text: `About ${fmt(pv.estimate)} for ${n} of ${m} items` }];
-  if (pv.actual != null) rows.push({ label: "Receipt total (only you)", text: fmt(pv.actual) });
+  const rows = [{ label: t("haul.pv.estimate"), text: t("haul.pv.aboutFor", { amount: fmt(pv.estimate), n, m }) }];
+  if (pv.actual != null) rows.push({ label: t("haul.pv.receiptTotal"), text: fmt(pv.actual) });
   return rows;
 }
 

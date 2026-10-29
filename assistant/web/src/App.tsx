@@ -10,6 +10,7 @@ import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { SCREENS } from "./screens/registry";
+import { t } from "./i18n";
 
 export function App() {
   return (
@@ -29,7 +30,8 @@ function Root() {
 }
 
 const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
-const TAB_LABEL: Record<string, string> = { home: "Today", list: "Lists", chat: "Ask", community: "Quest", profile: "Settings" };
+/* Tab names are en.json keys. */
+const TAB_LABEL: Record<string, string> = { home: "tabs.today", list: "tabs.lists", chat: "tabs.ask", community: "tabs.quest", profile: "tabs.settings" };
 
 /* An invite link (/?join=CODE) opens Join a group once the app knows
  * who is signed in (group.js afterSignIn; the demo skips it). */
@@ -48,7 +50,7 @@ function useInviteLink() {
       try { g = await get("/api/group"); } catch { g = { enabled: false, group: null }; }
       try { history.replaceState(null, "", location.pathname); } catch { /* stays in the bar */ }
       if (!g.enabled) return;
-      if (g.group) { toast(`You are already in ${g.group.name}. Leave it first to join another group.`); return; }
+      if (g.group) { toast(t("groupJoin.alreadyIn", { name: g.group.name })); return; }
       nav.show("group-join", { code });
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -85,14 +87,14 @@ function Shell() {
     <>
       {nav.chrome && (
         <button id="avatar-btn" className="avatar floating" type="button"
-          aria-label={ring ? `Settings, level ${ring.level}` : "Settings"}
+          aria-label={ring ? t("tabs.settingsLevel", { level: ring.level }) : t("tabs.settings")}
           style={ring ? ({ "--pct": ring.pct + "%" } as React.CSSProperties) : undefined}
           onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
           <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>
           <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />
         </button>
       )}
-      {nav.chrome && s.demo && <p id="demobar" className="note">Demo household · resets when you leave</p>}
+      {nav.chrome && s.demo && <p id="demobar" className="note">{t("common.demoBar")}</p>}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
           <Screen />
@@ -100,12 +102,12 @@ function Shell() {
       </main>
       {nav.chrome && (
         <nav id="tabs">
-          {TABS.map((t: ViewId) => {
-            const Icon = TAB_ICON[t];
+          {TABS.map((v: ViewId) => {
+            const Icon = TAB_ICON[v];
             return (
-              <button key={t} type="button" data-view={"view-" + t} className={nav.view === t ? "active" : undefined}
-                onClick={() => nav.show(t)}>
-                <Icon /><span>{TAB_LABEL[t]}</span>
+              <button key={v} type="button" data-view={"view-" + v} className={nav.view === v ? "active" : undefined}
+                onClick={() => nav.show(v)}>
+                <Icon /><span>{t(TAB_LABEL[v])}</span>
               </button>
             );
           })}

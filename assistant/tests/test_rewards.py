@@ -53,7 +53,7 @@ class TestRewardsShell(unittest.TestCase):
         quest = src("screens/Quest.tsx")
         self.assertIn('get("/api/quest/profile").then(p => {', quest)
         self.assertIn('<span id="today-level" className="bandchip"', quest)
-        self.assertIn("Level · {profile.points || 0} pts", src("screens/QuestProgress.tsx"))
+        self.assertIn("Level · {{points}} pts", src("screens/QuestProgress.tsx"))
 
 
 class TestRewardsUnderVitest(unittest.TestCase):
@@ -74,7 +74,7 @@ class TestFindItForMe(unittest.TestCase):
         self.assertIn("Q.scanTarget = target;", h)
         scan = src("screens/hunt/Scan.tsx")
         self.assertIn("const aim = t ? `&item=${encodeURIComponent(t)}` : \"\";", scan)
-        self.assertIn("Found it! ${t} is highlighted", scan)
+        self.assertIn("Found it! {{name}} is highlighted", scan)
 
     def test_fresh_photo_on_the_card_and_the_privacy_line(self):
         h = hunt()
@@ -109,7 +109,7 @@ class TestPlanAHunt(unittest.TestCase):
 
     def test_buckets_and_list_management(self):
         nl = src("screens/NewList.tsx")
-        for label in ("Usually bought here", "New on your list", "Usually from ${st}"):
+        for label in ("Usually bought here", "New on your list", "Usually from {{store}}"):
             self.assertIn(label, nl)
         rm = nl.split("const removeFromList = async")[1].split("\n  };")[0]
         self.assertIn('post("/api/list/remove", { item_id: itemId })', rm)
