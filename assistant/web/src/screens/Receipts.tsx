@@ -26,7 +26,7 @@ type Archive = { receipts: Rec[]; unsettled?: Unsettled[] };
 
 export function Receipts() {
   const nav = useNav();
-  const { demo, currency } = useSession();
+  const { currency } = useSession();
   const { toast, showErr } = useToast();
   const [queue, setQueue] = useState<{ lines: Line[]; unresolved: Unresolved[] }>({ lines: [], unresolved: [] });
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -38,7 +38,6 @@ export function Receipts() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
-  const [curBusy, setCurBusy] = useState(false);
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
 
   const loadScan = useCallback(async () => {
@@ -210,37 +209,35 @@ export function Receipts() {
           );
         })}
       </div>
-      <div id="curator" className="group eyegroup" hidden={!hasCur}>
-        {proposals.map(p => (
-          <div key={p.id} style={{ display: "contents" }}>
-            <div className="row"><div className="grow">
-              <span className="name">{p.kind === "merge" ? <>Merge into &ldquo;{p.into_name}&rdquo;</> : <>Keep &ldquo;{p.names[0]}&rdquo; separate</>}</span>
-              <span className="sub">{p.names.join(" + ")} — {p.reason}</span></div></div>
-            <div className="actions">
-              <button className="chip" data-curator-apply={p.id} onClick={() => attempt(async () => {
-                await post("/api/curator/decide", { id: p.id, action: "apply" });
-                toast("Applied. The products are one now.");
-                loadCurator();
-              })}>Apply</button>
-              <button className="chip" data-curator-dismiss={p.id} onClick={() => attempt(async () => {
-                await post("/api/curator/decide", { id: p.id, action: "dismiss" });
-                loadCurator();
-              })}>Dismiss</button>
+      {/* The approved wireframe (owner, 2026-10-29; app.js
+        * renderCurator): shown only when there is something to decide,
+        * one card per question, Arya's voice only, no internal names,
+        * no manual trigger. The card asks, the user decides, it goes. */}
+      <div id="curator" hidden={!hasCur}>
+        {proposals.map(p => {
+          const merge = p.kind === "merge";
+          return (
+            <div key={p.id} className="group pad askcard">
+              <p className="askq">{merge ? "Are these the same item?" : "Should these stay separate?"}</p>
+              {p.names.map((n: string) => <p className="askitem" key={n}>{n}</p>)}
+              <p className="sub">{merge
+                ? "Arya is asking because the names look alike. Nothing changes unless you choose."
+                : "Arya thinks these are different items that only look alike. Nothing changes unless you choose."}</p>
+              <div className="actions">
+                <button className="btn primary" data-curator-apply={p.id} data-kind={p.kind} onClick={() => attempt(async () => {
+                  await post("/api/curator/decide", { id: p.id, action: "apply" });
+                  toast(merge ? "They are one item now." : "Kept separate.");
+                  loadCurator();
+                })}>{merge ? "Yes, same item" : "Yes, keep separate"}</button>
+                <button className="btn" data-curator-dismiss={p.id} data-kind={p.kind} onClick={() => attempt(async () => {
+                  await post("/api/curator/decide", { id: p.id, action: "dismiss" });
+                  toast(merge ? "Kept separate." : "Left as one item.");
+                  loadCurator();
+                })}>{merge ? "No, keep separate" : "No, same item"}</button>
+              </div>
             </div>
-          </div>
-        ))}
-        {hasCur && (
-          <div className="row"><span className="sub grow">The Curator reasons about which products are the same item. Nothing changes until you apply it.</span>
-            {!demo && <button className="btn" id="btn-curator-run" type="button" disabled={curBusy} onClick={() => attempt(async () => {
-              setCurBusy(true);
-              try {
-                const r = await post("/api/curator/run");
-                toast(r.proposals ? `The Curator proposed ${r.proposals} change(s).` : "The Curator found nothing to change.");
-                loadCurator();
-              } finally { setCurBusy(false); }
-            })}>Ask the Curator</button>}
-          </div>
-        )}
+          );
+        })}
       </div>
       <div className="group pad">
         <label className="field">Add a receipt photo or PDF

@@ -21,9 +21,15 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
+/* One id per open tab (app.js CLIENT_ID): group live sync
+ * (app/groupLive.ts) skips the echo of this tab's own changes. */
+export const CLIENT_ID = Math.random().toString(36).slice(2, 12);
+
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   let r: Response;
-  try { r = await fetch(path, opts); }
+  const headers = new Headers(opts?.headers || {});
+  headers.set("X-Arya-Client", CLIENT_ID);
+  try { r = await fetch(path, { ...opts, headers }); }
   catch {
     // A network failure stays a TypeError (the hunt's offline outbox
     // keys on it) but reads as what it is.
