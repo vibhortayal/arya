@@ -152,7 +152,14 @@
 .exphelp-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .exphelp-btns .chip { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 .exphelp-btns .chip svg { width: 18px; height: 18px; flex: none; }
+/* No-map nudge (owner, 2026-10-29): an item Arya has no aisle photo
+ * of. "Snap the aisle" is an inline accent link, not a chip. */
+.expnodata { margin: 7px 0 0; font-size: var(--fs-body); line-height: 26px; color: var(--secondary); }
+.linkbtn.snapaisle { display: inline; min-height: 0; padding: 0; font: inherit; font-weight: 600; color: var(--acc); vertical-align: baseline; }
+.pop-shelf.nodata { line-height: 1.45; }
+.shopnomap { margin: 11px 0 4px; font-size: var(--fs-body); line-height: 22px; }
 #exp-more-list { margin: 0 0 8px; }
 #exp-photo { margin-top: 12px; }
 #exp-photo .storeview { border-radius: 16px; overflow: hidden; height: clamp(180px, 30dvh, 300px); }
 #exp-photo-cap { font-size: 15px; margin-top: 8px; }
+#cp-govideo { margin-top: 10px; }

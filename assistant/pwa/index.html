@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="haul.css">
 </head>
 <body>
-<button id="avatar-btn" class="avatar floating" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span><img id="avatar-img" alt="" hidden></button>
+<button id="avatar-btn" class="avatar floating" type="button" aria-label="Settings" hidden><span id="avatar-initial">A</span><img id="avatar-img" alt="" hidden></button>
 <p id="demobar" class="note" hidden>Demo household · resets when you leave</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
 <div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
@@ -40,6 +40,7 @@
     <button class="hubrow" type="button" data-shop="quest"><img class="rowface" src="assets/scenes/storefront.webp" alt=""><span class="hr-label">Quest<span class="sub">A treasure hunt with points and badges</span></span><span class="chev">›</span></button>
     <button class="hubrow" type="button" data-shop="express"><img class="rowface" src="assets/characters/basket.webp" alt=""><span class="hr-label">Express<span class="sub">Just the list, with aisle help</span></span><span class="chev">›</span></button>
   </div>
+  <p id="shop-nomap" class="muted shopnomap" hidden></p>
   <p id="shop-sugg" class="muted shopsugg" hidden></p>
 </div></div>
 
@@ -234,7 +235,7 @@
   </section>
   <section id="view-profile" class="view" hidden>
     <p><a href="#" id="pf-back">‹ Back</a></p>
-    <h2 class="largetitle">Profile</h2>
+    <h2 class="largetitle">Settings</h2>
     <div id="pf-avatar" class="group pad">
       <div class="avwrap"><div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div><button class="avedit" id="av-edit-btn" type="button" aria-label="Edit avatar" aria-expanded="false">&#9998;</button></div>
       <p class="nomargin" style="text-align:center"><strong id="pf-handle" style="font-size:19px"></strong></p>
@@ -277,7 +278,7 @@
       </div>
       <p class="muted small remnote" id="rem-note">One push a day at most, and only when something is due. Turn it off any time.</p>
     </div>
-    <h3 class="sect">Settings</h3>
+    <h3 class="sect">Account</h3>
     <div class="group" id="profile-account"></div>
     <div class="group">
       <button class="navrow" id="btn-feedback" type="button"><span class="grow">Feature request / Contact us<span class="sub">Tell us what to build, what broke, or ask a question</span></span><span class="chev">›</span></button>
@@ -494,6 +495,7 @@
     </div>
     <p id="cp-controls">
       <button class="btn primary wide" id="cp-go" type="button">Open camera</button>
+      <button class="btn wide" id="cp-govideo" type="button" hidden>Record a short video</button>
       <input type="file" id="cp-photo" accept="image/*" capture="environment" hidden>
       <input type="file" id="cp-video" accept="video/*" capture="environment" hidden>
     </p>
@@ -652,6 +654,7 @@
         <button id="exp-nothere" class="chip" type="button">Not here?</button>
         <button id="exp-find" class="chip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z"/><circle cx="12" cy="12.5" r="3.2"/></svg>Find with camera</button>
       </div>
+      <p id="exp-nodata" class="expnodata" hidden>Arya has no photo of this aisle yet. Found it? <button id="exp-snap" class="linkbtn snapaisle" type="button">Snap the aisle</button> so other Arya Shoppers can find it too.</p>
       <div id="exp-photo" hidden>
         <div id="exp-mount" class="storeview mini"></div>
         <p class="muted nomargin" id="exp-photo-cap"></p>

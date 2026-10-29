@@ -70,24 +70,95 @@ function stopHuntTimer() {
   if (Q.timer) { clearInterval(Q.timer); Q.timer = null; }
 }
 
-/* Stores with a rebuilt 3D model (the platform plane): squashed
- * store name -> the SceneView "cloud" manifest inside the PWA.
- * Assets are built by assistant/tools/prep_cloud.py from a shopper's
- * walkthrough (VGGT). A store not listed here has no model yet: it
- * plays in strip, and mapping it is the invitation. */
-const STORE_MODELS = { traderjoes: "models/trader-joes/manifest.json" };
-function qStoreModel(store) {
-  return STORE_MODELS[qnorm(store).replace(/ /g, "")] || null;
+/* ---------------- store pictures ----------------
+ * Which stores Arya holds aisle pictures for (owner, 2026-10-29: the
+ * no-map mockups). The server says (GET /api/storemap/stores): a
+ * shipped photo walk or 3D model, or shopper captures kept on the
+ * store's shared map. Read once per page load; the last answer is
+ * kept on the phone, and Trader Joe's (shipped with the app) always
+ * works, also offline or when the fetch fails.
+ *
+ * A store with no pictures offers Express only: Quest needs aisle
+ * photos. An item "has data" when its store has pictures AND the
+ * server placed the item on a shelf (shelf_u). An item with no data
+ * gets the "Snap the aisle" nudge, which opens the guided capture
+ * (mapper.js openCapture) for that aisle. */
+const STORE_DATA_BUILTIN = [
+  { store: "Trader Joe's", key: "traderjoes", photos: "models/trader-joes/frames-web",
+    model: "models/trader-joes/manifest.json", has_pictures: true },
+];
+const STORE_DATA_CACHE = "arya-store-data";
+const STORE_DATA = { rows: {}, loaded: false, pending: null };
+
+function storeKey(store) { return String(store || "").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+function storeDataSet(list) {
+  const rows = {};
+  STORE_DATA_BUILTIN.concat(Array.isArray(list) ? list : []).forEach(r => {
+    if (r && r.key) rows[r.key] = { ...rows[r.key], ...r };
+  });
+  STORE_DATA.rows = rows;
+}
+try { storeDataSet(JSON.parse(localStorage.getItem(STORE_DATA_CACHE) || "[]")); }
+catch (e) { storeDataSet([]); }
+
+/* One fetch per page load; a failure (offline, signed out) keeps
+ * what the phone already knows and tries again on the next call. */
+function loadStoreData() {
+  if (STORE_DATA.loaded) return Promise.resolve(STORE_DATA.rows);
+  if (STORE_DATA.pending) return STORE_DATA.pending;
+  if (typeof fetch !== "function") return Promise.resolve(STORE_DATA.rows);
+  STORE_DATA.pending = fetch("/api/storemap/stores", { credentials: "same-origin" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(out => {
+      if (out && Array.isArray(out.stores)) {
+        storeDataSet(out.stores);
+        STORE_DATA.loaded = true;
+        try { localStorage.setItem(STORE_DATA_CACHE, JSON.stringify(out.stores)); } catch (e) { /* private mode */ }
+      }
+      return STORE_DATA.rows;
+    })
+    .catch(() => STORE_DATA.rows)
+    .finally(() => { STORE_DATA.pending = null; });
+  return STORE_DATA.pending;
 }
 
-/* Stores with a photo walk (the platform plane): squashed store
- * name -> the SceneView "photo" frames directory inside the PWA.
- * The photo walk is a mapped store's default view (Discussion
- * 43); the cloud stays one tap away as the alternate 3D view. */
-const STORE_PHOTOS = { traderjoes: "models/trader-joes/frames-web" };
-function qStorePhotos(store) {
-  return STORE_PHOTOS[qnorm(store).replace(/ /g, "")] || null;
+function storeInfo(store) { return STORE_DATA.rows[storeKey(store)] || null; }
+/* The store's photo-walk frames (the SceneView "photo" driver), or null. */
+function storePhotosFor(store) { const s = storeInfo(store); return (s && s.photos) || null; }
+/* The store's 3D model manifest (the "cloud" driver), or null. */
+function storeModelFor(store) { const s = storeInfo(store); return (s && s.model) || null; }
+function storeHasPictures(store) { const s = storeInfo(store); return !!(s && s.has_pictures); }
+function itemHasData(store, item) {
+  return storeHasPictures(store) && !!item && item.shelf_u !== undefined && item.shelf_u !== null;
 }
+
+/* "Snap the aisle": ask the map engine for the capture this item's
+ * aisle needs (a known section, or a photo-or-video teach) and open
+ * the guided capture screen from Teach Arya your store. */
+async function snapAisle(store, item) {
+  if (!store || typeof openCapture !== "function") return;
+  let p = null;
+  try {
+    const out = await api(`/api/storemap/next?store=${encodeURIComponent(store)}&item=${encodeURIComponent(item || "")}`);
+    p = out && out.prompt;
+  } catch (e) { toast(e.message); return; }
+  if (!p) return;
+  if (typeof M !== "undefined") {
+    M.store = store;
+    api(`/api/storemap?store=${encodeURIComponent(store)}`).then(v => { M.view = v; }).catch(() => {});
+  }
+  openCapture(p);
+}
+
+
+/* A store's 3D model (the "cloud" manifest) and photo walk (the
+ * "photo" frames) come from the server (loadStoreData reads
+ * /api/storemap/stores; Trader Joe's ships with the app). A store
+ * with neither plays in strip, and mapping it is the invitation.
+ * The photo walk is a mapped store's default view (Discussion 43);
+ * the cloud stays one tap away as the alternate 3D view. */
+function qStoreModel(store) { return storeModelFor(store); }
+function qStorePhotos(store) { return storePhotosFor(store); }
 
 /* Which rung a hunt opens on. The player's own stored choice
  * (the scene toggle) wins when the store can serve it; else the
@@ -490,6 +561,7 @@ async function qStartNewHunt(fromList, mode) {
       () => {}, { timeout: 4000, maximumAge: 600000 });
   }
   try { await qLoadMine(); } catch (e) { Q.mine = []; }
+  await loadStoreData();
   await qLoadPlan();
   // One linked store that the household already knows: straight to
   // the plan. Several, or none known: the picker opens with the
@@ -837,7 +909,7 @@ function renderStorePick() {
     // Demo (owner, 2026-10-28): never offer a store the demo has
     // no data for — no walk, no model, no row. Typing the name
     // still works; it just isn't advertised.
-    .filter(h => !qIsDemo() || qStorePhotos(h) || qStoreModel(h));
+    .filter(h => !qIsDemo() || storeHasPictures(h));
   const hbox = $("#st-history");
   // Top 3 by trips, the rest behind a fold (owner phone pass,
   // 2026-10-28: his receipts name 11 Costco warehouses — the picker
@@ -856,7 +928,7 @@ function renderStorePick() {
   }
   // Demo: the same no-data rule covers My Stores rows.
   const mineShown = qIsDemo()
-    ? Q.mine.filter(s => qStorePhotos(s.name) || qStoreModel(s.name))
+    ? Q.mine.filter(s => storeHasPictures(s.name))
     : Q.mine;
   const favs = mineShown.filter(s => s.favorite);
   const rest = mineShown.filter(s => !s.favorite);
@@ -1186,7 +1258,7 @@ async function qOptimizeDraft() {
     Q.draft.finalItems = Q.draft.baseItems.map(i => typeof PACK !== "undefined"
       ? PACK.sessionItem(i) : ({ name: i.name, qty: i.qty, group: i.group }));
     if (Q.draft.fastMode) { await qCreateSession(Q.draft.fastMode); return; }
-    questShow("view-mode");
+    qShowModes();
     return;
   }
   renderOptimize();
@@ -1349,7 +1421,7 @@ function qOptProceed() {
   qAskLaterSave();
   Q.draft.finalItems = items;
   if (Q.draft.fastMode) { qCreateSession(Q.draft.fastMode); return; }
-  questShow("view-mode");
+  qShowModes();
 }
 $("#opt-next").addEventListener("click", qOptProceed);
 $("#opt-skip").addEventListener("click", qOptProceed);
@@ -1362,6 +1434,10 @@ $("#opt-skip").addEventListener("click", qOptProceed);
 async function qCreateSession(mode, b) {
   const draft = Q.draft;
   if (!draft || draft.creating) return;
+  // Quest needs aisle photos (owner, 2026-10-29): a store Arya has
+  // no pictures of runs as Express, from every way in.
+  const store = Q.draft.store;
+  if (mode === "quest" && !storeHasPictures(store)) mode = "express";
   draft.creating = true;
   if (b) b.disabled = true;
   try {
@@ -1389,6 +1465,12 @@ async function qCreateSession(mode, b) {
     qOpenSession(sess);
   } catch (e) { toast(e.message); }
   finally { draft.creating = false; if (b) b.disabled = false; }
+}
+/* The mode screen: a store with no aisle pictures shows Express only. */
+function qShowModes() {
+  const q = document.querySelector('.modecard[data-mode="quest"]');
+  if (q) q.hidden = !!(Q.draft && Q.draft.store) && !storeHasPictures(Q.draft.store);
+  questShow("view-mode");
 }
 document.querySelectorAll(".modecard").forEach(b =>
   b.addEventListener("click", () => qCreateSession(b.dataset.mode, b)));
@@ -2137,7 +2219,8 @@ function renderHunt() {
     const rep = Q.storeReports.find(r => (r.item_group && r.item_group === it.group) || qnorm(r.item) === qnorm(it.name));
     $("#pop-kicker").textContent = sess.state === "paused" ? "Paused" : "Suggested next — grab any stop";
     $("#pop-body").innerHTML = `<div class="popflex"><img class="popface" src="assets/characters/${qFaceFor(it.name)}" alt=""><div><p class="pop-name">${esc(it.name)}${it.unit ? ` · ${esc(qtyTag(it))}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
-      ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : stop.unplaced ? `<p class="pop-shelf">Not placed on the map</p>` : ""}
+      ${stop.shelfLabel ? `<p class="pop-shelf">${esc(stop.shelfLabel)}</p>` : ""}
+      ${itemHasData(sess.store, it) ? "" : `<p class="pop-shelf nodata">Arya has no photo of this aisle yet. Found it? <button type="button" class="linkbtn snapaisle" data-snap-aisle="${esc(it.name)}">Snap the aisle</button> so other Arya Shoppers can find it too.</p>`}
       ${rep ? `<p style="margin:6px 0 0"><span class="repflag">You reported this missing here.</span></p>` : ""}`;
     btn.textContent = it.unit || it.qty > 1 ? `Grab ${qtyTag(it)} - ${it.name}` : `Grab · ${it.name}`;
     btn.disabled = sess.state !== "playing";
@@ -2680,6 +2763,10 @@ $("#btn-scan").addEventListener("click", () => { Q.scanTarget = null; openScanVi
  * candidates, Muse Spark confirms, and the item pops highlighted with
  * its GRAB. What was seen where feeds the store map; the frame never
  * leaves the scan. */
+$("#pop-body").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-snap-aisle]");
+  if (b && Q.current) snapAisle(Q.current.store, b.dataset.snapAisle);
+});
 $("#btn-findit").addEventListener("click", () => {
   const sess = Q.current;
   const idx = sess ? qCurrentIndex(sess) : -1;
@@ -3032,6 +3119,7 @@ function destroyExpScene() {
 }
 function openExpress(sess) {
   Q.current = sess;
+  loadStoreData().then(() => { if (Q.current === sess && !$("#view-express").hidden) renderExpress(); });
   questShow("view-express");
   destroyExpScene();
   Q.expShow = false;
@@ -3049,7 +3137,12 @@ function qExpPaintHelp(sess, next) {
   const rows = list.querySelectorAll("[data-exp-check]");
   if (next >= 0 && rows[next]) { rows[next].after(help); help.hidden = false; }
   else { list.after(help); help.hidden = true; }
-  const on = !!Q.expShow && next >= 0;
+  // An item with no data (no store pictures, or no shelf match):
+  // Show me goes, the Snap the aisle nudge comes (owner, 2026-10-29).
+  const has = next >= 0 && itemHasData(sess.store, sess.items[next]);
+  $("#exp-show").hidden = !has;
+  $("#exp-nodata").hidden = next < 0 || has;
+  const on = has && !!Q.expShow;
   $("#exp-photo").hidden = !on;
   const show = $("#exp-show");
   show.setAttribute("aria-pressed", String(on));
@@ -3124,6 +3217,10 @@ $("#exp-nothere").addEventListener("click", async () => {
   const sess = Q.current, i = sess ? qNextIndex(sess) : -1;
   if (i < 0 || !(await qExpEnsurePlaying())) return;
   if (window.huntMoved) window.huntMoved(i, $("#exp-nothere")); else openSpotSheet(i);
+});
+$("#exp-snap").addEventListener("click", () => {
+  const sess = Q.current, i = sess ? qNextIndex(sess) : -1;
+  if (i >= 0) snapAisle(sess.store, sess.items[i].name);
 });
 $("#exp-find").addEventListener("click", async () => {
   const sess = Q.current, i = sess ? qNextIndex(sess) : -1;

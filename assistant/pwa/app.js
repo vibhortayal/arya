@@ -212,7 +212,7 @@ function paintLevelChip(profile) {
   const span = (profile.next_level_at - profile.level_floor) || 1;
   const pct = Math.max(0, Math.min(100, Math.round((profile.points - profile.level_floor) / span * 100)));
   $("#avatar-btn").style.setProperty("--pct", pct + "%");
-  $("#avatar-btn").setAttribute("aria-label", `Profile, level ${profile.level}`);
+  $("#avatar-btn").setAttribute("aria-label", `Settings, level ${profile.level}`);
 }
 /* Hunt v2 item 6: a finished hunt is closed — it leaves the hero.
  * The hero is the NEWEST hunt that still wants play (play-test:
@@ -657,6 +657,13 @@ function paintShopSheet() {
   const open = onListItems().filter(i => !i.checked && itemHome(i) === (lensList() ? lensList().id : "else"));
   const where = lensList() ? lensList().name : "Everything else";
   $("#shop-title").textContent = `Shop ${where} · ${open.length} item${open.length === 1 ? "" : "s"}`;
+  // No aisle pictures for the list's store (owner, 2026-10-29): Quest
+  // goes, Express stays, and one note says how the store gets mapped.
+  const store = shopNoMapStore();
+  $('#shop-sheet [data-shop="quest"]').hidden = !!store;
+  const nm = $("#shop-nomap");
+  nm.hidden = !store;
+  nm.innerHTML = store ? `Quest needs aisle photos of this store, and Arya has none yet. In Express, snap a photo or a short video of the aisles you pass. Once ${esc(store)} is mapped, Quest turns on here.` : "";
   const sugg = suggestions().filter(i => suggestHome(i) === (lensList() ? lensList().id : "else"));
   const el = $("#shop-sugg");
   el.hidden = !sugg.length;
@@ -665,12 +672,21 @@ function paintShopSheet() {
   const more = sugg.length > 2 ? ` and ${sugg.length - 2} more` : "";
   el.innerHTML = `Arya also suggests ${names.join(" and ")}${more}. <button type="button" class="linkbtn" data-shop-add>Add ${sugg.length === 1 ? "it" : sugg.length === 2 ? "both" : "all"}</button>`;
 }
+/* The list's one store when Arya has no aisle pictures of it, else "".
+ * A list with no store, or several, keeps both modes: the store is
+ * picked later, and Quest falls back to Express there if it must. */
+function shopNoMapStore() {
+  const l = lensList();
+  const stores = (l && l.stores) || [];
+  return stores.length === 1 && !storeHasPictures(stores[0]) ? stores[0] : "";
+}
 function closeShopSheet() { $("#shop-sheet").hidden = true; }
 $("#list-hunt").addEventListener("click", () => {
   paintShopSheet();
   $("#shop-sheet").hidden = false;
-  const first = $("#shop-sheet [data-shop]");
+  const first = $("#shop-sheet [data-shop]:not([hidden])");
   if (first) first.focus();
+  loadStoreData().then(() => { if (!$("#shop-sheet").hidden) paintShopSheet(); });
 });
 $("#shop-close").addEventListener("click", closeShopSheet);
 $("#shop-sheet").addEventListener("keydown", ev => { if (ev.key === "Escape") closeShopSheet(); });
@@ -2076,6 +2092,7 @@ async function boot() {
 
 function enterApp(user, demo) {
   isDemo = demo;
+  if (typeof loadStoreData === "function") loadStoreData();   // signed in: which stores have aisle pictures
   window.__aryaUser = user;
   $("#view-login").hidden = true;
   $("#avatar-initial").textContent = (demo ? "demo" : String(user || "A")).charAt(0).toUpperCase();

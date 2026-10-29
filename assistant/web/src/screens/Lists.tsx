@@ -8,6 +8,7 @@ import { IconCheck, IconMic, IconPen, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
 import { fmtDate, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
+import { storeHasPictures, useStoreData } from "../lib/stores";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
@@ -140,6 +141,10 @@ function ListRow({ i, picking, picked, onQty, onReload }: { i: Item; picking: bo
 
 /* ---------------- the screen ---------------- */
 
+/* The approved no-map note (owner, 2026-10-29), word for word. */
+const shopNomapNote = (shopStore: string) =>
+  `Quest needs aisle photos of this store, and Arya has none yet. In Express, snap a photo or a short video of the aisles you pass. Once ${shopStore} is mapped, Quest turns on here.`;
+
 export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
@@ -160,6 +165,7 @@ export function Lists() {
   const [doneOpen, setDoneOpen] = useState(false);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
+  useStoreData();
   const [g, setG] = useState<GState>({ enabled: false, group: null, recent: {} });
   const [eyes, setEyes] = useState<EyesRec[]>([]);
 
@@ -567,6 +573,11 @@ export function Lists() {
   };
 
   /* ---- Start shopping ---- */
+  // No aisle pictures for the list's one store (owner, 2026-10-29):
+  // Quest goes, Express stays, and one note says how the store gets
+  // mapped. A list with no store, or several, keeps both modes.
+  const shopStores = (here && here.stores) || [];
+  const shopNoMap = shopStores.length === 1 && !storeHasPictures(shopStores[0]) ? shopStores[0] : "";
   const shopSugg = data && shopOpen ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
   const addAllSuggested = () => guard(async () => {
     const ids = shopSugg.map(i => i.item_id);
@@ -791,9 +802,10 @@ export function Lists() {
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
         <div className="sheethead"><h3 id="shop-title" className="nomargin">Shop {here ? here.name : "Everything else"} · {open.length} item{open.length === 1 ? "" : "s"}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>Close</button></div>
         <div className="group shopmodes">
-          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => startHunt("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">Quest<span className="sub">A treasure hunt with points and badges</span></span><span className="chev">›</span></button>
-          <button className="hubrow" type="button" data-shop="express" onClick={() => startHunt("express")}><img className="rowface" src="/assets/characters/basket.webp" alt="" /><span className="hr-label">Express<span className="sub">Just the list, with aisle help</span></span><span className="chev">›</span></button>
+          {!shopNoMap && <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => startHunt("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">Quest<span className="sub">A treasure hunt with points and badges</span></span><span className="chev">›</span></button>}
+          <button className="hubrow" type="button" data-shop="express" data-first={shopNoMap ? true : undefined} onClick={() => startHunt("express")}><img className="rowface" src="/assets/characters/basket.webp" alt="" /><span className="hr-label">Express<span className="sub">Just the list, with aisle help</span></span><span className="chev">›</span></button>
         </div>
+        <p id="shop-nomap" className="muted shopnomap" hidden={!shopNoMap}>{shopNoMap ? shopNomapNote(shopNoMap) : null}</p>
         <p id="shop-sugg" className="muted shopsugg" hidden={!shopSugg.length}>
           {shopSugg.length ? <>Arya also suggests {shopSugg.slice(0, 2).map(i => i.name).join(" and ")}{shopSugg.length > 2 ? ` and ${shopSugg.length - 2} more` : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>Add {shopSugg.length === 1 ? "it" : shopSugg.length === 2 ? "both" : "all"}</button></> : null}
         </p>

@@ -205,7 +205,9 @@ _EXTRACT_SYSTEM = (
     "with JSON only, no prose: {\"items\": [\"<item name>\", ...]}. "
     "Item names are plain and short (\"oat milk\", \"eggs\"). "
     "Extract only things the writer wants to buy; skip greetings, "
-    "thanks, and conversation. Never invent an item.")
+    "thanks, and conversation. Never invent an item. The message may be in "
+    "any language: keep each item name in the writer's own words, "
+    "never translate it, and leave out verbs like \"add\".")
 
 
 def extract_items_model(text, client):
@@ -233,10 +235,30 @@ def extract_items_model(text, client):
 
 # --- one item, one row ----------------------------------------------------
 
+def item_slug(name):
+    """The id part of a typed item: lowercase, runs of anything but
+    letters and digits become one dash. ASCII names give the ids they
+    always did; other scripts (Hindi, Cyrillic...) keep their letters,
+    so two such names never collapse into one empty id."""
+    import unicodedata
+    out = []
+    for ch in (name or "").lower():
+        keep = ch.isalnum() if ch.isascii() else unicodedata.category(ch)[0] in "LMN"
+        out.append(ch if keep else "-")
+    return re.sub(r"-+", "-", "".join(out)).strip("-")
+
+
+def has_non_latin(text):
+    """True when the text holds a letter outside Latin script."""
+    import unicodedata
+    return any(ch.isalpha() and "LATIN" not in unicodedata.name(ch, "LATIN")
+               for ch in text or "")
+
+
 def _key(name):
     """Case, spacing, punctuation and a plural "s" do not make a new
     item: "Eggs", "eggs" and "egg " share one key."""
-    words = re.findall(r"[a-z0-9]+", (name or "").lower())
+    words = [w for w in item_slug(name).split("-") if w]
     return " ".join(w[:-1] if len(w) > 3 and w.endswith("s")
                     and not w.endswith("ss") else w for w in words)
 

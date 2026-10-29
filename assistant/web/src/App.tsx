@@ -65,7 +65,7 @@ function Shell() {
     <>
       {nav.chrome && (
         <button id="avatar-btn" className="avatar floating" type="button"
-          aria-label={ring ? `Profile, level ${ring.level}` : "Profile"}
+          aria-label={ring ? `Settings, level ${ring.level}` : "Settings"}
           style={ring ? ({ "--pct": ring.pct + "%" } as React.CSSProperties) : undefined}
           onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
           <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>

@@ -52,6 +52,21 @@ export default async function (page, base) {
   await page.click('#list-sheet [data-ls="delete"]');
   await page.waitForSelector("#lists-home");
 
+  // A store with no aisle pictures (the demo's Costco list): Quest is
+  // gone from the sheet and the approved note names the store.
+  await page.click('#list-cards [data-open-list="l-demo-costco"]');
+  await page.waitForSelector("#list-page #list-hunt");
+  await page.click("#list-hunt");
+  await page.waitForSelector("#shop-sheet [data-shop=express]");
+  await page.waitForSelector("#shop-nomap:not([hidden])");
+  if (await page.$("#shop-sheet [data-shop=quest]:not([hidden])")) throw new Error("Quest should be hidden for Costco");
+  const note = await page.textContent("#shop-nomap");
+  if (note !== "Quest needs aisle photos of this store, and Arya has none yet. In Express, snap a photo or a short video of the aisles you pass. Once Costco is mapped, Quest turns on here.") throw new Error("no-map note: " + note);
+  await page.click("#shop-close");
+  await page.waitForFunction(() => !document.querySelector("#shop-sheet"));
+  await page.click("#list-back");
+  await page.waitForSelector("#lists-home");
+
   // Start shopping from Everything else -> mode sheet -> the store picker.
   await page.click('#list-cards [data-open-list="else"]');
   await page.waitForSelector("#list-page");

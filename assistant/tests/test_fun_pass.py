@@ -227,4 +227,5 @@ class TestArtScene(unittest.TestCase):
 
     def test_demo_picker_hides_dataless_stores(self):
         q = read("quest.js")
-        self.assertIn("!qIsDemo() || qStorePhotos(h) || qStoreModel(h)", q)
+        self.assertIn("!qIsDemo() || storeHasPictures(h)", q)
+        self.assertIn("Q.mine.filter(s => storeHasPictures(s.name))", q)
