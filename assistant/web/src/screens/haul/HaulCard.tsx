@@ -141,7 +141,7 @@ export function HaulCard() {
                     aria-label={label(i)} onClick={() => onHide(i.key)}><img src={artSrc(art(i.name))} alt="" /><span className="hl-x" aria-hidden="true">{i.hidden ? "+" : "×"}</span></button></span>
                 ))}
               </div>
-              <p className="muted">{t("haul.tapAStickerToHide2", { count: left })}</p>
+              <p className="muted">{t("haul.postSheetHint", { count: left })}</p>
               <p className="hl-btnrow"><button className="btn primary" type="button" data-act="postgo" disabled={!left || going} onClick={postGo}>{t("haul.post")}</button>
                 <button className="btn" type="button" data-act="postcancel" onClick={() => setSheet(null)}>{t("common.cancel")}</button></p>
             </> : null}

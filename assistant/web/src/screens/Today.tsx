@@ -124,7 +124,7 @@ export function Today() {
     try {
       await post("/api/list/add", { item_id: id });
       setAdded(a => new Set(a).add(id));
-      toast(t("today.addedToList"));
+      toast(t("common.addedToList"));
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     setBusy(b => { const n = new Set(b); n.delete(id); return n; });
   }
@@ -559,7 +559,7 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
 
   const picker = (
     <>
-      <select id="ex-item" aria-label={t("today.item2")} value={sel}
+      <select id="ex-item" aria-label={t("today.itemHeading")} value={sel}
         onChange={ev => { setSel(ev.target.value); if (!ev.target.value) setTimeout(() => nameRef.current?.focus()); }}>
         {opts.map(o => <option key={o.id} value={o.id}>{o.name + o.tag}</option>)}
         <option value="">{opts.length ? t("today.differentItem") : t("today.nameTheItem")}</option>
@@ -581,7 +581,7 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
         {read.raw ? <div className="excrop">{read.raw}</div> : null}
         <h3 className="bigdate" id="ex-title">{t("today.readHeadline", { name: name0, word, date: fmtMD(read.date) })}</h3>
         <p className="muted nomargin">{fmtLong(read.date)} · {when(Math.round((dateObj(read.date).getTime() - dateObj(isoToday()).getTime()) / 864e5))}</p>
-        <div className="exkv"><span className="exk">{t("today.item2")}</span><span className="exv">{picker}</span></div>
+        <div className="exkv"><span className="exk">{t("today.itemHeading")}</span><span className="exv">{picker}</span></div>
         {dateRow}
         <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.looksRightTrackIt")}</button>
         <p className="muted small excenter">{t("today.nothingIsSavedUntilYou")}</p>
@@ -591,7 +591,7 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
   return (
     <>
       <h3 className="hm-title" id="ex-title">{fix ? t("today.fixTheDate") : t("today.typeTheDate")}</h3>
-      <div className="exkv"><span className="exk">{t("today.item2")}</span><span className="exv">{picker}</span></div>
+      <div className="exkv"><span className="exk">{t("today.itemHeading")}</span><span className="exv">{picker}</span></div>
       {dateRow}
       <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.trackIt")}</button>
     </>

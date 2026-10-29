@@ -10,11 +10,9 @@
     "askArya": "Ask Arya",
     "send": "Send",
     "notHere": "Not here?",
-    "back2": "Back",
     "teachAryaYourStore": "Teach Arya your store",
     "todaySHunts": "Today's hunts",
     "keepLooking": "Keep looking",
-    "notHere2": "Not here",
     "reportedMissing": "Reported missing",
     "checkOut": "Check out",
     "keepHunting": "Keep hunting",
@@ -133,7 +131,10 @@
       "add": "Add to favorites"
     },
     "sceneFailed": "The store view did not load.",
-    "demoBar": "Demo household · resets when you leave"
+    "demoBar": "Demo household · resets when you leave",
+    "backPlain": "Back",
+    "notHereShort": "Not here",
+    "addedToList": "Added to your list."
   },
   "about": {
     "builtBy": "Built by",
@@ -614,7 +615,6 @@
     "sharedWith": "{{name}} · shared with {{value}}",
     "loadingYourList": "Loading your list…",
     "newList": "New list",
-    "lists2": "‹ Lists",
     "listName": "List name",
     "listOptions": "List options",
     "speakYourList": "Speak your list",
@@ -645,7 +645,6 @@
     "deleteList": "Delete list",
     "linkStores": "Link stores",
     "pickOneOrMoreHunts": "Pick one or more. Hunts from {{name}} can start at any of them.",
-    "newList2": "+ New list…",
     "youMarkedItExpired": "You marked it expired",
     "on": "On {{expired_on}}.",
     "youBuyItEveryDays": "You buy it every ~{{median_interval_days}} days",
@@ -764,7 +763,9 @@
     "itsHereNow": "It's here now",
     "theyreHereNow": "They're here now",
     "moveTitle": "Move {{what}} to",
-    "addToList": "Add to list"
+    "addToList": "Add to list",
+    "backToLists": "‹ Lists",
+    "newListMenu": "+ New list…"
   },
   "login": {
     "signIn": "Sign in",
@@ -934,7 +935,6 @@
     "estimateAll_other": "About {{total}} for your {{count}} items. Only you see this.",
     "estimateSome": "About {{total}} for {{priced}} of your {{n}} items. Only you see this.",
     "overBudget": "About ${{over}} over your budget. Want to leave something for next trip?",
-    "note2": "Pack what you need. Tap a row to take it in or out.",
     "nothingToUndo": "Nothing to undo.",
     "welcomeBack": "Welcome back. Your bag is saved.",
     "startOver": "Start over",
@@ -988,7 +988,8 @@
     "yourQuest": "Your quest",
     "placeholder": "oat milk\n2x tortillas",
     "anyBrand": "Any brand",
-    "outOfTrip": "{{name}} is out of this trip."
+    "outOfTrip": "{{name}} is out of this trip.",
+    "intro": "Pack what you need. Tap a row to take it in or out."
   },
   "optimize": {
     "checkTheList": "Check the list",
@@ -1400,9 +1401,7 @@
     "itIs": "It is {{a}}",
     "fixTheName": "Fix the name",
     "nameNotSettledKeptOff": "Name not settled — kept off your list until you settle it",
-    "itIs2": "It is {{cn}}",
     "setTheName": "Set the name",
-    "researched2": "Researched:",
     "addAReceiptPhotoOr": "Add a receipt photo or PDF",
     "readLiveKeptForThis": "read live · kept for this demo visit only",
     "archive": "Archive",
@@ -1437,7 +1436,9 @@
     "mine": "Mine",
     "noLinesRead": "no lines read",
     "returns": " · returns −{{amount}}",
-    "byYou": " · you"
+    "byYou": " · you",
+    "itIsName": "It is {{cn}}",
+    "researchedLabel": "Researched:"
   },
   "score": {
     "scoringTheHunt": "Scoring the hunt…",
@@ -1570,7 +1571,6 @@
     "remindMeIn2Days": "Remind me in 2 days",
     "fixTheDate": "Fix the date",
     "stopTrackingThis": "Stop tracking this",
-    "item2": "Item",
     "whatIsIt": "What is it?",
     "itemName": "Item name",
     "date": "Date",
@@ -1584,7 +1584,6 @@
     "alertOnYourList": " · it's on your list",
     "alertPrice": "{{name}}: {{price}} at {{store}}",
     "alertUsuallyPay": "You usually pay {{price}} at {{store}}",
-    "addedToList": "Added to your list.",
     "andMore": " and {{n}} more",
     "stillGoodToast": "Still good — Arya will ask again next cycle.",
     "markedExpiredToast": "Marked expired. Arya suggests it on your list.",
@@ -1630,7 +1629,8 @@
     "differentItem": "A different item…",
     "nameTheItem": "Name the item…",
     "thisItem": "This item",
-    "readHeadline": "{{name}}, {{word}} {{date}}"
+    "readHeadline": "{{name}}, {{word}} {{date}}",
+    "itemHeading": "Item"
   },
   "haul": {
     "exampleOnly": "Example only",
@@ -1667,7 +1667,6 @@
     "anotherReceipt": "Another receipt",
     "paidInTwoPartsAdd": "Paid in two parts? Add the other receipt.",
     "openingYourHaul": "Opening your haul…",
-    "items2": "Items",
     "fullHaul": "Full haul",
     "bossItemNextTime": "Boss item: next time",
     "receiptWaitingAddItAny": "Receipt waiting. Add it any time. It never expires.",
@@ -1730,8 +1729,6 @@
     "postedNote": "Posted to your Crew. Hide or show a sticker and the post updates.",
     "notPostedNote": "Nothing posts until you tap Post to Crew.",
     "reactions": " Reactions: {{yum}} Yum, {{meToo}} Me too, {{teachMe}} Teach me.",
-    "tapAStickerToHide2_one": "Tap a sticker to hide it from this post. {{count}} sticker will go out.",
-    "tapAStickerToHide2_other": "Tap a sticker to hide it from this post. {{count}} stickers will go out.",
     "sharedWithCrewNoPrices": "Shared with Crew: {{who}}. No prices, no store photos, no people.",
     "fixToast": {
       "added": "{{name}} added to your haul.",
@@ -1800,12 +1797,14 @@
         "friends": "Cast joins in",
         "story": "Storybook"
       }
-    }
+    },
+    "itemsPoints": "Items",
+    "postSheetHint_one": "Tap a sticker to hide it from this post. {{count}} sticker will go out.",
+    "postSheetHint_other": "Tap a sticker to hide it from this post. {{count}} stickers will go out."
   },
   "a2hs": {
     "addAryaToYourHome": "Add Arya to your Home Screen",
     "addToHomeScreen": "Add to Home Screen",
-    "openAsWebApp": "Open as Web App",
     "ifItIsOffArya": "If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.",
     "fullScreenWithReminders": "Full screen, with reminders.",
     "opensFullScreenAndLets": "Opens full screen and lets reminders work",

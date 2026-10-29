@@ -146,7 +146,7 @@ export function Reveal() {
       <p className="rv-sr" id="rv-pts-sr" role="status" aria-live="polite"></p>
       <p className="muted rv-ptsub">{d.settled ? t("haul.banked") : t("haul.bankLater")}</p>
       <div className="group rv-lines">
-        <div className="rv-row"><span>{t("haul.items2")}</span><b>+{p.items}</b></div>
+        <div className="rv-row"><span>{t("haul.itemsPoints")}</span><b>+{p.items}</b></div>
         {!!p.full_haul && <div className="rv-row"><span>{t("haul.fullHaul")}</span><b>+{p.full_haul}</b></div>}
         {d.boss && (status === "found"
           ? <div className="rv-row"><span>{t("haul.bossItem")}</span><b>+{p.boss}</b></div>

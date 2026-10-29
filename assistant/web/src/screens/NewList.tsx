@@ -1152,7 +1152,7 @@ export function NewList() {
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h2>
-      <p className="muted" id="nl-sub">{t("newList.note2")}</p>
+      <p className="muted" id="nl-sub">{t("newList.intro")}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>
       <div className="group pad packcomposer">
         <label className="field" htmlFor="nl-text">{t("newList.addSomethingElse")}</label>

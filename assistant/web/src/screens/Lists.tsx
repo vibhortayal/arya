@@ -672,7 +672,7 @@ export function Lists() {
 
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
-          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>{t("lists.lists2")}</button>
+          <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}>{t("lists.backToLists")}</button>
           <div className="lhead">
             <h2 className="largetitle" id="lp-title">
               {renaming

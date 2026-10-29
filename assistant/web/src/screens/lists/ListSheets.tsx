@@ -247,7 +247,7 @@ function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: stri
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.moveTitle", { what: one ? one : t("common.itemCount", { count: ids.length }) })}</h3>
       {lists.map(l => dest(l.id, l.name))}{dest("else", t("common.everythingElse"))}
-      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow">{t("lists.newList2")}</span></button>
+      <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow">{t("lists.newListMenu")}</span></button>
     </>
   );
 }

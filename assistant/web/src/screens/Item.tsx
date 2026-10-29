@@ -88,7 +88,7 @@ export function Item() {
           </>}
           <p style={{ marginTop: 20, display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="btn secondary" id="btn-add" type="button"
-              onClick={() => act(() => post("/api/list/add", { item_id: id }), t("today.addedToList"))}>{t("item.addToList")}</button>
+              onClick={() => act(() => post("/api/list/add", { item_id: id }), t("common.addedToList"))}>{t("item.addToList")}</button>
             <button className="btn secondary" id="btn-never" type="button"
               onClick={() => act(() => post(`/api/items/${eid}/flag`, { never: true }), t("item.neverToast"))}>{t("item.neverSuggest")}</button>
             <button className="btn secondary" id="btn-expired" type="button"

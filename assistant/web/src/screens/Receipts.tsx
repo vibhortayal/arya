@@ -198,12 +198,12 @@ export function Receipts() {
                 <span className="sub">{t("receipts.nameNotSettledKeptOff")}</span></div></div>
               <div className="actions">
                 {(u.candidates || []).map(cn => (
-                  <button key={cn} className="chip" data-resolve={u.item_id} data-name={cn} onClick={() => resolve(u.item_id, cn)}>{t("receipts.itIs2", { cn })}</button>
+                  <button key={cn} className="chip" data-resolve={u.item_id} data-name={cn} onClick={() => resolve(u.item_id, cn)}>{t("receipts.itIsName", { cn })}</button>
                 ))}
                 <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.setTheName")}</button>
               </div>
               {srcs.length > 0 && (
-                <div className="row"><span className="sub">{t("receipts.researched2")}{" "}{srcs.map(([n, href], i) => (
+                <div className="row"><span className="sub">{t("receipts.researchedLabel")}{" "}{srcs.map(([n, href], i) => (
                   <span key={n}>{i > 0 && " · "}<a href={href} target="_blank" rel="noopener">{n}</a></span>))}</span></div>
               )}
               {editor(key, name => resolve(u.item_id, name), "data-save-resolve", u.item_id)}

@@ -329,7 +329,7 @@ export function Express() {
   return (
     <>
       <div className="hunthud" ref={root}>
-        <a href="#" className="qback hudback" aria-label={t("common.back2")} onClick={e => { e.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
+        <a href="#" className="qback hudback" aria-label={t("common.backPlain")} onClick={e => { e.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
         <span className="hchip grow" id="exp-store">{`${sess.store} · ${qModeLabel(sess.mode)}`}</span>
         <span className="hchip prog" id="exp-count">{`${prog.done}/${prog.total}`}</span>
         <button id="exp-pause" className="hudbtn" type="button" aria-label={paused ? t("common.resume") : t("common.pause")}
@@ -384,7 +384,7 @@ export function Express() {
 
       <Sheet open={spot !== null} onClose={() => setSpot(null)} id="spot-sheet">
         <span className="sheetgrip" aria-hidden="true"></span>
-        <div className="row"><span className="name">{t("common.notHere2")}</span></div>
+        <div className="row"><span className="name">{t("common.notHereShort")}</span></div>
         <p className="muted" id="spot-item">{t("express.atTheStopForWhat", { spot })}</p>
         <div className="actions" style={{ flexDirection: "column", alignItems: "stretch" }}>
           {SPOT_KINDS.map(([kind, label], k) => (

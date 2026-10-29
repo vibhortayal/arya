@@ -47,7 +47,7 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
   const addExtras = async () => {
     await post("/api/list/from-text", { text: (res?.extras || []).join("\n") }).catch(() => {});
     setAdded(true);
-    toast(t("today.addedToList"));
+    toast(t("common.addedToList"));
   };
   const face = (n: string) => plain ? null : <img key={n} className="rowface" src={asset("assets/characters/" + faceFor(n))} alt="" />;
 

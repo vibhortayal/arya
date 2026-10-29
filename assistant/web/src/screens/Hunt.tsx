@@ -793,7 +793,7 @@ export function Hunt() {
   return (
     <>
       <div className="hunthud">
-        <a href="#" className="qback hudback" aria-label={t("common.back2")} onClick={ev => { ev.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
+        <a href="#" className="qback hudback" aria-label={t("common.backPlain")} onClick={ev => { ev.preventDefault(); nav.back("community"); }}>&lsaquo;</a>
         <span className="hchip grow" id="hunt-store">{`${store} · ${qModeLabel(sess.mode)}`}</span>
         <span className="hchip" id="hunt-timer" ref={timerEl} hidden>0:00</span>
         <span className="hchip pts" id="hunt-pts" aria-live="polite">{t("hunt.pts", { qHaulPoints: qHaulPoints(sess, false) })}</span>
@@ -960,7 +960,7 @@ export function Hunt() {
 
       <Sheet open={!!spot} onClose={() => setSpot(null)} id="spot-sheet">
         <span className="sheetgrip" aria-hidden="true" />
-        <div className="row"><span className="name">{t("common.notHere2")}</span></div>
+        <div className="row"><span className="name">{t("common.notHereShort")}</span></div>
         <p className="muted" id="spot-item">{spot && sess.items[spot.idx] ? t("hunt.atTheStop", { name: sess.items[spot.idx].name }) : ""}</p>
         <div className="actions" style={{ flexDirection: "column", alignItems: "stretch" }}>
           {SPOT_KINDS.map(([kind, label]) => (
