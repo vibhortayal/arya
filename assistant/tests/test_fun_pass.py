@@ -87,7 +87,7 @@ class TestScoreAndTeachMove(unittest.TestCase):
     def test_score_party_only_when_settled(self):
         q = read("quest.js")
         self.assertIn("assets/scenes/score-party.webp", q)
-        self.assertIn('attached ? `<img class="scoreparty"', q)
+        self.assertIn('attached && !plain ? `<img class="scoreparty"', q)
 
     def test_teach_ask_left_the_score_screen(self):
         self.assertNotIn("mapperOfferAfterHunt", read("quest.js"))
