@@ -538,6 +538,24 @@ function qHistoryStores() {
   return Object.entries(seen).sort((a, b) => b[1] - a[1]).map(([s]) => s);
 }
 
+/* A store's open "not here" reports warn on the plan rows (play-test:
+ * Crew said apples was missing while the plan still listed it). The
+ * row stays tickable — a report can be old or wrong. */
+function qSing(s) { return qnorm(s).replace(/s$/, ""); }
+function qMissingNote(name, note) {
+  const miss = Q.draft && Q.draft.missing;
+  if (!miss || !miss.has(qSing(name))) return note;
+  return (note ? note + " · " : "") + "reported missing here";
+}
+async function qLoadMissing(store) {
+  const d = Q.draft;
+  d.missing = new Set();
+  try {
+    const r = await api(`/api/quest/stores/${encodeURIComponent(store)}/reports`);
+    d.missing = new Set((r.reports || []).map(x => qSing(x.item)));
+  } catch (e) { return; }
+  if (Q.draft === d && d.store === store && d.missing.size && !$("#view-newlist").hidden) renderPlan();
+}
 function renderPlan() {
   const store = Q.draft.store;
   // PACK opens the bag once per store (and resumes a saved draft),
@@ -564,6 +582,7 @@ function renderPlan() {
   // Tick = in this trip's quest; unticked stays on the Arya list;
   // ✕ (list items only) takes it off the Arya list altogether.
   const rowHtml = (key, name, note, itemId) => {
+    note = qMissingNote(name, note);
     if (typeof PACK !== "undefined") return PACK.rowHtml(key, pick[key], { name, note, itemId });
     const on = pick[key].on;
     return `<div class="planrow${on ? " in" : ""}"><button class="plantick" data-plan="${esc(key)}" aria-pressed="${String(on)}" type="button">
@@ -976,6 +995,7 @@ function qPickStore() {
   Q.draft.store = store;
   renderPlan();
   questShow("view-newlist");
+  qLoadMissing(store);
 }
 $("#st-name").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); qPickStore(); }
