@@ -4,6 +4,7 @@ import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
+import { storeHasData } from "../lib/stores";
 import { StarSvg, storeMeta, type MyStore } from "./StoresMine";
 
 /* Port of pwa/index.html #view-store and quest.js: qStartNewHunt (store
@@ -21,8 +22,6 @@ const sameStore = (a: string, b: string) => {
   const x = norm(a), y = norm(b);
   return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " "));
 };
-// Stores with a photo walk / 3D model (quest.js STORE_PHOTOS, STORE_MODELS).
-const hasData = (store: string) => norm(store).replace(/ /g, "") === "traderjoes";
 
 /* One-shot location for biasing Google suggestions (quest.js Q.geo,
  * Q.geoAsked): asked once per app run, not on every open. */
@@ -206,9 +205,9 @@ export function Store() {
   const histPick = (h: string) => { setSelId(null); setName(h); pickStore(h, null); };
   const hist = historyStores(plan)
     .filter(h => !mine.some(s => sameStore(s.name, h)))
-    .filter(h => !demo || hasData(h));
+    .filter(h => !demo || storeHasData(h));
   const shown = histAll ? hist : hist.slice(0, 3);
-  const mineShown = demo ? mine.filter(s => hasData(s.name)) : mine;
+  const mineShown = demo ? mine.filter(s => storeHasData(s.name)) : mine;
   const favs = mineShown.filter(s => s.favorite);
   const rest = mineShown.filter(s => !s.favorite);
 

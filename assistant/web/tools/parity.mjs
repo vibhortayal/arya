@@ -39,6 +39,7 @@ const SPECIAL = {
   },
   // No id: these only need the old app's real entry function.
   "stores-mine": { old: () => `questGo("view-stores-mine")`, new: () => `window.__aryaShow("stores-mine")` },
+  mapper: { old: () => `questGo("view-mapper")`, new: () => `window.__aryaShow("mapper")` },
   "stores-find": { old: () => `questGo("view-stores-find")`, new: () => `window.__aryaShow("stores-find")` },
   "stores-add": { old: () => `questGo("view-stores-add")`, new: () => `window.__aryaShow("stores-add")` },
   store: { old: () => `qStartNewHunt(null)`, new: () => `window.__aryaShow("store")` },
@@ -47,6 +48,10 @@ const SPECIAL = {
     new: () => `window.__aryaShow("newlist", { store: "Trader Joe's" })`,
   },
 };
+
+/* Screens that only exist mid-flow (a draft or a capture prompt from
+ * the screen before): checked by their e2e files, not parity. */
+const FLOW_ONLY = new Set(["capture", "optimize", "mode"]);
 
 const views = process.argv.slice(2).length ? process.argv.slice(2) : ["login", ...portedViews()];
 const browser = await chromium.launch();
@@ -79,6 +84,7 @@ async function shot(url, open, file) {
 
 let failed = 0;
 for (const v of views) {
+  if (FLOW_ONLY.has(v)) { console.log(`skip ${v.padEnd(16)} mid-flow screen, see e2e/${v}.e2e.mjs`); continue; }
   if (page.url() === "about:blank") await page.goto(BASE + "/");
   if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user))))) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));

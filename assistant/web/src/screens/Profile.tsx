@@ -138,7 +138,7 @@ export function Profile() {
       </div>
       <div className="group">
         <NavRow id="btn-feedback" view="feedback" title="Feature request / Contact us" sub="Tell us what to build, what broke, or ask a question" />
-        <NavRow id="btn-muse" view="muse" title="Connect Muse" sub="Link a code to file receipts by chat" />
+        <NavRow id="btn-muse" view="muse" title="Connect an AI agent" sub="Use Arya from your own AI assistant" />
         <NavRow id="btn-about" view="about" title="About" sub="Built on Meta models" />
       </div>
       <div className="group">

@@ -1,0 +1,82 @@
+import { useEffect, useRef, useState } from "react";
+import { useNav } from "../app/nav";
+import { useToast } from "../ui/Toast";
+import { api, post } from "../lib/api";
+
+/* Port of pwa/index.html #view-muse ("Connect an AI agent") plus
+ * app.js paintTokenRow / mintInto / SETUP_PROMPT. Back lands on Profile.
+ * The Shell already renders <section id="view-muse">; no second one. */
+
+const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
+
+Your job when I talk to you:
+- A receipt photo or PDF, or a pasted order (Instacart, Amazon, an email): read it and file it in Arya as structured data — merchant, date, each line (name, quantity, price, line total), subtotal, tax, total. Leave delivery fees and tips out. Report back the total Arya verified, never your own arithmetic.
+- Questions about my list, my spending, or whether something expired: answer from Arya's data, not from memory of our chats.
+- Anything else: answer normally. Bring Arya in only when my message is about my groceries, receipts, spending or list.
+
+Rules: never guess a product name you cannot read — flag it and let Arya queue it for me. If a name is unknown, check the retailer's own online catalog, propose the match with its source, and wait for my word before settling it. Returns are refunds, never purchases.
+
+My connector token lives in your secure credential store — the one I pasted when we set this up. Send it as a Bearer token and never print it.`;
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+export function Muse() {
+  const nav = useNav();
+  const { toast } = useToast();
+  // null = not loaded (row empty); a string = a freshly minted token shown once.
+  const [has, setHas] = useState<boolean | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const paint = async () => {
+    setToken(null);
+    try { setHas((await api<{ has_token: boolean }>("/auth/token")).has_token); }
+    catch { setHas(null); }
+  };
+  useEffect(() => { paint(); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mint = async () => {
+    try { setToken((await post<{ token: string }>("/auth/token")).token); }
+    catch (e) { toast(errMsg(e)); }
+  };
+  const copy = () => {
+    inputRef.current?.select();
+    if (navigator.clipboard) navigator.clipboard.writeText(inputRef.current?.value ?? "").catch(() => { /* selected; copy by hand */ });
+    toast("Token copied.");
+  };
+  const revoke = async () => {
+    try { await api("/auth/token", { method: "DELETE" }); toast("Link code revoked."); paint(); }
+    catch (e) { toast(errMsg(e)); }
+  };
+
+  return (
+    <>
+      <p><a href="#" id="pfm-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>Connect an AI agent</h2>
+      <div className="group pad">
+        <p className="muted nomargin">Use Arya from an AI assistant you already talk to. It can add to your list, tell you what is running low and file receipts it reads. It works with any assistant that supports MCP connectors. Make a link code, then paste it into your assistant. The code is shown once; making a new one replaces it.</p>
+        <div className="row" id="profile-token-row" style={{ marginTop: 10 }}>
+          {token !== null ? (
+            <>
+              <input className="grow" data-token-value readOnly value={token} ref={inputRef} />
+              <button className="btn" data-copy="1" onClick={copy}>Copy</button>
+              <span className="sub">Copy it now — it is not shown again. Paste it into your assistant's connector settings.</span>
+            </>
+          ) : has === null ? null : (
+            <>
+              <span className="sub grow">{has ? "Your link code is active." : "No link code yet."}</span>
+              <button className="btn" data-mint="1" onClick={mint}>{has ? "Make a new code" : "Make my link code"}</button>
+              {has && <button className="btn danger" data-revoke="1" onClick={revoke}>Revoke</button>}
+            </>
+          )}
+        </div>
+        <p style={{ marginTop: 10 }}>
+          <button className="btn" data-copy-prompt="1" type="button" onClick={() => {
+            if (navigator.clipboard) navigator.clipboard.writeText(SETUP_PROMPT).catch(() => { /* not allowed here */ });
+            toast("Setup prompt copied.");
+          }}>Copy setup prompt</button> <span className="sub">Paste it into your assistant so it knows how to use Arya.</span>
+        </p>
+      </div>
+    </>
+  );
+}

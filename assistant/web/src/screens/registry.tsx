@@ -9,7 +9,12 @@ import { GroupJoin } from "./GroupJoin";
 import { NewList } from "./NewList";
 import { Store } from "./Store";
 import { StoresMine } from "./StoresMine";
+import { Capture } from "./Capture";
 import { Item } from "./Item";
+import { Mapper } from "./Mapper";
+import { Mode } from "./Mode";
+import { Muse } from "./Muse";
+import { Optimize } from "./Optimize";
 import { Lists } from "./Lists";
 import { Quest } from "./Quest";
 import { StoresAdd } from "./StoresAdd";
@@ -33,7 +38,12 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   newlist: NewList,
   store: Store,
   "stores-mine": StoresMine,
+  capture: Capture,
   community: Quest,
+  mapper: Mapper,
+  mode: Mode,
+  muse: Muse,
+  optimize: Optimize,
   home: Today,
   item: Item,
   list: Lists,
