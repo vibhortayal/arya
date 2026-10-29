@@ -916,6 +916,34 @@ body.questmode #avatar-btn { display: none; }
 .cp-parts { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; gap: 6px; }
 .cp-parts span { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: background .3s; }
 .cp-parts span.on { background: #fff; }
+/* Guided scan (owner, 2026-10-29): a panorama-style sweep, scan lines,
+ * and outlines only for what Arya read. People are never outlined. */
+.cp-cam.scanning { --scan: #5FE3C0; --sign: #FFC94D; }
+.cp-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(95,227,192,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(95,227,192,.10) 1px, transparent 1px); background-size: 28px 28px; }
+.cp-sweep { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--scan); box-shadow: 0 0 14px 3px rgba(95,227,192,.55); animation: cp-sweep 2.6s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes cp-sweep { from { left: 15%; } to { left: 85%; } }
+.cp-marks { position: absolute; inset: 0; pointer-events: none; animation: cp-fade 3.2s ease-out forwards; }
+@keyframes cp-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.cp-mark { position: absolute; border: 2px solid var(--scan); border-radius: 6px; }
+.cp-mark.sign { border-color: var(--sign); }
+.cp-mark span { position: absolute; left: 0; top: 2px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; background: var(--scan); color: #062a20; }
+.cp-mark.sign span { background: var(--sign); color: #3a2a00; }
+.cp-guide { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.cp-track { position: relative; height: 30px; border-radius: 9px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.18); overflow: hidden; }
+.cp-track span { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(95,227,192,.25), rgba(95,227,192,.5)); border-right: 2px solid var(--scan); transition: width .4s ease-out; }
+.cp-track b { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #fff; font-size: 12px; }
+.cp-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.cp-chips span { font-size: 12px; font-weight: 600; color: #fff; background: rgba(0,0,0,.5); border-radius: 980px; padding: 3px 9px; }
+.cp-chips span.ok::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--scan); margin-right: 5px; vertical-align: 1px; }
+.cp-coach { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(20,60,50,.88); color: #fff; display: flex; flex-direction: column; gap: 2px; }
+.cp-coach b { font-size: 16px; } .cp-coach span { font-size: 13px; color: #cdeee4; }
+.cp-coach.wait { background: rgba(60,60,66,.92); } .cp-coach.wait span { color: #d6d6dc; }
+.cp-opt { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: 15px; }
+.cp-opt input { margin-top: 3px; width: 20px; height: 20px; accent-color: var(--accent); }
+.cp-opt small { display: block; color: var(--secondary); font-size: 13px; }
+.cp-extra { text-align: left; margin: 8px 0; }
+.cp-extra .row .sub { margin-left: 8px; text-align: right; }
+@media (prefers-reduced-motion: reduce) { .cp-sweep { display: none; } .cp-marks { animation: none; } .cp-track span { transition: none; } }
 .mp-reward { text-align: center; }
 .mp-reward .pts { font-size: 34px; font-weight: 800; color: var(--accent); animation: mp-pop .5s ease-out; }
 .mp-reward .what { font-size: 17px; font-weight: 600; margin: 4px 0 10px; }

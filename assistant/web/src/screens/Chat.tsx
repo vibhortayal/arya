@@ -3,6 +3,7 @@ import { clearOnSignOut, useSession } from "../app/session";
 import { post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
+import { useNav } from "../app/nav";
 import { IconMic, IconSpeaker } from "../ui/icons";
 import { languageToast, offerFor, offerRefused, refuseOffer, voiceLang } from "../lib/language";
 import "../ui/language.css";
@@ -13,7 +14,7 @@ import { useTranslation } from "../i18n";
  * An "offer" line is the one-time "Reply in <language> from now on?"
  * card (assistant/docs/MULTILINGUAL-ASK.md): on Auto, after a reply to
  * a non-English message; at most once per session, never after No. */
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer"; text: string; code?: string };
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map"; text: string; code?: string };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
 const history: Msg[] = [];
@@ -28,12 +29,18 @@ clearOnSignOut(() => {
 /* Suggested questions: en.json keys, sent as the question text. */
 const SUGGEST = ["ask.suggest.runningLow", "ask.suggest.spend", "ask.suggest.addEggs"];
 
+/* "map my store", "help me scan this store", "teach Arya the aisles":
+ * Arya answers by opening Map my store (owner, 2026-10-29). */
+export const wantsMapStore = (q: string) =>
+  /\b(map|mapping|scan|scanning|teach)\b/i.test(q) && /\b(store|shop|aisles?|shelves|supermarket)\b/i.test(q) && !/\breceipts?\b/i.test(q);
+
 const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
 
 export function Chat() {
   const { t } = useTranslation();
   const { demo, language, languages, setLanguage } = useSession();
   const { toast } = useToast();
+  const nav = useNav();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
   const [text, setText] = useState("");
   const [speakOn, setSpeakOn] = useState(readSpeak);
@@ -86,6 +93,10 @@ export function Chat() {
     const q = raw.trim();
     if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
+    if (wantsMapStore(q)) {
+      add({ kind: "me", text: q }, { kind: "map", text: t("ask.mapStoreReply") });
+      return;
+    }
     history.push({ role: "user", content: q });
     add({ kind: "me", text: q });
     const mine = epoch;
@@ -143,6 +154,7 @@ export function Chat() {
           <div id="chat-empty">
             <p className="muted">{t("ask.askAboutYourListYour")}</p>
             {SUGGEST.map(k => t(k)).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
+            <button id="ask-map-store" className="chip" type="button" onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (
           <div key={i} className="bubble arya offer" id="lang-offer">
@@ -154,6 +166,11 @@ export function Chat() {
                 <button className="btn primary" type="button" id="lang-offer-yes" onClick={() => offerYes(l.code!)}>{t("ask.yes", { text: l.text })}</button>
               </div>
             </div></div>
+          </div>
+        ) : l.kind === "map" ? (
+          <div key={i} className="bubble arya">
+            <p>{l.text}</p>
+            <button className="btn primary" type="button" data-map-open onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
           </div>
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>

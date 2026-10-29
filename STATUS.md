@@ -68,9 +68,18 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
-  One map per store location: only the Trader Joe's on Argonaut has
-  the shipped walk; other Trader Joe's play a labelled typical layout.
+  One map per store location. Nobody recorded which Trader Joe's the
+  shipped walk was filmed in, so no store has it as its map (until
+  `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
+  labelled typical layout, and Hunt shows its photos only there.
   `2026-10-29-store-maps-per-location.md`.
+  Map my store is one tap from the Quest home and Ask Arya, and offered
+  once after a trip at a store not fully mapped.
+  `2026-10-29-map-my-store-up-front.md`.
+  Map my store's walk is a guided scan: pan, never tap; Arya reads
+  sections, aisle signs, items and (opt-in) shelf prices every ~4 s,
+  outlines what it found, and blurs people before anything is kept
+  (SAM 3.1 + Spark, daily cap). `2026-10-29-guided-store-scan.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
@@ -111,8 +120,14 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
    The first load after the deploy installs the new service worker; it
    deletes the old `arya-v*` cache and takes over the open page.
-3. **Nov 4:** the Wonder amendment ends. Set `ARYA_PHOTO_READER=spark`
-   in `deploy/.env` and rebuild.
+3. **Nov 4:** the Wonder amendment ends. Early on Nov 4, before judges
+   arrive, set `ARYA_PHOTO_READER=spark` in `deploy/.env` and run
+   `docker compose up -d` in `assistant/deploy`. NOT `docker compose
+   restart`: restart keeps the old environment, so the site would keep
+   calling Wonder. Any recreate drops in-memory demo sessions, so do it
+   once, check one receipt photo, then deploy only in quiet hours.
+4. Caddyfile changes need a reload: `docker compose exec caddy caddy
+   reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
 - Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), owner
@@ -126,6 +141,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).
+- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; owner turns it on and reruns the demo household.
 - Owner phone pass on the list-first build after deploy.
 
 ## Known gaps

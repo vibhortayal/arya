@@ -66,8 +66,8 @@ export function followHold() {
 
 /* One store view, picked by the store (quest.js qResolveDriver). */
 export function resolveDriver(sess: Session, peek3D: boolean): string {
-  if (peek3D && storeModel(sess.store)) return "cloud";
-  if (storePhotos(sess.store)) return "photo";
+  if (peek3D && storeModel(sess.store, sess.store_id)) return "cloud";
+  if (storePhotos(sess.store, sess.store_id)) return "photo";
   return sess.mode === "express" ? "strip" : "art";
 }
 
@@ -260,6 +260,7 @@ export function Hunt() {
 
   const state = sess?.state || "";
   const store = sess?.store || "";
+  const storeId = sess?.store_id || null;
   const isQuest = sess?.mode === "quest";
 
   /* The briefing card (before the start) and the Teach Arya tool. */
@@ -697,7 +698,7 @@ export function Hunt() {
   const hd = qHandled(sess);
   const live = state === "playing";
   const bossGroup = sess.boss && sess.boss.group;
-  const hasModel = !!storeModel(store);
+  const hasModel = !!storeModel(store, storeId);
   const offlineText = qOfflineText();
   const stillOpen = openItems(sess).length > 0;
   const gyro = gyroAvailable() && !M.gyroGone;
@@ -725,7 +726,7 @@ export function Hunt() {
       <div className="popflex"><img className="popface" src={asset("assets/characters/" + faceFor(it.name))} alt="" />
         <div><p className="pop-name">{it.name}{it.unit ? ` · ${qtyTag(it)}` : it.qty > 1 ? ` · × ${qtyFmt(it.qty)}` : ""}</p></div></div>
       {stop.shelfLabel ? <p className="pop-shelf">{stop.shelfLabel}</p> : null}
-      {itemHasData(store, it) ? null : <p className="pop-shelf nodata"><Trans i18nKey="common.noPhotoNudge" components={{ snap: <button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)} /> }} /></p>}
+      {itemHasData(store, it, storeId) ? null : <p className="pop-shelf nodata"><Trans i18nKey="common.noPhotoNudge" components={{ snap: <button type="button" className="linkbtn snapaisle" data-snap-aisle={it.name} onClick={() => snapAisle(it.name)} /> }} /></p>}
       {rep ? <p style={{ margin: "6px 0 0" }}><span className="repflag">{t("hunt.youReportedThisMissingHere")}</span></p> : null}
     </>;
     collectLabel = it.unit || it.qty > 1 ? t("hunt.grabQty", { qty: qtyTag(it), name: it.name }) : t("hunt.grabName", { name: it.name });
@@ -815,7 +816,7 @@ export function Hunt() {
           </div>
         ) : null}
       </div>
-      <SceneView id="scene-mount" className="storeview" driver={driverName} photos={storePhotos(store)} model={storeModel(store)}
+      <SceneView id="scene-mount" className="storeview" driver={driverName} photos={storePhotos(store, storeId)} model={storeModel(store, storeId)}
         stops={stops} next={next} onTapStop={tapStop} onDriver={onDriver} />
       <div className="scenecap">
         <p id="scene-cap" className="muted nomargin">{QSCENE_CAPTION[driverName] ? t(QSCENE_CAPTION[driverName]) : ""}</p>

@@ -95,7 +95,7 @@ enforced there. `open_client.py` is the only other model client.
 |---|---|---|
 | Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard) | cached prefixes, low effort |
 | Receipt photo reader (default) | `muse-wonder-1.0`, 90 s bound | any failure falls back to Spark; `decoded_by` records which read it |
-| Receipt photo reader after Nov 4 | Spark | set `ARYA_PHOTO_READER=spark` in `deploy/.env` and rebuild; no code change |
+| Receipt photo reader after Nov 4 | Spark | set `ARYA_PHOTO_READER=spark` in `deploy/.env`, then `docker compose up -d` (not `restart`); no code change |
 | Avatar and look images | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
 | Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
@@ -180,7 +180,7 @@ handle the nightly backup. CI is manual only
 | `ARYA_REGISTRATION_OPEN` | `0` | open password sign-up |
 | `ARYA_PHOTO_READER` | `wonder` | receipt photo reader; `spark` from Nov 4 |
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
-| `ARYA_DEMO_DAILY_BUDGET_USD` | `2` | demo household's day bucket |
+| `ARYA_DEMO_DAILY_BUDGET_USD` | `2` (compose: `20`) | demo household's day bucket |
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |

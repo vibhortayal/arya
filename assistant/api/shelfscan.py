@@ -203,6 +203,31 @@ def scrub_people(image_bytes, client, media_type="image/jpeg",
     """Return (jpeg_bytes, people_count) with every person SAM finds
     pixelated, downscaled to max_side; or (None, 0) when the scrub
     could not run, so the caller keeps nothing."""
+    jpeg, boxes, _share = scrub_people_boxes(image_bytes, client, media_type,
+                                             max_side, quality)
+    return jpeg, len(boxes)
+
+
+def people_share(boxes, W, H):
+    """How much of the frame people cover (0..1), from their boxes on
+    a coarse grid so overlapping boxes count once."""
+    if not boxes or W <= 0 or H <= 0:
+        return 0.0
+    n = 24
+    hit = 0
+    for gy in range(n):
+        for gx in range(n):
+            x, y = (gx + 0.5) * W / n, (gy + 0.5) * H / n
+            if any(b[0] <= x <= b[2] and b[1] <= y <= b[3] for b in boxes):
+                hit += 1
+    return hit / float(n * n)
+
+
+def scrub_people_boxes(image_bytes, client, media_type="image/jpeg",
+                       max_side=KEEP_MAX_SIDE, quality=72):
+    """scrub_people, plus the people boxes and the share of the frame
+    they cover: (jpeg_bytes, boxes, share), or (None, [], 0.0) when the
+    scrub could not run."""
     try:
         boxes = []
         for prompt in PEOPLE_PROMPTS:
@@ -210,9 +235,10 @@ def scrub_people(image_bytes, client, media_type="image/jpeg",
                                            media_type=media_type)
             boxes.extend(b["box"] for b in found or [])
     except Exception:
-        return None, 0
+        return None, [], 0.0
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     W, H = img.size
+    share = people_share(boxes, W, H)
     for x1, y1, x2, y2 in boxes:
         px, py = (x2 - x1) * SCRUB_PAD, (y2 - y1) * SCRUB_PAD
         bx = (max(0, int(x1 - px)), max(0, int(y1 - py)),
@@ -230,4 +256,4 @@ def scrub_people(image_bytes, client, media_type="image/jpeg",
         img = img.resize((int(W * scale), int(H * scale)), Image.LANCZOS)
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=quality)
-    return buf.getvalue(), len(boxes)
+    return buf.getvalue(), boxes, share

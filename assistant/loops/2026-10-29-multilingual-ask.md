@@ -17,3 +17,11 @@ Built on branch feat/multilingual-ask, from docs/MULTILINGUAL-ASK.md.
 - Not done: voice `languageBias` (needs the doc's exact shape and a real
   clip); all UI (handed to the port thread). Live 10x3 eval not run.
 - Tests: tests/test_multilingual_ask.py; full suite green (1207).
+
+## Voice hint (later the same day)
+- `/api/transcribe` sends `languageBias: [<language name>]` when the
+  account language is fixed; nothing on auto (the docs say omitted =
+  automatic detection). Source: LiveKit's Meta STT plugin page; the
+  field's placement inside the batch `request` JSON is unconfirmed, so
+  a refused hinted call is retried once without it.
+- Still to do: try one real Spanish and one real Hindi clip.

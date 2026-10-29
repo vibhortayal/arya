@@ -203,6 +203,9 @@
 .qg-banner.map b { color: #fff; font-size: 24px; }
 .qg-snack { position: absolute; left: 12px; right: 12px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 76px)); z-index: 25; display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 10px 16px; border-radius: 14px; background: var(--q-ink); color: #fff; font-weight: 600; }
 .qg-snack button { color: var(--q-gold) !important; font-weight: 800; min-height: 40px; padding: 0 12px; }
+.qg-mapcard { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 100px); left: 12px; right: 12px; z-index: 5; display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.95); box-shadow: 0 0 0 1.5px #7FA3D6, 0 6px 18px rgba(0,0,0,.08); }
+.qg-mapcard p { font-size: 13px; line-height: 1.35; flex: 1; }
+.qg-mapcard .qg-x { position: static; flex: none; }
 .qg-coach { margin: 0 12px 8px; z-index: 20; display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 16px; background: #FFF8E1; box-shadow: 0 0 0 2px var(--q-gold), 0 6px 18px rgba(0,0,0,.08); pointer-events: none; }
 .qg-coach img { width: 38px; height: 38px; flex: none; border-radius: 50%; object-fit: cover; }
 .qg-coach p { font-size: 14px; font-weight: 600; line-height: 1.35; }

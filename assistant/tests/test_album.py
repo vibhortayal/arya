@@ -279,8 +279,8 @@ class TestChaptersAndFirstMapper(unittest.TestCase):
 
     def test_walkthrough_seeded_sections_never_count(self):
         from api import state
-        TJ = "Trader Joe's|tj-argonaut"
-        os.environ["ARYA_WALK_STORE_ID"] = "tj-argonaut"  # the walk's own store
+        TJ = "Trader Joe's|tj-walk"
+        os.environ["ARYA_WALK_STORE_ID"] = "tj-walk"  # the walk's own store
         self.addCleanup(os.environ.pop, "ARYA_WALK_STORE_ID", None)
         doc = self.sm.load_map(TJ)
         seeded = next(iter(doc["segments"]))

@@ -128,7 +128,7 @@ class TestPhotoWiring(unittest.TestCase):
         self.assertIn("photoFrameForU", js)
         hunt = src("screens/Hunt.tsx")
         self.assertIn("export function resolveDriver(sess: Session, peek3D: boolean): string {", hunt)
-        self.assertIn('if (storePhotos(sess.store)) return "photo";', hunt)
+        self.assertIn('if (storePhotos(sess.store, sess.store_id)) return "photo";', hunt)
         self.assertIn('return sess.mode === "express" ? "strip" : "art";', hunt)
         self.assertIn("drv.current = resolveDriver(sess, false);", hunt)
         self.assertIn("mount.dataset.photos = fromRoot(photos);", src("ui/Scene.tsx"))

@@ -8,6 +8,9 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.api
+    # Come back after a VM reboot or a crash. unless-stopped keeps a
+    # deliberate `docker compose stop` stopped.
+    restart: unless-stopped
     environment:
       ARYA_DATA_DIR: /app/data
       ARYA_DEMO_DOOR_RATE: ${ARYA_DEMO_DOOR_RATE:-240}
@@ -27,20 +30,26 @@ services:
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
       ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
-      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-2}
+      # $20 a day for the judging window (about 50 full demo visits at
+      # the $0.40 per-visit cap), paid from the hackathon credits. The
+      # app's own default stays $2; put 2 in deploy/.env to go back.
+      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-20}
       ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
       ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
       ARYA_PUSH_REMINDERS: ${ARYA_PUSH_REMINDERS:-0}
       ARYA_GROUPS: ${ARYA_GROUPS:-1}
+      ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-0}
       ARYA_LIVE_PG: ${ARYA_LIVE_PG:-1}
       ARYA_VAPID_PUBLIC_KEY: ${ARYA_VAPID_PUBLIC_KEY:-}
       ARYA_VAPID_PRIVATE_KEY: ${ARYA_VAPID_PRIVATE_KEY:-}
       ARYA_VAPID_SUBJECT: ${ARYA_VAPID_SUBJECT:-mailto:admin@example.com}
       ARYA_WALK_STORE_ID: ${ARYA_WALK_STORE_ID:-}
+      ARYA_SCAN_DAILY_FRAMES: ${ARYA_SCAN_DAILY_FRAMES:-120}
     volumes:
       - arya-data:/app/data
   caddy:
     image: caddy:2-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"

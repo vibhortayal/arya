@@ -10,6 +10,20 @@ arya-pilot.duckdns.org {
 		file_server
 		header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'"
 	}
+	# Compress text assets (three.js alone is 670 KB). Matched by
+	# content type on purpose: the group live stream is text/event-
+	# stream and must never be buffered by a compressor.
+	encode zstd gzip {
+		match {
+			header Content-Type text/html*
+			header Content-Type text/css*
+			header Content-Type text/javascript*
+			header Content-Type application/javascript*
+			header Content-Type application/json*
+			header Content-Type application/manifest+json*
+			header Content-Type image/svg+xml*
+		}
+	}
 	handle {
 		reverse_proxy api:8000
 	}
