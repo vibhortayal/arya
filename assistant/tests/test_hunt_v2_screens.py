@@ -74,7 +74,7 @@ class TestHuntV2Screens(unittest.TestCase):
         self.assertIn('"view-hunt"', back)
         self.assertIn("openHunt(Q.current)", back)
         self.assertIn("openExpress(Q.current)", back)
-        self.assertIn("&larr; Back to the hunt", read("index.html"))
+        self.assertIn("‹ Back to the hunt", read("index.html"))
 
     def test_resume_opens_a_finished_hunt_on_score(self):
         body = fn_body(read("quest.js"), "qOpenSession")
