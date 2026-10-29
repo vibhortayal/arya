@@ -136,7 +136,8 @@ class TestNewsAndSamples(unittest.TestCase):
         # feed shows only real friends' posts.
         self.assertNotIn("@sample-", quest)
         self.assertNotIn("samplepill", quest)
-        self.assertIn("Finish a quest of 8+ items with its receipt to get on the board.", quest)
+        # Fastest Hands left Your trips altogether (usability audit).
+        self.assertNotIn('id="comm-board"', quest)
         self.assertIn("H.feed = f;", feed)
         self.assertIn("if (!feed || !feed.length) return null;", feed)
 

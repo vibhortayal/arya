@@ -76,9 +76,8 @@ class TestHaulHooks(unittest.TestCase):
         self.assertIn("goesToHaul ? undefined :", sheet)
         self.assertIn("goesToHaul onClose", score)
         self.assertIn("goesToHaul onClose", src("screens/haul/Reveal.tsx"))
-        # The Crew feed rides the Quest tab's news block (off while the
-        # tab has none, as in the old app).
-        self.assertIn("{HAS_COMM_NEWS && <CrewFeed />}", src("screens/Quest.tsx"))
+        # The Crew feed left Your trips with Crew (usability audit).
+        self.assertNotIn("<CrewFeed", src("screens/Quest.tsx"))
 
     def test_profile_fetch_then_levelup_order(self):
         score = src("screens/Score.tsx")

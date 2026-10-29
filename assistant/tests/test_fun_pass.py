@@ -71,7 +71,8 @@ class TestFaces(unittest.TestCase):
     def test_quest_band_and_today_faces(self):
         # The band moved to the Quest tab; Today's running-low rows wear
         # the characters (list-first pass, owner 2026-10-29).
-        self.assertIn('className="todayband"', src("screens/Quest.tsx"))
+        # Your trips is history only now: no band (usability audit).
+        self.assertNotIn('className="todayband"', src("screens/Quest.tsx"))
         today = src("screens/Today.tsx")
         self.assertIn("const c = charFor(name);", today)
         self.assertIn("<Face name={i.name} />", today)
@@ -127,7 +128,8 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
     def test_teach_row_and_mapper_wear_the_storefront(self):
         # Teach row (Quest), mapper, Today's quiet Quest row, and the
         # Quest choice on a list's Start shopping sheet.
-        for f in ("screens/Quest.tsx", "screens/Mapper.tsx", "screens/Today.tsx", "screens/Lists.tsx"):
+        # (Your trips lost its Teach row: mapping lives in Quest.)
+        for f in ("screens/Mapper.tsx", "screens/Today.tsx", "screens/Lists.tsx"):
             self.assertEqual(src(f).count("assets/scenes/storefront.webp"), 1, f)
 
     def test_sw_v45_precaches_the_new_art(self):
