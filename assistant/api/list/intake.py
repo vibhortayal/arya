@@ -196,3 +196,31 @@ def extract_items_model(text, client):
         if _sensible(name):
             items.append(name)
     return items
+
+
+# --- one item, one row ----------------------------------------------------
+
+def _key(name):
+    """Case, spacing, punctuation and a plural "s" do not make a new
+    item: "Eggs", "eggs" and "egg " share one key."""
+    words = re.findall(r"[a-z0-9]+", (name or "").lower())
+    return " ".join(w[:-1] if len(w) > 3 and w.endswith("s")
+                    and not w.endswith("ss") else w for w in words)
+
+
+def existing_item_id(name, dictionary_entries, flags):
+    """The item a typed name already is, or None. A tracked item
+    (canonical name or alias) wins; then a typed item already on the
+    list. Exact after normalizing only: a looser match would merge
+    "milk" into "almond milk"."""
+    key = _key(name)
+    if not key:
+        return None
+    for e in dictionary_entries:
+        for known in [e.get("canonical_name")] + list(e.get("aliases") or []):
+            if known and _key(known) == key:
+                return e["item_id"]
+    for item_id, f in flags.items():
+        if item_id.startswith("manual-") and _key(f.get("name")) == key:
+            return item_id
+    return None

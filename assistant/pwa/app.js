@@ -1587,7 +1587,12 @@ async function boot() {
     $("#login-toggle").textContent = create ? "Already have an account? Sign in" : "New here? Create account";
     $("#login-error").textContent = "";
   };
-  if (!status.has_users) $(".signin").open = true;
+  const sheet = (id, on) => { $(id).hidden = !on; };
+  $("#signin-open").addEventListener("click", () => { sheet("#signin-sheet", true); $("#login-user").focus(); });
+  $("#signin-close").addEventListener("click", () => sheet("#signin-sheet", false));
+  $("#how-open").addEventListener("click", () => sheet("#how-sheet", true));
+  $("#how-close").addEventListener("click", () => sheet("#how-sheet", false));
+  if (!status.has_users) sheet("#signin-sheet", true);
   paintLoginMode();
   $("#login-toggle").addEventListener("click", () => {
     if (!status.registration_open) return;
@@ -1610,7 +1615,7 @@ async function boot() {
     const r = await fetch("/auth/demo", { method: "POST" });
     if (r.ok) { enterApp("demo", true); return; }
     $("#login-error").textContent = (await r.json().catch(() => ({}))).detail || "The demo did not open. Try again.";
-    $(".signin").open = true;
+    sheet("#signin-sheet", true);
   });
 }
 

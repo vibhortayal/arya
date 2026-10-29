@@ -82,16 +82,22 @@ def apply_actions(actions, added=None):
             # has never seen joins the list as a typed item, the same
             # as the Add box does (QA 2026-10-28).
             import re
+            from api.list.intake import existing_item_id
             name = str(a.get("item") or "").strip()[:60]
             slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
             if slug:
-                fl = dict(state.flags().get("manual-" + slug, {}))
+                # A name typed before joins its existing row, not a twin.
+                tid = existing_item_id(name, state.dictionary()["entries"],
+                                       state.flags()) or "manual-" + slug
+                fl = dict(state.flags().get(tid, {}))
                 if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
-                    added.append({"item_id": "manual-" + slug, "name": name})
-                fl.update({"manual": True, "name": name, "dismissed_on": None})
+                    added.append({"item_id": tid, "name": name})
+                fl.update({"manual": True, "dismissed_on": None})
+                if tid.startswith("manual-"):
+                    fl["name"] = name
                 if target:
                     fl["list"] = target["id"]
-                state.set_flag("manual-" + slug, fl)
+                state.set_flag(tid, fl)
                 applied.append(f"Added {name}{dest}.")
                 continue
         if not item_id:
