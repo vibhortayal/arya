@@ -111,7 +111,8 @@ class TestHardening(unittest.TestCase):
 
 
 class TestSupabaseSignin(unittest.TestCase):
-    ENV = {"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon"}
+    ENV = {"ARYA_SUPABASE_AUTH": "1", "SUPABASE_URL": "https://x.supabase.co",
+           "SUPABASE_ANON_KEY": "anon"}
 
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
@@ -126,6 +127,15 @@ class TestSupabaseSignin(unittest.TestCase):
     def test_off_when_unconfigured(self):
         self.assertFalse(self.c.get("/auth/status").json()["email_signin"])
         self.assertEqual(self.c.post("/auth/email/start", json={"email": "a@b.co"}).status_code, 404)
+
+    def test_flag_off_by_default_even_with_keys(self):
+        keys = {"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon"}
+        with mock.patch.dict(os.environ, keys):
+            os.environ.pop("ARYA_SUPABASE_AUTH", None)
+            self.assertFalse(self.c.get("/auth/status").json()["email_signin"])
+            self.assertEqual(self.c.get("/auth/google", follow_redirects=False).status_code, 404)
+        with mock.patch.dict(os.environ, {**keys, "ARYA_SUPABASE_AUTH": "1"}):
+            self.assertTrue(self.c.get("/auth/status").json()["email_signin"])
 
     def test_code_flow_creates_passwordless_account(self):
         user = {"email": "New@Example.com", "email_confirmed_at": "2026-10-29"}

@@ -6,8 +6,10 @@ returns that address. No Supabase library and no browser-side Supabase
 code: the server talks to the GoTrue REST API, so the same-origin CSP
 stays as it is.
 
-Env: SUPABASE_URL, SUPABASE_ANON_KEY (the publishable key; it is not a
-secret, but it lives in the VM env, not in the repo).
+Feature flag: ARYA_SUPABASE_AUTH=1 turns it on. It is OFF by default, so
+setting the keys alone does nothing. Also needs SUPABASE_URL and
+SUPABASE_ANON_KEY (the publishable key; it is not a secret, but it lives
+in the VM env, not in the repo).
 """
 import os
 from urllib.parse import quote
@@ -29,8 +31,12 @@ def _key():
     return os.environ.get("SUPABASE_ANON_KEY", "")
 
 
+def enabled():
+    return os.environ.get("ARYA_SUPABASE_AUTH") == "1"
+
+
 def configured():
-    return bool(_url() and _key())
+    return enabled() and bool(_url() and _key())
 
 
 def _headers(token=None):

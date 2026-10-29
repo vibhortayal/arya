@@ -14,11 +14,13 @@ Owner's word: "lets add supabase auth. That way we can capture real users"
   refuses it). `ARYA_SUPABASE_SIGNUP=0` limits it to existing accounts.
   Password sign-in and the registration lock are unchanged.
 - Per-IP caps: 5 code requests and 10 verifies per 15 minutes.
-- Off unless `SUPABASE_URL` and `SUPABASE_ANON_KEY` are set (VM env only).
+- Feature flag `ARYA_SUPABASE_AUTH=1` (default off, also in compose as 0).
+  Keys alone do nothing; it also needs `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+  (VM env only).
 - Known gap: an existing password account named like an email is claimed
   by whoever proves that email. Fine while registration is locked.
 - Owner steps in the Supabase dashboard: enable Email and Google
   providers; add `https://arya-pilot.duckdns.org/auth/callback` to the
   redirect allow-list; edit the Magic Link email template to include
   `{{ .Token }}` so the code shows.
-- Tests: suite 990 green (5 new). SW arya-v72.
+- Tests: suite green (6 new). SW arya-v72.
