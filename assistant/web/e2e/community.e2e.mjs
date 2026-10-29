@@ -6,6 +6,8 @@ export default async function (page, base) {
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");
+  // A real quest needs something on the list.
+  await page.evaluate(() => fetch("/api/list/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Milk" }) }));
   const show = async () => {
     await page.evaluate(() => window.__aryaShow("community"));
     await page.waitForSelector("#view-community .qg-home");

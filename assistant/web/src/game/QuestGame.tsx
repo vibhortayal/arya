@@ -44,11 +44,13 @@ export type QuestGameProps = {
   onMapStore?: (store: { id: string; name: string }) => void;
   /* The app's store search, for Build a store's "Which store?". */
   findStore?: (onAdded: () => void) => ReactNode;
+  /* An empty list: where the player adds items (the app's Lists). */
+  onAddItems?: () => void;
   /* Open straight into the Practice Market (the host's guide). */
   practice?: boolean;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, practice }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, onAddItems, practice }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -79,7 +81,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, seed: Math.floor(Math.random() * 1e6) }) });
   };
   const startQuest = async (st: StoreSummary) => {
-    if (!list) return;
+    if (!list?.items.length) { setScreen({ s: "home" }); return; }
     setScreen({ s: "loading" });
     const { layout, items } = await source.open(st.id, list);
     setScreen({ s: "play", trip: newTrip(layout, items, { seed: Math.floor(Math.random() * 1e6) }) });
@@ -99,7 +101,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} />}
+          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
           {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
@@ -107,7 +109,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
           {screen.s === "play" && (
             <Play trip={screen.trip} avatar={avatar} source={screen.trip.practice ? silent : source}
               onTrip={t => setScreen(sc => (sc.s === "play" ? { s: "play", trip: t } : sc))}
-              onFinish={finish} onQuit={() => setScreen({ s: "home" })} mapOffer={!!onMapStore && needsMap(screen.trip)} />
+              onFinish={finish} onQuit={() => setScreen({ s: "home" })} onEnd={source.end ? async () => { await source.end!(); setScreen({ s: "home" }); } : undefined} mapOffer={!!onMapStore && needsMap(screen.trip)} />
           )}
           {screen.s === "finish" && (
             <Finish trip={screen.trip} rewards={screen.rewards} profile={profile}

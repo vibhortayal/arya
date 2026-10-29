@@ -64,6 +64,8 @@ export function QuestMode() {
   // Build a store's "Which store?": the same search and add as Find stores.
   const findStore = useCallback((onAdded: () => void) => <FindStorePanel onAdded={onAdded} />, []);
 
+  const onAddItems = useCallback(() => nav.show("list"), [nav]);
+
   const extra = (
     <div className="qm-links">
       <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
@@ -78,7 +80,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} practice={practice} />
+        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} />
       </Suspense>
     </div>
   );
