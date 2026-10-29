@@ -9,7 +9,7 @@ import { setAssetResolver } from "../assets";
 import QuestGame from "../QuestGame";
 
 // Bundle the pictures, so the lab works from any host (and as one file).
-const files = import.meta.glob("../../../../pwa/assets/{characters,scenes}/*.webp", { eager: true, query: "?url", import: "default" }) as Record<string, string>;
+const files = import.meta.glob("../../../../pwa/assets/{characters,scenes,quest}/*.webp", { eager: true, query: "?url", import: "default" }) as Record<string, string>;
 const byPath: Record<string, string> = {};
 for (const [k, v] of Object.entries(files)) byPath[k.replace(/^.*\/assets\//, "")] = v;
 setAssetResolver(p => byPath[p] || "");

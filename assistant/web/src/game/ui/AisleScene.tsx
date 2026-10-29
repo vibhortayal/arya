@@ -10,7 +10,7 @@ import type { SectionKind } from "../core/types";
 import { reducedMotion } from "../fx/feel";
 
 type Look = "real" | "fog" | "guess";
-type Props = { kind: SectionKind; seed: string; name: string; tint: number; look: Look };
+type Props = { kind: SectionKind; seed: string; name: string; tint: number; look: Look; art?: string };
 
 type Pal = { wall: string; plank: string; plankEdge: string; floorA: string; floorB: string; ceil: string; goods: string[]; glow?: string };
 const PAL: Record<SectionKind, Pal> = {
@@ -156,7 +156,7 @@ function paint(c: CanvasRenderingContext2D, g: Geo, kind: SectionKind, seed: str
   }
 }
 
-export function AisleScene({ kind, seed, name, tint, look }: Props) {
+export function AisleScene({ kind, seed, name, tint, look, art }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const cv = ref.current!, ctx = cv.getContext("2d")!;
@@ -164,12 +164,24 @@ export function AisleScene({ kind, seed, name, tint, look }: Props) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let g = geo(1, 1), raf = 0, t0 = performance.now(), last = 0;
     const R = rng(seed + "amb");
+    // Generated art, when there is some, replaces the drawn shelves. A
+    // simulated store keeps the blueprint so it never passes for a real place.
+    let pic: HTMLImageElement | null = null;
+    if (art && look !== "guess") {
+      const im = new Image();
+      im.onload = () => { pic = im; size(); };
+      im.src = art;
+    }
     const motes = Array.from({ length: 14 }, () => ({ x: R(), y: R(), s: 0.5 + R() * 1.5, v: 0.2 + R() * 0.5 }));
     const size = () => {
       const r = cv.getBoundingClientRect(); if (!r.width) return;
       for (const k of [cv, base]) { k.width = Math.round(r.width * dpr); k.height = Math.round(r.height * dpr); }
       g = geo(r.width, r.height);
-      bctx.setTransform(dpr, 0, 0, dpr, 0, 0); paint(bctx, g, kind, seed, look);
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (pic) {
+        const k = Math.max(r.width / pic.width, r.height / pic.height), w = pic.width * k, h = pic.height * k;
+        bctx.drawImage(pic, (r.width - w) / 2, (r.height - h) * 0.4, w, h);
+      } else paint(bctx, g, kind, seed, look);
       frame(performance.now());
     };
     const frame = (now: number) => {
@@ -177,15 +189,18 @@ export function AisleScene({ kind, seed, name, tint, look }: Props) {
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
       // A slow, slight sway, as if standing in the aisle.
       const sway = reducedMotion() ? 0 : Math.sin(t * 0.5) * 2;
-      ctx.drawImage(base, sway * dpr - 3 * dpr, 0, cv.width + 6 * dpr, cv.height);
+      // With art, a slow push-in down the aisle, like walking in.
+      const zoom = pic && !reducedMotion() ? 1.02 + 0.02 * Math.sin(t * 0.15) : 1;
+      const zw = (cv.width + 6 * dpr) * zoom, zh = cv.height * zoom;
+      ctx.drawImage(base, sway * dpr - 3 * dpr - (zw - cv.width - 6 * dpr) / 2, -(zh - cv.height) * 0.4, zw, zh);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (!bp) {
         // Light shimmer from the ceiling panels.
-        const a = 0.05 + 0.03 * Math.sin(t * 1.7);
+        const a = (0.05 + 0.03 * Math.sin(t * 1.7)) * (pic ? 0.4 : 1);
         const lg = ctx.createLinearGradient(0, 0, 0, H * 0.7); lg.addColorStop(0, `rgba(255,255,240,${a + 0.08})`); lg.addColorStop(1, "rgba(255,255,240,0)");
         ctx.fillStyle = lg; ctx.fillRect(W * 0.25, 0, W * 0.5, H * 0.7);
         // Glass reflection sweeping across cooler doors.
-        if (isCooler(kind)) {
+        if (isCooler(kind) && !pic) {
           const p = ((t * 0.22) % 1.4) - 0.2;
           for (const side of [-1, 1] as const) {
             const z = Math.max(0, Math.min(0.95, p));
@@ -195,7 +210,7 @@ export function AisleScene({ kind, seed, name, tint, look }: Props) {
         }
         // A shopper with a cart crosses the far end now and then.
         const cyc = (t % 9) / 9;
-        if (cyc < 0.45) {
+        if (cyc < 0.45 && !pic) {
           const k = cyc / 0.45, x = lerp(g.bl - 20, g.br + 20, k), y = g.bb, hgt = (g.bb - g.bt) * 0.62, bob = Math.abs(Math.sin(t * 7)) * 1.2;
           ctx.save(); ctx.beginPath(); ctx.rect(g.bl, g.bt, g.br - g.bl, g.bb - g.bt + 2); ctx.clip();
           ctx.fillStyle = "rgba(60,55,70,.55)";
@@ -236,6 +251,6 @@ export function AisleScene({ kind, seed, name, tint, look }: Props) {
     size();
     if (!reducedMotion()) raf = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
-  }, [kind, seed, look, name, tint]);
+  }, [kind, seed, look, name, tint, art]);
   return <canvas ref={ref} className={"qg-aisle" + (look === "fog" ? " fog" : "")} aria-hidden="true" />;
 }

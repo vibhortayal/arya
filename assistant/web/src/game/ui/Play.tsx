@@ -181,8 +181,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         {view === "section" && section && (
           <motion.section key={"s-" + section.id} className={"qg-secview v-" + view_} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ type: "spring", damping: 24, stiffness: 300 }}>
             <div className="qg-scene" style={{ ["--tint" as string]: "#" + section.color.toString(16).padStart(6, "0") }}>
-              <AisleScene kind={section.kind} seed={section.id} name={section.short} tint={section.color} look={view_} />
-              <SceneArt id={section.id} />
+              <AisleScene kind={section.kind} seed={section.id} name={section.short} tint={section.color} look={view_} art={img(`quest/${section.id}.webp`)} />
               <div className="qg-scene-h">
                 <h2>{section.name}</h2>
                 <span className={"qg-tag " + view_}>{view_ === "real" ? "Mapped" : view_ === "fog" ? "Fog" : "Simulated"}</span>
@@ -473,8 +472,3 @@ function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
 /* Painted scene art for a section, when the app has it (generated
  * once, see tools/gen_quest_scenes.py). Without it the drawn aisle
  * underneath shows through. */
-function SceneArt({ id }: { id: string }) {
-  const [ok, setOk] = useState(true);
-  if (!ok) return null;
-  return <img className="qg-scene-art" src={img(`quest/${id}.webp`)} alt="" onError={() => setOk(false)} />;
-}
