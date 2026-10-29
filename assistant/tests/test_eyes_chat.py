@@ -132,7 +132,7 @@ class TestChat(unittest.TestCase):
                 assert "Whole Milk 1 gal" in snap  # snapshot carries the model
                 return json.dumps({"reply": "Yogurt is on the list. Milk is due too.",
                                    "actions": [{"type": "ran_out", "item": "Greek Yogurt 32 oz"},
-                                               {"type": "ran_out", "item": "Untracked Thing"},
+                                               {"type": "never_suggest", "item": "Untracked Thing"},
                                                {"type": "add_to_list", "item": "Fresh Basil"}]}), {}, 0.01
 
         main.MetaClient = FakeClient
