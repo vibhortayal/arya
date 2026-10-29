@@ -1,0 +1,8 @@
+/* The one-time "Reply in <language> from now on?" card in Ask
+ * (screens/Chat.tsx). A .group with one .row, laid out as a block. */
+.bubble.offer { background: transparent; padding: 0; max-width: 100%; }
+.bubble.offer .group { margin: 4px 0 0; }
+.bubble.offer .row { display: block; }
+.bubble.offer .name, .bubble.offer .sub { display: block; }
+.bubble.offer .offer-btns { display: flex; gap: 8px; margin-top: 10px; }
+.bubble.offer .offer-btns .btn { flex: 1; }
