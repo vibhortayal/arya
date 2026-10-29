@@ -35,3 +35,7 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
   loading (still under reduced motion). Suggestion "why" line wraps cleanly.
 - Not done: the demo bar shrink (left as is).
 - SW arya-v85. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.
+
+## Add to Home Screen (owner approved wireframe, 2026-10-29)
+- Today card (second visit+, has a list item, 30-day dismiss), Profile row, iPhone four-step sheet incl. Open as Web App on, Android native install. Hidden when installed or in the demo.
+- SW arya-v86.

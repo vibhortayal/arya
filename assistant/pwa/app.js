@@ -454,6 +454,7 @@ async function renderHome() {
   paintStoreAlerts(h).catch(() => {});
   paintTodayChecks(h);
   paintTodayLists(h);
+  if (window.A2HS) A2HS.paintToday(h);
   paintTodayPatterns().catch(() => {});
   if (window.Expiry) Expiry.paintToday(h.use_soon);
   if (window.Powers) Powers.paintToday().catch(() => {});
