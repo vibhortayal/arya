@@ -128,9 +128,11 @@ class TestPlanAHunt(unittest.TestCase):
         js = read("quest.js")
         # Slice to the handler's own closing (line-start "});"):
         # inner callbacks in the handler also end in "});".
-        new_hunt = js.split('$("#btn-new-hunt").addEventListener')[1].split("\n});")[0]
+        self.assertIn('$("#btn-new-hunt").addEventListener("click", () => qStartNewHunt(null))', js)
+        new_hunt = js.split("async function qStartNewHunt")[1].split("\n}\n")[0]
         self.assertIn('questShow("view-store")', new_hunt)
-        self.assertIn('api("/api/quest/plan")', new_hunt)
+        self.assertIn("await qLoadPlan()", new_hunt)
+        self.assertIn('api("/api/quest/plan")', js.split("async function qLoadPlan")[1].split("\n}\n")[0])
         # Tap-to-advance (owner phone pass, 2026-10-28): picking a
         # store starts the plan — the Choose items button is gone.
         pick = js.split("function qPickStore()")[1].split("\n}")[0]
@@ -154,7 +156,7 @@ class TestPlanAHunt(unittest.TestCase):
         self.assertIn('action: "Undo"', rm)
         self.assertIn('post("/api/list/add", { item_id: itemId })', rm)
         nxt = js.split('$("#nl-next").addEventListener')[1].split("\n});")[0]
-        self.assertIn('post("/api/list/add", { name: r.name })', nxt)
+        self.assertIn('post("/api/list/add", { name: r.name, ...lid })', nxt)
 
     def test_clean_list_skips_check_my_list(self):
         js = read("quest.js")
