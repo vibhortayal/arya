@@ -306,12 +306,62 @@
     $("#gj-go").addEventListener("click", joinNow);
     $("#gj-back").addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
   }
-  /* The other phone sees a change when the list opens or the app comes
-   * back to the front; there is no live sync in this version. */
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden || !G.group) return;
+  /* ---------- live sync ----------
+   * While the app is in front and the account is in a group, one
+   * EventSource listens for "the group changed" and the open screen
+   * reloads (a short pause gathers a burst of saves into one reload).
+   * The tab's own changes come back with its id and are skipped. A
+   * screen with a half-typed entry waits until the field is left. */
+  let es = null, pending = null, waitingForBlur = false;
+  function reloadNow() {
+    pending = null;
+    const typing = document.activeElement && document.activeElement.matches("input, textarea")
+      && document.activeElement.closest(".view:not([hidden])");
+    if (typing) {
+      if (!waitingForBlur) {
+        waitingForBlur = true;
+        document.activeElement.addEventListener("blur", () => { waitingForBlur = false; reloadNow(); }, { once: true });
+      }
+      return;
+    }
+    loadedAt = 0;
     const v = document.querySelector(".view:not([hidden])");
-    if (v && (v.id === "view-list" || v.id === "view-home")) { loadedAt = 0; refresh(v.id); }
+    if (!v) return;
+    if (v.id === "view-list" || v.id === "view-home" || v.id === "view-receipts") refresh(v.id);
+    else if (v.id === "view-profile") paintProfile();
+    else if (typeof listData !== "undefined") listData = null;
+  }
+  function onChange(ev) {
+    let d = {};
+    try { d = JSON.parse(ev.data); } catch (e) { return; }
+    if (d.client && typeof CLIENT_ID !== "undefined" && d.client === CLIENT_ID) return;
+    clearTimeout(pending);
+    pending = setTimeout(reloadNow, 400);
+  }
+  function connect() {
+    if (es || document.hidden || !G.enabled || !G.group || typeof EventSource === "undefined") return;
+    es = new EventSource("/api/group/live");
+    es.addEventListener("change", onChange);
+    es.addEventListener("left", () => { disconnect(); loadedAt = 0; load(true).then(reloadNow); });
+    // A 404 (no longer in a group) closes for good; a dropped network
+    // reconnects on its own.
+    es.onerror = () => { if (es && es.readyState === EventSource.CLOSED) disconnect(); };
+  }
+  function disconnect() {
+    if (es) { es.close(); es = null; }
+  }
+  const _load = load;
+  load = async function (force) {
+    const g = await _load(force);
+    if (g.group) connect(); else disconnect();
+    return g;
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { disconnect(); return; }
+    if (!G.group) return;
+    connect();
+    // Catch up on what changed while the app was in the background.
+    reloadNow();
   });
 
   /* An invite link (/?join=CODE) opens Join a group once the app knows

@@ -209,6 +209,7 @@ def rename(user, name):
             raise LookupError("you are not in a group")
         reg["groups"][gid]["name"] = name
         _save_registry(reg)
+    _signal(gid, user)
 
 
 def invite(user):
@@ -270,6 +271,7 @@ def join(user, code):
         g["members"].append({"user": user, "joined": int(time.time())})
         reg["member_of"][user] = gid
         _save_registry(reg)
+    _signal(gid, user)
     return gid
 
 
@@ -318,6 +320,7 @@ def leave(user):
         elif g["owner"] == user:
             g["owner"] = g["members"][0]["user"]
         _save_registry(reg)
+    _signal(gid, user)
     return gid
 
 
@@ -339,6 +342,11 @@ def remove(owner, member_handle):
         raise ValueError("use Leave group to leave")
     leave(target)
     return handle(target)
+
+
+def _signal(gid, user):
+    from api import live
+    live.changed(gid, by=handle(user), what="members")
 
 
 def _drop_group_plane(gid):
