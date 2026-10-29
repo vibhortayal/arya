@@ -7,6 +7,14 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 
+## Owner registration toggle (2026-10-29, merged)
+- Registration is a flag the owner flips live in Profile (Account
+  group, owner only): GET/POST `/auth/registration`; the choice is
+  stored in `site.json` in the data root and overrides the
+  ARYA_REGISTRATION_OPEN env default once set. The owner account is
+  named by ARYA_OWNER_USERNAME (operator-set; unset = nobody can
+  flip it). Ask's feature sheet reads the same gate.
+
 ## Price intelligence and Arya's powers (2026-10-29, merged)
 - Prices from the household's own receipts only: why-sheet trend, cheaper
   store and similar items with (i) caveats; Analysis "Your prices" (own

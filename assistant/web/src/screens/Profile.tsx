@@ -165,6 +165,7 @@ export function Profile() {
           <select id="pf-language" className="curpick" aria-label={t("settings.language")} value={language} onChange={ev => pickLanguage(ev.target.value)}>
             {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
           </select></div>
+        <RegistrationRow />
       </div>
       <div className="group">
         <NavRow id="btn-feedback" view="feedback" title={t("settings.featureRequestContactUs")} sub={t("settings.tellUsWhatToBuild")} />
@@ -290,6 +291,37 @@ const keyBytes = (b64: string) => {
   const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
   return Uint8Array.from(raw, c => c.charCodeAt(0));
 };
+
+function RegistrationRow() {
+  const { t } = useTranslation();
+  const [st, setSt] = useState<{ registration_open: boolean; can_manage: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try { setSt(await get<{ registration_open: boolean; can_manage: boolean }>("/auth/registration")); }
+      catch { setSt(null); }
+    })();
+  }, []);
+
+  // Owner only: the server names one account (can_manage); every
+  // other account — and any failure — renders nothing at all.
+  if (!st || !st.can_manage) return null;
+  const on = st.registration_open;
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      const r = await post<{ registration_open: boolean }>("/auth/registration", { open: !on });
+      setSt({ ...st, registration_open: r.registration_open });
+    } catch { /* keep the old state; the switch simply stays put */ }
+    setBusy(false);
+  };
+  return (
+    <div className="row"><span className="grow"><span className="name">{t("settings.registration")}</span>
+      <span className="sub">{on ? t("settings.registrationOn") : t("settings.registrationOff")}</span></span>
+      <button className="sw" id="reg-switch" type="button" role="switch" aria-checked={on} aria-label={t("settings.registration")} disabled={busy} onClick={toggle}><i></i></button></div>
+  );
+}
 
 function Reminders() {
   const { t } = useTranslation();
