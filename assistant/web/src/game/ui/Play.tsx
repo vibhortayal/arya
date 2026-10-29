@@ -23,13 +23,15 @@ import type { Goal, WorldApi } from "../world/World3D";
 const World3D = lazy(() => import("../world/World3D").then(m => ({ default: m.World3D })));
 
 type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void;
+  /* End the trip for good (the host closes its record). */
+  onEnd?: () => void;
   /* A store not fully mapped: say so once at the start (QuestGame.needsMap). */
   mapOffer?: boolean };
 type SheetName = null | "list" | "route" | "help" | "quit";
 type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
 
-export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, mapOffer }: Props) {
+export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, mapOffer }: Props) {
   // Shown until dismissed or the first item is handled; it never blocks play.
   const [mapCard, setMapCard] = useState(!!mapOffer);
   const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
@@ -333,7 +335,13 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, mapOffer 
         <div className="qg-opts">
           <button className="qg-btn primary" onClick={() => setSheet(null)}>Keep playing</button>
           {!trip.practice && got > 0 && <button className="qg-btn" onClick={() => onFinish(trip)}>Finish with what I have</button>}
-          <button className="qg-btn ghost" onClick={onQuit}>Leave</button>
+          {!trip.practice && onEnd
+            ? <>
+                <button id="qg-endquest" className="qg-btn" onClick={onEnd}>End quest</button>
+                <button className="qg-btn ghost" onClick={onQuit}>Keep it for later</button>
+                <p className="qg-small">End quest closes this trip. Anything you grabbed stays checked off on your list.</p>
+              </>
+            : <button className="qg-btn ghost" onClick={onQuit}>Leave</button>}
         </div>
       </Sheet>
     </div>

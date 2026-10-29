@@ -10,9 +10,11 @@ import { charArt, img } from "../assets";
 import { Bar, KindBadge, Sheet } from "./bits";
 import { HowTo } from "./Play";
 
-export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild }: {
+export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild, onAddItems }: {
   profile: Profile; newbie: boolean; list: ShoppingList | null; lists?: ShoppingList[]; onList?: (l: ShoppingList) => void;
   onPractice: () => void; onQuest: () => void; onAlbum: () => void; onExit?: () => void; extra?: ReactNode; onBuild?: () => void;
+  /* An empty list: the host's way to add items (the Lists tab). */
+  onAddItems?: () => void;
 }) {
   const lv = levelOf(profile.xp), st = streak(profile.weeks, new Date());
   const [how, setHow] = useState(false);
@@ -46,7 +48,8 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
           <h2>Play the Practice Market</h2>
           <p className="qg-p">A pretend store with a short list. Two minutes, no pressure, nothing is saved. You'll learn every move: the route, grabbing, fog and the golden item.</p>
           <button className="qg-btn primary big" onClick={onPractice}>Play practice <span aria-hidden="true">▶</span></button>
-          <button className="qg-btn ghost" onClick={onQuest}>Skip to a real quest</button>
+          {list?.items.length ? <button className="qg-btn ghost" onClick={onQuest}>Skip to a real quest</button>
+            : onAddItems && <button className="qg-btn ghost" onClick={onAddItems}>Add items to your list</button>}
         </motion.div>
       ) : (
         <motion.div className="qg-cta" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
@@ -59,8 +62,11 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
               ))}
             </div>
           )}
-          {list && !list.items.length && <p className="qg-p">Your list is empty. Add a few things first, or try practice.</p>}
-          <button className="qg-btn primary big" onClick={onQuest} disabled={!list?.items.length}>Start a quest <span aria-hidden="true">▶</span></button>
+          {list?.items.length ? <button className="qg-btn primary big" onClick={onQuest}>Start a quest <span aria-hidden="true">▶</span></button>
+            : <>
+                <p className="qg-p">Your list is empty. Add what you need, or try practice.</p>
+                {onAddItems && <button id="qg-additems" className="qg-btn primary big" onClick={onAddItems}>Add items</button>}
+              </>}
           <button className="qg-btn ghost" onClick={onPractice}>Practice</button>
         </motion.div>
       )}

@@ -171,6 +171,9 @@ export class AppSource implements QuestSource {
   }
 
   async open(storeId: string, list: ShoppingList): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[] }> {
+    // A trip with nothing on it is never created (owner 2026-10-29: an
+    // empty quest sat on Your trips as "your next action").
+    if (!list.items.length) throw new Error("empty list");
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
     // The player's own map of this store, if they built one: its zones are the store's shape.
@@ -241,6 +244,12 @@ export class AppSource implements QuestSource {
   progress(e: { kind: "grab" | "ungrab"; item: string; instead?: string }) {
     const s = this.sess; if (!s) return;
     void post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) }).catch(() => {});
+  }
+
+  async end(): Promise<void> {
+    const s = this.sess; if (!s) return;
+    this.sess = null;
+    await post(`/api/quest/sessions/${s.id}/state`, { state: "abandoned" }).catch(() => {});
   }
 
   async finish(): Promise<void> {
