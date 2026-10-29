@@ -1311,3 +1311,8 @@ body.selecting #tabs { display: none; }
 .whyrow .simrow { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; }
 .whyrow .simrow span:last-child { text-align: right; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .pwchev { transition: none; } }
+
+/* Start shopping sheet (design pass, 2026-10-29). */
+.shopmodes { margin-top: 12px; }
+.shopsugg { margin: 12px 0 4px; }
+.shopsugg .linkbtn { font-weight: 600; }

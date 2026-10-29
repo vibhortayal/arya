@@ -65,7 +65,8 @@ class TestPackShell(unittest.TestCase):
         self.assertIn("creating", nxt)
         self.assertIn("finally", nxt)
         self.assertLess(nxt.index("PACK.flush()"), nxt.index("qParseText"))
-        mode = js.split('querySelectorAll(".modecard")')[1].split("\n  }));")[0]
+        mode = js.split("async function qCreateSession(")[1].split("\n}\n")[0]
+        self.assertIn('qCreateSession(b.dataset.mode, b)', js)
         self.assertIn("draft.creating", mode)
         self.assertIn("PACK.finish()", mode)
         self.assertIn("finally", mode)
