@@ -276,7 +276,8 @@
     "typeFirst": "Type a question first.",
     "couldNotAnswer": "I could not answer that: {{error}}",
     "voiceEmpty": "That did not come through. Try again, or type it.",
-    "listening": "Listening… tap the mic again to send."
+    "listening": "Listening… tap the mic again to send.",
+    "mapStoreReply": "Happy to. Open Map my store, pick your store, and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures."
   },
   "express": {
     "reportedMissingAtThisStore": "Reported missing at this store.",
@@ -1339,7 +1340,9 @@
     "newQuest": "+ New quest",
     "tripsLink": "Your trips and receipts",
     "tripsLinkSub": "Open hunts, finished trips, Shop-Off and friends",
-    "openingQuest": "Opening Quest…"
+    "openingQuest": "Opening Quest…",
+    "mapMyStore": "Map my store",
+    "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles"
   },
   "questProgress": {
     "huntsFinished": "Hunts finished",

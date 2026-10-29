@@ -55,8 +55,14 @@ export function QuestMode() {
     if (sess) nav.show("finish", { session: sess });
   }, [source, nav]);
 
+  // Map my store after a trip: the store's map screen, for that store.
+  const onMapStore = useCallback((st: { name: string }) => nav.show("mapper", { store: st.name }), [nav]);
+
   const extra = (
     <div className="qm-links">
+      <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
+        <span><b>{t("quest.mapMyStore")}</b><small>{t("quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
+      </button>
       <button className="qg-store" type="button" onClick={() => nav.show("trips")}>
         <span><b>{t("quest.tripsLink")}</b><small>{t("quest.tripsLinkSub")}</small></span><span aria-hidden="true">›</span>
       </button>
@@ -66,7 +72,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} />
+        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} />
       </Suspense>
     </div>
   );

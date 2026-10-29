@@ -22,12 +22,16 @@ import type { Goal, WorldApi } from "../world/World3D";
 
 const World3D = lazy(() => import("../world/World3D").then(m => ({ default: m.World3D })));
 
-type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void };
+type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void;
+  /* A store not fully mapped: say so once at the start (QuestGame.needsMap). */
+  mapOffer?: boolean };
 type SheetName = null | "list" | "route" | "help" | "quit";
 type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
 
-export function Play({ trip, source, avatar, onTrip, onFinish, onQuit }: Props) {
+export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, mapOffer }: Props) {
+  // Shown until dismissed or the first item is handled; it never blocks play.
+  const [mapCard, setMapCard] = useState(!!mapOffer);
   const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
   const [page, setPage] = useState<Page>("main");
   const [walking, setWalking] = useState<Goal | null>(null);
@@ -202,6 +206,12 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit }: Props) 
         {L.kind === "partial" && <span className="qg-pill fog">Fog = not mapped yet</span>}
         <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"}>{overview ? "Follow me" : "Whole store"}</button>
       </div>
+      {mapCard && !trip.got.length && !trip.reports.length && (
+        <div className="qg-mapcard" role="status">
+          <p><b>This store isn't mapped yet.</b> You're playing a typical layout. When you're done, you can help map it.</p>
+          <button className="qg-x" onClick={() => setMapCard(false)} aria-label="Got it">✕</button>
+        </div>
+      )}
       {coach && (
         <motion.div key={coach.text} className="qg-coach" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
           <img src={charArt("compass.webp")} alt="" /><p>{coach.text}</p>
