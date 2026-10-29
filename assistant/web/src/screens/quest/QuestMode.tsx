@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
 import { useNav } from "../../app/nav";
 import { useSession } from "../../app/session";
+import { useAvatar } from "../../app/avatar";
 import { localProfileStore } from "../../game/store";
 import { AppSource } from "./appSource";
 import { useTranslation } from "../../i18n";
@@ -21,6 +22,7 @@ const FULL = new Set(["play", "finish", "loading"]);
 export function QuestMode() {
   const { t } = useTranslation();
   const nav = useNav();
+  const avatar = useAvatar().src;
   const s = useSession();
   const source = useMemo(() => new AppSource(), []);
   const store = useMemo(() => localProfileStore(`arya-quest:${s.user || "guest"}`), [s.user]);
@@ -64,7 +66,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} />
+        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} />
       </Suspense>
     </div>
   );

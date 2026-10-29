@@ -15,6 +15,7 @@ import { reducedMotion } from "../fx/feel";
 import { currentStop, isHandled, itemsIn, liveStops, sectionView, type Trip } from "../core/trip";
 import type { Section } from "../core/types";
 import { checkoutOf, entryOf, findPath, fixtures, floorOf, grid, nearestOpen, spots, toWorld, U, type Fixture, type Floor, type Spot, type V2 } from "./layout3d";
+import { advance, pathLen, zoomSpeed, type Walker } from "./motion";
 
 export type Goal = { kind: "item"; key: string } | { kind: "checkout" } | { kind: "point"; p: V2 };
 export type WorldApi = {
@@ -27,6 +28,8 @@ export type WorldApi = {
 };
 type Props = {
   trip: Trip;
+  /* The player's own avatar picture: worn as the shopper's face. */
+  avatar?: string | null;
   focus: string | null;
   onReady: (api: WorldApi) => void;
   onArrive: (g: Goal) => void;
@@ -97,6 +100,24 @@ function cardTex(art: string, mode: CardMode, bp: boolean) {
   return t;
 }
 
+/* The player's avatar, cut round with a white rim (avatars are square pictures). */
+const faceCache = new Map<string, THREE.CanvasTexture>();
+function faceTex(src: string) {
+  const hit = faceCache.get(src); if (hit) return hit;
+  const W = 256;
+  const paint = (c: CanvasRenderingContext2D, im?: HTMLImageElement) => {
+    c.clearRect(0, 0, W, W);
+    c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.arc(W / 2, W / 2 + 6, W / 2 - 8, 0, 7); c.fill();
+    c.fillStyle = "#FFFDF7"; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 8, 0, 7); c.fill();
+    if (im) { c.save(); c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 22, 0, 7); c.clip(); c.drawImage(im, 14, 14, W - 28, W - 28); c.restore(); }
+    c.strokeStyle = "#F2C14E"; c.lineWidth = 10; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 12, 0, 7); c.stroke();
+  };
+  const t = canvasTex(W, W, c => paint(c));
+  loadImg(src, im => { paint((t.image as HTMLCanvasElement).getContext("2d")!, im); t.needsUpdate = true; });
+  faceCache.set(src, t);
+  return t;
+}
+
 function signTex(text: string, bg: string, fg: string, dashed: boolean) {
   return canvasTex(512, 128, c => {
     c.fillStyle = bg; c.strokeStyle = dashed ? fg : "rgba(0,0,0,.25)"; c.lineWidth = 8;
@@ -122,9 +143,9 @@ export function World3D(p: Props) {
   );
 }
 
-type Walker = { p: V2; heading: number; path: V2[]; walk: number; moving: boolean; speed: number; pause: number };
 
-function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) {
+
+function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }: Props) {
   const L = trip.layout;
   const bp = L.kind === "simulated";
   const P = useMemo(() => palette(bp, L.look), [bp, L.look]);
@@ -136,7 +157,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
   const { camera, gl, scene } = useThree();
 
   const sim = useRef({
-    me: { p: { ...ENTRY_AT }, heading: Math.PI, path: [] as V2[], walk: 0, moving: false, speed: 3.6, pause: 0 } as Walker,
+    me: { p: { ...ENTRY_AT }, heading: Math.PI, path: [] as V2[], walk: 0, moving: false, speed: 8, pause: 0, zoom: true } as Walker,
     goal: null as Goal | null,
     // Other shoppers stroll only in practice: in a real store they would be one more thing to watch.
     npcs: !trip.practice ? [] : [
@@ -164,6 +185,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
         s.goal = g;
         s.me.path = findPath(G, s.me.p, to);
         if (!s.me.path.length) s.me.path = [to];
+        s.me.speed = zoomSpeed(pathLen(s.me.p, s.me.path), reducedMotion());
         s.overview = false;
         cb.current.onWalking(g.kind === "point" ? null : g);
       },
@@ -215,9 +237,10 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
     const want = s.overview ? Math.max(FL.w, FL.d) * 1.15 : 11, fov = (camera as THREE.PerspectiveCamera).fov * Math.PI / 180;
     const dist = Math.min(60, want / (2 * Math.tan(fov / 2) * Math.min(asp, 1.3)));
     const tgt = s.overview ? new THREE.Vector3(FL.w / 2, 0, FL.d / 2 + 1.5) : new THREE.Vector3(s.me.p.x, 0, s.me.p.z + 1.6);
-    s.camT.lerp(tgt, 1 - Math.exp(-dt * (rm ? 20 : 3.2)));
+    const k = rm ? 20 : s.me.moving ? 9 : 3.2; // keep up with a zoom, settle softly after
+    s.camT.lerp(tgt, 1 - Math.exp(-dt * k));
     const dir = new THREE.Vector3(0.28, 1.05, 0.9).normalize().multiplyScalar(dist);
-    camera.position.lerp(s.camT.clone().add(dir), 1 - Math.exp(-dt * (rm ? 20 : 3.2)));
+    camera.position.lerp(s.camT.clone().add(dir), 1 - Math.exp(-dt * k));
     camera.lookAt(s.camT);
   });
   const size = useRef({ w: 1, h: 1 });
@@ -228,6 +251,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
     const s = sim.current;
     s.goal = { kind: "point", p: { x: e.point.x, z: e.point.z } };
     s.me.path = findPath(G, s.me.p, nearestOpen(G, { x: e.point.x, z: e.point.z }));
+    s.me.speed = zoomSpeed(pathLen(s.me.p, s.me.path), reducedMotion());
     s.overview = false;
     cb.current.onWalking(null);
   };
@@ -247,7 +271,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
       <StopDiscs trip={trip} S={S} cur={cur} />
       <PathDots sim={sim} />
       <Markers trip={trip} S={S} focus={focus} bp={bp} onTap={k => cb.current.onTapItem(k)} sim={sim} />
-      <Shopper w={() => sim.current.me} cart shirt="#F2C14E" pants="#3E5C76" hair="#5A3B2A" skin="#D9A57B" got={trip.got} items={trip.items} />
+      <Shopper w={() => sim.current.me} cart shirt="#F2C14E" pants="#3E5C76" hair="#5A3B2A" skin="#D9A57B" got={trip.got} items={trip.items} face={avatar} />
       {sim.current.npcs.map((_, i) => (
         <Shopper key={i} w={() => sim.current.npcs[i]} shirt={["#7FA7C9", "#C98FA7", "#9DBF7A"][i]} pants={["#4D5D6B", "#6B5A4D", "#4F5B4A"][i]} hair={["#2F2A26", "#B89B72", "#6B4A2E"][i]} skin={["#C68A64", "#E8C2A0", "#9A6A48"][i]} ghost={bp} />
       ))}
@@ -256,15 +280,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
   );
 
   function step(w: Walker, dt: number, arrived: () => void) {
-    if (!w.path.length) { w.moving = false; return; }
-    const t = w.path[0], dx = t.x - w.p.x, dz = t.z - w.p.z, d = Math.hypot(dx, dz), mv = w.speed * dt;
-    w.moving = true; w.walk += dt * w.speed * 3.4;
-    const want = Math.atan2(dx, dz);
-    let dh = ((want - w.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    w.heading += dh * Math.min(1, dt * 10);
-    if (d <= mv) { w.p = { ...t }; w.path.shift(); if (!w.path.length) { w.moving = false; arrived(); } }
-    else { w.p = { x: w.p.x + dx / d * mv, z: w.p.z + dz / d * mv }; }
-    void dh;
+    if (advance(w, dt)) arrived();
   }
 }
 
@@ -613,15 +629,18 @@ function Markers({ trip, S, focus, bp, onTap, sim }: { trip: Trip; S: Spot[]; fo
 }
 
 /* ------------------------------------------------------------ shoppers */
-type ShopperProps = { w: () => Walker; cart?: boolean; shirt: string; pants: string; hair: string; skin: string; ghost?: boolean; got?: string[]; items?: Trip["items"] };
-function Shopper({ w, cart, shirt, pants, hair, skin, ghost, got = [], items = [] }: ShopperProps) {
+type ShopperProps = { w: () => Walker; cart?: boolean; shirt: string; pants: string; hair: string; skin: string; ghost?: boolean; got?: string[]; items?: Trip["items"]; face?: string | null };
+function Shopper({ w, cart, shirt, pants, hair, skin, ghost, got = [], items = [], face }: ShopperProps) {
   const root = useRef<THREE.Group>(null), legL = useRef<THREE.Group>(null), legR = useRef<THREE.Group>(null), body = useRef<THREE.Group>(null), armL = useRef<THREE.Group>(null), armR = useRef<THREE.Group>(null);
   useFrame(() => {
     const s = w(); if (!root.current) return;
     root.current.position.set(s.p.x, 0, s.p.z); root.current.rotation.y = s.heading;
-    const sw = s.moving && !reducedMotion() ? Math.sin(s.walk * 2.2) * 0.6 : 0;
+    // A zoomer glides on the cart, leaning in; only strollers swing their legs.
+    const sw = s.moving && !s.zoom && !reducedMotion() ? Math.sin(s.walk * 2.2) * 0.6 : 0;
     legL.current!.rotation.x = sw; legR.current!.rotation.x = -sw;
-    body.current!.position.y = s.moving ? Math.abs(Math.sin(s.walk * 2.2)) * 0.04 : 0;
+    body.current!.position.y = s.moving && !s.zoom ? Math.abs(Math.sin(s.walk * 2.2)) * 0.04 : 0;
+    const lean = s.moving && s.zoom && !reducedMotion() ? 0.22 : 0;
+    body.current!.rotation.x += (lean - body.current!.rotation.x) * 0.25;
     if (!cart) { armL.current!.rotation.x = -sw * 0.7; armR.current!.rotation.x = sw * 0.7; }
   });
   const m = (c: string) => <meshLambertMaterial color={c} transparent={ghost} opacity={ghost ? 0.55 : 1} />;
@@ -635,8 +654,15 @@ function Shopper({ w, cart, shirt, pants, hair, skin, ghost, got = [], items = [
           </group>
         ))}
         <mesh position={[0, 0.82, 0]} castShadow><capsuleGeometry args={[0.2, 0.3, 4, 10]} />{m(shirt)}</mesh>
-        <mesh position={[0, 1.32, 0]} castShadow><sphereGeometry args={[0.17, 16, 12]} />{m(skin)}</mesh>
-        <mesh position={[0, 1.39, -0.03]} scale={[1.05, 0.75, 1.08]}><sphereGeometry args={[0.18, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />{m(hair)}</mesh>
+        {face ? (
+          // The player's avatar as a round face that always looks at the camera.
+          <sprite position={[0, 1.55, 0]} scale={[0.9, 0.9, 1]}><spriteMaterial map={faceTex(face)} transparent depthWrite={false} /></sprite>
+        ) : (
+          <>
+            <mesh position={[0, 1.32, 0]} castShadow><sphereGeometry args={[0.17, 16, 12]} />{m(skin)}</mesh>
+            <mesh position={[0, 1.39, -0.03]} scale={[1.05, 0.75, 1.08]}><sphereGeometry args={[0.18, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />{m(hair)}</mesh>
+          </>
+        )}
         {[-1, 1].map(sd => (
           <group key={sd} ref={sd < 0 ? armL : armR} position={[sd * 0.25, 1.02, 0]} rotation-x={cart ? -1.15 : 0}>
             <mesh position={[0, -0.2, 0]} castShadow><boxGeometry args={[0.09, 0.4, 0.1]} />{m(shirt)}</mesh>

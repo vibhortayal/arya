@@ -32,9 +32,11 @@ export type QuestGameProps = {
   onScreen?: (s: Screen["s"]) => void;
   /* Host links shown at the foot of the game's home (trips, receipts). */
   homeExtra?: ReactNode;
+  /* The player's avatar picture: the shopper wears it as a face. */
+  avatar?: string | null;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -90,7 +92,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "loading" && <div className="qg-loading" role="status">Opening the store…</div>}
           {screen.s === "play" && (
-            <Play trip={screen.trip} source={screen.trip.practice ? silent : source}
+            <Play trip={screen.trip} avatar={avatar} source={screen.trip.practice ? silent : source}
               onTrip={t => setScreen(sc => (sc.s === "play" ? { s: "play", trip: t } : sc))}
               onFinish={finish} onQuit={() => setScreen({ s: "home" })} />
           )}
