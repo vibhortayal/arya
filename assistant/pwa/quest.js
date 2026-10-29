@@ -2171,7 +2171,7 @@ async function collectStop(idx, opts) {
     if (Q.found) delete Q.found[name];
     Q.followHold = false; // the walk resumes from the new anchor
     const target = qRetarget(sess, idx);
-    renderHunt();
+    renderCurrent();
     qStepAnchorTo(name); // a collect is ground truth for step-advance
     qWalkStart(target);
     qAnnounceGrab(sess, idx, wasSuggested);
@@ -2420,13 +2420,13 @@ async function sendSpotReport(kind, btn) {
       // "Found it after all" on the row takes the report back at any time.
       const repName = sess.items[next] ? sess.items[next].name : "";
       toast("Reported. Other hunters will confirm.", { action: "Undo", onAction: async () => {
-        if (repName && await qWithdrawReport(sess, repName)) { renderHunt(); toast("Report taken back."); }
+        if (repName && await qWithdrawReport(sess, repName)) { renderCurrent(); toast("Report taken back."); }
       } });
     }
     spotIdx = -1;
     Q.focusIdx = -1;
     await qLoadStoreReports(sess.store);
-    renderHunt();
+    renderCurrent();
   } catch (e) { toast(e.message); btn.setAttribute("aria-pressed", "false"); }
   spotBusy = false;
 }
@@ -2950,7 +2950,7 @@ $("#scan-boxes").addEventListener("click", async ev => {
     btn.querySelector(".poplabel").textContent = `${name} ✓`;
     Q.followHold = false;
     if (isCurrent) qRetarget(sess, cIdx); // a collect re-targets (Discussion 44)
-    renderHunt();
+    renderCurrent();
     qAnnounceGrab(sess, cIdx, isCurrent);
     if (isCurrent) { qStepAnchorTo(name); qWalkStart(qCurrentIndex(sess)); }
     if (Q.scanTarget === name && qNextIndex(sess) !== -1) {
@@ -2978,10 +2978,14 @@ function closeScan() {
 }
 
 /* ---------------- Express run ----------------
- * Hunt v2 item 9: no game chrome — a small strip view and the list
- * in walking order, where each row is the check. Any order; the
- * first tap starts the run. Checking the last row shows a toast and
- * never jumps to Finish. No celebration in this mode. */
+ * A plain grocery checklist in walking order; each row is the check.
+ * Any order; the first tap starts the run. Checking the last row shows
+ * a toast and never jumps to Finish. No characters, points or combo.
+ * The next item carries a help row (owner, 2026-10-29): Show me (the
+ * store photo, only when asked), Not here? (the same report sheet as
+ * Quest) and Find with camera (the same Shelf Scan). More help opens
+ * Ask Arya and Teach Arya. The signals feed the store map exactly as
+ * in Quest; nothing here shows as a reward. */
 
 function destroyExpScene() {
   if (Q.expScene) { Q.expScene.destroy(); Q.expScene = null; }
@@ -2990,29 +2994,55 @@ function openExpress(sess) {
   Q.current = sess;
   questShow("view-express");
   destroyExpScene();
-  Q.expScene = createSceneView($("#exp-mount"), "strip");
-  Q.expScene.onTapStop = idx => {
-    const it = Q.current && Q.current.items[idx];
-    if (it) qExpToggle(it);
-  };
+  Q.expShow = false;
+  Q.expMore = false;
   Q.followHold = false;
   Q.mapNote = "";
+  qWalkStop();
   renderExpress();
-  qWalkStart(qNextIndex(sess));
   qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) renderExpress(); });
+}
+/* The help row sits under the next item. It is moved, never rebuilt,
+ * so the mounted photo survives every repaint of the list. */
+function qExpPaintHelp(sess, next) {
+  const help = $("#exp-help"), list = $("#exp-items");
+  const rows = list.querySelectorAll("[data-exp-check]");
+  if (next >= 0 && rows[next]) { rows[next].after(help); help.hidden = false; }
+  else { list.after(help); help.hidden = true; }
+  const on = !!Q.expShow && next >= 0;
+  $("#exp-photo").hidden = !on;
+  const show = $("#exp-show");
+  show.setAttribute("aria-pressed", String(on));
+  show.textContent = on ? "Hide" : "Show me";
+  if (!on) { destroyExpScene(); return; }
+  const photos = qStorePhotos(sess.store);
+  if (!Q.expScene) {
+    const mount = $("#exp-mount");
+    mount.dataset.photos = photos || "";
+    mount.dataset.model = "";
+    Q.expScene = createSceneView(mount, photos ? "photo" : "strip");
+    Q.expScene.onTapStop = null;
+  }
+  Q.expScene.setStops(qStops(sess));
+  Q.expScene.setNext(next);
+  if (Q.expScene.glideTo) Q.expScene.glideTo(next);
+  $("#exp-photo-cap").textContent = photos
+    ? "A real photo from this store. The dot marks this item."
+    : "This store has no photos yet. The card shows the shelf.";
 }
 function renderExpress() {
   const sess = Q.current;
   if (!sess) return;
   const p = qProgress(sess);
   const next = qNextIndex(sess);
-  if (Q.expScene) {
-    Q.expScene.setStops(qStops(sess));
-    Q.expScene.setNext(next);
-  }
   $("#exp-store").textContent = `${sess.store} · ${QMODE_LABEL[sess.mode] || sess.mode}`;
   $("#exp-count").textContent = `${p.done}/${p.total}`;
+  const help = $("#exp-help");
+  if ($("#exp-items").contains(help)) $("#exp-items").after(help);   // keep it out of the repaint
   $("#exp-items").innerHTML = qExpListHtml(sess);
+  qExpPaintHelp(sess, next);
+  $("#exp-more").setAttribute("aria-expanded", String(!!Q.expMore));
+  $("#exp-more-list").hidden = !Q.expMore;
   $("#exp-rail").innerHTML = qRailHtml(sess.id);
   paintPauseBtn("#exp-pause", sess.state === "paused", sess.state === "not_started");
   $("#exp-finish").disabled = sess.state === "not_started";
@@ -3023,22 +3053,51 @@ async function qExpToggle(item) {
   try {
     if (sess.state === "not_started") await qSetState(sess, "playing");
     if (sess.state === "paused") { toast("The run is paused — resume first."); return; }
-    const nextIdx = qNextIndex(sess);
-    const wasNext = nextIdx >= 0 && sess.items[nextIdx].name === item.name;
     await qCheck(sess, item.name, !item.checked);
     renderExpress();
-    if (item.checked && wasNext) {
-      Q.followHold = false;
-      qWalkStart(qNextIndex(sess));
-    }
     if (qProgress(sess).left === 0) toast("All checked. Finish with the receipt.");
   } catch (e) { toast(e.message); }
+}
+/* Not here? and Find with camera need a live run: the first tap on
+ * either starts it, a paused run asks to resume. */
+async function qExpEnsurePlaying() {
+  const sess = Q.current;
+  if (!sess) return false;
+  try {
+    if (sess.state === "not_started") await qSetState(sess, "playing");
+    if (sess.state === "paused") { toast("The run is paused — resume first."); return false; }
+    renderExpress();
+    return sess.state === "playing";
+  } catch (e) { toast(e.message); return false; }
 }
 $("#exp-items").addEventListener("click", ev => {
   const b = ev.target.closest("[data-exp-check]");
   if (!b || !Q.current) return;
   const item = Q.current.items.find(i => i.name === b.dataset.expCheck);
   if (item) qExpToggle(item);
+});
+$("#exp-show").addEventListener("click", () => {
+  Q.expShow = !Q.expShow;
+  if (Q.current) renderExpress();
+});
+$("#exp-nothere").addEventListener("click", async () => {
+  const sess = Q.current, i = sess ? qNextIndex(sess) : -1;
+  if (i < 0 || !(await qExpEnsurePlaying())) return;
+  if (window.huntMoved) window.huntMoved(i, $("#exp-nothere")); else openSpotSheet(i);
+});
+$("#exp-find").addEventListener("click", async () => {
+  const sess = Q.current, i = sess ? qNextIndex(sess) : -1;
+  if (i < 0 || !(await qExpEnsurePlaying())) return;
+  Q.scanTarget = sess.items[i].name;
+  openScanView().catch(showErr);
+});
+$("#exp-more").addEventListener("click", () => {
+  Q.expMore = !Q.expMore;
+  if (Q.current) renderExpress();
+});
+$("#exp-ask").addEventListener("click", () => { const b = $("#hunt-askbar"); if (b) b.click(); });
+$("#exp-teach").addEventListener("click", () => {
+  if (Q.current && window.mapperTeachNow) mapperTeachNow(Q.current);
 });
 $("#exp-pause").addEventListener("click", async () => {
   const sess = Q.current;
@@ -3078,7 +3137,9 @@ function openFinish(sess) {
     : p.left === 0
     ? `Every item collected at ${sess.store}.`
     : `${p.done} of ${p.total} collected at ${sess.store}.`) +
-    " The receipt is the scorecard — snap it and the hunt is settled.";
+    (sess.mode === "express" ? " Snap the receipt and the trip is done." : " The receipt is the scorecard — snap it and the hunt is settled.");
+  // Express shows no points: the +50 receipt bonus line is a Quest line.
+  const bonus = $("#fin-bonus"); if (bonus) bonus.hidden = sess.mode === "express";
   $("#fin-status").textContent = "";
   $("#fin-photo").value = "";
   qShowDemoDoors($("#view-finish"));
@@ -3238,23 +3299,26 @@ async function openScore(sess) {
   questShow("view-score");
   const body = $("#score-body");
   body.innerHTML = `<div class="group">${empty("Scoring the hunt…")}</div>`;
+  // Express is plain (owner, 2026-10-29): no points, level, badges, album or characters.
+  const plain = sess.mode === "express";
   let receipt = null, profile = null;
   if (sess.receipt_id) {
     receipt = await api(`/api/quest/receipts/${encodeURIComponent(sess.receipt_id)}`).catch(() => null);
   }
   profile = await api("/api/quest/profile").catch(() => null);
+  if (plain) profile = null;   // Express: no level-up, badges or points
   if (window.AlbumUI && profile) AlbumUI.maybeLevelUp(profile);
   const p = qProgress(sess);
   const dur = qHuntDuration(sess, receipt);
   const attached = sess.state === "done";
   try { localStorage.setItem("arya-hunted", "1"); } catch (e) {}
-  let html = attached ? `<img class="scoreparty" src="assets/scenes/score-party.webp" alt="The cast celebrates around the receipt">` : "";
+  let html = attached && !plain ? `<img class="scoreparty" src="assets/scenes/score-party.webp" alt="The cast celebrates around the receipt">` : "";
   html += `<div class="scorehero">
     <p class="hero-k">${attached ? "Receipt attached ✓" : "Finished · Receipt missing"}</p>
-    <h2 class="largetitle" style="font-size:28px">${esc(sess.store)} — hunt finished</h2>
-    <p class="muted nomargin">${QMODE_LABEL[sess.mode] || esc(sess.mode)} · ${p.done} of ${p.total} collected</p>
+    <h2 class="largetitle" style="font-size:28px">${esc(sess.store)} — ${plain ? "shopping done" : "hunt finished"}</h2>
+    <p class="muted nomargin">${QMODE_LABEL[sess.mode] || esc(sess.mode)} · ${p.done} of ${p.total} ${plain ? "got" : "collected"}</p>
   </div>`;
-  html += qHaulHtml(sess, profile, attached);
+  if (!plain) html += qHaulHtml(sess, profile, attached);
   html += window.HaulUI ? HaulUI.scoreRow(sess, attached) : "";
   html += `<div class="group">`;
   html += row("Items found", "", `${p.done}/${p.total}`);
@@ -3268,10 +3332,10 @@ async function openScore(sess) {
     }
   }
   html += `</div>`;
-  if (attached) {
+  if (attached && !plain) {
     html += `<p><button id="score-challenge" class="btn secondary wide" type="button">Challenge a friend to beat this ›</button></p>`;
   }
-  html += `<p class="closenote">This hunt is closed. It has left Today — find it any time in Receipts.</p>`;
+  html += `<p class="closenote">This ${plain ? "trip" : "hunt"} is closed. It has left Today — find it any time in Receipts.</p>`;
   if (!attached) {
     html += `<p class="muted">No receipt yet. Add this trip's receipt and the hunt is settled; until then it waits in Receipts as “Finished · Receipt missing”.</p>
       <p><button id="score-addreceipt" class="btn wide" type="button">Add the receipt ›</button></p>`;
@@ -3289,7 +3353,7 @@ async function openScore(sess) {
       <div id="haul-result"></div>
     </div>`;
   }
-  if (profile) {
+  if (profile && !plain) {
     const seen = new Set(JSON.parse(localStorage.getItem("arya-seen-badges") || "[]"));
     const fresh = profile.badges.find(b => b.earned && !seen.has(b.id));
     if (fresh) Q.newBadge = { id: fresh.id, name: fresh.name };   // the share card's badge look
@@ -3308,11 +3372,11 @@ async function openScore(sess) {
     ...sess.items.filter(i => i.wild).map(i => i.name)])];
   if (attached && wildNames.length) {
     html += `<h3 class="sect">Wild finds</h3><div class="group"><div class="row">` +
-      wildNames.map(n => { const f = qFaceFor(n); return f ? `<img class="rowface" src="assets/characters/${f}" alt="">` : ""; }).join("") +
+      wildNames.map(n => { const f = plain ? "" : qFaceFor(n); return f ? `<img class="rowface" src="assets/characters/${f}" alt="">` : ""; }).join("") +
       `<div class="grow"><span class="name">${esc(wildNames.join(", "))}</span><span class="sub">Not on the list — grabbed anyway. The receipt catches them and Arya counts them like everything else.</span></div></div></div>`;
   }
   body.innerHTML = html;
-  qAfterHaul(sess, profile, attached);
+  if (!plain) qAfterHaul(sess, profile, attached);
   const ch = $("#score-challenge");
   if (ch) ch.addEventListener("click", () => { Q.raceStore = sess.store; questGo("view-race"); });
   const shareCtx = () => ({ sess, profile, haulPhotoURL: Q.haulPhotoURL || null });
@@ -3342,7 +3406,7 @@ async function openScore(sess) {
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
       const d = await r.json();
       status.textContent = "";
-      const face = n => { const x = qFaceFor(n); return x ? `<img class="rowface" src="assets/characters/${x}" alt="">` : ""; };
+      const face = n => { const x = plain ? "" : qFaceFor(n); return x ? `<img class="rowface" src="assets/characters/${x}" alt="">` : ""; };
       let h = "";
       if (d.seen.length) h += `<div class="row">${d.seen.map(s2 => face(s2.item)).join("")}<div class="grow"><span class="name">Spotted ${d.seen.length} of your items</span><span class="sub">${esc(d.seen.map(s2 => s2.item).join(", "))}</span></div></div>`;
       if (d.extras.length) h += `<div class="row"><div class="grow"><span class="name">Also in the photo: ${esc(d.extras.join(", "))}</span><span class="sub">Not on the list — wild finds, caught by the camera.</span></div><button class="btn" id="haul-addextra" type="button">Add to my list</button></div>`;

@@ -660,6 +660,19 @@ async function mapperOfferBriefing(sess) {
   const p = await mapperNextPrompt(sess.store, items);
   if (p) mapperOfferCard(sess, host, p);
 }
+/* Teach Arya from Express's More help: the same capture as the Quest
+ * tool button, for the aisle the engine picks. A store with nothing
+ * left to teach says so. */
+async function mapperTeachNow(sess) {
+  if (!sess || !sess.store) return;
+  const items = (sess.items || []).filter(i => !i.checked).map(i => i.name).slice(0, 30);
+  const p = await mapperNextPrompt(sess.store, items);
+  if (!p) { toast("Arya already knows every aisle of this store."); return; }
+  M.store = sess.store;
+  api(`/api/storemap?store=${encodeURIComponent(M.store)}`).then(v => { M.view = v; }).catch(() => {});
+  openCapture(p);
+}
+window.mapperTeachNow = mapperTeachNow;
 /* The in-hunt icon: a passive tool button, present only while the
  * store still has an aisle to teach. Tapping opens the capture for
  * the engine's picked aisle; the hunt waits (it lives server-side). */

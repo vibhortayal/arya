@@ -472,10 +472,10 @@
     <p><a href="#" class="qback">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">How are you shopping?</h2>
     <div>
-      <button class="modecard" data-mode="quest" type="button"><span class="name">Quest</span><span class="sub">Play the hunt. Find each item and collect it, at your own pace.</span></button>
-      <button class="modecard" data-mode="express" type="button"><span class="name">Express</span><span class="sub">The fastest route. The list in walking order, no game.</span></button>
+      <button class="modecard" data-mode="quest" type="button"><span class="name">Quest</span><span class="sub">Play the hunt: characters, points and badges. Arya helps you find each item.</span></button>
+      <button class="modecard" data-mode="express" type="button"><span class="name">Express</span><span class="sub">Same help from Arya, no game: show me the aisle, find it with the camera, report a problem. No characters, points or badges.</span></button>
     </div>
-    <p class="muted">Pick the mood. Either one can pause, and trips switch from the rail while you play.</p>
+    <p class="muted">Both end the same way: add your receipt and share your haul. Either one can pause, and trips switch from the rail while you play.</p>
   </section>
 
   <section id="view-hunt" class="view" hidden>
@@ -518,7 +518,6 @@
       </p>
       <p class="muted nomargin" id="wild-status"></p>
     </div>
-    <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <input id="locate-photo" type="file" accept="image/*" capture="environment" hidden>
     <div id="hunt-pop" class="nextcard">
       <p class="nb-k" id="pop-kicker">Suggested next — grab any stop</p>
@@ -549,6 +548,12 @@
     </p>
     <button id="hunt-askbar" class="askbar" type="button">Ask Arya…<span class="askmic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></span></button>
     <div id="hunt-rail" class="rail" aria-label="Today's hunts"></div>
+    <canvas id="confetti" class="confetti" aria-hidden="true" hidden></canvas>
+    <div id="celeb-layer" class="celeblayer" hidden></div>
+  </section>
+
+  <!-- Shared by the hunt and the Express run: the shelf scan, and the Not here sheet. -->
+    <input id="scan-photo" type="file" accept="image/*" capture="environment" hidden>
     <div id="scan-overlay" class="scanoverlay" hidden>
       <div class="scanbar">
         <div class="grow">
@@ -567,8 +572,6 @@
       </div>
       <p id="scan-status" class="scanstatus"></p>
     </div>
-    <canvas id="confetti" class="confetti" aria-hidden="true" hidden></canvas>
-    <div id="celeb-layer" class="celeblayer" hidden></div>
     <div id="spot-sheet" class="sheetwrap" hidden>
       <div class="sheet">
         <span class="sheetgrip" aria-hidden="true"></span>
@@ -577,25 +580,42 @@
         <div class="actions" style="flex-direction:column; align-items:stretch">
           <button class="chip" data-kind="empty_shelf" aria-pressed="false" type="button">Empty shelf — its tag is still there</button>
           <button class="chip" data-kind="replaced" aria-pressed="false" type="button">Something else here now</button>
+          <button class="chip" data-kind="wrong_aisle" aria-pressed="false" type="button">It is in a different aisle</button>
           <button class="chip" data-kind="cant_tell" aria-pressed="false" type="button">Can&rsquo;t tell</button>
         </div>
         <p class="muted nomargin">Tap what you see and the report is sent. Tap outside or drag down to close. A report flags the stop for other hunters. It changes nothing until time and other hunters settle what happened.</p>
       </div>
     </div>
-    </section>
-
+    
   <section id="view-express" class="view" hidden>
-    <!-- Express v2: no game chrome. A small strip view, then the list
-         in walking order; each row is the check. -->
+    <!-- Express: a plain grocery checklist in walking order. Each row is
+         the check. The next item opens a small help row (Show me, Not
+         here?, Find with camera); Show me mounts the store photo. No
+         game chrome, no characters. -->
     <div class="hunthud">
       <a href="#" class="qback hudback" aria-label="Back">&lsaquo;</a>
       <span class="hchip grow" id="exp-store"></span>
       <span class="hchip prog" id="exp-count"></span>
       <button id="exp-pause" class="hudbtn" type="button" aria-label="Pause"></button>
     </div>
-    <div id="exp-mount" class="storeview mini"></div>
-    <p class="walk-label">In walking order — tap a row to check it off</p>
+    <p class="walk-label">In walking order. Tap a row to check it off.</p>
     <div id="exp-items" class="group"></div>
+    <div id="exp-help" class="exphelp" hidden>
+      <div class="exphelp-btns">
+        <button id="exp-show" class="chip" type="button" aria-pressed="false">Show me</button>
+        <button id="exp-nothere" class="chip" type="button">Not here?</button>
+        <button id="exp-find" class="chip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z"/><circle cx="12" cy="12.5" r="3.2"/></svg>Find with camera</button>
+      </div>
+      <div id="exp-photo" hidden>
+        <div id="exp-mount" class="storeview mini"></div>
+        <p class="muted nomargin" id="exp-photo-cap"></p>
+      </div>
+    </div>
+    <p class="nomargin"><button id="exp-more" class="linkbtn" type="button" aria-expanded="false" aria-controls="exp-more-list">More help</button></p>
+    <div id="exp-more-list" class="exphelp-btns" hidden>
+      <button id="exp-ask" class="chip" type="button">Ask Arya</button>
+      <button id="exp-teach" class="chip" type="button">Teach Arya your store</button>
+    </div>
     <p><button id="exp-finish" class="btn primary wide" type="button">Finish &rarr;</button></p>
     <div id="exp-rail" class="rail" aria-label="Today's hunts"></div>
   </section>
@@ -614,7 +634,7 @@
       <p id="fin-status" class="muted nomargin"></p>
     </div>
     <p><button id="fin-skip" class="btn secondary wide" type="button">No receipt today</button></p>
-    <p class="muted">Your +50 bonus waits. It never expires. Add the receipt any time from Receipts.</p>
+    <p class="muted" id="fin-bonus">Your +50 bonus waits. It never expires. Add the receipt any time from Receipts.</p>
     <p class="muted">A blurry or partial photo is fine. Arya keeps what it can read.</p>
   </section>
 

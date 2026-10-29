@@ -49,7 +49,7 @@
     if (!text) return;
     const f = $("#ask-text"); if (f) f.value = "";
     return AryaAsk.run(text, { box: $("#ask-answer"), surface: "hunt", context: context(),
-      onChange: () => { if (typeof renderHunt === "function") renderHunt(); } });
+      onChange: () => { if (typeof renderCurrent === "function") renderCurrent(); } });
   }
 
   bar.addEventListener("click", open);

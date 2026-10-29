@@ -87,7 +87,7 @@ class TestScoreAndTeachMove(unittest.TestCase):
     def test_score_party_only_when_settled(self):
         q = read("quest.js")
         self.assertIn("assets/scenes/score-party.webp", q)
-        self.assertIn('attached ? `<img class="scoreparty"', q)
+        self.assertIn('attached && !plain ? `<img class="scoreparty"', q)
 
     def test_teach_ask_left_the_score_screen(self):
         self.assertNotIn("mapperOfferAfterHunt", read("quest.js"))
@@ -133,7 +133,7 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v79"', sw)
+        self.assertIn('CACHE = "arya-v80"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",
