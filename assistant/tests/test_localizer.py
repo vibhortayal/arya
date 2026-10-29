@@ -44,7 +44,7 @@ def jpeg_bytes(w=2000, h=1000):
 
 
 class StubMeta:
-    """main.MetaClient stand-in (session creation shelf-matches
+    """deps.MetaClient stand-in (session creation shelf-matches
     Trader Joe's items; the stub answers no model matches)."""
 
     def __init__(self, *a, **k):
@@ -77,9 +77,10 @@ class FakeMatcher:
 class TestLocateRoute(unittest.TestCase):
     def setUp(self):
         from api import locate, main
+        from api import deps
         self.tmp = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = self.tmp
-        main.MetaClient = StubMeta
+        deps.MetaClient = StubMeta
         self.locate = locate
         self._orig_matcher = locate._run_matcher
         FakeMatcher.reset()
@@ -153,6 +154,7 @@ class TestLocateDemoCarveOut(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
+        from api import deps
         c = TestClient(main.app)
         c.post("/auth/demo")
         # The demo household is read-only for other doors...

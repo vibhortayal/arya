@@ -31,8 +31,9 @@ class Base(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, shelfmatch
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main = main
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
@@ -616,7 +617,8 @@ class TestDemoSandbox(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
-        main.MetaClient = FakeClient
+        from api import deps
+        deps.MetaClient = FakeClient
         self.c = TestClient(main.app)
         self.c.post("/auth/demo")
 

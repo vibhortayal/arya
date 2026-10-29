@@ -16,6 +16,7 @@ def seed_demo(base):
 
 class TestEyes(unittest.TestCase):
     def setUp(self):
+        from api import deps
         base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = base
         seed_demo(base)
@@ -36,7 +37,7 @@ class TestEyes(unittest.TestCase):
                 self.calls += 1
                 return json.dumps(payload), {}, 0.02
 
-        main.MetaClient = FakeClient
+        deps.MetaClient = FakeClient
         self.c = TestClient(main.app)
         self.c.post("/auth/demo")  # demo data dir is users/demo; auth as owner instead below
 
@@ -52,6 +53,7 @@ class TestEyes(unittest.TestCase):
 
 class TestEyesOwner(unittest.TestCase):
     def setUp(self):
+        from api import deps
         base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = base
         # seed the demo dataset into the future owner's dir by generating at root
@@ -79,7 +81,7 @@ class TestEyesOwner(unittest.TestCase):
                 self.calls += 1
                 return json.dumps(payload), {}, 0.02
 
-        main.MetaClient = FakeClient
+        deps.MetaClient = FakeClient
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "owner", "password": "pw"})
 
@@ -115,6 +117,7 @@ class TestMatching(unittest.TestCase):
 
 class TestChat(unittest.TestCase):
     def setUp(self):
+        from api import deps
         base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = base
         seed_demo(base)
@@ -135,7 +138,7 @@ class TestChat(unittest.TestCase):
                                                {"type": "never_suggest", "item": "Untracked Thing"},
                                                {"type": "add_to_list", "item": "Fresh Basil"}]}), {}, 0.01
 
-        main.MetaClient = FakeClient
+        deps.MetaClient = FakeClient
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "owner", "password": "pw"})
 

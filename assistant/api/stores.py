@@ -44,7 +44,7 @@ def _now():
 # --- platform plane: the directory -------------------------------------
 # state._load/_save follow the per-user context; the directory lives
 # in the data root, so reads and writes run with the context cleared
-# (the same pattern main._is_demo uses to read the session store).
+# (the same pattern demo_guard._is_demo uses to read the session store).
 
 def _root_load(name, default):
     tok = state._current_user.set(None)

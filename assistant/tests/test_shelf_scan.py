@@ -89,8 +89,9 @@ class TestScanEndpoint(unittest.TestCase):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         FakeScanClient.calls = {"segment": [], "chat": []}
         from api import main, state
-        main.MetaClient = FakeScanClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeScanClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         state._save("dictionary.json", {"entries": []})
         state._save("receipts.json", [])
@@ -233,7 +234,8 @@ class TestScanDemoCarveOut(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
-        main.MetaClient = FakeScanClient
+        from api import deps
+        deps.MetaClient = FakeScanClient
         c = TestClient(main.app)
         c.post("/auth/demo")
         # The demo household is read-only for other doors...

@@ -34,9 +34,10 @@ class TestMcp(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
-        main._register_hits.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
+        deps._register_hits.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
                                              "password": "long-password"})

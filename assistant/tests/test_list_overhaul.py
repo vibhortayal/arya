@@ -137,3 +137,18 @@ class TestListsClient(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStartShopping(unittest.TestCase):
+    """Start shopping (owner, 2026-10-29): one bar above the tabs on an
+    open list; it leads to the store, the plan, then Quest or Express."""
+
+    def test_bar_markup_and_wiring(self):
+        html, js, css = read("index.html"), read("app.js"), read("styles.css")
+        self.assertIn('id="list-startbar"', html)
+        self.assertIn('id="list-hunt" class="btn primary wide"', html)
+        self.assertNotIn("Shopping now?", html)
+        self.assertIn("Start shopping · ${open.length} item", js)
+        self.assertIn("startHuntFromList(lensList() || null)", js)
+        self.assertIn(".startbar {", css)
+        self.assertNotIn(".huntline", css)

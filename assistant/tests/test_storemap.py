@@ -299,8 +299,9 @@ class TestRoutes(unittest.TestCase):
         FakeClient.calls, FakeClient.people_fails = [], False
         FakeClient.shelf_sizes = []
         from api import main, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         state._save("dictionary.json", {"entries": []})
         state._save("receipts.json", [])

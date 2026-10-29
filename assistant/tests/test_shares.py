@@ -34,8 +34,9 @@ class TestShares(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         state._save("receipts.json", [{
             "receipt_id": "r-tj-1", "merchant": "Trader Joe's",

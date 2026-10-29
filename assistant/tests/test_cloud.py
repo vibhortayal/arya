@@ -136,6 +136,7 @@ class TestCloudSession(unittest.TestCase):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         from api import main
+        from api import deps
 
         class FakeClient:
             def __init__(self, *a, **k):
@@ -144,8 +145,8 @@ class TestCloudSession(unittest.TestCase):
             def chat(self, *a, **k):
                 raise AssertionError("Quest paths must not call a model")
 
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={
             "username": "owner@example.com", "password": "long-password"})

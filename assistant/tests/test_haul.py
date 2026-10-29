@@ -51,8 +51,9 @@ class HaulBase(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main, self.state = main, state
         self.c = TestClient(main.app)
         state._save("receipts.json", [
@@ -647,7 +648,8 @@ class TestDemoSandbox(unittest.TestCase):
         spec.loader.exec_module(gen)
         gen.main(base)
         from api import main
-        main.MetaClient = FakeClient
+        from api import deps
+        deps.MetaClient = FakeClient
         self.c = TestClient(main.app)
         self.c.post("/auth/demo")
 

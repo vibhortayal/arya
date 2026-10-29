@@ -27,12 +27,13 @@ class FakeClient:
 
 class TestAvatar(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         FakeClient.calls = []
-        self.p = mock.patch.object(main, "MetaClient", FakeClient)
+        self.p = mock.patch.object(deps, "MetaClient", FakeClient)
         self.p.start()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "a@example.com", "password": "pw-a"})

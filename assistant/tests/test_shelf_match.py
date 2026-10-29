@@ -34,7 +34,7 @@ class StubClient:
 
 
 class StubMeta:
-    """main.MetaClient stand-in: the routes build it with a ledger
+    """deps.MetaClient stand-in: the routes build it with a ledger
     kwarg; chat forwards to the shared stub."""
     stub = None
 
@@ -199,8 +199,9 @@ class TestSessionMatchingApi(unittest.TestCase):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         StubMeta.stub = StubClient({"Cheese": "Cheese Shelf"})
         from api import main
-        main.MetaClient = StubMeta
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = StubMeta
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={
             "username": "owner@example.com", "password": "long-password"})

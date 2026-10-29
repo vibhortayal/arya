@@ -12,7 +12,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 def fresh(case):
     os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
     from api import main
-    main._login_fails.clear()
+    from api import deps
+    deps._login_fails.clear()
     case.c = TestClient(main.app)
     r = case.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
@@ -143,7 +144,8 @@ class TestChatActions(unittest.TestCase):
     def setUp(self):
         self.c = fresh(self)
         from api import main
-        main.MetaClient = StubChat
+        from api import deps
+        deps.MetaClient = StubChat
         StubChat.actions = []
 
     def ask(self, actions):

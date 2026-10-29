@@ -11,7 +11,7 @@ tab turns the shop into a treasure hunt through a model of your own
 store; Express gives the same in-store help as a plain checklist. One
 product, one app, one account.
 
-![Tests: 1,102 passing](https://img.shields.io/badge/tests-1%2C102%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
+![Tests: 1,108 passing](https://img.shields.io/badge/tests-1%2C108%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
 
 **Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
 
@@ -127,7 +127,7 @@ decisions: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** 1,102 and green — `cd assistant && python -m unittest
+- **Tests:** 1,108 and green — `cd assistant && python -m unittest
   discover -s tests` (exact count in `STATUS.md`).
 
 ## How this was built

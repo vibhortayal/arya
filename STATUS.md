@@ -9,7 +9,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
-Service worker cache: arya-v80. Suite: 1,102 tests, all green, 2 skipped.
+Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -18,8 +18,9 @@ Service worker cache: arya-v80. Suite: 1,102 tests, all green, 2 skipped.
   only what the household added; due staples show as suggestions under
   the list of their usual store, with a reason and a "why" sheet. Swipe
   to Move or Remove, Select to move many, a pencil renames a list.
-  Prepared cart is gone. `2026-10-29-list-overhaul.md`,
-  `2026-10-29-named-lists.md`.
+  Prepared cart is gone. A "Start shopping · N items" bar on an open
+  list leads to the Quest or Express choice. `2026-10-29-list-overhaul.md`,
+  `2026-10-29-named-lists.md`, `2026-10-29-start-shopping.md`.
 - **Adding:** one row (field, mic, camera). Adds apply at once with Undo;
   riskier changes (out, never, snooze) ask first. A typed name links to
   the tracked item ("milk" finds "Whole Milk", "mlik" fixes itself).

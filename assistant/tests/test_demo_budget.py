@@ -47,37 +47,41 @@ class TestLedgerBuckets(unittest.TestCase):
 
 class TestGuardSeparation(unittest.TestCase):
     def setUp(self):
+        from api import deps
         fd, self.path = tempfile.mkstemp(suffix=".jsonl")
         os.close(fd)
         os.unlink(self.path)
         import api.main as main
         from api.cost_ledger import CostLedger
         self.main, self.CostLedger = main, CostLedger
-        self._orig_ledger = main._LEDGER
-        main._LEDGER = self.path
+        self._orig_ledger = deps._LEDGER
+        deps._LEDGER = self.path
 
     def tearDown(self):
-        self.main._LEDGER = self._orig_ledger
+        from api import deps
+        deps._LEDGER = self._orig_ledger
 
     def test_demo_spend_does_not_trip_the_app_guard(self):
+        from api import deps
         from fastapi import HTTPException
         self.CostLedger(self.path, bucket="demo").record(
             mode="wonder", model="m", input_tokens=1, cached_tokens=0,
             output_tokens=1, cost_usd=3.00)
-        self.main._budget_guard()  # app bucket empty: no raise
+        deps._budget_guard()  # app bucket empty: no raise
         with self.assertRaises(HTTPException) as cm:
-            self.main._budget_guard(demo=True)  # demo cap is $2
+            deps._budget_guard(demo=True)  # demo cap is $2
         self.assertEqual(cm.exception.status_code, 503)
 
 
 class TestDemoRateLimits(unittest.TestCase):
     def setUp(self):
+        from api import demo_guard
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         os.environ["ARYA_DEMO_AUTH_RATE"] = "3"
         from fastapi.testclient import TestClient
         import api.main as main
-        main._demo_auth_hits.clear()
-        main._demo_door_hits.clear()
+        demo_guard._demo_auth_hits.clear()
+        demo_guard._demo_door_hits.clear()
         self.c = TestClient(main.app)
 
     def tearDown(self):
@@ -96,17 +100,18 @@ class TestHaulWritesAreFree(unittest.TestCase):
     no live-door budget (they sit under the sessions prefix)."""
 
     def test_door_check(self):
+        from api import demo_guard
         import api.main as main
         for path in ("/api/quest/sessions/s1/haul/fix",
                      "/api/quest/sessions/s1/haul/hide",
                      "/api/quest/sessions/s1/haul/post",
                      "/api/quest/sessions/s1/haul/receipts"):
-            self.assertFalse(main._demo_live_door(path), path)
+            self.assertFalse(demo_guard._demo_live_door(path), path)
         # The real doors stay counted.
         for path in ("/api/quest/sessions", "/api/quest/sessions/s1/check",
                      "/api/quest/sessions/s1/receipt", "/decode/photo",
                      "/api/quest/scan-shelf"):
-            self.assertTrue(main._demo_live_door(path), path)
+            self.assertTrue(demo_guard._demo_live_door(path), path)
 
 
 class TestSessionPruning(unittest.TestCase):
@@ -133,42 +138,48 @@ if __name__ == "__main__":
 class TestSessionShare(unittest.TestCase):
     def setUp(self):
         from api import main, state
+        from api import deps
+        from api import demo_guard
         self.main, self.state = main, state
         fd, path = tempfile.mkstemp(suffix=".jsonl")
         os.close(fd)
         os.unlink(path)
-        self._old = main._LEDGER
-        main._LEDGER = path
+        self._old = deps._LEDGER
+        deps._LEDGER = path
 
     def tearDown(self):
+        from api import deps
         self.state.set_overlay(None)
-        self.main._LEDGER = self._old
+        deps._LEDGER = self._old
 
     def _spend(self, box, usd):
+        from api import deps
         self.state.set_overlay(box)
-        self.main._ledger().record(mode="standard", model="m", input_tokens=1,
+        deps._ledger().record(mode="standard", model="m", input_tokens=1,
                                    cached_tokens=0, output_tokens=1, cost_usd=usd)
 
     def test_visit_share_stops_one_visitor_only(self):
+        from api import deps
         from fastapi import HTTPException
         a, b = {}, {}
         self._spend(a, 0.50)
         self.state.set_overlay(a)
         with self.assertRaises(HTTPException) as cm:
-            self.main._budget_guard()
+            deps._budget_guard()
         self.assertEqual(cm.exception.status_code, 503)
         self.assertIn("this demo visit", cm.exception.detail)
         self.state.set_overlay(b)       # another visitor is unaffected
-        self.main._budget_guard()
+        deps._budget_guard()
 
     def test_daily_demo_cap_message_is_friendly(self):
+        from api import deps
         from fastapi import HTTPException
         os.environ["ARYA_DEMO_DAILY_BUDGET_USD"] = "0.30"
         try:
             self._spend({}, 0.35)
             self.state.set_overlay({})
             with self.assertRaises(HTTPException) as cm:
-                self.main._budget_guard()
+                deps._budget_guard()
             self.assertIn("paused for today", cm.exception.detail)
         finally:
             del os.environ["ARYA_DEMO_DAILY_BUDGET_USD"]
