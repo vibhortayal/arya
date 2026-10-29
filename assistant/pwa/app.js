@@ -584,7 +584,11 @@ function paintListPage() {
   $("#list-done").innerHTML = done.length && !listSel
     ? `<div class="group"><div class="row donerow"><button class="linkbtn donetoggle" type="button" data-done-toggle aria-expanded="${listDoneOpen}">✓ ${done.length} checked off ${listDoneOpen ? "▴" : "▾"}</button><button class="linkbtn" type="button" data-done-clear>Clear</button></div>${listDoneOpen ? done.map(listRow).join("") : ""}</div>` : "";
   bindItemLinks($("#list-done"));
-  $("#list-hunt").hidden = !here || !!listSel || !open.length;
+  // Start shopping (owner, 2026-10-29): one bar above the tabs while the list has things to get.
+  const startBar = !!open.length && !listSel;
+  $("#list-startbar").hidden = !startBar;
+  $("#list-hunt").textContent = `Start shopping · ${open.length} item${open.length === 1 ? "" : "s"}`;
+  $("#list-page").classList.toggle("hasstart", startBar);
   $("#list-selbar").hidden = !listSel;
   if (listSel) $("#ls-move").textContent = listSel.size ? `Move ${listSel.size} to…` : "Move to…";
   $("#ls-move").disabled = $("#ls-remove").disabled = !(listSel && listSel.size);
@@ -623,8 +627,8 @@ $("#ls-move").addEventListener("click", () => {
   if (listSel && listSel.size && window.ListSheets) ListSheets.openMove([...listSel]);
 });
 $("#list-hunt").addEventListener("click", () => {
-  const l = lensList();
-  if (l && typeof startHuntFromList === "function") startHuntFromList(l);
+  // A named list plans from its own items; Everything else plans from the whole list.
+  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null);
 });
 $("#list-done").addEventListener("click", async ev => {
   if (ev.target.closest("[data-done-toggle]")) { listDoneOpen = !listDoneOpen; paintListPage(); return; }

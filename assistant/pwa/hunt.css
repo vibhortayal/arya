@@ -123,3 +123,14 @@
   .huntrow .rowface { display: none; }
   .rowact { min-width: 104px; }
 }
+
+/* ---- Express help row (owner, 2026-10-29): under the next item ---- */
+.exphelp { background: var(--acc-soft); padding: 2px 16px 14px; }
+#exp-items .exphelp { margin: 0 -16px; }
+.exphelp-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.exphelp-btns .chip { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.exphelp-btns .chip svg { width: 18px; height: 18px; flex: none; }
+#exp-more-list { margin: 0 0 8px; }
+#exp-photo { margin-top: 12px; }
+#exp-photo .storeview { border-radius: 16px; overflow: hidden; height: clamp(180px, 30dvh, 300px); }
+#exp-photo-cap { font-size: 15px; margin-top: 8px; }

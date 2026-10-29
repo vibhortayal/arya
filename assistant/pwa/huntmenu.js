@@ -699,6 +699,7 @@
     } });
   }
   window.huntAfterRender = huntAfterRender;
+  window.huntMoved = movedSheet;   // Express's Not here? opens the same sheet
   window.huntAfterGrab = huntAfterGrab;
 
   /* ------------------------------------------------------------------

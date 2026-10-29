@@ -571,6 +571,12 @@ class TestSpotter(unittest.TestCase):
         out = self.c.get("/api/quest/stores/Trader%20Joe%27s/reports").json()
         assert out["count"] == 2
 
+    def test_wrong_aisle_is_a_report_kind(self):
+        # Express and Quest share the sheet: "It is in a different aisle".
+        r = self._report(kind="wrong_aisle")
+        assert r.status_code == 200, r.text
+        assert r.json()["kind"] == "wrong_aisle"
+
     def test_profile_counts_spots_and_eagle_eye_waits_for_truth(self):
         self._report()
         p = self.c.get("/api/quest/profile").json()

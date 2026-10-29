@@ -711,7 +711,7 @@ const HaulUI = (() => {
         <button class="btn" type="button" data-hl="card">Make my haul card</button>
         ${sess.receipt_id ? `<button class="btn" type="button" data-hl="review"${showReview ? "" : " hidden"}>Check your receipt</button>` : ""}
         ${quest ? `<button class="btn" type="button" data-hl="replay">Replay the reveal</button>` : ""}
-        ${window.renderAlbum ? `<button class="btn" type="button" data-hl="album">See my album</button>` : ""}
+        ${window.renderAlbum && quest ? `<button class="btn" type="button" data-hl="album">See my album</button>` : ""}
       </div></div>`;
   }
   document.addEventListener("click", ev => {

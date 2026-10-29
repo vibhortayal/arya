@@ -700,7 +700,7 @@ def get_shopoff(race_id):
 # state field and the data shape only. Rewards land on truth, never
 # on reports, so filing one earns nothing by itself.
 
-REPORT_KINDS = ("empty_shelf", "replaced", "cant_tell")
+REPORT_KINDS = ("empty_shelf", "replaced", "wrong_aisle", "cant_tell")
 REPORT_STATES = ("reported", "resolved_stockout", "verified_move", "withdrawn")
 
 
