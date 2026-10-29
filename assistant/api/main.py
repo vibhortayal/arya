@@ -6,19 +6,16 @@ urllib with timeouts up to 120 s, so no route may call a model —
 or judge_pending, which calls the judge — on the event loop.
 Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
-import datetime, hashlib, json, logging, math, os
+import datetime, json, logging, math, os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from api import state, auth, supabase_auth
+from api import state
 from api.decode.service import decode_order_text, decode_photo, decode_text, extract_pdf_text, normalize_costco_json
-from api.deps import (_budget_guard, _client_ip, _int_field, _json_body, _json_obj,
-                      _login_fails, _register_hits, _code_hits, _verify_hits,
-                      _registration_open, _set_session_cookie, new_client)
-from api.demo_guard import _demo_auth_hits, _demo_rate, _is_demo, require_login
-from api.cart.build import approve
+from api.deps import _PWA, _budget_guard, _int_field, _json_body, _json_obj, new_client
+from api.demo_guard import _is_demo, require_login
 
 app = FastAPI(title="Arya API")
 app.middleware("http")(require_login)
@@ -37,247 +34,9 @@ async def _model_failure(request, exc):
                         status_code=502)
 from api import pack as pack_api; app.include_router(pack_api.router)  # noqa: E402,E702
 
+from api.routes import auth as auth_routes  # noqa: E402
+app.include_router(auth_routes.router)
 
-
-@app.get("/auth/status")
-def auth_status():
-    return {"has_users": len(auth.users()) > 0,
-            "registration_open": _registration_open(),
-            "email_signin": supabase_auth.configured()}
-
-
-@app.post("/auth/setup")
-async def auth_setup(req: Request):
-    if len(auth.users()) > 0:
-        raise HTTPException(403, "setup is closed; an account already exists")
-    body = await _json_obj(req)
-    try:
-        name = auth.create_user(body.get("username", ""), body.get("password", ""))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
-
-
-@app.post("/auth/register")
-async def auth_register(req: Request):
-    """Public sign-up — LOCKED unless the operator opens it
-    (ARYA_REGISTRATION_OPEN=1; owner locked registration 2026-10-28).
-    Same account shape as setup; setup stays bootstrap-only. A per-IP
-    cap keeps account farming slow, and the password floor is
-    enforced here so the operator path (create_user) keeps its own
-    rules."""
-    if not _registration_open():
-        raise HTTPException(403, "registration is closed")
-    import time as _t
-    ip = _client_ip(req)
-    hits = [t for t in _register_hits.get(ip, []) if _t.time() - t < 900]
-    if len(hits) >= 10:
-        raise HTTPException(429, "too many account creations — try again later")
-    _register_hits[ip] = hits + [_t.time()]
-    body = await _json_obj(req)
-    password = body.get("password", "")
-    if len(password) < 8:
-        raise HTTPException(400, "password must be at least 8 characters")
-    try:
-        name = auth.create_user(body.get("username", ""), password)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
-
-
-@app.post("/auth/login")
-async def auth_login(req: Request):
-    import time as _t
-    ip = _client_ip(req)
-    fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
-    if len(fails) >= 8:
-        raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
-    body = await _json_obj(req)
-    name = auth.resolve_login_name(body.get("username"))
-    if not auth.verify(name, body.get("password", "")):
-        _login_fails[ip] = fails + [_t.time()]
-        raise HTTPException(401, "wrong email or password")
-    return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
-
-
-def _federated_login(email):
-    """Sign in (or create) the account for a Supabase-verified email.
-    ARYA_SUPABASE_SIGNUP=0 limits it to accounts that already exist."""
-    try:
-        name, created = auth.ensure_federated_user(email) \
-            if os.environ.get("ARYA_SUPABASE_SIGNUP") != "0" or email in auth.users() \
-            else (None, False)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    if not name:
-        raise HTTPException(403, "sign-up is closed")
-    return _set_session_cookie(JSONResponse({"user": name, "created": created}),
-                               auth.new_session(name))
-
-
-def _email_guard(req, bucket, limit):
-    import time as _t
-    ip = _client_ip(req)
-    hits = [t for t in bucket.get(ip, []) if _t.time() - t < 900]
-    if len(hits) >= limit:
-        raise HTTPException(429, "too many attempts, try again in 15 minutes")
-    bucket[ip] = hits + [_t.time()]
-
-
-def _need_supabase():
-    if not supabase_auth.configured():
-        raise HTTPException(404, "email sign-in is not set up")
-
-
-@app.post("/auth/email/start")
-async def auth_email_start(req: Request):
-    _need_supabase()
-    _email_guard(req, _code_hits, 5)
-    body = await _json_obj(req)
-    email = (body.get("email") or "").strip().lower()
-    if "@" not in email or len(email) > 254:
-        raise HTTPException(400, "enter a valid email")
-    try:
-        await run_in_threadpool(supabase_auth.send_code, email)
-    except supabase_auth.AuthError as e:
-        raise HTTPException(502, str(e))
-    return {"ok": True}
-
-
-@app.post("/auth/email/verify")
-async def auth_email_verify(req: Request):
-    _need_supabase()
-    _email_guard(req, _verify_hits, 10)
-    body = await _json_obj(req)
-    email = (body.get("email") or "").strip().lower()
-    code = str(body.get("code") or "").strip()
-    try:
-        verified = await run_in_threadpool(supabase_auth.verify_code, email, code)
-    except supabase_auth.AuthError as e:
-        raise HTTPException(401, str(e))
-    return _federated_login(verified)
-
-
-@app.get("/auth/google")
-def auth_google(req: Request):
-    _need_supabase()
-    return RedirectResponse(supabase_auth.google_url(
-        str(req.base_url).rstrip("/") + "/auth/callback"))
-
-
-@app.get("/auth/callback")
-def auth_callback():
-    """Supabase returns the token in the URL fragment, which only the
-    browser can read. This page hands it to /auth/supabase and goes home."""
-    return HTMLResponse(
-        "<!doctype html><meta charset=utf-8><title>Signing in</title>"
-        "<p>Signing you in...</p><script>"
-        "const t=new URLSearchParams(location.hash.slice(1)).get('access_token');"
-        "history.replaceState(null,'','/auth/callback');"
-        "fetch('/auth/supabase',{method:'POST',headers:{'Content-Type':'application/json'},"
-        "body:JSON.stringify({access_token:t})})"
-        ".then(r=>{location.replace(r.ok?'/':'/?signin=failed')})"
-        ".catch(()=>{location.replace('/?signin=failed')});</script>")
-
-
-@app.post("/auth/supabase")
-async def auth_supabase(req: Request):
-    _need_supabase()
-    _email_guard(req, _verify_hits, 10)
-    body = await _json_obj(req)
-    try:
-        verified = await run_in_threadpool(
-            supabase_auth.email_for_token, str(body.get("access_token") or ""))
-    except supabase_auth.AuthError as e:
-        raise HTTPException(401, str(e))
-    return _federated_login(verified)
-
-
-@app.post("/auth/logout")
-async def auth_logout(req: Request):
-    auth.drop_session(req.cookies.get(auth.COOKIE))
-    resp = JSONResponse({"ok": True})
-    resp.delete_cookie(auth.COOKIE)
-    return resp
-
-
-@app.post("/auth/account/delete")
-async def auth_delete_account(req: Request):
-    """Erase the caller's account (Tranche 1, register #2):
-    password-confirmed, then the record, sessions, tokens, data
-    directory, friend mirrors in other accounts, and feedback
-    attribution all go. The registry lives in the data root, so
-    reads and writes run with the per-user context cleared (the
-    feedback._root_call idiom)."""
-    body = await _json_obj(req)
-    from api import auth, feedback, social, state
-    info = auth.session_info(req.cookies.get(auth.COOKIE))
-    if not info or info["demo"]:
-        raise HTTPException(403, "the demo household has no account to delete")
-    user = info["user"]
-
-    def _root_call(fn):
-        tok = state._current_user.set(None)
-        try:
-            return fn()
-        finally:
-            state._current_user.reset(tok)
-
-    everyone = _root_call(lambda: list(auth.users()))
-    if not _root_call(lambda: auth.verify(user, body.get("password", ""))):
-        raise HTTPException(401, "that password does not match this account")
-    social.scrub_handle(user.split("@")[0], everyone, skip=user)
-    _root_call(lambda: auth.delete_user(user))
-    feedback.anonymize_user(user)
-    resp = JSONResponse({"ok": True})
-    resp.delete_cookie(auth.COOKIE)
-    return resp
-
-
-@app.get("/auth/me")
-def auth_me(req: Request):
-    # Signed-out is a normal state, not an error (review
-    # 2026-10-28, U5): the boot probe reads user=None and shows
-    # the sign-in screen, with no 401 noise in the console.
-    info = auth.session_info(req.cookies.get(auth.COOKIE))
-    if not info:
-        return {"user": None, "demo": False}
-    return info
-
-
-@app.post("/auth/token")
-def mint_token(req: Request):
-    info = auth.session_info(req.cookies.get(auth.COOKIE))
-    if not info or info["demo"]:
-        raise HTTPException(401, "sign in with your account to create a connector token")
-    return {"token": auth.new_api_token(info["user"]),
-            "note": "Shown once. Creating a new token replaces the old one."}
-
-
-@app.get("/auth/token")
-def token_status(req: Request):
-    info = auth.session_info(req.cookies.get(auth.COOKIE))
-    if not info or info["demo"]:
-        raise HTTPException(401, "login required")
-    return {"has_token": auth.has_api_token(info["user"])}
-
-
-@app.delete("/auth/token")
-def revoke_token(req: Request):
-    info = auth.session_info(req.cookies.get(auth.COOKIE))
-    if not info or info["demo"]:
-        raise HTTPException(401, "login required")
-    auth.revoke_api_tokens(info["user"])
-    return {"ok": True, "has_token": False}
-
-
-@app.post("/auth/demo")
-def auth_demo(req: Request):
-    if not _demo_rate(_demo_auth_hits, _client_ip(req),
-                      "ARYA_DEMO_AUTH_RATE", 120):
-        raise HTTPException(429, "too many demo sessions — try again in a bit")
-    return _set_session_cookie(JSONResponse({"user": "demo", "demo": True}),
-                               auth.new_session("demo", demo=True))
 
 
 @app.get("/health")
@@ -678,59 +437,9 @@ async def transcribe_route(req: Request):
         raise HTTPException(502, str(e)[:200])
     return {"text": out["text"], "duration_s": out["duration_s"],
             "model": "muse-voice-transcribe-1.0", "demo": demo}
+from api.routes import eyes as eyes_routes  # noqa: E402
+app.include_router(eyes_routes.router)
 
-
-@app.post("/eyes/photo")
-async def eyes_photo(req: Request, kind: str = "fridge"):
-    if kind not in ("fridge", "pantry", "freezer", "fruit"):
-        raise HTTPException(400, "kind must be fridge, pantry, freezer, or fruit")
-    media = (req.headers.get("content-type") or "").split(";")[0].strip()
-    if not media.startswith("image/"):
-        raise HTTPException(415, "send a photo of the fridge, pantry, freezer, or fruit")
-    body = await req.body()
-    if not body:
-        raise HTTPException(400, "empty upload")
-    if len(body) > 12_000_000:
-        raise HTTPException(413, "photo too large (12 MB max)")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
-    from api.eyes.service import detect, match_item
-    from datetime import date as _d
-    client = new_client()
-    try:
-        sightings = await run_in_threadpool(detect, body, client,
-                                            media_type=media)
-    except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
-    rec_id = "eye-" + hashlib.sha1(body).hexdigest()[:10]
-    ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}.get(media, ".jpg")
-    photo_dir = os.path.join(state.data_dir(), "eyes_photos")
-    os.makedirs(photo_dir, exist_ok=True)
-    with open(os.path.join(photo_dir, rec_id + ext), "wb") as fh:
-        fh.write(body)
-    idx = state.name_index()
-    for sg in sightings:
-        sg["item_id"] = match_item(sg["name"], idx)
-        sg["state"] = "pending"
-    rec = {"id": rec_id, "date": _d.today().isoformat(), "kind": kind,
-           "photo": rec_id + ext, "sightings": sightings}
-    state.save_eyes_record(rec)
-    return rec
-
-
-@app.get("/api/eyes")
-def eyes_list():
-    return {"records": sorted(state.eyes_records(), key=lambda r: r["date"], reverse=True)}
-
-
-@app.post("/api/eyes/{rec_id}/delete")
-def eyes_delete(rec_id: str):
-    """Delete one Eyes photo and its record (Tranche 1)."""
-    from api import state
-    if state.delete_eyes_record(rec_id) is None:
-        raise HTTPException(404, "no such photo")
-    return {"ok": True, "deleted": rec_id}
 
 
 # --- Agent connector (MCP): any MCP-capable assistant, one token ---
@@ -921,33 +630,6 @@ async def mcp_route(req: Request):
     return resp
 
 
-@app.get("/eyes/photos/{rec_id}")
-def eyes_photo_file(rec_id: str):
-    from fastapi.responses import FileResponse
-    photo_dir = os.path.join(state.data_dir(), "eyes_photos")
-    for ext in (".jpg", ".png", ".webp"):
-        p = os.path.join(photo_dir, rec_id + ext)
-        if os.path.exists(p):
-            return FileResponse(p)
-    raise HTTPException(404, "no such photo")
-
-
-@app.post("/api/eyes/{rec_id}/sightings/{idx}")
-async def eyes_decide(rec_id: str, idx: int, req: Request):
-    body = await _json_obj(req)
-    decision = body.get("state")
-    if decision not in ("confirmed", "rejected"):
-        raise HTTPException(400, "state must be confirmed or rejected")
-    for rec in state.eyes_records():
-        if rec["id"] == rec_id:
-            if idx < 0 or idx >= len(rec["sightings"]):
-                raise HTTPException(404, "no such sighting")
-            rec["sightings"][idx]["state"] = decision
-            state.save_eyes_record(rec)
-            return rec
-    raise HTTPException(404, "no such eyes record")
-
-
 @app.post("/api/items/{item_id}/expired")
 def item_expired(item_id: str):
     from datetime import date as _d
@@ -956,40 +638,9 @@ def item_expired(item_id: str):
     cur["expired"] = _d.today().isoformat()
     state.set_flag(item_id, cur)
     return {"item_id": item_id, "expired": cur["expired"]}
+from api.routes import chat as chat_routes  # noqa: E402
+app.include_router(chat_routes.router)
 
-
-@app.post("/api/chat")
-async def chat_route(req: Request):
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    _budget_guard()
-    body = await _json_obj(req)
-    from api.chat_service import chat as run_chat
-    client = new_client()
-    try:
-        surface = body.get("surface") if body.get("surface") in ("list", "hunt") else None
-        return await run_in_threadpool(run_chat, body.get("messages", []), client,
-                                       surface=surface, context=body.get("context"))
-    except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
-
-
-@app.post("/api/chat/apply")
-async def chat_apply_route(req: Request):
-    """The yes to an action Arya proposed from the List or a hunt."""
-    body = await _json_obj(req)
-    actions = body.get("actions")
-    if not isinstance(actions, list) or not actions:
-        raise HTTPException(400, "actions are required")
-    from api.chat_service import apply_confirmed
-    return await run_in_threadpool(apply_confirmed, actions[:10])
-
-
-@app.post("/api/cart/approve")
-def approve_route():
-    cart = approve(state.get_cart())
-    state.save_cart(cart)
-    return cart
 
 
 # The flag vocabulary — every key a flag record may carry. The
@@ -1399,35 +1050,9 @@ async def list_qty(req: Request):
         flag["unit"] = clean_unit(body["unit"])  # "" clears it
     _merge_flag(item_id, flag)
     return {"ok": True}
+from api.routes import account as account_routes  # noqa: E402
+app.include_router(account_routes.router)
 
-
-# ---- Account settings. Currency only so far (owner, 2026-10-29): it
-# changes the symbol prices show with, nothing else. No exchange rates
-# and no conversion: an amount is shown as it was read.
-CURRENCIES = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
-              "CAD": "C$", "AUD": "A$"}
-
-
-@app.get("/api/settings")
-def settings_get():
-    code = state._load("settings.json", {}).get("currency", "USD")
-    if code not in CURRENCIES:
-        code = "USD"
-    return {"currency": code, "symbol": CURRENCIES[code],
-            "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()]}
-
-
-@app.post("/api/settings")
-async def settings_set(req: Request):
-    body = await _json_obj(req)
-    code = str(body.get("currency") or "").upper()
-    if code not in CURRENCIES:
-        raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
-    with state.file_lock("settings.json"):
-        cur = state._load("settings.json", {})
-        cur["currency"] = code
-        state._save("settings.json", cur)
-    return settings_get()
 
 
 # ---- Named lists (owner, 2026-10-29): Costco, Trader Joe's, Indian
@@ -1598,117 +1223,9 @@ async def review_resolve(req: Request):
     if entry is None:
         raise HTTPException(404, "no such item")
     return {"ok": True}
+from api.routes import stores as stores_routes  # noqa: E402
+app.include_router(stores_routes.router)
 
-
-# --- Stores (Stage E): the platform directory + My Stores ---
-
-@app.get("/api/stores/search")
-def stores_search(q: str = "", quests: int = 0):
-    from api import stores as stores_mod
-    return {"stores": stores_mod.search_views(q, quests_only=bool(quests))}
-
-
-@app.get("/api/stores/mine")
-def stores_mine():
-    from api import stores as stores_mod
-    return {"stores": stores_mod.mine()}
-
-
-@app.post("/api/stores/mine")
-async def stores_add_mine(req: Request):
-    body = await _json_obj(req)
-    store_id = (body.get("store_id") or "").strip()
-    if not store_id:
-        raise HTTPException(400, "store_id is required")
-    from api import stores as stores_mod
-    row = stores_mod.add_to_mine(store_id)
-    if row is None:
-        raise HTTPException(404, "no such store in the directory")
-    return row
-
-
-@app.post("/api/stores")
-async def stores_create(req: Request):
-    body = await _json_obj(req)
-    from api import stores as stores_mod
-    try:
-        store, _created = stores_mod.create_store(
-            body.get("name"), body.get("street"), body.get("city"),
-            body.get("state"), body.get("zip"),
-            created_by=state._current_user.get())
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return stores_mod.add_to_mine(store["id"])
-
-
-@app.get("/api/stores/places")
-def stores_places(q: str = "", session: str = "",
-                  lat: float = None, lng: float = None):
-    """Google Places suggestions for the store picker. A plain def
-    route: the upstream call blocks, so FastAPI runs it in the
-    threadpool. Unprovisioned (no key) is a quiet no-op, the
-    second-seat shape."""
-    from api import places
-    nearby = not q.strip() and lat is not None and lng is not None
-    if not places.provisioned() or (len(q.strip()) < 3 and not nearby):
-        return {"provisioned": places.provisioned(), "suggestions": []}
-    try:
-        if nearby:
-            # "Near me": grocery stores around the phone, no typing.
-            rows = places._text_search_stores("", lat, lng)
-        else:
-            rows = places.autocomplete(q.strip(), session or None, lat, lng)
-    except places.PlacesError:
-        return {"provisioned": True, "suggestions": [], "error": "places"}
-    return {"provisioned": True, "suggestions": rows}
-
-
-@app.post("/api/stores/places/pick")
-async def stores_places_pick(req: Request):
-    body = await _json_obj(req)
-    place_id = (body.get("place_id") or "").strip()
-    name = (body.get("name") or "").strip()
-    if not place_id or not name:
-        raise HTTPException(400, "place_id and name are required")
-    from api import places
-    if not places.provisioned():
-        raise HTTPException(503, "Google Places is not provisioned yet")
-    from starlette.concurrency import run_in_threadpool
-    try:
-        row = await run_in_threadpool(
-            places.pick_store, place_id, name, state._current_user.get())
-    except places.PlacesError as e:
-        raise HTTPException(502, str(e))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return row
-
-
-@app.post("/api/stores/favorite")
-async def stores_favorite(req: Request):
-    body = await _json_obj(req)
-    store_id = (body.get("store_id") or "").strip()
-    if not store_id:
-        raise HTTPException(400, "store_id is required")
-    if "favorite" not in body:
-        raise HTTPException(400, "favorite is required")
-    from api import stores as stores_mod
-    row = stores_mod.set_favorite(store_id, body.get("favorite"))
-    if row is None:
-        raise HTTPException(404, "that store is not in your stores")
-    return row
-
-
-@app.post("/api/stores/mine/remove")
-async def stores_mine_remove(req: Request):
-    body = await _json_obj(req)
-    store_id = (body.get("store_id") or "").strip()
-    if not store_id:
-        raise HTTPException(400, "store_id is required")
-    from api import stores as stores_mod
-    if not stores_mod.remove_from_mine(store_id):
-        raise HTTPException(404, "that store is not in your stores")
-    return {"ok": True, "removed": store_id}
 
 
 # --- Arya Quest (Stage A): sessions, optimizer, Shop-Off, social ---
@@ -2002,104 +1519,6 @@ def quest_list_friends():
     return {"friends": social.list_friends()}
 
 
-@app.get("/api/account/export")
-def account_export():
-    """Download everything the account holds (Tranche 1): the
-    raw per-user stores as one JSON file. Photos are not embedded —
-    their records and filenames are, and each original is served
-    by its own route."""
-    import json as _json
-    from datetime import datetime, timezone
-    from api import state
-    out = {"exported_at": datetime.now(timezone.utc).isoformat(),
-           "user": state._current_user.get()}
-    for name in ("receipts.json", "dictionary.json", "flags.json",
-                 "cart.json", "quest.json", "my_stores.json",
-                 "eyes.json", "curator.json", "lists.json", "settings.json"):
-        out[name[:-5]] = state._load(name, None)
-    return Response(_json.dumps(out, indent=1),
-                    media_type="application/json",
-                    headers={"Content-Disposition":
-                             "attachment; filename=arya-export.json"})
-
-
-@app.post("/api/feedback")
-async def feedback_submit(req: Request):
-    body = await _json_obj(req)
-    from api import feedback
-    user = state._current_user.get()
-    try:
-        feedback.submit(user, body.get("kind", ""), body.get("text", ""))
-    except PermissionError as e:
-        raise HTTPException(429, str(e))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return {"ok": True}
-
-
-# --- push reminders (flag ARYA_PUSH_REMINDERS=1, off by default) -----------
-def _push_guard(req):
-    from api import reminders
-    if not reminders.configured():
-        raise HTTPException(404, "reminders are not turned on")
-    return reminders
-
-
-@app.get("/api/push/config")
-def push_config(req: Request):
-    from api import reminders
-    if _is_demo(req):
-        return {"enabled": False}
-    return reminders.config()
-
-
-@app.post("/api/push/subscribe")
-async def push_subscribe(req: Request):
-    r = _push_guard(req)
-    body = await _json_obj(req)
-    try:
-        r.subscribe(body.get("subscription"))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return r.config()
-
-
-@app.post("/api/push/unsubscribe")
-async def push_unsubscribe(req: Request):
-    r = _push_guard(req)
-    body = await _json_obj(req)
-    r.unsubscribe(body.get("endpoint"))
-    return r.config()
-
-
-@app.post("/api/push/settings")
-async def push_settings(req: Request):
-    r = _push_guard(req)
-    body = await _json_obj(req)
-    try:
-        r.set_notice_days(body.get("notice_days"))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return r.config()
-
-
-@app.post("/api/push/test")
-def push_test(req: Request):
-    r = _push_guard(req)
-    if not r.config()["subscribed"]:
-        raise HTTPException(400, "turn reminders on first")
-    return {"sent": r.send(r.compose([], test=True))}
-
-
-@app.get("/api/feedback")
-def feedback_list():
-    """Owner only: the first account reads what people sent."""
-    from api import feedback
-    if not feedback.is_owner(state._current_user.get()):
-        raise HTTPException(403, "only the owner can read feedback")
-    return {"notes": feedback.list_all()}
-
-
 @app.post("/api/quest/friends")
 async def quest_request_friend(req: Request):
     body = await _json_obj(req)
@@ -2367,262 +1786,13 @@ async def quest_haul_photo(req: Request, session: str = ""):
     if out is None:
         raise HTTPException(404, "no such session")
     return out
+from api.routes import storemap as storemap_routes  # noqa: E402
+app.include_router(storemap_routes.router)
 
-
-# --- Map my store: the guided, crowd-built store map -----------------------
-# See api/storemap.py. One shared map per store; a shopper maps the
-# aisles they use, and every shopper's captures merge into it.
-
-def _map_store(value):
-    name = (value or "").strip()
-    if not name:
-        raise HTTPException(400, "store is required")
-    return name
-
-
-@app.get("/api/storemap")
-def storemap_view(store: str = ""):
-    from api import storemap
-    name = _map_store(store)
-    focus = storemap.get_focus(name)
-    return {**storemap.view(name, focus=focus), "focus": focus}
-
-
-@app.post("/api/storemap/segments")
-async def storemap_add_segment(req: Request):
-    from api import storemap
-    body = await _json_obj(req)
-    try:
-        seg, created = storemap.add_segment(
-            _map_store(body.get("store")), body.get("label"),
-            body.get("side") or "both")
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return {"segment": seg["id"], "label": seg["label"],
-            "side": seg["side"], "created": created}
-
-
-@app.post("/api/storemap/focus")
-async def storemap_set_focus(req: Request):
-    from api import storemap
-    body = await _json_obj(req)
-    name = _map_store(body.get("store"))
-    ids = body.get("segments")
-    if not isinstance(ids, list):
-        raise HTTPException(400, "segments must be a list")
-    return {"focus": storemap.set_focus(name, [str(i) for i in ids])}
-
-
-@app.get("/api/storemap/next")
-def storemap_next(store: str = "", segment: str = "", items: str = ""):
-    from api import storemap
-    name = _map_store(store)
-    prompt = storemap.next_prompt(
-        name, focus=storemap.get_focus(name), seg_id=segment or None,
-        hint_items=[i for i in items.split(",") if i.strip()][:30])
-    return {"prompt": prompt}
-
-
-@app.post("/api/storemap/outdated")
-async def storemap_outdated(req: Request):
-    """"The map is outdated": flag a segment (or the segment of an
-    item) and answer with the capture the engine wants."""
-    from api import storemap
-    body = await _json_obj(req)
-    return storemap.flag_outdated(
-        _map_store(body.get("store")), seg_id=body.get("segment"),
-        item=body.get("item"), reason=body.get("reason") or "outdated")
-
-
-@app.get("/api/storemap/photo")
-def storemap_photo(store: str = "", segment: str = ""):
-    """The segment's best kept photo (people already scrubbed), or the
-    walkthrough frame a seeded segment started from."""
-    from api import storemap
-    name = _map_store(store)
-    data = storemap.best_image(name, segment)
-    if data is not None:
-        return Response(content=data, media_type="image/jpeg")
-    frame = storemap.baseline_frame(name, segment)
-    if frame and storemap.store_key(name) == storemap.store_key("Trader Joe's"):
-        path = os.path.join(_PWA, "models", "trader-joes", "frames-web", frame)
-        if os.path.isfile(path):
-            with open(path, "rb") as fh:
-                return Response(content=fh.read(), media_type="image/jpeg")
-    raise HTTPException(404, "no photo for this part of the map yet")
-
-
-@app.post("/api/storemap/capture")
-async def storemap_capture(req: Request):
-    """One guided capture: a photo, or one frame the app picked from a
-    walk video. The frame goes through the SAM 3.1 people scrub first
-    and fails closed; then the engine grades it, drops it if it
-    repeats a better view, and keeps the best few per segment. A weak
-    capture is refused with a one-line fix to retake."""
-    from api import shelfscan, storemap
-    media = (req.headers.get("content-type") or "").split(";")[0].strip()
-    if not media.startswith("image/"):
-        raise HTTPException(415, "send a photo (image)")
-    body = await req.body()
-    if not body:
-        raise HTTPException(400, "empty upload")
-    if len(body) > 12_000_000:
-        raise HTTPException(413, "photo too large (12 MB max)")
-    name = _map_store(req.query_params.get("store"))
-    seg_id = req.query_params.get("segment", "")
-    kind = req.query_params.get("kind", "photo")
-    if seg_id not in storemap.load_map(name)["segments"]:
-        raise HTTPException(404, "no such part of the map")
-    try:
-        storemap.score_image(body)
-    except Exception:
-        raise HTTPException(400, "that file is not a readable photo")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    demo = _is_demo(req)
-    _budget_guard(demo=demo)
-    client = new_client()
-    jpeg, people = await run_in_threadpool(
-        shelfscan.scrub_people, body, client, media_type=media)
-    if jpeg is None:
-        raise HTTPException(
-            503, "could not blur people out of the photo, so nothing was kept")
-    # Shelf fill: live SAM returns one box per shelf bay, so fill is
-    # the SUM of the box areas (capped at 1), not the largest box. It
-    # is measured on the scrubbed JPEG, so no raw frame is sent twice.
-    fill = None
-    try:
-        boxes, _u, _c = await run_in_threadpool(
-            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
-        if boxes:
-            from PIL import Image
-            import io
-            w, h = Image.open(io.BytesIO(jpeg)).size
-            fill = min(1.0, sum((b["box"][2] - b["box"][0])
-                                * (b["box"][3] - b["box"][1])
-                                for b in boxes) / float(w * h))
-    except Exception:
-        fill = None   # neutral: the fill check never blocks a capture
-    try:
-        out = storemap.ingest(name, seg_id, jpeg, kind=kind,
-                              shelf_fill=fill, people=people)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    out["reward"] = storemap.award(name, out)
-    return out
-
-
-@app.post("/api/storemap/teach")
-async def storemap_teach(req: Request):
-    """Zero-entry teach (owner, 2026-10-28: "no user is going to
-    enter data"). One frame with NO segment named: the people scrub
-    runs first, the section reader names what the scrubbed frame
-    shows, that section is found-or-created (both sides — the
-    shopper never picks one), and the frame lands in it like any
-    guided capture. The walk sends its sharpest frames one by one;
-    sections the reader gets wrong come back out through the
-    confirm card's discard, while they are still the teacher's own.
-    """
-    from api import mapread, shelfscan, storemap
-    media = (req.headers.get("content-type") or "").split(";")[0].strip()
-    if not media.startswith("image/"):
-        raise HTTPException(415, "send a photo (image)")
-    body = await req.body()
-    if not body:
-        raise HTTPException(400, "empty upload")
-    if len(body) > 12_000_000:
-        raise HTTPException(413, "photo too large (12 MB max)")
-    name = _map_store(req.query_params.get("store"))
-    kind = req.query_params.get("kind", "walk")
-    if kind not in storemap.KINDS:
-        raise HTTPException(400, "kind must be photo or walk")
-    try:
-        storemap.score_image(body)
-    except Exception:
-        raise HTTPException(400, "that file is not a readable photo")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
-    demo = _is_demo(req)
-    _budget_guard(demo=demo)
-    client = new_client()
-    jpeg, people = await run_in_threadpool(
-        shelfscan.scrub_people, body, client, media_type=media)
-    if jpeg is None:
-        raise HTTPException(
-            503, "could not blur people out of the photo, so nothing was kept")
-    try:
-        read = await run_in_threadpool(mapread.read_section, client, jpeg)
-    except ValueError as e:
-        raise HTTPException(422, str(e))
-    if not read["label"]:
-        raise HTTPException(422, "no shelf in that frame — nothing kept")
-    try:
-        seg, created = storemap.add_segment(name, read["label"], "both")
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    fill = None
-    try:
-        boxes, _u, _c = await run_in_threadpool(
-            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
-        if boxes:
-            from PIL import Image
-            import io
-            w, h = Image.open(io.BytesIO(jpeg)).size
-            fill = min(1.0, sum((b["box"][2] - b["box"][0])
-                                * (b["box"][3] - b["box"][1])
-                                for b in boxes) / float(w * h))
-    except Exception:
-        fill = None   # neutral: the fill check never blocks a capture
-    try:
-        out = storemap.ingest(name, seg["id"], jpeg, kind=kind,
-                              shelf_fill=fill, people=people)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    for item in read["items"]:
-        storemap.note_sighting(name, item, read["label"])
-    out.update({"label": seg["label"], "created": created,
-                "items": read["items"]})
-    out["reward"] = storemap.award(name, out)
-    return out
-
-
-@app.post("/api/storemap/discard")
-async def storemap_discard(req: Request):
-    """The confirm card's "Not a section": retract a section the
-    signed-in shopper just taught, while it is still only theirs."""
-    from api import storemap
-    body = await _json_obj(req)
-    try:
-        label = storemap.discard_segment(
-            _map_store(body.get("store")), str(body.get("segment") or ""))
-    except KeyError:
-        raise HTTPException(404, "no such part of the map")
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return {"removed": True, "label": label}
-
-
-@app.post("/api/storemap/split")
-async def storemap_split(req: Request):
-    """The app timed a walk and asks for the aisle to be split into
-    sections. Idempotent: an already-split aisle returns its sections."""
-    from api import storemap
-    body = await _json_obj(req)
-    try:
-        kids, created = storemap.split_segment(
-            _map_store(body.get("store")), str(body.get("segment") or ""),
-            body.get("parts"))
-    except KeyError:
-        raise HTTPException(404, "no such part of the map")
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return {"created": created,
-            "segments": [{"id": k["id"], "label": k["label"]} for k in kids]}
 
 
 from api import haul_routes  # noqa: E402  (HAUL slice: review, card, Crew)
 app.include_router(haul_routes.router)
 
-_PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 if os.path.isdir(_PWA):
     app.mount("/", StaticFiles(directory=_PWA, html=True), name="pwa")
