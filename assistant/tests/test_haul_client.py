@@ -295,7 +295,7 @@ class TestShareSpec(unittest.TestCase):
         self.assertIn("ctx.title", body)
         self.assertIn("ctx.stats", body)
         self.assertIn("new · level", body)
-        self.assertIn("`Level ${level}`", body)
+        self.assertIn('"Level {{level}}"', body)
         for w in ("pts", "price", "total", "sess.store"):
             self.assertNotIn(w, body)
 

@@ -104,7 +104,7 @@ class TestPackShell(unittest.TestCase):
         # every mutator snapshots first and offers Undo through done()
         for header in ("const decide = (kind: string, id: string) => {", "const backOne = () => {",
                        "const sweep = (kind: string) => {", "const restore = (key: string) => {",
-                       "const addFromText = (t: string, src?: string) => {", "const addStarter = (name: string) => {"):
+                       "const addFromText = (txt: string, src?: string) => {", "const addStarter = (name: string) => {"):
             self.assertIn("snap();", body(nl, header), header)
         self.assertIn('if (msg) toast(msg, { action: "Undo", onAction: undo });', nl)
         # no emoji, no banned words in anything the shopper reads

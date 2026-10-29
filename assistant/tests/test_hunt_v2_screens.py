@@ -16,7 +16,7 @@ from tests.frontend import src
 class TestHuntV2Screens(unittest.TestCase):
     def test_labels_are_one_vocabulary(self):
         js = src("screens/Quest.tsx")
-        table = js.split("QSTATE_LBL: Record<string, string> = {")[1].split("}")[0]
+        table = js.split("QSTATE_KEY: Record<string, string> = {")[1].split("}")[0]
         self.assertIn('"Finished · Receipt missing"', table)
         self.assertIn('"Finished · Receipt attached ✓"', table)
         # Profile's missing-receipt rows use the same words.

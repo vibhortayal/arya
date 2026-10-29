@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "../i18n";
 
 /* The one bottom sheet. It replaces the three plain-JS versions
  * (static .sheetwrap blocks, huntmenu.js openSheet, expiry.js) with
@@ -28,7 +29,8 @@ type Props = {
 
 const FOCUSABLE = "button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])";
 
-export function Sheet({ open, onClose, title, className, id, labelledBy, closeLabel = "Close", focusKey, children }: Props) {
+export function Sheet({ open, onClose, title, className, id, labelledBy, closeLabel, focusKey, children }: Props) {
+  const { t } = useTranslation();
   const sheet = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const titleId = useId();
@@ -88,7 +90,7 @@ export function Sheet({ open, onClose, title, className, id, labelledBy, closeLa
         {title !== undefined && (
           <div className="sheethead">
             <h3 id={titleId} className="nomargin">{title}</h3>
-            <button type="button" className="linkbtn" onClick={() => close.current()}>{closeLabel}</button>
+            <button type="button" className="linkbtn" onClick={() => close.current()}>{closeLabel ?? t("common.close")}</button>
           </div>
         )}
         {children}

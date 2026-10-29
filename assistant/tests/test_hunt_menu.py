@@ -102,12 +102,12 @@ class TestHuntMenuShell(unittest.TestCase):
         h = hunt()
         row = h[h.index("const listRows = sess.items.map("):h.index("const left = sess.left || [];")]
         for pin in ("data-more={i}", "data-grab={i}", "data-putback={i}", "data-foundit={i}", "data-unfind={i}",
-                    "aria-label={`More for ${it.name}`}", "Found it after all", "Put back", "Boss", "Just added",
+                    'aria-label="More for {{name}}"', "Found it after all", "Put back", "Boss", "Just added",
                     "findline"):
             self.assertIn(pin, row)
         # Design pass (2026-10-29): the check is the grab; its label
         # carries the quantity.
-        self.assertIn("aria-label={qty ? `Grab ${qty} ${it.name}` : `Grab ${it.name}`}", row)
+        self.assertIn('aria-label={qty ? "Grab {{qty}} {{name}}" : "Grab {{name}}"}', row)
         self.assertIn('className={"huntcheck', row)
         self.assertEqual(EMOJI.findall(row), [])
 
@@ -128,7 +128,7 @@ class TestHuntMenuShell(unittest.TestCase):
 
     def test_copy_has_the_required_lines_and_no_banned_words(self):
         text = menu() + "\n" + hunt()
-        for line in ("Leave ${open.length} for next time?", "Nothing is lost. Saved items come first on your next trip.",
+        for line in ("Leave {{n}} for next time?", "Nothing is lost. Saved items come first on your next trip.",
                      "Keep hunting", "Check out", "Next trip", "Drop", "Find it for me",
                      "Tell other shoppers it is gone", "Keep looking", "Type my own",
                      "Your quantity carries over.", "is saved for next trip.", "Last seen:",
@@ -137,12 +137,12 @@ class TestHuntMenuShell(unittest.TestCase):
                      "Change quantity or note", "Save for next trip", "Don't need it today", "Swap it", "It moved",
                      "already on the list, now x", "in your cart"):
             self.assertIn(line, text)
-        for line in ("Welcome back. ${p.done} of ${p.total} in your cart.",
-                     "Reported missing on {b.reports} earlier trips. Find it for +{QPTS.boss}.",
+        for line in ("Welcome back. {{done}} of {{total}} in your cart.",
+                     "Reported missing on {{reports}} earlier trips. Find it for +{{boss}}.",
                      "Nothing left to grab. Tap Done when you are ready.",
                      "No signal. Tap it again when you are back online."):
             self.assertIn(line, hunt())
-        self.assertIn("left for next time at ${sess.store}.", src("screens/Finish.tsx"))
+        self.assertIn("left for next time at {{store}}.", src("screens/Finish.tsx"))
         low = menu().lower()
         for word in BANNED:
             if word in ("verified", "timer"):
@@ -154,7 +154,7 @@ class TestHuntMenuShell(unittest.TestCase):
     def test_toast_close_button_and_live_region(self):
         t = src("ui/Toast.tsx")
         self.assertIn('className="toastclose" aria-label="Dismiss"', t)
-        self.assertLess(t.index("{t?.msg}"), t.index('className="toastact"'))
+        self.assertLess(t.index("{cur?.msg}"), t.index('className="toastact"'))
         self.assertIn("clearTimeout(timer.current)", t)
         self.assertIn("toastMs(msg, !!opts?.action)", t)
         self.assertIn('<div id="toast" role="status" aria-live="polite"', t)

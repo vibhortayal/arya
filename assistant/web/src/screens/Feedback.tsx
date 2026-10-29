@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { get, post } from "../lib/api";
 import { Chip, Empty, Row } from "../ui/kit";
+import { useTranslation } from "../i18n";
 
 /* Port of Feature request / Contact us (pwa/index.html #view-feedback,
  * app.js "Feature request / Contact us"). One note, a kind; the
@@ -12,11 +13,12 @@ type Kind = "idea" | "bug" | "question";
 type Note = { text: string; kind: string; user: string; at: number };
 
 export function Feedback() {
+  const { t } = useTranslation();
   const nav = useNav();
   const { demo } = useSession();
   const [kind, setKind] = useState<Kind>("idea");
   const [text, setText] = useState("");
-  const [status, setStatus] = useState(demo ? "Sign in with a real account to send a note." : "");
+  const [status, setStatus] = useState(demo ? t("feedback.signInToSend") : "");
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState<Note[] | null>(null);
 
@@ -24,7 +26,7 @@ export function Feedback() {
     get<{ notes: Note[] }>("/api/feedback").then(d => setNotes(d.notes), () => setNotes(null));
   };
   useEffect(() => {
-    setStatus(demo ? "Sign in with a real account to send a note." : "");
+    setStatus(demo ? t("feedback.signInToSend") : "");
     loadInbox();
   }, [nav.key, demo]);
 
@@ -33,7 +35,7 @@ export function Feedback() {
     try {
       await post("/api/feedback", { kind, text });
       setText("");
-      setStatus("Sent. Thank you.");
+      setStatus(t("feedback.sent"));
       loadInbox();
     } catch (e) { setStatus(e instanceof Error ? e.message : String(e)); }
     setBusy(false);
@@ -41,32 +43,32 @@ export function Feedback() {
 
   return (
     <>
-      <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>Feature request / Contact us</h2>
+      <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}>{t("common.back")}</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("feedback.featureRequestContactUs")}</h2>
       <div className="group pad">
-        <p className="muted nomargin">We read every note. It goes out with your username only &mdash; no email or name needed.</p>
+        <p className="muted nomargin">{t("feedback.weReadEveryNoteIt")}</p>
         <div className="row" id="fb-kinds" style={{ marginTop: 10, gap: 8 }}>
           {(["idea", "bug", "question"] as Kind[]).map(k => (
             <Chip key={k} data-kind={k} pressed={kind === k} onClick={() => setKind(k)}>{k[0].toUpperCase() + k.slice(1)}</Chip>
           ))}
         </div>
-        <label className="field" htmlFor="fb-text" style={{ marginTop: 10 }}>Your note</label>
-        <textarea id="fb-text" rows={5} maxLength={1000} placeholder="What would make Arya better?"
+        <label className="field" htmlFor="fb-text" style={{ marginTop: 10 }}>{t("feedback.yourNote")}</label>
+        <textarea id="fb-text" rows={5} maxLength={1000} placeholder={t("feedback.whatWouldMakeAryaBetter")}
           value={text} onChange={e => setText(e.target.value)} />
         <p className="muted nomargin" id="fb-count">{text.length} / 1000</p>
-        <p><button id="fb-send" className="btn primary wide" type="button" disabled={demo || busy} onClick={send}>Send</button></p>
+        <p><button id="fb-send" className="btn primary wide" type="button" disabled={demo || busy} onClick={send}>{t("common.send")}</button></p>
         <p className="muted nomargin" id="fb-status">{status}</p>
       </div>
       <div id="fb-owner" hidden={notes === null}>
         {notes && (
           <>
-            <h3 className="sect">Received</h3>
+            <h3 className="sect">{t("feedback.received")}</h3>
             <div className="group">
               {notes.length
                 ? notes.map((n, i) => (
                   <Row key={i} name={n.text} sub={`${n.kind} · ${n.user} · ${new Date(n.at * 1000).toLocaleDateString()}`} />
                 ))
-                : <Empty>Nothing yet.</Empty>}
+                : <Empty>{t("feedback.nothingYet")}</Empty>}
             </div>
           </>
         )}

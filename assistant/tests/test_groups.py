@@ -287,4 +287,5 @@ class TestGroupShell(unittest.TestCase):
         js = frontend.src("screens/Profile.tsx")
         self.assertIn("/?join=", js)
         self.assertIn("The group keeps its own.", js)
-        self.assertIn('go${p.my_receipts === 1 ? "es" : ""} with you', js)
+        self.assertIn("Your {{count}} receipts go with you", js)
+        self.assertEqual(frontend.words("settings.yourReceiptsGo_one"), "Your {{count}} receipt goes with you")

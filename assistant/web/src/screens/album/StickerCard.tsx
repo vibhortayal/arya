@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { asset } from "../../lib/format";
 import { Q } from "../hunt/model";
+import { useTranslation } from "../../i18n";
 
 /* Port of the "New sticker" card in pwa/album.js (albCardEl,
  * albHideCard, albCardOpen, albCardUndo, albOnGrabbed). Mounted by the
@@ -31,6 +32,7 @@ export function stickerUndoIndex(sess: { items?: { name: string; group?: string 
 }
 
 export function StickerCard({ onUndo }: { onUndo: (key: string, name: string) => void }) {
+  const { t } = useTranslation();
   const [card, setCard] = useState<Card | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const undo = useRef(onUndo);
@@ -82,9 +84,9 @@ export function StickerCard({ onUndo }: { onUndo: (key: string, name: string) =>
       {card && (
         <>
           <img className="stkimg" src={stickerSrc(card.st)} alt="" />
-          <div className="stkbody"><b className="stkhead">New sticker</b><span className="stkname">{card.st.name}</span>
-            {card.badge && <span className="stkbadge">Page full. Add your receipt to earn {card.badge}.</span>}</div>
-          <button type="button" className="undo" data-stk-undo onClick={doUndo}>Undo</button>
+          <div className="stkbody"><b className="stkhead">{t("album.newSticker")}</b><span className="stkname">{card.st.name}</span>
+            {card.badge && <span className="stkbadge">{t("album.pageFullAddYourReceipt", { badge: card.badge })}</span>}</div>
+          <button type="button" className="undo" data-stk-undo onClick={doUndo}>{t("common.undo")}</button>
         </>
       )}
     </div>

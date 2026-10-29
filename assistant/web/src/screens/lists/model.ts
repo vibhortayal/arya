@@ -1,5 +1,6 @@
 import { clearOnSignOut } from "../../app/session";
 import { fmtShort } from "../../lib/format";
+import { t } from "../../i18n";
 
 /* Data helpers for the Lists tab, ported from pwa/app.js (namedLists,
  * itemHome, suggestHome, suggestWhy, qSameStore). The character
@@ -28,7 +29,7 @@ export const namedLists = (d: HomeData | null): NamedList[] => (d && d.lists) ||
 export const onListItems = (d: HomeData) => d.list.items.filter(i => i.on_list);
 export const suggestions = (d: HomeData) => d.list.items.filter(i => !i.on_list);
 export const lensName = (d: HomeData | null, id: string) =>
-  id === "else" ? "Everything else" : ((namedLists(d).find(l => l.id === id) || {} as Partial<NamedList>).name || "");
+  id === "else" ? t("common.everythingElse") : ((namedLists(d).find(l => l.id === id) || {} as Partial<NamedList>).name || "");
 
 /* Where an item lives: its named list, or "else". */
 export function itemHome(d: HomeData, i: Item): string {
@@ -50,12 +51,12 @@ export function suggestHome(d: HomeData, i: Item): string {
 
 /* One short reason for a suggestion row; the sheet has the rest. */
 export function suggestWhy(i: Item): string {
-  if (i.expired_on) return `Expired on ${fmtShort(i.expired_on)}`;
+  if (i.expired_on) return t("lists.why.expiredOn", { date: fmtShort(i.expired_on) });
   if (i.every_days) {
     const left = i.every_days - (i.days_since || 0);
-    return `Every ~${i.every_days} days · ${left <= 0 ? "due now" : `due in ${left} day${left === 1 ? "" : "s"}`}`;
+    return t("lists.why.every", { days: i.every_days }) + " · " + (left <= 0 ? t("lists.why.dueNow") : t("lists.why.dueIn", { count: left }));
   }
-  return i.due_reason || i.judge_reason || "Arya thinks it's due";
+  return i.due_reason || i.judge_reason || t("lists.why.thinksDue");
 }
 
 /* "To ask" items the New list plan skipped (quest.js qAskLaterHas). */

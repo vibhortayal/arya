@@ -5,6 +5,7 @@
  * MotionMath) through ui/Scene loadScene(). */
 import { loadScene } from "../../ui/Scene";
 import { Q, qCurrentIndex, qNextIndex, qStopU } from "./model";
+import { t } from "../../i18n";
 
 type MotionLook = { on: boolean; onUnavailable: (() => void) | null; start(): Promise<boolean>; stop(): void };
 type StepDet = { sample(a: DeviceMotionEventAcceleration | null, now: number): boolean };
@@ -68,7 +69,7 @@ export async function toggleSteps(): Promise<string> {
     const DME = typeof DeviceMotionEvent !== "undefined" ? (DeviceMotionEvent as any) : null;
     if (DME && typeof DME.requestPermission === "function") {
       const res = await DME.requestPermission().catch(() => "denied");
-      if (res !== "granted") return "Steps need motion permission — they stay off.";
+      if (res !== "granted") return t("hunt.stepsNeedPermission");
     }
     M.stepsOn = true;
     try { localStorage.setItem("arya-steps", "1"); } catch { /* memory only */ }
