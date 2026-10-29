@@ -15,7 +15,7 @@ import {
 import type { QuestItem } from "../core/types";
 import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
-import { charArt, img } from "../assets";
+import { charArt, sceneArt } from "../assets";
 import { GhostHand, KindBadge, Sheet } from "./bits";
 import { coachFor } from "./coach";
 import type { Goal, WorldApi } from "../world/World3D";
@@ -214,7 +214,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
           <motion.section key={"shelf-" + item.key + page} className={"qg-shelf v-" + view_} initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={{ type: "spring", damping: 26, stiffness: 320 }}>
             <button className="qg-x qg-shelf-x" onClick={() => { setAt(null); setPage("main"); }} aria-label="Walk away without choosing">✕</button>
             <div className="qg-shelf-h">
-              <div className="qg-shelf-art" style={{ backgroundImage: view_ === "fog" ? undefined : `url(${img(`quest/${section.id}.webp`)})` }}>
+              <div className="qg-shelf-art" style={{ backgroundImage: view_ === "fog" ? undefined : `url(${sceneArt(section)})` }}>
                 <img className={trip.golden === item.key ? "golden" : ""} src={charArt(item.art)} alt="" />
               </div>
               <div>

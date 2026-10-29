@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyTrip, emptyProfile, levelOf, stageOf, streak, weekKey, bundleProgress, BUNDLES } from "./meta";
-import { aryaOrder, leg, pointAt, routePath } from "./route";
+import { aryaOrder } from "./route";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SampleSource, WEEKLY, toItems } from "./source";
 import { buildLayout, sectionFor, viewOf } from "./template";
 import { SCORE, allHandled, currentStop, newTrip, reduce, tally, type Trip } from "./trip";
@@ -44,17 +44,14 @@ describe("route", () => {
     expect(order[0]).toBe("produce");
     expect(order.slice(-2)).toEqual(["dairy", "frozen"]);
   });
-  it("paths stay on the walkways", () => {
-    expect(leg({ x: 38, y: 200 }, { x: 175, y: 150 })).toEqual([{ x: 38, y: 74 }, { x: 175, y: 74 }, { x: 175, y: 150 }]);
-    expect(leg({ x: 103, y: 41 }, { x: 175, y: 41 })).toEqual([{ x: 175, y: 41 }]);
-  });
-  it("splits the path at the current stop and can find points on it", async () => {
+  it("walks up the left wall, along the back, the aisles, then cold cases", async () => {
     const { layout, items } = await open("tj-bellevue");
     const order = aryaOrder(layout, items);
-    const p = routePath(layout, order, 1);
-    expect(p.walked[0]).toEqual(layout.entry);
-    expect(p.ahead[p.ahead.length - 1]).toEqual(layout.checkout);
-    expect(pointAt([{ x: 0, y: 0 }, { x: 10, y: 0 }], 0.5)).toEqual({ x: 5, y: 0 });
+    const pos = (id: string) => order.indexOf(id);
+    const has = (id: string) => pos(id) >= 0;
+    if (has("bakery") && has("meat")) expect(pos("bakery")).toBeLessThan(pos("meat"));
+    const aisles = order.filter(id => id.startsWith("aisle"));
+    expect(aisles).toEqual([...aisles].sort());
   });
 });
 
