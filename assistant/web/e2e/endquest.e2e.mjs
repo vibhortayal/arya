@@ -20,10 +20,12 @@ export default async function (page, base) {
   await page.waitForSelector("#today-hero .herocard");
   const hero = await page.getAttribute("#today-hero [data-hero]", "data-hero");
   if (hero === ids.empty) throw new Error("an empty quest must not be the next action");
-  // Every open row can be ended, the newest included.
-  for (const id of [ids.full, ids.empty])
+  // Every open trip can be ended: the hero from its card, the rest from
+  // their rows (the hero is not listed twice).
+  if (await page.$(`#quest-sessions [data-sess="${hero}"]`)) throw new Error("hero listed twice");
+  for (const id of [ids.full, ids.empty].filter(x => x !== hero))
     if (!(await page.$(`#quest-sessions [data-abandon="${id}"]`))) throw new Error("no End on " + id);
   page.once("dialog", d => d.accept());
   await page.click(`#today-hero [data-hero-end="${hero}"]`);
-  await page.waitForFunction(h => !document.querySelector(`[data-sess="${h}"]`), hero);
+  await page.waitForFunction(h => !document.querySelector(`[data-hero="${h}"], [data-sess="${h}"]`), hero);
 }

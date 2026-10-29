@@ -5,7 +5,7 @@
  * built. Every line is something the player really did. */
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { levelOf, BUNDLES, type Profile, type Rewards } from "../core/meta";
+import { levelOf, type Profile, type Rewards } from "../core/meta";
 import { tally, type Trip } from "../core/trip";
 import { buzz, stinger, tick } from "../fx/feel";
 import { Juice } from "../fx/juice";
@@ -122,12 +122,6 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             <div><span className="qg-big">{rewards.streak.weeks}</span><small>week streak{rewards.streak.freezesLeft < 2 ? ` · ${rewards.streak.freezesLeft} rest week${rewards.streak.freezesLeft === 1 ? "" : "s"} left` : ""}</small></div>
             <div><span className="qg-big">{stage.after.pct}%</span><small>{trip.layout.name} mapped · {stage.after.name}{stage.after.name !== stage.before.name ? " (new!)" : ""}</small></div>
           </motion.div>
-
-          {rewards.bundlesDone.length > 0 && (
-            <motion.div className="qg-card" {...stagger(3)}>
-              {rewards.bundlesDone.map(id => { const b = BUNDLES.find(x => x.id === id)!; return <p key={id} className="qg-p"><b>{b.name} complete!</b> {b.reward}.</p>; })}
-            </motion.div>
-          )}
 
           <motion.div className="qg-card" {...stagger(4)}>
             <h3>How was the route?</h3>
