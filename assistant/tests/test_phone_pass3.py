@@ -32,7 +32,7 @@ class TestAbandonQuest(unittest.TestCase):
     def test_abandon_wiring(self):
         hunt = src("screens/Hunt.tsx")
         for needle in ('qSetState(s, "abandoned")',
-                       "End this quest? It leaves Quest and cannot be resumed."):
+                       "End this quest? You can't come back to it. Items you got stay in your cart."):
             self.assertIn(needle, hunt)
         self.assertIn('{ state: "abandoned" }', src("screens/Quest.tsx"))
 

@@ -7,7 +7,7 @@ test("format helpers match the plain-JS app", () => {
   expect(qtyTag({ qty: 1.5, unit: "kg" })).toBe("1.5 kg");
   expect(qtyTag({ qty: 1 })).toBe("");
   expect(money(-3.5, { code: "EUR", symbol: "€" })).toBe("€3.50");
-  expect(friendlyError("no such session.")).toMatch(/hunt is gone/);
+  expect(friendlyError("no such session.")).toMatch(/quest ended when the demo reset/);
 });
 
 test("short dates carry the year only when it is not this year", () => {

@@ -17,6 +17,10 @@ type Detail = {
   history: { date: string; event_type: string; store_id?: string; price: number }[];
 };
 
+/* The pattern engine's state (api/patterns/engine.py history_state) as
+ * a plain sentence; its "verdict" text is for developers. */
+const VERDICT: Record<string, string> = { pattern: "pattern", lapsed: "lapsed", "not-enough-history": "new" };
+
 export function Item() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -45,7 +49,7 @@ export function Item() {
 
   return (
     <>
-      <p><a href="#" id="item-back" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <p><a href="#" id="item-back" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <div id="item-detail">
         {d && <>
           <h2 className="largetitle" style={{ fontSize: 28 }}>{e ? e.canonical_name : id}</h2>
@@ -64,7 +68,7 @@ export function Item() {
             </div>
           </>}
           {p && p.analysis && p.analysis.verdict && (
-            <p className="muted">{t("item.patternCheck", { verdict: p.analysis.verdict })}{p.analysis.seasonal_months
+            <p className="muted">{t(`item.verdict.${p.due ? "due" : VERDICT[String(p.history_state)] || "new"}`)}{p.analysis.seasonal_months
               ? t("item.boughtMostlyIn", { months: p.analysis.seasonal_months.map((m: number) => MONTHS[m - 1]).join(", ") }) : ""}.</p>
           )}
           {stores.length > 0 && <>

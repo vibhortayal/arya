@@ -14,7 +14,7 @@ export default async function (page, base) {
   await page.fill("#gj-code", "ZZZZZZ");
   await page.waitForFunction(() => document.querySelector("#gj-preview").textContent.trim().length > 0, null, { timeout: 5000 });
   if (!(await page.isDisabled("#gj-go"))) throw new Error("Join should stay disabled without a group");
-  if (!(await page.textContent("#view-group-join")).includes("You can leave any time from Profile.")) throw new Error("footer text");
+  if (!(await page.textContent("#view-group-join")).includes("You can leave any time from Settings.")) throw new Error("footer text");
   await page.click("#gj-back");
   await page.waitForSelector("#view-profile");
 }

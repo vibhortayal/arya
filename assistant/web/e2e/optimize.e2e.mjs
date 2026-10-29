@@ -24,7 +24,7 @@ export default async function (page, base) {
   });
   await page.waitForSelector("#view-optimize #opt-body");
   const sum = await page.textContent("#opt-summary");
-  if (sum !== "3 in · 1 merged · 1 corrected · 1 to ask · 1 kept as typed") throw new Error("summary: " + sum);
+  if (sum !== "3 in · 1 merged · 1 corrected · 1 to check · 1 kept as typed") throw new Error("summary: " + sum);
   if (!(await page.isVisible("#opt-skip"))) throw new Error("skip should show while a question is open");
 
   await page.click("[data-undo='0']");

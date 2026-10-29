@@ -26,6 +26,12 @@ export const M = {
 
 const G = () => window as any;
 
+/* Debug builds (vite dev) and ?debug=1 show lab toggles such as
+ * step-advance; the demo and real accounts never see them. */
+export function stepsDebug(): boolean {
+  try { return !!import.meta.env?.DEV || new URLSearchParams(location.search).has("debug"); } catch { return false; }
+}
+
 export const gyroAvailable = () => typeof DeviceOrientationEvent !== "undefined";
 
 /* Builds the gyro controller once per hunt mount (it reads Q.scene per

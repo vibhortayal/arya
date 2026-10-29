@@ -42,7 +42,7 @@ class TestSmallUxPins(unittest.TestCase):
         self.assertIn("if (me && me.user)", src("app/session.tsx"))
 
     def test_hunts_tile_label(self):
-        self.assertIn('<div className="sl">Hunts finished</div>', src("screens/QuestProgress.tsx"))
+        self.assertIn('<div className="sl">Quests finished</div>', src("screens/QuestProgress.tsx"))
 
     def test_token_rows_wrap_and_signout_target(self):
         css = read("styles.css")

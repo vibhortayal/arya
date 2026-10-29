@@ -66,7 +66,9 @@ class TestStoreAlerts(unittest.TestCase):
         js = today()
         self.assertNotIn("samplepill", js)
         self.assertNotIn("Example only", js)
-        self.assertIn('{alertRows.length > 0 && <><h3 className="sect">Store alerts</h3>', js)
+        # Reports and price tips have their own headings (labels audit).
+        self.assertIn('[["report", "Store alerts"], ["price", "Cheaper elsewhere"]]', js)
+        self.assertIn('return rows.length > 0 && <Fragment key={kind}><h3 className="sect">{t(head)}</h3>', js)
 
 
 class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
@@ -82,7 +84,7 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
         q = src("screens/Quest.tsx")
         self.assertNotIn("No hunts yet today", q)
         self.assertIn('id="games-head" hidden={!sessions.length}', q)
-        self.assertIn('id="comm-fastest" hidden={!qualifying.length}', q)
+        self.assertIn('id="comm-fastest" hidden={!done.length}', q)
         self.assertNotIn("Hunting is better with company", q)
 
     def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):

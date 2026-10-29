@@ -165,7 +165,7 @@ export function FindStorePanel({ onAdded }: { onAdded?: (name: string) => void }
               <div className="row" key={s.id}>
                 <div className="grow"><span className="name">{s.name}</span>
                   <span className="sub">{storeMeta(s)}</span></div>
-                {s.in_mine ? <span className="sub">{t("storesFind.added")}</span>
+                {s.in_mine ? <span className="sub">{t("storesFind.added")}<span aria-hidden="true"> ✓</span></span>
                   : <button className="chip" data-addstore={s.id} type="button" onClick={ev => add(s, ev.currentTarget)}>{t("common.add")}</button>}
               </div>
             ))}

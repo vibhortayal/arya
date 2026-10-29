@@ -25,7 +25,7 @@ class TestTodayClock(unittest.TestCase):
     def test_data_through_is_labeled_as_data(self):
         js = src("screens/Today.tsx")
         self.assertIn('id="today-through"', js)
-        self.assertIn('h?.as_of ? "Data through {{date}}" : ""', js)
+        self.assertIn('h?.as_of ? "From your receipts up to {{date}}" : ""', js)
         # ...and the date in that line is as_of.
         raw = frontend.src_raw("screens/Today.tsx")
         self.assertIn('t("today.dataThrough", { date: fmtDate(h.as_of) })', raw)

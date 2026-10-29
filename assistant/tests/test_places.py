@@ -200,7 +200,7 @@ class TestPickerClient(unittest.TestCase):
         q = src("screens/Store.tsx")
         for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
                        "data-gpick", "From Google",
-                       "Pick the store from the list"):
+                       "Pick your store from the list"):
             self.assertIn(needle, q)
         self.assertNotIn('id="sa-form"', q)
 

@@ -106,7 +106,7 @@ describe("i18n setup", () => {
   test("English is loaded, with plurals and interpolation", () => {
     expect(i18n.t("common.itemCount", { count: 1 })).toBe("1 item");
     expect(i18n.t("common.itemCount", { count: 3 })).toBe("3 items");
-    expect(i18n.t("common.couldNotLoad", { error: "<x>" })).toBe("Could not load: <x>");
+    expect(i18n.t("hunt.inYourCart", { name: "<x>" })).toBe("<x> in your cart");
   });
 
   test("the language setting maps to an i18n language, English when unknown", () => {

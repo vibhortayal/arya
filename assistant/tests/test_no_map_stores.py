@@ -186,8 +186,8 @@ class TestWebNoMap(unittest.TestCase):
     def test_express_nudge(self):
         src = read(WEB, "screens", "Express.tsx")
         self.assertIn('id="exp-nodata"', src)
-        self.assertIn("Arya has no photo of this aisle yet. Found it?", src)
-        self.assertIn("<snap>Snap the aisle</snap> so other Arya Shoppers can find it too.", src)
+        self.assertIn("No photo of this aisle yet. Found it?", src)
+        self.assertIn("<snap>Map this aisle</snap> so other Arya shoppers can find it.", src)
         self.assertIn('snap: <button id="exp-snap" className="linkbtn snapaisle"', src)
         self.assertIn('nav.show("capture", { prompt', src)
 

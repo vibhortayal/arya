@@ -9,7 +9,7 @@ export default async function (page, base) {
   await page.waitForSelector("#view-analysis");
   await page.waitForSelector("#an-spend .bignum");
   const txt = await page.textContent("#view-analysis");
-  for (const t of ["Analysis", "Spend by month", "Spend by store", "Top grocery items", "All-time spend"])
+  for (const t of ["Spending", "Spending by month", "Spending by store", "Top grocery items", "All-time spending"])
     if (!txt.includes(t)) throw new Error("missing: " + t);
   if ((await page.$$("#an-months .month-row")).length < 1) throw new Error("no month bars");
   if ((await page.$$("#an-stores .row")).length < 1) throw new Error("no store rows");

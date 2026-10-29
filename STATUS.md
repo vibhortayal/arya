@@ -9,6 +9,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 
 ## Landing B1 flip cards (2026-10-29, branch feat/landing-b)
 - Logged-out landing is "Your grocery run, smarter.": four flip cards (wobble until first tapped), Try it now + Start my own list (only when registration is open) pinned to fit 390x664.
+- **Labels audit (2026-10-29, PR #197 merged):** one word per idea across the app (quest, trip, Arya shoppers, friends, username, map this store, Spending, To check, points), plural and currency fixes, glyphs out of strings; Race, sample boards, sample crew hauls, Deals/Arya Shoppers tips and "Coming soon" rungs hidden (keys kept, `web/src/lib/flags.ts`). `assistant/loops/2026-10-29-labels-audit.md`.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account

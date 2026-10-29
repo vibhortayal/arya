@@ -165,7 +165,7 @@ class TestPlanComposer(unittest.TestCase):
         # photo items are ticked into this quest, not just the list
         self.assertIn("D.pick[key] = { name: n, qty: (D.pick[key] || {}).qty || 1, on: true };", q)
         # a receipt photo is never filed mid-plan
-        self.assertIn("file it from the List tab", q)
+        self.assertIn("That looks like a receipt. Add it from Settings › Receipts.", q)
 
 
 class TestQuietMilestones(unittest.TestCase):
@@ -215,7 +215,7 @@ class TestArtScene(unittest.TestCase):
     def test_resolution_and_caption_carry_the_nudge(self):
         q = src("screens/Hunt.tsx")
         self.assertIn('base === "photo" && focus && focus.unplaced ? "art" : base', q)
-        self.assertIn("Tap Teach Arya to map it for real", q)
+        self.assertIn("Tap Map this store to help.", q)
         # Express never gets the art rung
         self.assertIn('return sess.mode === "express" ? "strip" : "art";', q)
 

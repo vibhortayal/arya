@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "../i18n";
+import { ApiError } from "../lib/api";
 
 /* The one toast (pwa/app.js toast()): a dark pill under the header.
  * Errors go here, never into content labels. */
@@ -28,7 +29,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     timer.current = window.setTimeout(() => setCur(null), toastMs(msg, !!opts?.action));
   }, []);
   current = toast;
-  const showErr = useCallback((e: unknown) => toast(t("common.couldNotLoad", { error: e instanceof Error ? e.message : String(e) })), [toast]);
+  /* A server answer (ApiError) is already a plain sentence (lib/api
+   * friendlyError); anything else is a plain "Couldn't load this" and
+   * the raw text goes to the console, never to the person. */
+  const showErr = useCallback((e: unknown) => {
+    if (e instanceof ApiError || (e instanceof TypeError && /connection/i.test(e.message))) { toast(e.message); return; }
+    console.warn("Arya:", e);
+    toast(t("common.couldNotLoad"));
+  }, [toast]);
 
   return (
     <Ctx.Provider value={{ toast, showErr, hide }}>

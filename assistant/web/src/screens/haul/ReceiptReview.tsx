@@ -134,7 +134,7 @@ export function ReceiptReview() {
         <div className="group">{r.grabbed_only.map(e => row("grabbed_only", e,
           e.fix === "grabbed_drop" ? t("haul.leftOutOfHaul") : t("haul.inYourHaul"), "no"))}</div>
       </>}
-      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more">{t("haul.addAnotherReceipt")}</label>
+      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more"><span aria-hidden="true">+ </span>{t("haul.addAnotherReceipt")}</label>
         <input type="file" id="rv-more" accept="application/pdf,image/*" aria-label={t("haul.anotherReceipt")} hidden onChange={onMore} /></p>
       <p className="muted rv-more-note">{t("haul.paidInTwoPartsAdd")}</p>
       <p id="rv-status" className="muted">{status}</p>

@@ -9,9 +9,9 @@ export default async function (page, base) {
   await page.evaluate(() => window.__aryaShow("home"));
   await page.waitForSelector("#view-home #today-dow:not(:empty)");
   const txt = await page.textContent("#view-home");
-  for (const t of ["Today", "Running low", "Your lists", "Use soon", "Make your next run a Quest"])
+  for (const t of ["Today", "Running low", "Your lists", "Use soon", "Make your next trip a quest"])
     if (!txt.includes(t)) throw new Error("missing: " + t);
-  if (!/Data through/.test(await page.textContent("#today-through"))) throw new Error("through line missing");
+  if (!/From your receipts up to/.test(await page.textContent("#today-through"))) throw new Error("through line missing");
 
   // Running low: Add puts the item on the list.
   await page.waitForSelector("#today-low .row [data-low-add]");

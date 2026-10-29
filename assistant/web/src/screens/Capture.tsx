@@ -531,7 +531,7 @@ export function Capture() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={back}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={back}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h2>
       <p className="muted" id="cp-why">{prompt.why || ""}</p>
       <div className={"cp-cam" + (live ? " scanning" : "")} id="cp-cam" hidden={!camOn} ref={camBox}>
@@ -543,7 +543,7 @@ export function Capture() {
             <ScanMarks live={live} video={videoRef.current} box={camBox.current} />
             <div className="cp-guide" aria-hidden="true">
               <div className="cp-track"><span style={{ width: `${Math.min(100, live.kept * 100 / SCAN_FULL)}%` }}></span>
-                <b>{live.paused ? t("capture.scan.paused") : t("capture.scan.panArrow")}</b></div>
+                <b>{live.paused ? t("capture.scan.paused") : <>{t("capture.scan.panArrow")}<span aria-hidden="true"> →</span></>}</b></div>
               <div className="cp-chips">
                 <span className={hint.good ? "ok" : ""}>{hint.good ? t("capture.scan.steady") : hint.text}</span>
                 <span>{t("capture.scan.frames", { count: live.kept })}</span>
@@ -614,7 +614,7 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
         {r.found.map(f => (
           <div className="row mp-seg" key={f.segment}>
             <span className="grow"><span className="name">{f.label}</span><span className="sub">{f.created ? t("capture.newSection") : t("capture.alreadyOnMap")}</span></span>
-            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>{t("capture.notASection")}</button>
+            <button className="btn small" data-tdiscard={f.segment} type="button" onClick={() => onDiscard(f.segment)}>{t("capture.notASection")}<span aria-hidden="true"> ✕</span></button>
           </div>
         ))}
         {r.extra && (r.extra.signs.length > 0 || r.extra.prices.length > 0 || r.extra.people > 0) && (

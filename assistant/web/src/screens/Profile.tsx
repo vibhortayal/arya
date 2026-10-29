@@ -124,7 +124,7 @@ export function Profile() {
 
   return (
     <>
-      {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}>{t("common.back")}</a></p>}
+      {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>}
       <h2 className="largetitle">{t("settings.settings")}</h2>
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
       {town ? <DirectorPanel /> : null}
@@ -140,17 +140,23 @@ export function Profile() {
           </div>
         ))}
       </div>
+      {/* Most of this tab is the user's data, not settings: a "Your data"
+        * heading groups Stores, Receipts and Spending (labels audit,
+        * judgement call 4; the tab keeps the name Settings). */}
+      <h3 className="sect" id="pf-data-head">{t("settings.yourData")}</h3>
       <div className="group">
         <NavRow view="stores-mine" title={t("settings.stores")} sub={t("settings.yourStoresFavoritesAndThe")} />
-        <button className="navrow" id="btn-tour" type="button" onClick={() => tour.startTour(FIRST_RUN_TOUR)}>
-          <span className="grow">{t("settings.showMeAroundAgain")}<span className="sub">{t("settings.replayTheTour")}</span></span><span className="chev">›</span></button>
+        <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"
+          sub={archive.receipts.length ? t("settings.receiptsSub", { count: archive.receipts.length }) : t("settings.privateArchive")} />
+        <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
+      </div>
+      <div className="group">
         <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
           <span className="grow">{t("settings.aryaGuide")}<span className="sub">{t("settings.aryaGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
-        <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
-        <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"
-          sub={archive.receipts.length ? t("settings.receiptsSub", { n: archive.receipts.length }) : t("settings.privateArchive")} />
         <NavRow id="btn-quest-progress" view="quest-progress" title={t("common.questProgress")} subId="pf-quest-sub" sub={questSub} />
+        <button className="navrow" id="btn-tour" type="button" onClick={() => tour.startTour(FIRST_RUN_TOUR)}>
+          <span className="grow">{t("settings.showMeAroundAgain")}<span className="sub">{t("settings.replayTheTour")}</span></span><span className="chev">›</span></button>
         <A2hsRow demo={demo} />
       </div>
       <Reminders />

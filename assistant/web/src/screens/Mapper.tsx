@@ -128,7 +128,7 @@ export function Mapper() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
       <img className="mapperhero" src="/assets/scenes/storefront.webp" alt="" />
       <p className="muted">{t("mapper.theMoreOfYourStore")}</p>
@@ -138,7 +138,7 @@ export function Mapper() {
             onClick={() => { chosen = n; setStore(n); setView(null); setFinding(false); load(n).catch(showErr); }}>{n}</button>
         ))}
         <button id="mp-findstore" className="chip" type="button" aria-expanded={showFind}
-          onClick={() => setFinding(!showFind)}>{t("mapper.findAnotherStore")}</button>
+          onClick={() => setFinding(!showFind)}><span aria-hidden="true">+ </span>{t("mapper.findAnotherStore")}</button>
       </div>
       {showFind && (
         <div id="mp-find">
@@ -186,7 +186,7 @@ export function Mapper() {
           const [statusKey, cls] = STATUS[s.status];
           const on = focusSet.has(s.id);
           const sub = [s.side === "both" ? t("mapper.bothSides") : t("mapper.oneSide", { side: s.side }),
-            s.contributors > 1 ? t("mapper.shoppers", { n: s.contributors }) : "",
+            s.contributors > 1 ? t("mapper.shoppers", { count: s.contributors }) : "",
             s.stale_item ? t("mapper.notFound", { item: s.stale_item }) : ""].filter(Boolean).join(" · ");
           return (
             <div className="row mp-seg" key={s.id}>

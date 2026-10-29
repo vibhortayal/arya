@@ -17,10 +17,10 @@ class TestHuntV2Screens(unittest.TestCase):
     def test_labels_are_one_vocabulary(self):
         js = src("screens/Quest.tsx")
         table = js.split("QSTATE_KEY: Record<string, string> = {")[1].split("}")[0]
-        self.assertIn('"Finished · Receipt missing"', table)
-        self.assertIn('"Finished · Receipt attached ✓"', table)
+        self.assertIn('"No receipt yet"', table)
+        self.assertIn('"Finished · Receipt added"', table)
         # Profile's missing-receipt rows use the same words.
-        self.assertIn("Finished · Receipt missing", src("screens/Profile.tsx"))
+        self.assertIn("in cart · No receipt yet", src("screens/Profile.tsx"))
 
     def test_today_hero_clears_on_finish(self):
         js = src("screens/Quest.tsx")
@@ -38,8 +38,8 @@ class TestHuntV2Screens(unittest.TestCase):
 
     def test_profile_counts_finished_and_attached_apart(self):
         prog = src("screens/QuestProgress.tsx")
-        self.assertIn(">Hunts finished<", prog)
-        self.assertIn(">Receipt attached<", prog)
+        self.assertIn(">Quests finished<", prog)
+        self.assertIn(">Receipt added<", prog)
         self.assertIn('id="pf-missing"', src("screens/Profile.tsx"))
 
     def test_add_receipt_is_reachable_everywhere(self):
@@ -65,7 +65,7 @@ class TestHuntV2Screens(unittest.TestCase):
 
     def test_back_is_a_stack(self):
         fin = src("screens/Finish.tsx")
-        self.assertIn("nav.back(); }}>‹ Back to the hunt</a>", fin)
+        self.assertIn('nav.back(); }}><span aria-hidden="true">‹ </span>Back to the quest</a>', fin)
         self.assertIn("Back is a stack", src("screens/hunt/hunt.test.tsx"))
 
     def test_resume_opens_a_finished_hunt_on_score(self):

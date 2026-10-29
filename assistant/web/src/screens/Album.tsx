@@ -91,7 +91,7 @@ export function Album() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle">{t("common.album")}</h2>
       <p className="subtitle" id="alb-sub">{sub}</p>
       <div id="alb-body">

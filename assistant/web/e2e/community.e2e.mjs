@@ -38,12 +38,14 @@ export default async function (page, base) {
   await page.waitForSelector("#view-trips #btn-new-hunt");
   const title = await page.textContent("#view-trips .largetitle");
   if (title !== "Your trips") throw new Error("title: " + title);
-  for (const sel of ["#btn-map-store", "#view-trips [data-qnav=view-race]", "#view-trips [data-qnav=view-friends]", "#album-nav-sub"])
+  for (const sel of ["#btn-map-store", "#view-trips [data-qnav=view-friends]", "#album-nav-sub"])
     if (!(await page.isVisible(sel))) throw new Error("missing " + sel);
+  // Race is hidden until cross-account races work (labels audit).
+  if (await page.$("#view-trips [data-qnav=view-race]")) throw new Error("Race row shows");
   await page.click("#btn-new-hunt");
   await page.waitForSelector("#view-community .qg-home");
   await page.evaluate(() => window.__aryaShow("trips"));
-  await page.click('#view-trips [data-qnav=view-race]');
+  await page.click('#view-trips [data-qnav=view-friends]');
   await page.waitForFunction(() => !document.querySelector("#view-trips"));
   await page.evaluate(() => window.__aryaShow("trips"));
   await page.click("#btn-map-store");

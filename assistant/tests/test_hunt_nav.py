@@ -94,7 +94,7 @@ class TestHuntFrameShell(unittest.TestCase):
         pop = section(h, 'id="hunt-pop"', 'id="hunt-done-note"')
         self.assertIn('id="btn-collect"', pop)
         self.assertIn("grabbtn", pop)
-        self.assertIn("Suggested next", hunt())
+        self.assertIn("Next up (any order is fine)", hunt())
         grab = css.split(".grabbtn {")[1].split("}")[0]
         self.assertIn("min-height: 60px", grab)  # >= the 56px brief
 

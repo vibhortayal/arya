@@ -3,7 +3,7 @@ import { useSession } from "../../app/session";
 import { useToast } from "../../ui/Toast";
 import { Sheet } from "../../ui/Sheet";
 import { api, get, post } from "../../lib/api";
-import { queuePick, queuedCount, sameToast, sampleHaul, type FeedPost, type PickRow } from "./core";
+import { queuePick, queuedCount, sameToast, type FeedPost, type PickRow } from "./core";
 import { H, artSrc, errMsg, faceReady } from "./state";
 import { useTranslation } from "../../i18n";
 
@@ -38,7 +38,9 @@ export function CrewFeed() {
       try { queued = (await get("/api/quest/queued")).queued || []; } catch { queued = []; }
       H.queuedIds = {};
       queued.forEach(r => { (H.queuedIds[r.post_id] = H.queuedIds[r.post_id] || []).push(r.id); });
-      H.feed = f.length ? f : [sampleHaul()];
+      // No sample post: the feed stays hidden until a friend posts
+      // (labels audit, judgement call 1). sampleHaul() is kept for tests.
+      H.feed = f;
       if (live) setFeed(H.feed);
     })();
     return () => { live = false; };
@@ -108,6 +110,7 @@ export function CrewFeed() {
   };
 
   const n = same && same !== "loading" ? same.rows.filter(r => r.checked).length : 0;
+  if (!feed || !feed.length) return null;
   return (
     <>
       <h3 className="sect">{t("haul.crewHauls")}</h3>

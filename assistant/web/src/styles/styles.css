@@ -1144,7 +1144,7 @@ input[type=file]::file-selector-button {
 .sheet .srow:last-child { border-bottom: none; }
 .sheet .srow .navrow { flex: 1; min-width: 0; border-bottom: none; }
 .sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 15px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
-.sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; }
+.sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; text-transform: uppercase; }
 .sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
 .sheet .sheetacts .btn { flex: 1; }
 .sheet .field { margin: 8px 0; }
@@ -1623,3 +1623,10 @@ button.gmember { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .gd-card.fwd, .gd-card.bwd { animation: none; }
 }
+
+/* The map pin on "Near me" (labels audit: icons live in code or CSS,
+ * never inside a translated string). */
+.pinic { display: inline-block; width: 12px; height: 14px; margin-right: 5px; vertical-align: -2px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 27S2 18.6 2 11a10 10 0 0 1 20 0c0 7.6-10 16-10 16zm0-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 27S2 18.6 2 11a10 10 0 0 1 20 0c0 7.6-10 16-10 16zm0-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'/%3E%3C/svg%3E") center / contain no-repeat; }

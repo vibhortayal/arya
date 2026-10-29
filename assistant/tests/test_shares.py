@@ -145,7 +145,7 @@ class TestShareClient(unittest.TestCase):
         for needle in ('id="share-haul"', 'id="share-love"', 'id="share-sos"', 'id="haul-photo"',
                        "haul-photo?session="):
             self.assertIn(needle, hp)
-        self.assertIn('<h3 className="sect">Wild finds</h3>', src("screens/Score.tsx"))
+        self.assertIn('<h3 className="sect">Not on your list</h3>', src("screens/Score.tsx"))
         hunt = src("screens/Hunt.tsx")
         for needle in ('id="wild-form"', 'id="btn-wild"'):
             self.assertIn(needle, hunt)

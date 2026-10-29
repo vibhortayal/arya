@@ -1,4 +1,4 @@
-/* Score: a skipped receipt shows Receipt missing; Add the receipt settles it; Race link works. */
+/* Score: a skipped receipt shows No receipt yet; Add the receipt settles it; the Race link stays hidden. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
@@ -21,7 +21,7 @@ export default async function (page, base) {
   await page.evaluate(s => window.__aryaShow("score", { session: s }), sess);
   await page.waitForSelector("#view-score #score-addreceipt");
   const k = await page.textContent(".hero-k");
-  if (!k.includes("Receipt missing")) throw new Error("hero: " + k);
+  if (!k.includes("No receipt yet")) throw new Error("hero: " + k);
   if (!(await page.textContent(".haul-wait")).includes("+50")) throw new Error("haul-wait missing");
   await page.click("#score-addreceipt");
   await page.waitForSelector("#ar-sheet #ar-sample");
@@ -30,10 +30,10 @@ export default async function (page, base) {
   await page.waitForSelector("#view-rreview [data-act=looks-right], #view-reveal [data-act=summary]");
   if (await page.$("#view-rreview")) await page.click("#view-rreview [data-act=looks-right]");
   await page.click("#view-reveal [data-act=summary]");
-  await page.waitForSelector("#score-challenge");
+  await page.waitForFunction(() => /Receipt added/.test(document.querySelector("#view-score .hero-k")?.textContent || ""));
   const k2 = await page.textContent(".hero-k");
-  if (!k2.includes("Receipt attached")) throw new Error("hero after: " + k2);
+  if (!k2.includes("Receipt added")) throw new Error("hero after: " + k2);
   await page.waitForSelector("#score-body .badgepop, #score-body h3.sect");
-  await page.click("#score-challenge");
-  await page.waitForSelector("#view-race");
+  // Race is hidden until cross-account races work (labels audit).
+  if (await page.$("#score-challenge")) throw new Error("Race challenge shows");
 }

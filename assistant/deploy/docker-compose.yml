@@ -3,6 +3,13 @@
 # is no local database service: the old one here was never read by the
 # app (codebase map 2026-10-29). An existing arya-db volume on the VM is
 # left in place; remove it by hand only when you are sure it is unused.
+# Docker keeps every container's stdout forever by default and a busy
+# demo can fill the VM disk. Cap each service at 5 files of 10 MB.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 services:
   api:
     build:
@@ -11,6 +18,7 @@ services:
     # Come back after a VM reboot or a crash. unless-stopped keeps a
     # deliberate `docker compose stop` stopped.
     restart: unless-stopped
+    logging: *default-logging
     environment:
       ARYA_DATA_DIR: /app/data
       ARYA_DEMO_DOOR_RATE: ${ARYA_DEMO_DOOR_RATE:-240}
@@ -50,6 +58,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "80:80"
       - "443:443"
