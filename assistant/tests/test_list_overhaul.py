@@ -163,7 +163,7 @@ class TestStartShopping(unittest.TestCase):
         self.assertIn('<div id="list-startbar" className="startbar"', js)
         self.assertIn('<button id="list-hunt" className="btn primary wide"', js)
         self.assertNotIn("Shopping now?", js)
-        self.assertIn("Start shopping · {open.length} item", js)
+        self.assertIn("Start shopping · {{count}} item", js)
         self.assertIn(".startbar {", css())
         self.assertNotIn(".huntline", css())
 

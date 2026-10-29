@@ -123,8 +123,8 @@ class TestShell(unittest.TestCase):
     def test_one_field_and_mic_go_through_aryaask(self):
         from tests import frontend
         lists, ask = frontend.src("screens/Lists.tsx"), frontend.src("screens/lists/AskCard.tsx")
-        self.assertIn("looksLikeAsk(t)", lists)
-        self.assertIn("parseAddToList(t, lists)", lists)
+        self.assertIn("looksLikeAsk(txt)", lists)
+        self.assertIn("parseAddToList(txt, lists)", lists)
         self.assertIn('id="add-mic"', lists)
         mic = lists.split("const mic = async () => {")[1].split("\n  };")[0]
         self.assertIn("ask.run(spoken", mic)

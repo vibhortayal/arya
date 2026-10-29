@@ -15,9 +15,11 @@
   "dependencies": {
     "@react-three/fiber": "^9.8.2",
     "canvas-confetti": "^1.9.4",
+    "i18next": "26.4.5",
     "motion": "^14.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-i18next": "17.0.16",
     "three": "^0.186.1"
   },
   "devDependencies": {

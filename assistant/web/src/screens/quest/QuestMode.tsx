@@ -3,6 +3,7 @@ import { useNav } from "../../app/nav";
 import { useSession } from "../../app/session";
 import { localProfileStore } from "../../game/store";
 import { AppSource } from "./appSource";
+import { useTranslation } from "../../i18n";
 
 /* The Quest tab: the 3D shopping game on the user's own lists, stores
  * and the shared store map (#158, owner 2026-10-29). The game and its
@@ -18,6 +19,7 @@ const QuestGame = lazy(() => import("../../game"));
 const FULL = new Set(["play", "finish", "loading"]);
 
 export function QuestMode() {
+  const { t } = useTranslation();
   const nav = useNav();
   const s = useSession();
   const source = useMemo(() => new AppSource(), []);
@@ -54,14 +56,14 @@ export function QuestMode() {
   const extra = (
     <div className="qm-links">
       <button className="qg-store" type="button" onClick={() => nav.show("trips")}>
-        <span><b>Your trips and receipts</b><small>Open hunts, finished trips, Shop-Off and friends</small></span><span aria-hidden="true">›</span>
+        <span><b>{t("quest.tripsLink")}</b><small>{t("quest.tripsLinkSub")}</small></span><span aria-hidden="true">›</span>
       </button>
     </div>
   );
 
   return (
     <div className="questmode-host">
-      <Suspense fallback={<div className="qm-loading" role="status">Opening Quest…</div>}>
+      <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
         <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} />
       </Suspense>
     </div>

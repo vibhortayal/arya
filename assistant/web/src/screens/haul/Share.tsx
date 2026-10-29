@@ -4,6 +4,7 @@ import { get } from "../../lib/api";
 import { asset } from "../../lib/format";
 import { faceFor } from "../../lib/characters";
 import type { ShareCtx } from "./state";
+import { t, useTranslation } from "../../i18n";
 
 /* Port of pwa/share.js ShareUI and index.html #share-sheet: the haul
  * card, the love note and the Shelf SOS. Every card is built from the
@@ -66,41 +67,41 @@ function specHaul(ctx: ShareCtx): Card {
   const st = ctx.stats || ({} as { items?: number; new?: number; level?: number });
   const level = st.level || (ctx.profile && (ctx.profile.level as number)) || 1;
   return {
-    kind: "haul", title: ctx.title || "My haul", store: "",
-    sub: `Level ${level}`,
+    kind: "haul", title: ctx.title || t("haul.card.myHaul"), store: "",
+    sub: t("haul.card.level", { level }),
     host: (ctx.profile && ctx.profile.avatar) || "basket.webp",
     handle: ctx.profile ? "@" + ctx.profile.handle : "",
     faces: got.slice(0, 8).map(i => ({ file: faceFor(i.name), name: i.name })),
     more: Math.max(0, got.length - 8),
     wild: wild.slice(0, 3),
-    stat: `${got.length} items · ${st.new || 0} new · level ${level}`,
-    statBase: `${got.length} items · ${st.new || 0} new`, level,
+    stat: t("haul.statsLabel", { items: got.length, fresh: st.new || 0, level }),
+    statBase: t("haul.card.statBase", { items: got.length, fresh: st.new || 0 }), level,
     badge: ctx.newBadge || null,
     photo: ctx.haulPhotoURL || null,
-    caption: "My haul on Arya.",
+    caption: t("haul.card.haulCaption"),
   };
 }
 function specLove(ctx: ShareCtx, item: string): Card {
   const tag = chainTag(ctx.sess.store);
   return {
-    kind: "love", title: "Found & loved", store: ctx.sess.store,
+    kind: "love", title: t("haul.card.foundLoved"), store: ctx.sess.store,
     host: (ctx.profile && ctx.profile.avatar) || "basket.webp",
     handle: ctx.profile ? "@" + ctx.profile.handle : "",
     faces: [{ file: faceFor(item), name: item }],
-    stat: `at ${ctx.sess.store}`,
-    caption: `Found & loved at ${ctx.sess.store}: ${item}.${tag ? " " + tag : ""} — via Arya, the list game.`,
+    stat: t("haul.card.atStore", { store: ctx.sess.store }),
+    caption: t("haul.card.loveCaption", { store: ctx.sess.store, item, tag: tag ? " " + tag : "" }),
   };
 }
 function specSos(ctx: ShareCtx, item: string, trips: number): Card {
   const tag = chainTag(ctx.sess.store);
-  const again = trips >= 2 ? ` That's ${trips} trips in a row.` : "";
+  const again = trips >= 2 ? t("haul.card.again", { n: trips }) : "";
   return {
-    kind: "sos", title: "Shelf SOS", store: ctx.sess.store,
+    kind: "sos", title: t("haul.card.shelfSos"), store: ctx.sess.store,
     host: "compass.webp",
     handle: ctx.profile ? "@" + ctx.profile.handle : "",
     faces: [{ file: faceFor(item), name: item }],
-    stat: trips >= 2 ? `missing ${trips} trips in a row` : "not on the shelf today",
-    caption: `Dear ${tag || ctx.sess.store} — ${item} wasn't on the shelf at ${ctx.sess.store} today.${again} Arya keeps count.`,
+    stat: trips >= 2 ? t("haul.card.missingTrips", { n: trips }) : t("haul.card.notOnShelf"),
+    caption: t("haul.card.sosCaption", { to: tag || ctx.sess.store, item, store: ctx.sess.store, again }),
   };
 }
 
@@ -185,7 +186,7 @@ function drawArt(g: G, H: number, c: Card, o: Opts, look: string, names: boolean
   }
 }
 // The Meta credit is claimed only when Muse painted the card.
-const creditLine = (o: Opts) => "Made with Arya" + (o.painted ? " · Powered by Meta Muse" : "");
+const creditLine = (o: Opts) => t("haul.card.madeWith") + (o.painted ? t("haul.card.poweredBy") : "");
 function draw(g: G, H: number, c: Card, o: Opts) {
   const painted = o.painted;
   if (painted) g.drawImage(painted, 0, 0, W, H);
@@ -232,13 +233,13 @@ function draw(g: G, H: number, c: Card, o: Opts) {
     if (c.more) {
       g.fillStyle = GREY; g.textAlign = "center";
       g.font = "700 34px system-ui, sans-serif";
-      g.fillText(`+ ${c.more} more`, W / 2, y + faceRows(c) * 300 + 40);
+      g.fillText(t("haul.card.more", { n: c.more }), W / 2, y + faceRows(c) * 300 + 40);
     }
     y += faceRows(c) * 300 + 90;
     if (c.wild && c.wild.length) {
       g.fillStyle = ACC; g.textAlign = "center";
       g.font = "800 38px system-ui, sans-serif";
-      g.fillText("Wild finds: " + c.wild.join(" · "), W / 2, y);
+      g.fillText(t("haul.card.wild", { names: c.wild.join(" · ") }), W / 2, y);
       y += 60;
     }
   }
@@ -273,7 +274,8 @@ function download(blob: Blob, name: string) {
 type Pick = { items: string[]; hint: string; done: (item: string) => void } | { none: true } | null;
 
 export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: () => void }) {
-  const [title, setTitle] = useState("Share");
+  const { t } = useTranslation();
+  const [title, setTitle] = useState(() => t("common.share"));
   const [pick, setPick] = useState<Pick>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [ready, setReady] = useState(false);
@@ -310,17 +312,17 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
       setReady(true);
     };
     if (kind === "haul") {
-      setTitle("Share your haul");
+      setTitle(t("haul.share.haulTitle"));
       showCard(specHaul(ctx));
     } else if (kind === "love") {
-      setTitle("Loved something?");
+      setTitle(t("haul.share.loveTitle"));
       const items = ctx.sess.items.filter(i => i.checked).map(i => i.name);
-      setPick(items.length ? { items, hint: "Pick the thing you loved — its character fronts the card.",
+      setPick(items.length ? { items, hint: t("haul.share.loveHint"),
         done: item => showCard(specLove(ctx, item)) } : { none: true });
     } else if (kind === "sos") {
-      setTitle("Shelf SOS");
+      setTitle(t("haul.card.shelfSos"));
       const items = (ctx.sess.my_reports as string[] | undefined) || [];
-      setPick(items.length ? { items, hint: "Pick the item that wasn't there — Arya counts your trips.",
+      setPick(items.length ? { items, hint: t("haul.share.sosHint"),
         done: async item => {
           let trips = 1;
           try {
@@ -344,13 +346,13 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
     if (base.busy || !card) return;
     if (look === "plain") { setO({ ...base, look: "plain", painted: null }); return; }
     setO({ ...base, busy: true, look });
-    setStatus("Arya is painting your card…");
+    setStatus(t("haul.share.painting"));
     try {
       const painted = await paintLook(card, { ...base, look }, look);
       setStatus("");
       setO(cur => ({ ...cur, look, painted, busy: false }));
     } catch (e) {
-      setStatus("Could not paint that one. Your plain card is untouched. " + ((e instanceof Error && e.message) || ""));
+      setStatus(t("haul.share.paintFailed") + ((e instanceof Error && e.message) || ""));
       setO(cur => ({ ...cur, look: "plain", painted: null, busy: false }));
     }
   };
@@ -362,23 +364,23 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
   const doShare = async () => {
     const file = await stillFile();
     if (!file || !card) return;
-    const data: ShareData = { title: "Arya haul", text: card.caption };
+    const data: ShareData = { title: t("haul.share.shareTitle"), text: card.caption };
     if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
     if (navigator.share) {
       try { await navigator.share(data); return; }
       catch (e) { if (e && (e as Error).name === "AbortError") return; }
     }
     download(file, file.name);
-    setStatus("Saved. Post it anywhere.");
+    setStatus(t("haul.share.savedPost"));
   };
   const doSave = async () => {
     const file = await stillFile();
-    if (file) { download(file, file.name); setStatus("Saved."); }
+    if (file) { download(file, file.name); setStatus(t("newList.saved")); }
   };
   const doCopy = async () => {
     if (!card) return;
     // Instagram and Facebook drop pre-filled text, so the caption is one tap to copy.
-    try { await navigator.clipboard.writeText(card.caption); setStatus("Caption copied."); }
+    try { await navigator.clipboard.writeText(card.caption); setStatus(t("haul.share.captionCopied")); }
     catch { setStatus(card.caption); }
   };
 
@@ -387,15 +389,15 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
    * so a haul photo (which may show people) switches the looks off. */
   const haul = !!card && card.kind === "haul";
   const lookOff = (l: string) => !!card && (o.busy || (l !== "plain" && (!!o.photo || !card.faces.length || (l === "badge" && !card.badge))));
-  const hint = !card ? "" : o.photo ? "Looks use the stickers only, so they are off while your photo is on."
-    : !card.badge ? "No new badge on this haul, so Add my badge is off."
-    : "Muse paints the picture. Arya adds the words after. About 10 seconds.";
+  const hint = !card ? "" : o.photo ? t("haul.share.hintPhoto")
+    : !card.badge ? t("haul.share.hintNoBadge")
+    : t("haul.share.hintMuse");
 
   return (
     <Sheet open={!!req} onClose={onClose} id="share-sheet" labelledBy="share-title">
       <h3 id="share-title" style={{ marginTop: 0 }}>{title}</h3>
       <div id="share-chips">
-        {pick && "none" in pick && <p className="muted">Nothing to pick from this hunt.</p>}
+        {pick && "none" in pick && <p className="muted">{t("haul.nothingToPickFromThis")}</p>}
         {pick && "items" in pick && <>
           <p className="muted">{pick.hint}</p>
           <p style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -415,35 +417,35 @@ export function ShareSheet({ req, onClose }: { req: ShareReq | null; onClose: ()
                 if (o.busy) return;
                 const base = { ...o, size: sz };
                 if (base.look !== "plain") setLook(base.look, base); else setO(base);
-              }}>{sz === "story" ? "Story" : "Post"}</button>
+              }}>{sz === "story" ? t("haul.share.sizeStory") : t("haul.share.sizePost")}</button>
           ))}
         </div>
         <p style={{ margin: "10px 0 2px" }}><label><input type="checkbox" id="opt-handle" checked={o.handle}
-          onChange={e => setO({ ...o, handle: e.target.checked })} /> Show my handle</label></p>
+          onChange={e => setO({ ...o, handle: e.target.checked })} />{" "}{t("haul.showMyHandle")}</label></p>
         <p style={{ margin: "2px 0" }}><label><input type="checkbox" id="opt-level" checked={o.level}
-          onChange={e => setO({ ...o, level: e.target.checked })} /> Show my level</label></p>
+          onChange={e => setO({ ...o, level: e.target.checked })} />{" "}{t("haul.showMyLevel")}</label></p>
         <p style={{ margin: "2px 0" }} id="opt-photo-row" hidden={!card || !card.photo}><label><input type="checkbox" id="opt-photo" checked={!!o.photo}
           onChange={e => {
             const photo = e.target.checked;
             setO(photo && o.look !== "plain" ? { ...o, photo, look: "plain", painted: null } : { ...o, photo });
-          }} /> Add my haul photo</label><br /><span className="muted">Off by default. Check that nobody is in it before you share.</span></p>
-        <h4 style={{ margin: "12px 0 6px" }}>Make it special with Arya</h4>
+          }} />{" "}{t("haul.addMyHaulPhoto")}</label><br /><span className="muted">{t("haul.offByDefaultCheckThat")}</span></p>
+        <h4 style={{ margin: "12px 0 6px" }}>{t("haul.makeItSpecialWithArya")}</h4>
         <div className="seg" id="share-looks">
-          {([["plain", "Plain"], ["badge", "Add my badge"], ["friends", "Cast joins in"], ["story", "Storybook"]] as const).map(([l, label]) => (
+          {([["plain", "haul.share.look.plain"], ["badge", "haul.share.look.badge"], ["friends", "haul.share.look.friends"], ["story", "haul.share.look.story"]] as const).map(([l, label]) => (
             <button key={l} className="chip" type="button" data-look={l} aria-pressed={o.look === l} disabled={lookOff(l)}
-              onClick={() => setLook(l, { ...o, tries: 0 })}>{label}</button>
+              onClick={() => setLook(l, { ...o, tries: 0 })}>{t(label)}</button>
           ))}
         </div>
         <p className="muted" id="share-look-hint" style={{ margin: "6px 0 0" }}>{hint}</p>
         <p style={{ margin: "6px 0 0" }}><button className="btn" id="share-again" type="button" hidden={o.look === "plain"} disabled={o.busy}
-          onClick={() => setLook(o.look, { ...o, tries: o.tries + 1 })}>Try another</button></p>
+          onClick={() => setLook(o.look, { ...o, tries: o.tries + 1 })}>{t("haul.tryAnother")}</button></p>
       </div>
       <p className="muted" id="share-caption" style={{ marginTop: 10 }}>{card ? card.caption : ""}</p>
       <p style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button className="btn primary grow" id="share-go" type="button" hidden={!ready} onClick={() => { doShare().catch(() => {}); }}>Share</button>
-        <button className="btn grow" id="share-png" type="button" hidden={!ready} onClick={() => { doSave().catch(() => {}); }}>Save image</button>
-        <button className="btn grow" id="share-copy" type="button" hidden={!ready} onClick={() => { doCopy(); }}>Copy caption</button>
-        <button className="btn grow" id="share-close" type="button" onClick={onClose}>Close</button>
+        <button className="btn primary grow" id="share-go" type="button" hidden={!ready} onClick={() => { doShare().catch(() => {}); }}>{t("common.share")}</button>
+        <button className="btn grow" id="share-png" type="button" hidden={!ready} onClick={() => { doSave().catch(() => {}); }}>{t("haul.saveImage")}</button>
+        <button className="btn grow" id="share-copy" type="button" hidden={!ready} onClick={() => { doCopy(); }}>{t("haul.copyCaption")}</button>
+        <button className="btn grow" id="share-close" type="button" onClick={onClose}>{t("common.close")}</button>
       </p>
       <p className="muted nomargin" id="share-status">{status}</p>
     </Sheet>

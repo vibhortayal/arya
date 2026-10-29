@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QFRESH, freshKey, type Session } from "./model";
+import { t, useTranslation } from "../../i18n";
 
 /* Shelf Scan (quest.js Discussion 37: openScanView .. closeScan), shared
  * by the hunt and Express. SAM proposes boxes for the remaining list,
@@ -12,7 +13,7 @@ import { QFRESH, freshKey, type Session } from "./model";
 export type Pop = { item: string; box: [number, number, number, number]; grade?: string };
 type ScanPop = Pop & { got?: boolean; busy?: boolean };
 
-export const SCAN_NO_POP = "Nothing from your list spotted here — that doesn't mean it isn't here. Keep looking.";
+export const SCAN_NO_POP = t("hunt.scan.noPop");
 const SCAN_TICK_MS = 250;
 const SCAN_DIFF = 0.06;
 const SCAN_SETTLE_EPS = 0.02;
@@ -74,6 +75,7 @@ type Props = {
 };
 
 export function ScanView({ open, sess, target, onClose, collect, onPops }: Props) {
+  const { t } = useTranslation();
   const [mode, setModeS] = useState<"starting" | "live" | "still">("still");
   const [url, setUrl] = useState("");
   const [pops, setPops] = useState<ScanPop[]>([]);
@@ -101,10 +103,10 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
   };
 
   const statusFor = (n: number) => {
-    const t = live.current.target;
-    if (t) return n ? `Found it! ${t} is highlighted — tap it to grab.`
-      : `Didn't spot ${t} in this view — try a little closer or another angle. That doesn't mean it isn't here.`;
-    return n ? `${n} from your list spotted here — tap one to collect it.` : SCAN_NO_POP;
+    const target = live.current.target;
+    if (target) return n ? t("hunt.scan.foundIt", { name: target })
+      : t("hunt.scan.didNotSpot", { name: target });
+    return n ? t("hunt.scan.spotted", { n }) : SCAN_NO_POP;
   };
   const showPops = (list: Pop[]) => {
     setPops(list);
@@ -131,7 +133,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
     r.sampler!.noteSent(performance.now());
     const fail = () => {
       r.busy = false;
-      if (r.mode === "live" && !r.popsShown) setStatus("That scan didn't work — still looking.");
+      if (r.mode === "live" && !r.popsShown) setStatus(t("hunt.scan.failedLooking"));
     };
     let c: HTMLCanvasElement;
     try {
@@ -170,7 +172,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
     if (d.clear && r.popsShown) {
       setPops([]);
       r.popsShown = false;
-      setStatus("Live scan — looking…");
+      setStatus(t("hunt.scan.liveLooking"));
     }
     if (d.send && !r.busy) sendFrame(v, arr);
   };
@@ -196,7 +198,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
     setMode("live");
     r.sampler = createScanSampler();
     r.prev = null; r.sent = null; r.busy = false;
-    setStatus("Live scan — point the camera at a shelf.");
+    setStatus(t("hunt.scan.livePoint"));
     if (r.timer) clearInterval(r.timer);
     r.timer = window.setInterval(tick, SCAN_TICK_MS);
     const wl = (navigator as any).wakeLock;
@@ -217,12 +219,12 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
     setPops([]);
     r.popsShown = false;
     setLast(null);
-    setStatus(live.current.target ? `Point the camera at the shelf — looking for ${live.current.target}…` : "Starting the camera…");
+    setStatus(live.current.target ? t("hunt.scan.pointFor", { name: live.current.target }) : t("hunt.scan.starting"));
     setMode("starting");
     startLive().catch(() => {
       if (!R.current.open) return;
       setMode("still");
-      setStatus("Camera not available here — take or choose a photo instead.");
+      setStatus(t("hunt.scan.noCamera"));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -255,7 +257,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
     setUrl(r.url);
     setPops([]);
     r.popsShown = false;
-    setStatus(live.current.target ? `Looking for ${live.current.target} on this shelf…` : "Looking for your list on this shelf…");
+    setStatus(live.current.target ? t("hunt.scan.lookingFor", { name: live.current.target }) : t("hunt.scan.lookingList"));
     const gen = r.gen;
     try {
       const out = await request(file);
@@ -263,7 +265,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
       showPops(out.pops || []);
       setLast(new Date());
     } catch {
-      setStatus("That scan didn't work — close and try again.");
+      setStatus(t("hunt.scan.failedClose"));
     }
   };
 
@@ -277,7 +279,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
 
   const isLive = mode === "live";
   const lastLine = last
-    ? `${isLive ? "Live scan · " : ""}Last scan ${last.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })}`
+    ? (isLive ? t("hunt.scan.livePrefix") : "") + t("hunt.scan.lastScan", { time: last.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" }) })
     : "";
 
   return (
@@ -287,13 +289,13 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
       <div id="scan-overlay" className="scanoverlay" hidden={!open}>
         <div className="scanbar">
           <div className="grow">
-            <span className="name">Shelf scan</span>
-            <span className="sub">Spots items from your list in a photo — each one verified by a second model before it highlights. We never keep pictures of people, only products: Meta SAM blurs out anyone in the frame first.</span>
+            <span className="name">{t("hunt.shelfScan")}</span>
+            <span className="sub">{t("hunt.spotsItemsFromYourList")}</span>
             <span className="sub" id="scan-last">{lastLine}</span>
           </div>
-          <button id="scan-usephoto" className="btn" type="button" hidden={isLive} onClick={() => photo.current?.click()}>Take a photo</button>
-          <button id="scan-stop" className="btn" type="button" hidden={!isLive} onClick={() => { stopLive(); setStatus("Live scan stopped."); }}>Stop</button>
-          <button id="scan-close" className="cornerbtn" type="button" aria-label="Close scan"
+          <button id="scan-usephoto" className="btn" type="button" hidden={isLive} onClick={() => photo.current?.click()}>{t("hunt.takeAPhoto")}</button>
+          <button id="scan-stop" className="btn" type="button" hidden={!isLive} onClick={() => { stopLive(); setStatus(t("hunt.scan.stopped")); }}>{t("hunt.stop")}</button>
+          <button id="scan-close" className="cornerbtn" type="button" aria-label={t("hunt.closeScan")}
             onClick={() => { stopLive(); if (photo.current) photo.current.value = ""; onClose(); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
@@ -301,7 +303,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
         <div className="scanstage">
           <div className="scanwrap">
             <video id="scan-video" ref={video} playsInline muted hidden={!isLive} />
-            <img id="scan-img" alt="Your shelf photo" hidden={isLive || !url} src={url || undefined} />
+            <img id="scan-img" alt={t("hunt.yourShelfPhoto")} hidden={isLive || !url} src={url || undefined} />
             <div id="scan-boxes">
               {pops.map((p, k) => {
                 const [x1, y1, x2, y2] = p.box;
@@ -310,7 +312,7 @@ export function ScanView({ open, sess, target, onClose, collect, onPops }: Props
                     data-item={p.item} disabled={p.busy}
                     style={{ left: `${x1 * 100}%`, top: `${y1 * 100}%`, width: `${(x2 - x1) * 100}%`, height: `${(y2 - y1) * 100}%` }}
                     onClick={() => tapPop(k)}>
-                    <span className="poplabel">{p.got ? `${p.item} ✓` : p.item + (p.grade === "region" ? " · this shelf" : "")}</span>
+                    <span className="poplabel">{p.got ? `${p.item} ✓` : p.item + (p.grade === "region" ? t("hunt.scan.thisShelf") : "")}</span>
                   </button>
                 );
               })}

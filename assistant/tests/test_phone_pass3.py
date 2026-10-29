@@ -19,7 +19,7 @@ class TestVoiceToList(unittest.TestCase):
         self.assertNotIn("ShowTextConfirm", nl)
         # the bag splits a sentence the same way
         self.assertIn("return parseText(l).map(", nl)
-        self.assertIn("const addFromText = (t: string, src?: string) => {", nl)
+        self.assertIn("const addFromText = (txt: string, src?: string) => {", nl)
 
     def test_add_button_and_helper_slot_exist(self):
         nl = src("screens/NewList.tsx")

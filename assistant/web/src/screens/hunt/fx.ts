@@ -4,6 +4,7 @@
  * short-lived animations, never state. Sound and buzz are opt-in. */
 import { faceFor, characterManifest, type Manifest } from "../../lib/characters";
 import { Q, QPTS, qProgress, qnorm, type Session } from "./model";
+import { t } from "../../i18n";
 
 export const QFX = { on: false, ctx: null as AudioContext | null };
 try { QFX.on = localStorage.getItem("arya-sound") === "1"; } catch { /* off */ }
@@ -55,7 +56,8 @@ function qBumpHud() {
   c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump");
 }
 
-const QMILESTONES: [number, string][] = [[0.5, "Halfway there!"]];
+/* [share of the list, en.json key]. */
+const QMILESTONES: [number, string][] = [[0.5, "hunt.fx.halfway"]];
 let qMilestoneTimer = 0;
 export function qShowMilestone(text: string) {
   const m = document.getElementById("milestone");
@@ -78,12 +80,12 @@ export function qRewardGrab(sess: Session, before: number, opts: { wasSuggested:
   const p = qProgress(sess);
   Q.combo = qComboAfter(Q.combo || 0, opts.wasSuggested);
   qFloat(`+${QPTS.item}`, "#hunt-pts");
-  if (opts.boss) qFloat(`+${QPTS.boss} boss`, "#hunt-count");
+  if (opts.boss) qFloat(t("hunt.fx.boss", { pts: QPTS.boss }), "#hunt-count");
   qBumpHud();
   qBuzz(15);
   if (p.total && p.done === p.total) {
-    qFloat(`+${QPTS.haul} full haul`, "#hunt-count");
-    qShowMilestone("All collected! Full haul!");
+    qFloat(t("hunt.fx.fullHaul", { pts: QPTS.haul }), "#hunt-count");
+    qShowMilestone(t("hunt.fx.allCollected"));
     qConfetti();
     qTone([523, 659, 784, 1047], 0.11);
     qBuzz([30, 60, 30, 60, 80]);
@@ -91,10 +93,10 @@ export function qRewardGrab(sess: Session, before: number, opts: { wasSuggested:
   }
   const crossed = QMILESTONES.filter(([f]) => before < p.total * f && p.done >= p.total * f).pop();
   if (crossed) {
-    qShowMilestone(crossed[1]);
+    qShowMilestone(t(crossed[1]));
     qTone([587, 740, 880], 0.08);
   } else if (p.total > 2 && p.total - p.done === 1) {
-    qShowMilestone("One to go!");
+    qShowMilestone(t("hunt.fx.oneToGo"));
     qTone([587, 740, 880], 0.08);
   } else {
     qTone([660, 880], 0.06);
