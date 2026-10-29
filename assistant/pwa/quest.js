@@ -1142,10 +1142,12 @@ function renderOptimize() {
       row(esc(m.name), `added as ${m.from.map(esc).join(", ")}`, `× ${qtyFmt(m.qty)}`)).join("") + `</div>`;
   }
   if (rep.corrected.length) {
-    html += `<h3 class="sect">Corrected</h3><div class="group">` + rep.corrected.map((c, ci) =>
-      `<div class="row"><div class="grow"><span class="name">${esc(c.from)} &rarr; ${esc(c.to)}</span>
-       <span class="sub">${Q.draft.undone[ci] ? "Kept as you typed it." : "Matched to your dictionary."}</span></div>
-       ${Q.draft.undone[ci] ? "" : `<button class="chip" data-undo="${ci}" type="button">Undo</button>`}</div>`).join("") + `</div>`;
+    html += `<h3 class="sect">Corrected</h3><div class="group">` + rep.corrected.map((c, ci) => {
+      const kept = !!Q.draft.undone[ci];
+      return `<div class="row optrow${kept ? " kept" : ""}"><div class="grow"><span class="name"><span class="opt-from">${esc(c.from)}</span> &rarr; <span class="opt-to">${esc(c.to)}</span></span>
+       <span class="sub">${kept ? "Kept as you typed it." : "Matched to your dictionary."}</span></div>
+       <button class="chip" data-${kept ? "redo" : "undo"}="${ci}" type="button">${kept ? "Use match" : "Undo"}</button></div>`;
+    }).join("") + `</div>`;
   }
   const seenQ = new Set();
   const questions = rep.questions.filter(q => !seenQ.has(q.item) && seenQ.add(q.item));
@@ -1154,12 +1156,20 @@ function renderOptimize() {
       const ans = Q.draft.answers[q.item];
       const chip = (val, label) =>
         `<button class="chip" data-q="${esc(q.item)}" data-ans="${esc(val)}" aria-pressed="${String(ans === val)}" type="button">${esc(label)}</button>`;
-      return `<div class="group pad"><p class="nomargin"><strong>${esc(q.item)}</strong> — which one?</p>
-        <div class="actions" style="padding-bottom:0">
+      // A swap (a candidate or Both) strikes the typed word and shows
+      // what replaces it; Keep as typed highlights without a strike.
+      const swapped = ans && ans !== "typed";
+      const pick = !swapped ? "" : ans === "both" ? "Both" : ans.slice(5);
+      const head = swapped
+        ? `<span class="opt-from">${esc(q.item)}</span> &rarr; <strong>${esc(pick)}</strong>`
+        : `<strong>${esc(q.item)}</strong> — which one?`;
+      return `<div class="group pad optq"><p class="nomargin">${head}</p>
+        <div class="actions optchips${ans ? " has-pick" : ""}" style="padding-bottom:0">
           ${q.candidates.map(c => chip("cand:" + c.name, c.name)).join("")}
           ${chip("both", "Both")}
           ${chip("typed", "Keep as typed")}
-        </div></div>`;
+        </div>
+        ${ans ? `<button class="opt-undo" data-qundo="${esc(q.item)}" type="button">Undo</button>` : ""}</div>`;
     }).join("");
   }
   if (rep.unresolved.length) {
@@ -1182,6 +1192,27 @@ $("#opt-body").addEventListener("click", ev => {
       item._undone = true;
     }
     Q.draft.undone[ci] = true;
+    renderOptimize();
+    return;
+  }
+  const redo = ev.target.closest("[data-redo]");
+  if (redo) {
+    const ci = Number(redo.dataset.redo);
+    const c = Q.draft.opt.report.corrected[ci];
+    const item = Q.draft.baseItems.find(i => i._undone && i.name === c.from);
+    const orig = Q.draft.opt.items.find(i => i.name === c.to);
+    if (item && orig) {
+      item.name = orig.name;
+      item.group = orig.group;
+      delete item._undone;
+    }
+    delete Q.draft.undone[ci];
+    renderOptimize();
+    return;
+  }
+  const qundo = ev.target.closest("[data-qundo]");
+  if (qundo) {
+    delete Q.draft.answers[qundo.dataset.qundo];
     renderOptimize();
     return;
   }
