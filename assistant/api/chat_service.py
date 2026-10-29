@@ -101,7 +101,10 @@ def apply_actions(actions, added=None):
                 if target:
                     fl["list"] = target["id"]
                 state.set_flag(tid, fl)
-                applied.append(f"Added {name}{dest}.")
+                note = ""
+                if state.classify_grocery(name)["kind"] == "other":
+                    note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
+                applied.append(f"Added {name}{dest}.{note}")
                 continue
         if not item_id:
             skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")

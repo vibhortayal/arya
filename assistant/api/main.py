@@ -1284,6 +1284,57 @@ async def list_from_text(req: Request):
             "item_ids": [a["item_id"] for a in added if a["item_id"] not in on_list]}
 
 
+@app.post("/api/list/judge")
+async def list_judge(req: Request):
+    """Settle the list's unknown names: the typed items the rules and
+    the aisle map do not know. One batched Spark Standard call at most,
+    and each name is asked once ever (the verdict is cached). Nothing
+    is removed or blocked; the client shows "Not a grocery item?
+    Added anyway" for what comes back flagged. No key or a failed
+    call just leaves the names unknown (treated as groceries)."""
+    from api.list import grocery
+    verdicts = grocery.load_verdicts()
+    unknown = []
+    for i in state.derived()["smart_list"]["items"]:
+        if i.get("source") != "user":
+            continue
+        if grocery.classify(i["name"], verdicts)["kind"] == "unknown" \
+                and not verdicts.get(_key_of(i["name"])):
+            unknown.append(i["name"])
+    if not unknown or not os.environ.get("MODEL_API_KEY"):
+        return {"judged": 0, "flagged": []}
+    demo = _is_demo(req)
+    _budget_guard(demo=demo)
+    client = MetaClient(ledger=CostLedger(
+        _LEDGER, bucket="demo" if demo else "app"))
+    found = await run_in_threadpool(grocery.judge_unknown, unknown, client)
+    if found:
+        verdicts = grocery.save_verdicts(found)
+    flagged = [i["item_id"] for i in state.derived()["smart_list"]["items"]
+               if i.get("not_grocery")]
+    return {"judged": len(found), "flagged": flagged}
+
+
+def _key_of(name):
+    from api.list.intake import _key
+    return _key(name)
+
+
+@app.post("/api/list/grocery-verdict")
+async def list_grocery_verdict(req: Request):
+    """The user's word on one item: kind "grocery" (Keep: it is fine)
+    or "other". Saved by name, beats every rule and model verdict."""
+    body = await _json_obj(req)
+    item = next((i for i in state.derived()["smart_list"]["items"]
+                 if i["item_id"] == body.get("item_id")), None)
+    kind = body.get("kind")
+    if not item or kind not in ("grocery", "other"):
+        raise HTTPException(400, "item_id on the list and kind grocery|other required")
+    from api.list.grocery import set_user_verdict
+    set_user_verdict(item["name"], kind)
+    return {"item_id": item["item_id"], "kind": kind}
+
+
 @app.post("/api/list/from-photo")
 async def list_from_photo(req: Request):
     """The Add tab's camera: one Spark vision read. A list photo

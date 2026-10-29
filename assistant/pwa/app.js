@@ -109,7 +109,8 @@ function listRow(i, tags, fileable) {
     <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
     <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}${fileable ? `<button class="storetag filetag" type="button" data-list-act="file" data-id="${esc(i.item_id)}">File under ›</button>` : ""}
     ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
-    ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}</div>
+    ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}
+    ${i.not_grocery ? `<span class="sub notgrocery">Not a grocery item? Added anyway. <button class="linkbtn" data-act="ng-keep" data-id="${esc(i.item_id)}">It is groceries</button> · <button class="linkbtn" data-act="ng-remove" data-id="${esc(i.item_id)}">Remove</button></span>` : ""}</div>
     <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${qtyFmt(i.qty)}. Tap to change.">× ${qtyFmt(i.qty)}</button>
   </div>`;
 }
@@ -379,8 +380,18 @@ function listHeader(l) {
 }
 
 function paintListGroups() {
-  const items = listData.list.items;
+  const all = listData.list.items;
+  const items = all.filter(i => !i.not_grocery);
   const box = $("#smart-list");
+  // Not-grocery items stay on the list, in their own group below.
+  const errands = all.filter(i => i.not_grocery);
+  const errandsHtml = errands.length
+    ? `<p class="grouplabel">Other errands</p><div class="group">${errands.map(i => listRow(i, [])).join("")}</div>` : "";
+  if (all.length && errands.length === all.length) {
+    box.innerHTML = errandsHtml;
+    bindItemLinks(box);
+    return;
+  }
   const lists = namedLists();
   const here = lensList();
   if (here) {
@@ -401,6 +412,7 @@ function paintListGroups() {
     }).join("") + (rest.length
       ? `<p class="grouplabel">Everything else</p><div class="group">${rest.map(i => listRow(i, [], true)).join("")}</div>` : "");
   }
+  box.insertAdjacentHTML("beforeend", errandsHtml);
   bindItemLinks(box);
 }
 
@@ -416,6 +428,11 @@ $("#smart-list").addEventListener("click", async ev => {
       await post("/api/list/check", { item_id: id, checked: !(item && item.checked) });
     } else if (b.dataset.act === "qty") {
       editQty(b, id, item);
+      return;
+    } else if (b.dataset.act === "ng-keep") {
+      await post("/api/list/grocery-verdict", { item_id: id, kind: "grocery" });
+    } else if (b.dataset.act === "ng-remove") {
+      await removeListItem(id);
       return;
     } else return;
     renderList().catch(showErr);
@@ -899,6 +916,17 @@ function flashNewRows(names) {
   rows[0].scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
+/* Names the rules do not know get one cached model look, after the
+ * add has already landed. A flagged item shows its chip; nothing is
+ * ever removed for the user. A failure is silent: unknown stays a
+ * normal grocery row. */
+async function judgeUnknownItems() {
+  try {
+    const r = await post("/api/list/judge", {});
+    if (r.flagged && r.flagged.length) renderList().catch(() => {});
+  } catch (e) { /* unknown stays groceries */ }
+}
+
 let addBound = false;
 function bindAdd() {
   if (addBound) return;
@@ -939,6 +967,7 @@ function bindAdd() {
       toast((r.added === 1 ? `Added 1 item to ${where}.`
         : `Added ${r.added} items to ${where}.`) + dup + skip);
       renderList().then(() => flashNewRows(r.names)).catch(() => {});
+      judgeUnknownItems();
     } catch (e) { toast(e.message); }
     btn.disabled = false;
   });
@@ -1338,6 +1367,8 @@ async function renderAnalysis() {
     <p class="muted" style="text-align:center">Across ${monthReceipts} receipt${monthReceipts === 1 ? "" : "s"} filed this month</p>
     ${row("Returns netted, all time", "All receipts — refunds reconcile into the ledger; returned items never count in patterns", "−" + money(d.returns_total))}
     ${row("All-time spend", `${d.trip_count} trips`, money(d.spend_total))}
+    ${d.spend_other ? row("Groceries", "food and household", money(d.spend_groceries)) : ""}
+    ${d.spend_other ? row("Other purchases", Object.entries(d.other_by_kind || {}).map(([k, v]) => `${esc(k)} ${money(v)}`).join(" · "), money(d.spend_other)) : ""}
     ${d.for_others_total ? row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) : ""}`
     : empty("No trips yet.");
   // Months with no receipts still get a row, so the bars do not jump a gap.

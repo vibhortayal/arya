@@ -8,7 +8,9 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge,
   the smart list with a store lens, Eyes, Ask Arya, Receipts with the
-  original image kept, Analysis (Spend).
+  original image kept, Analysis (Spend, with an Other purchases split),
+  grocery detection (rules and aisle map first, one cached model look for
+  unknown names, never blocks).
 - **Quest:** sessions, the Optimizer, Quest and Express hunts, receipt
   finish and Score, Shop-Off (single account), friends and badges,
   Spotter "Not here?" reports, the stores directory, item-to-shelf
