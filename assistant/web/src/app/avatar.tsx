@@ -14,6 +14,10 @@ type AvatarCtx = {
   src: string | null;
   reload: () => Promise<void>;
   set: (patch: Partial<Av>) => void;
+  /* The ring around the floating avatar fills toward the next level
+   * (app.js paintLevelChip): pct 0..100 and the level for its label. */
+  ring: { pct: number; level: number } | null;
+  setRing: (r: { pct: number; level: number }) => void;
 };
 
 export const avatarSrc = (av: Av) =>
@@ -34,7 +38,8 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
   useEffect(() => { reload(); }, [reload]);
 
   const set = useCallback((patch: Partial<Av>) => { setAv(a => ({ ...a, ...patch })); setLoaded(true); }, []);
-  const value = useMemo(() => ({ av, src: loaded ? avatarSrc(av) : null, reload, set }), [av, loaded, reload, set]);
+  const [ring, setRing] = useState<{ pct: number; level: number } | null>(null);
+  const value = useMemo(() => ({ av, src: loaded ? avatarSrc(av) : null, reload, set, ring, setRing }), [av, loaded, reload, set, ring]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

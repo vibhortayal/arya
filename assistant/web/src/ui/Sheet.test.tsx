@@ -29,3 +29,25 @@ test("sheet opens, traps Escape, closes on scrim and restores focus", () => {
   fireEvent.click(screen.getByRole("dialog"));
   expect(screen.queryByRole("dialog")).toBeNull();
 });
+
+function Steps() {
+  const [step, setStep] = useState<"a" | "b" | null>(null);
+  return (
+    <>
+      <button onClick={() => setStep("a")}>Open</button>
+      <Sheet open={!!step} onClose={() => setStep(null)} focusKey={step || ""}>
+        {step === "a" ? <button onClick={() => setStep("b")}>Next</button> : <button data-first>Save</button>}
+      </Sheet>
+    </>
+  );
+}
+
+test("a new step moves focus into the sheet, so Escape still closes it", () => {
+  render(<Steps />);
+  fireEvent.click(screen.getByText("Open"));
+  expect(document.activeElement).toBe(screen.getByText("Next"));
+  fireEvent.click(screen.getByText("Next"));
+  expect(document.activeElement).toBe(screen.getByText("Save"));
+  fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+});

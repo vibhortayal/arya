@@ -6,6 +6,7 @@ import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { clearOnSignOut } from "../app/session";
 import { asset } from "../lib/format";
+import { faceFor, loadCharacters } from "../lib/characters";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -407,28 +408,6 @@ export function packFinish(draft: NewListDraft | null) {
 }
 export { sessionItem as packSessionItem };
 
-/* ---------------- faces for cards (quest.js qFaceFor) ---------------- */
-
-type Celeb = { fallback?: string; items?: { keywords?: string[]; char?: string }[]; categories?: { keywords?: string[]; char?: string }[] };
-let CELEB: Celeb | null = null;
-function celebLoad() {
-  if (CELEB) return;
-  CELEB = { items: [], categories: [] };
-  fetch(asset("assets/characters/manifest.json")).then(r => r.json()).then(m => { CELEB = m; }).catch(() => {});
-}
-function faceFor(name: string) {
-  const tokens = norm(name).split(" ").filter(Boolean);
-  const hit = (kw: string) => {
-    const kt = kw.split(" ");
-    for (let i = 0; i + kt.length <= tokens.length; i++) if (kt.every((w, j) => tokens[i + j] === w)) return true;
-    return false;
-  };
-  let item: { char?: string } | null = null, cat: { char?: string } | null = null;
-  for (const r of CELEB?.items || []) if (!item && (r.keywords || []).some(hit)) item = r;
-  for (const c of CELEB?.categories || []) if (!cat && (c.keywords || []).some(hit)) cat = c;
-  return (item && item.char) || (cat && cat.char) || (CELEB && CELEB.fallback) || "basket.webp";
-}
-
 /* ---------------- plan helpers (quest.js) ---------------- */
 
 function planBucket(plan: Plan, li: ListRow, store: string) {
@@ -600,7 +579,7 @@ export function NewList() {
         D.plan = plan;
       }
       if (!live) return;
-      celebLoad();
+      loadCharacters();
       if (store && !D.missing) {
         D.missing = new Set();
         get<{ reports?: { item: string }[] }>(`/api/quest/stores/${encodeURIComponent(store)}/reports`)

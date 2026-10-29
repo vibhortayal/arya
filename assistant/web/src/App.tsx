@@ -59,12 +59,14 @@ function Shell() {
   const nav = useNav();
   const s = useSession();
   const Screen = SCREENS[nav.view];
-  const avatar = useAvatar().src;
+  const { src: avatar, ring } = useAvatar();
   useInviteLink();
   return (
     <>
       {nav.chrome && (
-        <button id="avatar-btn" className="avatar floating" type="button" aria-label="Profile"
+        <button id="avatar-btn" className="avatar floating" type="button"
+          aria-label={ring ? `Profile, level ${ring.level}` : "Profile"}
+          style={ring ? ({ "--pct": ring.pct + "%" } as React.CSSProperties) : undefined}
           onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
           <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>
           <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />

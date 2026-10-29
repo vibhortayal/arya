@@ -10,6 +10,11 @@ import { NewList } from "./NewList";
 import { Store } from "./Store";
 import { StoresMine } from "./StoresMine";
 import { Item } from "./Item";
+import { Lists } from "./Lists";
+import { Quest } from "./Quest";
+import { StoresAdd } from "./StoresAdd";
+import { StoresFind } from "./StoresFind";
+import { Today } from "./Today";
 import { Powers } from "./Powers";
 import { Profile } from "./Profile";
 import { QuestProgress } from "./QuestProgress";
@@ -28,7 +33,12 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   newlist: NewList,
   store: Store,
   "stores-mine": StoresMine,
+  community: Quest,
+  home: Today,
   item: Item,
+  list: Lists,
+  "stores-add": StoresAdd,
+  "stores-find": StoresFind,
   powers: Powers,
   profile: Profile,
   "quest-progress": QuestProgress,

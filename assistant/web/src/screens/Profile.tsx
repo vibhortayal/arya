@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
-import { useInstallPrompt } from "../app/a2hs";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
+import { A2hsRow } from "../ui/A2hs";
 import { Row } from "../ui/kit";
 import { IconPen } from "../ui/icons";
 import { AddReceiptSheet, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { get, post } from "../lib/api";
 import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
+import { characterManifest } from "../lib/characters";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -17,7 +18,8 @@ import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
  * Profile is also the Settings tab: with no nav.params.from the Back
  * link is hidden. Quest stats, badges and mapped stores live on the
  * quest-progress view, not here.
- * Local helpers (not in ui/): GroupSection, Reminders, A2hsRow. */
+ * Local helpers (not in ui/): GroupSection, Reminders. The Add to
+ * Home Screen row is ui/A2hs.tsx. */
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
@@ -175,11 +177,9 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
     // Each Profile open re-reads the avatar (app.js loadAvatar).
     (async () => {
       await reload();
-      try {
-        const c = await (await fetch(asset("assets/characters/manifest.json"))).json();
-        setPresets([...new Set([...(c.items || []).map((i: any) => i.char), ...(c.categories || []).map((x: any) => x.char),
-          ...Object.values(c.roles || {}), c.fallback].filter(Boolean))] as string[]);
-      } catch { /* no presets */ }
+      const c = await characterManifest();
+      if (c) setPresets([...new Set([...(c.items || []).map(i => i.char), ...(c.categories || []).map(x => x.char),
+        ...Object.values(c.roles || {}), c.fallback].filter(Boolean))] as string[]);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -249,37 +249,6 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
       <p id="av-status" className="muted nomargin" style={{ textAlign: "center" }}>{status}</p>
       <p className="nomargin" style={{ textAlign: "center", marginTop: 10 }}><button className="btn compact" id="av-edit-label" type="button" onClick={() => setOpen(o => !o)}>{open ? "Done" : "Edit avatar"}</button></p>
     </div>
-  );
-}
-
-/* ---------------- Add to Home Screen row (a2hs.js) ---------------- */
-function A2hsRow({ demo }: { demo: boolean }) {
-  const { prompt: deferred, take } = useInstallPrompt();
-  const [steps, setSteps] = useState(false);
-  const installed = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const available = !installed && !demo && (!!deferred || ios);
-  const go = async () => {
-    if (deferred) {
-      const ev = take();
-      try { await ev.prompt(); await ev.userChoice; } catch { /* closed */ }
-      return;
-    }
-    setSteps(true);
-  };
-  return (
-    <>
-      <button className="navrow" id="btn-a2hs" type="button" hidden={!available} onClick={go}>
-        <span className="grow">Add to Home Screen<span className="sub">Opens full screen and lets reminders work</span></span><span className="chev">›</span></button>
-      <Sheet open={steps} onClose={() => setSteps(false)} id="a2hs-sheet" title="Add Arya to your Home Screen">
-        <ol className="steps">
-          <li><span>Tap <b>Share</b> at the bottom of Safari.</span></li>
-          <li><span>Scroll and tap <b>Add to Home Screen</b>.</span></li>
-          <li><span>Leave <b>Open as Web App</b> <i className="tog" aria-hidden="true"></i> switched <b>on</b>.<span className="keepon">If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.</span></span></li>
-          <li><span>Tap <b>Add</b>, then open Arya from your Home Screen.</span></li>
-        </ol>
-      </Sheet>
-    </>
   );
 }
 

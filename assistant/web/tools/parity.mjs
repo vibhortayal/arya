@@ -39,6 +39,8 @@ const SPECIAL = {
   },
   // No id: these only need the old app's real entry function.
   "stores-mine": { old: () => `questGo("view-stores-mine")`, new: () => `window.__aryaShow("stores-mine")` },
+  "stores-find": { old: () => `questGo("view-stores-find")`, new: () => `window.__aryaShow("stores-find")` },
+  "stores-add": { old: () => `questGo("view-stores-add")`, new: () => `window.__aryaShow("stores-add")` },
   store: { old: () => `qStartNewHunt(null)`, new: () => `window.__aryaShow("store")` },
   newlist: {
     old: () => `qStartNewHunt(null).then(() => { document.querySelector("#st-name").value = "Trader Joe's"; qPickStore(); })`,
