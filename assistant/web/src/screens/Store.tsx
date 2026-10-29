@@ -24,6 +24,15 @@ const sameStore = (a: string, b: string) => {
 // Stores with a photo walk / 3D model (quest.js STORE_PHOTOS, STORE_MODELS).
 const hasData = (store: string) => norm(store).replace(/ /g, "") === "traderjoes";
 
+/* One-shot location for biasing Google suggestions (quest.js Q.geo,
+ * Q.geoAsked): asked once per app run, not on every open. */
+let geo: { lat: number; lng: number } | null = null;
+let geoAsked = false;
+/* The one-linked-store shortcut fires on the first open only, not
+ * again when Back returns here from Find / Add (keyed by the nav
+ * entry's params object, which Back keeps). */
+const shortcutTried = new WeakSet<object>();
+
 type PlanItem = { item_id?: string; name: string; stores?: Record<string, number>; [k: string]: any };
 type PlanRow = { name: string; list?: string; on_list?: boolean; history_id?: string; item_id?: string; [k: string]: any };
 type Plan = { list: PlanRow[]; items: PlanItem[] };
@@ -75,8 +84,7 @@ export function Store() {
   const [sugg, setSugg] = useState<Sugg[]>([]);
   const timer = useRef<number | undefined>(undefined);
   const session = useRef<string | null>(null);
-  const geo = useRef<{ lat: number; lng: number } | null>(null);
-  const geoAsked = useRef(false);
+  const gbusy = useRef(false);
   const latest = useRef("");
   latest.current = name;
 
@@ -95,10 +103,10 @@ export function Store() {
   // from Find / Add, so a store added there can be picked).
   useEffect(() => {
     let dead = false;
-    if (!geoAsked.current && navigator.geolocation) {
-      geoAsked.current = true;
+    if (!geoAsked && navigator.geolocation) {
+      geoAsked = true;
       navigator.geolocation.getCurrentPosition(
-        p => { geo.current = { lat: p.coords.latitude, lng: p.coords.longitude }; }, () => {}, { timeout: 4000, maximumAge: 600000 });
+        p => { geo = { lat: p.coords.latitude, lng: p.coords.longitude }; }, () => {}, { timeout: 4000, maximumAge: 600000 });
     }
     (async () => {
       const m = await loadMine().catch(() => [] as MyStore[]);
@@ -111,7 +119,9 @@ export function Store() {
       setLoaded(true);
       // One linked store the household already knows: straight to the plan.
       const one = fromList && (fromList.stores || []).length === 1 ? fromList.stores[0] : "";
-      if (one) {
+      const first = !shortcutTried.has(nav.params);
+      shortcutTried.add(nav.params);
+      if (one && first) {
         const mn = m.find(s => sameStore(s.name, one));
         const hist = historyStores(p).find(h => sameStore(h, one));
         if (mn || hist) go(mn ? mn.name : hist!, mn ? mn.id : null, true);
@@ -132,7 +142,7 @@ export function Store() {
   const suggest = async (q: string) => {
     if (q.length < 3) { setSugg([]); return; }
     if (!session.current) session.current = `s${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`;
-    const g = geo.current ? `&lat=${geo.current.lat}&lng=${geo.current.lng}` : "";
+    const g = geo ? `&lat=${geo.lat}&lng=${geo.lng}` : "";
     try {
       const d = await get(`/api/stores/places?q=${encodeURIComponent(q)}&session=${session.current}${g}`);
       if (latest.current.trim() !== q) return; // typed on: stale answer
@@ -170,6 +180,8 @@ export function Store() {
   };
 
   const gpick = async (s: Sugg) => {
+    if (gbusy.current) return; // the old button disabled itself while filing
+    gbusy.current = true;
     try {
       const row = await post("/api/stores/places/pick", { place_id: s.place_id, name: s.name });
       session.current = null; // the pick ends the billing session
@@ -178,6 +190,7 @@ export function Store() {
       setName(row.name); setSelId(row.id);
       pickStore(row.name, row.id);
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+    finally { gbusy.current = false; }
   };
 
   const toggleFav = async (s: MyStore) => {

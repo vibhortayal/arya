@@ -1,9 +1,11 @@
-import type { ComponentType } from "react";
+import { useEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider, useAvatar } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TABS, type ViewId } from "./app/views";
-import { ToastProvider } from "./ui/Toast";
+import { ToastProvider, useToast } from "./ui/Toast";
+import { get } from "./lib/api";
+import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { SCREENS } from "./screens/registry";
@@ -28,6 +30,29 @@ function Root() {
 const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
 const TAB_LABEL: Record<string, string> = { home: "Today", list: "Lists", chat: "Ask", community: "Quest", profile: "Settings" };
 
+/* An invite link (/?join=CODE) opens Join a group once the app knows
+ * who is signed in (group.js afterSignIn; the demo skips it). */
+function useInviteLink() {
+  const nav = useNav();
+  const { demo } = useSession();
+  const { toast } = useToast();
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current || demo) return;
+    done.current = true;
+    const code = joinCodeFromUrl();
+    if (!code) return;
+    (async () => {
+      let g: { enabled?: boolean; group?: { name: string } | null };
+      try { g = await get("/api/group"); } catch { g = { enabled: false, group: null }; }
+      try { history.replaceState(null, "", location.pathname); } catch { /* stays in the bar */ }
+      if (!g.enabled) return;
+      if (g.group) { toast(`You are already in ${g.group.name}. Leave it first to join another group.`); return; }
+      nav.show("group-join", { code });
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 /* pwa/index.html's shell: the floating avatar (the way to Profile),
  * the demo bar, one view at a time, and the four-tab bar. */
 function Shell() {
@@ -35,6 +60,7 @@ function Shell() {
   const s = useSession();
   const Screen = SCREENS[nav.view];
   const avatar = useAvatar().src;
+  useInviteLink();
   return (
     <>
       {nav.chrome && (

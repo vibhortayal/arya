@@ -3,6 +3,8 @@ import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { get, post } from "../lib/api";
+import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { clearOnSignOut } from "../app/session";
 import { asset } from "../lib/format";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
@@ -17,8 +19,14 @@ import { asset } from "../lib/format";
  * Exit: Start runs /api/quest/optimize, then nav.show("mode" | "optimize",
  * { draft }) with the old Q.draft shape (see NewListDraft). The draft is
  * kept per params object, so Back from those screens returns to the
- * same plan. Local helpers (not in ui/): the voice recorder (same as
- * Chat.tsx) and the Pack logic below. */
+ * same plan. The voice recorder is lib/recorder.ts (shared with Ask);
+ * the Pack logic below is local.
+ *
+ * fastMode ("Start shopping" on a list): the old qOptimizeDraft and
+ * the Check-my-list screen created the session at once
+ * (qCreateSession(fastMode)) instead of showing the mode screen. Here
+ * the draft goes to "mode"/"optimize" with draft.fastMode still set;
+ * those screens must honour it when they are ported. */
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -369,10 +377,20 @@ function rawItem(p: Pick): Line {
   if (aisle) out.aisle = aisle;
   return out;
 }
-function sessionItem(i: any) {
+function sessionItem(i: any, extras?: Record<string, unknown>) {
   const out: any = { name: i.name, qty: i.qty };
   if (i.group) out.group = i.group;
-  for (const k of ["note", "variant", "by", "src", "aisle", "unit"]) if (i[k]) out[k] = i[k];
+  const e: any = extras || {};
+  for (const k of ["note", "variant", "by", "src", "aisle", "unit"]) { const v = i[k] || e[k]; if (v) out[k] = v; }
+  return out;
+}
+/* The extras of the first raw line that carries this name (pack.js). */
+export function packExtrasOf(raw: Line[] | undefined, name: string) {
+  const n = norm(name);
+  const hit: any = (raw || []).find(r => norm(r.name) === n);
+  const out: Record<string, unknown> = {};
+  if (!hit) return out;
+  for (const k of ["note", "variant", "by", "src", "aisle", "unit"]) if (hit[k]) out[k] = hit[k];
   return out;
 }
 
@@ -411,65 +429,6 @@ function faceFor(name: string) {
   return (item && item.char) || (cat && cat.char) || (CELEB && CELEB.fallback) || "basket.webp";
 }
 
-/* ---------------- voice (app.js startCapture / wireRecordButton) ---------------- */
-
-async function startCapture() {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const AC = window.AudioContext || (window as any).webkitAudioContext;
-  const ctx = new AC();
-  const src = ctx.createMediaStreamSource(stream);
-  const proc = ctx.createScriptProcessor(4096, 1, 1);
-  const chunks: Float32Array[] = [];
-  proc.onaudioprocess = (ev: AudioProcessingEvent) => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
-  src.connect(proc);
-  proc.connect(ctx.destination);
-  return {
-    stop() {
-      proc.disconnect();
-      src.disconnect();
-      stream.getTracks().forEach(t => t.stop());
-      const wav = encodeWav(chunks, ctx.sampleRate);
-      ctx.close();
-      return wav;
-    },
-  };
-}
-function encodeWav(chunks: Float32Array[], srcRate: number) {
-  const target = 16000;
-  let len = 0;
-  chunks.forEach(c => { len += c.length; });
-  const flat = new Float32Array(len);
-  let off = 0;
-  chunks.forEach(c => { flat.set(c, off); off += c.length; });
-  const ratio = srcRate / target;
-  const n = Math.floor(flat.length / ratio);
-  const buf = new ArrayBuffer(44 + n * 2);
-  const v = new DataView(buf);
-  const wstr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-  wstr(0, "RIFF");
-  v.setUint32(4, 36 + n * 2, true);
-  wstr(8, "WAVEfmt ");
-  v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true);
-  v.setUint16(22, 1, true);
-  v.setUint32(24, target, true);
-  v.setUint32(28, target * 2, true);
-  v.setUint16(32, 2, true);
-  v.setUint16(34, 16, true);
-  wstr(36, "data");
-  v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) {
-    const s = Math.max(-1, Math.min(1, flat[Math.floor(i * ratio)]));
-    v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-  return new Blob([buf], { type: "audio/wav" });
-}
-async function transcribeBlob(wav: Blob) {
-  const r = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
-  return ((await r.json()) as { text?: string }).text || "";
-}
-
 /* ---------------- plan helpers (quest.js) ---------------- */
 
 function planBucket(plan: Plan, li: ListRow, store: string) {
@@ -489,6 +448,7 @@ function planBucket(plan: Plan, li: ListRow, store: string) {
 /* The draft survives Back from the screens after this one, keyed by
  * the params object the nav entry keeps. */
 let held: { params: object; draft: NewListDraft } | null = null;
+clearOnSignOut(() => { held = null; });
 function draftFor(params: Record<string, any>): NewListDraft {
   if (held && held.params === params) return held.draft;
   const fl = params.fromList as FromList | undefined;
@@ -525,7 +485,7 @@ export function NewList() {
   textRef.current = text;
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
-  const capture = useRef<Awaited<ReturnType<typeof startCapture>> | null>(null);
+  const capture = useRef<Capture | null>(null);
   const [creating, setCreating] = useState(false);
   const [leave, setLeave] = useState<{ card: Card; dir: "r" | "l"; go: boolean } | null>(null);
   const [editKey, setEditKey] = useState<string | null>(null);
@@ -669,6 +629,8 @@ export function NewList() {
     })().catch(e => toast(errMsg(e)));
     return () => { live = false; clearTimeout(busyT.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // The mic never outlives the screen.
+  useEffect(() => () => { capture.current?.cancel(); capture.current = null; }, []);
 
   // renderPlan -> paintFoot -> save, on every draw.
   useEffect(() => { if (ready) save(); });
@@ -886,7 +848,7 @@ export function NewList() {
       }
       return;
     }
-    if (!navigator.mediaDevices || !(window.AudioContext || (window as any).webkitAudioContext)) {
+    if (!voiceSupported()) {
       setStatus("Voice input is not available in this browser. The microphone on your keyboard works too.");
       return;
     }
@@ -941,7 +903,7 @@ export function NewList() {
     const rep = out.report;
     const go = replace ? nav.replace : nav.show;
     if (!rep.merged.length && !rep.corrected.length && !rep.questions.length) {
-      D.finalItems = D.baseItems.map(sessionItem);
+      D.finalItems = D.baseItems.map(i => sessionItem(i));
       go("mode", { draft: D });
       return;
     }
@@ -1235,7 +1197,7 @@ export function NewList() {
 
       <Sheet open={!!ed} onClose={() => closeEdit()} id="pack-sheet" className="packsheetwrap">
         {ed && editKey && (
-          <div className="packsheet" role="group" aria-labelledby="pack-edit-title">
+          <div className="packsheet" role="group" aria-labelledby="pack-edit-title" key={editKey}>
             <h3 id="pack-edit-title">{ed.name}</h3>
             <div className="packfield"><span className="packlabel" id="pack-q-label">Quantity</span>
               <span className="packqty" role="group" aria-labelledby="pack-q-label">
