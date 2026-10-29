@@ -27,6 +27,8 @@ export function QuestMode() {
   const source = useMemo(() => new AppSource(), []);
   const store = useMemo(() => localProfileStore(`arya-quest:${s.user || "guest"}`), [s.user]);
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
+  // The Arya guide's Quest "Try it" (#154) starts the Practice Market.
+  const practice = nav.params.practice === true;
   const { setChrome } = nav;
 
   // The tab bar's height, so the game's home ends above it.
@@ -72,7 +74,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} />
+        <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} practice={practice} />
       </Suspense>
     </div>
   );

@@ -1169,7 +1169,9 @@
     "sharingOn": "Sharing is on",
     "working": "Working for you ({{n}})",
     "later": "Turns on as you add receipts",
-    "choose": "You choose to turn on"
+    "choose": "You choose to turn on",
+    "seeHowItWorks": "See how it works",
+    "seeItInTheGuide": "See it in the guide"
   },
   "settings": {
     "settings": "Settings",
@@ -1296,7 +1298,9 @@
     "becomesOwner": "@{{handle}} becomes the owner",
     "youLeft": "You left {{name}}. Your lists are a copy now.",
     "showMeAroundAgain": "Show me around again",
-    "replayTheTour": "Replay the 30-second tour"
+    "replayTheTour": "Replay the 30-second tour",
+    "aryaGuide": "Arya guide",
+    "aryaGuideSub": "What Arya does, with things to try"
   },
   "quest": {
     "yourListAsATreasure": "Your list, as a treasure hunt through the store.",
@@ -2042,12 +2046,194 @@
       "settings": {
         "title": "Settings",
         "line": "Your stores, receipts and spending. Replay this tour any time here."
-      }
+      },
+      "guideLink": "Want the full guide?"
     }
   },
   "tour": {
     "skip": "Skip",
     "next": "Next",
     "stepOf": "Step {{n}} of {{total}}"
+  },
+  "guide": {
+    "count": "Arya guide · {{n}} of {{total}}",
+    "close": "Close the guide",
+    "back": "Back",
+    "next": "Next",
+    "cardOf": "Card {{n}} of {{total}}",
+    "sampleTag": "Sample",
+    "sample": {
+      "store": {
+        "tj": "Trader Joe's",
+        "safeway": "Safeway"
+      },
+      "item": {
+        "bananas": "Bananas",
+        "spinach": "Baby spinach",
+        "milk": "Whole milk",
+        "yogurt": "Greek yogurt",
+        "bread": "Sourdough bread",
+        "pasta": "Pasta",
+        "oil": "Olive oil, 1 L",
+        "eggs": "Eggs, dozen"
+      },
+      "cat": {
+        "produce": "Produce",
+        "dairy": "Dairy",
+        "bakery": "Bakery",
+        "pantry": "Pantry"
+      },
+      "art": {
+        "oil": "Olive oil, 1 L",
+        "cheaper": "{{price}} · cheaper",
+        "last3": "Your last 3 buys",
+        "up": "up 6%"
+      }
+    },
+    "tryLine": "Try it here. Nothing is saved.",
+    "cards": {
+      "what": {
+        "kicker": "What Arya is",
+        "title": "Groceries, sorted.",
+        "body": "Arya keeps a list for each store, reminds you what to use before it goes off, and learns your prices from your receipts. Shopping gets quicker every week."
+      },
+      "lists": {
+        "kicker": "Lists",
+        "title": "One list for each store",
+        "p1": "Type, talk, or snap a photo of a paper list.",
+        "p2": "Arya puts each item on the store you usually buy it at.",
+        "p3": "Tap Start shopping and Arya walks you through the store, item by item.",
+        "try": "Try it with a sample list ▸"
+      },
+      "usesoon": {
+        "kicker": "Use soon",
+        "title": "Snap a date, skip the waste",
+        "body": "Point your camera at the date on a pack. Arya reads it and reminds you before the food goes off. No typing.",
+        "try": "Try it with a sample yogurt ▸"
+      },
+      "receipts": {
+        "kicker": "Receipts and spending",
+        "title": "See where your money goes",
+        "body": "Snap a receipt or add a PDF. Arya files it, checks the total, and shows your spending by month and by store.",
+        "try": "Try it with a sample receipt ▸"
+      },
+      "prices": {
+        "kicker": "Prices",
+        "title": "Know where it's cheaper",
+        "body": "From your own receipts, Arya shows which of your stores is cheaper for an item and which prices are creeping up. It turns on after receipts from 2 stores.",
+        "try": "Try it with sample receipts ▸"
+      },
+      "ask": {
+        "kicker": "Ask Arya",
+        "title": "Ask about your groceries",
+        "body": "What to cook, what you spent, where something is cheaper. Arya answers from your own lists and receipts.",
+        "try": "Try it with sample questions ▸"
+      },
+      "quest": {
+        "kicker": "Quest (optional)",
+        "title": "Make a trip a treasure hunt",
+        "body": "Quest turns a store trip into a game: Arya walks you aisle by aisle and you collect each item as you find it. It's optional; your lists work the same without it.",
+        "try": "Play the Practice Market ▸"
+      },
+      "howto": {
+        "kicker": "How to",
+        "title": "Quick how-tos"
+      }
+    },
+    "howto": {
+      "receipt": {
+        "title": "Add a receipt",
+        "s1": "Settings › Receipts, or the camera on a list.",
+        "s2": "Snap the receipt or pick a PDF.",
+        "s3": "Arya files it and checks the total."
+      },
+      "shop": {
+        "title": "Start shopping",
+        "s1": "Open Lists and tap a store's list.",
+        "s2": "Tap Start shopping.",
+        "s3": "Pick Quest. Arya walks you through the store, item by item.",
+        "s4": "At the end, add your receipt."
+      },
+      "share": {
+        "title": "Share a list with your household",
+        "s1": "Settings › Start a group, and give it a name.",
+        "s2": "Your lists become the group's lists.",
+        "s3": "Tap Invite someone and send them the code."
+      },
+      "expiry": {
+        "title": "Snap an expiry date",
+        "s1": "On Today, under Use soon, tap Snap a date.",
+        "s2": "Tap Take a photo of the date on the pack.",
+        "s3": "Check the item and the date, then tap Looks right, track it.",
+        "s4": "Arya reminds you before it goes off."
+      },
+      "ask": {
+        "title": "Ask Arya a question",
+        "s1": "Tap the Ask tab.",
+        "s2": "Type or say your question, or tap a suggestion.",
+        "s3": "Arya answers from your own lists and receipts."
+      }
+    },
+    "try": {
+      "list": {
+        "placeholder": "oat milk, bananas",
+        "add": "Add",
+        "inputAria": "Items to add",
+        "itemsAria": "Sample list",
+        "justAdded": "Just added",
+        "real": "Make my real list ▸",
+        "aisle": {
+          "dairy": "Dairy · aisle 4",
+          "produce": "Produce · by the door",
+          "bakery": "Bakery",
+          "frozen": "Frozen · aisle 7",
+          "pantry": "Pantry · aisle 2",
+          "meat": "Meat and fish · back wall",
+          "snacks": "Snacks · aisle 5",
+          "drinks": "Drinks · aisle 6",
+          "other": "Arya learns where this is"
+        },
+        "seedEggs": "Eggs",
+        "seedBread": "Sourdough bread"
+      },
+      "usesoon": {
+        "title": "Snap a date",
+        "line": "Point the camera at the date on the pack.",
+        "stamp": "Best by 31 Oct",
+        "photoAria": "A sample yogurt pot with its date",
+        "snap": "Snap",
+        "useBy": "Use by Friday",
+        "after": "Arya reminds you before it goes off. You can mark it used or expired on Today."
+      },
+      "receipt": {
+        "title": "Add a receipt",
+        "file": "File it",
+        "filed": "Filed. The total checks out.",
+        "byCategory": "This receipt by category",
+        "total": "Total"
+      },
+      "prices": {
+        "title": "Prices",
+        "compare": "Compare prices",
+        "cheaperAt": "Cheaper at {{store}}",
+        "same": "Same price",
+        "save": "save {{amount}}"
+      },
+      "ask": {
+        "title": "Ask Arya",
+        "cook": {
+          "q": "What can I cook with spinach?",
+          "a": "Spinach pasta with olive oil and garlic. You bought all three this week. About 15 minutes."
+        },
+        "spent": {
+          "q": "How much did I spend this week?",
+          "a": "$34.83, all at Safeway. Pantry was the biggest part, mostly the olive oil."
+        },
+        "eggs": {
+          "q": "Where are eggs cheaper?",
+          "a": "Trader Joe's: $3.49 a dozen, against $4.29 at Safeway on your last receipts."
+        }
+      }
+    }
   }
 }

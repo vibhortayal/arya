@@ -31,9 +31,12 @@ export default async function (page, base) {
       if (on !== k) throw new Error("pip " + on + " at step " + k);
       const label = await page.textContent("#fr-tour-next");
       if (label !== (k === want.length - 1 ? "Done" : "Next")) throw new Error("button at step " + k + ": " + label);
+      // Only the last step offers the Arya guide (#154); Done does not open it.
+      if (!!(await page.$("#fr-tour-more")) !== (k === want.length - 1)) throw new Error("guide link at step " + k);
       await page.click("#fr-tour-next");
     }
     await page.waitForFunction(() => !document.querySelector(".fr-tour"));
+    if (await page.$(".gd")) throw new Error("Done opened the guide");
 
     // Reload: no welcome; Get started on Today with nothing done.
     await page.reload();

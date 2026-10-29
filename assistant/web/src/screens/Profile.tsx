@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { useTour } from "../ui/Tour";
 import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
+import { useGuide } from "../ui/Guide";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
@@ -39,6 +40,7 @@ export function Profile() {
   const nav = useNav();
   const town = useTown();
   const tour = useTour();
+  const guide = useGuide();
   const { demo, user, currency, setCurrency, language, languages, setLanguage, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
@@ -142,6 +144,8 @@ export function Profile() {
         <NavRow view="stores-mine" title={t("settings.stores")} sub={t("settings.yourStoresFavoritesAndThe")} />
         <button className="navrow" id="btn-tour" type="button" onClick={() => tour.startTour(FIRST_RUN_TOUR)}>
           <span className="grow">{t("settings.showMeAroundAgain")}<span className="sub">{t("settings.replayTheTour")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
+          <span className="grow">{t("settings.aryaGuide")}<span className="sub">{t("settings.aryaGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
         <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
         <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"

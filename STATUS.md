@@ -93,6 +93,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `ARYA_REGISTRATION_OPEN=1`. New accounts open on Today (no Connect
   Muse step). Account names are letters, digits and `. _ % + - @` only.
 - **First run (#153, #163; branch `feat/first-run`, not merged):** a new account gets a welcome sheet, a 5-step tour, a Get started card on Today and one first-list card on Lists; accounts with data and the demo never see them. `assistant/loops/2026-10-29-first-run.md`.
+- **Arya guide (#154; branch `feat/arya-guide`, not merged):** an 8-card swipeable guide with Try-it sheets on client-side sample data (nothing saved or sent), opened from Settings > Arya guide, Powers > See how it works, and the last first-run tour step; never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
 
 ## Built but switched off (flags)
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
