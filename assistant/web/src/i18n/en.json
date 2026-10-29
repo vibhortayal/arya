@@ -256,7 +256,28 @@
     "moreSectionsTo_one": "{{count}} more section to {{pct}}%",
     "moreSectionsTo_other": "{{count}} more sections to {{pct}}%",
     "knowsWholeStore": "Arya knows the whole store!",
-    "storePct": "Arya knows {{a}}% → <b>{{to}}%</b> of this store"
+    "storePct": "Arya knows {{a}}% → <b>{{to}}%</b> of this store",
+    "scan": {
+      "start": "Pan slowly along the shelves.",
+      "startSub": "No need to tap. Arya picks the sharp frames.",
+      "see": "Good. I see {{label}}.",
+      "seeItems": "Good. I see {{label}}: {{items}}.",
+      "keepPanning": "Keep panning, slowly.",
+      "looking": "Looking for shelves…",
+      "wait": "Waiting for a clear view.",
+      "waitSub": "Someone is in the way. Arya picks up again when the shelf is clear.",
+      "paused": "paused",
+      "panArrow": "keep panning →",
+      "steady": "Sharp and steady",
+      "frames_one": "{{count}} frame",
+      "frames_other": "{{count}} frames",
+      "pricesOpt": "Also read shelf prices",
+      "pricesOptSub": "Only clear price tags, saved as your own prices.",
+      "signsRead": "Signs read",
+      "pricesRead": "Shelf prices",
+      "peopleBlurred_one": "{{count}} person blurred, none kept",
+      "peopleBlurred_other": "{{count}} people blurred, none kept"
+    }
   },
   "ask": {
     "demoAskAnswersFromThe": "Demo: Ask answers from the demo household and applies what you tell it for this visit only. Try “We finished the milk” or “What do we spend on coffee?”",
