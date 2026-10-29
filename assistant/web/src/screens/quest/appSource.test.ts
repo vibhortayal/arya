@@ -5,6 +5,7 @@ const replies: Record<string, unknown> = {};
 vi.mock("../../lib/api", () => ({
   get: vi.fn(async (url: string) => { calls.push({ method: "GET", url }); const k = Object.keys(replies).find(p => url.startsWith(p)); if (!k) throw new Error("404 " + url); return replies[k]; }),
   post: vi.fn(async (url: string, body: any) => { calls.push({ method: "POST", url, body }); const k = Object.keys(replies).find(p => url.startsWith(p)); return k ? replies[k] : {}; }),
+  put: vi.fn(async (url: string, body: any) => { calls.push({ method: "PUT", url, body }); return { key: `${body.kind}:${body.storeId || "x"}`, ...body }; }),
 }));
 vi.mock("../../lib/characters", () => ({ loadCharacters: async () => {}, charFor: () => "" }));
 
@@ -85,6 +86,41 @@ describe("AppSource zones", () => {
     expect(ask?.body.graph).toBe("template");
     expect(items.find(i => i.name === "Dish brush")?.section).toBe("aisle4");
     expect(items.find(i => i.name === "Milk")?.section).toBe("dairy");
+  });
+});
+
+describe("AppSource Build", () => {
+  const MINE = {
+    id: "mine:s1", source: "mine" as const, size: "s" as const,
+    zones: [
+      { id: "cheese", kind: "dairy" as const, band: "back" as const, index: 0, label: "Cheese wall", categories: ["cheese", "brie"] },
+      { id: "snacks", kind: "aisle" as const, band: "centre" as const, index: 0, label: "Aisle 1 · Snacks", categories: ["chips"] },
+    ],
+  };
+  it("a saved My map is the store's shape on the next quest there", async () => {
+    replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };
+    replies["/api/storemap"] = { segments: [] };
+    replies["/api/quest/maps"] = { maps: [{ key: "store:s1", kind: "store", storeId: "s1", name: "Safeway", graph: MINE }] };
+    replies["/api/quest/sessions"] = { id: "q3", store: "Safeway", state: "not_started", mode: "quest", items: [] };
+    const src = new AppSource();
+    const [st] = await src.nearbyStores();
+    expect(st.seen).toBe("Your map");
+    expect(calls.some(c => c.url.startsWith("/api/storemap"))).toBe(false);
+    const { layout, items } = await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Brie" }, { name: "Chips" }] });
+    expect(layout.area).toBe("Your map");
+    expect(layout.sections.map(s => s.id).sort()).toEqual(["cheese", "snacks"]);
+    expect(items.map(i => i.section)).toEqual(["cheese", "snacks"]);
+  });
+  it("builds, changes and saves through the API", async () => {
+    replies["/api/quest/build/change"] = { graph: MINE, say: "Moved it." };
+    replies["/api/quest/build"] = { graph: MINE, say: "" };
+    replies["/api/quest/maps"] = { maps: [] };
+    const src = new AppSource();
+    expect(await src.build({ type: "corner", look: "farm", focus: [] }, MINE)).toEqual(MINE);
+    expect((await src.change(MINE, "move it")).say).toBe("Moved it.");
+    await src.saveMap({ kind: "store", storeId: "s1", name: "Safeway", graph: MINE });
+    expect(calls.find(c => c.method === "PUT")?.url).toBe("/api/quest/maps");
+    expect((await src.maps()).map(m => m.key)).toEqual(["store:s1"]);
   });
 });
 

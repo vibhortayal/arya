@@ -62,7 +62,7 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
   return (
     <div className="qg-finish" ref={root}>
       <motion.div className="qg-stinger" initial={{ scale: 2.6, opacity: 0, rotate: -8 }} animate={{ scale: 1, opacity: 1, rotate: -3 }} transition={{ type: "spring", damping: 10, stiffness: 180, delay: 0.1 }}>
-        <small>{practice ? "Practice Market" : `${trip.layout.name} · ${trip.layout.area}`}</small>
+        <small>{practice && trip.layout.id === "practice" ? "Practice Market" : `${trip.layout.name} · ${trip.layout.area}`}</small>
         <b>{practice ? "PRACTICE CLEAR!" : "TRIP CLEAR!"}</b>
       </motion.div>
 

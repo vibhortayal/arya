@@ -5,17 +5,20 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { applyTrip, type Profile, type Rewards } from "./core/meta";
-import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, type QuestSource } from "./core/source";
+import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
 import { newTrip, type Trip } from "./core/trip";
 import type { ShoppingList, StoreSummary } from "./core/types";
 import type { ProfileStore } from "./store";
 import { Album, Home, Pick } from "./ui/Hub";
 import { Play } from "./ui/Play";
 import { Finish } from "./ui/Finish";
+import { Build } from "./ui/Build";
+import { buildLayout, sectionFor } from "./core/template";
+import type { StoreGraph } from "./map/graph";
 import "./game.css";
 
 export type Screen =
-  | { s: "home" } | { s: "pick" } | { s: "album" } | { s: "loading" }
+  | { s: "home" } | { s: "pick" } | { s: "album" } | { s: "loading" } | { s: "build" }
   | { s: "play"; trip: Trip }
   | { s: "finish"; trip: Trip; rewards: Rewards };
 
@@ -53,6 +56,13 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     const eggs = items.find(i => i.name === "Eggs")?.key ?? null;
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, golden: eggs }) });
   };
+  /* Walk a built store: practice on its own layout with the player's list (nothing is saved). */
+  const walkBuilt = (graph: StoreGraph, name: string) => {
+    const src = list?.items.length ? list : PRACTICE_LIST;
+    const items = src.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: sectionFor(it.name, graph) }));
+    const layout = buildLayout({ id: graph.id, name, area: graph.source === "dream" ? "Dream store" : "Your map", kind: "mapped", items, graph });
+    setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, seed: Math.floor(Math.random() * 1e6) }) });
+  };
   const startQuest = async (st: StoreSummary) => {
     if (!list) return;
     setScreen({ s: "loading" });
@@ -74,7 +84,8 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} />}
+          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} />}
+          {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "loading" && <div className="qg-loading" role="status">Opening the store…</div>}

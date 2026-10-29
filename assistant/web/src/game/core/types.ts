@@ -43,6 +43,7 @@ export type StoreLayout = {
   /* The plan's size and its shelving racks, from the store's graph (map/solve.ts). */
   plan: { w: number; h: number };
   racks: Rect[];
+  look?: "market" | "modern" | "farm" | "neon";
 };
 
 /* A spot the game may show: only for a mapped section. */

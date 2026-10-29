@@ -25,6 +25,8 @@ export type StoreGraph = {
   id: string;
   source: "template" | "community" | "mine" | "dream";
   size?: ZoneSize;       // overall depth of the store
+  look?: "market" | "modern" | "farm" | "neon"; // Build's colour scheme (map/answers.ts)
+  name?: string;         // a dream store's name
   zones: Zone[];
 };
 
@@ -58,6 +60,7 @@ export function problems(g: StoreGraph): string[] {
   const out: string[] = [];
   if (!g.zones.length) out.push("no zones");
   if (g.zones.length > 24) out.push("more than 24 zones");
+  if (g.look && !["market", "modern", "farm", "neon"].includes(g.look)) out.push(`unknown look ${g.look}`);
   const ids = new Set<string>();
   for (const z of g.zones) {
     if (!z.id || !/^[a-z0-9-]{1,32}$/.test(z.id)) out.push(`bad id ${JSON.stringify(z.id)}`);

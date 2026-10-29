@@ -59,6 +59,12 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   screen stays only for runs started before). Older hunts, Shop-Off,
   friends, album and Teach Arya your store are on Trips (from the game's
   home). `2026-10-29-quest-mode.md`.
+  Build (Quest home, Play | Build): three questions (store type, look,
+  what is big; said or typed) make a whole store, Arya adapts it, you
+  walk it as practice, change it by saying what to move, and save it as
+  My map of a real store (used on your next quest there) or a dream
+  store. Dream-store sharing, the grid editor and map versions are cut
+  for Nov 4 (#170).
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
