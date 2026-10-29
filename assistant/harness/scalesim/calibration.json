@@ -1,0 +1,102 @@
+{
+ "label": "Measured on simulated households, one uvicorn process, file-backed store",
+ "users": 1000,
+ "weeks": 12,
+ "cpu_count": 4,
+ "disk": {
+  "households": 872,
+  "files": 4360,
+  "bytes": 44690430,
+  "receipts": 14177,
+  "lines": 94121,
+  "write_seconds": 3.5,
+  "bytes_per_household": 51250,
+  "sessions_json_kb": 109.0
+ },
+ "api": {
+  "levels": [
+   {
+    "concurrency": 1,
+    "rps": 111.7,
+    "p50_ms": 4.0,
+    "p95_ms": 23.5,
+    "p99_ms": 32.8,
+    "errors": 0,
+    "rss_mb": 62.6
+   },
+   {
+    "concurrency": 8,
+    "rps": 72.7,
+    "p50_ms": 87.2,
+    "p95_ms": 293.9,
+    "p99_ms": 344.5,
+    "errors": 0,
+    "rss_mb": 63.8
+   },
+   {
+    "concurrency": 32,
+    "rps": 68.1,
+    "p50_ms": 422.8,
+    "p95_ms": 955.2,
+    "p99_ms": 1188.3,
+    "errors": 0,
+    "rss_mb": 67.5
+   },
+   {
+    "concurrency": 96,
+    "rps": 76.2,
+    "p50_ms": 1581.3,
+    "p95_ms": 2180.5,
+    "p99_ms": 2402.7,
+    "errors": 0,
+    "rss_mb": 69.6
+   }
+  ],
+  "per_endpoint": {
+   "/api/home": {
+    "p50_ms": 274.6,
+    "p95_ms": 355.0,
+    "p99_ms": 396.4
+   },
+   "/api/lists": {
+    "p50_ms": 24.4,
+    "p95_ms": 42.5,
+    "p99_ms": 50.9
+   },
+   "/api/prices/insights": {
+    "p50_ms": 116.6,
+    "p95_ms": 165.3,
+    "p99_ms": 188.2
+   },
+   "/api/powers": {
+    "p50_ms": 25.3,
+    "p95_ms": 41.1,
+    "p99_ms": 54.1
+   }
+  },
+  "open_app_all_users": {
+   "users": 872,
+   "seconds": 48.7,
+   "errors": 0,
+   "users_per_second": 17.9
+  },
+  "rss_mb_after_cold": 61.1,
+  "home_ms_per_household_median": 26.0
+ },
+ "storemap": {
+  "jpeg_kb": 166.4,
+  "ingest_ms_first_30": 35.6,
+  "ingest_ms_last_30": 34.7,
+  "concurrent": {
+   "threads": 8,
+   "captures_per_second": 9.4,
+   "p50_ms": 837.5,
+   "p95_ms": 1415.1
+  },
+  "bytes_one_store_30_segments": {
+   "storemap.json": 36352,
+   "storemap_img.json": 18174125
+  },
+  "view_ms": 0.9
+ }
+}

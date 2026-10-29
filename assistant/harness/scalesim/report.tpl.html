@@ -1,0 +1,323 @@
+<title>Arya at Scale</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one control rail (stage, density) pinned on top; two views under it:
+   what shoppers see, what the system does. Tokens follow Arya's own DESIGN.md:
+   grey structure, one orange accent, system type. */
+:root{
+  --bg:#EFEFF1; --panel:#FFFFFF; --ink:#1B1B1E; --ink2:#55555C; --ink3:#8B8B93;
+  --line:#D9D9DE; --fill:#F4F4F6; --acc:#E4572E; --acc-soft:#FDEEE8; --acc-ink:#B63E1A;
+  --ok:#1E7A46; --ok-soft:#E4F4EA; --warn:#9A6200; --warn-soft:#FBF0D9; --bad:#C81E1E; --bad-soft:#FBE6E6;
+  --fog:#E3E3E8; --fog-line:#C9C9D0;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141416; --panel:#1E1E21; --ink:#F2F2F4; --ink2:#B4B4BC; --ink3:#85858E;
+  --line:#35353B; --fill:#27272B; --acc:#F0724D; --acc-soft:#3A2119; --acc-ink:#F59A7C;
+  --ok:#5CCB8A; --ok-soft:#173225; --warn:#E5B04D; --warn-soft:#352A12; --bad:#FF7B7B; --bad-soft:#3B1D1D;
+  --fog:#2B2B30; --fog-line:#44444B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141416; --panel:#1E1E21; --ink:#F2F2F4; --ink2:#B4B4BC; --ink3:#85858E;
+  --line:#35353B; --fill:#27272B; --acc:#F0724D; --acc-soft:#3A2119; --acc-ink:#F59A7C;
+  --ok:#5CCB8A; --ok-soft:#173225; --warn:#E5B04D; --warn-soft:#352A12; --bad:#FF7B7B; --bad-soft:#3B1D1D;
+  --fog:#2B2B30; --fog-line:#44444B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;margin:0;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;padding-block:16px 48px}
+h1{font-size:28px;line-height:1.15;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 6px}
+p{margin:0 0 8px}
+.sub{color:var(--ink2);max-width:68ch}
+.banner{display:flex;gap:10px;align-items:center;background:var(--acc-soft);color:var(--acc-ink);border-radius:12px;padding:10px 14px;margin-block:12px;font-weight:600;font-size:13px}
+.banner b{background:var(--acc);color:#fff;border-radius:980px;padding:2px 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.rail .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:600;margin-right:4px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:980px;padding:8px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:40px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip:focus-visible,input:focus-visible,.tab:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--acc);height:32px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;font:inherit;font-weight:600;color:var(--ink2);padding:10px 14px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--acc)}
+.verdict{background:var(--panel);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);margin-bottom:16px}
+.verdict .big{font-size:22px;font-weight:700;line-height:1.25;text-wrap:balance;margin-bottom:8px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border-radius:980px;padding:3px 10px;font-size:12px;font-weight:700;background:var(--fill);color:var(--ink2);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.strained{background:var(--warn-soft);color:var(--warn)} .pill.breaks{background:var(--bad-soft);color:var(--bad)}
+.tag{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--ink2);white-space:nowrap}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--panel);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);min-width:0}
+.card header{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px}
+.stat{display:flex;gap:16px;flex-wrap:wrap;margin-block:8px}
+.stat div{min-width:0}
+.stat b{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:12px;color:var(--ink2)}
+.muted{color:var(--ink2);font-size:13px}
+/* store map */
+.shelves{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin-block:10px}
+.sh{height:44px;border-radius:8px;border:1.5px dashed var(--fog-line);background:repeating-linear-gradient(45deg,var(--fog) 0 6px,transparent 6px 12px);font-size:10px;line-height:1.1;display:flex;align-items:flex-end;padding:3px 5px;color:var(--ink3);overflow:hidden;transition:background .25s}
+.sh.s1{background:var(--acc);border:1.5px solid var(--acc);color:#fff}
+.sh.s2{background:var(--acc-soft);border:1.5px solid var(--acc);color:var(--acc-ink)}
+.sh.s3{background:var(--bad-soft);border:1.5px solid var(--bad);color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:56px;margin-block:8px}
+.bars span{flex:1;background:var(--acc);border-radius:3px 3px 0 0;min-height:2px;opacity:.55}
+.bars span.on{opacity:1}
+.play{display:flex;gap:10px;align-items:center}
+/* prices */
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-size:14px}
+th{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+td.n,th.n{text-align:right}
+.best{color:var(--ok);font-weight:700}
+.scroll{overflow-x:auto}
+.item-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.item-tabs .chip{padding:5px 12px;min-height:32px;font-size:13px}
+/* heat */
+.heat{display:grid;grid-template-columns:34px repeat(13,minmax(0,1fr));gap:2px;font-size:10px;margin-top:8px}
+.heat div{height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:var(--fill);color:var(--ink3);font-variant-numeric:tabular-nums}
+.heat .h1{background:var(--acc-soft);color:var(--acc-ink)} .heat .h2{background:var(--acc);color:#fff}
+.heat .hd{background:none;height:auto}
+/* limits */
+.lim{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lim:last-child{border-bottom:0}
+.lim .pill{align-self:start}
+.lim .bar{grid-column:1/-1;height:8px;background:var(--fill);border-radius:99px;overflow:hidden}
+.lim .bar i{display:block;height:100%;border-radius:99px;background:var(--ok)}
+.lim .bar i.strained{background:var(--warn)} .lim .bar i.breaks{background:var(--bad)}
+.lim .fix{grid-column:1/-1;font-size:13px;color:var(--ink2)}
+.matrix{font-size:12px}
+.matrix td,.matrix th{padding:5px 6px;text-align:center;border-bottom:0}
+.matrix td.l,.matrix th.l{text-align:left}
+.cell{display:block;border-radius:5px;padding:3px 0;font-weight:700}
+.cell.ok{background:var(--ok-soft);color:var(--ok)} .cell.strained{background:var(--warn-soft);color:var(--warn)} .cell.breaks{background:var(--bad-soft);color:var(--bad)}
+.matrix tr.now td .cell{outline:2px solid var(--acc)}
+.cost{display:flex;height:14px;border-radius:99px;overflow:hidden;margin-block:8px}
+.cost i{display:block}
+ul{margin:4px 0 8px;padding-left:20px} li{margin-bottom:4px}
+.script li{margin-bottom:10px}
+.two{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.hide{display:none!important}
+@media (max-width:700px){.rail{position:static}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <h1>Arya at scale</h1>
+  <p class="sub">Pick how many people use Arya. See what the shopping data looks like, and what the system does to carry it. Drive it from the stage buttons or the slider.</p>
+  <div class="banner"><b>Simulated</b><span>Every number on this page comes from a simulation or a measurement on simulated households. No real users, receipts or prices are shown. Store names are real-style labels only.</span></div>
+
+  <div class="rail" id="rail">
+    <div class="row" id="stages" role="group" aria-label="Number of users"></div>
+    <input type="range" id="slide" min="0" value="2" aria-label="Number of users" style="margin-top:6px">
+    <div class="row">
+      <span class="lbl">Users per neighbourhood</span>
+      <span id="dens" role="group" aria-label="Neighbourhood density"></span>
+      <span class="muted" id="densnote"></span>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict" aria-live="polite"></div>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" aria-selected="true" data-t="shop">What shoppers see</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="sys">What the system does</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="how">Measured vs simulated</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="demo">Showing it in the demo</button>
+  </div>
+
+  <section id="p-shop" class="grid"></section>
+  <section id="p-sys" class="hide"></section>
+  <section id="p-how" class="hide"></section>
+  <section id="p-demo" class="hide"></section>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M" : n >= 1e3 ? (n / 1e3).toFixed(n % 1e3 ? 1 : 0).replace(/\.0$/, "") + "k" : String(n);
+const num = n => Math.round(n).toLocaleString("en-US");
+const usd = n => n >= 1e6 ? "$" + (n / 1e6).toFixed(2) + "M" : n >= 1e4 ? "$" + num(n) : n >= 100 ? "$" + num(n) : "$" + n.toFixed(2);
+const S = { i: 2, preset: "typical", tab: "shop", wk: 12, item: "milk", playing: null };
+try { const h = location.hash.slice(1); if (["shop","sys","how","demo"].includes(h)) S.tab = h; } catch (e) {}
+
+const st = () => D.stages[S.i];
+const sysd = () => st().systems[S.preset];
+const q = () => D.quality[st().grid[S.preset]];
+const status = s => ({ ok: "OK", strained: "Strained", breaks: "Breaks" })[s];
+const worst = sy => sy.limits.reduce((a, l) => (l.ratio > a.ratio ? l : a));
+
+function controls() {
+  $("#stages").innerHTML = '<span class="lbl">Users</span>' + D.stages.map((s, i) =>
+    `<button class="chip" data-i="${i}" aria-pressed="${i === S.i}">${fmt(s.users)}</button>`).join("");
+  $("#slide").max = D.stages.length - 1; $("#slide").value = S.i;
+  $("#dens").innerHTML = Object.entries(D.densities).map(([k, v]) =>
+    `<button class="chip" data-p="${k}" aria-pressed="${k === S.preset}">${num(v)}</button>`).join(" ");
+  const n = st().users, d = Math.min(n, D.densities[S.preset]);
+  $("#densnote").textContent = n <= d ? `All ${num(n)} users live in one neighbourhood.` :
+    `${num(n)} users spread over ${num(sysd().neighborhoods)} neighbourhoods of about ${num(d)}.`;
+}
+
+function verdict() {
+  const sy = sysd(), Q = q(), w = worst(sy);
+  const lastCov = Math.round(avg(Object.values(Q.map.weekly).map(a => a[11])));
+  const f = Q.prices.final;
+  const bad = sy.limits.filter(l => l.status === "breaks").length;
+  const head = bad ? `${num(st().users)} users: shoppers get a good product, the current system breaks in ${bad} place${bad > 1 ? "s" : ""}.`
+    : `${num(st().users)} users: the product is rich and the current system holds.`;
+  const pills = [
+    `<span class="pill">Store maps ${lastCov}% mapped after 12 weeks</span>`,
+    `<span class="pill">${f.items_with_compare} of ${Q.prices.items} products have a community price compare</span>`,
+    `<span class="pill">Arya Shoppers has a signal in ${Q.busy.signal_pct}% of store hours</span>`,
+    `<span class="pill ${w.status}">Tightest limit: ${w.name.replace(/ \(.*/, "")} (${status(w.status)})</span>`,
+    `<span class="pill">${usd(sy.cost.per_user)} per user per month</span>`,
+  ];
+  $("#verdict").innerHTML = `<div class="big">${head}</div><div class="pills">${pills.join("")}</div>`;
+}
+const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+
+function shop() {
+  const Q = q(), sy = sysd();
+  const m = Q.map, lab = m.labels, w = S.wk - 1;
+  const cov = m.weekly[m.spotlight], acc = m.accuracy[m.spotlight];
+  const counts = [0, 0, 0, 0]; m.lapse[w].forEach(c => counts[c]++);
+  const shelves = lab.map((l, i) => `<div class="sh s${m.lapse[w][i]}" title="${l}">${l}</div>`).join("");
+  const bars = cov.map((v, i) => `<span class="${i === w ? "on" : ""}" style="height:${Math.max(3, v)}%" title="Week ${i + 1}: ${v}% mapped"></span>`).join("");
+  const P = Q.prices, items = Object.keys(P.sample), it = P.sample[S.item];
+  const rows = Object.entries(it.stores).map(([s, v]) => ({ s, ...v }));
+  const best = Math.min(...rows.filter(r => r.median).map(r => r.median), Infinity);
+  const priceRows = rows.map(r => `<tr><td>${r.s}</td><td class="n ${r.median === best ? "best" : ""}">${r.median ? "$" + r.median.toFixed(2) : '<span class="muted">needs 5 households</span>'}</td><td class="n muted">${r.households}</td></tr>`).join("");
+  const B = Q.busy, hours = B.hours;
+  const heat = ['<div class="hd"></div>'].concat(hours.map(h => `<div class="hd">${h % 12 || 12}${h < 12 ? "a" : "p"}</div>`));
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d, di) => {
+    heat.push(`<div class="hd">${d}</div>`);
+    B.heat[di].forEach(v => heat.push(`<div class="${v >= 8 ? "h2" : v >= 3 ? "h1" : ""}">${v >= 3 ? Math.round(v) : ""}</div>`));
+  });
+  const L = Q.low, A = Q.alerts;
+  const tot = B.levels.Quiet + B.levels.Busy + B.levels.Packed;
+  $("#p-shop").innerHTML = `
+  <article class="card"><header><div><h2>Store maps fill in from fog</h2><p class="muted">${m.spotlight}, one tile per shelf run. A shopper photo reveals a tile.</p></div><span class="tag">simulated · real map rules</span></header>
+    <div class="play"><button class="chip" id="play">${S.playing ? "Pause" : "Play weeks"}</button><input type="range" id="wk" min="1" max="12" value="${S.wk}" aria-label="Week" style="flex:1"><b id="wkn">Week ${S.wk}</b></div>
+    <div class="shelves">${shelves}</div>
+    <div class="legend"><span><i style="background:var(--fog)"></i>fog (not mapped)</span><span><i style="background:var(--acc)"></i>mapped</span><span><i style="background:var(--acc-soft);border:1px solid var(--acc)"></i>aging (60+ days)</span><span><i style="background:var(--bad-soft);border:1px solid var(--bad)"></i>marked outdated</span></div>
+    <div class="stat"><div><b>${Math.round(100 * counts[1] / lab.length)}%</b><span>of ${lab.length} shelf runs mapped</span></div><div><b>${Math.round(100 * acc[w])}%</b><span>of shopped shelves match today's layout</span></div><div><b>${num(Q.photos)}</b><span>photos in 12 weeks, all stores</span></div></div>
+    <div class="bars" aria-hidden="true">${bars}</div><p class="muted">Share of shelf runs mapped, by week. Shelves get rearranged at random and a "map is outdated" tap sends them back to fog. The photo scoring, keep-best-3 and aging rules are the real <code>api/storemap.py</code> code.</p></article>
+
+  <article class="card"><header><div><h2>Price compare from neighbours</h2><p class="muted">Median of opted-in households, last 30 days. A store shows a price only when 5 or more households stand behind it.</p></div><span class="tag">simulated · rule from SPEC FR-11.7</span></header>
+    <div class="item-tabs">${items.map(k => `<button class="chip" data-item="${k}" aria-pressed="${k === S.item}">${P.sample[k].name}</button>`).join("")}</div>
+    <div class="scroll"><table><thead><tr><th>Store</th><th class="n">Community median</th><th class="n">Households</th></tr></thead><tbody>${priceRows}</tbody></table></div>
+    <div class="stat"><div><b>${P.final.items_with_compare}/${P.items}</b><span>products with a 2+ store compare (community)</span></div><div><b>${P.own_compare_pct}%</b><span>of a household's own products it can compare from its own receipts</span></div><div><b>${P.final.median_error_pct ?? "–"}%</b><span>median error against the true simulated price</span></div></div>
+    <p class="muted">${P.opted_in} households opted in. Prices here are invented; the shape of the data is the point.</p></article>
+
+  <article class="card"><header><div><h2>Arya Shoppers: how busy is the store</h2><p class="muted">${B.store}, average Arya shoppers inside, by weekday and hour. Under 3 shows "Quiet" and no number.</p></div><span class="tag">simulated · not built yet</span></header>
+    <div class="heat">${heat.join("")}</div>
+    <div class="legend" style="margin-top:8px"><span><i style="background:var(--fill)"></i>Quiet (under 3)</span><span><i style="background:var(--acc-soft)"></i>Busy (3 to 7)</span><span><i style="background:var(--acc)"></i>Packed (8+)</span></div>
+    <div class="stat"><div><b>${B.signal_pct}%</b><span>of store-hours have a reading</span></div><div><b>${Math.round(100 * B.levels.Packed / tot * 10) / 10}%</b><span>read Packed</span></div></div>
+    <p class="muted">Arya only sees its own users who turned presence on. Thin data stays Quiet instead of guessing. Thresholds are placeholders.</p></article>
+
+  <article class="card"><header><div><h2>Running low and missing items</h2><p class="muted">Two features, two kinds of scaling.</p></div><span class="tag">simulated</span></header>
+    <h3>Running low is personal</h3>
+    <div class="stat"><div><b>${L.precision_pct ?? "–"}%</b><span>of "running low" suggestions bought the next week</span></div><div><b>${(L.suggestions / Q.households).toFixed(1)}</b><span>suggestions per household</span></div></div>
+    <p class="muted">Each household's own receipts decide this. More users do not make it better, so it works on day one.</p>
+    <h3>Missing-item alerts are communal</h3>
+    <div class="stat"><div><b>${num(A.alerts)}</b><span>store alerts raised (3 households, 7 days)</span></div><div><b>${num(A.reports)}</b><span>"not here" taps</span></div></div>
+    <div class="scroll"><table><tbody>${A.top.map(t => `<tr><td>${t.item}</td><td>${t.store}</td><td class="n">${t.reports} reports</td></tr>`).join("")}</tbody></table></div>
+    <p class="muted">With few users, three separate reports take weeks. With many, a stock-out shows up the same day.</p></article>`;
+  const wk = $("#wk"); wk.oninput = () => { S.wk = +wk.value; shop(); };
+  $("#play").onclick = () => {
+    if (S.playing) { clearInterval(S.playing); S.playing = null; return shop(); }
+    S.wk = 1; shop();
+    S.playing = setInterval(() => { if (S.wk >= 12) { clearInterval(S.playing); S.playing = null; return shop(); } S.wk++; shop(); }, 700);
+    $("#play").textContent = "Pause";
+  };
+  document.querySelectorAll("[data-item]").forEach(b => b.onclick = () => { S.item = b.dataset.item; shop(); });
+}
+
+function sys() {
+  const sy = sysd(), c = sy.cost, d = sy.data;
+  const sum = c.models + c.compute + c.database + c.photos || 1;
+  const seg = (v, col) => `<i style="width:${100 * v / sum}%;background:${col}"></i>`;
+  const lims = sy.limits.map(l => `<div class="lim"><div><b>${l.name}</b> <span class="tag">${l.kind === "A" ? "modelled" : "measured + modelled"}</span><div class="muted">${l.value}</div></div><span class="pill ${l.status}">${status(l.status)}</span><div class="bar"><i class="${l.status}" style="width:${Math.min(100, Math.max(3, 100 * l.ratio))}%"></i></div>${l.status !== "ok" ? `<div class="fix"><b>What would change:</b> ${l.fix}</div>` : ""}</div>`).join("");
+  const mat = `<table class="matrix"><thead><tr><th class="l">Users</th>${sy.limits.map(l => `<th>${l.name.replace(/ \(.*/, "").replace("Sign-in sessions", "Sessions").replace("Store map photos", "Map photos").replace("Today screen recomputed on every read", "Today recompute").replace("Postgres connections", "Postgres conns").replace("Arya Shoppers presence", "Presence").replace("API processes", "API CPU")}</th>`).join("")}</tr></thead><tbody>${D.stages.map((s, i) => `<tr class="${i === S.i ? "now" : ""}"><td class="l"><b>${fmt(s.users)}</b></td>${s.systems[S.preset].limits.map(l => `<td><span class="cell ${l.status}">${status(l.status)}</span></td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  $("#p-sys").innerHTML = `<div class="two">
+   <article class="card"><header><h2>Where it strains</h2><span class="tag">code as it is today</span></header>${lims}</article>
+   <div style="display:grid;gap:16px;align-content:start;min-width:0">
+   <article class="card"><header><h2>What it costs a month</h2><span class="tag">list prices · assumptions</span></header>
+     <div class="stat"><div><b>${usd(c.total)}</b><span>total, models plus hosting</span></div><div><b>${usd(c.per_user)}</b><span>per user</span></div><div><b>${usd(c.models_per_user)}</b><span>per user on models</span></div></div>
+     <div class="cost">${seg(c.models, "var(--acc)")}${seg(c.compute, "var(--ink2)")}${seg(c.database, "var(--ink3)")}${seg(c.photos, "var(--line)")}</div>
+     <div class="legend"><span><i style="background:var(--acc)"></i>models ${usd(c.models)}</span><span><i style="background:var(--ink2)"></i>compute ${usd(c.compute)}</span><span><i style="background:var(--ink3)"></i>database ${usd(c.database)}</span><span><i style="background:var(--line)"></i>photo storage ${usd(c.photos)}</span></div>
+     <p class="muted">${num(c.receipts_mo)} receipt reads, ${num(c.photos_mo)} photo checks and ${num(c.asks_mo)} Ask answers a month. Receipt reading is the biggest line; lowering it is the main lever (cheaper tier, caching, on-device).</p></article>
+   <article class="card"><header><h2>How much data</h2><span class="tag">measured size · simulated volume</span></header>
+     <div class="stat"><div><b>${num(sy.households)}</b><span>households</span></div><div><b>${num(sy.stores)}</b><span>stores mapped</span></div><div><b>${num(sy.peak_rps)}</b><span>requests/s at peak</span></div></div>
+     <div class="stat"><div><b>${d.user_data_gb_1y} GB</b><span>household data after a year</span></div><div><b>${num(d.receipt_lines_per_week)}</b><span>receipt lines a week</span></div><div><b>${num(d.photos_per_week)}</b><span>shelf photos a week</span></div></div></article>
+   </div></div>
+   <article class="card" style="margin-top:16px"><header><div><h2>Every stage at a glance</h2><p class="muted">Same limits at each user count, for the density chosen above. Your current stage is outlined.</p></div></header><div class="scroll">${mat}</div></article>`;
+}
+
+function how() {
+  const C = D.calibration, a = C.api, s = C.storemap, b = C.disk;
+  const lv = a.levels.map(l => `<tr><td>${l.concurrency}</td><td class="n">${l.rps}</td><td class="n">${l.p50_ms}</td><td class="n">${l.p95_ms}</td><td class="n">${l.errors}</td><td class="n">${l.rss_mb}</td></tr>`).join("");
+  const ep = Object.entries(a.per_endpoint).map(([k, v]) => `<tr><td><code>${k}</code></td><td class="n">${v.p50_ms}</td><td class="n">${v.p95_ms}</td><td class="n">${v.p99_ms}</td></tr>`).join("");
+  const as = D.world.assumptions_behaviour, am = D.world.assumptions_system;
+  $("#p-how").innerHTML = `<div class="two">
+   <article class="card"><header><h2>Measured on the real code</h2><span class="tag">M</span></header>
+    <p class="muted">${C.label}. ${num(b.households)} simulated households (${num(C.users)} users), ${C.weeks} weeks of receipts, ${C.cpu_count} CPU cores, file-backed store. Postgres was not measured.</p>
+    <h3>One API process, mixed reads</h3>
+    <div class="scroll"><table><thead><tr><th>Clients</th><th class="n">req/s</th><th class="n">p50 ms</th><th class="n">p95 ms</th><th class="n">Errors</th><th class="n">RSS MB</th></tr></thead><tbody>${lv}</tbody></table></div>
+    <h3 style="margin-top:12px">Per endpoint, ${num(b.households)} different users opening the app</h3>
+    <div class="scroll"><table><thead><tr><th>Endpoint</th><th class="n">p50</th><th class="n">p95</th><th class="n">p99</th></tr></thead><tbody>${ep}</tbody></table></div>
+    <h3 style="margin-top:12px">Shared store map</h3>
+    <ul><li>${s.jpeg_kb} KB test photo; one store with 30 shelf runs: photo file ${(s.bytes_one_store_30_segments["storemap_img.json"] / 1e6).toFixed(1)} MB.</li>
+    <li>Each new photo rewrites the whole photo file: ${s.ingest_ms_first_30} ms at first, ${s.ingest_ms_last_30} ms later, ${s.concurrent.captures_per_second} photos/s with ${s.concurrent.threads} at once (p95 ${s.concurrent.p95_ms} ms).</li></ul>
+    <p class="muted">Disk: ${num(b.bytes_per_household)} bytes per household after ${C.weeks} weeks, ${num(b.files)} files. The Today screen takes ${a.home_ms_per_household_median} ms of one core per household.</p></article>
+   <article class="card"><header><h2>Simulated and assumed</h2><span class="tag">S · A</span></header>
+    <p>Data quality (maps, prices, busyness, alerts) comes from an agent-by-agent simulation at each neighbourhood size from 100 to 10,000 users. Seed ${D.seed}: the same seed gives the same page.</p>
+    <p>Totals for 100k to 5M users come from arithmetic on those results and the measurements. Nobody simulated 5 million people one by one.</p>
+    <h3>Behaviour assumptions</h3><ul>
+    <li>${100 * as.share_prices}% of households share prices; ${100 * as.share_presence}% turn on presence; ${100 * as.mapper}% take shelf photos, on ${100 * as.capture_per_trip}% of their trips.</li>
+    <li>${100 * as.not_here}% of grabs end in "not here"; ${100 * as.report_rate}% of those get tapped; ${100 * as.layout_change_per_week}% of shelf runs are rearranged each week; ${100 * as.stockout_per_week}% of products go out of stock each week.</li>
+    <li>Community price needs ${as.community_k}+ households over ${as.community_days} days. A store alert needs ${as.alert_reports} households in 7 days.</li></ul>
+    <h3>System assumptions</h3><ul>
+    <li>${am.opens_per_week} app opens a week, ${am.reqs_per_open} requests each, ${am.reqs_per_trip} per shopping trip. Peak hour = Saturday 11am, ${(100 * am.peak_hour_share).toFixed(1)}% of a week's traffic, times ${am.burst} for the peak minute.</li>
+    <li>${am.stores_per_neighborhood} stores and ${am.segments_per_store} shelf runs per neighbourhood; ${am.keep_per_segment} photos kept per shelf run at ${am.photo_mb} MB.</li>
+    <li>Model prices from docs/MODEL-POLICY.md. Hosting prices are rounded generic list prices, not quotes: ${usd(am.usd_per_core_month)} per core, ${usd(am.usd_per_gb_db_month)} per GB database.</li></ul>
+    <p class="muted">Change a number in <code>harness/scalesim/world.py</code> or <code>model.py</code>, run <code>python -m harness.scalesim.build</code>, and this page updates.</p></article></div>`;
+}
+
+function demo() {
+  $("#p-demo").innerHTML = `<div class="two">
+   <article class="card"><header><h2>Three-minute script</h2></header><ol class="script">
+    <li><b>0:00 to 0:25. Say it is a simulation.</b> "This is a simulator, not real users. I built it to see how Arya behaves when a neighbourhood actually uses it." Show the Simulated banner.</li>
+    <li><b>0:25 to 1:05. 200 users, then 1,000.</b> Press Play weeks on the store map. Fog turns into a map as shoppers photograph their aisles. Point at the 200-user map still patchy, the 1,000-user map filled in by week 5.</li>
+    <li><b>1:05 to 1:35. Prices.</b> Show a product where most stores say "needs 5 households" at 200 and every store has a price at 2,000. "Only households who opted in. No scraping."</li>
+    <li><b>1:35 to 2:05. Busyness and alerts.</b> Heat grid is empty at 1,000, readable at 10,000. "Arya says Quiet instead of guessing."</li>
+    <li><b>2:05 to 2:45. What breaks.</b> Go to 100k, then 1M, then 5M on the system tab. Show the red cells and the fix. "The single photo file stops working at a few thousand users. Here is what I would change."</li>
+    <li><b>2:45 to 3:00. Close.</b> "Simulated, measured on the real code, and the same app you saw earlier."</li></ol></article>
+   <article class="card"><header><h2>What is honest to say</h2></header><ul>
+    <li>Say: "simulated users", "measured on simulated households", "modelled at 5 million".</li>
+    <li>Say the app's real store-map rules and real API were run. That is true.</li>
+    <li>Do not say: real users, real prices, a beta, or "tested with 5 million".</li>
+    <li>Do not show the Arya Shoppers or community prices as shipped. They are not built; label them "next".</li>
+    <li>The hosting cost lines are list-price guesses. Say "rough".</li></ul>
+    <h3>Cut if time runs short</h3><ul><li>Running low (works the same at any size).</li><li>The Measured vs simulated tab; keep it for judges who read the page.</li><li>The cost breakdown. Keep one number: cost per user.</li></ul>
+    <h3>Good second view for the app itself</h3><p class="muted">A "Neighbourhood view" in demo mode backed by the 1,000-user stage, off by default behind a flag. Proposal only; this page ships first.</p></article></div>`;
+}
+
+function render() {
+  controls(); verdict();
+  ["shop", "sys", "how", "demo"].forEach(t => $("#p-" + t).classList.toggle("hide", t !== S.tab));
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.t === S.tab));
+  if (S.tab === "shop") shop(); else if (S.tab === "sys") sys(); else if (S.tab === "how") how(); else demo();
+}
+$("#stages").onclick = e => { const b = e.target.closest("[data-i]"); if (b) { S.i = +b.dataset.i; render(); } };
+$("#slide").oninput = e => { S.i = +e.target.value; render(); };
+$("#dens").onclick = e => { const b = e.target.closest("[data-p]"); if (b) { S.preset = b.dataset.p; render(); } };
+$("#tabs").onclick = e => { const b = e.target.closest(".tab"); if (b) { S.tab = b.dataset.t; try { history.replaceState(null, "", "#" + S.tab); } catch (x) {} render(); } };
+addEventListener("hashchange", () => { const h = location.hash.slice(1); if (["shop","sys","how","demo"].includes(h)) { S.tab = h; render(); } });
+render();
+</script>
