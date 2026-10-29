@@ -40,7 +40,7 @@ def net_purchases(entries):
         elif e["event_type"] == "return":
             returns.append(e)
     for ret in returns:
-        qty = ret["qty"]
+        qty = abs(ret["qty"])
         for p in kept.get(ret["item_id"], []):
             if qty <= 0:
                 break
