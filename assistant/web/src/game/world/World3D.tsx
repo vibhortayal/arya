@@ -14,7 +14,7 @@ import { charArt } from "../assets";
 import { reducedMotion } from "../fx/feel";
 import { currentStop, isHandled, itemsIn, liveStops, sectionView, type Trip } from "../core/trip";
 import type { Section } from "../core/types";
-import { FLOOR, findPath, fixtures, grid, nearestOpen, spots, toWorld, U, type Fixture, type Spot, type V2 } from "./layout3d";
+import { checkoutOf, entryOf, findPath, fixtures, floorOf, grid, nearestOpen, spots, toWorld, U, type Fixture, type Floor, type Spot, type V2 } from "./layout3d";
 
 export type Goal = { kind: "item"; key: string } | { kind: "checkout" } | { kind: "point"; p: V2 };
 export type WorldApi = {
@@ -34,8 +34,6 @@ type Props = {
   onTapItem: (key: string) => void;
 };
 
-const CHECKOUT_AT: V2 = { x: 11.2, z: 19.5 };
-const ENTRY_AT: V2 = { x: 2.6, z: 21.0 };
 const hex = (n: number) => "#" + n.toString(16).padStart(6, "0");
 
 /* ---------------------------------------------------------------- palette */
@@ -123,8 +121,10 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
   const L = trip.layout;
   const bp = L.kind === "simulated";
   const P = useMemo(() => palette(bp), [bp]);
-  const F = useMemo(() => fixtures(), []);
-  const G = useMemo(() => grid(F), [F]);
+  const FL = useMemo(() => floorOf(L), [L]);
+  const F = useMemo(() => fixtures(L), [L]);
+  const G = useMemo(() => grid(F, FL), [F, FL]);
+  const ENTRY_AT = useMemo(() => entryOf(FL), [FL]), CHECKOUT_AT = useMemo(() => checkoutOf(FL), [FL]);
   const S = useMemo(() => spots(L, trip.items, G), [L, trip.items, G]);
   const { camera, gl, scene } = useThree();
 
@@ -132,9 +132,9 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
     me: { p: { ...ENTRY_AT }, heading: Math.PI, path: [] as V2[], walk: 0, moving: false, speed: 3.6, pause: 0 } as Walker,
     goal: null as Goal | null,
     npcs: [
-      { p: { x: 6.6, z: 9 }, heading: 0, path: [], walk: 0, moving: false, speed: 1.1, pause: 1 },
-      { p: { x: 14.5, z: 2.6 }, heading: 0, path: [], walk: 2, moving: false, speed: 0.9, pause: 3 },
-      { p: { x: 12, z: 16.8 }, heading: 0, path: [], walk: 1, moving: false, speed: 1.0, pause: 0 },
+      { p: nearestOpen(G, { x: FL.w * 0.37, z: FL.d * 0.41 }), heading: 0, path: [], walk: 0, moving: false, speed: 1.1, pause: 1 },
+      { p: nearestOpen(G, { x: FL.w * 0.8, z: 2.6 }), heading: 0, path: [], walk: 2, moving: false, speed: 0.9, pause: 3 },
+      { p: nearestOpen(G, { x: FL.w * 0.67, z: FL.d * 0.76 }), heading: 0, path: [], walk: 1, moving: false, speed: 1.0, pause: 0 },
     ] as Walker[],
     flights: [] as { key: string; t: number; from: THREE.Vector3 }[],
     overview: false,
@@ -174,7 +174,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
       busy() { return s.me.path.length > 0; },
     };
     onReady(api);
-  }, [G, camera, gl, onReady]);
+  }, [G, camera, gl, onReady, CHECKOUT_AT]);
 
   /* Simulation: shopper, other shoppers, flights, camera. */
   useFrame((_, dtRaw) => {
@@ -195,7 +195,7 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
       if (!n.path.length) {
         n.pause -= dt;
         if (n.pause <= 0) {
-          const t = { x: 1 + Math.random() * 16, z: 2 + Math.random() * 16 };
+          const t = { x: 1 + Math.random() * (FL.w - 2), z: 2 + Math.random() * (FL.d - 6) };
           n.path = findPath(G, n.p, nearestOpen(G, t)); n.pause = 1.5 + Math.random() * 3.5;
         }
       }
@@ -204,9 +204,9 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
     s.flights.forEach(f => (f.t += dt * 1.6)); s.flights = s.flights.filter(f => f.t < 1);
     // Camera: follow the shopper, framed above the bottom card; or the whole store.
     const asp = Math.max(0.4, size.current.w / Math.max(1, size.current.h));
-    const want = s.overview ? 25 : 11, fov = (camera as THREE.PerspectiveCamera).fov * Math.PI / 180;
+    const want = s.overview ? Math.max(FL.w, FL.d) * 1.15 : 11, fov = (camera as THREE.PerspectiveCamera).fov * Math.PI / 180;
     const dist = Math.min(60, want / (2 * Math.tan(fov / 2) * Math.min(asp, 1.3)));
-    const tgt = s.overview ? new THREE.Vector3(FLOOR.w / 2, 0, FLOOR.d / 2 + 1.5) : new THREE.Vector3(s.me.p.x, 0, s.me.p.z + 1.6);
+    const tgt = s.overview ? new THREE.Vector3(FL.w / 2, 0, FL.d / 2 + 1.5) : new THREE.Vector3(s.me.p.x, 0, s.me.p.z + 1.6);
     s.camT.lerp(tgt, 1 - Math.exp(-dt * (rm ? 20 : 3.2)));
     const dir = new THREE.Vector3(0.28, 1.05, 0.9).normalize().multiplyScalar(dist);
     camera.position.lerp(s.camT.clone().add(dir), 1 - Math.exp(-dt * (rm ? 20 : 3.2)));
@@ -224,17 +224,17 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
     cb.current.onWalking(null);
   };
 
-  const cur = currentStop(trip);
+  const cur = currentStop(trip), reach = Math.max(FL.w, FL.d) / 2 + 5;
   return (
     <>
       <hemisphereLight args={[P.bp ? "#FFFFFF" : "#FFF6E4", P.bp ? "#DCE7F7" : "#D9C9A8", 1.5]} />
-      <directionalLight position={[10, 18, 12]} intensity={P.bp ? 0.9 : 1.7} castShadow
-        shadow-mapSize={[1024, 1024]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={16} shadow-camera-bottom={-16} shadow-bias={-0.0006}
-        target-position={[9, 0, 11]} />
-      <Floor P={P} L={L} trip={trip} onTap={tapFloor} />
-      <Walls P={P} name={L.name} />
+      <directionalLight position={[FL.w / 2 + 1, 18, FL.d / 2 + 1]} intensity={P.bp ? 0.9 : 1.7} castShadow
+        shadow-mapSize={[1024, 1024]} shadow-camera-left={-reach} shadow-camera-right={reach} shadow-camera-top={reach} shadow-camera-bottom={-reach} shadow-bias={-0.0006}
+        target-position={[FL.w / 2, 0, FL.d / 2]} />
+      <Floor P={P} L={L} FL={FL} trip={trip} onTap={tapFloor} />
+      <Walls P={P} FL={FL} name={L.name} />
       <Fixtures P={P} F={F} />
-      <Signs P={P} trip={trip} />
+      <Signs P={P} trip={trip} FL={FL} />
       <FogBanks trip={trip} />
       <StopDiscs trip={trip} S={S} cur={cur} />
       <PathDots sim={sim} />
@@ -261,23 +261,23 @@ function Store({ trip, focus, onReady, onArrive, onWalking, onTapItem }: Props) 
 }
 
 /* --------------------------------------------------------------- floor */
-function Floor({ P, L, trip, onTap }: { P: Pal; L: Trip["layout"]; trip: Trip; onTap: (e: ThreeEvent<MouseEvent>) => void }) {
+function Floor({ P, L, FL, trip, onTap }: { P: Pal; L: Trip["layout"]; FL: Floor; trip: Trip; onTap: (e: ThreeEvent<MouseEvent>) => void }) {
   const tex = useMemo(() => {
     const t = canvasTex(128, 128, c => {
       c.fillStyle = P.floorA; c.fillRect(0, 0, 128, 128); c.fillStyle = P.floorB; c.fillRect(0, 0, 64, 64); c.fillRect(64, 64, 64, 64);
       c.strokeStyle = P.grout; c.lineWidth = 2; c.strokeRect(0, 0, 64, 64); c.strokeRect(64, 64, 64, 64); c.strokeRect(64, 0, 64, 64); c.strokeRect(0, 64, 64, 64);
     });
-    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(FLOOR.w / 2, FLOOR.d / 2);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(FL.w / 2, FL.d / 2);
     return t;
-  }, [P]);
+  }, [P, FL]);
   return (
     <group>
-      <mesh rotation-x={-Math.PI / 2} position={[FLOOR.w / 2, 0, FLOOR.d / 2]} receiveShadow onClick={onTap}>
-        <planeGeometry args={[FLOOR.w, FLOOR.d]} />
+      <mesh rotation-x={-Math.PI / 2} position={[FL.w / 2, 0, FL.d / 2]} receiveShadow onClick={onTap}>
+        <planeGeometry args={[FL.w, FL.d]} />
         <meshLambertMaterial map={tex} />
       </mesh>
       {/* Ground outside the store, so the edges never float in space. */}
-      <mesh rotation-x={-Math.PI / 2} position={[FLOOR.w / 2, -0.02, FLOOR.d / 2]}>
+      <mesh rotation-x={-Math.PI / 2} position={[FL.w / 2, -0.02, FL.d / 2]}>
         <planeGeometry args={[120, 120]} />
         <meshBasicMaterial color={P.bp ? "#E8EFF9" : "#E6DCC5"} />
       </mesh>
@@ -292,7 +292,7 @@ function Floor({ P, L, trip, onTap }: { P: Pal; L: Trip["layout"]; trip: Trip; o
         );
       })}
       {/* Doormat at the entrance. */}
-      <mesh rotation-x={-Math.PI / 2} position={[ENTRY_AT.x, 0.01, 21.4]}>
+      <mesh rotation-x={-Math.PI / 2} position={[entryOf(FL).x, 0.01, FL.d - 0.6]}>
         <planeGeometry args={[2.6, 0.9]} />
         <meshLambertMaterial color={P.bp ? "#BFD3EE" : "#6E7F5A"} />
       </mesh>
@@ -300,16 +300,16 @@ function Floor({ P, L, trip, onTap }: { P: Pal; L: Trip["layout"]; trip: Trip; o
   );
 }
 
-function Walls({ P, name }: { P: Pal; name: string }) {
+function Walls({ P, FL, name }: { P: Pal; FL: Floor; name: string }) {
   const sign = useMemo(() => signTex(name, P.bp ? "#FFFFFF" : "#2E6B4F", P.bp ? P.ink : "#FFF6DA", P.bp), [name, P]);
   return (
     <group>
-      <Block x={-0.25} z={-0.25} w={FLOOR.w + 0.5} d={0.3} h={3} c={P.wall} P={P} cast={false} />
-      <Block x={-0.25} z={0} w={0.3} d={FLOOR.d} h={3} c={P.wall} P={P} cast={false} />
-      <Block x={-0.25} z={-0.05} w={FLOOR.w + 0.5} d={0.12} h={0.25} c={P.trim} P={P} cast={false} />
-      <Block x={FLOOR.w - 0.05} z={0} w={0.3} d={FLOOR.d} h={0.5} c={P.wall} P={P} cast={false} />
-      <Block x={4.2} z={FLOOR.d - 0.05} w={FLOOR.w - 4.2} d={0.3} h={0.5} c={P.wall} P={P} cast={false} />
-      <sprite position={[FLOOR.w / 2, 3.6, 0.1]} scale={[5, 1.25, 1]}><spriteMaterial map={sign} /></sprite>
+      <Block x={-0.25} z={-0.25} w={FL.w + 0.5} d={0.3} h={3} c={P.wall} P={P} cast={false} />
+      <Block x={-0.25} z={0} w={0.3} d={FL.d} h={3} c={P.wall} P={P} cast={false} />
+      <Block x={-0.25} z={-0.05} w={FL.w + 0.5} d={0.12} h={0.25} c={P.trim} P={P} cast={false} />
+      <Block x={FL.w - 0.05} z={0} w={0.3} d={FL.d} h={0.5} c={P.wall} P={P} cast={false} />
+      <Block x={4.2} z={FL.d - 0.05} w={FL.w - 4.2} d={0.3} h={0.5} c={P.wall} P={P} cast={false} />
+      <sprite position={[FL.w / 2, 3.6, 0.1]} scale={[5, 1.25, 1]}><spriteMaterial map={sign} /></sprite>
     </group>
   );
 }
@@ -338,6 +338,16 @@ function Fixtures({ P, F }: { P: Pal; F: Fixture[] }) {
   );
 }
 
+/* The panel against the wall and the glass on the shopper's side, by which way the fixture faces. */
+function sides(f: Fixture, t: number) {
+  const { x, z, w, d } = f;
+  switch (f.face ?? (f.kind === "freezer" ? "-x" : "+z")) {
+    case "+x": return { back: { x, z, w: t, d }, front: { x: x + w - t, z, w: t, d } };
+    case "-x": return { back: { x: x + w - t, z, w: t, d }, front: { x, z, w: t, d } };
+    default: return { back: { x, z, w, d: t }, front: { x, z: z + d - t, w, d: t } };
+  }
+}
+
 function Fix({ f, P }: { f: Fixture; P: Pal }) {
   const { x, z, w, d, h } = f;
   switch (f.kind) {
@@ -351,30 +361,34 @@ function Fix({ f, P }: { f: Fixture; P: Pal }) {
       </group>
     );
     case "bin": return <Block x={x} z={z} w={w} d={d} h={h} c={P.wood} P={P} />;
-    case "bread": return (
+    case "bread": { const b = sides(f, 0.25).back; return (
       <group>
         <Block x={x} z={z} w={w} d={d} h={h} c={P.wood} P={P} />
-        <Block x={x} z={z} w={w} d={0.25} h={2.1} c={P.bp ? P.wood : "#A9784A"} P={P} />
+        <Block {...b} h={2.1} c={P.bp ? P.wood : "#A9784A"} P={P} />
       </group>
-    );
-    case "counter": return (
+    ); }
+    case "counter": { const b = sides(f, 0.2).back; return (
       <group>
         <Block x={x} z={z} w={w} d={d} h={0.8} c={P.bp ? P.metal : "#E9E1D2"} P={P} />
         <Block x={x + 0.05} z={z + 0.05} w={w - 0.1} d={d - 0.1} y={0.8} h={0.5} c={P.glass} P={P} opacity={0.35} cast={false} />
-        <Block x={x} z={z} w={w} d={0.2} h={2.2} c={P.bp ? P.wall : "#D7CDBA"} P={P} />
+        <Block {...b} h={2.2} c={P.bp ? P.wall : "#D7CDBA"} P={P} />
       </group>
-    );
+    ); }
     case "fridge": case "freezer": {
-      const front = f.kind === "fridge";
+      const g = sides(f, 0.06).front;
       return (
         <group>
-          <Block x={x} z={z} w={w} d={d} h={h} c={P.bp ? P.metal : front ? "#E4EDF3" : "#D9EEF4"} P={P} />
-          {front
-            ? <Block x={x + 0.05} z={z + d - 0.02} w={w - 0.1} d={0.06} y={0.15} h={h - 0.35} c={P.glass} P={P} opacity={0.4} cast={false} />
-            : <Block x={x - 0.02} z={z + 0.05} w={0.06} d={d - 0.1} y={0.15} h={h - 0.35} c={P.glass} P={P} opacity={0.4} cast={false} />}
+          <Block x={x} z={z} w={w} d={d} h={h} c={P.bp ? P.metal : f.kind === "fridge" ? "#E4EDF3" : "#D9EEF4"} P={P} />
+          <Block {...g} y={0.15} h={h - 0.35} c={P.glass} P={P} opacity={0.4} cast={false} />
         </group>
       );
     }
+    case "shelf": { const b = sides(f, 0.12).back; return (
+      <group>
+        <Block {...b} h={h} c={P.bp ? P.metal : "#B9C1B5"} P={P} />
+        {[0.12, 0.5, 1.0, 1.5].map(y => <Block key={y} x={x} z={z} w={w} d={d} y={y - 0.04} h={0.04} c={P.bp ? P.metal : "#D8D2C0"} P={P} cast={false} />)}
+      </group>
+    ); }
     case "checkout": return (
       <group>
         <Block x={x} z={z} w={w} d={d} h={h} c={P.bp ? P.metal : "#5E8A72"} P={P} />
@@ -415,14 +429,27 @@ function Goods({ F, P }: { F: Fixture[]; P: Pal }) {
       } else if (f.kind === "bin") {
         const c = pick(P.fruit);
         for (let a = 0; a < 3; a++) for (let b = 0; b < 4; b++) fruits.push({ p: [f.x + 0.22 + a * 0.36, f.h + 0.08 + R() * 0.05, f.z + 0.22 + b * 0.34], r: 0.15, c });
-      } else if (f.kind === "bread") {
-        for (const y of [f.h, 1.2, 1.75]) for (let x = f.x + 0.3; x < f.x + f.w - 0.2; x += 0.42) fruits.push({ p: [x, y + 0.1, f.z + 0.45], r: 0.17, c: P.bp ? P.fruit[0] : pick(["#C9893F", "#E0A55A", "#B47332"]) });
-      } else if (f.kind === "counter") {
-        for (let x = f.x + 0.25; x < f.x + f.w - 0.2; x += 0.5) boxes.push({ p: [x, 0.86, f.z + 0.55], s: [0.4, 0.1, 0.5], c: pick(f.section === "meat" ? ["#E58A8A", "#C95B5B", "#F2B5A7"] : ["#E7C98F", "#8FA34A", "#E9443A", "#F2E6C9"]) });
-      } else if (f.kind === "fridge") {
-        for (const y of [0.35, 0.85, 1.35]) for (let x = f.x + 0.2; x < f.x + f.w - 0.15; x += 0.28) boxes.push({ p: [x, y + 0.15, f.z + 0.55], s: [0.2, 0.3, 0.2], c: pick(P.bp ? P.product : ["#FFFFFF", "#CFE3FF", "#FFE7B3", "#FFD23F"]) });
-      } else if (f.kind === "freezer") {
-        for (const y of [0.35, 0.85, 1.35]) for (let z = f.z + 0.2; z < f.z + f.d - 0.15; z += 0.32) boxes.push({ p: [f.x + 0.4, y + 0.13, z], s: [0.3, 0.26, 0.26], c: pick(P.bp ? P.product : ["#BFEFFF", "#E9443A", "#7FD6F5", "#FFFFFF", "#F2C14E"]) });
+      } else {
+        // Wall runs: stock along the fixture, on the shopper's side.
+        const face = f.face ?? (f.kind === "freezer" ? "-x" : "+z"), alongZ = face !== "+z";
+        const u0 = alongZ ? f.z : f.x, len = alongZ ? f.d : f.w, deep = alongZ ? f.w : f.d;
+        const front = (k: number) => alongZ ? (face === "+x" ? f.x + deep * k : f.x + deep * (1 - k)) : f.z + deep * k;
+        const at = (u: number, y: number, k: number): [number, number, number] => alongZ ? [front(k), y, u] : [u, y, front(k)];
+        const sz = (a: number, hh: number, b: number): [number, number, number] => alongZ ? [b, hh, a] : [a, hh, b];
+        if (f.kind === "bread") {
+          for (const y of [f.h, 1.2, 1.75]) for (let u = u0 + 0.3; u < u0 + len - 0.2; u += 0.42) fruits.push({ p: at(u, y + 0.1, 0.47), r: 0.17, c: P.bp ? P.fruit[0] : pick(["#C9893F", "#E0A55A", "#B47332"]) });
+        } else if (f.kind === "counter") {
+          for (let u = u0 + 0.25; u < u0 + len - 0.2; u += 0.5) boxes.push({ p: at(u, 0.86, 0.58), s: sz(0.4, 0.1, 0.5), c: pick(f.section === "meat" ? ["#E58A8A", "#C95B5B", "#F2B5A7"] : ["#E7C98F", "#8FA34A", "#E9443A", "#F2E6C9"]) });
+        } else if (f.kind === "fridge") {
+          for (const y of [0.35, 0.85, 1.35]) for (let u = u0 + 0.2; u < u0 + len - 0.15; u += 0.28) boxes.push({ p: at(u, y + 0.15, 0.58), s: sz(0.2, 0.3, 0.2), c: pick(P.bp ? P.product : ["#FFFFFF", "#CFE3FF", "#FFE7B3", "#FFD23F"]) });
+        } else if (f.kind === "freezer") {
+          for (const y of [0.35, 0.85, 1.35]) for (let u = u0 + 0.2; u < u0 + len - 0.15; u += 0.32) boxes.push({ p: at(u, y + 0.13, 0.42), s: sz(0.26, 0.26, 0.3), c: pick(P.bp ? P.product : ["#BFEFFF", "#E9443A", "#7FD6F5", "#FFFFFF", "#F2C14E"]) });
+        } else if (f.kind === "shelf") {
+          for (const y of [0.12, 0.5, 1.0, 1.5]) {
+            let u = u0 + 0.1;
+            while (u < u0 + len - 0.3) { const l = 0.22 + R() * 0.28, hh = 0.2 + R() * 0.22; boxes.push({ p: at(u + l / 2, y + hh / 2, 0.55), s: sz(l - 0.04, hh, 0.3), c: pick(P.product) }); u += l; }
+          }
+        }
       }
     }
     return { boxes, fruits };
@@ -446,15 +473,16 @@ function Goods({ F, P }: { F: Fixture[]; P: Pal }) {
 }
 
 /* ---------------------------------------------------- signs, fog, stops */
-function signPos(s: Section): [number, number, number] {
+function signPos(s: Section, FL: Floor): [number, number, number] {
   const r = s.rect, c = toWorld(s.node);
-  if (s.kind === "aisle") return [(r.x + r.w / 2) / U, 2.75, r.y / U + 0.6];
-  if (s.kind === "produce") return [0.7, 3.2, c.z];
-  if (s.kind === "frozen") return [17.0, 3.3, c.z];
+  if (s.band === "centre") return [(r.x + r.w / 2) / U, 2.75, r.y / U + 0.6];
+  if (s.band === "left") return [0.7, 3.2, c.z];
+  if (s.band === "right") return [FL.w - 1.0, 3.3, c.z];
+  if (s.band === "front") return [c.x, 2.2, c.z];
   return [c.x, 3.25, 0.5];
 }
 
-function Signs({ P, trip }: { P: Pal; trip: Trip }) {
+function Signs({ P, trip, FL }: { P: Pal; trip: Trip; FL: Floor }) {
   const L = trip.layout;
   const key = L.sections.map(s => s.id + sectionView(trip, s.id)).join();
   const tex = useMemo(() => L.sections.map(s => {
@@ -464,11 +492,11 @@ function Signs({ P, trip }: { P: Pal; trip: Trip }) {
         : signTex(s.short, hex(s.color), hex(s.ink), false);
   }), [key, P]); // eslint-disable-line react-hooks/exhaustive-deps
   const refs = useRef<(THREE.Sprite | null)[]>([]);
-  useFrame(({ clock }) => { if (reducedMotion()) return; refs.current.forEach((r, i) => { if (r) r.position.y = signPos(L.sections[i])[1] + Math.sin(clock.elapsedTime * 1.2 + i) * 0.04; }); });
+  useFrame(({ clock }) => { if (reducedMotion()) return; refs.current.forEach((r, i) => { if (r) r.position.y = signPos(L.sections[i], FL)[1] + Math.sin(clock.elapsedTime * 1.2 + i) * 0.04; }); });
   return (
     <group>
       {L.sections.map((s, i) => (
-        <sprite key={s.id} ref={r => { refs.current[i] = r; }} position={signPos(s)} scale={[2.1, 0.53, 1]}>
+        <sprite key={s.id} ref={r => { refs.current[i] = r; }} position={signPos(s, FL)} scale={[2.1, 0.53, 1]}>
           <spriteMaterial map={tex[i]} />
         </sprite>
       ))}

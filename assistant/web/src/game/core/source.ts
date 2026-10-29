@@ -3,6 +3,8 @@
  * (no network); the Arya app will plug in a source that reads the
  * user's lists and the store map API and posts finds and reports. */
 import { buildLayout, sectionFor } from "./template";
+import type { StoreGraph } from "../map/graph";
+import { PRESETS } from "../map/presets";
 import type { QuestItem, ShoppingList, StoreLayout, StoreSummary } from "./types";
 
 export type FieldReport =
@@ -43,8 +45,8 @@ export function artFor(name: string): string {
 }
 export const ALL_STICKERS = ["banana.webp", "vegetable.webp", "blueberry.webp", "raspberry.webp", "mandarin.webp", "fruit.webp", "bread.webp", "bakery.webp", "hummus.webp", "milk.webp", "egg.webp", "cheese.webp", "dairy.webp", "pizza.webp", "frozen.webp", "pasta.webp", "olive-oil.webp", "peanut-butter.webp", "almond.webp", "pantry.webp"];
 
-export function toItems(list: ShoppingList): QuestItem[] {
-  return list.items.map((it, i) => ({ key: `${i}-${slug(it.name)}`, name: it.name, art: it.art || artFor(it.name), section: sectionFor(it.name) }));
+export function toItems(list: ShoppingList, graph?: StoreGraph): QuestItem[] {
+  return list.items.map((it, i) => ({ key: `${i}-${slug(it.name)}`, name: it.name, art: it.art || artFor(it.name), section: sectionFor(it.name, graph) }));
 }
 
 /* Where items sit in the section picture: mapped stores know this. */
@@ -72,7 +74,7 @@ export const PRACTICE_LIST: ShoppingList = {
   items: ["Bananas", "Sourdough", "Penne pasta", "Olive oil", "Eggs", "Milk"].map(name => ({ name })),
 };
 
-type SampleStore = StoreSummary & { mapped?: string[]; shoppers?: number };
+type SampleStore = StoreSummary & { mapped?: string[]; shoppers?: number; graph?: StoreGraph };
 const STORES: SampleStore[] = [
   { id: "tj-bellevue", name: "Trader Joe's", area: "Bellevue", kind: "mapped", miles: 0.4, seen: "Walked by 14 shoppers", shoppers: 14 },
   { id: "safeway-kirkland", name: "Safeway", area: "Kirkland", kind: "partial", miles: 1.2, seen: "4 of 8 sections seen", mapped: ["produce", "dairy", "frozen", "meat"] },
@@ -81,7 +83,8 @@ const STORES: SampleStore[] = [
 const MORE: SampleStore[] = [
   { id: "wf-seattle", name: "Whole Foods", area: "Seattle · Westlake", kind: "simulated", miles: 9.8, seen: "Nobody has mapped it yet" },
   { id: "safeway-bellevue", name: "Safeway", area: "Bellevue · Main St", kind: "partial", miles: 0.9, seen: "2 of 8 sections seen", mapped: ["produce", "dairy"] },
-  { id: "costco-kirkland", name: "Costco", area: "Kirkland", kind: "simulated", miles: 1.6, seen: "Nobody has mapped it yet" },
+  { id: "costco-kirkland", name: "Costco", area: "Kirkland", kind: "simulated", miles: 1.6, seen: "Nobody has mapped it yet", graph: PRESETS.warehouse.graph },
+  { id: "patel-redmond", name: "Patel Brothers", area: "Redmond", kind: "simulated", miles: 3.1, seen: "Nobody has mapped it yet", graph: PRESETS.indian.graph },
 ];
 /* The practice store: a pretend store set up to teach every move,
  * real sections, one foggy aisle, a golden item. */
@@ -90,15 +93,15 @@ export const PRACTICE_STORE: SampleStore = { id: "practice", name: "Practice Mar
 export class SampleSource implements QuestSource {
   sent: FieldReport[] = [];
   async lists() { return [WEEKLY]; }
-  async nearbyStores() { return STORES.map(({ mapped: _m, shoppers: _s, ...s }) => s); }
+  async nearbyStores() { return STORES.map(({ mapped: _m, shoppers: _s, graph: _g, ...s }) => s); }
   async findStores(q: string) {
     const n = q.trim().toLowerCase();
-    return [...STORES, ...MORE].filter(s => !n || `${s.name} ${s.area}`.toLowerCase().includes(n)).map(({ mapped: _m, shoppers: _s, ...s }) => s);
+    return [...STORES, ...MORE].filter(s => !n || `${s.name} ${s.area}`.toLowerCase().includes(n)).map(({ mapped: _m, shoppers: _s, graph: _g, ...s }) => s);
   }
   async open(storeId: string, list: ShoppingList) {
     const s = [...STORES, ...MORE, PRACTICE_STORE].find(x => x.id === storeId) || STORES[2];
-    const base = toItems(list);
-    const layout = buildLayout({ id: s.id, name: s.name, area: s.area, kind: s.kind, items: base, mapped: s.mapped, shoppers: s.shoppers });
+    const base = toItems(list, s.graph);
+    const layout = buildLayout({ id: s.id, name: s.name, area: s.area, kind: s.kind, items: base, mapped: s.mapped, shoppers: s.shoppers, graph: s.graph });
     // Spots only where the section is really mapped: a guess never names a shelf.
     const items = base.map(i => {
       const sp = SHELF[i.name.toLowerCase()];

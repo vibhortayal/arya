@@ -13,6 +13,8 @@ export type Pt = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type SectionKind = "produce" | "bakery" | "deli" | "meat" | "dairy" | "frozen" | "aisle";
+/* Where along the store a section sits (see map/graph.ts). The doors are front-left. */
+export type Band = "left" | "back" | "right" | "centre" | "front";
 
 export type Section = {
   id: string;
@@ -24,6 +26,7 @@ export type Section = {
   color: number;     // floor tint (0xRRGGBB)
   ink: number;       // label colour
   typical: string;   // "Usually by the doors" — the only hint a guess may give
+  band: Band;
 };
 
 export type StoreLayout = {
@@ -37,6 +40,9 @@ export type StoreLayout = {
   entry: Pt;
   checkout: Pt;
   shoppers?: number; // people who walked it (mapped stores)
+  /* The plan's size and its shelving racks, from the store's graph (map/solve.ts). */
+  plan: { w: number; h: number };
+  racks: Rect[];
 };
 
 /* A spot the game may show: only for a mapped section. */

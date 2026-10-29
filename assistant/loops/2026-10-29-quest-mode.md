@@ -23,3 +23,16 @@ Next
 - StoreGraph + layout solver (one store model for Play, Build and the
   community map), Spark zone classification for list items, then Build:
   three questions -> a whole store saved as My map.
+
+## Part 2: one store model (StoreGraph + solver)
+- `web/src/game/map/`: `graph.ts` (zones placed by band and order, never
+  tiles; `problems()` validates model output), `solve.ts` (graph -> plan,
+  deterministic; the old hand-placed template is rebuilt within 1 unit),
+  `classify.ts` (store's own words, then template kind, then first aisle),
+  `presets.ts` (supermarket, warehouse club, corner store, health food,
+  Indian grocer: the starting points for Build).
+- 3D fixtures, walk grid, item spots, signs and route order now derive
+  from the layout's bands, so any graph renders and walks. Dead 2D route
+  helpers removed. Lab has Costco (warehouse) and Patel Brothers (Indian).
+- Tests: every preset solves, nothing overlaps, every item has an open
+  spot reachable from the doors, one walk covers every zone with cold last.

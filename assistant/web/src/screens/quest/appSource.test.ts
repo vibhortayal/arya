@@ -10,7 +10,7 @@ vi.mock("../../lib/characters", () => ({ loadCharacters: async () => {}, charFor
 
 import { AppSource, kindFor, shelfHint, mappedSections, sectionOfLabel } from "./appSource";
 import { buildLayout, sectionFor } from "../../game/core/template";
-import { findPath, fixtures, grid, isOpen, pathLength, spots } from "../../game/world/layout3d";
+import { findPath, fixtures, floorOf, grid, isOpen, pathLength, spots } from "../../game/world/layout3d";
 
 beforeEach(() => { calls.length = 0; for (const k of Object.keys(replies)) delete replies[k]; });
 
@@ -72,7 +72,8 @@ describe("AppSource", () => {
 });
 
 describe("3D store walk", () => {
-  const F = fixtures(), g = grid(F);
+  const L0 = buildLayout({ id: "t", name: "T", area: "", kind: "mapped", items: [], mapped: [] });
+  const F = fixtures(L0), g = grid(F, floorOf(L0));
   it("finds a walk from the doors to the back wall around the racks", () => {
     const from = { x: 9, z: 21 }, to = { x: 8.5, z: 1.6 };
     const pts = findPath(g, from, to);
