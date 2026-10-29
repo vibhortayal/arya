@@ -38,4 +38,6 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
 
 ## Add to Home Screen (owner approved wireframe, 2026-10-29)
 - Today card (second visit+, has a list item, 30-day dismiss), Profile row, iPhone four-step sheet incl. Open as Web App on, Android native install. Hidden when installed or in the demo.
+## Store alerts hide until real (owner, 2026-10-29)
+- New users no longer see the SAMPLE "Costco: Oat milk not there" card on Today; the section appears with the first real alert. Quest tab sample kept.
 - SW arya-v86.

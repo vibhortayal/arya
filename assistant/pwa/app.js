@@ -356,11 +356,9 @@ function storeAlertRows(h, news) {
 async function paintStoreAlerts(h) {
   const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
   const rows = storeAlertRows(h, nw.news);
-  // No report and no price gap yet: one labelled example, as Crew's
-  // store news showed it, never dressed as real data.
-  if (!rows.length) rows.push(`<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
-      <span class="name">Costco: Oat milk not there<span class="samplepill">Sample</span></span>
-      <span class="sub">Example only. Tap Not here? on a hunt and it shows up here.</span></div></div>`);
+  // Owner, 2026-10-29: nothing to say, nothing shown. No sample card
+  // for new users; the section appears with the first real alert.
+  if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }
   $("#today-alerts").innerHTML = `<h3 class="sect">Store alerts</h3><div class="group">${rows.join("")}</div>`;
 }
 
@@ -1203,11 +1201,15 @@ async function renderIntake() {
 /* File a receipt photo or PDF: the one receipt path the Receipts
  * view and the Add camera's receipt offer share. A PDF goes to
  * /decode/pdf (text layer, or a scan read page by page). */
-async function fileReceiptPhoto(file, statusEl, previewEl) {
-  statusEl.textContent = "Reading the receipt — this can take up to a minute.";
+async function fileReceiptPhoto(file, statusEl, previewEl, opts = {}) {
+  if (!file || !file.size) {
+    if (!opts.quiet) toast("That file arrived empty \u2014 if it is still downloading, wait for it to finish, then try again.");
+    return { ok: false, empty: true };
+  }
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  statusEl.textContent = opts.label || "Reading the receipt \u2014 this can take up to a minute.";
   if (previewEl) previewEl.innerHTML = "";
   try {
-    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
     const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
       method: "POST",
       headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") },
@@ -1219,17 +1221,23 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
     statusEl.textContent = "";
     if (out.demo) {
       if (previewEl) previewEl.innerHTML = `<div class="group pad" style="margin-top:10px">
-        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">read live · kept for this demo visit only</span></p>
+        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">read live \u00b7 kept for this demo visit only</span></p>
         ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
         ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
-      else statusEl.textContent = "Read live — kept for this demo visit only.";
-    } else {
-      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
-      renderScan().catch(showErr);
+      else statusEl.textContent = "Read live \u2014 kept for this demo visit only.";
+      return { ok: true, demo: true, out };
     }
+    if (out.duplicate) {
+      if (!opts.quiet) toast(`Already filed \u2014 ${rec.merchant || "that receipt"}, ${fmtDate(rec.purchased_at)}. Skipped, so the trip is not counted twice.`);
+      return { ok: true, duplicate: true, out };
+    }
+    if (!opts.quiet) toast(`Filed ${rec.merchant || "the receipt"} \u2014 ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
+    renderScan().catch(showErr);
+    return { ok: true, out };
   } catch (e) {
     statusEl.textContent = "";
-    toast("Could not read that photo: " + e.message);
+    if (!opts.quiet) toast(`Could not read that ${isPdf ? "file" : "photo"}: ` + e.message);
+    return { ok: false, error: e };
   }
 }
 
@@ -1428,10 +1436,22 @@ function bindAdd() {
 
   const rcPhoto = $("#rc-photo");
   if (rcPhoto) rcPhoto.addEventListener("change", async ev => {
-    const f = ev.target.files[0];
-    if (!f) return;
-    await fileReceiptPhoto(f, $("#rc-photo-status"), $("#rc-photo-preview"));
+    const files = [...(ev.target.files || [])];
     ev.target.value = "";
+    if (!files.length) return;
+    const status = $("#rc-photo-status"), preview = $("#rc-photo-preview");
+    if (files.length === 1) { await fileReceiptPhoto(files[0], status, preview); return; }
+    // Bulk (owner, 2026-10-29): file each in turn, one summary at
+    // the end \u2014 duplicates are skipped by the server, per file.
+    let filed = 0, dup = 0, failed = 0;
+    for (let i = 0; i < files.length; i++) {
+      const res = await fileReceiptPhoto(files[i], status, null,
+        { quiet: true, label: `Reading ${i + 1} of ${files.length} \u2014 ${files[i].name}\u2026` });
+      if (res.duplicate) dup++; else if (res.ok) filed++; else failed++;
+    }
+    status.textContent = "";
+    toast(`Bulk upload done: ${filed} filed${dup ? ` \u00b7 ${dup} already filed, skipped` : ""}${failed ? ` \u00b7 ${failed} could not be read` : ""}.`);
+    renderScan().catch(showErr);
   });
 }
 bindAdd();
