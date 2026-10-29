@@ -14,7 +14,7 @@
 .albtab {
   flex: none; min-height: 44px; padding: 6px 16px; border: none;
   border-radius: 980px; background: var(--panel); color: var(--ink);
-  font-size: 15px; font-weight: 550; white-space: nowrap;
+  font-size: 15px; font-weight: 600; white-space: nowrap;
 }
 .albtab[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
 
@@ -40,7 +40,7 @@
 }
 .albslot img { width: 66%; height: 66%; object-fit: contain; }
 .albslot.empty { background: var(--fill2); border: 2px dashed var(--line); }
-.albslot.empty::after { content: "?"; color: var(--ink3); font-size: 20px; font-weight: 700; }
+.albslot.empty::after { content: "?"; color: var(--ink3); font-size: 22px; font-weight: 700; }
 .albslot.season { border: 2px solid var(--acc); }
 .albslot.empty.season { border-style: dashed; }
 .albbadge {
@@ -62,7 +62,7 @@
 /* ---- sticker sheet (rides on the shared .sheetwrap/.sheet) ---- */
 .albsheet { text-align: center; padding-top: 10px; }
 .albsheetimg { width: 120px; height: 120px; object-fit: contain; }
-.albsheettitle { margin: 6px 0 4px; font-size: 20px; }
+.albsheettitle { margin: 6px 0 4px; font-size: 22px; }
 .albtruth {
   margin: 12px 0; padding: 10px 12px; border-radius: 12px;
   background: var(--fill); color: var(--ink); font-size: 15px; font-weight: 600;
@@ -84,7 +84,7 @@
   align-self: flex-start; font-size: 15px; font-weight: 700; color: var(--ink);
   background: var(--acc-soft); border-radius: 6px; padding: 0 6px;
 }
-.stkname { font-size: 17px; font-weight: 550; overflow-wrap: anywhere; }
+.stkname { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
 .stkbadge { font-size: 15px; color: var(--ink2); }
 .stkcard .undo {
   flex: none; min-width: 64px; min-height: 44px; padding: 6px 16px; border: none;
