@@ -22,6 +22,6 @@ export default async function (page, base) {
   await page.waitForFunction(() => document.querySelectorAll("#pf-badges .badgetile").length > 0
     || document.querySelector("#pf-stores") !== null);
   await page.click("#pfq-back");
-  await page.waitForSelector("#view-community");
+  await page.waitForSelector("#view-community #qm-progress");
   if (await page.$("#view-quest-progress")) throw new Error("quest-progress should be gone after Back");
 }
