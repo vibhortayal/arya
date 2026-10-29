@@ -325,6 +325,7 @@ async function renderHome() {
   const eyeBtn = $("#today-eye-btn");
   if (eyeBtn) eyeBtn.addEventListener("click", () => { receiptsFrom = "view-home"; show("view-receipts"); refresh("view-receipts"); });
   $("#today-listline-text").textContent = staplesLine(h.list.items);
+  if (window.Expiry) Expiry.paintToday(h.use_soon);
   TODAY_DUE = h.list.items || [];
   paintLineup(TODAY_DUE);
 }
@@ -536,6 +537,7 @@ async function renderList() {
   paintListGroups();
   paintListNotes(h);
   paintCart(h);
+  if (window.Expiry) Expiry.paintList(h.use_soon);
 }
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
