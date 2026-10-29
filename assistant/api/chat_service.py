@@ -77,8 +77,16 @@ def snapshot():
                             for t in dash["top_items"][:8]],
         "trips": dash["trip_count"], "top_items": [t["name"] for t in dash["top_items"][:8]],
         "items": pats,
+        # Prices from the household's own receipts, worked out in code
+        # (api/prices.py) so the model only reads them (owner, 2026-10-29).
+        "prices": _price_facts(d, nm),
         "review_pending": len(state.review_queue()["lines"]),
     }
+
+
+def _price_facts(d, nm):
+    from api import prices
+    return prices.ask_facts(d, nm)
 
 
 def _resolve(name):

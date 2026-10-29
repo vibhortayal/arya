@@ -99,7 +99,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v81"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v89"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
@@ -184,6 +184,21 @@ class TestAnalysisAndTodayData(unittest.TestCase):
         prof = self.c.get("/api/quest/profile").json()
         self.assertEqual(prof["stats"]["receipts"], 2)
         self.assertTrue(any(b["id"] == "eagle_eye" for b in prof["badges"]))
+
+
+class TestCuratorCardGating(unittest.TestCase):
+    """The Curator card shows only when proposals are pending
+    (owner, 2026-10-29 — an idle explainer card is clutter)."""
+
+    def test_card_hidden_without_proposals(self):
+        from pathlib import Path
+        pwa = Path(__file__).resolve().parents[1] / "pwa"
+        app = (pwa / "app.js").read_text()
+        fn = app.split("async function renderCurator() {")[1].split("\n}\n")[0]
+        self.assertIn("if (!d.proposals.length)", fn)
+        self.assertIn("el.hidden = true", fn)
+        html = (pwa / "index.html").read_text()
+        self.assertIn('id="curator" class="group eyegroup" hidden', html)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
 from api import state
-from api.decode.service import (decode_order_text, decode_photo, decode_text, extract_pdf_text,
+from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, extract_pdf_text,
                                 normalize_costco_json)
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _json_body, _json_obj, new_client
@@ -174,16 +174,36 @@ async def decode_pdf(req: Request):
         text = await run_in_threadpool(extract_pdf_text, body)
     except Exception:
         raise HTTPException(422, "could not read this PDF")
-    if len(text.strip()) < 20:
-        raise HTTPException(422, "no text layer in this PDF — scanned receipts use the photo path, which opens after verification")
     if not os.environ.get("MODEL_API_KEY"):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     client = new_client()
-    receipt = await run_in_threadpool(decode_text, text, client)
+    try:
+        if len(text.strip()) < 20:
+            # A scan: no text layer, so the pages are read as photos.
+            receipt = await run_in_threadpool(decode_scanned_pdf, body, client)
+        else:
+            receipt = await run_in_threadpool(decode_text, text, client)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    except RuntimeError as e:
+        raise HTTPException(502, str(e)[:200])
     _need_receipt_date(receipt)
+    dup = state.find_duplicate(receipt)
+    if dup is not None:
+        # Same receipt filed before: hand back the record on file
+        # (the hunt doors settle by its id) and file nothing twice.
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
+    if not added:
+        # The decode id is content-derived, so an exact re-upload
+        # lands here rather than in the fingerprint check above.
+        dup = next((r for r in state.receipts()
+                    if r["receipt_id"] == receipt["receipt_id"]), receipt)
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 
@@ -192,7 +212,7 @@ async def decode_pdf(req: Request):
 async def decode_photo_route(req: Request):
     media = (req.headers.get("content-type") or "").split(";")[0].strip()
     if not media.startswith("image/"):
-        raise HTTPException(415, "send a receipt photo (image) or use /decode/pdf for PDFs")
+        raise HTTPException(415, "send a receipt photo (image) or send a PDF to /decode/pdf")
     body = await req.body()
     if not body:
         raise HTTPException(400, "empty upload")
@@ -215,8 +235,17 @@ async def decode_photo_route(req: Request):
         receipt["live"] = True
         added = state.add_receipts([receipt])
         return {"demo": True, "added": added, "receipt": receipt}
+    dup = state.find_duplicate(receipt)
+    if dup is not None:
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
+    if not added:
+        dup = next((r for r in state.receipts()
+                    if r["receipt_id"] == receipt["receipt_id"]), receipt)
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
 

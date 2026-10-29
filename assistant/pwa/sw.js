@@ -1,6 +1,6 @@
-const CACHE = "arya-v81";
+const CACHE = "arya-v89";
 const SHELL = ["/", "/index.html", "/styles.css", "/hunt.css", "/pack.css", "/album.css", "/haul.css",
-  "/app.js", "/lists.js", "/aryaask.js", "/huntask.js", "/pack.js", "/scene.js", "/quest.js", "/huntmenu.js", "/album.js", "/mapper.js", "/share.js", "/haul.js", "/expiry.js", "/push.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
+  "/app.js", "/lists.js", "/aryaask.js", "/huntask.js", "/pack.js", "/scene.js", "/quest.js", "/huntmenu.js", "/album.js", "/mapper.js", "/share.js", "/haul.js", "/expiry.js", "/group.js", "/push.js", "/powers.js", "/a2hs.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
   "/assets/scenes/hero.webp",
   "/assets/scenes/score-party.webp", "/assets/scenes/aisle-art.webp",
   "/assets/scenes/storefront.webp",
@@ -28,7 +28,15 @@ self.addEventListener("activate", e => {
     .then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
+  // Writes and uploads never transit the worker: a forwarded POST
+  // can arrive at the server with an empty body (the 2026-10-29
+  // "empty upload" receipt bug on iOS). The browser's own stack
+  // sends them untouched; the worker only shells GET reads.
+  if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
+  // The live-sync stream stays a plain browser request: no worker in
+  // the middle of a connection that is meant to stay open.
+  if (url.pathname === "/api/group/live") return;
   if (BYPASS.some(p => url.pathname.startsWith(p))) {
     e.respondWith(fetch(e.request));
     return;

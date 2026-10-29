@@ -6,10 +6,18 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+
+## Price intelligence and Arya's powers (2026-10-29, PR pending)
+- Prices from the household's own receipts only: why-sheet trend, cheaper
+  store and similar items with (i) caveats; Analysis "Your prices" (own
+  inflation, split smarter, food waste); Ask answers price questions from
+  precomputed facts. Profile > Arya's powers; one "Did you know?" card a day.
+- Community prices, Deals and Arya Shoppers are opt-in and not live yet
+  (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
-Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
+Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -50,6 +58,14 @@ Service worker cache: arya-v81. Suite: 1,108 tests, all green, 2 skipped.
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
+- **Groups** (share lists and receipts with your home): ON by default in
+  compose since 2026-10-29 (owner); `ARYA_GROUPS=0` in `deploy/.env` turns it off.
+  Profile > Group: start, invite by a 6-letter code (48 h), join, leave.
+  Lists and product knowledge live in the group; receipts stay with whoever
+  filed them and every member sees them. Leaving copies the lists.
+  `2026-10-29-groups.md`. Live sync: an open app reloads within a second
+  when another member changes a list (SSE `/api/group/live`; Postgres
+  LISTEN/NOTIFY when `DATABASE_URL` is set, else in-process).
 - **Postgres storage:** `ARYA_STORE=json|dual|pg` (`api/pgstore.py`).
 - Every setting the app reads now reaches the container through
   `assistant/deploy/docker-compose.yml` (PR #106). Set them in

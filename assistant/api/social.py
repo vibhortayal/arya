@@ -7,7 +7,7 @@ deterministic code, $0, no model calls.
 """
 from datetime import date, datetime, timedelta
 
-from api import quest, state
+from api import groups, quest, state
 from api.optimizer import _squash
 from api.curator import _tokens
 
@@ -324,7 +324,12 @@ def _receipt_summary(r):
                 ln.get("line_total") or 0 for ln in lines
                 if ln.get("line_type") == "return"), 2),
             "photo": r.get("image_ref"),
-            "media_type": r.get("media_type")}
+            "media_type": r.get("media_type"),
+            # In a group: who filed it (a handle, never an email), and
+            # whether that is the caller.
+            **({"by": groups.handle(r["member"]),
+                "mine": r["member"] == state._current_user.get()}
+               if r.get("member") else {})}
 
 
 def receipt_archive():

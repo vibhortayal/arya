@@ -22,10 +22,20 @@ def fn(src, name):
 class TestTodayIsTheShoppingDashboard(unittest.TestCase):
     def test_today_sections_in_order(self):
         home = read("index.html").split('id="view-home"')[1].split("</section>")[0]
-        order = ["today-low", "today-alerts", "today-expiry", "today-checks",
-                 "today-lists", "today-patterns", "today-quest"]
+        # Design pass (2026-10-29): Your lists moved up under Running low;
+        # the tip folded to one line at the foot.
+        order = ["today-low", "today-lists", "today-alerts", "today-expiry",
+                 "today-checks", "today-patterns", "today-tip", "today-quest"]
         at = [home.index(f'id="{el}"') for el in order]
         self.assertEqual(at, sorted(at))
+
+    def test_today_extras_fold_to_one_line(self):
+        js, pw = read("app.js"), read("powers.js")
+        checks = fn(js, "paintTodayChecks")
+        self.assertIn("data-checks-fold", checks)
+        self.assertIn("to check", checks)
+        self.assertIn('class="tipline"', pw)
+        self.assertNotIn("tipcard", pw)
 
     def test_still_good_checks_left_the_list(self):
         js = read("app.js")
@@ -68,10 +78,21 @@ class TestStoreAlerts(unittest.TestCase):
         h["price_by_store"]["m"]["Trader Joe's"]["median"] = 4.39  # 10 cents: not news
         self.assertEqual(self.run_rows(h, []), [])
 
-    def test_empty_alerts_show_a_labelled_sample(self):
+    def test_empty_alerts_hide_the_section(self):
         body = read("app.js").split("async function paintStoreAlerts")[1].split("\n}\n")[0]
-        self.assertIn("samplepill", body)
-        self.assertIn("Example only", body)
+        self.assertNotIn("samplepill", body)
+        self.assertNotIn("Example only", body)
+        self.assertIn('if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }', body)
+
+
+class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
+    def test_needs_your_eye_shows_only_when_something_needs_it(self):
+        html, js = read("index.html"), read("app.js")
+        self.assertIn('id="eye-head" hidden', html)
+        self.assertIn('id="review" class="group eyegroup" hidden', html)
+        self.assertNotIn("Every line is verified", js)
+        self.assertIn('$("#review").hidden = !html;', js)
+        self.assertIn("function syncEyeHead()", js)
 
 
 class TestQuestTab(unittest.TestCase):

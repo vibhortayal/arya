@@ -468,13 +468,17 @@ $("#quest-sessions").addEventListener("click", async ev => {
   const s = qSessionById(b.dataset.sess);
   if (s) qOpenSession(s);
 });
-async function qStartNewHunt(fromList) {
+async function qStartNewHunt(fromList, mode) {
   // Plan a hunt (owner, 2026-10-28): store first, then move items
   // from the Arya list into the quest, sorted by where each one is
   // usually bought. From a named list (owner, 2026-10-29) the plan
   // holds that list's items only.
   Q.draft = { raw: [], store: "", opt: null, baseItems: [], undone: {}, answers: {}, pick: {},
-              fromList: fromList ? { id: fromList.id, name: fromList.name, stores: fromList.stores || [] } : null };
+              fromList: fromList ? { id: fromList.id, name: fromList.name, stores: fromList.stores || [] } : null,
+              // Start shopping on a list (design pass, 2026-10-29): the
+              // mode is picked on the list's sheet, so the trip skips the
+              // bag and the mode screen and opens the hunt started.
+              fastMode: mode || null };
   $("#st-name").value = "";
   $("#nl-text").value = "";
   // One-shot location for biasing Google suggestions toward the
@@ -505,7 +509,7 @@ async function qStartNewHunt(fromList) {
   questShow("view-store");
 }
 $("#btn-new-hunt").addEventListener("click", () => qStartNewHunt(null));
-window.startHuntFromList = list => qStartNewHunt(list).catch(e => toast(e.message));
+window.startHuntFromList = (list, mode) => qStartNewHunt(list, mode).catch(e => toast(e.message));
 
 /* The plan payload. From a named list the list rows narrow to that
  * list, so every step after (picks, the bag, usuals) sees one list. */
@@ -1046,9 +1050,30 @@ function qPickStore() {
   }
   if (Q.draft.store !== store) { Q.draft.pick = {}; Q.draft.pack = null; }
   Q.draft.store = store;
+  qLoadMissing(store);
+  if (Q.draft.fastMode) { qFastStart().catch(e => toast(e.message)); return; }
   renderPlan();
   questShow("view-newlist");
-  qLoadMissing(store);
+}
+
+/* The list is the plan: its open rows go to the trip as they are.
+ * An empty list falls back to the bag, where items can be added. */
+async function qFastStart() {
+  const d = Q.draft;
+  const raw = ((Q.plan && Q.plan.list) || []).filter(li => li.on_list !== false && !li.checked).map(li => {
+    const r = { name: li.name, qty: li.qty || 1 };
+    if (li.unit) r.unit = li.unit;
+    if (li.added_by) { r.by = li.added_by; r.src = "added"; }
+    return r;
+  });
+  if (!raw.length) {
+    d.fastMode = null;
+    renderPlan();
+    questShow("view-newlist");
+    return;
+  }
+  d.raw = raw;
+  await qOptimizeDraft();
 }
 $("#st-name").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); qPickStore(); }
@@ -1160,6 +1185,7 @@ async function qOptimizeDraft() {
   if (!rep.merged.length && !rep.corrected.length && !rep.questions.length) {
     Q.draft.finalItems = Q.draft.baseItems.map(i => typeof PACK !== "undefined"
       ? PACK.sessionItem(i) : ({ name: i.name, qty: i.qty, group: i.group }));
+    if (Q.draft.fastMode) { await qCreateSession(Q.draft.fastMode); return; }
     questShow("view-mode");
     return;
   }
@@ -1322,6 +1348,7 @@ function qOptProceed() {
   }
   qAskLaterSave();
   Q.draft.finalItems = items;
+  if (Q.draft.fastMode) { qCreateSession(Q.draft.fastMode); return; }
   questShow("view-mode");
 }
 $("#opt-next").addEventListener("click", qOptProceed);
@@ -1329,33 +1356,42 @@ $("#opt-skip").addEventListener("click", qOptProceed);
 
 /* ---------------- New hunt: mode choose ---------------- */
 
-document.querySelectorAll(".modecard").forEach(b =>
-  b.addEventListener("click", async () => {
-    const mode = b.dataset.mode;
-    // One tap makes one session: a second tap while the first is in
-    // flight does nothing.
-    const draft = Q.draft;
-    if (!draft || draft.creating) return;
-    draft.creating = true;
-    b.disabled = true;
-    try {
-      const sess = await post("/api/quest/sessions",
-        { store: Q.draft.store, mode, items: Q.draft.finalItems,
-          store_id: Q.draft.storeId || undefined,
-          driver: qStorePhotos(Q.draft.store) ? "photo"
-            : mode === "quest" ? "art" : "strip" });
-      // The draft is done: PACK clears the saved bag and tells the
-      // Same-haul queue which cards were dealt.
-      if (typeof PACK !== "undefined") PACK.finish();
-      await qLoadSessions().catch(() => {});
-      toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
-      // The set-up screens are done with: Back from the new hunt
-      // returns to the Quest tab, not into the mode picker again.
-      Q.stack = ["view-community"];
+/* One tap makes one session: a second tap while the first is in
+ * flight does nothing. From the list's Start shopping sheet the hunt
+ * opens already started; the mode screen still opens it ready. */
+async function qCreateSession(mode, b) {
+  const draft = Q.draft;
+  if (!draft || draft.creating) return;
+  draft.creating = true;
+  if (b) b.disabled = true;
+  try {
+    const sess = await post("/api/quest/sessions",
+      { store: Q.draft.store, mode, items: Q.draft.finalItems,
+        store_id: Q.draft.storeId || undefined,
+        driver: qStorePhotos(Q.draft.store) ? "photo"
+          : mode === "quest" ? "art" : "strip" });
+    // The draft is done: PACK clears the saved bag and tells the
+    // Same-haul queue which cards were dealt.
+    if (typeof PACK !== "undefined") PACK.finish();
+    await qLoadSessions().catch(() => {});
+    // The set-up screens are done with: Back from the new hunt
+    // returns to the Quest tab, not into the mode picker again.
+    Q.stack = ["view-community"];
+    if (draft.fastMode && sess.mode === "quest" && sess.state === "not_started") {
       qOpenSession(sess);
-    } catch (e) { toast(e.message); }
-    finally { draft.creating = false; b.disabled = false; }
-  }));
+      await qSetState(sess, "playing");
+      renderHunt();
+      startHuntTimer(sess);
+      qWalkStart(qCurrentIndex(sess));
+      return;
+    }
+    toast(`${QMODE_LABEL[mode]} at ${sess.store} — ready when you are.`);
+    qOpenSession(sess);
+  } catch (e) { toast(e.message); }
+  finally { draft.creating = false; if (b) b.disabled = false; }
+}
+document.querySelectorAll(".modecard").forEach(b =>
+  b.addEventListener("click", () => qCreateSession(b.dataset.mode, b)));
 
 /* ---------------- Navigation-first hunt (Discussion 35 + 36) ----
  * The hunt is navigation, not a viewer. The scene follows the
@@ -1466,11 +1502,12 @@ const QTICK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const QPIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>`;
 const QCLOSE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 /* Hunt v2: the one list, in route order, in flow under the store
- * view. Rows never move or re-sort. The leading 44px cell holds the
- * row menu (open or reported; a reported row's menu only saves it
- * for next trip or drops it) or a check (grabbed). The
- * action cell holds Grab, Put back or Found it after all. Grab takes
- * the whole quantity. */
+ * view. Rows never move or re-sort. The leading 44px cell is the
+ * check, the same circle as the List (design pass, 2026-10-29): tap it
+ * to grab the whole quantity, tap a ticked one to put it back. The row
+ * itself (or its chevron) opens the row menu. Only a reported row keeps
+ * an action button: Found it after all. One orange button on screen:
+ * the big Grab on the card above. */
 function qHuntListHtml(sess) {
   const stops = qStops(sess);
   const cur = qCurrentIndex(sess);
@@ -1481,14 +1518,17 @@ function qHuntListHtml(sess) {
     const rep = !it.checked && qIsReportedByMe(sess, it);
     const sub = [s.shelfLabel || (s.unplaced ? "Not placed on the map" : ""),
                  s.flagged || rep ? "Reported missing" : ""].filter(Boolean).join(" · ");
+    const qty = qtyTag(it);
     const lead = it.checked
-      ? `<span class="hunt-lead got" aria-hidden="true">${QTICK_SVG}</span>`
-      : `<button type="button" class="morebtn" data-more="${i}" aria-label="More for ${esc(it.name)}">${QDOTS_SVG}</button>`;
-    const act = it.checked
-      ? `<button type="button" class="btn rowact putback" data-putback="${i}"${live || sess.state === "paused" ? "" : " disabled"}>Put back</button>`
+      ? `<button type="button" class="huntcheck got" data-putback="${i}" aria-label="Put back ${esc(it.name)}"${live || sess.state === "paused" ? "" : " disabled"}>${QTICK_SVG}</button>`
       : rep
-        ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
-        : `<button type="button" class="btn primary rowact${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"}>${qtyTag(it) ? `Grab ${esc(qtyTag(it))}` : "Grab"}</button>`;
+        ? `<span class="huntcheck rep" aria-hidden="true"></span>`
+        : `<button type="button" class="huntcheck${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"} aria-label="${qty ? `Grab ${esc(qty)} ${esc(it.name)}` : `Grab ${esc(it.name)}`}">${QTICK_SVG}</button>`;
+    const act = rep
+      ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
+      : "";
+    const more = it.checked ? ""
+      : `<button type="button" class="morechev" data-more="${i}" aria-label="More for ${esc(it.name)}">›</button>`;
     const badges = [bossGroup && it.group === bossGroup ? `<span class="hunt-badge boss">Boss</span>` : "",
                     it.added_mid_hunt ? `<span class="hunt-badge">Just added</span>` : ""].filter(Boolean).join("");
     const note = qNoteOf(it);
@@ -1496,13 +1536,13 @@ function qHuntListHtml(sess) {
     const find = f && f.line
       ? `<span class="findline">${QPIN_SVG}<span class="hunt-findtext">${esc(f.line)}</span><button type="button" class="hunt-unfind" data-unfind="${i}" aria-label="Dismiss the spotted note for ${esc(it.name)}">${QCLOSE_SVG}</button></span>`
       : "";
-    return `<div class="row huntrow${it.checked ? " got" : ""}${rep ? " reported" : ""}${i === cur ? " next" : ""}">
+    return `<div class="row huntrow${it.checked ? " got" : ""}${rep ? " reported" : ""}${i === cur ? " next" : ""}"${it.checked ? "" : ` data-row="${i}"`}>
       ${lead}
       <img class="rowface" src="assets/characters/${qFaceFor(it.name)}" alt="" loading="lazy">
-      <div class="grow"><span class="name">${esc(it.name)}${qtyTag(it) ? ` - ${esc(qtyTag(it))}` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
+      <div class="grow"><span class="name">${esc(it.name)}${qty ? ` <span class="hqty">${esc(qty)}</span>` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
       ${note ? `<span class="sub hunt-note">${esc(note)}</span>` : ""}
       ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}${find}</div>
-      ${act}
+      ${act}${more}
     </div>`;
   }).join("");
   return html || empty((sess.left && sess.left.length)
@@ -2419,7 +2459,7 @@ async function sendSpotReport(kind, btn) {
     } else {
       // "Found it after all" on the row takes the report back at any time.
       const repName = sess.items[next] ? sess.items[next].name : "";
-      toast("Reported. Other hunters will confirm.", { action: "Undo", onAction: async () => {
+      toast("Thanks. You just saved the next shopper a trip down the aisle.", { action: "Undo", onAction: async () => {
         if (repName && await qWithdrawReport(sess, repName)) { renderCurrent(); toast("Report taken back."); }
       } });
     }
@@ -3149,9 +3189,10 @@ async function qCloseHunt(sess) {
     await qSetState(sess, "finished");
 }
 async function qDecodeReceipt(file) {
-  const r = await fetch("/decode/photo", {
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
     method: "POST",
-    headers: { "Content-Type": file.type || "image/jpeg" },
+    headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") },
     body: file
   });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);

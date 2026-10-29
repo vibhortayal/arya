@@ -25,6 +25,23 @@
 <div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
 <div id="ask-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden><div class="sheet" id="ask-body"></div></div>
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
+<div id="a2hs-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="a2hs-title" hidden><div class="sheet">
+  <div class="sheethead"><h3 id="a2hs-title" class="nomargin">Add Arya to your Home Screen</h3><button id="a2hs-close" class="linkbtn" type="button">Close</button></div>
+  <ol class="steps">
+    <li><span>Tap <b>Share</b> at the bottom of Safari.</span></li>
+    <li><span>Scroll and tap <b>Add to Home Screen</b>.</span></li>
+    <li><span>Leave <b>Open as Web App</b> <i class="tog" aria-hidden="true"></i> switched <b>on</b>.<span class="keepon">If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.</span></span></li>
+    <li><span>Tap <b>Add</b>, then open Arya from your Home Screen.</span></li>
+  </ol>
+</div></div>
+<div id="shop-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="shop-title" hidden><div class="sheet">
+  <div class="sheethead"><h3 id="shop-title" class="nomargin">Start shopping</h3><button id="shop-close" class="linkbtn" type="button">Close</button></div>
+  <div class="group shopmodes">
+    <button class="hubrow" type="button" data-shop="quest"><img class="rowface" src="assets/scenes/storefront.webp" alt=""><span class="hr-label">Quest<span class="sub">A treasure hunt with points and badges</span></span><span class="chev">›</span></button>
+    <button class="hubrow" type="button" data-shop="express"><img class="rowface" src="assets/characters/basket.webp" alt=""><span class="hr-label">Express<span class="sub">Just the list, with aisle help</span></span><span class="chev">›</span></button>
+  </div>
+  <p id="shop-sugg" class="muted shopsugg" hidden></p>
+</div></div>
 
 <section id="view-login" class="view" hidden>
   <header class="landtop">
@@ -99,17 +116,21 @@
   <section id="view-home" class="view">
     <p id="today-dow" class="dow"></p>
     <div class="titlerow"><h2 class="largetitle">Today</h2></div>
-    <p id="today-through" class="muted nomargin"></p>
     <!-- Today is the shopping dashboard (owner, 2026-10-29: "Waze for
          grocery shopping"; the list is the hero, Quest has its own tab). -->
+    <!-- Design pass (2026-10-29): what you came for first (running low,
+         your lists), then alerts and use soon; extras fold to one line. -->
+    <div id="today-a2hs"></div>
     <div id="today-low"></div>
+    <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
+    <div id="today-lists"></div>
     <div id="today-alerts"></div>
     <div id="today-expiry"></div>
     <div id="today-checks"></div>
     <div id="today-eye"></div>
-    <div class="sectrow"><h3 class="sect">Your lists</h3><button id="today-listline" class="linkbtn" type="button"><span id="today-listline-text">Open Lists</span> ›</button></div>
-    <div id="today-lists"></div>
     <div id="today-patterns"></div>
+    <p id="today-through" class="muted small throughline"></p>
+    <div id="today-tip"></div>
     <button id="today-quest" class="gamerow newrow" type="button"><img class="rowimg" src="assets/scenes/storefront.webp" alt=""><span class="g-main"><span class="g-name">Make your next run a Quest</span><span class="g-sub">Optional. Turn the list into a treasure hunt.</span></span><span class="chev">›</span></button>
   </section>
 
@@ -156,20 +177,21 @@
   </section>
 
   <section id="view-receipts" class="view" hidden>
-    <p><a href="#" id="rc-back" class="backlink">&larr; Back</a></p>
+    <p><a href="#" id="rc-back" class="backlink">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Receipts</h2>
     <p id="rc-count" class="subtitle"></p>
-    <h3 class="sect">Needs your eye</h3>
-    <div id="review" class="group eyegroup"></div>
-    <div id="curator" class="group eyegroup"></div>
+    <h3 class="sect" id="eye-head" hidden>Needs your eye</h3>
+    <div id="review" class="group eyegroup" hidden></div>
+    <div id="curator" class="group eyegroup" hidden></div>
     <div class="group pad">
-      <label class="field">Add a receipt photo
-        <input type="file" id="rc-photo" accept="image/*">
+      <label class="field">Add a receipt photo or PDF
+        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple>
       </label>
       <p class="muted nomargin" id="rc-photo-status"></p>
       <div id="rc-photo-preview"></div>
     </div>
     <h3 class="sect">Archive</h3>
+    <div id="rc-who" class="segs" role="group" aria-label="Whose receipts" hidden></div>
     <div id="rc-archive" class="group"></div>
   </section>
 
@@ -190,9 +212,10 @@
   </section>
 
   <section id="view-analysis" class="view" hidden>
-    <p><a href="#" id="an-back">&larr; Back</a></p>
+    <p><a href="#" id="an-back">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Analysis</h2>
     <p class="subtitle">From Profile · spend is live</p>
+    <div id="an-prices"></div>
     <h3 class="sect">Spend — live, from your receipts</h3>
     <div class="group pad" id="an-spend"></div>
     <h3 class="sect">Spend by month</h3>
@@ -204,11 +227,11 @@
   </section>
 
   <section id="view-item" class="view" hidden>
-    <p><a href="#" id="item-back">&larr; Back</a></p>
+    <p><a href="#" id="item-back">‹ Back</a></p>
     <div id="item-detail"></div>
   </section>
   <section id="view-profile" class="view" hidden>
-    <p><a href="#" id="pf-back">&larr; Back</a></p>
+    <p><a href="#" id="pf-back">‹ Back</a></p>
     <h2 class="largetitle">Profile</h2>
     <div id="pf-avatar" class="group pad">
       <div class="avwrap"><div class="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">A</span><img id="pf-avatar-img" alt="" hidden></div><button class="avedit" id="av-edit-btn" type="button" aria-label="Edit avatar" aria-expanded="false">&#9998;</button></div>
@@ -229,12 +252,15 @@
       <p id="av-status" class="muted nomargin" style="text-align:center"></p>
       <p class="nomargin" style="text-align:center;margin-top:10px"><button class="btn compact" id="av-edit-label" type="button">Edit avatar</button></p>
     </div>
+    <div id="pf-group" hidden></div>
     <div id="pf-missing" class="group"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-powers" type="button"><span class="grow">Arya's powers<span class="sub">What Arya can do, and how to unlock more</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-quest-progress" type="button"><span class="grow">Quest progress<span class="sub" id="pf-quest-sub">Hunts, badges and mapped stores</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-a2hs" type="button" hidden><span class="grow">Add to Home Screen<span class="sub">Opens full screen and lets reminders work</span></span><span class="chev">›</span></button>
     </div>
     <div id="pf-reminders" hidden>
       <h3 class="sect">Reminders</h3>
@@ -268,8 +294,23 @@
     <p style="margin-top:22px"><button id="btn-signout2" class="btn secondary wide" type="button">Sign out</button></p>
   </section>
 
+  <!-- Join a group (owner, 2026-10-29): from "Join with a code" in
+       Profile or an invite link (/?join=CODE). Nothing moves until Join. -->
+  <section id="view-group-join" class="view" hidden>
+    <p><a href="#" id="gj-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Join a group</h2>
+    <div class="group pad">
+      <label class="field">Invite code
+        <input type="text" id="gj-code" class="gjcode" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7Q 4MX">
+      </label>
+    </div>
+    <div id="gj-preview"></div>
+    <p style="margin-top:16px"><button class="btn primary wide" id="gj-go" type="button" disabled>Join</button></p>
+    <p class="muted small" style="text-align:center">You can leave any time from Profile.</p>
+  </section>
+
   <section id="view-quest-progress" class="view" hidden>
-    <p><a href="#" id="pfq-back">&larr; Back</a></p>
+    <p><a href="#" id="pfq-back">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Quest progress</h2>
     <div id="pf-stats" class="stattiles"></div>
     <p class="muted small">Points, levels and some badges count hunts that have their receipt attached.</p>
@@ -285,7 +326,7 @@
   </section>
 
   <section id="view-muse" class="view" hidden>
-    <p><a href="#" id="pfm-back">&larr; Back</a></p>
+    <p><a href="#" id="pfm-back">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Connect Muse</h2>
     <div class="group pad">
       <p class="muted nomargin">Every door runs on Meta models — Muse in chat, Spark on the Meta API in the app. Link Muse once with a code to file receipts and orders by chat or WhatsApp; the camera and microphone on the List tab work right here. The code is shown once; making a new one replaces it.</p>
@@ -294,8 +335,15 @@
     </div>
   </section>
 
+  <section id="view-powers" class="view" hidden>
+    <p><a href="#" id="pw-back">‹ Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Arya's powers</h2>
+    <p class="subtitle">Tap i to see what each one does.</p>
+    <div id="powers-body"></div>
+  </section>
+
   <section id="view-about" class="view" hidden>
-    <p><a href="#" id="pfa-back">&larr; Back</a></p>
+    <p><a href="#" id="pfa-back">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">About</h2>
     <div class="group pad">
       <p class="nomargin">Built by <a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>.</p>
@@ -304,7 +352,7 @@
   </section>
 
   <section id="view-feedback" class="view" hidden>
-    <p><a href="#" id="fb-back">&larr; Back</a></p>
+    <p><a href="#" id="fb-back">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Feature request / Contact us</h2>
     <div class="group pad">
       <p class="muted nomargin">We read every note. It goes out with your username only &mdash; no email or name needed.</p>
@@ -323,7 +371,7 @@
   </section>
 
   <section id="view-newlist" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px" id="nl-title">Your quest</h2>
     <p class="muted" id="nl-sub">Pack what you need. Tap a row to take it in or out.</p>
     <div id="nl-deck" hidden></div>
@@ -345,7 +393,7 @@
   </section>
 
   <section id="view-store" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Where are you shopping?</h2>
     <div class="group pad dropanchor">
       <label class="field">Type a store — or tap one below
@@ -364,7 +412,7 @@
   </section>
 
   <section id="view-stores-find" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Find stores</h2>
     <form id="sf-form" class="group pad dropanchor">
       <label class="field">ZIP, address, or name
@@ -383,7 +431,7 @@
   </section>
 
   <section id="view-stores-mine" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">My stores</h2>
     <div id="sm-list"></div>
     <div class="group">
@@ -393,7 +441,7 @@
   </section>
 
   <section id="view-stores-add" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Add a store</h2>
     <div class="group pad dropanchor">
       <label class="field">Search Google for the store
@@ -406,7 +454,7 @@
   </section>
 
   <section id="view-mapper" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Teach Arya your store</h2>
     <img class="mapperhero" src="assets/scenes/storefront.webp" alt="">
     <p class="muted">The more of your store Arya knows, the more it helps you: real shelf photos in your hunt, the exact aisle for each item, and fewer “can't find it” moments. Teach it the aisles you use, a little at a time. Other shoppers fill in the rest.</p>
@@ -432,7 +480,7 @@
   </section>
 
   <section id="view-capture" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:26px" id="cp-title"></h2>
     <p class="muted" id="cp-why"></p>
     <!-- Live camera: the app watches the frames and keeps the best one
@@ -459,7 +507,7 @@
   </section>
 
   <section id="view-optimize" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Check the list</h2>
     <p id="opt-summary" class="subtitle"></p>
     <div id="opt-body"></div>
@@ -469,7 +517,7 @@
   </section>
 
   <section id="view-mode" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">How are you shopping?</h2>
     <div>
       <button class="modecard" data-mode="quest" type="button"><span class="name">Quest</span><span class="sub">Play the hunt: characters, points and badges. Arya helps you find each item.</span></button>
@@ -621,7 +669,7 @@
   </section>
 
   <section id="view-finish" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back to the hunt</a></p>
+    <p><a href="#" class="qback">‹ Back to the hunt</a></p>
     <h2 class="largetitle" style="font-size:28px">Add your receipt</h2>
     <p class="muted" id="fin-sub">The receipt is the scorecard. Snap it and the hunt is settled.</p>
     <p class="muted">Arya reads items and the total. Your photo stays private to you. Nothing here is shared.</p>
@@ -643,7 +691,7 @@
   </section>
 
   <section id="view-album" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle">Album</h2>
     <p class="subtitle" id="alb-sub"></p>
     <div id="alb-body"><p class="empty">The album did not load. Close the app and open it again.</p></div>
@@ -679,7 +727,7 @@
   </section>
 
   <section id="view-race" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Shop-Off</h2>
     <div id="race-body"></div>
     <h3 class="sect">New race</h3>
@@ -699,7 +747,7 @@
   </section>
 
   <section id="view-friends" class="view" hidden>
-    <p><a href="#" class="qback">&larr; Back</a></p>
+    <p><a href="#" class="qback">‹ Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Friends</h2>
     <div class="group pad">
       <label class="field">Add by handle
@@ -712,7 +760,7 @@
   </section>
 
   <section id="view-receipt" class="view" hidden>
-    <p><a href="#" id="rcd-back" class="backlink">&larr; Back</a></p>
+    <p><a href="#" id="rcd-back" class="backlink">‹ Back</a></p>
     <div id="rc-body"></div>
   </section>
 
@@ -722,7 +770,7 @@
     <div class="sheet">
       <div class="row"><span class="name">Add receipt</span><button id="ar-close" class="btn" type="button">Not now</button></div>
       <p class="muted" id="ar-for"></p>
-      <input type="file" id="ar-photo" accept="image/*" aria-label="This trip's receipt photo" hidden>
+      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label="This trip's receipt photo" hidden>
       <p class="nomargin"><label class="btn primary wide receiptbtn" for="ar-photo">Snap the receipt photo</label></p>
       <p class="nomargin demo-only" hidden><button id="ar-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
       <p id="ar-status" class="muted nomargin"></p>
@@ -795,6 +843,7 @@
   </button>
 </nav>
 
+<div id="info-sheet" class="sheetwrap" role="dialog" aria-modal="true" hidden><div class="sheet" id="info-body"></div></div>
 <script src="app.js"></script>
 <script src="lists.js"></script>
 <script src="aryaask.js"></script>
@@ -808,6 +857,9 @@
 <script src="share.js"></script>
 <script src="haul.js"></script>
 <script src="expiry.js"></script>
+<script src="group.js"></script>
 <script src="push.js"></script>
+<script src="powers.js"></script>
+<script src="a2hs.js"></script>
 </body>
 </html>

@@ -40,8 +40,14 @@ function qtyTag(it) {
   if (unit) return `${qtyFmt(it.qty)} ${unit}`;
   return it && it.qty > 1 ? `x${qtyFmt(it.qty)}` : "";
 }
+/* One id per open tab: live sync (group.js) skips the echo of this
+ * tab's own changes. */
+const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 async function api(path, opts) {
   let r;
+  opts = Object.assign({}, opts);
+  opts.headers = new Headers(opts.headers || {});
+  opts.headers.set("X-Arya-Client", CLIENT_ID);
   try { r = await fetch(path, opts); }
   catch (e) {
     // A network failure stays a TypeError (the hunt's offline outbox
@@ -350,11 +356,9 @@ function storeAlertRows(h, news) {
 async function paintStoreAlerts(h) {
   const nw = await api("/api/quest/news").catch(() => ({ news: [] }));
   const rows = storeAlertRows(h, nw.news);
-  // No report and no price gap yet: one labelled example, as Crew's
-  // store news showed it, never dressed as real data.
-  if (!rows.length) rows.push(`<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
-      <span class="name">Costco: Oat milk not there<span class="samplepill">Sample</span></span>
-      <span class="sub">Example only. Tap Not here? on a hunt and it shows up here.</span></div></div>`);
+  // Owner, 2026-10-29: nothing to say, nothing shown. No sample card
+  // for new users; the section appears with the first real alert.
+  if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }
   $("#today-alerts").innerHTML = `<h3 class="sect">Store alerts</h3><div class="group">${rows.join("")}</div>`;
 }
 
@@ -365,12 +369,25 @@ function paintTodayChecks(h) {
   // Eyes sightings ("in stock, left off the list") came along from
   // the List with the List overhaul: the list holds only what you add.
   const seen = (h.seen || []).map(s => `<div class="row"><div class="grow"><span class="checktext">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`);
-  $("#today-checks").innerHTML = checks.length || seen.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
+  // Design pass (2026-10-29): one row that names what to check; the
+  // questions open under it on tap.
+  const n = checks.length + seen.length;
+  const names = [...checks.map(c => c.name || ""), ...(h.seen || []).map(s => s.name)].filter(Boolean);
+  const label = names.length ? names.slice(0, 2).join(", ") + (names.length > 2 ? ` and ${names.length - 2} more` : "") : "";
+  $("#today-checks").innerHTML = n ? `<div class="group checkfold${todayChecksOpen ? " open" : ""}">
+    <button class="hubrow" type="button" data-checks-fold aria-expanded="${String(todayChecksOpen)}"><span class="hr-label">Still good? · ${n} to check${label ? `<span class="sub">${esc(label)}</span>` : ""}</span><span class="chev">›</span></button>
+    <div class="checkrows"${todayChecksOpen ? "" : " hidden"}>${checks.map(c =>
     `<div class="row"><div class="grow"><span class="checktext">${esc(c.text)}</span>
-      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div>` : "";
+      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div></div>` : "";
 }
+let todayChecksOpen = false;
 
 $("#today-checks").addEventListener("click", async ev => {
+  if (ev.target.closest("[data-checks-fold]")) {
+    todayChecksOpen = !todayChecksOpen;
+    if (TODAY_HOME) paintTodayChecks(TODAY_HOME);
+    return;
+  }
   const ok = ev.target.closest("[data-check-ok]");
   const ex = ev.target.closest("[data-check-expired]");
   if (!ok && !ex) return;
@@ -435,8 +452,10 @@ async function renderHome() {
   paintStoreAlerts(h).catch(() => {});
   paintTodayChecks(h);
   paintTodayLists(h);
+  if (window.A2HS) A2HS.paintToday(h);
   paintTodayPatterns().catch(() => {});
   if (window.Expiry) Expiry.paintToday(h.use_soon);
+  if (window.Powers) Powers.paintToday().catch(() => {});
   TODAY_HOME = h;
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
@@ -524,6 +543,7 @@ function paintListsHome() {
   $("#list-line").textContent = open.length
     ? `${open.length} thing${open.length === 1 ? "" : "s"} to get${used > 1 ? ` across ${used} lists` : ""}`
     : "Nothing to get yet";
+  if (window.aryaGroup) aryaGroup.decorateLists();
 }
 
 function listRow(i) {
@@ -539,7 +559,7 @@ function listRow(i) {
     ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}
     ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}
     ${i.not_grocery && !picking ? `<span class="sub notgrocery">Not a grocery item? Added anyway. <button class="linkbtn" data-act="ng-keep" data-id="${esc(i.item_id)}">It is groceries</button> · <button class="linkbtn" data-act="ng-remove" data-id="${esc(i.item_id)}">Remove</button></span>` : ""}</div>
-    ${picking ? "" : `<button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>`}
+    ${picking ? "" : `<button class="qtybtn${!i.unit && Number(i.qty || 1) === 1 ? " one" : ""}" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>`}
   </div></div>`;
 }
 
@@ -626,9 +646,47 @@ $("#ls-remove").addEventListener("click", () => {
 $("#ls-move").addEventListener("click", () => {
   if (listSel && listSel.size && window.ListSheets) ListSheets.openMove([...listSel]);
 });
+/* Start shopping (design pass, 2026-10-29): one sheet picks Quest or
+ * Express and the trip opens straight from the list. Suggestions the
+ * list already shows get one "Add" line here, not a second deck. */
+function paintShopSheet() {
+  const open = onListItems().filter(i => !i.checked && itemHome(i) === (lensList() ? lensList().id : "else"));
+  const where = lensList() ? lensList().name : "Everything else";
+  $("#shop-title").textContent = `Shop ${where} · ${open.length} item${open.length === 1 ? "" : "s"}`;
+  const sugg = suggestions().filter(i => suggestHome(i) === (lensList() ? lensList().id : "else"));
+  const el = $("#shop-sugg");
+  el.hidden = !sugg.length;
+  if (!sugg.length) { el.innerHTML = ""; return; }
+  const names = sugg.slice(0, 2).map(i => esc(i.name));
+  const more = sugg.length > 2 ? ` and ${sugg.length - 2} more` : "";
+  el.innerHTML = `Arya also suggests ${names.join(" and ")}${more}. <button type="button" class="linkbtn" data-shop-add>Add ${sugg.length === 1 ? "it" : sugg.length === 2 ? "both" : "all"}</button>`;
+}
+function closeShopSheet() { $("#shop-sheet").hidden = true; }
 $("#list-hunt").addEventListener("click", () => {
+  paintShopSheet();
+  $("#shop-sheet").hidden = false;
+  const first = $("#shop-sheet [data-shop]");
+  if (first) first.focus();
+});
+$("#shop-close").addEventListener("click", closeShopSheet);
+$("#shop-sheet").addEventListener("keydown", ev => { if (ev.key === "Escape") closeShopSheet(); });
+$("#shop-sheet").addEventListener("click", async ev => {
+  if (ev.target.id === "shop-sheet") { closeShopSheet(); return; }
+  if (ev.target.closest("[data-shop-add]")) {
+    const lid = lensList() ? lensList().id : "else";
+    const ids = suggestions().filter(i => suggestHome(i) === lid).map(i => i.item_id);
+    try {
+      for (const id of ids) await post("/api/list/add", lid === "else" ? { item_id: id } : { item_id: id, list_id: lid });
+      await renderList();
+      paintShopSheet();
+    } catch (e) { toast(e.message); }
+    return;
+  }
+  const b = ev.target.closest("[data-shop]");
+  if (!b) return;
+  closeShopSheet();
   // A named list plans from its own items; Everything else plans from the whole list.
-  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null);
+  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null, b.dataset.shop);
 });
 $("#list-done").addEventListener("click", async ev => {
   if (ev.target.closest("[data-done-toggle]")) { listDoneOpen = !listDoneOpen; paintListPage(); return; }
@@ -815,6 +873,7 @@ async function renderList() {
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
   paintListGroups();
+  if (window.aryaGroup) aryaGroup.refreshLists().catch(() => {});
 }
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
@@ -877,6 +936,7 @@ document.addEventListener("click", async ev => {
  * There is no second, brain-only profile. The app is light theme
  * only (owner 2026-10-27) — there is no theme switch. */
 async function renderProfile() {
+  if (window.aryaGroup) aryaGroup.paintProfile().catch(() => {});
   await loadCurrency();
   $("#profile-account").innerHTML = row("Signed in as", "", esc(isDemo ? "demo" : (window.__aryaUser || "")))
     + `<div class="row"><div class="grow"><span class="name">Currency</span><span class="sub">How prices show. Arya does not convert.</span></div>
@@ -937,7 +997,8 @@ $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refr
 /* Quest progress, Connect Muse and About are one tap from Profile
  * (owner, 2026-10-29: Profile too busy). Each Back lands on Profile. */
 for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", "#pfq-back"],
-    ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"]]) {
+    ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"],
+    ["#btn-powers", "view-powers", "#pw-back"]]) {
   $(btn).addEventListener("click", () => { show(view); refresh(view); });
   $(back).addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
 }
@@ -1137,15 +1198,21 @@ async function renderIntake() {
   // and the owner dropped the Meta-model and Muse footer lines).
 }
 
-/* File a receipt photo (image only): the one receipt path the
- * Receipts view and the Add camera's receipt offer share. */
-async function fileReceiptPhoto(file, statusEl, previewEl) {
-  statusEl.textContent = "Reading the receipt — this can take up to a minute.";
+/* File a receipt photo or PDF: the one receipt path the Receipts
+ * view and the Add camera's receipt offer share. A PDF goes to
+ * /decode/pdf (text layer, or a scan read page by page). */
+async function fileReceiptPhoto(file, statusEl, previewEl, opts = {}) {
+  if (!file || !file.size) {
+    if (!opts.quiet) toast("That file arrived empty \u2014 if it is still downloading, wait for it to finish, then try again.");
+    return { ok: false, empty: true };
+  }
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  statusEl.textContent = opts.label || "Reading the receipt \u2014 this can take up to a minute.";
   if (previewEl) previewEl.innerHTML = "";
   try {
-    const r = await fetch("/decode/photo", {
+    const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
       method: "POST",
-      headers: { "Content-Type": file.type || "image/jpeg" },
+      headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") },
       body: file
     });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
@@ -1154,17 +1221,23 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
     statusEl.textContent = "";
     if (out.demo) {
       if (previewEl) previewEl.innerHTML = `<div class="group pad" style="margin-top:10px">
-        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">read live · kept for this demo visit only</span></p>
+        <p class="nomargin"><strong>${esc(rec.merchant || "Receipt")}</strong> <span class="sub">read live \u00b7 kept for this demo visit only</span></p>
         ${(rec.lines || []).map(l => row(esc(l.decoded_name || l.raw || "line"), "", l.line_total != null ? money(l.line_total) : "")).join("")}
         ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
-      else statusEl.textContent = "Read live — kept for this demo visit only.";
-    } else {
-      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
-      renderScan().catch(showErr);
+      else statusEl.textContent = "Read live \u2014 kept for this demo visit only.";
+      return { ok: true, demo: true, out };
     }
+    if (out.duplicate) {
+      if (!opts.quiet) toast(`Already filed \u2014 ${rec.merchant || "that receipt"}, ${fmtDate(rec.purchased_at)}. Skipped, so the trip is not counted twice.`);
+      return { ok: true, duplicate: true, out };
+    }
+    if (!opts.quiet) toast(`Filed ${rec.merchant || "the receipt"} \u2014 ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
+    renderScan().catch(showErr);
+    return { ok: true, out };
   } catch (e) {
     statusEl.textContent = "";
-    toast("Could not read that photo: " + e.message);
+    if (!opts.quiet) toast(`Could not read that ${isPdf ? "file" : "photo"}: ` + e.message);
+    return { ok: false, error: e };
   }
 }
 
@@ -1363,10 +1436,22 @@ function bindAdd() {
 
   const rcPhoto = $("#rc-photo");
   if (rcPhoto) rcPhoto.addEventListener("change", async ev => {
-    const f = ev.target.files[0];
-    if (!f) return;
-    await fileReceiptPhoto(f, $("#rc-photo-status"), $("#rc-photo-preview"));
+    const files = [...(ev.target.files || [])];
     ev.target.value = "";
+    if (!files.length) return;
+    const status = $("#rc-photo-status"), preview = $("#rc-photo-preview");
+    if (files.length === 1) { await fileReceiptPhoto(files[0], status, preview); return; }
+    // Bulk (owner, 2026-10-29): file each in turn, one summary at
+    // the end \u2014 duplicates are skipped by the server, per file.
+    let filed = 0, dup = 0, failed = 0;
+    for (let i = 0; i < files.length; i++) {
+      const res = await fileReceiptPhoto(files[i], status, null,
+        { quiet: true, label: `Reading ${i + 1} of ${files.length} \u2014 ${files[i].name}\u2026` });
+      if (res.duplicate) dup++; else if (res.ok) filed++; else failed++;
+    }
+    status.textContent = "";
+    toast(`Bulk upload done: ${filed} filed${dup ? ` \u00b7 ${dup} already filed, skipped` : ""}${failed ? ` \u00b7 ${failed} could not be read` : ""}.`);
+    renderScan().catch(showErr);
   });
 }
 bindAdd();
@@ -1375,6 +1460,12 @@ async function renderCurator() {
   const el = $("#curator");
   if (!el) return;
   const d = await api("/api/curator").catch(() => ({ proposals: [] }));
+  // The card earns its place only when there is something to
+  // decide (owner, 2026-10-29: "show only when there is issue") —
+  // with no pending proposals the Receipts view stays clean.
+  if (!d.proposals.length) { el.hidden = true; el.innerHTML = ""; syncEyeHead(); return; }
+  el.hidden = false;
+  syncEyeHead();
   let html = d.proposals.map(p => `
     <div class="row"><div class="grow"><span class="name">${p.kind === "merge" ? `Merge into &ldquo;${esc(p.into_name)}&rdquo;` : `Keep &ldquo;${esc(p.names[0])}&rdquo; separate`}</span>
     <span class="sub">${p.names.map(esc).join(" + ")} — ${esc(p.reason)}</span></div></div>
@@ -1440,7 +1531,14 @@ async function renderScan() {
         <button class="chip" data-save-resolve="${esc(u.item_id)}">Save</button>
       </div>`;
   }
-  $("#review").innerHTML = html || empty("Nothing to review. Every line is verified.");
+  // Owner, 2026-10-29: nothing to check, nothing shown. The heading and the
+  // card appear only when a line or a proposal needs a decision.
+  $("#review").innerHTML = html;
+  $("#review").hidden = !html;
+  syncEyeHead();
+}
+function syncEyeHead() {
+  $("#eye-head").hidden = $("#review").hidden && $("#curator").hidden;
 }
 
 $("#review").addEventListener("click", async ev => {
@@ -1534,11 +1632,25 @@ async function renderEyes() {
  * moved), then the archive. Rows open the receipt detail. No spend
  * content lives here; spend is Analysis, reached from Profile. */
 
+let rcWho = "all";
 async function renderReceipts() {
   await Promise.all([renderScan().catch(() => {}), renderCurator().catch(() => {})]);
   const archive = await api("/api/quest/receipts").catch(() => ({ receipts: [] }));
-  $("#rc-count").textContent = archive.receipts.length
-    ? `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted` : "";
+  // In a group (owner, 2026-10-29) every member's receipts show here,
+  // each with who filed it, and a switch narrows to one person.
+  const people = [...new Set(archive.receipts.filter(r => r.by && !r.mine).map(r => r.by))];
+  const shared = archive.receipts.some(r => r.by);
+  if (!shared || (rcWho !== "all" && rcWho !== "mine" && !people.includes(rcWho))) rcWho = "all";
+  const mineCount = archive.receipts.filter(r => r.mine).length;
+  $("#rc-count").textContent = !archive.receipts.length ? ""
+    : shared && people.length
+      ? `${archive.receipts.length} receipts from ${people.length + 1} people · ${mineCount} yours`
+      : `${archive.receipts.length} receipts · every one digitized, total-checked, returns netted`;
+  const segs = $("#rc-who");
+  segs.hidden = !people.length;
+  segs.innerHTML = people.length ? [["all", "Everyone"], ["mine", "Mine"], ...people.map(p => [p, p.charAt(0).toUpperCase() + p.slice(1)])]
+    .map(([k, label]) => `<button type="button" class="${rcWho === k ? "on" : ""}" data-rc-who="${esc(k)}" aria-pressed="${rcWho === k}">${esc(label)}</button>`).join("") : "";
+  archive.receipts = archive.receipts.filter(r => rcWho === "all" || (rcWho === "mine" ? r.mine : r.by === rcWho));
   // Unsettled hunts (Discussion 41): a hunt finished without its
   // receipt is logged here as its own entry, tagged "Receipt
   // missing", until this trip's receipt is uploaded against it.
@@ -1553,7 +1665,7 @@ async function renderReceipts() {
   const rows = archive.receipts.map(r => `
     <button class="sessrow" data-receipt="${esc(r.receipt_id)}" type="button">
       <span class="grow"><span class="name">${esc(r.merchant)}</span>
-      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}</span></span>
+      <span class="sub">${fmtShort(String(r.purchased_at).slice(0, 10))} · ${r.items ? `${r.items} item${r.items === 1 ? "" : "s"}` : "no lines read"}${r.returns_total ? ` · returns −${money(r.returns_total)}` : ""}${r.by ? (r.mine ? " · you" : ` · <span class="byp">${esc(r.by.charAt(0).toUpperCase() + r.by.slice(1))}</span>`) : ""}</span></span>
       <span class="money">${r.totals_reconcile ? "✓ " : ""}${r.total != null ? money(r.total) : ""}</span>
     </button>`).join("");
   $("#rc-archive").innerHTML = (unsettled || rows)
@@ -1589,6 +1701,12 @@ function paintMissingReceipts(el, unsettled, after) {
     if (up && window.openAddReceipt) openAddReceipt(up.dataset.upload, up.dataset.store, after);
   };
 }
+$("#rc-who").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-rc-who]");
+  if (!b) return;
+  rcWho = b.dataset.rcWho;
+  renderReceipts().catch(showErr);
+});
 $("#rc-archive").addEventListener("click", async ev => {
   const dis = ev.target.closest("[data-dismiss]");
   if (dis) {
@@ -1656,6 +1774,7 @@ async function renderAnalysis() {
   $("#an-top").innerHTML = d.top_items.map(i =>
     `<div class="row"><div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a></div><div class="money">${money(i.spend)}</div></div>`).join("") || empty("No items yet.");
   bindItemLinks($("#an-top"));
+  if (window.Powers) Powers.paintAnalysis().catch(() => {});
 }
 
 /* ---------------- Item page ---------------- */
@@ -1734,6 +1853,7 @@ function refresh(view) {
   if (view === "view-profile" || view === "view-quest-progress" || view === "view-muse") renderProfile().catch(showErr);
   if (view === "view-community") { renderQuestHub().catch(showErr); renderCommunity().catch(showErr); }
   if (view === "view-chat") paintChatEmpty();
+  if (view === "view-powers" && window.Powers) Powers.paintPowers().catch(showErr);
 }
 
 /* ---------------- Ask Arya + voice ---------------- */
@@ -1944,6 +2064,7 @@ function enterApp(user, demo) {
   // Every account opens on Today; Muse is linked from Profile.
   if (demo) $("#chat-demo-note").hidden = false;
   openShell();
+  if (!demo && window.aryaGroup) aryaGroup.afterSignIn().catch(() => {});
 }
 
 function openShell() {

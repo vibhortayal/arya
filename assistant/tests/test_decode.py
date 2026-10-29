@@ -267,3 +267,102 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         # carries no decoded_by (its StubClient asserts mode=standard).
         r = decode_text("any text", StubClient())
         self.assertNotIn("decoded_by", r)
+
+
+class TestScannedPdfIntake(unittest.TestCase):
+    """A PDF with no text layer (a scan, or a phone 'print to PDF') is
+    rendered page by page and read by the photo reader."""
+
+    @staticmethod
+    def _scan_pdf(pages):
+        import io
+        from PIL import Image
+        imgs = [Image.new("RGB", (600, 900), "white") for _ in range(pages)]
+        buf = io.BytesIO()
+        imgs[0].save(buf, "PDF", save_all=True, append_images=imgs[1:])
+        return buf.getvalue()
+
+    @staticmethod
+    def _client(pages_seen):
+        # Page 1 carries the store and one item; page 2 the second
+        # item and the totals.
+        payloads = [
+            {"store": "Safeway", "date": "2026-07-29", "subtotal": None, "tax": None, "total": None,
+             "lines": [{"item_no": "1", "product": "MILK", "price": 4.49, "qty": 1, "confidence": 0.95}]},
+            {"store": None, "date": None, "subtotal": 8.98, "tax": 0.0, "total": 8.98,
+             "lines": [{"item_no": "2", "product": "BREAD", "price": 4.49, "qty": 1, "confidence": 0.95}]}]
+
+        class FakeClient:
+            def __init__(self, ledger=None):
+                pass
+
+            def chat(self, messages, mode=None, personal=None, **kw):
+                assert personal is True
+                part = messages[1]["content"][1]["image_url"]["url"]
+                assert part.startswith("data:image/jpeg;base64,")
+                i = len(pages_seen)
+                pages_seen.append(part)
+                return json.dumps(payloads[min(i, 1)]), {}, 0.1
+        return FakeClient
+
+    def _app(self, pages_seen):
+        from api import deps
+        import tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["ARYA_INSECURE_COOKIE"] = "1"
+        os.environ["MODEL_API_KEY"] = "test-key"
+        from fastapi.testclient import TestClient
+        import api.main as main
+        deps.MetaClient = self._client(pages_seen)
+        c = TestClient(main.app)
+        c.post("/auth/setup", json={"username": "t", "password": "pw"})
+        return c
+
+    def test_render_pages(self):
+        from api.decode.service import render_pdf_pages
+        pages = render_pdf_pages(self._scan_pdf(2))
+        self.assertEqual(len(pages), 2)
+        self.assertTrue(all(p[:2] == b"\xff\xd8" for p in pages))
+
+    def test_scanned_multi_page_pdf_merges_into_one_receipt(self):
+        seen = []
+        c = self._app(seen)
+        pdf = self._scan_pdf(2)
+        r = c.post("/decode/pdf", content=pdf, headers={"Content-Type": "application/pdf"})
+        self.assertEqual(r.status_code, 200, r.text)
+        rec = r.json()["receipt"]
+        self.assertEqual(len(seen), 2)
+        self.assertEqual(rec["merchant"], "Safeway")
+        self.assertEqual([l["decoded_name"] for l in rec["lines"]], ["MILK", "BREAD"])
+        self.assertEqual(rec["total"], 8.98)
+        self.assertTrue(rec["totals_reconcile"])
+        orig = c.get(f"/api/quest/receipts/{rec['receipt_id']}/original")
+        self.assertEqual(orig.headers["content-type"], "application/pdf")
+
+    def test_too_many_pages_is_a_plain_message(self):
+        c = self._app([])
+        r = c.post("/decode/pdf", content=self._scan_pdf(6), headers={"Content-Type": "application/pdf"})
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("max 5", r.json()["detail"])
+
+    def test_oversized_pdf_is_refused(self):
+        c = self._app([])
+        r = c.post("/decode/pdf", content=b"0" * 10_000_001, headers={"Content-Type": "application/pdf"})
+        self.assertEqual(r.status_code, 413)
+
+
+class TestReceiptInputsAcceptPdf(unittest.TestCase):
+    PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
+
+    def read(self, name):
+        return open(os.path.join(self.PWA, name)).read()
+
+    def test_receipt_inputs_accept_pdf(self):
+        html = self.read("index.html")
+        for ident in ("rc-photo", "ar-photo"):
+            self.assertIn(f'id="{ident}" accept="application/pdf,image/*"', html)
+
+    def test_pdf_files_go_to_the_pdf_route(self):
+        for name in ("app.js", "quest.js"):
+            js = self.read(name)
+            self.assertIn('isPdf ? "/decode/pdf" : "/decode/photo"', js)

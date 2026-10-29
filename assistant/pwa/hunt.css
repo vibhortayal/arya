@@ -24,6 +24,28 @@
 /* ---- The row: 44px leading cell, face, text, action ---- */
 .huntrow { gap: 10px; }
 .huntrow .rowface { width: 40px; height: 40px; }
+/* The check (design pass, 2026-10-29): the List's circle, 44px target. */
+.huntcheck {
+  flex: none; width: 44px; height: 44px; border: 0; padding: 0; background: transparent;
+  display: grid; place-items: center; color: var(--panel); cursor: pointer;
+}
+.huntcheck::before {
+  content: ""; grid-area: 1 / 1; width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--tertiary); box-sizing: border-box;
+}
+.huntcheck svg { grid-area: 1 / 1; width: 16px; height: 16px; opacity: 0; position: relative; }
+.huntcheck.got::before { background: var(--accent); border-color: var(--accent); }
+.huntcheck.got svg { opacity: 1; }
+.huntcheck.rep::before { border-style: dashed; }
+.huntcheck.notlive, .huntcheck:disabled { opacity: .5; }
+.huntcheck:not(:disabled):not(.notlive):active::before { background: var(--acc-soft); }
+.huntrow[data-row] { cursor: pointer; }
+.huntrow .grow { min-width: 0; }
+.hqty { color: var(--secondary); font-weight: 600; }
+.morechev {
+  flex: none; width: 32px; min-height: 44px; border: 0; padding: 0; background: transparent;
+  color: var(--tertiary); font-size: 22px; line-height: 1; cursor: pointer;
+}
 .morebtn, .hunt-lead {
   flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%;
   display: grid; place-items: center; background: transparent; color: var(--ink2); padding: 0;
@@ -54,13 +76,13 @@
 /* ---- The sheet (one dialog for every hunt menu) ---- */
 #hunt-sheet { z-index: 40; }
 #hunt-sheet .sheet { max-height: 86vh; padding-top: 14px; }
-.hm-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; overflow-wrap: anywhere; }
+.hm-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; overflow-wrap: anywhere; }
 .hm-sub { margin: 0 0 12px; }
 .hm-opts { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; }
 .hm-opt {
   display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
   width: 100%; min-height: 56px; padding: 8px 14px; border: 0; border-radius: 14px;
-  background: var(--fill); color: var(--ink); text-align: left; font-size: 16px;
+  background: var(--fill); color: var(--ink); text-align: left; font-size: 17px;
 }
 .hm-opt:active { background: var(--fill2); }
 .hm-opt b { font-weight: 600; }
@@ -87,7 +109,7 @@
 
 /* ---- Forgot something ---- */
 .hm-add { margin-top: 12px; }
-.hm-addlabel { display: block; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.hm-addlabel { display: block; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
 .hm-addrow { display: flex; gap: 8px; align-items: center; }
 .hm-addinput { flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: 17px; }
 .hm-wide { width: 100%; }
@@ -101,7 +123,7 @@
 .hm-leftbar {
   display: flex; align-items: center; justify-content: space-between; width: 100%;
   min-height: 56px; padding: 0; border: 0; background: transparent; color: var(--ink);
-  font-size: 16px; font-weight: 600; text-align: left;
+  font-size: 17px; font-weight: 600; text-align: left;
 }
 .hm-chev { width: 22px; height: 22px; color: var(--ink2); }
 .hm-chev.open { transform: rotate(180deg); }
