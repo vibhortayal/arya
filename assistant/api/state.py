@@ -397,6 +397,16 @@ def derived():
         p["admitted"] = p["item_id"] in admitted_ids
     smart = build_list(visible)
     have = {i["item_id"] for i in smart["items"]}
+    # "I'm out" / "expired" is the user's word and needs no history:
+    # build_list wants 3 buys, so an item with fewer would be told
+    # "it's on the list" and then not be there.
+    for p in visible:
+        if p.get("user_report") and p["item_id"] not in have:
+            smart["items"].append({
+                "item_id": p["item_id"], "qty": p["typical_qty"],
+                "due_reason": p["user_report"].capitalize(),
+                "source": "pattern"})
+            have.add(p["item_id"])
     for pid, f in fl.items():
         if f.get("manual") and pid not in have:
             by = f.get("added_by")
@@ -434,6 +444,16 @@ def derived():
             item["judge_reason"] = j.get("reason", "")
             item["judge_class"] = j.get("class", "")
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
+
+
+def running_low(d=None):
+    """The patterns that are running low: due, admitted by the judge
+    (or reported out by the user), and either 3+ kept buys or the
+    user's own word. Today and Ask Arya both read this one rule."""
+    d = d or derived()
+    return [p for p in d["patterns"]
+            if p["due"] and p.get("admitted")
+            and (p["purchase_count"] >= 3 or p.get("user_report"))]
 
 
 def judgments():
