@@ -21,7 +21,8 @@ class TestReceiptRules(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state, auth
-        main._login_fails.clear()
+        from api import deps
+        deps._login_fails.clear()
         state._save("receipts.json", [
             _receipt("r-today", TODAY + "T18:00:00"),
             _receipt("r-today-2", TODAY + "T19:00:00"),

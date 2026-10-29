@@ -99,6 +99,7 @@ class TestPdfIntake(unittest.TestCase):
         self.assertIn("25.36", text)
 
     def test_pdf_endpoint(self):
+        from api import deps
         import tempfile
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -119,7 +120,7 @@ class TestPdfIntake(unittest.TestCase):
                            "subtotal": 25.36, "tax": 0.0, "total": 25.36}
                 return json.dumps(payload), {}, 0.001
 
-        main.MetaClient = FakeClient
+        deps.MetaClient = FakeClient
         c = TestClient(main.app)
         c.post("/auth/setup", json={"username": "t", "password": "pw"})
         r = c.post("/decode/pdf", content=open(self.FIXTURE, "rb").read(),
@@ -161,6 +162,7 @@ class TestPhotoIntake(unittest.TestCase):
         self.assertEqual(dec["lines"][1]["decoded_name"], "GG BREAD")
 
     def test_photo_endpoint(self):
+        from api import deps
         import tempfile
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -171,7 +173,7 @@ class TestPhotoIntake(unittest.TestCase):
                    "lines": [{"item_no": "1", "product": "MILK", "brand": None, "detail": None,
                               "list_price": 4.49, "price": 4.49, "discount": 0, "qty": 1,
                               "is_return": False, "confidence": 0.95, "needs_user_check": False, "alternatives": []}]}
-        main.MetaClient = self._fake_client(payload)
+        deps.MetaClient = self._fake_client(payload)
         c = TestClient(main.app)
         c.post("/auth/setup", json={"username": "t", "password": "pw"})
         r = c.post("/decode/photo", content=b"\xff\xd8\xff fake", headers={"Content-Type": "image/jpeg"})

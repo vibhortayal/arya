@@ -46,8 +46,9 @@ def fresh_client(case):
     StubClient.calls = 0
     StubClient.photo_reply = {"kind": "list", "items": ["oat milk", "eggs"]}
     from api import main
-    main.MetaClient = StubClient
-    main._login_fails.clear()
+    from api import deps
+    deps.MetaClient = StubClient
+    deps._login_fails.clear()
     case.c = TestClient(main.app)
     r = case.c.post("/auth/setup", json={"username": "t@x.y",
                                          "password": "long-password"})

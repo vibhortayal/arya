@@ -28,11 +28,12 @@ def _receipt(rid, merchant="Test Mart"):
 
 class TestDeletes(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
         from api import auth
-        main._login_fails.clear()
+        deps._login_fails.clear()
         self.a = TestClient(main.app)
         r = self.a.post("/auth/setup", json={
             "username": ALICE, "password": "pw-alice"})

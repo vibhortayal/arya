@@ -53,8 +53,9 @@ class FakeClient:
 def fresh_client():
     os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
     from api import main
-    main.MetaClient = FakeClient
-    main._login_fails.clear()
+    from api import deps
+    deps.MetaClient = FakeClient
+    deps._login_fails.clear()
     return TestClient(main.app), main
 
 

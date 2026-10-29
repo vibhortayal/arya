@@ -11,7 +11,8 @@ class TestNewAccount(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main._login_fails.clear()
+        from api import deps
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "new@example.com",
                                              "password": "long-password"})

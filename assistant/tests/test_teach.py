@@ -72,8 +72,9 @@ class TestTeachRoutes(unittest.TestCase):
         FakeTeachClient.reads = []
         FakeTeachClient.seen_images = 0
         from api import main
-        main.MetaClient = FakeTeachClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeTeachClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
                                              "password": "long-password"})

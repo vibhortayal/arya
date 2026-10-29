@@ -48,11 +48,12 @@ class TestSessionHashing(unittest.TestCase):
 
 class TestLoginLimiterKey(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
         self.main = main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "lim@example.com",
                                              "password": "pw-test"})

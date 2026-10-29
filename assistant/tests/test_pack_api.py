@@ -61,8 +61,9 @@ class PackBase(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main, self.state = main, state
         self.c = TestClient(main.app)
         if self.seed:

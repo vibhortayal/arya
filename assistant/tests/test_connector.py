@@ -36,8 +36,9 @@ class TestConnector(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main
-        main.MetaClient = FakeClient
-        main._login_fails.clear()  # the throttle is process-global; other suites share it
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()  # the throttle is process-global; other suites share it
         self.main = main
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",

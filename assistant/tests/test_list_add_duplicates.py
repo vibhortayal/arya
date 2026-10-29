@@ -56,8 +56,9 @@ class TestAddRoutes(unittest.TestCase):
     def setUp(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import main, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        from api import deps
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
         seed_receipt(self.c, "Costco", (date.today() - timedelta(days=3)).isoformat(),
