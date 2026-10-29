@@ -71,6 +71,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   One map per store location: only the Trader Joe's on Argonaut has
   the shipped walk; other Trader Joe's play a labelled typical layout.
   `2026-10-29-store-maps-per-location.md`.
+  Map my store is one tap from the Quest home and Ask Arya, and offered
+  once after a trip at a store not fully mapped.
+  `2026-10-29-map-my-store-up-front.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
