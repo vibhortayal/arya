@@ -15,6 +15,7 @@ import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { SCREENS } from "./screens/registry";
 import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
+import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
 import { t } from "./i18n";
 
 export function App() {
@@ -101,7 +102,9 @@ function Shell() {
           <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />
         </button>
       )}
-      {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}</p>}
+      {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
+        <button id="demo-finish" className="linkbtn" type="button" onClick={openEndOfDemo}>{t("endDemo.finish")}</button></p>}
+      {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
           <Screen />
