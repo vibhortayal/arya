@@ -131,7 +131,9 @@
       "removed": "Removed from favorites.",
       "remove": "Remove from favorites",
       "add": "Add to favorites"
-    }
+    },
+    "sceneFailed": "The store view did not load.",
+    "demoBar": "Demo household · resets when you leave"
   },
   "about": {
     "builtBy": "Built by",
@@ -377,7 +379,8 @@
     "patterns": "Running low and patterns use everyone's trips",
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
-    "join": "Join"
+    "join": "Join",
+    "alreadyIn": "You are already in {{name}}. Leave it first to join another group."
   },
   "hunt": {
     "thatHuntIsGoneThe": "That hunt is gone — the demo resets now and then. Go back to Today and start it again.",
@@ -1801,23 +1804,93 @@
   },
   "a2hs": {
     "addAryaToYourHome": "Add Arya to your Home Screen",
-    "tap": "Tap",
-    "atTheBottomOfSafari": "at the bottom of Safari.",
-    "scrollAndTap": "Scroll and tap",
     "addToHomeScreen": "Add to Home Screen",
-    "leave": "Leave",
-    "switched": "switched",
     "openAsWebApp": "Open as Web App",
-    "on": "on",
     "ifItIsOffArya": "If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.",
-    "thenOpenAryaFromYour": ", then open Arya from your Home Screen.",
     "fullScreenWithReminders": "Full screen, with reminders.",
-    "opensFullScreenAndLets": "Opens full screen and lets reminders work"
+    "opensFullScreenAndLets": "Opens full screen and lets reminders work",
+    "step1": "Tap <b>Share</b> at the bottom of Safari.",
+    "step2": "Scroll and tap <b>Add to Home Screen</b>.",
+    "step3": "Leave <b>Open as Web App</b> <tog></tog> switched <b>on</b>.",
+    "step4": "Tap <b>Add</b>, then open Arya from your Home Screen.",
+    "install": "Install",
+    "showHow": "Show how"
   },
   "addReceiptSheet": {
     "thisTripSReceiptPhoto": "This trip's receipt photo",
     "snapTheReceiptPhoto": "Snap the receipt photo",
     "useASampleReceipt": "Use a sample receipt",
-    "theHuntStaysClosedAttaching": "The hunt stays closed. Attaching its receipt settles it, and the “Receipt missing” tag clears everywhere."
+    "theHuntStaysClosedAttaching": "The hunt stays closed. Attaching its receipt settles it, and the “Receipt missing” tag clears everywhere.",
+    "attached": "Receipt attached — the hunt is settled.",
+    "seeHaul": "See haul",
+    "forTarget": "{{label}} · {{state}}"
+  },
+  "info": {
+    "trend": {
+      "title": "Price trend",
+      "sub": "How Arya works out a price move.",
+      "row1": "From your receipts",
+      "row1Text": "Arya compares the first and the latest price you paid at the store you use most for this item.",
+      "row2": "What counts",
+      "row2Text": "Sale prices count as what you paid. A trend needs 3 or more buys over 4 weeks or more. Moves under 2% are not shown.",
+      "row3": "What it is not",
+      "row3Text": "This is your price, not an official inflation number."
+    },
+    "cheaper": {
+      "title": "Cheaper store",
+      "sub": "How Arya picks the cheaper store.",
+      "row1": "From your receipts",
+      "row1Text": "The last price you paid at each store for this same item.",
+      "row2": "What counts",
+      "row2Text": "A store counts as cheaper only when it saves at least 25 cents and 5%.",
+      "row3": "What it is not",
+      "row3Text": "Prices change. This is what you paid, not today's shelf price."
+    },
+    "similar": {
+      "title": "Similar items",
+      "sub": "Where these come from.",
+      "row1": "From your receipts",
+      "row1Text": "Other items you bought with the same kind of name, such as other milks.",
+      "row2": "Per ounce",
+      "row2Text": "When both names give a size, Arya shows the price per ounce so they compare fairly.",
+      "row3": "No outside prices",
+      "row3Text": "Arya never looks up prices on store sites, flyers or the web."
+    },
+    "basket": {
+      "title": "Your prices",
+      "sub": "How Arya works out your own inflation.",
+      "row1": "Same items",
+      "row1Text": "Items you bought both then (60 to 120 days ago) and now (the last 30 days). Each item counts once.",
+      "row2": "Dollars a month",
+      "row2Text": "Each item is weighed by how often you bought it in the last 3 months.",
+      "row3": "What it is not",
+      "row3Text": "Your own prices at your own stores, not an official inflation number."
+    },
+    "split": {
+      "title": "Split smarter",
+      "sub": "How Arya finds the saving.",
+      "row1": "From your receipts",
+      "row1Text": "Your last 6 months. An item counts when you bought it at 2 or more stores.",
+      "row2": "What counts",
+      "row2Text": "The other store must save at least 25 cents and 5% on that item.",
+      "row3": "What it leaves out",
+      "row3Text": "Travel time and gas are not counted."
+    },
+    "waste": {
+      "title": "Food that expired",
+      "sub": "How Arya counts it.",
+      "row1": "What counts",
+      "row1Text": "Items you marked \"It expired\" this month.",
+      "row2": "Dollars",
+      "row2Text": "Each item at the price you last paid. An item with no price counts as $0."
+    }
+  },
+  "tabs": {
+    "today": "Today",
+    "lists": "Lists",
+    "ask": "Ask",
+    "quest": "Quest",
+    "settings": "Settings",
+    "settingsLevel": "Settings, level {{level}}"
   }
 }

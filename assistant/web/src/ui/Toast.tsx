@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     timer.current = window.setTimeout(() => setCur(null), toastMs(msg, !!opts?.action));
   }, []);
   current = toast;
-  const showErr = useCallback((e: unknown) => toast("Could not load: " + (e instanceof Error ? e.message : String(e))), [toast]);
+  const showErr = useCallback((e: unknown) => toast(t("common.couldNotLoad", { error: e instanceof Error ? e.message : String(e) })), [toast]);
 
   return (
     <Ctx.Provider value={{ toast, showErr, hide }}>

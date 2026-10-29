@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useInstallPrompt } from "../app/a2hs";
 import { asset } from "../lib/format";
 import { Sheet } from "./Sheet";
-import { useTranslation } from "../i18n";
+import { Trans, useTranslation } from "../i18n";
 
 /* Add to Home Screen (pwa/a2hs.js): one copy for Today's card and
  * Profile's row. Android and desktop Chrome: the button runs the
@@ -43,10 +43,10 @@ function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} id="a2hs-sheet" title={t("a2hs.addAryaToYourHome")}>
       <ol className="steps">
-        <li><span>{t("a2hs.tap")}{" "}<b>{t("common.share")}</b>{" "}{t("a2hs.atTheBottomOfSafari")}</span></li>
-        <li><span>{t("a2hs.scrollAndTap")}{" "}<b>{t("a2hs.addToHomeScreen")}</b>.</span></li>
-        <li><span>{t("a2hs.leave")}{" "}<b>{t("a2hs.openAsWebApp")}</b> <i className="tog" aria-hidden="true"></i>{" "}{t("a2hs.switched")}{" "}<b>{t("a2hs.on")}</b>.<span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
-        <li><span>{t("a2hs.tap")}{" "}<b>{t("common.add")}</b>{t("a2hs.thenOpenAryaFromYour")}</span></li>
+        <li><span><Trans i18nKey="a2hs.step1" components={{ b: <b /> }} /></span></li>
+        <li><span><Trans i18nKey="a2hs.step2" components={{ b: <b /> }} /></span></li>
+        <li><span><Trans i18nKey="a2hs.step3" components={{ b: <b />, tog: <i className="tog" aria-hidden="true" /> }} /><span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
+        <li><span><Trans i18nKey="a2hs.step4" components={{ b: <b /> }} /></span></li>
       </ol>
     </Sheet>
   );
@@ -66,7 +66,7 @@ export function A2hsCard({ hasList, demo }: { hasList: boolean; demo: boolean })
         <div className="group a2hs">
           <img className="rowface" src={asset("assets/characters/basket.webp")} alt="" />
           <div className="grow"><b>{t("a2hs.addAryaToYourHome")}</b><span className="sub">{t("a2hs.fullScreenWithReminders")}</span></div>
-          <button className="chip" type="button" data-a2hs-go onClick={a.go}>{a.deferred ? "Install" : "Show how"}</button>
+          <button className="chip" type="button" data-a2hs-go onClick={a.go}>{a.deferred ? t("a2hs.install") : t("a2hs.showHow")}</button>
           <button className="a2hs-x" type="button" data-a2hs-x aria-label={t("common.dismiss")}
             onClick={() => { st.dismissed = Date.now(); save(); bump(n => n + 1); }}>&times;</button>
         </div>

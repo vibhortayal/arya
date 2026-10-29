@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { get, post } from "../lib/api";
-import { InfoBtn, INFO, InfoSheetFrame, WhyRows } from "../ui/Info";
+import { InfoBtn, INFO, infoEntry, InfoSheetFrame, WhyRows } from "../ui/Info";
 import { useToast } from "../ui/Toast";
 import { useTranslation } from "../i18n";
 
@@ -119,7 +119,7 @@ export function Powers() {
         </div>
       </InfoSheetFrame>);
   } else if (sheet?.kind === "info" && INFO[sheet.key]) {
-    const i = INFO[sheet.key];
+    const i = infoEntry(sheet.key)!;
     sheetBody = (
       <InfoSheetFrame open onClose={close} title={i.t} sub={i.s}>
         <WhyRows rows={i.rows} />
