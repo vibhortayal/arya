@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 
-/* The store view (hunt, Express "Show me") is the current app's
- * pwa/scene.js, used as is: 930 lines of three.js drivers (photo walk,
- * point cloud, strip) plus the motion layer, with no DOM of its own
- * beyond the mount element. It loads once as a classic script from the
- * current app's static mount (it finds vendor/three.module.js next to
- * itself) and exposes globals: createSceneView, createMotionLook,
- * createStepDetector, MotionMath. Port it to a module only when the
- * old app is retired. */
+/* The store view (hunt, Express "Show me") is pwa/scene.js, used as
+ * is: 930 lines of three.js drivers (photo walk, point cloud, strip)
+ * plus the motion layer, with no DOM of its own beyond the mount
+ * element. It loads once as a classic script from the static folder
+ * at / (it finds vendor/three.module.js next to itself) and exposes
+ * globals: createSceneView, createMotionLook, createStepDetector,
+ * MotionMath. The node harnesses in tests/ (test_motion_nav,
+ * test_photo_driver) run it as this classic script. */
 
 export type Stop = {
   name: string; qty?: number; checked?: boolean; flagged?: boolean;
@@ -66,8 +66,9 @@ type Props = {
   id?: string;
 };
 
-/* Store data paths (lib/stores.ts) are relative to the current app's
- * root, as scene.js resolves them against the page; /next/ would 404. */
+/* Store data paths (lib/stores.ts) are relative to the static folder
+ * at /. scene.js resolves them against the page, so a deep link (or a
+ * future base path) must not change them: make them absolute. */
 const fromRoot = (p?: string | null) => (p && !/^(\/|https?:)/.test(p) ? "/" + p : p || "");
 
 /* One mount per driver/photos/model; stops and next are pushed in

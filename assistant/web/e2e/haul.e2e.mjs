@@ -2,7 +2,7 @@
  * reveal -> haul card; a sticker hides; the post sheet and the share
  * card open; the Score's haul row and share buttons work. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

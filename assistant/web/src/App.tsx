@@ -2,6 +2,7 @@ import { useEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider, useAvatar } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
+import { useGroupLive } from "./app/groupLive";
 import { TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
@@ -53,6 +54,23 @@ function useInviteLink() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
+/* A tapped push reminder opens the app at /#list (sw.js
+ * notificationclick; push.js openFromHash): show the Lists tab and
+ * take the fragment out of the bar. */
+function useListFromHash() {
+  const nav = useNav();
+  useEffect(() => {
+    const open = () => {
+      if (location.hash !== "#list") return;
+      nav.show("list");
+      try { history.replaceState(null, "", location.pathname + location.search); } catch { /* stays in the bar */ }
+    };
+    open();
+    addEventListener("hashchange", open);
+    return () => removeEventListener("hashchange", open);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 /* pwa/index.html's shell: the floating avatar (the way to Profile),
  * the demo bar, one view at a time, and the four-tab bar. */
 function Shell() {
@@ -61,6 +79,8 @@ function Shell() {
   const Screen = SCREENS[nav.view];
   const { src: avatar, ring } = useAvatar();
   useInviteLink();
+  useListFromHash();
+  useGroupLive();
   return (
     <>
       {nav.chrome && (

@@ -11,12 +11,7 @@ os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+from tests import frontend
 
 
 class FakeClient:
@@ -54,69 +49,74 @@ def seed_receipt(c, merchant, date, lines, rid):
 class TestShellContract(unittest.TestCase):
     def test_four_tabs_no_add_no_dashboard(self):
         # The Add tab is gone (owner, 2026-10-28): adding lives on
-        # the List page. Four tabs remain.
-        html = read("index.html")
-        nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
-        labels = re.findall(r"<span>([^<]+)</span>", nav)
-        # List first, Quest second (owner, 2026-10-29): Crew folded
-        # into the Quest tab; its view id stays view-community.
-        # Settings tab (owner, 2026-10-29) opens Profile, next to Quest.
-        self.assertEqual(labels, ["Today", "Lists", "Ask", "Quest", "Settings"])
-        views = re.findall(r'data-view="([^"]+)"', nav)
-        self.assertEqual(views, ["view-home", "view-list",
-                                 "view-chat", "view-community", "view-profile"])
-        self.assertNotIn('id="view-scan"', html)
+        # the List page. List first, Quest second (owner, 2026-10-29):
+        # Crew folded into the Quest tab; its view id stays
+        # community. Settings tab (owner, 2026-10-29) opens Profile.
+        views = frontend.src("app/views.ts")
+        tabs = re.search(r"TABS: ViewId\[\] = \[([^\]]*)\]", views).group(1)
+        self.assertEqual(re.findall(r'"([^"]+)"', tabs), ["home", "list", "chat", "community", "profile"])
+        app = frontend.src("App.tsx")
+        labels = re.search(r"TAB_LABEL[^{]*\{([^}]*)\}", app).group(1)
+        self.assertEqual(re.findall(r':\s*"([^"]+)"', labels), ["Today", "Lists", "Ask", "Quest", "Settings"])
+        self.assertIn('data-view={"view-" + t}', app)
+        self.assertNotIn('"scan"', views)
 
     def test_new_views_exist_dashboard_gone(self):
-        html = read("index.html")
-        for vid in ("view-list", "view-receipts", "view-analysis"):
-            self.assertIn(f'id="{vid}"', html)
-        self.assertNotIn('id="view-dash"', html)
+        reg = frontend.src("screens/registry.tsx")
+        for vid in ("list", "receipts", "analysis"):
+            self.assertRegex(reg, rf"\n\s*{vid}: ", vid)
+        self.assertNotIn("dash", frontend.src("app/views.ts"))
 
     def test_no_stock_chrome_emojis(self):
-        for name in ("index.html", "app.js"):
-            self.assertNotIn("🛒", read(name))
-            self.assertNotIn("☁️", read(name))
-            self.assertNotIn("🔔", read(name))
+        app = frontend.app()
+        self.assertNotIn("\U0001F6D2", app)
+        self.assertNotIn("\u2601\ufe0f", app)
+        self.assertNotIn("\U0001F514", app)
 
     def test_today_and_list_hooks(self):
-        html, js = read("index.html"), read("app.js")
-        for el in ("today-hero", "today-eye", "today-listline",
-                   "list-cards", "composer", "add-text", "add-submit",
-                   "add-split", "list-eyes", "rc-archive",
-                   "an-spend", "pf-avatar", "pf-badges"):
-            self.assertIn(f'id="{el}"', html)
+        where = {"screens/Today.tsx": ("today-eye", "today-listline"),
+                 "screens/Lists.tsx": ("list-cards", "composer", "add-text", "add-submit",
+                                       "add-split", "list-eyes"),
+                 "screens/Receipts.tsx": ("rc-archive",), "screens/Analysis.tsx": ("an-spend",),
+                 "screens/Profile.tsx": ("pf-avatar",), "screens/QuestProgress.tsx": ("pf-badges",)}
+        for f, ids in where.items():
+            js = frontend.src(f)
+            for el in ids:
+                self.assertIn(f'id="{el}"', js, el)
         # The staples line is a count only (owner, 2026-10-28): no
-        # name dump, no returns sentence.
-        self.assertNotIn("never re-suggested", js)
-        self.assertIn("staplesLine", js)
+        # name dump, no returns sentence. Today taps through to Lists.
+        today = frontend.src("screens/Today.tsx")
+        self.assertNotIn("never re-suggested", frontend.app())
+        self.assertIn('<span id="today-listline-text">Open Lists</span>', today)
 
     def test_list_actions_wired(self):
-        js = read("app.js")
+        js = frontend.app()
         for path in ("/api/list/check", "/api/list/qty", "/api/list/remove",
                      "/api/list/check-ok", "/expired"):
             self.assertIn(path, js)
         self.assertNotIn("renderDash", js)
         self.assertNotIn("view-dash", js)
 
-    def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v97"', read("sw.js"))
+    def test_sw_drops_every_old_cache(self):
+        # Was: the CACHE name bumped by hand. The worker now names its
+        # cache after the build and deletes every other one, the old
+        # app's "arya-v*" shells included.
+        sw = frontend.src("sw.js")
+        self.assertIn('const CACHE = "arya-web-" + hash(', sw)
+        self.assertIn("keys.filter(k => k !== CACHE).map(k => caches.delete(k))", sw)
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
-        no dark token variant, and the boot script pins light while
-        clearing any persisted theme preference."""
-        html = read("index.html")
-        js = read("app.js")
-        css = read("styles.css")
-        self.assertNotIn("Appearance", html)
-        self.assertNotIn("theme-seg", html + js)
-        self.assertNotIn("data-theme-choice", html + js)
-        self.assertNotIn("prefers-color-scheme: dark", css + html)
+        no dark token variant, and the page pins light."""
+        app = frontend.app()
+        css = frontend.css()
+        self.assertNotIn("Appearance", app)
+        self.assertNotIn("theme-seg", app)
+        self.assertNotIn("data-theme-choice", app)
+        self.assertNotIn("prefers-color-scheme: dark", css + app)
         self.assertNotIn('[data-theme="dark"]', css)
         self.assertNotIn("color-scheme: dark", css)
-        self.assertIn('dataset.theme="light"', html)
-        self.assertIn('removeItem("arya-theme")', html)
+        self.assertIn('<html lang="en" data-theme="light">', frontend.index_html())
 
 
 class TestLensData(unittest.TestCase):
@@ -195,19 +195,12 @@ class TestCuratorCardGating(unittest.TestCase):
     trigger on Receipts."""
 
     def test_card_hidden_without_proposals(self):
-        from pathlib import Path
-        pwa = Path(__file__).resolve().parents[1] / "pwa"
-        app = (pwa / "app.js").read_text()
-        fn = app.split("async function renderCurator() {")[1].split("\n}\n")[0]
-        self.assertIn("if (!d.proposals.length)", fn)
-        self.assertIn("el.hidden = true", fn)
-        html = (pwa / "index.html").read_text()
-        self.assertIn('id="curator" hidden', html)
+        js = frontend.src("screens/Receipts.tsx")
+        self.assertIn("const hasCur = proposals.length > 0;", js)
+        self.assertIn('<div id="curator" hidden={!hasCur}>', js)
 
     def test_card_is_the_approved_wireframe(self):
-        from pathlib import Path
-        pwa = Path(__file__).resolve().parents[1] / "pwa"
-        app = (pwa / "app.js").read_text()
+        app = frontend.src("screens/Receipts.tsx")
         self.assertIn("Are these the same item?", app)
         self.assertIn("Should these stay separate?", app)
         self.assertIn("Yes, same item", app)

@@ -1,85 +1,78 @@
 """Hunt v2 screen pins (rebuild plan items 5-8, 2026-10-28): a
-finished hunt is closed — Today's hero clears, the hunt shows once
+finished hunt is closed — the Quest hero clears, the hunt shows once
 under Finished, Profile counts finished and receipt-attached hunts
 apart, and nothing on Finish, Score or the Add receipt sheet claims
 the receipt was verified. Back is a stack, and the resume route
 opens a finished hunt on its Score.
+
+Pins over the React screens (web/src). The Back stack runs under
+vitest in web/src/screens/hunt/hunt.test.tsx and web/src/app/nav.test.tsx.
 """
-import os, unittest
+import unittest
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as f:
-        return f.read()
-
-
-def fn_body(js, name):
-    return js.split(f"function {name}(")[1].split("\n}")[0]
+from tests.frontend import src
 
 
 class TestHuntV2Screens(unittest.TestCase):
     def test_labels_are_one_vocabulary(self):
-        for name, var in (("quest.js", "QSTATE_LABEL"), ("app.js", "QSTATE_LBL")):
-            js = read(name)
-            table = js.split(f"{var} = {{")[1].split("}")[0]
-            self.assertIn('"Finished · Receipt missing"', table, name)
-            self.assertIn('"Finished · Receipt attached ✓"', table, name)
+        js = src("screens/Quest.tsx")
+        table = js.split("QSTATE_LBL: Record<string, string> = {")[1].split("}")[0]
+        self.assertIn('"Finished · Receipt missing"', table)
+        self.assertIn('"Finished · Receipt attached ✓"', table)
+        # Profile's missing-receipt rows use the same words.
+        self.assertIn("Finished · Receipt missing", src("screens/Profile.tsx"))
 
     def test_today_hero_clears_on_finish(self):
-        js = read("app.js")
-        hero = fn_body(js, "paintTodayHero")
-        # New-user pass (2026-10-29): no empty box; only an open hunt holds the hero.
-        self.assertNotIn("No quest in progress", hero)
-        self.assertIn('el.innerHTML = "";', hero)
-        self.assertNotIn('"finished"', hero.split('el.innerHTML = "";')[0])
-        games = fn_body(js, "paintTodayGames")
-        self.assertIn('class="g-group">Finished</p>', games)
+        js = src("screens/Quest.tsx")
+        pick = js.split("function heroSession(")[1].split("\n}")[0]
+        # Only an open hunt holds the hero; a finished one never does.
+        for state in ('"playing"', '"paused"', '"not_started"'):
+            self.assertIn(state, pick)
+        self.assertNotIn('"finished"', pick)
+        self.assertNotIn('"done"', pick)
+        hero = js.split("const heroCard = () => {")[1].split("\n  };")[0]
+        # New-user pass (2026-10-29): no empty box.
+        self.assertIn("if (!hero) return null;", hero)
+        self.assertNotIn("No quest in progress", js)
+        self.assertIn('<p className="g-group">Finished</p>', js)
 
     def test_profile_counts_finished_and_attached_apart(self):
-        js = read("app.js")
-        self.assertIn(">Hunts finished<", js)
-        self.assertIn(">Receipt attached<", js)
-        self.assertIn("function paintMissingReceipts(", js)
-        self.assertIn('id="pf-missing"', read("index.html"))
+        prog = src("screens/QuestProgress.tsx")
+        self.assertIn(">Hunts finished<", prog)
+        self.assertIn(">Receipt attached<", prog)
+        self.assertIn('id="pf-missing"', src("screens/Profile.tsx"))
 
     def test_add_receipt_is_reachable_everywhere(self):
-        js, app = read("quest.js"), read("app.js")
-        self.assertIn("function openAddReceipt(", js)
-        self.assertIn("score-addreceipt", fn_body(js, "openScore"))
-        self.assertIn("openAddReceipt(up.dataset.upload", app)  # Receipts
-        self.assertIn("openAddReceipt(", fn_body(app, "paintMissingReceipts"))  # Profile
+        self.assertIn("export function AddReceiptSheet(", src("ui/AddReceiptSheet.tsx"))
+        score = src("screens/Score.tsx")
+        self.assertIn('id="score-addreceipt"', score)
+        for rel in ("screens/Score.tsx", "screens/Receipts.tsx", "screens/Profile.tsx", "screens/haul/Reveal.tsx"):
+            self.assertIn("<AddReceiptSheet ", src(rel), rel)
+        # Profile's missing-receipt row opens it.
+        self.assertIn("onClick={() => setAr({ sessionId: e.session_id, label: e.store })}>Add receipt", src("screens/Profile.tsx"))
 
     def test_copy_never_claims_verified(self):
-        html, js = read("index.html"), read("quest.js")
-        fin = html.split('id="view-finish"')[1].split('id="view-score"')[0]
-        sheet = html.split('id="ar-sheet"')[1].split("</main>")[0]
-        for name, text in (("finish", fin), ("sheet", sheet),
-                           ("score", fn_body(js, "openScore")),
-                           ("settle", fn_body(js, "qArSettle"))):
-            self.assertNotIn("erified", text, name)
+        for rel in ("screens/Finish.tsx", "ui/AddReceiptSheet.tsx", "screens/Score.tsx"):
+            self.assertNotIn("erified", src(rel), rel)
 
     def test_demo_doors_only_in_the_demo(self):
-        html = read("index.html")
-        for el in ("fin-sample", "ar-sample"):
-            tag = html.split(f'id="{el}"')[0].rsplit("<p", 1)[1]
+        for rel, el in (("screens/Finish.tsx", "fin-sample"), ("ui/AddReceiptSheet.tsx", "ar-sample")):
+            js = src(rel)
+            tag = js.split(f'id="{el}"')[0].rsplit("<p", 1)[1]
             self.assertIn("demo-only", tag, el)
-            self.assertIn("hidden", tag, el)
-        self.assertIn("/sample-receipt", fn_body(read("quest.js"), "qSample"))
+            self.assertIn("hidden={!demo}", tag, el)
+            self.assertIn("/sample-receipt", js, rel)
 
     def test_back_is_a_stack(self):
-        js = read("quest.js")
-        back = fn_body(js, "questBack")
-        self.assertIn('"view-hunt"', back)
-        self.assertIn("openHunt(Q.current)", back)
-        self.assertIn("openExpress(Q.current)", back)
-        self.assertIn("‹ Back to the hunt", read("index.html"))
+        fin = src("screens/Finish.tsx")
+        self.assertIn("nav.back(); }}>‹ Back to the hunt</a>", fin)
+        self.assertIn("Back is a stack", src("screens/hunt/hunt.test.tsx"))
 
     def test_resume_opens_a_finished_hunt_on_score(self):
-        body = fn_body(read("quest.js"), "qOpenSession")
-        self.assertIn("openScore", body)
+        body = src("screens/Hunt.tsx").split("const openSession = (s0: Session) => {")[1].split("\n  };")[0]
+        self.assertIn('nav.show("score", { session: s0 })', body)
         self.assertIn('"finished"', body)
+        self.assertIn('"done"', body)
 
 
 if __name__ == "__main__":

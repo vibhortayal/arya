@@ -12,12 +12,7 @@ os.environ["MODEL_API_KEY"] = "test-key"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 from fastapi.testclient import TestClient  # noqa: E402
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+from tests.frontend import read, src  # noqa: E402
 
 
 class FakeClient:
@@ -73,26 +68,31 @@ class TestHomePriceByStore(unittest.TestCase):
 
 
 class TestListClientPins(unittest.TestCase):
+    """Over the React List screen (web/src/screens/Lists.tsx, the port of
+    app.js renderList) and Chat.tsx."""
+
     def test_no_per_item_requests_for_the_list(self):
-        js = read("app.js")
+        js = src("screens/Lists.tsx")
         # One /api/home call paints the list and its named lists.
-        render = js.split("async function renderList()")[1].split("\n}\n")[0]
-        self.assertNotIn("/api/items/", render)
-        self.assertEqual(render.count("api("), 1)
+        reload = js.split("const reload = useCallback(async (): Promise<HomeData> => {")[1].split("\n  }, [")[0]
+        self.assertEqual(reload.count("get"), 1)
+        self.assertIn('get<HomeData>("/api/home")', reload)
+        # The screen reads no item by itself (only the Why sheet does).
+        self.assertNotIn("get(`/api/items/", js)
+        self.assertNotIn("get<any>(`/api/items/", js)
 
     def test_loading_state_and_list_rows(self):
-        js = read("app.js")
-        self.assertIn('empty("Loading your list…")', js)
-        self.assertIn("groceries.map(listRow)", js)
+        js = src("screens/Lists.tsx")
+        self.assertIn('<p className="empty">Loading your list…</p>', js)
+        self.assertIn("groceries.map(i => <ListRow ", js)
 
     def test_ask_and_eyes_empty_states(self):
-        js = read("app.js")
-        self.assertIn("paintChatEmpty", js)
-        self.assertIn("What's running low?", js)
-        self.assertIn("chat-empty", js)
+        chat, js = src("screens/Chat.tsx"), src("screens/Lists.tsx")
+        self.assertIn('id="chat-empty"', chat)
+        self.assertIn("What's running low?", chat)
         # Eyes on the List page (owner wireframe, 2026-10-28): the
         # section renders only while a sighting is pending.
-        self.assertIn("wrap.hidden = !pending", js)
+        self.assertIn('<div id="list-eyes" hidden={!eyesPending}>', js)
         self.assertNotIn("No sightings yet.", js)
         self.assertIn("#chat-form input { flex: 1; min-width: 0;",
                       read("styles.css"))

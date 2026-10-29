@@ -20,9 +20,8 @@ Rules pinned here:
 import os
 import tempfile
 import unittest
-from pathlib import Path
 
-PWA = Path(__file__).resolve().parents[1] / "pwa"
+from tests.frontend import src  # noqa: E402
 ALICE = "alice@test.arya"
 
 
@@ -87,16 +86,14 @@ class TestReceiptDedupe(unittest.TestCase):
 
 class TestUploadShell(unittest.TestCase):
     def test_service_worker_never_mediates_writes(self):
-        sw = (PWA / "sw.js").read_text()
+        sw = src("sw.js")
         self.assertIn('if (e.request.method !== "GET") return;', sw)
 
     def test_receipts_picker_accepts_bulk(self):
-        html = (PWA / "index.html").read_text()
-        self.assertIn('id="rc-photo" accept="application/pdf,image/*" multiple',
-                      html)
-        app = (PWA / "app.js").read_text()
-        self.assertIn("Bulk upload done", app)
-        self.assertIn("Already filed", app)
+        js = src("screens/Receipts.tsx")
+        self.assertIn('id="rc-photo" accept="application/pdf,image/*" multiple', js)
+        self.assertIn("Bulk upload done", js)
+        self.assertIn("Already filed", js)
 
 
 if __name__ == "__main__":

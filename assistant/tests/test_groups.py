@@ -275,19 +275,16 @@ if __name__ == "__main__":
 
 
 class TestGroupShell(unittest.TestCase):
-    def read(self, name):
-        with open(os.path.join(os.path.dirname(__file__), "..", "pwa", name), encoding="utf-8") as fh:
-            return fh.read()
-
     def test_group_screen_ships_with_the_shell(self):
-        html, sw = self.read("index.html"), self.read("sw.js")
-        self.assertIn('<script src="group.js"></script>', html)
-        self.assertIn('"/group.js"', sw)
-        for el in ('id="pf-group"', 'id="view-group-join"', 'id="gj-code"', 'id="rc-who"'):
-            self.assertIn(el, html)
+        from tests import frontend
+        self.assertIn('"group-join": GroupJoin,', frontend.src("screens/registry.tsx"))
+        self.assertIn('id="pf-group"', frontend.src("screens/Profile.tsx"))
+        self.assertIn('id="gj-code"', frontend.src("screens/GroupJoin.tsx"))
+        self.assertIn('id="rc-who"', frontend.src("screens/Receipts.tsx"))
 
     def test_invite_link_and_leave_rules_in_the_app(self):
-        js = self.read("group.js")
+        from tests import frontend
+        js = frontend.src("screens/Profile.tsx")
         self.assertIn("/?join=", js)
         self.assertIn("The group keeps its own.", js)
-        self.assertIn("go${p.my_receipts === 1 ? \"es\" : \"\"} with you", js)
+        self.assertIn('go${p.my_receipts === 1 ? "es" : ""} with you', js)

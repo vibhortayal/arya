@@ -8,11 +8,12 @@ manifest must match it exactly (fun facts only; no nutrition or
 health claims; nothing improvised at runtime). Behavior is pinned
 headless under node with the real manifest (skipped without node).
 """
-import json, os, re, shutil, subprocess, tempfile, unittest
+import json, os, re, unittest
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
+from tests import frontend  # noqa: E402
+
+PWA = frontend.STATIC
 ASSETS = os.path.join(PWA, "assets", "characters")
-NODE = shutil.which("node")
 
 FACTS = {
     "blueberry": "The white dusty coating on a blueberry is called bloom — it's a natural shield that keeps the berry fresh.",
@@ -38,8 +39,7 @@ ITEM_CHARS = {"blueberry", "banana", "raspberry", "mandarin", "egg",
 
 
 def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+    return frontend.read(name)
 
 
 def manifest():
@@ -89,10 +89,9 @@ class TestManifest(unittest.TestCase):
 
 class TestCelebrationShell(unittest.TestCase):
     def test_layer_markup_and_styles(self):
-        html, css = read("index.html"), read("styles.css")
-        hunt = html.split('id="view-hunt"')[1].split('id="view-express"')[0]
+        hunt, express = frontend.src("screens/Hunt.tsx"), frontend.src("screens/Express.tsx")
+        css = read("styles.css")
         self.assertIn('id="celeb-layer"', hunt)
-        express = html.split('id="view-express"')[1].split('id="view-finish"')[0]
         self.assertNotIn("celeb-layer", express)
         self.assertIn("@keyframes celebpop", css)
         celeb_css = css.split("Collect celebration")[1]
@@ -101,19 +100,21 @@ class TestCelebrationShell(unittest.TestCase):
         self.assertIn("celebfade", reduced)  # fade, not bounce
 
     def test_hook_wiring(self):
-        js = read("quest.js")
+        js = frontend.src("screens/hunt/fx.ts")
         # Owner-disabled (phone pass, 2026-10-28): the collect hook
         # never pops a character card. The machinery stays wired
-        # for a one-function re-enable.
-        hook = js.split("function qOnCollected(")[1].split("\n}")[0]
-        self.assertIn("DISABLED at the owner's word", hook)
-        self.assertNotIn("qCelebrate(", hook)
+        # for a one-line re-enable.
+        self.assertIn("DISABLED at the owner's word", js)
+        self.assertIn("const CELEBRATE = false;", js)
+        hook = js.split("export function qOnCollected(")[1].split("\n}")[0]
+        self.assertIn("if (!CELEBRATE) return;", hook)
         self.assertIn("setTimeout(qCelebHide, 3500)", js)
-        self.assertIn("function qCelebResolve(", js)
+        self.assertIn("export function qCelebResolve(", js)
         # Hunt v2: list-row GRABs route through collectStop, the one
-        # collect path that fires the hook (the summoned panel is gone).
-        self.assertIn("collectStop(Number(g.dataset.grab))", js)
-        self.assertIn("qOnCollected(name);", js.split("async function collectStop(")[1].split("\n}")[0])
+        # collect path that fires the hook.
+        hunt = frontend.src("screens/Hunt.tsx")
+        self.assertIn("collectStop(i);", hunt)
+        self.assertIn("qOnCollected(name);", hunt.split("async function collectStop(")[1].split("\n  }\n")[0])
 
     def test_corner_card_placement(self):
         # Discussion 44 (owner phone test): the celebration is a
@@ -138,106 +139,20 @@ class TestCelebrationShell(unittest.TestCase):
         self.assertIn("font-size: 13px", bubble)  # the small size
 
     def test_sw_precaches_celebration_assets(self):
-        sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v97"', sw)
-        self.assertIn("/assets/characters/manifest.json", sw)
-        self.assertIn("/assets/characters/blueberry.webp", sw)
-        self.assertIn("/assets/characters/pantry.webp", sw)
+        sw = frontend.src("sw.js")
+        self.assertIn('"/assets/characters/manifest.json"', sw)
+        for n in ("blueberry", "pantry"):
+            self.assertIn(f'"{n}"', sw.split("const STATIC")[1].split("const BYPASS")[0])
 
 
-PRELUDE = r"""
-const __els = {};
-function __el() {
-  return {
-    hidden: false, disabled: false, value: "", textContent: "", innerHTML: "",
-    style: {}, dataset: {}, files: [],
-    classList: { add() {}, remove() {}, toggle() {} },
-    setAttribute() {}, getAttribute() { return null; },
-    addEventListener() {}, removeEventListener() {},
-    querySelector() { return __el(); }, querySelectorAll() { return []; },
-    closest() { return null; }
-  };
-}
-globalThis.document = {
-  currentScript: null, baseURI: "http://test/", body: __el(),
-  querySelector(sel) { return __els[sel] || (__els[sel] = __el()); },
-  querySelectorAll() { return []; },
-  addEventListener() {}, removeEventListener() {}
-};
-globalThis.window = globalThis;
-window.addEventListener = () => {}; window.removeEventListener = () => {}; window.scrollTo = () => {};
-globalThis.localStorage = { _m: {}, getItem(k) { return k in this._m ? this._m[k] : null; }, setItem(k, v) { this._m[k] = String(v); }, removeItem(k) { delete this._m[k]; } };
-globalThis.$ = s => document.querySelector(s);
-globalThis.esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-globalThis.qtyFmt = q => { const n = Number(q); return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); };
-globalThis.CHECK_SVG = "<svg></svg>";
-globalThis.empty = t => `<p class="empty">${t}</p>`;
-globalThis.row = () => "";
-globalThis.money = n => "$" + n;
-globalThis.fmtShort = s => s;
-globalThis.refresh = () => {};
-globalThis.show = () => {};
-globalThis.toast = () => {};
-"""
-
-DRIVER = r"""
-const out = {};
-const layer = () => document.querySelector("#celeb-layer");
-qCelebSetManifest(MANIFEST);
-const R = (n) => qCelebResolve(n, MANIFEST);
-// --- resolution: exact item, independent char/fact fallback ---
-out.blueberry = R("Blueberries").char === "blueberry.webp" && R("Blueberries").fact.includes("bloom");
-out.banana = R("Organic Bananas").char === "banana.webp" && R("Organic Bananas").fact.startsWith("Botanically");
-out.strawberry = R("Strawberries").char === "fruit.webp" && R("Strawberries").fact.includes("200 of them");
-out.milk = R("Whole Milk").char === "milk.webp" && R("Whole Milk").fact.includes("Swiss cheese");
-out.egg = R("Eggs 12ct").char === "egg.webp" && R("Eggs 12ct").fact.includes("shell color");
-out.eggplant_not_egg = R("Eggplant").char === "vegetable.webp" && R("Eggplant").fact === null;
-out.olive_oil = R("Olive Oil").char === "olive-oil.webp" && R("Olive Oil").fact.includes("1,000 years");
-out.peanut_butter = R("Peanut Butter").char === "peanut-butter.webp" && R("Peanut Butter").fact.includes("540 peanuts");
-out.almond = R("KS Almonds").char === "almond.webp" && R("KS Almonds").fact.includes("cousins of peaches");
-out.frozen_pizza_item_wins = R("Frozen Pizza").char === "pizza.webp";
-out.ice_cream_frozen = R("Ice Cream").char === "frozen.webp" && R("Ice Cream").fact.includes("Pizza Month");
-out.yogurt_dairy = R("Greek Yogurt").char === "dairy.webp" && R("Greek Yogurt").fact.includes("Swiss cheese");
-out.bagel_bakery = R("Bagels").char === "bakery.webp" && R("Bagels").fact.includes("10,000 years");
-out.carrot_veg_no_fact = R("Carrots").char === "vegetable.webp" && R("Carrots").fact === null;
-out.granola_pantry = R("Granola").char === "pantry.webp" && R("Granola").fact.includes("300 shapes");
-out.unmatched_none = R("Durian") === null;
-// --- the hook is owner-disabled (2026-10-28): silent in BOTH
-// modes; the machinery itself still renders when called directly ---
-Q.current = { mode: "express", items: [] };
-qOnCollected("Blueberries");
-out.express_silent = layer().innerHTML === "";
-Q.current = { mode: "quest", items: [] };
-qCelebHide();
-qOnCollected("Blueberries");
-out.quest_silent = layer().hidden === true && layer().innerHTML === "";
-qCelebrate("Blueberries");
-out.direct_still_works = layer().hidden === false && layer().innerHTML.includes("blueberry.webp") && layer().innerHTML.includes("bloom");
-qCelebHide();
-out.hide_clears = layer().hidden === true && layer().innerHTML === "";
-console.log(JSON.stringify(out));
-"""
-
-
-@unittest.skipUnless(NODE, "node not available")
 class TestCelebrationBehavior(unittest.TestCase):
     def test_resolution_and_gates(self):
-        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as fh:
-            fh.write(PRELUDE)
-            fh.write("\nconst MANIFEST = ")
-            json.dump(manifest(), fh)
-            fh.write(";\n")
-            fh.write(read("quest.js"))
-            fh.write(DRIVER)
-            path = fh.name
-        try:
-            out = subprocess.run([NODE, path], capture_output=True, text=True, timeout=60)
-        finally:
-            os.unlink(path)
-        self.assertEqual(out.returncode, 0, out.stderr)
-        res = json.loads(out.stdout.strip().splitlines()[-1])
-        failed = [k for k, v in res.items() if v is not True]
-        self.assertEqual(failed, [], f"harness checks failed: {failed} in {res}")
+        # The node harness that ran quest.js is now a vitest beside the
+        # port: every item and category case, and the disabled hook.
+        t = frontend.src("screens/hunt/fx.test.ts")
+        for case in ("Blueberries", "Eggplant", "Frozen Pizza", "Granola", "Durian"):
+            self.assertIn(f'"{case}"', t)
+        self.assertIn("the collect hook is owner-disabled", t)
 
 
 if __name__ == "__main__":

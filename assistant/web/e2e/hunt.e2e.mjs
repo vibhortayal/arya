@@ -2,7 +2,7 @@
  * the row menu, Forgot something, a wild find, Ask Arya, Find it for me
  * (the scan opens and closes), the leave sheet on Done, and Back. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

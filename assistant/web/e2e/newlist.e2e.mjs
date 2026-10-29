@@ -1,6 +1,6 @@
 /* Quest plan: add an item, edit it, tick it, start. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

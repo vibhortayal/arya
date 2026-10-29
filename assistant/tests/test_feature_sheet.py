@@ -30,14 +30,14 @@ class FeatureSheet(unittest.TestCase):
         self.assertNotIn("[if", on)
 
     def test_tabs_named_in_sheet_exist_in_app(self):
-        html = open(os.path.join(ROOT, "pwa", "index.html"), encoding="utf-8").read()
-        nav = html.split('<nav id="tabs"', 1)[1].split("</nav>", 1)[0]
-        labels = re.findall(r"<span>([^<]+)</span>", nav)
+        from tests import frontend
+        tabs = frontend.src("App.tsx").split("const TAB_LABEL", 1)[1].split("};", 1)[0]
+        labels = re.findall(r':\s*"([^"]+)"', tabs)
         first = raw().splitlines()[0]
         for t in re.findall(r"\b(Today|Lists|Ask|Quest|Settings)\b", first):
             self.assertIn(t, labels)
         self.assertEqual(len(labels), 5)
-        self.assertIn('id="pf-reminders"', html)
+        self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
 
     def test_small(self):
         self.assertLess(len(chat_service.feature_sheet({k: True for k in KNOWN_FLAGS})), 2400)

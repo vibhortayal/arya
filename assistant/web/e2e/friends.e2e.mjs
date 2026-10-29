@@ -1,6 +1,6 @@
 /* Friends (needs a second local account "cartqueen", see e2e/run.mjs): empty/list renders, adding a handle validates and posts, Back leaves. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

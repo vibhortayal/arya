@@ -1,11 +1,12 @@
 """Scripts run from files only (codebase map 2026-10-29). The Caddy CSP
-refuses inline script except the one theme line in index.html, which
-it allows by hash; these tests keep that hash in step and stop new
-inline scripts or inline event handlers from creeping back."""
+refuses every inline script; the app (web/, React) has none. These
+tests stop inline scripts or inline event handlers from creeping
+back."""
 import base64, hashlib, os, re, unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-PWA = os.path.join(ROOT, "pwa")
+PWA = os.path.join(ROOT, "pwa")  # the static folder
+WEB = os.path.join(ROOT, "web")
 
 
 def read(*parts):
@@ -23,18 +24,31 @@ class TestCsp(unittest.TestCase):
         self.assertNotIn("unsafe-inline", script)
         self.assertNotIn("unsafe-eval", script)
 
-    def test_inline_theme_script_hash_matches(self):
-        inline = re.findall(r"<script>(.*?)</script>", read("pwa", "index.html"), re.S)
-        self.assertEqual(len(inline), 1, "one inline script only; put new code in a file")
-        digest = base64.b64encode(hashlib.sha256(inline[0].encode()).digest()).decode()
-        self.assertIn(f"'sha256-{digest}'", self.csp())
+    def test_no_inline_script_and_csp_allows_none(self):
+        html = read("web", "index.html")
+        tags = re.findall(r"<script\b([^>]*)>(.*?)</script>", html, re.S)
+        self.assertTrue(tags)
+        for attrs, body in tags:
+            self.assertIn("src=", attrs)
+            self.assertEqual(body.strip(), "", "put new code in a file")
+        script = re.search(r"script-src ([^;]+)", self.csp()).group(1)
+        self.assertEqual(script.strip(), "'self'")
 
     def test_no_inline_event_handlers(self):
-        for name in os.listdir(PWA):
-            if name.endswith((".js", ".html")):
-                text = read("pwa", name)
-                self.assertIsNone(re.search(r"<[a-zA-Z][^<>]*\son[a-z]+\s*=\s*[\"']", text),
-                                  f"inline on...= handler in {name}")
+        pages = [os.path.join(WEB, "index.html")] + [
+            os.path.join(PWA, n) for n in os.listdir(PWA) if n.endswith((".js", ".html"))]
+        for path in pages:
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+            self.assertIsNone(re.search(r"<[a-zA-Z][^<>]*\son[a-z]+\s*=\s*[\"']", text),
+                              f"inline on...= handler in {path}")
+        # React sets handlers as properties; raw HTML it injects (the
+        # icon SVGs) must not carry one either.
+        for root, _, files in os.walk(os.path.join(WEB, "src")):
+            for n in files:
+                if n.endswith((".ts", ".tsx")):
+                    with open(os.path.join(root, n), encoding="utf-8") as fh:
+                        self.assertNotRegex(fh.read(), r"\son[a-z]+=\\?[\"']", n)
 
     def test_auth_callback_loads_a_file(self):
         from fastapi.testclient import TestClient

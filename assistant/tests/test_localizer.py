@@ -6,9 +6,10 @@ with a stubbed matcher (found / low-confidence / no-index /
 guards; the demo household may use the door), the shipped index
 artifact (loads; a real-matcher check on two held-out frames
 when cv2 and the spike's held-out set are present), and the
-client (Cloud-rung button, the anchor jump in a node harness).
+client (Cloud-rung button in web/src/screens/Hunt.tsx; the anchor
+jump runs under vitest in web/src/screens/hunt/motion.test.ts).
 """
-import io, json, os, subprocess, tempfile, unittest
+import io, json, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
@@ -21,19 +22,10 @@ try:
 except Exception:
     HAVE_CV2 = False
 
-NODE = None
-for cand in ("/opt/node24/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
-    if os.path.exists(cand):
-        NODE = cand
-        break
-
 HELDOUT = os.environ.get("ARYA_LOCALIZER_HELDOUT", "")
 
 
-def read(name):
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "pwa", name), encoding="utf-8") as fh:
-        return fh.read()
+from tests.frontend import src  # noqa: E402
 
 
 def jpeg_bytes(w=2000, h=1000):
@@ -202,119 +194,32 @@ class TestIndexArtifact(unittest.TestCase):
 
 class TestLocateShell(unittest.TestCase):
     def test_button_and_input_live_in_the_hunt_only(self):
-        html = read("index.html")
-        hunt = html.split('id="view-hunt"')[1].split('id="view-express"')[0]
-        self.assertIn('id="btn-locate"', hunt)
-        self.assertIn('id="locate-photo"', hunt)
+        hunt = src("screens/Hunt.tsx")
+        self.assertIn('<button id="btn-locate"', hunt)
+        self.assertIn('<input id="locate-photo"', hunt)
         self.assertIn("Where am I?", hunt)
-        express = html.split('id="view-express"')[1].split('id="view-finish"')[0]
-        self.assertNotIn('id="btn-locate"', express)
+        self.assertNotIn('id="btn-locate"', src("screens/Express.tsx"))
 
     def test_client_contract(self):
-        js = read("quest.js")
-        self.assertIn('$("#btn-locate").hidden = !(Q.driverName === "cloud" '
-                      '|| Q.driverName === "photo");', js)
-        self.assertIn("function qAnchorToU(u)", js)
+        js = src("screens/Hunt.tsx")
+        self.assertIn('id="btn-locate" className="btn toolbtn" type="button" '
+                      'hidden={!(driverName === "cloud" || driverName === "photo")}', js)
+        self.assertIn("export function anchorToU(u: number, walkStart: (idx: number) => void): number {",
+                      src("screens/hunt/motion.ts"))
+        self.assertIn("const idx = anchorToU(out.u, walkStart);", js)
         self.assertIn("/api/quest/locate?session=", js)
         self.assertIn("Placed you at", js)
         self.assertIn("Couldn't place that photo — keep following the route.", js)
 
 
-PRELUDE = r"""
-"use strict";
-const vm = require("vm");
-function __el() {
-  return {
-    style: {}, dataset: {}, files: [], srcObject: null,
-    classList: { add() {}, remove() {}, toggle() {} },
-    setAttribute() {}, getAttribute() { return null; },
-    addEventListener() {}, removeEventListener() {},
-    querySelector() { return __el(); }, querySelectorAll() { return []; },
-    closest() { return null; }
-  };
-}
-globalThis.document = {
-  currentScript: null, baseURI: "http://test/", body: __el(),
-  querySelector() { return __el(); },
-  querySelectorAll() { return []; },
-  createElement() { return { width: 0, height: 0, getContext() { return null; } }; },
-  addEventListener() {}, removeEventListener() {}
-};
-globalThis.window = globalThis;
-window.addEventListener = () => {}; window.removeEventListener = () => {}; window.scrollTo = () => {};
-globalThis.localStorage = { _m: {}, getItem(k) { return k in this._m ? this._m[k] : null; }, setItem(k, v) { this._m[k] = String(v); }, removeItem(k) { delete this._m[k]; } };
-Object.defineProperty(globalThis, "navigator", { configurable: true, writable: true, value: { onLine: true } });
-globalThis.$ = s => document.querySelector(s);
-globalThis.esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-globalThis.qtyFmt = q => { const n = Number(q); return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); };
-globalThis.qtyTag = it => { const u = String((it && it.unit) || "").trim(); return u ? qtyFmt(it.qty) + " " + u : (it && it.qty > 1 ? "x" + qtyFmt(it.qty) : ""); };
-globalThis.CHECK_SVG = "<svg></svg>";
-globalThis.empty = t => `<p class="empty">${t}</p>`;
-globalThis.row = () => "";
-globalThis.money = n => "$" + n;
-globalThis.fmtShort = s => s;
-globalThis.refresh = () => {};
-globalThis.showErr = e => { throw e; };
-globalThis.toast = () => {};
-globalThis.post = async () => ({});
-globalThis.api = async () => ({});
-globalThis.createSceneView = () => ({ setStops() {}, setNext() {}, glideTo() {}, setProgress() {}, destroy() {}, onTapStop: null });
-"""
+class TestAnchorUnderVitest(unittest.TestCase):
+    """The old node harness over quest.js qAnchorToU, ported."""
 
-DRIVER = r"""
-;(async () => {
-  const out = {};
-  const sess = {
-    id: "s1", store: "Trader Joe's", mode: "quest", state: "playing",
-    started_at: Date.now(), items: [
-      { name: "A", qty: 1, checked: false }, { name: "B", qty: 1, checked: false },
-      { name: "C", qty: 1, checked: false }, { name: "D", qty: 1, checked: false }],
-    stops: [
-      { item: "A", shelfLabel: "Start Shelf", shelf_u: 0.0 },
-      { item: "B", shelfLabel: "Mid Shelf", shelf_u: 0.3 },
-      { item: "C", shelfLabel: "Pasta Shelf", shelf_u: 0.6 },
-      { item: "D", shelfLabel: "End Shelf", shelf_u: 1.0 }]
-  };
-  Q.current = sess;
-  const rec = { progress: null, glides: [] };
-  Q.scene = { setStops() {}, setNext() {}, destroy() {},
-              setProgress(u) { rec.progress = u; },
-              glideTo(i, s) { rec.glides.push([i, s]); } };
-  Q.followHold = true;                     // the user had grabbed control
-  const idx = qAnchorToU(0.58);
-  out.nearest_stop = idx === 2;
-  out.position_jumped = rec.progress === 0.58;
-  out.follow_resumed = Q.followHold === false && Q.walkTarget === 2;
-  out.glides_to_anchor_stop = rec.glides.length === 1 && rec.glides[0][0] === 2;
-  out.step_rebased = Q.stepU === 0.58 && Q.stepAnchorU === 0.58 && Q.stepsHold === false;
-  // Anchored at a stop already in the basket: present the next
-  // uncollected stop ahead of it.
-  sess.items[2].checked = true;
-  rec.glides = [];
-  qAnchorToU(0.58);
-  out.collected_anchor_moves_ahead = Q.walkTarget === 3 && rec.glides[0][0] === 3;
-  console.log(JSON.stringify(out));
-  process.exit(0);
-})().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
-"""
-
-
-@unittest.skipUnless(NODE, "node not available")
-class TestAnchorNode(unittest.TestCase):
-    def test_anchor_jump_and_resume(self):
-        with tempfile.TemporaryDirectory() as td:
-            path = os.path.join(td, "harness.js")
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(PRELUDE)
-                fh.write(read("quest.js"))
-                fh.write(DRIVER)
-            out = subprocess.run([NODE, path], capture_output=True,
-                                 text=True, timeout=60)
-        self.assertEqual(out.returncode, 0, out.stderr)
-        res = json.loads(out.stdout.strip().splitlines()[-1])
-        self.assertNotIn("error", res, res.get("error"))
-        failed = [k for k, v in res.items() if v is not True]
-        self.assertEqual(failed, [], f"harness checks failed: {failed} in {res}")
+    def test_anchor_checks_are_ported(self):
+        t = src("screens/hunt/motion.test.ts")
+        for name in ("the anchor jumps the view, snaps to the nearest stop and resumes following",
+                     "anchored at a stop already in the basket: the next open stop ahead"):
+            self.assertIn(name, t)
 
 
 if __name__ == "__main__":

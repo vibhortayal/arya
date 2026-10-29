@@ -1,6 +1,6 @@
 /* Landing → demo → shell with five tabs; Settings opens Profile. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.waitForSelector("#demo-btn");
   await page.click("#how-open");
   await page.waitForSelector("#how-sheet");

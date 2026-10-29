@@ -1,11 +1,17 @@
-/* Screenshot parity: the same screen in the current app (/) and the
- * new one (/next/), on one demo session at 390x844, compared pixel by
- * pixel. A straight port must match; that replaces a wireframe
- * (PORTING.md). Usage:
- *   npm run build && npm run parity -- home list    (default: login + every ported screen)
- * Env: ARYA_URL (default http://localhost:8000), PARITY_MAX (percent
- * of pixels allowed to differ, default 0.5). Writes old/new/diff
- * PNGs to parity-out/ and exits 1 when any screen is over. */
+/* Screenshot parity: the same screen in the archived plain-JS app and
+ * in this app, on a demo session at 390x844, compared pixel by pixel.
+ * The React app is the only app at / now; the plain-JS app stays in
+ * git history (the tag plain-js-app, or 80bd79d, the last main commit
+ * before the switch). To compare, run that commit's API on another
+ * port and point PARITY_OLD_URL at it:
+ *   git worktree add /tmp/arya-old 80bd79d
+ *   (cd /tmp/arya-old/assistant && ARYA_DATA_DIR=/tmp/arya-old-data uvicorn api.main:app --port 8001)
+ *   npm run build && PARITY_OLD_URL=http://localhost:8001 npm run parity -- home list
+ * With no names it checks login + every screen in the registry.
+ * Env: ARYA_URL (this app, default http://localhost:8000),
+ * PARITY_OLD_URL (the old app, required), PARITY_MAX (percent of
+ * pixels allowed to differ, default 0.5). Writes old/new/diff PNGs to
+ * parity-out/ and exits 1 when any screen is over. */
 import { createRequire } from "node:module";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { PNG } from "pngjs";
@@ -14,13 +20,19 @@ import pixelmatch from "pixelmatch";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const BASE = process.env.ARYA_URL || "http://localhost:8000";
+const OLD = process.env.PARITY_OLD_URL;
+if (!OLD) {
+  console.error("parity: set PARITY_OLD_URL to a server running the plain-JS app (tag plain-js-app or commit 80bd79d); see the comment at the top of tools/parity.mjs.");
+  process.exit(2);
+}
 const MAX = Number(process.env.PARITY_MAX || 0.5);
 const OUT = new URL("../parity-out/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
-function portedViews() {
+/* Every screen the app registers (screens/registry.tsx SCREENS). */
+function registeredViews() {
   const src = readFileSync(new URL("../src/screens/registry.tsx", import.meta.url), "utf8");
-  const body = src.split("const PORTED")[1].split("};")[0];
+  const body = src.split("export const SCREENS")[1].split("};")[0];
   return [...body.matchAll(/^\s*"?([a-z-]+)"?\s*:/gm)].map(m => m[1]);
 }
 
@@ -93,7 +105,7 @@ const PARITY_SESSION = `async function paritySession(mode, state, grab, settle) 
  * the screen before): checked by their e2e files, not parity. */
 const FLOW_ONLY = new Set(["capture", "optimize", "mode"]);
 
-const views = process.argv.slice(2).length ? process.argv.slice(2) : ["login", ...portedViews()];
+const views = process.argv.slice(2).length ? process.argv.slice(2) : ["login", ...registeredViews()];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 // Freeze motion and the Add to Home Screen nudge so frames are stable.
@@ -113,15 +125,35 @@ page.on("pageerror", e => errors.push(e.message));
  * scene.js) settle longer before the frame is taken. */
 const SETTLE = { hunt: 2600, express: 2600 };
 
-async function shot(url, open, file, settle = 600) {
-  await page.goto(BASE + url);
+/* One side: sign in to the demo on that server (the two apps run on
+ * separate servers, with separate cookies and data), find the screen's
+ * id there, open the screen and take the frame. */
+async function shot(base, side, v, file) {
+  await page.goto(base + "/");
   await page.waitForLoadState("networkidle");
+  const signedIn = await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user)));
+  if (v === "login" && signedIn) {
+    await page.evaluate(() => fetch("/auth/logout", { method: "POST" }));
+  } else if (v !== "login" && !signedIn) {
+    await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
+  }
+  await page.goto(base + "/");
+  await page.waitForLoadState("networkidle");
+  const sp = SPECIAL[v];
+  const id = sp && sp.id ? await page.evaluate(`(async () => { ${PARITY_SESSION}; return (${sp.id.toString()})(); })()`) : null;
+  if (sp && sp.id && id == null) return null;
+  const open = v === "login" ? null : side === "old"
+    ? (sp ? sp.old(id)
+      // Tabs and screens with an entry button open through it (it may set state), else show().
+      : `{ const b = document.querySelector('#tabs button[data-view="view-${v}"]') || document.querySelector("#btn-${v}");
+           if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`)
+    : (sp ? sp.new(id) : `window.__aryaShow("${v}")`);
   if (open) {
-    await page.waitForFunction(url === "/" ? "!document.querySelector('#app-main').hidden" : "typeof window.__aryaShow === 'function'");
+    await page.waitForFunction(side === "old" ? "!document.querySelector('#app-main').hidden" : "typeof window.__aryaShow === 'function'");
     await page.evaluate(open);
     await page.waitForLoadState("networkidle");
   }
-  await page.waitForTimeout(settle);
+  await page.waitForTimeout(SETTLE[v] || 600);
   await page.screenshot({ path: OUT + file });
   return PNG.sync.read(await page.screenshot());
 }
@@ -129,19 +161,9 @@ async function shot(url, open, file, settle = 600) {
 let failed = 0;
 for (const v of views) {
   if (FLOW_ONLY.has(v)) { console.log(`skip ${v.padEnd(16)} mid-flow screen, see e2e/${v}.e2e.mjs`); continue; }
-  if (page.url() === "about:blank") await page.goto(BASE + "/");
-  if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user))))) {
-    await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
-  }
-  const sp = SPECIAL[v];
-  const id = sp && sp.id ? await page.evaluate(`(async () => { ${PARITY_SESSION}; return (${sp.id.toString()})(); })()`) : null;
-  if (sp && sp.id && id == null) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
-  const oldImg = await shot("/", sp ? sp.old(id) : v === "login" ? null
-    // Open through the screen's real entry button when it has one (it may set state), else show().
-    // Tabs and screens with an entry button open through it (it may set state), else show().
-    : `{ const b = document.querySelector('#tabs button[data-view="view-${v}"]') || document.querySelector("#btn-${v}");
-         if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`, SETTLE[v]);
-  const newImg = await shot("/next/", sp ? sp.new(id) : v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`, SETTLE[v]);
+  const oldImg = await shot(OLD, "old", v, `${v}-old.png`);
+  const newImg = oldImg && await shot(BASE, "new", v, `${v}-new.png`);
+  if (!oldImg || !newImg) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
   const { width, height } = oldImg;
   const diff = new PNG({ width, height });
   const n = newImg.height === height ? pixelmatch(oldImg.data, newImg.data, diff.data, width, height, { threshold: 0.1 }) : width * height;

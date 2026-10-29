@@ -1,6 +1,6 @@
 /* Score: a skipped receipt shows Receipt missing; Add the receipt settles it; Race link works. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

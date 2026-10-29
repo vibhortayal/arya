@@ -1,41 +1,69 @@
-# Porting a screen to the React app
+# Working on the app (`web/`)
 
-The React app (`web/`) is a straight port of the current PWA (`pwa/`).
-It is served at `/next/` next to the current app at `/` until the
-switch-over. The two apps share one API, one set of images (`/assets`,
-`/models`, `/vendor`) and one set of stylesheets: `src/main.tsx` imports
-`pwa/*.css` unchanged.
+The React app (`web/`) is the only app. The API serves its build
+(`web/dist`) at `/`. The port from the plain-JS app (`pwa/*.js`) is
+complete. The old app stays in git history: the tag `plain-js-app`, and
+commit 80bd79d (the last main commit before the switch, with #151 and
+#152). The old address `/next/...` answers 302 to the same path at `/`.
+
+The static folder `assistant/pwa/` now holds only the files that the app
+loads at run time: images (`/assets`), store models (`/models`),
+three.js (`/vendor`), `scene.js`, the manifest and the icons. The API
+serves it at `/` beside the build. The build wins on a name clash.
 
 ## Rules
 
-1. **Same look.** Use the old markup's class names and ids, so the old
-   CSS applies as is. A straight port needs no wireframe, but it must
-   pass screenshot parity. A screen whose design *changes* still needs
-   an approved wireframe first.
-2. **One screen per file** in `src/screens/<Name>.tsx`. Register it with
-   one line in `PORTED` in `src/screens/registry.tsx`.
-3. **Shared pieces live in `src/ui`** (kit, Sheet, Toast, icons) and
-   `src/lib` (api, format). Add to them instead of copying.
-4. **Navigation** goes through `useNav()`: `show`, `replace`, `back`, and
-   `setChrome(false)` for full-screen modes. Session data (user, demo,
-   currency) comes from `useSession()`.
-5. **Do not touch `pwa/`** while porting. The old app stays the live
-   app until the switch-over.
+1. **Same look.** The screens use the old class names and ids, and the
+   old stylesheets (now `src/styles/*.css`) apply as they are. A screen
+   whose design changes needs an approved wireframe first.
+2. **One screen per file** in `src/screens/<Name>.tsx`. Add it to
+   `SCREENS` in `src/screens/registry.tsx` and its id to `VIEWS` in
+   `src/app/views.ts`. The type checker stops a view with no screen.
+3. **Shared pieces live in `src/ui`** (kit, Sheet, Toast, Info, Scene,
+   icons) and `src/lib` (api, format, stores, language). Add to them;
+   do not copy them.
+4. **Navigation** goes through `useNav()`: `show`, `replace`, `back`,
+   `reset`, and `setChrome(false)` for full-screen modes. Back is a
+   stack. Session data (user, demo, currency, language) comes from
+   `useSession()`.
+5. **Pure logic is exported and tested.** Put a rule that a test must
+   run in a function that the screen exports (for example
+   `storeAlerts` in `Today.tsx`, `resolveDriver` in `Hunt.tsx`). Test it
+   with vitest beside the code (`*.test.ts` or `*.test.tsx`).
+6. **No cache name to bump.** The service worker (`src/sw.js`, built to
+   `/sw.js`) precaches the build with hashed file names. When the app
+   loads a new file from the static folder at run time, add it to
+   `STATIC` in `src/sw.js`.
+7. **No inline script** in `index.html`: the CSP allows script files
+   only (`tests/test_csp.py`).
 
-## Checks for every screen
+## Checks for every change
 
 ```sh
-# API on :8000 (serves / and /next/)
-npm run typecheck && npm test           # types + unit tests (vitest)
+# API on :8000 (serves the build at /)
+npx tsc -b && npx vitest run              # types + unit tests
 npm run build
-npm run parity -- <view>                 # old vs new at 390x844, <= 0.5% pixels differ
-npm run e2e -- <view>                    # e2e/<view>.e2e.mjs: the screen's main taps work
+npm run e2e -- <view>                     # e2e/<view>.e2e.mjs: the screen's main taps work
+cd .. && python -m unittest discover -s tests   # the string pins read web/src
 ```
 
-`parity-out/` holds `<view>-old.png`, `-new.png` and `-diff.png`. Review
-the diff, not just the number.
+The Python string pins read the source through `tests/frontend.py`
+(`src("screens/Hunt.tsx")`, `read("styles.css")`). When you rename a
+function or an id that a pin names, change the pin in the same commit.
 
-## Switch-over (later, owner's call)
+## Screenshot parity against the old app
 
-When every screen is ported, mount `web/dist` at `/`, register the
-service worker in `main.tsx`, and retire `pwa/*.js`.
+`npm run parity` compares a screen with the same screen in the old app.
+Run the old app's API (commit 80bd79d) on another port and point
+`PARITY_OLD_URL` at it:
+
+```sh
+git worktree add /tmp/arya-old 80bd79d
+(cd /tmp/arya-old/assistant && python -m harness.make_demo_household /tmp/arya-old-data \
+  && ARYA_DATA_DIR=/tmp/arya-old-data uvicorn api.main:app --port 8001)
+npm run build && PARITY_OLD_URL=http://localhost:8001 npm run parity -- home list
+```
+
+Give the old server an account too (as on the new one), or the old
+Login opens its first-run sheet. `parity-out/` holds `<view>-old.png`,
+`-new.png` and `-diff.png`. Review the diff, not only the number.

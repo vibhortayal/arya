@@ -23,11 +23,11 @@ import { faceFor, loadCharacters } from "../lib/characters";
  * same plan. The voice recorder is lib/recorder.ts (shared with Ask);
  * the Pack logic below is local.
  *
- * fastMode ("Start shopping" on a list): the old qOptimizeDraft and
- * the Check-my-list screen created the session at once
- * (qCreateSession(fastMode)) instead of showing the mode screen. Here
- * the draft goes to "mode"/"optimize" with draft.fastMode still set;
- * those screens must honour it when they are ported. */
+ * fastMode ("Start shopping" on a list): the list is the plan, so the
+ * bag is skipped. The draft goes on to "optimize"/"mode" with
+ * draft.fastMode still set, and Mode creates the session at once
+ * (a Quest starts playing) instead of showing its picker, as
+ * quest.js qCreateSession(fastMode) did. */
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -172,7 +172,7 @@ const SIZE_RE = new RegExp(
 const NUMERIC_BRANDS = ["7 up", "7up", "5 alive", "100 grand", "3 musketeers", "5 hour energy"];
 
 /* "2x tortillas", "tortillas x2", "salsa 16oz" -> {name, qty, note}. */
-function parseLine(text: unknown) {
+export function parseLine(text: unknown) {
   let s = String(text == null ? "" : text).replace(/[<>]/g, " ").replace(/\s+/g, " ").trim();
   if (!s) return { name: "", qty: 1, note: "" };
   let qty = 1, note = "";
@@ -198,7 +198,7 @@ function parseLine(text: unknown) {
 }
 
 /* Newline, then ";", then sentences. */
-function splitInput(text: string): string[] {
+export function splitInput(text: string): string[] {
   const lines = String(text == null ? "" : text).split(/[\n;]+/).map(p => p.trim()).filter(Boolean);
   return lines.flatMap(l => {
     if (!/,/.test(l) && !/^(i need|we need|get me|get|buy|add|please add|please get)\s/i.test(l)) return [l];
@@ -217,7 +217,7 @@ const AISLE_WORDS: [string, string[]][] = [
   ["Produce", ["apple", "banana", "berry", "strawberry", "blueberry", "raspberry", "grape", "orange", "lemon", "lime", "avocado", "tomato", "onion", "garlic", "potato", "carrot", "lettuce", "spinach", "kale", "salad", "cucumber", "pepper", "broccoli", "cauliflower", "celery", "mushroom", "cilantro", "parsley", "basil", "herb", "fruit", "vegetable", "melon", "mango", "pear", "peach", "zucchini", "squash", "corn", "ginger", "pineapple"]],
 ];
 const AISLE_PADDED = AISLE_WORDS.map(([label, words]) => [label, words.map(w => " " + squashName(w) + " ")] as const);
-function aisleFor(name: string) {
+export function aisleFor(name: string) {
   const hay = " " + squashName(name) + " ";
   if (hay.trim() === "") return "";
   for (const [label, words] of AISLE_PADDED) if (words.some(w => hay.includes(w))) return label;
@@ -227,13 +227,13 @@ function coreName(s: unknown) {
   const g = new RegExp(SIZE_RE.source, "gi");
   return squashName(String(s || "").replace(g, " "));
 }
-function exactRow<T extends { name: string }>(name: string, rows: T[]): T | null {
+export function exactRow<T extends { name: string }>(name: string, rows: T[]): T | null {
   const t = squashName(name);
   if (!t) return null;
   for (const r of rows || []) if (squashName(r.name) === t) return r;
   return null;
 }
-function matchRow<T extends { name: string }>(name: string, rows: T[]): T | null {
+export function matchRow<T extends { name: string }>(name: string, rows: T[]): T | null {
   const exact = exactRow(name, rows);
   if (exact) return exact;
   const t = coreName(name);
@@ -246,7 +246,7 @@ function matchRow<T extends { name: string }>(name: string, rows: T[]): T | null
 
 const cardId = (kind: string, key: string) => kind + ":" + key;
 
-function buildDeck(o: { plan: Plan; store: string; pick: Record<string, Pick> }): Card[] & { satisfied?: string[] } {
+export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, Pick> }): Card[] & { satisfied?: string[] } {
   const plan = o.plan || ({} as Plan);
   const store = o.store || "";
   const pick = o.pick || {};
@@ -307,7 +307,7 @@ function buildDeck(o: { plan: Plan; store: string; pick: Record<string, Pick> })
   return cards;
 }
 
-function reasonFor(c: Card) {
+export function reasonFor(c: Card) {
   if (!c) return "";
   if (c.kind === "carried") return "Left from last trip.";
   if (c.kind === "queued") return c.from ? `From @${c.from}'s haul.` : "From a friend's haul.";
@@ -320,7 +320,7 @@ function reasonFor(c: Card) {
   return out.slice(0, 3).join(" ");
 }
 
-function dragDecision(dx: number, width: number) {
+export function dragDecision(dx: number, width: number) {
   const t = Math.max(80, 0.25 * (Number(width) || 0));
   if (dx > t) return "pack";
   if (dx < -t) return "skip";
@@ -335,7 +335,7 @@ function planItemFor(plan: Plan | undefined, row: { name: string; itemId?: strin
   const sq = squashName(row.name);
   return items.find(i => squashName(i.name) === sq) || null;
 }
-function estimate(rows: { name: string; qty: number; itemId?: string }[], plan: Plan | undefined, store: string) {
+export function estimate(rows: { name: string; qty: number; itemId?: string }[], plan: Plan | undefined, store: string) {
   let total = 0, priced = 0;
   for (const r of rows || []) {
     const it = planItemFor(plan, r);
@@ -349,7 +349,7 @@ function estimate(rows: { name: string; qty: number; itemId?: string }[], plan: 
   }
   return { total: Math.round(total * 100) / 100, priced, count: (rows || []).length };
 }
-function estimateLine(est: { total: number; priced: number; count: number }) {
+export function estimateLine(est: { total: number; priced: number; count: number }) {
   if (!est || !est.priced) return "";
   const t = "$" + Math.round(est.total);
   const part = est.priced === est.count
@@ -357,7 +357,7 @@ function estimateLine(est: { total: number; priced: number; count: number }) {
     : `${est.priced} of your ${est.count} items`;
   return `About ${t} for ${part}. Only you see this.`;
 }
-function budgetLine(total: number, budget: string) {
+export function budgetLine(total: number, budget: string) {
   const b = Number(budget);
   if (!(b > 0) || !(total > 0)) return "";
   const over = Math.round(total - b);
@@ -367,7 +367,7 @@ function budgetLine(total: number, budget: string) {
 
 /* ---------------- session shape ---------------- */
 
-function rawItem(p: Pick): Line {
+export function rawItem(p: Pick): Line {
   const out: Line = { name: p.name, qty: Math.max(1, Number(p.qty) || 1) };
   const aisle = clip(p.aisle, 60) || aisleFor(p.name);
   if (clip(p.note, 60)) out.note = clip(p.note, 60);
@@ -378,7 +378,7 @@ function rawItem(p: Pick): Line {
   if (aisle) out.aisle = aisle;
   return out;
 }
-function sessionItem(i: any, extras?: Record<string, unknown>) {
+export function sessionItem(i: any, extras?: Record<string, unknown>) {
   const out: any = { name: i.name, qty: i.qty };
   if (i.group) out.group = i.group;
   const e: any = extras || {};

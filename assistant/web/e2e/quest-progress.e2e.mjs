@@ -1,6 +1,6 @@
 /* Quest progress: Back link, section headings, badge shelf and stores group render; Back returns to Profile. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

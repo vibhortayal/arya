@@ -30,11 +30,11 @@ function albDate(iso?: string) {
   if (!m) return "";
   return `${ALB_MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
 }
-function stickerSrc(st: Sticker | null | undefined) {
+export function stickerSrc(st: Sticker | null | undefined) {
   if (st && st.image === "cutout" && st.image_url) return st.image_url;
   return asset("assets/characters/" + ((st && st.art) || ALB_FALLBACK_ART));
 }
-function slots(page: Page): (Sticker | null)[][] {
+export function slots(page: Page): (Sticker | null)[][] {
   const list = page.stickers || [];
   if (page.kind === "other") {
     const size = Math.max(page.size || 4, list.length, 4);
@@ -45,7 +45,7 @@ function slots(page: Page): (Sticker | null)[][] {
   for (let c = 0; c < n; c++) out.push(Array.from({ length: ALB_SLOTS }, (_, i) => list[c * ALB_SLOTS + i] || null));
   return out;
 }
-function progressText(page: Page) {
+export function progressText(page: Page) {
   const count = page.count || 0;
   const size = page.size || ALB_SLOTS;
   return count > size ? `${count} stickers` : `${count} of ${size}`;

@@ -353,17 +353,15 @@ class TestScannedPdfIntake(unittest.TestCase):
 
 
 class TestReceiptInputsAcceptPdf(unittest.TestCase):
-    PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-    def read(self, name):
-        return open(os.path.join(self.PWA, name)).read()
-
     def test_receipt_inputs_accept_pdf(self):
-        html = self.read("index.html")
-        for ident in ("rc-photo", "ar-photo"):
-            self.assertIn(f'id="{ident}" accept="application/pdf,image/*"', html)
+        from tests import frontend
+        for f, ident in (("screens/Receipts.tsx", "rc-photo"), ("ui/AddReceiptSheet.tsx", "ar-photo")):
+            self.assertIn(f'id="{ident}" accept="application/pdf,image/*"', frontend.src(f))
 
     def test_pdf_files_go_to_the_pdf_route(self):
-        for name in ("app.js", "quest.js"):
-            js = self.read(name)
-            self.assertIn('isPdf ? "/decode/pdf" : "/decode/photo"', js)
+        from tests import frontend
+        # Receipts and the trip's Add receipt share ui/AddReceiptSheet
+        # decode(); the haul's receipt step has its own.
+        self.assertIn("const out = await decode(file);", frontend.src("screens/Receipts.tsx"))
+        self.assertIn('pdf ? "/decode/pdf" : "/decode/photo"', frontend.src("ui/AddReceiptSheet.tsx"))
+        self.assertIn('isPdf ? "/decode/pdf" : "/decode/photo"', frontend.src("screens/haul/state.ts"))

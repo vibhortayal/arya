@@ -1,8 +1,8 @@
 """Google Places store picking (owner, 2026-10-28): a store is
 picked from the API — name, address, place_id — never typed into
 existence. The HTTP layer is faked; no key, no network."""
-import os, shutil, subprocess, tempfile, unittest
-from pathlib import Path
+import os, tempfile, unittest
+from tests.frontend import src
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
@@ -10,7 +10,6 @@ os.environ["MODEL_API_KEY"] = "test-key"
 os.environ.pop("GOOGLE_PLACES_API_KEY", None)
 from fastapi.testclient import TestClient  # noqa: E402
 
-PWA = Path(__file__).resolve().parent.parent / "pwa"
 
 DETAILS = {
     "formattedAddress": "4455 W Armitage Ave, Chicago, IL 60639, USA",
@@ -188,67 +187,53 @@ class TestPlacesEndpoints(unittest.TestCase):
 
 class TestListSheetFindStore(unittest.TestCase):
     def test_list_sheets_carry_the_google_picker_and_remove(self):
-        l = (PWA / "lists.js").read_text()
+        l = src("screens/lists/ListSheets.tsx")
         for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
                        "/api/stores/mine/remove", "data-ls-pick",
                        "data-ls-rm", 'id="ls-find"', "Near you"):
             self.assertIn(needle, l)
-        self.assertEqual(l.count("${findBlock()}"), 2)  # New list + Link stores
+        self.assertEqual(l.count("<StorePicker "), 2)  # New list + Link stores
 
 
 class TestPickerClient(unittest.TestCase):
     def test_picker_wiring(self):
-        q = (PWA / "quest.js").read_text()
+        q = src("screens/Store.tsx")
         for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
                        "data-gpick", "From Google",
                        "Pick the store from the list"):
             self.assertIn(needle, q)
-        self.assertNotIn('$("#sa-form")', q)
+        self.assertNotIn('id="sa-form"', q)
 
     def test_find_stores_wiring(self):
         # Find stores carries the same live Google dropdown as the
         # hunt picker and Add a store (owner, 2026-10-28: the Find
         # box searched the directory only, so a real store not yet
         # in the directory could never be found by name or address).
-        q = (PWA / "quest.js").read_text()
-        self.assertIn('$("#sf-goog")', q)
-        self.assertIn('"#sf-goog"', q)  # in the qHideDrops list
-        html = (PWA / "index.html").read_text()
-        self.assertIn('id="sf-goog" class="gdrop"', html)
+        q = src("screens/StoresFind.tsx")
+        self.assertIn('<div id="sf-goog" className="gdrop"', q)
+        self.assertIn("/api/stores/places?q=", q)
+        self.assertIn("data-gpick", q)
 
 
-@unittest.skipUnless(shutil.which("node"), "node not installed")
 class TestPickerRefreshOnBack(unittest.TestCase):
     """A store added via Find / Add a store must be selectable when
     the player comes Back to the picker: the picker is redrawn from
-    My Stores, not left as it was drawn before they left it."""
+    My Stores, not left as it was drawn before they left it. The old
+    node harness over quest.js questBack runs under vitest in
+    web/src/screens/store.test.tsx."""
 
-    def run_back(self, prev, draft):
-        q = (PWA / "quest.js").read_text()
-        fn = q.split("function questBack() {")[1].split("\n}\n")[0]
-        js = ("const Q={stack:['view-store','view-stores-add'],draft:%s,"
-              "current:null};const calls=[];"
-              "const document={querySelectorAll:()=>({forEach(){}})};"
-              "const window={scrollTo(){}};"
-              "function stopHuntTimer(){}function stopHuntMotion(){}function qMarkTab(){}"
-              "function paintHuntFrame(){}function refresh(){}"
-              "function renderCommunity(){return Promise.resolve()}"
-              "function showErr(){}"
-              "function qLoadMine(){calls.push('load');return Promise.resolve()}"
-              "function renderStorePick(){calls.push('render')}"
-              "function questBack(){%s}"
-              "Q.stack=['%s','view-stores-add'];questBack();"
-              "setTimeout(()=>console.log(calls.join(',')),20);"
-              % (draft, fn, prev))
-        return subprocess.run(["node", "-e", js], capture_output=True,
-                              text=True, check=True).stdout.strip()
+    def test_picker_reloads_on_every_open(self):
+        q = src("screens/Store.tsx")
+        self.assertIn("// from Find / Add, so a store added there can be picked).", q)
+        self.assertIn("const m = await loadMine().catch(() => [] as MyStore[]);", q)
+        self.assertIn("}, [nav.key]);", q)
+        # App.tsx keys each screen by its stack entry, so Back remounts it.
+        self.assertIn('className="view" key={nav.key}>', src("App.tsx"))
 
-    def test_back_to_picker_reloads_and_redraws(self):
-        self.assertEqual(self.run_back("view-store", "{}"), "load,render")
-
-    def test_back_elsewhere_leaves_picker_alone(self):
-        self.assertEqual(self.run_back("view-home", "{}"), "")
-        self.assertEqual(self.run_back("view-store", "null"), "")
+    def test_vitest_covers_back(self):
+        t = src("screens/store.test.tsx")
+        self.assertIn("Back to the picker reloads My Stores and draws the new store", t)
+        self.assertIn("Back elsewhere leaves the picker alone", t)
 
 
 class TestAddressOnlySearch(unittest.TestCase):
@@ -269,6 +254,10 @@ class TestAddressOnlySearch(unittest.TestCase):
         self.assertEqual(stores.search("4455 Armitage Boston"), [])
 
     def test_client_picks_own_store_by_typed_address(self):
-        q = (PWA / "quest.js").read_text()
-        self.assertIn("function qStoreAtAddress", q)
-        self.assertIn("qStoreAtAddress(store)", q)
+        # quest.js qStoreAtAddress, inline in Store.tsx pickStore: every
+        # typed word must be in one of My Stores' addresses.
+        q = src("screens/Store.tsx")
+        pick = q.split("const pickStore = (nm: string, storeId: string | null) => {")[1].split("\n  };")[0]
+        self.assertIn("const hay = norm(`${s.street} ${s.city} ${s.state} ${s.zip}`);", pick)
+        self.assertIn("return toks.every(t => hay.includes(t));", pick)
+        self.assertIn("if (hits.length === 1) {", pick)

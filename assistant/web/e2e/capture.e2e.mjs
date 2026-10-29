@@ -2,7 +2,7 @@
  * file input when there is no camera; a photo upload shows the result;
  * Back leaves the screen. */
 export default async function (page, base) {
-  await page.goto(base + "/next/");
+  await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   await page.reload();
   await page.waitForSelector("#tabs");

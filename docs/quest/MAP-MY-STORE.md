@@ -5,7 +5,7 @@ mapper. Map only the aisles you use, over many visits. Many partial maps
 merge into one store map. A "not found" or "map is outdated" asks for one
 specific capture. The engine keeps the best images.
 Wireframe (v2): `docs/quest/map-my-store-wireframe.html`. Code: `api/storemap.py`,
-`pwa/mapper.js`.
+`assistant/web/src/screens/Mapper.tsx`.
 
 ## Coverage model
 A **segment** is one side of one aisle, or one wall or freezer run. A store

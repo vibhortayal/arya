@@ -24,9 +24,8 @@ TODAY = date.today().isoformat()
 
 
 def read(name):
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "pwa", name), encoding="utf-8") as fh:
-        return fh.read()
+    from tests import frontend
+    return frontend.read(name)
 
 
 class FakeClient:
@@ -128,32 +127,32 @@ class TestFinishFlow(unittest.TestCase):
 
 class TestFinishClient(unittest.TestCase):
     def test_picker_is_gone(self):
-        html = read("index.html")
-        fin = html.split('id="view-finish"')[1].split('id="view-score"')[0]
+        from tests import frontend
+        fin = frontend.src("screens/Finish.tsx")
         self.assertNotIn("already filed", fin)
         self.assertNotIn('id="fin-receipts"', fin)
         self.assertIn('id="fin-skip"', fin)
         self.assertIn(">No receipt today</button>", fin)
         self.assertIn("Snap the receipt", fin)
-        js = read("quest.js")
-        self.assertNotIn("renderFinishReceipts", js)
-        self.assertNotIn("fin-receipts", js)
-        self.assertNotIn("data-attach", js)
+        app = frontend.app()
+        self.assertNotIn("renderFinishReceipts", app)
+        self.assertNotIn("fin-receipts", app)
+        self.assertNotIn("data-attach", app)
 
     def test_receipts_view_carries_the_unsettled_entry(self):
         # Hunt v2 item 7: the unsettled entry raises the Add receipt
         # sheet (wireframe 7b) — this trip's receipt, attached to its
         # own hunt, which settles it and clears the tag.
-        js = read("app.js")
+        from tests import frontend
+        js = frontend.src("screens/Receipts.tsx")
         self.assertIn("Receipt missing", js)
         self.assertIn(">Add receipt</button>", js)
         self.assertIn("archive.unsettled", js)
-        self.assertIn("openAddReceipt(up.dataset.upload", js)
-        q = read("quest.js")
-        self.assertIn("/api/quest/sessions/${sessionId}/receipt", q)
-        html = read("index.html")
-        self.assertIn('id="ar-sheet"', html)
-        self.assertIn('id="ar-photo"', html)
+        self.assertIn("setAr({ sessionId: e.session_id, label: e.store })", js)
+        sheet = frontend.src("ui/AddReceiptSheet.tsx")
+        self.assertIn("/api/quest/sessions/${sid}/receipt", sheet)
+        self.assertIn('id="ar-sheet"', sheet)
+        self.assertIn('id="ar-photo"', sheet)
         self.assertIn(".misstag", read("styles.css"))
 
     def test_rule_is_logged(self):

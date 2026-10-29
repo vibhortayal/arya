@@ -3,20 +3,20 @@ what the household put on it. Arya's due staples are suggestions
 (on_list false) with the facts for a one-line reason. "I'm out" is the
 user's own word and goes straight on; an expired item stays a
 suggestion. The demo opens on Costco and Trader Joe's lists, and the
-Prepared cart is gone from the List."""
+Prepared cart is gone from the List.
+
+The client pins read the React screens: web/src/screens/Lists.tsx,
+lists/ListSheets.tsx and lists/model.ts (the port of app.js renderList
+and pwa/lists.js)."""
 import os, tempfile, unittest
 import importlib.util
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 from fastapi.testclient import TestClient  # noqa: E402
 
+from tests.frontend import css, src  # noqa: E402
+
 HERE = os.path.dirname(__file__)
-PWA = os.path.join(HERE, "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as f:
-        return f.read()
 
 
 class TestOnListInTheDemo(unittest.TestCase):
@@ -90,53 +90,49 @@ class TestOnListInTheDemo(unittest.TestCase):
 
 class TestListsClient(unittest.TestCase):
     def test_lists_home_and_list_page_hooks(self):
-        html = read("index.html")
+        js = src("screens/Lists.tsx")
         for el in ("lists-home", "list-cards", "list-new", "list-page", "list-back",
                    "lp-title", "lp-select", "lp-menu", "smart-list", "list-suggest",
-                   "list-done", "list-hunt", "list-selbar", "ls-move", "ls-remove",
-                   "today-checks"):
-            self.assertIn(f'id="{el}"', html)
-        self.assertNotIn('id="store-filter"', html)
-        self.assertNotIn('id="list-notes"', html)
+                   "list-done", "list-hunt", "list-selbar", "ls-move", "ls-remove"):
+            self.assertIn(f'id="{el}"', js)
+        self.assertIn('id="today-checks"', src("screens/Today.tsx"))
+        self.assertNotIn('id="store-filter"', js)
+        self.assertNotIn('id="list-notes"', js)
 
     def test_suggestions_have_a_reason_and_a_why_sheet(self):
-        js, ls = read("app.js"), read("lists.js")
-        self.assertIn("function suggestWhy(i)", js)
-        self.assertIn("due now", js)
-        self.assertIn("Suggested for", js)
-        self.assertIn("async function openWhy(itemId)", ls)
-        self.assertIn("Never suggest this", ls)
-        self.assertIn("Last 8 weeks", ls)
+        model, ls, sheets = src("screens/lists/model.ts"), src("screens/Lists.tsx"), src("screens/lists/ListSheets.tsx")
+        self.assertIn("export function suggestWhy(i: Item)", model)
+        self.assertIn("due now", model)
+        self.assertIn("Suggested for", ls)
+        self.assertIn("function WhySheet(", sheets)
+        self.assertIn("Never suggest this", sheets)
+        self.assertIn("Last 8 weeks", sheets)
 
     def test_swipe_shows_move_and_remove_instead_of_removing(self):
-        js = read("app.js")
+        js = src("screens/Lists.tsx")
         self.assertIn('data-act="move"', js)
         self.assertIn('data-act="remove"', js)
-        self.assertNotIn("dx < -90) removeListItem", js)
+        self.assertNotIn("removeListItem", js)
         self.assertIn("startSelect(id)", js)
 
     def test_move_sheet_moves_several_with_undo(self):
-        ls = read("lists.js")
-        self.assertIn("function openMove(ids)", ls)
-        self.assertIn("here now", ls)
-        self.assertIn("+ New list…", ls)
-        self.assertIn('"/api/list/move"', ls)
-        self.assertIn('action: "Undo"', ls)
+        js, sheets = src("screens/Lists.tsx"), src("screens/lists/ListSheets.tsx")
+        self.assertIn("function MoveSheet(", sheets)
+        self.assertIn("here now", sheets)
+        self.assertIn("+ New list…", sheets)
+        self.assertIn('post("/api/list/move"', js)
+        self.assertIn('action: "Undo"', js)
 
     def test_pencil_on_the_name_renames_in_place(self):
         # Owner, 2026-10-29: no second copy of the name in a sheet; the
         # pencil sits on the title and the title becomes the field.
-        js, ls = read("app.js"), read("lists.js")
+        js, sheets = src("screens/Lists.tsx"), src("screens/lists/ListSheets.tsx")
         self.assertIn('id="lp-pen"', js)
-        self.assertIn('listRenaming ? "Save"', js)
-        self.assertIn("function startRename()", ls)
-        self.assertIn('id="lp-name-input"', ls)
-        self.assertNotIn('data-ls="rename"', ls)
-        self.assertNotIn("Rename list", ls)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertIn('renaming ? "Save"', js)
+        self.assertIn("const startRename = () => {", js)
+        self.assertIn('id="lp-name-input"', js)
+        self.assertNotIn('data-ls="rename"', js + sheets)
+        self.assertNotIn("Rename list", js + sheets)
 
 
 class TestStartShopping(unittest.TestCase):
@@ -146,26 +142,31 @@ class TestStartShopping(unittest.TestCase):
     def test_shop_sheet_picks_the_mode(self):
         # Design pass (2026-10-29): Start shopping opens one sheet with
         # Quest and Express; the pick goes straight to the trip.
-        html, js, q = read("index.html"), read("app.js"), read("quest.js")
-        self.assertIn('id="shop-sheet" class="sheetwrap"', html)
-        self.assertIn('data-shop="quest"', html)
-        self.assertIn('data-shop="express"', html)
-        self.assertIn('id="shop-sugg"', html)
-        self.assertIn("paintShopSheet()", js)
+        js = src("screens/Lists.tsx")
+        self.assertIn('id="shop-sheet"', js)
+        self.assertIn('data-shop="quest"', js)
+        self.assertIn('data-shop="express"', js)
+        self.assertIn('id="shop-sugg"', js)
         self.assertIn("data-shop-add", js)
-        self.assertIn("fastMode: mode || null", q)
-        self.assertIn("if (Q.draft.fastMode) { qFastStart()", q)
+        self.assertIn("fastMode: mode });", js)
+        self.assertIn("const params = { store, storeId, fromList, fastMode };", src("screens/Store.tsx"))
+        self.assertIn("if (D.fastMode && !D.fastDone) {", src("screens/NewList.tsx"))
         # The fast trip skips the bag and the mode screen, and a Quest
         # opens already playing.
-        fast = q.split("async function qCreateSession(")[1].split("\n}\n")[0]
-        self.assertIn('await qSetState(sess, "playing")', fast)
+        mode = src("screens/Mode.tsx")
+        self.assertIn('if (D.fastMode && sess.mode === "quest" && sess.state === "not_started") {', mode)
+        self.assertIn('{ state: "playing" }', mode)
+        self.assertIn("create(D.fastMode);", mode)
 
     def test_bar_markup_and_wiring(self):
-        html, js, css = read("index.html"), read("app.js"), read("styles.css")
-        self.assertIn('id="list-startbar"', html)
-        self.assertIn('id="list-hunt" class="btn primary wide"', html)
-        self.assertNotIn("Shopping now?", html)
-        self.assertIn("Start shopping · ${open.length} item", js)
-        self.assertIn("startHuntFromList(lensList() || null, b.dataset.shop)", js)
-        self.assertIn(".startbar {", css)
-        self.assertNotIn(".huntline", css)
+        js = src("screens/Lists.tsx")
+        self.assertIn('<div id="list-startbar" className="startbar"', js)
+        self.assertIn('<button id="list-hunt" className="btn primary wide"', js)
+        self.assertNotIn("Shopping now?", js)
+        self.assertIn("Start shopping · {open.length} item", js)
+        self.assertIn(".startbar {", css())
+        self.assertNotIn(".huntline", css())
+
+
+if __name__ == "__main__":
+    unittest.main()

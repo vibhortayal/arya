@@ -1,27 +1,24 @@
 """QA signed-in pass 2026-10-28: Receipts Back, lapsed staples,
 sentence-as-item, archive display, badge copy."""
-import os, unittest
+import unittest
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name)) as f:
-        return f.read()
+from tests.frontend import src
 
 
 class TestSignedIn(unittest.TestCase):
     def test_receipts_back_works_from_profile(self):
-        js = read("app.js")
-        body = js.split('$("#rc-back")')[1].split("\n\n")[0]
-        self.assertIn("if (tab) tab.click(); else", body)
+        # Back is the nav stack: Receipts opened from Settings (or
+        # Today) returns there; a cold open falls back to Settings.
+        self.assertIn('id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}',
+                      src("screens/Receipts.tsx"))
 
     def test_archive_dates_carry_the_year(self):
-        body = read("app.js").split("function fmtShort(")[1].split("\n}")[0]
+        body = src("lib/format.ts").split("export function fmtShort(")[1].split("\n}")[0]
         self.assertIn("getFullYear()", body)
+        self.assertIn("short dates carry the year only when it is not this year", src("lib/format.test.ts"))
 
     def test_analysis_months_fill_gaps(self):
-        self.assertIn("Months with no receipts still get a row", read("app.js"))
+        self.assertIn("Months with no receipts still get a row", src("screens/Analysis.tsx"))
 
     def test_sentence_is_split_into_quest_items(self):
         from api import quest

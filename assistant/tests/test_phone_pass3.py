@@ -1,43 +1,40 @@
 """Phone pass 3 (owner's phone, 2026-10-28): dictation becomes a
 list that asks before it joins; the Add button is the submit the
-box never had; a started quest can be ended."""
+box never had; a started quest can be ended.
+
+Client pins read the React screens (web/src); the split behaviour runs
+under vitest in web/src/screens/dictation.test.ts."""
 import unittest
 from pathlib import Path
 
-PWA = Path(__file__).resolve().parent.parent / "pwa"
-
-
-def read(name):
-    return (PWA / name).read_text()
+from tests.frontend import src
 
 
 class TestVoiceToList(unittest.TestCase):
     def test_sentence_parser_feeds_the_bag(self):
-        q = read("quest.js")
+        nl = src("screens/NewList.tsx")
         # The "Looks right?" strip gave way to the Pack bag: dictation
         # becomes bag rows (each can be taken out or put back).
-        self.assertIn("function qParseText", q)
-        self.assertNotIn("function qShowTextConfirm", q)
-        self.assertIn("qNlAdd();\n});", q)
-        # the plan count and Start read the sentence parser
-        self.assertIn("qParseText($(\"#nl-text\").value)", q)
+        self.assertIn("function parseText(text: string): Line[]", nl)
+        self.assertNotIn("ShowTextConfirm", nl)
         # the bag splits a sentence the same way
-        pack = read("pack.js")
-        self.assertIn("qParseText(l)", pack)
+        self.assertIn("return parseText(l).map(", nl)
+        self.assertIn("const addFromText = (t: string, src?: string) => {", nl)
 
     def test_add_button_and_helper_slot_exist(self):
-        html = read("index.html")
-        for needle in ('id="nl-add"', 'id="nl-helper"', 'id="btn-abandon"'):
-            self.assertIn(needle, html)
+        nl = src("screens/NewList.tsx")
+        for needle in ('id="nl-add"', 'id="nl-helper"'):
+            self.assertIn(needle, nl)
+        self.assertIn('id="btn-abandon"', src("screens/Hunt.tsx"))
 
 
 class TestAbandonQuest(unittest.TestCase):
     def test_abandon_wiring(self):
-        q = read("quest.js")
-        for needle in ('qSetState(sess, "abandoned")',
-                       "End this quest? It leaves Quest and cannot be resumed.",
-                       '"abandoned"'):
-            self.assertIn(needle, q)
+        hunt = src("screens/Hunt.tsx")
+        for needle in ('qSetState(s, "abandoned")',
+                       "End this quest? It leaves Quest and cannot be resumed."):
+            self.assertIn(needle, hunt)
+        self.assertIn('{ state: "abandoned" }', src("screens/Quest.tsx"))
 
 
 class TestListComposerSmarts(unittest.TestCase):
@@ -54,10 +51,13 @@ class TestListComposerSmarts(unittest.TestCase):
         self.assertEqual(split_list_text("salt and pepper"), ["salt and pepper"])
 
     def test_client_preview_mirrors(self):
-        a = read("app.js")
-        for needle in ("ADD_LEAD", "i need some ", "sentence",
-                       "mac and cheese"):
+        a = src("screens/Lists.tsx")
+        for needle in ("ADD_LEAD", "i need some ", "sentence", "export function splitPreview("):
             self.assertIn(needle, a)
+        t = src("screens/dictation.test.ts")
+        for needle in ("I need some eggs, eggs, bananas, cookies, oranges.", "mac and cheese",
+                       "Oh, I need some eggs, potatoes, tomatoes, tomatoes, onions."):
+            self.assertIn(needle, t)
 
     def test_second_dictation_with_filler_word(self):
         # Owner's phone, 2026-10-28: "Oh, I need some eggs, ..." made
@@ -68,8 +68,8 @@ class TestListComposerSmarts(unittest.TestCase):
         self.assertEqual(
             split_list_text("Oh, I need some eggs, potatoes, tomatoes, tomatoes, onions."),
             ["eggs", "potatoes", "tomatoes", "onions"])
-        q = read("quest.js")
+        q = src("screens/NewList.tsx")
         self.assertIn("FILL", q)
         self.assertIn("oh|okay|ok|so|well|um|uh|hmm", q)
-        a = read("app.js")
+        a = src("screens/Lists.tsx")
         self.assertIn("oh|okay|ok|so|well|um|uh|hmm", a)

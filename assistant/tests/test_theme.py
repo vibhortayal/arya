@@ -7,14 +7,19 @@ approved wireframes' token values EXACTLY (greyscale is
 structure; the orange #E4572E is the game), the app's semantic
 aliases must resolve onto them, and no pre-migration color —
 above all the old green accent — may survive in any
-first-party pwa source. The amber warning palette stays
+first-party source (every file under web/src, scene.js, index.html). The amber warning palette stays
 separate from the accent, exactly as the wireframes hold it.
 """
-import os, re, unittest
+import glob, os, re, unittest
 
-PWA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pwa")
-FIRST_PARTY = ("styles.css", "scene.js", "quest.js", "app.js",
-               "index.html", "sw.js")
+from tests.frontend import SRC, STATIC, WEB, read, src
+
+
+def first_party():
+    """Every first-party front-end file: web/src (tests included),
+    web/index.html and the static scene.js."""
+    files = sorted(glob.glob(os.path.join(SRC, "**", "*.*"), recursive=True))
+    return files + [os.path.join(WEB, "index.html"), os.path.join(STATIC, "scene.js")]
 
 WIREFRAME_TOKENS = {
     "--acc": "#E4572E", "--acc-soft": "#FDEEE8",
@@ -38,11 +43,6 @@ FORBIDDEN = (
     "28, 107, 60", "52, 199, 89",           # green rgb/rgba forms
     "217, 144, 0",                          # old translucent amber
 )
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
 
 
 def root_tokens(css):
@@ -79,7 +79,7 @@ class TestWireframeTokens(unittest.TestCase):
         css = read("styles.css")
         self.assertIn("box-shadow: 0 8px 22px rgba(228, 87, 46, .35)", css)
         self.assertIn("box-shadow: 0 8px 22px rgba(228, 87, 46, .32)", css)
-        self.assertIn("receiptbtn", read("index.html"))
+        self.assertIn("receiptbtn", src("screens/Finish.tsx"))
 
     def test_amber_stays_separate_from_the_accent(self):
         css = read("styles.css")
@@ -89,8 +89,11 @@ class TestWireframeTokens(unittest.TestCase):
         self.assertIn('"#E8A33D"', read("scene.js"))        # marker flag badge
 
     def test_no_pre_migration_color_survives(self):
-        for name in FIRST_PARTY:
-            text = read(name).lower()
+        files = first_party()
+        self.assertGreater(len(files), 60)
+        for name in files:
+            with open(name, encoding="utf-8") as fh:
+                text = fh.read().lower()
             for bad in FORBIDDEN:
                 self.assertNotIn(bad, text,
                                  f"{bad} still present in {name}")
@@ -107,9 +110,10 @@ class TestWireframeTokens(unittest.TestCase):
         js = read("scene.js")
         self.assertIn('state === "got" ? "#E4572E" : "#55555C"', js)
         # Reported-missing renders use the amber flag class.
-        quest = read("quest.js")
-        self.assertIn('class="repflag"', quest)
-        self.assertNotIn('class="sub warn">Reported missing', quest)
+        for rel in ("screens/Hunt.tsx", "screens/Express.tsx"):
+            js = src(rel)
+            self.assertIn('className="repflag"', js, rel)
+            self.assertNotIn('className="sub warn">Reported missing', js, rel)
 
     def test_chip_on_states_match_the_wireframes(self):
         css = read("styles.css")

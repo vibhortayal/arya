@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
-import { VIEWS, type ViewId } from "../app/views";
-import { NotPorted } from "./NotPorted";
+import type { ViewId } from "../app/views";
 import { About } from "./About";
 import { Analysis } from "./Analysis";
 import { Chat } from "./Chat";
@@ -36,10 +35,9 @@ import { HaulCard } from "./haul/HaulCard";
 import { ReceiptReview } from "./haul/ReceiptReview";
 import { Reveal } from "./haul/Reveal";
 
-/* One entry per screen. A screen not ported yet shows NotPorted,
- * which links to the same screen in the current app. Porting a
- * screen = add its file and one line here (PORTING.md). */
-const PORTED: Partial<Record<ViewId, ComponentType>> = {
+/* One entry per screen: the type makes every view in app/views.ts
+ * name its screen. Signed out, App renders Login instead. */
+export const SCREENS: Record<ViewId, ComponentType> = {
   about: About,
   analysis: Analysis,
   chat: Chat,
@@ -75,9 +73,3 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   rreview: ReceiptReview,
   haul: HaulCard,
 };
-
-export const SCREENS = Object.fromEntries(
-  VIEWS.map(v => [v, PORTED[v] || (() => <NotPorted view={v} />)]),
-) as Record<ViewId, ComponentType>;
-
-export const portedViews = () => Object.keys(PORTED) as ViewId[];

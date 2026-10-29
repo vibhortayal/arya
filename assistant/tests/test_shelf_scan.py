@@ -9,25 +9,21 @@ three spike fixes are pinned: top-3 verify, the box-area cap
 (over-cap ignored while an in-cap box exists; region grade when
 only over-cap exists), and the phrasing bank.
 
-Client behavior is pinned headless under node (skipped when node
-is absent): the live sampling policy (diff threshold, ~1 s hold,
+Client behavior runs under vitest (web/src/screens/hunt/scan.test.tsx,
+the port of the old node harness): the live sampling policy (diff threshold, ~1 s hold,
 3 s settle floor, 2 s continued-change ceiling, stale-pop clear),
 pop overlay replacement, and stop releasing the camera.
 """
-import io, json, os, re, shutil, subprocess, tempfile, unittest
+import io, json, os, re, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-NODE = shutil.which("node")
 FRAME_W, FRAME_H = 1600, 900
 
 
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+from tests.frontend import read, src  # noqa: E402
 
 
 def _box(x1, y1, x2, y2, conf):
@@ -268,24 +264,28 @@ class TestPhrasingBank(unittest.TestCase):
 
 
 class TestScanShell(unittest.TestCase):
+    """Over the React scan view (web/src/screens/hunt/Scan.tsx, the port
+    of quest.js openScanView .. closeScan) and the hunt."""
+
     def test_scan_chrome_in_hunt_absent_elsewhere(self):
-        html = read("index.html")
-        hunt = html.split('id="view-hunt"')[1].split('id="view-express"')[0]
-        for el in ("btn-scan", "scan-photo", "scan-overlay", "scan-video",
+        scan, hunt = src("screens/hunt/Scan.tsx"), src("screens/Hunt.tsx")
+        for el in ("scan-photo", "scan-overlay", "scan-video",
                    "scan-img", "scan-boxes", "scan-status", "scan-stop",
                    "scan-usephoto", "scan-last", "scan-close"):
-            self.assertIn(f'id="{el}"', hunt)
-        self.assertIn('capture="environment"', hunt)
-        express = html.split('id="view-express"')[1].split('id="view-finish"')[0]
-        self.assertNotIn('id="btn-scan"', express)
+            self.assertIn(f'id="{el}"', scan)
+        self.assertIn('capture="environment"', scan)
+        self.assertIn('id="btn-scan"', hunt)
+        self.assertIn("<ScanView ", hunt)
+        self.assertNotIn('id="btn-scan"', src("screens/Express.tsx"))
 
     def test_scan_gated_to_the_strip_rung(self):
-        js = read("quest.js")
-        self.assertIn('$("#btn-scan").hidden = Q.driverName !== "strip";', js)
+        js = src("screens/hunt/Scan.tsx")
+        self.assertIn('id="btn-scan" className="btn toolbtn" type="button" hidden={driverName !== "strip"}',
+                      src("screens/Hunt.tsx"))
         self.assertIn("getUserMedia", js)
         self.assertIn("wakeLock", js)
         self.assertIn("/api/quest/scan-shelf?session=", js)
-        self.assertIn("createScanSampler", js)
+        self.assertIn("export function createScanSampler()", js)
         # Copy discipline: the lag is shown, "real-time" is never claimed.
         self.assertIn("Live scan", js)
         self.assertIn("Last scan", js)
@@ -294,150 +294,24 @@ class TestScanShell(unittest.TestCase):
         self.assertIn(".scanpop", read("styles.css"))
 
     def test_no_pop_copy_is_exact(self):
-        js = read("quest.js")
         self.assertIn(
-            'const SCAN_NO_POP = "Nothing from your list spotted here — '
-            "that doesn't mean it isn't here. Keep looking.\";", js)
+            'export const SCAN_NO_POP = "Nothing from your list spotted here — '
+            "that doesn't mean it isn't here. Keep looking.\";", src("screens/hunt/Scan.tsx"))
 
 
-PRELUDE = r"""
-function __el() {
-  return {
-    hidden: false, disabled: false, value: "", textContent: "", innerHTML: "",
-    style: {}, dataset: {}, files: [], srcObject: null,
-    classList: { add() {}, remove() {}, toggle() {} },
-    setAttribute() {}, getAttribute() { return null; },
-    addEventListener() {}, removeEventListener() {},
-    querySelector() { return __el(); }, querySelectorAll() { return []; },
-    closest() { return null; }
-  };
-}
-globalThis.document = {
-  currentScript: null, baseURI: "http://test/", body: __el(),
-  querySelector() { return __el(); },
-  querySelectorAll() { return []; },
-  createElement() { return { width: 0, height: 0, getContext() { return null; } }; },
-  addEventListener() {}, removeEventListener() {}
-};
-globalThis.window = globalThis;
-window.addEventListener = () => {}; window.removeEventListener = () => {}; window.scrollTo = () => {};
-globalThis.localStorage = { _m: {}, getItem(k) { return k in this._m ? this._m[k] : null; }, setItem(k, v) { this._m[k] = String(v); }, removeItem(k) { delete this._m[k]; } };
-globalThis.$ = s => document.querySelector(s);
-globalThis.esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-globalThis.qtyFmt = q => { const n = Number(q); return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); };
-globalThis.qtyTag = it => { const u = String((it && it.unit) || "").trim(); return u ? qtyFmt(it.qty) + " " + u : (it && it.qty > 1 ? "x" + qtyFmt(it.qty) : ""); };
-globalThis.CHECK_SVG = "<svg></svg>";
-globalThis.empty = t => `<p class="empty">${t}</p>`;
-globalThis.row = () => "";
-globalThis.money = n => "$" + n;
-globalThis.fmtShort = s => s;
-globalThis.refresh = () => {};
-globalThis.showErr = e => { throw e; };
-globalThis.toast = () => {};
-globalThis.post = async () => ({});
-globalThis.api = async () => ({});
-globalThis.createSceneView = () => ({ setStops() {}, setNext() {}, glideTo() {}, destroy() {}, onTapStop: null });
-"""
+class TestScanUnderVitest(unittest.TestCase):
+    """The old node harness over quest.js (sampler, pops, status copy,
+    camera life) runs in web/src/screens/hunt/scan.test.tsx."""
 
-DRIVER = r"""
-;(async () => {
-  const out = {};
-  // --- sampler: immaterial scenes never send ---
-  let s = createScanSampler();
-  out.calm_never_sends = true;
-  for (let t = 0; t <= 10000; t += 250) {
-    if (s.noteFrame(0.005, 0.01, t).send) out.calm_never_sends = false;
-  }
-  // --- change, then hold ~1s: send at the hold mark ---
-  s = createScanSampler();
-  let firstSend = -1;
-  for (let t = 0; t <= 3000; t += 250) {
-    const d = s.noteFrame(t === 0 ? 0.5 : 0.0, 0.5, t);
-    if (d.send && firstSend < 0) firstSend = t;
-  }
-  out.settle_send_at_hold = firstSend === 1250;
-  // --- settle floor: a second settle inside 3s waits ---
-  s.noteSent(1250);
-  let secondSend = -1;
-  for (let t = 1500; t <= 6000; t += 250) {
-    const dp = t === 1500 ? 0.5 : 0.0;
-    const d = s.noteFrame(dp, 0.5, t);
-    if (d.send && secondSend < 0) secondSend = t;
-  }
-  out.settle_floor_3s = secondSend === 4250;
-  // --- continued change: ceiling of one per 2s, and only mid-session ---
-  s = createScanSampler();
-  let changeSends = 0;
-  for (let t = 0; t <= 5000; t += 250) {
-    if (s.noteFrame(0.3, 0.5, t).send) changeSends++;
-  }
-  out.change_needs_first_send = changeSends === 0;
-  s.noteFrame(0.0, 0.5, 5250); s.noteFrame(0.0, 0.5, 5500);
-  s.noteFrame(0.0, 0.5, 5750); s.noteFrame(0.0, 0.5, 6000);
-  const settled = s.noteFrame(0.0, 0.5, 6250);
-  out.setup_settle_send = settled.send === true;
-  s.noteSent(6250);
-  let nextChangeSend = -1;
-  for (let t = 6500; t <= 9000; t += 250) {
-    if (s.noteFrame(0.3, 0.5, t).send && nextChangeSend < 0) nextChangeSend = t;
-  }
-  out.change_ceiling_2s = nextChangeSend === 8250;
-  // --- stale pops clear on a clearly-moved view, once per move ---
-  s = createScanSampler();
-  out.clear_needs_two_ticks = s.noteFrame(0.4, 0.3, 0).clear === false &&
-                              s.noteFrame(0.4, 0.3, 250).clear === true &&
-                              s.noteFrame(0.4, 0.3, 500).clear === false;
-  s.noteFrame(0.0, 0.0, 750);
-  out.clear_rearms = s.noteFrame(0.4, 0.3, 1000).clear === false &&
-                     s.noteFrame(0.4, 0.3, 1250).clear === true;
-  // --- pops render + replace; status copy ---
-  const htmlA = scanPopsHtml([{ item: "Milk", box: [0, 0, 0.5, 0.5], grade: "item" }]);
-  const htmlB = scanPopsHtml([{ item: "Frozen Pizza", box: [0.1, 0.1, 0.4, 0.4], grade: "region" }]);
-  out.pops_render = htmlA.includes("Milk") && htmlB.includes("Frozen Pizza") &&
-                    htmlB.includes("region") && htmlB.includes("this shelf") &&
-                    !htmlB.includes("Milk");
-  out.status_copies = scanStatusFor([]) === SCAN_NO_POP &&
-    SCAN_NO_POP === "Nothing from your list spotted here — that doesn't mean it isn't here. Keep looking." &&
-    scanStatusFor([{ item: "x" }]) === "1 from your list spotted here — tap one to collect it.";
-  // --- live start/stop with mocked devices: stop releases everything ---
-  let stops = 0, releases = 0;
-  const fakeStream = { getTracks: () => [{ stop() { stops++; } }, { stop() { stops++; } }] };
-  Object.defineProperty(globalThis, "navigator", { configurable: true, writable: true,
-    value: {
-      mediaDevices: { getUserMedia: async () => fakeStream },
-      wakeLock: { request: async () => ({ release() { releases++; return Promise.resolve(); } }) }
-    } });
-  await startScanLive();
-  out.live_started = Q.scanMode === "live" && Q.scanStream === fakeStream && Q.scanTimer !== null;
-  stopScanLive();
-  out.stop_releases = stops === 2 && releases === 1 && Q.scanStream === null &&
-                      Q.scanTimer === null && Q.scanMode === "still";
-  console.log(JSON.stringify(out));
-  process.exit(0);
-})().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
-"""
-
-
-@unittest.skipUnless(NODE, "node not available")
-class TestScanLiveNode(unittest.TestCase):
-    def test_live_policy_and_camera_lifecycle(self):
-        with tempfile.TemporaryDirectory() as td:
-            path = os.path.join(td, "harness.js")
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(PRELUDE)
-                fh.write(read("quest.js"))
-                fh.write(DRIVER)
-            out = subprocess.run([NODE, path], capture_output=True,
-                                 text=True, timeout=60)
-        self.assertEqual(out.returncode, 0, out.stderr)
-        res = json.loads(out.stdout.strip().splitlines()[-1])
-        self.assertNotIn("error", res, res.get("error"))
-        failed = [k for k, v in res.items() if v is not True]
-        self.assertEqual(failed, [], f"harness checks failed: {failed} in {res}")
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_harness_checks_are_ported(self):
+        t = src("screens/hunt/scan.test.tsx")
+        for name in ("a calm scene never sends",
+                     "a change, then a hold of about 1 s, sends at the hold mark; a second settle waits 3 s",
+                     "continued change sends at most once in 2 s, and only after a first send",
+                     "stale pops clear on a clearly moved view, once per move",
+                     "pops render and replace; the status copy is exact",
+                     "live start takes the camera and a wake lock; closing releases both"):
+            self.assertIn(name, t)
 
 
 class TestPeopleScrub(unittest.TestCase):

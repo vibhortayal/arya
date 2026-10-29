@@ -1,11 +1,12 @@
-# The React app (/next/) builds in its own stage; it imports the
-# current PWA's stylesheets, so pwa/ goes in beside it.
+# The app (web/, React) builds in its own stage into web/dist; the API
+# serves it at /. The static folder (pwa/: images, store models,
+# three.js, scene.js, manifest, icons) is not part of the build: the API
+# serves it beside web/dist and reads the models itself.
 FROM node:22-slim AS web
 WORKDIR /app/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web ./
-COPY pwa /app/pwa
 RUN npm run build
 
 FROM python:3.12-slim

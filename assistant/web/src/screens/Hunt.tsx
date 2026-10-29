@@ -33,7 +33,7 @@ import { useRecord } from "./hunt/useRecord";
  * tab bar, avatar and demo bar hide while it is up. */
 
 /* ---- the navigation-first walk (quest.js qWalkStart / qFollowHold) ---- */
-const WALK_MS: Record<string, number> = { quest: 3200, express: 2000 };
+export const WALK_MS: Record<string, number> = { quest: 3200, express: 2000 };
 export function walkStop() {
   if (Q.walkTimer) { clearTimeout(Q.walkTimer); Q.walkTimer = 0; }
   Q.walkTarget = -1;
@@ -64,7 +64,7 @@ export function followHold() {
 }
 
 /* One store view, picked by the store (quest.js qResolveDriver). */
-function resolveDriver(sess: Session, peek3D: boolean): string {
+export function resolveDriver(sess: Session, peek3D: boolean): string {
   if (peek3D && storeModel(sess.store)) return "cloud";
   if (storePhotos(sess.store)) return "photo";
   return sess.mode === "express" ? "strip" : "art";

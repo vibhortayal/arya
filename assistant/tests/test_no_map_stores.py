@@ -8,12 +8,12 @@ Pinned here:
   a prompt. A known section asks for that section; an unknown one asks
   for a photo or a short video and lets the teach reader name it, and
   the teach upload notes the item in the section it read.
-- Both front ends: the Start shopping sheet hides Quest for a store
+- The React app (web/src): the Start shopping sheet hides Quest for a store
   with no pictures and shows the approved note; the Express help row
   drops Show me for an item with no data and shows the Snap the aisle
   nudge; the hard-coded store tables are gone.
 """
-import io, os, re, tempfile, unittest
+import io, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
@@ -22,7 +22,6 @@ from PIL import Image  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PWA = os.path.join(HERE, "..", "pwa")
 WEB = os.path.join(HERE, "..", "web", "src")
 
 SHEET_NOTE = ("Quest needs aisle photos of this store, and Arya has none yet. "
@@ -140,61 +139,41 @@ class TestStoresRoute(unittest.TestCase):
         self.assertTrue(self.stores()["costco"]["has_pictures"])
 
 
-class TestPwaNoMap(unittest.TestCase):
-    def setUp(self):
-        self.html = read(PWA, "index.html")
-        self.app = read(PWA, "app.js")
-        self.quest = read(PWA, "quest.js")
-        self.sd = self.quest   # the store-pictures block lives in quest.js
-        self.sw = read(PWA, "sw.js")
+class TestWebStoreData(unittest.TestCase):
+    """The store-pictures block (pwa/storedata.js, now web/src/lib/stores.ts)."""
 
     def test_hard_coded_tables_are_gone(self):
-        for src in (self.quest, read(WEB, "lib", "stores.ts")):
-            self.assertNotIn("STORE_PHOTOS = {", src)
-            self.assertNotIn("STORE_MODELS = {", src)
-        self.assertIn("/api/storemap/stores", self.sd)
-        self.assertIn("/api/storemap/stores", read(WEB, "lib", "stores.ts"))
+        src = read(WEB, "lib", "stores.ts")
+        self.assertNotIn("STORE_PHOTOS = {", src)
+        self.assertNotIn("STORE_MODELS = {", src)
+        self.assertIn("/api/storemap/stores", src)
 
     def test_trader_joes_still_works_offline(self):
-        for src in (self.sd, read(WEB, "lib", "stores.ts")):
-            self.assertIn('"models/trader-joes/frames-web"', src)
-            self.assertIn('"models/trader-joes/manifest.json"', src)
+        src = read(WEB, "lib", "stores.ts")
+        self.assertIn('"models/trader-joes/frames-web"', src)
+        self.assertIn('"models/trader-joes/manifest.json"', src)
 
-    def test_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v97"', self.sw)
-
-    def test_sheet_note_is_the_approved_wording(self):
-        self.assertIn('id="shop-nomap"', self.html)
-        note = SHEET_NOTE.replace("{store}", "${esc(store)}")
-        self.assertIn(note, self.app)
-        self.assertIn("storeHasPictures", self.app)
-
-    def test_quest_falls_back_to_express_without_pictures(self):
-        self.assertIn('mode === "quest" && !storeHasPictures(store)', self.quest)
-
-    def test_express_help_row_nudge(self):
-        self.assertIn('id="exp-nodata"', self.html)
-        self.assertIn("Arya has no photo of this aisle yet. Found it? "
-                      '<button id="exp-snap" class="linkbtn snapaisle" type="button">Snap the aisle</button>'
-                      " so other Arya Shoppers can find it too.", self.html)
-        self.assertIn("itemHasData(sess.store, sess.items[next])", self.quest)
-        self.assertIn('$("#exp-show").hidden = !has', self.quest)
+    def test_express_show_me_needs_data(self):
+        src = read(WEB, "screens", "Express.tsx")
+        self.assertIn("itemHasData(sess.store, sess.items[next])", src)
+        self.assertIn('id="exp-show" className="chip" type="button" hidden={!hasData}', src)
 
     def test_hunt_pop_card_nudge(self):
-        self.assertIn('class="pop-shelf nodata"', self.quest)
-        self.assertIn("data-snap-aisle", self.quest)
+        src = read(WEB, "screens", "Hunt.tsx")
+        self.assertIn('<p className="pop-shelf nodata">', src)
+        self.assertIn("data-snap-aisle", src)
 
     def test_snap_opens_the_guided_capture(self):
-        self.assertIn("/api/storemap/next?store=", self.sd)
-        self.assertIn("&item=", self.sd)
-        self.assertIn("openCapture(", self.sd)
-        mapper = read(PWA, "mapper.js")
-        self.assertIn('id="cp-govideo"', self.html)
-        self.assertIn('prompt.media !== "both"', mapper)
-        self.assertIn("&item=", mapper)
+        src = read(WEB, "screens", "Hunt.tsx")
+        self.assertIn("/api/storemap/next?store=${encodeURIComponent(store)}&item=", src)
+        self.assertIn('nav.show("capture", { prompt, store, from: "hunt" })', src)
+        cap = read(WEB, "screens", "Capture.tsx")
+        self.assertIn('id="cp-govideo"', cap)
+        self.assertIn('setVideoOpt(p.media === "both");', cap)
+        self.assertIn("&item=", cap)
 
     def test_snap_link_is_accent_coloured(self):
-        css = read(PWA, "hunt.css")
+        css = read(WEB, "styles", "hunt.css")
         self.assertRegex(css, r"\.snapaisle\s*\{[^}]*color:\s*var\(--acc\)")
 
 
@@ -218,18 +197,11 @@ class TestWebNoMap(unittest.TestCase):
 
 
 class TestSettingsRename(unittest.TestCase):
-    def test_pwa(self):
-        html = read(PWA, "index.html")
-        self.assertIn('<h2 class="largetitle">Settings</h2>', html)
-        self.assertNotIn('<h2 class="largetitle">Profile</h2>', html)
-        self.assertIn('<h3 class="sect">Account</h3>', html)
-        self.assertIn('aria-label="Settings"', html)
-        self.assertIn("`Settings, level ${profile.level}`", read(PWA, "app.js"))
-
     def test_web(self):
         src = read(WEB, "screens", "Profile.tsx")
         self.assertIn('<h2 className="largetitle">Settings</h2>', src)
         self.assertIn('<h3 className="sect">Account</h3>', src)
+        self.assertNotIn('<h2 className="largetitle">Profile</h2>', src)
         self.assertIn("`Settings, level ${ring.level}` : \"Settings\"", read(WEB, "App.tsx"))
 
 
