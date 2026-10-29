@@ -1,6 +1,6 @@
 # Arya — Architecture (as built)
 
-Status: living document, revised 2026-10-28. SPEC.md states the product rules. This document states
+Status: living document, revised 2026-10-29. SPEC.md states the product rules. This document states
 how the built system is put together. Where the two disagree, SPEC.md
 wins for behavior and this document wins for structure.
 
@@ -104,8 +104,11 @@ Each agent has a narrow job and a named limit.
   unknown: Eyes never edits inventory on its own.
 - **Ask Arya.** Chat over a household snapshot. Actions (add to list,
   ran out, mark expired, never suggest, snooze) are validated
-  server-side. Numbers come from the data, never from the model. Demo
-  sessions cannot chat.
+  server-side. Numbers come from the data, never from the model. On the
+  Ask tab actions apply at once; from a list or a hunt, adds apply with
+  Undo and the riskier actions (out, expired, never, snooze) wait for a
+  yes (`/api/chat/apply`). Demo sessions can chat; it is a live door
+  under the demo's per-IP and per-visit caps (§10).
 
 ## 7. Money rules (summary; SPEC.md owns the detail)
 
@@ -120,9 +123,20 @@ Each agent has a narrow job and a named limit.
 
 ## 8. Accounts, tokens, and the connector
 
-- Per-user state lives in files under data/users/<account>/. Passwords
-  are PBKDF2 hashes; sign-in is throttled; sessions are cookies, and
-  session tokens are stored as SHA-256 hashes.
+- Per-user state is a set of JSON documents, one per former file
+  (receipts, dictionary, flags, lists, quest...). `ARYA_STORE` picks
+  where they live: `json` (files under data/users/<account>/, the
+  default), `dual` (files are the truth, every save is mirrored to
+  Postgres), or `pg` (table `arya.user_docs`, see `api/pgstore.py`).
+  The demo account always stays on files.
+- An account name is also a folder name, so it holds only letters,
+  digits and `. _ % + - @` (`auth.valid_name`). Passwords are PBKDF2
+  hashes; sign-in is throttled; sessions are cookies, and session
+  tokens are stored as SHA-256 hashes.
+- Email code and Google sign-in (Supabase Auth) are built behind
+  `ARYA_SUPABASE_AUTH=1`, off by default. Supabase only proves the
+  email; Arya keeps its own account (named by the email, no password)
+  and its own cookie (`api/supabase_auth.py`).
 - A connector token is `arya_` plus a random secret. **Only its SHA-256
   hash is stored.** It is shown once at mint; minting a new one replaces
   the old; it can be revoked at any time. Bearer tokens are accepted
@@ -138,13 +152,14 @@ Each agent has a narrow job and a named limit.
 
 ## 9. Onboarding
 
-1. Create an account. A real account with no token lands on a Connect
-   Muse step before the app shell. Demo accounts skip it.
-2. Mint the token in Arya (shown once).
+1. Create an account. A new account opens on Today; there is no
+   Connect Muse step on first run.
+2. Connecting Muse is optional, from Profile > Connect Muse: mint the
+   token there (shown once).
 3. Add the Arya connector in Muse; paste the token into the secure
    form. Never into a chat message.
-4. Talk to Muse. The Connect step inside Arya carries these steps and
-   a copyable fallback setup prompt for assistant apps that do not load
+4. Talk to Muse. Profile > Connect Muse carries these steps and a
+   copyable fallback setup prompt for assistant apps that do not load
    the connector doc automatically.
 
 ## 10. Cost control
@@ -154,9 +169,14 @@ Each agent has a narrow job and a named limit.
   Contributor for evaluation and synthetic data only — never personal
   data; Wonder is banned from volume paths.
 - Every model call is written to a cost ledger. The app's daily
-  ceiling ($10) stops app model spend; the demo household spends from
-  a separate budget bucket ($2/day), so demo use cannot drain the
-  app. Per-user spend caps are required before public registration
+  ceiling (`ARYA_DAILY_BUDGET_USD`, $10) stops app model spend; the
+  demo household spends from a separate bucket
+  (`ARYA_DEMO_DAILY_BUDGET_USD`, $2/day) and each demo visit from its
+  own share (`ARYA_DEMO_SESSION_BUDGET_USD`, $0.40), so demo use cannot
+  drain the app. Every live door, batch judge run and hunt creation
+  passes the guard first.
+- A model answer that cannot be read is a 502 with a plain sentence,
+  never a 500 (`meta_client.parse_json`). Per-user spend caps are required before public registration
   opens; they are not yet built.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
@@ -168,7 +188,13 @@ Each agent has a narrow job and a named limit.
   arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
-- The test suite runs before every commit. Small commits to main, named by
+- Settings come from `deploy/.env` (VM only). Compose passes only the
+  variables it lists, so every setting the app reads is listed in
+  `docker-compose.yml`; `tests/test_compose_env.py` fails if one is
+  missing. `.env.example` names them.
+- The test suite runs before every commit. A GitHub Actions workflow
+  (`.github/workflows/tests.yml`) runs it on demand only, not on
+  every PR (owner's choice). Small commits to main, named by
   stage; a session log goes to loops/ and STATUS.md is updated.
 
 ## 12. Quest storage
@@ -188,5 +214,5 @@ memory. The store directory (`stores.json`) is platform-level.
   once per-user spend caps exist (§10). Intake is not Muse-only:
   every door runs on Meta models — Muse in chat, Spark on the Meta
   API in the app.
-- Forgot-password — not built. There is no mail channel; a fake
-  affordance was refused on principle.
+- Forgot-password — not built. Once switched on, email code sign-in
+  (§8) lets a person in without a password.

@@ -22,7 +22,8 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 through `assistant/api/meta_client.py` (no other module calls the API).
 `assistant/harness/` eval loops; `assistant/prompts/` versioned prompts;
 `assistant/golden/` golden fixtures; `assistant/loops/` work-session logs.
-`assistant/pwa/` does not exist before Stage 3 — do not create it early.
+`assistant/pwa/` is the app (plain JS, no build step); bump `CACHE` in
+`pwa/sw.js` and list new files in its `SHELL` when the shell changes.
 
 ## Hard rules (no exceptions without the owner's word)
 1. **Personal data is Standard mode only.** Contributor mode is eval-only,
