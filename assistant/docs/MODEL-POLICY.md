@@ -32,6 +32,14 @@ Escalation is by evidence (a scored eval), never by default.
 - Policy targets: a full trip decode at or under 1–2 cents; total hackathon
   API spend well under the $150 credit (plan §8 estimated $57–61 at defaults).
 
+## Credits (owner, 2026-10-29)
+There is no $0 rule. Hackathon credits (Meta Model API, plus Baseten and Modal)
+are available, so spending on Meta models (Muse Image, Spark, Wonder, SAM) is
+allowed when it improves the product or demo. Stay budget-aware: the cheapest
+model that holds its score is still the default, spend goes through the ledger,
+and large batches get a capped trial first. The in-code caps (daily and demo
+budgets) are unchanged.
+
 ## Hackathon amendment (2026-10-27, per WONDER-EVAL.md)
 Through Nov 4, judge-facing PHOTO DECODE runs muse-wonder-1.0, with a
 timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
