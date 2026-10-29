@@ -1067,6 +1067,7 @@ input[type=file]::file-selector-button {
 /* Grab waits for Start: muted, but a tap still answers (first-timer play-test). */
 .rowact.notlive { opacity: .5; }
 .earlierrow { display: flex; align-items: center; gap: 8px; }
+.herocard .hero-end { display: block; margin: 4px auto 0; color: var(--secondary); font-weight: 500; }
 .earlierrow .gamerow { flex: 1; min-width: 0; }
 .earlierrow .btn { flex: none; min-height: 36px; padding: 6px 10px; font-size: 13px; }
 
@@ -1238,6 +1239,29 @@ body.hunting #view-hunt.full .askbar {
 .newlist { display: flex; width: 100%; align-items: center; gap: 10px; border: 1.5px dashed var(--line);
   background: transparent; border-radius: var(--radius); padding: 14px 16px; min-height: 44px; color: var(--secondary); font-weight: 600; font-size: 17px; margin-bottom: 12px; }
 .newlist b { color: var(--accent); font-size: 22px; line-height: 1; }
+/* Adaptive Lists home (#156, owner-approved mockup 2026-10-29): compact
+   tiles from 4 lists, dense rows with search from 12, a Cards | List
+   switch. Today caps its sections and links to the rest. */
+.lv-tools { display: flex; gap: 10px; align-items: center; margin: 8px 0 10px; }
+.lv-search { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 11px 14px; border-radius: 12px; border: none;
+  background: var(--fill); color: var(--label); -webkit-appearance: none; appearance: none; }
+.lv-seg { display: inline-flex; background: var(--fill); border-radius: 10px; padding: 3px; gap: 2px; margin-left: auto; flex: none; }
+.lv-seg button { border: none; background: none; font: inherit; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+  color: var(--secondary); min-height: 32px; cursor: pointer; }
+.lv-seg button[aria-pressed="true"] { background: var(--group); color: var(--label); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.listnav { color: var(--label); cursor: pointer; }
+.listnav .grow .name { display: block; }
+.lv-count { font-variant-numeric: tabular-nums; color: var(--secondary); font-weight: 600; }
+#list-cards.listcards .listcard { margin: 0; }
+@media (min-width: 600px) {
+  #list-cards.listcards { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+}
+.seeall { display: flex; justify-content: space-between; align-items: center; width: 100%; border: none; background: var(--group);
+  border-radius: 14px; padding: 14px 16px; min-height: 44px; font: inherit; font-weight: 600; color: var(--accent-text);
+  box-shadow: var(--shadow); margin-top: 10px; cursor: pointer; }
+.sectrow .linkbtn.gone { visibility: hidden; }
+.morerow { display: block; width: 100%; text-align: left; background: transparent; border: none;
+  padding: 12px 0; min-height: 44px; font: inherit; font-size: 15px; font-weight: 600; color: var(--accent-text); cursor: pointer; }
 .backlink.linkbtn { font-size: 17px; font-weight: 600; padding: 0; }
 .lhead { display: flex; align-items: center; gap: 8px; }
 .lhead .largetitle { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useNav } from "../app/nav";
+import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
@@ -17,6 +18,8 @@ import {
   askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
   suggestHome, suggestions, suggestWhy, type HomeData, type Item,
 } from "./lists/model";
+import { autoMode, filterLists, markOpened, readMode, readOpened, readView, recentLists, viewMode, writeMode, writeView,
+  type ListsMode, type ListsView } from "./lists/adaptive";
 import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
@@ -162,6 +165,7 @@ export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
+  const { user } = useSession();
   useCharacters();
 
   const [data, setData] = useState<HomeData | null>(cache.data);
@@ -186,6 +190,11 @@ export function Lists() {
   const [townItem, setTownItem] = useState<string | null>(null);
   const [g, setG] = useState<GState>({ enabled: false, group: null, recent: {} });
   const [eyes, setEyes] = useState<EyesRec[]>([]);
+  // The adaptive home (#156): the last automatic mode for this account,
+  // the device's Cards | List choice, and the search text.
+  const lastMode = useRef<ListsMode | null>(readMode(user));
+  const [view, setView] = useState<ListsView | null>(readView);
+  const [query, setQuery] = useState("");
 
   const [text, setText] = useState("");
   const textRef = useRef("");
@@ -243,6 +252,14 @@ export function Lists() {
   const selRef = useRef<Set<string> | null>(null);
   selRef.current = selEff;
   const onPage = !!data && effLens !== "home";
+  const auto = autoMode(lists.length, lastMode.current);
+  const mode = data ? viewMode(lists.length, auto, view) : "large";
+  useEffect(() => {
+    if (!data || lastMode.current === auto) return;
+    lastMode.current = auto; writeMode(user, auto);
+  }, [data, auto, user]);
+  // Recent: the device's last-opened time for each list.
+  useEffect(() => { if (here) markOpened(here.id); }, [here?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { document.body.classList.toggle("selecting", !!selEff && onPage); }, [selEff, onPage]);
 
@@ -256,6 +273,7 @@ export function Lists() {
     const before = dataRef.current!;
     const back = ids.map(id => [id, (before.list.items.find(i => i.item_id === id) || {} as Partial<Item>).list || null] as const);
     for (const id of ids) await post("/api/list/move", { item_id: id, list_id: listId === "else" ? null : listId });
+    markOpened(listId);
     setSheet(null);
     setSel(null);
     const fresh = await reload();
@@ -654,6 +672,52 @@ export function Lists() {
     );
   };
 
+  /* Compact tile (4-11 lists) and dense row (12+): name, open count,
+   * and for a tile the first two item names. */
+  const openOn = (id: string) => (data ? onListItems(data).filter(i => !i.checked && itemHome(data, i) === id) : []);
+  const tile = (id: string, cname: string) => {
+    const rs = openOn(id);
+    return (
+      <button className="listcard" type="button" data-open-list={id} key={id} onClick={() => openLens(id)}>
+        <span className="lc-name">{cname}</span>
+        <span className="lc-count">{t("common.itemCount", { count: rs.length })}</span>
+        <span className="lc-items">{rs.length ? rs.slice(0, 2).map(i => i.name).join(", ") + (rs.length > 2 ? "…" : "") : t("lists.nothingOnItYet")}</span>
+      </button>
+    );
+  };
+  const navRow = (id: string, cname: string) => {
+    const n = openOn(id).length;
+    return (
+      <button className="navrow listnav" type="button" data-open-list={id} key={id} onClick={() => openLens(id)}>
+        <span className="grow"><span className="name">{cname}</span></span>
+        <span className="lv-count">{n || ""}</span><span className="chev">›</span>
+      </button>
+    );
+  };
+  // Everything else shows in tiles and rows only when it has something.
+  const elseName = t("common.everythingElse");
+  const elseUsed = !!data && (openOn("else").length > 0 || suggestions(data).some(i => suggestHome(data, i) === "else"));
+  const pickView = (v: ListsView) => { setView(v); writeView(v); };
+  const dense = () => {
+    const q = query.trim();
+    if (q) {
+      const hits = filterLists(lists, q);
+      const elseHit = elseUsed && elseName.toLowerCase().includes(q.toLowerCase());
+      return hits.length || elseHit
+        ? <div className="group">{hits.map(l => navRow(l.id, l.name))}{elseHit ? navRow("else", elseName) : null}</div>
+        : <p className="empty">{t("lists.noListMatches", { q })}</p>;
+    }
+    const at: Record<string, number> = { ...readOpened() };
+    for (const [id, r] of Object.entries(g.recent || {})) if (id) at[id] = Math.max(at[id] || 0, r.at * 1000);
+    const az = [...lists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    return <>
+      <h3 className="sect">{t("lists.recent")}</h3>
+      <div className="group">{recentLists(lists, at).map(l => navRow(l.id, l.name))}</div>
+      <h3 className="sect">{t("lists.allAToZ")}</h3>
+      <div className="group">{az.map(l => navRow(l.id, l.name))}{elseUsed ? navRow("else", elseName) : null}</div>
+    </>;
+  };
+
   let homeLine = "";
   if (data && !onPage) {
     const allOpen = onListItems(data).filter(i => !i.checked);
@@ -692,12 +756,34 @@ export function Lists() {
               </div>
             </div>
           ) : <>
+          {data && lists.length >= 4 && (
+            <div className="lv-tools">
+              {mode === "dense" && (
+                <input type="search" id="list-search" className="lv-search" autoComplete="off" value={query}
+                  placeholder={t("lists.searchLists", { count: lists.length })} aria-label={t("lists.searchLists", { count: lists.length })}
+                  onChange={e => setQuery(e.target.value)} />
+              )}
+              <span className="lv-seg" role="group" aria-label={t("lists.showAs")}>
+                <button type="button" id="list-view-cards" aria-pressed={mode !== "dense"} onClick={() => pickView("cards")}>{t("lists.viewCards")}</button>
+                <button type="button" id="list-view-list" aria-pressed={mode === "dense"} onClick={() => pickView("list")}>{t("lists.viewList")}</button>
+              </span>
+            </div>
+          )}
+          {mode === "tiles" ? (
+            <div id="list-cards" className="listcards" data-mode="tiles">
+              {lists.map(l => tile(l.id, l.name))}
+              {elseUsed ? tile("else", elseName) : null}
+            </div>
+          ) : mode === "dense" ? (
+            <div id="list-cards" data-mode="dense">{dense()}</div>
+          ) : (
           <div id="list-cards">
             {data ? <>
               {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
               {card("else", t("common.everythingElse"), lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore"))}
             </> : <p className="empty">{t("lists.loadingYourList")}</p>}
           </div>
+          )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
           </>}
         </div>

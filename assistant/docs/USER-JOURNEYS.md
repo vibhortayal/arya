@@ -150,12 +150,10 @@ camera" and the Where am I? check need a model.
 | Step | What Priya does | What Arya shows |
 |---|---|---|
 | 1 | Opens Trader Joe's. Taps **Start shopping**, then **Quest**. | A first-time how-to: Find it, Grab it, Snap the receipt. |
-| 2 | Taps **Got it**. | "Trader Joe's · Quest", points counter, "0 of 3". Real photos of the store walk. A card says "Pasta 1 lb x2, Pasta Shelf". |
+| 2 | Taps **Got it**. | "Trader Joe's · Quest", points counter, "0 of 3". The store's labelled layout (photos once shoppers map it). A card says "Pasta 1 lb x2, Pasta Shelf". |
 | 3 | Taps **Grab**. | +10 points. She can put an item back. |
 | 4 | An item is not on the shelf. She taps **Not here?** and confirms. | The crew sees a store alert. |
 | 5 | Taps **I'm done shopping**, then photographs the receipt. | +50 points. The receipt is filed with the same checks as Journey 1. |
-
-![Quest hunt](img/j-hunt.png)
 
 **Rules.** No clock. No lives. No way to lose. Quest is optional, and
 Express gives the same help as a clean list.

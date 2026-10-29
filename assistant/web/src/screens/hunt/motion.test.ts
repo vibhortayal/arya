@@ -2,7 +2,7 @@ import { Q } from "./model";
 import { M, anchorToU, stepAnchorTo } from "./motion";
 
 /* Where am I? and the step anchor, as the plain-JS app's node harness
- * ran quest.js qAnchorToU (tests/test_localizer.py TestAnchorNode). */
+ * ran quest.js qAnchorToU. */
 
 function hunt() {
   return {

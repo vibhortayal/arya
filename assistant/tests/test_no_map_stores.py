@@ -82,16 +82,9 @@ class TestStoresRoute(unittest.TestCase):
         self.assertEqual(TestClient(__import__("api.main", fromlist=["app"]).app)
                          .get("/api/storemap/stores").status_code, 401)
 
-    def test_trader_joes_ships_with_pictures(self):
-        got = self.stores()
-        tj = got["traderjoes"]
-        self.assertEqual(set(tj), {"store", "key", "photos", "model", "has_pictures", "location", "captured_at"})
-        self.assertIsNone(tj["location"])   # nobody recorded where the walk was filmed
-        self.assertEqual(tj["store"], "Trader Joe's")
-        self.assertEqual(tj["photos"], "models/trader-joes/frames-web")
-        self.assertEqual(tj["model"], "models/trader-joes/manifest.json")
-        self.assertTrue(tj["has_pictures"])
-        self.assertNotIn("costco", got)
+    def test_no_store_ships_with_pictures(self):
+        # Owner 2026-10-29: the old Trader Joe's walk was removed.
+        self.assertEqual(self.stores(), {})
 
     def test_a_store_joins_once_a_capture_is_kept(self):
         r = self.c.post("/api/storemap/segments",
@@ -103,8 +96,9 @@ class TestStoresRoute(unittest.TestCase):
                         content=jpeg(3), headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 200, r.text)
         row = self.stores()["costco"]
+        # Saved under the bare chain name: chain-wide, no location.
         self.assertEqual(row, {"store": "Costco", "key": "costco", "photos": None,
-                               "model": None, "has_pictures": True})
+                               "model": None, "has_pictures": True, "captured_at": []})
 
     def test_snap_prompt_for_an_unknown_aisle_teaches_by_photo_or_video(self):
         r = self.c.get("/api/storemap/next", params={"store": "Costco", "item": "Paper Towels 6 ct"})
@@ -152,10 +146,9 @@ class TestWebStoreData(unittest.TestCase):
         self.assertNotIn("STORE_MODELS = {", src)
         self.assertIn("/api/storemap/stores", src)
 
-    def test_trader_joes_still_works_offline(self):
+    def test_no_store_is_built_in(self):
         src = read(WEB, "lib", "stores.ts")
-        self.assertIn('"models/trader-joes/frames-web"', src)
-        self.assertIn('"models/trader-joes/manifest.json"', src)
+        self.assertNotIn("models/trader-joes", src)
 
     def test_express_show_me_needs_data(self):
         src = read(WEB, "screens", "Express.tsx")

@@ -417,7 +417,6 @@
     "teachArya": "Teach Arya",
     "huntTools": "Hunt tools",
     "scanShelf": "Scan shelf",
-    "whereAmI": "Where am I?",
     "wildFind": "+ Wild find",
     "howToPlay": "How to play",
     "soundAndBuzz": "Sound and buzz",
@@ -497,8 +496,6 @@
     "wildFindAdded": "Wild find: {{name}} is in the haul.",
     "typeItemFirst": "Type an item first.",
     "startFirst": "Start the hunt first.",
-    "placedAt": "Placed you at {{where}}",
-    "couldNotPlace": "Couldn't place that photo — keep following the route.",
     "grab": "Grab",
     "readyWhenYouAre": "Ready when you are",
     "firstStop": "First stop: {{name}}.",
@@ -786,7 +783,15 @@
     "questWalksYou": "Arya walks you through the store, item by item",
     "firstListTitle": "Create your first list",
     "firstListLine": "One list per store you shop at. Type, talk or snap a photo.",
-    "createFirstList": "Create your first list"
+    "createFirstList": "Create your first list",
+    "searchLists_one": "Search {{count}} list",
+    "searchLists_other": "Search {{count}} lists",
+    "showAs": "Show lists as",
+    "viewCards": "Cards",
+    "viewList": "List",
+    "recent": "Recent",
+    "allAToZ": "All lists, A to Z",
+    "noListMatches": "No list matches “{{q}}”."
   },
   "login": {
     "signIn": "Sign in",
@@ -1211,6 +1216,9 @@
     "useThis": "Use this",
     "reminders": "Reminders",
     "remindMe": "Remind me",
+    "registration": "Registration",
+    "registrationOn": "Open — anyone can create an account",
+    "registrationOff": "Closed — only existing accounts can sign in",
     "headsUp": "Heads-up",
     "fewerDays": "Fewer days",
     "moreDays": "More days",
@@ -1309,7 +1317,7 @@
     "pts": "· {{points}} pts",
     "newHunt": "+ New hunt",
     "yourGames": "Your games",
-    "abandon": "Abandon",
+    "abandon": "End",
     "finished": "Finished",
     "20SecondsAnAisleYour": "20 seconds an aisle. Your next hunt gets faster.",
     "crew": "Crew",
@@ -1336,6 +1344,7 @@
     "stickers_other": "{{count}} stickers",
     "confirmEnd": "End this hunt? It leaves Quest and cannot be resumed.",
     "huntEnded": "Hunt ended.",
+    "endThisQuest": "End this quest",
     "gameName": "{{store}} — {{mode}}",
     "stateProgress": "{{state}} · {{done}} of {{total}}",
     "upNext": "Up next — your next game",
@@ -1566,7 +1575,10 @@
       "cloud": "3D mapped · Quest ready",
       "strip": "Walk-through view"
     },
-    "removed": "Removed from your stores."
+    "removed": "Removed from your stores.",
+    "searchStores_one": "Search {{count}} store",
+    "searchStores_other": "Search {{count}} stores",
+    "noStoreMatches": "No store matches “{{q}}”."
   },
   "today": {
     "today": "Today",
@@ -1678,7 +1690,11 @@
       "receiptSub": "See your spending and price trends.",
       "doneAria": "{{step}}, done",
       "dismiss": "Hide Get started"
-    }
+    },
+    "seeMore_one": "See {{count}} more",
+    "seeMore_other": "See {{count}} more",
+    "seeAllLists_one": "See all {{count}} lists",
+    "seeAllLists_other": "See all {{count}} lists"
   },
   "haul": {
     "exampleOnly": "Example only",

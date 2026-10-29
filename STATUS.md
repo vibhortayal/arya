@@ -7,6 +7,14 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 
+## Owner registration toggle (2026-10-29, merged)
+- Registration is a flag the owner flips live in Profile (Account
+  group, owner only): GET/POST `/auth/registration`; the choice is
+  stored in `site.json` in the data root and overrides the
+  ARYA_REGISTRATION_OPEN env default once set. The owner account is
+  named by ARYA_OWNER_USERNAME (operator-set; unset = nobody can
+  flip it). Ask's feature sheet reads the same gate.
+
 ## Price intelligence and Arya's powers (2026-10-29, merged)
 - Prices from the household's own receipts only: why-sheet trend, cheaper
   store and similar items with (i) caveats; Analysis "Your prices" (own
@@ -38,6 +46,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Prepared cart is gone. A "Start shopping · N items" bar on an open
   list leads to the Quest or Express choice. `2026-10-29-list-overhaul.md`,
   `2026-10-29-named-lists.md`, `2026-10-29-start-shopping.md`.
+  Adaptive layout (#156, branch feat/adaptive-layout, not merged): large cards for 1-3 lists, tiles for 4-11, search + Recent + A to Z rows for 12+, a Cards | List switch; Today caps sections. `2026-10-29-adaptive-layout.md`.
 - **Adding:** one row (field, mic, camera). Adds apply at once with Undo;
   riskier changes (out, never, snooze) ask first. A typed name links to
   the tracked item ("milk" finds "Whole Milk", "mlik" fixes itself).
@@ -68,11 +77,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Store status is earned: only located sections (a usable, fresh
   picture) count; 8 of 10 = Mapped, 3 to 7 = Part mapped, fewer =
   Simulated. `2026-10-29-earned-coverage.md`.
-  One map per store location. Nobody recorded which Trader Joe's the
-  shipped walk was filmed in, so no store has it as its map (until
-  `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
-  labelled typical layout, and Hunt shows its photos only there.
-  `2026-10-29-store-maps-per-location.md`.
+  One map per store location. `2026-10-29-store-maps-per-location.md`.
+  The old Trader Joe's walk data (photos, 3D model, shelf graph,
+  localizer and Where am I?) is removed; no store ships mapped.
+  `2026-10-29-remove-old-trader-joes-walk.md`.
   Map my store is one tap from the Quest home and Ask Arya, and offered
   once after a trip at a store not fully mapped.
   `2026-10-29-map-my-store-up-front.md`.
@@ -138,8 +146,6 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - Photo decode reads with Muse Wonder 1.0 (90 s bound, Spark
   fallback) under the hackathon amendment, which **expires Nov 4,
   2026**. Proof run 97/98 after adjudication, $1.12.
-- Localizer: stop accuracy 42/45, neighborhood 45/45, ~1 s a query.
-- Shelf graph build: $0.24 (SAM 36 images + Spark 55 calls).
 
 ## Remaining for submission
 - Demo video and the final submission package (owner go-ahead).

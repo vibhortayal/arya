@@ -27,11 +27,19 @@ export function StarSvg({ filled }: { filled: boolean }) {
 export const storeMeta = (s: MyStore) =>
   `${s.street}, ${s.city}, ${s.state} ${s.zip} · ${(s.scene && SCENE_LABEL[s.scene] && t(SCENE_LABEL[s.scene])) || ""}`;
 
+/* Search: the store's name, street, city or ZIP, case-insensitive. */
+export function filterStores(stores: MyStore[], q: string): MyStore[] {
+  const s = q.trim().toLowerCase();
+  if (!s) return stores;
+  return stores.filter(x => [x.name, x.street, x.city, x.zip].some(v => String(v || "").toLowerCase().includes(s)));
+}
+
 export function StoresMine() {
   const { t } = useTranslation();
   const nav = useNav();
   const { toast, showErr } = useToast();
   const [mine, setMine] = useState<MyStore[] | null>(null);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     const d = await get("/api/stores/mine").catch(() => ({ stores: [] }));
@@ -62,14 +70,25 @@ export function StoresMine() {
     </div>
   );
 
-  const favs = (mine || []).filter(s => s.favorite);
-  const rest = (mine || []).filter(s => !s.favorite);
+  // 12 stores or more: a search field above the groups (#156).
+  const searchable = (mine || []).length >= 12;
+  const shown = searchable ? filterStores(mine || [], query) : mine || [];
+  const favs = shown.filter(s => s.favorite);
+  const rest = shown.filter(s => !s.favorite);
 
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("storesMine.myStores")}</h2>
+      {searchable && (
+        <div className="lv-tools">
+          <input type="search" id="sm-search" className="lv-search" autoComplete="off" value={query}
+            placeholder={t("storesMine.searchStores", { count: mine!.length })} aria-label={t("storesMine.searchStores", { count: mine!.length })}
+            onChange={e => setQuery(e.target.value)} />
+        </div>
+      )}
       <div id="sm-list">
+        {searchable && query.trim() && !shown.length && <p className="empty">{t("storesMine.noStoreMatches", { q: query.trim() })}</p>}
         {mine && !mine.length && <div className="group"><Empty>{t("storesMine.noStoresYetFindOne")}</Empty></div>}
         {favs.length > 0 && <><h3 className="sect">{t("common.favorites")}</h3><div className="group">{favs.map(row)}</div></>}
         {rest.length > 0 && <><h3 className="sect">{t("storesMine.allMyStores")}</h3><div className="group">{rest.map(row)}</div></>}

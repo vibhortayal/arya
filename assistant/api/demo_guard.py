@@ -44,7 +44,7 @@ _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
 _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/list/from-photo", "/api/list/from-text",
                     "/api/expiry/read",
-                    "/api/quest/scan-shelf", "/api/quest/locate",
+                    "/api/quest/scan-shelf",
                     "/api/quest/share-look",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
                     "/api/storemap", "/api/quest/zones", "/api/quest/build")

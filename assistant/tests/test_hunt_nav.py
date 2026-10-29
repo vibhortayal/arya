@@ -89,7 +89,7 @@ class TestHuntFrameShell(unittest.TestCase):
     def test_tools_row_and_next_card(self):
         h, css = hunt_jsx(), read("styles.css")
         tools = section(h, 'className="hunt-tools"', '<div id="wild-form"')
-        for el in ("btn-scan", "btn-locate", "btn-nothere"):
+        for el in ("btn-scan", "btn-nothere"):
             self.assertIn(f'id="{el}"', tools)
         pop = section(h, 'id="hunt-pop"', 'id="hunt-done-note"')
         self.assertIn('id="btn-collect"', pop)

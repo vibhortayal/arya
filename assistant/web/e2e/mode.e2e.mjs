@@ -1,5 +1,6 @@
-/* Mode picker: Express and Quest each create a session and move on to
- * the hunt/express screen; fastMode skips the picker. */
+/* Mode picker: a store with no aisle pictures (every store, since the
+ * old Trader Joe's walk was removed) offers Express only, and a Quest
+ * ask falls back to Express; fastMode skips the picker. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
@@ -16,8 +17,8 @@ export default async function (page, base) {
   }, v, { timeout: 8000 });
 
   await show(null);
-  await page.waitForSelector("#view-mode .modecard[data-mode='quest']");
-  if ((await page.$$("#view-mode .modecard")).length !== 2) throw new Error("expected two mode cards");
+  await page.waitForSelector("#view-mode .modecard[data-mode='express']");
+  if (!(await page.$eval("#view-mode .modecard[data-mode='quest']", b => b.hidden))) throw new Error("Quest needs aisle pictures");
   const created = page.waitForResponse(r => r.url().includes("/api/quest/sessions") && r.request().method() === "POST");
   await page.click("#view-mode .modecard[data-mode='express']");
   const r = await created;
@@ -26,5 +27,5 @@ export default async function (page, base) {
   await shown("express");
 
   await show("quest");
-  await shown("hunt");
+  await shown("express");
 }

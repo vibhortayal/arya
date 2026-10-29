@@ -7,8 +7,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from api import auth, supabase_auth
 from api.demo_guard import _demo_auth_hits, _demo_rate
-from api.deps import (_client_ip, _code_hits, _json_obj, _login_fails, _prune, _register_hits, _registration_open,
-                      _set_session_cookie, _verify_hits)
+from api.deps import (_client_ip, _code_hits, _is_owner, _json_obj, _login_fails, _prune, _register_hits,
+                      _registration_open, _set_registration_open, _set_session_cookie, _verify_hits)
 
 router = APIRouter()
 
@@ -18,6 +18,42 @@ def auth_status():
     return {"has_users": len(auth.users()) > 0,
             "registration_open": _registration_open(),
             "email_signin": supabase_auth.configured()}
+
+
+def _session_user(req: Request):
+    """Who is asking, from the session cookie. The /auth/* routes
+    sit outside the login middleware's prefixes, so — like
+    /auth/me — they resolve the session themselves."""
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    return info if info and not info.get("demo") else None
+
+
+@router.get("/auth/registration")
+def registration_state(req: Request):
+    """Registration state for a signed-in account. `can_manage`
+    is true only for the owner (ARYA_OWNER_USERNAME), the one
+    account allowed to flip the toggle."""
+    info = _session_user(req)
+    if not info:
+        raise HTTPException(401, "login required")
+    return {"registration_open": _registration_open(),
+            "can_manage": _is_owner(info["user"])}
+
+
+@router.post("/auth/registration")
+async def registration_set(req: Request):
+    """The owner's registration toggle (owner, 2026-10-29): flips
+    sign-ups open or closed at once, no redeploy. The choice is
+    stored in the data root and overrides the environment flag."""
+    info = _session_user(req)
+    if not info:
+        raise HTTPException(401, "login required")
+    if not _is_owner(info["user"]):
+        raise HTTPException(403, "owner only")
+    body = await _json_obj(req)
+    if not isinstance(body.get("open"), bool):
+        raise HTTPException(400, "open must be true or false")
+    return {"registration_open": _set_registration_open(body["open"])}
 
 
 @router.post("/auth/setup")

@@ -7,11 +7,14 @@ import { resolveDriver } from "../Hunt";
 
 vi.mock("../../app/session", () => ({ useSession: () => ({ demo: false }), clearOnSignOut: () => {} }));
 
-const TJ = "Trader Joe's", CS = "Corner Store";
+/* No store ships with a photo walk any more (2026-10-29); a row
+ * with one stands in for a store that has one. */
+const TJ = "Walk Store", CS = "Corner Store";
+const WALK = { store: TJ, key: "walkstore", photos: "models/walk/frames", model: "models/walk/manifest.json", has_pictures: true };
 const sess = (store: string, mode = "quest") => ({ id: "s", store, mode, state: "playing", items: [] }) as any;
 
 describe("the store view", () => {
-  beforeEach(() => setStoreRows([]));
+  beforeEach(() => setStoreRows([WALK]));
 
   test("a mapped store opens on its photos; an unmapped one on the drawing, or cards in Express", () => {
     expect(resolveDriver(sess(TJ), false)).toBe("photo");

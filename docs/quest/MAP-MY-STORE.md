@@ -9,14 +9,14 @@ Wireframe (v2): `docs/quest/map-my-store-wireframe.html`. Code: `api/storemap.py
 
 ## Coverage model
 A **segment** is one side of one aisle, or one wall or freezer run. A store
-map is its list of segments. Shoppers add segments ("Add an aisle"); a store
-with a walkthrough (Trader Joe's) starts seeded from `shelf-graph.json`, one
-segment per labelled zone, each with its walk frame as a baseline photo.
+map is its list of segments. Shoppers add segments ("Add an aisle"). No store
+starts seeded: the old Trader Joe's walkthrough seed was removed (2026-10-29),
+and a saved section that only had a walkthrough baseline is dropped on load.
 
 Status of a segment, from its best capture:
 - **unmapped**: no capture, no baseline.
 - **mapped**: best capture is 60 days old or less and no open flag.
-- **aging**: best capture older than 60 days, or only a walkthrough baseline.
+- **aging**: best capture older than 60 days.
 - **stale**: a "not found" or "outdated" flag is newer than the best capture.
 
 Coverage is mapped segments over known segments. The denominator grows as

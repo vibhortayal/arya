@@ -16,9 +16,10 @@ FEATURES_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "arya_f
 
 def _feature_flags():
     from api import reminders, supabase_auth
+    from api.deps import _registration_open
     return {"push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
-            "registration_open": os.environ.get("ARYA_REGISTRATION_OPEN") == "1"}
+            "registration_open": _registration_open()}
 
 
 def feature_sheet(flags=None):

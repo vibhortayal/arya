@@ -29,6 +29,7 @@ services:
       # default, so an unset value behaves exactly as before.
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
+      ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}
       ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
       # $20 a day for the judging window (about 50 full demo visits at
       # the $0.40 per-visit cap), paid from the hackathon credits. The
@@ -43,7 +44,6 @@ services:
       ARYA_VAPID_PUBLIC_KEY: ${ARYA_VAPID_PUBLIC_KEY:-}
       ARYA_VAPID_PRIVATE_KEY: ${ARYA_VAPID_PRIVATE_KEY:-}
       ARYA_VAPID_SUBJECT: ${ARYA_VAPID_SUBJECT:-mailto:admin@example.com}
-      ARYA_WALK_STORE_ID: ${ARYA_WALK_STORE_ID:-}
       ARYA_SCAN_DAILY_FRAMES: ${ARYA_SCAN_DAILY_FRAMES:-120}
     volumes:
       - arya-data:/app/data

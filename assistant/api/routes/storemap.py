@@ -6,7 +6,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
 from api.demo_guard import _is_demo
-from api.deps import _PWA, _budget_guard, _json_obj, new_client
+from api.deps import _budget_guard, _json_obj, new_client
 
 router = APIRouter()
 
@@ -91,19 +91,12 @@ async def storemap_outdated(req: Request):
 
 @router.get("/api/storemap/photo")
 def storemap_photo(store: str = "", segment: str = ""):
-    """The segment's best kept photo (people already scrubbed), or the
-    walkthrough frame a seeded segment started from."""
+    """The segment's best kept photo (people already scrubbed)."""
     from api import storemap
     name = _map_store(store)
     data = storemap.best_image(name, segment)
     if data is not None:
         return Response(content=data, media_type="image/jpeg")
-    frame = storemap.baseline_frame(name, segment)
-    if frame and storemap.chain_key(name) == storemap.WALK_CHAIN:
-        path = os.path.join(_PWA, "models", "trader-joes", "frames-web", frame)
-        if os.path.isfile(path):
-            with open(path, "rb") as fh:
-                return Response(content=fh.read(), media_type="image/jpeg")
     raise HTTPException(404, "no photo for this part of the map yet")
 
 

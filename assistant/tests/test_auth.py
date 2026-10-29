@@ -72,6 +72,55 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(c.post("/auth/register", json={"username": "demo", "password": "long enough"}).status_code, 400)
         self.assertEqual(c.post("/auth/register", json={"username": "shorty@example.com", "password": "short"}).status_code, 400)
 
+    @mock.patch.dict(os.environ, {"ARYA_OWNER_USERNAME": "owner"})
+    def test_owner_toggle_opens_and_closes_registration(self):
+        c = self.c
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        # signed in as the owner: the toggle is manageable and starts closed
+        st = c.get("/auth/registration").json()
+        self.assertEqual(st, {"registration_open": False, "can_manage": True})
+        # flipping it opens public signup with no environment flag set
+        r = c.post("/auth/registration", json={"open": True})
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["registration_open"])
+        self.assertTrue(c.get("/auth/status").json()["registration_open"])
+        c.post("/auth/logout")
+        r = c.post("/auth/register", json={"username": "new@example.com", "password": "long enough"})
+        self.assertEqual(r.status_code, 200)
+        # a non-owner can read the state but never flip it
+        st = c.get("/auth/registration").json()
+        self.assertEqual(st, {"registration_open": True, "can_manage": False})
+        self.assertEqual(c.post("/auth/registration", json={"open": False}).status_code, 403)
+        # the owner closes it again; signup refuses once more
+        c.post("/auth/logout")
+        c.post("/auth/login", json={"username": "owner", "password": "correct horse"})
+        self.assertFalse(c.post("/auth/registration", json={"open": False}).json()["registration_open"])
+        c.post("/auth/logout")
+        r = c.post("/auth/register", json={"username": "two@example.com", "password": "long enough"})
+        self.assertEqual(r.status_code, 403)
+
+    @mock.patch.dict(os.environ, {"ARYA_OWNER_USERNAME": "owner",
+                                  "ARYA_REGISTRATION_OPEN": "1"})
+    def test_owner_toggle_overrides_environment(self):
+        c = self.c
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        self.assertTrue(c.get("/auth/status").json()["registration_open"])  # env says open
+        c.post("/auth/registration", json={"open": False})
+        self.assertFalse(c.get("/auth/status").json()["registration_open"])  # toggle wins
+
+    def test_registration_toggle_needs_login_and_owner(self):
+        c = self.c
+        # logged out: the state endpoint refuses outright
+        self.assertEqual(c.get("/auth/registration").status_code, 401)
+        self.assertEqual(c.post("/auth/registration", json={"open": True}).status_code, 401)
+        # with no ARYA_OWNER_USERNAME configured, nobody can manage it
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        self.assertFalse(c.get("/auth/registration").json()["can_manage"])
+        self.assertEqual(c.post("/auth/registration", json={"open": True}).status_code, 403)
+        # a malformed body is a 400 for the owner, never a silent flip
+        with mock.patch.dict(os.environ, {"ARYA_OWNER_USERNAME": "owner"}):
+            self.assertEqual(c.post("/auth/registration", json={"open": "yes"}).status_code, 400)
+
     def test_first_user_adopts_household_data(self):
         from api import state
         from api.decode.service import normalize_costco_json

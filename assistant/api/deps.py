@@ -5,6 +5,7 @@ one place a Meta client is built.
 Routes build their client with new_client() and read the ledger path
 from this module at call time, so a test can swap deps.MetaClient or
 deps._LEDGER and every router sees it."""
+import json
 import os
 
 from fastapi import HTTPException
@@ -141,12 +142,56 @@ def _set_session_cookie(resp, token):
     return resp
 
 
+def _site_path():
+    return os.path.join(state.base_dir(), "site.json")
+
+
+def _registration_override():
+    """The owner's in-app toggle, once it has been set: True or
+    False. None means never toggled — the environment decides."""
+    try:
+        with open(_site_path()) as fh:
+            v = json.load(fh).get("registration_open")
+    except (OSError, ValueError):
+        return None
+    return v if isinstance(v, bool) else None
+
+
 def _registration_open():
     """New-account creation is locked by default (owner locked it
-    2026-10-28, reversing the same-day open). The operator reopens it
-    by setting ARYA_REGISTRATION_OPEN=1 in the service environment —
-    no code change. Existing accounts and the demo are unaffected."""
+    2026-10-28, reversing the same-day open). The environment flag
+    ARYA_REGISTRATION_OPEN is the bootstrap default; the owner's
+    in-app toggle (POST /auth/registration, owner only) overrides
+    it once set, and the override survives redeploys in the data
+    root. Existing accounts and the demo are unaffected."""
+    override = _registration_override()
+    if override is not None:
+        return override
     return os.environ.get("ARYA_REGISTRATION_OPEN") == "1"
+
+
+def _set_registration_open(open_):
+    path = _site_path()
+    doc = {}
+    if os.path.exists(path):
+        try:
+            with open(path) as fh:
+                doc = json.load(fh)
+        except ValueError:
+            doc = {}
+    if not isinstance(doc, dict):
+        doc = {}
+    doc["registration_open"] = bool(open_)
+    state.write_json_atomic(path, doc)
+    return doc["registration_open"]
+
+
+def _is_owner(user):
+    """The site owner is whoever the operator names in
+    ARYA_OWNER_USERNAME. Unset means nobody is owner, so the
+    registration toggle stays unreachable (fail closed)."""
+    owner = (os.environ.get("ARYA_OWNER_USERNAME") or "").strip().lower()
+    return bool(owner) and (user or "").strip().lower() == owner
 
 
 def new_client():

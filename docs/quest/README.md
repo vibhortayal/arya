@@ -11,8 +11,8 @@ the camera at the shelf. Snap the receipt at checkout: it banks your
 points and teaches Arya your household, so next week's list writes
 itself.
 
-An unmapped store still plays, as shelf cards. One walkthrough video
-maps it for every shopper after you.
+An unmapped store still plays, as a labelled typical layout. A guided
+camera scan maps it for every shopper after you.
 
 ## Loop
 

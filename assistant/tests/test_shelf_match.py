@@ -12,6 +12,19 @@ os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
 
 
+FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "shelf-graphs")
+
+
+def use_fixture_graphs(case):
+    """An invented store's shelf graph (no shipped store has one)."""
+    from api import shelfmatch
+    old = shelfmatch.MODELS_DIR
+    shelfmatch.MODELS_DIR, shelfmatch._graphs = FIXTURE, None
+    def undo():
+        shelfmatch.MODELS_DIR, shelfmatch._graphs = old, None
+    case.addCleanup(undo)
+
+
 class StubClient:
     """Stands in for MetaClient: canned matches, call counting,
     optional failure. Asserts the policy on every call — session
@@ -47,13 +60,14 @@ class StubMeta:
 
 class TestDeterministicMatch(unittest.TestCase):
     def setUp(self):
+        use_fixture_graphs(self)
         from api import shelfmatch
         self.sm = shelfmatch
-        self.graph = shelfmatch.graph_for("Trader Joe's")
+        self.graph = shelfmatch.graph_for("Sample Market")
         assert self.graph is not None
 
     def test_graph_keyed_by_store_name(self):
-        assert self.sm.graph_for("trader-joes") is self.graph
+        assert self.sm.graph_for("sample-market") is self.graph
         assert self.sm.graph_for("Costco Wholesale") is None
 
     def test_exact_label_overlap(self):
@@ -81,9 +95,10 @@ class TestDeterministicMatch(unittest.TestCase):
 
 class TestModelMatch(unittest.TestCase):
     def setUp(self):
+        use_fixture_graphs(self)
         from api import shelfmatch
         self.sm = shelfmatch
-        self.graph = shelfmatch.graph_for("Trader Joe's")
+        self.graph = shelfmatch.graph_for("Sample Market")
 
     def test_valid_label_kept(self):
         stub = StubClient({"Cheese": "Cheese Shelf"})
@@ -115,6 +130,7 @@ class TestModelMatch(unittest.TestCase):
 
 class TestSessionMatching(unittest.TestCase):
     def setUp(self):
+        use_fixture_graphs(self)
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import quest
         self.quest = quest
@@ -123,7 +139,7 @@ class TestSessionMatching(unittest.TestCase):
         stub = StubClient({"Cheese": "Cheese Shelf",
                            "Unicorn Glitter": None})
         sess = self.quest.create_session(
-            "Trader Joe's", "quest",
+            "Sample Market", "quest",
             ["Frozen Pizza", "Unicorn Glitter", "Cheese"], client=stub)
         names = [it["name"] for it in sess["items"]]
         # Matched stops walk in shelf order; the unmatched stop
@@ -139,10 +155,10 @@ class TestSessionMatching(unittest.TestCase):
 
     def test_cache_avoids_a_second_call(self):
         stub = StubClient({"Cheese": "Cheese Shelf"})
-        self.quest.create_session("Trader Joe's", "quest", ["Cheese"],
+        self.quest.create_session("Sample Market", "quest", ["Cheese"],
                                   client=stub)
         assert stub.calls == 1
-        sess = self.quest.create_session("Trader Joe's", "quest",
+        sess = self.quest.create_session("Sample Market", "quest",
                                          ["Cheese"], client=stub)
         assert stub.calls == 1          # verdict came from the cache
         assert sess["items"][0]["shelf_label"] == "Cheese Shelf"
@@ -150,28 +166,28 @@ class TestSessionMatching(unittest.TestCase):
 
     def test_none_verdict_is_cached_too(self):
         stub = StubClient({"Unicorn Glitter": None})
-        self.quest.create_session("Trader Joe's", "quest",
+        self.quest.create_session("Sample Market", "quest",
                                   ["Unicorn Glitter"], client=stub)
-        self.quest.create_session("Trader Joe's", "quest",
+        self.quest.create_session("Sample Market", "quest",
                                   ["Unicorn Glitter"], client=stub)
         assert stub.calls == 1
 
     def test_model_failure_never_breaks_creation(self):
         stub = StubClient(fail=True)
-        sess = self.quest.create_session("Trader Joe's", "quest",
+        sess = self.quest.create_session("Sample Market", "quest",
                                          ["Cheese"], client=stub)
         assert sess["items"][0]["shelf_label"] is None
         # ...and the failure was not cached as a verdict: a working
         # client is asked again on the next session.
         good = StubClient({"Cheese": "Cheese Shelf"})
-        sess = self.quest.create_session("Trader Joe's", "quest",
+        sess = self.quest.create_session("Sample Market", "quest",
                                          ["Cheese"], client=good)
         assert good.calls == 1
         assert sess["items"][0]["shelf_label"] == "Cheese Shelf"
 
     def test_no_client_means_deterministic_only(self):
         sess = self.quest.create_session(
-            "Trader Joe's", "quest", ["Pasta Sauce", "Cheese"])
+            "Sample Market", "quest", ["Pasta Sauce", "Cheese"])
         pasta, cheese = sess["items"]
         assert pasta["match_source"] == "exact"
         assert cheese["shelf_label"] is None
@@ -186,7 +202,7 @@ class TestSessionMatching(unittest.TestCase):
 
     def test_session_completes_with_unmatched_stops(self):
         sess = self.quest.create_session(
-            "Trader Joe's", "quest", ["Unicorn Glitter", "Cheese"],
+            "Sample Market", "quest", ["Unicorn Glitter", "Cheese"],
             client=StubClient({"Cheese": "Cheese Shelf"}))
         for it in list(sess["items"]):
             self.quest.check_item(sess["id"], it["name"], True)
@@ -196,6 +212,7 @@ class TestSessionMatching(unittest.TestCase):
 
 class TestSessionMatchingApi(unittest.TestCase):
     def setUp(self):
+        use_fixture_graphs(self)
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         StubMeta.stub = StubClient({"Cheese": "Cheese Shelf"})
         from api import main
@@ -209,7 +226,7 @@ class TestSessionMatchingApi(unittest.TestCase):
 
     def test_session_response_carries_shelf_fields(self):
         r = self.c.post("/api/quest/sessions", json={
-            "store": "Trader Joe's", "mode": "quest", "driver": "cloud",
+            "store": "Sample Market", "mode": "quest", "driver": "cloud",
             "items": [{"name": "Organic Milk"}, {"name": "Cheese"}]})
         assert r.status_code == 200, r.text
         items = r.json()["items"]
@@ -223,6 +240,7 @@ class TestSessionMatchingApi(unittest.TestCase):
 
 class TestDemoUnchanged(unittest.TestCase):
     def setUp(self):
+        use_fixture_graphs(self)
         base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = base
         import importlib.util
@@ -240,7 +258,7 @@ class TestDemoUnchanged(unittest.TestCase):
         # The demo plays hunts (review 2026-10-28): the session exists
         # for this visitor, and nothing reaches the household on disk.
         r = self.c.post("/api/quest/sessions", json={
-            "store": "Trader Joe's", "mode": "quest",
+            "store": "Sample Market", "mode": "quest",
             "items": [{"name": "Cheese"}]})
         assert r.status_code == 200, r.text
         demo_dir = os.path.join(os.environ["ARYA_DATA_DIR"], "users", "demo")
