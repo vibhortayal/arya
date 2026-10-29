@@ -1,41 +1,47 @@
-/* A trip in progress: the store map (overworld) and a section (level).
- * The reducer owns the rules; this screen dispatches actions and plays
- * the events they emit as juice, sound, buzz and voice. */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+/* A trip in progress: one living store. Your shopper walks to an item,
+ * then you choose what happens (look first, grab later): Grab it, Not
+ * here, Substitute or Skip. Nothing enters the cart until you choose,
+ * and nothing moves on until you pick the next stop. The reducer owns
+ * the rules; this screen dispatches actions and plays their events. */
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { routeNote } from "../core/route";
 import { artFor, type QuestSource } from "../core/source";
 import { sectionFor } from "../core/template";
 import {
-  SCORE, allHandled, currentStop, isHandled, itemsIn, leftIn, liveStops, nextItem, reduce, sectionView, stops,
+  SCORE, allHandled, currentStop, isHandled, itemsIn, leftIn, liveStops, reduce, sectionView, stops,
   type Action, type GameEvent, type Trip,
 } from "../core/trip";
 import type { QuestItem } from "../core/types";
 import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
 import { charArt, img } from "../assets";
-import { GhostHand, KindBadge, MiniMap, Sheet } from "./bits";
-import { StoreMap, type MapHandle } from "./StoreMap";
+import { GhostHand, KindBadge, Sheet } from "./bits";
 import { coachFor } from "./coach";
-import { AisleScene } from "./AisleScene";
+import type { Goal, WorldApi } from "../world/World3D";
+
+const World3D = lazy(() => import("../world/World3D").then(m => ({ default: m.World3D })));
 
 type Props = { trip: Trip; source: QuestSource; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void };
-type SheetName = null | "list" | "route" | "cant" | "help" | "quit";
+type SheetName = null | "list" | "route" | "help" | "quit";
+type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
 
 export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
-  const [view, setView] = useState<"map" | "section">("map");
-  const [sec, setSec] = useState<string | null>(null);
+  const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
+  const [page, setPage] = useState<Page>("main");
+  const [walking, setWalking] = useState<Goal | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetName>(null);
   const [undo, setUndo] = useState<null | { key: string; name: string }>(null);
   const [banner, setBanner] = useState<Banner>(null);
-  const [findIt, setFindIt] = useState(0);
+  const [overview, setOverview] = useState(false);
   const [prefs, setPrefs] = useState<FeelPrefs>(feel.prefs);
   const [briefing, setBriefing] = useState(!trip.got.length && !trip.here);
+  const [subName, setSubName] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
-  const map = useRef<MapHandle>(null);
+  const world = useRef<WorldApi | null>(null);
   const tripRef = useRef(trip); tripRef.current = trip;
   const timers = useRef<number[]>([]);
   const undoTimer = useRef(0);
@@ -48,179 +54,236 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
   }, []);
 
   const L = trip.layout;
-  const cur = currentStop(trip);
   const done = allHandled(trip);
-  const section = sec ? L.sections.find(s => s.id === sec) || null : null;
-  const secItems = sec ? itemsIn(trip, sec) : [];
-  const item: QuestItem | null = (focus && secItems.find(i => i.key === focus && !isHandled(trip, i.key))) || (sec ? nextItem(trip, sec) : null);
-  const view_ = sec ? sectionView(trip, sec) : "real";
+  const item: QuestItem | null = at ? trip.items.find(i => i.key === at && !isHandled(trip, i.key)) ?? null : null;
+  const section = item ? L.sections.find(s => s.id === item.section)! : null;
+  const view_ = item ? sectionView(trip, item.section) : "real";
   const got = trip.got.length, total = trip.items.length;
+  /* The next item: the one you picked, else the next on Arya's route. */
+  const nextKey = (t: Trip) => {
+    if (focus && !isHandled(t, focus)) return focus;
+    const c = currentStop(t);
+    return c ? leftIn(t, c)[0]?.key ?? null : null;
+  };
+  const next = nextKey(trip);
+  const nextItem = next ? trip.items.find(i => i.key === next)! : null;
 
-  /* Voice guide: the next stop, out loud, when it changes. */
-  const spoke = useRef<string | null>(null);
+  const walkTo = useCallback((g: Goal) => {
+    setAt(null); setPage("main");
+    if (g.kind === "item") setFocus(g.key);
+    world.current?.walkTo(g);
+    setOverview(false);
+  }, []);
+
+  const onArrive = useCallback((g: Goal) => {
+    const t = tripRef.current;
+    if (g.kind === "item") {
+      const it = t.items.find(i => i.key === g.key);
+      if (!it || isHandled(t, it.key)) return;
+      onTrip(reduce(t, { type: "enter", section: it.section }));
+      setAt(it.key); setPage("main"); setSubName("");
+      tick(3);
+    } else if (g.kind === "checkout") {
+      if (allHandled(t)) { stinger(true); later(() => onFinish(tripRef.current), 450); }
+      else {
+        const n = t.items.filter(i => !isHandled(t, i.key)).length;
+        setBanner({ title: `${n} item${n === 1 ? "" : "s"} still to decide`, sub: "Grab, substitute, skip or report them first", kind: "map" });
+        later(() => setBanner(null), 1800);
+      }
+    }
+  }, [onTrip, onFinish]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Voice guide: says where you're headed. */
   useEffect(() => {
-    if (view !== "map") return;
-    const key = cur || (done ? "checkout" : "");
-    if (spoke.current === key) return;
-    spoke.current = key;
-    if (cur) { const s = L.sections.find(x => x.id === cur)!; say(`Next stop, ${s.short}. ${leftIn(trip, cur).map(i => i.name).join(", ")}.`); }
-    else if (done) say("That's everything. Head to the checkout.");
-  }, [view, cur, done, L.sections, trip]);
-
-  const goSection = useCallback((id: string) => {
-    if (!itemsIn(tripRef.current, id).length) { setBanner({ title: "Nothing on your list here", kind: "map" }); later(() => setBanner(null), 1100); return; }
-    onTrip(reduce(tripRef.current, { type: "enter", section: id }));
-    setSec(id); setFocus(null); setView("section"); setSheet(null);
-  }, [onTrip]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const backToMap = () => { setView("map"); setFocus(null); };
+    if (!walking || walking.kind !== "item") return;
+    const it = trip.items.find(i => i.key === walking.key); if (!it) return;
+    const s = L.sections.find(x => x.id === it.section)!;
+    say(sectionView(trip, s.id) === "fog" ? `Heading into the fog for ${it.name}.` : `Next, ${it.name}, in ${s.short}.`);
+  }, [walking]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Plays what the reducer reports. In a real store the game stays
    * quiet (a tick and the points; eyes go back to the shelf) and the
    * big moments wait for checkout. Practice gets the full show. */
-  const play = (events: GameEvent[], next: Trip, from: { x: number; y: number }) => {
+  const play = (events: GameEvent[], nxt: Trip) => {
     const j = juice.current!;
-    const quiet = !next.practice;
-    const basket = root.current?.querySelector(".qg-basket") || null;
+    const quiet = !nxt.practice;
+    const P = (k: string) => world.current?.screenOf(k) ?? world.current?.screenOf("player") ?? { x: innerWidth / 2, y: innerHeight / 2 };
     let delay = 0;
     for (const e of events) {
       if (e.t === "grab") {
-        const it = next.items.find(i => i.key === e.key)!;
-        j.splat(from.x, from.y, it.art, e.golden);
-        j.float(from.x, from.y - 30, e.golden ? `+${e.pts} GOLDEN` : `+${e.pts}`, e.golden ? "gold" : "pts");
-        if (e.chain > 1 && !e.golden && !events.some(x => x.t === "scout")) later(() => j.float(from.x + 46, from.y - 8, `x${e.chain} combo`, "chain"), 140);
-        j.fly(from, basket, charArt(it.art));
+        const it = nxt.items.find(i => i.key === e.key)!, p = j.local(P(e.key));
+        world.current?.pickup(e.key);
+        j.splat(p.x, p.y, it.art, e.golden);
+        j.float(p.x, p.y - 30, e.golden ? `+${e.pts} GOLDEN` : `+${e.pts}`, e.golden ? "gold" : "pts");
+        if (e.chain > 1 && !e.golden && !events.some(x => x.t === "scout")) later(() => j.float(p.x + 46, p.y - 8, `x${e.chain} combo`, "chain"), 140);
         if (e.golden) { goldChime(); buzz([20, 40, 20, 40, 60]); } else { chime(e.chain); buzz(18); }
+        later(() => j.pop(root.current?.querySelector(".qg-basket") ?? null), 600);
       } else if (e.t === "scout") {
-        later(() => { whoosh(); j.sparkle(from.x, from.y - 60, 22); j.float(from.x, from.y - 90, `+${e.pts} on the map!`, "scout"); }, 180);
+        const p = j.local(P(e.key));
+        later(() => { whoosh(); j.sparkle(p.x, p.y - 20, 22); j.float(p.x, p.y - 60, `+${e.pts} on the map!`, "scout"); }, 180);
         delay = Math.max(delay, 900);
-        const s = next.layout.sections.find(x => x.id === e.section)!;
-        void source.report({ kind: "found", store: next.layout.id, section: e.section, item: next.items.find(i => i.key === e.key)!.name });
+        const s = nxt.layout.sections.find(x => x.id === e.section)!;
+        void source.report({ kind: "found", store: nxt.layout.id, section: e.section, item: nxt.items.find(i => i.key === e.key)!.name });
         if (!quiet) {
-          later(() => { setBanner({ title: "Fog cleared!", sub: `${s.short} is on your map`, kind: "map" }); }, 300);
+          later(() => setBanner({ title: "Fog cleared!", sub: `${s.short} is on your map`, kind: "map" }), 300);
           later(() => setBanner(b => (b?.kind === "map" ? null : b)), 1700);
         }
       } else if (e.t === "report") {
         soft(); buzz(12);
-        j.float(from.x, from.y - 30, `+${e.pts} thanks!`, "scout");
-        const it = next.items.find(i => i.key === e.key)!;
-        void source.report({ kind: e.kind, store: next.layout.id, section: it.section, item: it.name });
+        const it = nxt.items.find(i => i.key === e.key)!, p = j.local(P(e.key));
+        j.float(p.x, p.y - 30, "Noted, thanks", "scout");
+        void source.report({ kind: e.kind, store: nxt.layout.id, section: it.section, item: it.name });
       } else if (e.t === "clear") {
-        const s = next.layout.sections.find(x => x.id === e.section)!;
-        if (quiet) {
-          later(() => { tick(7); j.float(from.x, from.y - 70, `${e.sweep ? "Sweep! " : ""}${s.short} done +${e.pts}`, "chain"); }, delay + 300);
-          later(() => { setView("map"); setFocus(null); }, delay + 1100);
-          continue;
-        }
+        const s = nxt.layout.sections.find(x => x.id === e.section)!, p = j.local(P("player"));
+        if (quiet) { later(() => { tick(7); j.float(p.x, p.y - 60, `${e.sweep ? "Sweep! " : ""}${s.short} done +${e.pts}`, "chain"); }, delay + 300); continue; }
         later(() => {
           stinger(false); buzz([30, 50, 30]);
           setBanner({ title: e.sweep ? "CLEAN SWEEP!" : "SECTION CLEAR!", sub: `${s.short}  +${e.pts}`, kind: e.sweep ? "sweep" : "clear" });
-          const c = j.at(root.current!.querySelector(".qg-banner"));
-          j.burst(c.x, c.y, e.sweep ? 70 : 44);
+          const c = j.at(root.current!.querySelector(".qg-banner")); j.burst(c.x, c.y, e.sweep ? 70 : 44);
         }, delay + 420);
-        later(() => { setBanner(null); setView("map"); setFocus(null); }, delay + 1650);
+        later(() => setBanner(null), delay + 1650);
+      } else if (e.t === "allDone") {
+        later(() => { const p = j.local(P("player")); j.float(p.x, p.y - 90, "List done! Checkout →", "chain"); }, delay + 900);
       } else if (e.t === "ungrab") soft();
     }
   };
 
-  const act = (a: Action, fromEl?: Element | null) => {
-    const prev = tripRef.current, next = reduce(prev, a);
-    if (next === prev) return;
-    const j = juice.current;
-    const from = j ? j.at(fromEl || root.current!.querySelector(".qg-art"), 0.45) : { x: 0, y: 0 };
-    onTrip(next);
-    play(next.events, next, from);
-    if (a.type === "grab") {
-      const it = next.items.find(i => i.key === a.key)!;
+  const act = (a: Action) => {
+    const prev = tripRef.current, nxt = reduce(prev, a);
+    if (nxt === prev) return;
+    onTrip(nxt);
+    play(nxt.events, nxt);
+    if (a.type === "grab" || a.type === "scout") {
+      const it = nxt.items.find(i => i.key === a.key)!;
       setUndo({ key: a.key, name: it.name });
       clearTimeout(undoTimer.current);
-      undoTimer.current = window.setTimeout(() => setUndo(u => (u?.key === a.key ? null : u)), 4000);
+      undoTimer.current = window.setTimeout(() => setUndo(u => (u?.key === a.key ? null : u)), 5000);
     }
-    setFocus(null);
-    // A section with nothing left and no clear (all passed or reported): back to the map.
-    if (sec && !leftIn(next, sec).length && !next.events.some(e => e.t === "clear")) later(backToMap, 700);
+    if (a.type !== "ungrab") { setAt(null); setPage("main"); setFocus(null); }
   };
 
-  const coach = trip.practice && !briefing ? coachFor(trip, view, item, view_) : null;
+  const onTapItem = (key: string) => {
+    const t = tripRef.current;
+    if (isHandled(t, key)) { if (t.passed.includes(key)) onTrip(reduce(t, { type: "unpass", key })); else return; }
+    walkTo({ kind: "item", key });
+  };
+
+  const coach = trip.practice && !briefing && !sheet ? coachFor(trip, item ? "section" : "map", item, view_) : null;
+  const left = trip.items.filter(i => !isHandled(trip, i.key) || trip.passed.includes(i.key));
 
   return (
-    <div className={"qg-play " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
+    <div className={"qg-play qg-live " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
+      <div className="qg-worldwrap">
+        <Suspense fallback={<div className="qg-loading">Opening the store…</div>}>
+          <World3D trip={trip} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} />
+        </Suspense>
+      </div>
+
       {/* HUD: back, where you are, the basket, help. */}
       <header className="qg-hud">
-        <button className="qg-ic" onClick={() => (view === "section" ? backToMap() : setSheet("quit"))} aria-label={view === "section" ? "Back to the map" : "Leave the quest"}>‹</button>
+        <button className="qg-ic" onClick={() => setSheet("quit")} aria-label="Leave the quest">‹</button>
         <div className="qg-where">
           <b>{trip.practice ? "Practice Market" : L.name}</b>
           <KindBadge kind={L.kind} practice={trip.practice} />
         </div>
-        <button className="qg-basket" onClick={() => setSheet("list")} aria-label={`Basket: ${got} of ${total}. ${trip.points} points. Open the list`}>
+        <button className="qg-basket" onClick={() => setSheet("list")} aria-label={`Cart: ${got} of ${total}. ${trip.points} points. Open the list`}>
           <img src={charArt("basket.webp")} alt="" />
           <span><b>{got}</b>/{total}</span>
           <i>{trip.points}</i>
         </button>
         <button className="qg-ic" onClick={() => setSheet("help")} aria-label="How to play and settings">?</button>
       </header>
+      <div className="qg-camrow">
+        {L.kind === "simulated" && <span className="qg-pill sim">Simulated store · sections are guesses</span>}
+        {L.kind === "partial" && <span className="qg-pill fog">Fog = not mapped yet</span>}
+        <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"}>{overview ? "🧍 Follow" : "🗺️ Whole store"}</button>
+      </div>
       {coach && (
         <motion.div key={coach.text} className="qg-coach" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
           <img src={charArt("compass.webp")} alt="" /><p>{coach.text}</p>
         </motion.div>
       )}
-      {coach && !sheet && !banner && <GhostHand target={coach.target} />}
+      {coach && !banner && <GhostHand target={coach.target} />}
 
-      <div className="qg-stagewrap">
-          <motion.section className={"qg-mapview" + (view === "map" ? "" : " off")} aria-hidden={view !== "map"} initial={false} animate={view === "map" ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.06 }} transition={{ duration: 0.24 }}>
-            {L.kind === "simulated" && <p className="qg-note sim">Simulated store: a typical layout. Sections are guesses until shoppers map it.</p>}
-            <div className="qg-mapwrap">
-              <StoreMap ref={map} trip={trip} active={view === "map"} tokenSrc={charArt("basket.webp")} onSection={goSection}
-                onWalkStep={p => { const j = juice.current; if (j) { const q = j.local(p); j.dust(q.x, q.y + 4); } }}
-                onReveal={p => { const j = juice.current; if (j) { const q = j.local(p); j.sparkle(q.x, q.y, 18); } }} />
-              {L.kind === "partial" && <span className="qg-legend"><i className="fog" /> Fog: not mapped yet. Find things there to map it.</span>}
-            </div>
-            <Dock trip={trip} cur={cur} done={done} onGo={() => (cur ? goSection(cur) : onFinish(trip))} onRoute={() => setSheet("route")} onList={() => setSheet("list")} onRetry={k => { const it = trip.items.find(i => i.key === k)!; onTrip(reduce(tripRef.current, { type: "unpass", key: k })); later(() => goSection(it.section), 0); }} undo={undo} onUndo={() => { if (undo) act({ type: "ungrab", key: undo.key }); setUndo(null); }} />
-          </motion.section>
-        <AnimatePresence initial={false}>
-        {view === "section" && section && (
-          <motion.section key={"s-" + section.id} className={"qg-secview v-" + view_} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ type: "spring", damping: 24, stiffness: 300 }}>
-            <div className="qg-scene" style={{ ["--tint" as string]: "#" + section.color.toString(16).padStart(6, "0") }}>
-              <AisleScene kind={section.kind} seed={section.id} name={section.short} tint={section.color} look={view_} art={img(`quest/${section.id}.webp`)} />
-              <div className="qg-scene-h">
-                <h2>{section.name}</h2>
-                <span className={"qg-tag " + view_}>{view_ === "real" ? "Mapped" : view_ === "fog" ? "Fog" : "Simulated"}</span>
+      <AnimatePresence mode="wait" initial={false}>
+        {item && section ? (
+          <motion.section key={"shelf-" + item.key + page} className={"qg-shelf v-" + view_} initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={{ type: "spring", damping: 26, stiffness: 320 }}>
+            <button className="qg-x qg-shelf-x" onClick={() => { setAt(null); setPage("main"); }} aria-label="Walk away without choosing">✕</button>
+            <div className="qg-shelf-h">
+              <div className="qg-shelf-art" style={{ backgroundImage: view_ === "fog" ? undefined : `url(${img(`quest/${section.id}.webp`)})` }}>
+                <img className={trip.golden === item.key ? "golden" : ""} src={charArt(item.art)} alt="" />
               </div>
-              <MiniMap trip={trip} here={section.id} onClick={backToMap} />
-              {item ? (
-                <ItemStage key={item.key} item={item} view={view_} golden={trip.golden === item.key} typical={section.typical} pulse={findIt} />
-              ) : (
-                <div className="qg-empty">All done here</div>
-              )}
-              {view_ === "fog" && <FogLayer />}
-            </div>
-
-            {item && (
-              <div className="qg-act">
-                <p className="qg-itemname">{trip.golden === item.key && <span className="qg-goldtag">★ Golden ×2</span>}{item.name}</p>
+              <div>
+                <span className={"qg-tag " + view_}>{view_ === "real" ? section.short : view_ === "fog" ? "Fog · not mapped yet" : `Simulated · ${section.short}`}</span>
+                <h2>{trip.golden === item.key && <span className="qg-goldtag">★ ×2</span>}{item.name}</h2>
                 <p className="qg-hint">{hintFor(item, view_, section.typical)}</p>
-                {view_ === "fog" ? (
-                  <button className="qg-got scout" onClick={() => act({ type: "scout", key: item.key })}>Found it! <small>+{SCORE.item + SCORE.scout}</small></button>
-                ) : (
-                  <button className={"qg-got" + (trip.golden === item.key ? " gold" : "")} onClick={() => act({ type: "grab", key: item.key })}>Got it <small>+{SCORE.item * (trip.golden === item.key ? SCORE.golden : 1)}</small></button>
-                )}
-                <button className="qg-cant" onClick={() => setSheet("cant")}>Can't find it?</button>
+              </div>
+            </div>
+            {page === "main" && (
+              <div className="qg-choices">
+                {view_ === "fog"
+                  ? <button className="qg-got scout" onClick={() => act({ type: "scout", key: item.key })}>Found it here <small>+{SCORE.item + SCORE.scout}</small></button>
+                  : <button className={"qg-got" + (trip.golden === item.key ? " gold" : "")} onClick={() => act({ type: "grab", key: item.key })}>Grab it <small>+{SCORE.item * (trip.golden === item.key ? SCORE.golden : 1)}</small></button>}
+                <div className="qg-choice-row">
+                  <button className="qg-cant" onClick={() => setPage("nothere")}>🔎 Not here</button>
+                  <button onClick={() => setPage("sub")}>🔁 Substitute</button>
+                  <button onClick={() => act({ type: "pass", key: item.key })}>⏭ Skip</button>
+                </div>
               </div>
             )}
-            <div className="qg-rail" role="list" aria-label={`${section.short} items`}>
-              {secItems.map(i => {
-                const h = isHandled(trip, i.key), g = trip.got.includes(i.key);
-                return (
-                  <button role="listitem" key={i.key} className={"qg-chip" + (item?.key === i.key ? " on" : "") + (h ? " done" : "")} onClick={() => !h && setFocus(i.key)} disabled={h} aria-label={`${i.name}${g ? ", got it" : h ? ", reported" : ""}`}>
-                    <img src={charArt(i.art)} alt="" />{g && <i>✓</i>}{h && !g && <i className="r">!</i>}
-                  </button>
-                );
-              })}
+            {page === "nothere" && (
+              <div className="qg-opts">
+                <button className="qg-opt" onClick={() => setPage("staff")}><b>🙋 Ask a staff member</b><span>Shows a card you can hand them.</span></button>
+                <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>🫙 The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
+                <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
+                <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
+              </div>
+            )}
+            {page === "staff" && (
+              <div className="qg-staff">
+                <p>Excuse me, where can I find</p>
+                <b>{item.name}?</b>
+                <button className="qg-btn" onClick={() => setPage("main")}>Back to the shelf</button>
+              </div>
+            )}
+            {page === "sub" && (
+              <div className="qg-opts">
+                <label className="qg-sub"><span>What are you taking instead? (optional)</span>
+                  <input value={subName} onChange={e => setSubName(e.target.value)} placeholder={`Another ${item.name.toLowerCase()}`} />
+                </label>
+                <button className="qg-got" onClick={() => act({ type: "grab", key: item.key })}>Add substitute <small>+{SCORE.item}</small></button>
+                <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
+              </div>
+            )}
+          </motion.section>
+        ) : (
+          <motion.section key="dock" className="qg-dock" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}>
+            <div className="qg-items" role="list" aria-label="Your list">
+              {left.map(i => (
+                <button role="listitem" key={i.key} className={"qg-chip" + (i.key === next ? " on" : "") + (trip.passed.includes(i.key) ? " later" : "")} onClick={() => onTapItem(i.key)} aria-label={`Walk to ${i.name}`}>
+                  <img src={charArt(i.art)} alt="" />{trip.golden === i.key && <i className="g">★</i>}
+                </button>
+              ))}
+              {!left.length && <span className="qg-alldone">Everything on your list is decided ✓</span>}
+            </div>
+            {walking ? (
+              <div className="qg-walking">{walking.kind === "checkout" ? "Heading to the checkout…" : `Walking to ${trip.items.find(i => walking.kind === "item" && i.key === walking.key)?.name ?? "it"}… follow the dots`}</div>
+            ) : nextItem && !done ? (
+              <button className="qg-go" onClick={() => walkTo({ kind: "item", key: nextItem.key })}>
+                Next: {nextItem.name} <span className="qg-go-sub">{(() => { const s = L.sections.find(x => x.id === nextItem.section)!; return sectionView(trip, s.id) === "fog" ? "in the fog" : s.short; })()}</span>
+              </button>
+            ) : (
+              <button className="qg-go fin" onClick={() => walkTo({ kind: "checkout" })}>Head to checkout 🛍️</button>
+            )}
+            <div className="qg-dock-row">
+              {undo && <button className="undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
+              <button onClick={() => setSheet("route")}>🗺️ Route</button>
+              <button onClick={() => setSheet("list")}>📝 List</button>
+              {!done && <button onClick={() => walkTo({ kind: "checkout" })}>🛍️ Checkout</button>}
             </div>
           </motion.section>
         )}
-        </AnimatePresence>
-      </div>
+      </AnimatePresence>
 
       <AnimatePresence>
         {banner && (
@@ -231,46 +294,15 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {undo && view === "section" && (
-          <motion.div className="qg-snack" role="status" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}>
-            <span>Got {undo.name}</span>
-            <button onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>Undo</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-
-      <AnimatePresence>
-        {briefing && <Mission trip={trip} onStart={() => { setBriefing(false); stinger(false); }} />}
+        {briefing && <Mission trip={trip} onStart={() => { setBriefing(false); stinger(false); const k = nextKey(tripRef.current); if (k) later(() => walkTo({ kind: "item", key: k }), 350); }} />}
       </AnimatePresence>
 
       {/* ---- sheets ---- */}
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
-        <ListSheet trip={trip} onGo={goSection} />
+        <ListSheet trip={trip} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
       <Sheet open={sheet === "route"} onClose={() => setSheet(null)} title="Your route" tall>
         <RouteSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} />
-      </Sheet>
-      <Sheet open={sheet === "cant"} onClose={() => setSheet(null)} title={item ? `Can't find ${item.name}?` : "Can't find it?"}>
-        {item && section && (
-          <div className="qg-opts">
-            <button className="qg-opt" onClick={() => { setSheet(null); setFindIt(n => n + 1); say(hintFor(item, view_, section.typical)); }}>
-              <b>🔎 Find it for me</b><span>{item.spot ? `Arya shows the shelf: ${item.spot.hint}.` : view_ === "real" ? "Arya has not pinned this shelf yet. Staff can point you to it." : `A guess: ${section.typical.toLowerCase()}. Staff can point you to it.`}</span>
-            </button>
-            <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "grab", key: item.key }); }}>
-              <b>🔁 I got a substitute</b><span>Another brand or size counts. +{SCORE.item}</span>
-            </button>
-            <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "report", key: item.key, kind: "empty" }); }}>
-              <b>🫙 The shelf is empty</b><span>Tell other shoppers. +{SCORE.report}</span>
-            </button>
-            <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "report", key: item.key, kind: "elsewhere" }); }}>
-              <b>↪ It's somewhere else here</b><span>Arya will ask the next shopper to confirm. +{SCORE.report}</span>
-            </button>
-            <button className="qg-opt" onClick={() => { setSheet(null); act({ type: "pass", key: item.key }); }}>
-              <b>⏭ Skip for now</b><span>It stays on your list.</span>
-            </button>
-          </div>
-        )}
       </Sheet>
       <Sheet open={sheet === "help"} onClose={() => setSheet(null)} title="How to play" tall>
         <HowTo />
@@ -283,7 +315,7 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
         </div>
       </Sheet>
       <Sheet open={sheet === "quit"} onClose={() => setSheet(null)} title="Leave this quest?">
-        <p className="qg-p">{trip.practice ? "Practice never saves, so nothing is lost." : `You have ${got} of ${total} in the basket. Finish now to keep your points, or keep going.`}</p>
+        <p className="qg-p">{trip.practice ? "Practice never saves, so nothing is lost." : `You have ${got} of ${total} in the cart. Finish now to keep your points, or keep going.`}</p>
         <div className="qg-opts">
           <button className="qg-btn primary" onClick={() => setSheet(null)}>Keep playing</button>
           {!trip.practice && got > 0 && <button className="qg-btn" onClick={() => onFinish(trip)}>Finish with what I have</button>}
@@ -295,71 +327,10 @@ export function Play({ trip, source, onTrip, onFinish, onQuit }: Props) {
 }
 
 function hintFor(item: QuestItem, view: string, typical: string) {
-  if (view === "fog") return "Nobody has mapped this aisle. Look around: when you find it, you put it on the map.";
+  if (view === "fog") return "Nobody has mapped this part yet. Look around: if you find it, you put it on the map.";
   if (item.spot) return item.spot.hint;
   if (view === "guess") return `${typical}. A guess, not a pin.`;
-  return "Arya has not pinned the shelf yet.";
-}
-
-/* The item in its scene. A mapped spot gets a glowing ring at the
- * shelf; a guess never gets a ring (we do not point at a shelf we have
- * not seen). */
-function ItemStage({ item, view, golden, typical, pulse }: { item: QuestItem; view: string; golden: boolean; typical: string; pulse: number }) {
-  const spot = view === "real" && item.spot?.shelf;
-  return (
-    <div className="qg-stage">
-      {spot && <span key={pulse} className={"qg-target" + (pulse ? " find" : "")} style={{ left: spot[0] + "%", top: spot[1] + "%" }} aria-hidden="true" />}
-      <motion.img className={"qg-art" + (golden ? " golden" : "")} src={charArt(item.art)} alt={item.name}
-        initial={{ scale: 0.3, y: 40, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} transition={{ type: "spring", damping: 11, stiffness: 220 }} />
-      {view === "guess" && <span className="qg-guess">Simulated · {typical.toLowerCase()}</span>}
-    </div>
-  );
-}
-
-function FogLayer() {
-  return (
-    <div className="qg-fog" aria-hidden="true">
-      {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 90}%`, top: `${10 + ((i * 23) % 70)}%`, animationDelay: `${-i * 1.3}s` }} />)}
-    </div>
-  );
-}
-
-function Dock({ trip, cur, done, onGo, onRoute, onList, onRetry, undo, onUndo }: { trip: Trip; cur: string | null; done: boolean; onGo: () => void; onRoute: () => void; onList: () => void; onRetry: (key: string) => void; undo: { name: string } | null; onUndo: () => void }) {
-  const live = liveStops(trip);
-  const s = cur ? trip.layout.sections.find(x => x.id === cur)! : null;
-  const left = cur ? leftIn(trip, cur) : [];
-  const fog = cur ? sectionView(trip, cur) === "fog" : false;
-  const passed = trip.passed.length, skipped = trip.skipped.length;
-  return (
-    <div className="qg-dock">
-      {s ? (
-        <>
-          <div className="qg-next">
-            <span className="qg-step">Stop {live.indexOf(cur!) + 1} of {live.length}</span>
-            <b>{s.short}{fog && <em> · fog</em>}</b>
-            <div className="qg-faces">{left.slice(0, 5).map(i => <img key={i.key} src={charArt(i.art)} alt={i.name} title={i.name} />)}{left.length > 5 && <span>+{left.length - 5}</span>}</div>
-          </div>
-          <button className="qg-go" onClick={onGo}>Go to {s.short} <span aria-hidden="true">→</span></button>
-        </>
-      ) : (
-        <>
-          <div className="qg-next">
-            <span className="qg-step">{done ? "Everything is handled" : `${passed + skipped ? "Some items are set aside" : "All stops done"}`}</span>
-            <b>Head to the checkout</b>
-          </div>
-          {passed > 0 && (() => { const first = trip.items.find(i => trip.passed.includes(i.key))!; return (
-            <p className="qg-aside">Set aside: {trip.items.filter(i => trip.passed.includes(i.key)).map(i => i.name).join(", ")}. <button className="qg-link" onClick={() => onRetry(first.key)}>Look for {first.name} again</button></p>
-          ); })()}
-          <button className="qg-go fin" onClick={onGo}>Finish trip <span aria-hidden="true">🏁</span></button>
-        </>
-      )}
-      <div className="qg-dock-row">
-        {undo && <button className="undo" onClick={onUndo}>↶ Undo {undo.name}</button>}
-        <button onClick={onRoute}>🗺️ Route</button>
-        <button onClick={onList}>📝 List</button>
-      </div>
-    </div>
-  );
+  return "Arya has not pinned the exact shelf yet.";
 }
 
 function ListSheet({ trip, onGo }: { trip: Trip; onGo: (id: string) => void }) {
@@ -392,13 +363,13 @@ function ListSheet({ trip, onGo }: { trip: Trip; onGo: (id: string) => void }) {
 function RouteSheet({ trip, dispatch }: { trip: Trip; dispatch: (a: Action) => void }) {
   const [name, setName] = useState("");
   const all = stops(trip);
-  const cur = currentStop(trip);
   const add = () => {
     const n = name.trim(); if (!n) return;
     const item: QuestItem = { key: `add-${Date.now()}`, name: n[0].toUpperCase() + n.slice(1), art: artFor(n), section: sectionFor(n) };
     dispatch({ type: "addItem", item }); setName("");
   };
   const live = useMemo(() => all.filter(id => !trip.skipped.includes(id)), [all, trip.skipped]);
+  const cur = currentStop(trip);
   return (
     <div className="qg-route">
       <p className="qg-p">{routeNote(live)}</p>
@@ -427,8 +398,8 @@ function RouteSheet({ trip, dispatch }: { trip: Trip; dispatch: (a: Action) => v
 
 export function HowTo() {
   const steps: [string, string, string][] = [
-    ["compass.webp", "Follow the dots", "Your list becomes a route through the store. Tap Go to walk to the next stop."],
-    ["basket.webp", "Grab and tap", "Put the item in your cart, then tap Got it. Grab a whole section in one visit for a clean sweep."],
+    ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Tap Next, or any item card, and your shopper walks there."],
+    ["basket.webp", "Look first, then choose", "At the shelf, pick Grab it, Not here, Substitute or Skip. Only a grab earns points; skipping never costs anything."],
     ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it: you just mapped it for everyone."],
     ["egg.webp", "Golden item", "One item each trip is golden and worth double. Nothing to lose, no timer, no lives."],
   ];
@@ -468,7 +439,3 @@ function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
     </motion.div>
   );
 }
-
-/* Painted scene art for a section, when the app has it (generated
- * once, see tools/gen_quest_scenes.py). Without it the drawn aisle
- * underneath shows through. */

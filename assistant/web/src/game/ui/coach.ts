@@ -8,15 +8,15 @@ export type Coach = { text: string; target: string | null };
 
 export function coachFor(trip: Trip, view: "map" | "section", item: QuestItem | null, sectionView: string): Coach | null {
   if (view === "map") {
-    if (allHandled(trip) || !currentStop(trip)) return { text: "That's the list! In a real store you'd walk to the checkout now. Tap Finish trip.", target: ".qg-go" };
-    if (!trip.got.length && !trip.reports.length) return { text: "This is the store from above. The dotted line is your route. Tap Go to walk to stop 1.", target: ".qg-go" };
-    if (trip.scouted.length && trip.cleared.length < 3) return { text: "See how the fog lifted? Your find mapped that aisle. Next stop!", target: ".qg-go" };
-    return { text: "Nice! Follow the dots to the next stop.", target: ".qg-go" };
+    if (allHandled(trip) || !currentStop(trip)) return { text: "That's the list! Tap Head to checkout and your shopper walks over.", target: ".qg-go" };
+    if (!trip.got.length && !trip.reports.length) return { text: "This is your store. Tap Next and your shopper walks there. Follow the dots.", target: ".qg-go" };
+    if (trip.scouted.length && trip.cleared.length < 3) return { text: "See how the fog lifted? Your find mapped that part of the store. Tap Next!", target: ".qg-go" };
+    return { text: "Nice! Tap Next, or tap any item card in the store to walk to it.", target: ".qg-go" };
   }
   if (!item) return null;
-  if (sectionView === "fog") return { text: "Fog: nobody has mapped this aisle. Look around. When you spot it, tap Found it to put it on the map.", target: ".qg-got" };
+  if (sectionView === "fog") return { text: "Fog: nobody has mapped this part. Look around. If you spot it, tap Found it here to put it on the map.", target: ".qg-got" };
   if (trip.golden === item.key) return { text: "A golden item! Each trip has one, and it's worth double.", target: ".qg-got" };
-  if (!item.spot && trip.scouted.includes(item.section)) return { text: "Can't see it? That happens. Tap Can't find it: telling Arya earns points too.", target: ".qg-cant" };
-  if (!trip.got.length) return { text: "The glowing ring is the shelf. Put it in your cart, then tap Got it.", target: ".qg-got" };
-  return { text: "Grab everything here in one visit for a clean sweep bonus.", target: ".qg-got" };
+  if (!item.spot && trip.scouted.includes(item.section)) return { text: "Can't see it? Tap Not here: you can ask staff or tell other shoppers.", target: ".qg-cant" };
+  if (!trip.got.length) return { text: "You're at the shelf. Nothing goes in the cart until you choose: tap Grab it once it's in your real cart.", target: ".qg-got" };
+  return { text: "Grab everything in one section on one visit for a clean sweep bonus.", target: ".qg-got" };
 }

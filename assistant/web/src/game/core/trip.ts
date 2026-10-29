@@ -6,7 +6,7 @@ import { aryaOrder, move } from "./route";
 import { sectionById, viewOf } from "./template";
 import type { QuestItem, StoreLayout } from "./types";
 
-export const SCORE = { item: 10, golden: 2, clear: 20, sweep: 10, scout: 25, report: 15 } as const;
+export const SCORE = { item: 10, golden: 2, clear: 20, sweep: 10, scout: 25, report: 0 } as const;
 
 export type ReportKind = "empty" | "elsewhere";
 
