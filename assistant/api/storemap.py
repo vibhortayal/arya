@@ -57,11 +57,61 @@ SOURCE_BASELINE = "walkthrough"
 # --- store and segment identity -----------------------------------------
 
 
+def chain_key(name):
+    """The chain: the normalized name with spaces removed, so "Trader
+    Joe's" and "trader joes" are one chain (the same rule
+    quest._same_store uses for reports). A "name|store_id" reference
+    is read as its name."""
+    return state._norm_name(split_ref(name)[0]).replace(" ", "")
+
+
+def split_ref(ref):
+    """("Trader Joe's", "seed-trader-joes-91709") from
+    "Trader Joe's|seed-trader-joes-91709"; (name, None) from a name."""
+    ref = (ref or "").strip()
+    if "|" in ref:
+        name, sid = ref.rsplit("|", 1)
+        sid = re.sub(r"[^A-Za-z0-9_.:-]", "", sid)[:96]
+        return name.strip(), sid or None
+    return ref, None
+
+
+def _my_location(chain):
+    """The account's own store of this chain, when it has exactly
+    one in My Stores (most households shop one Trader Joe's). Read
+    only: a fresh account counts the seed stores."""
+    try:
+        from api import stores
+        entries = state._load("my_stores.json", None)
+        ids = ([e["store_id"] for e in entries["entries"]] if entries
+               else [s["id"] for s in stores.SEED_STORES])
+        by_id = {s["id"]: s for s in stores.directory()}
+    except Exception:
+        return None
+    hits = [i for i in ids if i in by_id
+            and chain_key(by_id[i].get("name")) == chain]
+    return hits[0] if len(hits) == 1 else None
+
+
 def store_key(name):
-    """Store identity for the map: the normalized name with spaces
-    removed, so "Trader Joe's" and "trader joes" are one store (the
-    same rule quest._same_store uses for reports)."""
-    return state._norm_name(name or "").replace(" ", "")
+    """Map identity: one map per store LOCATION (owner, 2026-10-29:
+    a map only shows where it was made). "name|store_id" names the
+    location; a bare name means the account's one store of that
+    chain in My Stores. With neither (a free-text store), the chain
+    key, as before."""
+    base, sid = split_ref(name)
+    chain = chain_key(base)
+    sid = sid or (_my_location(chain) if state._current_user.get() else None)
+    return f"{chain}@{sid}" if sid and chain else chain
+
+
+def store_name(name):
+    """The display name of a map reference (never the id)."""
+    return split_ref(name)[0]
+
+
+def is_location(key):
+    return "@" in (key or "")
 
 
 def zone_key(label):
@@ -148,12 +198,45 @@ def _all():
     return _root_load(MAP_FILE, {})
 
 
+WALK_CHAIN = "traderjoes"
+
+
+def walk_location():
+    """The one store the shipped walk was filmed in: the Trader Joe's
+    on Argonaut (ARYA_WALK_STORE_ID overrides). None until that store
+    is in the directory."""
+    sid = os.environ.get("ARYA_WALK_STORE_ID", "").strip()
+    if sid:
+        return sid
+    try:
+        from api import stores
+        for s in stores.directory():
+            if chain_key(s.get("name")) == WALK_CHAIN and "argonaut" in (
+                    f"{s.get('street', '')} {s.get('city', '')}").lower():
+                return s["id"]
+    except Exception:
+        pass
+    return None
+
+
+def is_walk_key(key):
+    loc = walk_location()
+    return bool(loc) and key == f"{WALK_CHAIN}@{loc}"
+
+
 def _walkthrough_seed(key):
-    """The shipped walkthrough graph seeds a store's segments, so a
-    store with a walk video starts mapped (and aging, because the
-    walk is old) instead of empty. Only Trader Joe's ships one."""
-    if key != store_key("Trader Joe's"):
+    """The shipped walkthrough graph seeds the segments of the one
+    store it was filmed in, so that store starts mapped (and aging,
+    because the walk is old) instead of empty. Other locations of the
+    chain never get it as their map; Quest shows it there as a
+    labelled typical layout (chain_guess)."""
+    if not is_walk_key(key):
         return None
+    return walk_segments()
+
+
+def walk_segments():
+    """The walk's segments, keyed by segment id (see _walkthrough_seed)."""
     path = os.path.join(os.path.dirname(__file__), "..", "pwa", "models",
                         "trader-joes", "shelf-graph.json")
     frames_dir = os.path.join(os.path.dirname(path), "frames-web")
@@ -209,10 +292,17 @@ def load_map(name):
     walkthrough. Never writes: a seed lives in memory until the
     first real change saves it."""
     key = store_key(name)
-    doc = _all().get(key)
+    data = _all()
+    doc = data.get(key)
     seed = _walkthrough_seed(key)
+    if doc is None and seed is not None and data.get(WALK_CHAIN):
+        # Before maps were per location (2026-10-29) the walk and every
+        # capture on it lived under the chain; they were made in the
+        # walk's store, so that store takes them over.
+        old = data[WALK_CHAIN]
+        doc = {**old, "store": store_name(name) or old.get("store"), "key": key}
     if doc is None:
-        doc = {"store": (name or "").strip(), "key": key,
+        doc = {"store": store_name(name), "key": key,
                "segments": seed or {},
                "unplaced": []}
     elif seed:
@@ -256,15 +346,17 @@ def stores_with_pictures():
             os.path.join(_PWA_DIR, b["photos"])) else None
         model = b["model"] if os.path.isfile(
             os.path.join(_PWA_DIR, b["model"])) else None
-        key = store_key(b["store"])
+        key = chain_key(b["store"])
         out[key] = {"store": b["store"], "key": key, "photos": photos,
                     "model": model, "has_pictures": bool(photos or model)}
     blobs = _image_blobs()
-    for key, doc in _all().items():
-        have = blobs.get(key) or {}
+    # Keyed by chain: the app asks by store name (lib/stores.ts).
+    for mkey, doc in _all().items():
+        have = _images_of(mkey, blobs)
         kept = any(c.get("id") in have
                    for seg in (doc.get("segments") or {}).values()
                    for c in seg.get("captures") or [])
+        key = mkey.split("@")[0]
         if key in out:
             out[key]["has_pictures"] = out[key]["has_pictures"] or kept
             continue
@@ -484,6 +576,16 @@ def _image_blobs():
     return _root_load(IMG_FILE, {})
 
 
+def _images_of(key, blobs=None):
+    """A map's kept images. The walk's store also reads the pictures
+    saved under its chain before maps were per location."""
+    blobs = _image_blobs() if blobs is None else blobs
+    out = dict(blobs.get(key) or {})
+    if is_walk_key(key):
+        out = {**(blobs.get(WALK_CHAIN) or {}), **out}
+    return out
+
+
 def _put_image(key, cap_id, jpeg):
     blobs = _image_blobs()
     blobs.setdefault(key, {})[cap_id] = base64.b64encode(jpeg).decode()
@@ -579,7 +681,7 @@ def best_image(name, seg_id):
     if seg is None or not seg["captures"]:
         return None
     best = max(seg["captures"], key=_value)
-    b64 = _image_blobs().get(doc["key"], {}).get(best["id"])
+    b64 = _images_of(doc["key"]).get(best["id"])
     return base64.b64decode(b64) if b64 else None
 
 
@@ -876,7 +978,12 @@ def view(name, focus=None):
             "stale_item": (seg.get("stale") or {}).get("item"),
             "baseline": seg.get("baseline") is not None})
     total = len(rows)
+    # Another store of a chain with a shipped walk: the walk is only a
+    # typical layout here, never this store's map (owner, 2026-10-29).
+    typical = ("Trader Joe's" if doc["key"].split("@")[0] == WALK_CHAIN
+               and not is_walk_key(doc["key"]) else None)
     return {"store": doc["store"], "segments": rows, "counts": counts,
+            "typical": typical,
             "total": total,
             "coverage_pct": round(100 * counts["mapped"] / total) if total else 0,
             "mapped_or_aging_pct": round(

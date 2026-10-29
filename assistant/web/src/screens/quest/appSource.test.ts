@@ -89,6 +89,38 @@ describe("AppSource", () => {
   });
 });
 
+describe("AppSource per-location maps", () => {
+  it("asks for this location's map, and a found section goes on it", async () => {
+    replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };
+    replies["/api/storemap"] = { segments: [] };
+    replies["/api/quest/sessions"] = { id: "q3", store: "Safeway", store_id: "s1", state: "not_started", mode: "quest", items: [] };
+    const src = new AppSource();
+    await src.nearbyStores();
+    expect(calls.find(c => c.url.startsWith("/api/storemap"))?.url).toBe("/api/storemap?store=Safeway%7Cs1");
+    await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Milk" }] });
+    await src.report({ kind: "found", item: "Milk", section: "dairy" } as any);
+    expect(calls.find(c => c.url === "/api/storemap/segments")?.body).toMatchObject({ store: "Safeway|s1", label: "Dairy" });
+  });
+
+  it("another Trader Joe's plays the typical layout, labelled, with 'usually' hints", async () => {
+    replies["/api/stores/mine"] = { stores: [{ id: "tj2", name: "Trader Joe's", city: "Chino Hills" }] };
+    replies["/api/storemap"] = { segments: [], typical: "Trader Joe's" };
+    replies["/api/quest/sessions"] = { id: "q4", store: "Trader Joe's", state: "not_started", mode: "quest", items: [{ name: "Milk", shelf_label: "Butter & Cheese" }] };
+    const src = new AppSource();
+    const [st] = await src.nearbyStores();
+    expect(st).toMatchObject({ kind: "simulated", seen: "Typical Trader Joe's layout · not mapped here yet" });
+    const { layout, items } = await src.open("tj2", { id: "all", name: "Everything", items: [{ name: "Milk" }, { name: "Chips" }] });
+    expect(layout).toMatchObject({ kind: "simulated", mapped: [], typicalOf: "Trader Joe's" });
+    expect(items[0].spot?.hint).toBe("Usually near the Butter & Cheese shelf at Trader Joe's");
+    expect(items[1].spot).toBeUndefined();
+  });
+
+  it("a location with a real map is never called typical", () => {
+    const L = buildLayout({ id: "x", name: "Trader Joe's", area: "", kind: "mapped", items: [], mapped: ["dairy"], typicalOf: "Trader Joe's" });
+    expect(L.typicalOf).toBeUndefined();
+  });
+});
+
 describe("AppSource zones", () => {
   it("asks Arya only about items the words do not know, and uses its answer", async () => {
     replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };

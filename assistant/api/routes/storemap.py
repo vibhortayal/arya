@@ -99,7 +99,7 @@ def storemap_photo(store: str = "", segment: str = ""):
     if data is not None:
         return Response(content=data, media_type="image/jpeg")
     frame = storemap.baseline_frame(name, segment)
-    if frame and storemap.store_key(name) == storemap.store_key("Trader Joe's"):
+    if frame and storemap.chain_key(name) == storemap.WALK_CHAIN:
         path = os.path.join(_PWA, "models", "trader-joes", "frames-web", frame)
         if os.path.isfile(path):
             with open(path, "rb") as fh:

@@ -40,13 +40,15 @@ export type StoreLayout = {
   entry: Pt;
   checkout: Pt;
   shoppers?: number; // people who walked it (mapped stores)
+  /* A chain's layout played as a guess at a location nobody mapped ("Trader Joe's"). */
+  typicalOf?: string;
   /* The plan's size and its shelving racks, from the store's graph (map/solve.ts). */
   plan: { w: number; h: number };
   racks: Rect[];
   look?: "market" | "modern" | "farm" | "neon";
 };
 
-/* A spot the game may show: only for a mapped section. */
+/* A spot the game may show: a real one in a mapped section, or a "usually" one from a chain's typical layout. */
 export type Spot = { hint: string; shelf?: [number, number] }; // shelf = % position in the scene
 
 export type QuestItem = {

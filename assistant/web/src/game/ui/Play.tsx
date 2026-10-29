@@ -198,7 +198,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit }: Props) 
         <button className="qg-ic" onClick={() => setSheet("help")} aria-label="How to play and settings">?</button>
       </header>
       <div className="qg-camrow">
-        {L.kind === "simulated" && <span className="qg-pill sim">Simulated store · sections are guesses</span>}
+        {L.kind === "simulated" && <span className="qg-pill sim">{L.typicalOf ? `Typical ${L.typicalOf} layout · not mapped here yet` : "Simulated store · sections are guesses"}</span>}
         {L.kind === "partial" && <span className="qg-pill fog">Fog = not mapped yet</span>}
         <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"}>{overview ? "Follow me" : "Whole store"}</button>
       </div>
