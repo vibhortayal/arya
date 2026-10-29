@@ -186,3 +186,20 @@ class TestClientWiring(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPowersPlainWords(unittest.TestCase):
+    """Owner 2026-10-29: Working for you first and folded, each power
+    explained in one plain line, locked ones say what turns them on."""
+
+    def test_groups_order_and_fold(self):
+        js = open(os.path.join(PWA, "powers.js"), encoding="utf-8").read()
+        a = js.index("group(`Working for you")
+        b = js.index('group("Turns on as you add receipts"')
+        c = js.index('group("You choose to turn on"')
+        self.assertLess(a, b)
+        self.assertLess(b, c)
+        self.assertIn("working, false)", js)
+        self.assertIn('class="pwneed"', js)
+        self.assertIn('name: "Your spending"', js)
+        self.assertNotIn('name: "Patterns"', js)

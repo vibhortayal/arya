@@ -34,9 +34,9 @@ class FeatureSheet(unittest.TestCase):
         nav = html.split('<nav id="tabs"', 1)[1].split("</nav>", 1)[0]
         labels = re.findall(r"<span>([^<]+)</span>", nav)
         first = raw().splitlines()[0]
-        for t in re.findall(r"\b(Today|Lists|Ask|Quest)\b", first):
+        for t in re.findall(r"\b(Today|Lists|Ask|Quest|Settings)\b", first):
             self.assertIn(t, labels)
-        self.assertEqual(len(labels), 4)
+        self.assertEqual(len(labels), 5)
         self.assertIn('id="pf-reminders"', html)
 
     def test_small(self):

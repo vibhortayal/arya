@@ -13,10 +13,13 @@ def read(name):
 
 
 class CrewVisibility(unittest.TestCase):
-    def test_profile_is_not_a_tab_and_avatar_opens_it(self):
+    def test_settings_tab_and_avatar_both_open_profile(self):
+        # Owner 2026-10-29: a Settings tab next to Quest opens the same
+        # Profile page; the avatar still does too.
         html = read("index.html")
         nav = html.split('<nav id="tabs"')[1].split("</nav>")[0]
-        self.assertNotIn("view-profile", nav)
+        self.assertIn('data-view="view-profile"', nav)
+        self.assertIn("<span>Settings</span>", nav)
         self.assertNotIn("<header>", html)
         self.assertIn('id="avatar-btn"', html)
         self.assertNotIn('id="userbar"', html)
