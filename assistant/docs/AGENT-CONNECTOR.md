@@ -14,7 +14,7 @@ source of truth.
 
 ## Connect
 
-1. In Arya, open Profile → Connect Muse and create your connector
+1. In Arya, open Profile → Connect an AI agent and create your connector
    token. It is shown once. (The screen is named for the showcased
    client; the token works with any MCP client.)
 2. Add Arya as a remote MCP server in your assistant:

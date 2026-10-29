@@ -128,7 +128,7 @@ Allocation (a field on each ledger line):
 - FR-2.11 Reason: a purchase for a friend is not consumption of this household. Example: baby formula for a friend starts no baby-formula pattern in a household with no baby.
 - FR-2.12 The user sets the allocation in the review queue with one tap. The button label is "Not for us."
 - FR-2.13 The user can change the allocation later from the item view.
-- FR-2.14 The assistant can ask about a line that looks like an errand purchase. Signals: the item never appears in Eyes photos, the purchase is an unusual one-time bulk buy, the category is off-pattern for the household.
+- FR-2.14 The assistant can ask about a line that looks like an errand purchase. Signals: the purchase is an unusual one-time bulk buy, the category is off-pattern for the household.
 - FR-2.15 The assistant never excludes a line without an answer from the user. The ask-when-unsure rule applies.
 - FR-2.16 Reimbursement tracking is roadmap. Reimbursement tracking is not in the MVP. Section 11 names the expansion.
 
@@ -155,7 +155,6 @@ Allocation (a field on each ledger line):
 - FR-5.1 The system drafts the list from the patterns. An item is due when the time since the last purchase is equal to or more than the median interval of the item.
 - FR-5.2 The suggested quantity comes from the typical quantity of the item.
 - FR-5.3 The model ranks and narrates the draft. The model adds no item outside the computed due set and the additions of the user.
-- FR-5.4 Eyes sightings remove items from the draft. Section 6.7 gives the sighting rules.
 - FR-5.5 The list becomes a prepared cart in a sandbox. The cart lists items, quantities, and the store of the user.
 - FR-5.6 The cart waits for approval. The user approves with one tap. The system sends no order and makes no payment. The sandbox is the full scope of the cart in the MVP.
 
@@ -168,13 +167,8 @@ Allocation (a field on each ledger line):
 - FR-6.5 Each correction updates the dictionary.
 - FR-6.6 Photo protocol: the receipt lies flat. The cart photo is top-down. A short pan is optional for stacked items.
 
-### 6.7 Eyes — photo inventory and expiry (C7)
+### 6.7 Expiry (C7)
 
-- FR-7.1 The user takes one photo of the refrigerator, the pantry, the freezer, or the fruit table.
-- FR-7.2 The system identifies the visible items in the photo. Each identification is a sighting with a date and a photo reference.
-- FR-7.3 A sighting corrects the inventory estimate of the item. A sighting can remove an item from the list draft.
-- FR-7.4 An item with no sighting stays unknown. The system does not assume an unseen item is present. The system does not assume an unseen item is absent.
-- FR-7.5 The user confirms or corrects the sightings with one tap per item.
 - FR-7.6 Expiry uses category shelf-life priors first. One prior per category: greens days, milk about a week, eggs weeks.
 - FR-7.7 For a high-risk item in a new trip, the system asks the user for one photo of the printed date before put-away. The system asks for high-risk items only.
 - FR-7.8 A report of "this expired" from the user adjusts the shelf-life model of that item for this household.
@@ -224,7 +218,6 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 | Receipt decode, photo to draft | 30 s or less (Wonder, under the amendment: 90 s bound, then Spark) | Progress is visible |
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
-| Eyes photo to sightings | 15 s or less | One photo |
 | Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
 | Quest: Where am I?, one photo | about 1 s | Local matcher, no model call |
 
@@ -323,7 +316,6 @@ Status of the evidence:
 | Smart list (C5) | The due set equals the rule output of FR-5.1. The narration adds no item outside the due set. |
 | Prepared cart (C5) | The cart matches the approved list. The cart sends no order. |
 | Reconciliation (C6) | A test trip with one mismatch asks about that mismatch only. |
-| Eyes (C7) | A sighting of an item on the list draft removes the item. An unseen item stays unknown. |
 
 ### Gate 3 — superseded
 
@@ -350,7 +342,6 @@ The edge is not one feature. The edge is the joint claim:
 1. A verified cross-store ledger. Totals pass an arithmetic check. Each line has a confidence value.
 2. Returns netting. No competitor in the set subtracts a return from a ledger, a pattern, or a list. The returns column is empty for all sixteen products.
 3. Learned cross-store cadence. No competitor learns cadence from receipts across stores. The all-category part of this claim is roadmap. The MVP claim is food and household consumables.
-4. Photo-corrected inventory in the same loop. Eyes sightings change the list.
 
 The closest threat is FridgeBuddy. FridgeBuddy has receipt import from photo or PDF, a check step before saving, and shelf-photo inventory.
 FridgeBuddy has no cross-store history, no cadence, no returns, and no self-writing list.
@@ -370,7 +361,7 @@ A mapper network supplies shared walkthroughs. Walkthroughs have quality grades.
 The assistant builds maps for many stores.
 
 Expansion two is Deep.
-Eyes reads video inventory. The assistant learns expiry behavior for one household.
+The assistant learns expiry behavior for one household.
 The assistant reports waste. The assistant connects delivery spend to recipes for home cooking.
 
 Expansion three is All Purchases.

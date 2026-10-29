@@ -14,7 +14,7 @@ Escalation is by evidence (a scored eval), never by default.
 ## Assignments
 1. The cheapest model is no model. Patterns, cadence, run-out dates, ledger
    math, reconciliation, and list generation are deterministic code: $0.
-2. Volume intelligence (receipt decode, photo decode, Eyes sightings, command
+2. Volume intelligence (receipt decode, photo decode, command
    parsing): muse-spark-1.3 Standard, reasoning_effort=low, stable prefixes
    cached (dictionary + system prompt ride at the cached-input rate).
 3. Eval loops (golden sets, prompt variants): Contributor mode — synthetic
