@@ -58,7 +58,8 @@ Service worker cache: arya-v83. Suite: 1,151 tests, all green, 2 skipped.
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
-- **Groups** (share lists and receipts with your home): `ARYA_GROUPS=1`.
+- **Groups** (share lists and receipts with your home): ON by default in
+  compose since 2026-10-29 (owner); `ARYA_GROUPS=0` in `deploy/.env` turns it off.
   Profile > Group: start, invite by a 6-letter code (48 h), join, leave.
   Lists and product knowledge live in the group; receipts stay with whoever
   filed them and every member sees them. Leaving copies the lists.
