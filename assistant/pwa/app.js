@@ -1377,6 +1377,11 @@ async function renderCurator() {
   const el = $("#curator");
   if (!el) return;
   const d = await api("/api/curator").catch(() => ({ proposals: [] }));
+  // The card earns its place only when there is something to
+  // decide (owner, 2026-10-29: "show only when there is issue") —
+  // with no pending proposals the Receipts view stays clean.
+  if (!d.proposals.length) { el.hidden = true; el.innerHTML = ""; return; }
+  el.hidden = false;
   let html = d.proposals.map(p => `
     <div class="row"><div class="grow"><span class="name">${p.kind === "merge" ? `Merge into &ldquo;${esc(p.into_name)}&rdquo;` : `Keep &ldquo;${esc(p.names[0])}&rdquo; separate`}</span>
     <span class="sub">${p.names.map(esc).join(" + ")} — ${esc(p.reason)}</span></div></div>
