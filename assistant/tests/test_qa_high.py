@@ -30,7 +30,8 @@ class TestTypedQuantity(unittest.TestCase):
         self.addCleanup(lambda: os.environ.__setitem__("ARYA_DATA_DIR", prev)
                         if prev else os.environ.pop("ARYA_DATA_DIR", None))
         from api import main
-        main._login_fails.clear()
+        from api import deps
+        deps._login_fails.clear()
         c = TestClient(main.app)
         r = c.post("/auth/setup", json={"username": "t@x.y",
                                         "password": "long-password"})

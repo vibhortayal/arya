@@ -24,8 +24,9 @@ class FakeClient:
 
 def make_client(case):
     from api import main
-    main.MetaClient = FakeClient
-    main._login_fails.clear()
+    from api import deps
+    deps.MetaClient = FakeClient
+    deps._login_fails.clear()
     case.c = TestClient(main.app)
     case.main = main
     return case.c

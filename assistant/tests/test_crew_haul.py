@@ -33,12 +33,13 @@ def line(name):
 
 class CrewBase(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from fastapi.testclient import TestClient
         import api.main as main
         from api import auth, state
-        main.MetaClient = FakeClient
-        main._login_fails.clear()
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
         self.main, self.state = main, state
         state._save("receipts.json", [{
             "receipt_id": "r-1", "merchant": "Trader Joe's",

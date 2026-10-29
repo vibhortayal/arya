@@ -88,9 +88,10 @@ if __name__ == "__main__":
 
 class TestHardening(unittest.TestCase):
     def setUp(self):
+        from api import deps
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         import api.main as main
-        main._login_fails.clear()
+        deps._login_fails.clear()
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "owner", "password": "right"})
 
