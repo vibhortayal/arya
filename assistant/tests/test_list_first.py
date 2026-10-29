@@ -83,8 +83,7 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
     def test_quest_tab_hides_empty_blocks(self):
         q = src("screens/Quest.tsx")
         self.assertNotIn("No hunts yet today", q)
-        self.assertIn('id="games-head" hidden={!sessions.length}', q)
-        self.assertIn('id="comm-fastest" hidden={!done.length}', q)
+        self.assertIn('id="games-head" hidden={!openS.length && !done.length}', q)
         self.assertNotIn("Hunting is better with company", q)
 
     def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):
@@ -119,9 +118,11 @@ class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
 class TestQuestTab(unittest.TestCase):
     def test_quest_tab_holds_the_game(self):
         quest = src("screens/Quest.tsx")
-        for el in ("today-level", "today-hero", "btn-new-hunt", "quest-sessions",
-                   "btn-map-store", "crew-summary", "comm-board", "comm-fastest"):
+        # History only (usability audit, owner-approved 2026-10-29).
+        for el in ("today-hero", "quest-sessions"):
             self.assertIn(f'id="{el}"', quest)
+        for el in ("today-level", "btn-new-hunt", "btn-map-store", "crew-summary", "comm-board", "comm-fastest"):
+            self.assertNotIn(f'id="{el}"', quest)
         self.assertNotIn('id="comm-badges"', quest)  # badges live in Quest progress
         self.assertNotIn('id="comm-news"', quest)  # store news is on Today now
 
