@@ -1,7 +1,18 @@
 # Arya public site. Caddy obtains and renews the Let's Encrypt certificate
 # automatically once DNS points at this VM and ports 80/443 are reachable.
 arya-pilot.duckdns.org {
-	reverse_proxy api:8000
+	# Owner concept pages (static HTML dropped into ~/arya-pages on
+	# the VM; never in the repo). They are single-file mockups with
+	# inline scripts, so this path alone relaxes the CSP below; the
+	# app itself keeps the strict policy in the fallback handle.
+	handle_path /p/* {
+		root * /srv/pages
+		file_server
+		header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'"
+	}
+	handle {
+		reverse_proxy api:8000
+	}
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
