@@ -89,41 +89,6 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
     """New-user sweep (owner approved 2026-10-29): empty cards stay hidden."""
     def test_today_hides_empty_cards(self):
         js, html = read("app.js"), read("index.html")
-        low = fn(js, "paintTodayLow")
-        self.assertNotIn("Nothing is running low", low)
-        self.assertIn('id="today-lists-row" hidden', html)
-        self.assertIn("noLists", fn(js, "paintTodayLists"))
-
-    def test_quest_tab_hides_empty_blocks(self):
-        js, q, html = read("app.js"), read("quest.js"), read("index.html")
-        self.assertNotIn("No hunts yet today", js)
-        self.assertIn('id="games-head" hidden', html)
-        self.assertIn('id="comm-fastest" hidden', html)
-        self.assertIn('$("#comm-fastest").hidden =', q)
-        self.assertNotIn("Hunting is better with company", q)
-
-    def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):
-        html = read("index.html")
-        prog = html.split('id="view-quest-progress"')[1].split("</section>")[0]
-        self.assertEqual(prog.count('id="pf-badges"'), 1)
-        self.assertEqual(prog.count('id="pf-stores"'), 1)
-        self.assertIn('id="pf-stats" class="stattiles" hidden', prog)
-        self.assertIn('id="pf-spots" class="group" hidden', prog)
-
-    def test_analysis_is_one_line_until_a_receipt(self):
-        html = read("index.html")
-        self.assertIn('id="an-none" class="muted" hidden', html)
-        self.assertIn('$("#an-data").hidden = !latest;', read("app.js"))
-
-    def test_info_icon_is_an_icon(self):
-        self.assertIn('class="infoic"', read("powers.js"))
-        self.assertNotIn("Tap i to", read("index.html"))
-
-
-class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
-    """New-user sweep (owner approved 2026-10-29): empty cards stay hidden."""
-    def test_today_hides_empty_cards(self):
-        js, html = read("app.js"), read("index.html")
         self.assertNotIn("Nothing is running low", fn(js, "paintTodayLow"))
         self.assertIn('id="today-lists-row" hidden', html)
         self.assertIn("noLists", fn(js, "paintTodayLists"))
@@ -155,6 +120,14 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
         self.assertIn('class="pwlock"', read("app.js"))
         self.assertNotIn("Tap i to", read("index.html"))
         self.assertIn("You need to opt in first", pw)
+class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
+    def test_needs_your_eye_shows_only_when_something_needs_it(self):
+        html, js = read("index.html"), read("app.js")
+        self.assertIn('id="eye-head" hidden', html)
+        self.assertIn('id="review" class="group eyegroup" hidden', html)
+        self.assertNotIn("Every line is verified", js)
+        self.assertIn('$("#review").hidden = !html;', js)
+        self.assertIn("function syncEyeHead()", js)
 
 
 class TestQuestTab(unittest.TestCase):

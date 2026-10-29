@@ -36,6 +36,8 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
 - Not done: the demo bar shrink (left as is).
 - SW arya-v85. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.
 
+## Receipts: Needs your eye only when needed (owner, 2026-10-29)
+- Heading and card hidden when no line or proposal needs a decision. SW arya-v86.
 ## Add to Home Screen (owner approved wireframe, 2026-10-29)
 - Today card (second visit+, has a list item, 30-day dismiss), Profile row, iPhone four-step sheet incl. Open as Web App on, Android native install. Hidden when installed or in the demo.
 ## Store alerts hide until real (owner, 2026-10-29)
