@@ -57,11 +57,14 @@ production policy above is unchanged.
 **Demo budget.** Each demo visit may spend `ARYA_DEMO_SESSION_BUDGET_USD`
 (default $0.40) on live reads, held in that visitor's in-memory sandbox;
 all demo visits together stay under `ARYA_DEMO_DAILY_BUDGET_USD`
-(default $2). For the judging window set the daily cap higher in the VM
-env file (for example 15) and restart the api container.
+(code default $2; the compose default is $20 for the judging window,
+about 50 full visits a day). Set `ARYA_DEMO_DAILY_BUDGET_USD=2` in the
+VM env file to go back, then run `docker compose up -d` in
+`assistant/deploy` (a plain `restart` does not re-read the env file).
 
 **Switch at expiry.** The photo reader is an env setting:
-`ARYA_PHOTO_READER=spark` on the VM (then restart the api container)
+`ARYA_PHOTO_READER=spark` in the VM env file, then `docker compose up -d`
+in `assistant/deploy` (NOT `restart`, which keeps the old environment),
 puts photo decode on Spark Standard with no deploy; unset or `wonder`
 is the amendment path. Receipts record `decoded_by`, so the switch is
 visible in the data. Spark-only photo decode scored 93.88% in the Gate 0

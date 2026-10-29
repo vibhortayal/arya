@@ -115,8 +115,14 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
    The first load after the deploy installs the new service worker; it
    deletes the old `arya-v*` cache and takes over the open page.
-3. **Nov 4:** the Wonder amendment ends. Set `ARYA_PHOTO_READER=spark`
-   in `deploy/.env` and rebuild.
+3. **Nov 4:** the Wonder amendment ends. Early on Nov 4, before judges
+   arrive, set `ARYA_PHOTO_READER=spark` in `deploy/.env` and run
+   `docker compose up -d` in `assistant/deploy`. NOT `docker compose
+   restart`: restart keeps the old environment, so the site would keep
+   calling Wonder. Any recreate drops in-memory demo sessions, so do it
+   once, check one receipt photo, then deploy only in quiet hours.
+4. Caddyfile changes need a reload: `docker compose exec caddy caddy
+   reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
 - Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), owner
