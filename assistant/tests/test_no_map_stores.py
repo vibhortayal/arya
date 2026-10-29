@@ -85,7 +85,8 @@ class TestStoresRoute(unittest.TestCase):
     def test_trader_joes_ships_with_pictures(self):
         got = self.stores()
         tj = got["traderjoes"]
-        self.assertEqual(set(tj), {"store", "key", "photos", "model", "has_pictures"})
+        self.assertEqual(set(tj), {"store", "key", "photos", "model", "has_pictures", "location", "captured_at"})
+        self.assertIsNone(tj["location"])   # nobody recorded where the walk was filmed
         self.assertEqual(tj["store"], "Trader Joe's")
         self.assertEqual(tj["photos"], "models/trader-joes/frames-web")
         self.assertEqual(tj["model"], "models/trader-joes/manifest.json")
@@ -158,7 +159,7 @@ class TestWebStoreData(unittest.TestCase):
 
     def test_express_show_me_needs_data(self):
         src = read(WEB, "screens", "Express.tsx")
-        self.assertIn("itemHasData(sess.store, sess.items[next])", src)
+        self.assertIn("itemHasData(sess.store, sess.items[next], sess.store_id)", src)
         self.assertIn('id="exp-show" className="chip" type="button" hidden={!hasData}', src)
 
     def test_hunt_pop_card_nudge(self):
