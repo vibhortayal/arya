@@ -189,6 +189,12 @@ async def decode_pdf(req: Request):
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
     _need_receipt_date(receipt)
+    dup = state.find_duplicate(receipt)
+    if dup is not None:
+        # Same receipt filed before: hand back the record on file
+        # (the hunt doors settle by its id) and file nothing twice.
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
     await run_in_threadpool(state.judge_pending, new_client())
@@ -222,6 +228,10 @@ async def decode_photo_route(req: Request):
         receipt["live"] = True
         added = state.add_receipts([receipt])
         return {"demo": True, "added": added, "receipt": receipt}
+    dup = state.find_duplicate(receipt)
+    if dup is not None:
+        return {"added": 0, "duplicate": True,
+                "total_receipts": len(state.receipts()), "receipt": dup}
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
     await run_in_threadpool(state.judge_pending, new_client())
