@@ -1139,15 +1139,17 @@ async function renderIntake() {
   // and the owner dropped the Meta-model and Muse footer lines).
 }
 
-/* File a receipt photo (image only): the one receipt path the
- * Receipts view and the Add camera's receipt offer share. */
+/* File a receipt photo or PDF: the one receipt path the Receipts
+ * view and the Add camera's receipt offer share. A PDF goes to
+ * /decode/pdf (text layer, or a scan read page by page). */
 async function fileReceiptPhoto(file, statusEl, previewEl) {
   statusEl.textContent = "Reading the receipt — this can take up to a minute.";
   if (previewEl) previewEl.innerHTML = "";
   try {
-    const r = await fetch("/decode/photo", {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+    const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
       method: "POST",
-      headers: { "Content-Type": file.type || "image/jpeg" },
+      headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") },
       body: file
     });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);

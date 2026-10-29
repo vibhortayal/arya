@@ -3149,9 +3149,10 @@ async function qCloseHunt(sess) {
     await qSetState(sess, "finished");
 }
 async function qDecodeReceipt(file) {
-  const r = await fetch("/decode/photo", {
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
     method: "POST",
-    headers: { "Content-Type": file.type || "image/jpeg" },
+    headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") },
     body: file
   });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);

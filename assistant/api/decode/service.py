@@ -163,6 +163,56 @@ def extract_pdf_text(pdf_bytes):
     return "\n".join((page.extract_text() or "") for page in reader.pages)
 
 
+PDF_SCAN_MAX_PAGES = 5
+
+
+def render_pdf_pages(pdf_bytes, max_pages=PDF_SCAN_MAX_PAGES):
+    """Scanned PDF -> one JPEG per page, for the photo reader. Raises
+    ValueError with a plain message for a locked or oversized PDF."""
+    import io
+    import pypdfium2 as pdfium
+    try:
+        pdf = pdfium.PdfDocument(pdf_bytes)
+    except pdfium.PdfiumError as e:
+        if "password" in str(e).lower():
+            raise ValueError("this PDF is password-protected") from e
+        raise ValueError("could not read this PDF") from e
+    if len(pdf) > max_pages:
+        raise ValueError(f"this PDF has {len(pdf)} pages (max {max_pages}) — add the receipt pages as photos instead")
+    pages = []
+    for i in range(len(pdf)):
+        img = pdf[i].render(scale=2.0).to_pil().convert("RGB")
+        img.thumbnail((1800, 1800))
+        buf = io.BytesIO()
+        img.save(buf, "JPEG", quality=85)
+        pages.append(buf.getvalue())
+    return pages
+
+
+def decode_scanned_pdf(pdf_bytes, client):
+    """A PDF with no text layer (a scan): read each page with the photo
+    reader and merge the pages into one receipt. The model proposes,
+    arithmetic disposes: totals come from the last page that has them,
+    and _finish re-checks the merged lines against the subtotal."""
+    recs = [decode_photo(img, client, media_type="image/jpeg")
+            for img in render_pdf_pages(pdf_bytes)]
+    first = recs[0]
+    lines = [ln for r in recs for ln in r["lines"]]
+
+    def last(key):
+        return next((r[key] for r in reversed(recs) if r.get(key) is not None), None)
+
+    subtotal = last("subtotal")
+    lines, reconcile = _finish(lines, subtotal)
+    first.update({
+        "receipt_id": "dec-" + hashlib.sha1(pdf_bytes).hexdigest()[:10],
+        "merchant": next((r["merchant"] for r in recs if r.get("merchant")), None),
+        "purchased_at": next((r["purchased_at"] for r in recs if r.get("purchased_at")), None),
+        "lines": lines, "subtotal": subtotal, "tax": last("tax"),
+        "total": last("total"), "totals_reconcile": reconcile})
+    return first
+
+
 PHOTO_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "decode_photo_v1.md")
 
 

@@ -164,8 +164,8 @@
     <div id="review" class="group eyegroup"></div>
     <div id="curator" class="group eyegroup"></div>
     <div class="group pad">
-      <label class="field">Add a receipt photo
-        <input type="file" id="rc-photo" accept="image/*">
+      <label class="field">Add a receipt photo or PDF
+        <input type="file" id="rc-photo" accept="application/pdf,image/*">
       </label>
       <p class="muted nomargin" id="rc-photo-status"></p>
       <div id="rc-photo-preview"></div>
@@ -732,7 +732,7 @@
     <div class="sheet">
       <div class="row"><span class="name">Add receipt</span><button id="ar-close" class="btn" type="button">Not now</button></div>
       <p class="muted" id="ar-for"></p>
-      <input type="file" id="ar-photo" accept="image/*" aria-label="This trip's receipt photo" hidden>
+      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label="This trip's receipt photo" hidden>
       <p class="nomargin"><label class="btn primary wide receiptbtn" for="ar-photo">Snap the receipt photo</label></p>
       <p class="nomargin demo-only" hidden><button id="ar-sample" class="btn wide" type="button">Use a sample receipt <span class="demotag">Demo</span></button></p>
       <p id="ar-status" class="muted nomargin"></p>
