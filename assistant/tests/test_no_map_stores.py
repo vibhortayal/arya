@@ -161,7 +161,7 @@ class TestPwaNoMap(unittest.TestCase):
             self.assertIn('"models/trader-joes/manifest.json"', src)
 
     def test_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v96"', self.sw)
+        self.assertIn('CACHE = "arya-v97"', self.sw)
 
     def test_sheet_note_is_the_approved_wording(self):
         self.assertIn('id="shop-nomap"', self.html)
