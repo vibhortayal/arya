@@ -69,4 +69,22 @@ export default async function (page, base) {
   if ((await page.textContent("#exp-count")).trim() !== "3/3") throw new Error("all checked");
   await page.click("#exp-finish");
   await page.waitForFunction(() => { const s = document.getElementById("view-finish"); return !!s; });
+
+  // A store with no aisle pictures: Show me goes, the Snap the aisle
+  // nudge comes, and the link opens the guided capture for that item.
+  await page.evaluate(async () => {
+    const r = await fetch("/api/quest/sessions", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ store: "Costco Wholesale", mode: "express", items: [{ name: "Paper Towels 6 ct", qty: 1 }] }) });
+    if (!r.ok) throw new Error("create session " + r.status);
+    window.__aryaShow("express", { session: await r.json() });
+  });
+  await page.waitForSelector("#exp-items #exp-nodata:not([hidden])", { timeout: 8000 });
+  if (await page.isVisible("#exp-show")) throw new Error("Show me should be gone for an item with no data");
+  if (!(await page.isVisible("#exp-nothere")) || !(await page.isVisible("#exp-find"))) throw new Error("Not here? and Find with camera stay");
+  const nudge = (await page.textContent("#exp-nodata")).replace(/\s+/g, " ").trim();
+  if (nudge !== "Arya has no photo of this aisle yet. Found it? Snap the aisle so other Arya Shoppers can find it too.") throw new Error("nudge: " + nudge);
+  await page.click("#exp-snap");
+  await page.waitForSelector("#view-capture #cp-title");
+  await page.waitForFunction(() => document.querySelector("#cp-title").textContent.startsWith("Snap the aisle with"));
+  if (!(await page.isVisible("#cp-govideo"))) throw new Error("video option missing");
 }

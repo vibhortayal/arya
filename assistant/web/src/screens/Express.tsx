@@ -7,7 +7,7 @@ import { IconCheck, IconMic } from "../ui/icons";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { qtyFmt, qtyTag } from "../lib/format";
-import { storePhotos } from "../lib/stores";
+import { itemHasData, storePhotos, useStoreData } from "../lib/stores";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import {
   Q, QMODE_LABEL, qCheck, qFlushOutbox, qIsReportedByMe, qLoadSessions, qLoadStoreReports, qNextIndex, qProgress,
@@ -116,8 +116,12 @@ export function Express() {
   const stops = useMemo(() => (sess ? qStops(sess) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sess, reports, sess?.items.map(i => (i.checked ? 1 : 0) + i.name).join("|")]);
+  useStoreData();
   const photos = sess ? storePhotos(sess.store) : null;
-  const sceneOn = show && next >= 0;
+  // An item with no data (no store pictures, or no shelf match): Show
+  // me goes, the Snap the aisle nudge comes (owner, 2026-10-29).
+  const hasData = !!sess && next >= 0 && itemHasData(sess.store, sess.items[next]);
+  const sceneOn = show && hasData;
 
   /* ---- the run ---- */
   const toggle = async (item: Item) => {
@@ -183,6 +187,16 @@ export function Express() {
     if (i < 0) return;
     if (!name && !(await ensurePlaying())) return;
     openScan(sess.items[i].name);
+  };
+  /* Snap the aisle: the capture this item's aisle needs (a known
+   * section, or a photo-or-video teach), on the guided capture screen. */
+  const snapAisle = async () => {
+    if (!sess || next < 0) return;
+    try {
+      const out = await get(`/api/storemap/next?store=${encodeURIComponent(sess.store)}&item=${encodeURIComponent(sess.items[next].name)}`);
+      const prompt = out && out.prompt;
+      if (prompt) nav.show("capture", { prompt, store: sess.store, from: "express" });
+    } catch (e) { toast(errText(e)); }
   };
   const teach = async () => {
     if (!sess || !sess.store) return;
@@ -285,11 +299,12 @@ export function Express() {
   const helpRow = (
     <div key="help" id="exp-help" className="exphelp" hidden={next < 0}>
       <div className="exphelp-btns">
-        <button id="exp-show" className="chip" type="button" aria-pressed={sceneOn} onClick={() => setShow(v => !v)}>{sceneOn ? "Hide" : "Show me"}</button>
+        <button id="exp-show" className="chip" type="button" hidden={!hasData} aria-pressed={sceneOn} onClick={() => setShow(v => !v)}>{sceneOn ? "Hide" : "Show me"}</button>
         <button id="exp-nothere" className="chip" type="button" onClick={notHere}>Not here?</button>
         <button id="exp-find" className="chip" type="button" onClick={() => findWithCamera()}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>Find with camera</button>
       </div>
+      <p id="exp-nodata" className="expnodata" hidden={next < 0 || hasData}>Arya has no photo of this aisle yet. Found it? <button id="exp-snap" className="linkbtn snapaisle" type="button" onClick={snapAisle}>Snap the aisle</button> so other Arya Shoppers can find it too.</p>
       <div id="exp-photo" hidden={!sceneOn}>
         {sceneOn && (
           <SceneView id="exp-mount" className="storeview mini" driver={photos ? "photo" : "strip"} photos={photos} model={null}

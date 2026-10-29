@@ -4,7 +4,7 @@ import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { storeHasData } from "../lib/stores";
+import { storeHasPictures, useStoreData } from "../lib/stores";
 import { StarSvg, storeMeta, type MyStore } from "./StoresMine";
 
 /* Port of pwa/index.html #view-store and quest.js: qStartNewHunt (store
@@ -68,6 +68,7 @@ function historyStores(plan: Plan) {
 }
 
 export function Store() {
+  useStoreData();
   const nav = useNav();
   const { demo } = useSession();
   const { toast } = useToast();
@@ -205,9 +206,9 @@ export function Store() {
   const histPick = (h: string) => { setSelId(null); setName(h); pickStore(h, null); };
   const hist = historyStores(plan)
     .filter(h => !mine.some(s => sameStore(s.name, h)))
-    .filter(h => !demo || storeHasData(h));
+    .filter(h => !demo || storeHasPictures(h));
   const shown = histAll ? hist : hist.slice(0, 3);
-  const mineShown = demo ? mine.filter(s => storeHasData(s.name)) : mine;
+  const mineShown = demo ? mine.filter(s => storeHasPictures(s.name)) : mine;
   const favs = mineShown.filter(s => s.favorite);
   const rest = mineShown.filter(s => !s.favorite);
 

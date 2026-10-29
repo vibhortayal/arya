@@ -48,7 +48,10 @@ technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
   and share) and Express (a plain checklist with Show me, Not here? and
   Find with camera; no points or badges). Stores directory, Map my
   store, Shelf Scan, Where am I?, Shop-Off and friends.
-  `2026-10-29-express-mode.md`.
+  `2026-10-29-express-mode.md`. A store with no aisle pictures
+  (server list, `GET /api/storemap/stores`) offers Express only; an
+  item with no aisle photo gets "Snap the aisle" in place of Show me.
+  The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
 - **Design pass (PR #131) and Add to Home Screen:** type scale 34/22/17/15/13/12/11,
