@@ -786,7 +786,15 @@
     "questWalksYou": "Arya walks you through the store, item by item",
     "firstListTitle": "Create your first list",
     "firstListLine": "One list per store you shop at. Type, talk or snap a photo.",
-    "createFirstList": "Create your first list"
+    "createFirstList": "Create your first list",
+    "searchLists_one": "Search {{count}} list",
+    "searchLists_other": "Search {{count}} lists",
+    "showAs": "Show lists as",
+    "viewCards": "Cards",
+    "viewList": "List",
+    "recent": "Recent",
+    "allAToZ": "All lists, A to Z",
+    "noListMatches": "No list matches “{{q}}”."
   },
   "login": {
     "signIn": "Sign in",
@@ -1565,7 +1573,10 @@
       "cloud": "3D mapped · Quest ready",
       "strip": "Walk-through view"
     },
-    "removed": "Removed from your stores."
+    "removed": "Removed from your stores.",
+    "searchStores_one": "Search {{count}} store",
+    "searchStores_other": "Search {{count}} stores",
+    "noStoreMatches": "No store matches “{{q}}”."
   },
   "today": {
     "today": "Today",
@@ -1677,7 +1688,11 @@
       "receiptSub": "See your spending and price trends.",
       "doneAria": "{{step}}, done",
       "dismiss": "Hide Get started"
-    }
+    },
+    "seeMore_one": "See {{count}} more",
+    "seeMore_other": "See {{count}} more",
+    "seeAllLists_one": "See all {{count}} lists",
+    "seeAllLists_other": "See all {{count}} lists"
   },
   "haul": {
     "exampleOnly": "Example only",

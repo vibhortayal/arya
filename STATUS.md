@@ -38,6 +38,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Prepared cart is gone. A "Start shopping · N items" bar on an open
   list leads to the Quest or Express choice. `2026-10-29-list-overhaul.md`,
   `2026-10-29-named-lists.md`, `2026-10-29-start-shopping.md`.
+  Adaptive layout (#156, branch feat/adaptive-layout, not merged): large cards for 1-3 lists, tiles for 4-11, search + Recent + A to Z rows for 12+, a Cards | List switch; Today caps sections. `2026-10-29-adaptive-layout.md`.
 - **Adding:** one row (field, mic, camera). Adds apply at once with Undo;
   riskier changes (out, never, snooze) ask first. A typed name links to
   the tracked item ("milk" finds "Whole Milk", "mlik" fixes itself).
