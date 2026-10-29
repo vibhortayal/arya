@@ -77,7 +77,7 @@ If a guideline conflicts with these, these win:
 - **Scope:** grocery only.
 
 ## Working agreement
-- Small commits to `main`; the message names the stage (`Stage 1: ...`).
+- No commits to `main`. Every change goes through a PR based on `main`; the commit message names the stage (`Stage 1: ...`).
 - Tests before commit: `cd assistant && ../.venv/bin/python -m unittest discover -s tests`
   must be green (create the venv once: `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`). Add tests with new logic.
 - Every work session: append one entry to `assistant/loops/<date>-<stage>.md`
