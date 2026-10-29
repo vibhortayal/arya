@@ -40,7 +40,7 @@ export function Feedback() {
   };
 
   return (
-    <section id="view-feedback" className="view">
+    <>
       <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>Feature request / Contact us</h2>
       <div className="group pad">
@@ -71,6 +71,6 @@ export function Feedback() {
           </>
         )}
       </div>
-    </section>
+    </>
   );
 }

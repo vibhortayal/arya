@@ -73,7 +73,8 @@ export function Analysis() {
       setReceipts(latest ? archive.receipts.filter(r => String(r.purchased_at).startsWith(latest)).length : 0);
       setD(dash);
     })().catch(e => live && showErr(e));
-    get<Insights>("/api/prices/insights").then(r => live && setIns(r), () => {});
+    // A failed read clears the cards, as powers.js paintAnalysis did.
+    get<Insights>("/api/prices/insights").then(r => live && setIns(r), () => live && setIns(null));
     return () => { live = false; };
   }, [nav.key, showErr]);
 
@@ -129,8 +130,8 @@ export function Analysis() {
   const show = !d || !!latest;
 
   return (
-    <section id="view-analysis" className="view">
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back(); }}>‹ Back</a></p>
+    <>
+      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>Analysis</h2>
       <div id="an-prices">{cards.length > 0 && <><h3 className="sect">Your prices</h3>{cards}</>}</div>
       <p id="an-none" className="muted" hidden={show}>File a receipt and your spending shows up here.</p>
@@ -177,6 +178,6 @@ export function Analysis() {
           <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={() => setInfo(null)}>Close</button></div>
         </>}
       </Sheet>
-    </section>
+    </>
   );
 }

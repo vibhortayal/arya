@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
@@ -43,13 +43,19 @@ export function Receipts() {
   const [queue, setQueue] = useState<{ lines: Line[]; unresolved: Unresolved[] }>({ lines: [], unresolved: [] });
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [archive, setArchive] = useState<Archive>({ receipts: [] });
+  // No "No receipts filed yet." until the archive has actually loaded.
+  const [loaded, setLoaded] = useState(false);
   const [who, setWho] = useState("all");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [curBusy, setCurBusy] = useState(false);
-  const [ar, setAr] = useState<{ sessionId: string; label: string } | null>(null);
+  const [ar, setArState] = useState<{ sessionId: string; label: string } | null>(null);
+  // The open sheet, read after an await: closing it mid-read means
+  // nothing is attached (quest.js qArSettle checks qAR the same way).
+  const arRef = useRef(ar);
+  const setAr = (v: typeof ar) => { arRef.current = v; setArState(v); };
   const [arStatus, setArStatus] = useState("");
   const [arBusy, setArBusy] = useState(false);
 
@@ -63,6 +69,7 @@ export function Receipts() {
   }, []);
   const loadArchive = useCallback(async () => {
     setArchive(await get("/api/quest/receipts").catch(() => ({ receipts: [] })));
+    setLoaded(true);
   }, []);
   const loadAll = useCallback(
     () => Promise.all([loadScan().catch(() => {}), loadCurator().catch(() => {}), loadArchive()]).then(() => {}),
@@ -83,7 +90,13 @@ export function Receipts() {
     toast(`Settled as ${name}.`);
     loadScan().catch(() => {});
   });
-  const toggle = (key: string) => setOpen(o => ({ ...o, [key]: !o[key] }));
+  // Opening an editor focuses its field, every time (old renderScan).
+  const toggle = (key: string) => {
+    const opening = !open[key];
+    setOpen(o => ({ ...o, [key]: !o[key] }));
+    if (opening) requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>(`[data-editor="${CSS.escape(key)}"] input`)?.focus());
+  };
 
   const hasReview = queue.lines.length > 0 || queue.unresolved.length > 0;
   const hasCur = proposals.length > 0;
@@ -156,11 +169,12 @@ export function Receipts() {
 
   /* ---- Add receipt sheet (attach to a finished hunt) ---- */
   const arDone = async (settle: () => Promise<unknown>) => {
-    if (!ar) return;
+    if (!arRef.current) return;
     await settle();
     setAr(null);
     toast("Receipt attached — the hunt is settled.");
-    loadArchive().catch(showErr);
+    // Old onDone was renderReceipts: the filed lines can land in Needs your eye.
+    loadAll().catch(showErr);
   };
   const arPhoto = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
@@ -185,18 +199,17 @@ export function Receipts() {
     setArBusy(false);
   };
 
-  const editor = (key: string, onSave: (name: string) => void, saveAttr: string) => (
+  const editor = (key: string, onSave: (name: string) => void, saveAttr: string, saveVal: string) => (
     <div className="editor" data-editor={key} hidden={!open[key]}>
       <input type="text" placeholder="Correct name" aria-label="Correct name" value={draft[key] || ""}
-        ref={el => { if (el && open[key] && document.activeElement !== el && !(el as any)._f) { (el as any)._f = 1; el.focus(); } }}
         onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))} />
-      <button className="chip" {...{ [saveAttr]: key }} type="button"
+      <button className="chip" {...{ [saveAttr]: saveVal }} type="button"
         onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast("Type the correct name first."); return; } onSave(n); }}>Save</button>
     </div>
   );
 
   return (
-    <section id="view-receipts" className="view">
+    <>
       <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>Receipts</h2>
       <p id="rc-count" className="subtitle">{count}</p>
@@ -221,7 +234,7 @@ export function Receipts() {
                 ))}
                 <button className="chip" data-fix={key} onClick={() => toggle(key)}>Fix the name</button>
               </div>
-              {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, `Set to ${name}. The dictionary learned it.`), "data-save-line")}
+              {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, `Set to ${name}. The dictionary learned it.`), "data-save-line", key)}
             </div>
           );
         })}
@@ -242,7 +255,7 @@ export function Receipts() {
                 <div className="row"><span className="sub">Researched: {srcs.map(([n, href], i) => (
                   <span key={n}>{i > 0 && " · "}<a href={href} target="_blank" rel="noopener">{n}</a></span>))}</span></div>
               )}
-              {editor(key, name => resolve(u.item_id, name), "data-save-resolve")}
+              {editor(key, name => resolve(u.item_id, name), "data-save-resolve", u.item_id)}
             </div>
           );
         })}
@@ -303,7 +316,7 @@ export function Receipts() {
         ))}
       </div>
       <div id="rc-archive" className="group">
-        {!unsettled.length && !shown.length ? <Empty>No receipts filed yet.</Empty> : <>
+        {!loaded ? null : !unsettled.length && !shown.length ? <Empty>No receipts filed yet.</Empty> : <>
           {unsettled.map(e => (
             <div key={e.session_id} className="sessrow">
               <span className="grow"><span className="name">{e.store}</span>
@@ -336,6 +349,6 @@ export function Receipts() {
         <p id="ar-status" className="muted nomargin">{arStatus}</p>
         <p className="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
       </Sheet>
-    </section>
+    </>
   );
 }

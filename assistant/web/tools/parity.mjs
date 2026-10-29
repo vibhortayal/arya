@@ -55,6 +55,7 @@ async function shot(url, open, file) {
 
 let failed = 0;
 for (const v of views) {
+  if (page.url() === "about:blank") await page.goto(BASE + "/");
   if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user))))) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   }
