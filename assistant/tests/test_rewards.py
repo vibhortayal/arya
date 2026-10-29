@@ -51,8 +51,10 @@ class TestRewardsShell(unittest.TestCase):
         # The level chip moved from Today to the Quest tab (list-first
         # pass, 2026-10-29).
         quest = src("screens/Quest.tsx")
-        self.assertIn('get("/api/quest/profile").then(p => {', quest)
-        self.assertIn('<span id="today-level" className="bandchip"', quest)
+        self.assertIn('get("/api/quest/profile").then(p => {', quest)  # avatar ring
+        # Your trips keeps only the avatar ring; the level shows in Quest
+        # and Quest progress (usability audit).
+        self.assertNotIn('id="today-level"', quest)
         self.assertIn("Level · {{points}} points", src("screens/QuestProgress.tsx"))
 
 
@@ -91,8 +93,9 @@ class TestPlanAHunt(unittest.TestCase):
 
     def test_store_first_then_items(self):
         quest = src("screens/Quest.tsx")
-        # Quest mode (#158): a new trip starts in the game, which picks the store first.
-        self.assertIn('<button id="btn-new-hunt" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>', quest)
+        # Quest mode (#158): a new trip starts in the game, which picks
+        # the store first; Your trips has no New quest (usability audit).
+        self.assertNotIn('id="btn-new-hunt"', quest)
         store = src("screens/Store.tsx")
         self.assertIn('try { p = await get("/api/quest/plan"); }', store)
         # Tap-to-advance (owner phone pass, 2026-10-28): picking a
