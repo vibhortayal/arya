@@ -5,6 +5,14 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { asset, fmtShort } from "../lib/format";
+import { CrewFeed } from "./haul/CrewFeed";
+
+/* haul.js paintFeed paints the Crew hauls feed above #comm-news and
+ * returns at once when the page has no #comm-news. The current app's
+ * Quest tab has none (Store news moved to Today), so the feed does not
+ * show there; this flag keeps the port the same. Turn it on where the
+ * news block comes back. */
+const HAS_COMM_NEWS = false;
 
 /* Port of pwa/index.html #view-community with app.js renderQuestHub
  * (hero card, games, level chip) and quest.js renderCommunity (Crew
@@ -192,6 +200,7 @@ export function Quest() {
         <button className="navrow" data-qnav="view-friends" type="button" onClick={() => nav.show("friends")}><span className="grow">Friends<span className="sub" id="crew-friends-sub">{crew && crew.pend ? `${plural(crew.pend, "request")} waiting` : "Add by handle, accept requests"}</span></span><span className="chev">›</span></button>
         <button className="navrow" data-qnav="view-album" type="button" onClick={() => nav.show("album")}><span className="grow">Album<span className="sub" id="album-nav-sub">{albumSub}</span></span><span className="chev">›</span></button>
       </div>
+      {HAS_COMM_NEWS && <CrewFeed />}
       <div id="comm-fastest" hidden={!qualifying.length}>
         <div className="seg" id="comm-scopes">
           {SCOPES.map(([k, label]) => (

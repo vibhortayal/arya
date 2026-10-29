@@ -47,7 +47,47 @@ const SPECIAL = {
     old: () => `qStartNewHunt(null).then(() => { document.querySelector("#st-name").value = "Trader Joe's"; qPickStore(); })`,
     new: () => `window.__aryaShow("newlist", { store: "Trader Joe's" })`,
   },
+  album: { old: () => `questGo("view-album")`, new: () => `window.__aryaShow("album")` },
+  race: { old: () => `questGo("view-race")`, new: () => `window.__aryaShow("race")` },
+  friends: { old: () => `questGo("view-friends")`, new: () => `window.__aryaShow("friends")` },
+  // Trip screens: a fresh demo session (the "id" is the session itself).
+  hunt: { id: () => paritySession("quest"), old: s => `openHunt(${JSON.stringify(s)})`, new: s => `window.__aryaShow("hunt", { session: ${JSON.stringify(s)} })` },
+  express: { id: () => paritySession("express"), old: s => `openExpress(${JSON.stringify(s)})`, new: s => `window.__aryaShow("express", { session: ${JSON.stringify(s)} })` },
+  finish: { id: () => paritySession("quest"), old: s => `openFinish(${JSON.stringify(s)})`, new: s => `window.__aryaShow("finish", { session: ${JSON.stringify(s)} })` },
+  score: { id: () => paritySession("quest", "finished"), old: s => `openScore(${JSON.stringify(s)})`, new: s => `window.__aryaShow("score", { session: ${JSON.stringify(s)} })` },
+  // The haul screens (haul.js): a closed trip with two items grabbed.
+  // The reveal counts up for about a second, so both wait it out.
+  reveal: {
+    id: () => paritySession("quest", "finished", 2),
+    old: s => `HaulUI.openReveal(${JSON.stringify(s)}).then(() => new Promise(r => setTimeout(r, 1500)))`,
+    new: s => `(window.__aryaShow("reveal", { session: ${JSON.stringify(s)} }), new Promise(r => setTimeout(r, 2000)))`,
+  },
+  rreview: {
+    id: () => paritySession("quest", "finished", 2, true),
+    old: s => `HaulUI.openReview(${JSON.stringify(s)})`,
+    new: s => `window.__aryaShow("rreview", { session: ${JSON.stringify(s)} })`,
+  },
+  haul: {
+    id: () => paritySession("quest", "finished", 2, true),
+    old: s => `HaulUI.openCard(${JSON.stringify(s)})`,
+    new: s => `window.__aryaShow("haul", { session: ${JSON.stringify(s)} })`,
+  },
 };
+
+/* Runs in the page: a demo trip at Trader Joe's, optionally with the
+ * first `grab` items collected, moved to a state, and settled with the
+ * sample receipt. */
+const PARITY_SESSION = `async function paritySession(mode, state, grab, settle) {
+  const j = (u, b) => fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).then(r => r.json());
+  let s = await j("/api/quest/sessions", { store: "Trader Joe's", mode, items: [{ name: "Milk", qty: 1 }, { name: "Bread", qty: 2 }, { name: "Eggs", qty: 1 }] });
+  if (grab) {
+    await j("/api/quest/sessions/" + s.id + "/state", { state: "playing" });
+    for (const it of s.items.slice(0, grab)) await j("/api/quest/sessions/" + s.id + "/check", { item: it.name, checked: true });
+  }
+  if (state) s = await j("/api/quest/sessions/" + s.id + "/state", { state });
+  if (settle) s = await j("/api/quest/sessions/" + s.id + "/sample-receipt", {});
+  return s;
+}`;
 
 /* Screens that only exist mid-flow (a draft or a capture prompt from
  * the screen before): checked by their e2e files, not parity. */
@@ -69,7 +109,11 @@ const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", e => errors.push(e.message));
 
-async function shot(url, open, file) {
+/* Screens whose store view glides to the first stop (up to 1.9 s in
+ * scene.js) settle longer before the frame is taken. */
+const SETTLE = { hunt: 2600, express: 2600 };
+
+async function shot(url, open, file, settle = 600) {
   await page.goto(BASE + url);
   await page.waitForLoadState("networkidle");
   if (open) {
@@ -77,7 +121,7 @@ async function shot(url, open, file) {
     await page.evaluate(open);
     await page.waitForLoadState("networkidle");
   }
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(settle);
   await page.screenshot({ path: OUT + file });
   return PNG.sync.read(await page.screenshot());
 }
@@ -90,14 +134,14 @@ for (const v of views) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   }
   const sp = SPECIAL[v];
-  const id = sp && sp.id ? await page.evaluate(`(${sp.id.toString()})()`) : null;
+  const id = sp && sp.id ? await page.evaluate(`(async () => { ${PARITY_SESSION}; return (${sp.id.toString()})(); })()`) : null;
   if (sp && sp.id && id == null) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
   const oldImg = await shot("/", sp ? sp.old(id) : v === "login" ? null
     // Open through the screen's real entry button when it has one (it may set state), else show().
     // Tabs and screens with an entry button open through it (it may set state), else show().
     : `{ const b = document.querySelector('#tabs button[data-view="view-${v}"]') || document.querySelector("#btn-${v}");
-         if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`);
-  const newImg = await shot("/next/", sp ? sp.new(id) : v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`);
+         if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`, SETTLE[v]);
+  const newImg = await shot("/next/", sp ? sp.new(id) : v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`, SETTLE[v]);
   const { width, height } = oldImg;
   const diff = new PNG({ width, height });
   const n = newImg.height === height ? pixelmatch(oldImg.data, newImg.data, diff.data, width, height, { threshold: 0.1 }) : width * height;

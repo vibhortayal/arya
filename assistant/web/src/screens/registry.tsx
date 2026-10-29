@@ -25,6 +25,16 @@ import { Profile } from "./Profile";
 import { QuestProgress } from "./QuestProgress";
 import { Receipt } from "./Receipt";
 import { Receipts } from "./Receipts";
+import { Album } from "./Album";
+import { Express } from "./Express";
+import { Finish } from "./Finish";
+import { Friends } from "./Friends";
+import { Hunt } from "./Hunt";
+import { Race } from "./Race";
+import { Score } from "./Score";
+import { HaulCard } from "./haul/HaulCard";
+import { ReceiptReview } from "./haul/ReceiptReview";
+import { Reveal } from "./haul/Reveal";
 
 /* One entry per screen. A screen not ported yet shows NotPorted,
  * which links to the same screen in the current app. Porting a
@@ -54,6 +64,16 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   "quest-progress": QuestProgress,
   receipt: Receipt,
   receipts: Receipts,
+  album: Album,
+  express: Express,
+  finish: Finish,
+  friends: Friends,
+  hunt: Hunt,
+  race: Race,
+  score: Score,
+  reveal: Reveal,
+  rreview: ReceiptReview,
+  haul: HaulCard,
 };
 
 export const SCREENS = Object.fromEntries(
