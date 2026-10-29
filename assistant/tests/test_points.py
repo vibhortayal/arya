@@ -30,9 +30,9 @@ class TestPoints(unittest.TestCase):
             last = n
 
     def test_client_mirrors_the_server_rule(self):
-        import os
-        js = open(os.path.join(os.path.dirname(__file__), "..", "pwa", "quest.js"), encoding="utf-8").read()
-        self.assertIn("const QPTS = { item: 10, haul: 25, receipt: 50, boss: 40 };", js)
+        from tests.frontend import src
+        js = src("screens/hunt/model.ts")
+        self.assertIn("export const QPTS = { item: 10, haul: 25, receipt: 50, boss: 40 };", js)
 
 
 if __name__ == "__main__":

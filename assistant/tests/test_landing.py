@@ -1,18 +1,18 @@
 """Landing page (owner, 2026-10-28): first screen is punchy. Sign in is
 in the header, Try the demo is the one big button, the long copy and the
-Meta credit sit behind "How it works"."""
+Meta credit sit behind "How it works". Pins web/src/screens/Login.tsx;
+web/e2e/login.e2e.mjs taps it."""
 import unittest
 
-from tests.test_hunt_nav import read
+from tests import frontend
 
 
 class TestLanding(unittest.TestCase):
     def setUp(self):
-        html = read("index.html")
-        self.login = html.split('id="view-login"')[1].split("</section>")[0]
+        self.login = frontend.src("screens/Login.tsx").split('<section id="view-login"')[1].split("</section>")[0]
 
     def test_sign_in_is_in_the_header(self):
-        header = self.login.split('class="landtop"')[1].split("</header>")[0]
+        header = self.login.split('className="landtop"')[1].split("</header>")[0]
         self.assertIn('id="signin-open"', header)
         self.assertIn('id="login-user"', self.login)  # Email or username, #64
         self.assertIn("Email or username", self.login)
@@ -24,7 +24,7 @@ class TestLanding(unittest.TestCase):
         # List first, Quest second (owner, 2026-10-29).
         self.assertIn("Groceries, <em>sorted.</em>", front)
         self.assertNotIn("treasure hunt.</em>", front)
-        self.assertLess(front.index('id="demo-btn"'), front.index('class="questline"'))
+        self.assertLess(front.index('id="demo-btn"'), front.index('className="questline"'))
         for long_copy in ("Quest turns the list", "Meta API live", "Meta AI Developer Hackathon"):
             self.assertNotIn(long_copy, front)
 

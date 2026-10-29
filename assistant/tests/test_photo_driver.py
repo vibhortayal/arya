@@ -10,6 +10,11 @@ in photo), the switch-preserves-session rule, the shipped
 asset tier (90 frames, under the ~20 MB guide, never
 precached), and the honest labels (photos, never a "3D model"
 or a live view).
+
+The scene.js half runs under node as before (scene.js stays in the
+static folder); the driver resolution (quest.js qResolveDriver, now
+Hunt.tsx resolveDriver) runs under vitest in
+web/src/screens/hunt/driver.test.ts.
 """
 import json, os, subprocess, tempfile, unittest
 
@@ -34,6 +39,9 @@ STOPS = [(0.0, 0), (0.0244, 2), (0.0559, 5), (0.0789, 7),
 def read(name):
     with open(os.path.join(PWA, name), encoding="utf-8") as fh:
         return fh.read()
+
+
+from tests.frontend import src  # noqa: E402
 
 
 SCENE_PRELUDE = r"""
@@ -61,68 +69,6 @@ SCENE_DRIVER = r"""
 })().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
 """ % json.dumps(STOPS)
 
-QUEST_PRELUDE = r"""
-"use strict";
-function __el() {
-  return {
-    style: {}, dataset: {}, files: [], srcObject: null,
-    classList: { add() {}, remove() {}, toggle() {} },
-    setAttribute() {}, getAttribute() { return null; },
-    addEventListener() {}, removeEventListener() {},
-    querySelector() { return __el(); }, querySelectorAll() { return []; },
-    closest() { return null; }
-  };
-}
-globalThis.document = {
-  currentScript: null, baseURI: "http://test/", body: __el(),
-  querySelector() { return __el(); },
-  querySelectorAll() { return []; },
-  createElement() { return { width: 0, height: 0, getContext() { return null; } }; },
-  addEventListener() {}, removeEventListener() {}
-};
-globalThis.window = globalThis;
-window.addEventListener = () => {}; window.removeEventListener = () => {}; window.scrollTo = () => {};
-globalThis.localStorage = { _m: {}, getItem(k) { return k in this._m ? this._m[k] : null; }, setItem(k, v) { this._m[k] = String(v); }, removeItem(k) { delete this._m[k]; } };
-Object.defineProperty(globalThis, "navigator", { configurable: true, writable: true, value: { onLine: true } });
-globalThis.$ = s => document.querySelector(s);
-globalThis.esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-globalThis.qtyFmt = q => { const n = Number(q); return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); };
-globalThis.qtyTag = it => { const u = String((it && it.unit) || "").trim(); return u ? qtyFmt(it.qty) + " " + u : (it && it.qty > 1 ? "x" + qtyFmt(it.qty) : ""); };
-globalThis.CHECK_SVG = "<svg></svg>";
-globalThis.empty = t => `<p class="empty">${t}</p>`;
-globalThis.row = () => "";
-globalThis.money = n => "$" + n;
-globalThis.fmtShort = s => s;
-globalThis.refresh = () => {};
-globalThis.showErr = e => { throw e; };
-globalThis.toast = () => {};
-globalThis.post = async () => ({});
-globalThis.api = async () => ({});
-globalThis.createSceneView = () => ({ setStops() {}, setNext() {}, glideTo() {}, setProgress() {}, destroy() {}, onTapStop: null });
-"""
-
-QUEST_DRIVER = r"""
-;(async () => {
-  const out = {};
-  const TJ = "Trader Joe's", CS = "Corner Store";
-  // One view, picked by the store (owner, 2026-10-28).
-  out.mapped_default = qResolveDriver(TJ) === "photo";
-  out.unmapped_default = qResolveDriver(CS) === "art";
-  Q.current = { mode: "express" };
-  out.unmapped_express_stays_strip = qResolveDriver(CS) === "strip";
-  Q.current = null;
-  localStorage.setItem("arya-scene-driver", "aisle");
-  out.old_stored_choice_ignored = qResolveDriver(TJ) === "photo";
-  Q.peek3D = true;
-  out.peek_3d_mapped = qResolveDriver(TJ) === "cloud";
-  out.peek_3d_unmapped_stays_art = qResolveDriver(CS) === "art";
-  Q.peek3D = false;
-  console.log(JSON.stringify(out));
-  process.exit(0);
-})().catch(e => { console.log(JSON.stringify({ error: String(e && e.stack || e) })); process.exit(0); });
-"""
-
-
 def run_node(prelude, source_name, driver):
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, "harness.js")
@@ -145,8 +91,15 @@ class TestPhotoMappingNode(unittest.TestCase):
     def test_frame_for_u_matches_the_prototype_stops(self):
         run_node(SCENE_PRELUDE, "scene.js", SCENE_DRIVER)
 
+
+
+class TestDriverResolutionUnderVitest(unittest.TestCase):
     def test_driver_resolution_defaults(self):
-        run_node(QUEST_PRELUDE, "quest.js", QUEST_DRIVER)
+        t = src("screens/hunt/driver.test.ts")
+        for name in ("a mapped store opens on its photos; an unmapped one on the drawing, or cards in Express",
+                     "an old stored view choice is ignored",
+                     "the 3D peek needs a model; without one the view stays"):
+            self.assertIn(name, t)
 
 
 class TestPhotoAssets(unittest.TestCase):
@@ -164,7 +117,8 @@ class TestPhotoAssets(unittest.TestCase):
         self.assertLess(first, 1_400_000)
 
     def test_frames_are_not_precached(self):
-        self.assertNotIn("frames-web", read("sw.js"))
+        self.assertNotIn("frames-web", src("sw.js"))
+        self.assertNotIn("models", src("sw.js").split("const STATIC = [")[1].split("];")[0])
 
 
 class TestPhotoWiring(unittest.TestCase):
@@ -172,32 +126,32 @@ class TestPhotoWiring(unittest.TestCase):
         js = read("scene.js")
         self.assertIn("SceneDrivers.photo = function (el)", js)
         self.assertIn("photoFrameForU", js)
-        q = read("quest.js")
-        self.assertIn('qStorePhotos(Q.draft.store) ? "photo"', q)
-        self.assertIn('mode === "quest" ? "art" : "strip"', q)
-        self.assertIn("mount.dataset.photos", q)
-        self.assertIn("Q.driverName = qResolveDriver(sess.store);", q)
-        html = read("index.html")
+        hunt = src("screens/Hunt.tsx")
+        self.assertIn("export function resolveDriver(sess: Session, peek3D: boolean): string {", hunt)
+        self.assertIn('if (storePhotos(sess.store)) return "photo";', hunt)
+        self.assertIn('return sess.mode === "express" ? "strip" : "art";', hunt)
+        self.assertIn("drv.current = resolveDriver(sess, false);", hunt)
+        self.assertIn("mount.dataset.photos = fromRoot(photos);", src("ui/Scene.tsx"))
         # No view switch: the store picks; 3D is one link away.
-        self.assertNotIn('id="scene-toggle"', html)
-        self.assertNotIn('data-driver="aisle"', html)
-        self.assertIn('id="btn-3d"', html)
-        self.assertIn('id="scene-cap"', html)
+        self.assertNotIn('id="scene-toggle"', hunt)
+        self.assertNotIn('data-driver="aisle"', hunt)
+        self.assertIn('id="btn-3d"', hunt)
+        self.assertIn('id="scene-cap"', hunt)
 
     def test_3d_peek_preserves_the_session(self):
-        q = read("quest.js")
-        handler = q.split('$("#btn-3d").addEventListener')[1]
-        handler = handler.split("addEventListener")[0]
-        self.assertIn("mountScene();", handler)
-        self.assertIn("renderHunt();", handler)
+        hunt = src("screens/Hunt.tsx")
+        handler = hunt.split('<button id="btn-3d"')[1].split("</button>")[0]
+        self.assertIn("drv.current = resolveDriver(sess, peek);", handler)
+        self.assertIn("setPeek3D(peek);", handler)
         self.assertNotIn("qSetState", handler)
         self.assertNotIn("/check", handler)
+        self.assertNotIn("qCheck", handler)
 
     def test_honest_labels(self):
         # Nowhere is the photo view called a 3D model or a live
         # view; the caption names them real photos and a 3D scan.
-        q = read("quest.js")
-        cap = q.split("const QSCENE_CAPTION = {")[1].split("};")[0]
+        hunt = src("screens/Hunt.tsx")
+        cap = hunt.split("const QSCENE_CAPTION: Record<string, string> = {")[1].split("};")[0]
         self.assertIn("Real photos from a walk through this store", cap)
         self.assertNotIn("live", cap.split("cloud:")[0].lower())
         scene = read("scene.js")

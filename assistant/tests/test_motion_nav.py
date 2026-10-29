@@ -2,7 +2,8 @@
 and the step-advance experiment.
 
 Two layers of pins:
-- Shell contracts over the PWA text: the hunt carries the gyro
+- Shell contracts over the React hunt (web/src/screens/Hunt.tsx,
+  hunt/motion.ts) and scene.js: the hunt carries the gyro
   button + the experiment chip (both hidden until the screen paints
   them), every SceneView driver implements the optional
   setLook/setProgress motion methods, the step flag defaults OFF,
@@ -14,27 +15,23 @@ Two layers of pins:
 """
 import json, os, shutil, subprocess, tempfile, unittest
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
+from tests.frontend import read, src
+
 NODE = shutil.which("node")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
 
 
 class TestMotionShell(unittest.TestCase):
     def test_hunt_carries_motion_controls_hidden(self):
-        html = read("index.html")
-        hunt = html.split('id="view-hunt"')[1].split("</section>")[0]
+        hunt = src("screens/Hunt.tsx")
         self.assertIn('id="btn-gyro"', hunt)
         self.assertIn("Look around with your phone", hunt)
         self.assertIn('id="btn-steps"', hunt)
-        # Both start hidden; quest.js paints them per capability.
-        gyro = hunt.split('id="btn-gyro"')[1].split(">")[0]
-        steps = hunt.split('id="btn-steps"')[1].split(">")[0]
-        self.assertIn("hidden", gyro)
-        self.assertIn("hidden", steps)
+        # Both stay hidden until the hunt knows the capability.
+        gyro = hunt.split('id="btn-gyro"')[1].split("\n")[0]
+        steps = hunt.split('id="btn-steps"')[1].split("\n")[0]
+        self.assertIn("hidden={!gyro}", gyro)
+        self.assertIn("hidden={!stepsVis}", steps)
+        self.assertIn("const gyro = gyroAvailable() && !M.gyroGone;", hunt)
         # The standard hunt is untouched underneath them.
         self.assertIn('id="btn-collect"', hunt)
         self.assertIn('id="scene-mount"', hunt)
@@ -53,39 +50,38 @@ class TestMotionShell(unittest.TestCase):
         self.assertIn("panFraction", scene)
 
     def test_step_flag_defaults_off_and_chip_is_demo_only(self):
-        js = read("quest.js")
-        self.assertIn('localStorage.getItem("arya-steps") === "1"', js)
-        self.assertIn('localStorage.setItem("arya-steps", "1")', js)
+        m = src("screens/hunt/motion.ts")
+        self.assertIn('localStorage.getItem("arya-steps") === "1"', m)
+        self.assertIn('localStorage.setItem("arya-steps", "1")', m)
         # The toggle chip shows only on the demo account.
-        self.assertIn("function qStepsVisible()", js)
-        self.assertIn("isDemo", js.split("function qStepsVisible()")[1].split("}")[0])
-        self.assertIn('$("#btn-steps").hidden = !qStepsVisible()', js)
+        self.assertIn("const stepsVis = demo;", src("screens/Hunt.tsx"))
         # The devicemotion listener is only ever added under the flag.
-        self.assertIn("const want = Q.stepsOn && huntOpen", js)
+        self.assertIn("const want = M.stepsOn && huntOpen", m)
 
     def test_collect_reanchors_and_manual_nav_holds(self):
-        js = read("quest.js")
-        self.assertGreaterEqual(js.count("qStepAnchorTo("), 3)  # def + hunt collect + scan pop
-        self.assertIn("qStepAnchorTo(name); // a collect is ground truth", js)
+        js, m = src("screens/Hunt.tsx"), src("screens/hunt/motion.ts")
+        self.assertIn("export function stepAnchorTo(name: string)", m)
+        self.assertGreaterEqual(js.count("stepAnchorTo(name);"), 2)  # hunt collect + scan pop
+        collect = js.split("async function collectStop(")[1].split("\n  }\n")[0]
+        self.assertIn("stepAnchorTo(name);", collect)
         # Hunt v2: list-row GRABs collect through collectStop too.
-        self.assertIn("collectStop(Number(g.dataset.grab))", js)
+        self.assertIn("data-grab={i}", js)
+        self.assertIn("collectStop(i);", js)
         # Manual navigation pauses step-advance until the next collect.
-        self.assertIn('$("#scene-mount").addEventListener("pointerdown"', js)
-        self.assertGreaterEqual(js.count("Q.stepsHold = true"), 2)  # scene touch + the 3D peek
-        self.assertIn("if (!Q.stepDet || Q.stepsHold", js)
+        self.assertIn('mount?.addEventListener("pointerdown", onDown);', js)
+        self.assertGreaterEqual(js.count("M.stepsHold = true"), 2)  # scene touch + the 3D peek
+        self.assertIn("if (!M.stepDet || M.stepsHold", m)
         # A step can never walk past the stop it heads for.
-        self.assertIn("MotionMath.advance(Q.stepU, nextU", js)
+        self.assertIn("MM.advance(M.stepU, nextU", m)
+        self.assertIn("a collect re-anchors the step counter at that stop", src("screens/hunt/motion.test.ts"))
 
     def test_gyro_wiring_and_denied_path(self):
-        js = read("quest.js")
-        self.assertIn("createMotionLook(() => Q.scene", js)
+        js, m = src("screens/Hunt.tsx"), src("screens/hunt/motion.ts")
+        self.assertIn("g.createMotionLook(() => Q.scene", m)
         self.assertIn('if (!ok) toast("Phone look is not available', js)
         # Leaving the hunt stops the sensors.
-        self.assertIn("stopHuntMotion()", js)
-        self.assertIn('removeEventListener("devicemotion", qOnMotion)', js)
-
-    def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v97"', read("sw.js"))
+        self.assertIn("stopHuntMotion();", js)
+        self.assertIn('window.removeEventListener("devicemotion", onMotion);', m)
 
 
 PRELUDE = r"""

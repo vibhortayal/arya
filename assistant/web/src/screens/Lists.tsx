@@ -37,7 +37,7 @@ const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
 /* ---------------- the add field's split preview (app.js bindAdd) ---------------- */
 
 const ADD_LEAD = /^(please get |please buy |please add |add |buy |get |and |i need some |i need |we need some |we need |i want some |i want |get me some |get me )/i;
-function splitPreview(text: string): string[] {
+export function splitPreview(text: string): string[] {
   const out: string[] = [], seen = new Set<string>();
   for (const chunk of String(text || "").split(/[\n;]+/)) {
     const low = chunk.trim().toLowerCase();

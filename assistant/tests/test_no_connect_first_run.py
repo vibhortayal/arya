@@ -1,33 +1,32 @@
-"""First run opens Today. Connecting Muse lives in Profile only."""
-import pathlib
+"""First run opens Today. Connecting Muse lives in Profile only.
+
+Pins over the React app (web/src): App.tsx, app/views.ts, Muse.tsx."""
 import unittest
 
-PWA = pathlib.Path(__file__).resolve().parent.parent / "pwa"
-
-
-def read(name):
-    return (PWA / name).read_text()
+from tests.frontend import app, src
 
 
 class NoConnectOnFirstRun(unittest.TestCase):
     def test_connect_screen_is_gone(self):
-        html = read("index.html")
-        self.assertNotIn('id="view-connect"', html)
-        self.assertNotIn("connect-skip", html)
-        self.assertNotIn("connect-done", html)
+        everything = app()
+        self.assertNotIn('"connect"', src("app/views.ts"))
+        self.assertNotIn('id="view-connect"', everything)
+        self.assertNotIn("connect-skip", everything)
+        self.assertNotIn("connect-done", everything)
 
     def test_enter_app_opens_shell_without_token_check(self):
-        js = read("app.js")
-        body = js[js.index("function enterApp("):js.index("function openShell(")]
-        self.assertIn("openShell();", body)
-        self.assertNotIn("/auth/token", body)
-        self.assertNotIn("view-connect", js)
-        self.assertNotIn("arya-connect-skipped", js)
+        js = src("App.tsx")
+        self.assertIn("if (!s.user) return <Login />;", js)
+        self.assertIn('<NavProvider initial="home">', js)
+        self.assertNotIn("/auth/token", js)
+        self.assertNotIn("/auth/token", src("app/session.tsx"))
+        self.assertNotIn("arya-connect-skipped", app())
 
     def test_profile_still_connects_muse(self):
-        html = read("index.html")
-        self.assertIn('id="profile-token-row"', html)
-        self.assertIn('data-copy-prompt="1"', html)
+        muse = src("screens/Muse.tsx")
+        self.assertIn('id="profile-token-row"', muse)
+        self.assertIn('data-copy-prompt="1"', muse)
+        self.assertIn('view="muse"', src("screens/Profile.tsx"))
 
 
 if __name__ == "__main__":

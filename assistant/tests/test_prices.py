@@ -10,12 +10,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from api import prices  # noqa: E402
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
-
-
-def read(name):
-    with open(os.path.join(PWA, name), encoding="utf-8") as fh:
-        return fh.read()
+from tests.frontend import src  # noqa: E402
 
 
 def buy(iid, store, day, price, qty=1, alloc="HOUSEHOLD"):
@@ -162,22 +157,34 @@ class TestDemoRoutes(unittest.TestCase):
 
 
 class TestClientWiring(unittest.TestCase):
+    """Over the React app: Powers.tsx (the port of powers.js), the Info
+    sheet (ui/Info.tsx), Today's tip, Analysis's prices."""
+
     def test_powers_page_daily_card_and_analysis_are_wired(self):
-        html = read("index.html")
-        for needle in ('id="view-powers"', 'id="btn-powers"', 'id="today-tip"', 'id="an-prices"',
-                       'id="info-sheet"', '<script src="powers.js"></script>'):
-            self.assertIn(needle, html)
-        self.assertIn("/powers.js", read("sw.js"))
+        self.assertIn('"powers"', src("app/views.ts"))
+        self.assertIn("  powers: Powers,", src("screens/registry.tsx"))
+        self.assertIn('id="btn-powers" view="powers"', src("screens/Profile.tsx"))
+        self.assertIn('id="today-tip"', src("screens/Today.tsx"))
+        self.assertIn('id="an-prices"', src("screens/Analysis.tsx"))
+        self.assertIn('id="info-sheet"', src("ui/Info.tsx"))
 
     def test_quest_is_not_a_power_and_caveats_sit_behind_info(self):
-        js = read("powers.js")
+        js = src("screens/Powers.tsx")
         self.assertNotIn("Quest", re.sub(r"/\*.*?\*/", "", js, flags=re.S))
+        info = src("ui/Info.tsx")
         for key in ("trend", "cheaper", "similar", "basket", "split", "waste"):
-            self.assertIn(f"{key}: {{", js)
+            self.assertIn(f"  {key}: {{", info)
 
     def test_no_line_graphs(self):
-        for f in ("powers.js", "lists.js"):
-            self.assertNotIn("<svg", read(f).split("WHY_ICONS")[-1] if f == "lists.js" else read(f))
+        # Powers draws one icon (the lock); the Why sheet only its row
+        # icons (WHY_ICONS). Neither draws a chart.
+        pw = src("screens/Powers.tsx")
+        self.assertEqual(pw.count("<svg"), 1)
+        self.assertIn('<svg className="pwlock"', pw)
+        ls = src("screens/lists/ListSheets.tsx")
+        self.assertNotIn("<svg", ls.split("const WHY_ICONS")[0] + ls.split("const Ic = ")[1])
+        for text in (pw, ls):
+            self.assertNotIn("<polyline", text)
 
     def test_prompt_forbids_outside_prices(self):
         p = open(os.path.join(os.path.dirname(__file__), "..", "prompts", "chat_v1.md")).read()
@@ -193,21 +200,20 @@ class TestPowersPlainWords(unittest.TestCase):
     explained in one plain line, locked ones say what turns them on."""
 
     def test_groups_order_and_fold(self):
-        js = open(os.path.join(PWA, "powers.js"), encoding="utf-8").read()
+        js = src("screens/Powers.tsx")
         a = js.index("group(`Working for you")
         b = js.index('group("Turns on as you add receipts"')
         c = js.index('group("You choose to turn on"')
         self.assertLess(a, b)
         self.assertLess(b, c)
         self.assertIn("working, false)", js)
-        self.assertIn('class="pwneed"', js)
+        self.assertIn('className="pwneed"', js)
         self.assertIn('name: "Your spending"', js)
         self.assertNotIn('name: "Patterns"', js)
 
     def test_turn_on_is_a_button(self):
         # Owner bug 2026-10-29: "nothing happened when I click turn on".
-        js = open(os.path.join(PWA, "powers.js"), encoding="utf-8").read()
-        self.assertIn('<button class="pwneed" type="button" data-pw-act="share">', js)
-        self.assertIn('b.dataset.pwAct === "share") openShare()', js)
+        js = src("screens/Powers.tsx")
+        self.assertIn('<button className="pwneed" type="button" data-pw-act="share" onClick={() => setSheet({ kind: "share" })}>', js)
         # Arya Shoppers has no opt-in yet, so it says so instead of "Turn on".
         self.assertIn('name: "Arya Shoppers", sub: "See how busy a store is right now.", need: "Coming soon"', js)

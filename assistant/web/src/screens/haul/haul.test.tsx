@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NavProvider } from "../../app/nav";
+import { NavProvider, useNav } from "../../app/nav";
 import { ToastProvider } from "../../ui/Toast";
 import { decode } from "../../ui/AddReceiptSheet";
 import { Finish } from "../Finish";
@@ -180,3 +180,25 @@ describe("Finish: the e-receipt door", () => {
     expect(calls).toEqual([]);
   });
 });
+
+describe("Finish: the line under the title (test_hunt_menu.py QUEST_DRIVER)", () => {
+  const show = (sess: any) => {
+    stubFetch();
+    (Q as any).current = sess;
+    render(<ToastProvider><NavProvider initial="finish"><SetFinish sess={sess} /></NavProvider></ToastProvider>);
+    return document.getElementById("fin-sub")!.textContent!;
+  };
+  test("items left for next time are named; without them the wording stays", () => {
+    const items = [{ name: "A", qty: 1, checked: true }, { name: "B", qty: 1 }, { name: "C", qty: 1 }];
+    expect(show({ id: "s1", store: "TJ", mode: "quest", state: "playing", items, left: [{ name: "X", how: "saved" }, { name: "Y", how: "saved" }] }))
+      .toMatch(/^1 in your cart, 2 left for next time at TJ\./);
+    cleanup();
+    expect(show({ id: "s1", store: "TJ", mode: "quest", state: "playing", items, left: [] })).toMatch(/^1 of 3 collected at TJ\./);
+  });
+});
+
+function SetFinish({ sess }: { sess: any }) {
+  const n = useNav();
+  if (!n.params.session) { n.replace("finish", { session: sess }); return null; }
+  return <Finish />;
+}

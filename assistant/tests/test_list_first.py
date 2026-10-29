@@ -1,27 +1,30 @@
 """List first, Quest second (owner, 2026-10-29: "Think of our app as Waze
 for grocery shopping. Quest is the pokemon go part of our app. we should
 not make quest as the hero"). Today is the shopping dashboard; the game
-lives on its own Quest tab."""
-import json
-import subprocess
+lives on its own Quest tab.
+
+Pins over the React screens (web/src). The Store alerts rows that the
+old node harness ran (app.js storeAlertRows) run under vitest in
+web/src/screens/today.test.ts against Today.tsx storeAlerts."""
 import unittest
-from pathlib import Path
 
-PWA = Path(__file__).resolve().parent.parent / "pwa"
-
-
-def read(name):
-    return (PWA / name).read_text(encoding="utf-8")
+from tests.frontend import src
 
 
-def fn(src, name):
-    body = src.split(f"function {name}(")[1]
-    return f"function {name}(" + body[:body.index("\n}\n") + 2]
+def today():
+    return src("screens/Today.tsx")
+
+
+def markup(js):
+    """A screen's JSX: its last `return (` on."""
+    return js[js.rindex("\n  return (\n"):]
 
 
 class TestTodayIsTheShoppingDashboard(unittest.TestCase):
     def test_today_sections_in_order(self):
-        home = read("index.html").split('id="view-home"')[1].split("</section>")[0]
+        home = today()
+        home = home[home.index("export function Today() {"):]
+        home = markup(home[:home.index("\n}\n")])
         # Design pass (2026-10-29): Your lists moved up under Running low;
         # the tip folded to one line at the foot.
         order = ["today-low", "today-lists", "today-alerts", "today-expiry",
@@ -30,109 +33,90 @@ class TestTodayIsTheShoppingDashboard(unittest.TestCase):
         self.assertEqual(at, sorted(at))
 
     def test_today_extras_fold_to_one_line(self):
-        js, pw = read("app.js"), read("powers.js")
-        checks = fn(js, "paintTodayChecks")
+        js = today()
+        checks = js.split('<div id="today-checks">')[1].split('<div id="today-eye">')[0]
         self.assertIn("data-checks-fold", checks)
         self.assertIn("to check", checks)
-        self.assertIn('class="tipline"', pw)
-        self.assertNotIn("tipcard", pw)
+        self.assertIn('<div className="tipline">', js)
+        self.assertNotIn("tipcard", js)
 
     def test_still_good_checks_left_the_list(self):
-        js = read("app.js")
-        self.assertIn("data-check-ok", fn(js, "paintTodayChecks"))
+        self.assertIn("data-check-ok", today())
         # The List overhaul removed the List's notes block altogether.
-        self.assertNotIn("function paintListNotes", js)
+        self.assertNotIn("data-check-ok", src("screens/Lists.tsx"))
 
     def test_patterns_back_returns_to_today(self):
-        js = read("app.js")
-        self.assertIn('analysisFrom = "view-home"', js)
-        self.assertIn("const to = analysisFrom;", js)
+        self.assertIn('nav.show("analysis", { from: "home" })', today())
+        # Back is the nav stack: it pops to whoever opened Patterns.
+        self.assertIn('id="an-back" onClick={ev => { ev.preventDefault(); nav.back(', src("screens/Analysis.tsx"))
 
 
 class TestStoreAlerts(unittest.TestCase):
-    def run_rows(self, h, news):
-        js = read("app.js")
-        src = ("function esc(s){return String(s)}function fmtShort(s){return s}"
-               "function money(n){return '$'+n.toFixed(2)}" + fn(js, "storeAlertRows") +
-               f";console.log(JSON.stringify(storeAlertRows({json.dumps(h)},{json.dumps(news)})))")
-        out = subprocess.run(["node", "-e", src], capture_output=True, text=True, check=True)
-        return json.loads(out.stdout)
-
-    def test_report_marks_an_item_on_your_list(self):
-        h = {"list": {"items": [{"item_id": "e", "name": "Eggs", "checked": False, "on_list": True}]}, "price_by_store": {}}
-        rows = self.run_rows(h, [{"store": "Costco", "item": "eggs", "count": 2, "reported_at": "2026-10-28T10:00"}])
-        self.assertEqual(len(rows), 1)
-        self.assertIn("Costco: eggs not there", rows[0])
-        self.assertIn("2 reports", rows[0])
-        self.assertIn("on your list", rows[0])
-
-    def test_price_row_needs_two_stores_and_a_real_gap(self):
-        items = [{"item_id": "m", "name": "Milk"}, {"item_id": "b", "name": "Bread"}]
-        h = {"list": {"items": items}, "price_by_store": {
-            "m": {"Costco": {"median": 4.29}, "Trader Joe's": {"median": 4.79}},
-            "b": {"Costco": {"median": 3.0}}}}
-        rows = self.run_rows(h, [])
-        self.assertEqual(len(rows), 1)
-        self.assertIn("Milk: $4.29 at Costco", rows[0])
-        self.assertIn("$4.79 at Trader Joe's", rows[0])
-        h["price_by_store"]["m"]["Trader Joe's"]["median"] = 4.39  # 10 cents: not news
-        self.assertEqual(self.run_rows(h, []), [])
+    def test_rows_come_from_one_pure_function(self):
+        js = today()
+        self.assertIn("export function storeAlerts(", js)
+        self.assertIn("const alertRows = h && news ? storeAlerts(h, news, currency) : [];", js)
+        self.assertIn('if (hi[1].median - lo[1].median < 0.25) continue;', js)
+        t = src("screens/today.test.ts")
+        for name in ("a report marks an item on your list", "a price row needs two stores and a real gap",
+                     "three reports at most, four rows at most"):
+            self.assertIn(name, t)
 
     def test_empty_alerts_hide_the_section(self):
-        body = read("app.js").split("async function paintStoreAlerts")[1].split("\n}\n")[0]
-        self.assertNotIn("samplepill", body)
-        self.assertNotIn("Example only", body)
-        self.assertIn('if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }', body)
+        js = today()
+        self.assertNotIn("samplepill", js)
+        self.assertNotIn("Example only", js)
+        self.assertIn('{alertRows.length > 0 && <><h3 className="sect">Store alerts</h3>', js)
 
 
 class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
     """New-user sweep (owner approved 2026-10-29): empty cards stay hidden."""
     def test_today_hides_empty_cards(self):
-        js, html = read("app.js"), read("index.html")
-        self.assertNotIn("Nothing is running low", fn(js, "paintTodayLow"))
-        self.assertIn('id="today-lists-row" hidden', html)
-        self.assertIn("noLists", fn(js, "paintTodayLists"))
+        js = today()
+        self.assertNotIn("Nothing is running low", js)
+        self.assertIn("{low.length > 0 && (", js)
+        self.assertIn('id="today-lists-row" hidden={!h || noLists}', js)
+        self.assertIn("{h && !noLists && (", js)
 
     def test_quest_tab_hides_empty_blocks(self):
-        js, q, html = read("app.js"), read("quest.js"), read("index.html")
-        self.assertNotIn("No hunts yet today", js)
-        self.assertIn('id="games-head" hidden', html)
-        self.assertIn('id="comm-fastest" hidden', html)
-        self.assertIn('$("#comm-fastest").hidden =', q)
+        q = src("screens/Quest.tsx")
+        self.assertNotIn("No hunts yet today", q)
+        self.assertIn('id="games-head" hidden={!sessions.length}', q)
+        self.assertIn('id="comm-fastest" hidden={!qualifying.length}', q)
         self.assertNotIn("Hunting is better with company", q)
 
     def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):
-        prog = read("index.html").split('id="view-quest-progress"')[1].split("</section>")[0]
+        prog = src("screens/QuestProgress.tsx")
         self.assertEqual(prog.count('id="pf-badges"'), 1)
         self.assertEqual(prog.count('id="pf-stores"'), 1)
-        self.assertIn('id="pf-stats" class="stattiles" hidden', prog)
-        self.assertIn('id="pf-spots" class="group" hidden', prog)
+        self.assertIn('id="pf-stats" className="stattiles" hidden={!active}', prog)
+        self.assertIn('id="pf-spots" className="group" hidden={!showSpots}', prog)
 
     def test_analysis_is_one_line_until_a_receipt(self):
-        self.assertIn('id="an-none" class="muted" hidden', read("index.html"))
-        self.assertIn('$("#an-data").hidden = !latest;', read("app.js"))
+        an = src("screens/Analysis.tsx")
+        self.assertIn('id="an-none" className="muted" hidden={show}', an)
+        self.assertIn('id="an-data" hidden={!show}', an)
 
     def test_info_and_lock_are_icons(self):
-        pw = read("powers.js")
-        self.assertIn("INFO_SVG", pw)
-        self.assertIn("LOCK_SVG", pw)
-        self.assertIn('class="infoic"', read("app.js"))
-        self.assertIn('class="pwlock"', read("app.js"))
-        self.assertNotIn("Tap i to", read("index.html"))
+        self.assertIn('<svg className="infoic"', src("ui/Info.tsx"))
+        pw = src("screens/Powers.tsx")
+        self.assertIn('<svg className="pwlock"', pw)
         self.assertIn("You need to opt in first", pw)
+        self.assertNotIn("Tap i to", today())
+        self.assertNotIn("Tap i to", pw)
+
+
 class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
     def test_needs_your_eye_shows_only_when_something_needs_it(self):
-        html, js = read("index.html"), read("app.js")
-        self.assertIn('id="eye-head" hidden', html)
-        self.assertIn('id="review" class="group eyegroup" hidden', html)
+        js = src("screens/Receipts.tsx")
+        self.assertIn('id="eye-head" hidden={!hasReview && !hasCur}', js)
+        self.assertIn('id="review" className="group eyegroup" hidden={!hasReview}', js)
         self.assertNotIn("Every line is verified", js)
-        self.assertIn('$("#review").hidden = !html;', js)
-        self.assertIn("function syncEyeHead()", js)
 
 
 class TestQuestTab(unittest.TestCase):
     def test_quest_tab_holds_the_game(self):
-        quest = read("index.html").split('id="view-community"')[1].split("</section>")[0]
+        quest = src("screens/Quest.tsx")
         for el in ("today-level", "today-hero", "btn-new-hunt", "quest-sessions",
                    "btn-map-store", "crew-summary", "comm-board", "comm-fastest"):
             self.assertIn(f'id="{el}"', quest)
@@ -140,12 +124,14 @@ class TestQuestTab(unittest.TestCase):
         self.assertNotIn('id="comm-news"', quest)  # store news is on Today now
 
     def test_back_from_a_hunt_lands_on_quest(self):
-        q = read("quest.js")
-        self.assertIn('const to = prev || "view-community";', q)
-        self.assertIn('Q.stack = ["view-community"];', q)
+        self.assertIn('nav.reset(sess.mode === "express" ? "express" : "hunt", { session: sess }, "community");',
+                      src("screens/Mode.tsx"))
+        self.assertIn('nav.back("community")', src("screens/Hunt.tsx"))
+        self.assertIn("reset drops the set-up screens: Back from a new hunt lands on the Quest tab",
+                      src("app/nav.test.tsx"))
 
     def test_landing_leads_with_the_list(self):
-        login = read("index.html").split('id="view-login"')[1].split('id="signin-sheet"')[0]
+        login = src("screens/Login.tsx")
         for tag in ("Running low", "Store alert", "Use soon"):
             self.assertIn(tag, login)
         self.assertLess(login.index("Groceries"), login.index("treasure hunt"))

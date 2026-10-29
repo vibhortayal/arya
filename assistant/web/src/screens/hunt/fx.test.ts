@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { qCelebHide, qCelebResolve, qOnCollected } from "./fx";
+import { QFX, qCelebHide, qCelebResolve, qOnCollected, qRewardGrab } from "./fx";
+import { qHaulPoints, type Session } from "./model";
 
 /* The collect celebration (tests/test_celebration.py's node harness,
  * against the port): which character and fact an item resolves to
@@ -54,4 +55,54 @@ test("the collect hook is owner-disabled: the layer stays empty", () => {
   qCelebHide();
   expect(layer.hidden).toBe(true);
   layer.remove();
+});
+
+/* Rewards (tests/test_rewards.py's node harness, against the port):
+ * milestones fire once as they are crossed, the full haul bursts once,
+ * a put back takes points away from the haul only, a run of quick
+ * grabs is quiet, Express never celebrates, and sound starts off. */
+describe("rewards", () => {
+  const mk = (n: number, mode = "quest"): Session => ({ id: "s1", store: "TJ", mode, state: "playing",
+    items: Array.from({ length: n }, (_, i) => ({ name: "I" + i, qty: 1, checked: false, group: "g" + i })) });
+  let shown: string[], bursts: number, els: HTMLElement[];
+  beforeEach(() => {
+    shown = []; bursts = 0;
+    const m = document.createElement("div");
+    m.id = "milestone";
+    Object.defineProperty(m, "textContent", { set(v: string) { shown.push(v); }, get() { return shown[shown.length - 1] || ""; } });
+    const cv = document.createElement("canvas");
+    cv.id = "confetti";
+    (cv as any).getContext = () => { bursts++; return null; };
+    document.body.append(m, cv);
+    els = [m, cv];
+  });
+  afterEach(() => { els.forEach(e => e.remove()); });
+  const grab = (s: Session, i: number) => {
+    const before = s.items.filter(x => x.checked).length;
+    s.items[i].checked = true;
+    qRewardGrab(s, before, { wasSuggested: true, boss: false });
+  };
+
+  test("milestones in order, one full-haul burst, points follow a put back", () => {
+    const s = mk(8);
+    for (let i = 0; i < 8; i++) grab(s, i);
+    expect(shown.slice(0, 2)).toEqual(["Halfway there!", "One to go!"]);
+    expect(shown[shown.length - 1]).toBe("All collected! Full haul!");
+    expect(bursts).toBe(1);
+    expect(qHaulPoints(s, false)).toBe(105);
+    expect(qHaulPoints(s, true)).toBe(155);
+    s.items[7].checked = false;
+    expect(qHaulPoints(s, false)).toBe(70);
+  });
+
+  test("three quick grabs stay quiet; Express never celebrates; sound starts off", () => {
+    const s = mk(12);
+    grab(s, 0); grab(s, 1); grab(s, 2);
+    expect(shown).toEqual([]);
+    const e = mk(2, "express");
+    grab(e, 0); grab(e, 1);
+    expect(shown).toEqual([]);
+    expect(bursts).toBe(0);
+    expect(QFX.on).toBe(false);
+  });
 });

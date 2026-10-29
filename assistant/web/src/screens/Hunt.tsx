@@ -64,7 +64,7 @@ export function followHold() {
 }
 
 /* One store view, picked by the store (quest.js qResolveDriver). */
-function resolveDriver(sess: Session, peek3D: boolean): string {
+export function resolveDriver(sess: Session, peek3D: boolean): string {
   if (peek3D && storeModel(sess.store)) return "cloud";
   if (storePhotos(sess.store)) return "photo";
   return sess.mode === "express" ? "strip" : "art";

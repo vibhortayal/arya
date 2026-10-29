@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactElement } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -36,6 +36,33 @@ const isoToday = () => {
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
 };
 const cap = (t: unknown) => String(t || "").replace(/^./, c => c.toUpperCase());
+
+/* app.js storeAlertRows: up to three "not there" reports, then price
+ * gaps worth a detour (two stores or more, 25 cents apart or more),
+ * four rows at most. */
+export type AlertRow = { key: string; kind: "report" | "price"; name: string; sub: string };
+export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof money>[1]): AlertRow[] {
+  const items: any[] = h?.list?.items || [];
+  const rows: AlertRow[] = [];
+  const mineNames = new Set(items.filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
+  news.slice(0, 3).forEach((n, k) => {
+    const mine = mineNames.has(String(n.item || "").toLowerCase());
+    rows.push({ key: "n" + k, kind: "report", name: `${n.store}: ${n.item} not there`,
+      sub: `${n.count} report${n.count === 1 ? "" : "s"} · ${fmtShort(String(n.reported_at || "").slice(0, 10))}${mine ? " · it's on your list" : ""}` });
+  });
+  const names: Record<string, string> = Object.fromEntries(items.map(i => [i.item_id, i.name]));
+  for (const [id, by] of Object.entries<any>(h?.price_by_store || {})) {
+    if (rows.length >= 4) break;
+    const stores = Object.entries<any>(by).filter(([, p]) => p && p.median > 0);
+    if (stores.length < 2 || !names[id]) continue;
+    stores.sort((a, b) => a[1].median - b[1].median);
+    const [lo, hi] = [stores[0], stores[stores.length - 1]];
+    if (hi[1].median - lo[1].median < 0.25) continue; // not worth a detour
+    rows.push({ key: "p" + id, kind: "price", name: `${names[id]}: ${money(lo[1].median, currency)} at ${lo[0]}`,
+      sub: `You usually pay ${money(hi[1].median, currency)} at ${hi[0]}` });
+  }
+  return rows;
+}
 
 export function Today() {
   const nav = useNav();
@@ -101,30 +128,7 @@ export function Today() {
   }
 
   /* ---- Store alerts ---- */
-  const alertRows: ReactElement[] = [];
-  if (h && news) {
-    const mineNames = new Set(items.filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
-    news.slice(0, 3).forEach((n, k) => {
-      const mine = mineNames.has(String(n.item || "").toLowerCase());
-      alertRows.push(
-        <div className="row" key={"n" + k}><span className="alertic" aria-hidden="true">!</span><div className="grow">
-          <span className="name">{n.store}: {n.item} not there</span>
-          <span className="sub">{n.count} report{n.count === 1 ? "" : "s"} · {fmtShort(String(n.reported_at || "").slice(0, 10))}{mine ? " · it's on your list" : ""}</span></div></div>);
-    });
-    const names: Record<string, string> = Object.fromEntries(items.map(i => [i.item_id, i.name]));
-    for (const [id, by] of Object.entries<any>(h.price_by_store || {})) {
-      if (alertRows.length >= 4) break;
-      const stores = Object.entries<any>(by).filter(([, p]) => p && p.median > 0);
-      if (stores.length < 2 || !names[id]) continue;
-      stores.sort((a, b) => a[1].median - b[1].median);
-      const [lo, hi] = [stores[0], stores[stores.length - 1]];
-      if (hi[1].median - lo[1].median < 0.25) continue; // not worth a detour
-      alertRows.push(
-        <div className="row" key={"p" + id}><span className="alertic good" aria-hidden="true">$</span><div className="grow">
-          <span className="name">{names[id]}: {money(lo[1].median, currency)} at {lo[0]}</span>
-          <span className="sub">You usually pay {money(hi[1].median, currency)} at {hi[0]}</span></div></div>);
-    }
-  }
+  const alertRows = h && news ? storeAlerts(h, news, currency) : [];
 
   /* ---- Still good? ---- */
   const checks: any[] = h?.checks || [];
@@ -205,7 +209,9 @@ export function Today() {
         )}
       </div>
       <div id="today-alerts">
-        {alertRows.length > 0 && <><h3 className="sect">Store alerts</h3><div className="group">{alertRows}</div></>}
+        {alertRows.length > 0 && <><h3 className="sect">Store alerts</h3><div className="group">{alertRows.map(r => (
+          <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
+            <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}</div></>}
       </div>
       <div id="today-expiry">
         {h && (

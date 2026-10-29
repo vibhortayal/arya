@@ -10,10 +10,7 @@ os.environ["MODEL_API_KEY"] = "test-key"
 SUB = {"endpoint": "https://push.example.com/abc", "keys": {"p256dh": "k", "auth": "a"}}
 
 
-def read(name):
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "pwa", name)) as fh:
-        return fh.read()
+from tests.frontend import src  # noqa: E402
 
 
 class TestPush(unittest.TestCase):
@@ -144,9 +141,13 @@ class TestPush(unittest.TestCase):
             state.set_current_user(None)
 
     def test_client_wiring(self):
-        self.assertIn("/push.js", read("sw.js"))
-        self.assertIn('addEventListener("push"', read("sw.js"))
-        self.assertIn('addEventListener("notificationclick"', read("sw.js"))
-        self.assertIn("push.js", read("index.html"))
-        html = read("index.html")
-        self.assertIn('id="pf-reminders" hidden', html)
+        # The worker (web/src/sw.js) shows the reminder and opens the
+        # list on a tap; Settings (Profile.tsx, the port of push.js)
+        # subscribes through the registered worker.
+        sw = src("sw.js")
+        self.assertIn('addEventListener("push"', sw)
+        self.assertIn('addEventListener("notificationclick"', sw)
+        prof = src("screens/Profile.tsx")
+        self.assertIn('<div id="pf-reminders" hidden={!cfg.enabled}>', prof)
+        self.assertIn("await navigator.serviceWorker.ready", prof)
+        self.assertIn('pushPost("/api/push/subscribe"', prof)
