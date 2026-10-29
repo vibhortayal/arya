@@ -54,5 +54,12 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 groups.router):
     app.include_router(_router)
 
+# The React app (web/, built to web/dist) is served at /next/ beside
+# the current PWA until the switch-over. Mounted before "/" so the
+# catch-all does not swallow it; absent when it was never built.
+_WEB = os.path.join(os.path.dirname(__file__), "..", "web", "dist")
+if os.path.isdir(_WEB):
+    app.mount("/next", StaticFiles(directory=_WEB, html=True), name="web")
+
 if os.path.isdir(_PWA):
     app.mount("/", StaticFiles(directory=_PWA, html=True), name="pwa")

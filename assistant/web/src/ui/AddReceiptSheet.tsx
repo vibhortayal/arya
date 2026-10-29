@@ -1,0 +1,78 @@
+import { useRef, useState, type ChangeEvent } from "react";
+import { useSession } from "../app/session";
+import { Sheet } from "./Sheet";
+import { useToast } from "./Toast";
+import { post } from "../lib/api";
+
+/* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
+ * attaches this trip's receipt to a finished hunt. Moved out of
+ * Receipts.tsx so Profile can raise it too. target = null is closed. */
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+export const isPdfFile = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
+export async function decode(file: File) {
+  const pdf = isPdfFile(file);
+  const r = await fetch(pdf ? "/decode/pdf" : "/decode/photo", {
+    method: "POST",
+    headers: { "Content-Type": pdf ? "application/pdf" : (file.type || "image/jpeg") },
+    body: file,
+  });
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
+  return r.json();
+}
+
+export type ReceiptTarget = { sessionId: string; label: string };
+
+export function AddReceiptSheet({ target, onClose, onDone }:
+  { target: ReceiptTarget | null; onClose: () => void; onDone: () => void }) {
+  const { demo } = useSession();
+  const { toast } = useToast();
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  // Closing mid-read means nothing is attached (quest.js qArSettle).
+  const live = useRef(target);
+  live.current = target;
+
+  const close = () => { setStatus(""); onClose(); };
+  const settle = async (run: () => Promise<unknown>) => {
+    if (!live.current) return;
+    await run();
+    close();
+    toast("Receipt attached — the hunt is settled.");
+    onDone();
+  };
+  const photo = async (ev: ChangeEvent<HTMLInputElement>) => {
+    const f = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!f || !target) return;
+    const sid = target.sessionId;
+    setStatus("Reading the receipt — this can take up to a minute.");
+    try {
+      const rid = (await decode(f)).receipt.receipt_id;
+      setStatus("");
+      await settle(() => post(`/api/quest/sessions/${sid}/receipt`, { receipt_id: rid }));
+    } catch (e) {
+      setStatus("");
+      toast("Could not file that photo: " + errMsg(e));
+    }
+  };
+  const sample = async () => {
+    if (!target) return;
+    const sid = target.sessionId;
+    setBusy(true);
+    try { await settle(() => post(`/api/quest/sessions/${sid}/sample-receipt`, {})); } catch (e) { toast(errMsg(e)); }
+    setBusy(false);
+  };
+
+  return (
+    <Sheet open={!!target} onClose={close} id="ar-sheet">
+      <div className="row"><span className="name">Add receipt</span><button id="ar-close" className="btn" type="button" onClick={close}>Not now</button></div>
+      <p className="muted" id="ar-for">{target ? `${target.label} · Finished · Receipt missing` : ""}</p>
+      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label="This trip's receipt photo" hidden onChange={photo} />
+      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo">Snap the receipt photo</label></p>
+      <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>Use a sample receipt <span className="demotag">Demo</span></button></p>
+      <p id="ar-status" className="muted nomargin">{status}</p>
+      <p className="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
+    </Sheet>
+  );
+}

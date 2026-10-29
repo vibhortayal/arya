@@ -1,0 +1,76 @@
+import { useEffect, useState } from "react";
+import { useNav } from "../app/nav";
+import { useSession } from "../app/session";
+import { get, post } from "../lib/api";
+import { Chip, Empty, Row } from "../ui/kit";
+
+/* Port of Feature request / Contact us (pwa/index.html #view-feedback,
+ * app.js "Feature request / Contact us"). One note, a kind; the
+ * username rides the session. Demo visitors see the form but the send
+ * is disabled; the owner also sees what came in. */
+type Kind = "idea" | "bug" | "question";
+type Note = { text: string; kind: string; user: string; at: number };
+
+export function Feedback() {
+  const nav = useNav();
+  const { demo } = useSession();
+  const [kind, setKind] = useState<Kind>("idea");
+  const [text, setText] = useState("");
+  const [status, setStatus] = useState(demo ? "Sign in with a real account to send a note." : "");
+  const [busy, setBusy] = useState(false);
+  const [notes, setNotes] = useState<Note[] | null>(null);
+
+  const loadInbox = () => {
+    get<{ notes: Note[] }>("/api/feedback").then(d => setNotes(d.notes), () => setNotes(null));
+  };
+  useEffect(() => {
+    setStatus(demo ? "Sign in with a real account to send a note." : "");
+    loadInbox();
+  }, [nav.key, demo]);
+
+  const send = async () => {
+    setBusy(true);
+    try {
+      await post("/api/feedback", { kind, text });
+      setText("");
+      setStatus("Sent. Thank you.");
+      loadInbox();
+    } catch (e) { setStatus(e instanceof Error ? e.message : String(e)); }
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <p><a href="#" id="fb-back" onClick={e => { e.preventDefault(); nav.back("profile"); }}>‹ Back</a></p>
+      <h2 className="largetitle" style={{ fontSize: 28 }}>Feature request / Contact us</h2>
+      <div className="group pad">
+        <p className="muted nomargin">We read every note. It goes out with your username only &mdash; no email or name needed.</p>
+        <div className="row" id="fb-kinds" style={{ marginTop: 10, gap: 8 }}>
+          {(["idea", "bug", "question"] as Kind[]).map(k => (
+            <Chip key={k} data-kind={k} pressed={kind === k} onClick={() => setKind(k)}>{k[0].toUpperCase() + k.slice(1)}</Chip>
+          ))}
+        </div>
+        <label className="field" htmlFor="fb-text" style={{ marginTop: 10 }}>Your note</label>
+        <textarea id="fb-text" rows={5} maxLength={1000} placeholder="What would make Arya better?"
+          value={text} onChange={e => setText(e.target.value)} />
+        <p className="muted nomargin" id="fb-count">{text.length} / 1000</p>
+        <p><button id="fb-send" className="btn primary wide" type="button" disabled={demo || busy} onClick={send}>Send</button></p>
+        <p className="muted nomargin" id="fb-status">{status}</p>
+      </div>
+      <div id="fb-owner" hidden={notes === null}>
+        {notes && (
+          <>
+            <h3 className="sect">Received</h3>
+            <div className="group">
+              {notes.length
+                ? notes.map((n, i) => (
+                  <Row key={i} name={n.text} sub={`${n.kind} · ${n.user} · ${new Date(n.at * 1000).toLocaleDateString()}`} />
+                ))
+                : <Empty>Nothing yet.</Empty>}
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
