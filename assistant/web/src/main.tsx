@@ -1,12 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-/* The current app's stylesheets, unchanged: both apps draw from one
- * set of classes until the switch-over (PORTING.md). */
-import "../../pwa/styles.css";
-import "../../pwa/hunt.css";
-import "../../pwa/pack.css";
-import "../../pwa/album.css";
-import "../../pwa/haul.css";
+/* The plain-JS app's stylesheets, moved here unchanged at the
+ * switch-over: the screens keep its class names and ids. */
+import "./styles/styles.css";
+import "./styles/hunt.css";
+import "./styles/pack.css";
+import "./styles/album.css";
+import "./styles/haul.css";
 import { App } from "./App";
+import { registerWorker } from "./app/sw-register";
 
 createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
+registerWorker();
