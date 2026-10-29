@@ -43,7 +43,11 @@ page.on("pageerror", e => errors.push(e.message));
 async function shot(url, open, file) {
   await page.goto(BASE + url);
   await page.waitForLoadState("networkidle");
-  if (open) { await page.evaluate(open); await page.waitForLoadState("networkidle"); }
+  if (open) {
+    await page.waitForFunction(url === "/" ? "!document.querySelector('#app-main').hidden" : "typeof window.__aryaShow === 'function'");
+    await page.evaluate(open);
+    await page.waitForLoadState("networkidle");
+  }
   await page.waitForTimeout(600);
   await page.screenshot({ path: OUT + file });
   return PNG.sync.read(await page.screenshot());
@@ -51,10 +55,12 @@ async function shot(url, open, file) {
 
 let failed = 0;
 for (const v of views) {
-  if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => r.ok)))) {
+  if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user))))) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   }
-  const oldImg = await shot("/", v === "login" ? null : `show("view-${v}"); refresh("view-${v}")`, `${v}-old.png`);
+  const oldImg = await shot("/", v === "login" ? null
+    // Open through the screen's real entry button when it has one (it may set state), else show().
+    : `{ const b = document.querySelector("#btn-${v}"); if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`);
   const newImg = await shot("/next/", v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`);
   const { width, height } = oldImg;
   const diff = new PNG({ width, height });

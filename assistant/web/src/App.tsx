@@ -1,4 +1,6 @@
-import type { ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
+import { get } from "./lib/api";
+import { asset } from "./lib/format";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TABS, type ViewId } from "./app/views";
@@ -33,12 +35,14 @@ function Shell() {
   const nav = useNav();
   const s = useSession();
   const Screen = SCREENS[nav.view];
+  const avatar = useAvatar();
   return (
     <>
       {nav.chrome && (
         <button id="avatar-btn" className="avatar floating" type="button" aria-label="Profile"
           onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
           <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>
+          <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />
         </button>
       )}
       {nav.chrome && s.demo && <p id="demobar" className="note">Demo household · resets when you leave</p>}
@@ -62,4 +66,17 @@ function Shell() {
       )}
     </>
   );
+}
+
+/* The player's avatar (app.js loadAvatar/avatarSrc): a cast
+ * character or a made picture. The level ring (--pct) is painted by
+ * Today in the old app and comes with the Today port. */
+function useAvatar(): string | null {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    get<{ file?: string; image?: boolean; version?: number }>("/api/quest/avatar")
+      .then(av => setSrc(av.image ? `/api/quest/avatar/image?v=${av.version}` : asset(`assets/characters/${av.file || "basket.webp"}`)))
+      .catch(() => {});
+  }, []);
+  return src;
 }
