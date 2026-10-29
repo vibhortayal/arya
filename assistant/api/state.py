@@ -32,6 +32,10 @@ def data_dir():
     base = os.environ.get("ARYA_DATA_DIR", os.path.join(os.path.dirname(__file__), "..", "data"))
     user = _current_user.get()
     if user:
+        # Belt and braces for auth.valid_name: a name that could
+        # leave data/users/ never becomes a path.
+        if os.sep in user or "/" in user or user.startswith("."):
+            raise ValueError("invalid account name")
         return os.path.join(base, "users", user)
     return base
 
@@ -277,6 +281,19 @@ def set_flag(item_id, flag):
         f = flags()
         f[item_id] = flag
         _save("flags.json", f)
+
+
+def update_flag(item_id, fn):
+    """Read, change and save one item's flag under the flags lock, so
+    two quick writes to the same item cannot drop each other's fields
+    (codebase map 2026-10-29). fn takes the current flag dict (a copy)
+    and returns the new one. Returns the saved flag."""
+    with file_lock("flags.json"):
+        f = flags()
+        new = fn(dict(f.get(item_id, {})))
+        f[item_id] = new
+        _save("flags.json", f)
+        return new
 
 
 def as_of():

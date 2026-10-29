@@ -6,6 +6,8 @@ user's own index; an unresolvable action is reported, never guessed."""
 import json, os
 from datetime import date, timedelta
 
+from api.meta_client import parse_json
+
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "chat_v1.md")
 
 
@@ -169,10 +171,7 @@ def chat(history, client, surface=None, context=None):
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": str(h["content"])[:2000]})
     out, _u, _c = client.chat(messages, mode="standard", personal=True)
-    try:
-        dec = json.loads(out)
-    except Exception:
-        dec = json.loads(out[out.find("{"): out.rfind("}") + 1])
+    dec = parse_json(out)
     actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)]
     if surface:
         # Viewing a named list: an add that names no list goes there.

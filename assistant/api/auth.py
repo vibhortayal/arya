@@ -6,7 +6,7 @@ open only while zero users exist; the first account adopts the household
 data already in the store (the seeded corpus).
 Data is per-user: state lives under data/users/<username>/.
 """
-import hashlib, hmac, json, os, secrets, time
+import hashlib, hmac, json, os, re, secrets, time
 
 SESSION_TTL = 30 * 24 * 3600
 COOKIE = "arya_session"
@@ -70,6 +70,16 @@ def users():
 
 RESERVED = {"demo"}
 
+# An account name is also a folder name (data/users/<name>/), so it may
+# only hold characters that cannot leave that folder: letters, digits
+# and . _ % + - @, no leading dot, no "..". Plain names (tester-a) and
+# email addresses both fit (codebase map 2026-10-29).
+_NAME_OK = re.compile(r"[a-z0-9_%+@-][a-z0-9._%+@-]{0,253}")
+
+
+def valid_name(name):
+    return bool(_NAME_OK.fullmatch(name or "")) and ".." not in name
+
 
 def create_user(username, password):
     username = username.strip().lower()
@@ -77,6 +87,8 @@ def create_user(username, password):
         raise ValueError("username and password are required")
     if username in RESERVED:
         raise ValueError("that name is reserved")
+    if not valid_name(username):
+        raise ValueError("use letters, digits and . _ - + @ only")
     with _file_lock("users.json"):
         all_users = users()
         if username in all_users:
@@ -108,7 +120,7 @@ def ensure_federated_user(email):
     one is created with no password (password sign-in refuses it).
     Returns (name, created)."""
     name = (email or "").strip().lower()
-    if not name or name in RESERVED:
+    if not name or name in RESERVED or not valid_name(name):
         raise ValueError("that email cannot sign in")
     with _file_lock("users.json"):
         all_users = users()

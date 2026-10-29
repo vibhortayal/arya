@@ -6,7 +6,7 @@ urllib with timeouts up to 120 s, so no route may call a model —
 or judge_pending, which calls the judge — on the event loop.
 Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
-import datetime, hashlib, json, math, os
+import datetime, hashlib, json, logging, math, os
 from collections import OrderedDict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
@@ -20,6 +20,19 @@ from api.cost_ledger import CostLedger
 from api.cart.build import approve
 
 app = FastAPI(title="Arya API")
+_log = logging.getLogger("arya.api")
+
+
+@app.exception_handler(RuntimeError)
+async def _model_failure(request, exc):
+    """MetaClient and parse_json raise RuntimeError when a model call
+    fails or its answer cannot be read. Routes that do not catch it
+    answer 502 with a plain sentence instead of a bare 500 (codebase
+    map 2026-10-29). The traceback still goes to the log."""
+    _log.exception("unhandled RuntimeError on %s", request.url.path,
+                   exc_info=exc)
+    return JSONResponse({"detail": "Arya could not finish that read. Try again."},
+                        status_code=502)
 from api import pack as pack_api; app.include_router(pack_api.router)  # noqa: E402,E702
 # The cost ledger is an operator artifact: it lives in the data root so it
 # survives container redeploys (the app layer is ephemeral; /app/data is not).
@@ -113,8 +126,6 @@ def _demo_rate(bucket, key, limit_env, default):
         return False
     bucket[key] = hits + [now]
     return True
-
-_OPEN_PREFIXES = ("/health", "/auth/", "/sw.js", "/manifest.json", "/icon.svg", "/styles.css", "/app.js", "/scene.js", "/quest.js", "/index.html", "/")
 
 # The demo household is a sandbox (review 2026-10-28): a judge can play
 # the whole loop — list, hunt in every mode and view, receipt finish,
@@ -533,6 +544,15 @@ async def decode_text_route(req: Request):
     return dec
 
 
+def _need_receipt_date(receipt):
+    """state.add_receipts refuses a receipt with no date, so say so
+    here instead of answering "added" with an id that was never
+    filed (a hunt finish then failed with "no such receipt")."""
+    if not receipt.get("purchased_at"):
+        raise HTTPException(422, "could not read the date on this receipt — "
+                            "retake the photo with the date in view")
+
+
 @app.post("/api/intake/order-text")
 async def intake_order_text(req: Request):
     """A pasted online order (Instacart, Amazon Fresh, ...) becomes a
@@ -546,6 +566,7 @@ async def intake_order_text(req: Request):
     _budget_guard()
     client = MetaClient(ledger=_ledger())
     dec = await run_in_threadpool(decode_order_text, text, client)
+    _need_receipt_date(dec)
     state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
@@ -802,6 +823,7 @@ async def decode_pdf(req: Request):
     _budget_guard()
     client = MetaClient(ledger=_ledger())
     receipt = await run_in_threadpool(decode_text, text, client)
+    _need_receipt_date(receipt)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
     await run_in_threadpool(state.judge_pending, MetaClient(ledger=_ledger()))
@@ -822,13 +844,13 @@ async def decode_photo_route(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     try:
         receipt = await run_in_threadpool(decode_photo, body, client,
                                           media_type=media)
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
+    _need_receipt_date(receipt)
     if demo:
         # The demo files into the visitor's sandbox (never disk), so a
         # hunt can finish on its receipt; the batch judge does not run.
@@ -861,8 +883,7 @@ async def transcribe_route(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     try:
         out = await run_in_threadpool(transcribe_audio, body, client)
     except ValueError as e:
@@ -1200,17 +1221,12 @@ async def flag_route(item_id: str, req: Request):
     updates = {k: v for k, v in body.items() if k in _FLAG_KEYS}
     if not updates:
         raise HTTPException(400, "no recognized flag fields")
-    merged = dict(state.flags().get(item_id, {}))
-    merged.update(updates)
-    state.set_flag(item_id, merged)
+    merged = state.update_flag(item_id, lambda f: {**f, **updates})
     return {"item_id": item_id, "flags": merged}
 
 
 def _merge_flag(item_id, fields):
-    merged = dict(state.flags().get(item_id, {}))
-    merged.update(fields)
-    state.set_flag(item_id, merged)
-    return merged
+    return state.update_flag(item_id, lambda f: {**f, **fields})
 
 
 @app.get("/api/list/candidates")
@@ -1225,6 +1241,12 @@ def list_candidates():
 
 @app.post("/api/judge/run")
 def judge_run():
+    try:
+        _budget_guard()
+    except HTTPException:
+        # Over today's budget: judge nothing, quietly, like a host
+        # with no key. Verdicts catch up on the next run.
+        return {"judged": 0, "paused": True}
     client = MetaClient(ledger=_ledger())
     return {"judged": state.judge_pending(client)}
 
@@ -1240,6 +1262,7 @@ def judge_second_seat():
     judged = state.judgments()
     if not judged:
         return {"checked": 0, "agreed": 0, "disagreements": []}
+    _budget_guard()
     client = OpenClient()
     if not client.api_key:
         # Not provisioned on this host yet: a quiet no-op, the same
@@ -1314,18 +1337,20 @@ def _list_add_extras(item_id, body, fields):
     with no "by" key, such as an Undo of a removal, leaves it alone;
     an empty "by" clears it."""
     from api.itemmeta import clean_extras
-    merged = dict(state.flags().get(item_id, {}))
-    merged.update(fields)
-    if "by" in body:
-        by = clean_extras({"by": body.get("by")}).get("by")
-        if by:
-            merged["added_by"] = by
-        else:
-            merged.pop("added_by", None)
-        merged.pop("approved", None)
-    if body.get("approved") is True:
-        merged["approved"] = True
-    state.set_flag(item_id, merged)
+
+    def change(merged):
+        merged.update(fields)
+        if "by" in body:
+            by = clean_extras({"by": body.get("by")}).get("by")
+            if by:
+                merged["added_by"] = by
+            else:
+                merged.pop("added_by", None)
+            merged.pop("approved", None)
+        if body.get("approved") is True:
+            merged["approved"] = True
+        return merged
+    state.update_flag(item_id, change)
 
 
 @app.post("/api/list/add")
@@ -1407,8 +1432,7 @@ async def list_judge(req: Request):
         return {"judged": 0, "flagged": []}
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     found = await run_in_threadpool(grocery.judge_unknown, unknown, client)
     if found:
         verdicts = grocery.save_verdicts(found)
@@ -1458,8 +1482,7 @@ async def list_from_photo(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.list.intake import read_list_photo
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     try:
         read = await run_in_threadpool(read_list_photo, body, client,
                                        media_type=media)
@@ -1508,8 +1531,7 @@ async def expiry_read(req: Request, sample: int = 0):
         if not os.environ.get("MODEL_API_KEY"):
             raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
         _budget_guard(demo=demo)
-        client = MetaClient(ledger=CostLedger(
-            _LEDGER, bucket="demo" if demo else "app"))
+        client = MetaClient(ledger=_ledger())
         try:
             read = await run_in_threadpool(expiry.read_expiry_photo, body, client,
                                            media_type=media, today=today)
@@ -1924,12 +1946,17 @@ async def quest_create_session(req: Request):
         raise HTTPException(400, "store is required")
     from api import quest
     try:
+        _budget_guard()
+        match_client = MetaClient(ledger=_ledger())
+    except HTTPException:
+        match_client = None  # over budget: shelf matching stays code-only
+    try:
         sess = await run_in_threadpool(
             quest.create_session, store, body.get("mode") or "quest",
             body.get("items") or [],
             driver=body.get("driver") or "strip",
             store_id=store_id, store_address=store_address,
-            client=MetaClient(ledger=_ledger()))
+            client=match_client)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess
@@ -2051,8 +2078,7 @@ async def scan_shelf_route(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     try:
         out = await run_in_threadpool(shelfscan.scan, body, remaining,
                                       client, media_type=media)
@@ -2545,8 +2571,7 @@ async def quest_haul_photo(req: Request, session: str = ""):
         raise HTTPException(404, "no such session")
     _budget_guard(demo=_is_demo(req))
     from api.eyes.service import detect
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if _is_demo(req) else "app"))
+    client = MetaClient(ledger=_ledger())
     try:
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
@@ -2670,8 +2695,7 @@ async def storemap_capture(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     jpeg, people = await run_in_threadpool(
         shelfscan.scrub_people, body, client, media_type=media)
     if jpeg is None:
@@ -2734,8 +2758,7 @@ async def storemap_teach(req: Request):
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     demo = _is_demo(req)
     _budget_guard(demo=demo)
-    client = MetaClient(ledger=CostLedger(
-        _LEDGER, bucket="demo" if demo else "app"))
+    client = MetaClient(ledger=_ledger())
     jpeg, people = await run_in_threadpool(
         shelfscan.scrub_people, body, client, media_type=media)
     if jpeg is None:
