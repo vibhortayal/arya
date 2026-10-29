@@ -37,6 +37,13 @@ const SPECIAL = {
     old: id => `openReceipt(${JSON.stringify(id)})`,
     new: id => `window.__aryaShow("receipt", { receipt_id: ${JSON.stringify(id)} })`,
   },
+  // No id: these only need the old app's real entry function.
+  "stores-mine": { old: () => `questGo("view-stores-mine")`, new: () => `window.__aryaShow("stores-mine")` },
+  store: { old: () => `qStartNewHunt(null)`, new: () => `window.__aryaShow("store")` },
+  newlist: {
+    old: () => `qStartNewHunt(null).then(() => { document.querySelector("#st-name").value = "Trader Joe's"; qPickStore(); })`,
+    new: () => `window.__aryaShow("newlist", { store: "Trader Joe's" })`,
+  },
 };
 
 const views = process.argv.slice(2).length ? process.argv.slice(2) : ["login", ...portedViews()];
@@ -75,8 +82,8 @@ for (const v of views) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   }
   const sp = SPECIAL[v];
-  const id = sp ? await page.evaluate(`(${sp.id.toString()})()`) : null;
-  if (sp && id == null) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
+  const id = sp && sp.id ? await page.evaluate(`(${sp.id.toString()})()`) : null;
+  if (sp && sp.id && id == null) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
   const oldImg = await shot("/", sp ? sp.old(id) : v === "login" ? null
     // Open through the screen's real entry button when it has one (it may set state), else show().
     // Tabs and screens with an entry button open through it (it may set state), else show().

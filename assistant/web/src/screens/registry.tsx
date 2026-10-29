@@ -3,7 +3,12 @@ import { VIEWS, type ViewId } from "../app/views";
 import { NotPorted } from "./NotPorted";
 import { About } from "./About";
 import { Analysis } from "./Analysis";
+import { Chat } from "./Chat";
 import { Feedback } from "./Feedback";
+import { GroupJoin } from "./GroupJoin";
+import { NewList } from "./NewList";
+import { Store } from "./Store";
+import { StoresMine } from "./StoresMine";
 import { Item } from "./Item";
 import { Powers } from "./Powers";
 import { Profile } from "./Profile";
@@ -17,7 +22,12 @@ import { Receipts } from "./Receipts";
 const PORTED: Partial<Record<ViewId, ComponentType>> = {
   about: About,
   analysis: Analysis,
+  chat: Chat,
   feedback: Feedback,
+  "group-join": GroupJoin,
+  newlist: NewList,
+  store: Store,
+  "stores-mine": StoresMine,
   item: Item,
   powers: Powers,
   profile: Profile,
