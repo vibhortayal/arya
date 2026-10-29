@@ -1006,7 +1006,7 @@ input[type=file]::file-selector-button {
 /* Play-test fixes: demo banner clears the floating avatar, list rows
    keep a readable name column on a phone, new rows flash, extra
    open hunts fold. */
-#demobar { padding-right: 62px; }
+#demobar { padding-right: 12px; }
 @media (max-width: 480px) {
   .listrow { flex-wrap: wrap; }
   .listrow .grow { flex: 1 1 130px; }
@@ -1173,3 +1173,87 @@ body.hunting #view-hunt.full .askbar {
 .avedit { position: absolute; right: -6px; bottom: 0; width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; background: var(--accent); color: #fff; font-size: 14px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
 .avedit::after { content: ""; position: absolute; inset: -4px; }
 #av-panel { margin-top: 6px; }
+
+/* ---- Lists (owner, 2026-10-29: the List overhaul, wireframe v1) ----
+   Lists home cards, a list's page, suggestions with a reason, the
+   "why" sheet, swipe Move / Remove, and select-to-move. */
+#demobar { font-size: 13.5px; color: var(--secondary); padding: 7px 12px; margin-right: 62px; }
+#list-cards .listcard { display: block; width: 100%; text-align: left; border: none; background: var(--group);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px 12px; margin-bottom: 10px; color: var(--label); }
+#list-cards .listcard > span { display: block; }
+#list-cards .listcard .lc-top { display: flex; align-items: center; gap: 10px; }
+#list-cards .lc-name { flex: 1; min-width: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+#list-cards .lc-count { font-variant-numeric: tabular-nums; color: var(--secondary); font-size: 15px; font-weight: 600; }
+#list-cards .lc-top .chev { color: var(--tertiary); font-size: 22px; }
+#list-cards .lc-store { color: var(--secondary); font-size: 14px; margin-top: 1px; }
+#list-cards .lc-items { font-size: 15px; margin-top: 8px; line-height: 1.4; overflow-wrap: anywhere; }
+#list-cards .listcard .lc-sugg { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: var(--acc-soft);
+  color: var(--acc); border-radius: 980px; padding: 5px 11px; font-size: 13.5px; font-weight: 700; }
+.lc-sugg svg { width: 14px; height: 14px; }
+.newlist { display: flex; width: 100%; align-items: center; gap: 10px; border: 1.5px dashed var(--line);
+  background: transparent; border-radius: var(--radius); padding: 14px 16px; min-height: 44px; color: var(--secondary); font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+.newlist b { color: var(--accent); font-size: 22px; line-height: 1; }
+.backlink.linkbtn { font-size: 17px; font-weight: 550; padding: 0; }
+.lhead { display: flex; align-items: center; gap: 8px; }
+.lhead .largetitle { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.lhead .linkbtn { padding: 8px 4px; }
+.lhead .iconbtn { color: var(--label); background: var(--fill2); }
+.lhead .iconbtn svg { width: 24px; height: 24px; }
+.sectrow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 22px 4px 8px 16px; }
+.sectrow .sect { margin: 0; }
+.sectrow .muted { font-size: 13.5px; white-space: nowrap; }
+.sugrow { cursor: pointer; }
+.sugrow .why { color: var(--secondary); font-size: 14px; display: flex; gap: 5px; align-items: center; }
+.sugrow .why svg { width: 13px; height: 13px; flex: none; color: var(--acc); }
+.addchip { flex: none; border: none; background: var(--acc-soft); color: var(--acc); border-radius: 980px;
+  padding: 0 14px; height: 36px; font-weight: 700; font-size: 15px; }
+.donerow .linkbtn { color: var(--secondary); }
+.donerow .linkbtn:last-child { color: var(--accent); }
+.huntline { display: flex; width: 100%; align-items: center; gap: 6px; background: transparent; border: none;
+  color: var(--secondary); font-size: 15px; padding: 12px 4px; min-height: 44px; text-align: left; }
+.huntline b { color: var(--accent); font-weight: 600; }
+/* Swipe a row: Move and Remove sit behind it. */
+.swipewrap { position: relative; overflow: hidden; margin: 0 -16px; }
+.swipewrap::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--sep); }
+.swipewrap:last-child::after { display: none; }
+.swipewrap .listrow { position: relative; z-index: 1; background: var(--group); padding: 11px 16px; border-bottom: none; }
+.swipewrap .acts { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
+.swipewrap .acts button { width: 80px; border: none; color: #fff; font-weight: 700; font-size: 15px; }
+.swipewrap .acts .mv { background: #6F6F78; }
+.swipewrap .acts .rm { background: var(--danger); }
+.swipewrap.open .listrow { transform: translateX(-160px); }
+.listrow .pick { flex: none; width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--tertiary); display: grid; place-items: center; color: #fff; }
+.listrow .pick svg { width: 15px; height: 15px; opacity: 0; }
+.listrow.picked { background: var(--acc-soft); }
+.listrow.picked .pick { background: var(--accent); border-color: var(--accent); }
+.listrow.picked .pick svg { opacity: 1; }
+body.selecting .listrow { cursor: pointer; user-select: none; -webkit-user-select: none; }
+body.selecting #tabs { display: none; }
+.selbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 12; background: var(--panel); border-top: 1px solid var(--sep);
+  display: flex; gap: 8px; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+.selbar .btn { flex: 1; }
+.btn.dangertext { color: var(--danger); }
+.listrow { -webkit-touch-callout: none; }
+/* The why sheet */
+.whyhead { display: flex; gap: 12px; align-items: center; margin-bottom: 6px; }
+.whyhead .popface { width: 56px; height: 56px; }
+.whyrow { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--sep); align-items: flex-start; }
+.whyrow:last-of-type { border-bottom: none; }
+.whyrow .ic { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--fill); display: grid; place-items: center; color: var(--secondary); }
+.whyrow .ic svg { width: 17px; height: 17px; }
+.whyrow b { display: block; font-weight: 600; font-size: 16px; }
+.dots { display: flex; gap: 4px; margin-top: 6px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--acc); opacity: .85; }
+.dots i.gap { background: var(--fill2); opacity: 1; }
+.dots i.now { background: transparent; opacity: 1; box-shadow: inset 0 0 0 2px var(--acc); }
+.whynever { text-align: center; }
+.whynever .linkbtn { color: var(--secondary); }
+.sheet .navrow small { display: block; color: var(--secondary); font-size: 13.5px; font-weight: 400; }
+.sheet .navrow.here { color: var(--tertiary); cursor: default; }
+.sheet .navrow.here:disabled { opacity: 1; }
+.sheet .navrow.accentrow { color: var(--accent); }
+/* "Worth a look" on Today: the sentence takes the row, the two
+   answers sit under it (they squeezed it into a narrow column). */
+.checkrow { flex-wrap: wrap; }
+.checkrow .grow { flex: 1 1 100%; }
+.checkacts { display: flex; gap: 8px; }

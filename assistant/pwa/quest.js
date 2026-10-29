@@ -512,7 +512,7 @@ window.startHuntFromList = list => qStartNewHunt(list).catch(e => toast(e.messag
 async function qLoadPlan() {
   try { Q.plan = await api("/api/quest/plan"); } catch (e) { Q.plan = { list: [], items: [] }; }
   const fl = Q.draft && Q.draft.fromList;
-  if (fl) Q.plan = { ...Q.plan, list: (Q.plan.list || []).filter(li => li.list === fl.id) };
+  if (fl) Q.plan = { ...Q.plan, list: (Q.plan.list || []).filter(li => li.list === fl.id && li.on_list !== false) };
   return Q.plan;
 }
 

@@ -120,18 +120,7 @@ let isDemo = false;
 
 const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg>`;
 
-function listRow(i, tags, fileable) {
-  const reason = [i.due_reason, i.judge_reason].filter(Boolean).join(" · ");
-  const tagHtml = (tags || []).map(t => `<span class="storetag">${esc(t)}</span>`).join("");
-  return `<div class="row listrow${i.checked ? " checked" : ""}" tabindex="0" data-row-id="${esc(i.item_id)}">
-    <button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>
-    <div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>${tagHtml}${fileable ? `<button class="storetag filetag" type="button" data-list-act="file" data-id="${esc(i.item_id)}">File under ›</button>` : ""}
-    ${reason ? `<span class="sub">${esc(reason)}</span>` : ""}
-    ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}
-    ${i.not_grocery ? `<span class="sub notgrocery">Not a grocery item? Added anyway. <button class="linkbtn" data-act="ng-keep" data-id="${esc(i.item_id)}">It is groceries</button> · <button class="linkbtn" data-act="ng-remove" data-id="${esc(i.item_id)}">Remove</button></span>` : ""}</div>
-    <button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>
-  </div>`;
-}
+const SPARK_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3L2.5 12l7.3-2.2L12 2.5z"/></svg>`;
 
 function bindItemLinks(root) {
   if (!root) return;
@@ -370,9 +359,12 @@ async function paintStoreAlerts(h) {
  * beside Use soon, since the list-first pass. */
 function paintTodayChecks(h) {
   const checks = h.checks || [];
-  $("#today-checks").innerHTML = checks.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
+  // Eyes sightings ("in stock, left off the list") came along from
+  // the List with the List overhaul: the list holds only what you add.
+  const seen = (h.seen || []).map(s => `<div class="row"><div class="grow"><span class="checktext">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`);
+  $("#today-checks").innerHTML = checks.length || seen.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
     `<div class="row"><div class="grow"><span class="checktext">${esc(c.text)}</span>
-      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}</div>` : "";
+      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div>` : "";
 }
 
 $("#today-checks").addEventListener("click", async ev => {
@@ -385,7 +377,7 @@ $("#today-checks").addEventListener("click", async ev => {
       toast("Still good — Arya will ask again next cycle.");
     } else {
       await post(`/api/items/${encodeURIComponent(ex.dataset.checkExpired)}/expired`);
-      toast("Marked expired. It's on your list.");
+      toast("Marked expired. Arya suggests it on your list.");
     }
     renderHome().catch(showErr);
   } catch (e) { toast(e.message); }
@@ -397,7 +389,7 @@ function paintTodayLists(h) {
   const lists = h.lists || [];
   const cards = lists.map(l => ({ id: l.id, name: l.name, items: items.filter(i => i.list === l.id) }));
   const rest = items.filter(i => !i.list || !lists.some(l => l.id === i.list));
-  if (rest.length || !cards.length) cards.push({ id: "all", name: lists.length ? "Everything else" : "Your list", items: rest });
+  if (rest.length || !cards.length) cards.push({ id: "else", name: lists.length ? "Everything else" : "Your list", items: rest });
   $("#today-lists").innerHTML = `<div class="listcards">${cards.map(c => `
     <button class="listcard" data-open-list="${esc(c.id)}" type="button"><span class="lc-name">${esc(c.name)}</span>
     <span class="lc-count">${c.items.length} item${c.items.length === 1 ? "" : "s"}</span>
@@ -408,6 +400,7 @@ $("#today-lists").addEventListener("click", ev => {
   const b = ev.target.closest("[data-open-list]");
   if (!b) return;
   listLens = b.dataset.openList;
+  listSel = null; listDoneOpen = false;
   show("view-list"); refresh("view-list");
 });
 
@@ -457,93 +450,219 @@ async function renderHome() {
 $("#today-listline").addEventListener("click", () => { show("view-list"); refresh("view-list"); });
 $("#today-quest").addEventListener("click", () => { show("view-community"); refresh("view-community"); });
 
-/* ---------------- List: named lists (owner, 2026-10-29) ----------------
- * The household's own lists (Costco, Indian Store, Party...) replace
- * the old store lens. An item sits on one list at a time; items on
- * no list show under "Everything else" (or flat, when the household
- * has made no lists yet). Check-off is the same global flag in every
- * view — a list never duplicates an item. Create / rename / delete /
- * hunt live in lists.js. */
+/* ---------------- Lists (owner, 2026-10-29: the List overhaul) ----------------
+ * The tab opens on one card per list (Costco, Trader Joe's...) plus
+ * "Everything else" for items on no list. Inside a list: only what the
+ * household put on it. Arya's due staples are suggestions under it,
+ * each with a short reason; tapping one shows why (lists.js). Swipe a
+ * row for Move / Remove; Select or long-press picks several to move.
+ * The old store chips and the Prepared cart are gone: the cart was one
+ * Costco cart that copied the whole list (wireframe v1). */
 
-let listLens = "all";          // "all" or a named list's id
+let listLens = "home";         // "home", "else", or a named list's id
 let listData = null;
+let listSel = null;            // Set of picked item ids while selecting
+let listDoneOpen = false;      // checked rows shown, not just counted
 
 const namedLists = () => (listData && listData.lists) || [];
 const lensList = () => namedLists().find(l => l.id === listLens) || null;
+const sameStore = (a, b) => (typeof qSameStore === "function" ? qSameStore(a, b)
+  : String(a).toLowerCase() === String(b).toLowerCase());
 
-function paintStoreFilter() {
-  const lists = namedLists();
-  if (listLens !== "all" && !lists.some(l => l.id === listLens)) listLens = "all";
-  $("#store-filter").innerHTML = [{ id: "all", name: "All" }, ...lists].map(l =>
-    `<button class="chip" data-lens="${esc(l.id)}" aria-pressed="${String(listLens === l.id)}" type="button">${esc(l.name)}</button>`).join("");
-  const here = lensList();
-  const field = $("#add-text");
-  if (field) {
-    field.placeholder = here ? `Add to ${here.name}` : "Add an item";
-    field.setAttribute("aria-label", here ? `Add to ${here.name}` : "Add to your list");
+/* Where an item lives: its named list, or "else". */
+function itemHome(i) {
+  return i.list && namedLists().some(l => l.id === i.list) ? i.list : "else";
+}
+/* Where a suggestion shows: the list it is filed under, else the list
+ * linked to the store it is bought at most, else Everything else. */
+function suggestHome(i) {
+  if (i.list && namedLists().some(l => l.id === i.list)) return i.list;
+  const pbs = (listData.price_by_store || {})[i.item_id] || {};
+  const stores = Object.entries(pbs).sort((a, b) => b[1].count - a[1].count).map(([s]) => s);
+  for (const s of stores) {
+    const l = namedLists().find(l => (l.stores || []).some(x => sameStore(x, s)));
+    if (l) return l.id;
   }
+  return "else";
+}
+const onListItems = () => listData.list.items.filter(i => i.on_list);
+const suggestions = () => listData.list.items.filter(i => !i.on_list);
+const lensName = id => id === "else" ? "Everything else" : ((namedLists().find(l => l.id === id) || {}).name || "");
+
+/* One short reason for a suggestion row; the sheet has the rest. */
+function suggestWhy(i) {
+  if (i.expired_on) return `Expired on ${fmtShort(i.expired_on)}`;
+  if (i.every_days) {
+    const left = i.every_days - (i.days_since || 0);
+    return `Every ~${i.every_days} days · ${left <= 0 ? "due now" : `due in ${left} day${left === 1 ? "" : "s"}`}`;
+  }
+  return i.due_reason || i.judge_reason || "Arya thinks it's due";
 }
 
-$("#store-filter").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-lens]");
-  if (!b) return;
-  listLens = b.dataset.lens;
-  paintStoreFilter();
-  paintListGroups();
-});
+function paintListsHome() {
+  const mine = onListItems(), sugg = suggestions();
+  const open = mine.filter(i => !i.checked);
+  const card = (id, name, sub) => {
+    const rows = open.filter(i => itemHome(i) === id);
+    const n = sugg.filter(i => suggestHome(i) === id).length;
+    const names = rows.slice(0, 4).map(i => i.name).join(", ") + (rows.length > 4 ? ` +${rows.length - 4}` : "");
+    return `<button class="listcard" type="button" data-open-list="${esc(id)}">
+      <span class="lc-top"><span class="lc-name">${esc(name)}</span><span class="lc-count">${rows.length || ""}</span><span class="chev">›</span></span>
+      <span class="lc-store">${esc(sub)}</span>
+      <span class="lc-items">${rows.length ? esc(names) : "Nothing on it yet"}</span>
+      ${n ? `<span class="lc-sugg">${SPARK_SVG}${n} suggestion${n === 1 ? "" : "s"}</span>` : ""}</button>`;
+  };
+  const lists = namedLists();
+  $("#list-cards").innerHTML = lists.map(l =>
+    card(l.id, l.name, (l.stores || []).length ? l.stores.join(" · ") : "No store linked")).join("") +
+    card("else", "Everything else", lists.length ? "Not on a list yet" : "Make a list for each store you shop at");
+  const used = new Set(open.map(itemHome)).size;
+  $("#list-line").textContent = open.length
+    ? `${open.length} thing${open.length === 1 ? "" : "s"} to get${used > 1 ? ` across ${used} lists` : ""}`
+    : "Nothing to get yet";
+}
 
-const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19l-4 1z"/><path d="M14.5 6.5l3 3"/></svg>`;
-const DOTS_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="18.5" cy="12" r="2.1"/></svg>`;
+function listRow(i) {
+  const picking = !!listSel;
+  const picked = picking && listSel.has(i.item_id);
+  const sub = i.added_by ? `Added by ${i.added_by}` : "";
+  return `<div class="swipewrap" data-wrap-id="${esc(i.item_id)}">
+  <div class="acts" aria-hidden="true"><button type="button" class="mv" data-act="move" data-id="${esc(i.item_id)}" tabindex="-1">Move</button><button type="button" class="rm" data-act="remove" data-id="${esc(i.item_id)}" tabindex="-1">Remove</button></div>
+  <div class="row listrow${i.checked ? " checked" : ""}${picked ? " picked" : ""}" tabindex="0" data-row-id="${esc(i.item_id)}">
+    ${picking ? `<span class="pick" data-act="pick" data-id="${esc(i.item_id)}">${CHECK_SVG}</span>`
+      : `<button class="check" data-act="check" data-id="${esc(i.item_id)}" aria-label="Check off ${esc(i.name)}">${CHECK_SVG}</button>`}
+    <div class="grow">${picking ? `<span class="name">${esc(i.name)}</span>` : `<a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a>`}
+    ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}
+    ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}
+    ${i.not_grocery && !picking ? `<span class="sub notgrocery">Not a grocery item? Added anyway. <button class="linkbtn" data-act="ng-keep" data-id="${esc(i.item_id)}">It is groceries</button> · <button class="linkbtn" data-act="ng-remove" data-id="${esc(i.item_id)}">Remove</button></span>` : ""}</div>
+    ${picking ? "" : `<button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>`}
+  </div></div>`;
+}
 
-function listHeader(l) {
-  const linked = (l.stores || []).length;
-  return `<div class="listhead"><h3><span>${esc(l.name)}</span><button class="pen" data-list-act="rename" type="button" aria-label="Rename list">${PEN_SVG}</button></h3>
-    <button class="btn ${linked ? "primary" : "secondary"} compact" data-list-act="hunt" type="button">${linked ? "Start a hunt" : "Hunt"}</button>
-    <button class="iconbtn" data-list-act="menu" type="button" aria-label="List options">${DOTS_SVG}</button></div>` +
-    (linked ? `<p class="liststores">${l.stores.map(esc).join(" · ")}</p>` : "");
+function suggestRow(i) {
+  const c = charFor(i.name);
+  return `<div class="row sugrow" data-why="${esc(i.item_id)}" tabindex="0" role="button" aria-label="Why Arya suggests ${esc(i.name)}">
+    ${c ? `<img class="rowface" src="assets/characters/${c}" alt="">` : ""}
+    <div class="grow"><span class="name">${esc(i.name)}</span><span class="why">${SPARK_SVG}${esc(suggestWhy(i))}</span></div>
+    <button class="addchip" type="button" data-sugg-add="${esc(i.item_id)}" aria-label="Add ${esc(i.name)}">+ Add</button></div>`;
+}
+
+function paintListPage() {
+  const here = lensList();
+  const id = here ? here.id : "else";
+  const name = lensName(id);
+  const rows = onListItems().filter(i => itemHome(i) === id);
+  const open = rows.filter(i => !i.checked), done = rows.filter(i => i.checked);
+  const groceries = open.filter(i => !i.not_grocery), errands = open.filter(i => i.not_grocery);
+  if (listSel) for (const x of [...listSel]) if (!open.some(i => i.item_id === x)) listSel.delete(x);
+  $("#lp-title").textContent = name;
+  $("#lp-sub").textContent = listSel ? `${listSel.size} selected`
+    : [open.length ? `${open.length} to get` : "Nothing to get", ...((here && here.stores) || [])].join(" · ");
+  $("#lp-select").textContent = listSel ? "Done" : "Select";
+  $("#lp-select").hidden = !listSel && !open.length;
+  $("#lp-menu").hidden = !!listSel;
+  $("#composer").hidden = !!listSel;
+  const field = $("#add-text");
+  field.placeholder = `Add to ${name}`;
+  field.setAttribute("aria-label", `Add to ${name}`);
+  const box = $("#smart-list");
+  box.innerHTML = (groceries.length ? `<div class="group">${groceries.map(listRow).join("")}</div>`
+      : errands.length ? "" : `<div class="group pad"><div class="emptyface-wrap"><img class="emptyface" src="assets/characters/pantry.webp" alt="">${empty(`Nothing on ${esc(name)} yet. Type, speak or snap a list above.`)}</div></div>`) +
+    (errands.length ? `<p class="grouplabel">Other errands</p><div class="group">${errands.map(listRow).join("")}</div>` : "");
+  bindItemLinks(box);
+  const sugg = listSel ? [] : suggestions().filter(i => suggestHome(i) === id);
+  $("#list-suggest").innerHTML = sugg.length
+    ? `<div class="sectrow"><h3 class="sect">${id === "else" ? "Suggested" : `Suggested for ${esc(name)}`}</h3><span class="muted">Tap to see why</span></div><div class="group">${sugg.map(suggestRow).join("")}</div>` : "";
+  $("#list-done").innerHTML = done.length && !listSel
+    ? `<div class="group"><div class="row donerow"><button class="linkbtn donetoggle" type="button" data-done-toggle aria-expanded="${listDoneOpen}">✓ ${done.length} checked off ${listDoneOpen ? "▴" : "▾"}</button><button class="linkbtn" type="button" data-done-clear>Clear</button></div>${listDoneOpen ? done.map(listRow).join("") : ""}</div>` : "";
+  bindItemLinks($("#list-done"));
+  $("#list-hunt").hidden = !here || !!listSel || !open.length;
+  $("#list-selbar").hidden = !listSel;
+  if (listSel) $("#ls-move").textContent = listSel.size ? `Move ${listSel.size} to…` : "Move to…";
+  $("#ls-move").disabled = $("#ls-remove").disabled = !(listSel && listSel.size);
+  document.body.classList.toggle("selecting", !!listSel);
 }
 
 function paintListGroups() {
-  const all = listData.list.items;
-  const items = all.filter(i => !i.not_grocery);
-  const box = $("#smart-list");
-  // Not-grocery items stay on the list, in their own group below.
-  const errands = all.filter(i => i.not_grocery);
-  const errandsHtml = errands.length
-    ? `<p class="grouplabel">Other errands</p><div class="group">${errands.map(i => listRow(i, [])).join("")}</div>` : "";
-  if (all.length && errands.length === all.length) {
-    box.innerHTML = errandsHtml;
-    bindItemLinks(box);
-    return;
+  const home = listLens === "home";
+  if (!home && listLens !== "else" && !lensList()) listLens = "home";
+  $("#lists-home").hidden = listLens !== "home";
+  $("#list-page").hidden = listLens === "home";
+  if (listLens === "home") { listSel = null; document.body.classList.remove("selecting"); $("#list-selbar").hidden = true; paintListsHome(); }
+  else paintListPage();
+}
+
+function openListLens(id) {
+  listLens = id; listSel = null; listDoneOpen = false;
+  paintListGroups();
+  window.scrollTo(0, 0);
+}
+
+$("#list-cards").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-open-list]");
+  if (b) openListLens(b.dataset.openList);
+});
+$("#list-back").addEventListener("click", () => openListLens("home"));
+$("#lp-select").addEventListener("click", () => {
+  listSel = listSel ? null : new Set();
+  paintListPage();
+});
+$("#ls-remove").addEventListener("click", () => {
+  if (listSel && listSel.size) removeListItems([...listSel]);
+});
+$("#ls-move").addEventListener("click", () => {
+  if (listSel && listSel.size && window.ListSheets) ListSheets.openMove([...listSel]);
+});
+$("#list-hunt").addEventListener("click", () => {
+  const l = lensList();
+  if (l && typeof startHuntFromList === "function") startHuntFromList(l);
+});
+$("#list-done").addEventListener("click", async ev => {
+  if (ev.target.closest("[data-done-toggle]")) { listDoneOpen = !listDoneOpen; paintListPage(); return; }
+  if (ev.target.closest("[data-done-clear]")) {
+    const id = lensList() ? lensList().id : "else";
+    const ids = onListItems().filter(i => i.checked && itemHome(i) === id).map(i => i.item_id);
+    removeListItems(ids);
   }
-  const lists = namedLists();
-  const here = lensList();
-  if (here) {
-    const mine = items.filter(i => i.list === here.id);
-    box.innerHTML = listHeader(here) + (mine.length
-      ? `<div class="group">${mine.map(i => listRow(i, [])).join("")}</div>`
-      : `<div class="group pad">${empty(`Nothing on ${here.name} yet. Add something above.`)}</div>`);
-  } else if (!items.length) {
-    box.innerHTML = `<div class="emptyface-wrap"><img class="emptyface" src="assets/characters/pantry.webp" alt="">${empty("The list is empty. Nothing is due yet.")}</div>`;
-  } else if (!lists.length) {
-    box.innerHTML = `<div class="group">${items.map(i => listRow(i, [])).join("")}</div>`;
-  } else {
-    const ids = new Set(lists.map(l => l.id));
-    const rest = items.filter(i => !ids.has(i.list));
-    box.innerHTML = lists.map(l => {
-      const mine = items.filter(i => i.list === l.id);
-      return mine.length ? `<p class="grouplabel">${esc(l.name)}</p><div class="group">${mine.map(i => listRow(i, [])).join("")}</div>` : "";
-    }).join("") + (rest.length
-      ? `<p class="grouplabel">Everything else</p><div class="group">${rest.map(i => listRow(i, [], true)).join("")}</div>` : "");
-  }
-  box.insertAdjacentHTML("beforeend", errandsHtml);
-  bindItemLinks(box);
+});
+$("#list-suggest").addEventListener("click", async ev => {
+  const add = ev.target.closest("[data-sugg-add]");
+  if (add) { ev.stopPropagation(); addSuggestion(add.dataset.suggAdd); return; }
+  const r = ev.target.closest("[data-why]");
+  if (r && window.ListSheets) ListSheets.openWhy(r.dataset.why);
+});
+$("#list-suggest").addEventListener("keydown", ev => {
+  const r = ev.target.closest && ev.target.closest("[data-why]");
+  if (r && ev.target === r && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); if (window.ListSheets) ListSheets.openWhy(r.dataset.why); }
+});
+
+/* + Add on a suggestion: it joins the list it was suggested for. */
+async function addSuggestion(id) {
+  const it = listItems[id];
+  const target = it ? suggestHome(it) : "else";
+  try {
+    await post("/api/list/add", target === "else" ? { item_id: id } : { item_id: id, list_id: target });
+    await renderList();
+    toast(`Added ${it ? it.name : "it"} to ${lensName(target)}.`, { action: "Undo", onAction: async () => {
+      // Back to a suggestion: not on the list, and not dismissed either.
+      try { await post(`/api/items/${encodeURIComponent(id)}/flag`, { manual: false, list: it ? it.list || null : null }); renderList().catch(showErr); }
+      catch (e) { toast(e.message); }
+    } });
+  } catch (e) { toast(e.message); }
 }
 
 /* The list-row actions (check / stepper / remove). The endpoints
  * always existed; the Stage 6 file split dropped these handlers —
  * restored here, one delegation for every lens. */
 $("#smart-list").addEventListener("click", async ev => {
+  if (listSel) {
+    const r = ev.target.closest(".listrow");
+    if (!r) return;
+    const id = r.dataset.rowId;
+    if (listSel.has(id)) listSel.delete(id); else listSel.add(id);
+    paintListPage();
+    return;
+  }
   const b = ev.target.closest("[data-act]");
   if (!b) return;
   const id = b.dataset.id, item = listItems[id];
@@ -555,8 +674,11 @@ $("#smart-list").addEventListener("click", async ev => {
       return;
     } else if (b.dataset.act === "ng-keep") {
       await post("/api/list/grocery-verdict", { item_id: id, kind: "grocery" });
-    } else if (b.dataset.act === "ng-remove") {
+    } else if (b.dataset.act === "ng-remove" || b.dataset.act === "remove") {
       await removeListItem(id);
+      return;
+    } else if (b.dataset.act === "move") {
+      if (window.ListSheets) ListSheets.openMove([id]);
       return;
     } else return;
     renderList().catch(showErr);
@@ -600,96 +722,86 @@ function editQty(btn, id, item) {
   });
 }
 
-/* Remove by swiping a row left (or Delete on a focused row), with
- * Undo: the remove endpoint only dismisses, so Undo is an add by id. */
-async function removeListItem(id) {
-  const item = listItems[id];
+/* Remove with Undo (swipe → Remove, Delete on a focused row, Select →
+ * Remove, or Clear on checked rows). The remove endpoint only
+ * dismisses, so Undo is an add by id; the list filing stays put. */
+async function removeListItems(ids) {
+  if (!ids.length) return;
+  const names = ids.map(id => (listItems[id] || {}).name || "Item");
   try {
-    await post("/api/list/remove", { item_id: id });
+    for (const id of ids) await post("/api/list/remove", { item_id: id });
+    if (listSel) listSel = null;
     renderList().catch(showErr);
-    toast(`${item ? item.name : "Item"} removed.`, { action: "Undo", onAction: async () => {
-      try { await post("/api/list/add", { item_id: id }); renderList().catch(showErr); }
+    toast(ids.length === 1 ? `${names[0]} removed.` : `${ids.length} items removed.`, { action: "Undo", onAction: async () => {
+      try { for (const id of ids) await post("/api/list/add", { item_id: id }); renderList().catch(showErr); }
       catch (e) { toast(e.message); }
     } });
   } catch (e) { toast(e.message); }
 }
+const removeListItem = id => removeListItems([id]);
+
+/* Swipe a row left to show Move and Remove (it no longer removes on
+ * its own). Long-press a row to start selecting with it picked. */
 (function wireListSwipe() {
   const box = $("#smart-list");
-  let row = null, x0 = 0, y0 = 0, dx = 0, lock = null;
+  const OPEN = -160;
+  let row = null, x0 = 0, y0 = 0, dx = 0, lock = null, base = 0, press = null;
+  const closeAll = except => box.querySelectorAll(".swipewrap.open").forEach(w => {
+    if (w !== except) { w.classList.remove("open"); w.querySelector(".listrow").style.transform = ""; }
+  });
   box.addEventListener("touchstart", ev => {
     row = ev.target.closest(".listrow");
-    if (!row || ev.target.closest("input")) { row = null; return; }
+    if (!row || ev.target.closest("input") || listSel) { row = null; return; }
+    const wrap = row.closest(".swipewrap");
+    closeAll(wrap);
+    base = wrap.classList.contains("open") ? OPEN : 0;
     x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; dx = 0; lock = null;
+    clearTimeout(press);
+    const id = row.dataset.rowId;
+    press = setTimeout(() => { if (!lock) { row = null; startSelect(id); } }, 550);
   }, { passive: true });
   box.addEventListener("touchmove", ev => {
     if (!row) return;
     const mx = ev.touches[0].clientX - x0, my = ev.touches[0].clientY - y0;
-    if (!lock && (Math.abs(mx) > 8 || Math.abs(my) > 8)) lock = Math.abs(mx) > Math.abs(my) * 1.5 ? "x" : "y";
+    if (!lock && (Math.abs(mx) > 8 || Math.abs(my) > 8)) { lock = Math.abs(mx) > Math.abs(my) * 1.5 ? "x" : "y"; clearTimeout(press); }
     if (lock !== "x") return;
-    dx = Math.min(0, mx);
+    dx = Math.max(OPEN - 40, Math.min(0, base + mx));
     row.style.transform = `translateX(${dx}px)`;
-    row.classList.toggle("swipe-ready", dx < -90);
   }, { passive: true });
   const end = () => {
+    clearTimeout(press);
     if (!row) return;
-    const r = row; row = null;
-    r.style.transform = ""; r.classList.remove("swipe-ready");
-    if (lock === "x" && dx < -90) removeListItem(r.dataset.rowId);
+    const r = row, wrap = r.closest(".swipewrap"); row = null;
+    if (lock !== "x") return;
+    const open = dx < OPEN / 2;
+    wrap.classList.toggle("open", open);
+    r.style.transform = open ? `translateX(${OPEN}px)` : "";
   };
   box.addEventListener("touchend", end);
-  box.addEventListener("touchcancel", () => { if (row) { row.style.transform = ""; row = null; } });
+  box.addEventListener("touchcancel", () => { clearTimeout(press); if (row) { row.style.transform = ""; row = null; } });
+  box.addEventListener("contextmenu", ev => { if (ev.target.closest(".listrow")) ev.preventDefault(); });
+  document.addEventListener("click", ev => { if (!ev.target.closest(".swipewrap.open")) closeAll(null); });
   box.addEventListener("keydown", ev => {
     const r = ev.target.closest && ev.target.closest(".listrow");
     if (r && ev.target === r && (ev.key === "Delete" || ev.key === "Backspace")) { ev.preventDefault(); removeListItem(r.dataset.rowId); }
   });
 })();
 
-function paintListNotes(h) {
-  let notes = "";
-  if (h.seen && h.seen.length) {
-    notes += h.seen.map(s => `<div class="row"><div class="grow"><span class="name">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`).join("");
-  }
-  // The "still good?" checks moved to Today (list-first pass,
-  // owner 2026-10-29); the list keeps only what is on it.
-  $("#list-notes").innerHTML = notes ? `<h3 class="sect">Worth a look</h3><div class="group">${notes}</div>` : "";
-  bindItemLinks($("#list-notes"));
+function startSelect(id) {
+  listSel = new Set(id ? [id] : []);
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) { /* no haptics */ }
+  paintListPage();
 }
 
-function paintCart(h) {
-  const c = h.cart;
-  if (!c.items.length) {
-    // Nothing to approve: an empty cart asks for nothing.
-    $("#cart").innerHTML = `<p class="muted">The cart fills from your list. Nothing to approve yet.</p>`;
-    return;
-  }
-  $("#cart").innerHTML =
-    row(`${esc(c.store)} · ${c.items.length} item${c.items.length === 1 ? "" : "s"}`, c.state === "approved" ? "Approved" : "Waiting for your approval",
-        c.state === "approved" ? "" : `<button id="btn-approve" class="btn primary">Approve</button>`) +
-    c.items.map(i => `<div class="row"><div class="grow"><span>${esc(i.name)}</span></div><div class="money">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</div></div>`).join("") +
-    `<p class="muted">Approving does not place an order. The cart is a list you take to the store.</p>`;
-  const b = $("#btn-approve");
-  if (b) b.addEventListener("click", async () => {
-    b.disabled = true;
-    try {
-      await post("/api/cart/approve");
-      toast("Cart approved. Nothing was ordered — the cart is a proposal.");
-      renderList().catch(showErr);
-    } catch (e) { toast(e.message); b.disabled = false; }
-  });
-}
 
 async function renderList() {
   // A slow home payload must never face the user with the
   // previous list (or a blank): say what is happening (review M9).
-  $("#smart-list").innerHTML = empty("Loading your list…");
+  if (!listData) $("#list-cards").innerHTML = empty("Loading your list…");
   const h = await api("/api/home");
   listData = h;
   listItems = Object.fromEntries(h.list.items.map(i => [i.item_id, i]));
-  $("#list-line").textContent = staplesLine(h.list.items);
-  paintStoreFilter();
   paintListGroups();
-  paintListNotes(h);
-  paintCart(h);
   if (window.Expiry) Expiry.paintList(h.use_soon);
 }
 
@@ -1008,12 +1120,10 @@ function wireRecordButton(btn, statusEl, onText) {
 async function renderIntake() {
   const field = $("#add-text");
   if (!field) return;
-  if (isDemo) {
-    $("#add-status").textContent =
-      "Demo: type, snap a list or speak — the camera and microphone call the Meta API live. Changes last for this visit only.";
-    $("#add-claude-line").textContent =
-      "The demo does not connect a Muse. Every other door works here.";
-  }
+  // The demo bar already says changes reset; the List stays quiet
+  // (List overhaul: the demo hint wrapped three lines over the list).
+  // The demo has no Muse to add from, so that line goes too.
+  $("#add-claude-line").hidden = isDemo;
 }
 
 /* File a receipt photo (image only): the one receipt path the

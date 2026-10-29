@@ -80,7 +80,7 @@ class TestShellContract(unittest.TestCase):
     def test_today_and_list_hooks(self):
         html, js = read("index.html"), read("app.js")
         for el in ("today-hero", "today-eye", "today-listline",
-                   "store-filter", "composer", "add-text", "add-submit",
+                   "list-cards", "composer", "add-text", "add-submit",
                    "add-split", "list-eyes", "rc-archive",
                    "an-spend", "pf-avatar", "pf-badges"):
             self.assertIn(f'id="{el}"', html)
