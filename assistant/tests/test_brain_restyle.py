@@ -186,5 +186,20 @@ class TestAnalysisAndTodayData(unittest.TestCase):
         self.assertTrue(any(b["id"] == "eagle_eye" for b in prof["badges"]))
 
 
+class TestCuratorCardGating(unittest.TestCase):
+    """The Curator card shows only when proposals are pending
+    (owner, 2026-10-29 — an idle explainer card is clutter)."""
+
+    def test_card_hidden_without_proposals(self):
+        from pathlib import Path
+        pwa = Path(__file__).resolve().parents[1] / "pwa"
+        app = (pwa / "app.js").read_text()
+        fn = app.split("async function renderCurator() {")[1].split("\n}\n")[0]
+        self.assertIn("if (!d.proposals.length)", fn)
+        self.assertIn("el.hidden = true", fn)
+        html = (pwa / "index.html").read_text()
+        self.assertIn('id="curator" class="group eyegroup" hidden', html)
+
+
 if __name__ == "__main__":
     unittest.main()
