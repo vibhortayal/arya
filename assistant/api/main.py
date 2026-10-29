@@ -117,10 +117,27 @@ _demo_auth_hits = {}
 _demo_door_hits = {}
 
 
+RATE_BUCKET_MAX = 10_000
+
+
+def _prune(bucket, window):
+    """Per-IP hit lists live in memory. Once a bucket holds many IPs,
+    drop the ones with no hit inside the window, so a scan from many
+    addresses cannot grow it without bound (codebase map 2026-10-29)."""
+    if len(bucket) <= RATE_BUCKET_MAX:
+        return
+    import time as _t
+    now = _t.time()
+    for ip in [ip for ip, hits in bucket.items()
+               if not hits or now - hits[-1] >= window]:
+        bucket.pop(ip, None)
+
+
 def _demo_rate(bucket, key, limit_env, default):
     import time as _t
     limit = int(os.environ.get(limit_env, str(default)))
     now = _t.time()
+    _prune(bucket, 3600)
     hits = [t for t in bucket.get(key, []) if now - t < 3600]
     if len(hits) >= limit:
         return False
@@ -294,6 +311,7 @@ async def auth_register(req: Request):
         raise HTTPException(403, "registration is closed")
     import time as _t
     ip = _client_ip(req)
+    _prune(_register_hits, 900)
     hits = [t for t in _register_hits.get(ip, []) if _t.time() - t < 900]
     if len(hits) >= 10:
         raise HTTPException(429, "too many account creations — try again later")
@@ -313,6 +331,7 @@ async def auth_register(req: Request):
 async def auth_login(req: Request):
     import time as _t
     ip = _client_ip(req)
+    _prune(_login_fails, 900)
     fails = [t for t in _login_fails.get(ip, []) if _t.time() - t < 900]
     if len(fails) >= 8:
         raise HTTPException(429, "too many sign-in attempts — wait 15 minutes")
@@ -342,6 +361,7 @@ def _federated_login(email):
 def _email_guard(req, bucket, limit):
     import time as _t
     ip = _client_ip(req)
+    _prune(bucket, 900)
     hits = [t for t in bucket.get(ip, []) if _t.time() - t < 900]
     if len(hits) >= limit:
         raise HTTPException(429, "too many attempts, try again in 15 minutes")
@@ -395,13 +415,7 @@ def auth_callback():
     browser can read. This page hands it to /auth/supabase and goes home."""
     return HTMLResponse(
         "<!doctype html><meta charset=utf-8><title>Signing in</title>"
-        "<p>Signing you in...</p><script>"
-        "const t=new URLSearchParams(location.hash.slice(1)).get('access_token');"
-        "history.replaceState(null,'','/auth/callback');"
-        "fetch('/auth/supabase',{method:'POST',headers:{'Content-Type':'application/json'},"
-        "body:JSON.stringify({access_token:t})})"
-        ".then(r=>{location.replace(r.ok?'/':'/?signin=failed')})"
-        ".catch(()=>{location.replace('/?signin=failed')});</script>")
+        "<p>Signing you in...</p><script src=\"/auth-callback.js\"></script>")
 
 
 @app.post("/auth/supabase")
@@ -506,7 +520,9 @@ def auth_demo(req: Request):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "arya-api", "stage": 3, "receipts": len(state.receipts())}
+    # No receipt count: /health runs with no account, so it counted the
+    # root plane, which holds none (review M11). Liveness only.
+    return {"status": "ok", "service": "arya-api", "stage": 3}
 
 
 @app.post("/import/costco-json")

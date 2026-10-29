@@ -1,17 +1,9 @@
+# The app keeps its data as JSON documents in the arya-data volume, or
+# in Supabase Postgres when ARYA_STORE asks for it (DATABASE_URL). There
+# is no local database service: the old one here was never read by the
+# app (codebase map 2026-10-29). An existing arya-db volume on the VM is
+# left in place; remove it by hand only when you are sure it is unused.
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
-      POSTGRES_DB: arya
-      POSTGRES_USER: arya
-    volumes:
-      - arya-db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arya"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
   api:
     build:
       context: ..
@@ -44,9 +36,6 @@ services:
       ARYA_VAPID_SUBJECT: ${ARYA_VAPID_SUBJECT:-mailto:admin@example.com}
     volumes:
       - arya-data:/app/data
-    depends_on:
-      db:
-        condition: service_healthy
   caddy:
     image: caddy:2-alpine
     ports:
@@ -58,5 +47,4 @@ services:
     depends_on:
       - api
 volumes:
-  arya-db:
   arya-data:
