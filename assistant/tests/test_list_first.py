@@ -85,12 +85,85 @@ class TestStoreAlerts(unittest.TestCase):
         self.assertIn('if (!rows.length) { $("#today-alerts").innerHTML = ""; return; }', body)
 
 
+class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
+    """New-user sweep (owner approved 2026-10-29): empty cards stay hidden."""
+    def test_today_hides_empty_cards(self):
+        js, html = read("app.js"), read("index.html")
+        low = fn(js, "paintTodayLow")
+        self.assertNotIn("Nothing is running low", low)
+        self.assertIn('id="today-lists-row" hidden', html)
+        self.assertIn("noLists", fn(js, "paintTodayLists"))
+
+    def test_quest_tab_hides_empty_blocks(self):
+        js, q, html = read("app.js"), read("quest.js"), read("index.html")
+        self.assertNotIn("No hunts yet today", js)
+        self.assertIn('id="games-head" hidden', html)
+        self.assertIn('id="comm-fastest" hidden', html)
+        self.assertIn('$("#comm-fastest").hidden =', q)
+        self.assertNotIn("Hunting is better with company", q)
+
+    def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):
+        html = read("index.html")
+        prog = html.split('id="view-quest-progress"')[1].split("</section>")[0]
+        self.assertEqual(prog.count('id="pf-badges"'), 1)
+        self.assertEqual(prog.count('id="pf-stores"'), 1)
+        self.assertIn('id="pf-stats" class="stattiles" hidden', prog)
+        self.assertIn('id="pf-spots" class="group" hidden', prog)
+
+    def test_analysis_is_one_line_until_a_receipt(self):
+        html = read("index.html")
+        self.assertIn('id="an-none" class="muted" hidden', html)
+        self.assertIn('$("#an-data").hidden = !latest;', read("app.js"))
+
+    def test_info_icon_is_an_icon(self):
+        self.assertIn('class="infoic"', read("powers.js"))
+        self.assertNotIn("Tap i to", read("index.html"))
+
+
+class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
+    """New-user sweep (owner approved 2026-10-29): empty cards stay hidden."""
+    def test_today_hides_empty_cards(self):
+        js, html = read("app.js"), read("index.html")
+        self.assertNotIn("Nothing is running low", fn(js, "paintTodayLow"))
+        self.assertIn('id="today-lists-row" hidden', html)
+        self.assertIn("noLists", fn(js, "paintTodayLists"))
+
+    def test_quest_tab_hides_empty_blocks(self):
+        js, q, html = read("app.js"), read("quest.js"), read("index.html")
+        self.assertNotIn("No hunts yet today", js)
+        self.assertIn('id="games-head" hidden', html)
+        self.assertIn('id="comm-fastest" hidden', html)
+        self.assertIn('$("#comm-fastest").hidden =', q)
+        self.assertNotIn("Hunting is better with company", q)
+
+    def test_quest_progress_hides_zero_tiles_and_has_one_shelf(self):
+        prog = read("index.html").split('id="view-quest-progress"')[1].split("</section>")[0]
+        self.assertEqual(prog.count('id="pf-badges"'), 1)
+        self.assertEqual(prog.count('id="pf-stores"'), 1)
+        self.assertIn('id="pf-stats" class="stattiles" hidden', prog)
+        self.assertIn('id="pf-spots" class="group" hidden', prog)
+
+    def test_analysis_is_one_line_until_a_receipt(self):
+        self.assertIn('id="an-none" class="muted" hidden', read("index.html"))
+        self.assertIn('$("#an-data").hidden = !latest;', read("app.js"))
+
+    def test_info_and_lock_are_icons(self):
+        pw = read("powers.js")
+        self.assertIn("INFO_SVG", pw)
+        self.assertIn("LOCK_SVG", pw)
+        self.assertIn('class="infoic"', read("app.js"))
+        self.assertIn('class="pwlock"', read("app.js"))
+        self.assertNotIn("Tap i to", read("index.html"))
+        self.assertIn("You need to opt in first", pw)
+
+
 class TestQuestTab(unittest.TestCase):
     def test_quest_tab_holds_the_game(self):
         quest = read("index.html").split('id="view-community"')[1].split("</section>")[0]
         for el in ("today-level", "today-hero", "btn-new-hunt", "quest-sessions",
-                   "btn-map-store", "crew-summary", "comm-board", "comm-badges"):
+                   "btn-map-store", "crew-summary", "comm-board", "comm-fastest"):
             self.assertIn(f'id="{el}"', quest)
+        self.assertNotIn('id="comm-badges"', quest)  # badges live in Quest progress
         self.assertNotIn('id="comm-news"', quest)  # store news is on Today now
 
     def test_back_from_a_hunt_lands_on_quest(self):

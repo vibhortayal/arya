@@ -44,7 +44,7 @@
   const POWERS = [
     { id: "community", group: "next", name: "Community prices", what: "See what other Arya households paid for the same item at other stores.",
       unlock: "Turn on Share anonymous prices. You give item, store and price by the week, never your name, list or receipt photo.",
-      when: "A price shows only when 5 or more households agree in the last 30 days.", share: true },
+      when: "You need to opt in first. A price then shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified.", share: true },
     { id: "deals", group: "next", name: "Deals for you", what: "A heads-up when an item you buy is cheaper than usual somewhere near you.",
       unlock: "Needs Community prices. Only items you already buy.", when: "Built from shared prices, never from store sites or flyers.", share: true },
     { id: "shoppers", group: "next", name: "Arya Shoppers", what: "How busy a store is right now: Quiet, Busy or Packed, from people shopping there with Arya.",
@@ -74,7 +74,7 @@
   const isOn = p => p.group === "on" || (p.on ? p.on(facts) : false);
 
   function infoBtn(key) {
-    return `<button class="infobtn" type="button" data-info="${esc(key)}" aria-label="How this works">i</button>`;
+    return `<button class="infobtn" type="button" data-info="${esc(key)}" aria-label="How this works">${INFO_SVG}</button>`;
   }
 
   function open(html) {
@@ -156,7 +156,7 @@
   function powRow(p) {
     const on = isOn(p);
     const state = on ? "" : (p.share && facts.share_prices ? "Waiting" : (p.share ? "Opt in" : "Locked"));
-    return `<div class="row powrow"><span class="pwdot${on ? " on" : ""}" aria-hidden="true">${on ? "✓" : ""}</span>
+    return `<div class="row powrow"><span class="pwdot${on ? " on" : " off"}" aria-hidden="true">${on ? "✓" : LOCK_SVG}</span>
       <div class="grow"><span class="name">${esc(p.name)}</span></div>
       ${state ? `<span class="pwstate">${state}</span>` : ""}${infoBtn(p.id)}</div>`;
   }
@@ -210,7 +210,7 @@
     const title = p.tip || (p.id === "community" ? "Arya can show what other shoppers paid" : p.id === "deals" ? "Arya can find deals on what you buy" : "Arya can tell you how busy a store is");
     const step = on
       ? `<div class="tipstep"><span class="pwdot on">✓</span><div><b>It's on</b><span class="sub">${esc(p.what)}</span></div></div>`
-      : `<div class="tipstep"><span class="pwdot"></span><div><b>To unlock</b><span class="sub">${esc(p.unlock)}</span></div></div>`;
+      : `<div class="tipstep"><span class="pwdot off" aria-hidden="true">${LOCK_SVG}</span><div><b>To unlock</b><span class="sub">${esc(p.unlock)}</span></div></div>`;
     const go = p.share && !facts.share_prices
       ? `<button class="btn primary" type="button" data-tip="share">Share prices</button>`
       : `<button class="btn primary" type="button" data-tip="all">See all powers</button>`;

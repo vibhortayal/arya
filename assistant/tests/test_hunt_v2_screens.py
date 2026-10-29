@@ -30,10 +30,10 @@ class TestHuntV2Screens(unittest.TestCase):
     def test_today_hero_clears_on_finish(self):
         js = read("app.js")
         hero = fn_body(js, "paintTodayHero")
-        self.assertIn("No quest in progress", hero)
-        self.assertIn("Nothing is waiting on you.", hero)
-        # Only an open hunt can hold the hero.
-        self.assertNotIn('"finished"', hero.split("No quest in progress")[0])
+        # New-user pass (2026-10-29): no empty box; only an open hunt holds the hero.
+        self.assertNotIn("No quest in progress", hero)
+        self.assertIn('el.innerHTML = "";', hero)
+        self.assertNotIn('"finished"', hero.split('el.innerHTML = "";')[0])
         games = fn_body(js, "paintTodayGames")
         self.assertIn('class="g-group">Finished</p>', games)
 
