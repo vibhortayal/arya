@@ -1,9 +1,9 @@
 name: tests
 
+# Manual only (owner, 2026-10-29: no test run on every PR). Start it
+# from the Actions tab with "Run workflow".
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   unittest:
