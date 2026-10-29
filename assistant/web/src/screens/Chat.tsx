@@ -4,18 +4,24 @@ import { post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
 import { IconMic, IconSpeaker } from "../ui/icons";
+import { languageToast, offerFor, offerRefused, refuseOffer, voiceLang } from "../lib/language";
+import "../ui/language.css";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
- * The log and the history outlive the screen, as the old DOM did. */
-type Line = { kind: "me" | "arya" | "sys" | "actionchip"; text: string };
+ * The log and the history outlive the screen, as the old DOM did.
+ * An "offer" line is the one-time "Reply in <language> from now on?"
+ * card (assistant/docs/MULTILINGUAL-ASK.md): on Auto, after a reply to
+ * a non-English message; at most once per session, never after No. */
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer"; text: string; code?: string };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
 const history: Msg[] = [];
+let offered = false;
 /* Bumps on sign out: the log and history are this account's only, and
  * a reply still in flight from before must not land in the next one. */
 let epoch = 0;
 clearOnSignOut(() => {
-  lines.length = 0; history.length = 0; epoch++;
+  lines.length = 0; history.length = 0; epoch++; offered = false;
   if ("speechSynthesis" in window) speechSynthesis.cancel();
 });
 const SUGGEST = ["What's running low?", "What did I spend this month?", "Add eggs to my list"];
@@ -23,7 +29,7 @@ const SUGGEST = ["What's running low?", "What did I spend this month?", "Add egg
 const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
 
 export function Chat() {
-  const { demo } = useSession();
+  const { demo, language, languages, setLanguage } = useSession();
   const { toast } = useToast();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
   const [text, setText] = useState("");
@@ -44,6 +50,20 @@ export function Chat() {
   useEffect(() => () => { capture.current?.cancel(); capture.current = null; }, []);
 
   const add = (...l: Line[]) => { lines.push(...l); setLog(lines.slice()); };
+  const dropOffer = () => {
+    const i = lines.findIndex(l => l.kind === "offer");
+    if (i >= 0) lines.splice(i, 1);
+    setLog(lines.slice());
+  };
+  const offerNo = () => { refuseOffer(); dropOffer(); };
+  const offerYes = async (code: string) => {
+    try {
+      const r = await post<{ language: string }>("/api/settings", { language: code });
+      setLanguage(r.language);
+      dropOffer();
+      toast(languageToast(r.language, languages));
+    } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+  };
 
   const toggleSpeak = () => {
     const next = !speakOn;
@@ -54,7 +74,9 @@ export function Chat() {
   const speak = (t: string) => {
     if (!speakRef.current || !("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(t));
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = voiceLang(language, t);
+    speechSynthesis.speak(u);
   };
 
   const send = async (raw: string) => {
@@ -68,9 +90,12 @@ export function Chat() {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", { messages: history });
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply });
+      const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
+      if (offer) offered = true;
       add({ kind: "arya", text: res.reply },
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
-        ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })));
+        ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
+        ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
       speak(res.reply);
     } catch (e) {
       if (mine !== epoch) return;
@@ -116,7 +141,18 @@ export function Chat() {
             <p className="muted">Ask about your list, your spending, or what is running low.</p>
             {SUGGEST.map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
           </div>
-        ) : log.map((l, i) => <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
+        ) : log.map((l, i) => l.kind === "offer" ? (
+          <div key={i} className="bubble arya offer" id="lang-offer">
+            <div className="group"><div className="row">
+              <span className="name">Reply in {l.text} from now on?</span>
+              <span className="sub">You can change this any time in Settings › Language.</span>
+              <div className="offer-btns">
+                <button className="btn secondary" type="button" id="lang-offer-no" onClick={offerNo}>No, thanks</button>
+                <button className="btn primary" type="button" id="lang-offer-yes" onClick={() => offerYes(l.code!)}>Yes, {l.text}</button>
+              </div>
+            </div></div>
+          </div>
+        ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
       <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); send(text); }}>
         <button id="btn-mic" type="button" className={"iconbtn" + (listening ? " listening" : "")} aria-label="Speak your message" onClick={mic}><IconMic /></button>
