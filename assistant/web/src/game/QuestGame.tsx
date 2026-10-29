@@ -42,11 +42,13 @@ export type QuestGameProps = {
    * start that only informs, and one offer at the end. Never mid-trip,
    * where leaving the game would lose the trip. */
   onMapStore?: (store: { id: string; name: string }) => void;
+  /* The app's store search, for Build a store's "Which store?". */
+  findStore?: (onAdded: () => void) => ReactNode;
   /* Open straight into the Practice Market (the host's guide). */
   practice?: boolean;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, practice }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, practice }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -98,7 +100,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
           {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} />}
-          {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} />}
+          {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "loading" && <div className="qg-loading" role="status">Opening the store…</div>}
