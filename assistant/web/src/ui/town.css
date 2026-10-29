@@ -1,0 +1,21 @@
+/* Demo Town: the simulated neighbourhood. Every piece wears the
+ * Simulated pill. Greyscale plus the one accent; red only for a report
+ * that something is out or closed (the app's --danger). */
+.simpill { display: inline-block; background: #FDEEE8; color: var(--accent-text); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; border-radius: 980px; padding: 2px 8px; vertical-align: 1px; }
+.townchip { display: inline-flex; align-items: center; gap: 5px; border: 0; border-radius: 980px; padding: 3px 10px;
+  font: inherit; font-size: 13px; font-weight: 700; background: #FBE6E6; color: var(--danger); margin-top: 3px; cursor: pointer; }
+.townchip.ok { background: var(--fill); color: var(--label); }
+.townbadge { flex: none; border-radius: 980px; padding: 3px 10px; font-size: 13px; font-weight: 700; background: var(--fill); color: var(--label); }
+.townbadge.bad { background: #FBE6E6; color: var(--danger); }
+.towncard { margin: 0 0 12px; }
+.towncard .hubrow:last-child { border-bottom: 0; }
+.townhead { display: flex; align-items: center; gap: 8px; }
+.townalert { background: #FBE6E6; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.townalert b { color: var(--danger); }
+.townalert p { margin: 2px 0 0; font-size: 15px; }
+.townactions { display: flex; gap: 8px; margin-top: 8px; }
+.townactions .btn { flex: 1; }
+.townreport { margin: 12px 0 0; font-size: 13px; color: var(--secondary); }
+.townreport .linkbtn { font-size: 13px; }
+.director .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0 4px; }

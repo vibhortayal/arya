@@ -138,8 +138,24 @@ def demo_lists():
     return lists, flags
 
 
+def town_rename(receipts, lists, flags):
+    """Demo Town (ARYA_DEMO_TOWN=1): the household shops at invented
+    stores (owner, 2026-10-29), so nothing implies a real chain."""
+    from api.town import NAMES
+    for r in receipts:
+        r["merchant"] = NAMES.get(r["merchant"], r["merchant"])
+    for l in lists["lists"]:
+        l["name"] = NAMES.get(l["name"], l["name"])
+        l["stores"] = [NAMES.get(x, x) for x in l["stores"]]
+    # The eggs the Demo Town story turns on: on the Costco list, as the weekly run builds it.
+    flags["demo-eggs"] = {"manual": True, "list": "l-demo-costco"}
+
+
 def main(out_root):
     receipts, dictionary = build()
+    lists, flags = demo_lists()
+    if os.environ.get("ARYA_DEMO_TOWN") == "1":
+        town_rename(receipts, lists, flags)
     dest = os.path.join(out_root, "users", "demo")
     os.makedirs(dest, exist_ok=True)
     json.dump(receipts, open(os.path.join(dest, "receipts.json"), "w"), indent=1)
@@ -151,7 +167,6 @@ def main(out_root):
         "demo-yogurt": {"class": "OCCASIONAL", "list_ok": False, "reason": "bought a few times a year", "buys": 3},
     }
     json.dump(judged, open(os.path.join(dest, "judged.json"), "w"), indent=1)
-    lists, flags = demo_lists()
     json.dump(lists, open(os.path.join(dest, "lists.json"), "w"), indent=1)
     json.dump(flags, open(os.path.join(dest, "flags.json"), "w"), indent=1)
     print(f"demo household: {len(receipts)} receipts -> {dest}")
