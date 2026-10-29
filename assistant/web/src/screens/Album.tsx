@@ -5,7 +5,7 @@ import { get } from "../lib/api";
 import { asset } from "../lib/format";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-album and pwa/album.js renderAlbum and
  * its sticker sheet. The New sticker card and the level-up card belong
@@ -13,7 +13,8 @@ import { useTranslation } from "../i18n";
  * The Shell already renders <section id="view-album">. */
 const ALB_SLOTS = 8;
 const ALB_FALLBACK_ART = "basket.webp";
-const ALB_OTHER = "Other finds";
+/* The label of a page of kind "other" that comes with no title. */
+const albOther = () => t("album.otherFinds");
 const ALB_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 type Sticker = { id: string; name: string; image?: string; image_url?: string; art?: string; found_count?: number; first_found_at?: string; store?: string };
@@ -49,7 +50,7 @@ export function slots(page: Page): (Sticker | null)[][] {
 export function progressText(page: Page) {
   const count = page.count || 0;
   const size = page.size || ALB_SLOTS;
-  return count > size ? `${count} stickers` : `${count} of ${size}`;
+  return count > size ? t("album.stickerCount", { count }) : t("album.countOf", { count, size });
 }
 const progressPct = (page: Page) => Math.max(0, Math.min(100, Math.round(100 * (page.count || 0) / (page.size || ALB_SLOTS))));
 
@@ -86,7 +87,7 @@ export function Album() {
     s.querySelector<HTMLElement>('[aria-pressed="true"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
   }, [curId, view]);
 
-  const sub = !view ? "" : view.total === 1 ? "1 sticker collected" : `${view.total || 0} stickers collected`;
+  const sub = !view ? "" : t("album.collected", { count: view.total || 0 });
 
   return (
     <>
@@ -106,7 +107,7 @@ export function Album() {
               <div className="albtabs" role="group" aria-label={t("album.albumPages")} ref={strip}>
                 {pages.map(p => (
                   <button key={p.id} type="button" className="albtab" data-alb-tab={p.id} aria-pressed={p.id === curId}
-                    onClick={() => setTab(p.id)}>{p.title || (p.kind === "other" ? ALB_OTHER : p.id)}</button>
+                    onClick={() => setTab(p.id)}>{p.title || (p.kind === "other" ? albOther() : p.id)}</button>
                 ))}
               </div>
             )}
@@ -137,7 +138,7 @@ function PageView({ page, onOpen }: { page: Page; onOpen: (s: Sticker) => void }
   const b = page.badge;
   return (
     <div className="group pad albpage">
-      <div className="albhead"><b className="albtitle">{page.title || (page.kind === "other" ? ALB_OTHER : page.id)}</b>
+      <div className="albhead"><b className="albtitle">{page.title || (page.kind === "other" ? albOther() : page.id)}</b>
         {page.kind === "season" && <span className="albchip">{t("album.seasonal")}</span>}
         <span className="albcount">{progressText(page)}</span></div>
       <div className="albprog" role="progressbar" aria-valuemin={0} aria-valuemax={page.size || ALB_SLOTS} aria-valuenow={page.count || 0}>
@@ -145,7 +146,7 @@ function PageView({ page, onOpen }: { page: Page; onOpen: (s: Sticker) => void }
       {page.note && <p className="sub albnote">{page.note}</p>}
       {chunks.map((chunk, i) => (
         <div key={i}>
-          {chunks.length > 1 && <p className="sub albchunk">{t("album.sheet")}{" "}{i + 1}{" "}{t("album.of", { chunksCount: chunks.length })}</p>}
+          {chunks.length > 1 && <p className="sub albchunk">{t("album.sheetOf", { n: i + 1, total: chunks.length })}</p>}
           <div className="albgrid">
             {chunk.map((st, j) => st
               ? <button key={j} type="button" className={"albslot" + season} data-alb-slot={st.id} aria-label={st.name} onClick={() => onOpen(st)}>
@@ -156,7 +157,7 @@ function PageView({ page, onOpen }: { page: Page; onOpen: (s: Sticker) => void }
       ))}
       {b && (
         <div className={"albbadge" + (b.earned ? " earned" : "")}>
-          <div className="grow"><b>{b.name}</b><span className="sub">{b.text || (b.earned ? `${b.name} earned.` : `${b.to_go} to go. No rush.`)}</span></div>
+          <div className="grow"><b>{b.name}</b><span className="sub">{b.text || (b.earned ? t("album.badgeEarned", { name: b.name }) : t("album.toGo", { n: b.to_go }))}</span></div>
           {b.earned && <span className="albchip">{t("common.earned")}</span>}
         </div>
       )}
@@ -172,9 +173,9 @@ function StickerSheet({ st, onClose }: { st: Sticker; onClose: () => void }) {
     <div className="albsheet">
       <img className="albsheetimg" src={stickerSrc(st)} alt="" />
       <h3 className="albsheettitle" id="alb-sheet-title">{st.name}</h3>
-      {st.first_found_at && <p className="sub">{t("album.firstFound", { albDate: albDate(st.first_found_at) })}{st.store ? ` at ${st.store}` : ""}</p>}
+      {st.first_found_at && <p className="sub">{t("album.firstFound", { date: albDate(st.first_found_at) })}{st.store ? t("album.atStore", { store: st.store }) : ""}</p>}
       <p className="sub">{t("album.foundInHunt", { count: n })}</p>
-      <p className="albtruth">{cut ? "Only the product is kept in your album. No people." : "This sticker uses stock art. Your album keeps no photo of it."}</p>
+      <p className="albtruth">{cut ? t("album.cutoutTruth") : t("album.stockTruth")}</p>
       <button type="button" className="btn secondary wide" data-alb-close onClick={onClose}>{t("common.close")}</button>
     </div>
   );

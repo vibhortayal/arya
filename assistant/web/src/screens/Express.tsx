@@ -370,8 +370,8 @@ export function Express() {
           const stop = i >= 0 ? stops[i] : null;
           return (
             <>
-              <h3 className="hm-title" id="hm-title">{t("express.canTFind", { moved })}</h3>
-              <p className="sub hm-sub">{t("express.lastSeen", { where: stop && stop.shelfLabel ? stop.shelfLabel : t("express.notPlacedYet") })}</p>
+              <h3 className="hm-title" id="hm-title">{t("hunt.cantFind", { name: moved })}</h3>
+              <p className="sub hm-sub">{t("hunt.lastSeen", { where: stop && stop.shelfLabel ? stop.shelfLabel : t("hunt.notPlacedYet") })}</p>
               <button type="button" className="btn primary wide hm-main" data-act="find" data-first
                 onClick={() => { setMoved(null); findWithCamera(moved); }}>{t("express.findItForMe")}</button>
               <button type="button" className="btn wide" data-act="tell"
@@ -398,8 +398,8 @@ export function Express() {
       <Sheet open={leave !== null} onClose={() => setLeave(null)} id="hunt-sheet" labelledBy="hm-title">
         {leave && (
           <>
-            <h3 className="hm-title" id="hm-title">{t("express.leaveForNextTime", { leaveCount: leave.length })}</h3>
-            <p className="sub hm-sub">{t("express.nothingIsLostSavedItems")}</p>
+            <h3 className="hm-title" id="hm-title">{t("hunt.leaveTitle", { n: leave.length })}</h3>
+            <p className="sub hm-sub">{t("hunt.nothingLost")}</p>
             <div className="group hm-leavelist">
               {leave.map(it => (
                 <div className="row hm-leaverow" key={it.name}>

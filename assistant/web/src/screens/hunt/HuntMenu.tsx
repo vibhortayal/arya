@@ -82,7 +82,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
   if (menu.kind !== "leave" && !it) return null;
 
   const find = () => {
-    if (sess.state !== "playing") { toast("Start the hunt first."); return; }
+    if (sess.state !== "playing") { toast(t("hunt.startFirst")); return; }
     close();
     onFind(name);
   };
@@ -90,8 +90,8 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
     close();
     const moved = await leaveItems(toast, sess, [{ item: name, how }]);
     if (!moved) return;
-    toast(how === "saved" ? `${name} saved for next trip.` : `${name} dropped for today.`,
-      { action: "Undo", onAction: () => { restoreItems(toast, sess, moved); } });
+    toast(how === "saved" ? t("hunt.savedForNext", { name }) : t("hunt.droppedForToday", { name }),
+      { action: t("common.undo"), onAction: () => { restoreItems(toast, sess, moved); } });
     focusAfter();
   };
 
@@ -100,7 +100,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
   if (menu.kind === "row" && it) {
     const reported = qIsReportedByMe(sess, it);
     title = name;
-    sub = reported ? "You told other shoppers it is gone." : "";
+    sub = reported ? t("hunt.youToldShoppers") : "";
     body = <>
       <div className="hm-opts">
         {reported ? <>
@@ -109,7 +109,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
         </> : <>
           <Opt act="find" title={t("hunt.findItForMe")} desc={t("hunt.pointYourCameraAtThe")} onClick={find} />
           <Opt act="swap" title={t("hunt.swapIt")} desc={t("hunt.pickASubstituteYourQuantity")}
-            onClick={() => { if (offline()) { toast("No signal. A swap needs a connection."); return; } setMenu({ kind: "swap", name }); }} />
+            onClick={() => { if (offline()) { toast(t("hunt.swapNeedsSignal")); return; } setMenu({ kind: "swap", name }); }} />
           <Opt act="moved" title={t("hunt.itMoved")} desc={t("hunt.lookAgainOrTellOther")} onClick={() => setMenu({ kind: "moved", name })} />
           <Opt act="save" title={t("hunt.saveForNextTrip")} desc={t("hunt.itComesFirstOnYour")} onClick={() => leaveOne("saved")} />
           <Opt act="drop" title={t("hunt.donTNeedItToday")} desc={t("hunt.noReportNothingIsLost")} onClick={() => leaveOne("dropped")} />
@@ -120,8 +120,8 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
     </>;
   } else if (menu.kind === "moved" && it) {
     const stop = qStops(sess)[idx];
-    title = `Can't find ${name}?`;
-    sub = `Last seen: ${stop && stop.shelfLabel ? stop.shelfLabel : "not placed on the map yet"}. Check the end caps too.`;
+    title = t("hunt.cantFind", { name });
+    sub = t("hunt.lastSeen", { where: stop && stop.shelfLabel ? stop.shelfLabel : t("hunt.notPlacedYet") });
     body = <>
       <button type="button" className="btn primary wide hm-main" data-act="find" data-first onClick={find}>{t("hunt.findItForMe")}</button>
       <button type="button" className="btn wide" data-act="tell" onClick={() => { close(); onTell(idx); }}>{t("hunt.tellOtherShoppersItIs")}</button>
@@ -131,7 +131,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
     const subs = Q.plan && Q.plan.items ? huntSubstitutes(sess, Q.plan.items, name, sess.store, 3) : [];
     const doSwap = async (raw: string) => {
       const to = String(raw || "").trim();
-      if (!to) { toast("Type a name first."); return; }
+      if (!to) { toast(t("hunt.typeNameFirst")); return; }
       close();
       const s = await online(toast, sess, "swap", { item: name, to });
       if (!s) return;
@@ -139,17 +139,17 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
       const subName = j >= 0 ? sess.items[j].name : to;
       Q.focusIdx = j;
       Q.repaint?.();
-      toast(`Swapped for ${subName}. ${name} is saved for next trip.`, { action: "Undo", onAction: async () => {
+      toast(t("hunt.swappedFor", { sub: subName, name }), { action: t("common.undo"), onAction: async () => {
         if (await online(toast, sess, "unswap", { to: subName })) afterMutation(sess);
       } });
     };
-    title = `Swap ${name}`;
-    sub = `Your quantity carries over. ${name} is saved for next trip.`;
+    title = t("hunt.swapTitle", { name });
+    sub = t("hunt.swapSub", { name });
     body = <>
       {subs.length
         ? <div className="hm-opts">{subs.map((s, k) => (
           <button key={k} type="button" className="hm-opt" data-act="pick" data-k={k} onClick={() => doSwap(s.name)}><b>{s.name}</b>
-            <span className="sub">{s.here ? `You bought it here ${s.here} time${s.here === 1 ? "" : "s"}.` : "You bought it at another store."}</span></button>
+            <span className="sub">{s.here ? t("hunt.boughtHere", { count: s.here }) : t("hunt.boughtElsewhere")}</span></button>
         ))}</div>
         : <p className="sub">{t("hunt.yourReceiptsShowNoClose")}</p>}
       <label className="hm-label" htmlFor="hm-own">{t("hunt.typeMyOwn")}</label>
@@ -171,7 +171,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
       const r = await mutate(toast, sess, "edit", body, s => applyEdit(s, name, qty, n));
       if (!r.ok) return;
       afterMutation(sess);
-      toast(`${name} updated.`, { action: "Undo", onAction: async () => {
+      toast(t("hunt.updated", { name }), { action: t("common.undo"), onAction: async () => {
         const back = { item: name, qty: prev.qty, note: prev.note };
         await mutate(toast, sess, "edit", back, s => applyEdit(s, name, back.qty, back.note));
         afterMutation(sess);
@@ -179,7 +179,7 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
       focusAfter();
     };
     title = name;
-    sub = "Fix how many, or add a note.";
+    sub = t("hunt.fixHowManyOrAdd");
     body = <>
       <div className="row hm-stepper"><span className="name" id="hm-qlabel">{t("common.quantity")}</span>
         <div className="hm-step" role="group" aria-labelledby="hm-qlabel">
@@ -204,19 +204,19 @@ export function HuntMenu({ menu, setMenu, sess, onFind, onTell, onCheckout }: Pr
       close();
       onCheckout(moved.length, () => restoreItems(toast, sess, moved));
     };
-    title = `Leave ${open.length} for next time?`;
-    sub = "Nothing is lost. Saved items come first on your next trip.";
+    title = t("hunt.leaveTitle", { n: open.length });
+    sub = t("hunt.nothingLost");
     body = <>
       <div className="group hm-leavelist">
         {open.map((i, k) => (
           <div key={i.name} className="row hm-leaverow">
             <div className="grow"><span className="name">{i.name}{qtyTag(i) ? ` - ${qtyTag(i)}` : ""}</span>
               {qIsReportedByMe(sess, i) ? <span className="sub">{t("common.reportedMissing")}</span> : null}</div>
-            <div className="hm-seg" role="group" aria-label={`What to do with ${i.name}`}>
+            <div className="hm-seg" role="group" aria-label={t("hunt.whatToDoWith", { name: i.name })}>
               {(["saved", "dropped"] as const).map(how => (
                 <button key={how} type="button" className="hm-segbtn" data-act="how" data-k={k} data-how={how}
                   aria-pressed={(choice[i.name] || "saved") === how}
-                  onClick={() => setChoice(c => ({ ...c, [i.name]: how }))}>{how === "saved" ? "Next trip" : "Drop"}</button>
+                  onClick={() => setChoice(c => ({ ...c, [i.name]: how }))}>{how === "saved" ? t("hunt.nextTrip") : t("hunt.drop")}</button>
               ))}
             </div>
           </div>

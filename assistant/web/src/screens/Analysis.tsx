@@ -6,7 +6,7 @@ import { MONTHS, money as fmtMoney } from "../lib/format";
 import { Empty, Row, Section } from "../ui/kit";
 import { InfoBtn, InfoSheet } from "../ui/Info";
 import { useToast } from "../ui/Toast";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-analysis, app.js renderAnalysis and the
  * "Your prices" cards from powers.js paintAnalysis. Spend is live
@@ -28,7 +28,7 @@ type Insights = {
 } | null;
 
 const pct = (n: number) => `${Math.abs(n).toFixed(Math.abs(n) < 10 ? 1 : 0).replace(/\.0$/, "")}%`;
-const names = (n: string[]) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`);
+const names = (n: string[]) => (n.length <= 2 ? n.join(t("lists.and")) : t("analysis.namesAnd", { names: n.slice(0, -1).join(", "), last: n[n.length - 1] }));
 
 export function Analysis() {
   const { t } = useTranslation();
@@ -77,9 +77,9 @@ export function Analysis() {
   const cards: ReactNode[] = [];
   const b = ins && ins.basket;
   if (b) {
-    const head = Math.abs(b.pct) < 1 ? `Your basket costs about the same as in ${b.since_month}`
-      : `Your basket costs ${pct(b.pct)} ${b.pct > 0 ? "more" : "less"} than in ${b.since_month}`;
-    const dollars = Math.abs(b.month_dollars) >= 1 ? ` About ${money(Math.abs(b.month_dollars))} ${b.month_dollars > 0 ? "more" : "less"} a month.` : "";
+    const head = Math.abs(b.pct) < 1 ? t("analysis.basketSame", { month: b.since_month })
+      : t(b.pct > 0 ? "analysis.basketMore" : "analysis.basketLess", { pct: pct(b.pct), month: b.since_month });
+    const dollars = Math.abs(b.month_dollars) >= 1 ? t(b.month_dollars > 0 ? "analysis.aboutMore" : "analysis.aboutLess", { amount: money(Math.abs(b.month_dollars)) }) : "";
     const movers = b.movers || [];
     cards.push(
       <div key="basket" className="group pad pricecard"><div className="pchead"><span className="name">{head}</span><InfoBtn k="basket" onOpen={setInfo} /></div>
@@ -92,7 +92,7 @@ export function Analysis() {
   if (s) {
     const byTo: Record<string, string[]> = {};
     for (const m of s.moves) (byTo[m.to] = byTo[m.to] || []).push(m.name);
-    const lines = Object.entries(byTo).map(([st, ns]) => `Buy ${names(ns)} at ${st}.`).join(" ");
+    const lines = Object.entries(byTo).map(([st, ns]) => t("analysis.buyAt", { names: names(ns), store: st })).join(" ");
     cards.push(
       <div key="split" className="group pad pricecard"><div className="pchead"><span className="name">{t("analysis.splitSmarterSaveAboutA", { month_dollars: money(s.month_dollars) })}</span><InfoBtn k="split" onOpen={setInfo} /></div>
         <span className="sub">{lines}</span></div>);
@@ -102,7 +102,7 @@ export function Analysis() {
     const top = w.items.slice(0, 2).map(i => i.name);
     cards.push(
       <div key="waste" className="group pad pricecard"><div className="pchead"><span className="name">{t("analysis.ofFoodExpiredIn", { dollars: money(w.dollars), month: w.month })}</span><InfoBtn k="waste" onOpen={setInfo} /></div>
-        <span className="sub">{w.items.length === 1 ? top[0] : `Mostly ${names(top)}`}.</span></div>);
+        <span className="sub">{w.items.length === 1 ? top[0] : t("analysis.mostly", { names: names(top) })}.</span></div>);
   }
 
   const show = !d || !!latest;
@@ -117,11 +117,11 @@ export function Analysis() {
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
           {d && latest && <>
-            <p className="an-cap">{t("analysis.total", { monthName: monthName(latest) })}</p>
+            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
-            <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}{" "}{t("analysis.filedThisMonth")}</p>
+            <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}</p>
             <Row name={t("analysis.returnsNettedAllTime")} sub={t("analysis.allReceiptsRefundsReconcileInto")} right={"−" + money(d.returns_total)} />
-            <Row name={t("analysis.allTimeSpend")} sub={`${d.trip_count} trips`} right={money(d.spend_total)} />
+            <Row name={t("analysis.allTimeSpend")} sub={t("analysis.trips", { count: d.trip_count })} right={money(d.spend_total)} />
             {!!d.spend_other && <Row name={t("analysis.groceries")} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
             {!!d.spend_other && <Row name={t("analysis.otherPurchases")} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
             {!!d.for_others_total && <Row name={t("analysis.boughtForOthers")} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}

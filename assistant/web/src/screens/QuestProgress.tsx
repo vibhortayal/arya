@@ -67,7 +67,7 @@ export function QuestProgress() {
           <>
             <div className="stattile"><div className="sv">{s.hunts + unsettled}</div><div className="sl">{t("questProgress.huntsFinished")}</div></div>
             <div className="stattile"><div className="sv">{s.hunts}</div><div className="sl">{t("questProgress.receiptAttached")}</div></div>
-            <div className="stattile"><div className="sv">{profile.level || 1}</div><div className="sl">{t("questProgress.level")}{" "}{profile.points || 0}{" "}{t("common.pts")}</div></div>
+            <div className="stattile"><div className="sv">{profile.level || 1}</div><div className="sl">{t("questProgress.levelPts", { points: profile.points || 0 })}</div></div>
             <div className="stattile"><div className="sv">{s.receipts}</div><div className="sl">{t("common.receipts")}</div></div>
             <div className="stattile"><div className="sv">{t("questProgress.wk", { count: s.streak_weeks })}</div><div className="sl">{t("questProgress.streak")}</div></div>
           </>
@@ -78,7 +78,7 @@ export function QuestProgress() {
         {profile && s && (
           <>
             <Row name={t("questProgress.storeChangesYouSpotted")} sub={t("questProgress.pointsLandOnlyWhenA")} right={String(s.spots_reported || 0)} />
-            {eagle && <Row name={t("questProgress.eagleEye")} sub={eagle.detail || eagle.criteria} right={eagle.earned ? "Earned ✓" : "Locked"} />}
+            {eagle && <Row name={t("questProgress.eagleEye")} sub={eagle.detail || eagle.criteria} right={eagle.earned ? t("questProgress.earnedTick") : t("score.locked")} />}
           </>
         )}
       </div>
@@ -88,7 +88,7 @@ export function QuestProgress() {
           <div key={b.id} className={"badgetile" + (b.earned ? "" : " locked")}>
             {BADGE_ART[b.id] ? <img className="bdgimg" src={asset("assets/characters/" + BADGE_ART[b.id])} alt="" /> : null}
             <h4>{b.name}</h4><p>{b.criteria}</p>
-            <span className="b-state">{b.earned ? "Earned ✓" : `Locked · ${b.detail || ""}`}</span>
+            <span className="b-state">{b.earned ? t("questProgress.earnedTick") : t("questProgress.lockedDetail", { detail: b.detail || "" })}</span>
           </div>
         ))}
       </div>
