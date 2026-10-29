@@ -13,7 +13,7 @@ product, one app, one account.
 
 ![Tests: 1,108 passing](https://img.shields.io/badge/tests-1%2C108%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
 
-**Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
+**Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md) · [User journeys](assistant/docs/USER-JOURNEYS.md)
 
 **Play her live:** https://arya-pilot.duckdns.org — "Try the demo"
 opens a fictional household, no account needed. The whole loop is
@@ -58,9 +58,6 @@ Every item on your list has a face. Hers is a whole company of them:
   curation signal. The Curator proposes product merges and splits;
   you apply them — no silent edits. The Resolver researches names
   Arya cannot place and shows its sources; you settle.
-- **Eyes.** Show her the fridge, the pantry, the freezer. A photo
-  produces sightings; you confirm before her model changes. What she
-  has not seen, she calls unknown — never absent.
 - **Ask Arya.** A chat grounded in a snapshot of her model. She
   answers from your data and applies stated facts as server-validated
   actions.

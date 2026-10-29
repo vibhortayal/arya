@@ -9,7 +9,7 @@ wins for behavior and this document wins for structure.
 Arya has two layers. Each layer does the work it is good at.
 
 - **The edge** is the user's own Muse. It sees the media: receipt
-  photos, PDFs, pasted orders, fridge photos. It reads them and sends
+  photos, PDFs, pasted orders. It reads them and sends
   Arya structured data only; on this path no receipt image reaches the
   server. A receipt photo filed in the app itself is kept per account
   and is viewable in the app ("View receipt", Discussion 42). This is
@@ -99,9 +99,6 @@ Each agent has a narrow job and a named limit.
   Explicit user intent always beats the judge. Unjudged and unresolved
   items stay off the list.
 - **Curator.** See §4. Proposes identity changes; never applies them.
-- **Eyes.** Fridge, pantry, and freezer photos filed at the edge become
-  sightings. A sighting is pending until the user confirms it. Unseen is
-  unknown: Eyes never edits inventory on its own.
 - **Ask Arya.** Chat over a household snapshot. Actions (add to list,
   ran out, mark expired, never suggest, snooze) are validated
   server-side. Numbers come from the data, never from the model. On the
@@ -153,12 +150,12 @@ Each agent has a narrow job and a named limit.
 ## 9. Onboarding
 
 1. Create an account. A new account opens on Today; there is no
-   Connect Muse step on first run.
-2. Connecting Muse is optional, from Profile > Connect Muse: mint the
+   Connect an AI agent step on first run.
+2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
    token there (shown once).
 3. Add the Arya connector in Muse; paste the token into the secure
    form. Never into a chat message.
-4. Talk to Muse. Profile > Connect Muse carries these steps and a
+4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
    copyable fallback setup prompt for assistant apps that do not load
    the connector doc automatically.
 

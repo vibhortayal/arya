@@ -133,7 +133,7 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v92"', sw)
+        self.assertIn('CACHE = "arya-v94"', sw)
         for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
                   "assets/scenes/storefront.webp",
                   "assets/characters/compass.webp",

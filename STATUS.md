@@ -39,7 +39,7 @@ Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
   lines with no item number.
 - **Brain:** intake (photo, PDF, order text, JSON, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge
-  with the open-weights second seat, Eyes, Ask Arya, Receipts with the
+  with the open-weights second seat, Ask Arya, Receipts with the
   original kept, Analysis (groceries vs other purchases).
 - **Quest tab:** Quest hunts (points, stickers, album, badges, haul card
   and share) and Express (a plain checklist with Show me, Not here? and

@@ -885,7 +885,6 @@ const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at h
 Your job when I talk to you:
 - A receipt photo or PDF, or a pasted order (Instacart, Amazon, an email): read it and file it in Arya as structured data — merchant, date, each line (name, quantity, price, line total), subtotal, tax, total. Leave delivery fees and tips out. Report back the total Arya verified, never your own arithmetic.
 - Questions about my list, my spending, or whether something expired: answer from Arya's data, not from memory of our chats.
-- A fridge or pantry photo: file it as a sighting. Arya asks me to confirm any change.
 - Anything else: answer normally. Bring Arya in only when my message is about my groceries, receipts, spending or list.
 
 Rules: never guess a product name you cannot read — flag it and let Arya queue it for me. If a name is unknown, check the retailer's own online catalog, propose the match with its source, and wait for my word before settling it. Returns are refunds, never purchases.
@@ -912,7 +911,7 @@ async function mintInto(el) {
   try {
     const t = await post("/auth/token");
     el.innerHTML = `<input class="grow" data-token-value readonly value="${esc(t.token)}"><button class="btn" data-copy="1">Copy</button>
-      <span class="sub">Copy it now — it is not shown again. Paste it into Muse's secure form.</span>`;
+      <span class="sub">Copy it now — it is not shown again. Paste it into your assistant's connector settings.</span>`;
   } catch (e) { toast(e.message); }
 }
 
@@ -1002,7 +1001,7 @@ async function renderProfile() {
 }
 
 $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refresh("view-analysis"); });
-/* Quest progress, Connect Muse and About are one tap from Profile
+/* Quest progress, Connect an AI agent and About are one tap from Profile
  * (owner, 2026-10-29: Profile too busy). Each Back lands on Profile. */
 for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", "#pfq-back"],
     ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"],
