@@ -40,8 +40,14 @@ function qtyTag(it) {
   if (unit) return `${qtyFmt(it.qty)} ${unit}`;
   return it && it.qty > 1 ? `x${qtyFmt(it.qty)}` : "";
 }
+/* One id per open tab: live sync (group.js) skips the echo of this
+ * tab's own changes. */
+const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 async function api(path, opts) {
   let r;
+  opts = Object.assign({}, opts);
+  opts.headers = new Headers(opts.headers || {});
+  opts.headers.set("X-Arya-Client", CLIENT_ID);
   try { r = await fetch(path, opts); }
   catch (e) {
     // A network failure stays a TypeError (the hunt's offline outbox

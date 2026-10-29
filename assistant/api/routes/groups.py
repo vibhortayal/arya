@@ -122,6 +122,27 @@ def group_leave(req: Request):
     return {"enabled": True, "group": None}
 
 
+@router.get("/api/group/live")
+async def group_live(req: Request):
+    """Live sync: a Server-Sent Events stream that says "change" when
+    anyone in the caller's group changes a shared list or files a
+    receipt. 404 outside a group, so the app stops trying."""
+    from fastapi.responses import StreamingResponse
+    from api import live
+    user = _me(req)
+    gid = groups.group_id_for(user)
+    if not gid:
+        raise HTTPException(404, "you are not in a group")
+    sub = live.subscribe(gid, user)
+    if sub is None:
+        raise HTTPException(503, "too many open apps right now")
+    body = live.stream(sub, lambda: groups.group_id_for(user) == gid,
+                       req.is_disconnected)
+    return StreamingResponse(body, media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
+
+
 @router.post("/api/group/remove")
 async def group_remove(req: Request):
     user = _me(req)
