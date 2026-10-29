@@ -1463,8 +1463,9 @@ async function renderCurator() {
   // The card earns its place only when there is something to
   // decide (owner, 2026-10-29: "show only when there is issue") —
   // with no pending proposals the Receipts view stays clean.
-  if (!d.proposals.length) { el.hidden = true; el.innerHTML = ""; return; }
+  if (!d.proposals.length) { el.hidden = true; el.innerHTML = ""; syncEyeHead(); return; }
   el.hidden = false;
+  syncEyeHead();
   let html = d.proposals.map(p => `
     <div class="row"><div class="grow"><span class="name">${p.kind === "merge" ? `Merge into &ldquo;${esc(p.into_name)}&rdquo;` : `Keep &ldquo;${esc(p.names[0])}&rdquo; separate`}</span>
     <span class="sub">${p.names.map(esc).join(" + ")} — ${esc(p.reason)}</span></div></div>
@@ -1530,7 +1531,14 @@ async function renderScan() {
         <button class="chip" data-save-resolve="${esc(u.item_id)}">Save</button>
       </div>`;
   }
-  $("#review").innerHTML = html || empty("Nothing to review. Every line is verified.");
+  // Owner, 2026-10-29: nothing to check, nothing shown. The heading and the
+  // card appear only when a line or a proposal needs a decision.
+  $("#review").innerHTML = html;
+  $("#review").hidden = !html;
+  syncEyeHead();
+}
+function syncEyeHead() {
+  $("#eye-head").hidden = $("#review").hidden && $("#curator").hidden;
 }
 
 $("#review").addEventListener("click", async ev => {
