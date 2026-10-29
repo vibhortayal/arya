@@ -136,3 +136,11 @@ def _registration_open():
 def new_client():
     """A Meta client that books its spend on this request's ledger."""
     return MetaClient(ledger=_ledger())
+
+
+_PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
+
+
+def _d_today():
+    from datetime import date as _date
+    return _date.fromisoformat(state.today_ref())
