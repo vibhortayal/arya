@@ -1502,11 +1502,12 @@ const QTICK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const QPIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>`;
 const QCLOSE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 /* Hunt v2: the one list, in route order, in flow under the store
- * view. Rows never move or re-sort. The leading 44px cell holds the
- * row menu (open or reported; a reported row's menu only saves it
- * for next trip or drops it) or a check (grabbed). The
- * action cell holds Grab, Put back or Found it after all. Grab takes
- * the whole quantity. */
+ * view. Rows never move or re-sort. The leading 44px cell is the
+ * check, the same circle as the List (design pass, 2026-10-29): tap it
+ * to grab the whole quantity, tap a ticked one to put it back. The row
+ * itself (or its chevron) opens the row menu. Only a reported row keeps
+ * an action button: Found it after all. One orange button on screen:
+ * the big Grab on the card above. */
 function qHuntListHtml(sess) {
   const stops = qStops(sess);
   const cur = qCurrentIndex(sess);
@@ -1517,14 +1518,17 @@ function qHuntListHtml(sess) {
     const rep = !it.checked && qIsReportedByMe(sess, it);
     const sub = [s.shelfLabel || (s.unplaced ? "Not placed on the map" : ""),
                  s.flagged || rep ? "Reported missing" : ""].filter(Boolean).join(" · ");
+    const qty = qtyTag(it);
     const lead = it.checked
-      ? `<span class="hunt-lead got" aria-hidden="true">${QTICK_SVG}</span>`
-      : `<button type="button" class="morebtn" data-more="${i}" aria-label="More for ${esc(it.name)}">${QDOTS_SVG}</button>`;
-    const act = it.checked
-      ? `<button type="button" class="btn rowact putback" data-putback="${i}"${live || sess.state === "paused" ? "" : " disabled"}>Put back</button>`
+      ? `<button type="button" class="huntcheck got" data-putback="${i}" aria-label="Put back ${esc(it.name)}"${live || sess.state === "paused" ? "" : " disabled"}>${QTICK_SVG}</button>`
       : rep
-        ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
-        : `<button type="button" class="btn primary rowact${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"}>${qtyTag(it) ? `Grab ${esc(qtyTag(it))}` : "Grab"}</button>`;
+        ? `<span class="huntcheck rep" aria-hidden="true"></span>`
+        : `<button type="button" class="huntcheck${sess.state === "not_started" ? " notlive" : ""}" data-grab="${i}"${live ? "" : sess.state === "not_started" ? ' aria-disabled="true"' : " disabled"} aria-label="${qty ? `Grab ${esc(qty)} ${esc(it.name)}` : `Grab ${esc(it.name)}`}">${QTICK_SVG}</button>`;
+    const act = rep
+      ? `<button type="button" class="btn rowact" data-foundit="${i}"${live ? "" : " disabled"}>Found it after all</button>`
+      : "";
+    const more = it.checked ? ""
+      : `<button type="button" class="morechev" data-more="${i}" aria-label="More for ${esc(it.name)}">›</button>`;
     const badges = [bossGroup && it.group === bossGroup ? `<span class="hunt-badge boss">Boss</span>` : "",
                     it.added_mid_hunt ? `<span class="hunt-badge">Just added</span>` : ""].filter(Boolean).join("");
     const note = qNoteOf(it);
@@ -1532,13 +1536,13 @@ function qHuntListHtml(sess) {
     const find = f && f.line
       ? `<span class="findline">${QPIN_SVG}<span class="hunt-findtext">${esc(f.line)}</span><button type="button" class="hunt-unfind" data-unfind="${i}" aria-label="Dismiss the spotted note for ${esc(it.name)}">${QCLOSE_SVG}</button></span>`
       : "";
-    return `<div class="row huntrow${it.checked ? " got" : ""}${rep ? " reported" : ""}${i === cur ? " next" : ""}">
+    return `<div class="row huntrow${it.checked ? " got" : ""}${rep ? " reported" : ""}${i === cur ? " next" : ""}"${it.checked ? "" : ` data-row="${i}"`}>
       ${lead}
       <img class="rowface" src="assets/characters/${qFaceFor(it.name)}" alt="" loading="lazy">
-      <div class="grow"><span class="name">${esc(it.name)}${qtyTag(it) ? ` - ${esc(qtyTag(it))}` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
+      <div class="grow"><span class="name">${esc(it.name)}${qty ? ` <span class="hqty">${esc(qty)}</span>` : ""}</span>${badges ? `<span class="hunt-badges">${badges}</span>` : ""}
       ${note ? `<span class="sub hunt-note">${esc(note)}</span>` : ""}
       ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}${find}</div>
-      ${act}
+      ${act}${more}
     </div>`;
   }).join("");
   return html || empty((sess.left && sess.left.length)

@@ -739,7 +739,15 @@
     const f = ev.target.closest("[data-foundit]");
     if (f && !f.disabled) { foundIt(Number(f.dataset.foundit)); return; }
     const u = ev.target.closest("[data-unfind]");
-    if (u) unfind(Number(u.dataset.unfind));
+    if (u) { unfind(Number(u.dataset.unfind)); return; }
+    // A tap on the row (not its check or a button) opens the row menu,
+    // the same as its chevron (design pass, 2026-10-29).
+    if (ev.target.closest("button, a, input")) return;
+    const r = ev.target.closest("[data-row]");
+    if (r) {
+      const chev = r.querySelector("[data-more]");
+      rowMenu(Number(r.dataset.row), chev || r);
+    }
   }
   function onLeftClick(ev) {
     const bar = ev.target.closest("[data-act='fold']");
