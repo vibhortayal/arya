@@ -108,3 +108,67 @@ class TestHardening(unittest.TestCase):
             self.assertIn("budget", r.json()["detail"])
         finally:
             os.environ.pop("ARYA_DAILY_BUDGET_USD", None)
+
+
+class TestSupabaseSignin(unittest.TestCase):
+    ENV = {"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon"}
+
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api.main import app
+        self.c = TestClient(app)
+
+    def _resp(self, code, body):
+        r = mock.Mock(status_code=code)
+        r.json.return_value = body
+        return r
+
+    def test_off_when_unconfigured(self):
+        self.assertFalse(self.c.get("/auth/status").json()["email_signin"])
+        self.assertEqual(self.c.post("/auth/email/start", json={"email": "a@b.co"}).status_code, 404)
+
+    def test_code_flow_creates_passwordless_account(self):
+        user = {"email": "New@Example.com", "email_confirmed_at": "2026-10-29"}
+        with mock.patch.dict(os.environ, self.ENV), \
+                mock.patch("api.supabase_auth.httpx.post") as post:
+            post.return_value = self._resp(200, {})
+            self.assertTrue(self.c.get("/auth/status").json()["email_signin"])
+            self.assertEqual(self.c.post("/auth/email/start", json={"email": "New@Example.com"}).status_code, 200)
+            post.return_value = self._resp(200, {"user": user})
+            r = self.c.post("/auth/email/verify", json={"email": "new@example.com", "code": "123456"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), {"user": "new@example.com", "created": True})
+        self.assertEqual(self.c.get("/auth/me").json()["user"], "new@example.com")
+        self.c.post("/auth/logout")
+        # a passwordless account cannot be opened with an empty or guessed password
+        from api import auth
+        for pw in ("", "None", "x"):
+            self.assertFalse(auth.verify("new@example.com", pw))
+
+    def test_bad_code_and_unverified_email_refused(self):
+        with mock.patch.dict(os.environ, self.ENV), \
+                mock.patch("api.supabase_auth.httpx.post") as post:
+            post.return_value = self._resp(400, {})
+            self.assertEqual(self.c.post("/auth/email/verify", json={"email": "a@b.co", "code": "0"}).status_code, 401)
+            post.return_value = self._resp(200, {"user": {"email": "a@b.co"}})
+            self.assertEqual(self.c.post("/auth/email/verify", json={"email": "a@b.co", "code": "1"}).status_code, 401)
+        self.assertEqual(self.c.get("/auth/me").json()["user"], None)
+
+    def test_existing_account_is_reused_and_signup_can_be_closed(self):
+        from api import auth
+        auth.create_user("old@example.com", "pw-123456")
+        with mock.patch.dict(os.environ, {**self.ENV, "ARYA_SUPABASE_SIGNUP": "0"}), \
+                mock.patch("api.supabase_auth.httpx.get") as get:
+            get.return_value = self._resp(200, {"email": "old@example.com", "email_confirmed_at": "t"})
+            r = self.c.post("/auth/supabase", json={"access_token": "tok"})
+            self.assertEqual(r.json(), {"user": "old@example.com", "created": False})
+            self.c.post("/auth/logout")
+            get.return_value = self._resp(200, {"email": "stranger@example.com", "email_confirmed_at": "t"})
+            self.assertEqual(self.c.post("/auth/supabase", json={"access_token": "tok"}).status_code, 403)
+
+    def test_google_redirect(self):
+        with mock.patch.dict(os.environ, self.ENV):
+            r = self.c.get("/auth/google", follow_redirects=False)
+        self.assertEqual(r.status_code, 307)
+        self.assertIn("provider=google", r.headers["location"])
+        self.assertIn("auth%2Fcallback", r.headers["location"])

@@ -1611,6 +1611,25 @@ async function boot() {
     const data = await r.json();
     enterApp(data.user, false);
   });
+  if (status.email_signin) {
+    $("#email-signin").hidden = false;
+    let sent = false;
+    $("#code-form").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const email = $("#code-email").value.trim();
+      const post = (path, b) => fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+      const r = sent ? await post("/auth/email/verify", { email, code: $("#code-input").value }) : await post("/auth/email/start", { email });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) { $("#code-msg").textContent = data.detail || "Something went wrong."; return; }
+      if (sent) { enterApp(data.user, false); return; }
+      sent = true;
+      $("#code-field").hidden = false;
+      $("#code-btn").textContent = "Sign in";
+      $("#code-msg").textContent = "We emailed you a code. Enter it here.";
+      $("#code-input").focus();
+    });
+    if (location.search.includes("signin=failed")) { sheet("#signin-sheet", true); $("#code-msg").textContent = "Google sign-in did not finish. Try again."; }
+  }
   $("#demo-btn").addEventListener("click", async () => {
     const r = await fetch("/auth/demo", { method: "POST" });
     if (r.ok) { enterApp("demo", true); return; }
