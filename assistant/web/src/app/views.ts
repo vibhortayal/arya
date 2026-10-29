@@ -2,7 +2,7 @@
  * "view-". The tab bar shows four of them. */
 export const VIEWS = [
   "login", "home", "list", "receipts", "chat", "analysis", "item", "profile",
-  "quest-progress", "muse", "about", "feedback", "newlist", "store",
+  "group-join", "quest-progress", "muse", "powers", "about", "feedback", "newlist", "store",
   "stores-find", "stores-mine", "stores-add", "mapper", "capture", "optimize",
   "mode", "hunt", "express", "finish", "score", "album", "community", "race",
   "friends", "receipt",
