@@ -8,7 +8,9 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now.
 - **Brain:** intake (photo, PDF, JSON, order text, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge,
   the smart list with a store lens, Eyes, Ask Arya, Receipts with the
-  original image kept, Analysis (Spend).
+  original image kept, Analysis (Spend, with an Other purchases split),
+  grocery detection (rules and aisle map first, one cached model look for
+  unknown names, never blocks).
 - **Quest:** sessions, the Optimizer, Quest and Express hunts, receipt
   finish and Score, Shop-Off (single account), friends and badges,
   Spotter "Not here?" reports, the stores directory, item-to-shelf
@@ -107,3 +109,8 @@ Raw files stay out of git.
   New session on top of Today, compact staples line. SW arya-v43.
 - Known pre-existing failure on main: test_photo_driver frame budgets
   (the scrub commit pushed the walk frames over the size guide).
+
+## Open: expiry dates (feat/expiry-dates) — awaiting owner review
+- Snap the date on a package; Spark reads it; the user confirms; "Use soon"
+  on Today and List. Demo has a "Try a sample date" button (no model call).
+  SW arya-v69. Not yet tried with a live read on a real package.

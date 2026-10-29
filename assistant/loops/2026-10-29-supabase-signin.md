@@ -23,4 +23,4 @@ Owner's word: "lets add supabase auth. That way we can capture real users"
   providers; add `https://arya-pilot.duckdns.org/auth/callback` to the
   redirect allow-list; edit the Magic Link email template to include
   `{{ .Token }}` so the code shows.
-- Tests: suite green (6 new). SW arya-v72.
+- Tests: suite green (6 new). SW arya-v74.

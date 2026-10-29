@@ -112,6 +112,7 @@
     <div class="todayband"><img src="assets/scenes/hero.webp" alt=""><span id="today-level" class="bandchip" hidden></span></div>
     <div id="today-hero"></div>
     <div id="today-crew"></div>
+    <div id="today-expiry"></div>
     <button id="btn-new-hunt" class="gamerow newrow" type="button"><span class="g-main"><span class="g-name">+ New session</span></span><span class="chev">›</span></button>
     <h3 class="sect">Your games</h3>
     <div id="quest-sessions"></div>
@@ -139,6 +140,7 @@
         <input type="file" id="add-photo" accept="image/*" hidden>
         <button class="btn primary" id="add-submit" type="button">Add</button>
       </div>
+      <p class="nomargin"><button class="linkbtn" id="btn-expiry" type="button">Snap an expiry date ›</button></p>
       <div id="add-split" class="splitpreview" hidden></div>
       <p class="muted nomargin" id="add-status"></p>
       <div id="add-receipt-offer"></div>
@@ -148,6 +150,7 @@
       <h3 class="sect">Eyes — sightings to confirm</h3>
       <div class="group pad"><div id="eyes-records"></div></div>
     </div>
+    <div id="list-use"></div>
     <div id="smart-list"></div>
     <p class="muted small listhint">Tap the amount to change it. Swipe a row left to remove it.</p>
     <div id="list-notes"></div>
@@ -201,7 +204,7 @@
     <div id="an-months" class="group pad"></div>
     <h3 class="sect">Spend by store</h3>
     <div id="an-stores" class="group"></div>
-    <h3 class="sect">Top items</h3>
+    <h3 class="sect">Top grocery items</h3>
     <div id="an-top" class="group"></div>
   </section>
 
@@ -746,5 +749,6 @@
 <script src="mapper.js"></script>
 <script src="share.js"></script>
 <script src="haul.js"></script>
+<script src="expiry.js"></script>
 </body>
 </html>

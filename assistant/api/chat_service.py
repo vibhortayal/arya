@@ -80,7 +80,7 @@ def apply_actions(actions, added=None):
         if a.get("type") == "add_to_list" and a.get("list") and target is None:
             skipped.append(f"You have no list called {a['list']}, so {a.get('item')} went to Everything else.")
         dest = f" to {target['name']}" if target else " to your list"
-        if not item_id and a.get("type") == "add_to_list":
+        if not item_id and a.get("type") in ("add_to_list", "ran_out"):
             # Add is a list act, not a history lookup: a name Arya
             # has never seen joins the list as a typed item, the same
             # as the Add box does (QA 2026-10-28).
@@ -101,7 +101,10 @@ def apply_actions(actions, added=None):
                 if target:
                     fl["list"] = target["id"]
                 state.set_flag(tid, fl)
-                applied.append(f"Added {name}{dest}.")
+                note = ""
+                if state.classify_grocery(name)["kind"] == "other":
+                    note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
+                applied.append(f"Added {name}{dest}.{note}")
                 continue
         if not item_id:
             skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
