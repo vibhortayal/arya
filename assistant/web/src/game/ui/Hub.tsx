@@ -10,11 +10,13 @@ import { charArt, img } from "../assets";
 import { Bar, KindBadge, Sheet } from "./bits";
 import { HowTo } from "./Play";
 
-export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild, onAddItems }: {
+export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild, onAddItems, onPick }: {
   profile: Profile; newbie: boolean; list: ShoppingList | null; lists?: ShoppingList[]; onList?: (l: ShoppingList) => void;
   onPractice: () => void; onQuest: () => void; onAlbum: () => void; onExit?: () => void; extra?: ReactNode; onBuild?: () => void;
   /* An empty list: the host's way to add items (the Lists tab). */
   onAddItems?: () => void;
+  /* A list with its own store: Start goes there; this picks another. */
+  onPick?: () => void;
 }) {
   const lv = levelOf(profile.xp), st = streak(profile.weeks, new Date());
   const [how, setHow] = useState(false);
@@ -62,7 +64,10 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
               ))}
             </div>
           )}
-          {list?.items.length ? <button className="qg-btn primary big" onClick={onQuest}>Start a quest <span aria-hidden="true">▶</span></button>
+          {list?.items.length ? <>
+                <button className="qg-btn primary big" onClick={onQuest}>{list.store ? `Start at ${list.store}` : "Start a quest"} <span aria-hidden="true">▶</span></button>
+                {list.store && onPick && <button id="qg-otherstore" className="qg-btn ghost" onClick={onPick}>Shop somewhere else</button>}
+              </>
             : <>
                 <p className="qg-p">Your list is empty. Add what you need, or try practice.</p>
                 {onAddItems && <button id="qg-additems" className="qg-btn primary big" onClick={onAddItems}>Add items</button>}
@@ -97,7 +102,7 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
   );
 }
 
-export function Pick({ source, newbie, onPick, onPractice, onBack }: { source: QuestSource; newbie: boolean; onPick: (s: StoreSummary) => void; onPractice: () => void; onBack: () => void }) {
+export function Pick({ source, newbie, first, onPick, onPractice, onBack }: { source: QuestSource; newbie: boolean; first?: string; onPick: (s: StoreSummary) => void; onPractice: () => void; onBack: () => void }) {
   const [near, setNear] = useState<StoreSummary[]>([]);
   const [q, setQ] = useState("");
   const [found, setFound] = useState<StoreSummary[] | null>(null);
@@ -108,7 +113,12 @@ export function Pick({ source, newbie, onPick, onPractice, onBack }: { source: Q
     const t = setTimeout(() => void source.findStores(q).then(setFound), 180);
     return () => clearTimeout(t);
   }, [q, searching, source]);
-  const rows = searching ? found || [] : near;
+  // The list's own store leads; the rest are the player's stores.
+  const lead = (rows: StoreSummary[]) => {
+    const f = first?.trim().toLowerCase();
+    return f ? [...rows].sort((a, b) => Number(b.name.trim().toLowerCase() === f) - Number(a.name.trim().toLowerCase() === f)) : rows;
+  };
+  const rows = searching ? found || [] : lead(near);
   return (
     <div className="qg-pick">
       <header className="qg-home-h"><button className="qg-ic" onClick={onBack} aria-label="Back">‹</button><h1>Where are you shopping?</h1><span /></header>
@@ -121,7 +131,7 @@ export function Pick({ source, newbie, onPick, onPractice, onBack }: { source: Q
         <input value={q} onFocus={() => setSearching(true)} onChange={e => { setQ(e.target.value); setSearching(true); }} placeholder="Search stores by name or area" aria-label="Search stores" />
         {searching && <button onClick={() => { setSearching(false); setQ(""); }}>Cancel</button>}
       </div>
-      <p className="qg-kicker">{searching ? (q ? `Results for "${q}"` : "All stores") : "Near you"}</p>
+      <p className="qg-kicker">{searching ? (q ? `Results for "${q}"` : "All stores") : "Your stores"}</p>
       <div className="qg-stores">
         {rows.map(s => (
           <button key={s.id} className="qg-store" onClick={() => onPick(s)}>
