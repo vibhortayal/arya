@@ -9,9 +9,12 @@ from api.deps import _json_obj
 router = APIRouter()
 
 
-# ---- Account settings. Currency only so far (owner, 2026-10-29): it
+# ---- Account settings: currency and language. Currency (owner, 2026-10-29): it
 # changes the symbol prices show with, nothing else. No exchange rates
-# and no conversion: an amount is shown as it was read.
+# and no conversion: an amount is shown as it was read. Language
+# ("auto" or a code) sets Ask Arya's reply language; it does not
+# translate the app (assistant/docs/MULTILINGUAL-ASK.md).
+LANGUAGES = {"auto": "Auto", "en": "English", "es": "Español", "hi": "हिन्दी"}
 CURRENCIES = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
               "CAD": "C$", "AUD": "A$"}
 
@@ -21,19 +24,31 @@ def settings_get():
     code = state._load("settings.json", {}).get("currency", "USD")
     if code not in CURRENCIES:
         code = "USD"
-    return {"currency": code, "symbol": CURRENCIES[code],
+    lang = state._load("settings.json", {}).get("language", "auto")
+    if lang not in LANGUAGES:
+        lang = "auto"
+    return {"currency": code, "symbol": CURRENCIES[code], "language": lang,
+            "languages": [{"code": c, "name": n} for c, n in LANGUAGES.items()],
             "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()]}
 
 
 @router.post("/api/settings")
 async def settings_set(req: Request):
     body = await _json_obj(req)
-    code = str(body.get("currency") or "").upper()
-    if code not in CURRENCIES:
+    code = str(body["currency"]).upper() if "currency" in body else None
+    lang = str(body["language"]).lower() if "language" in body else None
+    if code is None and lang is None:
+        raise HTTPException(400, "send currency or language")
+    if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
+    if lang is not None and lang not in LANGUAGES:
+        raise HTTPException(400, "language must be one of " + ", ".join(LANGUAGES))
     with state.file_lock("settings.json"):
         cur = state._load("settings.json", {})
-        cur["currency"] = code
+        if code is not None:
+            cur["currency"] = code
+        if lang is not None:
+            cur["language"] = lang
         state._save("settings.json", cur)
     return settings_get()
 

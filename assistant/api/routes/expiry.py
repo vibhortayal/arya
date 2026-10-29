@@ -65,7 +65,7 @@ async def expiry_save(req: Request):
     """The user confirmed a date. Tracks it on the item (a known one by
     item_id, else a new tracked-only item by name — it does not join
     the shopping list)."""
-    import re as _re
+    from api.list.intake import item_slug
     from api import expiry
     body = await _json_obj(req)
     d = expiry.parse_iso(body.get("date"))
@@ -80,7 +80,7 @@ async def expiry_save(req: Request):
     elif name:
         item_id = expiry.match_item(name, state.dictionary()["entries"], state.flags())
         if not item_id:
-            item_id = "manual-" + _re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+            item_id = "manual-" + item_slug(name)
             _merge_flag(item_id, {"name": name})
     else:
         raise HTTPException(400, "item_id or name is required")

@@ -38,6 +38,69 @@ def feature_sheet(flags=None):
     return "\n".join(out)
 
 
+
+# ---- Language (owner, 2026-10-29; assistant/docs/MULTILINGUAL-ASK.md).
+# The model mirrors the user's language; these cover the lines code
+# writes. English is the fallback for any code not listed here.
+LANGUAGES = {"en": "English", "es": "Spanish", "hi": "Hindi"}
+
+_T = {
+    "es": {
+        "no_list": "No tienes una lista llamada {list}, así que {item} fue a Everything else.",
+        "not_tracked": "Todavía no sigo {item}: aparecerá después de su primer recibo.",
+        "added": "Añadí {name}{dest}.",
+        "dest_list": " a tu lista",
+        "dest_named": " a {list}",
+        "ran_out": "Marqué {name} como agotado: está en la lista.",
+        "expired": "Marqué {name} como caducado: está en la lista.",
+        "never": "No volveré a sugerir {name}.",
+        "snooze": "Pospuse {name} {days} días.",
+        "q_out": "¿Marcar {name} como agotado? Pasa a tu lista como pendiente.",
+        "q_expired": "¿Marcar {name} como caducado? Pasa a tu lista como pendiente.",
+        "q_never": "¿Dejar de sugerir {name}?",
+        "q_snooze": "¿Posponer {name} {days} días?",
+    },
+    "hi": {
+        "no_list": "आपकी {list} नाम की कोई सूची नहीं है, इसलिए {item} Everything else में गया।",
+        "not_tracked": "मैं अभी {item} को ट्रैक नहीं करता: पहली रसीद के बाद यह दिखेगा।",
+        "added": "{name} {dest} जोड़ दिया।",
+        "dest_list": "आपकी सूची में",
+        "dest_named": "{list} में",
+        "ran_out": "{name} को खत्म के रूप में चिह्नित किया: यह सूची में है।",
+        "expired": "{name} को एक्सपायर के रूप में चिह्नित किया: यह सूची में है।",
+        "never": "मैं {name} फिर नहीं सुझाऊँगा।",
+        "snooze": "{name} को {days} दिन के लिए टाल दिया।",
+        "q_out": "{name} को खत्म चिह्नित करें? यह सूची में तुरंत आ जाएगा।",
+        "q_expired": "{name} को एक्सपायर चिह्नित करें? यह सूची में तुरंत आ जाएगा।",
+        "q_never": "{name} सुझाना बंद करें?",
+        "q_snooze": "{name} को {days} दिन के लिए टालें?",
+    },
+}
+
+
+def _language_setting():
+    """The account's Language setting: "auto" or a code in LANGUAGES."""
+    from api import state
+    code = str(state._load("settings.json", {}).get("language") or "auto")
+    return code if code in LANGUAGES else "auto"
+
+
+def _t(key, default, **kw):
+    """A code-written line in the account's language (English when
+    the setting is auto or English, or the line has no translation)."""
+    tpl = _T.get(_language_setting(), {}).get(key, default)
+    return tpl.format(**kw)
+
+
+def _currency_line():
+    from api import state
+    from api.routes.account import CURRENCIES
+    code = state._load("settings.json", {}).get("currency", "USD")
+    if code not in CURRENCIES:
+        code = "USD"
+    return f"{code} ({CURRENCIES[code]})"
+
+
 def snapshot():
     from api import state
     d = state.derived()
@@ -69,7 +132,7 @@ def snapshot():
                        for i in d["smart_list"]["items"]
                        if i.get("list") == l["id"] and not i.get("checked")]}
             for l in state.named_lists()],
-        "currency": "USD (dollars)",
+        "currency": _currency_line(),
         "spend_total": dash["spend_total"], "returns_total": dash["returns_total"],
         "spend_by_month": dash["spend_by_month"],
         "spend_by_store": dash["spend_by_store"],
@@ -115,16 +178,17 @@ def apply_actions(actions, added=None):
         item_id = _resolve(a.get("item"))
         target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
         if a.get("type") == "add_to_list" and a.get("list") and target is None:
-            skipped.append(f"You have no list called {a['list']}, so {a.get('item')} went to Everything else.")
-        dest = f" to {target['name']}" if target else " to your list"
+            skipped.append(_t("no_list", "You have no list called {list}, so {item} went to Everything else.",
+                              list=a["list"], item=a.get("item")))
+        dest = (_t("dest_named", " to {list}", list=target["name"]) if target
+                else _t("dest_list", " to your list"))
         if not item_id and a.get("type") in ("add_to_list", "ran_out"):
             # Add is a list act, not a history lookup: a name Arya
             # has never seen joins the list as a typed item, the same
             # as the Add box does (QA 2026-10-28).
-            import re
-            from api.list.intake import existing_item_id
+            from api.list.intake import existing_item_id, item_slug
             name = str(a.get("item") or "").strip()[:60]
-            slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+            slug = item_slug(name)
             if slug:
                 # A name typed before joins its existing row, not a twin.
                 tid = existing_item_id(name, state.dictionary()["entries"],
@@ -141,10 +205,11 @@ def apply_actions(actions, added=None):
                 note = ""
                 if state.classify_grocery(name)["kind"] == "other":
                     note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
-                applied.append(f"Added {name}{dest}.{note}")
+                applied.append(_t("added", "Added {name}{dest}.", name=name, dest=dest) + note)
                 continue
         if not item_id:
-            skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
+            skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
+                              item=a.get("item")))
             continue
         nm = state.names().get(item_id, item_id)
         fl = dict(state.flags().get(item_id, {}))
@@ -155,20 +220,20 @@ def apply_actions(actions, added=None):
             fl["manual"] = True
             if target:
                 fl["list"] = target["id"]
-            applied.append(f"Added {nm}{dest}.")
+            applied.append(_t("added", "Added {name}{dest}.", name=nm, dest=dest))
         elif t == "ran_out":
             fl["out"] = today
-            applied.append(f"Marked {nm} as out — it's on the list.")
+            applied.append(_t("ran_out", "Marked {name} as out — it's on the list.", name=nm))
         elif t == "mark_expired":
             fl["expired"] = today
-            applied.append(f"Marked {nm} as expired — it's on the list.")
+            applied.append(_t("expired", "Marked {name} as expired — it's on the list.", name=nm))
         elif t == "never_suggest":
             fl["never"] = True
-            applied.append(f"I won't suggest {nm} again.")
+            applied.append(_t("never", "I won't suggest {name} again.", name=nm))
         elif t == "snooze":
             days = int(a.get("days") or 14)
             fl["snoozed_until"] = (date.today() + timedelta(days=days)).isoformat()
-            applied.append(f"Snoozed {nm} for {days} days.")
+            applied.append(_t("snooze", "Snoozed {name} for {days} days.", name=nm, days=days))
         else:
             continue
         state.set_flag(item_id, fl)
@@ -181,12 +246,12 @@ RISKY = {"ran_out", "mark_expired", "never_suggest", "snooze"}
 def _risky_text(a, name):
     t = a.get("type")
     if t == "ran_out":
-        return f"Mark {name} as out? It goes on your list as due now."
+        return _t("q_out", "Mark {name} as out? It goes on your list as due now.", name=name)
     if t == "mark_expired":
-        return f"Mark {name} as expired? It goes on your list as due now."
+        return _t("q_expired", "Mark {name} as expired? It goes on your list as due now.", name=name)
     if t == "never_suggest":
-        return f"Stop suggesting {name}?"
-    return f"Snooze {name} for {int(a.get('days') or 14)} days?"
+        return _t("q_never", "Stop suggesting {name}?", name=name)
+    return _t("q_snooze", "Snooze {name} for {days} days?", name=name, days=int(a.get("days") or 14))
 
 
 def chat(history, client, surface=None, context=None):
@@ -203,6 +268,9 @@ def chat(history, client, surface=None, context=None):
                 {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet()}]
     if surface and ctx:
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
+    lang = _language_setting()
+    if lang != "auto":
+        messages.append({"role": "user", "content": f"REPLY LANGUAGE: {LANGUAGES[lang]} ({lang})"})
     for h in (history or [])[-10:]:
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": str(h["content"])[:2000]})
@@ -229,7 +297,8 @@ def chat(history, client, surface=None, context=None):
     if surface:
         for a in actions:
             if a.get("type") in RISKY and not _resolve(a.get("item")):
-                skipped.append(f"I don't track {a.get('item')} yet — it will appear after its first receipt.")
+                skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
+                                  item=a.get("item")))
     return {"reply": dec.get("reply", ""), "applied": applied, "skipped": skipped,
             "added": added, "proposed": proposed}
 
