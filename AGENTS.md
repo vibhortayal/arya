@@ -46,16 +46,54 @@ helpers) is in `api/deps.py`; the demo sandbox and login middleware in `api/demo
    Synthetic fixtures only. Owner data lives in the staging area described
    in STATUS.md.
 
+## Coding behavior guidelines
+Condensed from Andrej Karpathy's observations on LLM coding pitfalls, via
+https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md.
+They bias toward care over speed; for trivial changes use judgment.
+
+1. **Think before coding.** State assumptions. If a request has more than one
+   reading, name them and say which you chose; do not pick silently. If a
+   simpler approach exists, say so. If something is unclear, ask.
+2. **Simplicity first.** Write the least code that solves the task. No
+   unrequested features, no abstraction for single-use code, no speculative
+   configuration, no handling for cases that cannot happen.
+3. **Surgical changes.** Touch only what the request needs. Match the existing
+   style. Do not refactor or reformat unrelated code; mention unrelated dead
+   code instead of deleting it. Remove only the imports and names your own
+   change orphaned. Every changed line should trace to the request.
+4. **Goal-driven execution.** Turn the task into a check you can verify (a
+   failing test first for a bug, a passing test after a refactor). For
+   multi-step work, state a short plan with a check for each step, and loop
+   until the checks pass.
+
+### Arya rules that win over the above
+If a guideline conflicts with these, these win:
+- **UI changes: wireframe first.** Show a phone-size mockup built from the
+  real app CSS and wait for the owner's approval before writing UI code.
+- **PRs:** base every PR on `main`; no stacked PRs.
+- **Tests:** CI is manual-only; never add a `pull_request` trigger.
+- **Cost:** $0 per call for math, patterns, and list logic (see
+  `assistant/docs/MODEL-POLICY.md`).
+- **Scope:** grocery only.
+- **Prices** come only from the user's own receipts and lists — no scraping,
+  no retailer APIs, no web search (SPEC FR-11.1). Community price comparison
+  is opt-in and not live (SPEC FR-11.7).
+- **Spec beats code:** if SPEC.md and the code disagree, the spec wins — fix
+  the code, or flag it and let the owner decide.
+
 ## Working agreement
-- Small commits to `main`; the message names the stage (`Stage 1: ...`).
-- Tests before commit: `cd assistant && ../.venv/bin/python -m unittest discover -s tests`
-  must be green (create the venv once: `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`). Add tests with new logic.
+- No commits to `main`. Every change goes through a PR based on `main`; commit messages are descriptive.
+- While iterating, run the tests for the area you touched. Before a PR
+  merges, run the full suite — `cd assistant && ../.venv/bin/python -m unittest discover -s tests` —
+  and it must be green. Add tests with new logic. Create the venv once:
+  `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`.
+  On the VM no setup is needed: the deploy container already has the
+  dependencies (`docker exec deploy-api-1 …`).
 - Every work session: append one entry to `assistant/loops/<date>-<stage>.md`
   (what changed, scores/costs if models ran, what's next) and update
-  `STATUS.md` + the stage issue checklist.
+  `STATUS.md` + the stage issue checklist. Docs-only PRs are exempt from all
+  three; code changes keep the full duty.
 - Stage starts, any paid spend, and deploys need the owner's go-ahead.
-- If a spec and the code disagree, the spec wins — fix the code, or flag it
-  in the issue and let the owner decide.
 
 ## Design work
 
