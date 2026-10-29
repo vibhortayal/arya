@@ -1692,7 +1692,7 @@
       "date": "date"
     },
     "when": {
-      "past": "Past the date. Still good, or toss it?",
+      "past": "Past the date. Check it before you use it.",
       "today": "Today",
       "tomorrow": "Tomorrow",
       "inDays_one": "in {{count}} day",

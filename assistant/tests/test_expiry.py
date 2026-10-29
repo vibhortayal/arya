@@ -233,7 +233,7 @@ class TestClientWiring(unittest.TestCase):
         from tests import frontend
         js = frontend.src("screens/Today.tsx")  # expiry.js was ported into Today
         for phrase in ("Arya tracks use-by dates", "Add a use-by date", "Add a date",
-                       "Nothing is saved until you tap", "Past the date. Still good, or toss it?",
+                       "Nothing is saved until you tap", "Past the date. Check it before you use it.",
                        "Add it to your list?", "Try a sample date"):
             self.assertIn(phrase, js)
         self.assertNotIn("danger", js)   # a date is information, never an alarm
