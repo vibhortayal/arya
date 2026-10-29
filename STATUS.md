@@ -115,6 +115,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   that store, the Quest home says "Start at <store>" with "Shop somewhere
   else", and the store pick leads with it under Your stores.
   `2026-10-29-quest-list-store.md`.
+  One level, streak and sticker album: the game keeps its profile on the
+  server and Settings counts it. `2026-10-29-quest-one-progress.md`.
   Your trips is history only: resume or end open trips, see finished
   ones. Bundles is cut from the Quest home. `2026-10-29-quest-trips-history.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
