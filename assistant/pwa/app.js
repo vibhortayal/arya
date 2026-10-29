@@ -128,6 +128,8 @@ const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 
 const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>`;
 const SPARK_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3L2.5 12l7.3-2.2L12 2.5z"/></svg>`;
+const INFO_SVG = `<svg class="infoic" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.2" r="1.15" fill="currentColor"/><path d="M10 9v5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+const LOCK_SVG = `<svg class="pwlock" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4.25" y="8.75" width="11.5" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.75 8.75V6.5a3.25 3.25 0 0 1 6.5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
 function bindItemLinks(root) {
   if (!root) return;
@@ -223,10 +225,7 @@ function paintTodayHero(sessions) {
   const el = $("#today-hero");
   const hero = heroSession(sessions);
   if (!hero) {
-    el.innerHTML = `<article class="herocard quiet">
-      <p class="hero-k">No quest in progress</p>
-      <p class="hero-sub nomargin">Nothing is waiting on you.</p>
-    </article>`;
+    el.innerHTML = "";
     return;
   }
   const p = sessProgress(hero);
@@ -269,7 +268,8 @@ function paintTodayGames(sessions) {
   el.innerHTML = sessions.length
     ? openHtml +
       (done.length ? `<p class="g-group">Finished</p>` + done.map(gameRow).join("") : "")
-    : `<p class="empty">No hunts yet today. Start one — the list becomes the game.</p>`;
+    : "";
+  $("#games-head").hidden = !sessions.length;
 }
 
 /* ---------------- Quest tab hub ----------------
@@ -301,7 +301,8 @@ function paintTodayLow(h) {
   const cap = t => String(t || "").replace(/^./, c => c.toUpperCase());
   const el = $("#today-low");
   if (!low.length) {
-    el.innerHTML = `<h3 class="sect">Running low</h3><div class="group pad">${empty("Nothing is running low. Arya learns your rhythm from receipts.")}</div>`;
+    // Owner, 2026-10-29: no empty cards for a new user; shows when something is low.
+    el.innerHTML = "";
     return;
   }
   el.innerHTML = `<h3 class="sect">Running low</h3><div class="group">${low.map(i => {
@@ -410,6 +411,9 @@ function paintTodayLists(h) {
   const cards = lists.map(l => ({ id: l.id, name: l.name, items: items.filter(i => i.list === l.id) }));
   const rest = items.filter(i => !i.list || !lists.some(l => l.id === i.list));
   if (rest.length || !cards.length) cards.push({ id: "else", name: lists.length ? "Everything else" : "Your list", items: rest });
+  const noLists = !items.length && !lists.length;
+  $("#today-lists-row").hidden = noLists;
+  if (noLists) { $("#today-lists").innerHTML = ""; return; }
   $("#today-lists").innerHTML = `<div class="listcards">${cards.map(c => `
     <button class="listcard" data-open-list="${esc(c.id)}" type="button"><span class="lc-name">${esc(c.name)}</span>
     <span class="lc-count">${c.items.length} item${c.items.length === 1 ? "" : "s"}</span>
@@ -542,7 +546,7 @@ function paintListsHome() {
   const used = new Set(open.map(itemHome)).size;
   $("#list-line").textContent = open.length
     ? `${open.length} thing${open.length === 1 ? "" : "s"} to get${used > 1 ? ` across ${used} lists` : ""}`
-    : "Nothing to get yet";
+    : "";
   if (window.aryaGroup) aryaGroup.decorateLists();
 }
 
@@ -979,11 +983,15 @@ async function renderProfile() {
      <div class="stattile"><div class="sv">${profile.level || 1}</div><div class="sl">Level · ${profile.points || 0} pts</div></div>
      <div class="stattile"><div class="sv">${s.receipts}</div><div class="sl">Receipts</div></div>
      <div class="stattile"><div class="sv">${s.streak_weeks} wk${s.streak_weeks === 1 ? "" : "s"}</div><div class="sl">Streak</div></div>`;
+  // New-user pass (2026-10-29): no row of zeros before the first hunt or receipt.
+  const active = s.hunts || s.receipts || (archive.unsettled || []).length;
+  $("#pf-stats").hidden = !active;
   paintMissingReceipts($("#pf-missing"), archive.unsettled || [], () => renderProfile().catch(showErr));
   const eagle = (profile.badges || []).find(b => b.id === "eagle_eye");
   $("#pf-spots").innerHTML =
     row("Store changes you spotted", "Points land only when a change is verified", String(s.spots_reported || 0)) +
     (eagle ? row("Eagle Eye", esc(eagle.detail || eagle.criteria), eagle.earned ? "Earned ✓" : "Locked") : "");
+  $("#pf-spots").hidden = !(s.spots_reported || (eagle && eagle.earned));
   if (window.qMarkBadgesSeen) qMarkBadgesSeen(profile.badges);
   $("#pf-badges").innerHTML = (profile.badges || []).map(b =>
     `<div class="badgetile${b.earned ? "" : " locked"}">${BADGE_ART[b.id] ? `<img class="bdgimg" src="assets/characters/${BADGE_ART[b.id]}" alt="">` : ""}<h4>${esc(b.name)}</h4><p>${esc(b.criteria)}</p>
@@ -1752,7 +1760,10 @@ async function renderAnalysis() {
     ${d.spend_other ? row("Groceries", "food and household", money(d.spend_groceries)) : ""}
     ${d.spend_other ? row("Other purchases", Object.entries(d.other_by_kind || {}).map(([k, v]) => `${esc(k)} ${money(v)}`).join(" · "), money(d.spend_other)) : ""}
     ${d.for_others_total ? row("Bought for others", "gifts and items for people outside the household", money(d.for_others_total)) : ""}`
-    : empty("No trips yet.");
+    : "";
+  // Owner, 2026-10-29: no empty cards for a new user; one line until a receipt is filed.
+  $("#an-data").hidden = !latest;
+  $("#an-none").hidden = !!latest;
   // Months with no receipts still get a row, so the bars do not jump a gap.
   const spent = d.spend_by_month;
   const months = [];
@@ -1842,7 +1853,12 @@ function show(id) {
   if (id !== "view-item") lastView = id;
 }
 document.querySelectorAll("#tabs button").forEach(b =>
-  b.addEventListener("click", () => { show(b.dataset.view); refresh(b.dataset.view); }));
+  b.addEventListener("click", () => {
+    // Settings tab (owner, 2026-10-29) opens the same Profile page as
+    // the avatar; as a tab it has no Back link.
+    if (b.dataset.view === "view-profile") { $("#pf-back").parentElement.hidden = true; avEdit(false); loadAvatar(); }
+    show(b.dataset.view); refresh(b.dataset.view);
+  }));
 $("#item-back").addEventListener("click", ev => { ev.preventDefault(); show(lastView); refresh(lastView); });
 
 function refresh(view) {
@@ -2169,7 +2185,8 @@ $("#av-use").addEventListener("click", async () => {
 let avatarFrom = "view-home";
 $("#avatar-btn").addEventListener("click", () => {
   const cur = [...document.querySelectorAll(".view")].find(v => !v.hidden);
-  avatarFrom = cur && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
+  avatarFrom = cur && cur.id !== "view-profile" && document.querySelector(`#tabs button[data-view="${cur.id}"]`) ? cur.id : "view-home";
+  if (!cur || cur.id !== "view-profile") $("#pf-back").parentElement.hidden = false;
   show("view-profile");
   refresh("view-profile");
   avEdit(false);

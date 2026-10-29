@@ -3483,15 +3483,6 @@ function qMarkBadgesSeen(badges) {
       JSON.stringify((badges || []).filter(b => b.earned).map(b => b.id)));
   } catch (e) {}
 }
-function qBadgeRows(badges) {
-  qMarkBadgesSeen(badges);
-  return badges.map(b => `
-    <div class="row">
-      <div class="grow"><span class="name">${esc(b.name)}</span>
-      <span class="sub">${esc(b.criteria)} · ${esc(b.detail)}</span></div>
-      ${b.earned ? `<span class="money" style="color:var(--accent-text)">Earned</span>` : `<span class="sub">Locked</span>`}
-    </div>`).join("");
-}
 function qFinishMs(sess) {
   if (!sess.started_at) return null;
   let endIso = sess.finished_at;
@@ -3520,7 +3511,8 @@ async function renderCommunity() {
   const raceN = new Set(Q.sessions.filter(s => s.shopoff_id && s.state !== "done" && s.state !== "finished").map(s => s.shopoff_id)).size;
   $("#crew-summary").innerHTML = (acc || pend || raceN)
     ? `<div class="row"><div class="grow"><span class="name">${acc} friend${acc === 1 ? "" : "s"}${pend ? ` · ${pend} request${pend === 1 ? "" : "s"}` : ""}</span><span class="sub">${raceN ? `${raceN} Shop-Off${raceN === 1 ? "" : "s"} on` : "No Shop-Off on right now"}</span></div></div>`
-    : empty("Hunting is better with company. Add a friend to race the same list.");
+    : "";
+  $("#crew-summary").hidden = !(acc || pend || raceN);
   $("#crew-friends-sub").textContent = pend ? `${pend} request${pend === 1 ? "" : "s"} waiting` : "Add by handle, accept requests";
   const newsEl = $("#comm-news");  // Store news moved to Today (Store alerts)
   const nw = newsEl ? await api("/api/quest/news").catch(() => ({ news: [] })) : { news: [] };
@@ -3553,8 +3545,9 @@ async function renderCommunity() {
       <div class="money">${Math.round(x.per / 1000)}s / item</div></div>`).join("")
       : empty("No qualifying hunts yet — finish a hunt with 8 or more items and a receipt.");
   }
-  $("#comm-badges").innerHTML = profile ? qBadgeRows(profile.badges)
-    : empty("Badges are unavailable right now.");
+  // Owner, 2026-10-29: the Fastest Hands block (chips, board, explainer)
+  // shows once a finished hunt qualifies; badges live in Quest progress.
+  $("#comm-fastest").hidden = !Q.sessions.some(s => s.state === "done" && s.items.length >= 8 && qFinishMs(s) != null);
   if (window.HaulUI) HaulUI.paintFeed().catch(() => {});
 }
 $("#comm-scopes").addEventListener("click", ev => {

@@ -60,10 +60,11 @@ class TestShellContract(unittest.TestCase):
         labels = re.findall(r"<span>([^<]+)</span>", nav)
         # List first, Quest second (owner, 2026-10-29): Crew folded
         # into the Quest tab; its view id stays view-community.
-        self.assertEqual(labels, ["Today", "Lists", "Ask", "Quest"])
+        # Settings tab (owner, 2026-10-29) opens Profile, next to Quest.
+        self.assertEqual(labels, ["Today", "Lists", "Ask", "Quest", "Settings"])
         views = re.findall(r'data-view="([^"]+)"', nav)
         self.assertEqual(views, ["view-home", "view-list",
-                                 "view-chat", "view-community"])
+                                 "view-chat", "view-community", "view-profile"])
         self.assertNotIn('id="view-scan"', html)
 
     def test_new_views_exist_dashboard_gone(self):
@@ -99,7 +100,7 @@ class TestShellContract(unittest.TestCase):
         self.assertNotIn("view-dash", js)
 
     def test_sw_cache_bumped(self):
-        self.assertIn('CACHE = "arya-v89"', read("sw.js"))
+        self.assertIn('CACHE = "arya-v91"', read("sw.js"))
 
     def test_light_mode_only(self):
         """Owner 2026-10-27: light theme only. No Appearance switch,
