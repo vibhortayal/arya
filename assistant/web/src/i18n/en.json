@@ -835,6 +835,7 @@
   },
   "landing": {
     "signIn": "Sign in",
+    "getTheApp": "Get the app",
     "headline": "Your grocery run, <em>smarter.</em>",
     "subhead": "One app for the list, the store and the trip.",
     "cards": {
@@ -1924,6 +1925,9 @@
   },
   "a2hs": {
     "addAryaToYourHome": "Add Arya to your Home Screen",
+    "getTheAryaApp": "Get the Arya app",
+    "intro": "Free, no app store. Arya opens full screen like any app and can remind you when milk runs low.",
+    "tip": "Tip: sign in from the Home Screen app. iPhone keeps it separate from Safari.",
     "addToHomeScreen": "Add to Home Screen",
     "ifItIsOffArya": "If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.",
     "fullScreenWithReminders": "Full screen, with reminders.",

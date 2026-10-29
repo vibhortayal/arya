@@ -8,22 +8,21 @@ import { Trans, useTranslation } from "../i18n";
  * Profile's row. Android and desktop Chrome: the button runs the
  * browser's own install prompt. iPhone: Safari cannot be triggered, so
  * it opens four steps, including leaving "Open as Web App" on. Nothing
- * shows once Arya runs from the Home Screen, or in the demo. */
+ * shows once Arya runs from the Home Screen, or in the demo. The
+ * landing's "Get the app" pill (screens/Login.tsx) uses the same
+ * useA2hs and A2hsSteps. */
 
 const KEY = "arya.a2hs";
 const DISMISS_DAYS = 30;
-/* Visits count once per page load, as the old script did. */
-const st = { visits: 0, dismissed: 0 };
+const st = { dismissed: 0 };
 try { Object.assign(st, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { /* private window */ }
-st.visits += 1;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* ignore */ } };
-save();
 
-const installed = () => window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
-const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const installed = () => (typeof matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) || (navigator as any).standalone === true;
+export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 /* Something to offer (the install prompt, or iPhone steps), and the go action. */
-function useA2hs(demo: boolean) {
+export function useA2hs(demo: boolean) {
   const { prompt: deferred, take } = useInstallPrompt();
   const [steps, setSteps] = useState(false);
   const available = !installed() && !demo && (!!deferred || isIOS());
@@ -38,28 +37,31 @@ function useA2hs(demo: boolean) {
   return { deferred, available, go, steps, closeSteps: () => setSteps(false) };
 }
 
-function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
+/* The iPhone steps, one copy for the landing, Today and Settings. */
+export function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   return (
-    <Sheet open={open} onClose={onClose} id="a2hs-sheet" title={t("a2hs.addAryaToYourHome")}>
+    <Sheet open={open} onClose={onClose} id="a2hs-sheet" title={t("a2hs.getTheAryaApp")}>
+      <p className="muted a2hs-intro">{t("a2hs.intro")}</p>
       <ol className="steps">
         <li><span><Trans i18nKey="a2hs.step1" components={{ b: <b /> }} /></span></li>
         <li><span><Trans i18nKey="a2hs.step2" components={{ b: <b /> }} /></span></li>
         <li><span><Trans i18nKey="a2hs.step3" components={{ b: <b />, tog: <i className="tog" aria-hidden="true" /> }} /><span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
         <li><span><Trans i18nKey="a2hs.step4" components={{ b: <b /> }} /></span></li>
       </ol>
+      <p className="muted small a2hs-tip">{t("a2hs.tip")}</p>
     </Sheet>
   );
 }
 
-/* Today: one dismissible card once there is a list and it is the
- * second visit or later; a dismiss holds for 30 days. */
+/* Today: one dismissible card once there is a list (from the first
+ * visit); a dismiss holds for 30 days. */
 export function A2hsCard({ hasList, demo }: { hasList: boolean; demo: boolean }) {
   const { t } = useTranslation();
   const a = useA2hs(demo);
   const [, bump] = useState(0);
   const dismissed = !!st.dismissed && Date.now() - st.dismissed < DISMISS_DAYS * 864e5;
-  const show = a.available && !dismissed && st.visits >= 2 && hasList;
+  const show = a.available && !dismissed && hasList;
   return (
     <>
       {show && (

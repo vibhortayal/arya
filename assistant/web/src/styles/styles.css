@@ -815,6 +815,23 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   min-height: calc(100vh - 38px - env(safe-area-inset-bottom));
   min-height: calc(100svh - 38px - env(safe-area-inset-bottom)); }
 .landtop .landsign { color: var(--ink); padding: 0 4px; min-height: 44px; margin: -6px 0; } /* 44 px target, 32 px of layout */
+/* "Get the app" pill (owner, 2026-10-29): before Sign in; jiggles
+   0.6 s of every 8 s from 1.2 s after load until first tapped; with
+   reduced motion, a soft glow at the same beat. */
+.landtop { gap: 8px; }
+.landtop .gethome { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; margin-block: -2px; /* 32 px of layout, as Sign in */
+  border: 0; border-radius: 999px; background: var(--acc-soft); color: var(--acc); font: inherit; font-size: 15px; font-weight: 700;
+  white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.landtop .gethome svg { width: 16px; height: 16px; flex: none; }
+.landtop .gethome + .landsign { margin-left: 0; }
+.landtop .gethome:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+@keyframes getjiggle { 0%, 7.5%, 100% { transform: none; } 1.25% { transform: rotate(-7deg); } 2.5% { transform: rotate(6deg); }
+  3.75% { transform: rotate(-5deg); } 5% { transform: rotate(3deg); } 6.25% { transform: rotate(-1.5deg); } }
+@keyframes getglow { 0%, 7.5%, 100% { box-shadow: 0 0 0 0 transparent; } 3.75% { box-shadow: 0 0 0 6px var(--acc-soft), 0 0 14px 2px var(--acc-soft); } }
+.landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s infinite; }
+.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }
+.a2hs-intro { margin: 0 0 2px; }
+.a2hs-tip { margin: 6px 0 0; }
 .landhero { text-align: center; margin: 0; padding-top: 18px; }
 .landhero .herotitle { font-size: 34px; }
 .landsub { margin-top: 4px; }

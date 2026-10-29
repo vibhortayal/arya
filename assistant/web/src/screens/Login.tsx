@@ -3,6 +3,7 @@ import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
+import { A2hsSteps, isIOS, useA2hs } from "../ui/A2hs";
 
 /* The logged-out landing (B1 flip cards, owner 2026-10-29) and
  * sign-in. Three modes: bootstrap (no accounts yet,
@@ -30,6 +31,44 @@ export function loadSeen(): string[] {
 
 function saveSeen(seen: string[]) {
   try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch { /* storage unavailable */ }
+}
+
+/* "Get the app" (owner, 2026-10-29): a pill in the header while Arya
+ * can go on this phone's Home Screen (ui/A2hs.tsx: not installed, and
+ * an install prompt or iPhone steps to offer; phones only, so not on
+ * a desktop). The landing is logged out, so the demo rule does not
+ * apply. About 1.2 s after load, and every 8 s, it jiggles (a soft
+ * glow with reduced motion), until it is first tapped (localStorage). */
+export const GETAPP_KEY = "arya.landing.getapp";
+
+export function getAppTapped(): boolean {
+  try { return localStorage.getItem(GETAPP_KEY) === "1"; } catch { return false; }
+}
+
+const reducedMotion = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
+const isPhone = () => isIOS() || /android/i.test(navigator.userAgent);
+
+function GetApp() {
+  const { t } = useTranslation();
+  const a = useA2hs(false);
+  const [tapped, setTapped] = useState(getAppTapped);
+  const nudge = tapped ? "" : reducedMotion() ? " glow" : " jiggle";
+  const go = () => {
+    if (!tapped) { setTapped(true); try { localStorage.setItem(GETAPP_KEY, "1"); } catch { /* storage unavailable */ } }
+    a.go();
+  };
+  return (
+    <>
+      {isPhone() && a.available && (
+        <button id="getapp-open" className={"gethome" + nudge} type="button" onClick={go}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="6" y="2" width="12" height="20" rx="2.5" /><path d="M12 7v7M9 11l3 3 3-3" /></svg>
+          <span>{t("landing.getTheApp")}</span>
+        </button>
+      )}
+      <A2hsSteps open={a.steps} onClose={a.closeSteps} />
+    </>
+  );
 }
 
 const postJson = (path: string, body?: unknown) =>
@@ -85,6 +124,7 @@ export function Login() {
       <div className="landpage">
         <header className="landtop">
           <span className="landlogo">Arya</span>
+          <GetApp />
           <button id="signin-open" className="linkbtn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
         </header>
         <div className="hero landhero">
