@@ -198,78 +198,6 @@ def _all():
     return _root_load(MAP_FILE, {})
 
 
-WALK_CHAIN = "traderjoes"
-
-
-def walk_location():
-    """The one store the shipped walk was filmed in, by its store id
-    (ARYA_WALK_STORE_ID). Nobody recorded which Trader Joe's that was
-    (owner, 2026-10-29: it was not Argonaut), so unset means no store:
-    every Trader Joe's plays the walk as a labelled typical layout."""
-    return os.environ.get("ARYA_WALK_STORE_ID", "").strip() or None
-
-
-def is_walk_key(key):
-    loc = walk_location()
-    return bool(loc) and key == f"{WALK_CHAIN}@{loc}"
-
-
-def _walkthrough_seed(key):
-    """The shipped walkthrough graph seeds the segments of the one
-    store it was filmed in, so that store starts mapped (and aging,
-    because the walk is old) instead of empty. Other locations of the
-    chain never get it as their map; Quest shows it there as a
-    labelled typical layout (chain_guess)."""
-    if not is_walk_key(key):
-        return None
-    return walk_segments()
-
-
-def walk_segments():
-    """The walk's segments, keyed by segment id (see _walkthrough_seed)."""
-    path = os.path.join(os.path.dirname(__file__), "..", "pwa", "models",
-                        "trader-joes", "shelf-graph.json")
-    frames_dir = os.path.join(os.path.dirname(path), "frames-web")
-    try:
-        with open(path) as fh:
-            graph = json.load(fh)
-    except (OSError, ValueError):
-        return None
-    # The shipped frames are a thinned copy of the walk (90 of ~180),
-    # so a stop's own frame number does not name a shipped file: the
-    # stop's path fraction u does, the same way the photo driver picks
-    # it (pwa/scene.js photoFrameForU). Using the number gave half the
-    # stops no picture and the rest the wrong one.
-    try:
-        shipped = len([f for f in os.listdir(frames_dir) if f.endswith(".jpg")])
-    except OSError:
-        shipped = 0
-    segs = {}
-    for stop in graph.get("stops", []):
-        u = stop.get("u")
-        frame = None
-        if shipped and isinstance(u, (int, float)):
-            frame = f"f{round(max(0.0, min(1.0, u)) * (shipped - 1)) + 1:03d}.jpg"
-            if not os.path.exists(os.path.join(frames_dir, frame)):
-                frame = None
-        for sh in stop.get("shelves", []):
-            label = (sh.get("label") or "").strip()
-            if not label or label.lower().startswith("unidentified"):
-                continue
-            # One segment per zone: the walk saw it from one path, and
-            # real sides are for shoppers to refine as they map.
-            label = re.sub(r"\s+Shelf$", "", label)
-            side = "both"
-            sid = segment_id(label, side)
-            seg = segs.get(sid)
-            if seg is None:
-                seg = segs[sid] = _new_segment(label, side, "walkthrough")
-                seg["baseline"] = {"frame": frame, "u": stop.get("u")}
-            elif frame and not seg["baseline"].get("frame"):
-                seg["baseline"]["frame"] = frame
-    return segs
-
-
 def _new_segment(label, side, created_by):
     return {"id": segment_id(label, side), "zone": zone_key(label),
             "label": label.strip(), "side": side,
@@ -278,29 +206,21 @@ def _new_segment(label, side, created_by):
 
 
 def load_map(name):
-    """One store's map, seeded on first read when the store has a
-    walkthrough. Never writes: a seed lives in memory until the
-    first real change saves it."""
+    """One store's map. Never writes. The Trader Joe's walkthrough that
+    once seeded maps was removed (owner, 2026-10-29: no known source);
+    a map saved before then drops what came only from it: segments the
+    walk made that no shopper has photographed, and every walk frame."""
     key = store_key(name)
-    data = _all()
-    doc = data.get(key)
-    seed = _walkthrough_seed(key)
-    if doc is None and seed is not None and data.get(WALK_CHAIN):
-        # Before maps were per location (2026-10-29) the walk and every
-        # capture on it lived under the chain; they were made in the
-        # walk's store, so that store takes them over.
-        old = data[WALK_CHAIN]
-        doc = {**old, "store": store_name(name) or old.get("store"), "key": key}
+    doc = _all().get(key)
     if doc is None:
-        doc = {"store": store_name(name), "key": key,
-               "segments": seed or {},
-               "unplaced": []}
-    elif seed:
-        # A walk's baseline frame is derived, never edited: a map saved
-        # before the frame fix (2026-10-29) takes the corrected one.
-        for sid, seg in doc["segments"].items():
-            if sid in seed and seg.get("baseline") is not None:
-                seg["baseline"] = seed[sid]["baseline"]
+        return {"store": store_name(name), "key": key, "segments": {},
+                "unplaced": []}
+    for sid in list(doc["segments"]):
+        seg = doc["segments"][sid]
+        if seg.get("created_by") == SOURCE_BASELINE and not seg.get("captures"):
+            del doc["segments"][sid]
+        else:
+            seg["baseline"] = None
     return doc
 
 
@@ -311,55 +231,38 @@ def _save_map(doc):
 
 
 # --- which stores have pictures ------------------------------------------
-# A store "has pictures" when Arya can show a shopper a real aisle:
-# a shipped photo walk (or 3D model) inside the PWA, or at least one
-# shopper capture kept on the shared map. Quest needs pictures; a
-# store without them offers Express only (owner, 2026-10-29).
-
-_PWA_DIR = os.path.join(os.path.dirname(__file__), "..", "pwa")
-BUILTIN_STORES = (
-    {"store": "Trader Joe's",
-     "photos": "models/trader-joes/frames-web",
-     "model": "models/trader-joes/manifest.json"},
-)
-
+# A store "has pictures" when Arya can show a shopper a real aisle: at
+# least one shopper capture kept on the shared map. No store ships with
+# pictures (the old Trader Joe's walk was removed, 2026-10-29). Quest
+# needs pictures; a store without them offers Express only.
 
 def stores_with_pictures():
-    """Every store Arya holds pictures for, as
-    [{store, key, photos, model, has_pictures}]. photos and model are
-    PWA paths (the photo walk frames, the 3D manifest) or None. A
-    store known only from captures has has_pictures True and no
-    photos/model: its pictures live on the map, not in the PWA."""
+    """Every store Arya holds pictures for, as [{store, key, photos,
+    model, has_pictures, location, captured_at}], keyed by chain (the
+    app asks by store name, lib/stores.ts). captured_at lists the
+    locations (store ids) with kept captures, so a capture shows only
+    where it was taken. A map saved under the bare chain name has no
+    location, so its row is the chain's answer everywhere."""
     out = {}
-    for b in BUILTIN_STORES:
-        photos = b["photos"] if os.path.isdir(
-            os.path.join(_PWA_DIR, b["photos"])) else None
-        model = b["model"] if os.path.isfile(
-            os.path.join(_PWA_DIR, b["model"])) else None
-        key = chain_key(b["store"])
-        out[key] = {"store": b["store"], "key": key, "photos": photos,
-                    "model": model, "has_pictures": bool(photos or model)}
-        if key == WALK_CHAIN:
-            # The walk's photos and model show only at the store it was
-            # filmed in (lib/stores.ts storeAt); None = no store.
-            out[key]["location"] = walk_location()
-            out[key]["captured_at"] = []
     blobs = _image_blobs()
-    # Keyed by chain: the app asks by store name (lib/stores.ts).
     for mkey, doc in _all().items():
         have = _images_of(mkey, blobs)
         kept = any(c.get("id") in have
                    for seg in (doc.get("segments") or {}).values()
                    for c in seg.get("captures") or [])
-        key = mkey.split("@")[0]
-        if kept and is_location(mkey) and "captured_at" in out.get(key, {}):
-            out[key]["captured_at"].append(mkey.split("@", 1)[1])
-        if key in out:
-            out[key]["has_pictures"] = out[key]["has_pictures"] or kept
+        if not kept:
             continue
-        if kept:
-            out[key] = {"store": doc.get("store") or key, "key": key,
-                        "photos": None, "model": None, "has_pictures": True}
+        key, _, sid = mkey.partition("@")
+        row = out.setdefault(key, {
+            "store": doc.get("store") or key, "key": key, "photos": None,
+            "model": None, "has_pictures": True, "location": None,
+            "captured_at": []})
+        if sid:
+            row["captured_at"].append(sid)
+        else:
+            row.pop("location", None)
+    for row in out.values():
+        row["captured_at"].sort()
     return sorted(out.values(), key=lambda r: r["store"].lower())
 
 
@@ -564,7 +467,7 @@ def segment_status(seg, now=None):
     if flag and (best is None or best["at"] <= flag["at"]):
         return "stale"
     if best is None:
-        return "aging" if seg.get("baseline") else "unmapped"
+        return "unmapped"
     age = _age_days(best["at"], now)
     return "aging" if age is not None and age > AGING_AFTER_DAYS else "mapped"
 
@@ -574,13 +477,9 @@ def _image_blobs():
 
 
 def _images_of(key, blobs=None):
-    """A map's kept images. The walk's store also reads the pictures
-    saved under its chain before maps were per location."""
+    """A map's kept images."""
     blobs = _image_blobs() if blobs is None else blobs
-    out = dict(blobs.get(key) or {})
-    if is_walk_key(key):
-        out = {**(blobs.get(WALK_CHAIN) or {}), **out}
-    return out
+    return dict(blobs.get(key) or {})
 
 
 def _put_image(key, cap_id, jpeg):
@@ -938,16 +837,13 @@ def located(seg, status=None, best=None):
     """Whether this segment counts toward a store being mapped: Arya
     has a usable picture of it that is not stale. A shopper capture
     counts unless it was weak (a partial frame Arya asked to retake
-    later); a shipped walkthrough counts only where the walk has a
-    frame of it. An upload alone, a label with no picture, a weak
+    later). An upload alone, a label with no picture, a weak
     shot or a stale spot never counts (owner, 2026-10-29: mapped is
     earned, not granted by an upload)."""
     st = status or segment_status(seg)
     if st not in ("mapped", "aging"):
         return False
-    if best is not None:
-        return not best.get("weak")
-    return bool((seg.get("baseline") or {}).get("frame"))
+    return best is not None and not best.get("weak")
 
 
 def view(name, focus=None):
@@ -967,20 +863,14 @@ def view(name, focus=None):
             "id": seg["id"], "label": seg["label"], "side": seg["side"],
             "status": st, "captures": len(seg["captures"]),
             "best_at": best["at"] if best else None,
-            "has_photo": bool(best) or bool(
-                (seg.get("baseline") or {}).get("frame")),
+            "has_photo": bool(best),
             "located": located(seg, st, best),
             "contributors": len({c["by"] for c in seg["captures"]}),
             "items": len(seg["items"]),
             "stale_item": (seg.get("stale") or {}).get("item"),
             "baseline": seg.get("baseline") is not None})
     total = len(rows)
-    # Another store of a chain with a shipped walk: the walk is only a
-    # typical layout here, never this store's map (owner, 2026-10-29).
-    typical = ("Trader Joe's" if doc["key"].split("@")[0] == WALK_CHAIN
-               and not is_walk_key(doc["key"]) else None)
     return {"store": doc["store"], "segments": rows, "counts": counts,
-            "typical": typical,
             "total": total,
             "coverage_pct": round(100 * counts["mapped"] / total) if total else 0,
             "mapped_or_aging_pct": round(
@@ -989,11 +879,6 @@ def view(name, focus=None):
             "unplaced": list(doc["unplaced"]),
             "goal": next_goal(doc), "credit": my_credit(),
             "next": next_prompt(name, focus)}
-
-
-def baseline_frame(name, seg_id):
-    seg = load_map(name)["segments"].get(seg_id)
-    return ((seg or {}).get("baseline") or {}).get("frame")
 
 
 # --- "just my aisles": the account's focus --------------------------------

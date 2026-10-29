@@ -165,16 +165,6 @@ class TestTeachRoutes(unittest.TestCase):
         self.assertEqual(r.status_code, 400)
         self.assertEqual(self.view()["total"], 1)
 
-    def test_discard_refuses_the_walkthrough_baseline(self):
-        os.environ["ARYA_WALK_STORE_ID"] = "tj-walk"  # the walk's own store
-        self.addCleanup(os.environ.pop, "ARYA_WALK_STORE_ID", None)
-        v = self.view("Trader Joe's|tj-walk")
-        self.assertTrue(v["total"])
-        seg = v["segments"][0]["id"]
-        r = self.c.post("/api/storemap/discard",
-                        json={"store": "Trader Joe's|tj-walk", "segment": seg})
-        self.assertEqual(r.status_code, 400)
-
     def test_demo_teaches_only_its_sandbox(self):
         FakeTeachClient.reads = ['{"label": "Frozen", "items": []}',
                                  '{"label": "Frozen", "items": []}']

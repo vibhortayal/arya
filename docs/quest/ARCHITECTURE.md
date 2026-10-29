@@ -5,18 +5,18 @@ phone. Two data planes never mix:
 
 | Plane | Contents | Shared? |
 | --- | --- | --- |
-| Platform | Store models: photos, point cloud, camera path, shelf graph, sightings, fresh shelf photos | Yes, with every player of that store |
+| Platform | Store maps: sections, shoppers' scrubbed aisle photos, sightings, opted-in shelf prices | Yes, with every player of that store |
 | Account | Lists, receipts, patterns, spend | Never |
 
 ## Pipelines
 
 ### 1. Store mapping (platform)
-`walkthrough video → frames → VGGT → point cloud + path → SAM 3.1 + Spark labels → shelf graph`
+`guided camera scan → SAM 3.1 people scrub → Spark reads the section, signs, prices → SAM shelf and sign boxes → store map sections`
 
-Frames at ~1 fps; VGGT infers poses and the cloud; SAM 3.1 segments
-shelves; Muse Spark names the regions. The graph carries the game
-logic; the photos and cloud carry the look. Shipped walk photos are
-scrubbed of people with SAM (`harness/scrub_walk_frames.py`).
+The shopper pans; a frame goes up every few seconds. People are blurred
+first and the frame is dropped if that fails. No store ships pre-mapped
+(the old Trader Joe's walkthrough model was removed 2026-10-29); a
+section counts as mapped only with a usable, fresh picture.
 
 ### 2. List and plan (account)
 One Add surface (text, mic, camera, Muse connector) feeds one list.
@@ -32,9 +32,8 @@ cannot settle. A clean list skips the screen.
 
 ### 4. The hunt (client PWA)
 Installable, works offline (grabs queue and sync). One store view per
-store: photos or shelf cards; 3D peek. Stops follow the shelf graph;
-any stop can be grabbed in any order. Where am I? matches a photo
-against the walk index locally ($0). Shelf Scan and Find it for me
+store: photos or shelf cards. Any stop can be grabbed in any order.
+Shelf Scan and Find it for me
 send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one
 item): SAM 3.1 proposes boxes, Spark verifies each crop. Verified pops
 are stored as sightings (item, store, shelf, time). A frame is kept as
@@ -55,6 +54,5 @@ kept in the account.
 - Find it for me scans one item: one item's SAM and Spark calls.
 
 ## Known limits
-- VGGT weights are non-commercial; a launch needs a license path.
 - Store permission and a photo opt-in policy are post-hackathon.
-- One aisle stretch is mapped; a whole store is rollout.
+- No store ships mapped; coverage grows only from shoppers' scans.

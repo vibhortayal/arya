@@ -15,7 +15,7 @@ import {
   qPinFound, qPlanUsuals, qProgress, qRetarget, qSetState, qStops, qnorm, type Fresh, type Session,
 } from "./hunt/model";
 import { qCelebHide, qCelebLoad, qOnCollected, qRewardGrab, QFX, setSound } from "./hunt/fx";
-import { M, anchorToU, gyroAvailable, initMotion, stepAnchorTo, stepSync, stopHuntMotion, toggleGyro, toggleSteps } from "./hunt/motion";
+import { M, gyroAvailable, initMotion, stepAnchorTo, stepSync, stopHuntMotion, toggleGyro, toggleSteps } from "./hunt/motion";
 import { bringBack, nrm, offline, submitForgot } from "./hunt/menu";
 import { StickerCard, cardOpen, stickerUndoIndex } from "./album/StickerCard";
 import { HuntMenu, openItems, type MenuState } from "./hunt/HuntMenu";
@@ -138,7 +138,7 @@ export function Hunt() {
   const nav = useNav();
   useStoreData();
   const { demo } = useSession();
-  const { toast, showErr, hide: hideToast } = useToast();
+  const { toast, hide: hideToast } = useToast();
   useCharacters();
   const sess = nav.params.session as Session | undefined;
 
@@ -162,7 +162,6 @@ export function Hunt() {
   const timer = useRef(0);
   const popRef = useRef<HTMLDivElement>(null);
   const popH = useRef(0);
-  const locateRef = useRef<HTMLInputElement>(null);
   const wildRef = useRef<HTMLInputElement>(null);
   const wildRec = useRecord(t => setWildName(t));
   const addRec = useRecord(t => setAddText(t));
@@ -604,25 +603,6 @@ export function Hunt() {
     repaint();
   };
 
-  /* Where am I?: a photo placed on the store's walkthrough path. */
-  async function locateFromPhoto(file: File) {
-    const s = Q.current;
-    if (!s) return;
-    const r = await fetch(`/api/quest/locate?session=${encodeURIComponent(s.id)}`, {
-      method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file,
-    });
-    if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
-    const out = (await r.json()) as { found?: boolean; u: number };
-    if (out.found) {
-      const idx = anchorToU(out.u, walkStart);
-      const stop = qStops(s)[idx];
-      repaint();
-      toast(t("hunt.placedAt", { where: stop && stop.shelfLabel ? stop.shelfLabel : s.items[idx].name }));
-    } else {
-      toast(t("hunt.couldNotPlace"));
-    }
-  }
-
   const closeHowto = () => {
     setHowto(false);
     try { localStorage.setItem(QHOWTO_KEY, "1"); } catch { /* shown again next time */ }
@@ -834,9 +814,6 @@ export function Hunt() {
       <div className="hunt-tools" role="group" aria-label={t("hunt.huntTools")}>
         <button id="btn-scan" className="btn toolbtn" type="button" hidden={driverName !== "strip"} onClick={() => openScan(null)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.4" /></svg><span>{t("hunt.scanShelf")}</span></button>
-        <button id="btn-locate" className="btn toolbtn" type="button" hidden={!(driverName === "cloud" || driverName === "photo")}
-          onClick={() => locateRef.current?.click()}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M15.8 8.2 13.4 13.4 8.2 15.8 10.6 10.6z" fill="currentColor" stroke="none" /></svg><span>{t("hunt.whereAmI")}</span></button>
         <button id="btn-nothere" className="btn toolbtn" type="button" hidden={allIn} disabled={notHereDisabled}
           onClick={() => { const s = Q.current; const i = s ? qCurrentIndex(s) : -1; if (s && i >= 0) setMenu({ kind: "moved", name: s.items[i].name }); }}>{t("common.notHere")}</button>
         <button id="btn-wild" className="btn toolbtn" type="button"
@@ -863,12 +840,6 @@ export function Hunt() {
         </p>
         <p className="muted nomargin" id="wild-status">{wildRec.status}</p>
       </div>
-      <input id="locate-photo" ref={locateRef} type="file" accept="image/*" capture="environment" hidden
-        onChange={ev => {
-          const f = ev.target.files && ev.target.files[0];
-          ev.target.value = "";
-          if (f) locateFromPhoto(f).catch(showErr);
-        }} />
       <div id="hunt-pop" className="nextcard" ref={popRef} hidden={allIn}>
         <p className="nb-k" id="pop-kicker">{popKicker || t("hunt.suggestedNext")}</p>
         <div id="pop-body">{popBody}</div>

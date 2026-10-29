@@ -10,8 +10,8 @@ microphone for steps 3, 4, 6 and 7.
 
 **What is real.** The demo household is fictional. Your changes live
 in an in-memory sandbox for your visit only; nothing reaches disk or
-another visitor. The Trader Joe's view is built from one shopper's
-walkthrough video, with shoppers blurred by SAM. Camera, microphone and
+another visitor. No store ships pre-mapped: a store's map comes only
+from shoppers' guided scans, with people blurred by SAM. Camera, microphone and
 chat call the Meta API live.
 
 **What you need.** A receipt photo for step 7 (any grocery receipt).
@@ -55,16 +55,14 @@ Check my list.
 
 ### 6. Play — SAM 3.1, Muse Spark, Muse Image
 - **How to play** shows once: find it, grab it, snap the receipt.
-- The view is real photos of the store; the orange dot is your next
-  item. **See it in 3D** shows the point cloud.
+- An unmapped store plays as a labelled typical layout; the orange
+  dot is your next item. **Map my store** opens the guided scan.
 - Tap **Grab**: +10, a Muse Image character, a fun fact. Points only
   go up; there is no clock and no way to lose.
 - **Find it for me** opens the camera aimed at the next item. SAM 3.1
   boxes candidates and Muse Spark checks each crop; the item lights up
   and one tap grabs it. Point it at any shelf photo on a second
   screen if you are not in a store.
-- **Where am I?** places a photo at the nearest stop. Muse Wonder wrote
-  this matcher (42/45 held-out frames at the right stop).
 - **Not here?** files a shortage report for the next shopper.
 
 ### 7. Finish with a receipt — Muse Wonder
@@ -108,11 +106,8 @@ becomes an action the server validates before it applies.
 
 ## Known limits
 
-- One mapped store (Trader Joe's, Chino Hills).
-- Localizer evidence is held-out frames from the same video, not
-  fresh shopper photos.
-- Open weights are not used; we do not claim that bonus. VGGT builds
-  the 3D geometry but is not on the event's model list.
+- No store ships pre-mapped; maps come from shoppers' scans.
+- Open weights are not used; we do not claim that bonus.
 - Closed in the demo: bulk imports, PDF and text decode,
   Curator and judge runs.
 - Shop-Off and Friends are single-account.
@@ -126,5 +121,4 @@ becomes an action the server validates before it applies.
 | "demo rate limit" | Wait a minute and retry. |
 | Receipt spinner over 90 s | Wait for the Spark fallback, or Skip. |
 | Voice gives nothing | Check mic permission, or type. |
-| 3D view is slow | Stay on the photos. |
 | Page looks stale | Reload twice, or clear site data. |

@@ -1,10 +1,10 @@
 /* Which stores Arya holds aisle pictures for (pwa/storedata.js). The
- * server says (GET /api/storemap/stores): a shipped photo walk or 3D
- * model, or shopper captures kept on the store's shared map. Read
- * once per page load; the last answer is kept on the phone, and
- * Trader Joe's (shipped with the app) always works, also offline or
- * when the fetch fails. One place, so the store picker, the Start
- * shopping sheet and the session's driver agree.
+ * server says (GET /api/storemap/stores): shopper captures kept on the
+ * store's shared map. No store ships with pictures (the old Trader
+ * Joe's walk was removed, 2026-10-29). Read once per page load; the
+ * last answer is kept on the phone, also offline or when the fetch
+ * fails. One place, so the store picker, the Start shopping sheet and
+ * the session's driver agree.
  *
  * A store with no pictures offers Express only: Quest needs aisle
  * photos. An item "has data" when its store has pictures AND the
@@ -12,14 +12,10 @@
 import { useEffect, useSyncExternalStore } from "react";
 
 export type StoreRow = { store: string; key: string; photos: string | null; model: string | null; has_pictures: boolean;
-  /* A shipped walk belongs to one location (its store id; null = none
-   * known), and captured_at lists the locations with their own photos. */
+  /* location null: the pictures are per location, and captured_at
+   * lists the store ids with kept captures. Absent: chain-wide. */
   location?: string | null; captured_at?: string[] };
 
-const BUILTIN: StoreRow[] = [
-  { store: "Trader Joe's", key: "traderjoes", photos: "models/trader-joes/frames-web",
-    model: "models/trader-joes/manifest.json", has_pictures: true, location: null, captured_at: [] },
-];
 const CACHE = "arya-store-data";
 
 const squash = (store: unknown) => String(store || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
@@ -32,7 +28,7 @@ const listeners = new Set<() => void>();
 
 export function setStoreRows(list: unknown) {
   const next: Record<string, StoreRow> = {};
-  for (const r of [...BUILTIN, ...(Array.isArray(list) ? (list as StoreRow[]) : [])]) {
+  for (const r of Array.isArray(list) ? (list as StoreRow[]) : []) {
     if (r && r.key) next[r.key] = { ...next[r.key], ...r };
   }
   rows = next;
@@ -70,9 +66,9 @@ export function useStoreData(): number {
 }
 
 /* The row for a store; with its store id, for that location only
- * (owner, 2026-10-29: a walk shows only where it was filmed). Another
- * location of the chain has no walk photos or model, and pictures only
- * if shoppers captured some there. No id: the chain's row. */
+ * (owner, 2026-10-29: pictures show only where they were taken).
+ * Another location of the chain has pictures only if shoppers
+ * captured some there. No id: the chain's row. */
 export function storeAt(store: unknown, storeId?: string | null): StoreRow | null {
   const r = rows[squash(store)] || null;
   if (!r || !storeId || r.location === undefined || r.location === storeId) return r;

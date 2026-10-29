@@ -40,13 +40,14 @@ first.
 
 The view is a viewport, not the game. One view, picked by the store:
 
-- **Mapped store:** real photos from a walkthrough, people blurred by
-  SAM. "See it in 3D" swaps to the point cloud and back.
+- **Mapped store:** shoppers' aisle photos, people blurred by SAM.
+  No store ships with photos (the old Trader Joe's walk was removed
+  2026-10-29); every map is earned by shoppers' captures.
 - **Any other store:** shelf cards in walking order. Playable, never
-  gated; filming the aisles adds photos and 3D.
+  gated; scanning the aisles adds photos.
 
 Stops, scoring, Shop-Off timing and the receipt finish do not depend
-on the view. Where am I? needs a mapped store.
+on the view.
 
 ## Intake
 

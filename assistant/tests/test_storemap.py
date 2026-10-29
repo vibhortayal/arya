@@ -3,7 +3,7 @@
 Pinned here: zone merging, segment status, the capture grade and its
 one-line live hints (never a refusal), best-capture selection (duplicates dropped,
 freshness counts), prompts that follow the shopper's focus and the
-stale flags, merging many accounts into one map, the walkthrough seed,
+stale flags, merging many accounts into one map, old walk sections dropped,
 and the capture route (people scrub fails closed, a weak frame costs
 no model call, the demo sandbox never touches the shared map).
 """
@@ -46,14 +46,9 @@ class TestZones(unittest.TestCase):
         self.assertEqual(sm.store_key("Trader Joe's"), sm.store_key("trader joes"))
 
 
-WALK = "Trader Joe's|tj-walk"   # the store the shipped walk was filmed in
-
-
 class TestEngine(unittest.TestCase):
     def setUp(self):
         fresh_data()
-        os.environ["ARYA_WALK_STORE_ID"] = "tj-walk"
-        self.addCleanup(os.environ.pop, "ARYA_WALK_STORE_ID", None)
         from api import state, storemap
         self.sm = storemap
         state.set_current_user("ana")
@@ -211,30 +206,33 @@ class TestEngine(unittest.TestCase):
             state.set_overlay(None)
         self.assertEqual(self.sm.view("Corner Store")["total"], 0)
 
-    def test_walkthrough_seeds_trader_joes_as_aging_with_photos(self):
-        v = self.sm.view(WALK)
-        self.assertGreater(v["total"], 10)
-        self.assertEqual(v["counts"]["mapped"], 0)
-        self.assertEqual(v["counts"]["aging"], v["total"])
-        self.assertTrue(any(s["has_photo"] for s in v["segments"]))
-        self.assertIsNotNone(v["next"])
+    def test_no_store_ships_with_a_map(self):
+        # Owner 2026-10-29: the old Trader Joe's walk was removed.
+        for ref in ("Trader Joe's", "Trader Joe's|tj-walk"):
+            v = self.sm.view(ref)
+            self.assertEqual(v["total"], 0)
+            self.assertNotIn("typical", v)
+        self.assertEqual(self.sm.stores_with_pictures(), [])
 
-    def test_walkthrough_frames_follow_the_path_not_the_frame_number(self):
-        # 2026-10-29: the shipped frames are a thinned copy of the walk,
-        # so the stop's path fraction picks the file (as the photo
-        # driver does). The frame number left half the stops with no
-        # picture and the rest with the wrong one.
-        segs = self.sm.load_map(WALK)["segments"]
-        self.assertEqual(segs["frozen-pizza:both"]["baseline"]["frame"], "f080.jpg")   # first seen at u 0.8894
-        self.assertEqual(segs["canned-goods:both"]["baseline"]["frame"], "f029.jpg")   # u 0.3196
-        v = self.sm.view(WALK)
-        self.assertTrue(all(s["located"] for s in v["segments"]))
-
-    def test_a_saved_map_takes_the_corrected_walk_frame(self):
-        doc = self.sm.load_map(WALK)
-        doc["segments"]["frozen-pizza:both"]["baseline"]["frame"] = None
-        self.sm._save_map(doc)
-        self.assertEqual(self.sm.load_map(WALK)["segments"]["frozen-pizza:both"]["baseline"]["frame"], "f080.jpg")
+    def test_a_saved_walk_section_is_dropped_but_captures_stay(self):
+        from api import state
+        tok = state._current_user.set(None)
+        try:
+            doc = self.sm.load_map("Trader Joe's|tj-walk")
+            base = {"label": "Pasta", "side": "both", "zone": "pasta",
+                    "created_by": "walkthrough",
+                    "baseline": {"frame": "f029.jpg", "at": "2026-10-01T00:00:00"}}
+            doc["segments"] = {
+                "pasta:both": {**base, "captures": []},
+                "bread:both": {**base, "label": "Bread", "zone": "bread",
+                               "captures": [{"id": "c1", "at": "2026-10-20T10:00:00",
+                                             "by": "x", "score": 1.0}]}}
+            self.sm._save_map(doc)
+        finally:
+            state._current_user.reset(tok)
+        segs = self.sm.load_map("Trader Joe's|tj-walk")["segments"]
+        self.assertEqual(list(segs), ["bread:both"])
+        self.assertIsNone(segs["bread:both"]["baseline"])
 
     def test_maps_are_per_location(self):
         # Owner 2026-10-29: a map only shows where it was made.
@@ -251,53 +249,19 @@ class TestEngine(unittest.TestCase):
         # A free-text store nobody has in My Stores stays chain-level.
         self.assertEqual(self.sm.store_key("Corner Store"), "cornerstore")
 
-    def test_other_trader_joes_get_the_walk_only_as_a_typical_layout(self):
-        mine = self.sm.view("Trader Joe's")          # Chino Hills, not the walk's store
-        self.assertEqual((mine["total"], mine["typical"]), (0, "Trader Joe's"))
-        walk = self.sm.view(WALK)
-        self.assertGreater(walk["total"], 10)
-        self.assertIsNone(walk["typical"])
-
-    def test_the_walk_store_takes_over_the_old_chain_map(self):
-        # Before 2026-10-29 the walk and its captures were saved under the chain.
-        from api import state
-        tok = state._current_user.set(None)
-        try:
-            doc = self.sm.load_map("Corner Store")    # any doc shape; re-key it
-            doc.update(key="traderjoes", store="Trader Joe's",
-                       segments=self.sm.walk_segments())
-            doc["segments"]["pasta:both"]["captures"] = [{"id": "c1", "at": "2026-10-20T10:00:00", "by": "x", "score": 1.0}]
-            self.sm._save_map(doc)
-            self.sm._put_image("traderjoes", "c1", jpeg(4))
-        finally:
-            state._current_user.reset(tok)
-        got = self.sm.load_map(WALK)
-        self.assertEqual(got["key"], "traderjoes@tj-walk")
-        self.assertEqual(len(got["segments"]["pasta:both"]["captures"]), 1)
-        self.assertIsNotNone(self.sm.best_image(WALK, "pasta:both"))
-        # Chino Hills does not inherit it.
-        self.assertEqual(self.sm.view("Trader Joe's")["total"], 0)
-
-    def test_no_store_has_the_walk_until_someone_says_which(self):
-        # Owner 2026-10-29: the walk was not filmed on Argonaut; nobody
-        # recorded where, so no store is mapped by it.
-        os.environ.pop("ARYA_WALK_STORE_ID", None)
-        from api import stores
-        stores.create_store("Trader Joe's", "1 Argonaut Way", "Somewhere", "CA", "90000", "ana")
-        self.assertIsNone(self.sm.walk_location())
-        for ref in ("Trader Joe's", WALK):
-            v = self.sm.view(ref)
-            self.assertEqual((v["total"], v["typical"]), (0, "Trader Joe's"))
-
     def test_pictures_list_stays_keyed_by_chain(self):
-        rows = {r["key"]: r for r in self.sm.stores_with_pictures()}
-        self.assertTrue(rows["traderjoes"]["has_pictures"])
-        # The walk's photos belong to one location; captures name theirs.
-        self.assertEqual(rows["traderjoes"]["location"], "tj-walk")
+        # Captures name their location, so a picture shows only there.
         self.sm.add_segment("Trader Joe's|tj-9", "Aisle 4", "left")
         self.sm.ingest("Trader Joe's|tj-9", "aisle-4:left", jpeg(5))
         rows = {r["key"]: r for r in self.sm.stores_with_pictures()}
-        self.assertIn("tj-9", rows["traderjoes"]["captured_at"])
+        self.assertTrue(rows["traderjoes"]["has_pictures"])
+        self.assertIsNone(rows["traderjoes"]["location"])
+        self.assertEqual(rows["traderjoes"]["captured_at"], ["tj-9"])
+        # A map saved under a bare chain name is chain-wide.
+        self.sm.add_segment("Corner Store", "Aisle 1", "left")
+        self.sm.ingest("Corner Store", "aisle-1:left", jpeg(6))
+        rows = {r["key"]: r for r in self.sm.stores_with_pictures()}
+        self.assertNotIn("location", rows["cornerstore"])
 
     def test_a_label_with_no_picture_is_not_located(self):
         self.sm.add_segment("Corner Store", "Aisle 4", "left")
