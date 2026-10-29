@@ -1473,32 +1473,36 @@ async function renderCurator() {
   if (!d.proposals.length) { el.hidden = true; el.innerHTML = ""; syncEyeHead(); return; }
   el.hidden = false;
   syncEyeHead();
-  let html = d.proposals.map(p => `
-    <div class="row"><div class="grow"><span class="name">${p.kind === "merge" ? `Merge into &ldquo;${esc(p.into_name)}&rdquo;` : `Keep &ldquo;${esc(p.names[0])}&rdquo; separate`}</span>
-    <span class="sub">${p.names.map(esc).join(" + ")} — ${esc(p.reason)}</span></div></div>
-    <div class="actions">
-      <button class="chip" data-curator-apply="${esc(p.id)}">Apply</button>
-      <button class="chip" data-curator-dismiss="${esc(p.id)}">Dismiss</button>
-    </div>`).join("");
-  html += `<div class="row"><span class="sub grow">The Curator reasons about which products are the same item. Nothing changes until you apply it.</span>${isDemo ? "" : `<button class="btn" id="btn-curator-run">Ask the Curator</button>`}</div>`;
-  el.innerHTML = html;
+  // The approved wireframe (owner, 2026-10-29): one card per
+  // question, Arya's voice only, no internal names, no manual
+  // trigger — the card asks, the user decides, the card goes away.
+  el.innerHTML = d.proposals.map(p => {
+    const merge = p.kind === "merge";
+    return `<div class="group pad askcard">
+      <p class="askq">${merge ? "Are these the same item?" : "Should these stay separate?"}</p>
+      ${p.names.map(n => `<p class="askitem">${esc(n)}</p>`).join("")}
+      <p class="sub">${merge
+        ? "Arya is asking because the names look alike. Nothing changes unless you choose."
+        : "Arya thinks these are different items that only look alike. Nothing changes unless you choose."}</p>
+      <div class="actions">
+        <button class="btn primary" data-curator-apply="${esc(p.id)}" data-kind="${esc(p.kind)}">${merge ? "Yes, same item" : "Yes, keep separate"}</button>
+        <button class="btn" data-curator-dismiss="${esc(p.id)}" data-kind="${esc(p.kind)}">${merge ? "No, keep separate" : "No, same item"}</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 $("#curator").addEventListener("click", async ev => {
   const b = ev.target.closest("button");
   if (!b) return;
   try {
-    if (b.id === "btn-curator-run") {
-      b.disabled = true;
-      const r = await post("/api/curator/run");
-      toast(r.proposals ? `The Curator proposed ${r.proposals} change(s).` : "The Curator found nothing to change.");
-      renderCurator();
-    } else if (b.dataset.curatorApply) {
+    if (b.dataset.curatorApply) {
       await post("/api/curator/decide", { id: b.dataset.curatorApply, action: "apply" });
-      toast("Applied. The products are one now.");
+      toast(b.dataset.kind === "merge" ? "They are one item now." : "Kept separate.");
       renderCurator();
     } else if (b.dataset.curatorDismiss) {
       await post("/api/curator/decide", { id: b.dataset.curatorDismiss, action: "dismiss" });
+      toast(b.dataset.kind === "merge" ? "Kept separate." : "Left as one item.");
       renderCurator();
     }
   } catch (e) { toast(e.message); }

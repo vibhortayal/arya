@@ -20,7 +20,7 @@ class FakeClient:
     def chat(self, messages, mode="standard", personal=False, **k):
         assert personal and mode == "standard"
         blob = " ".join(m.get("content", "") for m in messages)
-        if "Curator" in blob:
+        if "household grocery model" in blob:
             return CURATOR_JSON, {}, 0.001
         return json.dumps({"verdicts": []}), {}, 0.0
 
