@@ -11,15 +11,15 @@ tab turns the shop into a treasure hunt through a model of your own
 store; Express gives the same in-store help as a plain checklist. One
 product, one app, one account.
 
-![Tests: 1,108 passing](https://img.shields.io/badge/tests-1%2C108%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
+![Tests: 1,187 passing](https://img.shields.io/badge/tests-1%2C187%20passing-1a7f37) ![Receipt lines right: 97 of 98](https://img.shields.io/badge/receipt%20lines-97%2F98%20right-2a78d6) ![Faces shipped: 0](https://img.shields.io/badge/faces%20shipped-0-cf222e) ![Built in: 8 days](https://img.shields.io/badge/built%20in-8%20days-b45309)
 
-**Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
+**Quick links:** [Live demo](https://arya-pilot.duckdns.org) · [Pitch](docs/quest/PITCH.md) · [Game design](docs/quest/GAME-DESIGN.md) · [Design decisions](docs/quest/DISCUSSION.md) · [Submission map](docs/quest/SUBMISSION.md) · [Architecture](assistant/docs/ARCHITECTURE.md) · [Model policy](assistant/docs/MODEL-POLICY.md) · [Status](STATUS.md)
 
 **Play her live:** https://arya-pilot.duckdns.org — "Try the demo"
 opens a fictional household, no account needed. The whole loop is
 there: Today shows what is running low, Lists hold your Costco and
 Trader Joe's lists (add by typing, photo or voice), Ask Arya anything,
-and the Quest tab hunts the Trader Joe's aisles and settles on a
+Settings holds your account, Group and reminders, and the Quest tab hunts the Trader Joe's aisles and settles on a
 receipt photo. Demo writes
 live in a per-visitor sandbox; nothing reaches disk or another
 visitor. The owner's data stays behind the owner's account.
@@ -36,6 +36,18 @@ Every item on your list has a face. Hers is a whole company of them:
   <img src="assistant/pwa/assets/characters/egg.webp" alt="Egg" width="96">
   <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
 </p>
+
+## How it fits together
+
+<p align="center">
+  <a href="assistant/docs/ARCHITECTURE.md"><img src="assistant/docs/architecture.svg" alt="Arya architecture: PWA and Muse agent, Caddy, FastAPI routes, deterministic engines, Meta models, storage" width="760"></a>
+</p>
+
+A phone-first PWA (plain JavaScript) talks to one FastAPI process behind
+Caddy. Code does the money, timing and list logic at $0; Meta models read
+photos, judge staples and answer questions through a single client; state is
+JSON documents on a volume or in Supabase Postgres. Full detail, feature flags
+and deploy notes: [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
 
 ## Her brain
 
@@ -127,7 +139,7 @@ decisions: `docs/quest/`.
   in the research repo).
 - **Owner corpus:** 114 receipts, 1,226 lines, 114/114 arithmetic
   match.
-- **Tests:** 1,108 and green — `cd assistant && python -m unittest
+- **Tests:** 1,187 and green — `cd assistant && python -m unittest
   discover -s tests` (exact count in `STATUS.md`).
 
 ## How this was built

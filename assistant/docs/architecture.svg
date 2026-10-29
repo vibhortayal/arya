@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1010" width="1200" height="1010" role="img" aria-labelledby="ttl">
+<title id="ttl">Arya architecture: PWA and Muse agent, Caddy, FastAPI routes, deterministic engines, Meta models, storage</title>
+<defs><marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#555"/></marker></defs>
+<style>
+text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}
+.bg{fill:#fff} .band{fill:#f6f7f9;stroke:#d8dbe0} .bl{font-size:12px;font-weight:700;fill:#6a6f78;letter-spacing:.08em;text-transform:uppercase}
+.b{fill:#fff;stroke:#9aa1ab} .g{fill:#e9f6ee;stroke:#2f8f57} .o{fill:#fff1ea;stroke:#e4572e} .p{fill:#eef0fb;stroke:#5b64c9} .y{fill:#fff8e1;stroke:#c9a227}
+.t{font-weight:700;fill:#1c1c1e} .s{font-size:11.5px;fill:#3c3c43} .ar{stroke:#555;stroke-width:1.5;fill:none} .al{font-size:11px;fill:#555}
+.ttl{font-size:22px;font-weight:700;fill:#1c1c1e} .sub{font-size:12.5px;fill:#555}
+@media (prefers-color-scheme:dark){.bg{fill:#0d0d0f}.band{fill:#17181b;stroke:#34363b}.bl{fill:#a0a4ab}.b{fill:#1f2024;stroke:#6b7078}.g{fill:#14291d;stroke:#3fae6c}.o{fill:#33201a;stroke:#f08060}.p{fill:#1c1f38;stroke:#8990e6}.y{fill:#2b2510;stroke:#d9b640}.t,.ttl{fill:#f2f2f7}.s,.sub,.al{fill:#c7c7cc}.ar{stroke:#aaa}#h path{fill:#aaa}}
+</style>
+<rect class="bg" width="1200" height="1010"/>
+<text class="ttl" x="24" y="34">Arya, as built (main, 2026-10-29)</text>
+<text class="sub" x="24" y="54">List first. One FastAPI process, plain-JS PWA, deterministic engines for money and timing, Meta models for reading and judging.</text>
+<rect class="band" x="20" y="70" width="1160" height="110" rx="14"/>
+<text class="bl" x="1164" y="92" text-anchor="end">Clients</text>
+<rect class="o" x="40" y="96" width="520" height="74" rx="10"/>
+<text class="t" x="52" y="118" font-size="14">Phone PWA (assistant/pwa, plain JS, no build step)</text>
+<text class="s" x="52" y="138">Tabs: Today · Lists · Ask · Quest · Settings.  Quest: hunt (three.js), Express, album, haul share.</text>
+<text class="s" x="52" y="154">sw.js offline shell · Web Push · Add to Home Screen · SSE live sync for groups</text>
+<rect class="p" x="580" y="96" width="280" height="74" rx="10"/>
+<text class="t" x="592" y="118" font-size="14">Muse agent (MCP connector)</text>
+<text class="s" x="592" y="138">Any MCP client reads and writes the list</text>
+<text class="s" x="592" y="154">Bearer token arya_… (SHA-256 hash stored)</text>
+<rect class="b" x="880" y="96" width="280" height="74" rx="10"/>
+<text class="t" x="892" y="118" font-size="14">Owner on the VM (cron / shell)</text>
+<text class="s" x="892" y="138">python -m api.reminders (daily push)</text>
+<text class="s" x="892" y="154">backup.sh · restore.sh · migrate_json_to_pg</text>
+<rect class="band" x="20" y="190" width="1160" height="70" rx="14"/>
+<text class="bl" x="1164" y="212" text-anchor="end">Edge · Oracle VM, Docker Compose</text>
+<rect class="b" x="40" y="214" width="360" height="40" rx="10"/>
+<text class="t" x="52" y="236" font-size="13">Caddy  ·  Let's Encrypt, CSP, HSTS, http→https</text>
+<rect class="g" x="430" y="214" width="410" height="40" rx="10"/>
+<text class="t" x="442" y="236" font-size="13">uvicorn: api.main:app  (FastAPI, one process)</text>
+<rect class="b" x="870" y="214" width="290" height="40" rx="10"/>
+<text class="t" x="882" y="236" font-size="13">arya-data volume + deploy/.env (VM only)</text>
+<line class="ar" x1="300" y1="170" x2="220" y2="214" marker-end="url(#h)"/>
+<line class="ar" x1="720" y1="170" x2="640" y2="214" marker-end="url(#h)"/>
+<line class="ar" x1="400" y1="234" x2="430" y2="234" marker-end="url(#h)"/>
+<rect class="band" x="20" y="270" width="1160" height="70" rx="14"/>
+<text class="bl" x="1164" y="292" text-anchor="end">Request plumbing</text>
+<rect class="b" x="40" y="294" width="520" height="40" rx="10"/>
+<text class="t" x="52" y="316" font-size="12.5">demo_guard: require_login, demo sandbox (memory only), door caps</text>
+<rect class="b" x="580" y="294" width="580" height="40" rx="10"/>
+<text class="t" x="592" y="316" font-size="12.5">deps: cost ledger + budget guard, new_client(), rate limits, JSON helpers</text>
+<line class="ar" x1="640" y1="254" x2="300" y2="294" marker-end="url(#h)"/>
+<rect class="band" x="20" y="350" width="1160" height="150" rx="14"/>
+<text class="bl" x="1164" y="372" text-anchor="end">Routes (assistant/api/routes, one FastAPI router per area)</text>
+<rect class="b" x="40" y="374" width="264" height="50" rx="10"/>
+<text class="t" x="52" y="396" font-size="13">auth · account</text>
+
+<text class="s" x="52" y="412">sign-in, tokens, settings, push opt-in</text>
+<rect class="b" x="320" y="374" width="264" height="50" rx="10"/>
+<text class="t" x="332" y="396" font-size="13">intake · review</text>
+
+<text class="s" x="332" y="412">photo, PDF, text, JSON; review queue</text>
+<rect class="b" x="600" y="374" width="264" height="50" rx="10"/>
+<text class="t" x="612" y="396" font-size="13">lists · items</text>
+
+<text class="s" x="612" y="412">named lists, check, judge runs, item pages</text>
+<rect class="b" x="880" y="374" width="264" height="50" rx="10"/>
+<text class="t" x="892" y="396" font-size="13">home · chat · expiry</text>
+
+<text class="s" x="892" y="412">Today, Ask Arya, expiry dates</text>
+<rect class="b" x="40" y="432" width="264" height="50" rx="10"/>
+<text class="t" x="52" y="454" font-size="13">prices</text>
+
+<text class="s" x="52" y="470">own-receipt trends, powers, insights</text>
+<rect class="b" x="320" y="432" width="264" height="50" rx="10"/>
+<text class="t" x="332" y="454" font-size="13">groups</text>
+
+<text class="s" x="332" y="470">shared home, invite, leave, live SSE</text>
+<rect class="b" x="600" y="432" width="264" height="50" rx="10"/>
+<text class="t" x="612" y="454" font-size="13">quest · receipts</text>
+
+<text class="s" x="612" y="470">hunts, haul, album, stores, shelf, map</text>
+<rect class="b" x="880" y="432" width="264" height="50" rx="10"/>
+<text class="t" x="892" y="454" font-size="13">mcp_connector</text>
+
+<text class="s" x="892" y="470">/api/mcp tool surface for Muse</text>
+<line class="ar" x1="300" y1="334" x2="300" y2="374" marker-end="url(#h)"/>
+<rect class="band" x="20" y="510" width="1160" height="140" rx="14"/>
+<text class="bl" x="1164" y="532" text-anchor="end">Core engines (deterministic code, $0)</text>
+<rect class="g" x="40" y="534" width="212" height="100" rx="10"/>
+<text class="t" x="52" y="556" font-size="13">decode + reconcile</text>
+<text class="s" x="52" y="576">Totals must match lines;</text>
+<text class="s" x="52" y="592">else review queue</text>
+<rect class="g" x="264" y="534" width="212" height="100" rx="10"/>
+<text class="t" x="276" y="556" font-size="13">ledger + patterns</text>
+<text class="s" x="276" y="576">Returns netted (FIFO),</text>
+<text class="s" x="276" y="592">cadence and price by store</text>
+<rect class="g" x="488" y="534" width="212" height="100" rx="10"/>
+<text class="t" x="500" y="556" font-size="13">list · prices · expiry</text>
+<text class="s" x="500" y="576">Self-writing list, own-receipt</text>
+<text class="s" x="500" y="592">prices, running_low rule</text>
+<rect class="g" x="712" y="534" width="212" height="100" rx="10"/>
+<text class="t" x="724" y="556" font-size="13">dictionary · groups · live</text>
+<text class="s" x="724" y="576">SKU names, shared plane,</text>
+<text class="s" x="724" y="592">SSE + Postgres NOTIFY</text>
+<rect class="g" x="936" y="534" width="212" height="100" rx="10"/>
+<text class="t" x="948" y="556" font-size="13">reminders</text>
+<text class="s" x="948" y="576">One push a day, at most</text>
+<text class="s" x="948" y="592">(flag ARYA_PUSH_REMINDERS)</text>
+<line class="ar" x1="300" y1="500" x2="300" y2="534" marker-end="url(#h)"/>
+<rect class="band" x="20" y="660" width="1160" height="120" rx="14"/>
+<text class="bl" x="1164" y="682" text-anchor="end">Model-backed agents (all calls go through api/meta_client.py)</text>
+<rect class="y" x="40" y="684" width="212" height="86" rx="10"/>
+<text class="t" x="52" y="706" font-size="13">Staple judge</text>
+<text class="s" x="52" y="726">Gates list admission;</text>
+<text class="s" x="52" y="742">second seat on Spark Open</text>
+<rect class="y" x="264" y="684" width="212" height="86" rx="10"/>
+<text class="t" x="276" y="706" font-size="13">Curator + Resolver</text>
+<text class="s" x="276" y="726">Proposes merges/splits;</text>
+<text class="s" x="276" y="742">you apply, never silent</text>
+<rect class="y" x="488" y="684" width="212" height="86" rx="10"/>
+<text class="t" x="500" y="706" font-size="13">Eyes + Ask Arya</text>
+<text class="s" x="500" y="726">Fridge photos → sightings;</text>
+<text class="s" x="500" y="742">chat over a household snapshot</text>
+<rect class="y" x="712" y="684" width="212" height="86" rx="10"/>
+<text class="t" x="724" y="706" font-size="13">Quest vision</text>
+<text class="s" x="724" y="726">Shelf scan, localizer,</text>
+<text class="s" x="724" y="742">store map, Find it for me</text>
+<rect class="y" x="936" y="684" width="212" height="86" rx="10"/>
+<text class="t" x="948" y="706" font-size="13">Photo reader</text>
+<text class="s" x="948" y="726">Wonder (90 s), then Spark;</text>
+<text class="s" x="948" y="742">switch: ARYA_PHOTO_READER</text>
+<line class="ar" x1="300" y1="634" x2="300" y2="684" marker-end="url(#h)"/>
+<rect class="band" x="20" y="790" width="1160" height="92" rx="14"/>
+<text class="bl" x="1164" y="812" text-anchor="end">Outside services</text>
+<rect class="p" x="40" y="812" width="212" height="62" rx="10"/>
+<text class="t" x="52" y="834" font-size="13">Meta Model API</text>
+<text class="s" x="52" y="854">Spark 1.3 · Wonder 1.0 · Muse Image</text>
+<text class="s" x="52" y="870">Voice transcribe · SAM 3.1</text>
+<rect class="p" x="264" y="812" width="212" height="62" rx="10"/>
+<text class="t" x="276" y="834" font-size="13">Baseten</text>
+<text class="s" x="276" y="854">Spark Open (open weights)</text>
+<text class="s" x="276" y="870">platform data only, never personal</text>
+<rect class="p" x="488" y="812" width="212" height="62" rx="10"/>
+<text class="t" x="500" y="834" font-size="13">Supabase</text>
+<text class="s" x="500" y="854">Auth (email code, Google)</text>
+<text class="s" x="500" y="870">Postgres schema arya (flagged)</text>
+<rect class="b" x="712" y="812" width="212" height="62" rx="10"/>
+<text class="t" x="724" y="834" font-size="13">Google Places</text>
+<text class="s" x="724" y="854">Store search by name,</text>
+<text class="s" x="724" y="870">address or ZIP</text>
+<rect class="b" x="936" y="812" width="212" height="62" rx="10"/>
+<text class="t" x="948" y="834" font-size="13">Web Push</text>
+<text class="s" x="948" y="854">VAPID keys,</text>
+<text class="s" x="948" y="870">pywebpush (flagged)</text>
+<line class="ar" x1="300" y1="770" x2="300" y2="812" marker-end="url(#h)"/>
+<rect class="band" x="20" y="892" width="1160" height="100" rx="14"/>
+<text class="bl" x="1164" y="914" text-anchor="end">Storage (api/state.py, one document per former file)</text>
+<rect class="b" x="40" y="916" width="360" height="64" rx="10"/>
+<text class="t" x="52" y="938" font-size="13">json (default)</text>
+<text class="s" x="52" y="958">data/users/ACCOUNT/*.json, atomic writes</text>
+<text class="s" x="52" y="974">demo household shipped read-only</text>
+<rect class="b" x="420" y="916" width="360" height="64" rx="10"/>
+<text class="t" x="432" y="938" font-size="13">dual</text>
+<text class="s" x="432" y="958">files stay the truth; every save</text>
+<text class="s" x="432" y="974">mirrors to Postgres</text>
+<rect class="g" x="800" y="916" width="360" height="64" rx="10"/>
+<text class="t" x="812" y="938" font-size="13">pg  (Supabase, DATABASE_URL)</text>
+<text class="s" x="812" y="958">arya.user_docs (owner, doc name); group plane</text>
+<text class="s" x="812" y="974">LISTEN/NOTIFY arya_group for live sync</text>
+<line class="ar" x1="600" y1="882" x2="600" y2="916" marker-end="url(#h)"/>
+<text class="al" x="606" y="903">ARYA_STORE</text>
+</svg>

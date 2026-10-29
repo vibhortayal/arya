@@ -5,14 +5,21 @@ VISION.md), 2026-10-27. Where this file and the spec disagree, the spec wins.
 
 ## What it is
 
-Arya is a grocery assistant. Arya keeps a living model of one household's
-purchases: every receipt is read and checked, every return is netted, and
-buying patterns are learned. The shopping list writes itself from that
-model. In the store, a later add-on guides the shopper shelf to shelf.
+Arya is a grocery list that learns: Waze for grocery shopping. The list is
+the product. Arya keeps a living model of one household's purchases: every
+receipt is read and checked, every return is netted, and buying patterns are
+learned. The shopping list writes itself from that model: what is running
+low, what to use soon, and where it is usually bought.
+
+Quest is the second layer, and it is optional. It is its own tab, for when
+shopping should feel like play: a hunt through a model of the shopper's
+store that ends on a receipt photo. Express gives the same in-store help as
+a plain checklist, with no points. Shared households (Groups) let several
+people keep one set of lists.
 
 ## Who uses it
 
-One household. The primary user shops mainly at Costco and buys on a
+One household, or a few people sharing one home (a Group). The primary user shops mainly at Costco and buys on a
 repeat rhythm. The user opens Arya on a phone, often one-handed, often in
 or near a store. Speed and trust matter more than features.
 
@@ -34,15 +41,16 @@ or near a store. Speed and trust matter more than features.
   is. Deterministic code reports the facts and the timing.
 - Explicit user intent always beats the model.
 - Unseen is unknown. Arya never guesses a product name or a sighting.
-- Nothing buys itself. The prepared cart is a proposal; approval is a
-  state change only.
+- Nothing buys itself. Arya sends no order and makes no payment.
+- Prices come from the household's own receipts, never from store sites,
+  flyers, APIs or the web.
 
 ## Surface
 
-A phone-first PWA. Mode: Operate. The user is completing a task, not
-reading marketing. The visual language is the Apple UI design system:
-system typography, semantic colors with dark mode, grouped lists,
-44 pt targets. One account, the owner's; judges of the hackathon use a
+A phone-first PWA with five tabs: Today, Lists, Ask, Quest, Settings. Mode: Operate. The user is completing a task, not
+reading marketing. The visual language follows the Apple UI design system for
+type and layout: system typography, grouped lists, 44 pt targets. Color is
+greyscale structure with one orange accent, light mode only (`DESIGN.md`). One account, the owner's; judges of the hackathon use a
 read-only demo household with fictional data.
 
 ## Constraints
