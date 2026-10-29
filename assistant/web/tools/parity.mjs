@@ -24,6 +24,21 @@ function portedViews() {
   return [...body.matchAll(/^\s*"?([a-z-]+)"?\s*:/gm)].map(m => m[1]);
 }
 
+/* Screens that need an id: how to find one on the demo, and how
+ * each app opens the screen with it. */
+const SPECIAL = {
+  item: {
+    id: () => fetch("/api/home").then(r => r.json()).then(h => (h.list?.items || [])[0]?.item_id),
+    old: id => `renderItem(${JSON.stringify(id)})`,
+    new: id => `window.__aryaShow("item", { id: ${JSON.stringify(id)} })`,
+  },
+  receipt: {
+    id: () => fetch("/api/quest/receipts").then(r => r.json()).then(r => (r.receipts || [])[0]?.receipt_id),
+    old: id => `openReceipt(${JSON.stringify(id)})`,
+    new: id => `window.__aryaShow("receipt", { receipt_id: ${JSON.stringify(id)} })`,
+  },
+};
+
 const views = process.argv.slice(2).length ? process.argv.slice(2) : ["login", ...portedViews()];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -59,10 +74,15 @@ for (const v of views) {
   if (v !== "login" && !(await page.evaluate(() => fetch("/auth/me").then(r => (r.ok ? r.json() : {})).then(m => !!(m && m.user))))) {
     await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
   }
-  const oldImg = await shot("/", v === "login" ? null
+  const sp = SPECIAL[v];
+  const id = sp ? await page.evaluate(`(${sp.id.toString()})()`) : null;
+  if (sp && id == null) { console.log(`skip ${v.padEnd(16)} no id on the demo`); continue; }
+  const oldImg = await shot("/", sp ? sp.old(id) : v === "login" ? null
     // Open through the screen's real entry button when it has one (it may set state), else show().
-    : `{ const b = document.querySelector("#btn-${v}"); if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`);
-  const newImg = await shot("/next/", v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`);
+    // Tabs and screens with an entry button open through it (it may set state), else show().
+    : `{ const b = document.querySelector('#tabs button[data-view="view-${v}"]') || document.querySelector("#btn-${v}");
+         if (b) b.click(); else { show("view-${v}"); refresh("view-${v}"); } }`, `${v}-old.png`);
+  const newImg = await shot("/next/", sp ? sp.new(id) : v === "login" ? null : `window.__aryaShow("${v}")`, `${v}-new.png`);
   const { width, height } = oldImg;
   const diff = new PNG({ width, height });
   const n = newImg.height === height ? pixelmatch(oldImg.data, newImg.data, diff.data, width, height, { threshold: 0.1 }) : width * height;

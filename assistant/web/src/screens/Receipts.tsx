@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
-import { Sheet } from "../ui/Sheet";
+import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { fmtDate, fmtShort, money } from "../lib/format";
@@ -24,18 +24,6 @@ type Rec = { receipt_id: string; merchant: string; purchased_at: string; items?:
 type Unsettled = { session_id: string; store: string; finished_at?: string; items_collected: number; items_total: number };
 type Archive = { receipts: Rec[]; unsettled?: Unsettled[] };
 
-const isPdfFile = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
-async function decode(file: File) {
-  const pdf = isPdfFile(file);
-  const r = await fetch(pdf ? "/decode/pdf" : "/decode/photo", {
-    method: "POST",
-    headers: { "Content-Type": pdf ? "application/pdf" : (file.type || "image/jpeg") },
-    body: file,
-  });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
-  return r.json();
-}
-
 export function Receipts() {
   const nav = useNav();
   const { demo, currency } = useSession();
@@ -51,13 +39,7 @@ export function Receipts() {
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [curBusy, setCurBusy] = useState(false);
-  const [ar, setArState] = useState<{ sessionId: string; label: string } | null>(null);
-  // The open sheet, read after an await: closing it mid-read means
-  // nothing is attached (quest.js qArSettle checks qAR the same way).
-  const arRef = useRef(ar);
-  const setAr = (v: typeof ar) => { arRef.current = v; setArState(v); };
-  const [arStatus, setArStatus] = useState("");
-  const [arBusy, setArBusy] = useState(false);
+  const [ar, setAr] = useState<ReceiptTarget | null>(null);
 
   const loadScan = useCallback(async () => {
     const q = await get("/api/review");
@@ -165,38 +147,6 @@ export function Receipts() {
     toast(`Bulk upload done: ${filed} filed${dup ? ` · ${dup} already filed, skipped` : ""}${failed ? ` · ${failed} could not be read` : ""}.`);
     loadScan().catch(showErr);
     loadArchive().catch(() => {});
-  };
-
-  /* ---- Add receipt sheet (attach to a finished hunt) ---- */
-  const arDone = async (settle: () => Promise<unknown>) => {
-    if (!arRef.current) return;
-    await settle();
-    setAr(null);
-    toast("Receipt attached — the hunt is settled.");
-    // Old onDone was renderReceipts: the filed lines can land in Needs your eye.
-    loadAll().catch(showErr);
-  };
-  const arPhoto = async (ev: ChangeEvent<HTMLInputElement>) => {
-    const f = ev.target.files?.[0];
-    ev.target.value = "";
-    if (!f || !ar) return;
-    const sid = ar.sessionId;
-    setArStatus("Reading the receipt — this can take up to a minute.");
-    try {
-      const rid = (await decode(f)).receipt.receipt_id;
-      setArStatus("");
-      await arDone(() => post(`/api/quest/sessions/${sid}/receipt`, { receipt_id: rid }));
-    } catch (e) {
-      setArStatus("");
-      toast("Could not file that photo: " + errMsg(e));
-    }
-  };
-  const arSample = async () => {
-    if (!ar) return;
-    const sid = ar.sessionId;
-    setArBusy(true);
-    try { await arDone(() => post(`/api/quest/sessions/${sid}/sample-receipt`, {})); } catch (e) { toast(errMsg(e)); }
-    setArBusy(false);
   };
 
   const editor = (key: string, onSave: (name: string) => void, saveAttr: string, saveVal: string) => (
@@ -323,7 +273,7 @@ export function Receipts() {
                 <span className="sub">{fmtShort(String(e.finished_at || "").slice(0, 10))} · {e.items_collected} of {e.items_total} items collected</span></span>
               <span className="misstag">Receipt missing</span>
               <button className="btn" data-upload={e.session_id} data-store={e.store} type="button"
-                onClick={() => { setArStatus(""); setAr({ sessionId: e.session_id, label: e.store }); }}>Add receipt</button>
+                onClick={() => { setAr({ sessionId: e.session_id, label: e.store }); }}>Add receipt</button>
               <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>Dismiss</button>
             </div>
           ))}
@@ -340,15 +290,8 @@ export function Receipts() {
         </>}
       </div>
 
-      <Sheet open={!!ar} onClose={() => setAr(null)} id="ar-sheet">
-        <div className="row"><span className="name">Add receipt</span><button id="ar-close" className="btn" type="button" onClick={() => setAr(null)}>Not now</button></div>
-        <p className="muted" id="ar-for">{ar ? `${ar.label} · Finished · Receipt missing` : ""}</p>
-        <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label="This trip's receipt photo" hidden onChange={arPhoto} />
-        <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo">Snap the receipt photo</label></p>
-        <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={arBusy} onClick={arSample}>Use a sample receipt <span className="demotag">Demo</span></button></p>
-        <p id="ar-status" className="muted nomargin">{arStatus}</p>
-        <p className="muted nomargin">The hunt stays closed. Attaching its receipt settles it, and the &ldquo;Receipt missing&rdquo; tag clears everywhere.</p>
-      </Sheet>
+      {/* Old onDone was renderReceipts: the filed lines can land in Needs your eye. */}
+      <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => loadAll().catch(showErr)} />
     </>
   );
 }

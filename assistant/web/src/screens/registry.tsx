@@ -4,6 +4,11 @@ import { NotPorted } from "./NotPorted";
 import { About } from "./About";
 import { Analysis } from "./Analysis";
 import { Feedback } from "./Feedback";
+import { Item } from "./Item";
+import { Powers } from "./Powers";
+import { Profile } from "./Profile";
+import { QuestProgress } from "./QuestProgress";
+import { Receipt } from "./Receipt";
 import { Receipts } from "./Receipts";
 
 /* One entry per screen. A screen not ported yet shows NotPorted,
@@ -13,6 +18,11 @@ const PORTED: Partial<Record<ViewId, ComponentType>> = {
   about: About,
   analysis: Analysis,
   feedback: Feedback,
+  item: Item,
+  powers: Powers,
+  profile: Profile,
+  "quest-progress": QuestProgress,
+  receipt: Receipt,
   receipts: Receipts,
 };
 

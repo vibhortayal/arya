@@ -4,7 +4,7 @@ import { useSession } from "../app/session";
 import { get } from "../lib/api";
 import { MONTHS, money as fmtMoney } from "../lib/format";
 import { Empty, Row, Section } from "../ui/kit";
-import { Sheet } from "../ui/Sheet";
+import { InfoBtn, InfoSheet } from "../ui/Info";
 import { useToast } from "../ui/Toast";
 
 /* Port of pwa/index.html #view-analysis, app.js renderAnalysis and the
@@ -26,31 +26,8 @@ type Insights = {
   waste?: { dollars: number; month: string; items: { name: string }[] } | null;
 } | null;
 
-/* Local copy of the price (i) sheets in pwa/powers.js (INFO). */
-const INFO: Record<string, { t: string; s: string; rows: [string, string][] }> = {
-  basket: { t: "Your prices", s: "How Arya works out your own inflation.", rows: [
-    ["Same items", "Items you bought both then (60 to 120 days ago) and now (the last 30 days). Each item counts once."],
-    ["Dollars a month", "Each item is weighed by how often you bought it in the last 3 months."],
-    ["What it is not", "Your own prices at your own stores, not an official inflation number."]] },
-  split: { t: "Split smarter", s: "How Arya finds the saving.", rows: [
-    ["From your receipts", "Your last 6 months. An item counts when you bought it at 2 or more stores."],
-    ["What counts", "The other store must save at least 25 cents and 5% on that item."],
-    ["What it leaves out", "Travel time and gas are not counted."]] },
-  waste: { t: "Food that expired", s: "How Arya counts it.", rows: [
-    ["What counts", "Items you marked \"It expired\" this month."],
-    ["Dollars", "Each item at the price you last paid. An item with no price counts as $0."]] },
-};
-
 const pct = (n: number) => `${Math.abs(n).toFixed(Math.abs(n) < 10 ? 1 : 0).replace(/\.0$/, "")}%`;
 const names = (n: string[]) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`);
-
-function InfoBtn({ k, onOpen }: { k: string; onOpen: (k: string) => void }) {
-  return (
-    <button className="infobtn" type="button" data-info={k} aria-label="How this works" onClick={() => onOpen(k)}>
-      <svg className="infoic" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="10" cy="6.2" r="1.15" fill="currentColor" /><path d="M10 9v5.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
-    </button>
-  );
-}
 
 export function Analysis() {
   const nav = useNav();
@@ -126,7 +103,6 @@ export function Analysis() {
         <span className="sub">{w.items.length === 1 ? top[0] : `Mostly ${names(top)}`}.</span></div>);
   }
 
-  const i = info ? INFO[info] : null;
   const show = !d || !!latest;
 
   return (
@@ -170,14 +146,7 @@ export function Analysis() {
         </div>
       </div>
 
-      <Sheet open={!!i} onClose={() => setInfo(null)} id="info-sheet">
-        {i && <>
-          <span className="sheetgrip" />
-          <h3 className="largetitle" style={{ fontSize: 22, margin: "0 0 2px" }}>{i.t}</h3><span className="sub">{i.s}</span>
-          {i.rows.map(([bt, st]) => <div className="whyrow" key={bt}><div><b>{bt}</b><span className="sub">{st}</span></div></div>)}
-          <div className="sheetacts"><button className="btn secondary" type="button" data-pw="close" onClick={() => setInfo(null)}>Close</button></div>
-        </>}
-      </Sheet>
+      <InfoSheet k={info} onClose={() => setInfo(null)} />
     </>
   );
 }
