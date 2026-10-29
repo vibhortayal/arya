@@ -15,7 +15,7 @@ The assistant keeps a living model of the purchases of one household.
 The model is inventory-first. Items and item states are the core objects.
 The list, the dashboard, the patterns, and the reminders are views of the model.
 The assistant blends the physical world and software.
-Sensors read the physical world. The list, the reminders, and the prepared cart act on the physical world.
+Sensors read the physical world. The list, the reminders, and the store hunt act on the physical world.
 The assistant works in any store. The assistant needs no data from a retailer.
 The assistant learns from evidence. The assistant does not guess.
 
@@ -42,7 +42,7 @@ Food gets the deep functions because food expires and food is visible in the hom
 The MVP has one user and one household.
 The MVP uses the real data of the owner.
 The MVP closes the core loop of Section 3 with no store map.
-Quest (Section 6.8) is the play layer. It feeds the core and is not on its critical path.
+Quest (Section 6.8) is the play layer. Express is the same trip with no game. It feeds the core and is not on its critical path.
 
 ## 3. The core loop
 
@@ -55,7 +55,7 @@ The core loop has eight steps. The loop repeats with each trip.
 5. Patterns. The system computes cadence and quantity for each repeat item.
 6. Reconciliation. The system compares the list, the receipt, and the cart photo. The system asks about differences only.
 7. The list. The system writes the next list from the patterns. The user edits the list with taps.
-8. The prepared cart. The list becomes a prepared cart in a sandbox. The user approves the cart with one tap. Nothing buys itself.
+8. The trip. The user starts shopping from a named list. A hunt (Quest or Express, Section 6.8) takes the user through the store. A receipt settles the hunt and closes the loop. Arya places no order and takes no payment.
 
 The receipt is the sensor. The list is the surface.
 A return changes the ledger. A return changes the patterns. A return changes the next list.
@@ -89,12 +89,14 @@ The primary user is the owner. The data is the data of the owner.
 | US-2 | I see what I buy, how often I buy it, and how much I buy. The view works for one item or for one category. |
 | US-3 | The assistant drafts my next list from my patterns. I adjust the list with taps. I do not type. |
 | US-4 | I photograph the receipt and the cart at checkout. The assistant verifies the trip and asks me only about differences. |
-| US-5 | I photograph my refrigerator. The assistant corrects the inventory for the items in the photo. Items with no photo stay unknown. |
+| US-5 | I photograph the printed date on a package. The assistant reads it, I confirm it, and the assistant tells me what to use soon. A date never saves without my confirmation. |
 | US-6 | The assistant warns me before an item expires or runs low. The warning shows a date range and the reason. |
 | US-7 | I return an item. The assistant removes the item from my patterns and from future lists. |
-| US-8 | My list becomes a prepared cart. I approve the cart with one tap. |
+| US-8 | I keep named lists, one for each store or errand. I tap "Start shopping" on a list and choose Quest or Express. |
 | US-9 | I ask what I have. The assistant answers from the model and shows the evidence. |
-| US-10 | Add-on only: at a store with a map, the assistant guides me to each item and finds the item on the shelf. |
+| US-10 | At a store, the assistant shows me the aisle for each item and finds the item on the shelf with the camera. |
+| US-11 | I share my lists and receipts with the people in my home. I can leave the group at any time. |
+| US-12 | I see where I pay less, from my own receipts only. Arya states each price as a fact with the evidence behind it. |
 
 ## 6. Functional requirements
 
@@ -150,13 +152,16 @@ Allocation (a field on each ledger line):
 - FR-4.5 Patterns apply to food and household consumables in the MVP. Electronics and clothing show purchases and spend only.
 - FR-4.6 Patterns exclude FOR-OTHERS lines. Section 6.2 gives the allocation rules. Patterns also exclude returned items. Section 6.3 gives the return rules.
 
-### 6.5 The self-writing list and the prepared cart (C5)
+### 6.5 The self-writing list (C5)
 
-- FR-5.1 The system drafts the list from the patterns. An item is due when the time since the last purchase is equal to or more than the median interval of the item.
+- FR-5.1 The system suggests due items from the patterns. An item is due when the time since the last purchase is equal to or more than the median interval of the item. A list shows only what the household added. A due staple appears as a suggestion under the list of its usual store, with a reason and a "why" sheet.
 - FR-5.2 The suggested quantity comes from the typical quantity of the item.
 - FR-5.3 The model ranks and narrates the draft. The model adds no item outside the computed due set and the additions of the user.
-- FR-5.5 The list becomes a prepared cart in a sandbox. The cart lists items, quantities, and the store of the user.
-- FR-5.6 The cart waits for approval. The user approves with one tap. The system sends no order and makes no payment. The sandbox is the full scope of the cart in the MVP.
+- FR-5.5 The prepared cart was removed (PR #105). It copied the whole list into one Costco cart and added no value. The named lists of Section 6.9 replace it.
+- FR-5.6 The system sends no order and makes no payment. Arya works in any store and holds no retailer data.
+- FR-5.7 Typing a name links it to a tracked item. "milk" finds "Whole Milk". A near miss such as "mlik" is fixed. An add applies at once with Undo. A riskier change (out, never, snooze) asks first.
+- FR-5.8 A non-grocery item is kept and grouped under "Other errands."
+- FR-5.9 Running low uses one rule for Today and for Ask. It works before the staple judge has run.
 
 ### 6.6 Reconciliation (C6)
 
@@ -169,10 +174,13 @@ Allocation (a field on each ledger line):
 
 ### 6.7 Expiry (C7)
 
-- FR-7.6 Expiry uses category shelf-life priors first. One prior per category: greens days, milk about a week, eggs weeks.
-- FR-7.7 For a high-risk item in a new trip, the system asks the user for one photo of the printed date before put-away. The system asks for high-risk items only.
-- FR-7.8 A report of "this expired" from the user adjusts the shelf-life model of that item for this household.
-- FR-7.9 An expiry warning is a question, not a fact. Example: "The spinach from October 24 usually turns about now. Is it still good?"
+- FR-7.1 The user photographs the printed date on a package. A model reads the date. The photo is never kept.
+- FR-7.2 Nothing saves until the user confirms the date. The date matches a known item.
+- FR-7.3 Today shows a "use soon" list for dates inside seven days. A past date is neutral ("your call") and fades after a week.
+- FR-7.4 A new receipt for the item means a new package. The old date drops.
+- FR-7.5 The user can snooze or clear a date. A "still good?" check is a question, not a fact. Example: "The spinach from October 24 usually turns about now. Is it still good?"
+- FR-7.6 Category shelf-life priors drive the still-good checks when no date exists.
+- FR-7.7 Photos of a refrigerator or pantry are not a product feature. An earlier plan promised inventory from such photos. It was never shipped in the app. Items with no evidence stay "unknown" (Rule 4).
 
 ### 6.8 Quest — the play layer (C8)
 
@@ -180,7 +188,11 @@ Quest turns a store trip into a game. It feeds the core; it never
 replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
 - FR-8.1 A hunt is one store trip: one store, one list, one mode
-  (Quest or Express). A receipt settles it.
+  (Quest or Express). A receipt settles it. "Start shopping · N items"
+  on an open list leads to a sheet that picks the mode.
+- FR-8.1a Express is the same help with no game: a clean checklist,
+  "Show me" for the aisle image, "Not here?", and "Find it with the
+  camera". Express has no characters, no points, and no badges.
 - FR-8.2 Planning starts from the store. The list is sorted by where
   each item is usually bought, counted from the ledger. Unticked items
   stay on the list. Removing an item removes it from the list.
@@ -200,8 +212,35 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 - FR-8.8 "Not here?" files a report and edits nothing. Time resolves
   it: a later grab means a stockout; a confirmed new spot means a move.
 - FR-8.9 Every board and badge is receipt-verified.
+- FR-8.10 A hunt row taps to grab with a circle. Tapping again puts the grab back.
 
-### 6.9 Meal hook — optional scene (C9)
+### 6.9 Named lists and Today (C5)
+
+- FR-5.10 Lists are named. The Lists tab has one card per list plus "Everything else." The user creates, renames (pencil), deletes, and restores a list.
+- FR-5.11 Swipe moves or removes an item. Select moves many items.
+- FR-5.12 A new list can name a store. The store drives the aisle sort and the suggestions.
+- FR-5.13 Today is the dashboard: running low, store alerts, use soon, still-good checks, the user's lists, patterns, and one quiet Quest row. A new account shows no sample alerts.
+
+### 6.10 Groups (C10)
+
+- FR-10.1 A Group is a shared home. Members see the same lists and the same receipts. Live sync reloads an open app within about a second of a change.
+- FR-10.2 A member starts a group, invites with a 6-letter code (48 hours, up to 6 members), and others join with the code. Joining merges lists with the same name.
+- FR-10.3 Receipts belong to the account that filed them. Every member sees them. Personal data stays personal: profile, avatar, badges, Quest, push settings, currency, favorite stores, photos.
+- FR-10.4 A member can leave. The leaver keeps a copy of the lists. The group keeps its own. Receipts go with the account that filed them. Patterns and running low recompute on both sides.
+- FR-10.5 If the owner leaves, ownership passes to the oldest member. The last member out closes the group.
+- FR-10.6 The group is on by default. `ARYA_GROUPS=0` turns it off.
+
+### 6.11 Price intelligence (C11)
+
+- FR-11.1 Prices come only from the receipts and lists of the user. The system calls no retailer API, scrapes no site, reads no flyer, and uses no web search. A model never finds or guesses a price.
+- FR-11.2 The system shows the own-receipt price trend of an item, the cheaper store, and similar items. Trends show as words and up or down percentages. No line graphs.
+- FR-11.3 Analysis has "Your prices": personal inflation, split smarter, and food waste.
+- FR-11.4 Ask answers price questions from precomputed facts.
+- FR-11.5 Settings has "Arya's powers": one screen, one line per power, in the groups "Working for you," "Turns on as you add receipts," and "You choose to turn on." Quest is not listed. An (i) button on each power holds the caveats. A card states the fact in one line.
+- FR-11.6 Today shows one "Did you know?" card a day.
+- FR-11.7 Community prices, Deals, and Arya Shoppers (live presence: Quiet, Busy, Packed) are opt-in and not live. The opt-in records a choice only. A community figure would need 5 or more households over 30 days, a median, and no names. Roadmap.
+
+### 6.12 Meal hook — optional scene (C9)
 
 - FR-9.1 The system can suggest one dinner from ingredients the ledger supports. The suggestion shows the reason.
 - FR-9.2 A missing ingredient joins the list with one tap.
@@ -255,12 +294,13 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-PWA-core has five tabs: Today, List, Add, Ask, Profile. Receipts and
-Analysis are reached from Profile. Item and category detail opens from
-any list.
+The app is list first. It has five tabs: Today, Lists, Ask, Quest,
+Settings. Settings opens Profile (account, Group, Reminders, Arya's
+powers, Add to Home Screen, feedback). Receipts and Analysis are
+reached from Profile. Item and category detail opens from any list.
 
-1. Today. Running low is first. Each item shows a date range. The list draft sits below. One tap confirms, edits, or adds.
-2. List and Add. The Add tab is one surface: a text field, a mic, a camera, and the pointer to Muse in chat. Receipts enter by image only. The review queue sits with the receipts.
+1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
+2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own.
 3. Analysis (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
 4. Item and category detail. Purchase timeline. Cadence. Pack sizes. Price trend by store. Run-out range. Purchase and return history. Controls: add to list now, snooze suggestion, never suggest, change allocation.
 
@@ -314,7 +354,6 @@ Status of the evidence:
 | Allocation (Section 6.2) | A line marked FOR-OTHERS is in spend. The line is in no pattern, no run-out estimate, and no list draft. |
 | Patterns (C4) | Counts and intervals match a hand-computed check on the golden ledger for 100 percent of items. |
 | Smart list (C5) | The due set equals the rule output of FR-5.1. The narration adds no item outside the due set. |
-| Prepared cart (C5) | The cart matches the approved list. The cart sends no order. |
 | Reconciliation (C6) | A test trip with one mismatch asks about that mismatch only. |
 
 ### Gate 3 — superseded
@@ -349,8 +388,8 @@ Platform risk is real. Samsung or Instacart can close the gap in one release.
 
 ### 10.3 Demo requirements
 
-The demo shows: a receipt scan; the model learning; the list writing
-itself; a planned hunt with a grab and Find it for me; a return
+The demo shows: a receipt scan; the model learning; named lists with
+due suggestions; a planned hunt with a grab and Find it for me; a return
 changing the ledger; a total verified by arithmetic; the privacy
 sentence of Section 7.3. The judge path: `docs/quest/JUDGE-PLAYBOOK.md`.
 
@@ -376,8 +415,10 @@ Groceries are the first domain. Groceries are not the final domain.
 ## 12. Out of scope for the MVP
 
 - Nutrition, health, or dietary advice. This exclusion is permanent.
-- Multiple users and shared lists.
-- A real order or a real payment. The cart is a sandbox.
+- A real order or a real payment. There is no cart.
+- Per-person lists inside a group ("split the list" for kids or a partner).
+- Community prices, Deals, and Arya Shoppers presence (Section 6.11).
+- Photo inventory of a refrigerator or pantry.
 - Reimbursement tracking for bought-for-others purchases.
 - Retailer planogram data and retailer integrations.
 - Live guidance on glasses. Glasses record video only.

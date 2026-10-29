@@ -1,7 +1,8 @@
 # The Assistant — Implementation
 
 This document says how Arya is built. SPEC.md says what and why; read
-it first. STATUS.md says where the build is now. The per-session build
+it first. STATUS.md says where the build is now. ARCHITECTURE.md
+section 0 is the one-page map of the built system (updated 2026-10-29). The per-session build
 record is in `assistant/loops/`. ASD-STE100 style: short sentences, one
 idea each.
 
@@ -60,6 +61,7 @@ rules. Base URL https://api.meta.ai/v1; the key comes from env
 
 Client rules:
 
+- Photo receipts read with Muse Wonder (90 s bound, Spark fallback) under the hackathon amendment, which ends Nov 4, 2026. `ARYA_PHOTO_READER=spark` switches back.
 - Parse streaming output with care. Spark emits a non-standard stream event.
 - SAM accepts text prompts only. One concept per request. A maximum of 16 tracked objects per frame. A maximum of 15,000 frames per request. Video format is MP4 or MOV only.
 - Team rate ceilings: 3,000 requests per minute on Standard, 150 on Contributor. Eval loops on Contributor throttle to 100.
@@ -78,7 +80,7 @@ VM-only). The owner provisions the key on the VM.
 | Edge and TLS | Caddy | Automatic HTTPS; PWA files and API proxy under one origin; the camera API needs a secure context |
 | API | Python FastAPI | The media tools are Python: meta-sam-parser and ffmpeg |
 | Background jobs | A Postgres table plus a worker loop | Indexing is a long job; no Redis, no extra parts |
-| Data | File-backed JSON store | Per-account files under data/users/<account>/ with atomic writes (temp file + replace + per-file locks). The unused Postgres container was removed (2026-10-29) |
+| Data | File-backed JSON store, optional Supabase Postgres | Per-account files under data/users/<account>/ with atomic writes (temp file + replace + per-file locks). `ARYA_STORE=json\|dual\|pg` (`api/pgstore.py`) adds Postgres rows keyed (owner, name). A group uses owner `group:<id>`. The unused Postgres container was removed (2026-10-29) |
 | Media | VM disk | Videos and photos are large; derived data sits in the database |
 | Deploy | Git pull plus docker compose up | GitHub is the source of truth |
 | Insurance | Nightly sync of media and a database dump to Hatch | A dead VM in demo week loses no data |
@@ -122,20 +124,37 @@ ReconciliationResult (SPEC 6.6)
   unverified: [ { item_id, seen_in: [], reason } ],
   surprises: [ { raw, reason } ] }
 
-SmartList (SPEC 6.5)
-{ list_id, items: [ { item_id, qty, due_reason, source: pattern | user | eyes-removed } ],
+SmartList (SPEC 6.5) — suggestions
+{ list_id, items: [ { item_id, qty, due_reason, source: pattern | user } ],
   narration }
 
-PreparedCart (SPEC 6.5)
-{ cart_id, list_id, store,
-  items: [ { item_id, name, qty } ],
-  state: waiting | approved, approved_at }
-The cart sends no order. The cart makes no payment.
+NamedList (SPEC 5.10, 6.9) — `lists` store, one row per list
+{ list_id, name, store (optional), items: [ { item_id, qty, checked } ] }
+"Everything else" holds items with no list. A due staple is a suggestion
+under the list of its usual store; it is not an item until the user adds it.
+The prepared cart (PR #105) is gone from the app. Legacy `cart.json` and
+`/api/cart/approve` are not used by any screen. Arya places no order.
 
-EyesSighting (SPEC 6.7)
-{ sighting_id, item_id (or null), photo_ref, seen_at,
-  quantity_level: full | some | low | out | unknown,
-  confidence, user_state: unconfirmed | confirmed | corrected }
+ExpiryFlag (SPEC 6.7) — on the item's flag record
+{ use_by, use_by_kind: use_by | best_by | expires | packed | unknown,
+  use_by_set, use_by_snooze }
+One vision read returns the printed date. The user confirms. The photo is never kept.
+Fridge and pantry photo inventory was never shipped in the app. The
+`eyes` code (`api/eyes/`) is a spike and has no screen.
+
+Group (SPEC 6.10) — `groups.json` in the data root
+{ groups: { id: { name, owner, members: [ { user, joined } ], created,
+                  invite: { hash, expires, by } | null } },
+  member_of: { user: id } }
+In a group, `state._plane()` sends lists, item flags, and product
+knowledge to the group plane. Receipts stay per account and are read as the union of all members.
+Live sync: `GET /api/group/live` (SSE); Postgres LISTEN/NOTIFY on channel `arya_group` when `DATABASE_URL` is set, else in-process. `ARYA_GROUPS=0` turns groups off.
+
+PriceFacts (SPEC 6.11) — computed by `api/prices.py`, deterministic, $0
+{ item_id, per_store: [ { store, unit_price } ], cheaper_store,
+  trend_pct, similar: [], caveat }
+Unit price is net line total divided by quantity. A trend needs enough
+buys over enough days. Thin data shows nothing. No outside source.
 
 Store add-on contracts (SPEC 6.8)
 Sighting { sighting_id, store_id, zone_id, item_id, evidence,
@@ -157,18 +176,24 @@ WalkthroughGrade { walkthrough_id, recency_days, clarity,
 | 0 Foundations | Done. meta_client, cost ledger, Oracle stack live. |
 | 0.5 Spikes | Gate 0 photo decode PASS (93.85% combined, arithmetic 7/7). Costco pull: plan B (uploads and exports). |
 | 1 Decode API | Done. Dictionary v1: 458 entries. |
-| 2 Patterns, list, cart | Done. Returns netted; list needs 3 kept purchases. |
-| 3 PWA-core | Done and live; demo household is a per-visitor sandbox. |
-| 4 Ask | Done and live. (Fridge/pantry photo Eyes was never shipped in the app.) |
+| 2 Patterns, list | Done. Returns netted; list needs 3 kept purchases. The prepared cart was removed in PR #105. |
+| 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar, Express mode (#107). Demo household is a per-visitor sandbox. |
+| 4 Ask | Done. Ask Arya answers about Arya and about prices. Fridge/pantry photos were never shipped; expiry-date photos (#96) replace them. |
 | 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
-| 6 Hardening and demo | Hardening deployed; game upgrade on PR #18; demo video and package pending. |
+| 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video and package pending. |
+| 7 Groups | Merged (#121, live sync #127, on by default #128). |
+| 8 Price intelligence | Merged (#120): own-receipt prices, Arya's powers, daily card. Community prices, Deals, Arya Shoppers: after Nov 4. |
 
-Quest work after Stage 6 follows the Discussion log and the wireframes.
+Merged is not deployed. The owner deploys with `git pull` and
+`docker compose up -d --build`. STATUS.md lists the open steps.
+
+Switched-off flags: `ARYA_PUSH_REMINDERS`, `ARYA_SUPABASE_AUTH`. All app
+settings pass through `deploy/docker-compose.yml`. Quest work after Stage 6 follows the Discussion log and the wireframes.
 
 ## 5. Daily workflow
 1. Pick the next unpassed check.
-2. Work on a branch; small, gate-scoped commits.
-3. The suite must be green before a commit.
+2. Work on a branch based on `main`. Do not stack PRs.
+3. Run the suite by hand before a commit. CI is manual only (`.github/workflows/tests.yml`, owner's choice).
 4. Prompt work runs in the eval runner; each attempt writes a loop file.
 5. Every session appends a loop entry and updates STATUS.md.
 
