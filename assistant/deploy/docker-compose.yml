@@ -30,6 +30,18 @@ services:
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
       ARYA_SUPABASE_SIGNUP: ${ARYA_SUPABASE_SIGNUP:-1}
+      # Switches read by the app. Each default matches the code's own
+      # default, so an unset value behaves exactly as before.
+      ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
+      ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
+      ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
+      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-2}
+      ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
+      ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
+      ARYA_PUSH_REMINDERS: ${ARYA_PUSH_REMINDERS:-0}
+      ARYA_VAPID_PUBLIC_KEY: ${ARYA_VAPID_PUBLIC_KEY:-}
+      ARYA_VAPID_PRIVATE_KEY: ${ARYA_VAPID_PRIVATE_KEY:-}
+      ARYA_VAPID_SUBJECT: ${ARYA_VAPID_SUBJECT:-mailto:admin@example.com}
     volumes:
       - arya-data:/app/data
     depends_on:
