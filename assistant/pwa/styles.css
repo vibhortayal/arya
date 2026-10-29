@@ -1053,6 +1053,17 @@ input[type=file]::file-selector-button {
 .sheet .navrow[aria-pressed="true"] .tick { visibility: visible; }
 .sheet .navrow small { display: block; color: var(--secondary); font-size: 14px; }
 .sheet .navrow.dangerrow { color: var(--danger); }
+/* Find a store inside the list sheets: a field + Near me chip, then
+ * suggestions in flow (the sheet scrolls, so no floating dropdown). */
+.sheet .findrow { display: flex; gap: 8px; align-items: center; }
+.sheet .findrow input { flex: 1; min-width: 0; margin: 0; }
+.sheet .findrow .chip { flex: none; }
+.sheet .gdrop { position: static; box-shadow: none; margin: 6px 0 4px; }
+.sheet .srow { display: flex; align-items: center; border-bottom: 1px solid var(--sep); }
+.sheet .srow:last-child { border-bottom: none; }
+.sheet .srow .navrow { flex: 1; min-width: 0; border-bottom: none; }
+.sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 14px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
+.sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; }
 .sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
 .sheet .sheetacts .btn { flex: 1; }
 .sheet .field { margin: 8px 0; }

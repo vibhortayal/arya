@@ -108,7 +108,7 @@ def _text_search_stores(text, lat, lng):
     "grocery store 1914 14th street" resolves the Trader Joe's
     at that address; the raw address alone resolves the address
     itself, which is useless here). Same suggestion shape."""
-    body = {"textQuery": f"grocery store {text.strip()}"}
+    body = {"textQuery": f"grocery store {text.strip()}".strip()}
     if lat is not None and lng is not None:
         body["locationBias"] = {"circle": {
             "center": {"latitude": lat, "longitude": lng},

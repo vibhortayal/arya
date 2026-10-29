@@ -21,27 +21,106 @@
    * (My Stores first, then the stores its receipts name), so a hunt
    * from the list can open the store picker with no typing. */
   async function storeChoices(extra) {
-    const names = [];
+    const rows = [];   // { name, id?, where? } — id only for My Stores rows
     const same = (a, b) => (typeof qSameStore === "function" ? qSameStore(a, b) : a.toLowerCase() === b.toLowerCase());
-    const add = n => {
+    const add = (n, id, where) => {
       n = String(n || "").trim();
-      if (n && !names.some(x => same(x, n))) names.push(n);
+      if (n && !rows.some(x => (id && x.id === id) || (!id && same(x.name, n)))) rows.push({ name: n, id: id || "", where: where || "" });
     };
-    try { ((await api("/api/stores/mine")).stores || []).forEach(s => add(s.name)); } catch (e) { /* none yet */ }
+    try { ((await api("/api/stores/mine")).stores || []).forEach(s => add(s.name, s.id, storeWhere(s))); } catch (e) { /* none yet */ }
     try {
       const plan = await api("/api/quest/plan");
       const seen = {};
       for (const i of plan.items || []) for (const [s, n] of Object.entries(i.stores || {})) seen[s] = (seen[s] || 0) + n;
       Object.entries(seen).sort((a, b) => b[1] - a[1]).slice(0, 6).forEach(([s]) => add(s));
     } catch (e) { /* no history yet */ }
-    (extra || []).forEach(add);
-    return names;
+    (extra || []).forEach(n => add(n));
+    return rows;
+  }
+
+  function storeWhere(s) {
+    return [s.street, s.city].filter(Boolean).join(", ");
   }
 
   function storeRows(choices, picked) {
-    if (!choices.length) return `<p class="sub">No stores yet. Add one in Profile, then link it here.</p>`;
-    return choices.map(s => `<button class="navrow" type="button" data-ls-store="${esc(s)}" aria-pressed="${String(picked.includes(s))}">
-      <span class="grow">${esc(s)}</span><span class="tick">✓</span></button>`).join("");
+    if (!choices.length) return `<p class="sub">No stores yet. Find one above, then tick it.</p>`;
+    return choices.map(c => `<div class="srow"><button class="navrow" type="button" data-ls-store="${esc(c.name)}" aria-pressed="${String(picked.includes(c.name))}">
+      <span class="grow">${esc(c.name)}${c.fresh ? `<span class="newtag">NEW</span>` : ""}${c.where ? `<small>${esc(c.where)}</small>` : ""}</span><span class="tick">✓</span></button>${c.id
+        ? `<button class="rmstore" type="button" data-ls-rm="${esc(c.id)}" aria-label="Remove ${esc(c.name)} from my stores">Remove</button>` : ""}</div>`).join("");
+  }
+
+  /* Find a store: the same Google Places picker as Hunt and
+   * Profile > Stores (autocomplete, then a pick that files the store
+   * in the directory and in My Stores). Suggestions sit in flow. */
+  let placesTimer = null, placesSession = "", geo = null;
+  const session = () => placesSession || (placesSession = `l${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`);
+  function findBlock() {
+    return `<div class="findrow"><input type="text" id="ls-find" maxlength="80" placeholder="Find a store (name or ZIP)" autocomplete="off" aria-label="Find a store"><button class="chip" type="button" data-ls="near">📍 Near me</button></div>
+      <div id="ls-goog" class="gdrop" hidden></div>`;
+  }
+  function paintStores() {
+    $("#ls-stores").innerHTML = storeRows(sheetState.choices, sheetState.picked);
+  }
+  function paintSuggestions(d, head) {
+    const box = $("#ls-goog");
+    if (!box) return;
+    const rows = d.suggestions || [];
+    if (!rows.length) {
+      box.innerHTML = d.provisioned === false
+        ? `<div class="ghead">Google search is not set up</div>`
+        : `<div class="ghead">No stores found</div>`;
+      box.hidden = false;
+      return;
+    }
+    box.innerHTML = `<div class="ghead">${head}</div>` + rows.map(r => `
+      <button class="gitem" type="button" data-ls-pick="${esc(r.place_id)}" data-ls-pname="${esc(r.name)}">
+        <span class="name">${esc(r.name)}</span><span class="sub">${esc(r.secondary)}</span>
+      </button>`).join("");
+    box.hidden = false;
+  }
+  function clearSuggestions() {
+    const box = $("#ls-goog");
+    if (box) { box.hidden = true; box.innerHTML = ""; }
+  }
+  async function suggest(q) {
+    const g = geo ? `&lat=${geo.lat}&lng=${geo.lng}` : "";
+    const d = await api(`/api/stores/places?q=${encodeURIComponent(q)}&session=${session()}${g}`);
+    if (!sheetState || ($("#ls-find") && $("#ls-find").value.trim() !== q)) return;   // typed on: stale
+    paintSuggestions(d, "From Google");
+  }
+  function nearMe() {
+    if (!navigator.geolocation) { toast("This device cannot share its location."); return; }
+    navigator.geolocation.getCurrentPosition(p => guarded(async () => {
+      geo = { lat: p.coords.latitude, lng: p.coords.longitude };
+      const d = await api(`/api/stores/places?q=&lat=${geo.lat}&lng=${geo.lng}`);
+      if (!sheetState) return;
+      paintSuggestions(d, "Near you");
+    }), () => toast("Allow location to find stores near you, or type a name."), { timeout: 8000 });
+  }
+  async function pickPlace(btn) {
+    btn.disabled = true;
+    try {
+      const row = await post("/api/stores/places/pick", { place_id: btn.dataset.lsPick, name: btn.dataset.lsPname });
+      placesSession = "";   // the pick ends Google's billing session
+      if (!sheetState || !sheetState.choices) return;
+      const at = sheetState.choices.findIndex(c => c.id === row.id);
+      if (at > -1) sheetState.choices.splice(at, 1);
+      sheetState.choices.unshift({ name: row.name, id: row.id, where: storeWhere(row), fresh: true });
+      if (!sheetState.picked.includes(row.name)) sheetState.picked.push(row.name);
+      $("#ls-find").value = "";
+      clearSuggestions();
+      paintStores();
+      toast(`${row.name} is in your stores.`);
+    } catch (e) { toast(e.message); btn.disabled = false; }
+  }
+  async function removeStore(id) {
+    await post("/api/stores/mine/remove", { store_id: id });
+    if (!sheetState || !sheetState.choices) return;
+    const c = sheetState.choices.find(x => x.id === id);
+    sheetState.choices = sheetState.choices.filter(x => x.id !== id);
+    if (c) sheetState.picked = sheetState.picked.filter(n => n !== c.name);
+    paintStores();
+    toast(c ? `Removed ${c.name} from your stores.` : "Removed.");
   }
 
   async function openNew() {
@@ -49,7 +128,8 @@
     sheetState = { kind: "new", choices, picked: [] };
     open(`<h3 id="ls-title" class="largetitle" style="font-size:22px">New list</h3>
       <label class="field">Name<input type="text" id="ls-name" maxlength="40" placeholder="Costco, Indian Store, Party…" autocomplete="off"></label>
-      <p class="sub">Link stores (optional). Pick as many as you like: a hunt from this list can start at any of them.</p>
+      <p class="sub">Link stores (optional). Find one, or pick from yours. A hunt from this list can start at any of them.</p>
+      ${findBlock()}
       <div id="ls-stores">${storeRows(choices, [])}</div>
       <div class="sheetacts"><button class="btn secondary" type="button" data-ls="close">Cancel</button><button class="btn primary" type="button" data-ls="create">Create list</button></div>`);
   }
@@ -72,9 +152,10 @@
 
   async function openStores(l) {
     const choices = await storeChoices(l.stores);
-    sheetState = { kind: "stores", id: l.id, picked: [...(l.stores || [])] };
+    sheetState = { kind: "stores", id: l.id, choices, picked: [...(l.stores || [])] };
     open(`<h3 id="ls-title" class="largetitle" style="font-size:22px">Link stores</h3>
       <p class="sub">Pick one or more. Hunts from ${esc(l.name)} can start at any of them.</p>
+      ${findBlock()}
       <div id="ls-stores">${storeRows(choices, sheetState.picked)}</div>
       <div class="sheetacts"><button class="btn secondary" type="button" data-ls="close">Cancel</button><button class="btn primary" type="button" data-ls="savestores">Save</button></div>`);
   }
@@ -138,6 +219,10 @@
       st.setAttribute("aria-pressed", String(p.includes(s)));
       return;
     }
+    const pk = ev.target.closest("[data-ls-pick]");
+    if (pk && sheetState && sheetState.picked) { pickPlace(pk); return; }
+    const rm = ev.target.closest("[data-ls-rm]");
+    if (rm && sheetState && sheetState.choices) { guarded(() => removeStore(rm.dataset.lsRm)); return; }
     const fl = ev.target.closest("[data-ls-file]");
     if (fl && sheetState && sheetState.kind === "file") {
       const id = sheetState.id;
@@ -153,14 +238,23 @@
     if (!b) return;
     const act = b.dataset.ls, l = lensList();
     if (act === "close") close();
+    else if (act === "near") nearMe();
     else if (act === "create") guarded(create);
     else if (act === "saverename") guarded(saveRename);
     else if (act === "savestores") guarded(saveStores);
     else if (act === "stores" && l) guarded(() => openStores(l));
     else if (act === "delete" && l) guarded(() => del(l));
   });
+  wrap.addEventListener("input", ev => {
+    if (ev.target.id !== "ls-find") return;
+    clearTimeout(placesTimer);
+    const q = ev.target.value.trim();
+    if (q.length < 3) { clearSuggestions(); return; }
+    placesTimer = setTimeout(() => suggest(q).catch(() => clearSuggestions()), 300);
+  });
   wrap.addEventListener("keydown", ev => {
     if (ev.key === "Escape") { close(); return; }
+    if (ev.key === "Enter" && ev.target.id === "ls-find") { ev.preventDefault(); return; }
     if (ev.key === "Enter" && ev.target.id === "ls-name") {
       ev.preventDefault();
       guarded(sheetState && sheetState.kind === "rename" ? saveRename : create);
