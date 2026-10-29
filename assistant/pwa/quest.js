@@ -2419,7 +2419,7 @@ async function sendSpotReport(kind, btn) {
     } else {
       // "Found it after all" on the row takes the report back at any time.
       const repName = sess.items[next] ? sess.items[next].name : "";
-      toast("Reported. Other hunters will confirm.", { action: "Undo", onAction: async () => {
+      toast("Thanks. You just saved the next shopper a trip down the aisle.", { action: "Undo", onAction: async () => {
         if (repName && await qWithdrawReport(sess, repName)) { renderCurrent(); toast("Report taken back."); }
       } });
     }

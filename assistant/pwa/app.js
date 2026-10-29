@@ -437,6 +437,7 @@ async function renderHome() {
   paintTodayLists(h);
   paintTodayPatterns().catch(() => {});
   if (window.Expiry) Expiry.paintToday(h.use_soon);
+  if (window.Powers) Powers.paintToday().catch(() => {});
   TODAY_HOME = h;
   const [q, cur] = await Promise.all([
     api("/api/review").catch(() => ({ lines: [], unresolved: [] })),
@@ -937,7 +938,8 @@ $("#btn-analysis").addEventListener("click", () => { show("view-analysis"); refr
 /* Quest progress, Connect Muse and About are one tap from Profile
  * (owner, 2026-10-29: Profile too busy). Each Back lands on Profile. */
 for (const [btn, view, back] of [["#btn-quest-progress", "view-quest-progress", "#pfq-back"],
-    ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"]]) {
+    ["#btn-muse", "view-muse", "#pfm-back"], ["#btn-about", "view-about", "#pfa-back"],
+    ["#btn-powers", "view-powers", "#pw-back"]]) {
   $(btn).addEventListener("click", () => { show(view); refresh(view); });
   $(back).addEventListener("click", ev => { ev.preventDefault(); show("view-profile"); refresh("view-profile"); });
 }
@@ -1159,7 +1161,7 @@ async function fileReceiptPhoto(file, statusEl, previewEl) {
         ${rec.total != null ? row("Total", "", money(rec.total)) : ""}</div>`;
       else statusEl.textContent = "Read live — kept for this demo visit only.";
     } else {
-      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Anything unsure is in Receipts, under Needs your eye.`);
+      toast(`Filed ${rec.merchant || "the receipt"} — ${(rec.lines || []).length} lines. Each receipt makes your price comparisons sharper. Anything unsure is in Receipts, under Needs your eye.`);
       renderScan().catch(showErr);
     }
   } catch (e) {
@@ -1656,6 +1658,7 @@ async function renderAnalysis() {
   $("#an-top").innerHTML = d.top_items.map(i =>
     `<div class="row"><div class="grow"><a href="#" class="name item-link" data-id="${esc(i.item_id)}">${esc(i.name)}</a></div><div class="money">${money(i.spend)}</div></div>`).join("") || empty("No items yet.");
   bindItemLinks($("#an-top"));
+  if (window.Powers) Powers.paintAnalysis().catch(() => {});
 }
 
 /* ---------------- Item page ---------------- */
@@ -1734,6 +1737,7 @@ function refresh(view) {
   if (view === "view-profile" || view === "view-quest-progress" || view === "view-muse") renderProfile().catch(showErr);
   if (view === "view-community") { renderQuestHub().catch(showErr); renderCommunity().catch(showErr); }
   if (view === "view-chat") paintChatEmpty();
+  if (view === "view-powers" && window.Powers) Powers.paintPowers().catch(showErr);
 }
 
 /* ---------------- Ask Arya + voice ---------------- */

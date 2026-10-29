@@ -6,6 +6,14 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+
+## Price intelligence and Arya's powers (2026-10-29, PR pending)
+- Prices from the household's own receipts only: why-sheet trend, cheaper
+  store and similar items with (i) caveats; Analysis "Your prices" (own
+  inflation, split smarter, food waste); Ask answers price questions from
+  precomputed facts. Profile > Arya's powers; one "Did you know?" card a day.
+- Community prices, Deals and Arya Shoppers are opt-in and not live yet
+  (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."

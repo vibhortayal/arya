@@ -245,7 +245,22 @@
       const late = (p.days_since_last || 0) - Math.round(p.median_interval_days || 0);
       rows.push(`<div class="whyrow">${ic("clock")}<div><b>Last bought ${p.days_since_last === 0 ? "today" : `${p.days_since_last} day${p.days_since_last === 1 ? "" : "s"} ago`}</b><span class="sub">${esc(fmtShort(p.last_bought))}${last && last.store_id ? ` at ${esc(last.store_id)}` : ""}.${late > 0 ? ` That's ${late} day${late === 1 ? "" : "s"} past your usual.` : ""}</span></div></div>`);
     }
-    const stores = Object.entries((d && d.price_by_store) || {}).sort((a, b) => b[1].count - a[1].count);
+    // Prices, from this household's receipts only: the move at the usual
+    // store, the cheaper store against this list's store, and similar
+    // items bought. Each fact has an (i) for how it was worked out.
+    const at = ((namedLists().find(l => l.id === target) || {}).stores || [])[0] || "";
+    let pr = null;
+    try { pr = await api(`/api/prices/item/${encodeURIComponent(itemId)}${at ? `?at=${encodeURIComponent(at)}` : ""}`); } catch (e) { pr = null; }
+    const info = k => (window.Powers ? Powers.infoBtn(k) : "");
+    const tr = pr && pr.trend;
+    if (tr) rows.push(`<div class="whyrow"><span class="ic" aria-hidden="true"><b>${tr.pct > 0 ? "↗" : "↘"}</b></span><div><b>${tr.pct > 0 ? "Up" : "Down"} ${Math.abs(Math.round(tr.pct))}% since ${esc(tr.since_month)}</b><span class="sub">${money(tr.from_price)} then, ${money(tr.to_price)} now, at ${esc(tr.store)}.</span></div>${info("trend")}</div>`);
+    const ch = pr && pr.cheaper;
+    if (ch) rows.push(`<div class="whyrow">${ic("tag")}<div><b>Cheaper at ${esc(ch.store)}: ${money(ch.price)}</b><span class="sub">You paid ${money(ch.vs_price)} at ${esc(ch.vs_store)}. ${esc(ch.store)} on ${esc(fmtShort(ch.date))}.</span></div>${info("cheaper")}</div>`);
+    const sim = (pr && pr.similar) || [];
+    const perOz = (v, u) => u === "oz" ? `${(v * 100).toFixed(1)}¢/oz` : `${money(v)} each`;
+    if (sim.length) rows.push(`<div class="whyrow">${ic("tag")}<div><b>Similar items you bought</b>${pr.per_price ? `<span class="sub">This one: ${perOz(pr.per_price, pr.per)}.</span>` : ""}${sim.map(s =>
+      `<span class="sub simrow"><span>${esc(s.name)}<br>${esc(s.store)}, ${esc(fmtShort(s.date))}</span><span>${money(s.price)}${s.per_price ? `<br>${perOz(s.per_price, s.per)}` : ""}</span></span>`).join("")}</div>${info("similar")}</div>`);
+    const stores = ch ? [] : Object.entries((d && d.price_by_store) || {}).sort((a, b) => b[1].count - a[1].count);
     if (stores.length) {
       const [s0, v0] = stores[0];
       const others = stores.slice(1, 3).map(([s, v]) => `${money(v.median)} at ${esc(s)}`).join(" · ");

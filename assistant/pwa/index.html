@@ -103,6 +103,7 @@
     <!-- Today is the shopping dashboard (owner, 2026-10-29: "Waze for
          grocery shopping"; the list is the hero, Quest has its own tab). -->
     <div id="today-low"></div>
+    <div id="today-tip"></div>
     <div id="today-alerts"></div>
     <div id="today-expiry"></div>
     <div id="today-checks"></div>
@@ -193,6 +194,7 @@
     <p><a href="#" id="an-back">&larr; Back</a></p>
     <h2 class="largetitle" style="font-size:28px">Analysis</h2>
     <p class="subtitle">From Profile · spend is live</p>
+    <div id="an-prices"></div>
     <h3 class="sect">Spend — live, from your receipts</h3>
     <div class="group pad" id="an-spend"></div>
     <h3 class="sect">Spend by month</h3>
@@ -232,6 +234,7 @@
     <div id="pf-missing" class="group"></div>
     <div class="group">
       <button class="navrow" data-qnav="view-stores-mine" type="button"><span class="grow">Stores<span class="sub">Your stores, favorites, and the store directory</span></span><span class="chev">›</span></button>
+      <button class="navrow" id="btn-powers" type="button"><span class="grow">Arya's powers<span class="sub">What Arya can do, and how to unlock more</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-analysis" type="button"><span class="grow">Analysis<span class="sub">Spend is live; Patterns &amp; Trends coming next</span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-receipts" type="button"><span class="grow">Receipts<span class="sub" id="pf-receipts-sub"></span></span><span class="chev">›</span></button>
       <button class="navrow" id="btn-quest-progress" type="button"><span class="grow">Quest progress<span class="sub" id="pf-quest-sub">Hunts, badges and mapped stores</span></span><span class="chev">›</span></button>
@@ -292,6 +295,13 @@
       <div class="row" id="profile-token-row" style="margin-top:10px"></div>
       <p style="margin-top:10px"><button class="btn" data-copy-prompt="1" type="button">Copy setup prompt</button> <span class="sub">For setting Arya up in a different assistant app.</span></p>
     </div>
+  </section>
+
+  <section id="view-powers" class="view" hidden>
+    <p><a href="#" id="pw-back">&larr; Back</a></p>
+    <h2 class="largetitle" style="font-size:28px">Arya's powers</h2>
+    <p class="subtitle">Tap i to see what each one does.</p>
+    <div id="powers-body"></div>
   </section>
 
   <section id="view-about" class="view" hidden>
@@ -795,6 +805,7 @@
   </button>
 </nav>
 
+<div id="info-sheet" class="sheetwrap" role="dialog" aria-modal="true" hidden><div class="sheet" id="info-body"></div></div>
 <script src="app.js"></script>
 <script src="lists.js"></script>
 <script src="aryaask.js"></script>
@@ -809,5 +820,6 @@
 <script src="haul.js"></script>
 <script src="expiry.js"></script>
 <script src="push.js"></script>
+<script src="powers.js"></script>
 </body>
 </html>
