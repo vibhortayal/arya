@@ -581,7 +581,7 @@ def home():
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
             f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
-           for p in d["patterns"] if p["due"] and p["purchase_count"] >= 3 and p.get("admitted")]
+           for p in state.running_low(d)]
     # Store affinity for the list ships with this payload: the List
     # view used to make one /api/items/{id} call per list item just
     # for these keys (review 2026-10-28, M9). Same aggregation as
