@@ -37,8 +37,7 @@ Deterministic engines learn each item's cadence and price by store and
 derive the shopping list; a Muse Spark staple judge gates what the
 pattern facts may suggest. The Curator proposes product merges and
 splits and applies nothing until the user taps. The Resolver researches
-names Arya cannot resolve and shows its sources; the user settles. A
-fridge photo corrects the model by sight, after user confirmation. Ask
+names Arya cannot resolve and shows its sources; the user settles. Ask
 Arya answers from the model and applies stated facts ("we finished the
 yogurt") as server-validated actions. A prepared cart waits for a human
 tap. Nothing buys itself. A per-account token also connects the user's
@@ -61,8 +60,8 @@ writes itself.
 
 ## How Meta models are used
 
-- Muse Spark 1.3 (Standard) reads receipt PDFs, list photos, and
-  fridge photos (vision); is the fallback reader for receipt photos;
+- Muse Spark 1.3 (Standard) reads receipt PDFs and list photos
+  (vision); is the fallback reader for receipt photos;
   labels store shelves; and powers the Ask Arya agent and the staple
   judge.
 - Muse Wonder 1.0 reads receipt photos — the primary photo reader

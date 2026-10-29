@@ -18,7 +18,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest · Settings (Settings opens Profile). Landing
-headline: "Groceries, sorted." Service worker cache: arya-v91. Suite: 1,187
+headline: "Groceries, sorted." Service worker cache: arya-v93. Suite: 1,187
 tests, all green, 2 skipped (run 2026-10-29). Architecture diagram and
 technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
 
@@ -42,7 +42,7 @@ technical detail: `assistant/docs/ARCHITECTURE.md` section 0.
   lines with no item number.
 - **Brain:** intake (photo, PDF, order text, JSON, voice, Muse
   connector), ledger with returns netted, patterns, the staple judge
-  with the open-weights second seat, Eyes, Ask Arya, Receipts with the
+  with the open-weights second seat, Ask Arya, Receipts with the
   original kept, Analysis (groceries vs other purchases).
 - **Quest tab:** Quest hunts (points, stickers, album, badges, haul card
   and share) and Express (a plain checklist with Show me, Not here? and

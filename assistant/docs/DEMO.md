@@ -15,16 +15,13 @@ The video follows Path A beats; the narration is Path B safe.
    Say: "Patterns are math, not prompts. Three kept buys make a cadence."
 4. **The list writes itself.** Open Today. Show Running low with date
    ranges and reasons, and your lists under it (Lists tab for each store).
-5. **Eyes.** Upload the fridge photo. Confirm the spinach sighting.
-   Spinach leaves the list. Say: "A photo is evidence. Arya saw it, so
-   Arya does not buy it. Nothing changes without your tap."
-6. **A return changes the ledger.** Open Analysis (Settings tab). Show
+5. **A return changes the ledger.** Open Analysis (Settings tab). Show
    the returns total and the trip it came from. Say: "Returns are
    first class. A returned item is never suggested again."
-7. **Ask Arya.** Type: "We finished the Greek yogurt." The action
+6. **Ask Arya.** Type: "We finished the Greek yogurt." The action
    applies and the list updates. Ask: "What did we spend on coffee?"
    Say: "The agent answers from the model. It does not invent numbers."
-8. **Start shopping.** Open a list, tap "Start shopping", pick Quest or
+7. **Start shopping.** Open a list, tap "Start shopping", pick Quest or
    Express. Say: "Arya guides the shop. Nothing buys itself."
 
 ## Judge path (no narration)
@@ -35,7 +32,7 @@ return and the gift card under "Bought for others." The judge can play
 the full loop: add items (type, photo, voice), play a hunt at Trader
 Joe's (Quest or Express; Photos, 3D, Aisle or Strip), finish on a
 receipt photo, and ask Arya. Every demo write lives in a sandbox for
-that visit only. Bulk imports, PDF decode, fridge photos and batch
+that visit only. Bulk imports, PDF decode and batch
 model jobs need a real account.
 
 ## Failure fallbacks
