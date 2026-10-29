@@ -37,6 +37,7 @@ services:
       ARYA_VAPID_PRIVATE_KEY: ${ARYA_VAPID_PRIVATE_KEY:-}
       ARYA_VAPID_SUBJECT: ${ARYA_VAPID_SUBJECT:-mailto:admin@example.com}
       ARYA_WALK_STORE_ID: ${ARYA_WALK_STORE_ID:-}
+      ARYA_SCAN_DAILY_FRAMES: ${ARYA_SCAN_DAILY_FRAMES:-120}
     volumes:
       - arya-data:/app/data
   caddy:

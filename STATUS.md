@@ -73,6 +73,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `ARYA_WALK_STORE_ID` names it): every Trader Joe's plays it as a
   labelled typical layout, and Hunt shows its photos only there.
   `2026-10-29-store-maps-per-location.md`.
+  Map my store's walk is a guided scan: pan, never tap; Arya reads
+  sections, aisle signs, items and (opt-in) shelf prices every ~4 s,
+  outlines what it found, and blurs people before anything is kept
+  (SAM 3.1 + Spark, daily cap). `2026-10-29-guided-store-scan.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. Ships Costco and Trader Joe's lists.
