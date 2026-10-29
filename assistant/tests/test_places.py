@@ -76,6 +76,44 @@ class TestPlacesParsing(unittest.TestCase):
         self.assertEqual(det["lat"], 41.9169)
 
 
+SEARCH = {"places": [
+    {"id": "ChIJ-ts-tj", "displayName": {"text": "Trader Joe's"},
+     "formattedAddress": "1914 14th St NW, Washington, DC 20009, USA",
+     "types": ["grocery_store", "food", "store"]},
+    {"id": "ChIJ-ts-pharm", "displayName": {"text": "Corner Pharmacy"},
+     "formattedAddress": "1916 14th St NW, Washington, DC 20009, USA",
+     "types": ["pharmacy", "store"]}]}
+
+
+class TestAddressFallback(unittest.TestCase):
+    """A bare street address gets a Text Search fallback; a name
+    query never does (owner, 2026-10-28)."""
+
+    def run_auto(self, text):
+        from api import places
+        calls = []
+        def fake(url, method="GET", body=None, field_mask=None):
+            calls.append(url)
+            if url.endswith("places:searchText"):
+                return SEARCH
+            return {"suggestions": []}
+        places._http_json = fake
+        return places.autocomplete(text), calls
+
+    def test_address_query_falls_back(self):
+        rows, calls = self.run_auto("1914 14th street")
+        self.assertEqual(len(calls), 2)
+        # Only the grocery store survives the type filter.
+        self.assertEqual(rows, [{
+            "place_id": "ChIJ-ts-tj", "name": "Trader Joe's",
+            "secondary": "1914 14th St NW, Washington, DC 20009, USA"}])
+
+    def test_name_query_never_falls_back(self):
+        rows, calls = self.run_auto("zzqq market")
+        self.assertEqual(rows, [])
+        self.assertEqual(len(calls), 1)
+
+
 class TestPlacesEndpoints(unittest.TestCase):
     def setUp(self):
         # Fresh data dir per test: /auth/setup is a one-time door.

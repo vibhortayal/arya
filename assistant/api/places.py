@@ -87,6 +87,49 @@ def autocomplete(text, session_token=None, lat=None, lng=None):
         if pred.get("placeId") and name:
             rows.append({"place_id": pred["placeId"], "name": name,
                          "secondary": secondary})
+    if not rows and _address_like(text):
+        rows = _text_search_stores(text, lat, lng)
+    return rows
+
+
+def _address_like(text):
+    """A house number up front: the query is an address, not a
+    name. Google's autocomplete needs a name signal, so a bare
+    street address matches no store prediction at all (owner,
+    2026-10-28: "1914 14th street" found nothing, though Trader
+    Joe's sits at that address)."""
+    tok = (text or "").strip().split(" ", 1)[0].strip(",")
+    return tok[:1].isdigit()
+
+
+def _text_search_stores(text, lat, lng):
+    """Fallback for bare addresses: a Text Search for grocery
+    stores at the typed address (verified live 2026-10-28:
+    "grocery store 1914 14th street" resolves the Trader Joe's
+    at that address; the raw address alone resolves the address
+    itself, which is useless here). Same suggestion shape."""
+    body = {"textQuery": f"grocery store {text.strip()}"}
+    if lat is not None and lng is not None:
+        body["locationBias"] = {"circle": {
+            "center": {"latitude": lat, "longitude": lng},
+            "radius": 25000.0}}
+    out = _http_json(
+        f"{BASE}/places:searchText", method="POST", body=body,
+        field_mask=("places.id,places.displayName,"
+                    "places.formattedAddress,places.types"))
+    keep = set(GROCERY_TYPES) | {"food_store", "market"}
+    rows = []
+    for pl in out.get("places") or []:
+        name = ((pl.get("displayName") or {}).get("text") or "").strip()
+        if not pl.get("id") or not name:
+            continue
+        if not keep.intersection(pl.get("types") or []):
+            continue
+        rows.append({"place_id": pl["id"], "name": name,
+                     "secondary": (pl.get("formattedAddress")
+                                   or "").strip()})
+        if len(rows) >= 5:
+            break
     return rows
 
 
