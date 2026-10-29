@@ -254,6 +254,24 @@ def flags():
     return _load("flags.json", {})
 
 
+MAX_LISTS = 30
+MAX_LIST_STORES = 8
+
+
+def named_lists():
+    """The household's named lists (Costco, Indian Store, Party...), in
+    creation order. A list is {id, name, stores}; stores are the store
+    names a hunt from that list may start at. An item belongs to at
+    most one list through its flag's "list" key; an id that matches no
+    list here means "Everything else"."""
+    return _load("lists.json", {"lists": []}).get("lists", [])
+
+
+def save_named_lists(rows):
+    with file_lock("lists.json"):
+        _save("lists.json", {"lists": rows})
+
+
 def set_flag(item_id, flag):
     with file_lock("flags.json"):
         f = flags()
@@ -379,6 +397,16 @@ def derived():
         p["admitted"] = p["item_id"] in admitted_ids
     smart = build_list(visible)
     have = {i["item_id"] for i in smart["items"]}
+    # "I'm out" / "expired" is the user's word and needs no history:
+    # build_list wants 3 buys, so an item with fewer would be told
+    # "it's on the list" and then not be there.
+    for p in visible:
+        if p.get("user_report") and p["item_id"] not in have:
+            smart["items"].append({
+                "item_id": p["item_id"], "qty": p["typical_qty"],
+                "due_reason": p["user_report"].capitalize(),
+                "source": "pattern"})
+            have.add(p["item_id"])
     for pid, f in fl.items():
         if f.get("manual") and pid not in have:
             by = f.get("added_by")
@@ -391,6 +419,7 @@ def derived():
                     row["approved"] = True
             smart["items"].append(row)
     kept = []
+    list_ids = {l["id"] for l in named_lists()}
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
         if item.get("source") == "pattern" and f.get("dismissed_on") == today:
@@ -403,6 +432,8 @@ def derived():
                 item["approved"] = True
         if f.get("checked_on") and f.get("checked_on") == today:
             item["checked"] = True
+        if f.get("list") in list_ids:
+            item["list"] = f["list"]
         kept.append(item)
     smart["items"] = kept
     for item in smart["items"]:
@@ -413,6 +444,16 @@ def derived():
             item["judge_reason"] = j.get("reason", "")
             item["judge_class"] = j.get("class", "")
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
+
+
+def running_low(d=None):
+    """The patterns that are running low: due, admitted by the judge
+    (or reported out by the user), and either 3+ kept buys or the
+    user's own word. Today and Ask Arya both read this one rule."""
+    d = d or derived()
+    return [p for p in d["patterns"]
+            if p["due"] and p.get("admitted")
+            and (p["purchase_count"] >= 3 or p.get("user_report"))]
 
 
 def judgments():

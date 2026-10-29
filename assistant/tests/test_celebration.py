@@ -139,7 +139,7 @@ class TestCelebrationShell(unittest.TestCase):
 
     def test_sw_precaches_celebration_assets(self):
         sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v69"', sw)
+        self.assertIn('CACHE = "arya-v72"', sw)
         self.assertIn("/assets/characters/manifest.json", sw)
         self.assertIn("/assets/characters/blueberry.webp", sw)
         self.assertIn("/assets/characters/pantry.webp", sw)

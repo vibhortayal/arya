@@ -22,6 +22,8 @@
 <button id="avatar-btn" class="avatar floating" type="button" aria-label="Profile" hidden><span id="avatar-initial">A</span><img id="avatar-img" alt="" hidden></button>
 <p id="demobar" class="note" hidden>Demo household — fictional data. Play anything: your changes last only for this visit.</p>
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="list-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ls-title" hidden><div class="sheet" id="ls-body"></div></div>
+<div id="ask-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden><div class="sheet" id="ask-body"></div></div>
 <div id="hunt-sheet" class="sheetwrap" role="dialog" aria-modal="true" aria-labelledby="hm-title" hidden><div class="sheet" id="hm-body"></div></div>
 
 <section id="view-login" class="view" hidden>
@@ -109,26 +111,27 @@
   <section id="view-list" class="view" hidden>
     <h2 class="largetitle">List</h2>
     <p id="list-line" class="listline"></p>
-    <div id="store-filter" class="seg" role="group" aria-label="Store lens — view the one list by store"></div>
-    <p class="muted" style="font-size:14px">One list — the store chips are a lens. Checking an item off checks it everywhere.</p>
-    <!-- The composer (owner, 2026-10-28): the Add tab is gone — adding
-         lives on the List page, in one field with voice and photo.
-         Wireframe: docs/quest/wireframe-add-on-list.html -->
-    <div class="group pad" id="composer">
-      <label class="field">Add to your list
-        <textarea id="add-text" rows="2" placeholder="Type, or paste a list as text"></textarea>
-      </label>
-      <div id="add-split" class="splitpreview" hidden></div>
-      <p style="display:flex; gap:8px; margin:0 0 8px">
-        <button class="btn primary grow" id="add-submit" type="button">Add</button>
-        <button class="btn" id="add-mic" type="button">Record</button>
-        <label class="btn" for="add-photo">Photo</label>
+    <div class="chiprow">
+      <div id="store-filter" class="seg" role="group" aria-label="Your lists"></div>
+      <button id="list-new" class="iconbtn on" type="button" aria-label="New list">+</button>
+    </div>
+    <!-- The composer (owner, 2026-10-29): one row, like the Ask input.
+         Mic, field, camera, Add. The old multi-line box took a third
+         of the screen. Wireframe: the named-lists wireframe, v9. -->
+    <div id="composer">
+      <div class="addline">
+        <button class="iconbtn" id="add-mic" type="button" aria-label="Speak your list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
+        <input type="text" id="add-text" placeholder="Add an item" autocomplete="off" aria-label="Add to your list">
+        <label class="iconbtn" for="add-photo" aria-label="Add from a photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z"/><circle cx="12" cy="12.5" r="3.2"/></svg></label>
         <input type="file" id="add-photo" accept="image/*" hidden>
-      </p>
+        <button class="btn primary" id="add-submit" type="button">Add</button>
+      </div>
       <p class="nomargin"><button class="linkbtn" id="btn-expiry" type="button">Snap an expiry date ›</button></p>
+      <div id="add-split" class="splitpreview" hidden></div>
       <p class="muted nomargin" id="add-status"></p>
       <div id="add-receipt-offer"></div>
     </div>
+    <div id="list-answer"></div>
     <div id="list-eyes" hidden>
       <h3 class="sect">Eyes — sightings to confirm</h3>
       <div class="group pad"><div id="eyes-records"></div></div>
@@ -305,6 +308,7 @@
       <p class="muted nomargin" style="font-size:13px">Stores come from Google, with their real addresses — tap yours to start the plan.</p>
       <div id="st-goog" class="gdrop" hidden></div>
     </div>
+    <div id="st-fromlist"></div>
     <div id="st-mine"></div>
     <div id="st-history"></div>
     <div class="group">
@@ -497,6 +501,7 @@
       <button id="btn-gyro" class="btn" type="button" aria-pressed="false" hidden>Look around with your phone</button>
       <button id="btn-steps" class="chip" type="button" aria-pressed="false" hidden>Steps advance · experiment</button>
     </p>
+    <button id="hunt-askbar" class="askbar" type="button">Ask Arya…<span class="askmic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></span></button>
     <div id="hunt-rail" class="rail" aria-label="Today's hunts"></div>
     <div id="scan-overlay" class="scanoverlay" hidden>
       <div class="scanbar">
@@ -719,6 +724,9 @@
 </nav>
 
 <script src="app.js"></script>
+<script src="lists.js"></script>
+<script src="aryaask.js"></script>
+<script src="huntask.js"></script>
 <script src="pack.js"></script>
 <script src="scene.js"></script>
 <script src="quest.js"></script>

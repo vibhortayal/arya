@@ -59,7 +59,7 @@ class TestPackShell(unittest.TestCase):
     def test_quest_js_plan_block(self):
         js = read("quest.js")
         nxt = js.split('$("#nl-next").addEventListener')[1].split("\n});")[0]
-        self.assertIn('post("/api/list/add", { name: r.name })', nxt)
+        self.assertIn('post("/api/list/add", { name: r.name, ...lid })', nxt)
         self.assertIn("PACK.flush()", nxt)
         self.assertIn("PACK.listJoins()", nxt)
         self.assertIn("creating", nxt)

@@ -74,9 +74,10 @@ class TestHomePriceByStore(unittest.TestCase):
 class TestListClientPins(unittest.TestCase):
     def test_no_per_item_requests_for_the_list(self):
         js = read("app.js")
-        load = js.split("function loadItemStores")[1].split("}")[0]
-        self.assertNotIn("/api/items/", load)
-        self.assertIn("listData.price_by_store", js)
+        # One /api/home call paints the list and its named lists.
+        render = js.split("async function renderList()")[1].split("\n}\n")[0]
+        self.assertNotIn("/api/items/", render)
+        self.assertEqual(render.count("api("), 1)
 
     def test_loading_state_and_tag_free_all_lens(self):
         js = read("app.js")
