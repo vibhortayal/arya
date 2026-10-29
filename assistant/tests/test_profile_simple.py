@@ -1,5 +1,5 @@
 """Profile is one short screen (owner, 2026-10-29): the avatar choices
-open on Edit, and quest progress, Connect your agent and About sit one tap away."""
+open on Edit, and quest progress, Connect an AI agent and About sit one tap away."""
 import os
 import unittest
 

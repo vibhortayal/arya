@@ -150,12 +150,12 @@ Each agent has a narrow job and a named limit.
 ## 9. Onboarding
 
 1. Create an account. A new account opens on Today; there is no
-   Connect your agent step on first run.
-2. Connecting Muse is optional, from Profile > Connect your agent: mint the
+   Connect an AI agent step on first run.
+2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
    token there (shown once).
 3. Add the Arya connector in Muse; paste the token into the secure
    form. Never into a chat message.
-4. Talk to Muse. Profile > Connect your agent carries these steps and a
+4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
    copyable fallback setup prompt for assistant apps that do not load
    the connector doc automatically.
 
