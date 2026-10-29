@@ -17,5 +17,5 @@ left the screen, so the trip stayed open for good.
   checked off. Practice keeps plain Leave.
 
 ## Tests
-`e2e/questempty.e2e.mjs`; community and build specs now add an item
+`e2e/questempty.e2e.mjs` (empty list, and End quest closes the server session); community and build specs now add an item
 first, since a quest needs one.
