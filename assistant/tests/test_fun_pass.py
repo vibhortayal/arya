@@ -15,27 +15,32 @@ import os
 import pathlib
 import unittest
 
-PWA = pathlib.Path(__file__).resolve().parent.parent / "pwa"
+from tests import frontend
+
+PWA = pathlib.Path(frontend.STATIC)
 
 
 def read(name):
-    return (PWA / name).read_text(encoding="utf-8")
+    return frontend.read(name)
+
+
+src = frontend.src
 
 
 class TestLanding(unittest.TestCase):
     def test_hero_is_cast_key_art_not_a_walk_frame(self):
-        html = read("index.html")
-        self.assertIn('src="assets/scenes/hero.webp"', html)
-        self.assertNotIn('class="heroimg" src="models/trader-joes/frames-web', html)
+        login = src("screens/Login.tsx")
+        self.assertIn('asset("assets/scenes/hero.webp")', login)
+        self.assertNotIn("models/trader-joes/frames-web", login)
 
     def test_landing_shows_rows_not_the_cast_strip(self):
         # List first (owner, 2026-10-29): the landing shows three real
         # kinds of row; the cast strip left with the treasure-hunt pitch.
-        html = read("index.html")
-        login = html.split('id="view-login"')[1].split('id="signin-sheet"')[0]
-        self.assertNotIn('class="caststrip"', login)
+        login = src("screens/Login.tsx")
+        self.assertNotIn("caststrip", login)
+        self.assertIn("src={asset(`assets/characters/${img}.webp`)}", login)
         for c in ("milk", "egg", "vegetable"):
-            self.assertIn(f"assets/characters/{c}.webp", login)
+            self.assertIn(f'<Peek img="{c}"', login)
 
     def test_scene_assets_exist(self):
         for f in ("hero.webp", "score-party.webp", "storefront.webp"):
@@ -46,12 +51,13 @@ class TestLanding(unittest.TestCase):
 
 class TestFaces(unittest.TestCase):
     def test_ladder_lives_in_both_resolvers(self):
-        for src in ("quest.js", "app.js"):
-            self.assertIn("fallback", read(src), src)
-        q = read("quest.js")
-        self.assertIn("function qFaceFor(name)", q)
-        self.assertIn('CELEB.fallback', q)
-        self.assertIn("function charFor(name)", read("app.js"))
+        # One resolver now (lib/characters.ts) for every screen: exact
+        # item, then category, then the manifest's fallback; faceFor
+        # adds the basket when even that is missing.
+        c = src("lib/characters.ts")
+        self.assertIn("export function charFor(name: unknown)", c)
+        self.assertIn("return CHARM.fallback || null;", c)
+        self.assertIn('export const faceFor = (name: unknown): string => charFor(name) || "basket.webp";', c)
 
     def test_registry_names_its_fallback_and_roles(self):
         m = json.loads(read("assets/characters/manifest.json"))
@@ -60,59 +66,53 @@ class TestFaces(unittest.TestCase):
         self.assertEqual(m["roles"]["binoculars"], "binoculars.webp")
 
     def test_hunt_rows_and_target_card_wear_faces(self):
-        q = read("quest.js")
-        self.assertIn('class="rowface"', q)
-        self.assertIn('class="popface"', q)
-        self.assertIn("qFaceFor(it.name)", q)
+        q = src("screens/Hunt.tsx")
+        self.assertIn('className="rowface"', q)
+        self.assertIn('className="popface"', q)
+        self.assertIn('asset("assets/characters/" + faceFor(it.name))', q)
 
     def test_quest_band_and_today_faces(self):
         # The band moved to the Quest tab; Today's running-low rows wear
         # the characters (list-first pass, owner 2026-10-29).
-        html = read("index.html")
-        quest = html.split('id="view-community"')[1].split("</section>")[0]
-        self.assertIn('class="todayband"', quest)
-        a = read("app.js")
-        low = a.split("function paintTodayLow(h)")[1].split("\n}\n")[0]
-        self.assertIn("charFor(i.name)", low)
-        self.assertIn("if (TODAY_HOME) paintTodayLow(TODAY_HOME)", a)
+        self.assertIn('className="todayband"', src("screens/Quest.tsx"))
+        today = src("screens/Today.tsx")
+        self.assertIn("const c = charFor(name);", today)
+        self.assertIn("<Face name={i.name} />", today)
+        # Faces arrive late: the hook repaints Today once the manifest loads.
+        self.assertIn("useCharacters();", today)
 
     def test_express_wears_no_art(self):
-        html = read("index.html")
-        express = html.split('id="view-express"')[1].split("</section>")[0]
+        express = src("screens/Express.tsx")
         self.assertNotIn("assets/characters", express)
         self.assertNotIn("assets/scenes", express)
 
 
 class TestScoreAndTeachMove(unittest.TestCase):
     def test_score_party_only_when_settled(self):
-        q = read("quest.js")
-        self.assertIn("assets/scenes/score-party.webp", q)
-        self.assertIn('attached && !plain ? `<img class="scoreparty"', q)
+        q = src("screens/Score.tsx")
+        self.assertIn('{attached && !plain && <img className="scoreparty" src={asset("assets/scenes/score-party.webp")}', q)
 
     def test_teach_ask_left_the_score_screen(self):
-        self.assertNotIn("mapperOfferAfterHunt", read("quest.js"))
-        self.assertNotIn("mapperOfferAfterHunt", read("mapper.js"))
+        self.assertNotIn("mapperOfferAfterHunt", frontend.app())
+        self.assertNotIn("mapper", src("screens/Score.tsx").lower())
 
     def test_briefing_card_and_hunt_icon(self):
-        m = read("mapper.js")
-        self.assertIn("function mapperOfferBriefing(sess)", m)
-        self.assertIn("function mapperHuntIcon(sess)", m)
+        h = src("screens/Hunt.tsx")
         # never before the first hunt, never in Express, mute shared
-        self.assertIn('localStorage.getItem("arya-hunted")', m)
-        self.assertIn('sess.mode === "express"', m)
-        html = read("index.html")
-        self.assertIn('id="q-brief"', html)
-        self.assertIn('id="btn-teach"', html)
-        self.assertIn("assets/characters/compass.webp", html)
+        brief = h.split("/* The briefing card (before the start) and the Teach Arya tool. */")[1].split("  useEffect(")[1]
+        self.assertIn('sess.mode === "express" || mapperMuted(store)', brief)
+        self.assertIn('localStorage.getItem("arya-hunted")', brief)
+        self.assertIn('id="q-brief"', h)
+        self.assertIn('id="btn-teach"', h)
+        self.assertIn('asset("assets/characters/compass.webp")', h)
 
     def test_score_marks_the_player_as_hunted(self):
-        self.assertIn('localStorage.setItem("arya-hunted", "1")',
-                      read("quest.js"))
+        self.assertIn('localStorage.setItem("arya-hunted", "1")', src("screens/Score.tsx"))
 
 
 class TestBadgesAndEmptyStates(unittest.TestCase):
     def test_badge_art_map(self):
-        a = read("app.js")
+        a = src("screens/QuestProgress.tsx")
         self.assertIn("const BADGE_ART", a)
         for bid, char in (("egg_baron", "egg.webp"),
                           ("banana_republic", "banana.webp"),
@@ -120,27 +120,26 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
                           ("first_mapper", "compass.webp"),
                           ("eagle_eye", "binoculars.webp")):
             self.assertIn(f'{bid}: "{char}"', a)
-        self.assertIn('class="bdgimg"', a)
+        self.assertIn('className="bdgimg"', a)
 
     def test_empty_list_wears_the_pantry(self):
-        self.assertIn("emptyface", read("app.js"))
-        self.assertIn("assets/characters/pantry.webp", read("app.js"))
+        lists = src("screens/Lists.tsx")
+        self.assertIn("emptyface", lists)
+        self.assertIn("/assets/characters/pantry.webp", lists)
 
     def test_teach_row_and_mapper_wear_the_storefront(self):
-        html = read("index.html")
-        # Teach row (Quest), mapper, and Today's quiet Quest row.
-        self.assertEqual(html.count("assets/scenes/storefront.webp"), 4)
+        # Teach row (Quest), mapper, Today's quiet Quest row, and the
+        # Quest choice on a list's Start shopping sheet.
+        for f in ("screens/Quest.tsx", "screens/Mapper.tsx", "screens/Today.tsx", "screens/Lists.tsx"):
+            self.assertEqual(src(f).count("assets/scenes/storefront.webp"), 1, f)
 
     def test_sw_v45_precaches_the_new_art(self):
-        sw = read("sw.js")
-        self.assertIn('CACHE = "arya-v96"', sw)
-        for f in ("assets/scenes/hero.webp", "assets/scenes/score-party.webp",
-                  "assets/scenes/storefront.webp",
-                  "assets/characters/compass.webp",
-                  "assets/characters/basket.webp",
-                  "assets/characters/binoculars.webp"):
+        sw = src("sw.js")
+        for f in ("/assets/scenes/hero.webp", "/assets/scenes/score-party.webp",
+                  "/assets/scenes/storefront.webp"):
             self.assertIn(f, sw)
-
+        for c in ("compass", "basket", "binoculars"):
+            self.assertIn(f'"{c}"', sw)
 
 if __name__ == "__main__":
     unittest.main()
@@ -152,22 +151,22 @@ class TestPlanComposer(unittest.TestCase):
     text — the same doors as the List composer."""
 
     def test_composer_sits_above_the_plan_rows(self):
-        html = read("index.html")
-        self.assertLess(html.index('id="nl-text"'), html.index('id="nl-plan"'))
+        nl = src("screens/NewList.tsx")
+        self.assertLess(nl.index('id="nl-text"'), nl.index('id="nl-plan"'))
 
     def test_shorter_box_with_mic_and_photo(self):
-        html = read("index.html")
-        self.assertIn('id="nl-text" rows="2"', html)
-        self.assertIn('id="nl-mic"', html)
-        self.assertIn('id="nl-photo"', html)
-        self.assertIn('id="nl-status"', html)
+        nl = src("screens/NewList.tsx")
+        self.assertIn('id="nl-text" rows={2}', nl)
+        self.assertIn('id="nl-mic"', nl)
+        self.assertIn('id="nl-photo"', nl)
+        self.assertIn('id="nl-status"', nl)
 
     def test_voice_and_photo_feed_the_quest(self):
-        q = read("quest.js")
-        self.assertIn('wireRecordButton($("#nl-mic")', q)
+        q = src("screens/NewList.tsx")
+        self.assertIn('id="nl-mic" type="button" onClick={mic}', q)
         self.assertIn('"/api/list/from-photo"', q)
         # photo items are ticked into this quest, not just the list
-        self.assertIn("Q.draft.pick[key]", q)
+        self.assertIn("D.pick[key] = { name: n, qty: (D.pick[key] || {}).qty || 1, on: true };", q)
         # a receipt photo is never filed mid-plan
         self.assertIn("file it from the List tab", q)
 
@@ -177,17 +176,17 @@ class TestQuietMilestones(unittest.TestCase):
     tucked under the scene, two moments only, soft pill styling."""
 
     def test_slot_sits_under_the_scene_in_flow(self):
-        html = read("index.html")
-        self.assertLess(html.index('id="scene-cap"'), html.index('id="milestone"'))
-        self.assertLess(html.index('id="milestone"'), html.index('class="hunt-tools"'))
-        self.assertNotIn('id="milestone" class="milestone" role="status" hidden', html)
+        h = src("screens/Hunt.tsx")
+        self.assertLess(h.index('id="scene-cap"'), h.index('id="milestone"'))
+        self.assertLess(h.index('id="milestone"'), h.index('className="hunt-tools"'))
+        self.assertIn('<div id="milestone" className="milestone" role="status" />', h)
 
     def test_two_moments_only(self):
-        q = read("quest.js")
+        q = src("screens/hunt/fx.ts")
         self.assertIn('[[0.5, "Halfway there!"]]', q)
         self.assertIn('"One to go!"', q)
         for gone in ("A quarter of the way!", "Three quarters", "Hot streak"):
-            self.assertNotIn(gone, q)
+            self.assertNotIn(gone, frontend.app())
 
     def test_soft_pill_not_a_black_banner(self):
         css = read("styles.css")
@@ -207,25 +206,23 @@ class TestArtScene(unittest.TestCase):
         s = read("scene.js")
         self.assertIn("SceneDrivers.art = function", s)
         self.assertIn("assets/scenes/aisle-art.webp", s)
-        self.assertIn('"art"', read("quest.js"))
+        self.assertIn('"art"', src("screens/Hunt.tsx"))
         api = open(os.path.join(os.path.dirname(__file__), "..",
                                 "api", "quest.py"), encoding="utf-8").read()
         self.assertIn('"art"', api.split("DRIVERS =")[1].split("\n")[0])
 
     def test_art_asset_ships_and_precaches(self):
-        here = os.path.dirname(__file__)
-        self.assertTrue(os.path.exists(os.path.join(
-            here, "..", "pwa", "assets", "scenes", "aisle-art.webp")))
-        self.assertIn("/assets/scenes/aisle-art.webp", read("sw.js"))
+        self.assertTrue(os.path.exists(os.path.join(frontend.STATIC, "assets", "scenes", "aisle-art.webp")))
+        self.assertIn("/assets/scenes/aisle-art.webp", src("sw.js"))
 
     def test_resolution_and_caption_carry_the_nudge(self):
-        q = read("quest.js")
+        q = src("screens/Hunt.tsx")
         self.assertIn('base === "photo" && focus && focus.unplaced ? "art" : base', q)
         self.assertIn("Tap Teach Arya to map it for real", q)
         # Express never gets the art rung
-        self.assertIn('Q.current.mode === "express" ? "strip" : "art"', q)
+        self.assertIn('return sess.mode === "express" ? "strip" : "art";', q)
 
     def test_demo_picker_hides_dataless_stores(self):
-        q = read("quest.js")
-        self.assertIn("!qIsDemo() || storeHasPictures(h)", q)
-        self.assertIn("Q.mine.filter(s => storeHasPictures(s.name))", q)
+        q = src("screens/Store.tsx")
+        self.assertIn(".filter(h => !demo || storeHasPictures(h));", q)
+        self.assertIn("demo ? mine.filter(s => storeHasPictures(s.name)) : mine", q)

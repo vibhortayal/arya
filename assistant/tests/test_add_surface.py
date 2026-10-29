@@ -11,12 +11,9 @@ os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 from fastapi.testclient import TestClient  # noqa: E402
 
+from tests import frontend  # noqa: E402
+
 HERE = os.path.dirname(__file__)
-PWA = os.path.join(HERE, "..", "pwa")
-
-
-def read(name):
-    return open(os.path.join(PWA, name)).read()
 
 
 class StubClient:
@@ -63,28 +60,26 @@ def list_names(c):
 
 class TestShellContract(unittest.TestCase):
     def test_single_surface_no_doors(self):
-        html, app = read("index.html"), read("app.js")
-        assert 'id="add-text"' in html
-        assert 'class="addline"' in html  # one row, like the Ask input
-        assert 'id="add-mic"' in html and 'id="add-photo"' in html
+        lists = frontend.src("screens/Lists.tsx")
+        assert 'id="add-text"' in lists
+        assert 'className="addline"' in lists  # one row, like the Ask input
+        assert 'id="add-mic"' in lists and 'id="add-photo"' in lists
         # The owner dropped the "add from Muse chat" footer (2026-10-29).
-        assert "You can also add from Muse chat" not in html
-        assert 'id="doors"' not in html
-        assert "doorCard" not in app and "door-" not in app
-        assert "/api/list/from-text" in app
-        assert "/api/list/from-photo" in app
+        app = frontend.app()
+        assert "You can also add from Muse chat" not in app
+        assert 'id="doors"' not in app
+        assert "doorCard" not in app and '"door-' not in app
+        assert "/api/list/from-text" in lists
+        assert "/api/list/from-photo" in lists
 
     def test_no_order_intake_copy_anywhere(self):
-        for name in ("index.html", "app.js", "quest.js"):
-            src = read(name)
-            assert "Order confirmation" not in src, name
-            assert "File this order" not in src, name
-            assert "An online order, pasted as text" not in src, name
+        src = frontend.app()
+        assert "Order confirmation" not in src
+        assert "File this order" not in src
+        assert "An online order, pasted as text" not in src
 
     def test_receipts_view_has_its_own_photo_action(self):
-        html = read("index.html")
-        view = html[html.index('id="view-receipts"'):]
-        view = view[:view.index("</section>")]
+        view = frontend.src("screens/Receipts.tsx")
         assert "Add a receipt photo" in view
         assert 'id="rc-photo"' in view
 

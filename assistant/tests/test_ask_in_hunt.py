@@ -1,14 +1,11 @@
 """Ask Arya during a hunt (owner, 2026-10-29): a pinned bar opens a
 sheet with quick questions, a field and a mic; it reuses the List's
 engine with surface "hunt" and a context naming the store and stop."""
-import os, unittest
+import unittest
 
 import test_ask_in_list as base
 from test_ask_in_list import StubChat  # noqa: E402
-
-
-def read(name):
-    return open(os.path.join(os.path.dirname(__file__), "..", "pwa", name)).read()
+from tests import frontend
 
 
 class TestHuntContext(base.TestAskSurfaces):
@@ -26,25 +23,22 @@ class TestHuntContext(base.TestAskSurfaces):
 
 class TestShell(unittest.TestCase):
     def test_bar_sheet_and_script_are_wired(self):
-        html, js = read("index.html"), read("huntask.js")
-        hunt = html[html.index('id="view-hunt"'):]
-        hunt = hunt[:hunt.index("</section>")]
+        hunt, js = frontend.src("screens/Hunt.tsx"), frontend.src("screens/hunt/AskSheet.tsx")
         self.assertIn('id="hunt-askbar"', hunt)
-        self.assertIn('id="ask-sheet"', html)
-        self.assertIn("huntask.js", html)
-        self.assertIn("/huntask.js", read("sw.js"))
+        self.assertIn("<AskSheet", hunt)
+        self.assertIn('id="ask-sheet"', js)
         self.assertIn('surface: "hunt"', js)
-        self.assertIn("wireRecordButton", js)
+        self.assertIn("useRecord(", js)  # the shared mic (app.js wireRecordButton)
         for q in ("Is there a cheaper one?", "I can't find it"):
             self.assertIn(q, js)
 
     def test_bar_shows_only_on_the_hunt(self):
-        css = read("styles.css")
+        css = frontend.read("styles.css")
         self.assertIn(".askbar { display: none; }", css)
         self.assertIn("body.hunting #view-hunt.full .askbar", css)
 
     def test_nothing_in_the_bar_tells_the_crew(self):
-        js = read("huntask.js")
+        js = frontend.src("screens/hunt/AskSheet.tsx")
         self.assertNotIn("/api/quest/stores", js)
         self.assertNotIn("report", js.lower().replace("never mind", ""))
 

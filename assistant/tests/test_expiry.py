@@ -219,24 +219,19 @@ class TestDemo(unittest.TestCase):
 
 
 class TestClientWiring(unittest.TestCase):
-    def read(self, name):
-        with open(os.path.join(os.path.dirname(__file__), "..", "pwa", name)) as f:
-            return f.read()
-
     def test_shell_loads_the_expiry_script_and_hooks(self):
-        html, app, sw = self.read("index.html"), self.read("app.js"), self.read("sw.js")
-        for hook in ('id="today-expiry"', 'src="expiry.js"'):
-            self.assertIn(hook, html)
-        self.assertIn("Expiry.paintToday(h.use_soon)", app)
+        from tests import frontend
+        today = frontend.src("screens/Today.tsx")
+        self.assertIn('id="today-expiry"', today)
+        self.assertIn("h?.use_soon", today)
         # Expiry lives on Today only (owner, 2026-10-29): not on the List.
-        for gone in ('id="list-use"', 'id="btn-expiry"'):
-            self.assertNotIn(gone, html)
-        self.assertNotIn("Expiry.paintList", app)
-        self.assertNotIn('data-ls="expiry"', self.read("lists.js"))
-        self.assertIn('"/expiry.js"', sw)
+        lists = frontend.src("screens/Lists.tsx") + frontend.src("screens/lists/ListSheets.tsx")
+        for gone in ('id="list-use"', 'id="btn-expiry"', 'data-ls="expiry"', "use_soon"):
+            self.assertNotIn(gone, lists)
 
     def test_copy_follows_the_wireframe(self):
-        js = self.read("expiry.js")
+        from tests import frontend
+        js = frontend.src("screens/Today.tsx")  # expiry.js was ported into Today
         for phrase in ("Arya can keep track of expiry dates", "Snap an expiry date", "+ Snap a date",
                        "Nothing is saved until you tap", "Past the date. Your call.",
                        "Add it to your list?", "Try a sample date"):

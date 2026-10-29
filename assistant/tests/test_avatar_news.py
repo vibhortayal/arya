@@ -7,7 +7,6 @@ os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
 
-PWA = os.path.join(os.path.dirname(__file__), "..", "pwa")
 
 
 class FakeClient:
@@ -129,9 +128,12 @@ class TestNewsAndSamples(unittest.TestCase):
         self.assertEqual(news[0]["count"], 2)
 
     def test_samples_are_labelled(self):
-        js = open(os.path.join(PWA, "quest.js")).read()
-        self.assertGreaterEqual(js.count('samplepill">Sample'), 2)
-        self.assertIn("Example only", js)
+        from tests import frontend
+        quest, feed = frontend.src("screens/Quest.tsx"), frontend.src("screens/haul/CrewFeed.tsx")
+        # The sample leaderboard and the sample crew post both say so.
+        self.assertIn('className="samplepill">Sample', quest)
+        self.assertIn('className="samplepill">Sample', feed)
+        self.assertIn("Example only", quest)
 
 
 if __name__ == "__main__":

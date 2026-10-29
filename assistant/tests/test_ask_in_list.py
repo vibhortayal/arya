@@ -120,25 +120,24 @@ class TestAskSurfaces(unittest.TestCase):
 
 
 class TestShell(unittest.TestCase):
-    def read(self, name):
-        return open(os.path.join(os.path.dirname(__file__), "..", "pwa", name)).read()
-
     def test_one_field_and_mic_go_through_aryaask(self):
-        app, ask = self.read("app.js"), self.read("aryaask.js")
-        self.assertIn("AryaAsk.looksLikeAsk(text)", app)
-        self.assertIn("AryaAsk.parseAddToList(text, namedLists())", app)
-        self.assertIn('wireRecordButton($("#add-mic")', app)
-        self.assertIn("AryaAsk.run(text", app.split('wireRecordButton($("#add-mic")')[1])
+        from tests import frontend
+        lists, ask = frontend.src("screens/Lists.tsx"), frontend.src("screens/lists/AskCard.tsx")
+        self.assertIn("looksLikeAsk(t)", lists)
+        self.assertIn("parseAddToList(t, lists)", lists)
+        self.assertIn('id="add-mic"', lists)
+        mic = lists.split("const mic = async () => {")[1].split("\n  };")[0]
+        self.assertIn("ask.run(spoken", mic)
         # The engine is the Ask tab's own endpoint, called with a surface.
-        self.assertIn('post("/api/chat"', ask)
-        self.assertIn('post("/api/chat/apply"', ask)
+        self.assertIn('post<Res>("/api/chat"', ask)
+        self.assertIn('surface: "list"', ask)
+        self.assertIn('post<{ applied?: string[] }>("/api/chat/apply"', ask)
         self.assertIn('post("/api/list/remove"', ask)  # Undo
-        self.assertIn("aryaask.js", self.read("index.html"))
-        self.assertIn("/aryaask.js", self.read("sw.js"))
 
     def test_add_to_list_needs_no_model(self):
-        ask = self.read("aryaask.js")
-        body = ask.split("async function addToList")[1].split("\n  }\n")[0]
+        from tests import frontend
+        ask = frontend.src("screens/lists/AskCard.tsx")
+        body = ask.split("const addToList = useCallback(")[1].split("}, [onChange]);")[0]
         self.assertIn("/api/list/from-text", body)
         self.assertNotIn("/api/chat", body)
 

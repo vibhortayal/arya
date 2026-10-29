@@ -464,12 +464,8 @@ class TestUnlockView(unittest.TestCase):
         # Nothing on the ladder exists in the app today. A rung may be
         # marked live only when it names a feature marker that is
         # present in the app source.
-        src = ""
-        pwa = os.path.join(os.path.dirname(__file__), "..", "pwa")
-        for name in os.listdir(pwa):
-            if name.endswith(".js"):
-                with open(os.path.join(pwa, name), encoding="utf-8") as fh:
-                    src += fh.read()
+        from tests import frontend
+        src = frontend.app()  # the app's source (web/src)
         for r in self.social.LEVEL_UNLOCKS:
             if r["live"]:
                 self.assertTrue(r.get("feature"), r)
@@ -480,12 +476,8 @@ class TestUnlockView(unittest.TestCase):
         self.assertFalse(avatar["live"])
 
     def test_open_to_all_features_exist_and_are_not_rungs(self):
-        pwa = os.path.join(os.path.dirname(__file__), "..", "pwa")
-        src = ""
-        for name in os.listdir(pwa):
-            if name.endswith(".js"):
-                with open(os.path.join(pwa, name), encoding="utf-8") as fh:
-                    src += fh.read()
+        from tests import frontend
+        src = frontend.app()  # the app's source (web/src)
         titles = " ".join(r["title"] for r in self.social.LEVEL_UNLOCKS)
         for o in self.social.OPEN_TO_ALL:
             self.assertIn(o["feature"], src, o)

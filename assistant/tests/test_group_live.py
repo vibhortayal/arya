@@ -136,18 +136,18 @@ class TestLiveRoute(unittest.TestCase):
 
 
 class TestLiveShell(unittest.TestCase):
-    def read(self, name):
-        with open(os.path.join(os.path.dirname(__file__), "..", "pwa", name), encoding="utf-8") as fh:
-            return fh.read()
-
     def test_app_sends_tab_id_and_listens(self):
-        self.assertIn('"X-Arya-Client", CLIENT_ID', self.read("app.js"))
-        js = self.read("group.js")
+        from tests import frontend
+        api = frontend.src("lib/api.ts")
+        self.assertIn('headers.set("X-Arya-Client", CLIENT_ID);', api)
+        js = frontend.src("app/groupLive.ts")
         self.assertIn('new EventSource("/api/group/live")', js)
         self.assertIn("d.client === CLIENT_ID", js)
+        self.assertIn("useGroupLive();", frontend.src("App.tsx"))
 
     def test_worker_leaves_the_stream_alone(self):
-        sw = self.read("sw.js")
+        from tests import frontend
+        sw = frontend.src("sw.js")
         self.assertLess(sw.index('url.pathname === "/api/group/live") return;'),
                         sw.index("if (BYPASS"))
 
