@@ -1084,3 +1084,30 @@ body.hunting #view-hunt.full .askbar {
 .opt-undo { background: none; border: 0; padding: 6px 0; min-height: 40px; font: inherit; font-weight: 600; color: var(--accent-text); cursor: pointer; }
 .notgrocery { display: block; }
 .notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
+
+/* Expiry dates (owner, 2026-10-29): a one-time hint on Today, a quiet
+   "Use soon" row and section, and the sheets. Amber and red stay out of
+   it on purpose: a date is information, not an alarm. */
+.hintcard { background: var(--group); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin: 10px 0 4px; }
+.hintcard p { margin: 4px 0 0; font-size: 15px; }
+.hintcard .dow { margin: 0; }
+.hintacts { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+#tabs button { position: relative; }
+.tabdot { position: absolute; top: 6px; left: calc(50% + 8px); width: 9px; height: 9px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; }
+.sectrow { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 6px; }
+.sectrow .sect { margin-bottom: 0; }
+.sectrow .countbadge { margin-bottom: 2px; }
+.usesoon .row { gap: 10px; cursor: pointer; }
+.usesoon .sub b { font-weight: 700; color: var(--label); }
+#expiry-sheet .sheet .btn { margin-top: 10px; }
+#expiry-sheet .hm-title { margin: 6px 0 0; font-size: 20px; letter-spacing: -0.01em; }
+#expiry-sheet .bigdate { margin: 10px 0 2px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+#expiry-sheet select, #expiry-sheet input[type="date"], #expiry-sheet input[type="text"] { width: 100%; font: inherit; font-size: 16px; background: var(--fill); border: 0; border-radius: 10px; padding: 10px 12px; color: var(--label); }
+#expiry-sheet input[type="text"] { margin-top: 8px; }
+.exkv { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--sep); font-size: 15px; }
+.exk { color: var(--secondary); width: 56px; flex: none; }
+.exv { flex: 1; min-width: 0; }
+.excrop { background: #E9DFC4; color: #2B2618; border: 1px solid var(--line); border-radius: 10px; padding: 14px; text-align: center; font: 700 20px/1.2 ui-monospace, Menlo, monospace; letter-spacing: 0.06em; margin-top: 6px; overflow-wrap: anywhere; }
+.exhead { display: flex; gap: 10px; align-items: center; }
+.exlinks, .excenter { text-align: center; margin: 4px 0 0; }
+.excenter { margin-top: 8px; }
