@@ -216,6 +216,11 @@ def _load(name, default):
 def _save(name, obj):
     d, owner = _plane(name)
     save_at(d, owner, name, obj)
+    gid = _current_group.get()
+    if gid and (name in GROUP_DOCS or name == "receipts.json"):
+        # Live sync: the other members' open apps reload.
+        from api import live, groups
+        live.changed(gid, by=groups.handle(_current_user.get()))
 
 
 DEMO_USER = "demo"

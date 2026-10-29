@@ -17,7 +17,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 ## The product on main
 Arya is list first, Quest second ("Waze for grocery shopping"). Tabs:
 Today · Lists · Ask · Quest. Landing headline: "Groceries, sorted."
-Service worker cache: arya-v83. Suite: 1,151 tests, all green, 2 skipped.
+Service worker cache: arya-v84. Suite: 1,168 tests, all green, 2 skipped.
 
 - **Today:** running low, store alerts, use soon (expiry dates, with
   "+ Snap a date"), still-good checks, your lists, your patterns, one
@@ -63,7 +63,9 @@ Service worker cache: arya-v83. Suite: 1,151 tests, all green, 2 skipped.
   Profile > Group: start, invite by a 6-letter code (48 h), join, leave.
   Lists and product knowledge live in the group; receipts stay with whoever
   filed them and every member sees them. Leaving copies the lists.
-  `2026-10-29-groups.md`.
+  `2026-10-29-groups.md`. Live sync: an open app reloads within a second
+  when another member changes a list (SSE `/api/group/live`; Postgres
+  LISTEN/NOTIFY when `DATABASE_URL` is set, else in-process).
 - **Postgres storage:** `ARYA_STORE=json|dual|pg` (`api/pgstore.py`).
 - Every setting the app reads now reaches the container through
   `assistant/deploy/docker-compose.yml` (PR #106). Set them in

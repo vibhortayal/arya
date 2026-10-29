@@ -24,7 +24,7 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
   ("Still good? · 2 to check", names under it) that opens the questions.
   "Did you know?" is one line at the foot (× hides it, tap opens Powers).
   "Data through" moved under Your patterns.
-- SW arya-v86. Tests: 1139 OK.
+- SW arya-v85. Tests: 1139 OK.
 
 ## D. One type scale and a consistency sweep
 - Font sizes collapse to one scale (34 title, 22 card, 17 row, 15 body,
@@ -34,4 +34,4 @@ Design review with real 390x844 screenshots: https://claude.ai/artifact/YatnaZPE
 - One back style everywhere: "‹ Back". Quest strips show a shimmer while
   loading (still under reduced motion). Suggestion "why" line wraps cleanly.
 - Not done: the demo bar shrink (left as is).
-- SW arya-v87. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.
+- SW arya-v85. Tests: 1139 OK. Checked Today, Lists and Quest at 390x844.

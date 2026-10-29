@@ -78,6 +78,9 @@ async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
     state.set_overlay(None)
+    # Which open tab sent this (live sync skips a tab's own echo).
+    from api import live
+    live.client_id.set(request.headers.get("x-arya-client", "")[:40])
     if protected:
         info = None
         authz = request.headers.get("authorization", "")

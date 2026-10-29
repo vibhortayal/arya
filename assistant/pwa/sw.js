@@ -1,4 +1,4 @@
-const CACHE = "arya-v87";
+const CACHE = "arya-v85";
 const SHELL = ["/", "/index.html", "/styles.css", "/hunt.css", "/pack.css", "/album.css", "/haul.css",
   "/app.js", "/lists.js", "/aryaask.js", "/huntask.js", "/pack.js", "/scene.js", "/quest.js", "/huntmenu.js", "/album.js", "/mapper.js", "/share.js", "/haul.js", "/expiry.js", "/group.js", "/push.js", "/powers.js", "/manifest.json", "/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png", "/vendor/three.module.js",  "/assets/characters/manifest.json",
   "/assets/scenes/hero.webp",
@@ -29,6 +29,9 @@ self.addEventListener("activate", e => {
 });
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
+  // The live-sync stream stays a plain browser request: no worker in
+  // the middle of a connection that is meant to stay open.
+  if (url.pathname === "/api/group/live") return;
   if (BYPASS.some(p => url.pathname.startsWith(p))) {
     e.respondWith(fetch(e.request));
     return;
