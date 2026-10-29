@@ -288,7 +288,9 @@ async function renderQuestHub() {
 
 function paintTodayLow(h) {
   const low = (h.running_low || []).slice(0, 5);
-  const onList = new Set((h.list.items || []).filter(i => !i.checked).map(i => i.item_id));
+  // Due staples are suggestions until added (List overhaul): only
+  // what the household put on a list reads "On list".
+  const onList = new Set((h.list.items || []).filter(i => !i.checked && i.on_list).map(i => i.item_id));
   const cap = t => String(t || "").replace(/^./, c => c.toUpperCase());
   const el = $("#today-low");
   if (!low.length) {
@@ -321,7 +323,7 @@ $("#today-low").addEventListener("click", async ev => {
  * your list costs less (median price per store, from your own
  * receipts). Nothing is guessed: no report, no price, no row. */
 function storeAlertRows(h, news) {
-  const onList = new Set((h.list.items || []).filter(i => !i.checked).map(i => String(i.name || "").toLowerCase()));
+  const onList = new Set((h.list.items || []).filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
   const rows = (news || []).slice(0, 3).map(n => {
     const mine = onList.has(String(n.item || "").toLowerCase());
     return `<div class="row"><span class="alertic" aria-hidden="true">!</span><div class="grow">
@@ -385,7 +387,7 @@ $("#today-checks").addEventListener("click", async ev => {
 
 /* Your lists: one card per named list, what is still to get. */
 function paintTodayLists(h) {
-  const items = (h.list.items || []).filter(i => !i.checked && !i.not_grocery);
+  const items = (h.list.items || []).filter(i => !i.checked && i.on_list && !i.not_grocery);
   const lists = h.lists || [];
   const cards = lists.map(l => ({ id: l.id, name: l.name, items: items.filter(i => i.list === l.id) }));
   const rest = items.filter(i => !i.list || !lists.some(l => l.id === i.list));
@@ -508,13 +510,13 @@ function paintListsHome() {
     const names = rows.slice(0, 4).map(i => i.name).join(", ") + (rows.length > 4 ? ` +${rows.length - 4}` : "");
     return `<button class="listcard" type="button" data-open-list="${esc(id)}">
       <span class="lc-top"><span class="lc-name">${esc(name)}</span><span class="lc-count">${rows.length || ""}</span><span class="chev">›</span></span>
-      <span class="lc-store">${esc(sub)}</span>
+      ${sub ? `<span class="lc-store">${esc(sub)}</span>` : ""}
       <span class="lc-items">${rows.length ? esc(names) : "Nothing on it yet"}</span>
       ${n ? `<span class="lc-sugg">${SPARK_SVG}${n} suggestion${n === 1 ? "" : "s"}</span>` : ""}</button>`;
   };
   const lists = namedLists();
   $("#list-cards").innerHTML = lists.map(l =>
-    card(l.id, l.name, (l.stores || []).length ? l.stores.join(" · ") : "No store linked")).join("") +
+    card(l.id, l.name, (l.stores || []).length ? (l.stores.length === 1 && sameStore(l.stores[0], l.name) ? "" : l.stores.join(" · ")) : "No store linked")).join("") +
     card("else", "Everything else", lists.length ? "Not on a list yet" : "Make a list for each store you shop at");
   const used = new Set(open.map(itemHome)).size;
   $("#list-line").textContent = open.length
@@ -563,7 +565,7 @@ function paintListPage() {
   $("#lp-menu").hidden = !!listSel;
   $("#composer").hidden = !!listSel;
   const field = $("#add-text");
-  field.placeholder = `Add to ${name}`;
+  field.placeholder = name.length <= 8 ? `Add to ${name}` : "Add an item";
   field.setAttribute("aria-label", `Add to ${name}`);
   const box = $("#smart-list");
   box.innerHTML = (groceries.length ? `<div class="group">${groceries.map(listRow).join("")}</div>`
@@ -1121,9 +1123,8 @@ async function renderIntake() {
   const field = $("#add-text");
   if (!field) return;
   // The demo bar already says changes reset; the List stays quiet
-  // (List overhaul: the demo hint wrapped three lines over the list).
-  // The demo has no Muse to add from, so that line goes too.
-  $("#add-claude-line").hidden = isDemo;
+  // (List overhaul: the demo hint wrapped three lines over the list,
+  // and the owner dropped the Meta-model and Muse footer lines).
 }
 
 /* File a receipt photo (image only): the one receipt path the

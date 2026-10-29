@@ -30,7 +30,8 @@ class TestTodayIsTheShoppingDashboard(unittest.TestCase):
     def test_still_good_checks_left_the_list(self):
         js = read("app.js")
         self.assertIn("data-check-ok", fn(js, "paintTodayChecks"))
-        self.assertNotIn("data-check-ok", fn(js, "paintListNotes"))
+        # The List overhaul removed the List's notes block altogether.
+        self.assertNotIn("function paintListNotes", js)
 
     def test_patterns_back_returns_to_today(self):
         js = read("app.js")
@@ -48,7 +49,7 @@ class TestStoreAlerts(unittest.TestCase):
         return json.loads(out.stdout)
 
     def test_report_marks_an_item_on_your_list(self):
-        h = {"list": {"items": [{"item_id": "e", "name": "Eggs", "checked": False}]}, "price_by_store": {}}
+        h = {"list": {"items": [{"item_id": "e", "name": "Eggs", "checked": False, "on_list": True}]}, "price_by_store": {}}
         rows = self.run_rows(h, [{"store": "Costco", "item": "eggs", "count": 2, "reported_at": "2026-10-28T10:00"}])
         self.assertEqual(len(rows), 1)
         self.assertIn("Costco: eggs not there", rows[0])

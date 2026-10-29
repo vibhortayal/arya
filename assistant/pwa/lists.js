@@ -237,7 +237,7 @@
     sheetState = { kind: "why", id: itemId, target };
     open(`<div class="whyhead">${c ? `<img class="popface" src="assets/characters/${c}" alt="">` : ""}<div><h3 id="ls-title" class="largetitle" style="font-size:22px;margin:0">${esc(it.name)}</h3><span class="sub">Why Arya suggests it${target === "else" ? "" : ` for ${esc(tname)}`}</span></div></div>
       ${rows.join("")}
-      <div class="sheetacts"><button class="btn secondary" type="button" data-ls="whynot">Not now</button><button class="btn primary" type="button" data-ls="whyadd">Add to ${esc(tname)}</button></div>
+      <div class="sheetacts"><button class="btn secondary" type="button" data-ls="whynot">Not now</button><button class="btn primary" type="button" data-ls="whyadd">${tname.length <= 10 ? `Add to ${esc(tname)}` : "Add to list"}</button></div>
       <p class="nomargin whynever"><button class="linkbtn" type="button" data-ls="whynever">Never suggest this</button></p>`);
   }
 

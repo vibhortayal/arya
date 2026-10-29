@@ -1035,7 +1035,6 @@ input[type=file]::file-selector-button {
 .addline input[type="text"] { flex: 1; min-width: 0; border-radius: 980px; padding: 11px 16px; }
 .addline .btn { flex: none; padding: 11px 16px; }
 .addline label.iconbtn { cursor: pointer; }
-#list-new { font-size: 26px; line-height: 1; }
 .listhead { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
 .listhead h3 { flex: 1; min-width: 0; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; }
 .listhead h3 span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1214,7 +1213,8 @@ body.hunting #view-hunt.full .askbar {
 .huntline b { color: var(--accent); font-weight: 600; }
 /* Swipe a row: Move and Remove sit behind it. */
 .swipewrap { position: relative; overflow: hidden; margin: 0 -16px; }
-.swipewrap::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--sep); }
+.swipewrap::after { content: ""; position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--sep); pointer-events: none; }
+#smart-list .group, #list-done .group { overflow: hidden; }
 .swipewrap:last-child::after { display: none; }
 .swipewrap .listrow { position: relative; z-index: 1; background: var(--group); padding: 11px 16px; border-bottom: none; }
 .swipewrap .acts { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
