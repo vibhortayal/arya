@@ -371,12 +371,25 @@ function paintTodayChecks(h) {
   // Eyes sightings ("in stock, left off the list") came along from
   // the List with the List overhaul: the list holds only what you add.
   const seen = (h.seen || []).map(s => `<div class="row"><div class="grow"><span class="checktext">${esc(s.name)}</span><span class="sub">Seen in the ${esc(s.kind)} · ${fmtShort(s.date)} — in stock, left off the list.</span></div></div>`);
-  $("#today-checks").innerHTML = checks.length || seen.length ? `<h3 class="sect">Still good?</h3><div class="group">${checks.map(c =>
+  // Design pass (2026-10-29): one row that names what to check; the
+  // questions open under it on tap.
+  const n = checks.length + seen.length;
+  const names = [...checks.map(c => c.name || ""), ...(h.seen || []).map(s => s.name)].filter(Boolean);
+  const label = names.length ? names.slice(0, 2).join(", ") + (names.length > 2 ? ` and ${names.length - 2} more` : "") : "";
+  $("#today-checks").innerHTML = n ? `<div class="group checkfold${todayChecksOpen ? " open" : ""}">
+    <button class="hubrow" type="button" data-checks-fold aria-expanded="${String(todayChecksOpen)}"><span class="hr-label">Still good? · ${n} to check${label ? `<span class="sub">${esc(label)}</span>` : ""}</span><span class="chev">›</span></button>
+    <div class="checkrows"${todayChecksOpen ? "" : " hidden"}>${checks.map(c =>
     `<div class="row"><div class="grow"><span class="checktext">${esc(c.text)}</span>
-      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div>` : "";
+      <span class="chipset"><button class="chip" data-check-ok="${esc(c.item_id)}" type="button">Still good</button><button class="chip" data-check-expired="${esc(c.item_id)}" type="button">It expired</button></span></div></div>`).join("")}${seen.join("")}</div></div>` : "";
 }
+let todayChecksOpen = false;
 
 $("#today-checks").addEventListener("click", async ev => {
+  if (ev.target.closest("[data-checks-fold]")) {
+    todayChecksOpen = !todayChecksOpen;
+    if (TODAY_HOME) paintTodayChecks(TODAY_HOME);
+    return;
+  }
   const ok = ev.target.closest("[data-check-ok]");
   const ex = ev.target.closest("[data-check-expired]");
   if (!ok && !ex) return;
@@ -547,7 +560,7 @@ function listRow(i) {
     ${sub ? `<span class="sub">${esc(sub)}</span>` : ""}
     ${(window.qAskLaterHas && qAskLaterHas(i.name)) ? `<span class="sub asklater">To ask — kept as typed; asked again at the next plan.</span>` : ""}
     ${i.not_grocery && !picking ? `<span class="sub notgrocery">Not a grocery item? Added anyway. <button class="linkbtn" data-act="ng-keep" data-id="${esc(i.item_id)}">It is groceries</button> · <button class="linkbtn" data-act="ng-remove" data-id="${esc(i.item_id)}">Remove</button></span>` : ""}</div>
-    ${picking ? "" : `<button class="qtybtn" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>`}
+    ${picking ? "" : `<button class="qtybtn${!i.unit && Number(i.qty || 1) === 1 ? " one" : ""}" data-act="qty" data-id="${esc(i.item_id)}" aria-label="Quantity ${esc(qtyTag(i) || "1")}. Tap to change.">${i.unit ? esc(qtyFmt(i.qty) + " " + i.unit) : "× " + qtyFmt(i.qty)}</button>`}
   </div></div>`;
 }
 
@@ -634,9 +647,47 @@ $("#ls-remove").addEventListener("click", () => {
 $("#ls-move").addEventListener("click", () => {
   if (listSel && listSel.size && window.ListSheets) ListSheets.openMove([...listSel]);
 });
+/* Start shopping (design pass, 2026-10-29): one sheet picks Quest or
+ * Express and the trip opens straight from the list. Suggestions the
+ * list already shows get one "Add" line here, not a second deck. */
+function paintShopSheet() {
+  const open = onListItems().filter(i => !i.checked && itemHome(i) === (lensList() ? lensList().id : "else"));
+  const where = lensList() ? lensList().name : "Everything else";
+  $("#shop-title").textContent = `Shop ${where} · ${open.length} item${open.length === 1 ? "" : "s"}`;
+  const sugg = suggestions().filter(i => suggestHome(i) === (lensList() ? lensList().id : "else"));
+  const el = $("#shop-sugg");
+  el.hidden = !sugg.length;
+  if (!sugg.length) { el.innerHTML = ""; return; }
+  const names = sugg.slice(0, 2).map(i => esc(i.name));
+  const more = sugg.length > 2 ? ` and ${sugg.length - 2} more` : "";
+  el.innerHTML = `Arya also suggests ${names.join(" and ")}${more}. <button type="button" class="linkbtn" data-shop-add>Add ${sugg.length === 1 ? "it" : sugg.length === 2 ? "both" : "all"}</button>`;
+}
+function closeShopSheet() { $("#shop-sheet").hidden = true; }
 $("#list-hunt").addEventListener("click", () => {
+  paintShopSheet();
+  $("#shop-sheet").hidden = false;
+  const first = $("#shop-sheet [data-shop]");
+  if (first) first.focus();
+});
+$("#shop-close").addEventListener("click", closeShopSheet);
+$("#shop-sheet").addEventListener("keydown", ev => { if (ev.key === "Escape") closeShopSheet(); });
+$("#shop-sheet").addEventListener("click", async ev => {
+  if (ev.target.id === "shop-sheet") { closeShopSheet(); return; }
+  if (ev.target.closest("[data-shop-add]")) {
+    const lid = lensList() ? lensList().id : "else";
+    const ids = suggestions().filter(i => suggestHome(i) === lid).map(i => i.item_id);
+    try {
+      for (const id of ids) await post("/api/list/add", lid === "else" ? { item_id: id } : { item_id: id, list_id: lid });
+      await renderList();
+      paintShopSheet();
+    } catch (e) { toast(e.message); }
+    return;
+  }
+  const b = ev.target.closest("[data-shop]");
+  if (!b) return;
+  closeShopSheet();
   // A named list plans from its own items; Everything else plans from the whole list.
-  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null);
+  if (typeof startHuntFromList === "function") startHuntFromList(lensList() || null, b.dataset.shop);
 });
 $("#list-done").addEventListener("click", async ev => {
   if (ev.target.closest("[data-done-toggle]")) { listDoneOpen = !listDoneOpen; paintListPage(); return; }

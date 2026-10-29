@@ -6,6 +6,10 @@
    pins them (tests/test_theme.py). Light theme only: no dark
    variant is defined or applied. */
 :root {
+  /* Type scale (design pass, 2026-10-29): 34 title, 22 card title, 17 row
+     and button, 15 body, 13 section label, 12 tag and chip, 11 tab label.
+     Weights 400 / 600 / 700; 800 only for big numbers and kickers. */
+  --fs-title: 34px; --fs-card: 22px; --fs-row: 17px; --fs-body: 15px; --fs-label: 13px; --fs-tag: 12px; --fs-tab: 11px;
   /* The wireframe tokens, verbatim. */
   --acc: #E4572E;
   --acc-soft: #FDEEE8;
@@ -88,11 +92,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   background: conic-gradient(var(--accent) var(--pct), var(--fill2) 0); align-self: center; }
 .avatar span { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
   border-radius: 50%; background: var(--panel); color: var(--label); font-weight: 700; font-size: 16px; }
-.crewcard .hr-action { color: var(--accent-text); font-weight: 600; font-size: 14px; margin-left: auto; }
+.crewcard .hr-action { color: var(--accent-text); font-weight: 600; font-size: 15px; margin-left: auto; }
 .row .grow { flex: 1; min-width: 0; }
 .name { font-weight: 600; overflow-wrap: anywhere; }
 a.name { color: var(--label); }
-.sub { color: var(--secondary); font-size: 14px; display: block; font-weight: 400; overflow-wrap: anywhere; }
+.sub { color: var(--secondary); font-size: 15px; display: block; font-weight: 400; overflow-wrap: anywhere; }
 .money { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
 .empty { color: var(--secondary); padding: 12px 0; margin: 0; }
 .return { color: var(--danger); }
@@ -105,7 +109,7 @@ a.name { color: var(--label); }
   box-sizing: border-box; text-align: center; cursor: pointer;
   background: var(--fill); color: var(--label);
   border: none; border-radius: 980px; padding: 10px 20px; min-height: 44px;
-  font-weight: 600; font-size: 16px; transition: background 0.15s ease, transform 0.1s ease;
+  font-weight: 600; font-size: 17px; transition: background 0.15s ease, transform 0.1s ease;
 }
 .btn.primary { background: var(--accent); color: #fff; }
 .linkbtn { background: none; border: none; padding: 8px 0; min-height: 44px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
@@ -116,11 +120,11 @@ a.name { color: var(--label); }
 .btn.wide { width: 100%; }
 .chip {
   border: none; background: var(--fill); color: var(--label); border-radius: 980px;
-  padding: 8px 14px; min-height: 36px; font-size: 15px; font-weight: 550;
+  padding: 8px 14px; min-height: 36px; font-size: 15px; font-weight: 600;
 }
 .chip:active { background: var(--accent); color: #fff; }
 
-.field { display: block; margin: 12px 0; font-weight: 550; font-size: 15px; }
+.field { display: block; margin: 12px 0; font-weight: 600; font-size: 15px; }
 .field input, .field select { margin-top: 6px; }
 input[type="text"], input[type="password"], select {
   width: 100%; font: inherit; font-size: 17px; color: var(--label);
@@ -153,14 +157,14 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .listhint { margin: 8px 4px 0; }
 .remove {
   flex: none; width: 36px; height: 36px; border: none; border-radius: 50%;
-  background: transparent; color: var(--tertiary); font-size: 20px; line-height: 1;
+  background: transparent; color: var(--tertiary); font-size: 22px; line-height: 1;
 }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 12px; }
 .editor { padding: 0 0 12px; display: flex; gap: 8px; }
 .editor input { flex: 1; }
 .candrow {
   display: flex; width: 100%; text-align: left; background: transparent; border: none;
-  padding: 12px 0; border-bottom: 1px solid var(--sep); min-height: 44px; font-size: 16px;
+  padding: 12px 0; border-bottom: 1px solid var(--sep); min-height: 44px; font-size: 17px;
 }
 .candrow:last-child { border-bottom: none; }
 
@@ -183,7 +187,7 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 #tabs button {
   background: transparent; border: none; color: var(--secondary);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 10px; font-weight: 550; padding: 4px 14px; min-height: 48px; min-width: 64px;
+  font-size: 11px; font-weight: 600; padding: 4px 14px; min-height: 48px; min-width: 64px;
 }
 #tabs button svg { width: 25px; height: 25px; }
 #tabs button.active { color: var(--accent-text); }
@@ -198,7 +202,7 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 .bubble { max-width: 84%; padding: 10px 14px; border-radius: 18px; overflow-wrap: anywhere; }
 .bubble.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
 .bubble.arya { align-self: flex-start; background: var(--fill); border-bottom-left-radius: 4px; }
-.bubble.sys { align-self: center; background: transparent; color: var(--secondary); font-size: 14px; padding: 2px 8px; }
+.bubble.sys { align-self: center; background: transparent; color: var(--secondary); font-size: 15px; padding: 2px 8px; }
 #chat-form { display: flex; gap: 8px; align-items: center; }
 #chat-form input { flex: 1; min-width: 0; border-radius: 980px; padding: 11px 16px; }
 #chat-send { padding-left: 14px; padding-right: 14px; flex: none; }
@@ -252,7 +256,7 @@ textarea {
   border-bottom: 1px solid var(--sep); font-size: 17px;
 }
 .navrow:last-child { border-bottom: none; }
-.navrow .grow { flex: 1; font-weight: 550; }
+.navrow .grow { flex: 1; font-weight: 600; }
 .navrow .chev { color: var(--tertiary); font-size: 20px; }
 .sessrow {
   display: flex; width: 100%; align-items: center; gap: 12px; text-align: left;
@@ -273,7 +277,7 @@ textarea {
   display: block; width: 100%; text-align: left; background: var(--fill);
   border: none; border-radius: 12px; padding: 16px; margin: 8px 0; min-height: 44px;
 }
-.modecard .name { font-size: 19px; }
+.modecard .name { font-size: 22px; }
 .modecard:active { background: var(--accent); color: #fff; }
 .modecard:active .sub { color: rgba(255, 255, 255, 0.85); }
 /* The Quest mode card wears the game colors (wireframes:
@@ -357,7 +361,7 @@ textarea {
 }
 .strip-shelfbar { display: block; width: 100%; height: 6px; border-radius: 3px; background: var(--sep); margin-bottom: 6px; }
 .strip-num { font-size: 12px; font-weight: 700; color: var(--tertiary); }
-.strip-name { font-weight: 650; font-size: 15.5px; overflow-wrap: anywhere; line-height: 1.25; }
+.strip-name { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; line-height: 1.25; }
 .strip-sub { font-size: 13px; color: var(--secondary); margin-top: auto; }
 .strip-shelf { font-size: 12px; color: var(--secondary); }
 .strip-card.got { opacity: 0.55; }
@@ -443,8 +447,8 @@ textarea {
   font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
   color: var(--accent-text); margin: 0;
 }
-.herocard .hero-title { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; margin: 5px 0 0; }
-.herocard .hero-sub { font-size: 14px; color: var(--secondary); margin: 3px 0 0; }
+.herocard .hero-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 5px 0 0; }
+.herocard .hero-sub { font-size: 15px; color: var(--secondary); margin: 3px 0 0; }
 .herocard .track { margin: 10px 0 6px; }
 .herocard .hero-state { font-size: 13px; font-weight: 600; color: var(--secondary); }
 .herocard .btn { margin-top: 10px; }
@@ -455,7 +459,7 @@ textarea {
 }
 .gamerow:last-child { border-bottom: none; }
 .gamerow .g-main { flex: 1; min-width: 0; }
-.gamerow .g-name { display: block; font-size: 16px; font-weight: 700; }
+.gamerow .g-name { display: block; font-size: 17px; font-weight: 700; }
 .gamerow .g-meta { display: block; font-size: 12.5px; color: var(--secondary); margin-top: 1px; }
 .gamerow .g-bar { width: 64px; flex: none; }
 .gamerow .chev { color: var(--tertiary); font-size: 20px; flex: none; }
@@ -490,7 +494,7 @@ textarea {
 }
 .grabgroup { opacity: 0.62; }
 .storetag {
-  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; border: 1.5px solid var(--sep); border-radius: 980px;
   padding: 2px 7px; color: var(--secondary); margin-left: 7px; vertical-align: 2px;
   text-decoration: none;
@@ -499,7 +503,7 @@ textarea {
 .bubble.actionchip {
   align-self: flex-start; max-width: 92%; background: var(--fill);
   border: 1.5px solid var(--accent); color: var(--accent-text);
-  font-weight: 700; font-size: 14px; border-radius: 980px; padding: 7px 13px;
+  font-weight: 700; font-size: 15px; border-radius: 980px; padding: 7px 13px;
 }
 .stattiles { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .stattile {
@@ -602,7 +606,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .pop-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 0; }
 .pop-shelf { color: var(--secondary); font-size: 15px; margin: 2px 0 10px; }
 .grabbtn {
-  min-height: 60px; font-size: 19px; font-weight: 700;
+  min-height: 60px; font-size: 22px; font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   box-shadow: 0 8px 22px rgba(228, 87, 46, .35);
 }
@@ -690,7 +694,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .scanpop.got { border-color: var(--acc); background: var(--acc-soft); pointer-events: none; }
 .scanpop.got .poplabel { background: var(--acc); }
 .scanstatus {
-  color: #fff; font-size: 16px; text-align: center; margin: 0;
+  color: #fff; font-size: 17px; text-align: center; margin: 0;
   padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
 }
 
@@ -806,7 +810,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 @keyframes ptsbump { 0% { transform: scale(1); } 35% { transform: scale(1.22); background: var(--acc-soft); } 100% { transform: scale(1); } }
 .ptfloat {
   position: fixed; z-index: 30; pointer-events: none; transform: translateX(-50%);
-  font-weight: 800; font-size: 18px; color: var(--acc);
+  font-weight: 800; font-size: 17px; color: var(--acc);
   text-shadow: 0 1px 0 #fff; animation: ptfloat 1.1s ease-out forwards;
 }
 @keyframes ptfloat { 0% { opacity: 0; translate: 0 6px; } 15% { opacity: 1; } 100% { opacity: 0; translate: 0 -46px; } }
@@ -824,7 +828,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .haul-k { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
 .haul-pts { margin: 0; font-size: 52px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
 .haul-pts span + * { font-size: 22px; }
-.haul-wait { margin: 6px 0 0; background: var(--acc-soft); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.haul-wait { margin: 6px 0 0; background: var(--acc-soft); border-radius: 12px; padding: 10px 12px; font-size: 15px; }
 .lvl { width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; margin-top: 6px; text-align: left; }
 .lvl-n { font-weight: 700; }
 .lvl-bar { height: 12px; border-radius: 999px; background: var(--bg); overflow: hidden; }
@@ -839,15 +843,15 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .titlerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .levelchip { background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .levelchip span { color: var(--accent-text); }
-.offlinenote { margin: 0 0 10px; background: var(--fill2); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.offlinenote { margin: 0 0 10px; background: var(--fill2); border-radius: 12px; padding: 10px 12px; font-size: 15px; font-weight: 600; }
 .howto { margin: 4px 0 14px; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 10px; }
 .howto li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 2px 12px; padding: 12px; border: 1.5px solid var(--line); border-radius: 16px; }
 .howto li::before { content: counter(step); grid-row: span 2; width: 34px; height: 34px; border-radius: 999px; background: var(--acc); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 .howto b { font-size: 17px; }
-.howto span { font-size: 14px; color: var(--secondary); }
+.howto span { font-size: 15px; color: var(--secondary); }
 #btn-howto { font-weight: 800; font-size: 17px; }
 .scenecap { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 6px 2px 10px; font-size: 13px; }
-.linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 14px; min-height: 32px; }
+.linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 15px; min-height: 32px; }
 .hunt-tools .toolspacer { flex: 1 1 0; }
 .hunt-tools .hudbtn { flex-shrink: 0; }
 .findrow { margin-top: 8px; }
@@ -876,13 +880,13 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .toastact { margin-left: 12px; background: none; border: 0; color: var(--acc-soft); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; pointer-events: auto; }
 
 /* ---- Map my store ---- */
-.gamerow .g-sub { display: block; font-size: 13px; color: var(--secondary); font-weight: 450; margin-top: 2px; }
+.gamerow .g-sub { display: block; font-size: 13px; color: var(--secondary); font-weight: 400; margin-top: 2px; }
 .mp-count { font-size: 17px; margin-bottom: 8px; }
 .mp-nextcard .eyebrow { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
-.mp-nextcard .name { font-size: 20px; font-weight: 700; margin: 4px 0; }
+.mp-nextcard .name { font-size: 22px; font-weight: 700; margin: 4px 0; }
 .mp-seg { align-items: center; gap: 10px; }
 .mp-seg .mp-open { background: none; border: none; text-align: left; padding: 6px 0; min-height: 44px; font: inherit; color: inherit; }
-.mp-mine { min-width: 52px; min-height: 36px; border-radius: 980px; border: 1px solid var(--sep); background: var(--bg); color: var(--secondary); font-size: 14px; font-weight: 600; }
+.mp-mine { min-width: 52px; min-height: 36px; border-radius: 980px; border: 1px solid var(--sep); background: var(--bg); color: var(--secondary); font-size: 15px; font-weight: 600; }
 .mp-mine.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .mp-st { font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 980px; background: var(--fill); color: var(--secondary); white-space: nowrap; }
 .mp-st.st-ok { background: #E7F3EA; color: #1F6B3A; }
@@ -900,7 +904,7 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 .cp-parts span.on { background: #fff; }
 .mp-reward { text-align: center; }
 .mp-reward .pts { font-size: 34px; font-weight: 800; color: var(--accent); animation: mp-pop .5s ease-out; }
-.mp-reward .what { font-size: 18px; font-weight: 600; margin: 4px 0 10px; }
+.mp-reward .what { font-size: 17px; font-weight: 600; margin: 4px 0 10px; }
 .mp-reward .track { margin: 8px 0 4px; }
 .mp-reward .bar { transition: width .9s ease-out; }
 .mp-title { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 980px; background: var(--accent); color: #fff; font-weight: 700; animation: mp-pop .5s ease-out .3s both; }
@@ -915,7 +919,7 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 .splitpreview { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
 .splitpreview .spchip {
   background: var(--fill); border-radius: 999px; padding: 6px 8px 6px 12px;
-  font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
 }
 .splitpreview .spchip button {
   background: none; border: none; color: var(--secondary); font-size: 15px;
@@ -981,7 +985,7 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 #view-chat:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
 #view-chat #chat-log { flex: 1; }
 .avrow { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
-.avrow input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 10px 14px; min-height: 44px; border: 0; border-radius: 980px; background: var(--fill); color: var(--label); box-sizing: border-box; }
+.avrow input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 10px 14px; min-height: 44px; border: 0; border-radius: 980px; background: var(--fill); color: var(--label); box-sizing: border-box; }
 .btn.compact { padding: 8px 18px; flex: none; }
 .avalt { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 2px; }
 .avalt .linkbtn { padding: 0; }
@@ -1016,7 +1020,7 @@ input[type=file]::file-selector-button {
 .listrow.flash { animation: rowflash 1.6s ease-out; }
 @keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }
 @media (prefers-reduced-motion: reduce) { .listrow.flash { animation: none; } }
-.g-fold summary { cursor: pointer; padding: 10px 4px; color: var(--secondary); font-size: 14px; min-height: 44px; display: flex; align-items: center; }
+.g-fold summary { cursor: pointer; padding: 10px 4px; color: var(--secondary); font-size: 15px; min-height: 44px; display: flex; align-items: center; }
 
 /* Grab waits for Start: muted, but a tap still answers (first-timer play-test). */
 .rowact.notlive { opacity: .5; }
@@ -1043,10 +1047,10 @@ input[type=file]::file-selector-button {
 .listhead .iconbtn svg { width: 24px; height: 24px; }
 .pen { flex: none; width: 36px; height: 36px; border: none; background: transparent; color: var(--secondary); display: grid; place-items: center; }
 .pen svg { width: 18px; height: 18px; }
-.liststores { color: var(--secondary); font-size: 14px; margin: 0 0 8px; }
+.liststores { color: var(--secondary); font-size: 15px; margin: 0 0 8px; }
 .sheet .navrow .tick { margin-left: auto; color: var(--accent-text); font-weight: 700; visibility: hidden; }
 .sheet .navrow[aria-pressed="true"] .tick { visibility: visible; }
-.sheet .navrow small { display: block; color: var(--secondary); font-size: 14px; }
+.sheet .navrow small { display: block; color: var(--secondary); font-size: 15px; }
 .sheet .navrow.dangerrow { color: var(--danger); }
 /* Find a store inside the list sheets: a field + Near me chip, then
  * suggestions in flow (the sheet scrolls, so no floating dropdown). */
@@ -1057,7 +1061,7 @@ input[type=file]::file-selector-button {
 .sheet .srow { display: flex; align-items: center; border-bottom: 1px solid var(--sep); }
 .sheet .srow:last-child { border-bottom: none; }
 .sheet .srow .navrow { flex: 1; min-width: 0; border-bottom: none; }
-.sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 14px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
+.sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 15px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
 .sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; }
 .sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
 .sheet .sheetacts .btn { flex: 1; }
@@ -1078,7 +1082,7 @@ body.hunting #view-hunt.full .askbar {
   min-height: 48px; padding: 0 16px; border-radius: 24px;
   border: 1px solid var(--sep); background: rgba(255, 255, 255, 0.94);
   -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px);
-  color: var(--secondary, #6b7280); font: inherit; font-size: 16px; text-align: left;
+  color: var(--secondary, #6b7280); font: inherit; font-size: 17px; text-align: left;
 }
 .askbar .askmic { display: grid; } .askbar .askmic svg { width: 22px; height: 22px; }
 #view-hunt.full { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
@@ -1093,7 +1097,7 @@ body.hunting #view-hunt.full .askbar {
 .optrow.kept .opt-to { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--tertiary); font-weight: 600; }
 .opt-undo { background: none; border: 0; padding: 6px 0; min-height: 40px; font: inherit; font-weight: 600; color: var(--accent-text); cursor: pointer; }
 
-.curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 16px; }
+.curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 17px; }
 .notgrocery { display: block; }
 .notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
 
@@ -1112,9 +1116,9 @@ body.hunting #view-hunt.full .askbar {
 .usesoon .row { gap: 10px; cursor: pointer; }
 .usesoon .sub b { font-weight: 700; color: var(--label); }
 #expiry-sheet .sheet .btn { margin-top: 10px; }
-#expiry-sheet .hm-title { margin: 6px 0 0; font-size: 20px; letter-spacing: -0.01em; }
-#expiry-sheet .bigdate { margin: 10px 0 2px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
-#expiry-sheet select, #expiry-sheet input[type="date"], #expiry-sheet input[type="text"] { width: 100%; font: inherit; font-size: 16px; background: var(--fill); border: 0; border-radius: 10px; padding: 10px 12px; color: var(--label); }
+#expiry-sheet .hm-title { margin: 6px 0 0; font-size: 22px; letter-spacing: -0.01em; }
+#expiry-sheet .bigdate { margin: 10px 0 2px; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+#expiry-sheet select, #expiry-sheet input[type="date"], #expiry-sheet input[type="text"] { width: 100%; font: inherit; font-size: 17px; background: var(--fill); border: 0; border-radius: 10px; padding: 10px 12px; color: var(--label); }
 #expiry-sheet input[type="text"] { margin-top: 8px; }
 .exkv { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--sep); font-size: 15px; }
 .exk { color: var(--secondary); width: 56px; flex: none; }
@@ -1181,18 +1185,18 @@ body.hunting #view-hunt.full .askbar {
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px 12px; margin-bottom: 10px; color: var(--label); }
 #list-cards .listcard > span { display: block; }
 #list-cards .listcard .lc-top { display: flex; align-items: center; gap: 10px; }
-#list-cards .lc-name { flex: 1; min-width: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+#list-cards .lc-name { flex: 1; min-width: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 #list-cards .lc-count { font-variant-numeric: tabular-nums; color: var(--secondary); font-size: 15px; font-weight: 600; }
 #list-cards .lc-top .chev { color: var(--tertiary); font-size: 22px; }
-#list-cards .lc-store { color: var(--secondary); font-size: 14px; margin-top: 1px; }
+#list-cards .lc-store { color: var(--secondary); font-size: 15px; margin-top: 1px; }
 #list-cards .lc-items { font-size: 15px; margin-top: 8px; line-height: 1.4; overflow-wrap: anywhere; }
 #list-cards .listcard .lc-sugg { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: var(--acc-soft);
   color: var(--acc); border-radius: 980px; padding: 5px 11px; font-size: 13.5px; font-weight: 700; }
 .lc-sugg svg { width: 14px; height: 14px; }
 .newlist { display: flex; width: 100%; align-items: center; gap: 10px; border: 1.5px dashed var(--line);
-  background: transparent; border-radius: var(--radius); padding: 14px 16px; min-height: 44px; color: var(--secondary); font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+  background: transparent; border-radius: var(--radius); padding: 14px 16px; min-height: 44px; color: var(--secondary); font-weight: 600; font-size: 17px; margin-bottom: 12px; }
 .newlist b { color: var(--accent); font-size: 22px; line-height: 1; }
-.backlink.linkbtn { font-size: 17px; font-weight: 550; padding: 0; }
+.backlink.linkbtn { font-size: 17px; font-weight: 600; padding: 0; }
 .lhead { display: flex; align-items: center; gap: 8px; }
 .lhead .largetitle { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .lhead .linkbtn { padding: 8px 4px; }
@@ -1208,13 +1212,13 @@ body.hunting #view-hunt.full .askbar {
 #today-expiry .sectrow { margin: 26px 4px 8px 16px; align-items: center; }
 #today-expiry .sectrow .sect { margin: 0; }
 #today-expiry .sectrow .linkbtn { min-height: 0; display: block; padding: 0; font-weight: 600; }
-.snaprow .sub { display: block; color: var(--secondary); font-size: 14px; font-weight: 400; margin-top: 1px; }
+.snaprow .sub { display: block; color: var(--secondary); font-size: 15px; font-weight: 400; margin-top: 1px; }
 .sectrow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 22px 4px 8px 16px; }
 .sectrow .sect { margin: 0; }
 .sectrow .muted { font-size: 13.5px; white-space: nowrap; }
 .sugrow { cursor: pointer; }
-.sugrow .why { color: var(--secondary); font-size: 14px; display: flex; gap: 5px; align-items: center; }
-.sugrow .why svg { width: 13px; height: 13px; flex: none; color: var(--acc); }
+.sugrow .why { color: var(--secondary); font-size: 15px; display: block; }
+.sugrow .why svg { width: 13px; height: 13px; display: inline-block; vertical-align: -1px; margin-right: 5px; color: var(--acc); }
 .addchip { flex: none; border: none; background: var(--acc-soft); color: var(--acc); border-radius: 980px;
   padding: 0 14px; height: 36px; font-weight: 700; font-size: 15px; }
 .donerow .linkbtn { color: var(--secondary); }
@@ -1255,7 +1259,7 @@ body.selecting #tabs { display: none; }
 .whyrow:last-of-type { border-bottom: none; }
 .whyrow .ic { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--fill); display: grid; place-items: center; color: var(--secondary); }
 .whyrow .ic svg { width: 17px; height: 17px; }
-.whyrow b { display: block; font-weight: 600; font-size: 16px; }
+.whyrow b { display: block; font-weight: 600; font-size: 17px; }
 .dots { display: flex; gap: 4px; margin-top: 6px; }
 .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--acc); opacity: .85; }
 .dots i.gap { background: var(--fill2); opacity: 1; }
@@ -1337,3 +1341,26 @@ button.gmember { cursor: pointer; }
 .segs { display: flex; background: var(--fill2); border-radius: 9px; padding: 2px; margin: 0 0 10px; }
 .segs button { flex: 1; text-align: center; padding: 7px 6px; border-radius: 7px; font: inherit; font-size: 14px; font-weight: 600; background: none; border: none; color: var(--ink); cursor: pointer; min-height: 36px; }
 .segs button.on { background: var(--panel); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+
+/* Start shopping sheet (design pass, 2026-10-29). */
+.shopmodes { margin-top: 12px; }
+.shopsugg { margin: 12px 0 4px; }
+.shopsugg .linkbtn { font-weight: 600; }
+
+/* Today, calmer (design pass, 2026-10-29). */
+.checkfold .hubrow { border-bottom: 0; }
+.checkfold .checkrows { border-top: 1px solid var(--sep); }
+.checkfold.open .hubrow .chev { transform: rotate(90deg); }
+.throughline { margin: 14px 4px 0; }
+.tipline { display: flex; align-items: center; border-top: 1px solid var(--sep); margin-top: 8px; }
+.tipline .hubrow { flex: 1; min-width: 0; border-bottom: 0; }
+.tipkick { display: block; font-size: 13px; font-weight: 600; color: var(--accent-text); }
+.tipx { flex: none; width: 44px; height: 44px; border: 0; background: transparent; color: var(--tertiary); font-size: 22px; cursor: pointer; }
+
+/* Quantity 1 is the quiet default: no pill, still the tap target
+   (design pass, 2026-10-29). */
+.qtybtn.one { background: transparent; color: var(--tertiary); font-weight: 400; }
+/* A group still loading shows a soft placeholder, not an empty strip. */
+#view-community .group:empty { min-height: 52px; background: linear-gradient(90deg, var(--fill) 0%, var(--panel) 50%, var(--fill) 100%); background-size: 200% 100%; animation: skel 1.2s ease-in-out infinite; }
+@keyframes skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { #view-community .group:empty { animation: none; } }

@@ -89,7 +89,7 @@
 
 /* ---- first run ---- */
 .packfirst { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
-.packfirst h3 { margin: 0 0 6px; font-size: 20px; }
+.packfirst h3 { margin: 0 0 6px; font-size: 22px; }
 .packfirst p { margin: 0 0 8px; }
 .packstarter { min-height: 44px; font-size: 15px; }
 
@@ -127,7 +127,7 @@
 
 /* ---- the Edit sheet (uses .sheetwrap and .sheet from styles.css) ---- */
 .packsheet { max-height: 86vh; }
-.packsheet h3 { margin: 12px 0 4px; font-size: 20px; overflow-wrap: anywhere; }
+.packsheet h3 { margin: 12px 0 4px; font-size: 22px; overflow-wrap: anywhere; }
 .packfield { display: block; margin: 14px 0; }
 .packlabel { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 600; }
 .packfield input[type="text"] { min-height: 44px; margin-top: 8px; }
@@ -139,8 +139,8 @@
 
 /* ---- small phones ---- */
 @media (max-width: 380px) {
-  .packcard h3 { font-size: 20px; }
-  .packbtn { font-size: 16px; }
+  .packcard h3 { font-size: 22px; }
+  .packbtn { font-size: 17px; }
   .packestimate, .budgetrow label { font-size: 15px; }
 }
 

@@ -60,7 +60,7 @@
 .rv-lines { padding: 2px 16px; }
 .rv-row {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: 11px 0; min-height: 44px; border-bottom: 1px solid var(--line2); font-size: 16px;
+  padding: 11px 0; min-height: 44px; border-bottom: 1px solid var(--line2); font-size: 17px;
 }
 .rv-row:last-child { border-bottom: 0; }
 .rv-row b { font-variant-numeric: tabular-nums; }
@@ -79,7 +79,7 @@
   background: var(--panel); color: var(--acc); font-size: 12px; font-weight: 700;
   letter-spacing: 0.03em;
 }
-.hl-name { margin: 4px 0 12px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+.hl-name { margin: 4px 0 12px; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
 .hl-flat { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hl-flat button {
   position: relative; min-width: 44px; min-height: 44px; padding: 3px;
@@ -96,7 +96,7 @@
 }
 .hl-hint { margin: 10px 0 0; color: var(--ink2); font-size: 15px; }
 .hl-stats { display: flex; justify-content: center; gap: 28px; margin: 14px 0 6px; }
-.hl-stats b { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hl-stats b { display: block; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .hl-stats span { color: var(--ink2); font-size: 15px; }
 .hl-bosschip { margin: 6px 0 0; }
 .hl-foot { margin: 10px 0 0; color: var(--ink2); font-size: 15px; }

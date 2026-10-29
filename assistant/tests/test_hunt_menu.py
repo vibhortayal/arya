@@ -190,7 +190,10 @@ class TestHuntMenuShell(unittest.TestCase):
                     'data-foundit="${i}"', 'data-unfind="${i}"', 'aria-label="More for ${esc(it.name)}"',
                     "Found it after all", "Put back", "Boss", "Just added", "findline"):
             self.assertIn(pin, row)
-        self.assertIn("Grab ${esc(qtyTag(it))}", row)
+        # Design pass (2026-10-29): the check is the grab; its label
+        # carries the quantity.
+        self.assertIn("Grab ${esc(qty)} ${esc(it.name)}", row)
+        self.assertIn('class="huntcheck', row)
         self.assertEqual(EMOJI.findall(row), [])
 
     def test_no_emoji_in_new_markup_and_scripts(self):
@@ -419,12 +422,12 @@ QUEST_DRIVER = r"""
   const rowOf = name => html.split('<div class="row huntrow').find(r => r.includes(`>${name}`)) || "";
   const open = rowOf("Open"), got = rowOf("Got"), rp = rowOf("Rep"), pair = rowOf("Pair"), boss = rowOf("Boss"), nw = rowOf("New");
   out.row_open = open.includes('data-more="0"') && open.includes('data-grab="0"') && !open.includes("data-putback") &&
-    open.includes('aria-label="More for Open"') && open.includes(">Grab<");
+    open.includes('aria-label="More for Open"') && open.includes('aria-label="Grab Open"');
   out.row_pinned_finder = open.includes("findline") && open.includes("Spotted 2:14 pm - Aisle 3") && open.includes('data-unfind="0"');
   out.row_got = got.includes('data-putback="1"') && !got.includes("data-more") && !got.includes("data-grab") && got.includes("<svg");
   // a reported row keeps a menu (save for next trip, drop) and Found it after all, but no Grab
   out.row_reported = rp.includes('data-foundit="2"') && rp.includes('data-more="2"') && !rp.includes("data-grab") && rp.includes("Reported missing") && rp.includes("Found it after all");
-  out.row_qty2 = pair.includes("Pair - x2") && pair.includes("Grab x2") && pair.includes("ripe");
+  out.row_qty2 = pair.includes('Pair <span class="hqty">x2</span>') && pair.includes('aria-label="Grab x2 Pair"') && pair.includes("ripe");
   out.row_boss = boss.includes("hunt-badge boss") && boss.includes(">Boss</span>");
   out.row_just_added = nw.includes("Just added");
   out.row_img_kept = open.includes('class="rowface"');

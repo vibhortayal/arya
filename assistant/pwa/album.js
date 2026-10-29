@@ -360,7 +360,7 @@ function albInject() {
     const host = document.querySelector("main") || document.body;
     host.insertAdjacentHTML("beforeend",
       `<section id="view-album" class="view" hidden>
-        <p><a href="#" class="qback">&larr; Back</a></p>
+        <p><a href="#" class="qback">‹ Back</a></p>
         <h2 class="largetitle">Album</h2>
         <p class="subtitle" id="alb-sub"></p>
         <div id="alb-body"></div>
