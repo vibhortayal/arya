@@ -35,15 +35,6 @@ class TownCase(unittest.TestCase):
 
 
 class TestTownOn(TownCase):
-    def setUp(self):
-        super().setUp()
-        # Shop hours follow the clock; these tests are about the director,
-        # not the time of day, so the stores are always open.
-        from unittest import mock
-        p = mock.patch("api.town._open_now", return_value=True)
-        p.start()
-        self.addCleanup(p.stop)
-
     def test_household_shops_at_invented_stores(self):
         rs = json.load(open(os.path.join(self.base, "users", "demo", "receipts.json")))
         merchants = {r["merchant"] for r in rs}
@@ -60,6 +51,12 @@ class TestTownOn(TownCase):
         eggs = h["items"]["demo-eggs"]["stores"]["Costcozy"]
         self.assertEqual(eggs["state"], "in")
         self.assertTrue(h["feed"])
+
+    def test_a_typed_item_gets_the_stores_report(self):
+        # Hummus is typed onto the list (no receipt name); the baseline report
+        # says it is out at Trader Jill's, so the list needs the chip data.
+        it = self.hints()["items"]["manual-hummus"]
+        self.assertEqual(it["stores"]["Trader Jill's"]["state"], "out")
 
     def test_director_eggs_out_needs_four_households_and_points_to_another_store(self):
         self.c.post("/api/town/director", json={"scenario": "eggs_out"})
@@ -115,6 +112,28 @@ class TestTownOn(TownCase):
         c2.post("/auth/login", json={"username": "realuser", "password": "pw-12345678"})
         self.assertEqual(c2.get("/api/town/hints").status_code, 404)
         self.assertEqual(c2.post("/api/town/director", json={"scenario": "closes"}).status_code, 404)
+
+
+class TestTownClock(TownCase):
+    """The town's stores never read shut because of the hour the demo is
+    opened: outside shopping hours it reads late morning."""
+
+    def test_every_store_is_open_at_any_hour(self):
+        import datetime as dt
+        from api import town
+        for hour in range(24):
+            now = dt.datetime(2026, 10, 31, hour, 5, tzinfo=dt.timezone.utc).timestamp()
+            stores = town.hints(now)["stores"]
+            shut = [n for n, s in stores.items() if s["status"] == "shut"]
+            self.assertEqual(shut, [], f"shut at {hour}:05 UTC")
+
+    def test_busy_follows_the_hour_inside_shopping_hours(self):
+        import datetime as dt
+        from api import town
+        sat_11 = dt.datetime(2026, 10, 31, 18, 0, tzinfo=dt.timezone.utc).timestamp()  # 11:00 local, Saturday
+        sat_2am = dt.datetime(2026, 10, 31, 9, 0, tzinfo=dt.timezone.utc).timestamp()    # 02:00 local
+        self.assertEqual(town.hints(sat_11)["stores"]["Trader Jill's"]["busy"], "packed")
+        self.assertNotEqual(town.hints(sat_2am)["stores"]["Trader Jill's"]["busy"], "quiet")
 
 
 class TestTownOff(TownCase):
