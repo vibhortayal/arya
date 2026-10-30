@@ -75,6 +75,11 @@ class TestAlso(unittest.TestCase):
         it = self.items()["milk"]
         self.assertEqual((it["list"], it["also"]), (self.a, [c3]))
 
+    def test_quest_plan_carries_the_extra_lists(self):
+        self.add("Milk", self.a); self.add("Milk", self.b)
+        row = [r for r in self.c.get("/api/quest/plan").json()["list"] if r["name"].lower() == "milk"][0]
+        self.assertEqual((row["list"], row["also"]), (self.a, [self.b]))
+
     def test_bulk_import_move_mode(self):
         self.add("Milk", self.a)
         self.c.post("/api/list/import", json={"list_id": self.b, "mode": "move", "items": [{"name": "Milk"}]})

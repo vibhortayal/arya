@@ -113,7 +113,7 @@ export function Store() {
       let p: Plan;
       try { p = await get("/api/quest/plan"); } catch { p = { list: [], items: [] }; }
       p = { list: p.list || [], items: p.items || [] };
-      if (fromList) p = { ...p, list: p.list.filter(li => li.list === fromList.id && li.on_list !== false) };
+      if (fromList) p = { ...p, list: p.list.filter(li => (li.list === fromList.id || (li.also || []).includes(fromList.id)) && li.on_list !== false) };
       if (dead) return;
       setPlan(p);
       setLoaded(true);

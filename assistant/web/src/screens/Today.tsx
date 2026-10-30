@@ -303,7 +303,7 @@ export function Today() {
   /* ---- Your lists ---- */
   const listItems = items.filter(i => !i.checked && i.on_list && !i.not_grocery);
   const lists: any[] = h?.lists || [];
-  const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id) }));
+  const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id || (i.also || []).includes(l.id)) }));
   const cards = allCards.filter(c => c.items.length);
   const emptyNames = allCards.filter(c => !c.items.length).map(c => c.name);
   const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));

@@ -80,7 +80,7 @@ type Pack = {
 };
 type ListRow = {
   name: string; qty?: number; unit?: string; added_by?: string; approved?: boolean; source?: string; item_id?: string;
-  history_id?: string; list?: string; on_list?: boolean; checked?: boolean;
+  history_id?: string; list?: string; also?: string[]; on_list?: boolean; checked?: boolean;
 };
 type PlanItem = {
   name: string; item_id?: string; stores?: Record<string, number>; prices?: Record<string, number>; price?: number;
@@ -577,7 +577,7 @@ export function NewList() {
         let plan: Plan;
         try { plan = await get<Plan>("/api/quest/plan"); } catch { plan = { list: [], items: [] }; }
         const fl = D.fromList;
-        if (fl) plan = { ...plan, list: (plan.list || []).filter(li => li.list === fl.id && li.on_list !== false) };
+        if (fl) plan = { ...plan, list: (plan.list || []).filter(li => (li.list === fl.id || (li.also || []).includes(fl.id)) && li.on_list !== false) };
         D.plan = plan;
       }
       if (!live) return;
@@ -787,7 +787,7 @@ export function NewList() {
         const D = dRef.current;
         try {
           let plan = await get<Plan>("/api/quest/plan");
-          if (D.fromList) { const id = D.fromList.id; plan = { ...plan, list: (plan.list || []).filter(li => li.list === id && li.on_list !== false) }; }
+          if (D.fromList) { const id = D.fromList.id; plan = { ...plan, list: (plan.list || []).filter(li => (li.list === id || (li.also || []).includes(id)) && li.on_list !== false) }; }
           D.plan = plan;
         } catch { /* keep the plan we have */ }
         for (const n of out.names as string[]) {

@@ -129,7 +129,7 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
           <button key={i} className="navrow wizfound" type="button" aria-pressed={f.on} data-wiz="found"
             onClick={() => setFound(found.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))}>
             <span className={"wizcheck" + (f.on ? " on" : "")} aria-hidden="true">{f.on ? "✓" : ""}</span>
-            <span className="grow">{f.name}{f.qty > 1 ? ` ×${f.qty}` : ""}</span>
+            <span className="grow">{f.name}{f.unit ? ` ${f.qty} ${f.unit}` : f.qty > 1 ? ` ×${f.qty}` : ""}</span>
             {f.other_list ? <span className="wiztag">{t("lists.share.onOther", { name: f.other_list })}</span> : null}
           </button>))}
       </div>
