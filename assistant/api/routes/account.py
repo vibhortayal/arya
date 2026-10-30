@@ -65,6 +65,21 @@ def first_run(cur):
     return {"onboarded": onboarded, "get_started": gs}
 
 
+SHOP_MODES = ("quest", "list", "ask")
+NUDGE_AFTER = 3        # list-only trips before the Quest card shows
+NUDGE_SNOOZE = 5       # more trips after "Not now"
+NUDGE_MAX_SNOOZES = 2
+
+
+def _quest_nudge(cur):
+    """The Today "Try a Quest" card: only for people who chose Just my
+    list, after a few list-only trips, never after "Don't ask again"."""
+    if cur.get("shop_mode") != "list" or cur.get("quest_nudge_off"):
+        return False
+    due = NUDGE_AFTER + int(cur.get("quest_nudge_snoozes", 0)) * NUDGE_SNOOZE
+    return int(cur.get("list_trips", 0)) >= due
+
+
 @router.get("/api/settings")
 def settings_get():
     cur = state._load("settings.json", {})
@@ -77,6 +92,8 @@ def settings_get():
     return {"currency": code, "symbol": CURRENCIES[code], "language": lang,
             "languages": [{"code": c, "name": n} for c, n in LANGUAGES.items()],
             "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()],
+            "shop_mode": cur.get("shop_mode") if cur.get("shop_mode") in SHOP_MODES else None,
+            "quest_nudge": _quest_nudge(cur),
             **first_run(cur)}
 
 
@@ -87,8 +104,16 @@ async def settings_set(req: Request):
     lang = str(body["language"]).lower() if "language" in body else None
     onboard = body.get("onboarded") is True
     dismiss = body.get("get_started_dismissed") is True
-    if code is None and lang is None and not onboard and not dismiss:
-        raise HTTPException(400, "send currency, language, onboarded or get_started_dismissed")
+    mode = body.get("shop_mode")
+    nudge = body.get("quest_nudge")
+    trip = body.get("list_trip") is True
+    if mode is not None and mode not in SHOP_MODES:
+        raise HTTPException(400, "shop_mode must be one of " + ", ".join(SHOP_MODES))
+    if nudge is not None and nudge not in ("snooze", "off"):
+        raise HTTPException(400, "quest_nudge must be snooze or off")
+    if (code is None and lang is None and not onboard and not dismiss
+            and mode is None and nudge is None and not trip):
+        raise HTTPException(400, "send currency, language, onboarded, get_started_dismissed or shop_mode")
     if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
     if lang is not None and lang not in LANGUAGES:
@@ -105,6 +130,19 @@ async def settings_set(req: Request):
             cur["onboarded"] = True
         if dismiss:
             cur["get_started_dismissed"] = True
+        if mode is not None:
+            cur["shop_mode"] = mode
+            if mode != "list":
+                cur["quest_nudge_off"] = False
+        if trip and cur.get("shop_mode") == "list":
+            cur["list_trips"] = int(cur.get("list_trips", 0)) + 1
+        if nudge == "snooze":
+            n = int(cur.get("quest_nudge_snoozes", 0)) + 1
+            cur["quest_nudge_snoozes"] = n
+            if n > NUDGE_MAX_SNOOZES:
+                cur["quest_nudge_off"] = True
+        if nudge == "off":
+            cur["quest_nudge_off"] = True
         state._save("settings.json", cur)
     return settings_get()
 

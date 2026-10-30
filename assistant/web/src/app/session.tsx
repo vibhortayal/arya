@@ -4,6 +4,7 @@ import type { Currency } from "../lib/format";
 import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
 import { applyLanguage } from "../i18n";
 
+export type ShopMode = "quest" | "list" | "ask";
 export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean };
 type Session = {
   ready: boolean;
@@ -20,6 +21,13 @@ type Session = {
   /* First run (#153): false only for an account that has not answered
    * the welcome sheet and holds no data; null until settings load. */
   onboarded: boolean | null;
+  /* What Start shopping does (8b): null until the person picks once. */
+  shopMode: ShopMode | null;
+  /* The Today "Try a Quest" card: only for Just my list, after a few trips. */
+  questNudge: boolean;
+  saveShopMode: (m: ShopMode) => Promise<void>;
+  /* "list_trip" counts a finished list-only trip; the others answer the card. */
+  patchShop: (body: { list_trip?: true; quest_nudge?: "snooze" | "off" }) => Promise<void>;
   /* Either welcome choice: saved per account on the server. */
   markOnboarded: () => void;
   /* After sign out or account delete: back to the Login screen
@@ -46,6 +54,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState("auto");
   const [languages, setLanguages] = useState<Language[]>(DEFAULT_LANGUAGES);
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const [shopMode, setShopMode] = useState<ShopMode | null>(null);
+  const [questNudge, setQuestNudge] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -62,10 +72,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // setting comes with it (Auto until then).
   useEffect(() => {
     if (!user) return;
-    get<{ currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean }>("/api/settings")
+    get<{ currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean }>("/api/settings")
       .then(s => {
         setCurrency({ code: s.currency, symbol: s.symbol });
         setOnboarded(s.onboarded !== false);
+        setShopMode(s.shop_mode ?? null);
+        setQuestNudge(!!s.quest_nudge);
         if (s.language) setLanguage(s.language);
         if (s.languages?.length) setLanguages(s.languages);
       }).catch(() => {});
@@ -80,17 +92,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     post("/api/settings", { onboarded: true }).catch(() => {});
   }, []);
 
+  const applyShop = (r: { shop_mode?: ShopMode | null; quest_nudge?: boolean }) => {
+    setShopMode(r.shop_mode ?? null);
+    setQuestNudge(!!r.quest_nudge);
+  };
+  const saveShopMode = useCallback(async (m: ShopMode) => {
+    setShopMode(m);
+    applyShop(await post("/api/settings", { shop_mode: m }));
+  }, []);
+  const patchShop = useCallback(async (body: { list_trip?: true; quest_nudge?: "snooze" | "off" }) => {
+    applyShop(await post("/api/settings", body));
+  }, []);
+
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
 
   const leave = useCallback(async () => {
     runLeaveHooks();
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
-    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null);
+    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false);
     (window as any).__aryaUser = undefined;
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, leave }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, leave }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {
