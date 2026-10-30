@@ -58,7 +58,7 @@ describe("fog nudge", () => {
     render(<Play trip={trip} source={src} onTrip={n => { trip = n; }} onFinish={() => {}} onQuit={() => {}} />);
     await waitFor(() => expect(world.arrive).toBeTruthy());
     act(() => world.arrive!({ kind: "item", key: items[0].key }));
-    fireEvent.click(await screen.findByText(/Grab it/));
+    fireEvent.click(await screen.findByText(/Got it/));
     return { items, get trip() { return trip; } };
   };
 

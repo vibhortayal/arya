@@ -17,6 +17,8 @@ import type { Section } from "../core/types";
 import { checkoutOf, entryOf, findPath, fixtures, floorOf, grid, nearestOpen, spots, toWorld, U, type Fixture, type Floor, type Spot, type V2 } from "./layout3d";
 import { advance, pathLen, zoomSpeed, type Walker } from "./motion";
 
+const UP = new THREE.Vector3(0, 1, 0);
+
 export type Goal = { kind: "item"; key: string } | { kind: "checkout" } | { kind: "point"; p: V2 };
 export type WorldApi = {
   walkTo(g: Goal): void;
@@ -24,6 +26,8 @@ export type WorldApi = {
   screenOf(what: string): { x: number; y: number } | null;
   pickup(key: string): void;
   setOverview(on: boolean): void;
+  /* Undo the player's zoom and turn; true when there was any. */
+  resetView(): boolean;
   busy(): boolean;
 };
 type Props = {
@@ -167,6 +171,7 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     ] as Walker[],
     flights: [] as { key: string; t: number; from: THREE.Vector3 }[],
     overview: false,
+    zoom: 1, yaw: 0,              // the player's pinch and two-finger turn
     camT: new THREE.Vector3(ENTRY_AT.x, 0, ENTRY_AT.z),
     clock: 0,
   });
@@ -201,6 +206,7 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
         if (sp) s.flights.push({ key, t: 0, from: new THREE.Vector3(sp.at.x, 2.2, sp.at.z) });
       },
       setOverview(on) { s.overview = on; },
+      resetView() { const had = Math.abs(s.zoom - 1) > 0.05 || Math.abs(s.yaw) > 0.05; s.zoom = 1; s.yaw = 0; return had; },
       busy() { return s.me.path.length > 0; },
     };
     onReady(api);
@@ -234,15 +240,44 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     s.flights.forEach(f => (f.t += dt * 1.6)); s.flights = s.flights.filter(f => f.t < 1);
     // Camera: follow the shopper, framed above the bottom card; or the whole store.
     const asp = Math.max(0.4, size.current.w / Math.max(1, size.current.h));
-    const want = s.overview ? Math.max(FL.w, FL.d) * 1.15 : 11, fov = (camera as THREE.PerspectiveCamera).fov * Math.PI / 180;
+    const want = (s.overview ? Math.max(FL.w, FL.d) * 1.15 : 11) * s.zoom, fov = (camera as THREE.PerspectiveCamera).fov * Math.PI / 180;
     const dist = Math.min(60, want / (2 * Math.tan(fov / 2) * Math.min(asp, 1.3)));
-    const tgt = s.overview ? new THREE.Vector3(FL.w / 2, 0, FL.d / 2 + 1.5) : new THREE.Vector3(s.me.p.x, 0, s.me.p.z + 1.6);
+    const lead = new THREE.Vector3(0, 0, 1.6).applyAxisAngle(UP, s.yaw);
+    const tgt = s.overview ? new THREE.Vector3(FL.w / 2, 0, FL.d / 2 + 1.5) : new THREE.Vector3(s.me.p.x, 0, s.me.p.z).add(lead);
     const k = rm ? 20 : s.me.moving ? 9 : 3.2; // keep up with a zoom, settle softly after
     s.camT.lerp(tgt, 1 - Math.exp(-dt * k));
-    const dir = new THREE.Vector3(0.28, 1.05, 0.9).normalize().multiplyScalar(dist);
+    const dir = new THREE.Vector3(0.28, 1.05, 0.9).normalize().multiplyScalar(dist).applyAxisAngle(UP, s.yaw);
     camera.position.lerp(s.camT.clone().add(dir), 1 - Math.exp(-dt * k));
     camera.lookAt(s.camT);
   });
+  /* Pinch to zoom, two fingers to turn (owner, 2026-10-30); the mouse
+   * wheel zooms on a computer. One finger still taps and walks. */
+  useEffect(() => {
+    const el = gl.domElement, s = sim.current, pts = new Map<number, { x: number; y: number }>();
+    let last: { d: number; a: number } | null = null;
+    const pair = () => { const [p, q] = [...pts.values()]; return { d: Math.hypot(q.x - p.x, q.y - p.y), a: Math.atan2(q.y - p.y, q.x - p.x) }; };
+    const down = (e: PointerEvent) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) last = pair(); };
+    const move = (e: PointerEvent) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size !== 2 || !last) return;
+      const now = pair();
+      s.zoom = Math.min(2.6, Math.max(0.45, s.zoom * last.d / Math.max(1, now.d)));
+      let da = now.a - last.a; if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
+      s.yaw -= da;
+      last = now;
+    };
+    const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) last = null; };
+    const wheel = (e: WheelEvent) => { e.preventDefault(); s.zoom = Math.min(2.6, Math.max(0.45, s.zoom * Math.exp(e.deltaY * 0.0015))); };
+    el.addEventListener("pointerdown", down); el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => {
+      el.removeEventListener("pointerdown", down); el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up);
+      el.removeEventListener("wheel", wheel);
+    };
+  }, [gl]);
   const size = useRef({ w: 1, h: 1 });
   const three = useThree(); size.current = { w: three.size.width, h: three.size.height };
 
