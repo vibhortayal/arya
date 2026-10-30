@@ -542,6 +542,9 @@ export function Lists() {
     setSugOpen(false);
     field.current?.focus();
   };
+  /* One wide box (owner, 2026-10-30): the round + shows only once
+   * something is typed. */
+  const typed = !!text.trim();
 
   const flashNewRows = (names: string[]) => {
     const want = new Set((names || []).map(n => String(n).toLowerCase()));
@@ -893,21 +896,30 @@ export function Lists() {
           {town && !selEff ? <HeadsUp town={town} itemIds={open.map(i => i.item_id)} listStores={listStores} /> : null}
           <div id="composer" hidden={!!selEff}>
             <div className="addwrap">
-            <div className="addline">
-              <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label={t("lists.speakYourList")} onClick={mic}><IconMic /></button>
+            <div className={"addline onebox" + (typed ? " typed" : "")}>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
-                placeholder={name.length <= 8 ? t("lists.addTo", { name }) : t("lists.addAnItem")} autoComplete="off" aria-label={t("lists.addTo", { name })}
+                placeholder={t("lists.addItemHere")} autoComplete="off" aria-label={t("lists.addTo", { name })}
                 value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste}
                 onBlur={() => setSugOpen(false)} onFocus={() => setSugOpen(true)}
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
                 aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
-              <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.addFromAPhoto")}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
-              </label>
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
-              <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit}>{addLabel}</button>
+              {typed ? <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit} aria-label={addLabel} title={addLabel}>
+                {looksLikeAsk(text)
+                  ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+                  : <span aria-hidden="true">+</span>}
+              </button> : null}
             </div>
             <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} />
+            </div>
+            {/* Voice and photo say what they do (owner, 2026-10-30): bare
+              * icons were not obvious. */}
+            <div className="caprow">
+              <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
+              <label className="chip" htmlFor="add-photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+                {t("lists.photoToAdd")}
+              </label>
             </div>
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
