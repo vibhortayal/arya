@@ -254,17 +254,26 @@ function CardZoom({ id, from, onClose }: { id: string; from: string; onClose: ()
   const [closing, setClosing] = useState(false);
   const close = useRef<HTMLButtonElement>(null);
   const card = CARDS.find(c => c.id === id)!;
-  const done = () => { if (closing) onClose(); };
+  // Unmount on a timer, not on animationend: the shrink-back can be
+  // skipped (reduced motion, a hidden tab, a reused animation name), and
+  // a zoom layer left mounted covers the page so no other card opens.
   useEffect(() => {
+    if (!closing) return;
+    const t = window.setTimeout(onClose, 300);
+    return () => window.clearTimeout(t);
+  }, [closing]);
+  useEffect(() => {
+    // Focus goes back to the card that opened it, so keyboard users keep their place.
+    const opener = document.activeElement as HTMLElement | null;
     close.current?.focus();
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setClosing(true); };
     document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
+    return () => { document.removeEventListener("keydown", esc); opener?.focus?.(); };
   }, []);
   return (
     <div id="land-zoom" className={"zoombd" + (closing ? " out" : "")} onClick={() => setClosing(true)}>
       <div className="zoomcard" role="dialog" aria-modal="true" aria-labelledby="land-zoom-title"
-        style={{ ["--from" as string]: from }} onAnimationEnd={done} onClick={e => e.stopPropagation()}>
+        style={{ ["--from" as string]: from }} onClick={e => e.stopPropagation()}>
         <img src={asset(`assets/characters/${card.face}.webp`)} alt="" />
         <b id="land-zoom-title">{t(`landing.cards.${id}.title`)}</b>
         <p>{t(`landing.cards.${id}.back`)}</p>
