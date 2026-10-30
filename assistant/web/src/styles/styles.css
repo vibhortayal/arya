@@ -126,7 +126,7 @@ a.name { color: var(--label); }
 
 .field { display: block; margin: 12px 0; font-weight: 600; font-size: 15px; }
 .field input, .field select { margin-top: 6px; }
-input[type="text"], input[type="password"], select {
+input[type="text"], input[type="password"], input[type="email"], select {
   width: 100%; font: inherit; font-size: 17px; color: var(--label);
   background: var(--fill); border: none; border-radius: 10px; padding: 11px 12px;
 }
@@ -850,6 +850,7 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landcards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .landfoot { margin-top: auto; padding-top: 8px; }
 .landnote .linkbtn { min-height: 36px; margin: -10px 0; padding: 0 0 0 10px; font-size: 14px; }
+.landnote .linkbtn.wl { display: block; margin: -4px auto -12px; padding: 0; }
 .landnote { font-size: 12.5px; color: var(--ink2); text-align: center; margin: 8px 0 0; }
 /* Cards are raised buttons: a visible edge and shadow, a chevron, and
    a press that pushes them down. */
@@ -1721,3 +1722,15 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .skel i { display: block; height: 72px; border-radius: var(--radius); background: var(--fill2); }
 @media (prefers-reduced-motion: no-preference) { .skel i { animation: skelpulse 1.4s ease-in-out infinite; } }
 @keyframes skelpulse { 50% { opacity: .55; } }
+
+/* Waitlist sheet (owner, 2026-10-30): one email field, a privacy line,
+   and a done state with a mascot. */
+.wl-intro { margin: 0 0 4px; font-size: 15px; color: var(--ink2); }
+.wl-note { margin: 10px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink2); }
+.wl-err { margin: 6px 0 0; font-size: 14px; font-weight: 600; color: var(--danger); }
+.field.bad input { box-shadow: inset 0 0 0 1.5px var(--danger); }
+.wl-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.wl-done { text-align: center; padding: 6px 0 4px; }
+.wl-done img { width: 84px; height: 84px; border-radius: 18px; background: #FBF5E6; }
+.wl-done h4 { margin: 10px 0 4px; font-size: 20px; }
+.wl-done p { margin: 0 0 14px; font-size: 15px; color: var(--ink2); }
