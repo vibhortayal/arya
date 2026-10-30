@@ -12,6 +12,10 @@ import { A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
  * server reports it open. Optional email-code and Google sign-in. */
 type Mode = "setup" | "login" | "register";
 
+/* Store badges (owner, 2026-10-30, mockup option D): Apple's and Google's
+ * own artwork, unmodified, with "coming soon" as a caption beside them.
+ * They are NOT links until each listing exists; then link that badge. */
+
 /* Landing cards (owner option A, 2026-10-30): eight raised buttons.
  * Each mascot hops until its card is first tapped; the first card also
  * beats until any card has been tapped, so a visitor learns that they
@@ -181,6 +185,13 @@ export function Login() {
               <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => openWaitlist()}>{t("landing.joinWaitlist")}</button>
             )}
           </p>
+          <div className="landapps">
+            <p className="landappscap">{t("landing.appsSoon")}</p>
+            <div className="landbadges">
+              <img src={asset("assets/badges/app-store.svg")} alt={t("landing.appStoreAlt")} />
+              <img src={asset("assets/badges/google-play.png")} alt={t("landing.googlePlayAlt")} />
+            </div>
+          </div>
           <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a></p>
         </div>
       </main>

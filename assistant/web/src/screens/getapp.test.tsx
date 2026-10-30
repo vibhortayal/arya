@@ -120,3 +120,12 @@ test("a phone does not get the desktop line", () => {
   render(<Login />);
   expect(document.getElementById("landdesk-copy")).toBeNull();
 });
+
+test("store badges are shown unlinked, with the coming-soon caption", () => {
+  env(DESKTOP);
+  const { container } = render(<Login />);
+  const apps = container.querySelector(".landapps")!;
+  expect(apps.textContent).toMatch(/coming soon/i);
+  expect(apps.querySelectorAll("img").length).toBe(2);
+  expect(apps.querySelector("a, button")).toBeNull();
+});
