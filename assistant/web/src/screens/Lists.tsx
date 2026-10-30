@@ -5,7 +5,7 @@ import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { SuggestDrop, lastSegment, replaceLast, useSuggest } from "../ui/Suggest";
-import { HeadsUp, StoreNotice, TownChip, TownItemSheet } from "../ui/Town";
+import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconPen, IconSpark } from "../ui/icons";
@@ -690,8 +690,8 @@ export function Lists() {
   // One way to shop (#158): the Quest game on this list. A store
   // nobody mapped plays as fog or a labelled simulated store there.
   // Start shopping goes straight there (usability pass): the sheet with
-  // one option is gone; only Demo Town still opens it, for its store
-  // notice. Arya's suggestions stay on the list itself (#list-suggest).
+  // one option is gone; Demo Town opens it only when the list's store
+  // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
     nav.show("community", { listId: here ? here.id : "all" });
@@ -995,7 +995,7 @@ export function Lists() {
           </div>
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
-            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (town ? setShopOpen(true) : startHunt())}>{t("lists.startShoppingItem", { count: open.length })}</button>
+            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}>{t("lists.startShoppingItem", { count: open.length })}</button>
           </div>
         </div>
       )}
@@ -1016,7 +1016,7 @@ export function Lists() {
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
         onMove={store => guard(async () => { const id = townItem!; setTownItem(null); await toStoreList([id], store); })} /> : null}
 
-      {/* Demo Town only: its store notice before the quest. */}
+      {/* Demo Town only, when the list's store is in trouble: its store notice before the quest. */}
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
         <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
         {town ? <StoreNotice town={town} listStores={listStores} onSwitch={store => guard(async () => {

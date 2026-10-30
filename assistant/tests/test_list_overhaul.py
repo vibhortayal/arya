@@ -146,7 +146,7 @@ class TestStartShopping(unittest.TestCase):
         # Usability pass (owner 2026-10-29): Start shopping goes straight
         # to Quest; the one-option sheet opens only for Demo Town's store
         # notice. Suggestions stay on the list itself (#list-suggest).
-        self.assertIn('onClick={() => (town ? setShopOpen(true) : startHunt())}', js)
+        self.assertIn('onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}', js)
         self.assertIn('data-shop="quest"', js)
         self.assertNotIn('data-shop="express"', js)
         self.assertNotIn('id="shop-sugg"', js)
