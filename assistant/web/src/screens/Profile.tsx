@@ -184,7 +184,7 @@ export function Profile() {
         </div>
       </div>
       <p style={{ marginTop: 22 }}><button id="btn-signout2" className="btn secondary wide" type="button"
-        onClick={signOut}>{t("settings.signOut")}</button></p>
+        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
 
       <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => load().catch(showErr)} />
     </>

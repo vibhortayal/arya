@@ -32,3 +32,11 @@ Test: test_add_to_home_screen. Not done: the demo Back button. Back from the
 first view leaves the app (by design since #220); making Back in the demo end
 the demo would drop a visitor's state silently, so left for an owner call.
 Landing pill stays 36 px (landing layout is another thread's).
+## Part 2: demo exit (owner picked A + B, 2026-10-30)
+Mockup: https://claude.ai/artifact/LS8T3Wt8MVLUyXRFyeUq9d. Demo Settings
+already had Sign out on main (the report missed it). Now:
+- The end-of-tour sheet has "Leave the demo": logout, close the sheet, show
+  the start page (same path as Settings).
+- Settings shows "Leave the demo" in place of "Sign out" while in the demo.
+Test: ui/EndOfDemo.test.tsx. Still open: issue 6 (44px install button and
+dismiss x, demo back button), not part of A + B.

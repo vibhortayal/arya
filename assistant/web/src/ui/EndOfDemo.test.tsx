@@ -2,10 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { EndOfDemo, openEndOfDemo } from "./EndOfDemo";
 
+const leave = vi.fn(async () => {});
+vi.mock("../app/session", () => ({ useSession: () => ({ leave }) }));
 const post = vi.fn();
 vi.mock("../lib/api", () => ({ post: (...a: unknown[]) => post(...a) }));
 
-beforeEach(() => { post.mockReset(); });
+beforeEach(() => { post.mockReset(); leave.mockClear(); });
 
 describe("EndOfDemo", () => {
   it("is closed until opened, then sends text and email", async () => {
@@ -39,5 +41,17 @@ describe("EndOfDemo", () => {
     expect(hrefs).toEqual(["https://www.linkedin.com/in/vibhortayal", "https://github.com/vibhortayal", "https://github.com/vibhortayal/arya"]);
     fireEvent.click(screen.getByRole("button", { name: "Keep exploring" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("Leave the demo signs out of the demo and shows the start page", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EndOfDemo />);
+    act(() => openEndOfDemo());
+    fireEvent.click(await screen.findByRole("button", { name: "Leave the demo" }));
+    await waitFor(() => expect(leave).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenCalledWith("/auth/logout", { method: "POST" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    vi.unstubAllGlobals();
   });
 });
