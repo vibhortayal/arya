@@ -54,6 +54,16 @@ services:
       ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-20}
       ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
       ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
+      # Keeping Arya running: per real account, a month's AI spend that
+      # shows a heads-up, a higher one that pauses paid reads until the
+      # 1st, and an hour's spend that switches the account's paid reads
+      # off for ARYA_USER_FREEZE_HOURS. The owner is exempt. 0 = off.
+      ARYA_USER_HEAVY_MONTHLY_USD: ${ARYA_USER_HEAVY_MONTHLY_USD:-3}
+      ARYA_USER_MONTHLY_CEILING_USD: ${ARYA_USER_MONTHLY_CEILING_USD:-5}
+      ARYA_USER_HOURLY_FREEZE_USD: ${ARYA_USER_HOURLY_FREEZE_USD:-1}
+      ARYA_USER_FREEZE_HOURS: ${ARYA_USER_FREEZE_HOURS:-24}
+      ARYA_COST_PUBLIC_MIN: ${ARYA_COST_PUBLIC_MIN:-50}
+      ARYA_COST_PAID_BY: ${ARYA_COST_PAID_BY:-Hackathon credits}
       # on: an API token may not call the blocked routes (bulk model spend,
       # groups, push, feedback, account export). off lifts that list.
       ARYA_TOKEN_GUARDS: ${ARYA_TOKEN_GUARDS:-on}

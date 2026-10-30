@@ -37,6 +37,7 @@ import { QuestMode } from "./quest/QuestMode";
 import { ReceiptReview } from "./haul/ReceiptReview";
 import { Reveal } from "./haul/Reveal";
 import { WaitlistAdmin } from "./WaitlistAdmin";
+import { Usage } from "./Usage";
 
 /* One entry per screen: the type makes every view in app/views.ts
  * name its screen. Signed out, App renders Login instead. */
@@ -46,6 +47,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   chat: Chat,
   feedback: Feedback,
   waitlist: WaitlistAdmin,
+  usage: Usage,
   "group-join": GroupJoin,
   newlist: NewList,
   store: Store,
