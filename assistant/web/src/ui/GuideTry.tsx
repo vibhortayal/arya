@@ -6,6 +6,7 @@ import {
 import { asset, money } from "../lib/format";
 import { Sheet } from "./Sheet";
 import { useTranslation } from "../i18n";
+import { useSessionMaybe } from "../app/session";
 
 /* The guide's Try-it sheets (#154). Each runs on the sample data in
  * guide/cards.ts, in this component's state only: nothing is saved,
@@ -13,12 +14,12 @@ import { useTranslation } from "../i18n";
  * fetch). Every sheet shows the blue Sample tag and the line "Try it
  * here. Nothing is saved." */
 
-type Props = { kind: Exclude<TryKind, "quest">; onClose: () => void; onRealList: () => void };
+type Props = { kind: Exclude<TryKind, "quest">; onClose: () => void; onRealList: () => void; onStartGroup: () => void };
 
-export function GuideTry({ kind, onClose, onRealList }: Props) {
+export function GuideTry({ kind, onClose, onRealList, onStartGroup }: Props) {
   const { t } = useTranslation();
   const title = {
-    list: t("guide.sample.store.tj"), usesoon: t("guide.try.usesoon.title"), receipt: t("guide.try.receipt.title"),
+    list: t("guide.sample.store.tj"), share: t("guide.try.share.title"), usesoon: t("guide.try.usesoon.title"), receipt: t("guide.try.receipt.title"),
     prices: t("guide.try.prices.title"), ask: t("guide.try.ask.title"),
   }[kind];
   return (
@@ -30,6 +31,7 @@ export function GuideTry({ kind, onClose, onRealList }: Props) {
       </div>
       <p className="muted gd-tryline">{t("guide.tryLine")}</p>
       {kind === "list" && <TryList onRealList={onRealList} />}
+      {kind === "share" && <TryShare onStartGroup={onStartGroup} />}
       {kind === "usesoon" && <TryUseSoon />}
       {kind === "receipt" && <TryReceipt />}
       {kind === "prices" && <TryPrices />}
@@ -69,6 +71,30 @@ function TryList({ onRealList }: { onRealList: () => void }) {
         ))}
       </div>
       <button className="btn secondary wide" id="gd-real-list" type="button" onClick={onRealList}>{t("guide.try.list.real")}<span aria-hidden="true"> ▸</span></button>
+    </>
+  );
+}
+
+/* Household: a sample invite code, then a sample member joins. Start
+ * my group goes to Settings › Group; the demo household can't make a
+ * real group, so the demo doesn't offer it. */
+function TryShare({ onStartGroup }: { onStartGroup: () => void }) {
+  const { t } = useTranslation();
+  const demo = useSessionMaybe()?.demo ?? false;
+  const [joined, setJoined] = useState(false);
+  return (
+    <>
+      <p className="nomargin">{t("guide.try.share.line")}</p>
+      <div className="gd-code" aria-label={t("guide.try.share.codeAria")}>{t("guide.try.share.code")}</div>
+      <div className="group gd-sample" id="gd-share-members" aria-live="polite">
+        <div className="row"><div className="grow"><span className="name">{t("guide.try.share.you")}</span><span className="sub">{t("guide.try.share.youRole")}</span></div></div>
+        {joined && <div className="row"><div className="grow"><span className="name">{t("guide.try.share.priya")}</span><span className="sub">{t("guide.try.share.priyaRole")}</span></div>
+          <span className="samp new">{t("guide.try.share.joined")}</span></div>}
+      </div>
+      {!joined
+        ? <button className="btn primary wide" id="gd-join" type="button" data-first onClick={() => setJoined(true)}>{t("guide.try.share.join")}</button>
+        : <p className="muted" id="gd-share-after">{t("guide.try.share.after")}</p>}
+      {joined && !demo && <button className="btn secondary wide" id="gd-start-group" type="button" onClick={onStartGroup}>{t("guide.try.share.start")}<span aria-hidden="true"> ▸</span></button>}
     </>
   );
 }

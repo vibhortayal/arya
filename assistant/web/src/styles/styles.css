@@ -1586,7 +1586,7 @@ button.gmember { cursor: pointer; }
 .gd-card.bwd { animation: gdbwd .24s ease-out; }
 @keyframes gdfwd { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
 @keyframes gdbwd { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
-.gd-art { margin: 8px 0 0; border-radius: 22px; overflow: hidden; height: 300px; flex: none; background: #FBF3E6; display: grid; place-items: center; position: relative; }
+.gd-art { margin: 8px 0 0; border-radius: 22px; overflow: hidden; height: 250px; flex: none; background: #FBF3E6; display: grid; place-items: center; position: relative; }
 .gd-art img.full { width: 100%; height: 100%; object-fit: cover; }
 .gd-art .chars { display: flex; gap: 6px; align-items: flex-end; }
 .gd-art .chars img { width: 84px; height: 84px; object-fit: cover; border-radius: 50%; }
@@ -1626,6 +1626,18 @@ button.gmember { cursor: pointer; }
 .mini .r:first-of-type { border-top: none; }
 .mini b { font-size: 16px; }
 .mini .good { color: #1E7A45; font-weight: 700; text-align: right; }
+.mini .bad { color: #B3261E; font-weight: 700; text-align: right; }
+.mini .muted { color: var(--secondary); }
+.mini .mh { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.mini .sec { margin: 8px 0 0; font-size: 12.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--secondary); }
+.mini .sec:first-child { margin-top: 0; }
+.mini .sec + .r { border-top: none; }
+.mini .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--acc); margin-right: 6px; vertical-align: middle; }
+.mini .faces { display: flex; }
+.mini .faces i { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: 12px; color: #fff; border: 2px solid var(--group); margin-left: -7px; background: #E07A3F; }
+.mini .faces i:first-child { margin-left: 0; }
+.mini .faces i.f1 { background: #3F7AE0; }
+.gd-code { margin: 10px 0; padding: 14px; border-radius: 14px; background: var(--fill); text-align: center; font-size: 30px; font-weight: 800; letter-spacing: .14em; }
 .gd-trywrap { z-index: 70; }
 .gd-trywrap .sheet { max-height: 80vh; }
 .gd-tryline { margin: 0 0 10px; }

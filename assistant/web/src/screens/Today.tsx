@@ -437,7 +437,7 @@ export function Today() {
       {listItems.length > 0 && !questSeen && (
         <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
           <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-          <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>
+          <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
           <span className="chev">›</span></button>
       )}
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
