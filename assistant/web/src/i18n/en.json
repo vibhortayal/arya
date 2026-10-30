@@ -2306,5 +2306,25 @@
       }
     },
     "replayTour": "Replay the tour"
+  },
+  "endDemo": {
+    "kicker": "End of the tour",
+    "title": "That's Arya",
+    "line1": "Thanks for walking through it.",
+    "openToFew": "Arya is open to just a few people for now.",
+    "line2": "The best way in is to tell me what you thought.",
+    "feedback": "Your feedback",
+    "feedbackHint": "What worked, what didn't, what you'd want next",
+    "email": "Your email",
+    "emailWhy": "(so I can invite you)",
+    "fine": "Sending feedback puts you on the beta testers list. I use your email only to invite you.",
+    "send": "Send feedback",
+    "thanksTitle": "Thank you. You're on the list.",
+    "thanksLine": "Arya is open to a few people at a time. I read every note and I'll write to you when a spot opens.",
+    "direct": "Or write to me directly",
+    "peek": "Peek inside Arya's code",
+    "star": "and leave a star ★ if you find it useful.",
+    "keep": "Keep exploring",
+    "finish": "Finish demo"
   }
 }

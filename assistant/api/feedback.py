@@ -5,7 +5,7 @@ else is collected. Deterministic code, $0, no model calls.
 Spam guard: a daily cap per account, a length cap, and an identical
 repeat is refused. The owner (the first account) reads the list.
 """
-import json, os, time
+import json, os, re, time
 
 from api import auth, state
 
@@ -65,6 +65,47 @@ def submit(user, kind, text):
             if any(n.get("text") == text for n in mine):
                 raise ValueError("you already sent that")
             note = {"at": now, "user": user, "kind": kind, "text": text}
+            os.makedirs(os.path.dirname(_path()), exist_ok=True)
+            with open(_path(), "a") as fh:
+                fh.write(json.dumps(note) + "\n")
+            return note
+    return _root_call(_go)
+
+
+# The demo door: a demo visitor has no account, so the note carries
+# the visitor's email (how the owner invites them to the beta) and the
+# name "demo-visitor". Capped per email per day, plus a day-wide cap so
+# the one demo write that reaches disk stays bounded. The address is
+# stored with the note and never logged or mailed.
+DEMO_USER = "demo-visitor"
+DEMO_DAILY_CAP = 200
+DEMO_EMAIL_CAP = 3
+MAX_EMAIL = 200
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def submit_demo(text, email):
+    text = (text or "").strip()
+    email = (email or "").strip().lower()
+    if not text:
+        raise ValueError("write a few words first")
+    if len(text) > MAX_CHARS:
+        raise ValueError(f"keep it under {MAX_CHARS} characters")
+    if len(email) > MAX_EMAIL or not _EMAIL.match(email):
+        raise ValueError("add the email you want to be invited at")
+
+    def _go():
+        with state.file_lock(_FILE):
+            notes = _read()
+            now = int(time.time())
+            today = [n for n in notes if n.get("user") == DEMO_USER
+                     and now - n.get("at", 0) < 86400]
+            if len(today) >= DEMO_DAILY_CAP:
+                raise PermissionError("feedback is full for today, please try tomorrow")
+            if sum(1 for n in today if n.get("contact") == email) >= DEMO_EMAIL_CAP:
+                raise PermissionError("that is enough for today, thank you")
+            note = {"at": now, "user": DEMO_USER, "kind": "beta",
+                    "text": text, "contact": email}
             os.makedirs(os.path.dirname(_path()), exist_ok=True)
             with open(_path(), "a") as fh:
                 fh.write(json.dumps(note) + "\n")

@@ -141,6 +141,31 @@ async def feedback_submit(req: Request):
     return {"ok": True}
 
 
+@router.post("/api/demo/feedback")
+async def demo_feedback_submit(req: Request):
+    """The one demo write that reaches disk: a note from the end of the
+    demo. Demo sessions only; per-IP cap, length caps, a honeypot field,
+    and a day-wide cap (api/feedback.py). No model call."""
+    from api import demo_guard, feedback
+    from api.deps import _client_ip
+    if not _is_demo(req):
+        raise HTTPException(403, "this door is for the demo")
+    body = await _json_obj(req)
+    if body.get("website"):   # honeypot: a person never fills this
+        return {"ok": True}
+    # Backstop only: a shared network gets 10 an hour, a script gets stopped.
+    if not demo_guard._demo_rate(demo_guard._demo_feedback_hits, _client_ip(req),
+                                 "ARYA_DEMO_FEEDBACK_IP_RATE", 10):
+        raise HTTPException(429, "that is enough for now, thank you")
+    try:
+        feedback.submit_demo(body.get("text", ""), body.get("email", ""))
+    except PermissionError as e:
+        raise HTTPException(429, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True}
+
+
 # --- push reminders (flag ARYA_PUSH_REMINDERS=1, off by default) -----------
 def _push_guard(req):
     from api import reminders

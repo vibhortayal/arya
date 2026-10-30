@@ -14,6 +14,7 @@ from api.deps import _client_ip, _prune
 # a hard stop for a script (review 2026-10-28, H4).
 _demo_auth_hits = {}
 _demo_door_hits = {}
+_demo_feedback_hits = {}
 
 
 def _demo_rate(bucket, key, limit_env, default):

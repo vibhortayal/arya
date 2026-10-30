@@ -1,0 +1,16 @@
+/* End of the demo sheet (ui/EndOfDemo.tsx). */
+.end-demo .sheet { text-align: left; }
+.end-demo .ed-head { display: flex; gap: 12px; align-items: center; margin-top: 2px; }
+.end-demo .ed-head .fr-face { width: 56px; height: 56px; margin: 0; }
+.end-demo .ed-head h3 { margin: 0; font-size: 24px; }
+.end-demo .ed-line { margin: 10px 0 0; color: var(--label); }
+.end-demo .field { margin-top: 10px; display: block; }
+.end-demo .ed-fine { font-size: 13px; margin: 6px 0 0; }
+.end-demo .ed-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.end-demo .ed-err { color: var(--danger); margin: 8px 0 0; }
+.end-demo .ed-thanks { margin: 14px 0; background: var(--fill); box-shadow: none; }
+.end-demo .ed-thanks .fr-h { font-size: 20px; }
+.end-demo .ed-direct { margin: 16px 0 4px; color: var(--secondary); }
+.end-demo .ed-links { margin: 0; }
+.end-demo .ed-links a { text-decoration: none; }
+.end-demo .ed-code { font-size: 13px; text-align: center; margin: 14px 0 0; }

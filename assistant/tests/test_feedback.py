@@ -73,3 +73,76 @@ class TestFeedback(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDemoFeedbackDoor(unittest.TestCase):
+    """The demo's one write that reaches disk: email required and capped
+    per email, demo sessions only, no username."""
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from fastapi.testclient import TestClient
+        import api.main as main
+        from api import deps, demo_guard
+        deps._login_fails.clear()
+        demo_guard._demo_auth_hits.clear()
+        demo_guard._demo_feedback_hits.clear()
+        self.anon = TestClient(main.app)
+        self.owner = TestClient(main.app)
+        r = self.owner.post("/auth/setup", json={
+            "username": "owner@example.com", "password": "pw-owner"})
+        assert r.status_code == 200, r.text
+        self.demo = TestClient(main.app)
+        assert self.demo.post("/auth/demo").status_code == 200
+
+    def send(self, c, text="loved the tour", email="Judge@Example.com", **extra):
+        return c.post("/api/demo/feedback", json={"text": text, "email": email, **extra})
+
+    def test_demo_sends_and_owner_reads_it_with_normalised_email(self):
+        r = self.send(self.demo)
+        self.assertEqual(r.status_code, 200, r.text)
+        notes = self.owner.get("/api/feedback").json()["notes"]
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(notes[0]["user"], "demo-visitor")
+        self.assertEqual(notes[0]["kind"], "beta")
+        self.assertEqual(notes[0]["contact"], "judge@example.com")
+
+    def test_email_is_required_and_checked(self):
+        for bad in ("", "   ", "not-an-email", "a@b", "x" * 201 + "@e.com"):
+            self.assertEqual(self.send(self.demo, email=bad).status_code, 400, bad)
+
+    def test_real_account_and_anonymous_are_refused(self):
+        self.assertEqual(self.send(self.owner).status_code, 403)
+        self.assertEqual(self.send(self.anon).status_code, 401)
+
+    def test_per_email_cap_ignores_case_and_other_emails_are_free(self):
+        for i, e in enumerate(("a@x.com", "A@X.com", " a@x.com ")):
+            self.assertEqual(self.send(self.demo, f"note {i}", e).status_code, 200)
+        self.assertEqual(self.send(self.demo, "again", "a@x.com").status_code, 429)
+        self.assertEqual(self.send(self.demo, "other person", "b@x.com").status_code, 200)
+
+    def test_bounds_and_empty(self):
+        self.assertEqual(self.send(self.demo, "   ").status_code, 400)
+        self.assertEqual(self.send(self.demo, "x" * 1001).status_code, 400)
+
+    def test_honeypot_stores_nothing(self):
+        self.assertEqual(self.send(self.demo, "spam", website="http://x").status_code, 200)
+        self.assertEqual(self.owner.get("/api/feedback").json()["notes"], [])
+
+    def test_day_wide_cap(self):
+        from api import feedback
+        old = feedback.DEMO_DAILY_CAP
+        feedback.DEMO_DAILY_CAP = 1
+        try:
+            self.assertEqual(self.send(self.demo, "a", "a@x.com").status_code, 200)
+            self.assertEqual(self.send(self.demo, "b", "b@x.com").status_code, 429)
+        finally:
+            feedback.DEMO_DAILY_CAP = old
+
+    def test_ip_backstop_after_ten(self):
+        for i in range(10):
+            self.assertEqual(self.send(self.demo, f"n{i}", f"p{i}@x.com").status_code, 200)
+        self.assertEqual(self.send(self.demo, "eleven", "p11@x.com").status_code, 429)
+
+    def test_old_door_stays_closed_to_demo(self):
+        r = self.demo.post("/api/feedback", json={"kind": "idea", "text": "hi"})
+        self.assertEqual(r.status_code, 403)
