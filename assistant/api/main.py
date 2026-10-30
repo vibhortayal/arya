@@ -105,6 +105,25 @@ def _developers_page():
     return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
+_BUILT_DIR = os.path.realpath(os.path.join(_WEB, "app"))
+_PWA_CACHED = tuple(os.path.realpath(os.path.join(_PWA, d)) + os.sep
+                    for d in ("assets", "icons", "vendor"))
+
+
+def _static_cache_control(full_path):
+    """Hashed build files (web/dist/app/) never change under their name,
+    so they are cached for a year and a repeat visit skips the round
+    trip; a new build names new files and index.html (no-cache) points
+    at them. Images, icons and three.js keep their names across edits:
+    an hour, then the browser revalidates by ETag."""
+    p = os.path.realpath(full_path)
+    if p.startswith(_BUILT_DIR + os.sep):
+        return "public, max-age=31536000, immutable"
+    if p.startswith(_PWA_CACHED):
+        return "public, max-age=3600"
+    return None
+
+
 class _AppFiles(StaticFiles):
     """StaticFiles over several folders, first match wins. The shell
     (index.html) and the worker are revalidated on every load, so a
@@ -121,6 +140,10 @@ class _AppFiles(StaticFiles):
         resp = super().file_response(full_path, *args, **kwargs)
         if os.path.basename(full_path) in ("index.html", "sw.js"):
             resp.headers["Cache-Control"] = "no-cache"
+        else:
+            cc = _static_cache_control(full_path)
+            if cc:
+                resp.headers["Cache-Control"] = cc
         return resp
 
 
