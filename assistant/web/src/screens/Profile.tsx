@@ -177,6 +177,7 @@ export function Profile() {
             </select>
           </div></div>
         <RegistrationRow />
+        <WaitlistRow />
       </div>
       <div className="group">
         <NavRow id="btn-feedback" view="feedback" title={t("settings.featureRequestContactUs")} sub={t("settings.tellUsWhatToBuild")} />
@@ -315,6 +316,23 @@ const keyBytes = (b64: string) => {
   const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
   return Uint8Array.from(raw, c => c.charCodeAt(0));
 };
+
+/* Owner-only (ARYA_WAITLIST_ADMINS): the list call answers 403 to anyone
+ * else, so every other account, and any failure, renders nothing. */
+function WaitlistRow() {
+  const { t } = useTranslation();
+  const nav = useNav();
+  const [waiting, setWaiting] = useState<number | null>(null);
+  useEffect(() => {
+    get<{ rows: { approved: boolean }[] }>("/auth/waitlist/list")
+      .then(d => setWaiting(d.rows.filter(r => !r.approved).length), () => setWaiting(null));
+  }, [nav.key]);
+  if (waiting === null) return null;
+  return (
+    <button className="navrow" id="btn-waitlist" type="button" onClick={() => nav.show("waitlist")}>
+      <span className="grow">{t("waitlistAdmin.settingsRow")}<span className="sub">{waiting ? t("waitlistAdmin.settingsSub", { count: waiting }) : t("waitlistAdmin.settingsNone")}</span></span><span className="chev">›</span></button>
+  );
+}
 
 function RegistrationRow() {
   const { t } = useTranslation();

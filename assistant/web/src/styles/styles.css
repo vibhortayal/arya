@@ -1846,3 +1846,15 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
   .devpath { flex-basis: calc(100% - 70px); }
   .devwhat { flex-basis: 100%; padding-left: 70px; }
 }
+
+/* Waitlist admin (owner, 2026-10-30): Approve / Remove bar above the tab bar. */
+.wl-tools { padding: 0 0 8px; border: 0; gap: 8px; }
+.wl-list { margin-bottom: 96px; }
+.wl-row .name { color: var(--label); text-decoration: none; overflow-wrap: anywhere; }
+.wl-bar { position: fixed; left: 0; right: 0; bottom: calc(61px + env(safe-area-inset-bottom)); z-index: 9; display: flex; gap: 8px;
+  padding: 10px 16px; background: var(--tabbar); border-top: 1px solid var(--sep);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.wl-bar .btn.primary { flex: 1; }
+.wl-bar .btn.danger { flex: none; padding-left: 18px; padding-right: 18px; }
+.listrow.wl-row.checked .name { color: var(--label); text-decoration: none; }
+.listrow.wl-row.checked .sub { color: var(--secondary); text-decoration: none; }
