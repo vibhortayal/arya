@@ -232,3 +232,9 @@ class TestSupabaseSignin(unittest.TestCase):
         self.assertEqual(r.status_code, 307)
         self.assertIn("provider=google", r.headers["location"])
         self.assertIn("auth%2Fcallback", r.headers["location"])
+
+    def test_google_redirect_uses_the_public_url(self):
+        env = {**self.ENV, "ARYA_PUBLIC_URL": "https://arya.example.org/"}
+        with mock.patch.dict(os.environ, env):
+            r = self.c.get("/auth/google", follow_redirects=False)
+        self.assertIn("redirect_to=https%3A%2F%2Farya.example.org%2Fauth%2Fcallback", r.headers["location"])
