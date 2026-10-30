@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useInstallPrompt } from "../app/a2hs";
+import { inAppBrowser, useInstallPrompt } from "../app/a2hs";
 import { asset } from "../lib/format";
 import { Sheet } from "./Sheet";
 import { Trans, useTranslation } from "../i18n";
 
 /* Add to Home Screen (pwa/a2hs.js): one copy for Today's card and
  * Profile's row. Android and desktop Chrome: the button runs the
- * browser's own install prompt. iPhone: Safari cannot be triggered, so
- * it opens four steps, including leaving "Open as Web App" on. Nothing
+ * browser's own install prompt. iPhone: the browser cannot be triggered,
+ * so it opens four steps worded for any browser (owner, 2026-10-30: no
+ * browser names, menus change), including leaving "Open as Web App" on. Nothing
  * shows once Arya runs from the Home Screen, or in the demo. The
  * landing's "Get the app" pill (screens/Login.tsx) uses the same
  * useA2hs and A2hsSteps. */
@@ -18,7 +19,7 @@ const st = { dismissed: 0 };
 try { Object.assign(st, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { /* private window */ }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* ignore */ } };
 
-const installed = () => (typeof matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) || (navigator as any).standalone === true;
+export const installed = () => (typeof matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) || (navigator as any).standalone === true;
 export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 /* Something to offer (the install prompt, or iPhone steps), and the go action. */
@@ -37,6 +38,17 @@ export function useA2hs(demo: boolean) {
   return { deferred, available, go, steps, closeSteps: () => setSteps(false) };
 }
 
+/* "Copy link" text button; the label says what happened. */
+export function CopyLink({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const [state, setState] = useState<"" | "ok" | "fail">("");
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(location.origin + location.pathname); setState("ok"); }
+    catch { setState("fail"); }
+  };
+  return <button className="linkbtn" type="button" id={id} onClick={copy}>{t(state === "ok" ? "a2hs.linkCopied" : state === "fail" ? "a2hs.copyFailed" : "a2hs.copyLink")}</button>;
+}
+
 /* The iPhone steps, one copy for the landing, Today and Settings. */
 export function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
@@ -49,6 +61,10 @@ export function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => voi
         <li><span><Trans i18nKey="a2hs.step3" components={{ b: <b />, tog: <i className="tog" aria-hidden="true" /> }} /><span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
         <li><span><Trans i18nKey="a2hs.step4" components={{ b: <b /> }} /></span></li>
       </ol>
+      <p className="muted small a2hs-tip">{t("a2hs.findShare")}</p>
+      {inAppBrowser() && (
+        <p className="muted small a2hs-tip">{t("a2hs.otherApp")} <CopyLink id="a2hs-copy" /></p>
+      )}
       <p className="muted small a2hs-tip">{t("a2hs.tip")}</p>
     </Sheet>
   );

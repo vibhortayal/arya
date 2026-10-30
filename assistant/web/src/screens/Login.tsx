@@ -3,7 +3,7 @@ import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
-import { A2hsSteps, isIOS, useA2hs } from "../ui/A2hs";
+import { A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
 
 /* The logged-out landing (B1 cards, owner 2026-10-29; one screen with the
  * buttons first, owner 2026-10-30) and
@@ -154,6 +154,9 @@ export function Login() {
         <div className="hero landhero">
           <h1 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h1>
           <p className="herosub nomargin landsub">{t("landing.subhead")}</p>
+          {!isPhone() && !installed() && (
+            <p className="muted landdesk">{t("a2hs.desktop")} <CopyLink id="landdesk-copy" /></p>
+          )}
           <div className="landcta">
             <button id="demo-btn" className="btn primary" type="button" onClick={demo}>{t("landing.tryIt")}</button>
             <button id="signin-open" className="btn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
