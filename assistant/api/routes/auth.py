@@ -271,8 +271,10 @@ async def auth_email_verify(req: Request):
 @router.get("/auth/google")
 def auth_google(req: Request):
     _need_supabase()
-    return RedirectResponse(supabase_auth.google_url(
-        str(req.base_url).rstrip("/") + "/auth/callback"))
+    # Behind Caddy the request reads as http, so the return address comes
+    # from the configured public URL, as in the waitlist email.
+    base = (os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url)).rstrip("/")
+    return RedirectResponse(supabase_auth.google_url(base + "/auth/callback"))
 
 
 @router.get("/auth/callback")
