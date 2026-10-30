@@ -157,3 +157,20 @@ class TestVoiceHint(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFriendlyFallback(unittest.TestCase):
+    """Owner 2026-10-30: a Hinglish test message got only "Arya does not
+    do that yet". The prompt must send small talk and unsupported asks to
+    a friendly, language-matching reply that names what Arya can do."""
+    def setUp(self):
+        self.p = open(os.path.join(os.path.dirname(__file__), "..", "prompts", "chat_v1.md"), encoding="utf-8").read()
+
+    def test_no_bare_refusal_rule(self):
+        self.assertNotIn("say Arya does not do that (yet)", self.p)
+        self.assertIn('never answer with the bare words "Arya does not do that"', self.p)
+
+    def test_small_talk_rule_matches_language_and_suggests(self):
+        for need in ("small talk", "Hinglish", "two or three things to try",
+                     "emit no actions", "what can you do?"):
+            self.assertIn(need, self.p)
