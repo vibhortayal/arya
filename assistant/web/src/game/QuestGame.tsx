@@ -4,7 +4,7 @@
  * Practice runs on a silent source and never touches the profile. */
 import { useEffect, useRef, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { applyTrip, type Profile, type Rewards } from "./core/meta";
+import { applyTrip, played, type Profile, type Rewards } from "./core/meta";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
 import { newTrip, type Trip } from "./core/trip";
 import type { ShoppingList, StoreSummary } from "./core/types";
@@ -58,7 +58,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
   const [list, setList] = useState<ShoppingList | null>(null);
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const silent = useMemo(() => new SilentSource(), []);
-  const newbie = profile.trips === 0 && !store.flag("practiced");
+  const newbie = !played(profile) && !store.flag("practiced");
   useEffect(() => { onScreen?.(screen.s); }, [screen.s, onScreen]);
 
   useEffect(() => {

@@ -18,6 +18,10 @@ export type Profile = {
   reports: number;
 };
 
+/* Has this player shopped for real yet: a game trip, or any week the
+ * account shopped (receipt-closed hunts count). */
+export const played = (p: Profile) => p.trips > 0 || p.weeks.length > 0;
+
 export const emptyProfile = (): Profile => ({ xp: 0, stickers: [], shiny: [], weeks: [], trips: 0, stores: {}, found: [], bundles: [], reports: 0 });
 
 /* Level n needs 100 * n xp to finish (L1 0-99, L2 100-299, ...). */
