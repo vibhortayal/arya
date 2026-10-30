@@ -155,13 +155,13 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
       <div id="ls-stores">
         {choices && (!choices.length
           ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>
-          : choices.map(c => (
+          : <><p className="nearlbl">{t("lists.stores.yours")}</p>{choices.map(c => (
             <div className="srow" key={c.id || c.name}>
               <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={picked.includes(c.name)} onClick={() => toggle(c.name)}>
-                <span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span><span className="tick">✓</span>
+                <span className="tick" aria-hidden="true">✓</span><span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span>
               </button>
-              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>{t("common.remove")}</button> : null}
-            </div>)))}
+              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>×</button> : null}
+            </div>))}</>)}
       </div>
     </>
   );

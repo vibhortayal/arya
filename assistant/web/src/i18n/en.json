@@ -131,7 +131,7 @@
       "add": "Add to favorites"
     },
     "sceneFailed": "The store view did not load.",
-    "demoBar": "Demo household. Changes last until you leave.",
+    "demoBar": "Demo household",
     "backPlain": "Back",
     "notHereShort": "Not here",
     "addedToList": "Added to your list.",
@@ -795,7 +795,8 @@
       "added": "{{name}} is in your stores.",
       "removed": "Removed {{name}} from your stores.",
       "removedPlain": "Removed.",
-      "removeAria": "Remove {{name}} from my stores"
+      "removeAria": "Remove {{name}} from my stores",
+      "yours": "Your stores"
     },
     "changeStores": "Change stores",
     "storesUse": "Arya uses these for suggestions and quests",
@@ -810,7 +811,7 @@
     "newListMenu": "New list…",
     "questWalksYou": "A game with points and badges",
     "firstListTitle": "Create your first list",
-    "firstListLine": "One list per store you shop at. Type, talk or snap a photo.",
+    "firstListLine": "One list per store. Arya fills it as it learns.",
     "createFirstList": "Create your first list",
     "searchLists_one": "Search {{count}} list",
     "searchLists_other": "Search {{count}} lists",
@@ -2115,7 +2116,7 @@
   },
   "town": {
     "sim": "Simulated",
-    "demoBar": "Demo household · simulated neighborhood. Changes last until you leave.",
+    "demoBar": "Demo household · simulated town",
     "nearYou": "Near you today",
     "agoNow": "just now",
     "agoMin": "{{n}} min ago",

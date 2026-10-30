@@ -191,7 +191,8 @@ export function listsEmpty(data: HomeData | null): boolean {
   return !!data && !namedLists(data).length && !onListItems(data).length && !suggestions(data).length;
 }
 /* Owner 2026-10-29: new accounts see the bare card (image and button).
- * true adds the title and a one-line explanation back. */
+ * true adds the title back. The one-line explanation shows either way
+ * (owner approved the mockup, 2026-10-30). */
 const EMPTY_CARD_TEXT = false;
 
 /* ---------------- the screen ---------------- */
@@ -830,10 +831,8 @@ export function Lists() {
             <div id="list-cards">
               <div className="fr-card fr-empty" id="list-empty">
                 <img src={asset("assets/characters/basket.webp")} alt="" />
-                {EMPTY_CARD_TEXT && <>
-                  <h3 className="fr-h">{t("lists.firstListTitle")}</h3>
-                  <p className="fr-s">{t("lists.firstListLine")}</p>
-                </>}
+                {EMPTY_CARD_TEXT && <h3 className="fr-h">{t("lists.firstListTitle")}</h3>}
+                <p className="fr-s">{t("lists.firstListLine")}</p>
                 <button className="btn primary wide" id="list-first" type="button" onClick={() => setSheet({ kind: "new", moving: null })}>{t("lists.createFirstList")}</button>
               </div>
             </div>

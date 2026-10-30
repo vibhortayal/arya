@@ -1721,3 +1721,26 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .skel i { display: block; height: 72px; border-radius: var(--radius); background: var(--fill2); }
 @media (prefers-reduced-motion: no-preference) { .skel i { animation: skelpulse 1.4s ease-in-out infinite; } }
 @keyframes skelpulse { 50% { opacity: .55; } }
+
+/* Today (UI pass 2, 2026-10-30): the demo strip is one 44pt line, list
+   cards are full-width rows, Spending and the tip share one group. */
+#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 62px 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
+#demobar .linkbtn { font-size: 15px; padding: 0 14px; }
+#today-lists .listcards { grid-template-columns: 1fr; }
+#today-lists .listcard { padding: 14px 16px; }
+#today-lists .lc-top { display: flex; align-items: center; gap: 10px; }
+#today-lists .lc-top .lc-name { flex: 1; min-width: 0; font-size: 17px; }
+#today-lists .lc-top .lc-count { margin: 0; font-size: 15px; color: var(--secondary); }
+#today-lists .lc-top .chev { color: var(--tertiary); }
+#today-lists .lc-items { font-size: 15px; margin-top: 6px; }
+#today-patterns .group .hubrow { margin-top: 0; }
+#today-patterns .tipline { margin-top: 0; }
+#demobar .linkbtn::after { content: " ›"; white-space: pre; }
+
+/* New list stores (UI pass 2): unselected check rows, Remove is a quiet x. */
+.sheet .srow .navrow .tick { order: -1; margin: 0 12px 0 0; flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--tertiary);
+  display: grid; place-items: center; visibility: visible; color: transparent; font-size: 15px; }
+.sheet .srow .navrow[aria-pressed="true"] .tick { background: var(--acc); border-color: var(--acc); color: #fff; }
+.sheet .srow .navrow { text-align: left; }
+.sheet .srow .rmstore { color: var(--tertiary); font-size: 24px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 0; }
+.nearlbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--secondary); margin: 14px 0 2px; }
