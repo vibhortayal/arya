@@ -35,4 +35,4 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
    code". The code works for one hour. After that, tap "Email me a code" for a fresh one.
    You can also use Continue with Google with this same address." The same template is used
    for every code email, so a neutral subject such as "Your Arya sign-in code" also works.
-   Replies and the sender address for these emails are set in Supabase (SMTP settings).
+   End the body with: "This address is not monitored. For help, write to support@teamnightshift.org." Replies and the sender address for these emails are set in Supabase (SMTP settings).
