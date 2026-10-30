@@ -1,10 +1,9 @@
-/* Arya guide (#154, owner's sections 2026-10-30): opens from Settings
- * on Lists, Try it adds an item to the sample list, closes; swipes to
- * card 2 (household) and its Try it shows a sample invite (no Start
- * my group in the demo); the real lists are the same as before (Try
- * it saves nothing). Keys move and Esc closes on
- * a desktop keyboard. Powers' "See how it works" opens the guide at
- * card 1, and a power's (i) sheet opens its own card. */
+/* Arya guide (#154, owner's sections and no-links pass 2026-10-30):
+ * opens from Settings on Lists; every card has numbered steps and
+ * nothing links out (no Try it, no Practice Market, no Start my
+ * group); Replay the tour is the last card's closing action; swipe
+ * and keys move, Esc closes. Powers' "See how it works" opens the
+ * guide at card 1, and a power's (i) sheet opens its own card. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
@@ -25,24 +24,11 @@ export default async function (page, base) {
   if (!(await page.textContent("#btn-guide")).startsWith("Help and guide")) throw new Error("help row label");
   await page.click("#btn-guide");
   await page.waitForSelector('.gd[data-card="lists"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 9") throw new Error("count: " + (await page.textContent("#gd-count")));
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 8") throw new Error("count: " + (await page.textContent("#gd-count")));
   if (await page.$("#gd-back")) throw new Error("Back on card 1");
-  if ((await page.textContent("#gd-tour")) !== "Replay the tour") throw new Error("Replay the tour on card 1");
-
-  // Try it: a sample Trader Joe's list; add two items.
-  await page.click("#gd-try");
-  await page.waitForSelector("#gd-try-sheet .samp");
-  const sheetText = await page.textContent("#gd-try-sheet");
-  for (const want of ["Trader Joe's", "Sample", "Try it here. Nothing is saved."]) if (!sheetText.includes(want)) throw new Error("try sheet missing: " + want);
-  await page.fill("#gd-list-input", "oat milk, bananas");
-  await page.click("#gd-list-add");
-  await page.waitForSelector("#gd-list-items .samp.new");
-  const names = await page.$$eval("#gd-list-items .row .name", ns => ns.map(n => n.textContent));
-  if (names.slice(0, 2).join() !== "Oat milk,Bananas") throw new Error("added items not on top: " + names.join());
-  const aisle = await page.textContent("#gd-list-items .row .sub");
-  if (aisle !== "Dairy · aisle 4") throw new Error("aisle: " + aisle);
-  await page.click("#gd-try-sheet .sheethead .linkbtn");
-  await page.waitForSelector("#gd-try-sheet", { state: "detached" });
+  if (await page.$("#gd-tour")) throw new Error("Replay the tour on card 1");
+  if (await page.$("#gd-try, .gd .try")) throw new Error("a Try it is still on card 1");
+  if ((await page.$$(".gd ol.steps li")).length !== 3) throw new Error("card 1 steps");
 
   // Swipe left to card 2.
   const box = await page.$eval(".gd", el => { const r = el.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2 }; });
@@ -53,17 +39,11 @@ export default async function (page, base) {
     el.dispatchEvent(new TouchEvent("touchend", { bubbles: true, touches: [], changedTouches: [touch(x - 120)] }));
   }, box);
   await page.waitForSelector('.gd[data-card="share"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 2 of 9") throw new Error("swipe did not reach card 2");
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 2 of 8") throw new Error("swipe did not reach card 2");
 
-  // Household Try it: a sample code, Priya joins; the demo can't make a
-  // real group, so there is no Start my group.
-  await page.click("#gd-try");
-  await page.waitForSelector("#gd-try-sheet .gd-code");
-  await page.click("#gd-join");
-  await page.waitForSelector("#gd-share-after");
-  if (await page.$("#gd-start-group")) throw new Error("Start my group offered in the demo");
-  await page.click("#gd-try-sheet .sheethead .linkbtn");
-  await page.waitForSelector("#gd-try-sheet", { state: "detached" });
+  // Card 2 has its steps and no way out of the guide.
+  if ((await page.$$(".gd ol.steps li")).length !== 3) throw new Error("household steps");
+  if (await page.$("#gd-try, #gd-start-group, .gd-card a, .gd-card ol.steps button")) throw new Error("a link out on the household card");
 
   // Keys: right and left move, Esc closes.
   await page.keyboard.press("ArrowRight");
@@ -74,7 +54,7 @@ export default async function (page, base) {
   await page.waitForSelector(".gd", { state: "detached" });
 
   // Nothing was sent, and the real lists are unchanged.
-  if (sent.length) throw new Error("Try it sent requests: " + sent.join("; "));
+  if (sent.length) throw new Error("the guide sent requests: " + sent.join("; "));
   if ((await lists()) !== before) throw new Error("real lists changed");
 
   // Powers: See how it works opens the guide; a power's (i) opens its card.
@@ -88,26 +68,21 @@ export default async function (page, base) {
   await page.click('#powers-body .infobtn[data-info="compare"]');
   await page.click('#info-sheet [data-pw="guide"]');
   await page.waitForSelector('.gd[data-card="prices"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 6 of 9") throw new Error("power link count");
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 6 of 8") throw new Error("power link count");
   await page.click("#gd-close");
   await page.waitForSelector(".gd", { state: "detached" });
   await page.waitForSelector("#view-powers");
 
-  // Make my real list: the guide closes and the real new-list sheet opens.
+  // Every card keeps you on it: walk all eight, no link out, then Replay on the last.
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.click("#btn-guide");
-  await page.click("#gd-try");
-  await page.click("#gd-real-list");
-  await page.waitForSelector("#list-sheet #ls-name");
-  if (await page.$(".gd")) throw new Error("guide still open over the real list");
-  await page.keyboard.press("Escape");
-  await page.waitForSelector("#list-sheet", { state: "detached" });
-
-  // Store maps' Try it opens the game's Practice Market.
-  await page.evaluate(() => window.__aryaShow("profile"));
-  await page.click("#btn-guide");
-  for (let k = 0; k < 2; k++) await page.keyboard.press("ArrowRight");
-  await page.waitForSelector('.gd[data-card="maps"]');
-  await page.click("#gd-try");
-  await page.waitForSelector('.qg[data-screen="play"]', { timeout: 20000 });
+  for (let k = 0; k < 7; k++) {
+    if (await page.$("#gd-try, .gd .try, .gd-card a, .gd-card ol.steps button")) throw new Error("link out on card " + (k + 1));
+    if (!(await page.$(".gd ol.steps li"))) throw new Error("no steps on card " + (k + 1));
+    await page.keyboard.press("ArrowRight");
+  }
+  await page.waitForSelector('.gd[data-card="ask"]');
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 8 of 8") throw new Error("last count");
+  if ((await page.textContent("#gd-tour")) !== "Replay the tour") throw new Error("Replay the tour is not on the last card");
+  if (sent.length) throw new Error("the guide sent requests: " + sent.join("; "));
 }

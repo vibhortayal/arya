@@ -2209,220 +2209,70 @@
     "back": "Back",
     "next": "Next",
     "cardOf": "Card {{n}} of {{total}}",
-    "sampleTag": "Sample",
-    "sample": {
-      "store": {
-        "tj": "Trader Joe's",
-        "safeway": "Safeway"
-      },
-      "item": {
-        "bananas": "Bananas",
-        "spinach": "Baby spinach",
-        "milk": "Whole milk",
-        "yogurt": "Greek yogurt",
-        "bread": "Sourdough bread",
-        "pasta": "Pasta",
-        "oil": "Olive oil, 1 L",
-        "eggs": "Eggs, dozen"
-      },
-      "cat": {
-        "produce": "Produce",
-        "dairy": "Dairy",
-        "bakery": "Bakery",
-        "pantry": "Pantry"
-      },
-      "art": {
-        "oil": "Organic olive oil, 1 L",
-        "cheaper": "$8.99 · cheaper",
-        "dearer": "$11.49",
-        "fromShoppers": "From your receipts and 6 Arya shoppers",
-        "costco": "Costco",
-        "milk": "Whole milk",
-        "blueberries": "Blueberries",
-        "cottage": "Cottage cheese",
-        "shareHead": "Our home · Costco",
-        "faceYou": "Y",
-        "facePriya": "P",
-        "priyaTicked": "Priya ticked it",
-        "towels": "Paper towels",
-        "priyaAdded": "Priya added it",
-        "eggs": "Eggs, dozen",
-        "youChanged": "You changed it to 2",
-        "newsHead": "Trader Joe's · Store news",
-        "oatMilk": "Oat milk",
-        "outOfStock": "Out of stock · 3 shoppers",
-        "sourdough": "Sourdough",
-        "backInStock": "Back in stock · 1 h ago",
-        "inStock": "In stock · today",
-        "spendHead": "Spending · October",
-        "spendCostco": "$312",
-        "spendTj": "$181",
-        "spendSafeway": "$104",
-        "receiptRow": "Costco · Oct 12",
-        "forReturn": "Open for a return"
-      }
-    },
-    "tryLine": "Try it here. Nothing is saved.",
     "cards": {
       "lists": {
         "kicker": "Lists",
         "title": "A list for every store",
         "body": "Milk from Trader Joe's, blueberries from Costco, cottage cheese from Safeway? Arya keeps a separate, tidy list for each store and puts every item on the right one. Type it, say it, or snap a paper list.",
-        "try": "Try it with a sample list"
+        "s1": "Tap the Lists tab, then New list.",
+        "s2": "Choose the store the list is for.",
+        "s3": "Tap Add an item. Type it, say it, or snap a paper list."
       },
       "share": {
         "kicker": "Your household",
         "title": "Share lists, shop together or apart",
         "body": "Invite your household to your lists. Anyone can add, change or tick off an item, even in the middle of a shop, and the list stays in sync on every phone. Go together, or split up and each take a store.",
-        "try": "Try it: invite someone"
+        "s1": "Open Settings, tap Start a group and give it a name.",
+        "s2": "Tap Invite someone and send them the code.",
+        "s3": "When they join, your lists are shared. Anyone can add, change or tick off an item, and every phone stays in sync."
       },
       "maps": {
         "kicker": "Store maps",
         "title": "Get through the store faster",
         "body": "Arya knows the store's layout, mapped by you or by other Arya shoppers, and walks you to each item in order. No more doubling back for the eggs. Turn it into a game with Quest if you like.",
-        "try": "Play the Practice Market"
+        "s1": "Open a store's list and tap Start shopping.",
+        "s2": "Arya walks you to each item in aisle order.",
+        "s3": "Store not mapped yet? Tap Map my store and walk it once."
       },
       "news": {
         "kicker": "Store news",
         "title": "Know what's in stock before you go",
-        "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. Seen a gap? Report it and help the next shopper."
+        "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. Seen a gap? Report it and help the next shopper.",
+        "s1": "Open Today to see what Arya shoppers report at your stores.",
+        "s2": "Seen an empty shelf? Under Report something yourself, tap Out of stock."
       },
       "receipts": {
         "kicker": "Receipts",
         "title": "See where your money goes",
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
-        "try": "Try it with a sample receipt"
+        "s1": "Settings › Receipts, or the camera on a list.",
+        "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
+        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund."
       },
       "prices": {
         "kicker": "Prices",
         "title": "Know where it's cheaper",
         "body": "From your own receipts and from Arya shoppers who share prices, Arya tells you whether your organic olive oil is cheaper at Trader Joe's or at Safeway.",
-        "try": "Try it with sample receipts"
+        "s1": "Add receipts from two stores.",
+        "s2": "Open Settings › Arya's powers › Compare your stores.",
+        "s3": "Arya shows which store is cheaper per item, and adds prices from Arya shoppers who share them."
       },
       "usesoon": {
         "kicker": "Use soon",
         "title": "Reduce food waste",
         "body": "Snap the date on a pack, or pick a use-by date for fresh food. Arya nudges you to use it in time, so less food ends up in the bin.",
-        "try": "Try it with a sample yogurt"
-      },
-      "ask": {
-        "kicker": "Ask Arya",
-        "title": "Just ask",
-        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costco?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
-        "try": "Try it with sample questions"
-      },
-      "howto": {
-        "kicker": "How to",
-        "title": "Quick how-tos"
-      }
-    },
-    "howto": {
-      "receipt": {
-        "title": "Add a receipt",
-        "s1": "Settings › Receipts, or the camera on a list.",
-        "s2": "Snap the receipt or pick a PDF.",
-        "s3": "Arya adds it and checks the total."
-      },
-      "shop": {
-        "title": "Start shopping",
-        "s1": "Open Lists and tap a store's list.",
-        "s2": "Tap Start shopping.",
-        "s3": "Tap Quest. Arya walks you through the store, item by item.",
-        "s4": "At the end, add your receipt."
-      },
-      "share": {
-        "title": "Share a list with your household",
-        "s1": "Settings › Start a group, and give it a name.",
-        "s2": "Your lists become the group's lists.",
-        "s3": "Tap Invite someone and send them the code."
-      },
-      "expiry": {
-        "title": "Add a use-by date",
         "s1": "After a receipt, Today asks for you. Any time: Settings › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
         "s4": "Arya reminds you what to use before it expires or goes bad."
       },
       "ask": {
-        "title": "Ask Arya a question",
+        "kicker": "Ask Arya",
+        "title": "Just ask",
+        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costco?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
         "s1": "Tap the Ask tab.",
         "s2": "Type or say your question, or tap a suggestion.",
         "s3": "Arya answers from your own lists and receipts."
-      }
-    },
-    "try": {
-      "list": {
-        "placeholder": "oat milk, bananas",
-        "add": "Add",
-        "inputAria": "Items to add",
-        "itemsAria": "Sample list",
-        "justAdded": "Just added",
-        "real": "Make my real list",
-        "aisle": {
-          "dairy": "Dairy · aisle 4",
-          "produce": "Produce · by the door",
-          "bakery": "Bakery",
-          "frozen": "Frozen · aisle 7",
-          "pantry": "Pantry · aisle 2",
-          "meat": "Meat and fish · back wall",
-          "snacks": "Snacks · aisle 5",
-          "drinks": "Drinks · aisle 6",
-          "other": "Arya learns where this is"
-        },
-        "seedEggs": "Eggs",
-        "seedBread": "Sourdough bread"
-      },
-      "usesoon": {
-        "title": "Snap a date",
-        "line": "Point the camera at the date on the pack.",
-        "stamp": "Best by 31 Oct",
-        "photoAria": "A sample yogurt pot with its date",
-        "snap": "Snap",
-        "useBy": "Use by Friday",
-        "after": "Arya reminds you what to use before it expires or goes bad. You can mark it used or expired on Today."
-      },
-      "receipt": {
-        "title": "Add a receipt",
-        "file": "Add it",
-        "filed": "Added. The total checks out.",
-        "byCategory": "This receipt by category",
-        "total": "Total"
-      },
-      "prices": {
-        "title": "Prices",
-        "compare": "Compare prices",
-        "cheaperAt": "Cheaper at {{store}}",
-        "same": "Same price",
-        "save": "save {{amount}}"
-      },
-      "ask": {
-        "title": "Ask Arya",
-        "cook": {
-          "q": "What can I cook with spinach?",
-          "a": "Spinach pasta with olive oil and garlic. You bought all three this week. About 15 minutes."
-        },
-        "spent": {
-          "q": "How much did I spend this week?",
-          "a": "$34.83, all at Safeway. Pantry was the biggest part, mostly the olive oil."
-        },
-        "eggs": {
-          "q": "Where are eggs cheaper?",
-          "a": "Trader Joe's: $3.49 a dozen, against $4.29 at Safeway on your last receipts."
-        }
-      },
-      "share": {
-        "title": "Invite to Our home",
-        "line": "Send this code. It works for 48 hours.",
-        "code": "K7Q 2MX",
-        "codeAria": "Sample invite code K7Q 2MX",
-        "you": "@you",
-        "youRole": "you · owner",
-        "priya": "@priya",
-        "priyaRole": "member · joined just now",
-        "joined": "Joined",
-        "join": "See Priya join",
-        "after": "Priya now sees your Trader Joe's and Costco lists. When she ticks Blueberries, it ticks for you too.",
-        "start": "Start my group"
       }
     },
     "replayTour": "Replay the tour"
