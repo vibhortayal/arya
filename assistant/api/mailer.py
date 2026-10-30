@@ -54,8 +54,8 @@ def waitlist_joined(email, app_url):
         "we'll email you a code to sign in.\n\n"
         f"While you wait, you can try Arya with a sample household. No sign-up needed: {app_url}\n\n"
         "Joined by mistake? Ignore this email. We only write again to send your invitation.\n\n"
-        f"You got this because {email} asked to join the Arya waitlist. "
-        f"Reply \"remove\" and we will delete your email, or write to {reply_to()}.\n")
+        f"You got this because {email} asked to join the Arya waitlist.\n"
+        f"This address is not monitored. For help, or to be taken off the list, write to {reply_to()}.\n")
     e = html.escape(email)
     u = html.escape(app_url, quote=True)
     body = (
@@ -67,6 +67,6 @@ def waitlist_joined(email, app_url):
         "<p>While you wait, you can try Arya with a sample household. No sign-up needed.</p>"
         f'<p><a href="{u}" style="display:inline-block;background:#C2410C;color:#fff;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:999px">Try the demo</a></p>'
         "<p>Joined by mistake? Ignore this email. We only write again to send your invitation.</p>"
-        f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">You got this because {e} asked to join the Arya waitlist. Reply "remove" and we will delete your email, or write to {html.escape(reply_to())}.</p>'
+        f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">You got this because {e} asked to join the Arya waitlist.<br>This address is not monitored. For help, or to be taken off the list, write to {html.escape(reply_to())}.</p>'
         "</div>")
     return send(email, subject, text, body)

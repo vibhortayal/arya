@@ -36,6 +36,8 @@ class TestWaitlistMail(unittest.TestCase):
         self.assertEqual(to, "sam@example.com")
         self.assertEqual(subject, "You're on the Arya waitlist")
         self.assertIn("support@teamnightshift.org", text)
+        self.assertIn("not monitored", text)
+        self.assertIn("not monitored", html)
         self.assertIn("sam@example.com", html)
 
     def test_no_key_means_no_email_and_joining_still_works(self):

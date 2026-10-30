@@ -27,12 +27,37 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
    `ARYA_MAIL_REPLY_TO` (default `support@teamnightshift.org`, forwarded by Cloudflare
    Email Routing), `ARYA_PUBLIC_URL` (the app's web address for the "Try the demo" link,
    `https://arya.teamnightshift.org`). A failed send is logged and never blocks joining.
-2. **The code email** is sent by Supabase (Magic Link template, `{{ .Token }}`), and also
-   when the owner approves someone on the Waitlist screen. Its subject and body are edited
-   in the Supabase dashboard (Auth, Email Templates). Suggested wording for the invite:
-   subject "You're off the Arya waitlist"; body "You're in. A spot opened up. Your sign-in
-   code: {{ .Token }}. Open Arya, tap Sign in, enter this email, then tap "I already have a
-   code". The code works for one hour. After that, tap "Email me a code" for a fresh one.
-   You can also use Continue with Google with this same address." The same template is used
-   for every code email, so a neutral subject such as "Your Arya sign-in code" also works.
-   Replies and the sender address for these emails are set in Supabase (SMTP settings).
+2. **The code emails** are sent by Supabase, not the app (also when the owner approves
+   someone on the Waitlist screen). `send_code` asks for a code with `create_user: true`,
+   so Supabase picks the template by whether that address has signed in before. Both are
+   edited in the dashboard (Authentication, Emails), both are code only (`{{ .Token }}`,
+   `{{ .ConfirmationURL }}` unused), both end with the not-monitored line, and both are styled
+   with Arya's colours and type. The styled originals, with copy buttons, are in the owner's
+   artifact https://claude.ai/artifact/MqVD7GHNGv14L5AW4NZWee and are repeated here. The
+   sender and Reply-To for these emails are set in Supabase (Project Settings, Auth, SMTP).
+
+   **Confirm signup** (first sign-in). Subject: `You're off the Arya waitlist: {{ .Token }}`
+
+   ```html
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1B1B1E"><tr><td style="padding:28px 24px">
+<div style="font-size:20px;font-weight:700;color:#C2410C;margin-bottom:20px">Arya</div>
+<div style="font-size:22px;font-weight:700;line-height:1.25;margin-bottom:8px">You're off the waitlist.</div>
+<div style="font-size:15px;line-height:1.5;color:#55555C;margin-bottom:20px">Welcome to Arya. Type this code into the app to sign in:</div>
+<div style="background:#F4F4F6;border-radius:12px;padding:18px;text-align:center;font-size:34px;font-weight:700;letter-spacing:8px;font-family:Menlo,Consolas,monospace;color:#1B1B1E">{{ .Token }}</div>
+<div style="font-size:14px;line-height:1.5;color:#55555C;margin-top:18px">The code works for 1 hour and only once. If you didn't ask to sign in, you can ignore this email and nothing happens.</div>
+<div style="border-top:1px solid #D9D9DE;margin-top:24px;padding-top:14px;font-size:12px;line-height:1.5;color:#8B8B93">Sent by Arya, the grocery list that learns your store.<br>This address is not monitored. For help, write to support@teamnightshift.org.</div>
+</td></tr></table>
+   ```
+
+   **Magic Link** (returning sign-in). Subject: `Your Arya code: {{ .Token }}`
+
+   ```html
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1B1B1E"><tr><td style="padding:28px 24px">
+<div style="font-size:20px;font-weight:700;color:#C2410C;margin-bottom:20px">Arya</div>
+<div style="font-size:22px;font-weight:700;line-height:1.25;margin-bottom:8px">Welcome back.</div>
+<div style="font-size:15px;line-height:1.5;color:#55555C;margin-bottom:20px">Type this code into Arya to sign in:</div>
+<div style="background:#F4F4F6;border-radius:12px;padding:18px;text-align:center;font-size:34px;font-weight:700;letter-spacing:8px;font-family:Menlo,Consolas,monospace;color:#1B1B1E">{{ .Token }}</div>
+<div style="font-size:14px;line-height:1.5;color:#55555C;margin-top:18px">The code works for 1 hour and only once. If you didn't ask to sign in, you can ignore this email and nothing happens.</div>
+<div style="border-top:1px solid #D9D9DE;margin-top:24px;padding-top:14px;font-size:12px;line-height:1.5;color:#8B8B93">Sent by Arya, the grocery list that learns your store.<br>This address is not monitored. For help, write to support@teamnightshift.org.</div>
+</td></tr></table>
+   ```
