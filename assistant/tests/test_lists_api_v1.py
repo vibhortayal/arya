@@ -134,6 +134,16 @@ class TestReadAndAdd(V1Case):
         assert set(names) == {"milk", "eggs", "bread"}
         assert names["eggs"]["qty"] == 3
 
+    def test_add_text_drops_a_sentence_whole(self):
+        lid = self.make_list()
+        text = ("milk\neggs x 3\nbread\n42\n"
+                "This is a long sentence that is not an item at all, really.")
+        r = self.post(f"/lists/{lid}/items", json={"text": text})
+        assert r.status_code == 200, r.text
+        assert {i["name"] for i in r.json()["items"]} == {"milk", "eggs", "bread"}
+        assert "42" in r.json()["skipped"]
+        assert any(s.startswith("This is a long") for s in r.json()["skipped"])
+
     def test_add_dedups_with_already_reply(self):
         lid = self.make_list()
         self.add(lid, "milk")

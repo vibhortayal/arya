@@ -61,15 +61,15 @@ def _truthy(v):
 
 def parse_text(text):
     """A checklist or plain list -> rows. Boxes set the checked state."""
-    from api.list.intake import split_list_items_units
+    from api.list.intake import split_text_lines
     rows, skipped = [], 0
     for line in (text or "").splitlines():
         if not line.strip():
             continue
         checked = bool(_CHECKED_LEAD.match(line))
         line = _BOX_LEAD.sub("", _CHECKED_LEAD.sub("", line, count=1), count=1)
-        found = split_list_items_units(line)
-        if not found:
+        found, dropped = split_text_lines(line)
+        if not found or dropped:
             skipped += 1
         for name, qty, unit in found:
             rows.append({"name": name, "qty": qty, "unit": unit,

@@ -203,6 +203,31 @@ def split_list_items_units(text):
     return out
 
 
+def _is_prose(name):
+    """A piece too long to be an item: five words or more than 60 characters."""
+    return len(name) > 60 or len(name.split()) > 5
+
+
+def split_text_lines(text):
+    """The strict split for the open API: (items, skipped). A line with a
+    sentence in it is dropped whole, so the tail of a comma-split sentence
+    never becomes an item. Other pieces that are not items (a bare number)
+    are skipped one by one."""
+    items, skipped, seen = [], [], set()
+    for line in re.split(r"[\n;]+", text or ""):
+        if not line.strip():
+            continue
+        if any(_is_prose(_clean_piece(p)) for p in _pieces(line)):
+            skipped.append(line.strip()[:30])
+            continue
+        for name, qty, unit in split_list_items_units(line):
+            if name.lower() not in seen:
+                seen.add(name.lower())
+                items.append((name, qty, unit))
+        skipped.extend(skipped_pieces(line))
+    return items, skipped
+
+
 def split_list_items(text):
     """Same split as (name, qty) pairs."""
     return [(n, q) for n, q, _u in split_list_items_units(text)]

@@ -19,7 +19,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from api import open_data, state
 from api.demo_guard import _demo_rate
 from api.list import export
-from api.list.intake import amount, clean_unit, split_list_items_units
+from api.list.intake import amount, clean_unit, split_text_lines
 from api.routes import lists as L
 from api.routes.mcp_connector import MCP_MAX_BODY, _mcp_hits
 
@@ -229,9 +229,8 @@ async def add_items(list_id: str, req: Request, body: AddItems):
         skipped = []
     else:
         # Deterministic split only ($0): the API never spends model calls.
-        typed = split_list_items_units(body.text)[:MAX_ADD]
-        from api.list.intake import skipped_pieces
-        skipped = skipped_pieces(body.text)
+        typed, skipped = split_text_lines(body.text)
+        typed, skipped = typed[:MAX_ADD], skipped[:5]
     # One row per item: a name already on a different list is not moved
     # (the in-app add would move it). It stays put and is reported.
     from api.list.intake import existing_item_id
