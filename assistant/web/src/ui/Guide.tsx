@@ -1,9 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useNav } from "../app/nav";
-import { GUIDE_CARDS, guideIndex, type GuideArt, type GuideCard, type GuideId, type TryKind } from "../guide/cards";
-import { asset } from "../lib/format";
-import { GuideTry } from "./GuideTry";
+import { GUIDE_CARDS, guideIndex, type GuideCard, type GuideId } from "../guide/cards";
 import { useTour } from "./Tour";
 import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
 import { useTranslation } from "../i18n";
@@ -23,8 +20,9 @@ import { useTranslation } from "../i18n";
  * cards; Esc and the round x close it; Done on the last card closes
  * it. role="dialog", focus moves in, stays in, and goes back to the
  * control that opened it. Under prefers-reduced-motion the cards do
- * not slide. Try it opens a sheet over the card (ui/GuideTry.tsx).
- * "Replay the tour" on card 1 closes the guide and replays the
+ * not slide. Each card is text and numbered steps; nothing in it links
+ * out of the guide.
+ * "Replay the tour" on the last card closes the guide and replays the
  * first-run tour (it used to be its own Settings row; usability pass). */
 
 type Guide = { active: boolean; open: (at?: GuideId) => void; close: () => void };
@@ -61,61 +59,23 @@ export function useGuide(): Guide {
 const SWIPE = 50;
 const FOCUSABLE = "button:not([disabled]), summary, [href]";
 
-function Art({ art }: { art: GuideArt }) {
-  const { t } = useTranslation();
-  if (art.kind === "image") return <div className="gd-art"><img className="full" src={asset(art.src)} alt="" /></div>;
-  if (art.kind === "chars") {
-    return <div className="gd-art"><div className="chars">{art.names.map(n => <img key={n} src={asset(`assets/characters/${n}.webp`)} alt="" />)}</div></div>;
-  }
-  // A small sample screen: a heading (with faces for a shared list),
-  // then rows; a section row is a store name, bar a spending bar.
-  return (
-    <div className="gd-art">
-      <div className="mini" aria-hidden="true">
-        {(art.headKey || art.faces) && <div className="mh">
-          {art.faces && <span className="faces">{art.faces.map((f, k) => <i key={f} className={"f" + k}>{t(f)}</i>)}</span>}
-          {art.headKey && <b>{t(art.headKey)}</b>}
-        </div>}
-        {art.rows.map((r, k) => r.section
-          ? <p className="sec" key={k}>{t(r.k)}</p>
-          : <div className="r" key={k}><span>{t(r.k)}</span>
-            {r.v && <span className={r.tone}>{r.bar != null && <i className="bar" style={{ width: `${Math.round(r.bar * 80)}px` }} />}{t(r.v)}</span>}</div>)}
-      </div>
-    </div>
-  );
-}
-
-function Card({ card, onTry }: { card: GuideCard; onTry: (k: TryKind) => void }) {
+function Card({ card }: { card: GuideCard }) {
   const { t } = useTranslation();
   return (
     <>
-      {card.art && <Art art={card.art} />}
       <p className="gd-k">{t(card.kickerKey)}</p>
       <h2 id="gd-title">{t(card.titleKey)}</h2>
-      {card.bodyKey && <p className="b">{t(card.bodyKey)}</p>}
-      {card.pointKeys && <ul className="pts">{card.pointKeys.map(k => <li key={k}>{t(k)}</li>)}</ul>}
-      {card.howtos && (
-        <div className="gd-howto">
-          {card.howtos.map((h, k) => (
-            <details key={h.id} data-howto={h.id} open={k === 0}>
-              <summary>{t(h.titleKey)}</summary>
-              <ol className="howto">{h.stepKeys.map(s => <li key={s}>{t(s)}</li>)}</ol>
-            </details>
-          ))}
-        </div>
-      )}
-      {card.try && <button className="try" id="gd-try" type="button" data-try={card.try.kind} onClick={() => onTry(card.try!.kind)}>{t(card.try.labelKey)}<span aria-hidden="true"> ▸</span></button>}
+      <p className="b">{t(card.bodyKey)}</p>
+      <ol className="steps">{card.stepKeys.map(k => <li key={k}><span>{t(k)}</span></li>)}</ol>
     </>
   );
 }
 
 export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: () => void }) {
   const { t } = useTranslation();
-  const nav = useNav();
   const tour = useTour();
   const [i, setI] = useState(start);
   const [dir, setDir] = useState<"" | "fwd" | "bwd">("");
-  const [tryKind, setTry] = useState<Exclude<TryKind, "quest"> | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const next = useRef<HTMLButtonElement>(null);
   const x0 = useRef<{ x: number; y: number } | null>(null);
@@ -151,11 +111,10 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
     wrap.current?.querySelector(".gd-body")?.scrollTo?.(0, 0);
   }, [i]);
 
-  // Keys work wherever focus is, unless a Try-it sheet is up (the
-  // sheet takes Esc for itself).
+  // Keys work wherever focus is.
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
-      if (tryKind || ev.defaultPrevented) return;
+      if (ev.defaultPrevented) return;
       if (ev.key === "Escape") { ev.preventDefault(); onClose(); }
       else if (ev.key === "ArrowRight") { ev.preventDefault(); if (!last) go(i + 1); }
       else if (ev.key === "ArrowLeft") { ev.preventDefault(); bwd(); }
@@ -171,26 +130,19 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [tryKind, onClose, go, bwd, i, last]);
+  }, [onClose, go, bwd, i, last]);
 
   const onTouchStart = (ev: React.TouchEvent) => { x0.current = { x: ev.touches[0].clientX, y: ev.touches[0].clientY }; };
   const onTouchEnd = (ev: React.TouchEvent) => {
     const s = x0.current;
     x0.current = null;
-    if (!s || tryKind) return;
+    if (!s) return;
     const dx = ev.changedTouches[0].clientX - s.x, dy = ev.changedTouches[0].clientY - s.y;
     if (Math.abs(dx) < SWIPE || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) { if (!last) go(i + 1); } else bwd();
   };
 
-  const onTry = (k: TryKind) => {
-    // Store maps' Try it is the game's own Practice Market (saves nothing).
-    if (k === "quest") { onClose(); nav.show("community", { practice: true }); return; }
-    setTry(k);
-  };
   const replay = () => { onClose(); tour.startTour(FIRST_RUN_TOUR); };
-  const realList = () => { setTry(null); onClose(); nav.show("list", { newList: true }); };
-  const startGroup = () => { setTry(null); onClose(); nav.show("profile", { group: true }); };
 
   return createPortal(
     <>
@@ -201,9 +153,9 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
           <button className="x" id="gd-close" type="button" aria-label={t("guide.close")} onClick={onClose}>×</button>
         </div>
         <div className="gd-body">
-          <div className={"gd-card" + (card.art ? "" : " noart") + (dir ? " " + dir : "")} key={card.id}>
-            <Card card={card} onTry={onTry} />
-            {i === 0 && <button className="linkbtn gd-tour" id="gd-tour" type="button" onClick={replay}>{t("guide.replayTour")}</button>}
+          <div className={"gd-card" + (dir ? " " + dir : "")} key={card.id}>
+            <Card card={card} />
+            {last && <button className="linkbtn gd-tour" id="gd-tour" type="button" onClick={replay}>{t("guide.replayTour")}</button>}
           </div>
         </div>
         <div className="gd-bot">
@@ -214,7 +166,6 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
           <button className="btn primary" id="gd-next" type="button" ref={next} onClick={fwd}>{last ? t("common.done") : t("guide.next")}</button>
         </div>
       </div>
-      {tryKind && <GuideTry kind={tryKind} onClose={() => setTry(null)} onRealList={realList} onStartGroup={startGroup} />}
     </>,
     document.body,
   );

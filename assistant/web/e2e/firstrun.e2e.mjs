@@ -59,6 +59,7 @@ export default async function (page, base) {
     await page.click('#tabs button[data-view="view-profile"]');
     if (await page.$("#btn-tour")) throw new Error("tour replay should live inside the guide");
     await page.click("#btn-guide");
+    for (let k = 0; k < 7; k++) await page.keyboard.press("ArrowRight");
     await page.click("#gd-tour");
     await page.waitForSelector(".gd", { state: "detached" });
     await page.waitForSelector('.fr-tour[data-tour-step="today"]');

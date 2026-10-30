@@ -32,7 +32,7 @@ export function QuestMode() {
   useEffect(() => { void loadGameDoc().then(setDoc); }, [s.user]);
   const store = useMemo(() => doc === undefined ? null : serverProfileStore(`arya-quest:${s.user || "guest"}`, doc), [s.user, doc]);
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
-  // The Arya guide's Quest "Try it" (#154) starts the Practice Market.
+  // nav.params.practice starts the Practice Market.
   const practice = nav.params.practice === true;
   // Your trips › Resume on a Quest trip picks it back up in the game.
   const resume = typeof nav.params.resume === "string" ? nav.params.resume : undefined;
