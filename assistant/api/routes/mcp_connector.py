@@ -3,17 +3,21 @@ import datetime
 import json
 import math
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
 from api import state
-from api.demo_guard import _is_demo
+from api.demo_guard import _demo_rate, _is_demo
 from api.deps import _json_body, new_client
 from api.routes.items import _merge_flag
 from api.routes.lists import _add_name_to_list
 
 router = APIRouter()
+
+MCP_MAX_BODY = 256 * 1024     # bytes; a receipt with 200 lines is ~40 KB
+MCP_MAX_RECEIPT_LINES = 200
+_mcp_hits = {}                # username -> tools/call timestamps (rolling hour)
 
 
 # --- Agent connector (MCP): any MCP-capable assistant, one token ---
@@ -65,13 +69,16 @@ def _mcp_check_item(args):
         raise ValueError("name is required")
     d = state.derived()
     nm = state.names()
+    checked = args.get("checked", True)
+    if not isinstance(checked, bool):
+        raise ValueError("checked must be true or false")
     want = name.lower()
     for i in d["smart_list"]["items"]:
         iname = i.get("name") or nm.get(i["item_id"], i["item_id"])
         if iname.lower() == want:
             _merge_flag(i["item_id"],
-                        {"checked_on": state.as_of() if args.get("checked", True) else None})
-            return {"name": iname, "checked": bool(args.get("checked", True))}
+                        {"checked_on": state.as_of() if checked else None})
+            return {"name": iname, "checked": checked}
     raise ValueError(f"{name} is not on the list")
 
 
@@ -88,6 +95,8 @@ def _mcp_file_receipt(args):
     raw_lines = args.get("lines")
     if not merchant or not purchased_at or not isinstance(raw_lines, list) or not raw_lines:
         raise ValueError("a receipt needs merchant, purchased_at, and lines")
+    if len(raw_lines) > MCP_MAX_RECEIPT_LINES:
+        raise ValueError(f"a receipt can have at most {MCP_MAX_RECEIPT_LINES} lines")
     from api.decode.service import _finish
     lines = []
     for ln in raw_lines:
@@ -159,6 +168,8 @@ def _mcp_dispatch(msg, demo=False):
                          -32600, "invalid request")
     rid = msg.get("id")
     method = msg["method"]
+    if not isinstance(method, str):
+        return mcp.error(msg.get("id"), -32600, "invalid request")
     params = msg.get("params") or {}
     if method.startswith("notifications/"):
         return None
@@ -184,6 +195,11 @@ def _mcp_dispatch(msg, demo=False):
                 "this needs a real account — the demo household keeps nothing"))
         if handler is None:
             return mcp.result(rid, mcp.tool_error(f"unknown tool: {name}"))
+        if not demo and not _demo_rate(
+                _mcp_hits, state._current_user.get() or "",
+                "ARYA_MCP_RATE", 600):
+            return mcp.result(rid, mcp.tool_error(
+                "too many tool calls this hour — try again in a bit"))
         args = params.get("arguments") or {}
         if not isinstance(args, dict):
             return mcp.result(rid, mcp.tool_error("arguments must be an object"))
@@ -197,6 +213,9 @@ def _mcp_dispatch(msg, demo=False):
 
 @router.post("/api/mcp")
 async def mcp_route(req: Request):
+    declared = req.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > MCP_MAX_BODY:
+        raise HTTPException(413, "request too large")
     body = await _json_body(req)
     resp = await run_in_threadpool(_mcp_dispatch, body, _is_demo(req))
     if resp is None:

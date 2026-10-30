@@ -38,6 +38,8 @@ class TestMcp(unittest.TestCase):
         deps.MetaClient = FakeClient
         deps._login_fails.clear()
         deps._register_hits.clear()
+        from api.routes import mcp_connector
+        mcp_connector._mcp_hits.clear()
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
                                              "password": "long-password"})
@@ -166,6 +168,40 @@ class TestMcp(unittest.TestCase):
         tok2 = other.post("/auth/token").json()["token"]
         lst = call(other, tok2, "get_list")["structuredContent"]
         assert all(i["name"] != "owner only item" for i in lst["items"])
+
+    def test_hardening(self):
+        # Non-string method is an invalid request, not a 500.
+        r = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": 5}, self.token)
+        assert r.status_code == 200 and r.json()["error"]["code"] == -32600
+        # checked must be a real boolean ("false" the string is not False).
+        call(self.c, self.token, "add_items", {"items": ["eggs"]})
+        res = call(self.c, self.token, "check_item",
+                   {"name": "eggs", "checked": "false"})
+        assert res["isError"]
+        # Receipt line and body caps.
+        line = {"decoded_name": "x", "line_total": 1}
+        res = call(self.c, self.token, "file_receipt", {
+            "merchant": "m", "purchased_at": "2026-10-28",
+            "lines": [line] * 201})
+        assert res["isError"]
+        r = self.c.post("/api/mcp", content=b" " * (256 * 1024 + 1),
+                        headers={"Authorization": f"Bearer {self.token}"})
+        assert r.status_code == 413
+        # Tools carry read-only / non-destructive hints.
+        tools = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                    self.token).json()["result"]["tools"]
+        assert all("annotations" in t for t in tools)
+
+    def test_tool_call_rate_limit(self):
+        with mock.patch.dict(os.environ, {"ARYA_MCP_RATE": "3"}):
+            for _ in range(3):
+                assert not call(self.c, self.token, "get_list")["isError"]
+            res = call(self.c, self.token, "get_list")
+            assert res["isError"] and "too many" in res["content"][0]["text"]
+            # Protocol messages (not tool calls) are not throttled.
+            r = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                    self.token)
+            assert "result" in r.json()
 
 
 if __name__ == "__main__":

@@ -4,7 +4,8 @@ The connector is generic: any MCP-capable assistant connects with the
 account's API token (the same token the REST connector uses) and gets
 the tools below. Muse Spark is the showcased client, not a special
 case. This module holds the protocol envelopes and the tool catalog;
-the handlers live in api/main.py beside the REST routes they mirror.
+the handlers live in api/routes/mcp_connector.py beside the REST
+routes they mirror.
 
 Transport: streamable HTTP, stateless. One POST of a JSON-RPC 2.0
 message to /api/mcp returns one JSON response. Notifications (no id)
@@ -38,9 +39,13 @@ def tool_error(message):
             "isError": True}
 
 
+READ_ONLY = {"readOnlyHint": True}
+ADDITIVE = {"readOnlyHint": False, "destructiveHint": False}
+
 TOOL_DEFS = [
     {
         "name": "get_snapshot",
+        "annotations": READ_ONLY,
         "description": "The household model in brief: what the account "
                        "is running low on, recent spend and returns, "
                        "trip count, and top items. Read-only.",
@@ -48,6 +53,7 @@ TOOL_DEFS = [
     },
     {
         "name": "get_list",
+        "annotations": READ_ONLY,
         "description": "The current shopping list: item names, "
                        "quantities, and which items are checked off. "
                        "Read-only.",
@@ -55,6 +61,7 @@ TOOL_DEFS = [
     },
     {
         "name": "add_items",
+        "annotations": ADDITIVE,
         "description": "Add items to the shopping list by name, the "
                        "way a person would say them ('oat milk', "
                        "'eggs'). Each name joins the list as a manual "
@@ -68,6 +75,7 @@ TOOL_DEFS = [
     },
     {
         "name": "check_item",
+        "annotations": ADDITIVE,
         "description": "Check an item off the list (or uncheck it) by "
                        "name — for 'I bought the milk' updates. The "
                        "item must be on the list.",
@@ -80,6 +88,7 @@ TOOL_DEFS = [
     },
     {
         "name": "file_receipt",
+        "annotations": ADDITIVE,
         "description": "File a receipt the agent has already read "
                        "(from a photo, an email, or an order page). "
                        "Arya verifies the arithmetic, files the lines, "
@@ -106,6 +115,7 @@ TOOL_DEFS = [
     },
     {
         "name": "get_receipts",
+        "annotations": READ_ONLY,
         "description": "Recent filed receipts: merchant, date, and "
                        "total. Read-only.",
         "inputSchema": {
