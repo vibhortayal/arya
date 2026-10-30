@@ -81,6 +81,16 @@ class TestKroger(unittest.TestCase):
         self.assertEqual(hint["aisle"], "12")
         self.assertTrue(any("filter.locationId=01400513" in u for u in fake.urls))
 
+    def test_trip_hints_one_location_lookup_and_skips_misses(self):
+        self.on()
+        fake = kroger._http = Fake(PASTA)
+        out = kroger.trip_hints(STORE, ["pasta", "Pasta", "rice", ""])
+        self.assertEqual(sorted(out), ["pasta", "rice"])
+        self.assertEqual(sum("/locations" in u for u in fake.urls), 1)
+
+    def test_trip_hints_off_returns_empty(self):
+        self.assertEqual(kroger.trip_hints(STORE, ["milk"]), {})
+
     def test_non_kroger_store_makes_no_calls(self):
         self.on()
         fake = kroger._http = Fake(MILK)
@@ -143,6 +153,13 @@ class TestKrogerRoute(unittest.TestCase):
         sid = self.stores.directory()[0]["id"]
         r = self.c.get("/api/stores/kroger-aisle", params={"store_id": sid, "item": "milk"})
         self.assertEqual(r.json(), {"enabled": False, "hint": None})
+
+    def test_trip_route_flag_off_and_validation(self):
+        sid = self.stores.directory()[0]["id"]
+        r = self.c.post("/api/stores/kroger-trip", json={"store_id": sid, "items": ["milk"]})
+        self.assertEqual(r.json(), {"enabled": False, "hints": {}})
+        r = self.c.post("/api/stores/kroger-trip", json={"store_id": "nope", "items": []})
+        self.assertEqual(r.status_code, 404)
 
     def test_unknown_store_404(self):
         r = self.c.get("/api/stores/kroger-aisle", params={"store_id": "nope", "item": "milk"})
