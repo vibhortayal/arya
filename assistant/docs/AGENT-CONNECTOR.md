@@ -23,8 +23,15 @@ source of truth.
    - Transport: streamable HTTP (stateless; one POST per message)
    - Header: `Authorization: Bearer <your token>`
 
-3. The token acts as your account and nothing else. Revoke it from
+3. The token acts as your account: it is accepted on the MCP door and on
+   the REST connector routes under `/api`, but never on `/auth` (it cannot
+   mint tokens or delete the account). Revoke it from
    the same screen at any time; minting a new one replaces the old.
+
+## Limits
+
+- 600 tool calls per account per hour (`ARYA_MCP_RATE`), 256 KB per request,
+  50 items per `add_items`, 200 lines per `file_receipt`.
 
 ## Tools
 
