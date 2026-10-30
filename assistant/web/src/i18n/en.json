@@ -1156,7 +1156,7 @@
         "name": "Food waste",
         "sub": "See what expired food cost you this month.",
         "what": "What expired this month, in dollars, from the items you mark \"It expired\".",
-        "unlock": "Tap It expired on Today when food goes off.",
+        "unlock": "Tap It expired on Today when food expires or goes bad.",
         "tip": "Tap It expired on Today and Arya counts what food waste costs you."
       },
       "low": {
@@ -1171,8 +1171,8 @@
       },
       "usesoon": {
         "name": "Use soon",
-        "sub": "Add a use-by date and Arya reminds you before food goes off.",
-        "what": "Snap a use-by date and Arya reminds you before it goes off."
+        "sub": "Add a use-by date and Arya reminds you what to use before it expires or goes bad.",
+        "what": "Snap a use-by date and Arya reminds you what to use before it expires or goes bad."
       },
       "plan": {
         "name": "Plan a shop",
@@ -1768,8 +1768,8 @@
     "needsYourEye_one": "Check {{count}} receipt item",
     "needsYourEye_other": "Check {{count}} receipt items",
     "perish": {
-      "title_one": "{{count}} thing from your receipt can go off",
-      "title_other": "{{count}} things from your receipt can go off",
+      "title_one": "{{count}} thing from your receipt can expire or go bad",
+      "title_other": "{{count}} things from your receipt can expire or go bad",
       "names": "{{names}}. Add dates and Arya reminds you.",
       "andMore": "{{names}} and {{count}} more",
       "sheetTitle": "Use-by dates",
@@ -2148,7 +2148,7 @@
       "lists": "Lists",
       "listsSub": "One per store",
       "reminders": "Reminders",
-      "remindersSub": "Use it before it goes off",
+      "remindersSub": "What to use before it expires or goes bad",
       "spending": "Spending",
       "spendingSub": "From your receipts",
       "showMe": "Show me around · 30 sec",
@@ -2223,7 +2223,7 @@
       "what": {
         "kicker": "What Arya is",
         "title": "Groceries, sorted.",
-        "body": "Arya keeps a list for each store, reminds you what to use before it goes off, and learns your prices from your receipts. Shopping gets quicker every week."
+        "body": "Arya keeps a list for each store, reminds you what to use before it expires or goes bad, and learns your prices from your receipts. Shopping gets quicker every week."
       },
       "lists": {
         "kicker": "Lists",
@@ -2236,7 +2236,7 @@
       "usesoon": {
         "kicker": "Use soon",
         "title": "Add a use-by date, skip the waste",
-        "body": "Point your camera at the date on a pack. Arya reads it and reminds you before the food goes off. No typing.",
+        "body": "Point your camera at the date on a pack. Arya reads it and reminds you what to use before it expires or goes bad. No typing.",
         "try": "Try it with a sample yogurt"
       },
       "receipts": {
@@ -2293,7 +2293,7 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you before it goes off."
+        "s4": "Arya reminds you what to use before it expires or goes bad."
       },
       "ask": {
         "title": "Ask Arya a question",
@@ -2331,7 +2331,7 @@
         "photoAria": "A sample yogurt pot with its date",
         "snap": "Snap",
         "useBy": "Use by Friday",
-        "after": "Arya reminds you before it goes off. You can mark it used or expired on Today."
+        "after": "Arya reminds you what to use before it expires or goes bad. You can mark it used or expired on Today."
       },
       "receipt": {
         "title": "Add a receipt",

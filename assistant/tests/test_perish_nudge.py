@@ -1,4 +1,4 @@
-"""After a receipt, Today asks for use-by dates on what goes off (#207,
+"""After a receipt, Today asks for use-by dates on what can expire or go bad (#207,
 owner 2026-10-30). Guessing is plain rules at $0; the card is asked
 once per receipt and stops for good after two "Not now"s."""
 import os, tempfile, unittest
