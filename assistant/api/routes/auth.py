@@ -8,7 +8,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from api import auth, supabase_auth
 from api.demo_guard import _demo_auth_hits, _demo_rate
 from api.deps import (_client_ip, _code_hits, _is_owner, _json_obj, _login_fails, _prune, _register_hits,
-                      _registration_open, _set_registration_open, _set_session_cookie, _verify_hits)
+                      _registration_open, _set_registration_open, _set_session_cookie, _verify_hits,
+                      _waitlist_hits)
 
 router = APIRouter()
 
@@ -94,6 +95,32 @@ async def auth_register(req: Request):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
+
+
+@router.post("/auth/waitlist")
+async def auth_waitlist(req: Request):
+    """Join the sign-in waitlist (owner, 2026-10-30): public, an email
+    and nothing else (api/waitlist.py). A hidden field a person never
+    fills, and 5 tries an hour per IP, keep it quiet. Answers
+    {"status": "added" | "already"}."""
+    import os as _os, time as _t
+    from api import waitlist
+    ip = _client_ip(req)
+    body = await _json_obj(req)
+    if body.get("website"):   # honeypot: look like success, store nothing
+        return {"status": "added"}
+    limit = int(_os.environ.get("ARYA_WAITLIST_IP_RATE", "5"))
+    _prune(_waitlist_hits, 3600)
+    hits = [t for t in _waitlist_hits.get(ip, []) if _t.time() - t < 3600]
+    if len(hits) >= limit:
+        raise HTTPException(429, "Too many tries. Wait a few minutes and try again.")
+    _waitlist_hits[ip] = hits + [_t.time()]
+    try:
+        return {"status": waitlist.join(body.get("email", ""))}
+    except PermissionError as e:
+        raise HTTPException(429, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.post("/auth/login")

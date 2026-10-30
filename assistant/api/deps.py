@@ -41,6 +41,7 @@ _login_fails = {}
 _register_hits = {}
 _code_hits = {}
 _verify_hits = {}
+_waitlist_hits = {}
 
 
 def _client_ip(req):

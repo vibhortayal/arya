@@ -904,7 +904,24 @@
     },
     "tryIt": "Try it now",
     "startOwnList": "Start my own list",
-    "demoNote": "The demo needs no sign-up."
+    "demoNote": "The demo needs no sign-up.",
+    "invitationNote": "Sign-in is by invitation for now.",
+    "joinWaitlist": "Join the waitlist",
+    "noAccountWaitlist": "No account yet? Join the waitlist"
+  },
+  "waitlist": {
+    "intro": "Sign-in is by invitation while we grow. Leave your email and we will write when a spot opens for your household.",
+    "email": "Email",
+    "join": "Join waitlist",
+    "privacy": "We use your email only to send your invite. Ask us to delete it any time.",
+    "yourData": "Your lists, your data. Export anytime.",
+    "addedTitle": "You’re on the list",
+    "addedBody": "We will email {{email}} when there is a spot for your household.",
+    "alreadyTitle": "You’re already on the list",
+    "alreadyBody": "Nothing more to do. We will email you when a spot opens for your household.",
+    "done": "Done",
+    "badEmail": "That email does not look right. Check it and try again.",
+    "tooMany": "Too many tries. Wait a few minutes and try again."
   },
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your quest, the exact aisle for each item, and fewer “can't find it” moments. Map the aisles you use, a little at a time. Arya shoppers fill in the rest.",
