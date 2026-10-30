@@ -14,7 +14,7 @@ from api.cart.build import prepare
 
 import contextvars
 
-from api import aisles, pgstore
+from api import aisles, pgstore, storename
 
 _current_user = contextvars.ContextVar("arya_user", default=None)
 # The demo sandbox (review 2026-10-28): a demo visitor's writes land in
@@ -960,6 +960,7 @@ def dashboard():
             "spend_other": other_total, "other_by_kind": other_by_kind,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),
             "spend_by_store": by_store,
+            "store_notes": {v["label"]: v["sub"] for v in storename.merge(r.get("merchant") for r in rs).values() if v["sub"]},
             "top_items": [{"item_id": k, "name": nm.get(k, k), "spend": v} for k, v in top]}
 
 

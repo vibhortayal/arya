@@ -17,6 +17,7 @@ import { t, useTranslation } from "../i18n";
 type Dash = {
   spend_by_month: Record<string, number>;
   spend_by_store: Record<string, number>;
+  store_notes?: Record<string, string>;
   top_items: { item_id: string; name: string; spend: number }[];
   returns_total: number; returns_count?: number; savings_total?: number; trip_count: number; spend_total: number;
   spend_other?: number; spend_groceries: number; other_by_kind?: Record<string, number>;
@@ -24,7 +25,7 @@ type Dash = {
 };
 type Insights = {
   basket?: { pct: number; since_month: string; month_dollars: number; items: number; movers?: { name: string; pct: number }[] } | null;
-  split?: { month_dollars: number; moves: { to: string; name: string }[] } | null;
+  split?: { month_dollars: number; moves: { to: string; from: string; to_price: number; from_price: number; month_dollars: number; name: string }[] } | null;
   waste?: { dollars: number; month: string; items: { name: string }[] } | null;
 } | null;
 
@@ -96,12 +97,12 @@ export function Analysis() {
   }
   const s = ins && ins.split;
   if (s) {
-    const byTo: Record<string, string[]> = {};
-    for (const m of s.moves) (byTo[m.to] = byTo[m.to] || []).push(m.name);
-    const lines = Object.entries(byTo).map(([st, ns]) => t("analysis.buyAt", { names: names(ns), store: st })).join(" ");
     cards.push(
-      <div key="split" className="group pad pricecard"><div className="pchead"><span className="name">{t("analysis.splitSmarterSaveAboutA", { month_dollars: money(s.month_dollars) })}</span><InfoBtn k="split" onOpen={setInfo} /></div>
-        <span className="sub">{lines}</span></div>);
+      <div key="split" className="group pad pricecard"><div className="pchead"><span className="name">{t("analysis.splitHead", { count: s.moves.length, month_dollars: money(s.month_dollars) })}</span><InfoBtn k="split" onOpen={setInfo} /></div>
+        <span className="sub">{t("analysis.splitSub")}</span>
+        <div className="pricerows">{s.moves.slice(0, 5).map(m =>
+          <div className="pricerow" key={m.name + m.to}><span>{m.name}<br /><span className="sub">{t("analysis.splitMove", { to: m.to, toPrice: money(m.to_price), from: m.from, fromPrice: money(m.from_price) })}</span></span><span className="down">↓ {money(m.month_dollars)}</span></div>)}</div>
+        <span className="sub">{t("analysis.splitFoot")}</span></div>);
   }
   const w = ins && ins.waste;
   if (w) {
@@ -152,7 +153,7 @@ export function Analysis() {
         <Section title={t("analysis.spendByStore")} />
         <div id="an-stores" className="group">
           {d && (Object.keys(d.spend_by_store).length
-            ? Object.entries(d.spend_by_store).sort((a, c) => c[1] - a[1]).map(([st, v]) => <Row key={st} name={st} right={money(v)} />)
+            ? Object.entries(d.spend_by_store).sort((a, c) => c[1] - a[1]).map(([st, v]) => <Row key={st} name={st} sub={d.store_notes?.[st]} right={money(v)} />)
             : <Empty>{t("analysis.noTripsYet")}</Empty>)}
         </div>
       </>
