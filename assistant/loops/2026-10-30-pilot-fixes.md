@@ -40,3 +40,10 @@ already had Sign out on main (the report missed it). Now:
 - Settings shows "Leave the demo" in place of "Sign out" while in the demo.
 Test: ui/EndOfDemo.test.tsx. Still open: issue 6 (44px install button and
 dismiss x, demo back button), not part of A + B.
+
+## Part 4: missing-receipt card at 390 px (owner "go", 2026-10-30)
+Settings "receipt missing" card: note on top at full width, Add receipt and
+Dismiss share the row below (CSS only, `#pf-missing .sessrow`). Mockup:
+https://claude.ai/artifact/7pAj4FPgti7zwCyVLda8GQ. Test: test_hunt_v2_screens.
+Checked, not changed: join link while already a member already toasts "You
+are already in <group>"; only "Try it now" exists on the landing.
