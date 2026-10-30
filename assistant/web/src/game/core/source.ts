@@ -27,6 +27,9 @@ export interface QuestSource {
   /* End the trip without finishing it (Leave › End quest): the host
    * closes its record; grabs already sent stay checked off. */
   end?(): Promise<void>;
+  /* Pick a saved trip back up (Your trips › Resume): its layout, items
+   * and the keys already grabbed; null when the game cannot play it. */
+  resume?(id: string): Promise<{ layout: StoreLayout; items: QuestItem[]; got: string[] } | null>;
   /* Build (optional). build: Arya's pass over the store the answers
    * made (names, a cuisine's items); it answers the store it was given
    * when it cannot do better. change: one edit said in a sentence.

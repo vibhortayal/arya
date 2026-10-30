@@ -32,8 +32,8 @@ type NamedList = { id: string; name: string; stores?: string[] };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
 type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
-type SessItem = { name: string; shelf_label?: string | null };
-export type Session = { id: string; store: string; store_id?: string | null; state: string; items: SessItem[]; mode: string };
+type SessItem = { name: string; shelf_label?: string | null; checked?: boolean };
+export type Session = { id: string; store: string; store_id?: string | null; store_address?: string | null; state: string; items: SessItem[]; mode: string; shopoff_id?: string };
 
 const BASE = ["produce", "bakery", "deli", "meat", "dairy", "frozen"];
 
@@ -183,18 +183,38 @@ export class AppSource implements QuestSource {
     if (!list.items.length) throw new Error("empty list");
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
-    // The player's own map of this store, if they built one: its zones are the store's shape.
-    const own = (await this.maps().catch(() => [] as SavedMap[])).find(m => m.key === `store:${storeId}`)?.graph;
     const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) };
     // A draft gives the shelf hints; nothing is saved until the first grab.
-    const [draft, zoned] = await Promise.all([
-      post<Session>("/api/quest/sessions", { ...body, draft: true }),
-      this.zonesFor(list.items.map(i => i.name), own || TEMPLATE),
-    ]);
+    const out = await this.lay(storeId, name, st ? area(st) : "", st ? storeId : undefined, list,
+      post<Session>("/api/quest/sessions", { ...body, draft: true }));
     this.sess = null; this.creating = null; this.pending = body;
-    const shelf = new Map(draft.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
+    return out;
+  }
+
+  /* Resume a saved Quest trip in the game (usability audit pain 3): the
+   * same store and items, with what was grabbed already in the cart.
+   * null for anything the game does not play (Express, a Shop-Off, a
+   * closed or empty trip). */
+  async resume(id: string): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[]; got: string[] } | null> {
+    const s = await get<Session>(`/api/quest/sessions/${encodeURIComponent(id)}`).catch(() => null);
+    if (!s || s.mode !== "quest" || s.shopoff_id || !s.items.length || !["not_started", "playing", "paused"].includes(s.state)) return null;
+    await loadCharacters();
+    const list: ShoppingList = { id: "resume", name: s.store, items: s.items.map(i => ({ name: i.name, art: charFor(i.name) || artFor(i.name) })) };
+    const out = await this.lay(s.store_id || s.store, s.store, s.store_address || "", s.store_id || undefined, list, Promise.resolve(s));
+    this.sess = s; this.creating = null; this.pending = null;
+    void post(`/api/quest/sessions/${s.id}/state`, { state: "playing" }).catch(() => {});
+    return { ...out, got: out.items.filter((_, i) => s.items[i]?.checked).map(it => it.key) };
+  }
+
+  /* The store's layout and the list's items with their hints. shelf: the
+   * session (or draft) whose items carry the store's shelf labels. */
+  private async lay(storeId: string, name: string, where: string, dirId: string | undefined, list: ShoppingList, shelfOf: Promise<Session>) {
+    // The player's own map of this store, if they built one: its zones are the store's shape.
+    const own = (await this.maps().catch(() => [] as SavedMap[])).find(m => m.key === `store:${storeId}`)?.graph;
+    const [sess, zoned] = await Promise.all([shelfOf, this.zonesFor(list.items.map(i => i.name), own || TEMPLATE)]);
+    const shelf = new Map(sess.items.map(i => [i.name.toLowerCase(), i.shelf_label]));
     const base = list.items.map((it, i) => ({ key: `${i}-${it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name: it.name, art: it.art || artFor(it.name), section: zoned[it.name] || sectionFor(it.name, own) }));
-    const cov: Coverage = own ? { kind: "mapped", seen: own.zones.map(z => z.id) } : await this.mapOf(mapRef(name, st ? storeId : undefined));
+    const cov: Coverage = own ? { kind: "mapped", seen: own.zones.map(z => z.id) } : await this.mapOf(mapRef(name, dirId));
     const ids = cov.kind === "simulated" ? [] : cov.seen, kind = cov.kind;
     const typical = kind === "simulated" ? cov.typical : undefined;
     const items: QuestItem[] = base.map(b => {
@@ -205,7 +225,7 @@ export class AppSource implements QuestSource {
       if (label && typical) return { ...b, spot: { hint: typicalHint(label, typical) } };
       return b;
     });
-    const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : st ? area(st) : "", kind, items, mapped: ids, graph: own, typicalOf: typical });
+    const layout = buildLayout({ id: storeId, name, area: own ? "Your map" : where, kind, items, mapped: ids, graph: own, typicalOf: typical });
     return { layout, items };
   }
 

@@ -34,6 +34,8 @@ export function QuestMode() {
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
   // The Arya guide's Quest "Try it" (#154) starts the Practice Market.
   const practice = nav.params.practice === true;
+  // Your trips › Resume on a Quest trip picks it back up in the game.
+  const resume = typeof nav.params.resume === "string" ? nav.params.resume : undefined;
   const { setChrome } = nav;
 
   // Opening Quest once retires Today's Quest nudge for this account.
@@ -90,7 +92,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} />}
+        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
       </Suspense>
     </div>
   );

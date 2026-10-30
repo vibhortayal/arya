@@ -120,6 +120,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   server and Settings counts it. `2026-10-29-quest-one-progress.md`.
   Your trips is history only: resume or end open trips, see finished
   ones. Bundles is cut from the Quest home. `2026-10-29-quest-trips-history.md`.
+  Resume on a Quest trip opens it in the Quest game, grabs in the cart.
+  `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. It has a Costco list and a Trader Joe's list
   (store names only; no Trader Joe's map data ships).
