@@ -54,3 +54,24 @@ export function cardsForFocus(picked: FocusId[]): CardId[] {
   for (const f of FOCUS_IDS) if (picked.includes(f)) for (const c of FOCUS_CARDS[f]) if (!lead.includes(c)) lead.push(c);
   return [...lead, ...DEFAULT_CARDS.filter(c => !lead.includes(c))];
 }
+
+/* Card sizes (card library, 2026-10-30), like widget sizes: Small is
+ * one line that opens to Medium when tapped, Medium is the usual card
+ * (three rows, then "See N more"), Large shows every row. Saved per
+ * card as "today_sizes"; absent means Medium. */
+export type Size = "s" | "m" | "l";
+export const SIZES_OF: Record<CardId, Size[]> = {
+  low: ["s", "m", "l"], lists: ["s", "m", "l"], report: ["s", "m", "l"], price: ["s", "m", "l"],
+  expiry: ["s", "m", "l"], checks: ["s", "m", "l"], patterns: ["s", "m"], quest: ["s", "m"],
+};
+export function sizeOf(sizes: unknown, id: CardId): Size {
+  const s = sizes && typeof sizes === "object" ? (sizes as Record<string, unknown>)[id] : undefined;
+  return SIZES_OF[id].includes(s as Size) ? (s as Size) : "m";
+}
+
+/* The card library's groups. */
+export const LIBRARY_GROUPS = ["all", "money", "food", "shop"] as const;
+export type LibraryGroup = (typeof LIBRARY_GROUPS)[number];
+export const CARD_GROUP: Record<CardId, Exclude<LibraryGroup, "all">> = {
+  low: "food", lists: "shop", report: "shop", price: "money", expiry: "food", checks: "food", patterns: "money", quest: "shop",
+};

@@ -41,3 +41,21 @@ class TestTodayCards(unittest.TestCase):
 
     def test_asked_sticks(self):
         self.assertTrue(self.post(today_asked=True)["today_asked"])
+
+
+class TestCardSizesAndDisplay(TestTodayCards):
+    def test_sizes_merge_and_validate(self):
+        self.assertEqual(self.c.get("/api/settings").json()["today_sizes"], {})
+        self.post(today_sizes={"low": "s"})
+        self.assertEqual(self.post(today_sizes={"lists": "l"})["today_sizes"], {"low": "s", "lists": "l"})
+        self.post(400, today_sizes={"low": "xl"})
+        self.post(400, today_sizes={"nope": "s"})
+
+    def test_display_defaults_merge_and_validate(self):
+        d = self.c.get("/api/settings").json()["display"]
+        self.assertEqual(d, {"text": 1, "spacing": "comfortable", "bold": False, "pictures": True, "motion": True})
+        d = self.post(display={"text": 3, "bold": True})["display"]
+        self.assertEqual((d["text"], d["bold"], d["spacing"]), (3, True, "comfortable"))
+        self.post(400, display={"text": 9})
+        self.post(400, display={"bold": 1})
+        self.post(400, display={"font": "big"})
