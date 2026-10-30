@@ -7,7 +7,7 @@ import { asset } from "../lib/format";
 import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-quest-progress and the quest half of
- * app.js renderProfile. Back lands on Profile. The Shell already
+ * app.js renderProfile. Opened from the Quest tab; Back lands there. The Shell already
  * renders <section id="view-quest-progress">; no second one. */
 
 const BADGE_ART: Record<string, string> = {
@@ -60,7 +60,7 @@ export function QuestProgress() {
 
   return (
     <>
-      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.questProgress")}</h2>
       <div id="pf-stats" className="stattiles" hidden={!active}>
         {profile && s && (

@@ -101,7 +101,9 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
       <button className={"qtybtn" + (one ? " one" : "")} data-act="qty" data-id={item.item_id} type="button"
         aria-label={t("lists.qtyAria", { qty: qtyTag(item) || "1" })}
         onClick={() => { done.current = false; setQ(String(Number(item.qty) || 1)); setU(item.unit || ""); setEditing(true); }}>
-        {item.unit ? qtyFmt(item.qty) + " " + item.unit : "× " + qtyFmt(item.qty)}
+        {/* "× 1" says nothing: the count shows only above 1 (usability
+          * pass); the empty button still opens the quantity editor. */}
+        {item.unit ? qtyFmt(item.qty) + " " + item.unit : one ? "" : "× " + qtyFmt(item.qty)}
       </button>
     );
   }
@@ -614,14 +616,11 @@ export function Lists() {
   };
 
   /* ---- Start shopping ---- */
-  const shopSugg = data && shopOpen ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
-  const addAllSuggested = () => guard(async () => {
-    const ids = shopSugg.map(i => i.item_id);
-    for (const id of ids) await post("/api/list/add", lid === "else" ? { item_id: id } : { item_id: id, list_id: lid });
-    await reload();
-  });
   // One way to shop (#158): the Quest game on this list. A store
   // nobody mapped plays as fog or a labelled simulated store there.
+  // Start shopping goes straight there (usability pass): the sheet with
+  // one option is gone; only Demo Town still opens it, for its store
+  // notice. Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
     nav.show("community", { listId: here ? here.id : "all" });
@@ -868,6 +867,7 @@ export function Lists() {
             </div></div>
           </div>
 
+          {open.length && !selEff ? <p className="muted small tickhint" id="list-tickhint">{t("lists.tickHint")}</p> : null}
           <div id="smart-list" ref={smart} onClick={onRows} onKeyDown={onRowsKey}>
             {groceries.length ? <div className="group">{groceries.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
               : errands.length ? null
@@ -909,7 +909,7 @@ export function Lists() {
           </div>
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
-            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => setShopOpen(true)}>{t("lists.startShoppingItem", { count: open.length })}</button>
+            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (town ? setShopOpen(true) : startHunt())}>{t("lists.startShoppingItem", { count: open.length })}</button>
           </div>
         </div>
       )}
@@ -930,6 +930,7 @@ export function Lists() {
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
         onMove={store => guard(async () => { const id = townItem!; setTownItem(null); await toStoreList([id], store); })} /> : null}
 
+      {/* Demo Town only: its store notice before the quest. */}
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
         <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
         {town ? <StoreNotice town={town} listStores={listStores} onSwitch={store => guard(async () => {
@@ -940,9 +941,6 @@ export function Lists() {
         <div className="group shopmodes">
           <button className="hubrow" type="button" data-shop="quest" data-first onClick={startHunt}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("common.quest")}<span className="sub">{t("lists.questWalksYou")}</span></span><span className="chev">›</span></button>
         </div>
-        <p id="shop-sugg" className="muted shopsugg" hidden={!shopSugg.length}>
-          {shopSugg.length ? <>{t("lists.aryaAlsoSuggests", { names: shopSugg.slice(0, 2).map(i => i.name).join(t("lists.and")) })}{shopSugg.length > 2 ? t("lists.andNMore", { n: shopSugg.length - 2 }) : ""}. <button type="button" className="linkbtn" data-shop-add onClick={addAllSuggested}>{t(shopSugg.length === 1 ? "lists.addIt" : shopSugg.length === 2 ? "lists.addBoth" : "lists.addAll")}</button></> : null}
-        </p>
       </Sheet>
     </>
   );

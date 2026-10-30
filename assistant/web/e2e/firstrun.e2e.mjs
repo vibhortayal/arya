@@ -55,9 +55,12 @@ export default async function (page, base) {
     if (await page.$("#list-new")) throw new Error("New list button should be hidden");
     if (await page.$('[data-open-list="else"]')) throw new Error("Everything else should be hidden");
 
-    // The Esc key closes a replayed tour from Settings.
+    // The Esc key closes a tour replayed from Settings > Help and guide.
     await page.click('#tabs button[data-view="view-profile"]');
-    await page.click("#btn-tour");
+    if (await page.$("#btn-tour")) throw new Error("tour replay should live inside the guide");
+    await page.click("#btn-guide");
+    await page.click("#gd-tour");
+    await page.waitForSelector(".gd", { state: "detached" });
     await page.waitForSelector('.fr-tour[data-tour-step="today"]');
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => !document.querySelector(".fr-tour"));

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ComponentType } from "react";
-import { AvatarProvider, useAvatar } from "./app/avatar";
+import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TourProvider, useTour } from "./ui/Tour";
@@ -79,29 +79,21 @@ function useListFromHash() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-/* pwa/index.html's shell: the floating avatar (the way to Profile),
- * the demo bar, one view at a time, and the four-tab bar. */
+/* pwa/index.html's shell: the demo bar, one view at a time, and the
+ * tab bar. No floating avatar (usability pass, owner 2026-10-29): it
+ * did what the Settings tab does and covered page titles; the avatar
+ * lives on Settings and in Quest. */
 function Shell() {
   const nav = useNav();
   const s = useSession();
   const town = useTown();
   const Screen = SCREENS[nav.view];
-  const { src: avatar, ring } = useAvatar();
   const tour = useTour();
   useInviteLink();
   useListFromHash();
   useGroupLive();
   return (
     <>
-      {nav.chrome && (
-        <button id="avatar-btn" className="avatar floating" type="button"
-          aria-label={ring ? t("tabs.settingsLevel", { level: ring.level }) : t("tabs.settings")}
-          style={ring ? ({ "--pct": ring.pct + "%" } as React.CSSProperties) : undefined}
-          onClick={() => nav.view !== "profile" && nav.show("profile", { from: TABS.includes(nav.view) ? nav.view : "home" })}>
-          <span id="avatar-initial">{(s.demo ? "demo" : s.user || "A").charAt(0).toUpperCase()}</span>
-          <img id="avatar-img" alt="" hidden={!avatar} src={avatar || undefined} />
-        </button>
-      )}
       {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
         <button id="demo-finish" className="linkbtn" type="button" onClick={openEndOfDemo}>{t("endDemo.finish")}</button></p>}
       {s.demo && <EndOfDemo />}

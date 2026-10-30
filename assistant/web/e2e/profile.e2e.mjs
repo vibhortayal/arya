@@ -8,7 +8,7 @@ export default async function (page, base) {
   await page.waitForSelector("#view-profile");
   // Opened as a tab (no params.from): no Back link.
   if (await page.$("#pf-back")) throw new Error("Back link should be hidden on the Settings tab");
-  for (const sel of ["#pf-avatar", "#av-edit-btn", "#profile-account", "#pf-currency", "#btn-receipts", "#btn-signout2"])
+  for (const sel of ["#pf-avatar", "#av-edit-label", "#profile-account", "#pf-currency", "#btn-receipts", "#btn-signout2"])
     await page.waitForSelector(sel, { state: "attached" });
   const acct = await page.textContent("#profile-account");
   if (!acct.includes("Signed in as") || !acct.includes("demo")) throw new Error("account rows wrong: " + acct);
@@ -16,7 +16,9 @@ export default async function (page, base) {
   await page.click("#av-edit-label");
   await page.waitForSelector("#av-panel", { state: "visible" });
   if ((await page.textContent("#av-edit-label")) !== "Done") throw new Error("edit label should read Done");
-  await page.click("#av-edit-btn");
+  // One edit control (usability pass): no pencil on the picture.
+  if (await page.$("#av-edit-btn")) throw new Error("second avatar edit control");
+  await page.click("#av-edit-label");
   await page.waitForSelector("#av-panel", { state: "hidden" });
   // Delete box toggles.
   await page.click("#btn-del-account");
@@ -28,13 +30,10 @@ export default async function (page, base) {
   await page.waitForFunction(() => document.querySelector("#view-about") && !document.querySelector("#view-profile"));
   await page.click("#pfa-back");
   await page.waitForSelector("#view-profile");
-  // From the avatar: Back is shown and returns.
+  // No floating avatar on the tabs (usability pass): Settings is a tab.
   await page.evaluate(() => window.__aryaShow("home"));
   await page.waitForSelector("#view-home");
-  await page.click("#avatar-btn");
-  await page.waitForSelector("#pf-back");
-  await page.click("#pf-back");
-  await page.waitForFunction(() => !document.querySelector("#view-profile"));
+  if (await page.$("#avatar-btn")) throw new Error("floating avatar should be gone");
   // Sign out lands on the Login screen without a reload.
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.waitForSelector("#btn-signout2");
