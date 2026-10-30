@@ -6,7 +6,7 @@ export default async function (page, base) {
   await page.waitForSelector("#tabs");
   await page.evaluate(() => window.__aryaShow("stores-find"));
   await page.waitForSelector("#view-stores-find");
-  const h = await page.textContent("#view-stores-find h2.largetitle");
+  const h = await page.textContent("#view-stores-find .largetitle");
   if (h !== "Find stores") throw new Error("title: " + h);
   await page.waitForFunction(() => document.querySelector("#sf-results .row, #sf-results .empty"));
   await page.click('#sf-chips [data-sfchip="quests"]');

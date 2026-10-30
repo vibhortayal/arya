@@ -232,7 +232,7 @@ export function Store() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("store.whereAreYouShopping")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("store.whereAreYouShopping")}</h1>
       <div className="group pad dropanchor">
         <label className="field">{t("store.typeAStoreOrTap")}<input type="text" id="st-name" placeholder="Trader Joe’s" autoComplete="off" value={name}
             onChange={ev => onType(ev.target.value)}

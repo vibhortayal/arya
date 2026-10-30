@@ -155,7 +155,7 @@ export function Powers() {
   return (
     <>
       <p><a href="#" id="pw-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.aryaSPowers")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.aryaSPowers")}</h1>
       <p className="subtitle">{t("powers.whatAryaAlreadyDoesFor")}</p>
       <button className="linkbtn" id="pw-guide" type="button" onClick={() => guide.open()}>{t("powers.seeHowItWorks")}<span aria-hidden="true"> ›</span></button>
       <div id="powers-body">

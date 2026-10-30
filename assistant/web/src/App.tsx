@@ -6,7 +6,7 @@ import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
 import { FIRST_RUN_TOUR } from "./onboarding/firstRunTour";
 import { useGroupLive } from "./app/groupLive";
-import { TABS, type ViewId } from "./app/views";
+import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
 import { useTown } from "./lib/town";
@@ -103,11 +103,12 @@ function Shell() {
         </section>
       </main>
       {nav.chrome && (
-        <nav id="tabs">
+        <nav id="tabs" aria-label={t("tabs.label")}>
           {TABS.map((v: ViewId) => {
             const Icon = TAB_ICON[v];
+            const lit = nav.view === v || PARENT_TAB[nav.view] === v;
             return (
-              <button key={v} type="button" data-view={"view-" + v} className={nav.view === v ? "active" : undefined}
+              <button key={v} type="button" data-view={"view-" + v} className={lit ? "active" : undefined} aria-current={lit ? "page" : undefined}
                 onClick={() => nav.show(v)}>
                 <Icon /><span>{t(TAB_LABEL[v])}</span>
               </button>

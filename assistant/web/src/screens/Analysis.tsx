@@ -110,7 +110,7 @@ export function Analysis() {
   return (
     <>
       <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.analysis")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.analysis")}</h1>
       <div id="an-prices">{cards.length > 0 && <><h3 className="sect">{t("analysis.yourPrices")}</h3>{cards}</>}</div>
       <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
         <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>

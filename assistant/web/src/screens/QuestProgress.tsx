@@ -61,7 +61,7 @@ export function QuestProgress() {
   return (
     <>
       <p><a href="#" id="pfq-back" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.questProgress")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.questProgress")}</h1>
       <div id="pf-stats" className="stattiles" hidden={!active}>
         {profile && s && (
           <>

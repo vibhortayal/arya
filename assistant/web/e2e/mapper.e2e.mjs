@@ -6,7 +6,7 @@ export default async function (page, base) {
   await page.reload();
   await page.waitForSelector("#tabs");
   await page.evaluate(() => window.__aryaShow("mapper"));
-  await page.waitForSelector("#view-mapper h2");
+  await page.waitForSelector("#view-mapper h1");
   await page.waitForSelector("#mp-walkstart");
   if (!(await page.$$("#mp-stores [data-mstore]")).length) throw new Error("no store chips");
   if ((await page.$$eval("#mp-stores [aria-pressed=true]", e => e.length)) !== 1) throw new Error("one store should be selected");
@@ -18,7 +18,7 @@ export default async function (page, base) {
   // The button names the picked store (owner 2026-10-30).
   const picked = await page.getAttribute("#mp-stores [aria-pressed=true]", "data-mstore");
   if ((await page.textContent("#mp-walkstart")).trim() !== `Start mapping ${picked}`) throw new Error("start label");
-  if ((await page.textContent("#view-mapper h2")).trim() !== "Map my store") throw new Error("title");
+  if ((await page.textContent("#view-mapper h1")).trim() !== "Map my store") throw new Error("title");
   if (!(await page.isVisible("#mp-select"))) throw new Error("Select store heading");
   const order = await page.evaluate(() => {
     const at = id => [...document.querySelectorAll("#view-mapper *")].indexOf(document.getElementById(id));
@@ -55,5 +55,5 @@ export default async function (page, base) {
   // The walk opens the capture screen.
   await page.click("#mp-walkstart");
   await page.waitForSelector("#view-capture", { state: "attached" });
-  await page.waitForFunction(() => !document.getElementById("view-mapper") || document.getElementById("view-mapper").hidden || !document.querySelector("#view-mapper h2"));
+  await page.waitForFunction(() => !document.getElementById("view-mapper") || document.getElementById("view-mapper").hidden || !document.querySelector("#view-mapper h1"));
 }

@@ -7,6 +7,7 @@ import type { Session } from "../hunt/model";
 import { H } from "../haul/state";
 import type { ShareKind } from "../haul/Share";
 import { useTranslation } from "../../i18n";
+import { pickerProps } from "../../ui/picker";
 
 /* The Score's "Snap your haul" (quest.js openScore, haul-photo): Arya
  * spots the products in a photo, extras included. The photo itself is
@@ -63,7 +64,7 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
           {((sess.my_reports as string[] | undefined) || []).length > 0 &&
             <button className="btn grow" id="share-sos" type="button" onClick={() => onShare("sos")}>{t("score.shelfSos")}</button>}
         </p>
-        <p style={{ marginTop: 10 }}><label className="btn wide" htmlFor="haul-photo" style={{ textAlign: "center" }}>{t("score.snapYourHaul")}</label>
+        <p style={{ marginTop: 10 }}><label className="btn wide" htmlFor="haul-photo" {...pickerProps("haul-photo")} style={{ textAlign: "center" }}>{t("score.snapYourHaul")}</label>
           <input type="file" id="haul-photo" accept="image/*" hidden onChange={onPhoto} /></p>
         <p className="muted nomargin" id="haul-status">{status}</p>
         <div id="haul-result">

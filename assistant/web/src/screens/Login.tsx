@@ -133,7 +133,7 @@ export function Login() {
           <button id="signin-open" className="linkbtn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
         </header>
         <div className="hero landhero">
-          <h2 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h2>
+          <h1 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h1>
           <p className="herosub nomargin landsub">{t("landing.subhead")}</p>
           <div className="landcards">
             {CARDS.map(c => (

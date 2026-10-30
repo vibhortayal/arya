@@ -198,9 +198,9 @@ class TestWebNoMap(unittest.TestCase):
 class TestSettingsRename(unittest.TestCase):
     def test_web(self):
         src = read(WEB, "screens", "Profile.tsx")
-        self.assertIn('<h2 className="largetitle">Settings</h2>', src)
+        self.assertIn('<h1 className="largetitle">Settings</h1>', src)
         self.assertIn('<h3 className="sect">Account</h3>', src)
-        self.assertNotIn('<h2 className="largetitle">Profile</h2>', src)
+        self.assertNotIn('<h1 className="largetitle">Profile</h1>', src)
         # No floating avatar any more (usability pass); Settings is a tab.
         self.assertNotIn('id="avatar-btn"', read(WEB, "App.tsx"))
 

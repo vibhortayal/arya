@@ -14,7 +14,7 @@ export function StoresAdd() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.addAStore")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.addAStore")}</h1>
       <div className="group pad dropanchor">
         <label className="field">{t("storesAdd.searchGoogleForTheStore")}<input type="text" id="sa-q" placeholder="Costco" autoComplete="off" value={q} onChange={e => setQ(e.target.value)} />
         </label>

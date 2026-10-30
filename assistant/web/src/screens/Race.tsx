@@ -72,7 +72,7 @@ export function Race() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.shopOff")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.shopOff")}</h1>
       <div id="race-body">
         {races && !races.length && <div className="group"><Empty>{t("race.noRacesYetStartOne")}</Empty></div>}
         {(races || []).map((race, ri) => (

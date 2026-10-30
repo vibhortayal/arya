@@ -98,7 +98,7 @@ export function HaulCard() {
 
   return (
     <div id="hl-card-body">
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("haul.yourHaulCard")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("haul.yourHaulCard")}</h1>
       <div className="hl-card">
         <div className="hl-top"><span className="hl-chip">{t("haul.namedByArya")}</span>
           {posted && <button type="button" className="rv-link" data-act="delpost" onClick={() => unpost(false)}>{t("haul.deletePost")}</button>}</div>

@@ -54,7 +54,7 @@ export function Muse() {
   return (
     <>
       <p><a href="#" id="pfm-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("muse.connectAnAiAgent")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("muse.connectAnAiAgent")}</h1>
       <div className="group pad">
         <p className="muted nomargin">{t("muse.useAryaFromAnAi")}</p>
         <div className="row" id="profile-token-row" style={{ marginTop: 10 }}>

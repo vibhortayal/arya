@@ -6,6 +6,7 @@ import { Q, type Session } from "../hunt/model";
 import { fixLabel, type Bucket } from "./core";
 import { H, decodeAny, errMsg, fetchHaul, haulPost, next, openScore, type Entry, type HaulView } from "./state";
 import { t, useTranslation } from "../../i18n";
+import { pickerProps } from "../../ui/picker";
 
 /* Port of pwa/haul.js #view-rreview (openReview, reviewHtml,
  * onReviewClick, onReviewChange): check the receipt against the hunt.
@@ -109,7 +110,7 @@ export function ReceiptReview() {
 
   return (
     <div id="rv-review">
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("haul.checkYourReceipt")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("haul.checkYourReceipt")}</h1>
       <p className="muted">{t("haul.aryaReadFixAnythingThat", { count: r.read })}</p>
       <p className="muted">{t("haul.aryaMatchesByNameThese")}</p>
       {r.matched.length > 0 && <>
@@ -134,7 +135,7 @@ export function ReceiptReview() {
         <div className="group">{r.grabbed_only.map(e => row("grabbed_only", e,
           e.fix === "grabbed_drop" ? t("haul.leftOutOfHaul") : t("haul.inYourHaul"), "no"))}</div>
       </>}
-      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more"><span aria-hidden="true">+ </span>{t("haul.addAnotherReceipt")}</label>
+      <p className="rv-more"><label className="rv-addrcpt" htmlFor="rv-more" {...pickerProps("rv-more")}><span aria-hidden="true">+ </span>{t("haul.addAnotherReceipt")}</label>
         <input type="file" id="rv-more" accept="application/pdf,image/*" aria-label={t("haul.anotherReceipt")} hidden onChange={onMore} /></p>
       <p className="muted rv-more-note">{t("haul.paidInTwoPartsAdd")}</p>
       <p id="rv-status" className="muted">{status}</p>

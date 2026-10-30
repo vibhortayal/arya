@@ -4,7 +4,7 @@ The first parity pass matched structure only, and the colors
 stayed behind (owner catch, 2026-10-27). These tests are the
 verification that pass skipped: the built CSS must carry the
 approved wireframes' token values EXACTLY (greyscale is
-structure; the orange #E4572E is the game), the app's semantic
+structure; the orange #C2410C is the game), the app's semantic
 aliases must resolve onto them, and no pre-migration color —
 above all the old green accent — may survive in any
 first-party source (every file under web/src, scene.js, index.html). The amber warning palette stays
@@ -22,7 +22,7 @@ def first_party():
     return files + [os.path.join(WEB, "index.html"), os.path.join(STATIC, "scene.js")]
 
 WIREFRAME_TOKENS = {
-    "--acc": "#E4572E", "--acc-soft": "#FDEEE8",
+    "--acc": "#C2410C", "--acc-soft": "#FDEEE8",
     "--ink": "#1B1B1E", "--ink2": "#55555C", "--ink3": "#8B8B93",
     "--line": "#D9D9DE", "--line2": "#ECECEF",
     "--bg": "#EFEFF1", "--panel": "#FFFFFF",
@@ -77,8 +77,8 @@ class TestWireframeTokens(unittest.TestCase):
 
     def test_game_shadows_are_the_wireframe_values(self):
         css = read("styles.css")
-        self.assertIn("box-shadow: 0 8px 22px rgba(228, 87, 46, .35)", css)
-        self.assertIn("box-shadow: 0 8px 22px rgba(228, 87, 46, .32)", css)
+        self.assertIn("box-shadow: 0 8px 22px rgba(194, 65, 12, .35)", css)
+        self.assertIn("box-shadow: 0 8px 22px rgba(194, 65, 12, .32)", css)
         self.assertIn("receiptbtn", src("screens/Finish.tsx"))
 
     def test_amber_stays_separate_from_the_accent(self):

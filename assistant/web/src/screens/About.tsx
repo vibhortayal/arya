@@ -9,7 +9,7 @@ export function About() {
   return (
     <>
       <p><a href="#" id="pfa-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.about")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.about")}</h1>
       <div className="group pad">
         <p className="nomargin">{t("about.builtBy")}{" "}<a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>.</p>
         <p className="muted" style={{ marginTop: 8 }}>{t("about.builtOnMetaModelsSam")}</p>

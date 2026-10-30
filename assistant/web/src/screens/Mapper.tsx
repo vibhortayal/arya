@@ -141,7 +141,7 @@ export function Mapper() {
   return (
     <>
       <p className="backrow"><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h1>
       <h3 className="sect" id="mp-select">{t("mapper.selectStore")}</h3>
       <div id="mp-stores" className="mp-stores">
         {shown.map(n => (

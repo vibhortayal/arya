@@ -42,7 +42,7 @@ class TestDeadSurfacesRemoved(unittest.TestCase):
 class TestOnePrimaryAction(unittest.TestCase):
     def test_finish_snap_is_the_primary_button(self):
         fin = src("screens/Finish.tsx")
-        self.assertIn('<label className="btn primary wide receiptbtn" htmlFor="fin-photo">Snap the receipt</label>', fin)
+        self.assertIn('<label className="btn primary wide receiptbtn" htmlFor="fin-photo" {...pickerProps("fin-photo")}>Snap the receipt</label>', fin)
         # the raw input stays out of sight
         self.assertIn('<input type="file" id="fin-photo" accept="image/*" aria-label="Receipt photo" hidden', fin)
 

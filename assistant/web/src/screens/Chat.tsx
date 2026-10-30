@@ -14,7 +14,7 @@ import { t, useTranslation } from "../i18n";
  * An "offer" line is the one-time "Reply in <language> from now on?"
  * card (assistant/docs/MULTILINGUAL-ASK.md): on Auto, after a reply to
  * a non-English message; at most once per session, never after No. */
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map"; text: string; code?: string };
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err"; text: string; code?: string };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
 const history: Msg[] = [];
@@ -120,7 +120,14 @@ export function Chat() {
     speechSynthesis.speak(u);
   };
 
-  const send = async (raw: string) => {
+  /* A failed answer leaves a "Try again" chip that asks the same question
+   * again (UI/UX pass, issue 8): the failed bubbles go, the question stays. */
+  const retry = (q: string) => {
+    const i = lines.findIndex(l => l.kind === "err" && l.code === q);
+    if (i >= 0) lines.splice(i, 1);
+    send(q, true);
+  };
+  const send = async (raw: string, again = false) => {
     const q = raw.trim();
     if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
@@ -129,7 +136,7 @@ export function Chat() {
       return;
     }
     history.push({ role: "user", content: q });
-    add({ kind: "me", text: q });
+    if (!again) add({ kind: "me", text: q }); else setLog(lines.slice());
     const mine = epoch;
     try {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", { messages: history });
@@ -144,7 +151,8 @@ export function Chat() {
       speak(res.reply);
     } catch (e) {
       if (mine !== epoch) return;
-      add({ kind: "arya", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }) });
+      history.pop();
+      add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
   };
 
@@ -178,7 +186,7 @@ export function Chat() {
 
   return (
     <>
-      <h2 className="largetitle">{t("common.askArya")}</h2>
+      <h1 className="largetitle">{t("common.askArya")}</h1>
       <div id="chat-log" ref={logEl}>
         {log.length === 0 ? (
           <div id="chat-empty">
@@ -201,6 +209,11 @@ export function Chat() {
           <div key={i} className="bubble arya">
             <p>{l.text}</p>
             <button className="btn primary" type="button" data-map-open onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
+          </div>
+        ) : l.kind === "err" ? (
+          <div key={i} className="bubble arya" role="alert">
+            <p>{l.text}</p>
+            <button className="chip" type="button" data-ask-retry onClick={() => retry(l.code!)}>{t("ask.tryAgain")}</button>
           </div>
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>

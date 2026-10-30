@@ -181,8 +181,8 @@ export function StoresFind() {
   const nav = useNav();
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.findStores")}</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.findStores")}</h1>
       <FindStorePanel />
       <p className="muted">{t("storesFind.theDirectoryIsSharedBy")}</p>
     </>

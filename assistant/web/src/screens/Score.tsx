@@ -156,7 +156,7 @@ export function Score() {
       {attached && !plain && <img className="scoreparty" src={asset("assets/scenes/score-party.webp")} alt={t("score.theCastCelebratesAroundThe")} />}
       <div className="scorehero">
         <p className="hero-k">{attached ? <>{t("score.receiptAttached")}<span aria-hidden="true"> ✓</span></> : t("common.finishedReceiptMissing")}</p>
-        <h2 className="largetitle" style={{ fontSize: 28 }}>{t(plain ? "score.titleShoppingDone" : "score.titleHuntFinished", { store: sess.store })}</h2>
+        <h1 className="largetitle" style={{ fontSize: 28 }}>{t(plain ? "score.titleShoppingDone" : "score.titleHuntFinished", { store: sess.store })}</h1>
         <p className="muted nomargin">{t(plain ? "score.progressGot" : "score.progressCollected", { mode: qModeLabel(sess.mode), done: p.done, total: p.total })}</p>
       </div>
       {!plain && (

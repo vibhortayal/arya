@@ -13,6 +13,15 @@ export function fmtShort(iso: string): string {
   return y && y !== new Date().getFullYear() ? `${MONTHS[m - 1]} ${d}, ${y}` : `${MONTHS[m - 1]} ${d}`;
 }
 
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/* "Tue, Oct 27" for a receipt's date; the year shows when it is not this year. */
+export function fmtWeekday(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return `${DAYS[new Date(y, m - 1, d).getDay()]}, ${fmtShort(iso.slice(0, 10))}`;
+}
+
 export type Currency = { code: string; symbol: string };
 export const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", INR: "₹", CAD: "C$", AUD: "A$" };
 

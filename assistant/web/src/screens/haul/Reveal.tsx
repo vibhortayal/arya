@@ -130,7 +130,7 @@ export function Reveal() {
 
   return (
     <div id="rv-reveal" ref={box}>
-      <div className="rv-head"><h2 className="largetitle" style={{ fontSize: 28 }}>{title}</h2>
+      <div className="rv-head"><h1 className="largetitle" style={{ fontSize: 28 }}>{title}</h1>
         <p className="muted nomargin">{t("haul.fromThisTripTapAnywhere", { count: items.length })}</p></div>
       <div className="rv-loot" id="rv-loot">
         {items.map((it, i) => (

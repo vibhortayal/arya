@@ -11,9 +11,9 @@ export default async function (page, base) {
   await page.click("#chat-send");
   await page.waitForSelector("#chat-log [data-map-open]");
   await page.click("#chat-log [data-map-open]");
-  await page.waitForSelector("#view-mapper h2");
+  await page.waitForSelector("#view-mapper h1");
   await page.evaluate(() => window.__aryaShow("community"));
   await page.waitForSelector("#qm-map-store", { timeout: 20000 });
   await page.click("#qm-map-store");
-  await page.waitForSelector("#view-mapper h2");
+  await page.waitForSelector("#view-mapper h1");
 }

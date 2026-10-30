@@ -532,7 +532,7 @@ export function Capture() {
   return (
     <>
       <p><a href="#" className="qback" onClick={back}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h2>
+      <h1 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h1>
       <p className="muted" id="cp-why">{prompt.why || ""}</p>
       <div className={"cp-cam" + (live ? " scanning" : "")} id="cp-cam" hidden={!camOn} ref={camBox}>
         <video id="cp-live" ref={videoRef} playsInline muted autoPlay></video>
