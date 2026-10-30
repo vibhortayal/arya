@@ -351,6 +351,8 @@
     "dateRead": "{{name}} expires {{date}}.",
     "thisItem": "This item",
     "trackIt": "Track it",
+    "nameIt": "What is this item called? Type its name and I will track it.",
+    "trackFail": "I could not save that date. Nothing was changed. Try Track it again.",
     "dateTracked": "Tracking {{name}} until {{date}}. It will show under Use soon."
   },
   "express": {
