@@ -48,7 +48,7 @@ class TestLanding(unittest.TestCase):
         self.assertIn('aria-haspopup="dialog"', self.front)
         self.assertIn(">Try it now<", self.front)
         self.assertIn(">Start my own list<", self.front)
-        self.assertIn("status.registration_open && (", self.front)
+        self.assertIn("status.registration_open ? (", self.front)
         self.assertIn("The demo needs no sign-up.", self.front)
         self.assertLess(self.front.index('id="demo-btn"'), self.front.index('className="landcards"'))
         self.assertLess(self.front.index('className="landcards"'), self.front.index('id="register-open"'))

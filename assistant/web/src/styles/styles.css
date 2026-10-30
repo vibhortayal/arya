@@ -898,15 +898,17 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
    screen over a dimmed page, and shrinks back to it on close. */
 .zoombd { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px;
   background: rgba(20, 20, 24, .5); animation: zfade .25s ease both; }
-.zoombd.out { animation: zfade .25s ease reverse both; }
+.zoombd.out { animation: zfadeout .3s ease both; }
 .zoomcard { box-sizing: border-box; width: min(320px, 100%); padding: 22px 20px 20px; text-align: center; background: var(--panel);
   border-radius: 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, .35); animation: zin .35s cubic-bezier(.2, .8, .2, 1) both; }
-.zoombd.out .zoomcard { animation: zin .3s cubic-bezier(.4, 0, .6, 1) reverse both; }
+.zoombd.out .zoomcard { animation: zout .3s cubic-bezier(.4, 0, .6, 1) both; }
 .zoomcard img { width: 84px; height: 84px; border-radius: 18px; background: #FBF5E6; }
 .zoomcard b { display: block; margin: 10px 0 6px; font-size: 20px; color: var(--acc); }
 .zoomcard p { margin: 0 0 16px; font-size: 16px; line-height: 1.45; color: var(--ink); }
 @keyframes zin { from { transform: var(--from); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes zfade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zout { from { transform: none; opacity: 1; } to { transform: var(--from); opacity: .6; } }
+@keyframes zfadeout { from { opacity: 1; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .zoomcard, .zoombd.out .zoomcard { animation: none; }
   .zoombd, .zoombd.out { animation-duration: .01s; }

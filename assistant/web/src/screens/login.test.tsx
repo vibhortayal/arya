@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
 import type { AuthStatus } from "../app/session";
 import { Login, SEEN_KEY, loadSeen } from "./Login";
 
@@ -28,22 +28,58 @@ describe("cards", () => {
     expect(sign.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  /* The zoom layer must leave on its own timer: the old code waited for
+   * animationend, which never came after Close, so the dimmed layer stayed
+   * and no other card could be tapped (owner, 2026-10-30). No animation
+   * event is fired here on purpose. */
   test("a tap zooms the card with its text, and Close, the backdrop and Escape go back", () => {
-    render(<Login />);
-    fireEvent.click(document.getElementById("land-usesoon")!);
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.textContent).toContain("expires or goes bad");
-    fireEvent.click(document.getElementById("land-zoom-close")!);
-    fireEvent.animationEnd(dialog);
-    expect(document.getElementById("land-zoom")).toBeNull();
-    fireEvent.click(document.getElementById("land-maps")!);
-    fireEvent.keyDown(document, { key: "Escape" });
-    fireEvent.animationEnd(screen.getByRole("dialog"));
-    expect(document.getElementById("land-zoom")).toBeNull();
-    fireEvent.click(document.getElementById("land-ask")!);
-    fireEvent.click(document.getElementById("land-zoom")!);
-    fireEvent.animationEnd(screen.getByRole("dialog"));
-    expect(document.getElementById("land-zoom")).toBeNull();
+    vi.useFakeTimers();
+    try {
+      render(<Login />);
+      fireEvent.click(document.getElementById("land-usesoon")!);
+      const dialog = screen.getByRole("dialog");
+      expect(dialog.textContent).toContain("expires or goes bad");
+      fireEvent.click(document.getElementById("land-zoom-close")!);
+      act(() => { vi.advanceTimersByTime(400); });
+      expect(document.getElementById("land-zoom")).toBeNull();
+      fireEvent.click(document.getElementById("land-maps")!);
+      fireEvent.keyDown(document, { key: "Escape" });
+      act(() => { vi.advanceTimersByTime(400); });
+      expect(document.getElementById("land-zoom")).toBeNull();
+      fireEvent.click(document.getElementById("land-ask")!);
+      fireEvent.click(document.getElementById("land-zoom")!);
+      act(() => { vi.advanceTimersByTime(400); });
+      expect(document.getElementById("land-zoom")).toBeNull();
+    } finally { vi.useRealTimers(); }
+  });
+
+  test("every card opens and closes, in any order and repeatedly", () => {
+    vi.useFakeTimers();
+    try {
+      render(<Login />);
+      const ids = Array.from(document.querySelectorAll(".ftile")).map(c => c.id);
+      const order = [...ids, ...ids.slice().reverse(), ids[3], ids[3], ids[0]];
+      for (const id of order) {
+        fireEvent.click(document.getElementById(id)!);
+        expect(document.getElementById("land-zoom")).not.toBeNull();
+        fireEvent.click(document.getElementById("land-zoom-close")!);
+        act(() => { vi.advanceTimersByTime(400); });
+        expect(document.getElementById("land-zoom")).toBeNull();
+      }
+    } finally { vi.useRealTimers(); }
+  });
+
+  test("closing a card puts keyboard focus back on it", () => {
+    vi.useFakeTimers();
+    try {
+      render(<Login />);
+      const card = document.getElementById("land-news")!;
+      card.focus();
+      fireEvent.click(card);
+      fireEvent.keyDown(document, { key: "Escape" });
+      act(() => { vi.advanceTimersByTime(400); });
+      expect(document.activeElement).toBe(card);
+    } finally { vi.useRealTimers(); }
   });
 
   test("the first card beats until any card is tapped; a tapped card stops hopping for good", () => {
