@@ -2,11 +2,10 @@
 a Kroger-family store (Kroger Products API `aisleLocations`).
 
 A suggestion only. Crowd-mapping stays the core; this never writes to a
-store map. Kroger's terms (developer.kroger.com/terms, section 5e) forbid
-permanent copies and caching past the response cache header, so nothing
-here is stored: the one cache is the OAuth token (our credential, not
-Kroger content), and a Kroger response is kept only when it carries a
-`Cache-Control: max-age`. Kroger sends none today, so every lookup is live.
+store map. Nothing from Kroger is stored: the one cache is the OAuth
+token (our credential, not Kroger content), and a Kroger response is kept
+only when it carries a `Cache-Control: max-age`. Kroger sends none today,
+so every lookup is live.
 
 Off unless ARYA_KROGER_AISLES=1 and KROGER_CLIENT_ID / KROGER_CLIENT_SECRET
 are set (server side only, never logged). Every failure answers None so the
@@ -22,9 +21,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, wait
 
 BASE = "https://api.kroger.com/v1"
 TIMEOUT = 8
+WORKERS = 5      # concurrent product lookups per trip
+BUDGET_S = 10    # give up on stragglers; the screen just shows no hint
 
 # Brands that share Kroger's catalog (store name contains one of these).
 FAMILY = ["kroger", "ralphs", "fred meyer", "harris teeter", "king soopers",
@@ -162,7 +164,7 @@ def location_id(store):
 
 def _clean(entry):
     num = str(entry.get("number") or "").strip()
-    out = {"department": (entry.get("description") or "").strip().title()}
+    out = {"department": entry.get("description") or ""}
     # Fresh departments carry a department code, not a walkable aisle.
     if num.isdigit() and 0 < int(num) < 100:
         out["aisle"] = num
@@ -173,24 +175,58 @@ def _clean(entry):
     return out if (out["department"] or "aisle" in out) else None
 
 
-def aisle_hint(store, item):
-    """{product, department, aisle?, side?, bay?, shelf?} for one list item
-    at one Kroger-family store, or None (not Kroger, off, no data, or any
-    failure). `store` is a stores.py directory row."""
-    item = (item or "").strip()[:80]
-    if not (enabled() and item and is_kroger_family(store.get("name"))):
-        return None
+def _hint_at(loc, item):
+    body = _get("/products", {"filter.term": item, "filter.locationId": loc,
+                              "filter.limit": 5})
+    for prod in (body or {}).get("data", []):
+        for entry in prod.get("aisleLocations") or []:
+            hint = _clean(entry)
+            if hint:
+                return {"product": prod.get("description", ""), **hint}
+    return None
+
+
+def trip_hints(store, items, limit=15):
+    """{item: hint} for the items of one trip: one location lookup, then the
+    items looked up concurrently.
+    The caller keeps it in memory for the trip and drops it at checkout;
+    nothing is stored here. Items without a hint are left out. Any failure
+    returns what was gathered so far (possibly {})."""
+    names = []
+    for item in items or []:
+        n = (item or "").strip()[:80]
+        if n and n.lower() not in [x.lower() for x in names]:
+            names.append(n)
+    out = {}
+    if not (enabled() and names and is_kroger_family(store.get("name"))):
+        return out
     try:
         loc = location_id(store)
-        if not loc:
-            return None
-        body = _get("/products", {"filter.term": item, "filter.locationId": loc,
-                                  "filter.limit": 5})
-        for prod in (body or {}).get("data", []):
-            for entry in prod.get("aisleLocations") or []:
-                hint = _clean(entry)
-                if hint:
-                    return {"product": prod.get("description", ""), **hint}
     except (urllib.error.URLError, OSError, ValueError, KeyError):
-        return None
-    return None
+        return out
+    if not loc:
+        return out
+
+    def one(n):
+        try:
+            return n, _hint_at(loc, n)
+        except (urllib.error.URLError, OSError, ValueError, KeyError):
+            return n, None
+
+    # Concurrent lookups: the token is already warm from the location call.
+    pool = ThreadPoolExecutor(max_workers=WORKERS)
+    try:
+        futures = [pool.submit(one, n) for n in names[:limit]]
+        done, _ = wait(futures, timeout=BUDGET_S)
+        for f in done:
+            n, hint = f.result()
+            if hint:
+                out[n] = hint
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    return out
+
+
+def aisle_hint(store, item):
+    """One item's hint at one Kroger-family store, or None."""
+    return trip_hints(store, [item], limit=1).get((item or "").strip()[:80])

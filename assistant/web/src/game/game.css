@@ -172,6 +172,7 @@
 .qg-act { padding: 12px 16px 4px; text-align: center; }
 .qg-itemname { font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .qg-goldtag { font-size: 12px; font-weight: 900; color: #7A5200; background: var(--q-gold); padding: 3px 8px; border-radius: 99px; }
+.qg-kroger { margin: 2px 0 0; font-size: 14px; font-weight: 700; color: #1f7a3f; text-transform: capitalize; }
 .qg-hint { font-size: 14px; color: var(--q-ink2); margin-top: 2px; min-height: 20px; }
 .qg-got { width: 100%; min-height: 60px; margin-top: 12px; border-radius: 18px; background: var(--q-green); color: #fff !important; font-size: 20px; font-weight: 900; box-shadow: 0 5px 0 #1F6B37; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .qg-got small { font-size: 14px; background: rgba(255,255,255,.22); padding: 3px 8px; border-radius: 99px; }

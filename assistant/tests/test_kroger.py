@@ -70,7 +70,7 @@ class TestKroger(unittest.TestCase):
         self.on()
         kroger._http = Fake(MILK)
         hint = kroger.aisle_hint(STORE, "milk")
-        self.assertEqual(hint["department"], "Dairy")
+        self.assertEqual(hint["department"], "DAIRY")   # shown as returned
         self.assertNotIn("aisle", hint)
         self.assertEqual((hint["side"], hint["bay"], hint["shelf"]), ("L", "2", "4"))
 
@@ -80,6 +80,48 @@ class TestKroger(unittest.TestCase):
         hint = kroger.aisle_hint(STORE, "pasta")
         self.assertEqual(hint["aisle"], "12")
         self.assertTrue(any("filter.locationId=01400513" in u for u in fake.urls))
+
+    def test_trip_hints_one_location_lookup_and_skips_misses(self):
+        self.on()
+        fake = kroger._http = Fake(PASTA)
+        out = kroger.trip_hints(STORE, ["pasta", "Pasta", "rice", ""])
+        self.assertEqual(sorted(out), ["pasta", "rice"])
+        self.assertEqual(sum("/locations" in u for u in fake.urls), 1)
+
+    def test_trip_hints_look_items_up_concurrently(self):
+        import time
+        self.on()
+        base = Fake(PASTA)
+        def slow(url, headers, data=None):
+            if "/products" in url:
+                time.sleep(0.3)
+            return base(url, headers, data)
+        kroger._http = slow
+        t = time.time()
+        out = kroger.trip_hints(STORE, ["a", "b", "c", "d", "e"])
+        self.assertEqual(len(out), 5)
+        self.assertLess(time.time() - t, 1.0)   # sequential would be 1.5 s
+
+    def test_slow_straggler_is_dropped_not_waited_for(self):
+        import time
+        self.on()
+        base = Fake(PASTA)
+        def slow(url, headers, data=None):
+            if "/products" in url and "filter.term=stuck" in url:
+                time.sleep(2)
+            return base(url, headers, data)
+        kroger._http = slow
+        old, kroger.BUDGET_S = kroger.BUDGET_S, 0.5
+        try:
+            t = time.time()
+            out = kroger.trip_hints(STORE, ["pasta", "stuck"])
+        finally:
+            kroger.BUDGET_S = old
+        self.assertEqual(list(out), ["pasta"])
+        self.assertLess(time.time() - t, 1.5)
+
+    def test_trip_hints_off_returns_empty(self):
+        self.assertEqual(kroger.trip_hints(STORE, ["milk"]), {})
 
     def test_non_kroger_store_makes_no_calls(self):
         self.on()
@@ -143,6 +185,13 @@ class TestKrogerRoute(unittest.TestCase):
         sid = self.stores.directory()[0]["id"]
         r = self.c.get("/api/stores/kroger-aisle", params={"store_id": sid, "item": "milk"})
         self.assertEqual(r.json(), {"enabled": False, "hint": None})
+
+    def test_trip_route_flag_off_and_validation(self):
+        sid = self.stores.directory()[0]["id"]
+        r = self.c.post("/api/stores/kroger-trip", json={"store_id": sid, "items": ["milk"]})
+        self.assertEqual(r.json(), {"enabled": False, "hints": {}})
+        r = self.c.post("/api/stores/kroger-trip", json={"store_id": "nope", "items": []})
+        self.assertEqual(r.status_code, 404)
 
     def test_unknown_store_404(self):
         r = self.c.get("/api/stores/kroger-aisle", params={"store_id": "nope", "item": "milk"})

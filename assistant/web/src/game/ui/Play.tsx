@@ -17,6 +17,7 @@ import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type Fe
 import { Juice } from "../fx/juice";
 import { charArt, sceneArt } from "../assets";
 import { GhostHand, Sheet, SnapButton } from "./bits";
+import { hintFor as krogerLine, useKrogerHints } from "../../lib/krogerHints";
 import { coachFor } from "./coach";
 import type { Goal, WorldApi } from "../world/World3D";
 
@@ -68,6 +69,8 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   }, []);
 
   const L = trip.layout;
+  /* Live aisle hints at a Kroger-family store: background fetch, trip memory only. */
+  const kroger = useKrogerHints(L.id, trip.items.map(i => i.name), !trip.practice);
   const done = allHandled(trip);
   const item: QuestItem | null = at ? trip.items.find(i => i.key === at && !isHandled(trip, i.key)) ?? null : null;
   const section = item ? L.sections.find(s => s.id === item.section)! : null;
@@ -325,6 +328,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
                     <span className={"qg-tag " + view_}>{view_ === "real" ? section.short : view_ === "fog" ? "Fog · not mapped yet" : `Simulated · ${section.short}`}</span>
                     <h2>{trip.golden === item.key && <span className="qg-goldtag">★ ×2</span>}{item.name}</h2>
                     <p className="qg-hint">{hintFor(item, view_, section.typical)}</p>
+                    {krogerLine(kroger, item.name) && <p className="qg-kroger">Kroger: {krogerLine(kroger, item.name)}</p>}
                   </div>
                 </div>
                 {page === "main" && (

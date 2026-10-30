@@ -6,6 +6,8 @@ import { SampleSource } from "../core/source";
 import { newTrip, type Trip } from "../core/trip";
 import { Play } from "./Play";
 
+const kroger = vi.hoisted(() => ({ hints: {} as Record<string, unknown> }));
+vi.mock("../../lib/krogerHints", async orig => ({ ...(await orig<typeof import("../../lib/krogerHints")>()), useKrogerHints: () => kroger.hints }));
 const world = vi.hoisted(() => ({ arrive: null as null | ((g: { kind: "item"; key: string }) => void) }));
 vi.mock("../world/World3D", () => ({ World3D: (p: { onArrive: (g: { kind: "item"; key: string }) => void }) => { world.arrive = p.onArrive; return null; } }));
 vi.mock("../fx/juice", () => ({ Juice: class {
@@ -88,5 +90,19 @@ describe("fog nudge", () => {
     await atShelf(snapSource({ ok: true }), true);
     await screen.findByText(/^List ·/);
     expect(screen.queryByText(/Snap the shelf/)).toBeNull();
+  });
+
+  it("shows the Kroger line only after the hint arrives and never blocks the cue", async () => {
+    kroger.hints = {};
+    const trip = await open(["Pasta"]);
+    const { rerender } = render(<Play trip={{ ...trip, here: trip.items[0].section }} source={new SampleSource()} onTrip={() => {}} onFinish={() => {}} onQuit={() => {}} />);
+    await waitFor(() => expect(world.arrive).toBeTruthy());
+    act(() => world.arrive!({ kind: "item", key: trip.items[0].key }));
+    await screen.findByText(/Got it/);                         // the cue is up without any hint
+    expect(screen.queryByText(/Kroger:/)).toBeNull();
+    kroger.hints = { pasta: { aisle: "2", side: "L", bay: "10" } };
+    rerender(<Play trip={{ ...trip, here: trip.items[0].section }} source={new SampleSource()} onTrip={() => {}} onFinish={() => {}} onQuit={() => {}} />);
+    expect(await screen.findByText("Kroger: Aisle 2 · left side · bay 10")).toBeTruthy();
+    kroger.hints = {};
   });
 });
