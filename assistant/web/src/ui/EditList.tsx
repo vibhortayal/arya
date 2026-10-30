@@ -23,10 +23,10 @@ const Grip = () => (
 );
 
 /* The title row: the page title, and Edit, which turns into Done. */
-export function EditTitle({ title, editTitle, editing, onToggle, id }: { title: string; editTitle: string; editing: boolean; onToggle: () => void; id?: string }) {
+export function EditTitle({ title, editTitle, editing, onToggle, id, small }: { title: string; editTitle: string; editing: boolean; onToggle: () => void; id?: string; small?: boolean }) {
   const { t } = useTranslation();
   return (
-    <div className="titlerow"><h1 className="largetitle">{editing ? editTitle : title}</h1>
+    <div className="titlerow"><h1 className="largetitle" style={small ? { fontSize: 28 } : undefined}>{editing ? editTitle : title}</h1>
       <button type="button" id={id} className={"linkbtn titleedit" + (editing ? " done" : "")} onClick={onToggle}>
         {editing ? t("common.done") : t("today.edit.edit")}</button></div>
   );
@@ -44,6 +44,8 @@ type Props<T extends string> = {
   onChange: (next: T[], msg?: string) => void;
   hint?: string;
   moreTitle?: string;
+  /* Under More when nothing is off. */
+  emptyMore?: string;
   /* Replaces the plain More list (Today shows its card library). */
   more?: ReactNode;
   /* Something at the end of an item, before the grip (a size, a pin). */
@@ -56,7 +58,7 @@ type Props<T extends string> = {
   id?: string;
 };
 
-export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, more, badge, onTap, below, onReset, resetLabel, id }: Props<T>) {
+export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, emptyMore, more, badge, onTap, below, onReset, resetLabel, id }: Props<T>) {
   const { t } = useTranslation();
   // The order while a finger drags; saved when it lifts.
   const [order, setOrder] = useState(on);
@@ -125,7 +127,7 @@ export function EditList<T extends string>({ on, off, name, sub, desc, onChange,
                 </button>
               ))}
             </div>
-          ) : <p className="muted small edithint">{t("edit.allOn")}</p>}
+          ) : <p className="muted small edithint">{emptyMore ?? t("edit.allOn")}</p>}
         </>
       )}
       {onReset && <button type="button" className="linkbtn editreset" onClick={onReset}>{resetLabel ?? t("edit.reset")}</button>}

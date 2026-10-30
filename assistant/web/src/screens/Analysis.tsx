@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { get } from "../lib/api";
@@ -6,6 +6,7 @@ import { MONTHS, money as fmtMoney } from "../lib/format";
 import { Empty, Row, Section } from "../ui/kit";
 import { InfoBtn, InfoSheet } from "../ui/Info";
 import { useToast } from "../ui/Toast";
+import { EditList, EditTitle } from "../ui/EditList";
 import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-analysis, app.js renderAnalysis and the
@@ -27,14 +28,19 @@ type Insights = {
   waste?: { dollars: number; month: string; items: { name: string }[] } | null;
 } | null;
 
+/* Spending's sections, in their usual order; the person can reorder
+ * and hide them (card library, 2026-10-30). */
+const SECTIONS = ["prices", "spend", "months", "stores", "top"];
+
 const pct = (n: number) => `${Math.abs(n).toFixed(Math.abs(n) < 10 ? 1 : 0).replace(/\.0$/, "")}%`;
 const names = (n: string[]) => (n.length <= 2 ? n.join(t("lists.and")) : t("analysis.namesAnd", { names: n.slice(0, -1).join(", "), last: n[n.length - 1] }));
 
 export function Analysis() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency } = useSession();
-  const { showErr } = useToast();
+  const { currency, layouts = {}, saveLayout } = useSession();
+  const { toast, showErr } = useToast();
+  const [editing, setEditing] = useState(false);
   const money = (n: number) => fmtMoney(n, currency);
   const [d, setD] = useState<Dash | null>(null);
   const [receipts, setReceipts] = useState(0);
@@ -106,15 +112,15 @@ export function Analysis() {
   }
 
   const show = !d || !!latest;
-
-  return (
-    <>
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.analysis")}</h1>
+  const saved = layouts.spending?.on;
+  const on = saved ? saved.filter(id => SECTIONS.includes(id)) : SECTIONS;
+  const offS = SECTIONS.filter(id => !on.includes(id));
+  const sections: Record<string, ReactNode> = {
+    prices: (
       <div id="an-prices">{cards.length > 0 && <><h3 className="sect">{t("analysis.yourPrices")}</h3>{cards}</>}</div>
-      <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
-        <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
-      <div id="an-data" hidden={!show}>
+    ),
+    spend: (
+      <>
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
           {d && latest && <>
@@ -129,18 +135,30 @@ export function Analysis() {
             {!!d.for_others_total && <Row name={t("analysis.boughtForOthers")} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
           </>}
         </div>
+      </>
+    ),
+    months: (
+      <>
         <Section title={t("analysis.spendByMonth")} />
         <div id="an-months" className="group pad">
           {d && (months.length ? months.map(([m, v]) =>
             <div className="month-row" key={m}><span>{monthName(m)}</span><div className="track"><div className="bar" style={{ width: `${Math.round(v / max * 100)}%` }} /></div><span className="money">{money(v)}</span></div>)
             : <Empty>{t("analysis.noTripsYet")}</Empty>)}
         </div>
+      </>
+    ),
+    stores: (
+      <>
         <Section title={t("analysis.spendByStore")} />
         <div id="an-stores" className="group">
           {d && (Object.keys(d.spend_by_store).length
             ? Object.entries(d.spend_by_store).sort((a, c) => c[1] - a[1]).map(([st, v]) => <Row key={st} name={st} right={money(v)} />)
             : <Empty>{t("analysis.noTripsYet")}</Empty>)}
         </div>
+      </>
+    ),
+    top: (
+      <>
         <Section title={t("analysis.topGroceryItems")} />
         <div id="an-top" className="group">
           {d && (d.top_items.length ? d.top_items.map(it =>
@@ -148,8 +166,30 @@ export function Analysis() {
               onClick={ev => { ev.preventDefault(); nav.show("item", { id: it.item_id }); }}>{it.name}</a></div><div className="money">{money(it.spend)}</div></div>)
             : <Empty>{t("analysis.noItemsYet")}</Empty>)}
         </div>
-      </div>
+      </>
+    ),
+  };
 
+  return (
+    <>
+      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <EditTitle id="an-editbtn" small title={t("common.analysis")} editTitle={t("analysis.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
+      {editing ? (
+        <EditList id="an-edit" on={on} off={offS} name={id => t(`analysis.sections.${id}`)} sub={() => ""} desc={() => ""}
+          hint={t("analysis.editHint")} moreTitle={t("analysis.moreSections")}
+          onChange={(next, msg) => {
+            const prev = layouts.spending;
+            saveLayout("spending", { on: next }).catch(showErr);
+            if (msg) toast(msg, { action: t("common.undo"), onAction: () => { saveLayout("spending", prev || {}).catch(showErr); } });
+          }}
+          onReset={() => { saveLayout("spending", {}).catch(showErr); }} />
+      ) : <>
+        <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
+          <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
+        <div id="an-data" hidden={!show}>
+          {on.map(id => <Fragment key={id}>{sections[id]}</Fragment>)}
+        </div>
+      </>}
       <InfoSheet k={info} onClose={() => setInfo(null)} />
     </>
   );

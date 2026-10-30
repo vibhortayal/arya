@@ -80,6 +80,28 @@ DISPLAY = {"text": (0, 1, 2, 3, 4), "spacing": ("compact", "comfortable"),
 DISPLAY_DEFAULT = {"text": 1, "spacing": "comfortable", "bold": False, "pictures": True, "motion": True}
 
 
+# Edit mode on other screens (card library, 2026-10-30): per screen,
+# lists of ids or texts. "lists": {"order", "hidden", "flags"},
+# "ask": {"chips"}, "spending": {"on"}. Whole screen values replace.
+LAYOUT_SCREENS = ("lists", "ask", "spending")
+LAYOUT_MAX_ITEMS = 60
+LAYOUT_MAX_TEXT = 120
+
+
+def _layout_ok(v):
+    return isinstance(v, dict) and all(
+        isinstance(k, str) and (x is None or (isinstance(x, list) and len(x) <= LAYOUT_MAX_ITEMS
+                                and all(isinstance(i, str) and 0 < len(i) <= LAYOUT_MAX_TEXT for i in x)))
+        for k, x in v.items())
+
+
+def _layouts(cur):
+    got = cur.get("layouts")
+    if not isinstance(got, dict):
+        return {}
+    return {k: v for k, v in got.items() if k in LAYOUT_SCREENS and _layout_ok(v)}
+
+
 def _today_sizes(cur):
     sizes = cur.get("today_sizes")
     if not isinstance(sizes, dict):
@@ -132,6 +154,7 @@ def settings_get():
             "today_asked": bool(cur.get("today_asked")),
             "today_sizes": _today_sizes(cur),
             "display": _display(cur),
+            "layouts": _layouts(cur),
             **first_run(cur)}
 
 
@@ -149,6 +172,10 @@ async def settings_set(req: Request):
     asked = body.get("today_asked") is True
     sizes = body.get("today_sizes")
     display = body.get("display")
+    layouts = body.get("layouts")
+    if layouts is not None and (not isinstance(layouts, dict) or any(
+            k not in LAYOUT_SCREENS or not _layout_ok(v) for k, v in layouts.items())):
+        raise HTTPException(400, "layouts maps lists, ask or spending to lists of ids")
     if sizes is not None and (not isinstance(sizes, dict) or any(
             k not in TODAY_CARDS or v not in TODAY_SIZES for k, v in sizes.items())):
         raise HTTPException(400, "today_sizes maps a card to s, m or l")
@@ -165,7 +192,7 @@ async def settings_set(req: Request):
         raise HTTPException(400, "quest_nudge must be snooze or off")
     if (code is None and lang is None and not onboard and not dismiss
             and mode is None and nudge is None and not trip
-            and cards == "absent" and not asked and sizes is None and display is None):
+            and cards == "absent" and not asked and sizes is None and display is None and layouts is None):
         raise HTTPException(400, "send currency, language, onboarded, get_started_dismissed, shop_mode or today_cards")
     if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
@@ -208,6 +235,8 @@ async def settings_set(req: Request):
             cur["today_sizes"] = {**_today_sizes(cur), **sizes}
         if display is not None:
             cur["display"] = {**_display(cur), **display}
+        if layouts is not None:
+            cur["layouts"] = {**_layouts(cur), **layouts}
         state._save("settings.json", cur)
     return settings_get()
 
