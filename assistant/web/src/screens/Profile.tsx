@@ -184,7 +184,7 @@ export function Profile() {
         <NavRow id="btn-about" view="about" title={t("common.about")} sub={t("settings.builtOnMetaModels")} />
       </div>
       <div className="group">
-        <a className="navrow" href="/api/account/export"><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
+        <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
         <button className="navrow" id="btn-del-account" type="button" onClick={() => setDelOpen(o => !o)}>
           <span className="grow">{t("settings.deleteMyAccount")}<span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
         <div id="del-account-box" className="pad" hidden={!delOpen}>

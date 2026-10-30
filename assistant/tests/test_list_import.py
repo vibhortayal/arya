@@ -100,6 +100,13 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(self.c.post("/api/list/import", json={"items": []}).status_code, 400)
         self.assertEqual(self.c.post("/api/list/import", json={"list_id": "nope", "items": [{"name": "x"}]}).status_code, 404)
 
+    def test_names_that_fold_into_one_row_are_counted_once(self):
+        r = self.c.post("/api/list/import", json={"list_id": self.lid, "items": [
+            {"name": "zz import1"}, {"name": "zz import1"}, {"name": "zz import1 "}]}).json()
+        self.assertEqual((r["added"], r["merged"], r["already"]), (1, 2, 0))
+        r = self.c.post("/api/list/import", json={"list_id": self.lid, "items": [{"name": "zz import1"}]}).json()
+        self.assertEqual((r["added"], r["already"]), (0, 1))
+
 
 if __name__ == "__main__":
     unittest.main()

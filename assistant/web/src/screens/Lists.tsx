@@ -904,7 +904,7 @@ export function Lists() {
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
               <span>{t("lists.sharedWith", { name: grp.name, value: (() => {
-                const ns = others.map(m => cap(m.handle));
+                const ns = others.map(m => "@" + m.handle);
                 return ns.length <= 2 ? ns.join(t("lists.and")) : t("lists.namesAndMore", { names: ns.slice(0, 2).join(", "), n: ns.length - 2 });
               })() })}</span>
             </p>

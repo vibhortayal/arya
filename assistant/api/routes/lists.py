@@ -322,8 +322,19 @@ async def list_import(req: Request):
             _merge_flag(a["item_id"], {"aisle": it["aisle"]})
         groups.note("added", a["item_id"])
         added.append(a)
-    new_ids = [a["item_id"] for a in added if a["item_id"] not in before]
-    return {"added": len(new_ids), "already": len(added) - len(new_ids),
+    # Names that read as the same item fold into one row ("zz import3" and
+    # "zz import4" into "zz import1"): count the rows that are new, and say
+    # how many names folded into a row that was already there.
+    new_ids, already, merged = [], 0, 0
+    for a in added:
+        i = a["item_id"]
+        if i in before:
+            already += 1
+        elif i in new_ids:
+            merged += 1
+        else:
+            new_ids.append(i)
+    return {"added": len(new_ids), "already": already, "merged": merged,
             "names": [a["name"] for a in added], "item_ids": new_ids}
 
 

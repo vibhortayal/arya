@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
-import { NavProvider, useNav } from "./app/nav";
+import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
@@ -93,6 +93,13 @@ function Shell() {
   const Screen = SCREENS[nav.view];
   const tour = useTour();
   useInviteLink();
+  // Back from the demo's first screen returns to the start page, as
+  // "Leave the demo" does, instead of leaving the site (pilot audit, 2026-10-30).
+  useBackHandler(() => {
+    if (!s.demo || nav.depth > 1 || !nav.chrome) return false;
+    fetch("/auth/logout", { method: "POST" }).catch(() => {}).finally(() => { s.leave(); });
+    return true;
+  });
   useListFromHash();
   useGroupLive();
   return (
