@@ -121,8 +121,9 @@ class TestTeachRoutes(unittest.TestCase):
         self.teach(jpeg(1))
         self.teach(jpeg(2))
         v = self.view()
-        self.assertEqual(v["total"], 2)
-        self.assertEqual(v["coverage_pct"], 100)
+        self.assertEqual((v["total"], v["seen"]), (2, 2))
+        # No aisle number read yet: the store's size is unknown, so no %.
+        self.assertIsNone(v["coverage_pct"])
 
     def test_scrub_failure_keeps_nothing_and_never_reads(self):
         FakeTeachClient.people_fails = True
