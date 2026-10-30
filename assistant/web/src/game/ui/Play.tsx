@@ -16,7 +16,7 @@ import type { QuestItem } from "../core/types";
 import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
 import { charArt, sceneArt } from "../assets";
-import { GhostHand, KindBadge, Sheet } from "./bits";
+import { GhostHand, Sheet } from "./bits";
 import { coachFor } from "./coach";
 import type { Goal, WorldApi } from "../world/World3D";
 
@@ -25,15 +25,14 @@ const World3D = lazy(() => import("../world/World3D").then(m => ({ default: m.Wo
 type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: (t: Trip) => void; onFinish: (t: Trip) => void; onQuit: () => void;
   /* End the trip for good (the host closes its record). */
   onEnd?: () => void;
-  /* A store not fully mapped: say so once at the start (QuestGame.needsMap). */
-  mapOffer?: boolean };
-type SheetName = null | "list" | "route" | "help" | "quit";
+  /* A store not fully mapped: the cue's Map it opens a sheet whose
+   * "Map it now" leaves for the host's Map my store (QuestGame.needsMap). */
+  onMap?: () => void };
+type SheetName = null | "list" | "map" | "help" | "quit";
 type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
 
-export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, mapOffer }: Props) {
-  // Shown until dismissed or the first item is handled; it never blocks play.
-  const [mapCard, setMapCard] = useState(!!mapOffer);
+export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, onMap }: Props) {
   const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
   const [page, setPage] = useState<Page>("main");
   const [walking, setWalking] = useState<Goal | null>(null);
@@ -43,7 +42,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
   const [banner, setBanner] = useState<Banner>(null);
   const [overview, setOverview] = useState(false);
   const [prefs, setPrefs] = useState<FeelPrefs>(feel.prefs);
-  const [briefing, setBriefing] = useState(!trip.got.length && !trip.here);
+  const [briefing, setBriefing] = useState(!trip.got.length && !trip.here && trip.items.length > 0);
   const [subName, setSubName] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
@@ -180,6 +179,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
 
   const coach = trip.practice && !briefing && !sheet ? coachFor(trip, item ? "section" : "map", item, view_) : null;
   const left = trip.items.filter(i => !isHandled(trip, i.key) || trip.passed.includes(i.key));
+  const cue = trip.practice ? "Practice" : L.kind === "simulated" ? "Typical layout" : L.kind === "partial" ? "Part mapped" : null;
 
   return (
     <div className={"qg-play qg-live " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
@@ -194,7 +194,6 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
         <button className="qg-ic" onClick={() => setSheet("quit")} aria-label="Leave the quest">‹</button>
         <div className="qg-where">
           <b>{trip.practice && L.id === "practice" ? "Practice Market" : L.name}</b>
-          <KindBadge kind={L.kind} practice={trip.practice} />
         </div>
         <button className="qg-basket" onClick={() => setSheet("list")} aria-label={`Cart: ${got} of ${total}. ${trip.points} points. Open the list`}>
           <img src={charArt("basket.webp")} alt="" />
@@ -203,15 +202,13 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
         </button>
         <button className="qg-ic" onClick={() => setSheet("help")} aria-label="How to play and settings">?</button>
       </header>
-      <div className="qg-camrow">
-        {L.kind === "simulated" && <span className="qg-pill sim">{L.typicalOf ? `Typical ${L.typicalOf} layout · not mapped here yet` : "Simulated store · sections are guesses"}</span>}
-        {L.kind === "partial" && <span className="qg-pill fog">Fog = not mapped yet</span>}
-        <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"}>{overview ? "Follow me" : "Whole store"}</button>
-      </div>
-      {mapCard && !trip.got.length && !trip.reports.length && (
-        <div className="qg-mapcard" role="status">
-          <p><b>This store isn't mapped yet.</b> You're playing a typical layout. When you're done, you can help map it.</p>
-          <button className="qg-x" onClick={() => setMapCard(false)} aria-label="Got it">✕</button>
+      {/* The store's status: one quiet cue (usability audit: one pill, and
+          "you can help map it" comes with the button). */}
+      {cue && (
+        <div className="qg-camrow">
+          {onMap && !trip.practice
+            ? <button className="qg-cue" onClick={() => setSheet("map")} aria-label={`${cue}. Map this store`}>{cue} · <b>Map it ›</b></button>
+            : <span className="qg-cue">{cue}</span>}
         </div>
       )}
       {coach && (
@@ -274,6 +271,16 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
           </motion.section>
         ) : (
           <motion.section key="dock" className="qg-dock" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}>
+            <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">{overview ? <><circle cx="12" cy="8" r="3.2" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></> : <><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M3.5 10h17M10 10v10.5" /></>}</svg>
+            </button>
+            {!total ? (
+              <>
+                <div className="qg-empty"><b>Your list is empty</b><small>Add what you need and Arya plans the walk.</small></div>
+                <AddItem dispatch={a => onTrip(reduce(tripRef.current, a))} />
+                <div className="qg-dock-row"><button onClick={onQuit}>Pick a saved list</button></div>
+              </>
+            ) : <>
             <div className="qg-items" role="list" aria-label="Your list">
               {left.map(i => (
                 <button role="listitem" key={i.key} className={"qg-chip" + (i.key === next ? " on" : "") + (trip.passed.includes(i.key) ? " later" : "")} onClick={() => onTapItem(i.key)} aria-label={`Walk to ${i.name}`}>
@@ -293,10 +300,10 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
             )}
             <div className="qg-dock-row">
               {undo && <button className="undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
-              <button onClick={() => setSheet("route")}>Route</button>
-              <button onClick={() => setSheet("list")}>List</button>
+              <button onClick={() => setSheet("list")}>List{left.length ? ` · ${left.length} left` : ""}</button>
               {!done && <button onClick={() => walkTo({ kind: "checkout" })}>Checkout</button>}
             </div>
+            </>}
           </motion.section>
         )}
       </AnimatePresence>
@@ -315,10 +322,16 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, ma
 
       {/* ---- sheets ---- */}
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
-        <ListSheet trip={trip} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
+        <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
-      <Sheet open={sheet === "route"} onClose={() => setSheet(null)} title="Your route" tall>
-        <RouteSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} />
+      <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map this store?">
+        <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are blurred first.</p>
+        <p className="qg-p">{got ? `You have ${got} of ${total} in the cart. Your grabs are saved; the trip ends here.` : "Nothing is in the cart yet, so nothing is lost."}</p>
+        <div className="qg-opts">
+          <button id="qg-mapnow" className="qg-btn primary" onClick={() => { setSheet(null); onMap?.(); }}>Map it now</button>
+          <button className="qg-btn" onClick={() => setSheet(null)}>After this trip</button>
+          <button className="qg-btn ghost" onClick={() => setSheet(null)}>Keep playing</button>
+        </div>
       </Sheet>
       <Sheet open={sheet === "help"} onClose={() => setSheet(null)} title="How to play" tall>
         <HowTo />
@@ -355,41 +368,59 @@ function hintFor(item: QuestItem, view: string, typical: string) {
   return "Arya has not pinned the exact shelf yet.";
 }
 
-function ListSheet({ trip, onGo }: { trip: Trip; onGo: (id: string) => void }) {
+/* One list (usability audit: Route and List were two sheets for one
+ * thing). Add at the top, then the items by section in walking order.
+ * Arya keeps the order; moving or skipping a section is one link down. */
+function ListSheet({ trip, dispatch, onGo }: { trip: Trip; dispatch: (a: Action) => void; onGo: (id: string) => void }) {
+  const [edit, setEdit] = useState(false);
   const order = stops(trip);
+  const live = order.filter(id => !trip.skipped.includes(id));
   return (
     <div className="qg-list">
-      {order.map(id => {
-        const s = trip.layout.sections.find(x => x.id === id)!;
-        return (
-          <div key={id} className="qg-list-sec">
-            <button className="qg-list-h" onClick={() => onGo(id)}>{s.short}{trip.skipped.includes(id) && <em> · skipped</em>}<span>Go →</span></button>
-            {itemsIn(trip, id).map(i => {
-              const g = trip.got.includes(i.key), r = trip.reports.find(x => x.key === i.key), p = trip.passed.includes(i.key);
-              return (
-                <div key={i.key} className={"qg-list-i" + (g ? " got" : "")}>
-                  <img src={charArt(i.art)} alt="" /><span>{i.name}</span>
-                  <small>{g ? "✓ got it" : r ? (r.kind === "empty" ? "shelf empty" : "somewhere else") : p ? "later" : ""}</small>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+      <AddItem dispatch={dispatch} />
+      {edit ? <RouteEdit trip={trip} dispatch={dispatch} onDone={() => setEdit(false)} /> : <>
+        {order.length ? <p className="qg-p">In walking order. Arya sorts it; tap a section to go there.</p> : <p className="qg-p">Nothing on your list yet.</p>}
+        {order.map(id => {
+          const s = trip.layout.sections.find(x => x.id === id)!, sk = trip.skipped.includes(id);
+          return (
+            <div key={id} className="qg-list-sec">
+              <button className="qg-list-h" onClick={() => onGo(id)}>{sk ? s.short : `${live.indexOf(id) + 1} · ${s.short}`}{sk && <em> · skipped</em>}<span>Go →</span></button>
+              {itemsIn(trip, id).map(i => {
+                const g = trip.got.includes(i.key), r = trip.reports.find(x => x.key === i.key), p = trip.passed.includes(i.key);
+                return (
+                  <div key={i.key} className={"qg-list-i" + (g ? " got" : "")}>
+                    <img src={charArt(i.art)} alt="" /><span>{i.name}</span>
+                    <small>{g ? "✓ got it" : r ? (r.kind === "empty" ? "shelf empty" : "somewhere else") : p ? "later" : ""}</small>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+        {order.length > 1 && <button className="qg-link qg-list-edit" onClick={() => setEdit(true)}>Change the order or skip a section</button>}
+      </>}
     </div>
   );
 }
 
-/* Route editing before or during a trip: move a stop, skip it, add an
- * item. Arya's order is one tap away. */
-function RouteSheet({ trip, dispatch }: { trip: Trip; dispatch: (a: Action) => void }) {
+function AddItem({ dispatch }: { dispatch: (a: Action) => void }) {
   const [name, setName] = useState("");
-  const all = stops(trip);
   const add = () => {
     const n = name.trim(); if (!n) return;
     const item: QuestItem = { key: `add-${Date.now()}`, name: n[0].toUpperCase() + n.slice(1), art: artFor(n), section: sectionFor(n) };
     dispatch({ type: "addItem", item }); setName("");
   };
+  return (
+    <div className="qg-add">
+      <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} placeholder="Add an item, e.g. peanut butter" aria-label="Add an item" />
+      <button onClick={add} disabled={!name.trim()}>Add</button>
+    </div>
+  );
+}
+
+/* Moving or skipping a stop, before or during a trip. Arya's order is one tap away. */
+function RouteEdit({ trip, dispatch, onDone }: { trip: Trip; dispatch: (a: Action) => void; onDone: () => void }) {
+  const all = stops(trip);
   const live = useMemo(() => all.filter(id => !trip.skipped.includes(id)), [all, trip.skipped]);
   const cur = currentStop(trip);
   return (
@@ -409,11 +440,10 @@ function RouteSheet({ trip, dispatch }: { trip: Trip; dispatch: (a: Action) => v
           );
         })}
       </ol>
-      <div className="qg-add">
-        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} placeholder="Add an item, e.g. peanut butter" aria-label="Add an item" />
-        <button onClick={add} disabled={!name.trim()}>Add</button>
+      <div className="qg-opts">
+        <button className="qg-btn primary" onClick={onDone}>Done</button>
+        <button className="qg-btn ghost" onClick={() => dispatch({ type: "resetOrder" })}>Use Arya's order</button>
       </div>
-      <button className="qg-btn ghost" onClick={() => dispatch({ type: "resetOrder" })}>Use Arya's order</button>
     </div>
   );
 }
