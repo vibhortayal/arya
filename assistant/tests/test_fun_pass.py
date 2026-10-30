@@ -217,7 +217,7 @@ class TestArtScene(unittest.TestCase):
     def test_resolution_and_caption_carry_the_nudge(self):
         q = src("screens/Hunt.tsx")
         self.assertIn('base === "photo" && focus && focus.unplaced ? "art" : base', q)
-        self.assertIn("Tap Map this store to help.", q)
+        self.assertIn("Tap Map my store to help.", q)
         # Express never gets the art rung
         self.assertIn('return sess.mode === "express" ? "strip" : "art";', q)
 

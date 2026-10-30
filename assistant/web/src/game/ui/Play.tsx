@@ -237,7 +237,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       {cue && (
         <div className="qg-camrow">
           {onMap && !trip.practice
-            ? <button className="qg-cue" onClick={() => setSheet("map")} aria-label={`${cue}. Map this store`}>{cue} · <b>Map it ›</b></button>
+            ? <button className="qg-cue" onClick={() => setSheet("map")} aria-label={`${cue}. Map my store`}>{cue} · <b>Map it ›</b></button>
             : <span className="qg-cue">{cue}</span>}
         </div>
       )}
@@ -365,7 +365,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
         <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
-      <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map this store?">
+      <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map my store?">
         <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are blurred first.</p>
         <p className="qg-p">{got ? `You have ${got} of ${total} in the cart. Your grabs are saved; the trip ends here.` : "Nothing is in the cart yet, so nothing is lost."}</p>
         <div className="qg-opts">

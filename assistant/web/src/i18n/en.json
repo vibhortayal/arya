@@ -10,7 +10,7 @@
     "askArya": "Ask Arya",
     "send": "Send",
     "notHere": "Not here?",
-    "teachAryaYourStore": "Map this store",
+    "teachAryaYourStore": "Map my store",
     "todaySHunts": "Today's quests",
     "keepLooking": "Keep looking",
     "reportedMissing": "Reported missing",
@@ -218,7 +218,7 @@
     "recordAShortVideo": "Record a short video",
     "thisPartOfTheMap": "This part of the map is out of date",
     "tapTheAisleYouAre": "Tap the aisle you are in:",
-    "aryaDoesNotKnowThis": "Arya does not know this store's aisles yet. Add the one you are in from Map this store.",
+    "aryaDoesNotKnowThis": "Arya does not know this store's aisles yet. Add the one you are in from Map my store.",
     "checkThemAWrongOne": "Check them. Tap one that's wrong to remove it. Everything here came from your walk; you typed nothing.",
     "notASection": "Not a section",
     "youReNowA": "You earned the {{title}} badge",
@@ -300,7 +300,7 @@
     "couldNotAnswer": "Arya couldn't answer that. Try again in a moment.",
     "voiceEmpty": "That did not come through. Try again, or type it.",
     "listening": "Listening… tap the mic again to send.",
-    "mapStoreReply": "Happy to. In Quest, tap Map this store and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures."
+    "mapStoreReply": "Happy to. In Quest, tap Map my store and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures."
   },
   "express": {
     "reportedMissingAtThisStore": "Reported missing at this store.",
@@ -416,7 +416,7 @@
     "bonus10Pts": "Bonus · +10 points",
     "gotSecondsTeachArya": "Got {{est_seconds}} seconds? Map the {{replace}} aisle.",
     "yourNextHuntHereGets": "Your next quest here gets faster. Open the camera and walk; Arya does the rest.",
-    "teachArya": "Map this store",
+    "teachArya": "Map my store",
     "huntTools": "Tools",
     "scanShelf": "Scan the shelf",
     "wildFind": "Not on my list",
@@ -474,7 +474,7 @@
       "photo": "Real photos from this store. The orange dot is your next item.",
       "cloud": "A 3D view of this store. Drag to look around.",
       "strip": "One card per item. This store has no map yet, so the cards lead the way.",
-      "art": "A drawing of this store until someone maps it. Tap Map this store to help."
+      "art": "A drawing of this store until someone maps it. Tap Map my store to help."
     },
     "allCollectedTapDone": "Everything is in your cart. Tap Done when you are ready.",
     "nothingLeftTapDone": "Nothing left to grab. Tap Done when you are ready.",
@@ -863,11 +863,12 @@
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your quest, the exact aisle for each item, and fewer “can't find it” moments. Map the aisles you use, a little at a time. Arya shoppers fill in the rest.",
     "pickAStoreFromMy": "Find your store above to start.",
+    "selectStore": "Select store",
     "findAnotherStore": "Find or add a store",
     "teachTheAislesYouUse": "Map the aisles you use. You never need all of them.",
     "noAislesHereYetWalk": "No aisles here yet. Walk the store and Arya builds the map from what it sees.",
     "zeroTyping": "Zero typing",
-    "walkYourStore": "Map this store",
+    "walkYourStore": "Map my store",
     "justWalkTheAislesYou": "Just walk the aisles you shop, phone up. Arya reads the shelves, names each section, and builds the map. Afterwards you check what it found — that's all.",
     "startTheWalk": "Start the walk",
     "teachAryaNext": "Map next",
@@ -1412,7 +1413,7 @@
     "tripsLink": "Your trips and receipts",
     "tripsLinkSub": "Open quests, finished trips and friends",
     "openingQuest": "Opening Quest…",
-    "mapMyStore": "Map this store",
+    "mapMyStore": "Map my store",
     "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles",
     "progressSub": "Quests, badges and mapped stores"
   },

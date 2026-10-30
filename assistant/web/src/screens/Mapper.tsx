@@ -130,6 +130,7 @@ export function Mapper() {
     <>
       <p className="backrow"><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
+      <h3 className="sect" id="mp-select">{t("mapper.selectStore")}</h3>
       <div id="mp-stores" className="rail">
         {names.map(n => (
           <button key={n} className="chip" data-mstore={n} aria-pressed={n === store} type="button"
