@@ -209,7 +209,9 @@ class TestCopyAndWords(unittest.TestCase):
     def test_reveal_motion_rules(self):
         js = src("screens/haul/Reveal.tsx")
         self.assertIn("if (reduced()) { showAll();", js)
-        self.assertIn("prefers-reduced-motion: reduce", src("screens/haul/state.ts"))
+        # One helper answers for the Display switch and the system setting.
+        self.assertIn("export const reduced = motionOff;", src("screens/haul/state.ts"))
+        self.assertIn("prefers-reduced-motion: reduce", src("lib/motion.ts"))
         self.assertIn("cancelAnimationFrame(raf.current)", js)
         self.assertIn("const skipReveal = () => {", js)
         self.assertIn('if (!(ev.target as Element).closest("button, a, label, input")) skipRef.current();', js)

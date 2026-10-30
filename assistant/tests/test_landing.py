@@ -37,8 +37,8 @@ class TestLanding(unittest.TestCase):
         self.assertIn('GETAPP_KEY = "arya.landing.getapp"', login)
         self.assertIn('" glow" : " jiggle"', login)
         css = frontend.read("styles.css")
-        self.assertIn(".landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s infinite; }", css)
-        self.assertIn(".landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }", css)
+        self.assertIn(".landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s 2; }", css)  # two rounds, then rest
+        self.assertIn(".landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s 2; }", css)
         self.assertNotIn("pwa", frontend.words("landing.getTheApp").lower())
 
     def test_headline_cards_and_buttons(self):

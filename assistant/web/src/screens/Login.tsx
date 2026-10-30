@@ -49,8 +49,9 @@ function saveSeen(seen: string[]) {
  * can go on this phone's Home Screen (ui/A2hs.tsx: not installed, and
  * an install prompt or iPhone steps to offer; phones only, so not on
  * a desktop). The landing is logged out, so the demo rule does not
- * apply. About 1.2 s after load, and every 8 s, it jiggles (a soft
- * glow with reduced motion), until it is first tapped (localStorage). */
+ * apply. About 1.2 s after load, and once more 8 s later, it jiggles (a
+ * soft glow with reduced motion), then rests; a tap (localStorage) stops
+ * it for good. */
 export const GETAPP_KEY = "arya.landing.getapp";
 
 export function getAppTapped(): boolean {
