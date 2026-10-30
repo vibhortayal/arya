@@ -21,12 +21,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [cur, setCur] = useState<{ msg: string; opts?: Opts; n: number } | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const visRef = useRef<() => void>(() => {});
+  /* The last toast stays drawn while it fades out (#toast[hidden] animates), so the pill never empties first. */
+  const shown = useRef(cur);
+  if (cur) shown.current = cur;
+  const view = cur ?? shown.current;
   const hide = useCallback(() => { clearTimeout(timer.current); setCur(null); }, []);
 
   const toast = useCallback<ToastFn>((msg, opts) => {
     clearTimeout(timer.current);
     setCur(prev => ({ msg, opts, n: (prev?.n || 0) + 1 }));
-    timer.current = window.setTimeout(() => setCur(null), toastMs(msg, !!opts?.action));
+    const ms = toastMs(msg, !!opts?.action);
+    timer.current = window.setTimeout(() => setCur(null), ms);
+    /* A hidden tab pauses the clock: an Undo must not expire unseen. */
+    const onVis = () => {
+      clearTimeout(timer.current);
+      if (document.visibilityState === "visible") timer.current = window.setTimeout(() => setCur(null), ms);
+    };
+    document.removeEventListener("visibilitychange", visRef.current);
+    visRef.current = onVis;
+    document.addEventListener("visibilitychange", onVis);
   }, []);
   current = toast;
   /* A server answer (ApiError) is already a plain sentence (lib/api
@@ -42,9 +56,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ toast, showErr, hide }}>
       {children}
       <div id="toast" role="status" aria-live="polite" hidden={!cur}>
-        {cur?.msg}
-        {cur?.opts?.action && (
-          <button type="button" className="toastact" onClick={() => { const f = cur.opts?.onAction; hide(); f?.(); }}>{cur.opts.action}</button>
+        {view?.msg}
+        {view?.opts?.action && (
+          <button type="button" className="toastact" onClick={() => { const f = view.opts?.onAction; hide(); f?.(); }}>{view.opts.action}</button>
         )}
         <button type="button" className="toastclose" aria-label={t("common.dismiss")} onClick={hide}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
