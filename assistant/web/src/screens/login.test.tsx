@@ -13,11 +13,19 @@ beforeEach(() => { localStorage.clear(); status = { has_users: true, registratio
 afterEach(cleanup);
 
 describe("flip cards", () => {
+  test("the eight guide sections, in the guide's order", () => {
+    render(<Login />);
+    expect(Array.from(document.querySelectorAll(".ftile")).map(c => c.id)).toEqual(
+      ["land-lists", "land-share", "land-maps", "land-news", "land-receipts", "land-prices", "land-usesoon", "land-ask"]);
+    expect(document.querySelector("#land-usesoon .back")!.textContent).toContain("expires or goes bad");
+    expect(document.body.textContent).not.toMatch(/optional|goes off/i);
+  });
+
   test("a tap flips the card and stops its wobble for good", () => {
     render(<Login />);
-    const card = document.getElementById("land-quest")!;
+    const card = document.getElementById("land-maps")!;
     expect(card.className).not.toContain("seen");
-    expect(document.querySelectorAll(".ftile:not(.seen)").length).toBe(4);
+    expect(document.querySelectorAll(".ftile:not(.seen)").length).toBe(8);
     fireEvent.click(card);
     expect(card.className).toContain("seen");
     expect(card.className).toContain(" on");
@@ -25,13 +33,13 @@ describe("flip cards", () => {
     fireEvent.click(card);
     expect(card.className).not.toContain(" on");
     expect(card.className).toContain("seen"); // flipped back, still no wobble
-    expect(loadSeen()).toEqual(["quest"]);
+    expect(loadSeen()).toEqual(["maps"]);
     cleanup();
     render(<Login />); // a later visit: still seen, not flipped
-    const again = document.getElementById("land-quest")!;
+    const again = document.getElementById("land-maps")!;
     expect(again.className).toContain("seen");
     expect(again.getAttribute("aria-pressed")).toBe("false");
-    expect(document.getElementById("land-habits")!.className).not.toContain("seen");
+    expect(document.getElementById("land-lists")!.className).not.toContain("seen");
   });
 
   test("bad or missing storage means every card wobbles", () => {
