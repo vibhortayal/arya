@@ -74,6 +74,18 @@ def _next_moved(request: Request, path: str = ""):
     return RedirectResponse("/" + path.lstrip("/\\") + ("?" + q if q else ""), status_code=302)
 
 
+@app.get("/team", include_in_schema=False)
+@app.get("/team/", include_in_schema=False)
+def _team_page():
+    """Team sign-in (owner, 2026-10-30): the password form for beta testers
+    and test agents lives here, off the public sign-in page. Not a secret:
+    the password route stays rate limited. The shell shows the form."""
+    index = os.path.join(_WEB, "index.html")
+    if not os.path.isfile(index):
+        return JSONResponse({"detail": "the app is not built"}, status_code=404)
+    return FileResponse(index, headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/developers", include_in_schema=False)
 @app.get("/developers/", include_in_schema=False)
 def _developers_page():

@@ -116,7 +116,13 @@ async def auth_waitlist(req: Request):
         raise HTTPException(429, "Too many tries. Wait a few minutes and try again.")
     _waitlist_hits[ip] = hits + [_t.time()]
     try:
-        return {"status": waitlist.join(body.get("email", ""))}
+        status = waitlist.join(body.get("email", ""))
+        if status == "added":
+            from api import mailer
+            if mailer.configured():   # best effort: never blocks joining
+                await run_in_threadpool(mailer.waitlist_joined, waitlist.clean(body.get("email", "")),
+                                        os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url).rstrip("/"))
+        return {"status": status}
     except PermissionError as e:
         raise HTTPException(429, str(e))
     except ValueError as e:
@@ -208,7 +214,9 @@ def _federated_login(email):
     except ValueError as e:
         raise HTTPException(400, str(e))
     if not name:
-        raise HTTPException(403, "that email is not invited yet")
+        # The address is proven by the code or by Google, so it is safe to
+        # hand back: the page offers to put it on the waitlist.
+        return JSONResponse({"detail": "that email is not invited yet", "email": email}, status_code=403)
     waitlist.remove(name)
     return _set_session_cookie(JSONResponse({"user": name, "created": created}),
                                auth.new_session(name))

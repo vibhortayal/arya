@@ -1800,6 +1800,9 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .wiztag { flex: none; font-size: 13px; font-weight: 600; color: var(--accent-text); white-space: nowrap; }
 /* Waitlist sheet (owner, 2026-10-30): one email field, a privacy line,
    and a done state with a mascot. */
+.signin .hint { margin: 6px 0 14px; }
+.signin .center { text-align: center; }
+.signin .wl-err.empty { display: none; }
 .wl-intro { margin: 0 0 4px; font-size: 15px; color: var(--ink2); }
 .wl-note { margin: 10px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink2); }
 .wl-err { margin: 6px 0 0; font-size: 14px; font-weight: 600; color: var(--danger); }

@@ -9,5 +9,14 @@ fetch("/auth/supabase", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ access_token: t })
 })
-  .then(r => { location.replace(r.ok ? "/" : "/?signin=failed"); })
+  .then(async r => {
+    if (r.status === 403) {
+      // Google proved the address but it is not invited: keep it for the waitlist offer.
+      const d = await r.json().catch(() => ({}));
+      try { if (d.email) sessionStorage.setItem("arya.notinvited", d.email); } catch (e) { /* storage unavailable */ }
+      location.replace("/?signin=notinvited");
+      return;
+    }
+    location.replace(r.ok ? "/" : "/?signin=failed");
+  })
   .catch(() => { location.replace("/?signin=failed"); });
