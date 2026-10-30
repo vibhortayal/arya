@@ -405,6 +405,9 @@ def attach_receipt(session_id, receipt_id):
                 f"the hunt is at {sess.get('store')}")
         _check_receipt_is_this_trips(sess, receipt)
 
+    if sess is not None and sess.get("store_id"):
+        state.link_receipt_store(receipt_id, sess["store_id"])
+
     def fn(sess):
         sess["receipt_id"] = receipt_id
         sess["state"] = "done"

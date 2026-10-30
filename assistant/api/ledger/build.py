@@ -24,7 +24,7 @@ def receipt_savings(r):
 
 def build_ledger(receipts, fee_skus=frozenset()):
     entries = []
-    stores = storename.merge(r.get("merchant") for r in receipts)
+    stores = storename.labels(receipts)
     for r in receipts:
         discounts = {}
         for ln in r["lines"]:
@@ -41,7 +41,7 @@ def build_ledger(receipts, fee_skus=frozenset()):
             entries.append({
                 "entry_id": eid, "receipt_id": r["receipt_id"],
                 "item_id": ln.get("item_id") or f"costco-{ln['sku']}",
-                "store_id": (stores.get(r.get("merchant")) or {}).get("label") or r.get("merchant"), "date": r["purchased_at"],
+                "store_id": stores[r["receipt_id"]]["label"] or r.get("merchant"), "date": r["purchased_at"],
                 "qty": abs(ln["qty"]), "price": round(net, 2),
                 "event_type": "return" if ln["line_type"] == "return" else "purchase",
                 "allocation": ln.get("allocation", "HOUSEHOLD"),
