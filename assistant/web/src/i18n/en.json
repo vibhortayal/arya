@@ -1059,6 +1059,8 @@
     "demoNote": "The demo needs no sign-up.",
     "invitationNote": "Sign-in is by invitation for now.",
     "joinWaitlist": "Join the waitlist",
+    "privacy": "Privacy policy",
+    "terms": "Terms of service",
     "noAccountWaitlist": "No account yet? Join the waitlist"
   },
   "waitlist": {

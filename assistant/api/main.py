@@ -86,6 +86,14 @@ def _team_page():
     return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
+@app.get("/privacy", include_in_schema=False)
+@app.get("/terms", include_in_schema=False)
+def _legal_redirect(request: Request):
+    """The public privacy policy and terms are static pages (pwa/privacy/,
+    pwa/terms/); the bare path goes to the folder so relative links work."""
+    return RedirectResponse(request.url.path + "/", status_code=301)
+
+
 @app.get("/developers", include_in_schema=False)
 @app.get("/developers/", include_in_schema=False)
 def _developers_page():
