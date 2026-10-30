@@ -837,6 +837,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }
 .a2hs-intro { margin: 0 0 2px; }
 .a2hs-tip { margin: 6px 0 0; }
+.a2hs-tip .linkbtn, .landdesk .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
+.landdesk { margin: 8px auto 0; max-width: 34ch; font-size: 14px; }
 .landhero { text-align: center; margin: 0; padding-top: 6px; }
 .landhero .herotitle { font-size: 30px; }
 .landsub { margin-top: 4px; }
