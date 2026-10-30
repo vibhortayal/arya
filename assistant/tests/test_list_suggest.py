@@ -121,6 +121,15 @@ class TestGuesses(unittest.TestCase):
         self.assertEqual(c.calls, 1)
 
     def test_switch_and_key(self):
+        saved = {k: os.environ.get(k) for k in ("MODEL_API_KEY", "ARYA_SUGGEST_GUESSES")}
+
+        def restore():
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+        self.addCleanup(restore)
         os.environ["MODEL_API_KEY"] = "k"
         os.environ["ARYA_SUGGEST_GUESSES"] = "0"
         self.assertFalse(suggest.guess_enabled())
