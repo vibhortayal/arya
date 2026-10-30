@@ -232,7 +232,7 @@ class TestClientWiring(unittest.TestCase):
     def test_copy_follows_the_wireframe(self):
         from tests import frontend
         js = frontend.src("screens/Today.tsx")  # expiry.js was ported into Today
-        for phrase in ("things from your receipt can go off", "Use-by dates", "Add a date",
+        for phrase in ("things from your receipt can expire or go bad", "Use-by dates", "Add a date",
                        "Nothing is saved until you tap", "Past the date. Check it before you use it.",
                        "Add it to your list?", "Try a sample date"):
             self.assertIn(phrase, js)

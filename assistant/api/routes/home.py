@@ -56,7 +56,7 @@ def home():
     from api import expiry
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
     use_soon = expiry.use_soon(_fl, nm, last_bought, _d_today())
-    # After a receipt, the things that go off (#207): asked once per
+    # After a receipt, the things that can expire or go bad (#207): asked once per
     # receipt, and never again after two "Not now"s.
     # The demo's receipts are fixed in time, so its window counts back
     # from its last receipt, not from today.
