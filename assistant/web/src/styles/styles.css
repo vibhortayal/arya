@@ -1430,7 +1430,9 @@ body.hunting #view-hunt.full .askbar {
   padding: 10px 16px; background: var(--tabbar); border-top: 1px solid var(--sep);
   -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .startbar[hidden] { display: none; }
+.startbar .startlink { display: block; margin: 0 auto; min-height: 44px; padding: 4px 0 0; font-size: 14px; font-weight: 600; }
 #list-page.hasstart { padding-bottom: 84px; }
+#list-page.hasstart.hastick { padding-bottom: 128px; }
 /* Swipe a row: Move and Remove sit behind it. */
 .swipewrap { position: relative; overflow: hidden; margin: 0 -16px; }
 .swipewrap::after { content: ""; position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 0; height: 1px; background: var(--sep); pointer-events: none; }
