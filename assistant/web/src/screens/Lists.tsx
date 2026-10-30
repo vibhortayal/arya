@@ -777,6 +777,12 @@ export function Lists() {
     if (shopMode === null) saveShopMode(mode).catch(e => toast(errMsg(e)));
     if (mode === "quest") startHunt(); else startList();
   };
+  // Or just tick items as I shop: turns on Just my list for good (Settings
+  // can switch it back), so the link goes away once that is the saved choice.
+  const tickAsIShop = () => {
+    saveShopMode("list").catch(e => toast(errMsg(e)));
+    startList();
+  };
   const finishTrip = () => {
     setDoneStep(null);
     setShopping(null);
@@ -894,6 +900,7 @@ export function Lists() {
   const sugg = data && !selEff && onPage ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
   const shoppingHere = shopping !== null && shopping === effLens && onPage;
   const startBar = (!!open.length || shoppingHere) && !selEff;
+  const tickLink = startBar && !shoppingHere && shopMode !== "list";
   const nSel = selEff ? selEff.size : 0;
 
   return (
@@ -958,7 +965,7 @@ export function Lists() {
       )}
 
       {onPage && data && (
-        <div id="list-page" className={startBar ? "hasstart" : undefined}>
+        <div id="list-page" className={startBar ? "hasstart" + (tickLink ? " hastick" : "") : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
           {shoppingHere ? <p className="shopinglabel" id="list-shopping">{t("lists.shoppingLabel")}</p> : null}
           <div className="lhead">
@@ -1108,6 +1115,7 @@ export function Lists() {
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
             <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (shoppingHere ? setDoneStep("ask") : begin())}>{shoppingHere ? (open.length ? t("lists.doneShoppingLeft", { count: open.length }) : t("lists.doneShoppingAll")) : t("lists.startShoppingItem", { count: open.length })}</button>
+            {tickLink ? <button id="list-tick-link" className="linkbtn startlink" type="button" onClick={tickAsIShop}>{t("lists.tickAsIShop")}</button> : null}
           </div>
         </div>
       )}
