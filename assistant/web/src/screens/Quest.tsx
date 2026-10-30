@@ -69,6 +69,9 @@ export function Quest() {
 
   const open = (s: Sess) => {
     if (closed(s)) nav.show("score", { session: s });
+    // A Quest trip resumes in the Quest game (usability audit pain 3);
+    // Express and Shop-Off keep their screens.
+    else if (s.mode === "quest" && !s.shopoff_id) nav.show("community", { resume: s.id });
     else nav.show(s.mode === "express" ? "express" : "hunt", { session: s });
   };
 

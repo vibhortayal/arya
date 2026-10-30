@@ -55,9 +55,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 
 /* No top bar (owner, 2026-10-28): the wordmark cost a row of
- * screen on every view. The profile door floats instead. */
-.avatar.floating { position: fixed; top: 10px; right: 12px; z-index: 40;
-  box-shadow: 0 2px 10px rgba(27,27,30,.18); }
+ * screen on every view. No floating avatar either (usability pass):
+ * Settings is a tab. */
 
 .largetitle { font-size: 34px; font-weight: 700; letter-spacing: -0.022em; margin: 10px 0 2px; }
 .subtitle { color: var(--secondary); margin: 0 0 4px; font-size: 15px; }
@@ -540,7 +539,7 @@ textarea {
    column. HUD, view switch, the store view in a contained box with
    ONE target, the tools row, the suggested-next card, then the one
    list in flow. The tab bar hides while a hunt or run is open. */
-body.hunting #tabs, body.hunting #avatar-btn, body.hunting #demobar { display: none !important; }
+body.hunting #tabs, body.hunting #demobar { display: none !important; }
 /* Game shell: while hunting, a page gesture is never a zoom or a
    pull-to-refresh — the column still scrolls vertically, and the 3D
    canvas keeps its own drag. Full height follows the dynamic
@@ -552,7 +551,6 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
    avatar hides here: Settings is a tab, and the game's ? sits there. */
 .questmode-host { position: fixed; left: 0; right: 0; top: 0; bottom: var(--tabs-h, 0px); z-index: 5; }
 body.hunting .questmode-host { bottom: 0; z-index: 20; }
-body.questmode #avatar-btn { display: none; }
 .questmode-host .qg { min-height: 0; height: 100%; }
 .qm-loading { display: grid; place-items: center; height: 100%; color: var(--secondary); font-weight: 600; background: #F6F2EA; }
 .qm-links { padding: 8px 0 0; }
@@ -1057,6 +1055,11 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 .badgetile.locked .bdgimg { filter: grayscale(1); opacity: .5; }
 .toolimg { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
 .mapperhero { width: 100%; border-radius: 16px; border: 1px solid var(--line); display: block; margin: 6px 0 10px; }
+.backrow { padding-top: env(safe-area-inset-top); margin-top: 0; }
+.mp-howto { margin-top: 8px; }
+.mp-how { margin: 0 0 12px; }
+.mp-how > summary { display: inline-block; list-style: none; cursor: pointer; color: var(--accent-text); font-weight: 600; padding: 6px 0; min-height: 44px; line-height: 32px; }
+.mp-how > summary::-webkit-details-marker { display: none; }
 .emptyface-wrap { text-align: center; padding: 12px 0 4px; }
 .emptyface { width: 96px; height: 96px; border-radius: 20px; object-fit: cover; background: #FBF5E6; border: 1px solid var(--line2); }
 
@@ -1476,8 +1479,6 @@ button.gmember { cursor: pointer; }
 
 /* Start shopping sheet (design pass, 2026-10-29). */
 .shopmodes { margin-top: 12px; }
-.shopsugg { margin: 12px 0 4px; }
-.shopsugg .linkbtn { font-weight: 600; }
 
 /* Today, calmer (design pass, 2026-10-29). */
 .checkfold .hubrow { border-bottom: 0; }
@@ -1491,7 +1492,8 @@ button.gmember { cursor: pointer; }
 
 /* Quantity 1 is the quiet default: no pill, still the tap target
    (design pass, 2026-10-29). */
-.qtybtn.one { background: transparent; color: var(--tertiary); font-weight: 400; }
+.qtybtn.one { background: transparent; color: var(--tertiary); font-weight: 400; min-width: 44px; }
+.tickhint { margin: 4px 4px 8px; }
 /* A group still loading shows a soft placeholder, not an empty strip. */
 #view-community .group:empty { min-height: 52px; background: linear-gradient(90deg, var(--fill) 0%, var(--panel) 50%, var(--fill) 100%); background-size: 200% 100%; animation: skel 1.2s ease-in-out infinite; }
 @keyframes skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
@@ -1597,6 +1599,7 @@ button.gmember { cursor: pointer; }
 .gd ul.pts li::before { content: ""; flex: 0 0 8px; height: 8px; border-radius: 50%; background: var(--acc); margin-top: 8px; }
 .gd .try { margin-top: 14px; align-self: flex-start; background: var(--acc-soft); color: var(--acc); border: none; border-radius: 999px;
   padding: 11px 18px; min-height: 44px; font: inherit; font-weight: 700; font-size: 16px; }
+.gd .gd-tour { margin-top: 10px; align-self: flex-start; min-height: 44px; font-weight: 600; }
 .gd-bot { display: flex; align-items: center; gap: 12px; padding-top: 12px; flex: none; }
 .gd-dots { display: flex; gap: 6px; margin-right: auto; }
 .gd-dots i { width: 7px; height: 7px; border-radius: 50%; background: #CFCFD4; display: block; }

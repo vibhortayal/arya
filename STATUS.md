@@ -18,6 +18,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 - **Trips save on first grab (merged, #200):** a quest saves a trip when the
   first item is grabbed, not when the quest opens.
   `assistant/loops/2026-10-29-quest-trip-on-grab.md`.
+- **Usability pass (2026-10-29, PR #203):** mapping screen leads with store, then one Start mapping (How it works and More folds); Settings has one Help and guide row (Replay the tour inside the guide), Quest progress moved to the Quest tab; no floating avatar; Today drops Open Lists and retires the Quest nudge after the first Quest open; Start shopping skips the one-option sheet; tick-off hint; "× 1" hidden. Pins: `tests/test_usability_pass.py`.
 - **Get the app (2026-10-29, PR #206):** landing header pill before Sign in on phones that can install Arya (iPhone steps sheet "Get the Arya app" or the Android prompt), jiggles every 8 s until tapped (glow with reduced motion); Today's add-to-Home-Screen card now shows from the first visit. `assistant/loops/2026-10-29-get-the-app.md`.
 
 ## Owner registration toggle (2026-10-29, merged)
@@ -120,6 +121,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   server and Settings counts it. `2026-10-29-quest-one-progress.md`.
   Your trips is history only: resume or end open trips, see finished
   ones. Bundles is cut from the Quest home. `2026-10-29-quest-trips-history.md`.
+  Resume on a Quest trip opens it in the Quest game, grabs in the cart.
+  `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. It has a Costco list and a Trader Joe's list
   (store names only; no Trader Joe's map data ships).

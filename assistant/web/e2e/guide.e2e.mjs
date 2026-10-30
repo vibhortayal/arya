@@ -18,10 +18,14 @@ export default async function (page, base) {
   await page.waitForSelector("#btn-guide");
   const order = await page.$$eval("#view-profile .navrow", rs => rs.map(r => r.id));
   if (order.indexOf("btn-guide") !== order.indexOf("btn-powers") - 1) throw new Error("Arya guide is not just above Arya's powers: " + order.join(","));
+  // One help row (usability pass): no separate tour row, no Quest progress.
+  for (const gone of ["btn-tour", "btn-quest-progress"]) if (order.includes(gone)) throw new Error(gone + " should be gone from Settings");
+  if (!(await page.textContent("#btn-guide")).startsWith("Help and guide")) throw new Error("help row label");
   await page.click("#btn-guide");
   await page.waitForSelector('.gd[data-card="what"]');
   if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 8") throw new Error("count: " + (await page.textContent("#gd-count")));
   if (await page.$("#gd-back")) throw new Error("Back on card 1");
+  if ((await page.textContent("#gd-tour")) !== "Replay the tour") throw new Error("Replay the tour on card 1");
 
   // Swipe left to card 2.
   const box = await page.$eval(".gd", el => { const r = el.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2 }; });

@@ -45,13 +45,10 @@ class TestPhonePassBatch(unittest.TestCase):
         quest = src("screens/Quest.tsx")
         # Your trips is history only: a new quest starts in Quest itself.
         self.assertNotIn('id="btn-new-hunt"', quest)
-        # The Today line is a link to the lists, never a dump of names
-        # (app.js staplesLine was a count only, and was no longer
-        # called on main).
+        # Usability pass (owner 2026-10-29): no "Open Lists" link on
+        # Today; the list cards and the Lists tab open lists.
         today = src("screens/Today.tsx")
-        line = today.split('id="today-listline"')[1].split("</button>")[0]
-        self.assertIn('<span id="today-listline-text">Open Lists</span>', line)
-        self.assertNotIn(".map(", line)
+        self.assertNotIn('id="today-listline"', today)
 
     def test_composer_on_list(self):
         js = src("screens/Lists.tsx")

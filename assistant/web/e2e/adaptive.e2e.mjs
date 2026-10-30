@@ -93,7 +93,7 @@ export default async function (page, base) {
     if ((await page.$$("#today-lists .listcard")).length !== 4) throw new Error("Today tiles: not 4");
     const see = await page.textContent("#today-seeall");
     if (!see.includes("See all 10 lists")) throw new Error("See all: " + see);
-    if (await page.isVisible("#today-listline")) throw new Error("Open Lists link still shows");
+    if (await page.$("#today-listline")) throw new Error("Open Lists link should be gone");
     await page.click("#today-seeall");
     await page.waitForSelector("#list-cards[data-mode=tiles]");
   } finally {
