@@ -854,8 +854,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 @keyframes getjiggle { 0%, 7.5%, 100% { transform: none; } 1.25% { transform: rotate(-7deg); } 2.5% { transform: rotate(6deg); }
   3.75% { transform: rotate(-5deg); } 5% { transform: rotate(3deg); } 6.25% { transform: rotate(-1.5deg); } }
 @keyframes getglow { 0%, 7.5%, 100% { box-shadow: 0 0 0 0 transparent; } 3.75% { box-shadow: 0 0 0 6px var(--acc-soft), 0 0 14px 2px var(--acc-soft); } }
-.landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s infinite; }
-.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }
+.landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s 2; }
+.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s 2; }
 .a2hs-intro { margin: 0 0 2px; }
 .a2hs-tip { margin: 6px 0 0; }
 .a2hs-tip .linkbtn, .landdesk .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
@@ -1396,7 +1396,7 @@ body.hunting #view-hunt.full .askbar {
 /* ---- Lists (owner, 2026-10-29: the List overhaul, wireframe v1) ----
    Lists home cards, a list's page, suggestions with a reason, the
    "why" sheet, swipe Move / Remove, and select-to-move. */
-#demobar { font-size: 13.5px; color: var(--secondary); padding: 7px 12px; margin-right: 62px; }
+#demobar { font-size: 13.5px; color: var(--secondary); padding: 7px 12px; }
 #list-cards .listcard { display: block; width: 100%; text-align: left; border: none; background: var(--group);
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px 12px; margin-bottom: 10px; color: var(--label); }
 #list-cards .listcard > span { display: block; }
@@ -1774,7 +1774,7 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 
 /* Today (UI pass 2, 2026-10-30): the demo strip is one 44pt line, list
    cards are full-width rows, Spending and the tip share one group. */
-#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 62px 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
+#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 0 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
 #demobar .linkbtn { font-size: 15px; padding: 0 14px; }
 #today-lists .listcards { grid-template-columns: 1fr; }
 #today-lists .listcard { padding: 14px 16px; }
@@ -1997,7 +1997,11 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .boldtext body { font-weight: 500; }
 .boldtext .sub, .boldtext .muted, .boldtext .name, .boldtext .hr-label, .boldtext .navrow { font-weight: 600; }
 .nopics .rowface, .nopics .rowimg { display: none; }
-.nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition: none !important; }
+.nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition-property: opacity, color, background-color, border-color, box-shadow, visibility !important; transition-duration: .12s !important; transition-delay: 0s !important; }
+/* Motion off means gentler, not none: fades stay, travel goes. */
+.nomotion .sheetwrap { animation: scrimin .12s ease !important; }
+.nomotion .sheetwrap.closing { animation: scrimout .12s ease forwards !important; }
+.nomotion .cp-marks { animation: cp-fade 3.2s linear forwards !important; }
 
 /* Price watch and Next trip (card library, 2026-10-30) */
 #today-watch .hubrow:last-child, #today-trip .hubrow:last-child { border-bottom: none; }
@@ -2023,3 +2027,35 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 @media (prefers-reduced-motion: reduce) {
   .btn:not(:disabled):active, .chip:active, .iconbtn:not(:disabled):active, .stepper button:active, .qtybtn:active, .listrow .check:active { transform: none; }
 }
+
+/* ---- Sheet exit (Emil pass): it leaves the way it came, faster than it
+   arrived. Sheet.tsx keeps it mounted ~200 ms with .closing. ---- */
+@keyframes scrimout { to { opacity: 0; } }
+@keyframes sheetdown { to { transform: translateY(100%); } }
+.sheetwrap.closing { pointer-events: none; animation: scrimout .2s var(--ease-out) forwards; }
+.sheetwrap.closing .sheet { animation: sheetdown .2s var(--ease-out) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .sheetwrap { animation-duration: .12s; }
+  .sheetwrap.closing { animation: scrimout .12s ease forwards; }
+  .sheetwrap.closing .sheet { animation: none; }
+}
+.nomotion .sheetwrap.closing .sheet { animation: none !important; }
+
+/* ---- Pressed rows and bigger tap areas (Apple pass) ---- */
+.navrow:active, .hubrow:active, .morerow:active, .listcard:active { background: var(--fill); }
+.navrow, .hubrow, .morerow, .listcard { transition: background-color .12s var(--ease-out); }
+/* The hit area grows with a pseudo-element, so nothing changes visually. ::before, because
+   #demobar .linkbtn already uses ::after for its chevron. */
+.linkbtn, .chip, .backlink { position: relative; }
+.linkbtn::before, .backlink::before { content: ""; position: absolute; inset: -8px -10px; }
+.chip::before { content: ""; position: absolute; inset: -4px 0; }
+
+/* ---- Material fallbacks (Apple pass) ---- */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --tabbar: var(--panel); }
+  #tabs, .selbar, .startbar { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --line: #A8A8B0; --sep: #A8A8B0; }
+}
+#list-cards .listcard:active, #today-lists .listcard:active { background: var(--fill); }
