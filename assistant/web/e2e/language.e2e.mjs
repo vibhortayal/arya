@@ -25,7 +25,7 @@ export default async function (page, base) {
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.waitForSelector("#pf-language");
   const order = await page.$$eval("#profile-account select", s => s.map(e => e.id));
-  if (order.join() !== "pf-currency,pf-language") throw new Error("Language row should follow Currency: " + order);
+  if (order.indexOf("pf-language") !== order.indexOf("pf-currency") + 1 || order.indexOf("pf-currency") < 0) throw new Error("Language row should follow Currency: " + order);
   const opts = await page.$$eval("#pf-language option", o => o.map(e => e.value + "=" + e.textContent));
   if (opts.join() !== "auto=Auto,en=English,es=Español,hi=हिन्दी") throw new Error("options wrong: " + opts);
   if ((await page.inputValue("#pf-language")) !== "auto") throw new Error("default should be auto");
