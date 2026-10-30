@@ -57,6 +57,7 @@ export function Muse() {
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("muse.connectAnAiAgent")}</h1>
       <div className="group pad">
         <p className="muted nomargin">{t("muse.useAryaFromAnAi")}</p>
+        <p className="muted nomargin" style={{ marginTop: 6 }}>{t("muse.sameCodeListsApi")}</p>
         <div className="row" id="profile-token-row" style={{ marginTop: 10 }}>
           {token !== null ? (
             <>

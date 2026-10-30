@@ -78,6 +78,11 @@ def _demo_sandbox(token):
 async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
+    # The Lists API (/api/v1) answers with a bearer token only, and its
+    # schema is public.
+    open_lists = path == "/api/v1" or path.startswith("/api/v1/")
+    if path == "/api/v1/openapi.json":
+        protected = False
     state.set_overlay(None)
     # Which open tab sent this (live sync skips a tab's own echo).
     from api import live
@@ -89,6 +94,11 @@ async def require_login(request, call_next):
             user = auth.api_token_user(authz[7:])
             if user:
                 info = {"user": user, "demo": False}
+        if open_lists and not info:
+            return JSONResponse(
+                {"error": {"code": "unauthorized",
+                           "message": "send your API token: Authorization: Bearer <token>"}},
+                status_code=401, headers={"WWW-Authenticate": "Bearer"})
         cookie = request.cookies.get(auth.COOKIE)
         if not info:
             info = auth.session_info(cookie)
