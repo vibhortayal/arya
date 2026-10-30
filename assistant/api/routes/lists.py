@@ -572,6 +572,19 @@ def _clean_list_fields(body, current=None):
             if st and st.lower() not in {x.lower() for x in stores}:
                 stores.append(st)
         out["stores"] = stores[:state.MAX_LIST_STORES]
+        # Two branches can share a name (two Trader Joe's), so the picker
+        # also keeps which directory stores were chosen. Optional: lists
+        # saved before this have names only.
+        ids = body.get("store_ids") or []
+        if not isinstance(ids, list):
+            raise HTTPException(400, "store_ids must be a list")
+        keep = []
+        for sid in ids:
+            sid = str(sid or "").strip()[:80]
+            if sid and sid not in keep:
+                keep.append(sid)
+        if keep or (current and "store_ids" in current):
+            out["store_ids"] = keep[:state.MAX_LIST_STORES]
     return out
 
 

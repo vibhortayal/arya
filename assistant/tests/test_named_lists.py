@@ -89,6 +89,15 @@ class TestNamedLists(unittest.TestCase):
         self.assertEqual(self.c.post("/api/lists/update", json={"id": l["id"], "name": "costco"}).status_code, 409)
         self.assertEqual(self.c.post("/api/lists/update", json={"id": "l-x", "name": "z"}).status_code, 404)
 
+    def test_two_same_name_stores_keep_their_ids(self):
+        l = self.make("Trader Joe's")
+        r = self.c.post("/api/lists/update", json={"id": l["id"], "stores": ["Trader Joe's"], "store_ids": ["s-b", "s-b", ""]})
+        self.assertEqual((r.json()["stores"], r.json()["store_ids"]), (["Trader Joe's"], ["s-b"]))
+        # Relinking by names alone drops ids that no longer describe the list.
+        r = self.c.post("/api/lists/update", json={"id": l["id"], "stores": []})
+        self.assertEqual(r.json()["store_ids"], [])
+        self.assertNotIn("store_ids", self.make("Plain"))
+
     def test_delete_keeps_items_and_restore_brings_them_back(self):
         a = self.make("Costco")
         b = self.make("Party")

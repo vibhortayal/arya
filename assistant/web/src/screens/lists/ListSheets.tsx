@@ -42,6 +42,11 @@ export type SheetState =
 /* ---------------- store choices and the Find-a-store picker ---------------- */
 
 type Choice = { name: string; id: string; where: string; fresh?: boolean };
+/* What a list links to: store names (what hunts use) plus the directory
+ * ids actually chosen, so two branches with one name stay apart. */
+export type StoreLink = { stores: string[]; ids: string[] };
+export const NO_LINK: StoreLink = { stores: [], ids: [] };
+const linkOf = (l: { stores?: string[]; store_ids?: string[] }): StoreLink => ({ stores: [...(l.stores || [])], ids: [...(l.store_ids || [])] });
 type Sugg = { place_id: string; name: string; secondary: string };
 type Places = { suggestions?: Sugg[]; provisioned?: boolean };
 
@@ -71,7 +76,15 @@ let geo: { lat: number; lng: number } | null = null;
 clearOnSignOut(() => { placesSession = ""; geo = null; });
 const session = () => placesSession || (placesSession = `l${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`);
 
-function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: string[]; setPicked: (p: string[]) => void }) {
+/* Untick one store; its name stays while another branch of that name is
+ * still ticked. */
+export function unpick(p: StoreLink, c: { name: string; id: string }, all: { name: string; id: string }[]): StoreLink {
+  const ids = p.ids.filter(i => i !== c.id);
+  const keep = all.some(x => x.id !== c.id && x.name === c.name && (x.id ? ids.includes(x.id) : false));
+  return { stores: keep ? p.stores : p.stores.filter(n => n !== c.name), ids };
+}
+
+function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: StoreLink; setPicked: (p: StoreLink) => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [choices, setChoices] = useState<Choice[] | null>(null);
@@ -86,7 +99,19 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
 
   useEffect(() => {
     alive.current = true;
-    storeChoices(extra).then(c => { if (alive.current) setChoices(c); });
+    storeChoices(extra).then(c => {
+      if (!alive.current) return;
+      setChoices(c);
+      // A list saved before ids existed names "Trader Joe's" only: tick the
+      // first matching branch, not every one.
+      const p = pickedRef.current;
+      const ids = [...p.ids];
+      for (const n of p.stores) {
+        const same = c.filter(x => x.id && x.name === n);
+        if (same.length && !same.some(x => ids.includes(x.id))) ids.push(same[0].id);
+      }
+      if (ids.length !== p.ids.length) setPicked({ stores: p.stores, ids });
+    });
     return () => { alive.current = false; clearTimeout(timer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -123,7 +148,8 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
       placesSession = ""; // the pick ends Google's billing session
       if (!alive.current) return;
       setChoices(c => [{ name: row.name, id: row.id, where: storeWhere(row), fresh: true }, ...(c || []).filter(x => x.id !== row.id)]);
-      if (!pickedRef.current.includes(row.name)) setPicked([...pickedRef.current, row.name]);
+      const p = pickedRef.current;
+      setPicked({ stores: p.stores.includes(row.name) ? p.stores : [...p.stores, row.name], ids: p.ids.includes(row.id) ? p.ids : [...p.ids, row.id] });
       setFind(""); findRef.current = ""; setGoog(null);
       toast(t("lists.stores.added", { name: row.name }));
     } catch (e) { toast(errMsg(e)); }
@@ -135,11 +161,13 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
       if (!alive.current) return;
       const c = (choices || []).find(x => x.id === id);
       setChoices(cs => (cs || []).filter(x => x.id !== id));
-      if (c) setPicked(pickedRef.current.filter(n => n !== c.name));
+      if (c) setPicked(unpick(pickedRef.current, c, (choices || []).filter(x => x.id !== id)));
       toast(c ? t("lists.stores.removed", { name: c.name }) : t("lists.stores.removedPlain"));
     } catch (e) { toast(errMsg(e)); }
   };
-  const toggle = (name: string) => setPicked(picked.includes(name) ? picked.filter(n => n !== name) : [...picked, name]);
+  const on = (c: Choice) => (c.id ? picked.ids.includes(c.id) : picked.stores.includes(c.name));
+  const toggle = (c: Choice) => setPicked(on(c) ? unpick(picked, c, choices || [])
+    : { stores: picked.stores.includes(c.name) ? picked.stores : [...picked.stores, c.name], ids: c.id ? [...picked.ids, c.id] : picked.ids });
 
   return (
     <>
@@ -166,7 +194,7 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
           ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>
           : <><p className="nearlbl">{t("lists.stores.yours")}</p>{choices.map(c => (
             <div className="srow" key={c.id || c.name}>
-              <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={picked.includes(c.name)} onClick={() => toggle(c.name)}>
+              <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={on(c)} onClick={() => toggle(c)}>
                 <span className="tick" aria-hidden="true">✓</span><span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span>
               </button>
               {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>×</button> : null}
@@ -187,11 +215,11 @@ type Common = {
   run: (fn: () => Promise<void>) => void;
 };
 
-function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "run"> & { moving: string[] | null; onCreate: (name: string, stores: string[], moving: string[] | null) => Promise<void> }) {
+function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "run"> & { moving: string[] | null; onCreate: (name: string, link: StoreLink, moving: string[] | null) => Promise<void> }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [name, setName] = useState("");
-  const [picked, setPicked] = useState<string[]>([]);
+  const [picked, setPicked] = useState<StoreLink>(NO_LINK);
   const create = () => {
     const n = name.trim();
     if (!n) { toast(t("lists.giveName")); return; }
@@ -233,10 +261,10 @@ function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }:
   );
 }
 
-function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (id: string, stores: string[]) => Promise<void> }) {
+function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (id: string, link: StoreLink) => Promise<void> }) {
   const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens);
-  const [picked, setPicked] = useState<string[]>([...((l && l.stores) || [])]);
+  const [picked, setPicked] = useState<StoreLink>(linkOf(l || {}));
   if (!l) return null;
   return (
     <>
@@ -433,8 +461,8 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
 }
 
 export type SheetActions = {
-  onCreate: (name: string, stores: string[], moving: string[] | null) => Promise<void>;
-  onSaveStores: (id: string, stores: string[]) => Promise<void>;
+  onCreate: (name: string, link: StoreLink, moving: string[] | null) => Promise<void>;
+  onSaveStores: (id: string, link: StoreLink) => Promise<void>;
   onDelete: (l: NamedList) => void;
   onMove: (ids: string[], listId: string) => Promise<void>;
   onWhyAdd: (id: string) => void;

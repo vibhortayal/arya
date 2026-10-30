@@ -13,7 +13,7 @@ import { get, post } from "../lib/api";
 import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
-import { ListSheet, type SheetState } from "./lists/ListSheets";
+import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
 import {
   alsoNames, askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
@@ -376,7 +376,8 @@ export function Lists() {
       await reload();
     }) });
   };
-  const createList = async (listName: string, stores: string[], moving: string[] | null) => {
+  const createList = async (listName: string, link: StoreLink, moving: string[] | null) => {
+    let { stores } = link;
     // A list named after one of your stores ("Costco") links it unless
     // you picked stores yourself (QA 2026-10-30: it said "No store linked").
     if (!stores.length) {
@@ -386,15 +387,15 @@ export function Lists() {
         if (hit) stores = [hit.name];
       } catch { /* no stores: the list stays unlinked */ }
     }
-    const l = await post<{ id: string; name: string }>("/api/lists", { name: listName, stores });
+    const l = await post<{ id: string; name: string }>("/api/lists", { name: listName, stores, store_ids: link.ids });
     if (moving) { await reload(); await moveTo(moving, l.id); return; }
     setSheet(null);
     setLens(l.id);
     await reload();
     toast(t("lists.created", { name: l.name }));
   };
-  const saveStores = async (id: string, stores: string[]) => {
-    await post("/api/lists/update", { id, stores });
+  const saveStores = async (id: string, link: StoreLink) => {
+    await post("/api/lists/update", { id, stores: link.stores, store_ids: link.ids });
     setSheet(null);
     await reload();
   };
