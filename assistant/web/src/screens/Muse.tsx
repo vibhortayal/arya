@@ -8,7 +8,7 @@ import { useTranslation } from "../i18n";
  * app.js paintTokenRow / mintInto / SETUP_PROMPT. Back lands on Profile.
  * The Shell already renders <section id="view-muse">; no second one. */
 
-const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya-pilot.duckdns.org. Arya keeps a living model of my purchases, inventory and shopping list.
+const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya.teamnightshift.org. Arya keeps a living model of my purchases, inventory and shopping list.
 
 Your job when I talk to you:
 - A receipt photo or PDF, or a pasted order (Instacart, Amazon, an email): read it and file it in Arya as structured data — merchant, date, each line (name, quantity, price, line total), subtotal, tax, total. Leave delivery fees and tips out. Report back the total Arya verified, never your own arithmetic.

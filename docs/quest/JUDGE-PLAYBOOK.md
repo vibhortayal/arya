@@ -4,7 +4,7 @@ An eight-minute path through the live demo, grouped by the judging
 criteria. Each step says what to do, what you see, and which Meta model
 is involved.
 
-**Live demo:** https://arya-pilot.duckdns.org/ (no account). Use a phone,
+**Live demo:** https://arya.teamnightshift.org/ (no account). Use a phone,
 or a browser window about 390 px wide. Allow the camera and microphone
 for the steps that use them.
 
