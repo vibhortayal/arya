@@ -133,7 +133,7 @@ def demo_lists():
         "demo-avocado": {"manual": True, "list": "l-demo-tj"},
         "demo-pasta": {"manual": True, "list": "l-demo-tj", "qty_override": 2},
         "manual-hummus": {"manual": True, "name": "Hummus", "list": "l-demo-tj"},
-        "manual-basil": {"manual": True, "name": "Basil"},
+        "manual-basil": {"manual": True, "name": "Basil", "list": "l-demo-tj"},
     }
     return lists, flags
 

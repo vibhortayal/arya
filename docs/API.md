@@ -76,9 +76,11 @@ Reply:
 ```
 
 - `already`: names that were already on this list. They are not added twice.
-- `also_on`: names that are already on a **different** list. Arya keeps one
-  row per item, so these are **not moved and not added**; the reply says
-  where they are. To move one, `PATCH` its `list_id`.
+- `also_on`: names that are already on a **different** list. The API does
+  not move them and does not add them to this list; the reply says where
+  they are. To move one, `PATCH` its `list_id`. (In the app a person can
+  keep an item on more than one list. The API shows such an item once, under
+  its main list, and its ticks there are the main list's.)
 - `skipped`: pieces of `text` that were not items (a bare number, a sentence).
 - `items`: the items now on the list for the names you sent.
 - `text` is split by fixed rules. The API makes no model calls.

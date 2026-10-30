@@ -14,7 +14,7 @@ from api.cart.build import prepare
 
 import contextvars
 
-from api import pgstore
+from api import aisles, pgstore
 
 _current_user = contextvars.ContextVar("arya_user", default=None)
 # The demo sandbox (review 2026-10-28): a demo visitor's writes land in
@@ -666,6 +666,10 @@ def derived():
             item["checked"] = True
         if f.get("list") in list_ids:
             item["list"] = f["list"]
+        also = [a for a in (f.get("also") or []) if a in list_ids and a != f.get("list")]
+        if also:
+            item["also"] = also
+            item["checked_in"] = [a for a in also if (f.get("checked_in") or {}).get(a) == today]
         kept.append(item)
     smart["items"] = kept
     verdicts = grocery_verdicts()
@@ -674,6 +678,11 @@ def derived():
         item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
         # Deterministic and cached only, never a model call here: the
         # list shows "Not a grocery item? Added anyway" for these.
+        # The household's own pick wins over the keyword map.
+        pin = f.get("aisle")
+        aisle = pin if pin in aisles.AISLES or pin == "Other" else aisles.aisle_for(item["name"])
+        if aisle:
+            item["aisle"] = aisle  # the department the list groups under
         g = classify_grocery(item["name"], verdicts)
         if g["kind"] == "other":
             item["not_grocery"] = g["sub"] or "other"

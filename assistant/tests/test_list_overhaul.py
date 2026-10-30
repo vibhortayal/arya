@@ -43,8 +43,10 @@ class TestOnListInTheDemo(unittest.TestCase):
         self.assertEqual(got["Hummus"]["list"], "l-demo-tj")
         self.assertTrue(got["Paper Towels 6 ct"]["on_list"])
         self.assertEqual(got["Paper Towels 6 ct"]["list"], "l-demo-costco")
+        # No "Everything else" card in the demo (owner, 2026-10-30):
+        # every demo item sits on one of the two lists.
         self.assertTrue(got["Basil"]["on_list"])
-        self.assertNotIn("list", got["Basil"])
+        self.assertEqual(got["Basil"]["list"], "l-demo-tj")
 
     def test_due_staples_are_suggestions_with_reason_facts(self):
         milk = self.items()["Whole Milk 1 gal"]
@@ -146,7 +148,13 @@ class TestStartShopping(unittest.TestCase):
         # Usability pass (owner 2026-10-29): Start shopping goes straight
         # to Quest; the one-option sheet opens only for Demo Town's store
         # notice. Suggestions stay on the list itself (#list-suggest).
-        self.assertIn('onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}', js)
+        # 8b (owner, 2026-10-30): the saved choice (Quest, Just my list,
+        # Ask me) decides; the sheet only asks while nothing is saved or
+        # for Ask me, and still shows Demo Town's store notice.
+        self.assertIn('if (town && storeTrouble(town, here ? here.stores || [] : [])) { setShopOpen(true); return; }', js)
+        self.assertIn('if (shopMode === "quest") startHunt();', js)
+        self.assertIn('else if (shopMode === "list") startList();', js)
+        self.assertIn('data-shop="list"', js)
         self.assertIn('data-shop="quest"', js)
         self.assertNotIn('data-shop="express"', js)
         self.assertNotIn('id="shop-sugg"', js)

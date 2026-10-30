@@ -3,8 +3,8 @@ sheet with quick questions, a field and a mic; it reuses the List's
 engine with surface "hunt" and a context naming the store and stop."""
 import unittest
 
-import test_ask_in_list as base
-from test_ask_in_list import StubChat  # noqa: E402
+from tests import test_ask_in_list as base
+from tests.test_ask_in_list import StubChat  # noqa: E402
 from tests import frontend
 
 

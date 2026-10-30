@@ -182,7 +182,7 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency, demo, user } = useSession();
+  const { currency, demo, user, questNudge, patchShop, saveShopMode } = useSession();
   // The Quest nudge retires once this account has opened Quest.
   const [questSeen] = useState(() => questOpened(user));
   const town = useTown();
@@ -284,6 +284,7 @@ export function Today() {
   const checks: any[] = (h?.checks || []).filter((c: any) => !asked.has(c.item_id));
   const seen: any[] = (h?.seen || []).filter((c: any) => !asked.has(c.item_id));
   const nChecks = checks.length + seen.length;
+  const tip = facts && !firstRun ? <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} /> : null;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
   const checkLabel = checkNames.length ? checkNames.slice(0, 2).join(", ") + (checkNames.length > 2 ? t("today.andMore", { n: checkNames.length - 2 }) : "") : "";
   async function check(kind: "ok" | "expired", id: string) {
@@ -363,8 +364,8 @@ export function Today() {
           <div className="listcards">
             {listCap.shown.map(c => (
               <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
-                <span className="lc-name">{c.name}</span>
-                <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span>
+                <span className="lc-top"><span className="lc-name">{c.name}</span>
+                  <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span><span className="chev" aria-hidden="true">›</span></span>
                 <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : t("today.nothingToGet")}</span>
               </button>
             ))}
@@ -426,14 +427,28 @@ export function Today() {
         {lastMonth && months && (
           <>
             <h3 className="sect">{t("today.yourPatterns")}</h3>
-            <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
-              <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
-              <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
+            <div className="group">
+              <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
+                <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
+              {tip}
+            </div>
           </>
         )}
       </div>
       <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
-      <div id="today-tip">{facts && !firstRun && <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} />}</div>
+      <div id="today-tip">{!(lastMonth && months) && tip}</div>
+      {questNudge && (
+        <div id="today-questnudge" className="fr-card">
+          <p className="fr-h">{t("today.questNudge.title")}</p>
+          <p className="fr-s">{t("today.questNudge.sub")}</p>
+          <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
+          <div className="fr-links">
+            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
+            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
+          </div>
+        </div>
+      )}
       {listItems.length > 0 && !questSeen && (
         <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
           <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />

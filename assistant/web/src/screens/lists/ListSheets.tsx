@@ -6,8 +6,11 @@ import { get, post } from "../../lib/api";
 import { MONTHS, fmtShort, money } from "../../lib/format";
 import { clearOnSignOut, useSession } from "../../app/session";
 import { charFor } from "../../lib/characters";
-import { namedLists, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
+import { AISLE_ORDER, GROUP_AT, OTHER } from "./aisles";
+import { itemHome, namedLists, onListItems, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
 import { useTranslation } from "../../i18n";
+import { ShareWizard } from "./ShareWizard";
+import { TidyFlow } from "./Tidy";
 
 /* Port of pwa/lists.js: the sheets behind the Lists tab (new list,
  * list options, link stores, move, and "why Arya suggests it"). The
@@ -28,6 +31,12 @@ export type SheetState =
   | { kind: "menu" }
   | { kind: "stores" }
   | { kind: "move"; ids: string[] }
+  | { kind: "row"; id: string }
+  | { kind: "aisle"; id: string }
+  | { kind: "where"; id: string }
+  | { kind: "share" }
+  | { kind: "tidy" }
+  | { kind: "also"; id: string }
   | { kind: "why"; id: string };
 
 /* ---------------- store choices and the Find-a-store picker ---------------- */
@@ -155,13 +164,13 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: s
       <div id="ls-stores">
         {choices && (!choices.length
           ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>
-          : choices.map(c => (
+          : <><p className="nearlbl">{t("lists.stores.yours")}</p>{choices.map(c => (
             <div className="srow" key={c.id || c.name}>
               <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={picked.includes(c.name)} onClick={() => toggle(c.name)}>
-                <span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span><span className="tick">✓</span>
+                <span className="tick" aria-hidden="true">✓</span><span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span>
               </button>
-              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>{t("common.remove")}</button> : null}
-            </div>)))}
+              {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>×</button> : null}
+            </div>))}</>)}
       </div>
     </>
   );
@@ -201,14 +210,16 @@ function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "
   );
 }
 
-function MenuSheet({ data, lens, onClose, onStores, onDelete }: Common & { onStores: () => void; onDelete: (l: NamedList) => void }) {
+function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }: Common & { onStores: () => void; onDelete: (l: NamedList) => void; onShare: () => void; onTidy: () => void }) {
   const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens) || null;
-  const n = l ? data.list.items.filter(i => i.on_list && i.list === l.id).length : 0;
+  const n = l ? onListItems(data).filter(i => i.list === l.id).length : 0;
   return (
     <>
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{l ? l.name : t("common.everythingElse")}</h3>
+      {l ? <button className="navrow" type="button" data-ls="share" onClick={onShare}><span className="grow">{t("lists.share.menuRow")}<small>{t("lists.share.menuSub")}</small></span><span className="chev">›</span></button> : null}
+      {l ? <button className="navrow" type="button" data-ls="tidy" onClick={onTidy}><span className="grow">{t("lists.tidy.menuRow")}<small>{t("lists.tidy.menuSub")}</small></span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow" type="button" data-ls="stores" onClick={onStores}><span className="grow">{(l.stores || []).length ? t("lists.changeStores") : t("lists.linkStores")}<small>{(l.stores || []).length ? l.stores!.join(", ") : t("lists.storesUse")}</small></span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow dangerrow" type="button" data-ls="delete" onClick={() => onDelete(l)}><span className="grow">{t("lists.deleteList")}<small>{n ? t("lists.deleteMoves", { count: n }) : t("lists.hasNoItems")}</small></span></button> : null}
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.done")}</button></div>
@@ -232,11 +243,27 @@ function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (i
   );
 }
 
+/* "Also put on another list": the item stays where it is. */
+function AlsoSheet({ data, lens, id, run, onAlso }: Common & { id: string; onAlso: (id: string, listId: string) => Promise<void> }) {
+  const { t } = useTranslation();
+  const item = onListItems(data).find(i => i.item_id === id && itemHome(data, i) === (lens === "home" ? "else" : lens)) || ({} as Partial<Item>);
+  const on = new Set([lens, item.list || "", ...(item.also || [])]);
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.alsoTitle", { what: item.name || "" })}</h3>
+      {namedLists(data).filter(l => !on.has(l.id)).map(l => (
+        <button key={l.id} className="navrow" type="button" data-ls-also={l.id} onClick={() => run(() => onAlso(id, l.id))}><span className="grow">{l.name}</span><span className="chev">›</span></button>
+      ))}
+    </>
+  );
+}
+
 function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: string[]; onMove: (ids: string[], listId: string) => Promise<void>; onNew: (ids: string[]) => void }) {
   const { t } = useTranslation();
   const here = lens === "home" ? "else" : lens;
   const lists = namedLists(data);
-  const count = (id: string) => data.list.items.filter(i => i.on_list && !i.checked && (id === "else"
+  const count = (id: string) => onListItems(data).filter(i => !i.checked && (id === "else"
     ? !lists.some(l => l.id === i.list) : i.list === id)).length;
   const one = ids.length === 1 ? (data.list.items.find(i => i.item_id === ids[0]) || ({} as Partial<Item>)).name : "";
   const dest = (id: string, name: string) => id === here
@@ -248,6 +275,65 @@ function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: stri
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.moveTitle", { what: one ? one : t("common.itemCount", { count: ids.length }) })}</h3>
       {lists.map(l => dest(l.id, l.name))}{dest("else", t("common.everythingElse"))}
       <button className="navrow accentrow" type="button" data-ls="movenew" onClick={() => onNew(ids)}><span className="grow"><span aria-hidden="true">+ </span>{t("lists.newListMenu")}</span></button>
+    </>
+  );
+}
+
+const deptOf = (i: Item) => (i.aisle && AISLE_ORDER.includes(i.aisle) ? i.aisle : OTHER);
+
+/* Pick the department an item files under. Remembered for the household. */
+function AisleSheet({ data, id, run, onClose, onAisle }: Common & { id: string; onAisle: (id: string, aisle: string) => Promise<void> }) {
+  const { t } = useTranslation();
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  const now = deptOf(item as Item);
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{item.name || ""}</h3>
+      <p className="sub">{t("lists.departmentHint")}</p>
+      <div className="group" style={{ boxShadow: "none" }}>
+        {[...AISLE_ORDER, OTHER].map(a => (
+          <button key={a} className="navrow" type="button" data-ls-aisle={a} aria-pressed={a === now}
+            onClick={() => run(async () => { onClose(); if (a !== now) await onAisle(id, a); })}>
+            <span className="grow">{t(`lists.aisle.${a}`)}</span><span className="tick" aria-hidden="true">✓</span></button>))}
+      </div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
+    </>
+  );
+}
+
+/* The row's ⋯ button: Move and Remove without needing the swipe. */
+function RowSheet({ data, id, run, onClose, onMove, onAlso, onAisle, onRemove, shopping, onWhere }: Common & { id: string; onMove: (id: string) => void; onAlso: (id: string) => void; onAisle: (id: string) => void; onRemove: (ids: string[]) => Promise<void>; shopping?: boolean; onWhere: (id: string) => void }) {
+  const { t } = useTranslation();
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  const name = item.name || "";
+  /* The department row only helps where the list shows department headers. */
+  const grouped = !!item.item_id && onListItems(data).filter(i => !i.checked && !i.not_grocery && itemHome(data, i) === itemHome(data, item as Item)).length >= GROUP_AT;
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{name}</h3>
+      {shopping ? <button className="navrow" type="button" data-ls="row-where" onClick={() => onWhere(id)}><span className="grow">{t("lists.whereIsIt")}<small>{t(`lists.aisle.${deptOf(item as Item)}`)}</small></span><span className="chev">›</span></button> : null}
+      {!shopping ? <button className="navrow" type="button" data-ls="row-move" onClick={() => onMove(id)}><span className="grow">{t("lists.moveToAnother")}</span><span className="chev">›</span></button> : null}
+      {!shopping && namedLists(data).length > 1 ? <button className="navrow" type="button" data-ls="row-also" onClick={() => onAlso(id)}><span className="grow">{t("lists.alsoAnother")}</span><span className="chev">›</span></button> : null}
+      {grouped && !shopping ? <button className="navrow" type="button" data-ls="row-aisle" onClick={() => onAisle(id)}><span className="grow">{t("lists.moveToDepartment")}<small>{t(`lists.aisle.${deptOf(item as Item)}`)}</small></span><span className="chev">›</span></button> : null}
+      {!shopping ? <button className="navrow dangerrow" type="button" data-ls="row-remove" onClick={() => run(async () => { onClose(); await onRemove([id]); })}><span className="grow">{t("common.remove")}</span></button> : null}
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
+    </>
+  );
+}
+
+/* Where? (8): what Arya knows about the aisle, and a way to help map it. */
+function WhereSheet({ data, id, run, onClose, onSnap }: Common & { id: string; onSnap: (name: string) => void }) {
+  const { t } = useTranslation();
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{item.name || ""}</h3>
+      <p className="sub">{t("lists.whereIn", { dept: t(`lists.aisle.${deptOf(item as Item)}`) })}</p>
+      <button className="navrow" type="button" data-ls="where-snap" onClick={() => run(async () => { onClose(); onSnap(item.name || ""); })}><span className="grow">{t("lists.whereSnap")}<small>{t("lists.whereSnapSub")}</small></span><span className="chev">›</span></button>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
     </>
   );
 }
@@ -348,6 +434,13 @@ export type SheetActions = {
   onWhyAdd: (id: string) => void;
   onWhyNot: (id: string) => void;
   onWhyNever: (id: string) => void;
+  onRemove: (ids: string[]) => Promise<void>;
+  onAisle: (id: string, aisle: string) => Promise<void>;
+  /* Just my list (8): the shopping view trims the row menu to Where?. */
+  shopping?: boolean;
+  onSnap?: (name: string) => void;
+  onChanged?: () => void;
+  onAlso: (id: string, listId: string) => Promise<void>;
 };
 
 export function ListSheet({ sheet, setSheet, data, lens, actions }:
@@ -364,8 +457,14 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
   return (
     <Sheet open onClose={onClose} id="list-sheet" labelledBy="ls-title" focusKey={sheet.kind}>
       {sheet.kind === "new" && <NewSheet moving={sheet.moving} onClose={onClose} run={run} onCreate={actions.onCreate} />}
-      {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} />}
+      {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} onShare={() => setSheet({ kind: "share" })} onTidy={() => setSheet({ kind: "tidy" })} />}
+      {sheet.kind === "share" && <ShareWizard data={data} listId={lens} listName={(namedLists(data).find(x => x.id === lens) || { name: "" }).name} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} onTidy={() => setSheet({ kind: "tidy" })} />}
+      {sheet.kind === "tidy" && <TidyFlow listId={lens} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
+      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAlso={id => setSheet({ kind: "also", id })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} shopping={actions.shopping} onWhere={id => setSheet({ kind: "where", id })} />}
+      {sheet.kind === "where" && <WhereSheet {...common} id={sheet.id} onSnap={name => actions.onSnap && actions.onSnap(name)} />}
+      {sheet.kind === "also" && <AlsoSheet {...common} id={sheet.id} onAlso={actions.onAlso} />}
+      {sheet.kind === "aisle" && <AisleSheet {...common} id={sheet.id} onAisle={actions.onAisle} />}
       {sheet.kind === "move" && <MoveSheet {...common} ids={sheet.ids} onMove={actions.onMove} onNew={ids => setSheet({ kind: "new", moving: ids })} />}
     </Sheet>
   );

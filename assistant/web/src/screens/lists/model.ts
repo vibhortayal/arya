@@ -8,7 +8,7 @@ import { t } from "../../i18n";
 
 export type Item = {
   item_id: string; name: string; on_list?: boolean; checked?: boolean; list?: string | null;
-  qty?: number; unit?: string; added_by?: string; not_grocery?: boolean; source?: string;
+  qty?: number; unit?: string; added_by?: string; also?: string[]; checked_in?: string[]; aisle?: string; not_grocery?: boolean; source?: string;
   expired_on?: string; every_days?: number; days_since?: number; due_reason?: string; judge_reason?: string;
 };
 export type NamedList = { id: string; name: string; stores?: string[] };
@@ -26,7 +26,15 @@ export function sameStore(a: unknown, b: unknown) {
 }
 
 export const namedLists = (d: HomeData | null): NamedList[] => (d && d.lists) || [];
-export const onListItems = (d: HomeData) => d.list.items.filter(i => i.on_list);
+/* An item on more than one list shows once per list (owner, 2026-10-30):
+ * each copy has that list as its `list`, its own tick, and `also` names
+ * the other lists it is on. */
+export const onListItems = (d: HomeData) => d.list.items.filter(i => i.on_list).flatMap(i => [i,
+  ...(i.also || []).map(a => ({ ...i, list: a, checked: (i.checked_in || []).includes(a),
+    also: [i.list || "", ...(i.also || []).filter(x => x !== a)].filter(Boolean), checked_in: [] }))]);
+/* The names of the other lists a row is on, for its quiet line. */
+export const alsoNames = (d: HomeData, i: Item) =>
+  (i.also || []).map(id => namedLists(d).find(l => l.id === id)?.name || "").filter(Boolean);
 export const suggestions = (d: HomeData) => d.list.items.filter(i => !i.on_list);
 export const lensName = (d: HomeData | null, id: string) =>
   id === "else" ? t("common.everythingElse") : ((namedLists(d).find(l => l.id === id) || {} as Partial<NamedList>).name || "");

@@ -65,11 +65,14 @@ class TestAddIntoAList(unittest.TestCase):
         self.assertEqual(r["moved"], [{"name": "bananas", "from": ""}])
         self.assertEqual(r["already"], 0)
 
-    def test_moved_names_the_list_it_left(self):
+    def test_second_list_names_the_list_it_is_also_on(self):
+        # Owner, 2026-10-30 (option B): people decide, so it joins both
+        # lists and the toast offers Move here (tests/test_list_also.py).
         costco = self.c.post("/api/lists", json={"name": "Costco", "stores": []}).json()
         self.add("eggs", costco["id"])
         r = self.add("eggs", self.tj["id"])
-        self.assertEqual(r["moved"], [{"name": "eggs", "from": "Costco"}])
+        self.assertEqual([(a["name"], a["list"]) for a in r["also"]], [("eggs", "Costco")])
+        self.assertEqual(r["moved"], [])
 
     def test_re_adding_a_ticked_item_brings_it_back(self):
         # H2: it said "1 already on it" and stayed under Checked off.

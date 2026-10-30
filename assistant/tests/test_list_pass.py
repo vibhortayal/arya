@@ -84,7 +84,7 @@ class TestListClientPins(unittest.TestCase):
     def test_loading_state_and_list_rows(self):
         js = src("screens/Lists.tsx")
         self.assertIn('className="skel" role="status" aria-label="Loading your list…"', js)
-        self.assertIn("groceries.map(i => <ListRow ", js)
+        self.assertIn("gShown.map(i => <ListRow ", js)
 
     def test_ask_and_eyes_empty_states(self):
         chat, js = src("screens/Chat.tsx"), src("screens/Lists.tsx")

@@ -63,7 +63,23 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name, qty=1, list_id=None, unit=""):
+def _put_also(item_id, list_id, on=True):
+    """An item can sit on more than one list (owner, 2026-10-30): its
+    "list" is where it lives, "also" the others. Ticking is per list."""
+    def change(f):
+        f = dict(f)
+        also = [a for a in (f.get("also") or []) if a != list_id]
+        if on and f.get("list") != list_id:
+            also.append(list_id)
+        f["also"] = also
+        ticks = dict(f.get("checked_in") or {})
+        ticks.pop(list_id, None)
+        f["checked_in"] = ticks
+        return f
+    state.update_flag(item_id, change)
+
+
+def _add_name_to_list(name, qty=1, list_id=None, unit="", mode="both"):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
@@ -76,8 +92,18 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
         # off, and an add from inside a list files it there (QA
         # 2026-10-30: "bananas" on Trader Joe's went to Everything else).
         flag = {"manual": True, "dismissed_on": None, "checked_on": None}
-        if list_id:
+        cur = state.flags().get(known, {})
+        elsewhere = (cur.get("list") if cur.get("list") in {l["id"] for l in state.named_lists()} else None)
+        if list_id and elsewhere and elsewhere != list_id and cur.get("manual") and mode == "both":
+            # On another list already: people decide (owner, 2026-10-30).
+            # It joins this one too; "Move here" is one tap in the toast.
+            if list_id not in (cur.get("also") or []):
+                _put_also(known, list_id)
+            flag["checked_on"] = cur.get("checked_on")
+        elif list_id:
             flag["list"] = list_id
+            if list_id in (cur.get("also") or []):
+                flag["also"] = [a for a in cur["also"] if a != list_id]
         if qty and qty != 1:
             flag["qty_override"] = qty
         if unit:
@@ -176,13 +202,16 @@ def _add_typed(typed, list_id=None, source="split", skipped=()):
     # Already on the list, unticked and on this list: not "added". A
     # ticked row comes back and a row on another list moves here; the
     # toast names both so the add never looks like it did nothing.
-    already, already_names, back, moved = 0, [], [], []  # names for the toast
+    already, already_names, back, moved, also = 0, [], [], [], []  # names for the toast
     for a in added:
         was = before.get(a["item_id"])
         if was is None:
             continue
         if was.get("checked"):
             back.append(a["name"])
+        elif list_id and was.get("list") != list_id and list_id in (state.flags().get(a["item_id"], {}).get("also") or []):
+            also.append({"name": a["name"], "item_id": a["item_id"],
+                         "list": lists.get(was.get("list")) or ""})
         elif list_id and was.get("list") != list_id:
             moved.append({"name": a["name"],
                           "from": lists.get(was.get("list")) or ""})
@@ -191,7 +220,7 @@ def _add_typed(typed, list_id=None, source="split", skipped=()):
             already_names.append({"name": a["name"],
                                   "list": lists.get(was.get("list")) or ""})
     return {"added": len(added) - already, "already": already,
-            "already_names": already_names, "back": back, "moved": moved,
+            "already_names": already_names, "back": back, "moved": moved, "also": also,
             "names": [a["name"] for a in added], "source": source,
             "skipped": list(skipped),
             # Only what newly joined the list: the client's Undo.
@@ -237,6 +266,128 @@ async def list_from_text(req: Request):
         if not names:  # say what was left out instead of adding 0 in silence
             skipped = skipped_pieces(text)
     return _add_typed(typed, list_id, source, skipped)
+
+
+@router.post("/api/list/import-preview")
+async def list_import_preview(req: Request):
+    """Read a paste (lines, CSV, JSON or anything) into a preview. Adds
+    nothing. Items already on another list are marked with that list."""
+    body = await _json_obj(req)
+    text = body.get("text") or ""
+    if not str(text).strip():
+        raise HTTPException(400, "text is required")
+    from api.list.importer import parse_paste
+
+    def by_model(t):
+        if not os.environ.get("MODEL_API_KEY"):
+            return []
+        _budget_guard()
+        from api.list.intake import extract_items_model
+        return extract_items_model(t, new_client())
+    items, source = parse_paste(str(text), by_model)
+    before = {i["item_id"]: i for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    lists = {l["id"]: l["name"] for l in state.named_lists()}
+    from api.list.intake import existing_item_id
+    ents, flags = state.dictionary()["entries"], state.flags()
+    list_id = body.get("list_id") or None
+    for it in items:
+        known = existing_item_id(it["name"], ents, flags)
+        was = before.get(known) if known else None
+        it["on_list"] = bool(was)
+        it["other_list"] = (lists.get(was.get("list")) or "") if was and was.get("list") != list_id and not was.get("checked") else ""
+    return {"items": items, "source": source}
+
+
+@router.post("/api/list/import")
+async def list_import(req: Request):
+    """Add the previewed items to one list: the same add path as typing."""
+    body = await _json_obj(req)
+    list_id = body.get("list_id") or None
+    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
+    rows = body.get("items")
+    if not isinstance(rows, list) or not rows:
+        raise HTTPException(400, "items is required")
+    from api import aisles
+    from api.list.importer import MAX_ITEMS, _item
+    before = {i["item_id"] for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    added = []
+    for r in rows[:MAX_ITEMS]:
+        it = _item(r.get("name"), r.get("qty") or 1, r.get("unit") or "", False, r.get("aisle") or "") if isinstance(r, dict) else None
+        if not it:
+            continue
+        a = _add_name_to_list(it["name"], it["qty"], list_id, it["unit"],
+                              mode="move" if body.get("mode") == "move" else "both")
+        if it["aisle"] in aisles.AISLES or it["aisle"] == "Other":
+            _merge_flag(a["item_id"], {"aisle": it["aisle"]})
+        groups.note("added", a["item_id"])
+        added.append(a)
+    new_ids = [a["item_id"] for a in added if a["item_id"] not in before]
+    return {"added": len(new_ids), "already": len(added) - len(new_ids),
+            "names": [a["name"] for a in added], "item_ids": new_ids}
+
+
+@router.get("/api/list/tidy")
+def list_tidy(list_id: str = ""):
+    """What Arya would tidy on one list: doubles, typed amounts, errands."""
+    from api.list import tidy
+    rows = [i for i in state.derived()["smart_list"]["items"]
+            if i.get("on_list") and not i.get("checked") and (i.get("list") or "") == (list_id if list_id != "else" else "")]
+    return {"fixes": tidy.find(rows)}
+
+
+@router.post("/api/list/tidy/apply")
+async def list_tidy_apply(req: Request):
+    """Apply chosen fixes (from /api/list/tidy). Returns `undo`: the
+    flags the fixes changed, to put back with /api/list/tidy/undo."""
+    body = await _json_obj(req)
+    fixes = body.get("fixes")
+    if not isinstance(fixes, list) or not fixes:
+        raise HTTPException(400, "fixes is required")
+    rows = {i["item_id"]: i for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    old = state.flags()
+    undo, applied = {}, 0
+
+    def snap(i):
+        if i not in undo:
+            undo[i] = dict(old[i]) if i in old else None
+
+    for f in fixes[:200]:
+        if not isinstance(f, dict):
+            continue
+        kind = f.get("kind")
+        if kind == "double" and f.get("keep") in rows:
+            drops = [d for d in (f.get("drop") or []) if d in rows]
+            total = int(rows[f["keep"]].get("qty") or 1) + sum(int(rows[d].get("qty") or 1) for d in drops)
+            snap(f["keep"])
+            _merge_flag(f["keep"], {"qty_override": min(total, 99)})
+            for d in drops:
+                snap(d)
+                _merge_flag(d, {"manual": False, "dismissed_on": state.cycle()})
+            applied += 1
+        elif kind == "amount" and f.get("id") in rows and str(f["id"]).startswith("manual-"):
+            name = " ".join(str(f.get("new_name") or "").split())[:80]
+            qty = max(1, min(int(f.get("qty") or 1), 99))
+            if name:
+                snap(f["id"])
+                _merge_flag(f["id"], {"name": name, "qty_override": qty})
+                applied += 1
+        elif kind == "errand" and f.get("id") in rows:
+            snap(f["id"])
+            _merge_flag(f["id"], {"manual": False, "dismissed_on": state.cycle()})
+            applied += 1
+    return {"applied": applied, "undo": undo}
+
+
+@router.post("/api/list/tidy/undo")
+async def list_tidy_undo(req: Request):
+    body = await _json_obj(req)
+    undo = body.get("undo")
+    if not isinstance(undo, dict) or len(undo) > 400:
+        raise HTTPException(400, "undo is required")
+    for item_id, flag in undo.items():
+        state.update_flag(str(item_id), lambda _f, flag=flag: dict(flag) if isinstance(flag, dict) else {})
+    return {"ok": True}
 
 
 @router.post("/api/list/judge")
@@ -328,9 +479,26 @@ async def list_from_photo(req: Request):
             "added": len(added), "demo": demo}
 
 
-def _remove_item(item_id):
+def _remove_item(item_id, lid=None):
+    cur = state.flags().get(item_id, {})
+    also = list(cur.get("also") or [])
+    if lid and also and (lid in also or lid == cur.get("list")):
+        # On more than one list: leaving this one keeps the others.
+        def leave(f):
+            f = dict(f)
+            rest = [a for a in also if a != lid]
+            if lid == f.get("list"):
+                f["list"] = rest.pop(0)
+            f["also"] = rest
+            ticks = dict(f.get("checked_in") or {})
+            ticks.pop(lid, None)
+            f["checked_in"] = ticks
+            return f
+        state.update_flag(item_id, leave)
+        return True
     _merge_flag(item_id, {"manual": False, "dismissed_on": state.cycle()})
     groups.note("removed", item_id)
+    return False
 
 
 @router.post("/api/list/remove")
@@ -339,8 +507,8 @@ async def list_remove(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    _remove_item(item_id)
-    return {"ok": True}
+    still_on = _remove_item(item_id, body.get("list_id"))
+    return {"ok": True, "still_on": still_on} if still_on else {"ok": True}
 
 
 def _set_qty(item_id, body):
@@ -473,10 +641,37 @@ async def lists_restore(req: Request):
     return {"list": row}
 
 
-def _move_item(item_id, list_id):
+def _move_item(item_id, list_id, from_list=None):
     if list_id and not any(l["id"] == list_id for l in state.named_lists()):
         raise HTTPException(404, "no such list")
-    _merge_flag(item_id, {"list": list_id})
+
+    def change(f):
+        f = dict(f)
+        also = [a for a in (f.get("also") or []) if a != list_id]
+        if from_list and from_list != f.get("list") and from_list in (f.get("also") or []):
+            # Moved out of an extra list: the main list stays, the item
+            # swaps this list for the new one.
+            also = [a for a in also if a != from_list]
+            f["also"] = also if list_id is None or list_id == f.get("list") else also + [list_id]
+            return f
+        f["list"] = list_id
+        f["also"] = also
+        return f
+    state.update_flag(item_id, change)
+
+
+@router.post("/api/list/also")
+async def list_also(req: Request):
+    """Put an item on one more list (on true), or take it off that one
+    (on false). Its main list stays where it is."""
+    body = await _json_obj(req)
+    item_id, list_id = body.get("item_id"), body.get("list_id")
+    if not item_id or not list_id:
+        raise HTTPException(400, "item_id and list_id are required")
+    if not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
+    _put_also(item_id, list_id, on=body.get("on", True) is not False)
+    return {"ok": True}
 
 
 @router.post("/api/list/move")
@@ -486,12 +681,43 @@ async def list_move(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    _move_item(item_id, body.get("list_id") or None)
+    _move_item(item_id, body.get("list_id") or None, body.get("from_list"))
     return {"ok": True}
 
 
-def _set_checked(item_id, checked):
-    _merge_flag(item_id, {"checked_on": state.cycle() if checked else None})
+@router.post("/api/list/aisle")
+async def list_aisle(req: Request):
+    """Pin an item to a department ("Other" for none), or clear the pin
+    (aisle null) so the keyword map decides again. Remembered per
+    household, so the next time the item is added it files the same way."""
+    from api import aisles
+    body = await _json_obj(req)
+    item_id = body.get("item_id")
+    if not item_id:
+        raise HTTPException(400, "item_id is required")
+    aisle = body.get("aisle") or None
+    if aisle and aisle not in aisles.AISLES and aisle != "Other":
+        raise HTTPException(400, "unknown department")
+    _merge_flag(item_id, {"aisle": aisle})
+    return {"ok": True}
+
+
+def _set_checked(item_id, checked, lid=None):
+    cur = state.flags().get(item_id, {})
+    if lid and lid in (cur.get("also") or []):
+        # Ticked on the extra list only: the other list keeps its own tick.
+        def change(f):
+            f = dict(f)
+            t = dict(f.get("checked_in") or {})
+            if checked:
+                t[lid] = state.cycle()
+            else:
+                t.pop(lid, None)
+            f["checked_in"] = t
+            return f
+        state.update_flag(item_id, change)
+    else:
+        _merge_flag(item_id, {"checked_on": state.cycle() if checked else None})
     if checked:
         groups.note("ticked", item_id)
 
@@ -501,7 +727,7 @@ async def list_check(req: Request):
     body = await _json_obj(req)
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
-    _set_checked(body["item_id"], body.get("checked"))
+    _set_checked(body["item_id"], body.get("checked"), body.get("list_id"))
     return {"ok": True}
 
 

@@ -39,7 +39,7 @@ export function Profile() {
   const nav = useNav();
   const town = useTown();
   const guide = useGuide();
-  const { demo, user, currency, setCurrency, language, languages, setLanguage, leave } = useSession();
+  const { demo, user, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
@@ -165,6 +165,15 @@ export function Profile() {
             </select>
             <select id="pf-language" className="curpick" aria-label={t("settings.language")} value={language} onChange={ev => pickLanguage(ev.target.value)}>
               {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+          </div></div>
+        <div className="row prefrow" id="pf-shopmode"><div className="grow"><span className="name">{t("settings.shopMode")}</span><span className="sub">{t("settings.shopModeSub")}</span></div>
+          <div className="prefpicks">
+            <select id="pf-shopmode-select" className="curpick" aria-label={t("settings.shopMode")} value={shopMode || "ask"}
+              onChange={ev => attempt(async () => { await saveShopMode(ev.target.value as "quest" | "list" | "ask"); })}>
+              <option value="quest">{t("settings.shopModeQuest")}</option>
+              <option value="list">{t("settings.shopModeList")}</option>
+              <option value="ask">{t("settings.shopModeAsk")}</option>
             </select>
           </div></div>
         <RegistrationRow />

@@ -1723,6 +1723,71 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 @media (prefers-reduced-motion: no-preference) { .skel i { animation: skelpulse 1.4s ease-in-out infinite; } }
 @keyframes skelpulse { 50% { opacity: .55; } }
 
+/* Today (UI pass 2, 2026-10-30): the demo strip is one 44pt line, list
+   cards are full-width rows, Spending and the tip share one group. */
+#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 62px 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
+#demobar .linkbtn { font-size: 15px; padding: 0 14px; }
+#today-lists .listcards { grid-template-columns: 1fr; }
+#today-lists .listcard { padding: 14px 16px; }
+#today-lists .lc-top { display: flex; align-items: center; gap: 10px; }
+#today-lists .lc-top .lc-name { flex: 1; min-width: 0; font-size: 17px; }
+#today-lists .lc-top .lc-count { margin: 0; font-size: 15px; color: var(--secondary); }
+#today-lists .lc-top .chev { color: var(--tertiary); }
+#today-lists .lc-items { font-size: 15px; margin-top: 6px; }
+#today-patterns .group .hubrow { margin-top: 0; }
+#today-patterns .tipline { margin-top: 0; }
+#demobar .linkbtn::after { content: " ›"; white-space: pre; }
+
+/* New list stores (UI pass 2): unselected check rows, Remove is a quiet x. */
+.sheet .srow .navrow .tick { order: -1; margin: 0 12px 0 0; flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--tertiary);
+  display: grid; place-items: center; visibility: visible; color: transparent; font-size: 15px; }
+.sheet .srow .navrow[aria-pressed="true"] .tick { background: var(--acc); border-color: var(--acc); color: #fff; }
+.sheet .srow .navrow { text-align: left; }
+.sheet .srow .rmstore { color: var(--tertiary); font-size: 24px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 0; }
+.nearlbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--secondary); margin: 14px 0 2px; }
+
+/* Long lists (owner 2026-10-30): department headers that fold, and a
+   find field from 25 items. */
+.aisle { margin-top: 14px; }
+.aisle:first-child { margin-top: 0; }
+.aisle .group { margin: 0; }
+.aisle-h { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; border: 0; background: none; padding: 0 4px; font: inherit; text-align: left; color: var(--secondary); cursor: pointer; }
+.aisle-h b { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.aisle-h .n { font-size: 13px; color: var(--tertiary); }
+.aisle-h .chev { margin-left: auto; color: var(--tertiary); transform: rotate(90deg); }
+.aisle.shut .aisle-h .chev { transform: none; }
+
+/* The row's more button (owner 2026-10-30): Move and Remove without the swipe. */
+.listrow .morebtn { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; background: none; color: var(--tertiary); display: grid; place-items: center; }
+.listrow .morebtn svg { width: 22px; height: 22px; }
+
+/* Find (owner approved mockup 6b, 2026-10-30): an icon chip from 25 items,
+   one field with Cancel once tapped. */
+.caprow .chip.findchip { flex: none; width: 48px; padding: 0; }
+.findbar { align-items: center; }
+.findfield { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--group); color: var(--secondary); }
+.findfield svg { flex: none; width: 20px; height: 20px; }
+.findfield input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 17px; color: var(--ink); outline: none; }
+.findfield input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+/* Today's Quest card for Just my list shoppers (8b) and the shopping view. */
+.fr-links { display: flex; gap: 8px; margin-top: 2px; }
+.fr-links .linkbtn { min-height: 44px; }
+#today-questnudge .btn { margin-top: 12px; }
+.shopinglabel { margin: 0 0 2px; font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
+.donesheet .btn + .btn, .donesheet .linkbtn { margin-top: 8px; }
+.shopnote { margin: 10px 0 0; color: var(--secondary); font-size: var(--fs-body); }
+
+/* Share, export or import wizard. */
+.wizbar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+.wizbar .linkbtn { min-height: 44px; }
+.nomargin { margin: 0; }
+.wizpre { background: var(--fill); border-radius: 14px; padding: 14px; font: 15px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; margin: 4px 0 12px; max-height: 40vh; overflow: auto; }
+.wizpaste { width: 100%; box-sizing: border-box; border-radius: 14px; border: 1px solid var(--sep); padding: 12px; font: inherit; font-size: 17px; line-height: 1.5; background: var(--fill); color: inherit; }
+.wizfound { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+.wizcheck { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sep); display: grid; place-items: center; color: #fff; font-size: 15px; box-sizing: border-box; }
+.wizcheck.on { background: var(--accent); border-color: var(--accent); }
+.wiztag { flex: none; font-size: 13px; font-weight: 600; color: var(--accent-text); white-space: nowrap; }
 /* Waitlist sheet (owner, 2026-10-30): one email field, a privacy line,
    and a done state with a mascot. */
 .wl-intro { margin: 0 0 4px; font-size: 15px; color: var(--ink2); }

@@ -74,6 +74,9 @@ def last_segment(text):
 def yours(q, derived=None):
     d = derived or state.derived()
     on_list = {state._norm_name(i["name"]) for i in d["smart_list"]["items"]}
+    lname = {l["id"]: l["name"] for l in state.named_lists()}
+    where = {state._norm_name(i["name"]): lname.get(i.get("list"), "")
+             for i in d["smart_list"]["items"] if i.get("on_list")}
     counts = {p["item_id"]: p["purchase_count"] for p in d["patterns"]}
     pool = {}
     for e in state.dictionary()["entries"]:
@@ -88,9 +91,14 @@ def yours(q, derived=None):
         if r is not None:
             rows.append((r, -n, name))
     rows.sort()
-    return [{"name": nm, "kind": "yours",
-             "tag": "On this list" if state._norm_name(nm) in on_list else "Bought before"}
-            for _, _, nm in rows]
+    out = []
+    for _, _, nm in rows:
+        row = {"name": nm, "kind": "yours",
+               "tag": "On this list" if state._norm_name(nm) in on_list else "Bought before"}
+        if state._norm_name(nm) in where:
+            row["on"] = where[state._norm_name(nm)]   # "" = Everything else
+        out.append(row)
+    return out
 
 
 # --- tier 2 ---------------------------------------------------------------

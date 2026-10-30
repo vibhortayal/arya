@@ -62,7 +62,7 @@ class TestShellContract(unittest.TestCase):
     def test_single_surface_no_doors(self):
         lists = frontend.src("screens/Lists.tsx")
         assert 'id="add-text"' in lists
-        assert 'className="addline"' in lists  # one row, like the Ask input
+        assert 'className={"addline' in lists  # one row, like the Ask input
         assert 'id="add-mic"' in lists and 'id="add-photo"' in lists
         # The owner dropped the "add from Muse chat" footer (2026-10-29).
         app = frontend.app()
