@@ -3,7 +3,7 @@ import { applyTrip, emptyProfile, levelOf, stageOf, streak, weekKey, bundleProgr
 import { aryaOrder } from "./route";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SampleSource, WEEKLY, toItems } from "./source";
 import { buildLayout, sectionFor, viewOf } from "./template";
-import { SCORE, allHandled, currentStop, newTrip, reduce, tally, type Trip } from "./trip";
+import { SCORE, allHandled, currentStop, newTrip, reduce, tally, unmappedFinds, type Trip } from "./trip";
 
 const src = new SampleSource();
 const open = (store: string, list = WEEKLY) => src.open(store, list);
@@ -202,5 +202,24 @@ describe("substitutes", () => {
     expect(t.subs[milk]).toBeUndefined();
     t = reduce(t, { type: "grab", key: milk, instead: "   " });
     expect(t.subs[milk]).toBeUndefined();
+  });
+});
+
+describe("shelf photos (fog nudge)", () => {
+  it("lists each section a find was made in that Arya had not located, once", async () => {
+    const { layout, items } = await new SampleSource().open("safeway-kirkland", { id: "l", name: "L", items: ["Milk", "Penne pasta", "Spaghetti", "Olive oil"].map(name => ({ name })) });
+    let t = newTrip(layout, items, { seed: 1 });
+    for (const i of items) t = reduce(t, { type: i.section === "dairy" ? "grab" : "scout", key: i.key });
+    const finds = unmappedFinds(t);
+    expect(finds.map(f => f.section)).not.toContain("dairy");
+    expect(new Set(finds.map(f => f.section)).size).toBe(finds.length);
+    expect(finds[0].item).toBe("Penne pasta");
+  });
+  it("remembers a snapped section once", async () => {
+    const { layout, items } = await new SampleSource().open("qfc-redmond", { id: "l", name: "L", items: [{ name: "Milk" }] });
+    let t = newTrip(layout, items, { seed: 1 });
+    t = reduce(t, { type: "snapped", section: "dairy" });
+    expect(reduce(t, { type: "snapped", section: "dairy" })).toBe(t);
+    expect(t.snapped).toEqual(["dairy"]);
   });
 });

@@ -16,7 +16,7 @@ import type { QuestItem } from "../core/types";
 import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type FeelPrefs } from "../fx/feel";
 import { Juice } from "../fx/juice";
 import { charArt, sceneArt } from "../assets";
-import { GhostHand, Sheet } from "./bits";
+import { GhostHand, Sheet, SnapButton } from "./bits";
 import { coachFor } from "./coach";
 import type { Goal, WorldApi } from "../world/World3D";
 
@@ -31,6 +31,10 @@ type Props = { trip: Trip; source: QuestSource; avatar?: string | null; onTrip: 
 type SheetName = null | "list" | "map" | "help" | "quit";
 type Page = "main" | "nothere" | "staff" | "sub";
 type Banner = null | { title: string; sub?: string; kind: "clear" | "sweep" | "map" };
+/* The fog nudge (owner, 2026-10-30: a small nudge while shopping is
+ * fine, never the whole screen): after a find in a section Arya has not
+ * located, one line beside the map button offers a shelf photo. */
+type Nudge = null | { section: string; item: string; state: "ask" | "busy" | "done" | "fail"; note?: string };
 
 export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, onMap }: Props) {
   const [at, setAt] = useState<string | null>(null);          // item the shopper stands at (choice open)
@@ -44,6 +48,10 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   const [prefs, setPrefs] = useState<FeelPrefs>(feel.prefs);
   const [briefing, setBriefing] = useState(!trip.got.length && !trip.here && trip.items.length > 0);
   const [subName, setSubName] = useState("");
+  const [nudge, setNudge] = useState<Nudge>(null);
+  const nudged = useRef(new Set(trip.snapped));
+  const nudgeTimer = useRef(0);
+  const noThanks = useRef(0);   // two ✕ and the nudge stops for this trip
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
   const world = useRef<WorldApi | null>(null);
@@ -75,6 +83,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
   const walkTo = useCallback((g: Goal) => {
     setAt(null); setPage("main");
+    setNudge(n => (n && n.state !== "busy" ? null : n));
     if (g.kind === "item") setFocus(g.key);
     world.current?.walkTo(g);
     setOverview(false);
@@ -164,6 +173,13 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
     }
     if (a.type === "grab" || a.type === "scout") {
       const it = nxt.items.find(i => i.key === a.key)!;
+      // Once per section, on a real trip whose host takes shelf photos.
+      if (!nxt.practice && source.snap && !nxt.layout.mapped.includes(it.section) && !nudged.current.has(it.section) && noThanks.current < 2) {
+        nudged.current.add(it.section);
+        clearTimeout(nudgeTimer.current);
+        setNudge({ section: it.section, item: it.name, state: "ask" });
+        nudgeTimer.current = window.setTimeout(() => setNudge(n => (n?.state === "ask" ? null : n)), 8000);
+      }
       setUndo({ key: a.key, name: it.name });
       clearTimeout(undoTimer.current);
       undoTimer.current = window.setTimeout(() => setUndo(u => (u?.key === a.key ? null : u)), 5000);
@@ -176,6 +192,20 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
     if (isHandled(t, key)) { if (t.passed.includes(key)) onTrip(reduce(t, { type: "unpass", key })); else return; }
     walkTo({ kind: "item", key });
   };
+
+  const snap = async (n: NonNullable<Nudge>, photo: File) => {
+    if (!source.snap) return;
+    clearTimeout(nudgeTimer.current);
+    setNudge({ ...n, state: "busy" });
+    const r = await source.snap({ section: n.section, item: n.item, photo });
+    if (r.ok) {
+      onTrip(reduce(tripRef.current, { type: "snapped", section: n.section }));
+      chime(1); buzz(18);
+      setNudge({ ...n, state: "done" });
+      nudgeTimer.current = window.setTimeout(() => setNudge(x => (x?.state === "done" ? null : x)), 2500);
+    } else setNudge({ ...n, state: "fail", note: r.note });
+  };
+  const nudgeSec = nudge ? L.sections.find(x => x.id === nudge.section)?.short ?? "this aisle" : "";
 
   const coach = trip.practice && !briefing && !sheet ? coachFor(trip, item ? "section" : "map", item, view_) : null;
   const left = trip.items.filter(i => !isHandled(trip, i.key) || trip.passed.includes(i.key));
@@ -274,6 +304,17 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
             <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">{overview ? <><circle cx="12" cy="8" r="3.2" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></> : <><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M3.5 10h17M10 10v10.5" /></>}</svg>
             </button>
+            {nudge && (
+              <div className={"qg-nudge " + nudge.state} role="status">
+                <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
+                <p>{nudge.state === "ask" ? <><b>{L.kind === "partial" ? "Spotted" : "Found"} in {nudgeSec}!</b> {L.kind === "partial" ? "Snap the shelf to clear the fog for good." : "Snap the shelf to put it on the map."}</>
+                  : nudge.state === "busy" ? <>Reading the shelf… People are blurred first.</>
+                  : nudge.state === "done" ? <><b>{nudgeSec} is on the map.</b> Thanks!</>
+                  : <>{nudge.note || "That photo didn't go through."}</>}</p>
+                {(nudge.state === "ask" || nudge.state === "fail") && <SnapButton className="qg-nudge-snap" onPhoto={f => void snap(nudge, f)}>{nudge.state === "fail" ? "Retry" : "Snap"}</SnapButton>}
+                {nudge.state !== "busy" && <button className="qg-nudge-x" onClick={() => { clearTimeout(nudgeTimer.current); if (nudge.state === "ask") noThanks.current++; setNudge(null); }} aria-label="Not now">✕</button>}
+              </div>
+            )}
             {!total ? (
               <>
                 <div className="qg-empty"><b>Your list is empty</b><small>Add what you need and Arya plans the walk.</small></div>

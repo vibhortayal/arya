@@ -97,3 +97,16 @@ export function GhostHand({ target, delay = 3000 }: { target: string | null; del
   }, [target, delay]);
   return <div ref={ref} className="qg-hand" aria-hidden="true" />;
 }
+
+/* Snap: opens the phone's camera without leaving the game (a file
+ * input with capture), and hands the photo over. */
+export function SnapButton({ onPhoto, className, children, disabled }: { onPhoto: (f: File) => void; className?: string; children: ReactNode; disabled?: boolean }) {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <button className={className} disabled={disabled} onClick={() => input.current?.click()}>{children}</button>
+      <input ref={input} className="qg-snapfile" type="file" accept="image/*" capture="environment" hidden
+        onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onPhoto(f); }} />
+    </>
+  );
+}

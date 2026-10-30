@@ -6,11 +6,12 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { levelOf, type Profile, type Rewards } from "../core/meta";
-import { tally, type Trip } from "../core/trip";
+import { tally, unmappedFinds, type Trip } from "../core/trip";
+import type { SnapResult } from "../core/source";
 import { buzz, stinger, tick } from "../fx/feel";
 import { Juice } from "../fx/juice";
 import { charArt } from "../assets";
-import { Bar } from "./bits";
+import { Bar, SnapButton } from "./bits";
 
 type Props = {
   trip: Trip; rewards: Rewards; profile: Profile;
@@ -19,12 +20,25 @@ type Props = {
   /* Map my store, offered once at the end of a trip at a store not fully mapped. */
   onMap?: () => void;
   onReceipt?: () => void;
+  /* A shelf photo for each section the player found something in that
+   * Arya had not located (the host's Map my store scan). */
+  onSnap?: (e: { section: string; item: string; photo: Blob }) => Promise<SnapResult>;
 };
 
 const NOTES = ["Great route", "Too much walking", "Order felt off", "A section has moved"];
 
-export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, onRoute, onReceipt, onMap }: Props) {
+export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, onRoute, onReceipt, onMap, onSnap }: Props) {
   const lines = tally(trip);
+  // At most four: the card asks, it never becomes a chore list.
+  const finds = onSnap && !trip.practice ? unmappedFinds(trip).slice(0, 4) : [];
+  // section -> "busy" | "done" | why it failed
+  const [snaps, setSnaps] = useState<Record<string, string>>(() => Object.fromEntries(trip.snapped.map(s => [s, "done"])));
+  const snap = async (f: { section: string; item: string }, photo: File) => {
+    setSnaps(x => ({ ...x, [f.section]: "busy" }));
+    const r = await onSnap!({ ...f, photo });
+    setSnaps(x => ({ ...x, [f.section]: r.ok ? "done" : r.note || "That photo didn't go through." }));
+    if (r.ok) buzz(18);
+  };
   const [shown, setShown] = useState(0);
   const [count, setCount] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -133,14 +147,30 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             {notes.length > 0 && !sent && <button className="qg-btn" onClick={() => { onRoute(notes); setSent(true); }}>Send to Arya</button>}
             {sent && <p className="qg-small">Thanks! Two shoppers saying the same thing updates the map.</p>}
           </motion.div>
-          {onMap && (
+          {finds.length > 0 ? (
+            <motion.div className="qg-card qg-mapask qg-snapcard" {...stagger(5)}>
+              <h3>{trip.layout.kind === "partial" ? "Clear the fog you spotted" : "Map the shelves you found"}</h3>
+              {finds.map(f => {
+                const st = snaps[f.section], sec = trip.layout.sections.find(x => x.id === f.section)?.short ?? f.section;
+                return (
+                  <div key={f.section} className="qg-spot">
+                    <span>{sec}<small>{st && st !== "busy" && st !== "done" ? st : f.item}</small></span>
+                    {st === "done" ? <em>✓ On the map</em>
+                      : <SnapButton className="qg-nudge-snap" disabled={st === "busy"} onPhoto={p => void snap(f, p)}>{st === "busy" ? "Reading…" : st ? "Retry" : "Snap"}</SnapButton>}
+                  </div>
+                );
+              })}
+              <p className="qg-p" style={{ marginTop: 10 }}>A photo of the shelf turns your find into a real pin. People are blurred first.</p>
+              {onMap && <button className="qg-btn ghost" onClick={onMap}>Map the whole store</button>}
+            </motion.div>
+          ) : onMap && (
             <motion.div className="qg-card qg-mapask" {...stagger(5)}>
               <h3>Map the sections you walked?</h3>
               <p className="qg-p">Pan your phone along the shelves. Arya reads them, and the next shopper here gets a real map.</p>
               <button className="qg-btn" onClick={onMap}>Map this store</button>
             </motion.div>
           )}
-          <motion.div {...stagger(onMap ? 6 : 5)}>
+          <motion.div {...stagger(onMap || finds.length ? 6 : 5)}>
             {onReceipt && <button className="qg-btn primary big" onClick={onReceipt}>Add your receipt</button>}
             <button className={"qg-btn big" + (onReceipt ? "" : " primary")} onClick={onDone}>Done</button>
           </motion.div>

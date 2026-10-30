@@ -17,10 +17,10 @@
  *   (PUT /api/quest/maps). A saved My map is the store's shape from
  *   then on, for this player only.
  * Practice never reaches this file (the game uses its silent source). */
-import { get, post, put } from "../../lib/api";
+import { ApiError, api, get, post, put } from "../../lib/api";
 import { startCapture, transcribeBlob, voiceSupported } from "../../lib/recorder";
 import { charFor, loadCharacters } from "../../lib/characters";
-import { artFor, type FieldReport, type QuestSource, type SavedMap } from "../../game/core/source";
+import { artFor, type FieldReport, type QuestSource, type SavedMap, type SnapResult } from "../../game/core/source";
 import { buildLayout, sectionFor, SECTIONS } from "../../game/core/template";
 import { TEMPLATE, type StoreGraph } from "../../game/map/graph";
 import { knownZone } from "../../game/map/classify";
@@ -284,6 +284,25 @@ export class AppSource implements QuestSource {
     } catch { /* a report never blocks play */ }
   }
 
+  /* A shelf photo from inside the game goes through Map my store's
+   * guided scan: people are blurred first (or nothing is kept), the
+   * reader names the section, and it lands on this store's map. */
+  async snap(e: { section: string; item: string; photo: Blob }): Promise<SnapResult> {
+    const at = this.sess || this.pending as { store?: string; store_id?: string } | null;
+    if (!at?.store) return { ok: false, note: "This trip has no store to map." };
+    try {
+      const photo = await shrink(e.photo);
+      const out = await api<{ kept?: boolean; label?: string; paused?: string }>(`/api/storemap/scan?store=${encodeURIComponent(mapRef(at.store, at.store_id || undefined))}`,
+        { method: "POST", headers: { "Content-Type": photo.type || "image/jpeg" }, body: photo });
+      if (out.paused === "people") return { ok: false, note: "Too many people in that one. Try the shelf without them." };
+      if (!out.kept) return { ok: false, note: "Arya couldn't read that shelf. Try a little closer, with the sign in view." };
+      return { ok: true, label: out.label };
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503) return { ok: false, note: "Shelf photos aren't on right now, so nothing was kept." };
+      return { ok: false, note: err instanceof Error ? err.message : "That photo didn't go through." };
+    }
+  }
+
   progress(e: { kind: "grab" | "ungrab"; item: string; instead?: string }) {
     if (!this.sess && !this.pending) return;
     this.queue = this.queue.then(async () => {
@@ -307,4 +326,17 @@ export class AppSource implements QuestSource {
     const s = await this.ensure(); if (!s) return;
     try { this.sess = await post<Session>(`/api/quest/sessions/${s.id}/state`, { state: "finished" }); } catch { /* the receipt step can still close it */ }
   }
+}
+
+/* A phone photo, cut to at most 1600px on its long side as a JPEG, so
+ * the upload is small; the original if the browser cannot decode it. */
+async function shrink(b: Blob): Promise<Blob> {
+  try {
+    const img = await createImageBitmap(b);
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise<Blob>((res, rej) => c.toBlob(x => (x ? res(x) : rej(new Error("no blob"))), "image/jpeg", 0.85));
+  } catch { return b; }
 }

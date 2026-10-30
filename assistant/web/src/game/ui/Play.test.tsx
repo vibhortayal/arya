@@ -1,13 +1,16 @@
 /* The in-store screen's dock: an empty list leads somewhere (add an
  * item or pick a saved list), never "decided" or Head to checkout. */
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SampleSource } from "../core/source";
 import { newTrip, type Trip } from "../core/trip";
 import { Play } from "./Play";
 
-vi.mock("../world/World3D", () => ({ World3D: () => null }));
-vi.mock("../fx/juice", () => ({ Juice: class { resize() {} destroy() {} } }));
+const world = vi.hoisted(() => ({ arrive: null as null | ((g: { kind: "item"; key: string }) => void) }));
+vi.mock("../world/World3D", () => ({ World3D: (p: { onArrive: (g: { kind: "item"; key: string }) => void }) => { world.arrive = p.onArrive; return null; } }));
+vi.mock("../fx/juice", () => ({ Juice: class {
+  constructor() { return new Proxy(this, { get: () => () => ({ x: 0, y: 0 }) }); }
+} }));
 
 const open = async (names: string[]) => {
   const { layout, items } = await new SampleSource().open("qfc-redmond", { id: "l", name: "List", items: names.map(name => ({ name })) });
@@ -43,5 +46,47 @@ describe("Play dock", () => {
     rerender(<Play trip={trip} source={new SampleSource()} onTrip={() => {}} onFinish={() => {}} onQuit={() => {}} onMap={() => {}} />);
     expect(trip.layout.kind).toBe("simulated");
     expect(screen.getByText(/Map it/)).toBeTruthy();
+  });
+});
+
+describe("fog nudge", () => {
+  const snapSource = (r: { ok: boolean; label?: string; note?: string }) => Object.assign(new SampleSource(), { snap: vi.fn(async (_e: unknown) => r) });
+  /* A real trip at a store nobody mapped, standing at the first item. */
+  const atShelf = async (src: SampleSource, practice = false) => {
+    const { layout, items } = await src.open("qfc-redmond", { id: "l", name: "L", items: [{ name: "Milk" }, { name: "Bananas" }] });
+    let trip: Trip = { ...newTrip(layout, items, { seed: 1, practice }), here: items[0].section };
+    render(<Play trip={trip} source={src} onTrip={n => { trip = n; }} onFinish={() => {}} onQuit={() => {}} />);
+    await waitFor(() => expect(world.arrive).toBeTruthy());
+    act(() => world.arrive!({ kind: "item", key: items[0].key }));
+    fireEvent.click(await screen.findByText(/Grab it/));
+    return { items, get trip() { return trip; } };
+  };
+
+  it("offers one small Snap after a find, and the photo puts the section on the map", async () => {
+    const src = snapSource({ ok: true, label: "Dairy" });
+    const g = await atShelf(src);
+    expect(await screen.findByText(/Snap the shelf to put it on the map/)).toBeTruthy();
+    const input = document.querySelector<HTMLInputElement>(".qg-nudge .qg-snapfile")!;
+    const photo = new File(["x"], "shelf.jpg", { type: "image/jpeg" });
+    await act(async () => { fireEvent.change(input, { target: { files: [photo] } }); });
+    expect(src.snap).toHaveBeenCalledWith({ section: g.items[0].section, item: "Milk", photo });
+    expect(await screen.findByText(/is on the map/)).toBeTruthy();
+    expect(g.trip.snapped).toEqual([g.items[0].section]);
+  });
+
+  it("a refused photo says why and offers a retry", async () => {
+    const src = snapSource({ ok: false, note: "Shelf photos aren't on right now, so nothing was kept." });
+    await atShelf(src);
+    await screen.findByText(/Snap the shelf/);
+    const input = document.querySelector<HTMLInputElement>(".qg-nudge .qg-snapfile")!;
+    await act(async () => { fireEvent.change(input, { target: { files: [new File(["x"], "s.jpg", { type: "image/jpeg" })] } }); });
+    expect(screen.getByText(/aren't on right now/)).toBeTruthy();
+    expect(screen.getByText("Retry")).toBeTruthy();
+  });
+
+  it("practice never nudges", async () => {
+    await atShelf(snapSource({ ok: true }), true);
+    await screen.findByText(/^List ·/);
+    expect(screen.queryByText(/Snap the shelf/)).toBeNull();
   });
 });
