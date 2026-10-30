@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent 
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
+import { questOpened } from "../lib/questSeen";
 import { get, post, friendlyError } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
@@ -132,7 +133,9 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency, demo } = useSession();
+  const { currency, demo, user } = useSession();
+  // The Quest nudge retires once this account has opened Quest.
+  const [questSeen] = useState(() => questOpened(user));
   const town = useTown();
   const { toast, showErr } = useToast();
   const { setRing } = useAvatar();
@@ -283,7 +286,6 @@ export function Today() {
       </div>
       <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
         <h3 className="sect">{t("today.yourLists")}</h3>
-        <button id="today-listline" className={"linkbtn" + (listCap.seeAll ? " gone" : "")} type="button" onClick={() => nav.show("list")}><span id="today-listline-text">{t("today.openLists")}</span> ›</button>
       </div>
       <div id="today-lists">
         {h && !noLists && (
@@ -357,7 +359,7 @@ export function Today() {
       </div>
       <p id="today-through" className="muted small throughline">{h?.as_of ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
       <div id="today-tip">{facts && !firstRun && <TipLine facts={facts} setFacts={setFacts} />}</div>
-      {!(firstRun && noLists) && (
+      {!(firstRun && noLists) && !questSeen && (
         <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
           <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
           <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>

@@ -13,10 +13,23 @@ export default async function (page, base) {
   if (!(await page.textContent("#mp-cover"))) throw new Error("cover empty");
   await page.waitForSelector("#mp-segs .row, #mp-segs .empty");
 
-  // Add-aisle lives in the closed "Fine-tune" disclosure (as in the old
+  // Store choice, then one "Start mapping" button before anything else; the
+  // illustration and long explainer wait behind "How it works".
+  if ((await page.textContent("#mp-walkstart")).trim() !== "Start mapping") throw new Error("start label");
+  const order = await page.evaluate(() => {
+    const at = id => [...document.querySelectorAll("#view-mapper *")].indexOf(document.getElementById(id));
+    return at("mp-stores") < at("mp-walkstart") && at("mp-walkstart") < at("mp-cover");
+  });
+  if (!order) throw new Error("store chips, then Start mapping, then coverage");
+  if (await page.isVisible("#view-mapper .mapperhero")) throw new Error("illustration should sit behind How it works");
+  await page.click("#mp-how summary");
+  await page.waitForSelector("#view-mapper .mapperhero", { state: "visible" });
+  if ((await page.$$eval("#view-mapper .btn.primary", e => e.length)) !== 1) throw new Error("one primary button");
+
+  // Add-aisle lives in the closed "More" fold (as in the old
   // app): open it, then an empty name toasts and a real one is added.
   if (await page.isVisible("#mp-add")) throw new Error("fine-tune should start closed");
-  await page.click("#view-mapper details summary");
+  await page.click("#mp-more summary");
   await page.waitForSelector("#mp-add", { state: "visible" });
   await page.click("#mp-add");
   await page.waitForFunction(() => /Name the aisle first/.test(document.getElementById("toast")?.textContent || ""));

@@ -2,7 +2,7 @@ import type { TourStep } from "../ui/Tour";
 import { openGuide } from "../ui/Guide";
 
 /* The first-run tour (#153): one step per tab, in tab order. The
- * welcome sheet starts it; Settings > Show me around again replays it.
+ * welcome sheet starts it; Replay the tour in the Arya guide replays it.
  * Run it with useTour().startTour(FIRST_RUN_TOUR). The last step
  * offers the Arya guide (#154): its "Want the full guide?" link ends
  * the tour and opens the guide; Done alone just ends it. */
