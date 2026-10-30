@@ -19,7 +19,7 @@ source of truth.
    client; the token works with any MCP client.)
 2. Add Arya as a remote MCP server in your assistant:
 
-   - URL: `https://arya-pilot.duckdns.org/api/mcp`
+   - URL: `https://arya.teamnightshift.org/api/mcp`
    - Transport: streamable HTTP (stateless; one POST per message)
    - Header: `Authorization: Bearer <your token>`
 

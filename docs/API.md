@@ -5,7 +5,7 @@ your data with you. The same personal API token that the agent connector
 uses works here. Make one in Arya under Settings › Use Arya in another AI
 app. The code shows once; a new code replaces it.
 
-Base URL: `https://arya-pilot.duckdns.org/api/v1`
+Base URL: `https://arya.teamnightshift.org/api/v1`
 
 The same guide, shorter, is the public page at `/developers`.
 
@@ -15,7 +15,7 @@ fields they do not know. The machine-readable schema is at
 `/api/v1/openapi.json` (public, no token needed).
 
 ```bash
-export ARYA=https://arya-pilot.duckdns.org/api/v1
+export ARYA=https://arya.teamnightshift.org/api/v1
 export TOKEN=...   # your code
 ```
 

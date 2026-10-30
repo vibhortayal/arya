@@ -1,6 +1,6 @@
 # STATUS — where Arya stands (2026-10-29)
 
-Live: https://arya-pilot.duckdns.org. Deadline: Nov 4, 2026, 9:00 PM ET.
+Live: https://arya.teamnightshift.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions
 live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after

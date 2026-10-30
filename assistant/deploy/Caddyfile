@@ -1,6 +1,7 @@
 # Arya public site. Caddy obtains and renews the Let's Encrypt certificate
 # automatically once DNS points at this VM and ports 80/443 are reachable.
-arya-pilot.duckdns.org {
+# The old DuckDNS name stays up as a permanent redirect (see below).
+arya.teamnightshift.org {
 	# Owner concept pages (static HTML dropped into ~/arya-pages on
 	# the VM; never in the repo). They are single-file mockups with
 	# inline scripts, so this path alone relaxes the CSP below; the
@@ -42,11 +43,18 @@ arya-pilot.duckdns.org {
 	}
 }
 
+# The pilot name moved to arya.teamnightshift.org. Keep it alive as a
+# permanent redirect so old links, installed PWAs and the Muse connector
+# URL still land on the app (sessions do not carry over: new origin).
+arya-pilot.duckdns.org {
+	redir https://arya.teamnightshift.org{uri} permanent
+}
+
 # Plain HTTP never serves the app (review 2026-10-28, M11): the
 # session cookie is Secure, so a login over http:// silently
 # failed — the sign-in form "worked" and the app stayed logged
 # out. Every plain-HTTP path (the port-80 catch-all and the 8081
 # host mapping) now redirects to the canonical HTTPS name.
 :80 {
-	redir https://arya-pilot.duckdns.org{uri} permanent
+	redir https://arya.teamnightshift.org{uri} permanent
 }
