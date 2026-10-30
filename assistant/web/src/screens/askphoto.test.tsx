@@ -141,3 +141,31 @@ test("Remove drops the photo strip", async () => {
   act(() => { fireEvent.click($("[data-photo-remove]")!); });
   expect($("#ask-photo-strip")).toBeNull();
 });
+
+test("Track it on a date with no known item asks for a name, then saves it", async () => {
+  routes["/api/expiry/read"] = () => json({ readable: true, name: null, date: "2026-12-25", kind: "use_by", match: null });
+  routes["/api/expiry/save"] = () => json({ item_id: "manual-oat-milk", date: "2026-12-25" });
+  await mount();
+  await pick();
+  act(() => { fireEvent.click($("[data-photo-do=date]")!); });
+  await waitFor(() => expect(document.body.textContent).toContain("This item expires"));
+  act(() => { fireEvent.click($("[data-photo-chip]")!); });
+  await waitFor(() => expect(document.body.textContent).toContain("What is this item called?"));
+  expect(calls.find(c => c.url.includes("/api/expiry/save"))).toBeUndefined();
+  act(() => { fireEvent.change($("#chat-input")!, { target: { value: "Oat milk" } }); });
+  await act(async () => { fireEvent.submit($("#chat-form")!); });
+  await waitFor(() => expect(document.body.textContent).toContain("Tracking Oat milk until"));
+  expect(JSON.parse(String(calls.find(c => c.url.includes("/api/expiry/save"))!.init!.body))).toMatchObject({ name: "Oat milk", date: "2026-12-25" });
+});
+
+test("a failed Track it says so in plain words, not the API's", async () => {
+  routes["/api/expiry/read"] = () => json({ readable: true, name: "Milk", date: "2026-11-20", kind: "use_by", match: null });
+  routes["/api/expiry/save"] = () => json({ detail: "item_id or name is required" }, 400);
+  await mount();
+  await pick();
+  act(() => { fireEvent.click($("[data-photo-do=date]")!); });
+  await waitFor(() => expect(document.body.textContent).toContain("Milk expires"));
+  act(() => { fireEvent.click($("[data-photo-chip]")!); });
+  await waitFor(() => expect(document.body.textContent).toContain("I could not save that date"));
+  expect(document.body.textContent).not.toContain("item_id");
+});
