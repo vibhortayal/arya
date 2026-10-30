@@ -960,7 +960,7 @@ def dashboard():
             "spend_other": other_total, "other_by_kind": other_by_kind,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),
             "spend_by_store": by_store,
-            "store_notes": {v["label"]: v["sub"] for v in storename.merge(r.get("merchant") for r in rs).values() if v["sub"]},
+            "store_notes": {v["label"]: v["sub"] for v in storename.labels(rs).values() if v["sub"]},
             "top_items": [{"item_id": k, "name": nm.get(k, k), "spend": v} for k, v in top]}
 
 
@@ -1011,6 +1011,20 @@ def update_receipt_line(receipt_id, idx, fields):
                 _save("receipts.json", rs)
                 return r["lines"][idx]
     return None
+
+
+def link_receipt_store(receipt_id, store_id):
+    """A receipt settled against a shopping trip carries that trip's
+    directory store, so its spend and prices group under the trip's
+    store (the label only applies when the receipt agrees with it)."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id:
+                r["store_ref"] = store_id
+                _save("receipts.json", rs)
+                return True
+    return False
 
 
 def teach_name(sku, name):

@@ -15,6 +15,10 @@ label per store, in two steps, all deterministic code at $0:
   2. Otherwise clean the text: drop "Wholesale", the number and the
      punctuation, and fold spellings that share a chain and a number.
 
+A receipt filed against a shopping trip carries "store_ref", the trip's
+directory store. The label comes from that store when the receipt agrees
+with it: the same chain, and a city that is absent or the same.
+
 The label is "<chain> <city>", for example "Costco Newark". It is also
 the ledger store id, so prices and spending group on it. The raw merchant
 text on the receipt is never changed.
@@ -103,4 +107,33 @@ def merge(raws, stores=None):
             out[r] = {"label": label, "sub": None}
         else:
             out[r] = {"label": str(r), "sub": None}
+    return out
+
+
+def _agrees(merchant, store):
+    """Does the receipt's merchant text fit the trip's store? Same
+    chain, and a place that is absent or is the store's city."""
+    words, _num = _parse(merchant)
+    name = str(store.get("name") or "").split()
+    if not words or not name or _chain(words[0]) != _chain(name[0]):
+        return False
+    city = (store.get("city") or "").strip().lower()
+    return len(words) < 2 or not city or city in " ".join(words[1:]).lower()
+
+
+def labels(receipts, stores=None):
+    """{receipt_id: {"label", "sub"}}: merge() for every receipt, and a
+    receipt linked to its trip's store takes that store's label."""
+    receipts = list(receipts)
+    stores = _directory() if stores is None else stores
+    by_merchant = merge((r.get("merchant") for r in receipts), stores)
+    by_id = {s.get("id"): s for s in stores}
+    out = {}
+    for r in receipts:
+        ref = by_id.get(r.get("store_ref"))
+        if ref and _agrees(r.get("merchant"), ref):
+            sub = ", ".join(x for x in (ref.get("street"), ref.get("city")) if x)
+            out[r["receipt_id"]] = {"label": _store_label(ref), "sub": sub}
+        else:
+            out[r["receipt_id"]] = by_merchant.get(r.get("merchant")) or {"label": r.get("merchant"), "sub": None}
     return out

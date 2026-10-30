@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
-from api import state
+from api import state, stores
 from api.demo_guard import _demo_rate, _is_demo, _token_hits as _mcp_hits
 from api.deps import _json_body, new_client
 from api.routes.items import _merge_flag
@@ -125,6 +125,7 @@ def _mcp_file_receipt(args):
            "lines": lines, "subtotal": args.get("subtotal"),
            "tax": args.get("tax"), "total": args.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
+    stores.resolve_merchants([merchant])
     added = state.add_receipts([dec])
     state.judge_pending(new_client())
     return {"receipt_id": rid, "merchant": merchant, "added": added,

@@ -98,6 +98,46 @@ def snapshot(store_id):
     return {"name": s["name"], "address": address_line(s)}
 
 
+_MISSED = set()   # merchants Places could not place this run; ask once
+
+
+def resolve_merchants(merchants):
+    """Receipt merchants -> directory stores through Google Places
+    (owner, 2026-10-30: a receipt filed with no shopping trip behind
+    it should get its exact store name and city). A merchant counts
+    when it names a chain and a place ("Costco Newark #1660") and no
+    directory store matches it yet. The first Places suggestion is
+    taken only if its chain matches and Google's city appears in the
+    merchant text, and, when the account's own stores show a state,
+    the state matches. The store lands in the directory, not in My
+    Stores. Never raises; a miss leaves the receipt on text cleanup."""
+    from api import places, storename
+    if not places.provisioned():
+        return []
+    mine_states = [s.get("state") for s in mine() if s.get("state")]
+    hint = max(set(mine_states), key=mine_states.count) if mine_states else None
+    out = []
+    for merchant in dict.fromkeys(m for m in merchants if m):
+        words, _num = storename._parse(merchant)
+        if merchant in _MISSED or len(words) < 2 \
+                or storename._match(words, directory()):
+            continue
+        place = " ".join(words[1:]).lower()
+        try:
+            rows = places.autocomplete(" ".join(words + ([hint] if hint else [])))
+            row = rows[0] if rows else None
+            if not row or storename._chain(row["name"].split()[0]) != storename._chain(words[0]):
+                raise LookupError("no store of that chain")
+            det = places.details(row["place_id"])
+            if (det.get("city") or "").lower() not in place \
+                    or (hint and (det.get("state") or "").upper() != hint):
+                raise LookupError("not the place the receipt names")
+            out.append(upsert_google_store(row["place_id"], row["name"], det, "receipt"))
+        except Exception:
+            _MISSED.add(merchant)
+    return out
+
+
 def _zip5(zipcode):
     digits = re.sub(r"\D", "", zipcode or "")
     return digits[:5] if len(digits) >= 5 else None

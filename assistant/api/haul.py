@@ -538,6 +538,8 @@ def add_receipt(session_id, receipt_id):
         for sid, r in _hauls().items():
             if sid != session_id and receipt_id in (r.get("receipts") or []):
                 raise ValueError("this receipt already belongs to another trip")
+    if sess.get("store_id"):
+        state.link_receipt_store(receipt_id, sess["store_id"])
     _update(session_id, lambda r: r["receipts"].append(receipt_id))
     return haul_view(session_id)
 
