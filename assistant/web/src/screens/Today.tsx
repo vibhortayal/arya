@@ -182,7 +182,7 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency, demo, user } = useSession();
+  const { currency, demo, user, questNudge, patchShop, saveShopMode } = useSession();
   // The Quest nudge retires once this account has opened Quest.
   const [questSeen] = useState(() => questOpened(user));
   const town = useTown();
@@ -438,6 +438,17 @@ export function Today() {
       </div>
       <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
       <div id="today-tip">{!(lastMonth && months) && tip}</div>
+      {questNudge && (
+        <div id="today-questnudge" className="fr-card">
+          <p className="fr-h">{t("today.questNudge.title")}</p>
+          <p className="fr-s">{t("today.questNudge.sub")}</p>
+          <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
+          <div className="fr-links">
+            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
+            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
+          </div>
+        </div>
+      )}
       {listItems.length > 0 && !questSeen && (
         <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
           <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />

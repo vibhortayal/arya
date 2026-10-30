@@ -1768,3 +1768,11 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .findfield svg { flex: none; width: 20px; height: 20px; }
 .findfield input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 17px; color: var(--ink); outline: none; }
 .findfield input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+/* Today's Quest card for Just my list shoppers (8b) and the shopping view. */
+.fr-links { display: flex; gap: 8px; margin-top: 2px; }
+.fr-links .linkbtn { min-height: 44px; }
+#today-questnudge .btn { margin-top: 12px; }
+.shopinglabel { margin: 0 0 2px; font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
+.donesheet .btn + .btn, .donesheet .linkbtn { margin-top: 8px; }
+.shopnote { margin: 10px 0 0; color: var(--secondary); font-size: var(--fs-body); }

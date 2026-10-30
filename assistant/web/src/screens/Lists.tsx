@@ -204,7 +204,7 @@ export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
-  const { user } = useSession();
+  const { user, shopMode, saveShopMode, patchShop } = useSession();
   useCharacters();
 
   const [data, setData] = useState<HomeData | null>(cache.data);
@@ -237,6 +237,14 @@ export function Lists() {
   // Back to this entry must not open it again.
   useEffect(() => { nav.params.newList = undefined; nav.params.stores = undefined; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [shopOpen, setShopOpen] = useState(false);
+  // Just my list (8): the list itself turns into the shopping view. One
+  // list at a time, kept for the browser session.
+  const [shopping, setShoppingId] = useState<string | null>(() => { try { return sessionStorage.getItem("arya.shopping"); } catch { return null; } });
+  const setShopping = (id: string | null) => {
+    setShoppingId(id);
+    try { if (id) sessionStorage.setItem("arya.shopping", id); else sessionStorage.removeItem("arya.shopping"); } catch { /* private window */ }
+  };
+  const [doneStep, setDoneStep] = useState<"ask" | "clear" | null>(null);
   const town = useTown();
   const [townItem, setTownItem] = useState<string | null>(null);
   const [g, setG] = useState<GState>({ enabled: false, group: null, recent: {} });
@@ -729,6 +737,38 @@ export function Lists() {
     setShopOpen(false);
     nav.show("community", { listId: here ? here.id : "all" });
   };
+  // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
+  const snapAisle = async (name: string) => {
+    const store = (here && here.stores && here.stores[0]) || "";
+    if (!store) { toast(t("lists.whereNoStore")); return; }
+    try {
+      const out = await get<{ prompt?: unknown }>(`/api/storemap/next?store=${encodeURIComponent(store)}&item=${encodeURIComponent(name)}`);
+      if (out && out.prompt) nav.show("capture", { prompt: out.prompt, store, from: "express" });
+    } catch (e) { toast(errMsg(e)); }
+  };
+  const startList = () => { setShopOpen(false); setShopping(effLens); };
+  // The Start shopping button: the saved choice decides; the sheet only
+  // asks while nothing is saved, or when the person chose Ask me.
+  const begin = () => {
+    if (town && storeTrouble(town, here ? here.stores || [] : [])) { setShopOpen(true); return; }
+    if (shopMode === "quest") startHunt();
+    else if (shopMode === "list") startList();
+    else setShopOpen(true);
+  };
+  const pick = (mode: "quest" | "list") => {
+    if (shopMode === null) saveShopMode(mode).catch(e => toast(errMsg(e)));
+    if (mode === "quest") startHunt(); else startList();
+  };
+  const finishTrip = () => {
+    setDoneStep(null);
+    setShopping(null);
+    if (shopMode === "list") patchShop({ list_trip: true }).catch(() => {});
+  };
+  const doneShopping = () => {
+    const ids = done.map(i => i.item_id);
+    finishTrip();
+    if (ids.length) removeItems(ids);
+  };
 
   /* ---- Eyes ---- */
   const eyeDecide = (rec: string, idx: number, state: string) => guard(async () => {
@@ -834,7 +874,8 @@ export function Lists() {
   }
 
   const sugg = data && !selEff && onPage ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
-  const startBar = !!open.length && !selEff;
+  const shoppingHere = shopping !== null && shopping === effLens && onPage;
+  const startBar = (!!open.length || shoppingHere) && !selEff;
   const nSel = selEff ? selEff.size : 0;
 
   return (
@@ -901,6 +942,7 @@ export function Lists() {
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
+          {shoppingHere ? <p className="shopinglabel" id="list-shopping">{t("lists.shoppingLabel")}</p> : null}
           <div className="lhead">
             <h1 className="largetitle" id="lp-title">
               {renaming
@@ -914,11 +956,11 @@ export function Lists() {
                   ? <><span id="lp-name">{name}</span><button className="pen" id="lp-pen" type="button" aria-label={t("lists.rename", { name })} onClick={startRename}><IconPen /></button></>
                   : name}
             </h1>
-            <button className="linkbtn" id="lp-select" type="button" hidden={!renaming && !selEff && !open.length}
+            <button className="linkbtn" id="lp-select" type="button" hidden={shoppingHere || (!renaming && !selEff && !open.length)}
               onClick={() => { if (renaming) { saveTitle(); return; } setSel(selEff ? null : new Set()); }}>
               {renaming ? t("common.save") : selEff ? t("common.done") : t("lists.select")}
             </button>
-            <button className="iconbtn" id="lp-menu" type="button" aria-label={t("lists.listOptions")} hidden={!here || !!selEff || renaming}
+            <button className="iconbtn" id="lp-menu" type="button" aria-label={t("lists.listOptions")} hidden={!here || !!selEff || renaming || shoppingHere}
               onClick={() => setSheet({ kind: "menu" })}>
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2.1" /><circle cx="12" cy="12" r="2.1" /><circle cx="18.5" cy="12" r="2.1" /></svg>
             </button>
@@ -996,7 +1038,7 @@ export function Lists() {
             </div></div>
           </div>
 
-          {open.length && !selEff ? <p className="muted small tickhint" id="list-tickhint">{t("lists.tickHint")}</p> : null}
+          {open.length && !selEff && !shoppingHere ? <p className="muted small tickhint" id="list-tickhint">{t("lists.tickHint")}</p> : null}
           <div id="smart-list" ref={smart} onClick={onRows} onKeyDown={onRowsKey}>
             {q && !gShown.length && !eShown.length ? <p className="empty" id="list-nomatch">{t("lists.noMatch", { q })}</p> : null}
             {aisleGroups ? aisleGroups.map(g => {
@@ -1018,7 +1060,7 @@ export function Lists() {
           </div>
 
           <div id="list-suggest">
-            {sugg.length ? <>
+            {sugg.length && !shoppingHere ? <>
               <div className="sectrow"><h3 className="sect">{lid === "else" ? t("lists.suggested") : t("lists.suggestedFor", { name })}</h3><span className="muted">{t("lists.tapToSeeWhy")}</span></div>
               <div className="group">{sugg.map(i => {
                 const c = charFor(i.name);
@@ -1047,7 +1089,7 @@ export function Lists() {
           </div>
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
-            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}>{t("lists.startShoppingItem", { count: open.length })}</button>
+            <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (shoppingHere ? setDoneStep("ask") : begin())}>{shoppingHere ? (open.length ? t("lists.doneShoppingLeft", { count: open.length }) : t("lists.doneShoppingAll")) : t("lists.startShoppingItem", { count: open.length })}</button>
           </div>
         </div>
       )}
@@ -1062,23 +1104,48 @@ export function Lists() {
       {data && (
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
-            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle }} />
+            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle,
+            shopping: shoppingHere, onSnap: snapAisle }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
         onMove={store => guard(async () => { const id = townItem!; setTownItem(null); await toStoreList([id], store); })} /> : null}
 
+      <Sheet open={doneStep === "ask"} onClose={() => setDoneStep(null)} id="done-sheet" labelledBy="done-title">
+        <div className="donesheet">
+          <h3 id="done-title" className="largetitle" style={{ fontSize: 22, margin: "0 0 4px" }}>{t("lists.doneTitle")}</h3>
+          <p className="sub">{t("lists.doneSummary", { done: done.length, left: open.length })}</p>
+          <button className="btn primary wide" id="done-receipt" type="button" onClick={() => { setDoneStep("clear"); document.getElementById("add-photo")?.click(); }}>{t("lists.addReceipt")}</button>
+          <button className="btn secondary wide" id="done-skip" type="button" onClick={() => (done.length ? setDoneStep("clear") : finishTrip())}>{t("lists.skipReceipt")}</button>
+          <button className="linkbtn" id="done-keep" type="button" onClick={() => setDoneStep(null)}>{t("lists.keepShopping")}</button>
+        </div>
+      </Sheet>
+      <Sheet open={doneStep === "clear"} onClose={finishTrip} id="clear-sheet" labelledBy="clear-title">
+        <div className="donesheet">
+          <h3 id="clear-title" className="largetitle" style={{ fontSize: 22, margin: "0 0 4px" }}>{t("lists.clearTitle")}</h3>
+          <p className="sub">{t("lists.clearSub")}</p>
+          <button className="btn primary wide" id="clear-do" type="button" disabled={!done.length} onClick={doneShopping}>{t("lists.clearDo", { count: done.length })}</button>
+          <button className="btn secondary wide" id="clear-keep" type="button" onClick={finishTrip}>{t("lists.keepThem")}</button>
+        </div>
+      </Sheet>
+
       {/* Demo Town only, when the list's store is in trouble: its store notice before the quest. */}
       <Sheet open={shopOpen} onClose={() => setShopOpen(false)} id="shop-sheet" labelledBy="shop-title">
-        <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
+        <div className="sheethead"><h3 id="shop-title" className="nomargin">{t("lists.shopHow")}</h3><button id="shop-close" className="linkbtn" type="button" onClick={() => setShopOpen(false)}>{t("common.close")}</button></div>
+        <p className="sub">{t("lists.shopTitle", { name: here ? here.name : t("common.everythingElse"), count: open.length })}</p>
         {town ? <StoreNotice town={town} listStores={listStores} onSwitch={store => guard(async () => {
           const id = await toStoreList(open.map(i => i.item_id), store);
           setShopOpen(false);
           openLens(id);
         })} /> : null}
         <div className="group shopmodes">
-          <button className="hubrow" type="button" data-shop="quest" data-first onClick={startHunt}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("common.quest")}<span className="sub">{t("lists.questWalksYou")}</span></span><span className="chev">›</span></button>
+          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => pick("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("lists.startAQuest")}<span className="sub">{t("lists.shopQuestSub")}</span></span><span className="chev">›</span></button>
+          <button className="hubrow" type="button" data-shop="list" onClick={() => pick("list")}><span className="hr-label">{t("lists.shopJustList")}<span className="sub">{t("lists.shopJustListSub")}</span></span><span className="chev">›</span></button>
         </div>
+        {shopMode === null ? <>
+          <button className="linkbtn" id="shop-ask-every" type="button" onClick={() => saveShopMode("ask").catch(e => toast(errMsg(e)))}>{t("lists.shopAskEvery")}</button>
+          <p className="shopnote">{t("lists.shopSaved")}</p>
+        </> : null}
       </Sheet>
     </>
   );
