@@ -189,7 +189,7 @@ class TestSupabaseSignin(unittest.TestCase):
 
     def test_code_flow_creates_passwordless_account(self):
         user = {"email": "New@Example.com", "email_confirmed_at": "2026-10-29"}
-        with mock.patch.dict(os.environ, self.ENV), \
+        with mock.patch.dict(os.environ, {**self.ENV, "ARYA_REGISTRATION_OPEN": "1"}), \
                 mock.patch("api.supabase_auth.httpx.post") as post:
             post.return_value = self._resp(200, {})
             self.assertTrue(self.c.get("/auth/status").json()["email_signin"])

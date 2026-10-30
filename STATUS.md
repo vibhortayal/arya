@@ -185,6 +185,14 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
+  Sign-in by code or Google works for: an existing account, an address the
+  owner approved from the waitlist, or anyone while the owner's Registration
+  switch is open (and `ARYA_SUPABASE_SIGNUP` is not 0). Approving is for the
+  accounts listed in `ARYA_WAITLIST_ADMINS` (separate from the owner setting;
+  unset means nobody): `GET /auth/waitlist/list`, `POST /auth/waitlist/approve`
+  (`send_email` true mails the code), `POST /auth/waitlist/remove`, or
+  `python -m harness.waitlist approve a@b.com [--email]`. A row is deleted when
+  the person first signs in. Password accounts are unchanged.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
 - **Groups** (share lists and receipts with your home): ON by default in
