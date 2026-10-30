@@ -78,7 +78,10 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
         self.assertNotIn("Nothing is running low", js)
         self.assertIn("{low.length > 0 && (", js)
         self.assertIn('id="today-lists-row" hidden={!h || noLists}', js)
-        self.assertIn("{h && !noLists && (", js)
+        # Tiles only for lists with items; empty ones fold into one row
+        # (relevant cards, owner 2026-10-30).
+        self.assertIn("{h && !noLists && cards.length > 0 && (", js)
+        self.assertIn('id="today-emptylists"', js)
 
     def test_quest_tab_hides_empty_blocks(self):
         q = src("screens/Quest.tsx")
@@ -95,7 +98,9 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
 
     def test_analysis_is_one_line_until_a_receipt(self):
         an = src("screens/Analysis.tsx")
-        self.assertIn('id="an-none" className="muted" hidden={show}', an)
+        self.assertIn('id="an-none" hidden={show}', an)
+        # ...and that line comes with the button that does it.
+        self.assertIn('id="an-add"', an)
         self.assertIn('id="an-data" hidden={!show}', an)
 
     def test_info_and_lock_are_icons(self):

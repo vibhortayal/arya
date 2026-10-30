@@ -212,7 +212,8 @@
     "trips_other": "{{count}} trips",
     "acrossReceipt_one": "Across {{count}} receipt added this month",
     "acrossReceipt_other": "Across {{count}} receipts added this month",
-    "monthTotal": "{{month}} total"
+    "monthTotal": "{{month}} total",
+    "addAReceipt": "Add a receipt"
   },
   "capture": {
     "recordAShortVideo": "Record a short video",
@@ -282,7 +283,6 @@
     }
   },
   "ask": {
-    "demoAskAnswersFromThe": "Demo: Arya answers about this sample household. Changes last until you leave.",
     "askAboutYourListYour": "Ask about your list, your spending, or what is running low.",
     "replyInFromNowOn": "Reply in {{text}} from now on?",
     "youCanChangeThisAny": "You can change this any time in Settings › Ask replies in.",
@@ -292,9 +292,13 @@
     "message": "Message",
     "toggleSpokenReplies": "Read replies aloud",
     "suggest": {
-      "runningLow": "What's running low?",
-      "spend": "What did I spend this month?",
-      "addEggs": "Add eggs to my list"
+      "addEggs": "Add eggs to my list",
+      "needIt": "Do I need {{name}}?",
+      "useFirst": "What should I use first?",
+      "cheaper": "Where is {{name}} cheaper?",
+      "spendIn": "What did I spend in {{month}}?",
+      "addTo": "Add milk and eggs to {{list}}",
+      "howKnow": "How does Arya know what I need?"
     },
     "typeFirst": "Type a question first.",
     "couldNotAnswer": "Arya couldn't answer that. Try again in a moment.",
@@ -1302,7 +1306,6 @@
     "questSubEmpty": "Quests, badges and mapped stores",
     "pricesIn": "Prices now show in {{currency}}.",
     "enterPassword": "Enter your password to confirm.",
-    "privateArchive": "Only you and your group see them",
     "describeFirst": "Describe your avatar first.",
     "drawingIt": "Drawing it…",
     "drawingYou": "Drawing you as a cartoon…",
@@ -1347,11 +1350,18 @@
     "sameForGroup": "Same for the group, from what is left.",
     "becomesOwner": "@{{handle}} becomes the owner",
     "youLeft": "You left {{name}}. Your lists are a copy now.",
-    "receiptsSub_one": "{{count}} receipt · only you and your group see it",
-    "receiptsSub_other": "{{count}} receipts · only you and your group see them",
     "yourData": "Your data",
     "helpAndGuide": "Help and guide",
-    "helpAndGuideSub": "What Arya does, things to try, and the tour again"
+    "helpAndGuideSub": "What Arya does, things to try, and the tour again",
+    "receiptsCount_one": "{{count}} receipt",
+    "receiptsCount_other": "{{count}} receipts",
+    "seenBy": {
+      "you": "only you see them",
+      "group": "only you and {{group}} see them"
+    },
+    "shoppingWeeks_one": "{{count}} week of shopping with Arya",
+    "shoppingWeeks_other": "{{count}} weeks of shopping with Arya",
+    "firstQuestLevel": "Your first quest earns Level 1"
   },
   "quest": {
     "yourListAsATreasure": "Your list, as a game through the store.",
@@ -1687,7 +1697,7 @@
     "onYourList": "On your list",
     "addToYourList": "Add {{name}} to your list",
     "nothingToGet": "Nothing to get",
-    "dataThrough": "From your receipts up to {{date}}",
+    "dataThrough": "Last receipt {{date}}. Add newer ones to keep this right.",
     "doneWith": "Done with {{name}}. Add it to your list?",
     "isOnYourList": "{{name}} is on your list.",
     "tip": {
@@ -1780,6 +1790,19 @@
       "saved_other": "Tracking {{count}} dates. Arya reminds you in time.",
       "cantRead": "Arya couldn't read that date. Pick it instead.",
       "done": "Done"
+    },
+    "emptyLists": {
+      "one": "{{name}} is empty",
+      "some": "{{names}} and {{last}} are empty",
+      "many": "{{names}} and {{count}} more lists are empty",
+      "sub": "Add what you need, or tap Add on Running low.",
+      "subNew": "Add what you need. Arya fills them from what you usually buy once it has a receipt."
+    },
+    "finding": {
+      "kicker": "Price watch",
+      "up": "{{name}} costs {{pct}} more than in {{month}}.",
+      "cheaperAt": "Cheaper at {{store}}.",
+      "move": "Buy {{name}} at {{store}}: about {{money}} a month less."
     }
   },
   "haul": {

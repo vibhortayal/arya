@@ -22,6 +22,11 @@ export default async function (page, base) {
       for (let i = 0; i < names.length; i++) out.push((await j("/api/lists", { name: names[i], stores: i === 1 ? ["Costco Wholesale"] : [] })).id);
       const it = await j("/api/list/add", { name: "zzz adaptive eggs" });
       await j("/api/list/move", { item_id: it.item_id, list_id: out[3] });
+      // Today tiles only lists with items (2026-10-30): give five more one.
+      for (const k of [0, 1, 2, 4, 5]) {
+        const x = await j("/api/list/add", { name: "zzz adaptive item " + k });
+        await j("/api/list/move", { item_id: x.item_id, list_id: out[k] });
+      }
       return out;
     }, NAMES);
     const lists = async () => {
@@ -87,13 +92,15 @@ export default async function (page, base) {
     await page.click("#list-view-cards");
     await page.waitForSelector("#list-cards[data-mode=tiles]");
 
-    // Today: four tiles, See all 10 lists, no second link.
+    // Today: four tiles (of the six lists with items), See all 10 lists,
+    // and the four empty ones folded into one row.
     await page.evaluate(() => window.__aryaShow("home"));
     await page.waitForSelector("#today-seeall");
     if ((await page.$$("#today-lists .listcard")).length !== 4) throw new Error("Today tiles: not 4");
     const see = await page.textContent("#today-seeall");
     if (!see.includes("See all 10 lists")) throw new Error("See all: " + see);
     if (await page.$("#today-listline")) throw new Error("Open Lists link should be gone");
+    if (!/are empty/.test((await page.textContent("#today-emptylists")) || "")) throw new Error("empty lists row missing");
     await page.click("#today-seeall");
     await page.waitForSelector("#list-cards[data-mode=tiles]");
   } finally {
