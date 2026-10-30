@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from api import aisles, state
+from api import open_data, state
 from api.demo_guard import _demo_rate
 from api.list import export
 from api.list.intake import amount, clean_unit, split_list_items_units
@@ -153,7 +153,8 @@ def _items():
         out.append({
             "id": i["item_id"], "name": i["name"], "qty": i.get("qty") or 1,
             "unit": i.get("unit") or "", "checked": bool(i.get("checked")),
-            "aisle": f.get("aisle") or aisles.aisle_for(i["name"]),
+            # Only a department the user set: Arya's own guess stays inside Arya.
+            "aisle": f.get("aisle") or None,
             "added_at": f.get("added_at"), "list_id": i.get("list") or UNFILED})
     return out
 
@@ -366,3 +367,68 @@ async def import_list(req: Request, list: str = "", format: str = ""):
         created += len(new)
         skipped += len(group) - len(new)
     return {"created": created, "skipped": skipped, "lists": touched}
+
+
+# ---- your receipts and totals --------------------------------------------
+# The account's own filed receipts only (never a household member's), and
+# plain sums of them. No inference is exposed here.
+
+def _own():
+    return state.own_receipts()
+
+
+def _own_or_404(receipt_id):
+    r = next((r for r in _own() if r["receipt_id"] == receipt_id), None)
+    if r is None:
+        raise HTTPException(404, "no such receipt")
+    return r
+
+
+@v1.get("/receipts")
+def get_receipts(limit: int = 50, offset: int = 0):
+    rows = open_data.newest_first(_own())
+    limit, offset = min(max(limit, 1), 200), max(offset, 0)
+    return {"total": len(rows),
+            "receipts": [open_data.summary(r) for r in rows[offset:offset + limit]]}
+
+
+@v1.get("/receipts/export")
+def export_receipts(format: str = "json"):
+    rows = _own()
+    if format == "json":
+        return {"receipts": [open_data.detail(r) for r in open_data.newest_first(rows)]}
+    if format == "csv":
+        return Response(open_data.to_csv(rows), media_type="text/csv; charset=utf-8")
+    raise HTTPException(400, "format must be csv or json")
+
+
+@v1.get("/receipts/{receipt_id}")
+def get_receipt(receipt_id: str):
+    return open_data.detail(_own_or_404(receipt_id))
+
+
+@v1.get("/receipts/{receipt_id}/original")
+def get_receipt_original(receipt_id: str):
+    r = _own_or_404(receipt_id)
+    data = state.receipt_media(receipt_id) if r.get("image_ref") else None
+    if data is None:
+        raise HTTPException(404, "no original kept for this receipt")
+    return Response(data, media_type=r.get("media_type") or "application/octet-stream")
+
+
+@v1.delete("/receipts/{receipt_id}")
+def delete_receipt(receipt_id: str):
+    _own_or_404(receipt_id)
+    from api.routes.receipts import quest_delete_receipt
+    quest_delete_receipt(receipt_id)
+    return {"deleted": receipt_id}
+
+
+@v1.get("/analysis/spending")
+def analysis_spending():
+    return open_data.spending(_own())
+
+
+@v1.get("/analysis/purchases")
+def analysis_purchases(limit: int = 50):
+    return {"items": open_data.purchases(_own(), min(max(limit, 1), 500))}
