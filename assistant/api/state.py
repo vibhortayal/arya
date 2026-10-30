@@ -490,6 +490,17 @@ def as_of():
     return max((r["purchased_at"] for r in rs), default=None)
 
 
+# The per-cycle flags (checked_on, dismissed_on, check_ok) key on this.
+# An account with no receipts yet has no as_of(); without a stand-in its
+# ticks were saved as None and never showed (QA 2026-10-30). The first
+# receipt starts a new cycle, as every later one does.
+NO_RECEIPTS_CYCLE = "before-first-receipt"
+
+
+def cycle():
+    return as_of() or NO_RECEIPTS_CYCLE
+
+
 def today_ref():
     """The day "days ago" and "due" are measured from: today, or the
     last receipt when that is later (a future-dated fixture). as_of()
@@ -559,7 +570,7 @@ def derived():
     entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=today_ref())
     fl = flags()
-    today = as_of()
+    today = cycle()
     def hidden(pid):
         f = fl.get(pid, {})
         # A snooze runs to its date on the calendar, not to the last

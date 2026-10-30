@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
-import { useNav } from "../app/nav";
+import { useBackHandler, useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
@@ -60,6 +60,30 @@ export function splitPreview(text: string): string[] {
   return out;
 }
 
+/* ---------------- what an add did, in words ----------------
+ * The toast names the items, so an add that changed nothing on screen
+ * still says why: back from Checked off, moved here from another list,
+ * or already on a list (QA 2026-10-30). */
+
+export type AddResult = { added: number; already?: number; skipped?: string[]; names?: string[];
+  already_names?: { name: string; list: string }[]; back?: string[]; moved?: { name: string; from: string }[] };
+
+const nameList = (ns: string[]) => (ns.length <= 3 ? ns.join(", ") : t("lists.namesAndMore", { names: ns.slice(0, 2).join(", "), n: ns.length - 2 }));
+
+export function addToast(r: AddResult, where: string): string {
+  const back = r.back || [], moved = r.moved || [], already = r.already_names || [];
+  const other = new Set([...back, ...moved.map(m => m.name), ...already.map(a => a.name)]);
+  const fresh = (r.names || []).filter(n => !other.has(n));
+  const out: string[] = [];
+  if (fresh.length) out.push(t("lists.addedNamesTo", { names: nameList(fresh), where }));
+  if (back.length) out.push(t("lists.backOnList", { names: nameList(back), count: back.length }));
+  for (const m of moved) out.push(m.from ? t("lists.movedHereFrom", { name: m.name, from: m.from }) : t("lists.movedHere", { name: m.name }));
+  for (const a of already) out.push(t("lists.alreadyOnNamed", { name: a.name, where: a.list || t("common.everythingElse") }));
+  if (!out.length) out.push(t("lists.addedNTo", { count: r.added, where }));
+  const skip = (r.skipped || []).length ? t("lists.leftOut", { names: r.skipped!.join(", ") }) : "";
+  return out.join(" ") + skip;
+}
+
 /* ---------------- the group line (group.js decorateLists) ---------------- */
 
 type Member = { handle: string; me?: boolean; owner?: boolean };
@@ -109,8 +133,9 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
   }
   const commit = async () => {
     if (done.current) return; done.current = true;
-    const n = Math.max(1, Math.round(Number(q) || 1));
     const unit = u.trim();
+    // With a unit the amount keeps one decimal (1.5 gal); a bare count is whole.
+    const n = unit ? Math.min(99, Math.max(0.1, Math.round((Number(q) || 1) * 10) / 10)) : Math.max(1, Math.round(Number(q) || 1));
     try {
       if (n !== Number(item.qty) || unit !== (item.unit || "")) await onCommit(item.item_id, n, unit);
       else onCancel();
@@ -124,7 +149,7 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
         if (ev.key === "Enter") { ev.preventDefault(); commit(); }
         if (ev.key === "Escape") { done.current = true; setEditing(false); onCancel(); }
       }}>
-      <input type="number" min="1" step="1" inputMode="numeric" className="qtyinput" aria-label={t("common.quantity")} ref={qInput}
+      <input type="number" min={u.trim() ? "0.1" : "1"} step={u.trim() ? "0.1" : "1"} inputMode={u.trim() ? "decimal" : "numeric"} className="qtyinput" aria-label={t("common.quantity")} ref={qInput}
         value={q} onChange={e => setQ(e.target.value)} />
       <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder={t("lists.unit")} aria-label={t("lists.unitForExampleKgOr")}
         value={u} onChange={e => setU(e.target.value)} />
@@ -276,6 +301,13 @@ export function Lists() {
     setLens(id); setSel(null); setDoneOpen(false); setRenaming(false);
     window.scrollTo(0, 0);
   };
+  // The phone's Back: out of select or rename first, then to the cards.
+  useBackHandler(() => {
+    if (selRef.current) { setSel(null); return true; }
+    if (renaming) { setRenaming(false); return true; }
+    openLens("home");
+    return true;
+  }, onPage);
 
   /* ---- sheets' writes (lists.js) ---- */
   const moveTo = async (ids: string[], listId: string) => {
@@ -294,6 +326,15 @@ export function Lists() {
     }) });
   };
   const createList = async (listName: string, stores: string[], moving: string[] | null) => {
+    // A list named after one of your stores ("Costco") links it unless
+    // you picked stores yourself (QA 2026-10-30: it said "No store linked").
+    if (!stores.length) {
+      try {
+        const mine = (await get<{ stores?: { name: string }[] }>("/api/stores/mine")).stores || [];
+        const hit = mine.find(s => sameStore(s.name, listName));
+        if (hit) stores = [hit.name];
+      } catch { /* no stores: the list stays unlinked */ }
+    }
     const l = await post<{ id: string; name: string }>("/api/lists", { name: listName, stores });
     if (moving) { await reload(); await moveTo(moving, l.id); return; }
     setSheet(null);
@@ -426,10 +467,15 @@ export function Lists() {
     const OPEN = -160;
     let row: HTMLElement | null = null, x0 = 0, y0 = 0, dx = 0, lock: string | null = null, base = 0;
     let press: number | undefined;
+    // The finger that long-pressed lifts after select mode has moved the
+    // rows up, and its tap would pick whichever row is now under it
+    // (QA 2026-10-30). That one click is swallowed.
+    let swallow = false;
     const closeAll = (except: Element | null) => box.querySelectorAll<HTMLElement>(".swipewrap.open").forEach(w => {
       if (w !== except) { w.classList.remove("open"); (w.querySelector(".listrow") as HTMLElement).style.transform = ""; }
     });
     const start = (ev: TouchEvent) => {
+      swallow = false; // a new touch: only the long press's own lift is eaten
       row = (ev.target as HTMLElement).closest<HTMLElement>(".listrow");
       if (!row || (ev.target as HTMLElement).closest("input") || selRef.current) { row = null; return; }
       const wrap = row.closest(".swipewrap")!;
@@ -438,7 +484,7 @@ export function Lists() {
       x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; dx = 0; lock = null;
       clearTimeout(press);
       const id = row.dataset.rowId!;
-      press = window.setTimeout(() => { if (!lock) { row = null; startSelect(id); } }, 550);
+      press = window.setTimeout(() => { if (!lock) { row = null; swallow = true; startSelect(id); } }, 550);
     };
     const move = (ev: TouchEvent) => {
       if (!row) return;
@@ -458,6 +504,7 @@ export function Lists() {
       r.style.transform = isOpen ? `translateX(${OPEN}px)` : "";
     };
     const cancel = () => { clearTimeout(press); if (row) { row.style.transform = ""; row = null; } };
+    const eat = (ev: Event) => { if (swallow) { swallow = false; ev.preventDefault(); ev.stopPropagation(); } };
     const menu = (ev: Event) => { if ((ev.target as HTMLElement).closest(".listrow")) ev.preventDefault(); };
     const outside = (ev: Event) => { if (!(ev.target as HTMLElement).closest(".swipewrap.open")) closeAll(null); };
     box.addEventListener("touchstart", start, { passive: true });
@@ -465,6 +512,7 @@ export function Lists() {
     box.addEventListener("touchend", end);
     box.addEventListener("touchcancel", cancel);
     box.addEventListener("contextmenu", menu);
+    document.addEventListener("click", eat, true);
     document.addEventListener("click", outside);
     return () => {
       clearTimeout(press);
@@ -473,6 +521,7 @@ export function Lists() {
       box.removeEventListener("touchend", end);
       box.removeEventListener("touchcancel", cancel);
       box.removeEventListener("contextmenu", menu);
+      document.removeEventListener("click", eat, true);
       document.removeEventListener("click", outside);
     };
   }, [onPage, startSelect]);
@@ -517,14 +566,11 @@ export function Lists() {
         setAdding(false);
         return;
       }
-      const r = await post<{ added: number; already?: number; skipped?: string[]; names?: string[] }>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
+      const r = await post<AddResult>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
       // Text typed while the request ran stays; only the sent text clears.
       if (textRef.current.trim() === txt) changeText("");
       setStatus("");
-      const dup = r.already ? t("lists.alreadyOnIt", { n: r.already }) : "";
-      const skip = (r.skipped || []).length ? t("lists.leftOut", { names: r.skipped!.join(", ") }) : "";
-      const where = here ? here.name : t("lists.yourList");
-      toast(t("lists.addedNTo", { count: r.added, where }) + dup + skip);
+      toast(addToast(r, here ? here.name : t("lists.yourList")));
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});
       judgeUnknown();
     } catch (e) { toast(errMsg(e)); }
@@ -582,13 +628,13 @@ export function Lists() {
     setReceiptFile(null);
     setStatus(t("lists.readingPhoto"));
     try {
-      const r = await fetch("/api/list/from-photo", { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
+      const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
       setStatus("");
       if (out.kind === "receipt") setReceiptFile(f);
       else {
-        toast(t("lists.addedNTo", { count: out.added, where: t("lists.yourList") }));
+        toast(t("lists.addedNTo", { count: out.added, where: here ? here.name : t("lists.yourList") }));
         reloadQuiet();
       }
     } catch (e) {

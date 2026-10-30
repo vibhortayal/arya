@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { NavProvider, useNav } from "./nav";
+import { NavProvider, useBackHandler, useNav } from "./nav";
 
 let nav!: ReturnType<typeof useNav>;
 function Probe() { nav = useNav(); return <p>{nav.view}</p>; }
@@ -25,5 +25,21 @@ test("reset drops the set-up screens: Back from a new hunt lands on the Quest ta
   act(() => nav.back());
   expect(nav.view).toBe("community");
   act(() => nav.back());
+  expect(nav.view).toBe("home");
+});
+
+/* The phone's Back (QA 2026-10-30): it left the app because nothing was
+ * in the history. Now Back closes what is open first, then goes back
+ * one view. */
+test("phone Back runs the newest open handler, then goes back a view", () => {
+  let open = true;
+  function Sheetish() { useBackHandler(() => { open = false; return true; }, open); return null; }
+  const r = render(<NavProvider initial="home"><Probe /><Sheetish /></NavProvider>);
+  act(() => nav.show("list"));
+  act(() => { window.dispatchEvent(new PopStateEvent("popstate")); });
+  expect(open).toBe(false);
+  expect(nav.view).toBe("list");
+  r.rerender(<NavProvider initial="home"><Probe /></NavProvider>);
+  act(() => { window.dispatchEvent(new PopStateEvent("popstate")); });
   expect(nav.view).toBe("home");
 });

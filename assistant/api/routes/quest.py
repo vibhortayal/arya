@@ -136,6 +136,13 @@ async def quest_check(session_id: str, req: Request):
     sess = quest.check_item(session_id, body["item"], checked, instead)
     if sess is None:
         raise HTTPException(404, "no such item in this session")
+    # The list follows the basket: a grab ticks the list row, a put back
+    # unticks it (QA 2026-10-30: a finished quest left the list as it
+    # was). Never fails the grab.
+    try:
+        _tick_list_row(body["item"], bool(checked))
+    except Exception:
+        pass
     # Album: a grab mints a sticker (a put back retracts one). Stickers
     # are garnish and must never fail a grab. The payload rides along
     # only for a first-time product.
@@ -148,6 +155,21 @@ async def quest_check(session_id: str, req: Request):
     if payload:
         return {**sess, "new_sticker": payload}
     return sess
+
+
+def _tick_list_row(name, checked):
+    """Tick (or untick) the list row a quest item stands for: same
+    product group, or the same name."""
+    from api import quest
+    from api.routes.items import _merge_flag
+    key, norm = quest._item_key(name), state._norm_name(name)
+    for i in state.derived()["smart_list"]["items"]:
+        if not i.get("on_list"):
+            continue
+        if i["item_id"] == key or state._norm_name(i.get("name")) == norm:
+            _merge_flag(i["item_id"], {"checked_on": state.cycle() if checked else None})
+            return i["item_id"]
+    return None
 
 
 @router.post("/api/quest/sessions/{session_id}/state")
