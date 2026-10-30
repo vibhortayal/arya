@@ -31,7 +31,8 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
    someone on the Waitlist screen). `send_code` asks for a code with `create_user: true`,
    so Supabase picks the template by whether that address has signed in before. Both are
    edited in the dashboard (Authentication, Emails), both are code only (`{{ .Token }}`,
-   `{{ .ConfirmationURL }}` unused), both end with the not-monitored line, and both are styled
+   `{{ .ConfirmationURL }}` unused), both carry an "Open Arya" button that links the plain site
+   (`https://arya.teamnightshift.org`, never a login link), both end with the not-monitored line, and both are styled
    with Arya's colours and type. The styled originals, with copy buttons, are in the owner's
    artifact https://claude.ai/artifact/MqVD7GHNGv14L5AW4NZWee and are repeated here. The
    sender and Reply-To for these emails are set in Supabase (Project Settings, Auth, SMTP).
@@ -44,6 +45,7 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
 <div style="font-size:22px;font-weight:700;line-height:1.25;margin-bottom:8px">You're off the waitlist.</div>
 <div style="font-size:15px;line-height:1.5;color:#55555C;margin-bottom:20px">Welcome to Arya. Type this code into the app to sign in:</div>
 <div style="background:#F4F4F6;border-radius:12px;padding:18px;text-align:center;font-size:34px;font-weight:700;letter-spacing:8px;font-family:Menlo,Consolas,monospace;color:#1B1B1E">{{ .Token }}</div>
+<div style="margin-top:18px;text-align:center"><a href="https://arya.teamnightshift.org" style="display:inline-block;background:#C2410C;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 24px;border-radius:999px">Open Arya</a></div>
 <div style="font-size:14px;line-height:1.5;color:#55555C;margin-top:18px">The code works for 1 hour and only once. If you didn't ask to sign in, you can ignore this email and nothing happens.</div>
 <div style="border-top:1px solid #D9D9DE;margin-top:24px;padding-top:14px;font-size:12px;line-height:1.5;color:#8B8B93">Sent by Arya, the grocery list that learns your store.<br>This address is not monitored. For help, write to support@teamnightshift.org.</div>
 </td></tr></table>
@@ -57,6 +59,7 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
 <div style="font-size:22px;font-weight:700;line-height:1.25;margin-bottom:8px">Welcome back.</div>
 <div style="font-size:15px;line-height:1.5;color:#55555C;margin-bottom:20px">Type this code into Arya to sign in:</div>
 <div style="background:#F4F4F6;border-radius:12px;padding:18px;text-align:center;font-size:34px;font-weight:700;letter-spacing:8px;font-family:Menlo,Consolas,monospace;color:#1B1B1E">{{ .Token }}</div>
+<div style="margin-top:18px;text-align:center"><a href="https://arya.teamnightshift.org" style="display:inline-block;background:#C2410C;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 24px;border-radius:999px">Open Arya</a></div>
 <div style="font-size:14px;line-height:1.5;color:#55555C;margin-top:18px">The code works for 1 hour and only once. If you didn't ask to sign in, you can ignore this email and nothing happens.</div>
 <div style="border-top:1px solid #D9D9DE;margin-top:24px;padding-top:14px;font-size:12px;line-height:1.5;color:#8B8B93">Sent by Arya, the grocery list that learns your store.<br>This address is not monitored. For help, write to support@teamnightshift.org.</div>
 </td></tr></table>
