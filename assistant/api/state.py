@@ -439,6 +439,19 @@ def names():
     return {e["item_id"]: e["canonical_name"] for e in dictionary()["entries"]}
 
 
+def names_with_receipts():
+    """Dictionary names, plus a readable name for any receipt line whose
+    item is not in the dictionary yet (decoded name, else the receipt text)."""
+    nm = names()
+    for r in receipts():
+        for ln in r["lines"]:
+            if ln.get("line_type") == "discount" or not ln.get("sku"):
+                continue
+            iid = ln.get("item_id") or f"costco-{ln['sku']}"
+            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
+    return nm
+
+
 def fee_skus():
     return {e["sku"] for e in dictionary()["entries"] if e.get("kind") == "fee"}
 
@@ -914,13 +927,7 @@ def dashboard():
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
     by_month, by_store, by_item = {}, {}, {}
-    nm = names()
-    for r in rs:  # a receipt line not yet in the dictionary still has a name
-        for ln in r["lines"]:
-            if ln.get("line_type") == "discount" or not ln.get("sku"):
-                continue
-            iid = ln.get("item_id") or f"costco-{ln['sku']}"
-            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
+    nm = names_with_receipts()
     verdicts = grocery_verdicts()
     kind_of = {}      # item_id -> "other" sub, or None for groceries
     for e in entries:
