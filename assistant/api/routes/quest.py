@@ -55,7 +55,8 @@ def quest_plan():
             hid = _quest.resolve_group(name) or hid
         lst.append({"item_id": iid, "history_id": hid, "name": name,
                     "qty": i.get("qty") or 1, "unit": i.get("unit") or "",
-                    "list": i.get("list"), "on_list": bool(i.get("on_list"))})
+                    "list": i.get("list"), "also": i.get("also") or [],
+                    "on_list": bool(i.get("on_list"))})
     return pack_api.enrich_plan({"list": lst, "items": items}, d)
 
 

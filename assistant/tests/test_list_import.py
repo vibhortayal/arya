@@ -29,6 +29,20 @@ class TestParse(unittest.TestCase):
         self.assertEqual(n, ["Oat milk", "Eggs", "Butter", "lemons"])
         self.assertEqual(src, "split")
 
+    def test_a_heading_line_is_not_an_item(self):
+        n, _ = self.names("Groceries\n- 2 lbs chicken thighs\n[ ] oat milk\n1. rice 5kg")
+        self.assertEqual(n, ["chicken thighs", "oat milk", "rice"])
+        n, _ = self.names("Costco:\nMilk\nEggs")
+        self.assertEqual(n, ["Milk", "Eggs"])
+
+    def test_bare_lines_stay_items(self):
+        n, _ = self.names("Milk\nEggs\nBread")
+        self.assertEqual(n, ["Milk", "Eggs", "Bread"])
+
+    def test_units_come_through_for_the_preview(self):
+        items, _ = parse_paste("- 2 lbs chicken thighs\n1. rice 5kg")
+        self.assertEqual([(i["qty"], i["unit"]) for i in items], [(2, "lbs"), (5, "kg")])
+
     def test_csv_with_known_columns(self):
         items, src = parse_paste("name,qty,unit,checked,department\nMilk,2,gal,no,Dairy\nBread,1,,yes,Bakery")
         self.assertEqual(src, "csv")

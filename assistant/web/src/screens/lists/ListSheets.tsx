@@ -214,12 +214,18 @@ function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }:
   const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens) || null;
   const n = l ? onListItems(data).filter(i => i.list === l.id).length : 0;
+  // How many fixes Arya would suggest, for the Tidy row; none, no line.
+  const [tidyN, setTidyN] = useState(0);
+  useEffect(() => {
+    if (!l) return;
+    get<{ fixes: unknown[] }>("/api/list/tidy?list_id=" + encodeURIComponent(l.id)).then(r => setTidyN(r.fixes.length)).catch(() => {});
+  }, [l ? l.id : ""]);
   return (
     <>
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{l ? l.name : t("common.everythingElse")}</h3>
       {l ? <button className="navrow" type="button" data-ls="share" onClick={onShare}><span className="grow">{t("lists.share.menuRow")}<small>{t("lists.share.menuSub")}</small></span><span className="chev">›</span></button> : null}
-      {l ? <button className="navrow" type="button" data-ls="tidy" onClick={onTidy}><span className="grow">{t("lists.tidy.menuRow")}<small>{t("lists.tidy.menuSub")}</small></span><span className="chev">›</span></button> : null}
+      {l ? <button className="navrow" type="button" data-ls="tidy" onClick={onTidy}><span className="grow">{t("lists.tidy.menuRow")}{tidyN ? <small>{t("lists.tidy.menuSub", { count: tidyN })}</small> : null}</span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow" type="button" data-ls="stores" onClick={onStores}><span className="grow">{(l.stores || []).length ? t("lists.changeStores") : t("lists.linkStores")}<small>{(l.stores || []).length ? l.stores!.join(", ") : t("lists.storesUse")}</small></span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow dangerrow" type="button" data-ls="delete" onClick={() => onDelete(l)}><span className="grow">{t("lists.deleteList")}<small>{n ? t("lists.deleteMoves", { count: n }) : t("lists.hasNoItems")}</small></span></button> : null}
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.done")}</button></div>
