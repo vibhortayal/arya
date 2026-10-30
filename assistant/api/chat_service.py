@@ -255,7 +255,14 @@ def _risky_text(a, name):
     return _t("q_snooze", "Snooze {name} for {days} days?", name=name, days=int(a.get("days") or 14))
 
 
-def chat(history, client, surface=None, context=None):
+PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer from what you "
+               "can see in it, in the same JSON shape with an empty actions list. Never say "
+               "whether a price is good, cheap or expensive, and never quote a price you read "
+               "off the photo as a comparison; if asked, say prices come from receipts and "
+               "Arya shoppers. The photo is not saved. If it is unclear, say so.")
+
+
+def chat(history, client, surface=None, context=None, image=None):
     """One Ask Arya turn. On the Ask tab every action applies at once.
     From the List or a hunt (surface "list"/"hunt"; owner, 2026-10-29)
     adds still apply at once, with the added items returned so the
@@ -275,9 +282,18 @@ def chat(history, client, surface=None, context=None):
     for h in (history or [])[-10:]:
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": str(h["content"])[:2000]})
+    if image:
+        # One-shot "ask about this photo": the picture rides on the last
+        # question and is not stored. Prices are never judged from a
+        # photo (owner rule), and a photo answer changes nothing.
+        messages.append({"role": "user", "content": PHOTO_RULES})
+        last = next((m for m in reversed(messages) if m["role"] == "user" and m["content"] is not PHOTO_RULES), None)
+        uri = f"data:{image['media_type']};base64,{image['data']}"
+        last["content"] = [{"type": "text", "text": str(last["content"])},
+                           {"type": "image_url", "image_url": {"url": uri}}]
     out, _u, _c = client.chat(messages, mode="standard", personal=True)
     dec = parse_json(out)
-    actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)]
+    actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)] if not image else []
     if surface:
         # Viewing a named list: an add that names no list goes there.
         here = next((l for l in state.named_lists() if l["id"] == ctx.get("list_id")), None)

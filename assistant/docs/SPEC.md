@@ -310,7 +310,7 @@ powers, Add to Home Screen, feedback). Receipts and Spending are
 reached from Profile. Item and category detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
-2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own.
+2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own. Ask takes typed or spoken questions through labelled Talk and Photo buttons under the field. A photo opens a chooser (add to my list, file a receipt, check my fridge, read the date, or ask about this photo); asking about a photo sends it once with the question, keeps nothing, and never judges a price from the picture. Replies are text only, never spoken.
 3. Spending (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
 4. Item and category detail. Purchase timeline. Cadence. Pack sizes. Price trend by store. Run-out range. Purchase and return history. Controls: add to list now, snooze suggestion, never suggest, change allocation.
 
