@@ -24,3 +24,11 @@ in the React landing on main.
 
 Full suite: 4 failures, same as main (3 in test_demo_town, test_add_surface
 single-surface shell check).
+
+## Part 3: touch targets (issue 6)
+The Today "Add Arya to your home" card: Install/Show how chip 36 -> 44 px
+min-height, dismiss x 36 -> 44 px (negative margin keeps the card height).
+Test: test_add_to_home_screen. Not done: the demo Back button. Back from the
+first view leaves the app (by design since #220); making Back in the demo end
+the demo would drop a visitor's state silently, so left for an owner call.
+Landing pill stays 36 px (landing layout is another thread's).

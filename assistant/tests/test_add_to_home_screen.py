@@ -16,6 +16,12 @@ class TestAddToHomeScreen(unittest.TestCase):
         self.assertIn("data-a2hs-x", a2hs)  # the card's close
         self.assertLess(today.index('id="today-a2hs"'), today.index('id="today-low"'))
 
+    def test_install_and_close_meet_the_44px_touch_floor(self):
+        # Pilot 2026-10-29: Install was 38 px and the x 36 px.
+        css = frontend.src("styles/styles.css")
+        self.assertIn(".a2hs .chip { white-space: nowrap; min-height: 44px; }", css)
+        self.assertIn(".a2hs-x { flex: none; width: 44px; height: 44px;", css)
+
     def test_ios_steps_say_to_keep_open_as_web_app_on(self):
         sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</ol>")[0]
         self.assertIn("Add to Home Screen", sheet)
