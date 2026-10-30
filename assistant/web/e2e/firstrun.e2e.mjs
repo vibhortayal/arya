@@ -82,7 +82,10 @@ export default async function (page, base) {
     // The x closes the card for good.
     await page.click("#gs-dismiss");
     await page.reload();
-    await page.waitForSelector("#today-quest");
+    // The new list is empty: it folds into one row, and the Quest nudge
+    // waits until a list has something to shop for.
+    await page.waitForSelector("#today-emptylists");
+    if (await page.$("#today-quest")) throw new Error("Quest nudge with nothing to shop for");
     if (await page.$("#today-getstarted")) throw new Error("Get started came back after closing");
   } finally {
     await page.evaluate(pw => fetch("/auth/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: pw }) }), password).catch(() => {});

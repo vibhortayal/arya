@@ -44,6 +44,7 @@ export function Profile() {
   const [profile, setProfile] = useState<QProfile | null>(null);
   const [archive, setArchive] = useState<Archive>({ receipts: [] });
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
+  const [groupName, setGroupName] = useState<string | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [delPw, setDelPw] = useState("");
 
@@ -53,6 +54,8 @@ export function Profile() {
       get<Archive>("/api/quest/receipts").catch(() => ({ receipts: [] })),
     ]);
     setProfile(p);
+    // Who sees the receipts: you alone, or you and your group by name.
+    get<{ group: { name: string } | null }>("/api/group").then(g => setGroupName(g?.group?.name || null), () => setGroupName(null));
     setArchive(a);
     // renderProfile marked the earned badges seen (quest.js qMarkBadgesSeen).
     if (p) {
@@ -65,9 +68,10 @@ export function Profile() {
   const unsettled = archive.unsettled || [];
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
 
-  const s = profile?.stats;
-  const level = profile && s
-    ? t("settings.levelLine", { level: profile.level || 1, points: profile.points || 0 }) + (s.streak_weeks ? t("settings.streak", { n: s.streak_weeks }) : "") : "";
+  // No zero scores (relevant cards, owner 2026-10-30): level and points
+  // once a quest has earned any; before that the streak alone, or what
+  // the first quest gives.
+  const level = profileLine(profile);
 
   const dismiss = (sid: string) => attempt(async () => {
     if (!confirm(t("receipts.confirmDismiss"))) return;
@@ -138,7 +142,7 @@ export function Profile() {
       <div className="group">
         <NavRow view="stores-mine" title={t("settings.stores")} sub={t("settings.yourStoresFavoritesAndThe")} />
         <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"
-          sub={archive.receipts.length ? t("settings.receiptsSub", { count: archive.receipts.length }) : t("settings.privateArchive")} />
+          sub={receiptsSub(archive.receipts.length, groupName)} />
         <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
       </div>
       <div className="group">
@@ -188,6 +192,19 @@ export function Profile() {
 }
 
 /* ---------------- Avatar (app.js loadAvatar and the av-* handlers) ---------------- */
+export function profileLine(profile: QProfile | null): string {
+  const s = profile?.stats;
+  if (!profile || !s) return "";
+  if ((profile.points || 0) > 0) return t("settings.levelLine", { level: profile.level || 1, points: profile.points }) + (s.streak_weeks ? t("settings.streak", { n: s.streak_weeks }) : "");
+  return s.streak_weeks ? t("settings.shoppingWeeks", { count: s.streak_weeks }) : t("settings.firstQuestLevel");
+}
+
+export function receiptsSub(count: number, group: string | null): string {
+  const who = group ? t("settings.seenBy.group", { group }) : t("settings.seenBy.you");
+  return count ? t("settings.receiptsCount", { count }) + " · " + who : cap1(who);
+}
+const cap1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 function AvatarCard({ handle, level }: { handle: string; level: string }) {
   const { t } = useTranslation();
   const { demo, user } = useSession();

@@ -11,7 +11,9 @@ export default async function (page, base) {
   const txt = await page.textContent("#view-home");
   for (const t of ["Today", "Running low", "Your lists", "Use soon", "Make your next trip a quest"])
     if (!txt.includes(t)) throw new Error("missing: " + t);
-  if (!/From your receipts up to/.test(await page.textContent("#today-through"))) throw new Error("through line missing");
+  // The receipts date shows only when the last receipt is over a week old.
+  const through = (await page.textContent("#today-through")) || "";
+  if (through && !/^Last receipt /.test(through)) throw new Error("through line: " + through);
 
   // Running low: Add puts the item on the list.
   await page.waitForSelector("#today-low .row [data-low-add]");

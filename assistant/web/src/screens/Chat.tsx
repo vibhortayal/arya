@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { clearOnSignOut, useSession } from "../app/session";
-import { post } from "../lib/api";
+import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
 import { useNav } from "../app/nav";
 import { IconMic, IconSpeaker } from "../ui/icons";
 import { languageToast, offerFor, offerRefused, refuseOffer, voiceLang } from "../lib/language";
 import "../ui/language.css";
-import { useTranslation } from "../i18n";
+import { t, useTranslation } from "../i18n";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -27,7 +27,36 @@ clearOnSignOut(() => {
   if ("speechSynthesis" in window) speechSynthesis.cancel();
 });
 /* Suggested questions: en.json keys, sent as the question text. */
-const SUGGEST = ["ask.suggest.runningLow", "ask.suggest.spend", "ask.suggest.addEggs"];
+/* Starter chips come from the household's own data (relevant cards,
+ * owner 2026-10-30): a running-low item, dated food, a cheaper store,
+ * this month's spend. A new account gets list-building ones. Four at
+ * most; Map my store always follows (owner rule, #183). */
+export type ChipHome = {
+  as_of?: string; running_low?: { name: string }[]; use_soon?: unknown[];
+  lists?: { name: string }[]; price_by_store?: Record<string, Record<string, { median: number }>>;
+  list?: { items?: { item_id: string; name: string; on_list?: boolean; checked?: boolean }[] };
+} | null;
+export function askChips(h: ChipHome, today: Date = new Date()): string[] {
+  const out: string[] = [];
+  if (!h) return [t("ask.suggest.addEggs")];
+  const low = h.running_low?.[0];
+  if (low) out.push(t("ask.suggest.needIt", { name: low.name }));
+  if (h.use_soon?.length) out.push(t("ask.suggest.useFirst"));
+  const onList = (h.list?.items || []).filter(i => i.on_list && !i.checked);
+  const gap = onList.find(i => {
+    const by = Object.values(h.price_by_store?.[i.item_id] || {}).map(p => p.median).filter(m => m > 0);
+    return by.length >= 2 && Math.max(...by) - Math.min(...by) >= 0.25;
+  });
+  if (gap) out.push(t("ask.suggest.cheaper", { name: gap.name }));
+  const month = today.toLocaleString("en", { month: "long" });
+  if (h.as_of && h.as_of.slice(0, 7) === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`) out.push(t("ask.suggest.spendIn", { month }));
+  if (!out.length) {
+    const first = h.lists?.[0]?.name;
+    out.push(first ? t("ask.suggest.addTo", { list: first }) : t("ask.suggest.addEggs"));
+    out.push(t("ask.suggest.howKnow"));
+  }
+  return out.slice(0, 4);
+}
 
 /* "map my store", "help me scan this store", "teach Arya the aisles":
  * Arya answers by opening Map my store (owner, 2026-10-29). */
@@ -38,7 +67,7 @@ const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1
 
 export function Chat() {
   const { t } = useTranslation();
-  const { demo, language, languages, setLanguage } = useSession();
+  const { language, languages, setLanguage } = useSession();
   const { toast } = useToast();
   const nav = useNav();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
@@ -46,6 +75,8 @@ export function Chat() {
   const [speakOn, setSpeakOn] = useState(readSpeak);
   const [listening, setListening] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [home, setHome] = useState<ChipHome>(null);
+  useEffect(() => { let live = true; get<ChipHome>("/api/home").then(h => live && setHome(h), () => {}); return () => { live = false; }; }, []);
   const capture = useRef<Capture | null>(null);
   const speakRef = useRef(speakOn);
   const input = useRef<HTMLInputElement>(null);
@@ -148,12 +179,11 @@ export function Chat() {
   return (
     <>
       <h2 className="largetitle">{t("common.askArya")}</h2>
-      {demo && <p id="chat-demo-note" className="note">{t("ask.demoAskAnswersFromThe")}</p>}
       <div id="chat-log" ref={logEl}>
         {log.length === 0 ? (
           <div id="chat-empty">
             <p className="muted">{t("ask.askAboutYourListYour")}</p>
-            {SUGGEST.map(k => t(k)).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
+            {askChips(home).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
             <button id="ask-map-store" className="chip" type="button" onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (

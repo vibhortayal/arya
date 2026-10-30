@@ -89,7 +89,9 @@ class TestListClientPins(unittest.TestCase):
     def test_ask_and_eyes_empty_states(self):
         chat, js = src("screens/Chat.tsx"), src("screens/Lists.tsx")
         self.assertIn('id="chat-empty"', chat)
-        self.assertIn("What's running low?", chat)
+        # Starter chips are built from the household's data (2026-10-30).
+        self.assertIn("askChips(home)", chat)
+        self.assertIn("Do I need {{name}}?", chat)
         # Eyes on the List page (owner wireframe, 2026-10-28): the
         # section renders only while a sighting is pending.
         self.assertIn('<div id="list-eyes" hidden={!eyesPending}>', js)

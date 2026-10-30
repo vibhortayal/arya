@@ -6,7 +6,11 @@ export default async function (page, base) {
   await page.waitForSelector("#tabs");
   await page.evaluate(() => window.__aryaShow("chat"));
   await page.waitForSelector("#view-chat #chat-empty");
-  if (!(await page.isVisible("#chat-demo-note"))) throw new Error("demo note missing");
+  // The demo banner says it once; Ask has no note of its own (2026-10-30).
+  if (await page.$("#chat-demo-note")) throw new Error("demo note should be gone");
+  // Starter chips come from the demo's data; Map my store always follows.
+  await page.waitForFunction(() => [...document.querySelectorAll("#chat-empty [data-ask]")].some(b => /^Do I need /.test(b.textContent || "")));
+  if (!(await page.$("#ask-map-store"))) throw new Error("Map my store chip missing");
   await page.click("#btn-speak");
   if ((await page.getAttribute("#btn-speak", "aria-pressed")) !== "true") throw new Error("speaker did not toggle");
   await page.click("#btn-speak");

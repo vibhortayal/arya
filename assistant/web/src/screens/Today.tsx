@@ -56,7 +56,9 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
     rows.push({ key: "n" + k, kind: "report", name: t("today.alertNotThere", { store: n.store, item: n.item }),
       sub: t("today.alertReports", { count: n.count, date: fmtShort(String(n.reported_at || "").slice(0, 10)) }) + (mine ? t("today.alertOnYourList") : "") });
   });
-  const names: Record<string, string> = Object.fromEntries(items.map(i => [i.item_id, i.name]));
+  // Only what is on a list now: a price gap helps the next trip, not
+  // the history (relevant cards, owner 2026-10-30).
+  const names: Record<string, string> = Object.fromEntries(items.filter(i => !i.checked && i.on_list).map(i => [i.item_id, i.name]));
   for (const [id, by] of Object.entries<any>(h?.price_by_store || {})) {
     if (rows.length >= 4) break;
     const stores = Object.entries<any>(by).filter(([, p]) => p && p.median > 0);
@@ -84,6 +86,47 @@ export function capRows<T>(rows: T[], open: boolean): { shown: T[]; more: number
 export function capLists<T>(cards: T[], nLists: number): { shown: T[]; seeAll: boolean } {
   if (nLists <= LIST_CAP) return { shown: cards, seeAll: false };
   return { shown: cards.slice(0, LIST_CAP), seeAll: true };
+}
+
+/* Relevant cards (owner, 2026-10-30): a card shows only when it says
+ * something true for you now. Empty lists fold into one row. */
+export function emptyListsLine(names: string[]): string {
+  if (names.length === 1) return t("today.emptyLists.one", { name: names[0] });
+  if (names.length <= 3) return t("today.emptyLists.some", { names: names.slice(0, -1).join(", "), last: names[names.length - 1] });
+  return t("today.emptyLists.many", { names: names.slice(0, 2).join(", "), count: names.length - 2 });
+}
+
+/* The Did you know? line turns into what Arya actually found in the
+ * receipts (/api/prices/insights): an item that got pricier, with the
+ * store that has it for less when Today knows one; else the store
+ * where an item is cheaper. Null when there is nothing worth saying. */
+export type Insights = {
+  basket?: { since_month: string; movers?: { item_id?: string; name: string; pct: number }[] } | null;
+  split?: { moves: { item_id?: string; name: string; to: string; month_dollars: number }[] } | null;
+} | null;
+export const FINDING_MIN_PCT = 5;
+export function findingLine(ins: Insights, h: Home, currency?: Parameters<typeof money>[1]): string | null {
+  const up = (ins?.basket?.movers || []).find(m => m.pct >= FINDING_MIN_PCT);
+  if (up) {
+    const pct = `${up.pct.toFixed(up.pct < 10 ? 1 : 0).replace(/\.0$/, "")}%`;
+    let line = t("today.finding.up", { name: up.name, pct, month: ins!.basket!.since_month });
+    const by = Object.entries<any>((up.item_id && h?.price_by_store?.[up.item_id]) || {}).filter(([, p]) => p && p.median > 0);
+    if (by.length >= 2) {
+      by.sort((a, b) => a[1].median - b[1].median);
+      if (by[by.length - 1][1].median - by[0][1].median >= 0.25) line += " " + t("today.finding.cheaperAt", { store: by[0][0] });
+    }
+    return line;
+  }
+  const mv = (ins?.split?.moves || [])[0];
+  if (mv && mv.month_dollars >= 1) return t("today.finding.move", { name: mv.name, store: mv.to, money: money(mv.month_dollars, currency) });
+  return null;
+}
+
+/* "From your receipts up to …" only when the last one is a week old. */
+export const STALE_DAYS = 7;
+export function staleThrough(asOf: string | undefined, today: string): boolean {
+  if (!asOf) return false;
+  return (new Date(today + "T12:00:00").getTime() - new Date(asOf.slice(0, 10) + "T12:00:00").getTime()) / 864e5 > STALE_DAYS;
 }
 
 function MoreRow({ more, onOpen }: { more: number; onOpen: () => void }) {
@@ -150,6 +193,7 @@ export function Today() {
   const [eyeCount, setEyeCount] = useState(0);
   const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
+  const [ins, setIns] = useState<Insights>(null);
   const [checksOpen, setChecksOpenState] = useState(checksOpenMem);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Set<string>>(new Set());
@@ -175,6 +219,7 @@ export function Today() {
     get("/api/dashboard").then(d => live.current && setMonths({ spend: d.spend_by_month || {} }), () => live.current && setMonths(null));
     // powers.js loadFacts: a failed read keeps the last facts (at first
     // the defaults), so the tip still shows.
+    get<Insights>("/api/prices/insights").then(r => live.current && setIns(r), () => live.current && setIns(null));
     get<Facts>("/api/powers").then(f => live.current && setFacts(f),
       () => live.current && setFacts(f => f || { receipts: 0, stores: 0, share_prices: false }));
     Promise.all([
@@ -215,8 +260,10 @@ export function Today() {
   const items: any[] = h?.list?.items || [];
 
   /* ---- Running low ---- */
-  const low: any[] = (h?.running_low || []).slice(0, 5);
   const onList = new Set(items.filter(i => !i.checked && i.on_list).map(i => i.item_id));
+  // Already on a list: handled, so the row goes (one added here stays
+  // until you leave, so the tap shows its result).
+  const low: any[] = (h?.running_low || []).filter((i: any) => !onList.has(i.item_id) || added.has(i.item_id)).slice(0, 5);
   async function addLow(id: string) {
     setBusy(b => new Set(b).add(id));
     try {
@@ -232,8 +279,10 @@ export function Today() {
   const lowCap = capRows(low, lowOpen);
 
   /* ---- Still good? ---- */
-  const checks: any[] = h?.checks || [];
-  const seen: any[] = h?.seen || [];
+  // The after-receipt card already asks about these; no repeats.
+  const asked = new Set<string>((h?.perishables?.items || []).map((i: { item_id: string }) => i.item_id));
+  const checks: any[] = (h?.checks || []).filter((c: any) => !asked.has(c.item_id));
+  const seen: any[] = (h?.seen || []).filter((c: any) => !asked.has(c.item_id));
   const nChecks = checks.length + seen.length;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
   const checkLabel = checkNames.length ? checkNames.slice(0, 2).join(", ") + (checkNames.length > 2 ? t("today.andMore", { n: checkNames.length - 2 }) : "") : "";
@@ -253,11 +302,13 @@ export function Today() {
   /* ---- Your lists ---- */
   const listItems = items.filter(i => !i.checked && i.on_list && !i.not_grocery);
   const lists: any[] = h?.lists || [];
-  const cards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id) }));
+  const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id) }));
+  const cards = allCards.filter(c => c.items.length);
+  const emptyNames = allCards.filter(c => !c.items.length).map(c => c.name);
   const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));
-  if (rest.length || !cards.length) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
+  if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
   const noLists = !listItems.length && !lists.length;
-  const listCap = capLists(cards, lists.length);
+  const listCap = capLists(cards, cards.length);
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
@@ -308,7 +359,7 @@ export function Today() {
         <h3 className="sect">{t("today.yourLists")}</h3>
       </div>
       <div id="today-lists">
-        {h && !noLists && (
+        {h && !noLists && cards.length > 0 && (
           <div className="listcards">
             {listCap.shown.map(c => (
               <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
@@ -318,6 +369,11 @@ export function Today() {
               </button>
             ))}
           </div>
+        )}
+        {h && !noLists && emptyNames.length > 0 && (
+          <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
+            <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
+            <span className="chev" aria-hidden="true">›</span></button></div>
         )}
         {h && listCap.seeAll && (
           <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
@@ -376,9 +432,9 @@ export function Today() {
           </>
         )}
       </div>
-      <p id="today-through" className="muted small throughline">{h?.as_of ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
-      <div id="today-tip">{facts && !firstRun && <TipLine facts={facts} setFacts={setFacts} />}</div>
-      {!(firstRun && noLists) && !questSeen && (
+      <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
+      <div id="today-tip">{facts && !firstRun && <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} />}</div>
+      {listItems.length > 0 && !questSeen && (
         <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
           <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
           <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.optionalTurnTheListInto")}</span></span>
@@ -408,18 +464,21 @@ export function Today() {
 
 /* ---------------- Did you know? (powers.js todaysTip) ---------------- */
 type Facts = { receipts: number; stores: number; share_prices: boolean };
-type Tip = { id: string; titleKey: string; share?: boolean; on?: (f: Facts) => boolean; hidden?: boolean };
+type Tip = { id: string; titleKey: string; share?: boolean; on?: (f: Facts) => boolean; near?: (f: Facts) => boolean; hidden?: boolean };
+/* A tip about a power is news only when that power is one step from
+ * turning on (relevant cards, owner 2026-10-30); once it works, the
+ * finding line shows what it found instead. */
 /* The powers that carry a tip or a share prompt, in powers.js order. */
 const TIPS: Tip[] = [
-  { id: "community", titleKey: "today.tip.community", share: true },
+  { id: "community", titleKey: "today.tip.community", share: true, near: f => !f.share_prices && f.receipts >= 3 },
   // Deals and Arya Shoppers are not built yet: their tips stay hidden
   // (keys kept) until they are (labels audit, judgement call 1).
   { id: "deals", titleKey: "today.tip.deals", share: true, hidden: true },
   { id: "shoppers", titleKey: "today.tip.shoppers", share: true, hidden: true },
-  { id: "compare", titleKey: "today.tip.compare" },
-  { id: "trends", titleKey: "today.tip.trends" },
-  { id: "similar", titleKey: "today.tip.similar" },
-  { id: "split", titleKey: "today.tip.split" },
+  { id: "compare", titleKey: "today.tip.compare", near: f => f.stores === 1 && f.receipts >= 1 },
+  { id: "trends", titleKey: "today.tip.trends", near: f => f.receipts === 2 },
+  { id: "similar", titleKey: "today.tip.similar", near: f => f.receipts === 0 && f.stores > 0 },
+  { id: "split", titleKey: "today.tip.split", near: f => f.stores === 1 && f.receipts >= 1 },
   { id: "waste", titleKey: "today.tip.waste" },
 ];
 const TIP_KEY = "arya-tip-hidden";
@@ -431,11 +490,12 @@ function hideTip(id: string) {
   h[id] = new Date().toISOString().slice(0, 10);
   try { localStorage.setItem(TIP_KEY, JSON.stringify(h)); } catch { /* private window */ }
 }
-function todaysTip(): Tip | null {
+export function todaysTip(facts?: Facts | null): Tip | null {
   const today = new Date().toISOString().slice(0, 10);
   const hid = hiddenTips();
   if (Object.values(hid).includes(today)) return null; // one a day, and Not now means not today
-  const tips = TIPS.filter(p => !p.hidden);
+  const tips = TIPS.filter(p => !p.hidden && (!facts || (p.near ? p.near(facts) : false)));
+  if (!tips.length) return null;
   const start = Math.floor(Date.now() / 864e5) % tips.length;
   for (let k = 0; k < tips.length; k++) {
     const p = tips[(start + k) % tips.length];
@@ -444,11 +504,17 @@ function todaysTip(): Tip | null {
   return null;
 }
 
-function TipLine({ facts, setFacts }: { facts: Facts; setFacts: (f: Facts) => void }) {
+const FINDING: Tip = { id: "finding", titleKey: "" };
+
+function TipLine({ facts, setFacts, finding }: { facts: Facts; setFacts: (f: Facts) => void; finding: string | null }) {
   const { t } = useTranslation();
   const nav = useNav();
   const { toast } = useToast();
-  const [tip, setTip] = useState<Tip | null>(() => todaysTip());
+  const [hidden, setHidden] = useState(false);
+  // A real finding beats a tip; a tip only for a power that is still off.
+  const [tipPick] = useState<Tip | null>(() => todaysTip(facts));
+  const findOk = !!finding && !Object.values(hiddenTips()).includes(new Date().toISOString().slice(0, 10));
+  const tip = hidden ? null : findOk ? FINDING : tipPick;
   const [share, setShare] = useState(false);
 
   async function setSharing(on: boolean) {
@@ -465,10 +531,13 @@ function TipLine({ facts, setFacts }: { facts: Facts; setFacts: (f: Facts) => vo
     <>
       {tip && (
         <div className="tipline">
-          <button className="hubrow" type="button" data-tip={act} onClick={() => (act === "share" ? setShare(true) : nav.show("powers"))}>
-            <span className="hr-label"><span className="tipkick">{t("today.didYouKnow")}</span>{t(tip.titleKey)}</span><span className="chev">›</span></button>
+          {tip === FINDING
+            ? <button className="hubrow" type="button" data-tip="finding" onClick={() => nav.show("analysis", { from: "home" })}>
+              <span className="hr-label"><span className="tipkick">{t("today.finding.kicker")}</span>{finding}</span><span className="chev">›</span></button>
+            : <button className="hubrow" type="button" data-tip={act} onClick={() => (act === "share" ? setShare(true) : nav.show("powers"))}>
+              <span className="hr-label"><span className="tipkick">{t("today.didYouKnow")}</span>{t(tip.titleKey)}</span><span className="chev">›</span></button>}
           <button className="tipx" type="button" data-tip="hide" data-tip-id={tip.id} aria-label={t("common.notNow")}
-            onClick={() => { hideTip(tip.id); setTip(null); }}>×</button>
+            onClick={() => { hideTip(tip.id); setHidden(true); }}>×</button>
         </div>
       )}
       <InfoSheetFrame open={share} onClose={() => setShare(false)} title={t("today.shopSmarterTogether")} sub={t("today.everyReceiptAndReportMakes")}>

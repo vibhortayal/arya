@@ -112,7 +112,8 @@ export function Analysis() {
       <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.analysis")}</h2>
       <div id="an-prices">{cards.length > 0 && <><h3 className="sect">{t("analysis.yourPrices")}</h3>{cards}</>}</div>
-      <p id="an-none" className="muted" hidden={show}>{t("analysis.fileAReceiptAndYour")}</p>
+      <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
+        <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
       <div id="an-data" hidden={!show}>
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
