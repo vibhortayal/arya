@@ -4,6 +4,7 @@ import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
 import { A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
+import { motionOff } from "../lib/motion";
 
 /* The logged-out landing (B1 cards, owner 2026-10-29; one screen with the
  * buttons first, owner 2026-10-30) and
@@ -56,7 +57,7 @@ export function getAppTapped(): boolean {
   try { return localStorage.getItem(GETAPP_KEY) === "1"; } catch { return false; }
 }
 
-const reducedMotion = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
+const reducedMotion = motionOff;
 const isPhone = () => isIOS() || /android/i.test(navigator.userAgent);
 
 function GetApp() {

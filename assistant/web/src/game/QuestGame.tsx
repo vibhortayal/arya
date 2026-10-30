@@ -3,7 +3,8 @@
  * this folder. Screens: hub -> pick a store -> play -> finish.
  * Practice runs on a silent source and never touches the profile. */
 import { useEffect, useRef, useMemo, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { motionOff } from "../lib/motion";
 import { applyTrip, played, type Profile, type Rewards } from "./core/meta";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
 import { newTrip, type Trip } from "./core/trip";
@@ -142,6 +143,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
 
   const key = screen.s === "play" ? "play" : screen.s;
   return (
+    <MotionConfig reducedMotion={motionOff() ? "always" : "user"}>
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
@@ -166,5 +168,6 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
         </motion.div>
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }

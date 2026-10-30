@@ -9,6 +9,7 @@ import { asset, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
+import { motionOff } from "../lib/motion";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -117,7 +118,7 @@ const storeCount = (stores: Record<string, number> | undefined, store: string) =
   Object.entries(stores || {}).reduce((n, [s, c]) => n + (sameStore(s, store) ? c : 0), 0);
 const titleCase1 = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 function reduced() {
-  try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch { return false; }
+  return motionOff();
 }
 const clip = (v: unknown, n: number) => String(v == null ? "" : v).trim().slice(0, n).trim();
 const qSing = (s: unknown) => norm(s).replace(/s$/, "");

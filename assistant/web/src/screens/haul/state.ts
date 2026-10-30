@@ -11,6 +11,7 @@ import { clearOnSignOut } from "../../app/session";
 import type { useNav } from "../../app/nav";
 import { Q, type Session } from "../hunt/model";
 import { norm, type FeedPost, type Private } from "./core";
+import { motionOff } from "../../lib/motion";
 
 export type Nav = ReturnType<typeof useNav>;
 
@@ -51,7 +52,7 @@ clearOnSignOut(() => {
 
 export const art = (name: string) => faceFor(name);
 export const artSrc = (file: string) => asset("assets/characters/" + file);
-export const reduced = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+export const reduced = motionOff;
 export const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const sid = (sess: Session) => encodeURIComponent(sess.id);
 

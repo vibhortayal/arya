@@ -1,3 +1,4 @@
+import { motionOff } from "../../lib/motion";
 /* Sound, buzz and voice: the parts of the feel you get without looking.
  * All three are opt-in (a phone in a store should not beep unasked),
  * remembered per device, and safe to call when unsupported. Sounds are
@@ -18,7 +19,7 @@ export const feel = {
   set(p: Partial<FeelPrefs>) { prefs = { ...prefs, ...p }; savePrefs(prefs); if (p.sound) chime(0); },
 };
 
-export const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const reducedMotion = motionOff;
 
 let ctx: AudioContext | null = null;
 function ac(): AudioContext | null {

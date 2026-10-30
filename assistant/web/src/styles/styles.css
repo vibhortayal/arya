@@ -34,6 +34,10 @@
   --danger: #c81e1e;
   --tabbar: rgba(255, 255, 255, 0.86);
   --radius: 14px;
+  /* Motion (Emil pass): one strong ease-out for entrances and feedback, one for on-screen moves, one drawer curve. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   color-scheme: light;
 }
@@ -110,7 +114,7 @@ a.name { color: var(--label); }
   box-sizing: border-box; text-align: center; cursor: pointer;
   background: var(--fill); color: var(--label);
   border: none; border-radius: 980px; padding: 10px 20px; min-height: 44px;
-  font-weight: 600; font-size: 17px; transition: background 0.15s ease, transform 0.1s ease;
+  font-weight: 600; font-size: 17px; transition: background 0.15s var(--ease-out), transform 0.16s var(--ease-out);
 }
 .btn.primary { background: var(--accent); color: #fff; }
 .linkbtn { flex-shrink: 0; background: none; border: none; padding: 8px 0; min-height: 44px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
@@ -178,6 +182,20 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
   margin: 0 auto; z-index: 70;
   background: var(--label); color: var(--bg); border-radius: 10px;
   padding: 10px 14px; font-size: 15px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  /* Enter 240 ms, leave 160 ms. A transition, not a keyframe, so a second toast
+     retargets from where the first is instead of restarting. [hidden] stays the
+     state flag, so tests and screen readers see no change. */
+  opacity: 1; transform: none;
+  transition: opacity .24s var(--ease-out), transform .24s var(--ease-out);
+  @starting-style { opacity: 0; transform: translateY(-12px) scale(.98); }
+}
+#toast[hidden] {
+  display: block !important; visibility: hidden; pointer-events: none;
+  opacity: 0; transform: translateY(-12px) scale(.98);
+  transition: opacity .16s var(--ease-out), transform .16s var(--ease-out), visibility 0s linear .16s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #toast, #toast[hidden] { transform: none; transition: opacity .12s ease, visibility 0s linear .12s; }
 }
 
 #tabs {
@@ -317,13 +335,15 @@ textarea {
 .sheetwrap {
   position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.38);
   display: flex; align-items: flex-end; justify-content: center;
+  animation: scrimin 0.2s var(--ease-out);
 }
 .sheet {
   background: var(--group); width: 100%; max-width: 680px; max-height: 72vh; overflow: auto;
   border-radius: 18px 18px 0 0; padding: 6px 16px calc(16px + env(safe-area-inset-bottom));
-  animation: sheetup 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: sheetup 0.32s var(--ease-drawer);
 }
-@keyframes sheetup { from { transform: translateY(24px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@keyframes sheetup { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes scrimin { from { opacity: 0; } to { opacity: 1; } }
 .warn { color: var(--danger); font-weight: 600; }
 /* Reported-missing flag: the amber palette, kept separate from
    the accent exactly as the wireframes hold it. */
@@ -352,7 +372,7 @@ textarea {
 .scene-you text { fill: var(--bg); font-size: 8px; font-weight: 800; }
 @media (prefers-reduced-motion: reduce) {
   .scene-stop.next circle { animation: none; }
-  .sheet { animation: none; }
+  .sheet { animation: scrimin 0.15s ease; }
   .badgepop { animation: none; }
 }
 
@@ -834,8 +854,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 @keyframes getjiggle { 0%, 7.5%, 100% { transform: none; } 1.25% { transform: rotate(-7deg); } 2.5% { transform: rotate(6deg); }
   3.75% { transform: rotate(-5deg); } 5% { transform: rotate(3deg); } 6.25% { transform: rotate(-1.5deg); } }
 @keyframes getglow { 0%, 7.5%, 100% { box-shadow: 0 0 0 0 transparent; } 3.75% { box-shadow: 0 0 0 6px var(--acc-soft), 0 0 14px 2px var(--acc-soft); } }
-.landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s infinite; }
-.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }
+.landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s 2; }
+.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s 2; }
 .a2hs-intro { margin: 0 0 2px; }
 .a2hs-tip { margin: 6px 0 0; }
 .a2hs-tip .linkbtn, .landdesk .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
@@ -905,8 +925,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 /* The zoomed card: grows from the tapped card to the middle of the
    screen over a dimmed page, and shrinks back to it on close. */
 .zoombd { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px;
-  background: rgba(20, 20, 24, .5); animation: zfade .25s ease both; }
-.zoombd.out { animation: zfadeout .3s ease both; }
+  background: rgba(20, 20, 24, .5); animation: zfade .25s var(--ease-out) both; }
+.zoombd.out { animation: zfadeout .2s var(--ease-out) both; }
 .zoomcard { box-sizing: border-box; width: min(320px, 100%); padding: 22px 20px 20px; text-align: center; background: var(--panel);
   border-radius: 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, .35); animation: zin .35s cubic-bezier(.2, .8, .2, 1) both; }
 .zoombd.out .zoomcard { animation: zout .3s cubic-bezier(.4, 0, .6, 1) both; }
@@ -946,7 +966,7 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   background: var(--acc-soft); color: var(--acc); border-radius: 999px;
   font-weight: 700; font-size: 13.5px; text-align: center; white-space: nowrap;
   padding: 0 14px; max-height: 0; opacity: 0; overflow: hidden;
-  transition: max-height .25s ease, opacity .25s ease, padding .25s ease, margin .25s ease;
+  transition: max-height .25s var(--ease-out), opacity .25s var(--ease-out), padding .25s var(--ease-out), margin .25s var(--ease-out);
   pointer-events: none;
 }
 .milestone.show { max-height: 40px; opacity: 1; padding: 6px 14px; margin: 8px auto 0; }
@@ -1331,10 +1351,10 @@ body.hunting #view-hunt.full .askbar {
 .excenter { margin-top: 8px; }
 
 /* Push reminders (Profile, behind the server flag). */
-.sw { width: 51px; height: 31px; border-radius: 16px; border: 0; background: var(--fill2); position: relative; flex: none; transition: background .15s; }
-.sw i { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: left .15s; }
+.sw { width: 51px; height: 31px; border-radius: 16px; border: 0; background: var(--fill2); position: relative; flex: none; transition: background .2s var(--ease-out); }
+.sw i { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s var(--ease-out); }
 .sw[aria-checked="true"] { background: var(--accent); }
-.sw[aria-checked="true"] i { left: 22px; }
+.sw[aria-checked="true"] i { transform: translateX(20px); }
 .sw:disabled { opacity: .5; }
 .accenttext { color: var(--accent-text); }
 .accenttext .sub { color: var(--secondary); }
@@ -1376,7 +1396,7 @@ body.hunting #view-hunt.full .askbar {
 /* ---- Lists (owner, 2026-10-29: the List overhaul, wireframe v1) ----
    Lists home cards, a list's page, suggestions with a reason, the
    "why" sheet, swipe Move / Remove, and select-to-move. */
-#demobar { font-size: 13.5px; color: var(--secondary); padding: 7px 12px; margin-right: 62px; }
+#demobar { font-size: 13.5px; color: var(--secondary); padding: 7px 12px; }
 #list-cards .listcard { display: block; width: 100%; text-align: left; border: none; background: var(--group);
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px 12px; margin-bottom: 10px; color: var(--label); }
 #list-cards .listcard > span { display: block; }
@@ -1754,7 +1774,7 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 
 /* Today (UI pass 2, 2026-10-30): the demo strip is one 44pt line, list
    cards are full-width rows, Spending and the tip share one group. */
-#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 62px 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
+#demobar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin: 0 0 8px 0; padding: 0 0 0 14px; line-height: 1.2; background: var(--group); border-radius: var(--radius); }
 #demobar .linkbtn { font-size: 15px; padding: 0 14px; }
 #today-lists .listcards { grid-template-columns: 1fr; }
 #today-lists .listcard { padding: 14px 16px; }
@@ -1977,7 +1997,11 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .boldtext body { font-weight: 500; }
 .boldtext .sub, .boldtext .muted, .boldtext .name, .boldtext .hr-label, .boldtext .navrow { font-weight: 600; }
 .nopics .rowface, .nopics .rowimg { display: none; }
-.nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition: none !important; }
+.nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition-property: opacity, color, background-color, border-color, box-shadow, visibility !important; transition-duration: .12s !important; transition-delay: 0s !important; }
+/* Motion off means gentler, not none: fades stay, travel goes. */
+.nomotion .sheetwrap { animation: scrimin .12s ease !important; }
+.nomotion .sheetwrap.closing { animation: scrimout .12s ease forwards !important; }
+.nomotion .cp-marks { animation: cp-fade 3.2s linear forwards !important; }
 
 /* Price watch and Next trip (card library, 2026-10-30) */
 #today-watch .hubrow:last-child, #today-trip .hubrow:last-child { border-bottom: none; }
@@ -1987,3 +2011,51 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .nosugg .lc-sugg { display: none; }
 .addq { display: flex; gap: 8px; margin-top: 14px; }
 .addq input { flex: 1; min-width: 0; }
+
+/* ---- Press feedback (Emil pass): every tappable squeezes to 0.97 on press.
+   Down is quick (100 ms), release eases back (160 ms). Wide rows and tab
+   labels use a background fill instead, so they never shrink. ---- */
+.btn, .chip, .iconbtn, .stepper button, .qtybtn, .linkbtn, .listrow .check {
+  transition-property: transform, background-color, color;
+  transition-duration: .16s; transition-timing-function: var(--ease-out);
+}
+.btn:not(:disabled):active, .chip:active, .iconbtn:not(:disabled):active, .stepper button:active, .qtybtn:active { transform: scale(.97); transition-duration: .1s; }
+.listrow .check:active { transform: scale(.9); transition-duration: .1s; }
+.linkbtn:active { opacity: .6; }
+#tabs button:active { background: var(--fill); border-radius: 10px; }
+.chip:active { background: var(--fill2); color: var(--label); }
+@media (prefers-reduced-motion: reduce) {
+  .btn:not(:disabled):active, .chip:active, .iconbtn:not(:disabled):active, .stepper button:active, .qtybtn:active, .listrow .check:active { transform: none; }
+}
+
+/* ---- Sheet exit (Emil pass): it leaves the way it came, faster than it
+   arrived. Sheet.tsx keeps it mounted ~200 ms with .closing. ---- */
+@keyframes scrimout { to { opacity: 0; } }
+@keyframes sheetdown { to { transform: translateY(100%); } }
+.sheetwrap.closing { pointer-events: none; animation: scrimout .2s var(--ease-out) forwards; }
+.sheetwrap.closing .sheet { animation: sheetdown .2s var(--ease-out) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .sheetwrap { animation-duration: .12s; }
+  .sheetwrap.closing { animation: scrimout .12s ease forwards; }
+  .sheetwrap.closing .sheet { animation: none; }
+}
+.nomotion .sheetwrap.closing .sheet { animation: none !important; }
+
+/* ---- Pressed rows and bigger tap areas (Apple pass) ---- */
+.navrow:active, .hubrow:active, .morerow:active, .listcard:active { background: var(--fill); }
+.navrow, .hubrow, .morerow, .listcard { transition: background-color .12s var(--ease-out); }
+/* The hit area grows with a pseudo-element, so nothing changes visually. ::before, because
+   #demobar .linkbtn already uses ::after for its chevron. */
+.linkbtn, .chip, .backlink { position: relative; }
+.linkbtn::before, .backlink::before { content: ""; position: absolute; inset: -8px -10px; }
+.chip::before { content: ""; position: absolute; inset: -4px 0; }
+
+/* ---- Material fallbacks (Apple pass) ---- */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --tabbar: var(--panel); }
+  #tabs, .selbar, .startbar { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --line: #A8A8B0; --sep: #A8A8B0; }
+}
+#list-cards .listcard:active, #today-lists .listcard:active { background: var(--fill); }
