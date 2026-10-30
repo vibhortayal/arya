@@ -1756,3 +1756,7 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .aisle-h .chev { margin-left: auto; color: var(--tertiary); transform: rotate(90deg); }
 .aisle.shut .aisle-h .chev { transform: none; }
 .listfind { display: block; width: 100%; box-sizing: border-box; min-height: 44px; margin: 0 0 10px; padding: 0 16px; border: 0; border-radius: var(--radius); background: var(--group); color: var(--ink); font: inherit; font-size: 17px; }
+
+/* The row's more button (owner 2026-10-30): Move and Remove without the swipe. */
+.listrow .morebtn { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; background: none; color: var(--tertiary); display: grid; place-items: center; }
+.listrow .morebtn svg { width: 22px; height: 22px; }

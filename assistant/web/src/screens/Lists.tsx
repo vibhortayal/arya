@@ -8,7 +8,7 @@ import { SuggestDrop, lastSegment, replaceLast, useSuggest } from "../ui/Suggest
 import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
-import { IconCheck, IconMic, IconPen, IconSpark } from "../ui/icons";
+import { IconCheck, IconMic, IconMore, IconPen, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
 import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
@@ -178,6 +178,7 @@ function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picki
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
           {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
         {picking ? null : <QtyBtn item={i} onCommit={onQty} onCancel={onReload} />}
+        {picking ? null : <button className="morebtn" type="button" data-act="more" data-id={i.item_id} aria-label={t("lists.moreFor", { name: i.name })}><IconMore /></button>}
       </div>
     </div>
   );
@@ -474,6 +475,7 @@ export function Lists() {
       else if (act === "ng-keep") await post("/api/list/grocery-verdict", { item_id: id, kind: "grocery" });
       else if (act === "ng-remove" || act === "remove") { await removeItems([id]); return; }
       else if (act === "move") { setSheet({ kind: "move", ids: [id] }); return; }
+      else if (act === "more") { setSheet({ kind: "row", id }); return; }
       else return;
       reloadQuiet();
     } catch (e) { toast(errMsg(e)); }
@@ -1046,7 +1048,7 @@ export function Lists() {
       {data && (
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
-            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest }} />
+            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}

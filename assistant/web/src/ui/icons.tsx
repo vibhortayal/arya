@@ -10,6 +10,7 @@ const make = (inner: string, attrs: { sw?: number; fill?: boolean } = {}) =>
     );
   };
 
+export const IconMore = make(`<circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/>`, { fill: true });
 export const IconCheck = make(`<path d="M4.5 12.5 10 18 19.5 6.5"/>`, { sw: 3.2 });
 export const IconPen = make(`<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>`);
 export const IconSpark = make(`<path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3L2.5 12l7.3-2.2L12 2.5z"/>`, { fill: true });
