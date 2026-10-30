@@ -178,6 +178,7 @@ export function Login() {
               <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => openWaitlist()}>{t("landing.joinWaitlist")}</button>
             )}
           </p>
+          <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a></p>
         </div>
       </main>
 
