@@ -100,6 +100,7 @@ a.name { color: var(--label); }
 .money { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
 .empty { color: var(--secondary); padding: 12px 0; margin: 0; }
 .return { color: var(--danger); }
+.saved { color: #1E6B34; font-weight: 600; }
 
 .btn {
   /* display is explicit: a <label class="btn"> is inline by default,
@@ -1943,3 +1944,37 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
   .cardmenu { animation: cm-in .16s ease-out; }
   @keyframes cm-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
 }
+
+/* Card library (2026-10-30): the shared edit mode (ui/EditList.tsx),
+   card sizes, the library grid, Small cards, and Settings > Display. */
+.etile .etap { background: none; border: 0; padding: 4px 0; font: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
+.esize { flex: none; font-size: 13px; color: var(--secondary); background: var(--fill); border-radius: 980px; padding: 2px 9px; }
+.esizes { background: var(--group); border-radius: 0 0 var(--radius) var(--radius); margin: -10px 0 0; padding: 16px 14px 10px; box-shadow: var(--shadow); }
+.esizes-k { margin: 0 0 6px; font-size: 13px; color: var(--secondary); }
+.esizes .segs { margin: 0; }
+.esizes .muted { margin: 8px 2px 0; }
+.libgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
+.libitem { min-width: 0; }
+.libcard { position: relative; display: flex; flex-direction: column; gap: 6px; width: 100%; min-height: 112px; padding: 12px; text-align: left; background: var(--group); border: 0; border-radius: var(--radius); box-shadow: var(--shadow); font: inherit; color: var(--ink); cursor: pointer; }
+.libcard .ebadge { position: absolute; top: 8px; right: 8px; }
+.libcard .lib-k { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--secondary); padding-right: 30px; }
+.libcard .lib-peek { font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.libcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lib-name { margin: 6px 2px 0; font-weight: 600; font-size: 15px; }
+.lib-sizes { margin: 0 2px; font-size: 13px; color: var(--secondary); }
+.smallcard .smalltap { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
+.smallcard .smalltap .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.smallcard .row { border-bottom: 0; }
+.textsize { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.textsize input { flex: 1; accent-color: var(--acc); min-height: 44px; }
+.ts-a.small { font-size: 13px; } .ts-a.big { font-size: 22px; }
+/* Display settings, on the root element. */
+.dense .row { padding: 7px 0; }
+.dense .hubrow { padding: 8px 2px; }
+.dense .navrow { padding: 9px 0; }
+.dense .sect { margin-top: 16px; }
+.dense .listcard { padding-top: 10px; padding-bottom: 10px; }
+.boldtext body { font-weight: 500; }
+.boldtext .sub, .boldtext .muted, .boldtext .name, .boldtext .hr-label, .boldtext .navrow { font-weight: 600; }
+.nopics .rowface, .nopics .rowimg { display: none; }
+.nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition: none !important; }

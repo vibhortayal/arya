@@ -30,6 +30,7 @@ const Quest = screen(() => import("./Quest"), "Quest");
 const StoresAdd = screen(() => import("./StoresAdd"), "StoresAdd");
 const StoresFind = screen(() => import("./StoresFind"), "StoresFind");
 const Powers = screen(() => import("./Powers"), "Powers");
+const Display = screen(() => import("./Display"), "Display");
 const Profile = screen(() => import("./Profile"), "Profile");
 const QuestProgress = screen(() => import("./QuestProgress"), "QuestProgress");
 const Receipt = screen(() => import("./Receipt"), "Receipt");
@@ -46,6 +47,7 @@ const QuestMode = screen(() => import("./quest/QuestMode"), "QuestMode");
 const ReceiptReview = screen(() => import("./haul/ReceiptReview"), "ReceiptReview");
 const Reveal = screen(() => import("./haul/Reveal"), "Reveal");
 const WaitlistAdmin = screen(() => import("./WaitlistAdmin"), "WaitlistAdmin");
+const Usage = screen(() => import("./Usage"), "Usage");
 
 /* One entry per screen: the type makes every view in app/views.ts
  * name its screen. Signed out, App renders Login instead. */
@@ -55,6 +57,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   chat: Chat,
   feedback: Feedback,
   waitlist: WaitlistAdmin,
+  usage: Usage,
   "group-join": GroupJoin,
   newlist: NewList,
   store: Store,
@@ -72,6 +75,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   "stores-add": StoresAdd,
   "stores-find": StoresFind,
   powers: Powers,
+  display: Display,
   profile: Profile,
   "quest-progress": QuestProgress,
   receipt: Receipt,

@@ -10,7 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
@@ -173,7 +173,7 @@ function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item;
       <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}
         {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
-          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
+          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-pressed={!!i.checked} aria-label={t(i.checked ? "lists.uncheck" : "lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
@@ -738,7 +738,8 @@ export function Lists() {
       setStatus("");
       if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
       if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
-      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
+      const saved = lineSavings(rec.lines || []);
+      toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
     } catch (e) {
       setStatus("");
       toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));

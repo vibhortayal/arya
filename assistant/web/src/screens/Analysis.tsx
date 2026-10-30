@@ -17,7 +17,7 @@ type Dash = {
   spend_by_month: Record<string, number>;
   spend_by_store: Record<string, number>;
   top_items: { item_id: string; name: string; spend: number }[];
-  returns_total: number; trip_count: number; spend_total: number;
+  returns_total: number; returns_count?: number; savings_total?: number; trip_count: number; spend_total: number;
   spend_other?: number; spend_groceries: number; other_by_kind?: Record<string, number>;
   for_others_total?: number;
 };
@@ -121,10 +121,11 @@ export function Analysis() {
             <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
             <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}</p>
-            <Row name={t("analysis.returnsNettedAllTime")} sub={t("analysis.allReceiptsRefundsReconcileInto")} right={"−" + money(d.returns_total)} />
-            <Row name={t("analysis.allTimeSpend")} sub={t("analysis.trips", { count: d.trip_count })} right={money(d.spend_total)} />
+            <Row name={t("analysis.allTimeSpend")} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
             {!!d.spend_other && <Row name={t("analysis.groceries")} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
             {!!d.spend_other && <Row name={t("analysis.otherPurchases")} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
+            {!!d.returns_total && <Row name={t("analysis.returnsRow")} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
+            {!!d.savings_total && <Row name={t("analysis.youSaved")} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
             {!!d.for_others_total && <Row name={t("analysis.boughtForOthers")} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
           </>}
         </div>

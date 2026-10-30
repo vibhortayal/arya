@@ -14,7 +14,8 @@ import { TownFeed } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
 import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
-import { cardsForFocus, cardsOn, moveCard, removeCard, type CardId, type FocusId } from "./todayCards";
+import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
+import { EditTitle } from "../ui/EditList";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -212,6 +213,11 @@ export function Today() {
   const [cardsSaved, setCardsSaved] = useState<CardId[] | null>(null);
   const [focusAsked, setFocusAsked] = useState(true);
   const [editing, setEditing] = useState(false);
+  // Card sizes; a Small card tapped open shows as Medium until you leave.
+  const [sizes, setSizes] = useState<Partial<Record<CardId, Size>>>({});
+  const [peekOpen, setPeekOpen] = useState<Set<CardId>>(new Set());
+  const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
+  const big = (id: CardId) => sz(id) === "l";
   const [menu, setMenu] = useState<{ id: CardId; top: number } | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
@@ -220,13 +226,14 @@ export function Today() {
   useCharacters();
 
   const load = useCallback(async () => {
-    let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean } | null;
+    let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean; today_sizes?: Partial<Record<CardId, Size>> } | null;
     try {
       [home, st] = await Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
     } catch (e) { showErr(e); return; }
     if (!live.current) return;
     setGs(demo ? null : st?.get_started ?? null);
     setCardsSaved(st?.today_cards ?? null);
+    setSizes(st?.today_sizes || {});
     // Asked once; someone who already arranged Today is not asked.
     setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
     setH(home);
@@ -256,6 +263,8 @@ export function Today() {
   // What Arya can do › Use soon › Add a date opens the date sheet here.
   useEffect(() => {
     if (nav.params.snapDate) { nav.params.snapDate = undefined; setEx({ k: "capture" }); }
+    // Settings > Display > Today cards opens Today in edit mode.
+    if (nav.params.edit) { nav.params.edit = undefined; setEditing(true); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---- Get started ---- */
@@ -292,7 +301,7 @@ export function Today() {
 
   /* ---- Store alerts ---- */
   const alertRows = h && news ? storeAlerts(h, news, currency) : [];
-  const lowCap = capRows(low, lowOpen);
+  const lowCap = capRows(low, lowOpen || big("low"));
 
   /* ---- Still good? ---- */
   // The after-receipt card already asks about these; no repeats.
@@ -325,7 +334,7 @@ export function Today() {
   const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));
   if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
   const noLists = !listItems.length && !lists.length;
-  const listCap = capLists(cards, cards.length);
+  const listCap = big("lists") ? { shown: cards, seeAll: false } : capLists(cards, cards.length);
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
@@ -349,7 +358,7 @@ export function Today() {
      * each gets its own heading (labels audit, 2026-10-29) and is its
      * own card (customizable Today). */
     const rows = alertRows.filter(r => r.kind === kind);
-    const capped = capRows(rows, alertsOpen);
+    const capped = capRows(rows, alertsOpen || big(kind));
     return <div id={id}>{rows.length > 0 && <><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
       <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
         <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
@@ -413,18 +422,18 @@ export function Today() {
     price: alertSection("price", "today-cheaper", "today.cheaperElsewhere"),
     expiry: (
           <div id="today-expiry">
-            {h && <UseSoon soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
+            {h && <UseSoon large={big("expiry")} soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
               onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
           </div>
     ),
     checks: (
           <div id="today-checks">
             {nChecks > 0 && (
-              <div className={"group checkfold" + (checksOpen ? " open" : "")}>
-                <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen) as "true" | "false"}
+              <div className={"group checkfold" + (checksOpen || big("checks") ? " open" : "")}>
+                <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen || big("checks")) as "true" | "false"}
                   onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
                   <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
-                <div className="checkrows" hidden={!checksOpen}>
+                <div className="checkrows" hidden={!checksOpen && !big("checks")}>
                   {checks.map(c => (
                     <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
                       <span className="chipset">
@@ -508,6 +517,49 @@ export function Today() {
   }
   const name = (id: CardId) => t(`today.cards.${id}.name`);
 
+  /* A Small card: one line under its heading; tapping it opens the
+   * card at Medium (Running low adds everything instead). */
+  const smallLine = (id: CardId): string => {
+    if (id === "low") return t("today.small.low", { count: low.length });
+    if (id === "lists") return t("today.small.lists", { count: cards.length, items: listItems.length });
+    if (id === "report" || id === "price") return t(`today.small.${id}`, { count: alertRows.filter(r => r.kind === id).length });
+    if (id === "expiry") return t("today.small.expiry", { count: soon.length + (perish?.items.length || 0) });
+    if (id === "checks") return t("today.small.checks", { count: nChecks });
+    return id === "patterns" ? peek(id) : name(id);
+  };
+  async function addAllLow() {
+    const ids = low.filter(i => !onList.has(i.item_id) && !added.has(i.item_id)).map(i => i.item_id);
+    try {
+      for (const id of ids) await post("/api/list/add", { item_id: id });
+      setAdded(a => new Set([...a, ...ids]));
+      toast(t("today.small.addedAll"));
+    } catch (e) { showErr(e); }
+  }
+  const small = (id: CardId) => (
+    <div id={`today-small-${id}`} className="smallcard">
+      <h3 className="sect">{name(id)}</h3>
+      <div className="group"><div className="row">
+        <button type="button" className="grow smalltap" data-small={id} onClick={() => setPeekOpen(o => new Set(o).add(id))}>
+          <span className="name">{smallLine(id)}</span>
+          {id !== "patterns" && <span className="sub">{peek(id)}</span>}</button>
+        {id === "low"
+          ? <button type="button" className="chip" data-low-addall onClick={addAllLow}>{t("today.small.addAll")}</button>
+          : <span className="chev" aria-hidden="true">›</span>}
+      </div></div>
+    </div>
+  );
+  function saveSize(id: CardId, s: Size) {
+    setSizes(x => ({ ...x, [id]: s }));
+    setPeekOpen(o => { const n = new Set(o); n.delete(id); return n; });
+    post("/api/settings", { today_sizes: { [id]: s } }).catch(showErr);
+  }
+  function resetToday() {
+    saveCards(null);
+    setSizes({});
+    post("/api/settings", { today_sizes: Object.fromEntries(Object.keys(SIZES_OF).map(k => [k, "m"])) }).catch(showErr);
+    toast(t("today.edit.resetDone"));
+  }
+
   /* Touch and hold a card for its menu (right-click on a desktop). A
    * hold that opened the menu swallows the click that follows. */
   const holdProps = (id: CardId) => ({
@@ -544,18 +596,15 @@ export function Today() {
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <div className="titlerow"><h1 className="largetitle">{editing ? t("today.edit.title") : t("today.today")}</h1>
-        {h && <button type="button" id="today-editbtn" className={"linkbtn titleedit" + (editing ? " done" : "")} onClick={() => setEditing(e => !e)}>
-          {editing ? t("common.done") : t("today.edit.edit")}</button>}</div>
+      <EditTitle id="today-editbtn" title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
-        <TodayEdit on={on} has={has} peek={peek} onChange={saveCards}
-          onReset={() => { saveCards(null); toast(t("today.edit.resetDone")); }} />
+        <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
       ) : (
         <>
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
           {town ? <TownFeed town={town} /> : null}
-          {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sections[id]}</div>)}
+          {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>)}
           <div id="today-eye">
             {eyeCount > 0 && (
               <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
@@ -723,14 +772,14 @@ export function perishNames(items: { name: string }[]): string {
   return names.length > 3 ? t("today.perish.andMore", { names: names.slice(0, 3).join(", "), count: names.length - 3 }) : names.join(", ");
 }
 
-function UseSoon({ soon, perish, setEx, onDone, onPerish, onNotNow }: { soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
+function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow }: { large?: boolean; soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
   onDone: (s: Soon) => void; onPerish: () => void; onNotNow: () => void }) {
   const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
   const [soonOpen, setSoonOpen] = useState(false);
   if (!soon.length && !perish) return null;
   const open = (id: string) => setEx({ k: "item", id });
-  const capped = capRows(soon, soonOpen);
+  const capped = capRows(soon, soonOpen || !!large);
   return (
     <>
       <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3>{perish

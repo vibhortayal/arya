@@ -1,4 +1,4 @@
-import { addCard, cardsForFocus, cardsOff, cardsOn, DEFAULT_CARDS, moveCard, removeCard } from "./todayCards";
+import { addCard, cardsForFocus, cardsOff, cardsOn, DEFAULT_CARDS, moveCard, removeCard, sizeOf } from "./todayCards";
 
 describe("customizable Today", () => {
   test("null or junk is the default; unknown ids and repeats drop", () => {
@@ -29,5 +29,14 @@ describe("customizable Today", () => {
     expect([...money].sort()).toEqual([...DEFAULT_CARDS].sort());
     expect(cardsForFocus(["faster", "waste"]).slice(0, 3)).toEqual(["expiry", "checks", "lists"]);
     expect(cardsForFocus([])).toEqual(DEFAULT_CARDS);
+  });
+});
+
+describe("card sizes", () => {
+  test("Medium unless a size the card has was saved", () => {
+    expect(sizeOf(null, "low")).toBe("m");
+    expect(sizeOf({ low: "s" }, "low")).toBe("s");
+    expect(sizeOf({ patterns: "l" }, "patterns")).toBe("m"); // Spending has no Large
+    expect(sizeOf({ low: "xl" }, "low")).toBe("m");
   });
 });

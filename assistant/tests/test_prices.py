@@ -224,3 +224,14 @@ class TestReadableNames(unittest.TestCase):
         self.assertEqual(prices._label({"costco-1": "Milk"}, "costco-1"), "Milk")
         self.assertEqual(prices._label({}, "costco-96716"), "an item")
         self.assertEqual(prices._label({"costco-9": "costco-9"}, "costco-9"), "an item")
+
+
+class TestReceiptSavings(unittest.TestCase):
+    def test_discount_lines_and_photo_discounts_count_as_savings(self):
+        from api.ledger.build import receipt_savings
+        r = {"lines": [{"line_type": "item", "line_total": 10.0},
+                       {"line_type": "discount", "line_total": -4.0},
+                       {"line_type": "item", "line_total": 5.0, "discount_amount": 1.5},
+                       {"line_type": "return", "line_total": -3.0}]}
+        self.assertEqual(receipt_savings(r), 5.5)
+        self.assertEqual(receipt_savings({"lines": []}), 0)

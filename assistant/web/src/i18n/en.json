@@ -96,7 +96,8 @@
       "theReceipt": "the receipt",
       "couldNotReadFile": "Couldn't read that file. Try again, or try another file.",
       "couldNotReadPhoto": "Couldn't read that photo. Take it once more, in good light.",
-      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check."
+      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check.",
+      "filedSaved": "Added {{merchant}}, {{n}} items. You saved {{amount}} with coupons and deals. Anything Arya isn't sure about is in Receipts, under To check."
     },
     "doneDot": "Done.",
     "undone": "Undone.",
@@ -140,6 +141,33 @@
   "about": {
     "builtBy": "Built by",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
+  },
+  "usage": {
+    "title": "Keeping Arya running",
+    "intro": "Arya is free. Reading receipts and photos, answering Ask and mapping stores use a paid AI model. This is what that costs and how much of it you have used.",
+    "sinceYouJoined": "Since you joined",
+    "ofReadingSince": "of AI reading since {{since}}",
+    "nothingYet": "Nothing yet. Arya has not read anything for you.",
+    "thisMonth": "This month",
+    "kind": {
+      "reads": "Receipts and photos",
+      "ask": "Ask Arya",
+      "maps": "Store maps and Quest",
+      "helps": "Lists, voice and extras"
+    },
+    "calls_one": "{{count}} time",
+    "calls_other": "{{count}} times",
+    "heavy": "You are one of the heaviest users this month. Nothing is wrong and nothing changes. Arya's AI reading is paid for by one person, so a lighter month helps keep it free for everyone.",
+    "paused": "Arya's reading is paused for you right now after unusual use. Lists, Today and typing still work. It comes back on its own, or write to support@teamnightshift.org.",
+    "whole": "Arya as a whole, so far",
+    "paidReading": "AI reading",
+    "paidBy": "Paid by {{who}}",
+    "people": "People using Arya",
+    "peopleSub": "Have had something read",
+    "average": "Average per person",
+    "averageSub": "AI reading only",
+    "private": "Only you see your numbers. The totals above count everyone together.",
+    "couldNotLoad": "Could not load your usage."
   },
   "album": {
     "couldNotLoadYourAlbum": "Could not load your album.",
@@ -187,8 +215,12 @@
     "yourPrices": "Your prices over time",
     "fileAReceiptAndYour": "Add a receipt and your spending shows up here.",
     "spendLiveFromYourReceipts": "Spending, from your receipts",
-    "returnsNettedAllTime": "Returns taken off, all time",
-    "allReceiptsRefundsReconcileInto": "Already subtracted from every total below.",
+    "returnsRow": "Returns",
+    "returnsRowSub_one": "{{count}} return, already taken off",
+    "returnsRowSub_other": "{{count}} returns, already taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals, discounts",
+    "afterReturns": "after returns",
     "allTimeSpend": "All-time spending",
     "groceries": "Groceries",
     "foodAndHousehold": "food and household",
@@ -351,6 +383,8 @@
     "dateRead": "{{name}} expires {{date}}.",
     "thisItem": "This item",
     "trackIt": "Track it",
+    "nameIt": "What is this item called? Type its name and I will track it.",
+    "trackFail": "I could not save that date. Nothing was changed. Try Track it again.",
     "dateTracked": "Tracking {{name}} until {{date}}. It will show under Use soon."
   },
   "express": {
@@ -853,6 +887,7 @@
     "qtyAria": "Quantity {{qty}}. Tap to change.",
     "addedBy": "Added by {{name}}",
     "checkOff": "Check off {{name}}",
+    "uncheck": "Uncheck {{name}}",
     "shopNoMap": "Quest here uses a typical store layout until someone maps it.",
     "item": "Item",
     "movedTo": "Moved {{what}} to {{dest}}.",
@@ -1501,6 +1536,7 @@
     "stores": "Stores",
     "yourStoresFavoritesAndThe": "Your stores and favorites",
     "whatAryaCanDoAnd": "What Arya does for you, and what you can turn on",
+    "usageSub": "What the AI reading costs, and your share",
     "spendingByMonthAndStore": "By month, store and item",
     "account": "Account",
     "signedInAs": "Signed in as",
@@ -1756,6 +1792,8 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "returnsNetted": "Returns taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals and discounts, already taken off",
     "viewReceipt": "View receipt",
     "theFiledReceiptPhoto": "The receipt photo",
     "deleteReceipt": "Delete receipt",
@@ -1924,6 +1962,34 @@
   },
   "today": {
     "today": "Today",
+    "sizes": {
+      "label": "Size",
+      "s": "Small",
+      "m": "Medium",
+      "l": "Large",
+      "sHelp": "One line. Tap it to see more.",
+      "mHelp": "The first few rows.",
+      "lHelp": "Every row."
+    },
+    "small": {
+      "low": "{{count}} running low",
+      "lists": "{{count}} lists, {{items}} to get",
+      "report": "{{count}} store alerts",
+      "price": "{{count}} cheaper elsewhere",
+      "expiry": "{{count}} to use soon",
+      "checks": "{{count}} to check",
+      "addAll": "Add all",
+      "addedAll": "Added to your list"
+    },
+    "library": {
+      "title": "Card library",
+      "all": "All",
+      "money": "Money",
+      "food": "Food",
+      "shop": "Shopping",
+      "sizes": "Sizes: {{sizes}}",
+      "none": "Every card in this group is on Today."
+    },
     "cards": {
       "low": {
         "name": "Running low",
@@ -2721,5 +2787,36 @@
     "settingsSub_one": "{{count}} waiting",
     "settingsSub_other": "{{count}} waiting",
     "settingsNone": "Nobody waiting"
+  },
+  "edit": {
+    "remove": "Remove {{name}}",
+    "add": "Add {{name}}",
+    "move": "Move {{name}}. Use the up and down arrow keys.",
+    "removed": "{{name}} removed",
+    "added": "{{name}} added",
+    "more": "More",
+    "reset": "Reset to default",
+    "allOn": "Everything is already on."
+  },
+  "display": {
+    "title": "Display",
+    "sub": "Text size, spacing, pictures",
+    "text": "Text size",
+    "textSmaller": "Smaller",
+    "textLarger": "Larger",
+    "sample": "Whole Milk 1 gal · Every ~7 days",
+    "spacing": "Spacing",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "look": "Look",
+    "bold": "Bold text",
+    "pictures": "Item pictures",
+    "picturesSub": "The little faces next to items",
+    "motion": "Animations",
+    "motionSub": "Your phone's Reduce Motion setting turns them down too",
+    "customize": "Customize",
+    "today": "Today cards",
+    "resetAll": "Reset all to default",
+    "resetDone": "Display and Today are back to the default"
   }
 }

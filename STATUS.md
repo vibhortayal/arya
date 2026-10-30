@@ -6,6 +6,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Keeping Arya running (2026-10-30, PR open):** Settings row and screen show each account's lifetime AI cost (`GET /api/usage`) and, from 50 accounts, the totals for everyone. Ledger rows now carry `user` and `kind`; rows from before have neither. No limit bar, no money ask. A heads-up at $3 a month, a pause at $5, and an hourly $1 trip-wire that switches an account's paid reads off for 24 h (owner exempt). `assistant/loops/2026-10-30-keeping-arya-running.md`.
 - **Ask photo (2026-10-30, PR open):** Talk and Photo are labelled chips under the Ask field; a photo opens a chooser over the existing readers (list, receipt, fridge, expiry date) plus a one-shot "Ask about this photo" (`/api/chat` takes an optional `image`, never stored, no price judgments). The speaker toggle and all spoken replies are gone. `assistant/loops/2026-10-30-ask-photo.md`.
 - **Token guardrails (2026-10-30, PR open):** one hourly allowance (600) for every route an API token reaches; a short blocked list (bulk model spend, groups, push, feedback, settings, account export) answers 403 to a token; the app is unaffected; `ARYA_TOKEN_GUARDS=off` lifts it. Two key types are after Nov 4. `assistant/loops/2026-10-30-token-guardrails.md`.
 - **Developer page (2026-10-30, PR open):** public `/developers` (React screen, no sign-in): what the API is, how to get a code, a copy-paste curl, every endpoint. The server answers `/developers` with the app shell. Say "open platform" only after the API is deployed. `assistant/loops/2026-10-30-developers-page.md`.
@@ -145,6 +146,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  The golden item says it is picked at random from your own list and
+  that Arya never adds products or ads; How to play matches today's
+  buttons. `2026-10-30-quest-golden-wording.md`.
   Quest colors have one job each: green for grabbed or mapped, gold for
   golden, the app orange, neutral for the rest (no blue badges or black
   chips); the 3D simulated store stays a blue blueprint. `2026-10-30-quest-colors.md`.

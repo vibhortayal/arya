@@ -93,7 +93,6 @@ export async function shrinkPhoto(f: File, max = 1600): Promise<{ media_type: st
   return { media_type: f.type || "image/jpeg", data: await b64(f) };
 }
 type ExpiryRead = { readable: boolean; name?: string | null; date?: string | null; kind?: string; match?: { item_id: string; name: string } | null };
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const readJson = async (r: Response) => {
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
   return r.json();
@@ -117,6 +116,7 @@ export function Chat() {
   const job = useRef(0);
   const picker = useRef<HTMLInputElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const naming = useRef<((name: string) => Promise<void>) | null>(null);
   const logEl = useRef<HTMLDivElement>(null);
 
   const toEnd = () => (logEl.current?.lastElementChild as HTMLElement | null | undefined)?.scrollIntoView?.({ block: "end" });
@@ -193,11 +193,17 @@ export function Chat() {
         else {
           const when = new Date(rd.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
           const name = rd.match?.name || rd.name || t("ask.thisItem");
-          done({ kind: "arya", text: t("ask.dateRead", { name, date: when }), chips: [{ label: t("ask.trackIt"), run: async () => {
+          const track = async (nm: string | null | undefined) => {
             try {
-              await post("/api/expiry/save", { item_id: rd.match?.item_id, name: rd.name, date: rd.date, kind: rd.kind });
-              add({ kind: "sys", text: t("ask.dateTracked", { name, date: when }) });
-            } catch (e) { toast(errMsg(e)); }
+              await post("/api/expiry/save", { item_id: rd.match?.item_id, name: nm, date: rd.date, kind: rd.kind });
+              const typed = !!naming.current;
+              naming.current = null;
+              add({ kind: "sys", text: t("ask.dateTracked", { name: (typed && nm) || name, date: when }) });
+            } catch (e) { add({ kind: "sys", text: t("ask.trackFail") }); }
+          };
+          done({ kind: "arya", text: t("ask.dateRead", { name, date: when }), chips: [{ label: t("ask.trackIt"), run: async () => {
+            if (rd.match?.item_id || rd.name) await track(rd.name);
+            else { naming.current = track; add({ kind: "arya", text: t("ask.nameIt") }); input.current?.focus(); }
           } }] });
         }
       }
@@ -225,6 +231,7 @@ export function Chat() {
     const q = raw.trim();
     if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
+    if (naming.current) { const go = naming.current; add({ kind: "me", text: q }); await go(q.slice(0, 80)); return; }
     if (wantsMapStore(q)) {
       add({ kind: "me", text: q }, { kind: "map", text: t("ask.mapStoreReply") });
       return;

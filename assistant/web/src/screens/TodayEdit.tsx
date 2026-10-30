@@ -1,96 +1,84 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sheet } from "../ui/Sheet";
+import { EditList } from "../ui/EditList";
 import { useTranslation } from "../i18n";
-import { addCard, cardsOff, moveCard, removeCard, FOCUS_IDS, type CardId, type FocusId } from "./todayCards";
+import { cardsOff, CARD_GROUP, FOCUS_IDS, LIBRARY_GROUPS, SIZES_OF, type CardId, type FocusId, type LibraryGroup, type Size } from "./todayCards";
 
 /* Customizable Today, edited in place the way a phone home screen is
  * (owner, 2026-10-30, "think how modern OS do it"): touch and hold a
- * card for a short menu, or Edit for edit mode. In edit mode each card
- * is one line with a red minus to remove it and a grip to drag it;
- * the cards that are off sit under More cards with a green plus. Every
- * change saves at once and the toast offers Undo; nothing asks "Are
- * you sure?". */
-
-const Grip = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-    <path d="M5 8h14M5 12h14M5 16h14" />
-  </svg>
-);
+ * card for a short menu, or Edit for edit mode (ui/EditList.tsx, the
+ * edit mode every screen shares). Tapping a card in edit mode picks
+ * its size; the cards that are off sit in the card library below,
+ * each with a live preview. */
 
 type EditProps = {
   on: CardId[];
   has: Record<CardId, boolean>;
   peek: (id: CardId) => string;
+  size: (id: CardId) => Size;
   onChange: (next: CardId[], msg?: string) => void;
+  onSize: (id: CardId, s: Size) => void;
   onReset: () => void;
 };
 
-export function TodayEdit({ on, has, peek, onChange, onReset }: EditProps) {
+export function TodayEdit({ on, has, peek, size, onChange, onSize, onReset }: EditProps) {
   const { t } = useTranslation();
   const name = (id: CardId) => t(`today.cards.${id}.name`);
-  // The order while a finger drags; saved when it lifts.
-  const [order, setOrder] = useState(on);
-  const [drag, setDrag] = useState<CardId | null>(null);
-  const tiles = useRef<Partial<Record<CardId, HTMLDivElement | null>>>({});
-  useEffect(() => { if (!drag) setOrder(on); }, [on, drag]);
-
-  function down(e: PointerEvent<HTMLButtonElement>, id: CardId) {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setDrag(id);
-  }
-  function move(e: PointerEvent<HTMLButtonElement>) {
-    if (!drag) return;
-    const rest = order.filter(c => c !== drag);
-    let to = rest.length;
-    for (let k = 0; k < rest.length; k++) {
-      const r = tiles.current[rest[k]]?.getBoundingClientRect();
-      if (r && e.clientY < r.top + r.height / 2) { to = k; break; }
-    }
-    const next = moveCard(order, drag, to);
-    if (next.join() !== order.join()) setOrder(next);
-  }
-  function up() {
-    if (!drag) return;
-    setDrag(null);
-    if (order.join() !== on.join()) onChange(order);
-  }
-  function key(e: KeyboardEvent<HTMLButtonElement>, id: CardId) {
-    const k = on.indexOf(id);
-    if (e.key === "ArrowUp" && k > 0) { e.preventDefault(); onChange(moveCard(on, id, k - 1)); }
-    if (e.key === "ArrowDown" && k < on.length - 1) { e.preventDefault(); onChange(moveCard(on, id, k + 1)); }
-  }
-
+  const [open, setOpen] = useState<CardId | null>(null);
+  const [group, setGroup] = useState<LibraryGroup>("all");
   const off = cardsOff(on);
-  return (
-    <div id="today-edit">
-      <p className="muted small edithint">{t("today.edit.hint")}</p>
-      <div className="etiles">
-        {order.map(id => (
-          <div key={id} data-tile={id} className={"etile" + (drag === id ? " lifted" : "")} ref={el => { tiles.current[id] = el; }}>
-            <button type="button" className="eminus" aria-label={t("today.edit.remove", { name: name(id) })}
-              onClick={() => onChange(removeCard(on, id), t("today.edit.removed", { name: name(id) }))}><span className="ebadge" aria-hidden="true">−</span></button>
-            <span className="grow"><b>{name(id)}</b><span className="sub">{has[id] ? peek(id) : t("today.cards.waiting")}</span></span>
-            <button type="button" className="egrip" aria-label={t("today.edit.move", { name: name(id) })}
-              onPointerDown={e => down(e, id)} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-              onKeyDown={e => key(e, id)}><Grip /></button>
-          </div>
+  const shown = off.filter(id => group === "all" || CARD_GROUP[id] === group);
+  const sizeNames = (id: CardId) => SIZES_OF[id].map(z => t(`today.sizes.${z}`)).join(" · ");
+
+  const library = (
+    <>
+      <h3 className="sect">{t("today.library.title")}</h3>
+      <div className="segs" role="tablist">
+        {LIBRARY_GROUPS.map(g => (
+          <button key={g} type="button" role="tab" aria-selected={group === g} className={group === g ? "on" : ""} onClick={() => setGroup(g)}>{t(`today.library.${g}`)}</button>
         ))}
       </div>
-      <h3 className="sect">{t("today.edit.more")}</h3>
-      {off.length ? (
-        <div className="etiles">
-          {off.map(id => (
-            <button key={id} type="button" data-add={id} className="etile eadd" aria-label={t("today.edit.add", { name: name(id) })}
-              onClick={() => onChange(addCard(on, id), t("today.edit.added", { name: name(id) }))}>
-              <span className="ebadge eplus" aria-hidden="true">+</span>
-              <span className="grow"><b>{name(id)}</b><span className="sub">{t(`today.cards.${id}.desc`)}</span></span>
-            </button>
+      {shown.length ? (
+        <div className="libgrid">
+          {shown.map(id => (
+            <div key={id} className="libitem">
+              <button type="button" className="libcard" data-add={id} aria-label={t("edit.add", { name: name(id) })}
+                onClick={() => onChange([id, ...on], t("today.edit.added", { name: name(id) }))}>
+                <span className="ebadge eplus" aria-hidden="true">+</span>
+                <span className="lib-k">{name(id)}</span>
+                <span className={"lib-peek" + (has[id] ? "" : " muted")}>{has[id] ? peek(id) : t(`today.cards.${id}.desc`)}</span>
+              </button>
+              <p className="lib-name">{name(id)}</p>
+              <p className="lib-sizes">{sizeNames(id)}</p>
+            </div>
           ))}
         </div>
-      ) : <p className="muted small edithint">{t("today.edit.allOn")}</p>}
-      <button type="button" className="linkbtn editreset" onClick={onReset}>{t("today.edit.reset")}</button>
-    </div>
+      ) : <p className="muted small edithint">{t(off.length ? "today.library.none" : "today.edit.allOn")}</p>}
+    </>
+  );
+
+  return (
+    <EditList id="today-edit" on={on} off={off} name={name} desc={id => t(`today.cards.${id}.desc`)}
+      sub={id => (has[id] ? peek(id) : t("today.cards.waiting"))}
+      hint={t("today.edit.hint")}
+      onChange={onChange}
+      more={library}
+      // Only a size that is not the usual Medium shows on the line.
+      badge={id => size(id) !== "m" ? <span className="esize">{t(`today.sizes.${size(id)}`)}</span> : null}
+      onTap={id => setOpen(o => (o === id ? null : id))}
+      below={id => open === id && SIZES_OF[id].length > 1 ? (
+        <div className="esizes">
+          <p className="esizes-k">{t("today.sizes.label")}</p>
+          <div className="segs" role="radiogroup" aria-label={t("today.sizes.label")}>
+            {SIZES_OF[id].map(z => (
+              <button key={z} type="button" role="radio" aria-checked={size(id) === z} data-size={z}
+                className={size(id) === z ? "on" : ""} onClick={() => onSize(id, z)}>{t(`today.sizes.${z}`)}</button>
+            ))}
+          </div>
+          <p className="muted small">{t(`today.sizes.${size(id)}Help`)}</p>
+        </div>
+      ) : null}
+      onReset={onReset} resetLabel={t("today.edit.reset")} />
   );
 }
 
