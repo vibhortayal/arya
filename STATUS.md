@@ -135,6 +135,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  In the store: one compact panel with the list always in view, Got it /
+  Can't find it / Later, Got it walks on by itself, and the store view
+  pinches to zoom and turns with two fingers. `2026-10-30-quest-one-panel.md`.
   Map my store (one name app-wide) starts with Select store: your stores
   as cards with addresses, then Find my store, then "Start mapping
   <store>". `2026-10-30-map-my-store-cards.md`.
