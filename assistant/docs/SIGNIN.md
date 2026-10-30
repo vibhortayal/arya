@@ -34,7 +34,6 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
    `{{ .ConfirmationURL }}` unused), both end with the not-monitored line, and both are styled
    with Arya's colours and type. The styled originals, with copy buttons, are in the owner's
    artifact https://claude.ai/artifact/MqVD7GHNGv14L5AW4NZWee and are repeated here. The
-   project is shared with khelo, so these templates apply to khelo's sign-ins too. The
    sender and Reply-To for these emails are set in Supabase (Project Settings, Auth, SMTP).
 
    **Confirm signup** (first sign-in). Subject: `You're off the Arya waitlist: {{ .Token }}`
