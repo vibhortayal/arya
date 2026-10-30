@@ -6,7 +6,7 @@ export default async function (page, base) {
   await page.waitForSelector("#tabs");
   await page.evaluate(() => window.__aryaShow("stores-add"));
   await page.waitForSelector("#view-stores-add");
-  const h = await page.textContent("#view-stores-add h2.largetitle");
+  const h = await page.textContent("#view-stores-add .largetitle");
   if (h !== "Add a store") throw new Error("title: " + h);
   await page.fill("#sa-q", "Cos");
   if ((await page.inputValue("#sa-q")) !== "Cos") throw new Error("input");

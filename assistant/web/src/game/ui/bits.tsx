@@ -67,10 +67,10 @@ export function MiniMap({ trip, here, onClick }: { trip: Trip; here: string | nu
           if (s.kind === "aisle" && !itemsIn(trip, s.id).length) return null;
           const v = sectionView(trip, s.id), done = itemsIn(trip, s.id).length > 0 && !leftIn(trip, s.id).length;
           const fill = v === "fog" ? "#dedee4" : v === "guess" ? "#e8f0fb" : hex(s.color);
-          return <rect key={s.id} x={s.rect.x} y={s.rect.y} width={s.rect.w} height={s.rect.h} rx="8" fill={done ? "#ffd9cc" : fill} stroke={s.id === here ? "#E4572E" : "none"} strokeWidth="10" />;
+          return <rect key={s.id} x={s.rect.x} y={s.rect.y} width={s.rect.w} height={s.rect.h} rx="8" fill={done ? "#ffd9cc" : fill} stroke={s.id === here ? "#C2410C" : "none"} strokeWidth="10" />;
         })}
-        {cur && cur !== here && (() => { const n = L.sections.find(s => s.id === cur)!.node; return <circle cx={n.x} cy={n.y} r="16" fill="none" stroke="#E4572E" strokeWidth="7" strokeDasharray="8 7" />; })()}
-        {sec && <circle cx={sec.node.x} cy={sec.node.y} r="22" fill="#E4572E" stroke="#fff" strokeWidth="8" />}
+        {cur && cur !== here && (() => { const n = L.sections.find(s => s.id === cur)!.node; return <circle cx={n.x} cy={n.y} r="16" fill="none" stroke="#C2410C" strokeWidth="7" strokeDasharray="8 7" />; })()}
+        {sec && <circle cx={sec.node.x} cy={sec.node.y} r="22" fill="#C2410C" stroke="#fff" strokeWidth="8" />}
       </svg>
     </button>
   );

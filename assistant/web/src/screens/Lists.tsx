@@ -22,6 +22,7 @@ import {
 import { autoMode, filterLists, markOpened, readMode, readOpened, readView, recentLists, viewMode, writeMode, writeView,
   type ListsMode, type ListsView } from "./lists/adaptive";
 import { t, useTranslation } from "../i18n";
+import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -204,6 +205,7 @@ export function Lists() {
   useCharacters();
 
   const [data, setData] = useState<HomeData | null>(cache.data);
+  const [loadFailed, setLoadFailed] = useState(false);
   const dataRef = useRef<HomeData | null>(cache.data);
   // Today's list cards open one list (app.js: listLens = card's id).
   const [lens, setLensState] = useState(() => {
@@ -259,7 +261,7 @@ export function Lists() {
   const reload = useCallback(async (): Promise<HomeData> => {
     const h = await get<HomeData>("/api/home");
     cache.data = h; dataRef.current = h;
-    if (alive.current) setData(h);
+    if (alive.current) { setData(h); setLoadFailed(false); }
     loadGroup();
     return h;
   }, [loadGroup]);
@@ -269,7 +271,7 @@ export function Lists() {
     if (alive.current) setEyes(r.records || []);
   }, []);
 
-  useEffect(() => { reload().catch(showErr); loadEyes(); }, [reload, loadEyes, showErr]);
+  useEffect(() => { reload().catch(e => { if (alive.current) setLoadFailed(true); showErr(e); }); loadEyes(); }, [reload, loadEyes, showErr]);
 
   const ask = useAsk(reloadQuiet);
 
@@ -813,7 +815,7 @@ export function Lists() {
     <>
       {!onPage && (
         <div id="lists-home">
-          <h2 className="largetitle">{t("lists.lists")}</h2>
+          <h1 className="largetitle">{t("lists.lists")}</h1>
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
@@ -861,7 +863,10 @@ export function Lists() {
             {data ? <>
               {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
               {card("else", t("common.everythingElse"), lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore"))}
-            </> : <p className="empty">{t("lists.loadingYourList")}</p>}
+            </> : loadFailed
+              ? <div className="empty" role="alert"><p>{t("lists.couldNotLoad")}</p>
+                  <button className="btn" id="lists-retry" type="button" onClick={() => { setLoadFailed(false); reload().catch(e => { if (alive.current) setLoadFailed(true); showErr(e); }); }}>{t("lists.retry")}</button></div>
+              : <div className="skel" role="status" aria-label={t("lists.loadingYourList")}><i /><i /><i /></div>}
           </div>
           )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
@@ -873,7 +878,7 @@ export function Lists() {
         <div id="list-page" className={startBar ? "hasstart" : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
           <div className="lhead">
-            <h2 className="largetitle" id="lp-title">
+            <h1 className="largetitle" id="lp-title">
               {renaming
                 ? <input type="text" id="lp-name-input" className="titleinput" maxLength={40} autoComplete="off" aria-label={t("lists.listName")} autoFocus
                     value={renameVal} onChange={e => setRenameVal(e.target.value)} onFocus={e => e.currentTarget.select()}
@@ -884,7 +889,7 @@ export function Lists() {
                 : here && !selEff
                   ? <><span id="lp-name">{name}</span><button className="pen" id="lp-pen" type="button" aria-label={t("lists.rename", { name })} onClick={startRename}><IconPen /></button></>
                   : name}
-            </h2>
+            </h1>
             <button className="linkbtn" id="lp-select" type="button" hidden={!renaming && !selEff && !open.length}
               onClick={() => { if (renaming) { saveTitle(); return; } setSel(selEff ? null : new Set()); }}>
               {renaming ? t("common.save") : selEff ? t("common.done") : t("lists.select")}
@@ -921,7 +926,7 @@ export function Lists() {
               * icons were not obvious. */}
             <div className="caprow">
               <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
-              <label className="chip" htmlFor="add-photo">
+              <label className="chip" htmlFor="add-photo" {...pickerProps("add-photo")}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
                 {t("lists.photoToAdd")}
               </label>

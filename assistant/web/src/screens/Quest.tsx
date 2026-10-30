@@ -128,8 +128,8 @@ export function Quest() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}>‹ {t("common.quest")}</a></p>
-      <h2 className="largetitle">{t("quest.yourTrips")}</h2>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <h1 className="largetitle">{t("quest.yourTrips")}</h1>
       <p className="muted nomargin">{t("quest.yourTripsSub")}</p>
       <div id="today-hero">{heroCard()}</div>
       <h3 className="sect" id="games-head" hidden={!openS.length && !done.length}>{t("quest.yourGames")}</h3>

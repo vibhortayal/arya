@@ -52,7 +52,7 @@ export function Item() {
       <p><a href="#" id="item-back" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <div id="item-detail">
         {d && <>
-          <h2 className="largetitle" style={{ fontSize: 28 }}>{e ? e.canonical_name : id}</h2>
+          <h1 className="largetitle" style={{ fontSize: 28 }}>{e ? e.canonical_name : id}</h1>
           {p && p.history_state !== "not-enough-history" ? (
             <div className="group">
               <Row name={t("item.buys")} right={String(p.purchase_count)} />

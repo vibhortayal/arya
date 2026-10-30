@@ -4,7 +4,7 @@ import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { money, qtyFmt } from "../lib/format";
+import { fmtWeekday, money, qtyFmt } from "../lib/format";
 import { useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-receipt and quest.js openReceipt.
@@ -57,8 +57,8 @@ export function Receipt() {
       <p><a href="#" id="rcd-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("receipts"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <div id="rc-body">
         {r && <>
-          <h2 className="largetitle" style={{ fontSize: 28 }}>{r.merchant}</h2>
-          <p className="subtitle">{t("receipt.filedFrom", { when: String(r.purchased_at).replace("T", " "), source: SOURCES.includes(String(r.source_type)) ? t(`receipt.source.${r.source_type}`) : t("receipt.aReceipt") })}</p>
+          <h1 className="largetitle" style={{ fontSize: 28 }}>{r.merchant}</h1>
+          <p className="subtitle">{t("receipt.filedFrom", { when: fmtWeekday(String(r.purchased_at)), source: SOURCES.includes(String(r.source_type)) ? t(`receipt.source.${r.source_type}`) : t("receipt.aReceipt") })}</p>
           <div className="group">
             {r.lines.length ? r.lines.map((ln, i) => {
               if (ln.line_type === "return") return <Row key={i} name={ln.name} sub={t("receipt.returned")} right={signed(ln.line_total)} />;

@@ -79,7 +79,7 @@ export function StoresMine() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("storesMine.myStores")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("storesMine.myStores")}</h1>
       {searchable && (
         <div className="lv-tools">
           <input type="search" id="sm-search" className="lv-search" autoComplete="off" value={query}

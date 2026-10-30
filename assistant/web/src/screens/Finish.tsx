@@ -7,6 +7,7 @@ import { post } from "../lib/api";
 import { Q, qLoadSessions, qProgress, qSetState, type Session } from "./hunt/model";
 import { afterFinish } from "./haul/state";
 import { useTranslation } from "../i18n";
+import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-finish and quest.js openFinish,
  * qCloseHunt, qAttach, qSample, closeToScore. Every way out (snap,
@@ -97,14 +98,14 @@ export function Finish() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("finish.backToTheHunt")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("finish.addYourReceipt")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("finish.addYourReceipt")}</h1>
       <p className="muted" id="fin-sub">{sub}</p>
       <p className="muted">{t("finish.aryaReadsItemsAndThe")}</p>
       <div className="group pad">
         <input type="file" id="fin-photo" accept="image/*" aria-label={t("finish.receiptPhoto")} hidden onChange={onPhoto} />
-        <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="fin-photo">{t("finish.snapTheReceipt")}</label></p>
+        <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="fin-photo" {...pickerProps("fin-photo")}>{t("finish.snapTheReceipt")}</label></p>
         <input type="file" id="fin-ereceipt" accept="application/pdf,image/*" aria-label={t("finish.eReceiptPdfOrScreenshot")} hidden onChange={onEreceipt} />
-        <p className="nomargin real-only" style={{ marginTop: 10 }} hidden={demo}><label className="btn wide" htmlFor="fin-ereceipt">{t("finish.addAnEReceiptPdf")}</label></p>
+        <p className="nomargin real-only" style={{ marginTop: 10 }} hidden={demo}><label className="btn wide" htmlFor="fin-ereceipt" {...pickerProps("fin-ereceipt")}>{t("finish.addAnEReceiptPdf")}</label></p>
         <p className="nomargin demo-only" hidden={!demo} style={{ marginTop: 10 }}><button id="fin-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("finish.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
         <p id="fin-status" className="muted nomargin">{status}</p>
       </div>

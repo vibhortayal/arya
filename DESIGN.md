@@ -28,7 +28,7 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
 - Colors: greyscale is structure. --bg #EFEFF1; --panel/--group #FFFFFF;
   --ink/--label #1B1B1E; --ink2/--secondary #55555C; --ink3 #8B8B93;
   --line #D9D9DE; --fill #F4F4F6.
-- Accent: one orange (--acc #E4572E, soft #FDEEE8). It marks the active
+- Accent: one orange (--acc #C2410C, soft #FDEEE8). It marks the active
   tab, primary pills, links and the game. The only other saturated color
   is danger (#c81e1e) for returns and recording state.
 - Shape: groups radius 14, inputs radius 10, buttons and chips are

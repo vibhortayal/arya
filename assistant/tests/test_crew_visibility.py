@@ -28,7 +28,7 @@ class CrewVisibility(unittest.TestCase):
         # owner-approved 2026-10-29): Crew, Race and Fastest Hands wait
         # for real cross-account play; their screens keep their routes.
         crew = frontend.src("screens/Quest.tsx")
-        self.assertIn(">Your trips</h2>", crew)
+        self.assertIn(">Your trips</h1>", crew)
         for gone in (">Friends</h3>", 'data-qnav="view-race"', 'data-qnav="view-friends"', 'id="comm-board"'):
             self.assertNotIn(gone, crew)
         self.assertIn('nav.back("community")', crew)

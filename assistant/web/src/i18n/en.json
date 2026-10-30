@@ -302,6 +302,7 @@
     },
     "typeFirst": "Type a question first.",
     "couldNotAnswer": "Arya couldn't answer that. Try again in a moment.",
+    "tryAgain": "Try again",
     "voiceEmpty": "That did not come through. Try again, or type it.",
     "listening": "Listening… tap the mic again to send.",
     "mapStoreReply": "Happy to. In Quest, tap Map my store and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures."
@@ -640,6 +641,8 @@
     "lists": "Lists",
     "sharedWith": "{{name}} · shared with {{value}}",
     "loadingYourList": "Loading your list…",
+    "couldNotLoad": "Couldn't load your lists.",
+    "retry": "Retry",
     "newList": "New list",
     "listName": "List name",
     "listOptions": "List options",
@@ -1282,6 +1285,8 @@
     "connectAnAiAgent": "Use Arya in another AI app",
     "useAryaFromYourOwn": "Add to your list from the AI app you already use",
     "builtOnMetaModels": "Built on Meta models",
+    "preferences": "Preferences",
+    "preferencesSub": "Prices show in this currency. Arya answers in this language.",
     "exportMyData": "Export my data",
     "everythingAryaHoldsForYou": "Everything Arya holds for you, as one file",
     "deleteMyAccount": "Delete my account",
@@ -1576,6 +1581,7 @@
     "mine": "Mine",
     "noLinesRead": "no lines read",
     "returns": " · returns −{{amount}}",
+    "returnOnly": "Return · −{{amount}}",
     "byYou": " · you",
     "itIsName": "It is {{cn}}",
     "researchedLabel": "Arya's guess:",
@@ -2100,6 +2106,7 @@
     }
   },
   "tabs": {
+    "label": "Main",
     "today": "Today",
     "lists": "Lists",
     "ask": "Ask",

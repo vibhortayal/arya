@@ -24,8 +24,8 @@ export default async function (page, base) {
     if (!(await page.textContent("#view-score .hl-btns")).includes(t)) throw new Error("haul row missing " + t);
   await page.waitForSelector('#view-score [data-hl="review"]:not([hidden])');
   await page.click('#view-score [data-hl="review"]');
-  await page.waitForSelector("#view-rreview #rv-review h2");
-  if ((await page.textContent("#rv-review h2")) !== "Check your receipt") throw new Error("review title");
+  await page.waitForSelector("#view-rreview #rv-review h1");
+  if ((await page.textContent("#rv-review h1")) !== "Check your receipt") throw new Error("review title");
   if (!(await page.textContent("#rv-review")).includes("Arya read")) throw new Error("review lines");
   // A fix chip toggles and offers Undo.
   const chip = await page.$("#rv-review .rv-fix");

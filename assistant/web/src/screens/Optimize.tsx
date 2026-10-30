@@ -35,7 +35,7 @@ export function Optimize() {
     return (
       <>
         <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-        <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
+        <h1 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h1>
         <div className="group"><Empty>{t("optimize.nothingToCheckYet")}</Empty></div>
       </>
     );
@@ -105,7 +105,7 @@ export function Optimize() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("optimize.checkTheList")}</h1>
       <p id="opt-summary" className="subtitle">{parts.join(" · ")}</p>
       <div id="opt-body">
         {rep.merged.length > 0 && (

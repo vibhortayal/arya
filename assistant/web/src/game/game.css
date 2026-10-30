@@ -2,7 +2,7 @@
  * app's tokens (styles.css), with fallbacks so the lab runs alone.
  * Primary actions sit in the bottom 40% of the screen, 56px tall. */
 .qg {
-  --q-acc: var(--acc, #E4572E); --q-acc-soft: var(--acc-soft, #FDEEE8); --q-ink: var(--ink, #1B1B1E); --q-ink2: var(--ink2, #55555C);
+  --q-acc: var(--acc, #C2410C); --q-acc-soft: var(--acc-soft, #FDEEE8); --q-ink: var(--ink, #1B1B1E); --q-ink2: var(--ink2, #55555C);
   --q-ink3: var(--ink3, #8B8B93); --q-line: var(--line2, #ECECEF); --q-bg: #F6F2EA; --q-panel: var(--panel, #fff); --q-gold: #FFC83D;
   --q-blue: #1D5FAF; --q-green: #2F8F4E; --q-r: 18px;
   position: relative; height: 100%; min-height: 100dvh; background: var(--q-bg); color: var(--q-ink);
@@ -391,7 +391,7 @@
 .qg-choice small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--q-ink2); line-height: 1.3; }
 .qg-choice.on { box-shadow: inset 0 0 0 3px var(--q-acc); background: var(--q-acc-soft); }
 .qg-swatch { display: block; height: 26px; border-radius: 8px; margin-bottom: 8px; }
-.look-market .qg-swatch { background: linear-gradient(90deg, #F4EBD6 0 40%, #C99A62 40% 70%, #E4572E 70%); }
+.look-market .qg-swatch { background: linear-gradient(90deg, #F4EBD6 0 40%, #C99A62 40% 70%, #C2410C 70%); }
 .look-modern .qg-swatch { background: linear-gradient(90deg, #FFFFFF 0 40%, #E8EBEE 40% 70%, #4A8FE0 70%); box-shadow: inset 0 0 0 1px #E1E4E8; }
 .look-farm .qg-swatch { background: linear-gradient(90deg, #E9DCC2 0 40%, #B5452F 40% 70%, #4FB23B 70%); }
 .look-neon .qg-swatch { background: linear-gradient(90deg, #231C38 0 40%, #FF4FD8 40% 70%, #47D7FF 70%); }

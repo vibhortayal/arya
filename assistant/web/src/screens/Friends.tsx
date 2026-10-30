@@ -55,7 +55,7 @@ export function Friends() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("community"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.friends")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.friends")}</h1>
       <div className="group pad">
         <label className="field">{t("friends.addByHandle")}<input type="text" id="fr-handle" placeholder={t("friends.handle")} autoComplete="off" value={handle} onChange={e => setHandle(e.target.value)} />
         </label>

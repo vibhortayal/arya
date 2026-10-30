@@ -7,6 +7,7 @@ import { useNav } from "../app/nav";
 import { afterFinish } from "../screens/haul/state";
 import { qLoadSessions, type Session } from "../screens/hunt/model";
 import { useTranslation } from "../i18n";
+import { pickerProps } from "./picker";
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
  * attaches this trip's receipt to a finished hunt. Moved out of
@@ -80,7 +81,7 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
       <div className="row"><span className="name">{t("common.addReceipt")}</span><button id="ar-close" className="btn" type="button" onClick={close}>{t("common.notNow")}</button></div>
       <p className="muted" id="ar-for">{target ? t("addReceiptSheet.forTarget", { label: target.label, state: t("common.finishedReceiptMissing") }) : ""}</p>
       <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label={t("addReceiptSheet.thisTripSReceiptPhoto")} hidden onChange={photo} />
-      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo">{t("addReceiptSheet.snapTheReceiptPhoto")}</label></p>
+      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo" {...pickerProps("ar-photo")}>{t("addReceiptSheet.snapTheReceiptPhoto")}</label></p>
       <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("addReceiptSheet.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
       <p id="ar-status" className="muted nomargin">{status}</p>
       <p className="muted nomargin">{t("addReceiptSheet.theHuntStaysClosedAttaching")}</p>

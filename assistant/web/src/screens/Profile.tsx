@@ -16,6 +16,7 @@ import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
 import { characterManifest } from "../lib/characters";
 import { languageToast } from "../lib/language";
 import { t, useTranslation } from "../i18n";
+import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -120,7 +121,7 @@ export function Profile() {
   return (
     <>
       {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>}
-      <h2 className="largetitle">{t("settings.settings")}</h2>
+      <h1 className="largetitle">{t("settings.settings")}</h1>
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
       {town ? <DirectorPanel /> : null}
       <GroupSection />
@@ -157,14 +158,15 @@ export function Profile() {
       <h3 className="sect">{t("settings.account")}</h3>
       <div className="group" id="profile-account">
         <Row name={t("settings.signedInAs")} right={demo ? "demo" : user || ""} />
-        <div className="row"><div className="grow"><span className="name">{t("settings.currency")}</span><span className="sub">{t("settings.howPricesShowAryaDoes")}</span></div>
-          <select id="pf-currency" className="curpick" aria-label={t("settings.currency")} value={currency.code} onChange={ev => pickCurrency(ev.target.value)}>
-            {["USD", "EUR", "GBP", "INR", "CAD", "AUD"].map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
-          </select></div>
-        <div className="row"><div className="grow"><span className="name">{t("settings.language")}</span><span className="sub">{t("settings.whatAryaAnswersInAuto")}</span></div>
-          <select id="pf-language" className="curpick" aria-label={t("settings.language")} value={language} onChange={ev => pickLanguage(ev.target.value)}>
-            {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-          </select></div>
+        <div className="row prefrow" id="pf-prefs"><div className="grow"><span className="name">{t("settings.preferences")}</span><span className="sub">{t("settings.preferencesSub")}</span></div>
+          <div className="prefpicks">
+            <select id="pf-currency" className="curpick" aria-label={t("settings.currency")} value={currency.code} onChange={ev => pickCurrency(ev.target.value)}>
+              {["USD", "EUR", "GBP", "INR", "CAD", "AUD"].map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+            </select>
+            <select id="pf-language" className="curpick" aria-label={t("settings.language")} value={language} onChange={ev => pickLanguage(ev.target.value)}>
+              {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+          </div></div>
         <RegistrationRow />
       </div>
       <div className="group">
@@ -283,7 +285,7 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
           <div className="avrow"><input type="text" id="av-prompt" maxLength={200} placeholder={t("settings.describeItAFoxWith")} aria-label={t("settings.describeYourAvatar")}
             autoComplete="off" value={prompt} onChange={e => setPrompt(e.target.value)} />
             <button id="av-make" className="btn compact primary" type="button" disabled={making} onClick={make}>{t("settings.make")}</button></div>
-          <p className="nomargin avalt"><label className="linkbtn" htmlFor="av-photo">{t("settings.orUseMyPhoto")}</label>
+          <p className="nomargin avalt"><label className="linkbtn" htmlFor="av-photo" {...pickerProps("av-photo")}>{t("settings.orUseMyPhoto")}</label>
             <input type="file" id="av-photo" accept="image/*" hidden onChange={photo} /><span className="muted">{" "}{t("settings.drawnAsACartoonThen")}</span></p>
           <div id="av-candidate" className="avcand" hidden={!cand}>
             <img id="av-cand-img" className="candimg" alt={t("settings.yourNewAvatar")} src={cand || undefined} />

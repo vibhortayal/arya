@@ -8,6 +8,7 @@ import { clearOnSignOut, useSession } from "../app/session";
 import { asset, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
 import { t, useTranslation } from "../i18n";
+import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -1153,7 +1154,7 @@ export function NewList() {
   return (
     <>
       <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h1>
       <p className="muted" id="nl-sub">{t("newList.intro")}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>
       <div className="group pad packcomposer">
@@ -1163,7 +1164,7 @@ export function NewList() {
           onKeyDown={ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); nlAdd(); } }} />
         <p className="packaddrow">
           <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? t("common.voice.stopTranscribe") : t("common.voice.record")}</button>
-          <label className="btn grow" htmlFor="nl-photo" style={{ textAlign: "center" }}>{t("newList.photo")}</label>
+          <label className="btn grow" htmlFor="nl-photo" {...pickerProps("nl-photo")} style={{ textAlign: "center" }}>{t("newList.photo")}</label>
           <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>{t("common.add")}</button>
           <input type="file" id="nl-photo" accept="image/*" hidden onChange={photo} />
         </p>

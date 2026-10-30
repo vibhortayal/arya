@@ -45,7 +45,7 @@ export function Section({ title, action, children }: { title: ReactNode; action?
 }
 
 export function LargeTitle({ children }: { children: ReactNode }) {
-  return <h2 className="largetitle">{children}</h2>;
+  return <h1 className="largetitle">{children}</h1>;
 }
 
 /* pwa/app.js empty(text). */

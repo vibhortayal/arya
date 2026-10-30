@@ -23,7 +23,7 @@ const CHAINS: [string, string][] = [
   ["kroger", "@kroger"], ["h mart", "@hmartofficial"],
   ["aldi", "@aldiusa"], ["sprouts", "@sproutsfarmersmarket"],
 ];
-const CREAM = "#FBF5E6", INK = "#1B1B1E", ACC = "#E4572E", SOFT = "#FDEEE8", GREY = "#8B8B93";
+const CREAM = "#FBF5E6", INK = "#1B1B1E", ACC = "#C2410C", SOFT = "#FDEEE8", GREY = "#8B8B93";
 
 export function chainTag(store?: string) {
   const n = (store || "").toLowerCase();

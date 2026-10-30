@@ -328,7 +328,7 @@ export function Today() {
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <div className="titlerow"><h2 className="largetitle">{t("today.today")}</h2></div>
+      <div className="titlerow"><h1 className="largetitle">{t("today.today")}</h1></div>
       {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
       <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
       {town ? <TownFeed town={town} /> : null}

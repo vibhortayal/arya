@@ -5,8 +5,9 @@ import { useToast } from "../ui/Toast";
 import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { fmtDate, fmtShort, money } from "../lib/format";
+import { fmtDate, fmtShort, fmtWeekday, money } from "../lib/format";
 import { useTranslation } from "../i18n";
+import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-receipts and app.js renderReceipts,
  * renderScan (review queue), renderCurator, fileReceiptPhoto and the
@@ -162,7 +163,7 @@ export function Receipts() {
   return (
     <>
       <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h2>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h1>
       <p id="rc-count" className="subtitle">{count}</p>
       <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>
       <div id="review" className="group eyegroup" hidden={!hasReview}>
@@ -242,8 +243,9 @@ export function Receipts() {
         })}
       </div>
       <div className="group pad">
-        <label className="field">{t("receipts.addAReceiptPhotoOr")}<input type="file" id="rc-photo" accept="application/pdf,image/*" multiple onChange={onFiles} />
-        </label>
+        <label className="btn primary wide receiptbtn" htmlFor="rc-photo" {...pickerProps("rc-photo")}>{t("common.addReceipt")}</label>
+        <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>
+        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden onChange={onFiles} />
         <p className="muted nomargin" id="rc-photo-status">{status}</p>
         <div id="rc-photo-preview">
           {preview && (
@@ -279,10 +281,10 @@ export function Receipts() {
             <button key={r.receipt_id} className="sessrow" data-receipt={r.receipt_id} type="button"
               onClick={() => nav.show("receipt", { receipt_id: r.receipt_id, id: r.receipt_id })}>
               <span className="grow"><span className="name">{r.merchant}</span>
-                <span className="sub">{fmtShort(String(r.purchased_at).slice(0, 10))} · {r.items ? t("common.itemCount", { count: r.items }) : t("receipts.noLinesRead")}
-                  {r.returns_total ? t("receipts.returns", { amount: money(r.returns_total, currency) }) : ""}
+                <span className="sub">{fmtWeekday(String(r.purchased_at).slice(0, 10))} · {r.items ? t("common.itemCount", { count: r.items }) : r.returns_total ? t("receipts.returnOnly", { amount: money(r.returns_total, currency) }) : t("receipts.noLinesRead")}
+                  {r.items && r.returns_total ? t("receipts.returns", { amount: money(r.returns_total, currency) }) : ""}
                   {r.by ? (r.mine ? t("receipts.byYou") : <> · <span className="byp">{cap(r.by)}</span></>) : ""}</span></span>
-              <span className="money">{r.totals_reconcile ? "✓ " : ""}{r.total != null ? money(r.total, currency) : ""}</span>
+              <span className="money">{r.totals_reconcile && !(r.returns_total && !r.items) ? "✓ " : ""}{r.total != null && !(r.returns_total && !r.items) ? money(r.total, currency) : ""}</span>
             </button>
           ))}
         </>}

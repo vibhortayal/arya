@@ -15,7 +15,7 @@ export default async function (page, base) {
     return;
   }
   await page.evaluate(i => window.__aryaShow("receipt", { receipt_id: i, id: i }), id);
-  await page.waitForSelector("#view-receipt #rc-body h2.largetitle");
+  await page.waitForSelector("#view-receipt #rc-body .largetitle");
   await page.waitForSelector("#rc-del-btn");
   const txt = await page.textContent("#rc-body");
   if (!txt.includes("Total")) throw new Error("Total row missing");

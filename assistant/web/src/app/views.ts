@@ -13,3 +13,11 @@ export type ViewParams = Record<string, unknown>;
 
 /* Settings (owner, 2026-10-29) is the Profile page as a fifth tab. */
 export const TABS: ViewId[] = ["home", "list", "chat", "community", "profile"];
+
+/* A pushed page keeps its parent tab lit (UI/UX pass, issue 10). */
+export const PARENT_TAB: Partial<Record<ViewId, ViewId>> = {
+  receipts: "profile", receipt: "profile", analysis: "profile", powers: "profile", about: "profile", feedback: "profile",
+  muse: "profile", "stores-mine": "profile", "stores-find": "profile", "stores-add": "profile", "group-join": "profile",
+  item: "list", newlist: "list", store: "list", optimize: "list",
+  "quest-progress": "community", trips: "community", mapper: "community", album: "community", friends: "community", race: "community",
+};

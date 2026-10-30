@@ -15,7 +15,7 @@ export default async function (page, base) {
   const demoGet = page.waitForResponse(r => r.url().endsWith("/auth/token") && r.request().method() === "GET");
   await page.click("#btn-muse");
   await page.waitForSelector("#view-muse");
-  if ((await page.textContent("#view-muse h2")) !== "Use Arya in another AI app") throw new Error("title");
+  if ((await page.textContent("#view-muse h1")) !== "Use Arya in another AI app") throw new Error("title");
   if ((await demoGet).status() !== 401) throw new Error("demo should not read a token");
   await page.waitForTimeout(100);
   if ((await page.$$("#profile-token-row > *")).length) throw new Error("demo row should stay empty");

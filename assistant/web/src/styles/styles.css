@@ -11,7 +11,7 @@
      Weights 400 / 600 / 700; 800 only for big numbers and kickers. */
   --fs-title: 34px; --fs-card: 22px; --fs-row: 17px; --fs-body: 15px; --fs-label: 13px; --fs-tag: 12px; --fs-tab: 11px;
   /* The wireframe tokens, verbatim. */
-  --acc: #E4572E;
+  --acc: #C2410C;
   --acc-soft: #FDEEE8;
   --ink: #1B1B1E;
   --ink2: #55555C;
@@ -46,12 +46,13 @@ body {
   font-size: 17px; line-height: 1.45;
   padding: 14px 16px calc(96px + env(safe-area-inset-bottom));
 }
-::selection { background: rgba(228, 87, 46, 0.28); }
+::selection { background: rgba(194, 65, 12, 0.28); }
 a { color: var(--accent-text); text-decoration: none; }
 button { font: inherit; cursor: pointer; color: inherit; }
 button:disabled { opacity: 0.45; cursor: default; }
 [hidden] { display: none !important; }
 .btn.primary:disabled { background: var(--fill); color: var(--secondary); opacity: 1; }
+.btn.primary.fr-go:disabled { background: var(--accent); color: #fff; opacity: .5; }
 :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 
 /* No top bar (owner, 2026-10-28): the wordmark cost a row of
@@ -111,7 +112,7 @@ a.name { color: var(--label); }
   font-weight: 600; font-size: 17px; transition: background 0.15s ease, transform 0.1s ease;
 }
 .btn.primary { background: var(--accent); color: #fff; }
-.linkbtn { background: none; border: none; padding: 8px 0; min-height: 44px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
+.linkbtn { flex-shrink: 0; background: none; border: none; padding: 8px 0; min-height: 44px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
 .btn.primary:active { background: var(--accent-press); }
 .btn.secondary { background: var(--fill); color: var(--label); }
 .btn.danger { background: var(--fill); color: var(--danger); }
@@ -136,6 +137,8 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
   border: 2px solid var(--tertiary); background: transparent; padding: 0;
   display: grid; place-items: center; color: #fff;
 }
+.listrow .check { position: relative; }
+.listrow .check::before { content: ""; position: absolute; inset: -7px; }
 .listrow .check svg { width: 16px; height: 16px; opacity: 0; }
 .listrow.checked .check { background: var(--accent); border-color: var(--accent); }
 .listrow.checked .check svg { opacity: 1; }
@@ -186,7 +189,7 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 #tabs button {
   background: transparent; border: none; color: var(--secondary);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 11px; font-weight: 600; padding: 4px 6px; min-height: 48px; min-width: 60px;
+  font-size: 11px; font-weight: 600; padding: 4px 2px; min-height: 48px; min-width: 0; flex: 1;
 }
 #tabs button svg { width: 25px; height: 25px; }
 #tabs button.active { color: var(--accent-text); }
@@ -620,7 +623,7 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 .grabbtn {
   min-height: 60px; font-size: 22px; font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  box-shadow: 0 8px 22px rgba(228, 87, 46, .35);
+  box-shadow: 0 8px 22px rgba(194, 65, 12, .35);
 }
 .donenote {
   margin: 12px 0 0; padding: 12px 14px; border-radius: 14px;
@@ -629,7 +632,7 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 /* The one list: rows never move. A collected row keeps its place and
    swaps GRAB for Put back in the same button box. */
 .huntrow { gap: 10px; }
-.huntrow.next { background: var(--acc-soft, rgba(228, 87, 46, 0.08)); }
+.huntrow.next { background: var(--acc-soft, rgba(194, 65, 12, 0.08)); }
 .huntrow.got .name { color: var(--secondary); text-decoration: line-through; }
 .hl-n {
   width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center;
@@ -639,7 +642,7 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 .rowact { flex: none; width: 112px; min-height: 44px; padding: 0 10px; justify-content: center; }
 /* The Finish screen's receipt button carries the wireframes'
    softer accent shadow. */
-.receiptbtn { box-shadow: 0 8px 22px rgba(228, 87, 46, .32); }
+.receiptbtn { box-shadow: 0 8px 22px rgba(194, 65, 12, .32); }
 .demotag {
   font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
   background: var(--fill); color: var(--secondary); border-radius: 6px; padding: 2px 6px; margin-left: 6px;
@@ -695,7 +698,7 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 #scan-boxes { position: absolute; inset: 0; }
 .scanpop {
   position: absolute; border: 3px solid var(--accent); border-radius: 10px;
-  background: rgba(228, 87, 46, 0.10); padding: 0; cursor: pointer;
+  background: rgba(194, 65, 12, 0.10); padding: 0; cursor: pointer;
 }
 .scanpop.region { border-style: dashed; }
 .scanpop .poplabel {
@@ -958,7 +961,6 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .howto span { font-size: 15px; color: var(--secondary); }
 #btn-howto { font-weight: 800; font-size: 17px; }
 .scenecap { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 6px 2px 10px; font-size: 13px; }
-.linkbtn { flex-shrink: 0; border: 0; background: none; padding: 6px 0; color: var(--accent-text); font-weight: 600; font-size: 15px; min-height: 32px; }
 .hunt-tools .toolspacer { flex: 1 1 0; }
 .hunt-tools .hudbtn { flex-shrink: 0; }
 .findrow { margin-top: 8px; }
@@ -1259,6 +1261,10 @@ body.hunting #view-hunt.full .askbar {
 .optrow.kept .opt-to { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--tertiary); font-weight: 600; }
 .opt-undo { background: none; border: 0; padding: 6px 0; min-height: 40px; font: inherit; font-weight: 600; color: var(--accent-text); cursor: pointer; }
 
+.prefrow { flex-wrap: wrap; }
+.prefrow .grow { flex-basis: 100%; }
+.prefpicks { display: flex; gap: 8px; width: 100%; }
+.prefpicks .curpick { flex: 1; min-width: 0; }
 .curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 17px; }
 .notgrocery { display: block; }
 .notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
@@ -1377,7 +1383,7 @@ body.hunting #view-hunt.full .askbar {
   padding: 12px 0; min-height: 44px; font: inherit; font-size: 15px; font-weight: 600; color: var(--accent-text); cursor: pointer; }
 .backlink.linkbtn { font-size: 17px; font-weight: 600; padding: 0; }
 .lhead { display: flex; align-items: center; gap: 8px; }
-.lhead .largetitle { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.lhead .largetitle { flex: 1; min-width: 0; margin: 0; overflow-wrap: break-word; }
 .lhead .linkbtn { padding: 8px 4px; }
 .lhead .iconbtn { color: var(--label); background: var(--fill2); }
 .lhead .iconbtn svg { width: 24px; height: 24px; }
@@ -1677,7 +1683,7 @@ button.gmember { cursor: pointer; }
 
 /* First trip (#207, owner 2026-10-30): only the next step is lit; the
  * card waits when the trip has not happened yet. */
-.fr-steps li.later { opacity: .55; }
+.fr-steps li.later b { color: var(--ink2); }
 .fr-steps li.next .fr-dot { border-color: var(--accent); color: var(--accent); }
 .gs-wait { margin: 10px 0 0; font-size: 14px; color: var(--secondary); background: var(--fill); border-radius: 10px; padding: 10px 12px; }
 
@@ -1699,3 +1705,13 @@ button.gmember { cursor: pointer; }
 .pz li.skip { opacity: .5; }
 .pz-undo { border: 0; background: none; color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer; }
 .pz-foot { margin: 8px 0 0; }
+
+/* UI/UX pass (2026-10-30): text links on a row are ink, Delete is danger. */
+a.navrow, .ed-links .navrow { color: var(--ink); }
+#btn-del-account { color: var(--danger); }
+
+/* Loading skeleton in the grouped-list shape (UI/UX pass, issue 8). */
+.skel { display: grid; gap: 10px; }
+.skel i { display: block; height: 72px; border-radius: var(--radius); background: var(--fill2); }
+@media (prefers-reduced-motion: no-preference) { .skel i { animation: skelpulse 1.4s ease-in-out infinite; } }
+@keyframes skelpulse { 50% { opacity: .55; } }
