@@ -17,6 +17,44 @@ _demo_door_hits = {}
 _demo_feedback_hits = {}
 
 
+# API-token calls per account (rolling hour): shared by the agent
+# connector, the Lists API and every other route a token can reach.
+_token_hits = {}
+
+# What a token (agent or script) may not do on its own, whatever else
+# it can reach: calls that spend model credits in bulk, and changes
+# that touch other people or the account's privacy. The app itself
+# (a signed-in cookie) is not affected. ARYA_TOKEN_GUARDS=off lifts it.
+_TOKEN_BLOCKED = (
+    # (path prefix, methods that are blocked; None = every method)
+    ("/api/chat", None), ("/api/judge/", None), ("/api/curator/", None),
+    ("/api/review/suggest", None), ("/api/list/judge", None),
+    ("/api/list/from-photo", None), ("/api/list/suggest/guess", None),
+    ("/api/transcribe", None), ("/api/quest/avatar/generate", None),
+    ("/api/quest/avatar/photo", None), ("/api/storemap/", ("POST",)),
+    ("/api/expiry/read", None), ("/api/quest/scan-shelf", None),
+    ("/api/quest/haul-photo", None), ("/decode/", None), ("/eyes/photo", None),
+    ("/api/group", None), ("/api/quest/friends", None),
+    ("/api/feedback", None), ("/api/demo/feedback", None),
+    ("/api/push/", None), ("/api/settings", ("POST",)),
+    ("/api/powers/share", None), ("/api/account/export", None),
+    ("/api/quest/receipts/", ("POST",)),
+)
+
+
+def _token_blocked(path, method):
+    if os.environ.get("ARYA_TOKEN_GUARDS", "").lower() == "off":
+        return False
+    return any(path.startswith(p) and (m is None or method in m)
+               for p, m in _TOKEN_BLOCKED)
+
+
+def _retry_after(bucket, key):
+    import time as _t
+    oldest = min(bucket.get(key) or [_t.time()])
+    return max(1, int(3600 - (_t.time() - oldest)))
+
+
 def _demo_rate(bucket, key, limit_env, default):
     import time as _t
     limit = int(os.environ.get(limit_env, str(default)))
@@ -78,6 +116,7 @@ def _demo_sandbox(token):
 async def require_login(request, call_next):
     path = request.url.path
     protected = path.startswith(("/api/", "/import", "/decode", "/eyes"))
+    via_token = False
     # The Lists API (/api/v1) answers with a bearer token only, and its
     # schema is public.
     open_lists = path == "/api/v1" or path.startswith("/api/v1/")
@@ -94,6 +133,7 @@ async def require_login(request, call_next):
             user = auth.api_token_user(authz[7:])
             if user:
                 info = {"user": user, "demo": False}
+                via_token = True
         if open_lists and not info:
             return JSONResponse(
                 {"error": {"code": "unauthorized",
@@ -104,6 +144,18 @@ async def require_login(request, call_next):
             info = auth.session_info(cookie)
         if not info:
             return JSONResponse({"detail": "login required"}, status_code=401)
+        if via_token and not path.startswith(("/api/mcp", "/api/v1")):
+            # /api/mcp and /api/v1 count their own calls. Every other
+            # route a token reaches shares the same hourly allowance.
+            if _token_blocked(path, request.method):
+                return JSONResponse(
+                    {"detail": "an API token cannot do this; use the app"},
+                    status_code=403)
+            if not _demo_rate(_token_hits, info["user"], "ARYA_MCP_RATE", 600):
+                return JSONResponse(
+                    {"detail": "too many calls this hour; try again later"},
+                    status_code=429,
+                    headers={"Retry-After": str(_retry_after(_token_hits, info["user"]))})
         if info["demo"]:
             if request.method != "GET":
                 if path.startswith(_DEMO_CLOSED):
