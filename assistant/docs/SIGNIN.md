@@ -61,3 +61,19 @@ Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
 <div style="border-top:1px solid #D9D9DE;margin-top:24px;padding-top:14px;font-size:12px;line-height:1.5;color:#8B8B93">Sent by Arya, the grocery list that learns your store.<br>This address is not monitored. For help, write to support@teamnightshift.org.</div>
 </td></tr></table>
    ```
+
+## Google's screen names Arya (own Google sign-in, flagged)
+
+With only the Supabase Google provider, Google's screen reads "continue to
+<project>.supabase.co". Setting `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`
+(VM `.env`) makes `/auth/google` use Arya's own authorization-code flow instead
+(`api/google_oauth.py`, callback `/auth/google/callback`). Unset = the Supabase flow, unchanged.
+Email codes and the waitlist are untouched.
+
+Google Cloud setup (project "Arya", Google Auth Platform):
+1. Branding: app name Arya, support email, authorized domain `teamnightshift.org`, home page
+   `https://arya.teamnightshift.org`, privacy policy on that domain. Publish to production
+   (only `openid email` scopes, so no sensitive-scope review; logo/name verification is separate).
+2. Clients: create an OAuth client, type Web application, authorized redirect URI
+   `https://arya.teamnightshift.org/auth/google/callback`.
+3. Put the client ID and secret in the VM `.env`, then `docker compose up -d`.

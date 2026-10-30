@@ -1,11 +1,13 @@
 """Sign-in, sessions, API tokens and account deletion."""
 import os
+import secrets
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from api import auth, supabase_auth
+from api import auth, google_oauth, supabase_auth
 from api.demo_guard import _demo_auth_hits, _demo_rate
 from api.deps import (_client_ip, _code_hits, _is_owner, _json_obj, _login_fails, _prune, _register_hits,
                       _is_waitlist_admin, _registration_open, _set_registration_open, _set_session_cookie, _verify_hits,
@@ -274,7 +276,40 @@ def auth_google(req: Request):
     # Behind Caddy the request reads as http, so the return address comes
     # from the configured public URL, as in the waitlist email.
     base = (os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url)).rstrip("/")
+    if google_oauth.configured():
+        state = google_oauth.new_state()
+        resp = RedirectResponse(google_oauth.start_url(base + "/auth/google/callback", state))
+        resp.set_cookie("arya_goauth", state, max_age=600, httponly=True, samesite="lax",
+                        secure=base.startswith("https"))
+        return resp
     return RedirectResponse(supabase_auth.google_url(base + "/auth/callback"))
+
+
+@router.get("/auth/google/callback")
+async def auth_google_callback(req: Request):
+    """Arya's own Google flow (GOOGLE_OAUTH_CLIENT_ID/SECRET set): Google
+    sends the code here, the server exchanges it, then signs in as for
+    the Supabase paths and lands on the same pages."""
+    _need_supabase()
+    if not google_oauth.configured():
+        raise HTTPException(404, "Google sign-in is not set up")
+    _email_guard(req, _verify_hits, 10)
+    state = req.cookies.get("arya_goauth") or ""
+    code = req.query_params.get("code") or ""
+    if not code or not state or not secrets.compare_digest(state, req.query_params.get("state") or ""):
+        return RedirectResponse("/?signin=failed")
+    base = (os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url)).rstrip("/")
+    try:
+        email = await run_in_threadpool(google_oauth.email_for_code, code, base + "/auth/google/callback")
+    except google_oauth.GoogleError:
+        return RedirectResponse("/?signin=failed")
+    login = _federated_login(email)
+    if login.status_code == 403:
+        return RedirectResponse("/auth/callback#notinvited=" + quote(email, safe=""))
+    out = RedirectResponse("/", status_code=303)
+    out.headers.append("set-cookie", login.headers["set-cookie"])
+    out.delete_cookie("arya_goauth")
+    return out
 
 
 @router.get("/auth/callback")
