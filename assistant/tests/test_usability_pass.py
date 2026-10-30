@@ -70,7 +70,7 @@ class TestToday(unittest.TestCase):
 class TestLists(unittest.TestCase):
     def test_start_shopping_skips_the_one_option_sheet(self):
         js = src_raw("screens/Lists.tsx")
-        self.assertIn('onClick={() => (town ? setShopOpen(true) : startHunt())}', js)
+        self.assertIn('onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}', js)
 
     def test_tick_hint(self):
         self.assertIn("Tap the circles to tick items off as you shop", src("screens/Lists.tsx"))

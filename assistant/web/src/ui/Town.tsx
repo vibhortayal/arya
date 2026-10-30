@@ -134,6 +134,13 @@ export function TownItemSheet({ town, itemId, listStores, onClose, onMove }:
 }
 
 /* Start shopping at a store reported closed or in an incident. */
+/* Something about this list's store worth a stop before shopping: it is
+ * closed or has an incident and the town knows where else to go. */
+export function storeTrouble(town: Town, listStores: string[]) {
+  const bad = named(town, listStores).map(n => town.stores[n]).find(s => s.status === "closed" || s.status === "incident" || s.status === "shut");
+  return !!bad && (bad.status === "closed" || bad.status === "incident" || !!town.alternatives[bad.name]);
+}
+
 export function StoreNotice({ town, listStores, onSwitch }: { town: Town; listStores: string[]; onSwitch: (store: string) => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();

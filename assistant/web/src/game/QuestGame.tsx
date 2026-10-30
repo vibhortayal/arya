@@ -22,6 +22,8 @@ export type Screen =
   | { s: "play"; trip: Trip }
   | { s: "finish"; trip: Trip; rewards: Rewards };
 
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
 /* A real trip at a store Arya has not fully mapped: worth offering Map my store. */
 export const needsMap = (t: Trip) => !t.practice && t.layout.kind !== "mapped";
 
@@ -91,13 +93,16 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     const layout = buildLayout({ id: graph.id, name, area: graph.source === "dream" ? "Dream store" : "Your map", kind: "mapped", items, graph });
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, seed: Math.floor(Math.random() * 1e6) }) });
   };
-  /* The list's own store: one of the player's stores by that name, else
-   * the first search hit. null sends the player to the store pick. */
+  /* The list's own store: one of the player's stores by that name ("Costco"
+   * finds "Costco Wholesale"), else the first search hit. null sends the
+   * player to the store pick. */
   const listStore = async (l: ShoppingList | null): Promise<StoreSummary | null> => {
     if (!l?.store) return null;
-    const want = l.store.trim().toLowerCase();
-    const hit = (rows: StoreSummary[]) => rows.find(s => s.name.trim().toLowerCase() === want) || null;
-    return hit(await source.nearbyStores().catch(() => [])) || hit(await source.findStores(l.store).catch(() => []));
+    const want = norm(l.store);
+    if (!want) return null;
+    const hit = (rows: StoreSummary[]) => rows.find(s => norm(s.name) === want) || rows.find(s => norm(s.name).startsWith(want)) || null;
+    const found = await source.findStores(l.store).catch(() => [] as StoreSummary[]);
+    return hit(await source.nearbyStores().catch(() => [])) || hit(found) || found[0] || null;
   };
   const quest = async () => {
     const st = await listStore(list);
