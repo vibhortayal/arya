@@ -161,7 +161,7 @@ def location_id(store):
 
 def _clean(entry):
     num = str(entry.get("number") or "").strip()
-    out = {"department": (entry.get("description") or "").strip().title()}
+    out = {"department": entry.get("description") or ""}
     # Fresh departments carry a department code, not a walkable aisle.
     if num.isdigit() and 0 < int(num) < 100:
         out["aisle"] = num

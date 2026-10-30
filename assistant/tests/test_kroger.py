@@ -70,7 +70,7 @@ class TestKroger(unittest.TestCase):
         self.on()
         kroger._http = Fake(MILK)
         hint = kroger.aisle_hint(STORE, "milk")
-        self.assertEqual(hint["department"], "Dairy")
+        self.assertEqual(hint["department"], "DAIRY")   # shown as returned
         self.assertNotIn("aisle", hint)
         self.assertEqual((hint["side"], hint["bay"], hint["shelf"]), ("L", "2", "4"))
 
