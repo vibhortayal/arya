@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -13,6 +13,8 @@ import { useToast } from "../ui/Toast";
 import { TownFeed } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
+import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
+import { cardsForFocus, cardsOn, moveCard, removeCard, type CardId, type FocusId } from "./todayCards";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -179,6 +181,9 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
   );
 }
 
+/* How long a finger rests on a card before its menu opens. */
+const HOLD_MS = 500;
+
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -202,17 +207,28 @@ export function Today() {
   const [lowOpen, setLowOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const live = useRef(true);
+  // Customizable Today: the saved card order (null = the default), the
+  // one question, edit mode and the touch-and-hold menu.
+  const [cardsSaved, setCardsSaved] = useState<CardId[] | null>(null);
+  const [focusAsked, setFocusAsked] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [menu, setMenu] = useState<{ id: CardId; top: number } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
 
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
   useCharacters();
 
   const load = useCallback(async () => {
-    let home: Home, st: { get_started?: GetStarted } | null;
+    let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean } | null;
     try {
-      [home, st] = await Promise.all([get("/api/home"), demo ? null : get("/api/settings").catch(() => null)]);
+      [home, st] = await Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
     } catch (e) { showErr(e); return; }
     if (!live.current) return;
-    setGs(st?.get_started ?? null);
+    setGs(demo ? null : st?.get_started ?? null);
+    setCardsSaved(st?.today_cards ?? null);
+    // Asked once; someone who already arranged Today is not asked.
+    setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
     setH(home);
     setAdded(new Set());
     get("/api/quest/news").then(n => live.current && setNews(n.news || []), () => live.current && setNews([]));
@@ -326,140 +342,242 @@ export function Today() {
     catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   }
 
+  /* ---- Customizable Today (todayCards.ts) ---- */
+  const on = cardsOn(cardsSaved);
+  const alertSection = (kind: "report" | "price", id: string, head: string) => {
+    /* Out-of-stock reports and price tips are two kinds of row, so
+     * each gets its own heading (labels audit, 2026-10-29) and is its
+     * own card (customizable Today). */
+    const rows = alertRows.filter(r => r.kind === kind);
+    const capped = capRows(rows, alertsOpen);
+    return <div id={id}>{rows.length > 0 && <><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
+      <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
+        <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
+  };
+  const sections: Record<CardId, ReactNode> = {
+    low: (
+          <div id="today-low">
+            {low.length > 0 && (
+              <>
+                <h3 className="sect">{t("common.runningLow")}</h3>
+                <div className="group">
+                  {lowCap.shown.map(i => (
+                    <div className="row" key={i.item_id}>
+                      <Face name={i.name} />
+                      <div className="grow">
+                        <a href="#" className="name item-link" data-id={i.item_id}
+                          onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
+                        <span className="sub">{cap(i.reason)}</span></div>
+                      {onList.has(i.item_id) || added.has(i.item_id)
+                        ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : t("today.onYourList")}>{t("today.onList")}</span>
+                        : <button className="chip" data-low-add={i.item_id} type="button" aria-label={t("today.addToYourList", { name: i.name })}
+                          disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
+                    </div>
+                  ))}
+                  <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
+                </div>
+              </>
+            )}
+          </div>
+    ),
+    lists: (
+      <>
+        <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
+          <h3 className="sect">{t("today.yourLists")}</h3>
+        </div>
+        <div id="today-lists">
+          {h && !noLists && cards.length > 0 && (
+            <div className="listcards">
+              {listCap.shown.map(c => (
+                <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
+                  <span className="lc-top"><span className="lc-name">{c.name}</span>
+                    <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span><span className="chev" aria-hidden="true">›</span></span>
+                  <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : t("today.nothingToGet")}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {h && !noLists && emptyNames.length > 0 && (
+            <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
+              <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
+              <span className="chev" aria-hidden="true">›</span></button></div>
+          )}
+          {h && listCap.seeAll && (
+            <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
+              <span>{t("today.seeAllLists", { count: lists.length })}</span><span aria-hidden="true">›</span></button>
+          )}
+        </div>
+      </>
+    ),
+    report: alertSection("report", "today-alerts", "today.storeAlerts"),
+    price: alertSection("price", "today-cheaper", "today.cheaperElsewhere"),
+    expiry: (
+          <div id="today-expiry">
+            {h && <UseSoon soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
+              onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
+          </div>
+    ),
+    checks: (
+          <div id="today-checks">
+            {nChecks > 0 && (
+              <div className={"group checkfold" + (checksOpen ? " open" : "")}>
+                <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen) as "true" | "false"}
+                  onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
+                  <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
+                <div className="checkrows" hidden={!checksOpen}>
+                  {checks.map(c => (
+                    <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
+                      <span className="chipset">
+                        <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
+                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
+                  ))}
+                  {seen.map((s, k) => (
+                    <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
+                      <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+    ),
+    patterns: (
+      <>
+        <div id="today-patterns">
+          {lastMonth && months && (
+            <>
+              <h3 className="sect">{t("today.yourPatterns")}</h3>
+              <div className="group">
+                <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                  <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
+                  <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
+                {tip}
+              </div>
+            </>
+          )}
+        </div>
+        <div id="today-tip">{!(lastMonth && months) && tip}</div>
+      </>
+    ),
+    quest: (
+      <>
+        {questNudge && (
+          <div id="today-questnudge" className="fr-card">
+            <p className="fr-h">{t("today.questNudge.title")}</p>
+            <p className="fr-s">{t("today.questNudge.sub")}</p>
+            <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
+            <div className="fr-links">
+              <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
+              <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
+            </div>
+          </div>
+        )}
+        {listItems.length > 0 && !questSeen && (
+          <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+            <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
+            <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
+            <span className="chev">›</span></button>
+        )}
+      </>
+    ),
+  };
+  const has: Record<CardId, boolean> = {
+    low: low.length > 0,
+    lists: !!h && !noLists,
+    report: alertRows.some(r => r.kind === "report"),
+    price: alertRows.some(r => r.kind === "price"),
+    expiry: soon.length > 0 || !!perish,
+    checks: nChecks > 0,
+    patterns: !!(lastMonth && months) || !!tip,
+    quest: !!questNudge || (listItems.length > 0 && !questSeen),
+  };
+  const peek = (id: CardId): string => {
+    if (id === "low") return low.map(i => i.name).slice(0, 3).join(", ");
+    if (id === "lists") return cards.map(c => c.name).join(", ");
+    if (id === "report" || id === "price") return alertRows.find(r => r.kind === id)?.name || "";
+    if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
+    if (id === "checks") return checkLabel;
+    if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
+    return t(`today.cards.${id}.desc`);
+  };
+  function saveCards(next: CardId[] | null, msg?: string) {
+    const prev = Array.isArray(cardsSaved) ? cardsOn(cardsSaved) : null;
+    setCardsSaved(next);
+    setFocusAsked(true);
+    post("/api/settings", { today_cards: next }).catch(e => { setCardsSaved(prev); showErr(e); });
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => saveCards(prev) });
+  }
+  const name = (id: CardId) => t(`today.cards.${id}.name`);
+
+  /* Touch and hold a card for its menu (right-click on a desktop). A
+   * hold that opened the menu swallows the click that follows. */
+  const holdProps = (id: CardId) => ({
+    onPointerDown: (e: ReactPointerEvent) => {
+      if (e.pointerType === "mouse") return;
+      const x = e.clientX, y = e.clientY;
+      clearTimeout(hold.current.timer);
+      hold.current = { x, y, fired: false, timer: window.setTimeout(() => {
+        hold.current.fired = true;
+        navigator.vibrate?.(10);
+        setMenu({ id, top: y + 12 });
+      }, HOLD_MS) };
+    },
+    onPointerMove: (e: ReactPointerEvent) => {
+      if (Math.hypot(e.clientX - hold.current.x, e.clientY - hold.current.y) > 10) clearTimeout(hold.current.timer);
+    },
+    onPointerUp: () => clearTimeout(hold.current.timer),
+    onPointerCancel: () => clearTimeout(hold.current.timer),
+    onClickCapture: (e: ReactMouseEvent) => {
+      if (hold.current.fired) { e.preventDefault(); e.stopPropagation(); hold.current.fired = false; }
+    },
+    onContextMenu: (e: ReactMouseEvent) => { e.preventDefault(); clearTimeout(hold.current.timer); setMenu({ id, top: e.clientY + 12 }); },
+  });
+
+  /* The one question: once, after the first list (not on the demo). */
+  const askShow = !!h && !focusAsked && lists.length > 0 && !editing;
+  function answerAsk(picked: FocusId[] | null) {
+    setFocusAsked(true);
+    const body = picked ? { today_asked: true, today_cards: cardsForFocus(picked) } : { today_asked: true };
+    if (picked) setCardsSaved(cardsForFocus(picked));
+    post("/api/settings", body).then(() => picked && toast(t("today.ask.done")), showErr);
+  }
+
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <div className="titlerow"><h1 className="largetitle">{t("today.today")}</h1></div>
-      {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
-      <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
-      {town ? <TownFeed town={town} /> : null}
-      <div id="today-low">
-        {low.length > 0 && (
-          <>
-            <h3 className="sect">{t("common.runningLow")}</h3>
-            <div className="group">
-              {lowCap.shown.map(i => (
-                <div className="row" key={i.item_id}>
-                  <Face name={i.name} />
-                  <div className="grow">
-                    <a href="#" className="name item-link" data-id={i.item_id}
-                      onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
-                    <span className="sub">{cap(i.reason)}</span></div>
-                  {onList.has(i.item_id) || added.has(i.item_id)
-                    ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : t("today.onYourList")}>{t("today.onList")}</span>
-                    : <button className="chip" data-low-add={i.item_id} type="button" aria-label={t("today.addToYourList", { name: i.name })}
-                      disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
-                </div>
-              ))}
-              <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
-            </div>
-          </>
-        )}
-      </div>
-      <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
-        <h3 className="sect">{t("today.yourLists")}</h3>
-      </div>
-      <div id="today-lists">
-        {h && !noLists && cards.length > 0 && (
-          <div className="listcards">
-            {listCap.shown.map(c => (
-              <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
-                <span className="lc-top"><span className="lc-name">{c.name}</span>
-                  <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span><span className="chev" aria-hidden="true">›</span></span>
-                <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : t("today.nothingToGet")}</span>
-              </button>
-            ))}
+      <div className="titlerow"><h1 className="largetitle">{editing ? t("today.edit.title") : t("today.today")}</h1>
+        {h && <button type="button" id="today-editbtn" className={"linkbtn titleedit" + (editing ? " done" : "")} onClick={() => setEditing(e => !e)}>
+          {editing ? t("common.done") : t("today.edit.edit")}</button>}</div>
+      {editing ? (
+        <TodayEdit on={on} has={has} peek={peek} onChange={saveCards}
+          onReset={() => { saveCards(null); toast(t("today.edit.resetDone")); }} />
+      ) : (
+        <>
+          {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
+          <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+          {town ? <TownFeed town={town} /> : null}
+          {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sections[id]}</div>)}
+          <div id="today-eye">
+            {eyeCount > 0 && (
+              <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
+                <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
+            )}
           </div>
-        )}
-        {h && !noLists && emptyNames.length > 0 && (
-          <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
-            <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
-            <span className="chev" aria-hidden="true">›</span></button></div>
-        )}
-        {h && listCap.seeAll && (
-          <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
-            <span>{t("today.seeAllLists", { count: lists.length })}</span><span aria-hidden="true">›</span></button>
-        )}
-      </div>
-      <div id="today-alerts">
-        {/* Out-of-stock reports and price tips are two kinds of row, so
-          * each gets its own heading (labels audit, 2026-10-29). */}
-        {([["report", "today.storeAlerts"], ["price", "today.cheaperElsewhere"]] as const).map(([kind, head]) => {
-          const rows = alertRows.filter(r => r.kind === kind);
-          const capped = capRows(rows, alertsOpen);
-          return rows.length > 0 && <Fragment key={kind}><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
-            <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
-              <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></Fragment>;
-        })}
-      </div>
-      <div id="today-expiry">
-        {h && <UseSoon soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
-          onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
-      </div>
-      <div id="today-checks">
-        {nChecks > 0 && (
-          <div className={"group checkfold" + (checksOpen ? " open" : "")}>
-            <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen) as "true" | "false"}
-              onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
-              <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
-            <div className="checkrows" hidden={!checksOpen}>
-              {checks.map(c => (
-                <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                  <span className="chipset">
-                    <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
-                    <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
-              ))}
-              {seen.map((s, k) => (
-                <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
-                  <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div id="today-eye">
-        {eyeCount > 0 && (
-          <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
-            <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
-        )}
-      </div>
-      <div id="today-patterns">
-        {lastMonth && months && (
-          <>
-            <h3 className="sect">{t("today.yourPatterns")}</h3>
-            <div className="group">
-              <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
-                <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
-                <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
-              {tip}
-            </div>
-          </>
-        )}
-      </div>
-      <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
-      <div id="today-tip">{!(lastMonth && months) && tip}</div>
-      {questNudge && (
-        <div id="today-questnudge" className="fr-card">
-          <p className="fr-h">{t("today.questNudge.title")}</p>
-          <p className="fr-s">{t("today.questNudge.sub")}</p>
-          <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
-          <div className="fr-links">
-            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
-            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
-          </div>
-        </div>
+          <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
+        </>
       )}
-      {listItems.length > 0 && !questSeen && (
-        <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
-          <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-          <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
-          <span className="chev">›</span></button>
+      {menu && (
+        <CardMenu id={menu.id} top={menu.top} first={on.indexOf(menu.id) === 0} last={on.indexOf(menu.id) === on.length - 1}
+          onClose={closeMenu} onEdit={() => setEditing(true)}
+          onMove={d => saveCards(moveCard(on, menu.id, on.indexOf(menu.id) + d))}
+          onRemove={() => saveCards(removeCard(on, menu.id), t("today.edit.removed", { name: name(menu.id) }))} />
       )}
+      {askShow && <AskSheet onSkip={() => answerAsk(null)} onDone={answerAsk} />}
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
       {perish && <PerishSheet open={perishOpen} perish={perish} demo={demo}
         onClose={() => setPerishOpen(false)} onMore={() => { setPerishOpen(false); setEx({ k: "capture" }); }} reload={load} />}
     </>
   );
+
 
   /* Used up: offer, never assume, to put it back on the shopping list
    * (expiry.js done). */

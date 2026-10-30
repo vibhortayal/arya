@@ -26,11 +26,19 @@ class TestTodayIsTheShoppingDashboard(unittest.TestCase):
         home = home[home.index("export function Today() {"):]
         home = markup(home[:home.index("\n}\n")])
         # Design pass (2026-10-29): Your lists moved up under Running low;
-        # the tip folded to one line at the foot.
-        order = ["today-low", "today-lists", "today-alerts", "today-expiry",
+        # the tip folded to one line at the foot. Customizable Today
+        # (2026-10-30): this is the default order of the cards, which
+        # the person can change (screens/todayCards.ts).
+        body = today()
+        body = body[body.index("export function Today() {"):]
+        order = ["today-low", "today-lists", "today-alerts", "today-cheaper", "today-expiry",
                  "today-checks", "today-patterns", "today-tip", "today-quest"]
-        at = [home.index(f'id="{el}"') for el in order]
+        at = [body.index(f'id="{el}"') if el not in ("today-alerts", "today-cheaper")
+              else body.index(f'"{el}"') for el in order]
         self.assertEqual(at, sorted(at))
+        self.assertIn('"low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"',
+                      src("screens/todayCards.ts"))
+        self.assertIn("on.map(id =>", home)
 
     def test_today_extras_fold_to_one_line(self):
         js = today()
@@ -67,8 +75,9 @@ class TestStoreAlerts(unittest.TestCase):
         self.assertNotIn("samplepill", js)
         self.assertNotIn("Example only", js)
         # Reports and price tips have their own headings (labels audit).
-        self.assertIn('[["report", "Store alerts"], ["price", "Cheaper elsewhere"]]', js)
-        self.assertIn('return rows.length > 0 && <Fragment key={kind}><h3 className="sect">{t(head)}</h3>', js)
+        self.assertIn('alertSection("report", "today-alerts", "Store alerts")', js)
+        self.assertIn('alertSection("price", "today-cheaper", "Cheaper elsewhere")', js)
+        self.assertIn('{rows.length > 0 && <><h3 className="sect">{t(head)}</h3>', js)
 
 
 class TestNewUserSeesNoEmptyNoise(unittest.TestCase):

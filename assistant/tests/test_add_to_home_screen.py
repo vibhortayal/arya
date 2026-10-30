@@ -8,13 +8,14 @@ from tests import frontend
 class TestAddToHomeScreen(unittest.TestCase):
     def test_wired_into_the_shell(self):
         a2hs, today = frontend.src("ui/A2hs.tsx"), frontend.src("screens/Today.tsx")
-        # The card on Today, above Running low; the row in Settings.
+        # The card on Today, above the cards (Running low first by
+        # default, customizable Today); the row in Settings.
         self.assertIn("<A2hsCard", today)
         self.assertIn("<A2hsRow", frontend.src("screens/Profile.tsx"))
         self.assertIn('id="btn-a2hs"', a2hs)
         self.assertIn('id="a2hs-sheet"', a2hs)
         self.assertIn("data-a2hs-x", a2hs)  # the card's close
-        self.assertLess(today.index('id="today-a2hs"'), today.index('id="today-low"'))
+        self.assertLess(today.index('id="today-a2hs"'), today.index("{on.map(id =>"))
 
     def test_install_and_close_meet_the_44px_touch_floor(self):
         # Pilot 2026-10-29: Install was 38 px and the x 36 px.
