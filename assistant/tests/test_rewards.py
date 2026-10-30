@@ -45,7 +45,8 @@ class TestRewardsShell(unittest.TestCase):
         css = read("styles.css")
         tail = css.split("/* Rewards (owner, 2026-10-28)")[1]
         self.assertIn("prefers-reduced-motion: reduce", tail)
-        self.assertIn('matchMedia("(prefers-reduced-motion: reduce)")', src("screens/hunt/fx.ts"))
+        self.assertIn("motionOff()", src("screens/hunt/fx.ts"))
+        self.assertIn('matchMedia("(prefers-reduced-motion: reduce)")', src("lib/motion.ts"))
 
     def test_level_shows_on_the_quest_tab_and_progress(self):
         # The level chip moved from Today to the Quest tab (list-first
