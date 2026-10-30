@@ -184,6 +184,7 @@ handle the nightly backup. CI is manual only
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
+| `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export); `off` lifts the list |
 | `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
 | `ARYA_OWNER_USERNAME` | empty | the account that can flip registration in Settings |
 | `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |

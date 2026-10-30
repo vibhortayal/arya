@@ -8,7 +8,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from api import auth, supabase_auth
 from api.demo_guard import _demo_auth_hits, _demo_rate
 from api.deps import (_client_ip, _code_hits, _is_owner, _json_obj, _login_fails, _prune, _register_hits,
-                      _registration_open, _set_registration_open, _set_session_cookie, _verify_hits)
+                      _is_waitlist_admin, _registration_open, _set_registration_open, _set_session_cookie, _verify_hits,
+                      _waitlist_hits)
 
 router = APIRouter()
 
@@ -96,6 +97,81 @@ async def auth_register(req: Request):
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
 
+@router.post("/auth/waitlist")
+async def auth_waitlist(req: Request):
+    """Join the sign-in waitlist (owner, 2026-10-30): public, an email
+    and nothing else (api/waitlist.py). A hidden field a person never
+    fills, and 5 tries an hour per IP, keep it quiet. Answers
+    {"status": "added" | "already"}."""
+    import os as _os, time as _t
+    from api import waitlist
+    ip = _client_ip(req)
+    body = await _json_obj(req)
+    if body.get("website"):   # honeypot: look like success, store nothing
+        return {"status": "added"}
+    limit = int(_os.environ.get("ARYA_WAITLIST_IP_RATE", "5"))
+    _prune(_waitlist_hits, 3600)
+    hits = [t for t in _waitlist_hits.get(ip, []) if _t.time() - t < 3600]
+    if len(hits) >= limit:
+        raise HTTPException(429, "Too many tries. Wait a few minutes and try again.")
+    _waitlist_hits[ip] = hits + [_t.time()]
+    try:
+        return {"status": waitlist.join(body.get("email", ""))}
+    except PermissionError as e:
+        raise HTTPException(429, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+def _owner_only(req: Request):
+    info = _session_user(req)
+    if not info:
+        raise HTTPException(401, "login required")
+    if not _is_waitlist_admin(info["user"]):
+        raise HTTPException(403, "waitlist admins only")
+
+
+async def _emails(req: Request):
+    body = await _json_obj(req)
+    emails = body.get("emails")
+    if not isinstance(emails, list) or not 0 < len(emails) <= 50 \
+            or not all(isinstance(e, str) for e in emails):
+        raise HTTPException(400, "emails must be a list of 1 to 50 addresses")
+    return body, emails
+
+
+@router.get("/auth/waitlist/list")
+def waitlist_list(req: Request):
+    """Owner only: who is waiting, oldest first."""
+    from api import waitlist
+    _owner_only(req)
+    return {"rows": [{"email": r["email"], "at": r.get("at", 0), "approved": bool(r.get("approved"))}
+                     for r in sorted(waitlist.rows(), key=lambda r: r.get("at", 0))]}
+
+
+@router.post("/auth/waitlist/approve")
+async def waitlist_approve(req: Request):
+    """Owner only: let these addresses sign in. With send_email true each
+    gets the sign-in code mail now (Supabase sends it)."""
+    from api import waitlist
+    _owner_only(req)
+    body, emails = await _emails(req)
+    done = waitlist.approve(emails)
+    sent = 0
+    if body.get("send_email") is True:
+        for e in done:
+            sent += bool(await run_in_threadpool(waitlist.send_invite, e))
+    return {"approved": len(done), "emailed": sent}
+
+
+@router.post("/auth/waitlist/remove")
+async def waitlist_remove(req: Request):
+    from api import waitlist
+    _owner_only(req)
+    _, emails = await _emails(req)
+    return {"removed": sum(bool(waitlist.remove(e)) for e in emails)}
+
+
 @router.post("/auth/login")
 async def auth_login(req: Request):
     import time as _t
@@ -112,17 +188,28 @@ async def auth_login(req: Request):
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
 
+def _email_allowed(email):
+    """May this verified-or-typed email sign in by code or Google? Yes for
+    an existing account, an address the owner approved from the waitlist,
+    or anyone while the owner's registration switch is open (and
+    ARYA_SUPABASE_SIGNUP is not 0)."""
+    from api import waitlist
+    if email in auth.users() or waitlist.is_approved(email):
+        return True
+    return _registration_open() and os.environ.get("ARYA_SUPABASE_SIGNUP") != "0"
+
+
 def _federated_login(email):
     """Sign in (or create) the account for a Supabase-verified email.
-    ARYA_SUPABASE_SIGNUP=0 limits it to accounts that already exist."""
+    The waitlist row is deleted once the person is in."""
+    from api import waitlist
     try:
-        name, created = auth.ensure_federated_user(email) \
-            if os.environ.get("ARYA_SUPABASE_SIGNUP") != "0" or email in auth.users() \
-            else (None, False)
+        name, created = auth.ensure_federated_user(email) if _email_allowed(email) else (None, False)
     except ValueError as e:
         raise HTTPException(400, str(e))
     if not name:
-        raise HTTPException(403, "sign-up is closed")
+        raise HTTPException(403, "that email is not invited yet")
+    waitlist.remove(name)
     return _set_session_cookie(JSONResponse({"user": name, "created": created}),
                                auth.new_session(name))
 
@@ -150,6 +237,8 @@ async def auth_email_start(req: Request):
     email = (body.get("email") or "").strip().lower()
     if "@" not in email or len(email) > 254:
         raise HTTPException(400, "enter a valid email")
+    if not _email_allowed(email):
+        return {"ok": True}   # same answer for every address: no one can probe who is invited
     try:
         await run_in_threadpool(supabase_auth.send_code, email)
     except supabase_auth.AuthError as e:

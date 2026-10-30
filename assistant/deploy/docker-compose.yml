@@ -38,6 +38,9 @@ services:
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
       ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}
+      ARYA_WAITLIST_ADMINS: ${ARYA_WAITLIST_ADMINS:-}
+      ARYA_WAITLIST_IP_RATE: ${ARYA_WAITLIST_IP_RATE:-5}
+      ARYA_WAITLIST_MAX: ${ARYA_WAITLIST_MAX:-5000}
       ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
       # $20 a day for the judging window (about 50 full demo visits at
       # the $0.40 per-visit cap), paid from the hackathon credits. The
@@ -45,6 +48,9 @@ services:
       ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-20}
       ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
       ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
+      # on: an API token may not call the blocked routes (bulk model spend,
+      # groups, push, feedback, account export). off lifts that list.
+      ARYA_TOKEN_GUARDS: ${ARYA_TOKEN_GUARDS:-on}
       ARYA_PUSH_REMINDERS: ${ARYA_PUSH_REMINDERS:-0}
       ARYA_GROUPS: ${ARYA_GROUPS:-1}
       ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-0}

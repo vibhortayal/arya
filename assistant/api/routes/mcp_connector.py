@@ -8,7 +8,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
 from api import state
-from api.demo_guard import _demo_rate, _is_demo
+from api.demo_guard import _demo_rate, _is_demo, _token_hits as _mcp_hits
 from api.deps import _json_body, new_client
 from api.routes.items import _merge_flag
 from api.routes.lists import _add_name_to_list
@@ -17,7 +17,6 @@ router = APIRouter()
 
 MCP_MAX_BODY = 256 * 1024     # bytes; a receipt with 200 lines is ~40 KB
 MCP_MAX_RECEIPT_LINES = 200
-_mcp_hits = {}                # username -> tools/call timestamps (rolling hour)
 
 
 # --- Agent connector (MCP): any MCP-capable assistant, one token ---

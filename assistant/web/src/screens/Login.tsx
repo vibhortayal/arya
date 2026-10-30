@@ -114,6 +114,7 @@ export function Login() {
   };
 
   const [seen, setSeen] = useState<string[]>(loadSeen);
+  const [waitlist, setWaitlist] = useState(false);
   const [zoom, setZoom] = useState<{ id: string; from: string } | null>(null);
   const tap = (id: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -157,13 +158,17 @@ export function Login() {
           </div>
         </div>
         <div className="landfoot">
-          <p className="landnote">{t("landing.demoNote")}
-            {status.registration_open && (
+          <p className="landnote">{status.registration_open ? t("landing.demoNote") : `${t("landing.demoNote")} ${t("landing.invitationNote")}`}
+            {status.registration_open ? (
               <button id="register-open" className="linkbtn" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
+            ) : (
+              <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => setWaitlist(true)}>{t("landing.joinWaitlist")}</button>
             )}
           </p>
         </div>
       </main>
+
+      <Waitlist open={waitlist} onClose={() => setWaitlist(false)} />
 
       {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 
@@ -186,8 +191,59 @@ export function Login() {
             onClick={() => { setMode(mode === "login" ? "register" : "login"); setErr(""); }}>
             {create ? t("login.haveAccount") : t("login.newHere")}</button></p>
         )}
+        {mode !== "setup" && !status.registration_open && (
+          <p className="nomargin"><button type="button" id="signin-waitlist" className="linkbtn"
+            onClick={() => { setSignin(false); setPass(""); setWaitlist(true); }}>{t("landing.noAccountWaitlist")}</button></p>
+        )}
       </Sheet>
     </section>
+  );
+}
+
+/* The waitlist (owner, 2026-10-30): email only. The server answers
+ * added or already; a hidden field catches bots (api/waitlist.py). */
+function Waitlist({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState<"" | "added" | "already">("");
+  const [busy, setBusy] = useState(false);
+  const [trap, setTrap] = useState("");
+  const close = () => { onClose(); setErr(""); setDone(""); };
+  const submit = async (ev: FormEvent) => {
+    ev.preventDefault();
+    if (busy) return;
+    setBusy(true); setErr("");
+    try {
+      const r = await postJson("/auth/waitlist", { email: email.trim(), website: trap });
+      if (r.ok) { setDone(((await r.json()) as { status: "added" | "already" }).status); return; }
+      setErr(r.status === 400 ? t("waitlist.badEmail") : r.status === 429 ? t("waitlist.tooMany") : t("login.wentWrong"));
+    } catch { setErr(t("login.wentWrong")); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Sheet open={open} onClose={close} id="waitlist-sheet" className="signin" title={t("landing.joinWaitlist")}>
+      {done ? (
+        <div className="wl-done" id="waitlist-done">
+          <img src={asset(`assets/characters/${done === "added" ? "basket" : "milk"}.webp`)} alt="" />
+          <h4>{t(done === "added" ? "waitlist.addedTitle" : "waitlist.alreadyTitle")}</h4>
+          <p>{done === "added" ? t("waitlist.addedBody", { email: email.trim().toLowerCase() }) : t("waitlist.alreadyBody")}</p>
+          <button type="button" id="waitlist-close" className="btn primary wide" onClick={close}>{t("waitlist.done")}</button>
+        </div>
+      ) : (
+        <form id="waitlist-form" onSubmit={submit}>
+          <p className="wl-intro">{t("waitlist.intro")}</p>
+          <label className={"field" + (err ? " bad" : "")}>{t("waitlist.email")}
+            <input type="email" id="waitlist-email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+              inputMode="email" placeholder="you@example.com" required data-first value={email} onChange={e => setEmail(e.target.value)} />
+          </label>
+          <div className="wl-hp" aria-hidden="true"><input type="text" tabIndex={-1} autoComplete="off" value={trap} onChange={e => setTrap(e.target.value)} /></div>
+          {err && <p id="waitlist-error" className="wl-err" role="alert">{err}</p>}
+          <p style={{ margin: "14px 0 0" }}><button type="submit" id="waitlist-join" className="btn primary wide" disabled={busy}>{t("waitlist.join")}</button></p>
+          <p className="wl-note">{t("waitlist.privacy")}<br />{t("waitlist.yourData")}</p>
+        </form>
+      )}
+    </Sheet>
   );
 }
 

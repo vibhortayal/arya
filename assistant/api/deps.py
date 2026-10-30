@@ -41,6 +41,7 @@ _login_fails = {}
 _register_hits = {}
 _code_hits = {}
 _verify_hits = {}
+_waitlist_hits = {}
 
 
 def _client_ip(req):
@@ -192,6 +193,17 @@ def _is_owner(user):
     registration toggle stays unreachable (fail closed)."""
     owner = (os.environ.get("ARYA_OWNER_USERNAME") or "").strip().lower()
     return bool(owner) and (user or "").strip().lower() == owner
+
+
+def _is_waitlist_admin(user):
+    """Who may approve people from the waitlist: the accounts listed in
+    ARYA_WAITLIST_ADMINS (comma separated; usernames or the email an
+    account is named after, so a Google-only account can be one). Unset
+    means nobody (fail closed). Separate from ARYA_OWNER_USERNAME on
+    purpose (owner, 2026-10-30)."""
+    names = {n.strip().lower() for n in (os.environ.get("ARYA_WAITLIST_ADMINS") or "").split(",")}
+    names.discard("")
+    return (user or "").strip().lower() in names
 
 
 def new_client():

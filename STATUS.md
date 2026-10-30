@@ -6,6 +6,9 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Token guardrails (2026-10-30, PR open):** one hourly allowance (600) for every route an API token reaches; a short blocked list (bulk model spend, groups, push, feedback, settings, account export) answers 403 to a token; the app is unaffected; `ARYA_TOKEN_GUARDS=off` lifts it. Two key types are after Nov 4. `assistant/loops/2026-10-30-token-guardrails.md`.
+- **Developer page (2026-10-30, PR open):** public `/developers` (React screen, no sign-in): what the API is, how to get a code, a copy-paste curl, every endpoint. The server answers `/developers` with the app shell. Say "open platform" only after the API is deployed. `assistant/loops/2026-10-30-developers-page.md`.
+- **Open Lists API v1 (2026-10-30, PR open):** `/api/v1` lists, items, add, change, delete, export and import with the connector's token; `docs/API.md`; schema at `/api/v1/openapi.json`. Say "Your lists, your data. Export anytime." until it is merged and deployed; only then "open platform". `assistant/loops/2026-10-30-lists-api-v1.md`.
 - **Labels audit (merged, #197):** one word per idea across the app (quest,
   trip, Arya shoppers, friends, username, map this store, Spending, To
   check, points), plural and currency fixes, glyphs out of strings. Race,
@@ -141,6 +144,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  Quest colors have one job each: green for grabbed or mapped, gold for
+  golden, the app orange, neutral for the rest (no blue badges or black
+  chips); the 3D simulated store stays a blue blueprint. `2026-10-30-quest-colors.md`.
   Start shopping goes straight into the list's store ("Costco" finds
   "Costco Wholesale"), no one-option sheet or second store pick, and the
   in-store chips, cue and buttons are 44pt targets. `2026-10-30-quest-straight-in.md`.
@@ -180,6 +186,14 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
+  Sign-in by code or Google works for: an existing account, an address the
+  owner approved from the waitlist, or anyone while the owner's Registration
+  switch is open (and `ARYA_SUPABASE_SIGNUP` is not 0). Approving is for the
+  accounts listed in `ARYA_WAITLIST_ADMINS` (separate from the owner setting;
+  unset means nobody): `GET /auth/waitlist/list`, `POST /auth/waitlist/approve`
+  (`send_email` true mails the code), `POST /auth/waitlist/remove`, or
+  `python -m harness.waitlist approve a@b.com [--email]`. A row is deleted when
+  the person first signs in. Password accounts are unchanged.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
 - **Groups** (share lists and receipts with your home): ON by default in

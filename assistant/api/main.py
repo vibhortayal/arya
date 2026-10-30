@@ -8,14 +8,14 @@ Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
 import logging, os
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import album_routes, haul_routes, hunt_routes, pack, state
 from api.demo_guard import require_login
 from api.deps import _PWA
 from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
-                        intake, items, lists, mcp_connector, prices, quest,
+                        intake, items, lists, lists_v1, mcp_connector, prices, quest,
                         questmap, receipts, review, shelf, storemap, stores, town)
 
 app = FastAPI(title="Arya API")
@@ -54,6 +54,10 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 groups.router, questmap.router, town.router):
     app.include_router(_router)
 
+# The open Lists API is its own small app, so its errors and schema
+# (/api/v1/openapi.json) stay separate from the app's routes.
+app.mount("/api/v1", lists_v1.v1)
+
 # The app is the React build (web/dist) at /. The static folder
 # (pwa/: images, store models, three.js, scene.js, the manifest and
 # icons) is served at / beside it; the build wins on a name clash.
@@ -68,6 +72,17 @@ def _next_moved(request: Request, path: str = ""):
     # lstrip: "/next//evil.example" must not become "//evil.example".
     q = request.url.query
     return RedirectResponse("/" + path.lstrip("/\\") + ("?" + q if q else ""), status_code=302)
+
+
+@app.get("/developers", include_in_schema=False)
+@app.get("/developers/", include_in_schema=False)
+def _developers_page():
+    """The public developer page is a screen of the React app: the shell
+    answers /developers and the app shows it before sign-in."""
+    index = os.path.join(_WEB, "index.html")
+    if not os.path.isfile(index):
+        return JSONResponse({"detail": "the app is not built"}, status_code=404)
+    return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
 class _AppFiles(StaticFiles):
