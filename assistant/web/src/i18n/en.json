@@ -739,6 +739,14 @@
     "nothingToGet": "Nothing to get",
     "addTo": "Add to {{name}}",
     "addAnItem": "Add an item",
+    "suggest": {
+      "label": "Suggestions",
+      "yours": "From your lists",
+      "shared": "Popular with Arya shoppers",
+      "guesses": "Arya guesses",
+      "onList": "On this list",
+      "boughtBefore": "Bought before"
+    },
     "removeName": "Remove {{name}}",
     "readsDisagreed": "Not sure · tap to check",
     "suggested": "Suggested",

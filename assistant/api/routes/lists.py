@@ -482,3 +482,31 @@ async def list_check_ok(req: Request):
         raise HTTPException(400, "item_id is required")
     _merge_flag(body["item_id"], {"check_ok": state.cycle()})
     return {"ok": True}
+
+
+@router.get("/api/list/suggest")
+async def list_suggest(q: str = ""):
+    """Tiers 1 and 2 of the field's auto-suggest: your names, then the
+    shared dictionary. $0, no model. "thin" tells the client whether
+    to ask for guesses after a pause."""
+    from api.list import suggest
+    return await run_in_threadpool(suggest.suggest, q[:200])
+
+
+@router.post("/api/list/suggest/guess")
+async def list_suggest_guess(req: Request):
+    """Tier 3: a few cached Spark guesses for a prefix, grocery and
+    household items only. Off for the demo, with no key, with
+    ARYA_SUGGEST_GUESSES=0, over the daily budget or the per-account
+    daily cap; every one of those is just no guesses."""
+    from api.list import suggest
+    body = await _json_obj(req)
+    q = str(body.get("q") or "")[:200]
+    if _is_demo(req) or not suggest.guess_enabled():
+        return {"guesses": []}
+    try:
+        _budget_guard()
+    except HTTPException:
+        return {"guesses": []}
+    names = await run_in_threadpool(suggest.guess, q, new_client())
+    return {"guesses": [{"name": n, "kind": "guess", "tag": ""} for n in names]}
