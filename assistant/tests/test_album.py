@@ -131,8 +131,15 @@ class TestPages(unittest.TestCase):
         add("Durian")
         self.assertEqual(page(self.album.view(today=NOV), "Other finds")["count"], 1)
         better = aisles_index_with(("Produce", ["durian"]))
-        with mock.patch("api.aisles._INDEX", better):
-            v = self.album.view(today=NOV)
+        from api import aisles
+        # _classify is memoized on the text (#279): the swapped-in map must
+        # not see answers cached from the old one, nor leave its own behind.
+        aisles._classify.cache_clear()
+        try:
+            with mock.patch("api.aisles._INDEX", better):
+                v = self.album.view(today=NOV)
+        finally:
+            aisles._classify.cache_clear()
         self.assertEqual(page(v, "Produce")["count"], 1)
         self.assertIsNone(page(v, "Other finds"))
 
