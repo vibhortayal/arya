@@ -260,17 +260,9 @@ export function Today() {
 
   const load = useCallback(async () => {
     let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean; today_sizes?: Partial<Record<CardId, Size>> } | null;
-    try {
-      [home, st] = await Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
-    } catch (e) { showErr(e); return; }
-    if (!live.current) return;
-    setGs(demo ? null : st?.get_started ?? null);
-    setCardsSaved(st?.today_cards ?? null);
-    setSizes(st?.today_sizes || {});
-    // Asked once; someone who already arranged Today is not asked.
-    setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
-    setH(home);
-    setAdded(new Set());
+    const first = Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
+    // None of these reads needs /api/home, so they start right behind it
+    // instead of waiting for it (and for settings) to come back.
     get("/api/quest/news").then(n => live.current && setNews(n.news || []), () => live.current && setNews([]));
     get("/api/dashboard").then(d => live.current && setMonths({ spend: d.spend_by_month || {} }), () => live.current && setMonths(null));
     // powers.js loadFacts: a failed read keeps the last facts (at first
@@ -291,6 +283,15 @@ export function Today() {
       const pct = Math.max(0, Math.min(100, Math.round((p.points - p.level_floor) / span * 100)));
       setRing({ pct, level: p.level });
     }).catch(() => {});
+    try { [home, st] = await first; } catch (e) { showErr(e); return; }
+    if (!live.current) return;
+    setGs(demo ? null : st?.get_started ?? null);
+    setCardsSaved(st?.today_cards ?? null);
+    setSizes(st?.today_sizes || {});
+    // Asked once; someone who already arranged Today is not asked.
+    setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
+    setH(home);
+    setAdded(new Set());
   }, [showErr, setRing, demo]);
   useEffect(() => { load(); }, [load]);
   // What Arya can do › Use soon › Add a date opens the date sheet here.
