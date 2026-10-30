@@ -132,13 +132,13 @@ export function Login() {
 
   return (
     <section id="view-login" className="view">
-      <div className="landpage">
+      <main className="landpage">
         <header className="landtop">
           <span className="landlogo">Arya</span>
           <GetApp />
         </header>
         <div className="hero landhero">
-          <h2 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h2>
+          <h1 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h1>
           <p className="herosub nomargin landsub">{t("landing.subhead")}</p>
           <div className="landcta">
             <button id="demo-btn" className="btn primary" type="button" onClick={demo}>{t("landing.tryIt")}</button>
@@ -163,7 +163,7 @@ export function Login() {
             )}
           </p>
         </div>
-      </div>
+      </main>
 
       {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 

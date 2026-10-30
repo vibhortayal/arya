@@ -841,7 +841,7 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landcards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .landfoot { margin-top: auto; padding-top: 8px; }
 .landnote .linkbtn { min-height: 36px; margin: -10px 0; padding: 0 0 0 10px; font-size: 14px; }
-.landnote { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 8px 0 0; }
+.landnote { font-size: 12.5px; color: var(--ink2); text-align: center; margin: 8px 0 0; }
 /* Cards are raised buttons: a visible edge and shadow, a chevron, and
    a press that pushes them down. */
 .ftile { position: relative; display: flex; align-items: center; gap: 8px; min-height: 72px; padding: 6px 20px 6px 6px; text-align: left;
@@ -873,9 +873,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .ftile.beat { animation: beat 2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .ftile:not(.seen) img { animation: none; }
-  .ftile.beat { animation: pulse 2s ease-in-out infinite; }
+  .ftile.beat { animation: none; }
 }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 /* Narrow phones (360 px): titles and hints wrap more, so the cards
    give back a little room. */
 @media (max-width: 380px) {
