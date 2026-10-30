@@ -136,7 +136,7 @@ def stores_kroger_aisle(store_id: str = "", item: str = ""):
 @router.post("/api/stores/kroger-trip")
 async def stores_kroger_trip(req: Request):
     """Aisle hints for the items of one trip, in one call. The app keeps
-    them in memory until checkout and never saves them (Kroger terms 5e)."""
+    them in memory until checkout and never saves them."""
     from fastapi.concurrency import run_in_threadpool
     from api import kroger, stores as stores_mod
     body = await _json_obj(req)
