@@ -7,7 +7,7 @@ from the stored receipts. Postgres replaces the files when volume demands.
 import copy, hashlib, json, os, tempfile, threading
 from datetime import date, timedelta
 
-from api.ledger.build import build_ledger
+from api.ledger.build import build_ledger, receipt_savings
 from api.patterns.engine import summarize
 from api.list.build import build_list
 from api.cart.build import prepare
@@ -925,6 +925,8 @@ def dashboard():
     # positive size (the app prints the minus).
     spend = round(sum(e["price"] for e in entries), 2)
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
+    returns_count = sum(1 for e in entries if e["event_type"] == "return")
+    savings = [x for x in (receipt_savings(r) for r in rs) if x]
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
     by_month, by_store, by_item = {}, {}, {}
     nm = names_with_receipts()
@@ -951,7 +953,9 @@ def dashboard():
     top = sorted(((k, v) for k, v in net_by_item.items()
                   if v > 0 and not kind_of.get(k)), key=lambda kv: -kv[1])[:10]
     other_total = round(other_total, 2)
-    return {"spend_total": spend, "returns_total": returns, "for_others_total": others,
+    return {"spend_total": spend, "returns_total": returns, "returns_count": returns_count,
+            "savings_total": round(sum(savings), 2), "savings_count": len(savings),
+            "for_others_total": others,
             "spend_groceries": round(spend - other_total, 2),
             "spend_other": other_total, "other_by_kind": other_by_kind,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),

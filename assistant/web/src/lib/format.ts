@@ -44,3 +44,11 @@ export function qtyTag(it?: { qty?: number; unit?: string } | null): string {
 
 /* Asset URLs come from the current PWA's static mount, shared by both apps. */
 export const asset = (p: string) => "/" + p.replace(/^\/+/, "");
+
+/* What coupons, deals and discounts took off a filed receipt (the same
+ * rule as api/ledger/build.py receipt_savings): discount lines, plus the
+ * discount a photo read kept on a line. A positive number, or 0. */
+export function lineSavings(lines: { line_type?: string; line_total?: number | null; discount_amount?: number | null }[]): number {
+  const sum = lines.reduce((a, ln) => a + Math.abs((ln.line_type === "discount" ? ln.line_total : ln.discount_amount) || 0), 0);
+  return Math.round(sum * 100) / 100;
+}
