@@ -56,9 +56,11 @@ type Props<T extends string> = {
   onReset?: () => void;
   resetLabel?: string;
   id?: string;
+  /* Items that always stay: no red minus (they still move). */
+  locked?: (id: T) => boolean;
 };
 
-export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, emptyMore, more, badge, onTap, below, onReset, resetLabel, id }: Props<T>) {
+export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, emptyMore, more, badge, onTap, below, onReset, resetLabel, id, locked }: Props<T>) {
   const { t } = useTranslation();
   // The order while a finger drags; saved when it lifts.
   const [order, setOrder] = useState(on);
@@ -100,8 +102,10 @@ export function EditList<T extends string>({ on, off, name, sub, desc, onChange,
         {order.map(it => (
           <div key={it} className="etile-wrap">
             <div data-tile={it} className={"etile" + (drag === it ? " lifted" : "")} ref={el => { tiles.current[it] = el; }}>
-              <button type="button" className="eminus" aria-label={t("edit.remove", { name: name(it) })}
-                onClick={() => onChange(on.filter(c => c !== it), t("edit.removed", { name: name(it) }))}><span className="ebadge" aria-hidden="true">−</span></button>
+              {locked?.(it)
+                ? <span className="eminus elocked" aria-hidden="true" />
+                : <button type="button" className="eminus" aria-label={t("edit.remove", { name: name(it) })}
+                  onClick={() => onChange(on.filter(c => c !== it), t("edit.removed", { name: name(it) }))}><span className="ebadge" aria-hidden="true">−</span></button>}
               {onTap
                 ? <button type="button" className="grow etap" data-tap={it} onClick={() => onTap(it)}><b>{name(it)}</b><span className="sub">{sub(it)}</span></button>
                 : <span className="grow"><b>{name(it)}</b><span className="sub">{sub(it)}</span></span>}

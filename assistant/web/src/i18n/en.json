@@ -1775,6 +1775,19 @@
     "openingQuest": "Opening Quest…",
     "mapMyStore": "Map my store",
     "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles",
+    "edit": {
+      "title": "Edit Quest",
+      "hint": "Hide what you don't use. Play and Map my store stay.",
+      "reset": "Reset Quest",
+      "resetDone": "Quest is back to the default",
+      "cta": { "name": "Ready for a quest?", "desc": "Start a quest or practice" },
+      "stats": { "name": "Level and streak", "desc": "Shows after your first real trip" },
+      "map": { "name": "Map my store", "desc": "Learn the aisles" },
+      "progress": { "name": "Quest progress", "desc": "Quests, badges and mapped stores" },
+      "trips": { "name": "Your trips", "desc": "Open quests, finished trips and friends" },
+      "album": { "name": "Sticker album", "desc": "Shows with your first sticker" },
+      "stores": { "name": "Stores you're building", "desc": "How much of each store is mapped" }
+    },
     "progressSub": "Quests, badges and mapped stores"
   },
   "questProgress": {

@@ -584,6 +584,7 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 .questmode-host .qg { min-height: 0; height: 100%; }
 .qm-loading { display: grid; place-items: center; height: 100%; color: var(--secondary); font-weight: 600; background: #F6F2EA; }
 .qm-links { padding: 8px 0 0; }
+.qm-links + .qm-links { padding-top: 0; }
 .qm-links .qg-store { justify-content: space-between; }
 .qm-links small { display: block; }
 .hunthud {
@@ -2011,6 +2012,12 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .nosugg .lc-sugg { display: none; }
 .addq { display: flex; gap: 8px; margin-top: 14px; }
 .addq input { flex: 1; min-width: 0; }
+
+/* Edit Quest (card library, 2026-10-30): an app page over the game. */
+.qm-edit { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); padding: max(12px, env(safe-area-inset-top, 0px)) 16px 24px; z-index: 2; }
+.qm-game[hidden] { display: none; }
+.qm-game { height: 100%; }
+.eminus.elocked { pointer-events: none; }
 
 /* ---- Press feedback (Emil pass): every tappable squeezes to 0.97 on press.
    Down is quick (100 ms), release eases back (160 ms). Wide rows and tab

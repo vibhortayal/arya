@@ -29,4 +29,16 @@ describe("Quest home", () => {
     expect(screen.queryByText(/New here/)).toBeNull();
     expect(screen.getByText("Practice")).toBeTruthy();
   });
+
+  it("follows the player's panel order and hidden panels, and Ready for a quest always shows", () => {
+    const p = { ...emptyProfile(), weeks: ["2026-W40"], stickers: ["milk.webp"] };
+    const { container } = render(<Home profile={p} newbie={false} list={{ id: "l", name: "Weekly", items: [{ name: "Milk" }] }} onPractice={noop} onQuest={noop} onAlbum={noop}
+      panels={{ map: <p>Map my store</p>, trips: <p>Your trips</p> }} order={["trips", "map", "cta"]} hidden={["album", "stats", "cta"]} onEdit={noop} />);
+    const text = container.textContent || "";
+    expect(text.indexOf("Your trips")).toBeLessThan(text.indexOf("Map my store"));
+    expect(text.indexOf("Map my store")).toBeLessThan(text.indexOf("Ready for a quest?"));
+    expect(screen.queryByText("Sticker album")).toBeNull();
+    expect(container.querySelector(".qg-lvchip")).toBeNull();
+    expect(container.querySelector("#qg-editbtn")).not.toBeNull();
+  });
 });

@@ -7,6 +7,9 @@ import { AppSource } from "./appSource";
 import { FindStorePanel } from "../StoresFind";
 import { markQuestOpened } from "../../lib/questSeen";
 import { useTranslation } from "../../i18n";
+import { EditList, EditTitle } from "../../ui/EditList";
+import { useToast } from "../../ui/Toast";
+import { arrange } from "../../lib/layout";
 
 /* The Quest tab: the 3D shopping game on the user's own lists, stores
  * and the shared store map (#158, owner 2026-10-29). The game and its
@@ -75,24 +78,66 @@ export function QuestMode() {
 
   const onAddItems = useCallback(() => nav.show("list"), [nav]);
 
-  const extra = (
-    <div className="qm-links">
-      <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
-        <span><b>{t("quest.mapMyStore")}</b><small>{t("quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
-      </button>
-      <button id="qm-progress" className="qg-store" type="button" onClick={() => nav.show("quest-progress")}>
-        <span><b>{t("common.questProgress")}</b><small>{t("quest.progressSub")}</small></span><span aria-hidden="true">›</span>
-      </button>
-      <button className="qg-store" type="button" onClick={() => nav.show("trips")}>
-        <span><b>{t("quest.tripsLink")}</b><small>{t("quest.tripsLinkSub")}</small></span><span aria-hidden="true">›</span>
-      </button>
-    </div>
-  );
+  const panels = {
+    map: (
+      <div className="qm-links">
+        <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
+          <span><b>{t("quest.mapMyStore")}</b><small>{t("quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
+        </button>
+      </div>
+    ),
+    progress: (
+      <div className="qm-links">
+        <button id="qm-progress" className="qg-store" type="button" onClick={() => nav.show("quest-progress")}>
+          <span><b>{t("common.questProgress")}</b><small>{t("quest.progressSub")}</small></span><span aria-hidden="true">›</span>
+        </button>
+      </div>
+    ),
+    trips: (
+      <div className="qm-links">
+        <button className="qg-store" type="button" onClick={() => nav.show("trips")}>
+          <span><b>{t("quest.tripsLink")}</b><small>{t("quest.tripsLinkSub")}</small></span><span aria-hidden="true">›</span>
+        </button>
+      </div>
+    ),
+  };
+
+  /* Edit Quest (card library, owner 2026-10-30): the same edit mode as
+   * Today. Ready for a quest and Map my store always stay (Play, and
+   * the owner's keep-Map-my-store rule); the rest hide and reorder. */
+  const { toast, showErr } = useToast();
+  const [editing, setEditing] = useState(false);
+  const lay = s.layouts.quest || {};
+  const ids = ["cta", "stats", "map", "progress", "trips", "album", "stores"] as const;
+  type PanelId = (typeof ids)[number];
+  const keep = (id: string) => id === "cta" || id === "map";
+  const { shown, hidden } = arrange([...ids], lay.order, (lay.hidden || []).filter(h => !keep(h)));
+  const order = shown.filter(id => id !== "stats");
+  function saveQuest(next: string[], msg?: string) {
+    const prev = lay;
+    const v = { order: next, hidden: ids.filter(id => !next.includes(id) && !keep(id)) };
+    s.saveLayout("quest", v).catch(e => { s.saveLayout("quest", prev).catch(() => {}); showErr(e); });
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => { s.saveLayout("quest", prev).catch(showErr); } });
+  }
+  const pname = (id: PanelId) => t(`quest.edit.${id}.name`);
 
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
+        {editing && (
+          <div className="qm-edit" id="quest-edit">
+            <EditTitle title={t("quest.edit.title")} editTitle={t("quest.edit.title")} editing onToggle={() => setEditing(false)} id="quest-editdone" />
+            <EditList<PanelId> id="quest-editlist" on={shown as PanelId[]} off={hidden as PanelId[]} name={pname}
+              sub={id => t(`quest.edit.${id}.desc`)} desc={id => t(`quest.edit.${id}.desc`)} locked={keep}
+              hint={t("quest.edit.hint")} moreTitle={t("edit.more")}
+              onChange={(next, msg) => saveQuest(next, msg)}
+              onReset={() => { const prev = lay; s.saveLayout("quest", {}).catch(showErr); toast(t("quest.edit.resetDone"), { action: t("common.undo"), onAction: () => { s.saveLayout("quest", prev).catch(showErr); } }); }}
+              resetLabel={t("quest.edit.reset")} />
+          </div>
+        )}
+        <div hidden={editing} className="qm-game">
+        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homePanels={panels} homeOrder={order} homeHidden={hidden} onEditHome={() => setEditing(true)} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
+        </div>
       </Suspense>
     </div>
   );

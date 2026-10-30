@@ -87,7 +87,7 @@ DISPLAY_DEFAULT = {"text": 1, "spacing": "comfortable", "bold": False, "pictures
 # Edit mode on other screens (card library, 2026-10-30): per screen,
 # lists of ids or texts. "lists": {"order", "hidden", "flags"},
 # "ask": {"chips"}, "spending": {"on"}. Whole screen values replace.
-LAYOUT_SCREENS = ("lists", "ask", "spending")
+LAYOUT_SCREENS = ("lists", "ask", "spending", "quest")
 LAYOUT_MAX_ITEMS = 60
 LAYOUT_MAX_TEXT = 120
 

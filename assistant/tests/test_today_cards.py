@@ -71,6 +71,9 @@ class TestLayouts(TestTodayCards):
         # a screen's value is replaced whole; null clears a key
         r = self.post(layouts={"ask": {"chips": None}})
         self.assertIsNone(r["layouts"]["ask"]["chips"])
+        # Quest home panels (Edit Quest)
+        r = self.post(layouts={"quest": {"order": ["trips", "cta"], "hidden": ["album"]}})
+        self.assertEqual(r["layouts"]["quest"], {"order": ["trips", "cta"], "hidden": ["album"]})
 
     def test_layouts_validated(self):
         self.post(400, layouts={"nope": {"on": []}})
