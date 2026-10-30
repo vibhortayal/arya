@@ -24,14 +24,22 @@ class TestAddToHomeScreen(unittest.TestCase):
 
     def test_when_it_shows(self):
         js = frontend.src("ui/A2hs.tsx")
-        # Not once installed, not in the demo, not before the second visit,
-        # not without a list item, not for 30 days after the x.
+        # Not once installed, not in the demo, not without a list item,
+        # not for 30 days after the x. From the first visit (owner,
+        # 2026-10-29, "Get the app").
         self.assertIn('(display-mode: standalone)', js)
         self.assertIn("navigator as any).standalone", js)
         self.assertIn("!demo", js)
-        self.assertIn("st.visits >= 2", js)
+        self.assertNotIn("visits", js)
         self.assertIn("&& hasList", js)
         self.assertIn("DISMISS_DAYS = 30", js)
+
+    def test_sheet_is_get_the_arya_app_with_intro_and_tip(self):
+        sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</Sheet>")[0]
+        self.assertIn("Get the Arya app", sheet)
+        self.assertIn("Free, no app store.", sheet)
+        self.assertIn("Tip: sign in from the Home Screen app. iPhone keeps it separate from Safari.", sheet)
+        self.assertNotIn("pwa", frontend.en()["a2hs"].__repr__().lower())
 
     def test_android_runs_the_native_prompt_iphone_opens_steps(self):
         self.assertIn("beforeinstallprompt", frontend.src("app/a2hs.ts"))

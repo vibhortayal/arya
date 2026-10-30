@@ -21,6 +21,23 @@ class TestLanding(unittest.TestCase):
         self.assertIn('id="login-user"', self.login)  # Email or username, #64
         self.assertIn("Email or username", self.login)
 
+    def test_get_the_app_pill_before_sign_in(self):
+        header = self.login.split('className="landtop"')[1].split("</header>")[0]
+        self.assertLess(header.index("<GetApp />"), header.index('id="signin-open"'))
+        login = frontend.src("screens/Login.tsx")
+        # Shows only while installing is possible (ui/A2hs.tsx), on a
+        # phone; the demo rule does not apply (logged out).
+        self.assertIn("useA2hs(false)", login)
+        self.assertIn("isPhone() && a.available", login)
+        self.assertIn("<A2hsSteps", login)
+        self.assertIn(">Get the app<", login)
+        self.assertIn('GETAPP_KEY = "arya.landing.getapp"', login)
+        self.assertIn('" glow" : " jiggle"', login)
+        css = frontend.read("styles.css")
+        self.assertIn(".landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s infinite; }", css)
+        self.assertIn(".landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }", css)
+        self.assertNotIn("pwa", frontend.words("landing.getTheApp").lower())
+
     def test_headline_cards_and_buttons(self):
         self.assertIn("Your grocery run, <em>smarter.</em>", self.front)
         self.assertIn("One app for the list, the store and the trip.", self.front)
