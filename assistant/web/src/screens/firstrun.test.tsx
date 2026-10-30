@@ -26,25 +26,34 @@ describe("get started", () => {
     expect(getStartedView(null).show).toBe(false);
     expect(getStartedView(undefined).show).toBe(false);
   });
-  test("counts real progress and goes when all three are done", () => {
-    expect(getStartedView({ list: false, expiry: false, receipt: false })).toMatchObject({ show: true, done: 0 });
-    const one = getStartedView({ list: true, expiry: false, receipt: false });
+  test("counts real progress and goes when all four are done (#207)", () => {
+    const none = { list: false, store: false, shop: false, receipt: false };
+    expect(getStartedView(none)).toMatchObject({ show: true, done: 0 });
+    const one = getStartedView({ ...none, list: true });
     expect(one).toMatchObject({ show: true, done: 1 });
-    expect(one.steps.map(s => s.done)).toEqual([true, false, false]);
-    expect(getStartedView({ list: true, expiry: true, receipt: true }).show).toBe(false);
+    expect(one.steps.map(s => s.key)).toEqual(["list", "store", "shop", "receipt"]);
+    expect(one.steps.map(s => s.done)).toEqual([true, false, false, false]);
+    expect(getStartedView({ list: true, store: true, shop: true, receipt: true }).show).toBe(false);
   });
-  test("the card ticks done steps and routes taps", () => {
+  test("the card ticks done steps, lights only the next one and routes taps", () => {
     const onStep = vi.fn(), onDismiss = vi.fn();
-    const { container } = render(<GetStartedCard gs={{ list: true, expiry: false, receipt: false }} onStep={onStep} onDismiss={onDismiss} />);
-    expect(screen.getByText("Get started · 1 of 3")).toBeTruthy();
+    const { container } = render(<GetStartedCard gs={{ list: true, store: false, shop: false, receipt: false }} onStep={onStep} onDismiss={onDismiss} />);
+    expect(screen.getByText("Get started · 1 of 4")).toBeTruthy();
+    expect(screen.getByText("Your first trip with Arya")).toBeTruthy();
     const lis = container.querySelectorAll(".fr-steps li");
-    expect(lis[0].className).toBe("done");
+    expect([...lis].map(l => l.className)).toEqual(["done", "next", "later", "later"]);
     expect(lis[0].querySelector(".fr-dot")!.textContent).toBe("✓");
     expect(lis[1].querySelector(".fr-dot")!.textContent).toBe("2");
-    fireEvent.click(container.querySelector('[data-gs="expiry"]')!);
-    expect(onStep).toHaveBeenCalledWith("expiry");
+    expect(container.querySelector(".gs-wait")).toBeNull();
+    fireEvent.click(container.querySelector('[data-gs="store"]')!);
+    expect(onStep).toHaveBeenCalledWith("store");
     fireEvent.click(container.querySelector("#gs-dismiss")!);
     expect(onDismiss).toHaveBeenCalled();
+  });
+  test("list and store done, no trip yet: the card waits without nagging", () => {
+    const { container } = render(<GetStartedCard gs={{ list: true, store: true, shop: false, receipt: false }} onStep={() => {}} onDismiss={() => {}} />);
+    expect(container.querySelector(".gs-wait")!.textContent).toContain("No rush");
+    expect(container.querySelector(".fr-steps li.next [data-gs]")!.getAttribute("data-gs")).toBe("shop");
   });
 });
 

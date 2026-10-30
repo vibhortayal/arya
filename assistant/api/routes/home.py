@@ -56,10 +56,19 @@ def home():
     from api import expiry
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
     use_soon = expiry.use_soon(_fl, nm, last_bought, _d_today())
+    # After a receipt, the things that go off (#207): asked once per
+    # receipt, and never again after two "Not now"s.
+    # The demo's receipts are fixed in time, so its window counts back
+    # from its last receipt, not from today.
+    pn = state._load("settings.json", {}).get("perish_nudge") or {}
+    ref = (expiry.parse_iso(state.as_of()) if state._current_user.get() == state.DEMO_USER
+           else None) or _d_today()
+    perish = (None if pn.get("not_now", 0) >= expiry.NUDGE_STOP_AFTER else
+              expiry.receipt_nudge(state.receipts(), _fl, pn.get("seen"), ref))
     return {"as_of": state.as_of(), "running_low": low,
             "list": d["smart_list"], "lists": state.named_lists(),
             "cart": state.get_cart(), "seen": seen, "checks": checks, "price_by_store": pbs,
-            "use_soon": use_soon}
+            "use_soon": use_soon, "perishables": perish}
 
 
 @router.get("/api/dashboard")

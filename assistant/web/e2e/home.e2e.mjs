@@ -35,6 +35,20 @@ export default async function (page, base) {
     await page.waitForSelector("#expiry-sheet #ex-done");
     await page.keyboard.press("Escape");
     await page.waitForSelector("#expiry-sheet", { state: "detached" });
+  } else if (await page.$("#perish-open")) {
+    // After a receipt (#207): one sheet of what goes off; skip one, pick a
+    // date for another, Escape leaves without saving.
+    await page.click("#perish-open");
+    await page.waitForSelector("#perish-sheet .pz li");
+    const n = (await page.$$("#perish-sheet .pz li")).length;
+    if (n < 2 || n > 8) throw new Error("perishables shown: " + n);
+    await page.click("#perish-sheet .pz li:first-child .pz-x");
+    await page.waitForSelector("#perish-sheet .pz li.skip");
+    await page.fill("#perish-sheet .pz li:nth-child(2) .pz-pick input", "2030-01-15");
+    await page.waitForSelector("#perish-sheet .pz-date");
+    await page.focus("#pz-more");
+    await page.keyboard.press("Escape");
+    await page.waitForSelector("#perish-sheet", { state: "detached" });
   } else {
     await page.click("#today-expiry [data-ex-snap]");
     await page.waitForSelector("#expiry-sheet #ex-type");
