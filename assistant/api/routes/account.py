@@ -1,10 +1,14 @@
 """Account-level routes: settings, data export, feedback and push reminders."""
+import os
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from api import state
 from api.demo_guard import _is_demo
-from api.deps import _json_obj
+from api import deps
+from api.cost_ledger import CostLedger
+from api.deps import _is_owner, _json_obj, user_limits
 
 router = APIRouter()
 
@@ -268,3 +272,43 @@ def feedback_list():
     if not feedback.is_owner(state._current_user.get()):
         raise HTTPException(403, "only the owner can read feedback")
     return {"notes": feedback.list_all()}
+
+
+# ---- Keeping Arya running (owner, 2026-10-30): what the paid AI reading
+# cost, for this account and for everyone. Lifetime is the headline.
+# Wikipedia-style transparency: no money ask, no meter, no nudge. The
+# heads-up and the pause only show for an account far above a typical
+# one (deps.user_limits). The whole-Arya totals stay hidden until enough
+# accounts have spend on record to make an average mean something.
+@router.get("/api/usage")
+def usage_route():
+    user = state._owner()
+    led = CostLedger(deps._LEDGER)
+    mine = led.usage("" if user == state.DEMO_USER else user)
+    heavy = user_limits()[0]
+    limited = bool(user) and not _is_owner(user) and user != state.DEMO_USER
+    month = mine["month_usd"]
+    whole = led.whole()
+    try:
+        need = int(os.environ.get("ARYA_COST_PUBLIC_MIN", "50"))
+    except ValueError:
+        need = 50
+    return {**mine,
+            "heavy": limited and bool(heavy) and month >= heavy,
+            "paused": limited and bool(deps.reading_off(user, act=False)),
+            "whole": ({"usd": whole["usd"], "people": whole["people"],
+                       "average_usd": round(whole["usd"] / whole["people"], 4),
+                       "paid_by": os.environ.get("ARYA_COST_PAID_BY", "Hackathon credits")}
+                      if whole["people"] >= max(need, 1) else None)}
+
+
+@router.post("/api/usage/unfreeze")
+async def unfreeze_route(req: Request):
+    """Owner only: bring an account's paid reads back before the
+    freeze runs out."""
+    if not _is_owner(state._owner()):
+        raise HTTPException(403, "owner only")
+    body = await _json_obj(req)
+    user = str(body.get("user") or "").strip().lower()
+    deps.unfreeze(user)
+    return {"ok": True, "user": user}

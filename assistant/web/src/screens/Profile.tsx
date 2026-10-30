@@ -152,6 +152,7 @@ export function Profile() {
         <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
           <span className="grow">{t("settings.helpAndGuide")}<span className="sub">{t("settings.helpAndGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
+        <NavRow id="btn-usage" view="usage" title={t("usage.title")} sub={t("settings.usageSub")} />
         <A2hsRow demo={demo} />
       </div>
       <Reminders />

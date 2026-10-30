@@ -141,6 +141,33 @@
     "builtBy": "Built by",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
   },
+  "usage": {
+    "title": "Keeping Arya running",
+    "intro": "Arya is free. Reading receipts and photos, answering Ask and mapping stores use a paid AI model. This is what that costs and how much of it you have used.",
+    "sinceYouJoined": "Since you joined",
+    "ofReadingSince": "of AI reading since {{since}}",
+    "nothingYet": "Nothing yet. Arya has not read anything for you.",
+    "thisMonth": "This month",
+    "kind": {
+      "reads": "Receipts and photos",
+      "ask": "Ask Arya",
+      "maps": "Store maps and Quest",
+      "helps": "Lists, voice and extras"
+    },
+    "calls_one": "{{count}} time",
+    "calls_other": "{{count}} times",
+    "heavy": "You are one of the heaviest users this month. Nothing is wrong and nothing changes. Arya's AI reading is paid for by one person, so a lighter month helps keep it free for everyone.",
+    "paused": "Arya's reading is paused for you right now after unusual use. Lists, Today and typing still work. It comes back on its own, or write to support@teamnightshift.org.",
+    "whole": "Arya as a whole, so far",
+    "paidReading": "AI reading",
+    "paidBy": "Paid by {{who}}",
+    "people": "People using Arya",
+    "peopleSub": "Have had something read",
+    "average": "Average per person",
+    "averageSub": "AI reading only",
+    "private": "Only you see your numbers. The totals above count everyone together.",
+    "couldNotLoad": "Could not load your usage."
+  },
   "album": {
     "couldNotLoadYourAlbum": "Could not load your album.",
     "loadingYourAlbum": "Loading your album.",
@@ -1498,6 +1525,7 @@
     "stores": "Stores",
     "yourStoresFavoritesAndThe": "Your stores and favorites",
     "whatAryaCanDoAnd": "What Arya does for you, and what you can turn on",
+    "usageSub": "What the AI reading costs, and your share",
     "spendingByMonthAndStore": "By month, store and item",
     "account": "Account",
     "signedInAs": "Signed in as",
