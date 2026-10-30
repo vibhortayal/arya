@@ -1243,7 +1243,16 @@ input[type=file]::file-selector-button {
  * inside it once something is typed, and labelled voice and photo
  * buttons under it. */
 .addline.onebox { position: relative; }
-.addline.onebox input[type="text"] { padding: 13px 54px 13px 18px; min-height: 52px; }
+.addline.onebox input[type="text"] { padding: 13px 54px 13px 18px; min-height: 52px; background: var(--panel); box-shadow: inset 0 0 0 1.5px #6F6F78; }
+.addline.onebox input[type="text"]::placeholder { color: var(--ink2); opacity: 1; }
+.addline.onebox input[type="text"]:focus { outline: none; box-shadow: inset 0 0 0 2px var(--acc); }
+/* Voice, photo and find live inside the box (owner, 2026-10-30): 44px targets. */
+.addline.onebox .inicons { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; }
+.addline.onebox .inicons .iconbtn { background: transparent; color: var(--ink); cursor: pointer; }
+.addline.onebox .inicons .iconbtn svg { width: 24px; height: 24px; }
+.addline.onebox .inicons .iconbtn.listening { background: var(--danger); color: #fff; }
+.addline.onebox:has(.inicons) input[type="text"] { padding-right: calc(10px + 44px * var(--nicons, 2)); }
+.addline.onebox:has(#list-find-open) { --nicons: 3; }
 .addline.onebox #add-submit { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; min-height: 0; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 26px; line-height: 1; }
 .addline.onebox #add-submit svg { width: 20px; height: 20px; }
 .caprow { display: flex; gap: 8px; margin: 0 0 8px; }
@@ -1777,7 +1786,7 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 
 /* Find (owner approved mockup 6b, 2026-10-30): an icon chip from 25 items,
    one field with Cancel once tapped. */
-.caprow .chip.findchip { flex: none; width: 48px; padding: 0; }
+
 .findbar { align-items: center; }
 .findfield { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--group); color: var(--secondary); }
 .findfield svg { flex: none; width: 20px; height: 20px; }
