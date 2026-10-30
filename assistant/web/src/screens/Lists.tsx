@@ -24,6 +24,8 @@ import { autoMode, filterLists, markOpened, readMode, readOpened, readView, rece
   type ListsMode, type ListsView } from "./lists/adaptive";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
+import { EditList, EditTitle } from "../ui/EditList";
+import { arrange } from "../lib/layout";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -207,7 +209,10 @@ export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
-  const { user, shopMode, saveShopMode, patchShop } = useSession();
+  const { user, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
+  // Edit mode on Lists (card library, 2026-10-30): order, hide, and
+  // what each list shows.
+  const [editing, setEditing] = useState(false);
   useCharacters();
 
   const [data, setData] = useState<HomeData | null>(cache.data);
@@ -300,6 +305,15 @@ export function Lists() {
 
   /* ---- derived ---- */
   const lists = namedLists(data);
+  const lay = layouts.lists || {};
+  const arranged = arrange(lists.map(l => l.id), lay.order, lay.hidden);
+  const homeLists = arranged.shown.map(id => lists.find(l => l.id === id)!);
+  const flags = new Set(lay.flags || []);
+  function saveListsLayout(v: typeof lay, msg?: string) {
+    const prev = layouts.lists || {};
+    saveLayout("lists", v).catch(showErr);
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => { saveLayout("lists", prev).catch(showErr); } });
+  }
   // A lens whose list is gone falls back to the cards.
   const effLens = data && lens !== "home" && lens !== "else" && !lists.some(l => l.id === lens) ? "home" : lens;
   const here = lists.find(l => l.id === effLens) || null;
@@ -882,10 +896,10 @@ export function Lists() {
     }
     const at: Record<string, number> = { ...readOpened() };
     for (const [id, r] of Object.entries(g.recent || {})) if (id) at[id] = Math.max(at[id] || 0, r.at * 1000);
-    const az = [...lists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    const az = [...homeLists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
     return <>
       <h3 className="sect">{t("lists.recent")}</h3>
-      <div className="group">{recentLists(lists, at).map(l => navRow(l.id, l.name))}</div>
+      <div className="group">{recentLists(homeLists, at).map(l => navRow(l.id, l.name))}</div>
       <h3 className="sect">{t("lists.allAToZ")}</h3>
       <div className="group">{az.map(l => navRow(l.id, l.name))}{elseUsed ? navRow("else", elseName) : null}</div>
     </>;
@@ -907,8 +921,10 @@ export function Lists() {
   return (
     <>
       {!onPage && (
-        <div id="lists-home">
-          <h1 className="largetitle">{t("lists.lists")}</h1>
+        <div id="lists-home" className={(flags.has("hide-preview") ? "nopreview " : "") + (flags.has("hide-suggestions") ? "nosugg" : "")}>
+          {data && lists.length > 0
+            ? <EditTitle id="lists-editbtn" title={t("lists.lists")} editTitle={t("lists.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
+            : <h1 className="largetitle">{t("lists.lists")}</h1>}
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
@@ -919,7 +935,27 @@ export function Lists() {
             </p>
           ) : null}
           <p id="list-line" className="subtitle">{homeLine}</p>
-          {listsEmpty(data) ? (
+          {editing && data && lists.length > 0 ? (
+            <>
+              <EditList id="lists-edit" on={arranged.shown} off={arranged.hidden}
+                name={id => lists.find(l => l.id === id)?.name || ""}
+                sub={id => t("common.itemCount", { count: onListItems(data).filter(i => !i.checked && itemHome(data, i) === id).length })}
+                desc={() => t("lists.hiddenSub")}
+                hint={t("lists.editHint")} moreTitle={t("lists.hiddenLists")} emptyMore={t("lists.noHidden")}
+                onChange={(next, msg) => saveListsLayout({ ...lay, order: next, hidden: lists.map(l => l.id).filter(id => !next.includes(id)) }, msg)}
+                onReset={() => saveListsLayout({})} />
+              <h3 className="sect">{t("lists.showOnEach")}</h3>
+              <div className="group">
+                {(["hide-preview", "hide-suggestions"] as const).map(f => (
+                  <div className="hubrow" key={f}>
+                    <span className="hr-label">{t(`lists.flag.${f}`)}<span className="sub">{t(`lists.flag.${f}Sub`)}</span></span>
+                    <button type="button" className="sw" role="switch" data-flag={f} aria-checked={!flags.has(f)} aria-label={t(`lists.flag.${f}`)}
+                      onClick={() => saveListsLayout({ ...lay, flags: flags.has(f) ? [...flags].filter(x => x !== f) : [...flags, f] })}><i></i></button>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : listsEmpty(data) ? (
             <div id="list-cards">
               <div className="fr-card fr-empty" id="list-empty">
                 <img src={asset("assets/characters/basket.webp")} alt="" />
@@ -944,7 +980,7 @@ export function Lists() {
           )}
           {mode === "tiles" ? (
             <div id="list-cards" className="listcards" data-mode="tiles">
-              {lists.map(l => tile(l.id, l.name))}
+              {homeLists.map(l => tile(l.id, l.name))}
               {elseUsed ? tile("else", elseName) : null}
             </div>
           ) : mode === "dense" ? (
@@ -952,7 +988,7 @@ export function Lists() {
           ) : (
           <div id="list-cards">
             {data ? <>
-              {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
+              {homeLists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
               {elseUsed || !lists.length ? card("else", elseName, lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore")) : null}
             </> : loadFailed
               ? <div className="empty" role="alert"><p>{t("lists.couldNotLoad")}</p>

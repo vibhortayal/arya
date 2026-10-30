@@ -7,6 +7,7 @@ from collections import OrderedDict
 from fastapi.responses import JSONResponse
 
 from api import state, auth
+from api.cost_ledger import kind_for_path, usage_kind
 from api.deps import _client_ip, _prune
 
 # Per-IP sliding-window caps on the demo's unauthenticated surface:
@@ -170,6 +171,7 @@ async def require_login(request, call_next):
                         status_code=429)
             state.set_overlay(_demo_sandbox(cookie))
         state.set_current_user(info["user"])
+        usage_kind.set(kind_for_path(path))
     return await call_next(request)
 
 

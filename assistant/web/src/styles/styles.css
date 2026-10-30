@@ -1982,3 +1982,8 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 /* Price watch and Next trip (card library, 2026-10-30) */
 #today-watch .hubrow:last-child, #today-trip .hubrow:last-child { border-bottom: none; }
 #today-watch .hubrow .sub, #today-trip .hubrow .sub { font-weight: 400; }
+/* Lists edit mode: what each list shows. */
+.nopreview .lc-items { display: none; }
+.nosugg .lc-sugg { display: none; }
+.addq { display: flex; gap: 8px; margin-top: 14px; }
+.addq input { flex: 1; min-width: 0; }

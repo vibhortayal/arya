@@ -55,7 +55,8 @@ export type Action =
   | { type: "addItem"; item: QuestItem }
   | { type: "snapped"; section: string };
 
-/* The golden item: picked from the list by a seed, so a trip can be
+/* The golden item: picked from the trip's own items (the player's list,
+ * never anything Arya adds; the UI promises this) by a seed, so a trip can be
  * replayed and tested. Never an item in a fog section (it must be findable). */
 export function pickGolden(layout: StoreLayout, items: QuestItem[], seed: number): string | null {
   const pool = items.filter(i => viewOf(layout, i.section) !== "fog");

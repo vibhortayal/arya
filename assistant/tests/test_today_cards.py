@@ -59,3 +59,21 @@ class TestCardSizesAndDisplay(TestTodayCards):
         self.post(400, display={"text": 9})
         self.post(400, display={"bold": 1})
         self.post(400, display={"font": "big"})
+
+
+class TestLayouts(TestTodayCards):
+    def test_layouts_per_screen(self):
+        self.assertEqual(self.c.get("/api/settings").json()["layouts"], {})
+        self.post(layouts={"lists": {"order": ["b", "a"], "hidden": ["c"]}})
+        r = self.post(layouts={"ask": {"chips": ["What goes bad this week?"]}})
+        self.assertEqual(r["layouts"]["lists"]["order"], ["b", "a"])
+        self.assertEqual(r["layouts"]["ask"]["chips"], ["What goes bad this week?"])
+        # a screen's value is replaced whole; null clears a key
+        r = self.post(layouts={"ask": {"chips": None}})
+        self.assertIsNone(r["layouts"]["ask"]["chips"])
+
+    def test_layouts_validated(self):
+        self.post(400, layouts={"nope": {"on": []}})
+        self.post(400, layouts={"lists": {"order": "a"}})
+        self.post(400, layouts={"ask": {"chips": ["x" * 121]}})
+        self.post(400, layouts={"spending": {"on": [1]}})
