@@ -42,6 +42,13 @@ class TestHuntV2Screens(unittest.TestCase):
         self.assertIn(">Receipt added<", prog)
         self.assertIn('id="pf-missing"', src("screens/Profile.tsx"))
 
+    def test_missing_receipt_card_wraps_on_a_phone(self):
+        # Pilot 2026-10-30: at 390 px the store name was squeezed into a
+        # one-word column beside the two buttons.
+        css = src("styles/styles.css")
+        self.assertIn("#pf-missing .sessrow { flex-wrap: wrap; }", css)
+        self.assertIn("#pf-missing .sessrow .grow { flex: 1 1 100%; }", css)
+
     def test_add_receipt_is_reachable_everywhere(self):
         self.assertIn("export function AddReceiptSheet(", src("ui/AddReceiptSheet.tsx"))
         score = src("screens/Score.tsx")

@@ -267,6 +267,12 @@ textarea {
 }
 .sessrow:last-child { border-bottom: none; }
 .sessrow .grow { flex: 1; min-width: 0; }
+/* Missing-receipt card (Settings): the note takes the full width and the
+   two buttons share the row under it, so a 390 px phone never squeezes
+   the store name into one word per line. */
+#pf-missing .sessrow { flex-wrap: wrap; }
+#pf-missing .sessrow .grow { flex: 1 1 100%; }
+#pf-missing .sessrow .btn { flex: 1; }
 .track { display: block; height: 6px; background: var(--fill); border-radius: 3px; margin-top: 7px; overflow: hidden; }
 .track .bar { display: block; height: 100%; }
 .rail { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; -webkit-overflow-scrolling: touch; }
