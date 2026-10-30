@@ -1226,6 +1226,14 @@ input[type=file]::file-selector-button {
 .sheet .srow .rmstore { flex: none; background: none; border: none; color: var(--danger); font: inherit; font-size: 15px; font-weight: 600; padding: 12px 4px 12px 12px; cursor: pointer; }
 .sheet .navrow .newtag { font-size: 11px; font-weight: 700; color: var(--accent-text); margin-left: 8px; text-transform: uppercase; }
 .sheet .sheetacts { display: flex; gap: 8px; margin-top: 12px; }
+/* The buttons stay on screen however long the sheet scrolls, above the keyboard. */
+.sheet .sheetacts { position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); margin-inline: -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--group); border-top: 1px solid var(--sep); }
+.pchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.pchips .chip { min-height: 34px; }
+.sheet .showall { margin: 8px 0 0; }
+/* Keyboard open: the sheet takes the room above it and drops the title and hint. */
+.sheet:has(.sheetbody.kb) { max-height: calc(100dvh - 12px); }
+.sheetbody.kb .sheetgrip, .sheetbody.kb .largetitle, .sheetbody.kb > .sub { display: none; }
 .sheet .sheetacts .btn { flex: 1; }
 .sheet .field { margin: 8px 0; }
 .filetag { font: inherit; border: 1.5px solid var(--sep); background: transparent; }

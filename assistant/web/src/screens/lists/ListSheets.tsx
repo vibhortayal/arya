@@ -84,8 +84,24 @@ export function unpick(p: StoreLink, c: { name: string; id: string }, all: { nam
   return { stores: keep ? p.stores : p.stores.filter(n => n !== c.name), ids };
 }
 
-function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: StoreLink; setPicked: (p: StoreLink) => void }) {
+/* True while the on-screen keyboard covers a good part of the screen, so
+ * the store sheets can drop their title and hint and use the room above it. */
+function useKeyboardOpen() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const check = () => setOpen(window.innerHeight - vv.height > 150);
+    check();
+    vv.addEventListener("resize", check);
+    return () => vv.removeEventListener("resize", check);
+  }, []);
+  return open;
+}
+
+function StorePicker({ extra, picked, setPicked, compact }: { extra?: string[]; picked: StoreLink; setPicked: (p: StoreLink) => void; compact?: boolean }) {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
   const { toast } = useToast();
   const [choices, setChoices] = useState<Choice[] | null>(null);
   const [find, setFind] = useState("");
@@ -169,8 +185,32 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: S
   const toggle = (c: Choice) => setPicked(on(c) ? unpick(picked, c, choices || [])
     : { stores: picked.stores.includes(c.name) ? picked.stores : [...picked.stores, c.name], ids: c.id ? [...picked.ids, c.id] : picked.ids });
 
+  const q = find.trim().toLowerCase();
+  const all = choices || [];
+  const matches = q ? all.filter(c => (c.name + " " + c.where).toLowerCase().includes(q)) : all;
+  const limit = q || showAll ? matches.length : compact ? 2 : 5;
+  const shown = matches.slice(0, limit);
+  // Picked stores as chips: the household's own rows, then names that have no row.
+  const chips: { key: string; label: string; off: () => void }[] = [
+    ...all.filter(on).map(c => ({
+      key: c.id || c.name,
+      label: all.filter(x => x.name === c.name).length > 1 && c.where ? `${c.name} · ${c.where}` : c.name,
+      off: () => setPicked(unpick(picked, c, all)),
+    })),
+    ...picked.stores.filter(n => !all.some(c => c.name === n)).map(n => ({
+      key: "n:" + n, label: n, off: () => setPicked({ stores: picked.stores.filter(x => x !== n), ids: picked.ids }),
+    })),
+  ];
+
   return (
     <>
+      {chips.length ? (
+        <div className="pchips" id="ls-picked">
+          {chips.map(c => (
+            <button key={c.key} className="chip" type="button" data-ls-chip={c.label} aria-label={t("lists.stores.removeChip", { name: c.label })} onClick={c.off}>{c.label} <span aria-hidden="true">×</span></button>
+          ))}
+        </div>
+      ) : null}
       <div className="findrow">
         <input type="text" id="ls-find" maxLength={80} placeholder={t("lists.findAStoreNameOr")} autoComplete="off" aria-label={t("lists.findAStore")}
           value={find} onChange={e => onFind(e.target.value)}
@@ -192,13 +232,16 @@ function StorePicker({ extra, picked, setPicked }: { extra?: string[]; picked: S
       <div id="ls-stores">
         {choices && (!choices.length
           ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>
-          : <><p className="nearlbl">{t("lists.stores.yours")}</p>{choices.map(c => (
+          : <><p className="nearlbl">{t("lists.stores.yours")}</p>{shown.map(c => (
             <div className="srow" key={c.id || c.name}>
               <button className="navrow" type="button" data-ls-store={c.name} aria-pressed={on(c)} onClick={() => toggle(c)}>
                 <span className="tick" aria-hidden="true">✓</span><span className="grow">{c.name}{c.fresh ? <span className="newtag">{t("common.new")}</span> : null}{c.where ? <small>{c.where}</small> : null}</span>
               </button>
               {c.id ? <button className="rmstore" type="button" data-ls-rm={c.id} aria-label={t("lists.stores.removeAria", { name: c.name })} onClick={() => removeStore(c.id)}>×</button> : null}
-            </div>))}</>)}
+            </div>))}
+            {!q && !showAll && matches.length > limit
+              ? <p className="showall"><button type="button" id="ls-showall" className="linkbtn" onClick={() => setShowAll(true)}>{t("lists.stores.showAll", { count: matches.length })}</button></p>
+              : null}</>)}
       </div>
     </>
   );
@@ -218,6 +261,7 @@ type Common = {
 function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "run"> & { moving: string[] | null; onCreate: (name: string, link: StoreLink, moving: string[] | null) => Promise<void> }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const kb = useKeyboardOpen();
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<StoreLink>(NO_LINK);
   const create = () => {
@@ -226,15 +270,15 @@ function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "
     run(() => onCreate(n, picked, moving));
   };
   return (
-    <>
+    <div className={"sheetbody" + (kb ? " kb" : "")}>
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.newList")}</h3>
       <label className="field">{t("lists.name")}<input type="text" id="ls-name" maxLength={40} placeholder={t("lists.costcoIndianStoreParty")} autoComplete="off" data-first
         value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); create(); } }} /></label>
       <p className="sub">{t("lists.linkStoresOptionalFindOne")}</p>
-      <StorePicker picked={picked} setPicked={setPicked} />
+      <StorePicker picked={picked} setPicked={setPicked} compact={kb} />
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button><button className="btn primary" type="button" data-ls="create" onClick={create}>{t("lists.createList")}</button></div>
-    </>
+    </div>
   );
 }
 
@@ -263,17 +307,18 @@ function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }:
 
 function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (id: string, link: StoreLink) => Promise<void> }) {
   const { t } = useTranslation();
+  const kb = useKeyboardOpen();
   const l = namedLists(data).find(x => x.id === lens);
   const [picked, setPicked] = useState<StoreLink>(linkOf(l || {}));
   if (!l) return null;
   return (
-    <>
+    <div className={"sheetbody" + (kb ? " kb" : "")}>
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.linkStores")}</h3>
       <p className="sub">{t("lists.pickOneOrMoreHunts", { name: l.name })}</p>
-      <StorePicker extra={l.stores} picked={picked} setPicked={setPicked} />
+      <StorePicker extra={l.stores} picked={picked} setPicked={setPicked} compact={kb} />
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button><button className="btn primary" type="button" data-ls="savestores" onClick={() => run(() => onSave(l.id, picked))}>{t("common.save")}</button></div>
-    </>
+    </div>
   );
 }
 
