@@ -148,6 +148,11 @@ describe("trip rules", () => {
       expect(viewOf(layout, items.find(i => i.key === g)!.section)).not.toBe("fog");
     }
   });
+  it("the golden item is always one of the player's own items", async () => {
+    const { layout, items } = await open("safeway-kirkland");
+    const own = new Set(items.map(i => i.key));
+    for (let seed = 0; seed < 50; seed++) expect(own.has(newTrip(layout, items, { seed }).golden!)).toBe(true);
+  });
 });
 
 describe("progression", () => {
