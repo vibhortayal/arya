@@ -80,6 +80,12 @@ export default async function (page, base) {
     // Exactly one step is lit as next.
     if ((await page.$$("#today-getstarted li.next")).length !== 1) throw new Error("one next step expected");
 
+    // Today asks once, after the first list, what matters most: skip it.
+    const ask = page.locator("#today-ask");
+    if (await ask.waitFor({ timeout: 4000 }).then(() => true, () => false)) {
+      await ask.getByRole("button", { name: "Skip" }).first().click();
+      await ask.waitFor({ state: "detached" });
+    }
     // The x closes the card for good.
     await page.click("#gs-dismiss");
     await page.reload();
