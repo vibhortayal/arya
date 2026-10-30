@@ -27,6 +27,10 @@ export interface QuestSource {
   /* End the trip without finishing it (Leave › End quest): the host
    * closes its record; grabs already sent stay checked off. */
   end?(): Promise<void>;
+  /* One shelf photo for the store map, taken in the game (the fog
+   * nudge, the finish card). The host blurs people first and may
+   * refuse (daily cap, no reader); note says why, for the player. */
+  snap?(e: { section: string; item: string; photo: Blob }): Promise<SnapResult>;
   /* Pick a saved trip back up (Your trips › Resume): its layout, items
    * and the keys already grabbed; null when the game cannot play it. */
   resume?(id: string): Promise<{ layout: StoreLayout; items: QuestItem[]; got: string[] } | null>;
@@ -41,6 +45,8 @@ export interface QuestSource {
   saveMap?(m: Omit<SavedMap, "key" | "savedAt">): Promise<SavedMap>;
   voice?(): Promise<{ stop(): Promise<string>; cancel(): void }>;
 }
+
+export type SnapResult = { ok: boolean; label?: string; note?: string };
 
 /* A store the player built: "store" is their own map of a real store
  * (it stays theirs until others agree), "dream" is made up and only

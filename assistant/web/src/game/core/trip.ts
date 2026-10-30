@@ -28,6 +28,7 @@ export type Trip = {
   subs: Record<string, string>;  // item key -> what the shopper took instead (Substitute)
   reports: { key: string; kind: ReportKind }[];
   scouted: string[];             // fog sections the player put on the map this trip
+  snapped: string[];             // sections the player photographed for the map this trip
   cleared: string[];             // sections finished with at least one item got
   clearPts: Record<string, number>; // the bonus each clear paid (an undo takes it back)
   golden: string | null;         // one item per trip counts double
@@ -51,7 +52,8 @@ export type Action =
   | { type: "unskipSection"; section: string }
   | { type: "move"; section: string; by: -1 | 1 }
   | { type: "resetOrder" }
-  | { type: "addItem"; item: QuestItem };
+  | { type: "addItem"; item: QuestItem }
+  | { type: "snapped"; section: string };
 
 /* The golden item: picked from the list by a seed, so a trip can be
  * replayed and tested. Never an item in a fog section (it must be findable). */
@@ -63,7 +65,7 @@ export function pickGolden(layout: StoreLayout, items: QuestItem[], seed: number
 
 export function newTrip(layout: StoreLayout, items: QuestItem[], o: { seed?: number; practice?: boolean; golden?: string | null } = {}): Trip {
   return {
-    layout, items, order: aryaOrder(layout, items), skipped: [], got: [], passed: [], subs: {}, reports: [], scouted: [], cleared: [], clearPts: {},
+    layout, items, order: aryaOrder(layout, items), skipped: [], got: [], passed: [], subs: {}, reports: [], scouted: [], snapped: [], cleared: [], clearPts: {},
     golden: o.golden !== undefined ? o.golden : pickGolden(layout, items, o.seed ?? 0),
     points: 0, here: null, chain: 0, leftEarly: [], events: [], practice: !!o.practice,
   };
@@ -83,6 +85,18 @@ export const nextItem = (trip: Trip, section: string) => leftIn(trip, section)[0
 export const progress = (trip: Trip) => ({ done: trip.got.length, total: trip.items.length });
 export const allHandled = (trip: Trip) => trip.items.every(i => handled(trip, i.key));
 export const sectionView = (trip: Trip, section: string) => viewOf(trip.layout, section, new Set(trip.scouted));
+/* Sections where the player found something Arya had not located (a fog
+ * find, or a grab in a guessed section), in the order found, with the
+ * first item found there: what a shelf photo would put on the map. */
+export function unmappedFinds(trip: Trip): { section: string; item: string }[] {
+  const out: { section: string; item: string }[] = [];
+  for (const key of trip.got) {
+    const it = trip.items.find(i => i.key === key);
+    if (!it || trip.layout.mapped.includes(it.section) || out.some(o => o.section === it.section)) continue;
+    out.push({ section: it.section, item: it.name });
+  }
+  return out;
+}
 
 /* ---- the reducer ---- */
 export function reduce(trip: Trip, a: Action): Trip {
@@ -151,6 +165,7 @@ export function reduce(trip: Trip, a: Action): Trip {
     case "skipSection": return t.skipped.includes(a.section) ? trip : { ...t, skipped: [...t.skipped, a.section] };
     case "unskipSection": return { ...t, skipped: t.skipped.filter(s => s !== a.section) };
     case "move": return { ...t, order: move(t.order, a.section, a.by) };
+    case "snapped": return t.snapped.includes(a.section) ? trip : { ...t, snapped: [...t.snapped, a.section] };
     case "resetOrder": return { ...t, order: aryaOrder(t.layout, t.items), skipped: [] };
     case "addItem": {
       if (t.items.some(i => i.key === a.item.key)) return trip;

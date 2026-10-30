@@ -155,6 +155,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
             <Finish trip={screen.trip} rewards={screen.rewards} profile={profile}
               onDone={() => setScreen({ s: "home" })} onReceipt={!screen.trip.practice ? onReceipt : undefined} onRealQuest={() => setScreen({ s: "pick" })} onAgain={startPractice}
               onMap={onMapStore && needsMap(screen.trip) ? () => onMapStore({ id: screen.trip.layout.id, name: screen.trip.layout.name }) : undefined}
+              onSnap={source.snap ? e => source.snap!(e) : undefined}
               onRoute={notes => void (screen.trip.practice ? silent : source).report({ kind: "route", store: screen.trip.layout.id, notes, text: "" })} />
           )}
         </motion.div>

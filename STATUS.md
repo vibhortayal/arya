@@ -126,6 +126,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   button, and one List sheet (add at the top, sections in walking order,
   reorder or skip behind a link). An empty list offers add or a saved list.
   `2026-10-29-quest-instore.md`.
+  After a find in a part of the store Arya has not located, a one-line
+  nudge offers Snap: the camera opens inside the game and the shelf photo
+  goes to Map my store's scan (people blurred first). The finish card
+  lists those sections with Snap each. `2026-10-30-quest-fog-snap.md`.
   Resume on a Quest trip opens it in the Quest game, grabs in the cart.
   `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
