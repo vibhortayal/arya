@@ -747,6 +747,9 @@
       "onList": "On this list",
       "boughtBefore": "Bought before"
     },
+    "addItemHere": "Add item here…",
+    "talkToAdd": "Talk to add",
+    "photoToAdd": "Photo to add",
     "removeName": "Remove {{name}}",
     "readsDisagreed": "Not sure · tap to check",
     "suggested": "Suggested",
