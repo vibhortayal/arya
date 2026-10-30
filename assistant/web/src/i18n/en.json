@@ -870,7 +870,7 @@
         "back": "Is your olive oil cheaper at Trader Joe's or Safeway? Arya tells you, from your receipts and Arya shoppers."
       },
       "usesoon": {
-        "title": "Rescue food waste",
+        "title": "Reduce food waste",
         "sub": "Before it expires or goes bad",
         "back": "Snap the date on a pack. Arya reminds you to use it before it expires or goes bad."
       },
@@ -2301,7 +2301,7 @@
       },
       "usesoon": {
         "kicker": "Use soon",
-        "title": "Use it before it expires or goes bad",
+        "title": "Reduce food waste",
         "body": "Snap the date on a pack, or pick a use-by date for fresh food. Arya nudges you to use it in time, so less food ends up in the bin.",
         "try": "Try it with a sample yogurt"
       },

@@ -57,7 +57,7 @@ class TestLanding(unittest.TestCase):
         self.assertEqual(list(en), list(keys))
         self.assertEqual([en[k]["title"] for k in keys],
                          ["A list for every store", "Share with your household", "Map your store", "Store news",
-                          "See where money goes", "Know where it's cheaper", "Rescue food waste", "Just ask Arya"])
+                          "See where money goes", "Know where it's cheaper", "Reduce food waste", "Just ask Arya"])
         self.assertIn("learns your habits", en["lists"]["back"].lower())
         self.assertIn("expires or goes bad", en["usesoon"]["sub"])
         for card in en.values():
