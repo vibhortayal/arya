@@ -1869,3 +1869,19 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .wl-bar .btn.danger { flex: none; padding-left: 18px; padding-right: 18px; }
 .listrow.wl-row.checked .name { color: var(--label); text-decoration: none; }
 .listrow.wl-row.checked .sub { color: var(--secondary); text-decoration: none; }
+
+/* Ask: Talk and Photo chips under the field, photo chooser and strip (owner 2026-10-30). */
+#chat-form { flex-wrap: wrap; }
+#chat-form .caprow { flex: 1 1 100%; }
+#chat-form .spchip { flex: 1 1 100%; order: -1; display: flex; align-items: center; gap: 10px; }
+#chat-form .spchip img { width: 44px; height: 34px; object-fit: cover; border-radius: 7px; flex: none; }
+#chat-form .spchip .grow { flex: 1; min-width: 0; }
+.bubble.me.photo { background: transparent; padding: 4px; }
+.bubble.me.photo img { display: block; max-width: 160px; max-height: 160px; border-radius: 12px; }
+.bubble .small { font-size: 13px; margin: 6px 0 0; }
+.bubble .tall { min-height: 44px; }
+.bubble.choose .pick { all: unset; box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--sep); cursor: pointer; }
+.bubble.choose .pick b { color: var(--accent-text, var(--accent)); }
+.bubble.choose .pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bubble .chip.tall { margin-top: 8px; }
+#chat-log > * { scroll-margin-bottom: 160px; }
