@@ -1755,8 +1755,16 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .aisle-h .n { font-size: 13px; color: var(--tertiary); }
 .aisle-h .chev { margin-left: auto; color: var(--tertiary); transform: rotate(90deg); }
 .aisle.shut .aisle-h .chev { transform: none; }
-.listfind { display: block; width: 100%; box-sizing: border-box; min-height: 44px; margin: 0 0 10px; padding: 0 16px; border: 0; border-radius: var(--radius); background: var(--group); color: var(--ink); font: inherit; font-size: 17px; }
 
 /* The row's more button (owner 2026-10-30): Move and Remove without the swipe. */
 .listrow .morebtn { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; background: none; color: var(--tertiary); display: grid; place-items: center; }
 .listrow .morebtn svg { width: 22px; height: 22px; }
+
+/* Find (owner approved mockup 6b, 2026-10-30): an icon chip from 25 items,
+   one field with Cancel once tapped. */
+.caprow .chip.findchip { flex: none; width: 48px; padding: 0; }
+.findbar { align-items: center; }
+.findfield { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--group); color: var(--secondary); }
+.findfield svg { flex: none; width: 20px; height: 20px; }
+.findfield input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 17px; color: var(--ink); outline: none; }
+.findfield input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }

@@ -6,7 +6,8 @@ import { get, post } from "../../lib/api";
 import { MONTHS, fmtShort, money } from "../../lib/format";
 import { clearOnSignOut, useSession } from "../../app/session";
 import { charFor } from "../../lib/characters";
-import { namedLists, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
+import { AISLE_ORDER, GROUP_AT, OTHER } from "./aisles";
+import { itemHome, namedLists, onListItems, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
 import { useTranslation } from "../../i18n";
 
 /* Port of pwa/lists.js: the sheets behind the Lists tab (new list,
@@ -29,6 +30,7 @@ export type SheetState =
   | { kind: "stores" }
   | { kind: "move"; ids: string[] }
   | { kind: "row"; id: string }
+  | { kind: "aisle"; id: string }
   | { kind: "why"; id: string };
 
 /* ---------------- store choices and the Find-a-store picker ---------------- */
@@ -253,15 +255,42 @@ function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: stri
   );
 }
 
-/* The row's ⋯ button: Move and Remove without needing the swipe. */
-function RowSheet({ data, id, run, onClose, onMove, onRemove }: Common & { id: string; onMove: (id: string) => void; onRemove: (ids: string[]) => Promise<void> }) {
+const deptOf = (i: Item) => (i.aisle && AISLE_ORDER.includes(i.aisle) ? i.aisle : OTHER);
+
+/* Pick the department an item files under. Remembered for the household. */
+function AisleSheet({ data, id, run, onClose, onAisle }: Common & { id: string; onAisle: (id: string, aisle: string) => Promise<void> }) {
   const { t } = useTranslation();
-  const name = (data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>)).name || "";
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  const now = deptOf(item as Item);
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{item.name || ""}</h3>
+      <p className="sub">{t("lists.departmentHint")}</p>
+      <div className="group" style={{ boxShadow: "none" }}>
+        {[...AISLE_ORDER, OTHER].map(a => (
+          <button key={a} className="navrow" type="button" data-ls-aisle={a} aria-pressed={a === now}
+            onClick={() => run(async () => { onClose(); if (a !== now) await onAisle(id, a); })}>
+            <span className="grow">{t(`lists.aisle.${a}`)}</span><span className="tick" aria-hidden="true">✓</span></button>))}
+      </div>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
+    </>
+  );
+}
+
+/* The row's ⋯ button: Move and Remove without needing the swipe. */
+function RowSheet({ data, id, run, onClose, onMove, onAisle, onRemove }: Common & { id: string; onMove: (id: string) => void; onAisle: (id: string) => void; onRemove: (ids: string[]) => Promise<void> }) {
+  const { t } = useTranslation();
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  const name = item.name || "";
+  /* The department row only helps where the list shows department headers. */
+  const grouped = !!item.item_id && onListItems(data).filter(i => !i.checked && !i.not_grocery && itemHome(data, i) === itemHome(data, item as Item)).length >= GROUP_AT;
   return (
     <>
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{name}</h3>
       <button className="navrow" type="button" data-ls="row-move" onClick={() => onMove(id)}><span className="grow">{t("lists.moveToAnother")}</span><span className="chev">›</span></button>
+      {grouped ? <button className="navrow" type="button" data-ls="row-aisle" onClick={() => onAisle(id)}><span className="grow">{t("lists.moveToDepartment")}<small>{t(`lists.aisle.${deptOf(item as Item)}`)}</small></span><span className="chev">›</span></button> : null}
       <button className="navrow dangerrow" type="button" data-ls="row-remove" onClick={() => run(async () => { onClose(); await onRemove([id]); })}><span className="grow">{t("common.remove")}</span></button>
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
     </>
@@ -365,6 +394,7 @@ export type SheetActions = {
   onWhyNot: (id: string) => void;
   onWhyNever: (id: string) => void;
   onRemove: (ids: string[]) => Promise<void>;
+  onAisle: (id: string, aisle: string) => Promise<void>;
 };
 
 export function ListSheet({ sheet, setSheet, data, lens, actions }:
@@ -383,7 +413,8 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
       {sheet.kind === "new" && <NewSheet moving={sheet.moving} onClose={onClose} run={run} onCreate={actions.onCreate} />}
       {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
-      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onRemove={actions.onRemove} />}
+      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} />}
+      {sheet.kind === "aisle" && <AisleSheet {...common} id={sheet.id} onAisle={actions.onAisle} />}
       {sheet.kind === "move" && <MoveSheet {...common} ids={sheet.ids} onMove={actions.onMove} onNew={ids => setSheet({ kind: "new", moving: ids })} />}
     </Sheet>
   );

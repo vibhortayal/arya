@@ -465,6 +465,23 @@ async def list_move(req: Request):
     return {"ok": True}
 
 
+@router.post("/api/list/aisle")
+async def list_aisle(req: Request):
+    """Pin an item to a department ("Other" for none), or clear the pin
+    (aisle null) so the keyword map decides again. Remembered per
+    household, so the next time the item is added it files the same way."""
+    from api import aisles
+    body = await _json_obj(req)
+    item_id = body.get("item_id")
+    if not item_id:
+        raise HTTPException(400, "item_id is required")
+    aisle = body.get("aisle") or None
+    if aisle and aisle not in aisles.AISLES and aisle != "Other":
+        raise HTTPException(400, "unknown department")
+    _merge_flag(item_id, {"aisle": aisle})
+    return {"ok": True}
+
+
 @router.post("/api/list/check")
 async def list_check(req: Request):
     body = await _json_obj(req)

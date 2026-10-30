@@ -811,6 +811,9 @@
     "newListMenu": "New list…",
     "questWalksYou": "A game with points and badges",
     "firstListTitle": "Create your first list",
+    "moveToDepartment": "Move to department",
+    "departmentHint": "Arya remembers this for your household.",
+    "departmentSet": "{{name}} is now under {{dept}}.",
     "findInList": "Find in this list",
     "noMatch": "Nothing on this list matches \"{{q}}\".",
     "aisle": {

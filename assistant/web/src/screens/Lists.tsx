@@ -8,7 +8,7 @@ import { SuggestDrop, lastSegment, replaceLast, useSuggest } from "../ui/Suggest
 import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
-import { IconCheck, IconMic, IconMore, IconPen, IconSpark } from "../ui/icons";
+import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
 import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
@@ -222,6 +222,7 @@ export function Lists() {
   const [renameVal, setRenameVal] = useState("");
   const [doneOpen, setDoneOpen] = useState(false);
   const [find, setFind] = useState("");
+  const [finding, setFinding] = useState(false);
   const [folded, setFolded] = useState<Set<string>>(loadFolded);
   const toggleFold = (key: string) => setFolded(prev => {
     const next = new Set(prev);
@@ -299,7 +300,8 @@ export function Lists() {
   /* A long list gets a find field (25+ open items) and department
    * headers (12+), owner 2026-10-30. A search shows a flat result. */
   const findOn = open.length >= FIND_AT;
-  const q = findOn ? find.trim() : "";
+  const q = findOn && finding ? find.trim() : "";
+  useEffect(() => { setFinding(false); setFind(""); }, [findOn, lid]);
   const gShown = q ? groceries.filter(i => matchesFind(i, q)) : groceries;
   const eShown = q ? errands.filter(i => matchesFind(i, q)) : errands;
   const aisleGroups = q ? null : groupByAisle(groceries);
@@ -333,6 +335,11 @@ export function Lists() {
   }, onPage);
 
   /* ---- sheets' writes (lists.js) ---- */
+  const setAisle = async (id: string, aisle: string) => {
+    await post("/api/list/aisle", { item_id: id, aisle });
+    toast(t("lists.departmentSet", { name: (dataRef.current?.list.items.find(i => i.item_id === id) || { name: "" }).name, dept: t(`lists.aisle.${aisle}`) }));
+    await reload();
+  };
   const moveTo = async (ids: string[], listId: string) => {
     const before = dataRef.current!;
     const back = ids.map(id => [id, (before.list.items.find(i => i.item_id === id) || {} as Partial<Item>).list || null] as const);
@@ -941,13 +948,22 @@ export function Lists() {
             </div>
             {/* Voice and photo say what they do (owner, 2026-10-30): bare
               * icons were not obvious. */}
-            <div className="caprow">
-              <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
-              <label className="chip" htmlFor="add-photo" {...pickerProps("add-photo")}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
-                {t("lists.photoToAdd")}
-              </label>
-            </div>
+            {findOn && finding ? (
+              <div className="caprow findbar">
+                <span className="findfield"><IconSearch /><input type="search" id="list-find" maxLength={80} autoComplete="off" autoFocus value={find}
+                  placeholder={t("lists.findInList")} aria-label={t("lists.findInList")} onChange={e => setFind(e.target.value)} /></span>
+                <button className="linkbtn" id="list-find-cancel" type="button" onClick={() => { setFinding(false); setFind(""); }}>{t("common.cancel")}</button>
+              </div>
+            ) : (
+              <div className="caprow">
+                <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
+                <label className="chip" htmlFor="add-photo" {...pickerProps("add-photo")}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+                  {t("lists.photoToAdd")}
+                </label>
+                {findOn ? <button className="chip findchip" id="list-find-open" type="button" aria-label={t("lists.findInList")} onClick={() => setFinding(true)}><IconSearch /></button> : null}
+              </div>
+            )}
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
@@ -981,8 +997,6 @@ export function Lists() {
           </div>
 
           {open.length && !selEff ? <p className="muted small tickhint" id="list-tickhint">{t("lists.tickHint")}</p> : null}
-          {findOn ? <input type="search" id="list-find" className="listfind" maxLength={80} autoComplete="off" value={find}
-            placeholder={t("lists.findInList")} aria-label={t("lists.findInList")} onChange={e => setFind(e.target.value)} /> : null}
           <div id="smart-list" ref={smart} onClick={onRows} onKeyDown={onRowsKey}>
             {q && !gShown.length && !eShown.length ? <p className="empty" id="list-nomatch">{t("lists.noMatch", { q })}</p> : null}
             {aisleGroups ? aisleGroups.map(g => {
@@ -1048,7 +1062,7 @@ export function Lists() {
       {data && (
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
-            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems }} />
+            onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}

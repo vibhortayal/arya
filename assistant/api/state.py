@@ -674,7 +674,9 @@ def derived():
         item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
         # Deterministic and cached only, never a model call here: the
         # list shows "Not a grocery item? Added anyway" for these.
-        aisle = aisles.aisle_for(item["name"])
+        # The household's own pick wins over the keyword map.
+        pin = f.get("aisle")
+        aisle = pin if pin in aisles.AISLES or pin == "Other" else aisles.aisle_for(item["name"])
         if aisle:
             item["aisle"] = aisle  # the department the list groups under
         g = classify_grocery(item["name"], verdicts)
