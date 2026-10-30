@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNav } from "../../app/nav";
+import { get } from "../../lib/api";
 import { useSession } from "../../app/session";
 import { useAvatar } from "../../app/avatar";
 import { loadGameDoc, serverProfileStore, type GameDoc } from "./serverProfile";
@@ -78,11 +79,21 @@ export function QuestMode() {
 
   const onAddItems = useCallback(() => nav.show("list"), [nav]);
 
+  // Map my store row: says when a walk is being read or is ready to check.
+  const [mapState, setMapState] = useState<"" | "building" | "ready">("");
+  useEffect(() => {
+    get<{ jobs: { status: string; seen: boolean }[] }>("/api/storemap/jobs").then(r => {
+      const jobs = r.jobs || [];
+      setMapState(jobs.some(j => j.status === "ready" && !j.seen) ? "ready"
+        : jobs.some(j => j.status === "queued" || j.status === "reading") ? "building" : "");
+    }).catch(() => {});
+  }, [nav.key]);
+
   const panels = {
     map: (
       <div className="qm-links">
-        <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
-          <span><b>{t("quest.mapMyStore")}</b><small>{t("quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
+        <button id="qm-map-store" className={"qg-store" + (mapState === "ready" ? " qm-ready" : "")} type="button" onClick={() => nav.show("mapper")}>
+          <span><b>{t("quest.mapMyStore")}</b><small>{t(mapState === "ready" ? "quest.mapReadySub" : mapState === "building" ? "quest.mapBuildingSub" : "quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
         </button>
       </div>
     ),
