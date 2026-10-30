@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentType } from "react";
+import { Suspense, useEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -14,7 +14,7 @@ import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { Developers, isDevelopersPath } from "./screens/Developers";
-import { SCREENS } from "./screens/registry";
+import { SCREENS, preloadTabScreens } from "./screens/registry";
 import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
 import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
 import { t } from "./i18n";
@@ -102,6 +102,12 @@ function Shell() {
   });
   useListFromHash();
   useGroupLive();
+  useEffect(() => {
+    // After first paint and a quiet moment, fetch the other tabs' code.
+    const idle = (window as { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const id = idle ? idle(preloadTabScreens, { timeout: 8000 }) : window.setTimeout(preloadTabScreens, 3000);
+    return () => { if (!idle) clearTimeout(id); };
+  }, []);
   return (
     <>
       {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
@@ -109,7 +115,7 @@ function Shell() {
       {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
-          <Screen />
+          <Suspense fallback={null}><Screen /></Suspense>
         </section>
       </main>
       {nav.chrome && (

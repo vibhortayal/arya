@@ -13,6 +13,7 @@ None, and the album files them under "Other finds".
 """
 import json
 import os
+import functools
 import re
 
 AISLES = ["Produce", "Bakery", "Deli", "Dairy", "Pantry", "Frozen", "Household"]
@@ -168,7 +169,10 @@ def _build_index():
 _INDEX = _build_index()
 
 
+@functools.lru_cache(maxsize=8192)
 def _classify(text):
+    # Pure in the text and the rule table, and called per item on every
+    # Today / Lists / cart read, so the answers are kept.
     toks = _norm(text).split()
     if not toks:
         return None
