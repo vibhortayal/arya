@@ -7,7 +7,7 @@ import { t } from "../i18n";
  * model guesses (one POST after a longer pause, and only when the
  * first two come up thin). The server decides what is allowed. */
 
-export type SuggestRow = { name: string; kind: "yours" | "shared" | "guess"; tag?: string };
+export type SuggestRow = { name: string; kind: "yours" | "shared" | "guess"; tag?: string; on?: string };
 
 const MIN_Q = 2;
 const MAX_ROWS = 5;
@@ -67,8 +67,10 @@ function Bold({ name, q }: { name: string; q: string }) {
 
 /* rows are in display order (yours, shared, guesses); idx is the
  * highlighted row or -1. */
-export function SuggestDrop({ rows, idx, q, onPick }: {
+export function SuggestDrop({ rows, idx, q, onPick, here }: {
   rows: SuggestRow[]; idx: number; q: string; onPick: (name: string) => void;
+  /* The list being added to: a row on a different list says which one. */
+  here?: string;
 }) {
   if (!rows.length) return null;
   return (
@@ -81,12 +83,13 @@ export function SuggestDrop({ rows, idx, q, onPick }: {
             <div className="ghead">{t(g.head)}</div>
             {part.map(r => {
               const n = rows.indexOf(r);
+              const elsewhere = here !== undefined && r.on !== undefined && (r.on || t("common.everythingElse")) !== here;
               return (
                 <div key={r.name} id={"add-sug-" + n} role="option" aria-selected={n === idx}
-                  className={"gitem" + (n === idx ? " on" : "") + (r.tag === "On this list" ? " dim" : "")}
+                  className={"gitem" + (n === idx ? " on" : "") + (r.tag === "On this list" && !elsewhere ? " dim" : "")}
                   onMouseDown={e => e.preventDefault()} onClick={() => onPick(r.name)}>
                   <span className="name"><Bold name={r.name} q={q} /></span>
-                  {r.tag ? <span className="tag">{r.tag === "On this list" ? t("lists.suggest.onList") : t("lists.suggest.boughtBefore")}</span> : null}
+                  {r.tag ? <span className="tag">{elsewhere ? t("lists.suggest.onNamed", { list: r.on || t("common.everythingElse") }) : r.tag === "On this list" ? t("lists.suggest.onList") : t("lists.suggest.boughtBefore")}</span> : null}
                 </div>
               );
             })}

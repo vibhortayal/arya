@@ -666,6 +666,10 @@ def derived():
             item["checked"] = True
         if f.get("list") in list_ids:
             item["list"] = f["list"]
+        also = [a for a in (f.get("also") or []) if a in list_ids and a != f.get("list")]
+        if also:
+            item["also"] = also
+            item["checked_in"] = [a for a in also if (f.get("checked_in") or {}).get(a) == today]
         kept.append(item)
     smart["items"] = kept
     verdicts = grocery_verdicts()

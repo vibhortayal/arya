@@ -16,7 +16,7 @@ import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../l
 import { ListSheet, type SheetState } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
 import {
-  askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
+  alsoNames, askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
   suggestHome, suggestions, suggestWhy, type HomeData, type Item,
 } from "./lists/model";
 import { FIND_AT, groupByAisle, loadFolded, matchesFind, saveFolded } from "./lists/aisles";
@@ -69,17 +69,19 @@ export function splitPreview(text: string): string[] {
  * or already on a list (QA 2026-10-30). */
 
 export type AddResult = { added: number; already?: number; skipped?: string[]; names?: string[];
-  already_names?: { name: string; list: string }[]; back?: string[]; moved?: { name: string; from: string }[] };
+  already_names?: { name: string; list: string }[]; back?: string[]; moved?: { name: string; from: string }[];
+  also?: { name: string; item_id: string; list: string }[] };
 
 const nameList = (ns: string[]) => (ns.length <= 3 ? ns.join(", ") : t("lists.namesAndMore", { names: ns.slice(0, 2).join(", "), n: ns.length - 2 }));
 
 export function addToast(r: AddResult, where: string): string {
-  const back = r.back || [], moved = r.moved || [], already = r.already_names || [];
-  const other = new Set([...back, ...moved.map(m => m.name), ...already.map(a => a.name)]);
+  const back = r.back || [], moved = r.moved || [], already = r.already_names || [], also = r.also || [];
+  const other = new Set([...back, ...moved.map(m => m.name), ...already.map(a => a.name), ...also.map(a => a.name)]);
   const fresh = (r.names || []).filter(n => !other.has(n));
   const out: string[] = [];
   if (fresh.length) out.push(t("lists.addedNamesTo", { names: nameList(fresh), where }));
   if (back.length) out.push(t("lists.backOnList", { names: nameList(back), count: back.length }));
+  for (const a of also) out.push(t("lists.addedAlsoOn", { name: a.name, list: a.list || t("common.everythingElse") }));
   for (const m of moved) out.push(m.from ? t("lists.movedHereFrom", { name: m.name, from: m.from }) : t("lists.movedHere", { name: m.name }));
   for (const a of already) out.push(t("lists.alreadyOnNamed", { name: a.name, where: a.list || t("common.everythingElse") }));
   if (!out.length && !r.added && (r.skipped || []).length) return t("lists.nothingAdded");
@@ -161,7 +163,7 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
   );
 }
 
-function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picking: boolean; picked: boolean;
+function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
   onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void; chip?: ReactNode }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
@@ -174,6 +176,7 @@ function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picki
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
+          {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
           {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
@@ -351,7 +354,7 @@ export function Lists() {
   const moveTo = async (ids: string[], listId: string) => {
     const before = dataRef.current!;
     const back = ids.map(id => [id, (before.list.items.find(i => i.item_id === id) || {} as Partial<Item>).list || null] as const);
-    for (const id of ids) await post("/api/list/move", { item_id: id, list_id: listId === "else" ? null : listId });
+    for (const id of ids) await post("/api/list/move", { item_id: id, list_id: listId === "else" ? null : listId, ...(lid !== "else" ? { from_list: lid } : {}) });
     markOpened(listId);
     setSheet(null);
     setSel(null);
@@ -360,6 +363,16 @@ export function Lists() {
     const what = ids.length === 1 ? ((before.list.items.find(i => i.item_id === ids[0]) || {} as Partial<Item>).name || t("lists.item")) : t("common.itemCount", { count: ids.length });
     toast(t("lists.movedTo", { what, dest }), { action: t("common.undo"), onAction: () => guard(async () => {
       for (const [id, l] of back) await post("/api/list/move", { item_id: id, list_id: l });
+      await reload();
+    }) });
+  };
+  const alsoOn = async (id: string, listId: string) => {
+    await post("/api/list/also", { item_id: id, list_id: listId });
+    setSheet(null);
+    const fresh = await reload();
+    const it = fresh.list.items.find(i => i.item_id === id);
+    toast(t("lists.alsoPut", { name: it ? it.name : t("lists.it"), list: lensName(fresh, listId) }), { action: t("common.undo"), onAction: () => guard(async () => {
+      await post("/api/list/also", { item_id: id, list_id: listId, on: false });
       await reload();
     }) });
   };
@@ -447,7 +460,7 @@ export function Lists() {
     const d = dataRef.current!;
     const names = ids.map(id => (d.list.items.find(i => i.item_id === id) || {} as Partial<Item>).name || t("lists.item"));
     try {
-      for (const id of ids) await post("/api/list/remove", { item_id: id });
+      for (const id of ids) await post("/api/list/remove", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) });
       if (selRef.current) setSel(null);
       reloadQuiet();
       toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
@@ -484,9 +497,9 @@ export function Lists() {
     const b = t.closest<HTMLElement>("[data-act]");
     if (!b) return;
     const act = b.dataset.act, id = b.dataset.id!;
-    const item = dataRef.current?.list.items.find(i => i.item_id === id);
+    const item = dataRef.current ? onListItems(dataRef.current).find(i => i.item_id === id && itemHome(dataRef.current!, i) === lid) : undefined;
     try {
-      if (act === "check") await post("/api/list/check", { item_id: id, checked: !(item && item.checked) });
+      if (act === "check") await post("/api/list/check", { item_id: id, checked: !(item && item.checked), ...(lid !== "else" ? { list_id: lid } : {}) });
       else if (act === "ng-keep") await post("/api/list/grocery-verdict", { item_id: id, kind: "grocery" });
       else if (act === "ng-remove" || act === "remove") { await removeItems([id]); return; }
       else if (act === "move") { setSheet({ kind: "move", ids: [id] }); return; }
@@ -625,7 +638,11 @@ export function Lists() {
       // Text typed while the request ran stays; only the sent text clears.
       if (textRef.current.trim() === txt && (r.added || !(r.skipped || []).length)) changeText("");
       setStatus("");
-      toast(addToast(r, here ? here.name : t("lists.yourList")));
+      const one = (r.also || []).length === 1 && here ? r.also![0] : null;
+      toast(addToast(r, here ? here.name : t("lists.yourList")), one ? { action: t("lists.moveHere"), onAction: () => guard(async () => {
+        await post("/api/list/move", { item_id: one.item_id, list_id: here!.id });
+        await reload();
+      }) } : undefined);
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});
       judgeUnknown();
     } catch (e) { toast(errMsg(e)); }
@@ -785,7 +802,7 @@ export function Lists() {
 
   /* ---- paint ---- */
   const listStores = here ? here.stores || [] : [];
-  const rowProps = (i: Item) => ({ i, picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: setQty, onReload: reloadQuiet,
+  const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: setQty, onReload: reloadQuiet,
     chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
   /* Demo Town: send items to the list of another store, making it when there is none. */
   const toStoreList = async (ids: string[], store: string) => {
@@ -986,7 +1003,7 @@ export function Lists() {
                   : <span aria-hidden="true">+</span>}
               </button> : null}
             </div>
-            <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} />
+            <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} here={name} />
             </div>
             {/* Voice and photo say what they do (owner, 2026-10-30): bare
               * icons were not obvious. */}
@@ -1105,7 +1122,7 @@ export function Lists() {
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
             onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle,
-            shopping: shoppingHere, onSnap: snapAisle, onChanged: reloadQuiet }} />
+            shopping: shoppingHere, onSnap: snapAisle, onChanged: reloadQuiet, onAlso: alsoOn }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}

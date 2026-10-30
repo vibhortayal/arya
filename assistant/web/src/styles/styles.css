@@ -1781,8 +1781,8 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .wizbar { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
 .wizbar .linkbtn { min-height: 44px; }
 .nomargin { margin: 0; }
-.wizpre { background: var(--fill, #f2f2f7); border-radius: 14px; padding: 14px; font: 15px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; margin: 4px 0 12px; max-height: 40vh; overflow: auto; }
-.wizpaste { width: 100%; box-sizing: border-box; border-radius: 14px; border: 1px solid var(--sep); padding: 12px; font: inherit; font-size: 17px; line-height: 1.5; background: var(--fill, #f2f2f7); color: inherit; }
+.wizpre { background: var(--fill); border-radius: 14px; padding: 14px; font: 15px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; margin: 4px 0 12px; max-height: 40vh; overflow: auto; }
+.wizpaste { width: 100%; box-sizing: border-box; border-radius: 14px; border: 1px solid var(--sep); padding: 12px; font: inherit; font-size: 17px; line-height: 1.5; background: var(--fill); color: inherit; }
 .wizfound { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
 .wizcheck { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sep); display: grid; place-items: center; color: #fff; font-size: 15px; box-sizing: border-box; }
 .wizcheck.on { background: var(--accent); border-color: var(--accent); }

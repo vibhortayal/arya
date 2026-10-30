@@ -62,7 +62,23 @@ def judge_second_seat():
     return report
 
 
-def _add_name_to_list(name, qty=1, list_id=None, unit=""):
+def _put_also(item_id, list_id, on=True):
+    """An item can sit on more than one list (owner, 2026-10-30): its
+    "list" is where it lives, "also" the others. Ticking is per list."""
+    def change(f):
+        f = dict(f)
+        also = [a for a in (f.get("also") or []) if a != list_id]
+        if on and f.get("list") != list_id:
+            also.append(list_id)
+        f["also"] = also
+        ticks = dict(f.get("checked_in") or {})
+        ticks.pop(list_id, None)
+        f["checked_in"] = ticks
+        return f
+    state.update_flag(item_id, change)
+
+
+def _add_name_to_list(name, qty=1, list_id=None, unit="", mode="both"):
     """A typed/pasted/read name joins the list as a manual item —
     the one add path every Add surface shares. A typed quantity
     ("eggs x 2") rides along as the item's quantity."""
@@ -75,8 +91,18 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
         # off, and an add from inside a list files it there (QA
         # 2026-10-30: "bananas" on Trader Joe's went to Everything else).
         flag = {"manual": True, "dismissed_on": None, "checked_on": None}
-        if list_id:
+        cur = state.flags().get(known, {})
+        elsewhere = (cur.get("list") if cur.get("list") in {l["id"] for l in state.named_lists()} else None)
+        if list_id and elsewhere and elsewhere != list_id and cur.get("manual") and mode == "both":
+            # On another list already: people decide (owner, 2026-10-30).
+            # It joins this one too; "Move here" is one tap in the toast.
+            if list_id not in (cur.get("also") or []):
+                _put_also(known, list_id)
+            flag["checked_on"] = cur.get("checked_on")
+        elif list_id:
             flag["list"] = list_id
+            if list_id in (cur.get("also") or []):
+                flag["also"] = [a for a in cur["also"] if a != list_id]
         if qty and qty != 1:
             flag["qty_override"] = qty
         if unit:
@@ -206,13 +232,16 @@ async def list_from_text(req: Request):
     # Already on the list, unticked and on this list: not "added". A
     # ticked row comes back and a row on another list moves here; the
     # toast names both so the add never looks like it did nothing.
-    already, already_names, back, moved = 0, [], [], []  # names for the toast
+    already, already_names, back, moved, also = 0, [], [], [], []  # names for the toast
     for a in added:
         was = before.get(a["item_id"])
         if was is None:
             continue
         if was.get("checked"):
             back.append(a["name"])
+        elif list_id and was.get("list") != list_id and list_id in (state.flags().get(a["item_id"], {}).get("also") or []):
+            also.append({"name": a["name"], "item_id": a["item_id"],
+                         "list": lists.get(was.get("list")) or ""})
         elif list_id and was.get("list") != list_id:
             moved.append({"name": a["name"],
                           "from": lists.get(was.get("list")) or ""})
@@ -221,7 +250,7 @@ async def list_from_text(req: Request):
             already_names.append({"name": a["name"],
                                   "list": lists.get(was.get("list")) or ""})
     return {"added": len(added) - already, "already": already,
-            "already_names": already_names, "back": back, "moved": moved,
+            "already_names": already_names, "back": back, "moved": moved, "also": also,
             "names": [a["name"] for a in added], "source": source,
             "skipped": skipped,
             # Only what newly joined the list: the client's Undo.
@@ -276,7 +305,8 @@ async def list_import(req: Request):
         it = _item(r.get("name"), r.get("qty") or 1, r.get("unit") or "", False, r.get("aisle") or "") if isinstance(r, dict) else None
         if not it:
             continue
-        a = _add_name_to_list(it["name"], it["qty"], list_id, it["unit"])
+        a = _add_name_to_list(it["name"], it["qty"], list_id, it["unit"],
+                              mode="move" if body.get("mode") == "move" else "both")
         if it["aisle"] in aisles.AISLES or it["aisle"] == "Other":
             _merge_flag(a["item_id"], {"aisle": it["aisle"]})
         groups.note("added", a["item_id"])
@@ -444,6 +474,23 @@ async def list_remove(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
+    lid = body.get("list_id")
+    cur = state.flags().get(item_id, {})
+    also = list(cur.get("also") or [])
+    if lid and also and (lid in also or lid == cur.get("list")):
+        # On more than one list: leaving this one keeps the others.
+        def leave(f):
+            f = dict(f)
+            rest = [a for a in also if a != lid]
+            if lid == f.get("list"):
+                f["list"] = rest.pop(0)
+            f["also"] = rest
+            ticks = dict(f.get("checked_in") or {})
+            ticks.pop(lid, None)
+            f["checked_in"] = ticks
+            return f
+        state.update_flag(item_id, leave)
+        return {"ok": True, "still_on": True}
     _merge_flag(item_id, {"manual": False, "dismissed_on": state.cycle()})
     groups.note("removed", item_id)
     return {"ok": True}
@@ -582,7 +629,35 @@ async def list_move(req: Request):
     list_id = body.get("list_id") or None
     if list_id and not any(l["id"] == list_id for l in state.named_lists()):
         raise HTTPException(404, "no such list")
-    _merge_flag(item_id, {"list": list_id})
+    from_list = body.get("from_list")
+
+    def change(f):
+        f = dict(f)
+        also = [a for a in (f.get("also") or []) if a != list_id]
+        if from_list and from_list != f.get("list") and from_list in (f.get("also") or []):
+            # Moved out of an extra list: the main list stays, the item
+            # swaps this list for the new one.
+            also = [a for a in also if a != from_list]
+            f["also"] = also if list_id is None or list_id == f.get("list") else also + [list_id]
+            return f
+        f["list"] = list_id
+        f["also"] = also
+        return f
+    state.update_flag(item_id, change)
+    return {"ok": True}
+
+
+@router.post("/api/list/also")
+async def list_also(req: Request):
+    """Put an item on one more list (on true), or take it off that one
+    (on false). Its main list stays where it is."""
+    body = await _json_obj(req)
+    item_id, list_id = body.get("item_id"), body.get("list_id")
+    if not item_id or not list_id:
+        raise HTTPException(400, "item_id and list_id are required")
+    if not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
+    _put_also(item_id, list_id, on=body.get("on", True) is not False)
     return {"ok": True}
 
 
@@ -608,8 +683,23 @@ async def list_check(req: Request):
     body = await _json_obj(req)
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
-    _merge_flag(body["item_id"],
-                {"checked_on": state.cycle() if body.get("checked") else None})
+    lid = body.get("list_id")
+    cur = state.flags().get(body["item_id"], {})
+    if lid and lid in (cur.get("also") or []):
+        # Ticked on the extra list only: the other list keeps its own tick.
+        def change(f):
+            f = dict(f)
+            t = dict(f.get("checked_in") or {})
+            if body.get("checked"):
+                t[lid] = state.cycle()
+            else:
+                t.pop(lid, None)
+            f["checked_in"] = t
+            return f
+        state.update_flag(body["item_id"], change)
+    else:
+        _merge_flag(body["item_id"],
+                    {"checked_on": state.cycle() if body.get("checked") else None})
     if body.get("checked"):
         groups.note("ticked", body["item_id"])
     return {"ok": True}

@@ -36,6 +36,7 @@ export type SheetState =
   | { kind: "where"; id: string }
   | { kind: "share" }
   | { kind: "tidy" }
+  | { kind: "also"; id: string }
   | { kind: "why"; id: string };
 
 /* ---------------- store choices and the Find-a-store picker ---------------- */
@@ -212,7 +213,7 @@ function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "
 function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }: Common & { onStores: () => void; onDelete: (l: NamedList) => void; onShare: () => void; onTidy: () => void }) {
   const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens) || null;
-  const n = l ? data.list.items.filter(i => i.on_list && i.list === l.id).length : 0;
+  const n = l ? onListItems(data).filter(i => i.list === l.id).length : 0;
   return (
     <>
       <span className="sheetgrip" />
@@ -242,11 +243,27 @@ function StoresSheet({ data, lens, onClose, run, onSave }: Common & { onSave: (i
   );
 }
 
+/* "Also put on another list": the item stays where it is. */
+function AlsoSheet({ data, lens, id, run, onAlso }: Common & { id: string; onAlso: (id: string, listId: string) => Promise<void> }) {
+  const { t } = useTranslation();
+  const item = onListItems(data).find(i => i.item_id === id && itemHome(data, i) === (lens === "home" ? "else" : lens)) || ({} as Partial<Item>);
+  const on = new Set([lens, item.list || "", ...(item.also || [])]);
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.alsoTitle", { what: item.name || "" })}</h3>
+      {namedLists(data).filter(l => !on.has(l.id)).map(l => (
+        <button key={l.id} className="navrow" type="button" data-ls-also={l.id} onClick={() => run(() => onAlso(id, l.id))}><span className="grow">{l.name}</span><span className="chev">›</span></button>
+      ))}
+    </>
+  );
+}
+
 function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: string[]; onMove: (ids: string[], listId: string) => Promise<void>; onNew: (ids: string[]) => void }) {
   const { t } = useTranslation();
   const here = lens === "home" ? "else" : lens;
   const lists = namedLists(data);
-  const count = (id: string) => data.list.items.filter(i => i.on_list && !i.checked && (id === "else"
+  const count = (id: string) => onListItems(data).filter(i => !i.checked && (id === "else"
     ? !lists.some(l => l.id === i.list) : i.list === id)).length;
   const one = ids.length === 1 ? (data.list.items.find(i => i.item_id === ids[0]) || ({} as Partial<Item>)).name : "";
   const dest = (id: string, name: string) => id === here
@@ -286,7 +303,7 @@ function AisleSheet({ data, id, run, onClose, onAisle }: Common & { id: string; 
 }
 
 /* The row's ⋯ button: Move and Remove without needing the swipe. */
-function RowSheet({ data, id, run, onClose, onMove, onAisle, onRemove, shopping, onWhere }: Common & { id: string; onMove: (id: string) => void; onAisle: (id: string) => void; onRemove: (ids: string[]) => Promise<void>; shopping?: boolean; onWhere: (id: string) => void }) {
+function RowSheet({ data, id, run, onClose, onMove, onAlso, onAisle, onRemove, shopping, onWhere }: Common & { id: string; onMove: (id: string) => void; onAlso: (id: string) => void; onAisle: (id: string) => void; onRemove: (ids: string[]) => Promise<void>; shopping?: boolean; onWhere: (id: string) => void }) {
   const { t } = useTranslation();
   const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
   const name = item.name || "";
@@ -298,6 +315,7 @@ function RowSheet({ data, id, run, onClose, onMove, onAisle, onRemove, shopping,
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{name}</h3>
       {shopping ? <button className="navrow" type="button" data-ls="row-where" onClick={() => onWhere(id)}><span className="grow">{t("lists.whereIsIt")}<small>{t(`lists.aisle.${deptOf(item as Item)}`)}</small></span><span className="chev">›</span></button> : null}
       {!shopping ? <button className="navrow" type="button" data-ls="row-move" onClick={() => onMove(id)}><span className="grow">{t("lists.moveToAnother")}</span><span className="chev">›</span></button> : null}
+      {!shopping && namedLists(data).length > 1 ? <button className="navrow" type="button" data-ls="row-also" onClick={() => onAlso(id)}><span className="grow">{t("lists.alsoAnother")}</span><span className="chev">›</span></button> : null}
       {grouped && !shopping ? <button className="navrow" type="button" data-ls="row-aisle" onClick={() => onAisle(id)}><span className="grow">{t("lists.moveToDepartment")}<small>{t(`lists.aisle.${deptOf(item as Item)}`)}</small></span><span className="chev">›</span></button> : null}
       {!shopping ? <button className="navrow dangerrow" type="button" data-ls="row-remove" onClick={() => run(async () => { onClose(); await onRemove([id]); })}><span className="grow">{t("common.remove")}</span></button> : null}
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
@@ -422,6 +440,7 @@ export type SheetActions = {
   shopping?: boolean;
   onSnap?: (name: string) => void;
   onChanged?: () => void;
+  onAlso: (id: string, listId: string) => Promise<void>;
 };
 
 export function ListSheet({ sheet, setSheet, data, lens, actions }:
@@ -442,8 +461,9 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
       {sheet.kind === "share" && <ShareWizard data={data} listId={lens} listName={(namedLists(data).find(x => x.id === lens) || { name: "" }).name} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} onTidy={() => setSheet({ kind: "tidy" })} />}
       {sheet.kind === "tidy" && <TidyFlow listId={lens} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
-      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} shopping={actions.shopping} onWhere={id => setSheet({ kind: "where", id })} />}
+      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAlso={id => setSheet({ kind: "also", id })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} shopping={actions.shopping} onWhere={id => setSheet({ kind: "where", id })} />}
       {sheet.kind === "where" && <WhereSheet {...common} id={sheet.id} onSnap={name => actions.onSnap && actions.onSnap(name)} />}
+      {sheet.kind === "also" && <AlsoSheet {...common} id={sheet.id} onAlso={actions.onAlso} />}
       {sheet.kind === "aisle" && <AisleSheet {...common} id={sheet.id} onAisle={actions.onAisle} />}
       {sheet.kind === "move" && <MoveSheet {...common} ids={sheet.ids} onMove={actions.onMove} onNew={ids => setSheet({ kind: "new", moving: ids })} />}
     </Sheet>

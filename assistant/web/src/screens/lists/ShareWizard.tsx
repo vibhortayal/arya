@@ -4,7 +4,7 @@ import { useToast } from "../../ui/Toast";
 import { useTranslation } from "../../i18n";
 import { AISLE_ORDER, OTHER } from "./aisles";
 import { fileName, toChecklist, toCsv, toJson, toRows } from "./exportFormats";
-import { type HomeData, type Item } from "./model";
+import { type HomeData, type Item, onListItems } from "./model";
 
 /* Share, export or import (owner, 2026-10-30): one question, then a short
  * path. Share sends a checklist, Export downloads a file, Import reads a
@@ -25,9 +25,10 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState<Found[]>([]);
+  const [dupes, setDupes] = useState<"both" | "move" | "skip">("both");
   const [result, setResult] = useState<{ added: number; already: number } | null>(null);
 
-  const items = data.list.items.filter(i => i.on_list && i.list === listId);
+  const items = onListItems(data).filter(i => i.list === listId);
   const rows = toRows(items, deptOf);
   const checklist = toChecklist(listName, rows);
   const total = step === "paste" ? 3 : step === "found" ? 3 : step === "added" ? 3 : 2;
@@ -65,11 +66,11 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
     finally { setBusy(false); }
   };
   const addAll = async () => {
-    const chosen = found.filter(f => f.on);
+    const chosen = found.filter(f => f.on && !(dupes === "skip" && f.other_list));
     if (!chosen.length) return;
     setBusy(true);
     try {
-      const r = await post<{ added: number; already: number }>("/api/list/import", { list_id: listId, items: chosen });
+      const r = await post<{ added: number; already: number }>("/api/list/import", { list_id: listId, items: chosen, mode: dupes === "move" ? "move" : "both" });
       setResult(r);
       setStep("added");
       onChanged();
@@ -114,9 +115,15 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
       <button className="btn primary" type="button" data-wiz="read" disabled={busy || !text.trim()} onClick={read}>{busy ? t("lists.share.reading") : t("lists.share.read")}</button>
     </div></>;
   if (step === "found") {
-    const n = found.filter(f => f.on).length;
+    const n = found.filter(f => f.on && !(dupes === "skip" && f.other_list)).length;
     return <>
       {head(t("lists.share.foundTitle", { count: found.length }), t("lists.share.foundHint", { name: listName }), "paste", num, total)}
+      {found.some(f => f.other_list && f.on) ? <>
+        <p className="sub nomargin">{t("lists.share.dupesLead", { count: found.filter(f => f.other_list && f.on).length })}</p>
+        <div className="segs" role="group" aria-label={t("lists.share.dupesLead", { count: found.filter(f => f.other_list && f.on).length })}>
+          {(["both", "move", "skip"] as const).map(m => (
+            <button key={m} type="button" className={dupes === m ? "on" : ""} aria-pressed={dupes === m} data-wiz-dupes={m} onClick={() => setDupes(m)}>{t("lists.share.dupes_" + m)}</button>))}
+        </div></> : null}
       <div className="group" style={{ boxShadow: "none" }} id="wiz-found">
         {found.map((f, i) => (
           <button key={i} className="navrow wizfound" type="button" aria-pressed={f.on} data-wiz="found"
