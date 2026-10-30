@@ -15,7 +15,7 @@ from api import album_routes, haul_routes, hunt_routes, pack, state
 from api.demo_guard import require_login
 from api.deps import _PWA
 from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
-                        intake, items, lists, mcp_connector, prices, quest,
+                        intake, items, lists, lists_v1, mcp_connector, prices, quest,
                         questmap, receipts, review, shelf, storemap, stores, town)
 
 app = FastAPI(title="Arya API")
@@ -53,6 +53,10 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 storemap.router, haul_routes.router, prices.router,
                 groups.router, questmap.router, town.router):
     app.include_router(_router)
+
+# The open Lists API is its own small app, so its errors and schema
+# (/api/v1/openapi.json) stay separate from the app's routes.
+app.mount("/api/v1", lists_v1.v1)
 
 # The app is the React build (web/dist) at /. The static folder
 # (pwa/: images, store models, three.js, scene.js, the manifest and

@@ -984,6 +984,7 @@
   "muse": {
     "connectAnAiAgent": "Use Arya in another AI app",
     "useAryaFromAnAi": "Use Arya from an AI app you already talk to. It can add to your list, tell you what is running low and add receipts it reads. Make a code, then paste it into your AI app. The code shows once; a new code replaces it. (Works with any app that supports MCP connectors.)",
+    "sameCodeListsApi": "The same code also works for the Arya Lists API, so a script or another app can read and write your lists. See docs/API.md in the Arya repo.",
     "copy": "Copy the code",
     "copyItNowItIs": "Copy it now; it is not shown again. Paste it into your AI app's connector settings.",
     "revoke": "Turn off this code",
