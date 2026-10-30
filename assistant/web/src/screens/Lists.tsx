@@ -944,7 +944,7 @@ export function Lists() {
           <div id="list-cards">
             {data ? <>
               {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
-              {card("else", t("common.everythingElse"), lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore"))}
+              {elseUsed || !lists.length ? card("else", elseName, lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore")) : null}
             </> : loadFailed
               ? <div className="empty" role="alert"><p>{t("lists.couldNotLoad")}</p>
                   <button className="btn" id="lists-retry" type="button" onClick={() => { setLoadFailed(false); reload().catch(e => { if (alive.current) setLoadFailed(true); showErr(e); }); }}>{t("lists.retry")}</button></div>
