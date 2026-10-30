@@ -31,6 +31,16 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
 - Accent: one orange (--acc #C2410C, soft #FDEEE8). It marks the active
   tab, primary pills, links and the game. The only other saturated color
   is danger (#c81e1e) for returns and recording state.
+- Quest sub-palette (game/game.css, owner approved 2026-10-30): each
+  color has one job. Green #237A40 (pressed edge #17562C) = grabbed or
+  mapped: Got it, Found it here, Mapped, done ticks. Gold #FFC83D = the
+  golden item. Orange = the app accent above (main buttons, Map it).
+  Everything else is neutral: Simulated badges are #F1EEE8 with a
+  #B8B2A7 dash, the selected list chip is outlined, not filled black.
+  No blue, purple or teal in Quest chrome. The one exception is the 3D
+  store: a simulated store is drawn as a blue blueprint, because there
+  blue means "a guess, not a pin". Quest tags are at least 11px and
+  weights stop at 800.
 - Shape: groups radius 14, inputs radius 10, buttons and chips are
   pills (980). A 1px soft shadow on cards.
 - Spacing: 4/8/16/24 rhythm; groups inset 16 from the screen edge;

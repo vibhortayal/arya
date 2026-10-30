@@ -141,6 +141,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  Quest colors have one job each: green for grabbed or mapped, gold for
+  golden, the app orange, neutral for the rest (no blue badges or black
+  chips); the 3D simulated store stays a blue blueprint. `2026-10-30-quest-colors.md`.
   Start shopping goes straight into the list's store ("Costco" finds
   "Costco Wholesale"), no one-option sheet or second store pick, and the
   in-store chips, cue and buttons are 44pt targets. `2026-10-30-quest-straight-in.md`.
