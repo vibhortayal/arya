@@ -163,8 +163,8 @@ Errors are JSON, with the matching HTTP status:
 
 ## Limits
 
-- 600 calls per account per hour, shared with the agent connector
-  (`ARYA_MCP_RATE`). Over it you get `429` with a `Retry-After` header
+- 600 calls per account per hour, shared with the agent connector and
+  every other route a token reaches (`ARYA_MCP_RATE`). Over it you get `429` with a `Retry-After` header
   in seconds.
 - 256 KB per request, 50 items per add call, 500 rows per import.
 

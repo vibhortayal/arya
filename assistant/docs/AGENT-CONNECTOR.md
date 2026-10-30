@@ -24,13 +24,19 @@ source of truth.
    - Header: `Authorization: Bearer <your token>`
 
 3. The token acts as your account: it is accepted on the MCP door and on
-   the REST connector routes under `/api`, but never on `/auth` (it cannot
-   mint tokens or delete the account). Revoke it from
+   the app's routes under `/api`, but never on `/auth` (it cannot mint tokens
+   or delete the account). A short list of routes is closed to tokens and
+   answers 403: calls that spend model credits in bulk (chat, photo and
+   shelf reads, avatars, the judge), groups, friends, push, feedback,
+   settings changes, price sharing, account export and receipt delete
+   through the app (`ARYA_TOKEN_GUARDS`). Revoke it from
    the same screen at any time; minting a new one replaces the old.
 
 ## Limits
 
-- 600 tool calls per account per hour (`ARYA_MCP_RATE`), 256 KB per request,
+- 600 calls per account per hour (`ARYA_MCP_RATE`), shared by the connector,
+  the Lists API (`docs/API.md` in the repo root) and every other route a token
+  reaches; over it, 429 with `Retry-After`. 256 KB per request,
   50 items per `add_items`, 200 lines per `file_receipt`.
 
 ## Tools

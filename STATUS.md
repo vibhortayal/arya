@@ -6,6 +6,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Token guardrails (2026-10-30, PR open):** one hourly allowance (600) for every route an API token reaches; a short blocked list (bulk model spend, groups, push, feedback, settings, account export) answers 403 to a token; the app is unaffected; `ARYA_TOKEN_GUARDS=off` lifts it. Two key types are after Nov 4. `assistant/loops/2026-10-30-token-guardrails.md`.
 - **Open Lists API v1 (2026-10-30, PR open):** `/api/v1` lists, items, add, change, delete, export and import with the connector's token; `docs/API.md`; schema at `/api/v1/openapi.json`. Say "Your lists, your data. Export anytime." until it is merged and deployed; only then "open platform". `assistant/loops/2026-10-30-lists-api-v1.md`.
 - **Labels audit (merged, #197):** one word per idea across the app (quest,
   trip, Arya shoppers, friends, username, map this store, Spending, To
