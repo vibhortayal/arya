@@ -160,7 +160,7 @@ export function Login() {
         </div>
       </div>
 
-      <Sheet open={signin} onClose={() => setSignin(false)} id="signin-sheet" className="signin"
+      <Sheet open={signin} onClose={() => { setSignin(false); setPass(""); }} id="signin-sheet" className="signin"
         title={create ? t("login.createTitle") : t("login.signIn")}>
         {status.email_signin && <EmailSignin onDone={u => enter(u, false)} />}
         <form id="login-form" onSubmit={submit}>

@@ -74,3 +74,16 @@ describe("start my own list", () => {
     expect(document.getElementById("register-open")).toBeNull();
   });
 });
+
+describe("sign-in sheet", () => {
+  test("a typed password does not survive closing the sheet", () => {
+    render(<Login />);
+    fireEvent.click(document.getElementById("signin-open")!);
+    const pass = () => document.getElementById("login-pass") as HTMLInputElement;
+    fireEvent.change(pass(), { target: { value: "hunter2" } });
+    expect(pass().value).toBe("hunter2");
+    fireEvent.keyDown(document.getElementById("signin-sheet")!, { key: "Escape" });
+    fireEvent.click(document.getElementById("signin-open")!);
+    expect(pass().value).toBe("");
+  });
+});

@@ -1,5 +1,7 @@
 """Groups: share lists and receipts with the people you shop for
 (flag ARYA_GROUPS=1). See api/groups.py for the rules."""
+import time
+
 from fastapi import APIRouter, HTTPException, Request
 
 from api import groups, state
@@ -70,14 +72,18 @@ async def group_rename(req: Request):
 
 
 @router.post("/api/group/invite")
-def group_invite(req: Request):
+async def group_invite(req: Request):
     user = _me(req)
     try:
-        code, expires = groups.invite(user)
+        body = await req.json()
+    except Exception:
+        body = {}
+    try:
+        code, expires = groups.invite(user, fresh=bool(body.get("new")) if isinstance(body, dict) else False)
     except LookupError as e:
         raise HTTPException(404, str(e))
     return {"code": code, "expires": expires,
-            "hours": groups.INVITE_TTL // 3600}
+            "hours": max(1, -(-(expires - int(time.time())) // 3600))}
 
 
 @router.get("/api/group/preview")

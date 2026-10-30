@@ -27,7 +27,7 @@ class TestLows(unittest.TestCase):
         self.assertIn("no such session", js)
 
     def test_add_box_keeps_text_typed_meanwhile(self):
-        self.assertIn('if (textRef.current.trim() === txt) changeText("");', src("screens/Lists.tsx"))
+        self.assertIn('if (textRef.current.trim() === txt && (r.added', src("screens/Lists.tsx"))
 
     def test_grab_before_start_explains(self):
         self.assertIn("Tap Start the quest first.", src("screens/Hunt.tsx"))
