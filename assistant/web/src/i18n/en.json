@@ -1924,6 +1924,34 @@
   },
   "today": {
     "today": "Today",
+    "sizes": {
+      "label": "Size",
+      "s": "Small",
+      "m": "Medium",
+      "l": "Large",
+      "sHelp": "One line. Tap it to see more.",
+      "mHelp": "The first few rows.",
+      "lHelp": "Every row."
+    },
+    "small": {
+      "low": "{{count}} running low",
+      "lists": "{{count}} lists, {{items}} to get",
+      "report": "{{count}} store alerts",
+      "price": "{{count}} cheaper elsewhere",
+      "expiry": "{{count}} to use soon",
+      "checks": "{{count}} to check",
+      "addAll": "Add all",
+      "addedAll": "Added to your list"
+    },
+    "library": {
+      "title": "Card library",
+      "all": "All",
+      "money": "Money",
+      "food": "Food",
+      "shop": "Shopping",
+      "sizes": "Sizes: {{sizes}}",
+      "none": "Every card in this group is on Today."
+    },
     "cards": {
       "low": {
         "name": "Running low",
@@ -2721,5 +2749,36 @@
     "settingsSub_one": "{{count}} waiting",
     "settingsSub_other": "{{count}} waiting",
     "settingsNone": "Nobody waiting"
+  },
+  "edit": {
+    "remove": "Remove {{name}}",
+    "add": "Add {{name}}",
+    "move": "Move {{name}}. Use the up and down arrow keys.",
+    "removed": "{{name}} removed",
+    "added": "{{name}} added",
+    "more": "More",
+    "reset": "Reset to default",
+    "allOn": "Everything is already on."
+  },
+  "display": {
+    "title": "Display",
+    "sub": "Text size, spacing, pictures",
+    "text": "Text size",
+    "textSmaller": "Smaller",
+    "textLarger": "Larger",
+    "sample": "Whole Milk 1 gal · Every ~7 days",
+    "spacing": "Spacing",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "look": "Look",
+    "bold": "Bold text",
+    "pictures": "Item pictures",
+    "picturesSub": "The little faces next to items",
+    "motion": "Animations",
+    "motionSub": "Your phone's Reduce Motion setting turns them down too",
+    "customize": "Customize",
+    "today": "Today cards",
+    "resetAll": "Reset all to default",
+    "resetDone": "Display and Today are back to the default"
   }
 }

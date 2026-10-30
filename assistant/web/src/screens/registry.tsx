@@ -20,6 +20,7 @@ import { StoresAdd } from "./StoresAdd";
 import { StoresFind } from "./StoresFind";
 import { Today } from "./Today";
 import { Powers } from "./Powers";
+import { Display } from "./Display";
 import { Profile } from "./Profile";
 import { QuestProgress } from "./QuestProgress";
 import { Receipt } from "./Receipt";
@@ -62,6 +63,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   "stores-add": StoresAdd,
   "stores-find": StoresFind,
   powers: Powers,
+  display: Display,
   profile: Profile,
   "quest-progress": QuestProgress,
   receipt: Receipt,
