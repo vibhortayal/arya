@@ -852,7 +852,9 @@
     "googleFailed": "Google sign-in did not finish. Try again.",
     "wentWrong": "Something went wrong. Try again in a moment.",
     "emailedCode": "We emailed you a code. Enter it here.",
-    "emailMeCode": "Email me a code"
+    "emailMeCode": "Email me a code",
+    "codeIfInvited": "If that email is on the invite list, a code is on its way.",
+    "notInvitedYet": "Not invited yet?"
   },
   "landing": {
     "signIn": "Sign in",
@@ -2388,5 +2390,39 @@
     "rPurchases": "What you bought, and when",
     "later": "Not yet",
     "laterBody": "Webhooks, sign-in with OAuth, sharing a list with another account, filing a receipt, and Quest data."
+  },
+  "waitlistAdmin": {
+    "title": "Waitlist",
+    "waiting_one": "{{count}} waiting. Approve to let them sign in.",
+    "waiting_other": "{{count}} waiting. Approve to let them sign in.",
+    "nobody": "Nobody is waiting.",
+    "empty": "No one is on the waitlist yet. People join from the link on the sign-in screen.",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "oldestFirst": "Oldest first",
+    "joinedToday": "Joined today",
+    "joinedYesterday": "Joined yesterday",
+    "joinedOn": "Joined {{date}}",
+    "approvedLine": "Approved · {{when}}",
+    "approve": "Approve",
+    "approveN": "Approve {{count}}",
+    "remove": "Remove",
+    "approveTitle_one": "Approve {{count}} person?",
+    "approveTitle_other": "Approve {{count}} people?",
+    "approveBody": "They can sign in with an email code or Google. “Approve and email” sends the code now. They can ask for a new code any time on the sign-in screen.",
+    "approveAndEmail": "Approve and email",
+    "approveQuiet": "Approve, do not email",
+    "removeTitle_one": "Remove {{count}} person?",
+    "removeTitle_other": "Remove {{count}} people?",
+    "removeBody": "Their email is deleted from the waitlist. They can join again.",
+    "approvedToast_one": "Approved {{count}} person.",
+    "approvedToast_other": "Approved {{count}} people.",
+    "approvedSomeFailed": "Approved {{n}}, but only {{sent}} emails went out. They can request a code themselves.",
+    "removedToast_one": "Removed {{count}} person.",
+    "removedToast_other": "Removed {{count}} people.",
+    "settingsRow": "Waitlist",
+    "settingsSub_one": "{{count}} waiting",
+    "settingsSub_other": "{{count}} waiting",
+    "settingsNone": "Nobody waiting"
   }
 }

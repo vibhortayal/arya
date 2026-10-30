@@ -174,7 +174,8 @@ export function Login() {
 
       <Sheet open={signin} onClose={() => { setSignin(false); setPass(""); }} id="signin-sheet" className="signin"
         title={create ? t("login.createTitle") : t("login.signIn")}>
-        {status.email_signin && <EmailSignin onDone={u => enter(u, false)} />}
+        {status.email_signin && <EmailSignin onDone={u => enter(u, false)}
+          onWaitlist={status.registration_open ? undefined : () => { setSignin(false); setPass(""); setWaitlist(true); }} />}
         <form id="login-form" onSubmit={submit}>
           <label className="field">{create ? t("login.username") : t("login.emailOrUsername")}
             <input type="text" id="login-user" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
@@ -274,7 +275,7 @@ function CardZoom({ id, from, onClose }: { id: string; from: string; onClose: ()
   );
 }
 
-function EmailSignin({ onDone }: { onDone: (user: string) => void }) {
+function EmailSignin({ onDone, onWaitlist }: { onDone: (user: string) => void; onWaitlist?: () => void }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -288,7 +289,7 @@ function EmailSignin({ onDone }: { onDone: (user: string) => void }) {
     if (!r.ok) { setMsg(data.detail || t("login.wentWrong")); return; }
     if (sent) { onDone(data.user); return; }
     setSent(true);
-    setMsg(t("login.emailedCode"));
+    setMsg(t("login.codeIfInvited"));
   };
 
   return (
@@ -304,7 +305,8 @@ function EmailSignin({ onDone }: { onDone: (user: string) => void }) {
           </label>
         )}
         <p><button type="submit" id="code-btn" className="btn wide">{sent ? t("login.signIn") : t("login.emailMeCode")}</button></p>
-        <p id="code-msg" className="muted loginerr" role="alert">{msg}</p>
+        <p id="code-msg" className={"muted" + (sent ? "" : " loginerr")} role="alert">{msg}
+          {sent && onWaitlist && <> {t("login.notInvitedYet")} <button type="button" id="code-waitlist" className="linkbtn" onClick={onWaitlist}>{t("landing.joinWaitlist")}</button></>}</p>
       </form>
       <p className="muted">{t("login.orUseAPassword")}</p>
     </div>
