@@ -230,6 +230,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 - FR-5.11 Swipe moves or removes an item. Select moves many items.
 - FR-5.12 A new list can name a store. The store drives the aisle sort and the suggestions.
 - FR-5.13 Today is the dashboard: running low, store alerts, use soon, still-good checks, the user's lists, patterns, and one quiet Quest row. A new account shows no sample alerts.
+- FR-5.14 The Add field on a list suggests item names while the user types. The order is: the user's own names, then names that at least 3 households have on their lists, then up to 4 guesses from Spark. The shared file holds only names with household counts. A guess is cached by prefix, waits for a pause in typing, has a daily cap for each account, and is not available in the demo. A filter keeps only plausible grocery and household names.
 
 ### 6.10 Groups (C10)
 

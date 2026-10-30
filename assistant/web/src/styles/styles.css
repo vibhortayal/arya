@@ -1152,6 +1152,16 @@ input[type=file]::file-selector-button {
 .addline input[type="text"] { flex: 1; min-width: 0; border-radius: 980px; padding: 11px 16px; }
 .addline .btn { flex: none; padding: 11px 16px; }
 .addline label.iconbtn { cursor: pointer; }
+/* Auto-suggest under the Add row (owner, 2026-10-30): the store-search
+ * dropdown, anchored to the row, full width. */
+.addwrap { position: relative; }
+.gdrop.suggest { left: 0; right: 0; top: calc(100% - 4px); max-height: 46vh; overflow-y: auto; }
+.gdrop.suggest .gitem { display: flex; align-items: center; gap: 8px; }
+.gdrop.suggest .gitem .name { flex: 1; min-width: 0; font-weight: 500; }
+.gdrop.suggest .gitem .name b { color: var(--accent-text); font-weight: 700; }
+.gdrop.suggest .gitem .tag { flex: none; font-size: 12.5px; color: var(--tertiary); white-space: nowrap; }
+.gdrop.suggest .gitem.on { background: var(--fill); }
+.gdrop.suggest .gitem.dim .name { opacity: .55; }
 .listhead { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
 .listhead h3 { flex: 1; min-width: 0; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; }
 .listhead h3 span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

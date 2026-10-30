@@ -4,6 +4,7 @@ import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
+import { SuggestDrop, lastSegment, replaceLast, useSuggest } from "../ui/Suggest";
 import { HeadsUp, StoreNotice, TownChip, TownItemSheet } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
@@ -481,7 +482,17 @@ export function Lists() {
   const items = splitPreview(text);
   const asking = looksLikeAsk(text) || !!parseAddToList(text, lists);
   const addLabel = asking ? (looksLikeAsk(text) ? t("common.ask") : t("common.add")) : (items.length > 1 ? t("lists.addNItems", { count: items.length }) : t("common.add"));
-  const changeText = (v: string) => { textRef.current = v; setText(v); };
+  const changeText = (v: string) => { textRef.current = v; setText(v); setSugOpen(true); setSugIdx(-1); };
+  /* Auto-suggest: closed while the text is a question or an add-to-list command. */
+  const [sugOpen, setSugOpen] = useState(true);
+  const [sugIdx, setSugIdx] = useState(-1);
+  const sugRows = useSuggest(text, sugOpen && !asking);
+  const sugShown = sugOpen && !asking ? sugRows : [];
+  const pickSug = (name: string) => {
+    changeText(replaceLast(textRef.current, name));
+    setSugOpen(false);
+    field.current?.focus();
+  };
 
   const flashNewRows = (names: string[]) => {
     const want = new Set((names || []).map(n => String(n).toLowerCase()));
@@ -531,8 +542,17 @@ export function Lists() {
     setAdding(false);
   };
   const onFieldKey = (ev: KeyboardEvent<HTMLInputElement>) => {
+    const n = sugShown.length;
+    if (n && (ev.key === "ArrowDown" || ev.key === "ArrowUp")) {
+      ev.preventDefault();
+      setSugIdx(i => ev.key === "ArrowDown" ? (i + 1) % n : (i <= 0 ? n - 1 : i - 1));
+      return;
+    }
+    if (n && ev.key === "Escape") { ev.preventDefault(); setSugOpen(false); return; }
     if (ev.key !== "Enter" || ev.shiftKey) return;
-    ev.preventDefault(); submit();
+    ev.preventDefault();
+    if (n && sugIdx >= 0 && sugShown[sugIdx]) { pickSug(sugShown[sugIdx].name); return; }
+    submit();
   };
   /* A one-line field flattens a pasted list's line breaks. Keep them as
    * semicolons, which the server split reads as item breaks. */
@@ -826,16 +846,22 @@ export function Lists() {
 
           {town && !selEff ? <HeadsUp town={town} itemIds={open.map(i => i.item_id)} listStores={listStores} /> : null}
           <div id="composer" hidden={!!selEff}>
+            <div className="addwrap">
             <div className="addline">
               <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" aria-label={t("lists.speakYourList")} onClick={mic}><IconMic /></button>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
                 placeholder={name.length <= 8 ? t("lists.addTo", { name }) : t("lists.addAnItem")} autoComplete="off" aria-label={t("lists.addTo", { name })}
-                value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste} />
+                value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste}
+                onBlur={() => setSugOpen(false)} onFocus={() => setSugOpen(true)}
+                role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
+                aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
               <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.addFromAPhoto")}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
               </label>
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
               <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit}>{addLabel}</button>
+            </div>
+            <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} />
             </div>
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
