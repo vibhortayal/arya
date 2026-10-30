@@ -35,6 +35,15 @@ class TownCase(unittest.TestCase):
 
 
 class TestTownOn(TownCase):
+    def setUp(self):
+        super().setUp()
+        # Shop hours follow the clock; these tests are about the director,
+        # not the time of day, so the stores are always open.
+        from unittest import mock
+        p = mock.patch("api.town._open_now", return_value=True)
+        p.start()
+        self.addCleanup(p.stop)
+
     def test_household_shops_at_invented_stores(self):
         rs = json.load(open(os.path.join(self.base, "users", "demo", "receipts.json")))
         merchants = {r["merchant"] for r in rs}
