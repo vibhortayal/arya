@@ -162,3 +162,74 @@ def use_soon(flags, names, last_bought, today):
                     "days": days})
     out.sort(key=lambda r: (r["days"], r["name"]))
     return out
+
+
+# --- after a receipt: which of it goes off (#207) ---------------------------
+# Owner 2026-10-30: after a receipt, Today names what was bought that
+# usually goes off and asks for dates in one sheet. Guessing is $0: the
+# character categories (api/haul.py, used for trip names) mark fruit,
+# vegetables, dairy and bakery; a short word list adds meat, fish, eggs,
+# cheese and bread. No model call.
+
+PERISHABLE_CATS = {"fruit", "vegetable", "dairy", "bakery"}
+PERISHABLE_WORDS = {"chicken", "beef", "pork", "turkey", "lamb", "steak",
+                    "sausage", "sausages", "bacon", "ham", "salami", "fish",
+                    "salmon", "shrimp", "cod", "tilapia", "egg", "eggs",
+                    "cheese", "hummus", "bread", "loaf", "sourdough", "salsa",
+                    "guacamole", "banana", "bananas", "raspberry", "raspberries",
+                    "blueberry", "blueberries", "meat", "tortellini", "ravioli"}
+NOT_PERISHABLE = {"dried", "canned", "powder", "peanut", "almond"}
+NUDGE_DAYS = 14         # a receipt older than this is not asked about
+NUDGE_MAX_ITEMS = 8
+NUDGE_MIN_ITEMS = 2
+NUDGE_STOP_AFTER = 2    # two "Not now"s and it stops for good
+
+
+def perishable(name):
+    from api import haul, state
+    words = set(state._norm_name(name).split())
+    if words & NOT_PERISHABLE:
+        return False
+    cat = haul._category(name)
+    if cat:
+        return cat in PERISHABLE_CATS
+    return bool(words & PERISHABLE_WORDS)
+
+
+def receipt_nudge(receipts, flags, seen, today):
+    """The newest receipt from the last NUDGE_DAYS, bought after `seen`
+    (an ISO date: the receipt last answered), that holds at least
+    NUDGE_MIN_ITEMS perishables without a date set since that trip.
+    Returns {receipt_id, store, date, items: [{item_id, name}]} or None."""
+    seen_d = parse_iso(seen) if seen else None
+    rows = []
+    for r in receipts or []:
+        d = parse_iso(str(r.get("purchased_at") or "")[:10])
+        if d is None or (today - d).days > NUDGE_DAYS or d > today:
+            continue
+        if seen_d and d <= seen_d:
+            continue
+        if r.get("source_type") not in (None, "grocery"):
+            continue
+        rows.append((d, r))
+    rows.sort(key=lambda x: x[0], reverse=True)
+    for d, r in rows:
+        items, ids = [], set()
+        for ln in r.get("lines") or []:
+            if ln.get("line_type") not in (None, "item"):
+                continue
+            iid, name = ln.get("item_id"), ln.get("decoded_name") or ln.get("raw")
+            if not iid or not name or iid in ids or not perishable(name):
+                continue
+            f = flags.get(iid) or {}
+            set_on = parse_iso(f.get("use_by_set"))
+            if tracked(f) and set_on and set_on >= d:
+                continue  # already dated since this trip
+            ids.add(iid)
+            items.append({"item_id": iid, "name": f.get("name") or name})
+            if len(items) >= NUDGE_MAX_ITEMS:
+                break
+        if len(items) >= NUDGE_MIN_ITEMS:
+            return {"receipt_id": r.get("receipt_id"), "store": r.get("merchant") or "",
+                    "date": d.isoformat(), "items": items}
+    return None

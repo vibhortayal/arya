@@ -189,9 +189,11 @@ export function Lists() {
   const [renameVal, setRenameVal] = useState("");
   const [doneOpen, setDoneOpen] = useState(false);
   // Today's Get started step 1 opens the new-list sheet (once).
-  const [sheet, setSheet] = useState<SheetState | null>(() => (nav.params.newList ? { kind: "new", moving: null } : null));
+  // Step 2 (Pick your store) opens that list's store picker.
+  const [sheet, setSheet] = useState<SheetState | null>(() => (nav.params.newList ? { kind: "new", moving: null }
+    : nav.params.stores ? { kind: "stores" } : null));
   // Back to this entry must not open it again.
-  useEffect(() => { nav.params.newList = undefined; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { nav.params.newList = undefined; nav.params.stores = undefined; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [shopOpen, setShopOpen] = useState(false);
   const town = useTown();
   const [townItem, setTownItem] = useState<string | null>(null);

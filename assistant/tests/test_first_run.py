@@ -20,16 +20,20 @@ class TestFirstRun(unittest.TestCase):
         return self.c.get("/api/settings").json()
 
     def test_new_account_is_not_onboarded_until_it_answers(self):
-        none_done = {"list": False, "expiry": False, "receipt": False}
+        none_done = {"list": False, "store": False, "shop": False, "receipt": False}
         self.assertEqual((self.s()["onboarded"], self.s()["get_started"]), (False, none_done))
         r = self.c.post("/api/settings", json={"onboarded": True})
         self.assertEqual(r.status_code, 200)
         self.assertTrue(r.json()["onboarded"])
-        self.assertEqual(r.json()["get_started"], {"list": False, "expiry": False, "receipt": False})
+        self.assertEqual(r.json()["get_started"], none_done)
         # A later answer does not reset the card.
         self.c.post("/api/lists", json={"name": "Costco"})
         self.c.post("/api/settings", json={"onboarded": True})
-        self.assertEqual(self.s()["get_started"], {"list": True, "expiry": False, "receipt": False})
+        self.assertEqual(self.s()["get_started"], {"list": True, "store": False, "shop": False, "receipt": False})
+        # Picking the list's store ticks step 2 (#207).
+        lid = self.c.get("/api/lists").json()["lists"][0]["id"]
+        self.c.post("/api/lists/update", json={"id": lid, "stores": ["Costco"]})
+        self.assertEqual(self.s()["get_started"], {"list": True, "store": True, "shop": False, "receipt": False})
 
     def test_flag_is_stored_server_side_per_account(self):
         self.c.post("/api/settings", json={"onboarded": True})
@@ -67,12 +71,15 @@ class TestFirstRun(unittest.TestCase):
         self.assertIsNone(self.s()["get_started"])
         self.assertTrue(self.s()["onboarded"])
 
-    def test_all_three_done_ends_the_card_for_good(self):
+    def test_all_four_done_ends_the_card_for_good(self):
         self.c.post("/api/settings", json={"onboarded": True})
         from api import state
         with state.as_user("new@x.y"):
-            state.save_named_lists([{"id": "l1", "name": "TJ", "stores": []}])
-            state.set_flag("milk", {"use_by": "2026-11-02"})
+            state.save_named_lists([{"id": "l1", "name": "TJ", "stores": ["Trader Joe's"]}])
+            state._save("quest.json", {"sessions": [{"id": "s1"}]})
+        # Three of four: the receipt is still to come.
+        self.assertEqual(self.s()["get_started"], {"list": True, "store": True, "shop": True, "receipt": False})
+        with state.as_user("new@x.y"):
             state._save("receipts.json", [{"receipt_id": "r1", "lines": []}])
         self.assertIsNone(self.s()["get_started"])
         with state.as_user("new@x.y"):

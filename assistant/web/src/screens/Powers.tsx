@@ -125,7 +125,10 @@ export function Powers() {
       <InfoSheetFrame open onClose={close} title={t(p.name)}>
         <WhyRows rows={rows} />
         <div className="sheetacts">{closeBtn()}
-          {GUIDE_FOR_POWER[p.id] && <button className="btn primary" type="button" data-pw="guide" onClick={() => { close(); guide.open(GUIDE_FOR_POWER[p.id]); }}>{t("powers.seeItInTheGuide")}</button>}
+          {/* Use soon trades its guide button for Add a date (#207): the
+            * empty Use soon card on Today is gone, so this is the by-hand way in. */}
+          {GUIDE_FOR_POWER[p.id] && p.id !== "usesoon" && <button className="btn primary" type="button" data-pw="guide" onClick={() => { close(); guide.open(GUIDE_FOR_POWER[p.id]); }}>{t("powers.seeItInTheGuide")}</button>}
+          {p.id === "usesoon" && <button className="btn primary" type="button" data-pw="snap" onClick={() => { close(); nav.show("home", { snapDate: true }); }}>{t("powers.addADate")}</button>}
           {p.share && <button className="btn primary" type="button" data-pw="share" onClick={() => setSheet({ kind: "share" })}>{facts.share_prices ? t("powers.sharingOn") : t("common.sharing.start")}</button>}
         </div>
       </InfoSheetFrame>);

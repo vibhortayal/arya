@@ -25,7 +25,7 @@ CURRENCIES = {"USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
 # session) counts as onboarded without the flag, so an existing
 # account never sees the welcome. The demo household never does.
 # "get_started" is set only when the welcome is answered by an empty
-# account: Today then shows the three first steps until all three are
+# account: Today then shows the four first-trip steps until all four are
 # done or the user closes the card ("get_started_dismissed").
 def _has_data():
     from api import quest
@@ -34,26 +34,29 @@ def _has_data():
 
 
 def _get_started_steps():
-    from api import expiry
-    fl = state.flags()
-    return {"list": bool(state.named_lists()) or any(f.get("manual") for f in fl.values()),
-            "expiry": any(expiry.tracked(f) for f in fl.values()),
+    """The first trip, in the owner's order (#207, 2026-10-30): a list,
+    its store, a shopping trip, the receipt. Each ticks on its own."""
+    from api import quest
+    lists = state.named_lists()
+    return {"list": bool(lists) or any(f.get("manual") for f in state.flags().values()),
+            "store": any(l.get("stores") for l in lists),
+            "shop": bool(quest._store()["sessions"]),
             "receipt": bool(state.receipts())}
 
 
 def first_run(cur):
-    """{"onboarded": bool, "get_started": None | {list, expiry, receipt}}."""
+    """{"onboarded": bool, "get_started": None | {list, store, shop, receipt}}."""
     if state._current_user.get() == state.DEMO_USER:
         return {"onboarded": True, "get_started": None}
     onboarded = bool(cur.get("onboarded")) or _has_data()
     gs = None
     if not onboarded:
         # Still new: Today shows the card behind the welcome sheet.
-        gs = {"list": False, "expiry": False, "receipt": False}
+        gs = {"list": False, "store": False, "shop": False, "receipt": False}
     elif cur.get("get_started") and not cur.get("get_started_dismissed"):
         gs = _get_started_steps()
         if all(gs.values()):
-            # All three done: the card goes for good.
+            # All four done: the card goes for good.
             with state.file_lock("settings.json"):
                 now = state._load("settings.json", {})
                 now["get_started_dismissed"] = True

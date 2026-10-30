@@ -89,6 +89,33 @@ async def expiry_save(req: Request):
             "date": d.isoformat()}
 
 
+@router.post("/api/expiry/nudge")
+async def expiry_nudge(req: Request):
+    """The after-receipt card was answered (#207). "done" (dates saved
+    or the sheet closed with Done) and "not_now" both stop asking about
+    this receipt and anything older; "not_now" also counts toward the
+    stop for good."""
+    from api import expiry
+    body = await _json_obj(req)
+    action = body.get("action")
+    if action not in ("done", "not_now"):
+        raise HTTPException(400, "action must be done or not_now")
+    d = expiry.parse_iso(str(body.get("date") or ""))
+    if d is None:
+        raise HTTPException(400, "date is the receipt's date (YYYY-MM-DD)")
+    with state.file_lock("settings.json"):
+        cur = state._load("settings.json", {})
+        pn = dict(cur.get("perish_nudge") or {})
+        old = expiry.parse_iso(pn.get("seen") or "")
+        if old is None or d > old:
+            pn["seen"] = d.isoformat()
+        if action == "not_now":
+            pn["not_now"] = int(pn.get("not_now") or 0) + 1
+        cur["perish_nudge"] = pn
+        state._save("settings.json", cur)
+    return {"perish_nudge": pn}
+
+
 @router.post("/api/expiry/{item_id}/{action}")
 def expiry_action(item_id: str, action: str):
     """done (used it) and stop both untrack; snooze waits two days."""
