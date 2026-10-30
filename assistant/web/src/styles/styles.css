@@ -1721,3 +1721,7 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .skel i { display: block; height: 72px; border-radius: var(--radius); background: var(--fill2); }
 @media (prefers-reduced-motion: no-preference) { .skel i { animation: skelpulse 1.4s ease-in-out infinite; } }
 @keyframes skelpulse { 50% { opacity: .55; } }
+
+/* The row's more button (owner 2026-10-30): Move and Remove without the swipe. */
+.listrow .morebtn { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; background: none; color: var(--tertiary); display: grid; place-items: center; }
+.listrow .morebtn svg { width: 22px; height: 22px; }

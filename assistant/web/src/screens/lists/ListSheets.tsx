@@ -28,6 +28,7 @@ export type SheetState =
   | { kind: "menu" }
   | { kind: "stores" }
   | { kind: "move"; ids: string[] }
+  | { kind: "row"; id: string }
   | { kind: "why"; id: string };
 
 /* ---------------- store choices and the Find-a-store picker ---------------- */
@@ -252,6 +253,21 @@ function MoveSheet({ data, lens, ids, run, onMove, onNew }: Common & { ids: stri
   );
 }
 
+/* The row's ⋯ button: Move and Remove without needing the swipe. */
+function RowSheet({ data, id, run, onClose, onMove, onRemove }: Common & { id: string; onMove: (id: string) => void; onRemove: (ids: string[]) => Promise<void> }) {
+  const { t } = useTranslation();
+  const name = (data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>)).name || "";
+  return (
+    <>
+      <span className="sheetgrip" />
+      <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{name}</h3>
+      <button className="navrow" type="button" data-ls="row-move" onClick={() => onMove(id)}><span className="grow">{t("lists.moveToAnother")}</span><span className="chev">›</span></button>
+      <button className="navrow dangerrow" type="button" data-ls="row-remove" onClick={() => run(async () => { onClose(); await onRemove([id]); })}><span className="grow">{t("common.remove")}</span></button>
+      <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
+    </>
+  );
+}
+
 /* Why Arya suggests an item: rhythm (with the last 8 weeks as dots),
  * last bought, and where it is usually bought, all from receipts. */
 type Hist = { event_type: string; date: string; store_id?: string };
@@ -348,6 +364,7 @@ export type SheetActions = {
   onWhyAdd: (id: string) => void;
   onWhyNot: (id: string) => void;
   onWhyNever: (id: string) => void;
+  onRemove: (ids: string[]) => Promise<void>;
 };
 
 export function ListSheet({ sheet, setSheet, data, lens, actions }:
@@ -366,6 +383,7 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
       {sheet.kind === "new" && <NewSheet moving={sheet.moving} onClose={onClose} run={run} onCreate={actions.onCreate} />}
       {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
+      {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onRemove={actions.onRemove} />}
       {sheet.kind === "move" && <MoveSheet {...common} ids={sheet.ids} onMove={actions.onMove} onNew={ids => setSheet({ kind: "new", moving: ids })} />}
     </Sheet>
   );

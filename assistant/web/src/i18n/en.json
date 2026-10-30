@@ -831,7 +831,9 @@
       "freezer": "Freezer",
       "fruit": "Fruit bowl"
     },
-    "tickHint": "Tap the circles to tick items off as you shop"
+    "tickHint": "Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.",
+    "moveToAnother": "Move to another list",
+    "moreFor": "More for {{name}}: move or remove"
   },
   "login": {
     "signIn": "Sign in",

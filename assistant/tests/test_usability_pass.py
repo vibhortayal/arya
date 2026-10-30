@@ -73,7 +73,7 @@ class TestLists(unittest.TestCase):
         self.assertIn('onClick={() => (town && storeTrouble(town, here ? here.stores || [] : []) ? setShopOpen(true) : startHunt())}', js)
 
     def test_tick_hint(self):
-        self.assertIn("Tap the circles to tick items off as you shop", src("screens/Lists.tsx"))
+        self.assertIn("Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.", src("screens/Lists.tsx"))
 
     def test_qty_only_above_one(self):
         self.assertIn(': one ? "" : "× " + qtyFmt(item.qty)', src_raw("screens/Lists.tsx"))
