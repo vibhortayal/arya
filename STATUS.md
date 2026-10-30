@@ -131,6 +131,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   nudge offers Snap: the camera opens inside the game and the shelf photo
   goes to Map my store's scan (people blurred first). The finish card
   lists those sections with Snap each. `2026-10-30-quest-fog-snap.md`.
+  Map my store (one name app-wide) starts with Select store: your stores
+  as cards with addresses, then Find my store, then "Start mapping
+  <store>". `2026-10-30-map-my-store-cards.md`.
   Resume on a Quest trip opens it in the Quest game, grabs in the cart.
   `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
