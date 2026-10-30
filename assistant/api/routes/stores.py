@@ -116,3 +116,18 @@ async def stores_mine_remove(req: Request):
     if not stores_mod.remove_from_mine(store_id):
         raise HTTPException(404, "that store is not in your stores")
     return {"ok": True, "removed": store_id}
+
+
+@router.get("/api/stores/kroger-aisle")
+def stores_kroger_aisle(store_id: str = "", item: str = ""):
+    """A live, unsaved aisle suggestion for a Kroger-family store (see
+    api/kroger.py). Always 200: {"hint": null} means fall back to the
+    crowd map. A plain def route: the upstream call blocks."""
+    from api import kroger, stores as stores_mod
+    store = stores_mod.get_store(store_id.strip())
+    if store is None:
+        raise HTTPException(404, "no such store in the directory")
+    if not kroger.enabled():
+        return {"enabled": False, "hint": None}
+    return {"enabled": True, "hint": kroger.aisle_hint(store, item),
+            "source": "Kroger"}
