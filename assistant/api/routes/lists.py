@@ -286,6 +286,69 @@ async def list_import(req: Request):
             "names": [a["name"] for a in added], "item_ids": new_ids}
 
 
+@router.get("/api/list/tidy")
+def list_tidy(list_id: str = ""):
+    """What Arya would tidy on one list: doubles, typed amounts, errands."""
+    from api.list import tidy
+    rows = [i for i in state.derived()["smart_list"]["items"]
+            if i.get("on_list") and not i.get("checked") and (i.get("list") or "") == (list_id if list_id != "else" else "")]
+    return {"fixes": tidy.find(rows)}
+
+
+@router.post("/api/list/tidy/apply")
+async def list_tidy_apply(req: Request):
+    """Apply chosen fixes (from /api/list/tidy). Returns `undo`: the
+    flags the fixes changed, to put back with /api/list/tidy/undo."""
+    body = await _json_obj(req)
+    fixes = body.get("fixes")
+    if not isinstance(fixes, list) or not fixes:
+        raise HTTPException(400, "fixes is required")
+    rows = {i["item_id"]: i for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    old = state.flags()
+    undo, applied = {}, 0
+
+    def snap(i):
+        if i not in undo:
+            undo[i] = dict(old[i]) if i in old else None
+
+    for f in fixes[:200]:
+        if not isinstance(f, dict):
+            continue
+        kind = f.get("kind")
+        if kind == "double" and f.get("keep") in rows:
+            drops = [d for d in (f.get("drop") or []) if d in rows]
+            total = int(rows[f["keep"]].get("qty") or 1) + sum(int(rows[d].get("qty") or 1) for d in drops)
+            snap(f["keep"])
+            _merge_flag(f["keep"], {"qty_override": min(total, 99)})
+            for d in drops:
+                snap(d)
+                _merge_flag(d, {"manual": False, "dismissed_on": state.cycle()})
+            applied += 1
+        elif kind == "amount" and f.get("id") in rows and str(f["id"]).startswith("manual-"):
+            name = " ".join(str(f.get("new_name") or "").split())[:80]
+            qty = max(1, min(int(f.get("qty") or 1), 99))
+            if name:
+                snap(f["id"])
+                _merge_flag(f["id"], {"name": name, "qty_override": qty})
+                applied += 1
+        elif kind == "errand" and f.get("id") in rows:
+            snap(f["id"])
+            _merge_flag(f["id"], {"manual": False, "dismissed_on": state.cycle()})
+            applied += 1
+    return {"applied": applied, "undo": undo}
+
+
+@router.post("/api/list/tidy/undo")
+async def list_tidy_undo(req: Request):
+    body = await _json_obj(req)
+    undo = body.get("undo")
+    if not isinstance(undo, dict) or len(undo) > 400:
+        raise HTTPException(400, "undo is required")
+    for item_id, flag in undo.items():
+        state.update_flag(str(item_id), lambda _f, flag=flag: dict(flag) if isinstance(flag, dict) else {})
+    return {"ok": True}
+
+
 @router.post("/api/list/judge")
 async def list_judge(req: Request):
     """Settle the list's unknown names: the typed items the rules and

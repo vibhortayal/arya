@@ -17,8 +17,8 @@ type Found = { name: string; qty: number; unit: string; aisle: string; other_lis
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const deptOf = (i: Item) => (i.aisle && AISLE_ORDER.includes(i.aisle) ? i.aisle : OTHER);
 
-export function ShareWizard({ data, listId, listName, onClose, onChanged }:
-  { data: HomeData; listId: string; listName: string; onClose: () => void; onChanged: () => void }) {
+export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy }:
+  { data: HomeData; listId: string; listName: string; onClose: () => void; onChanged: () => void; onTidy: () => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>("choose");
@@ -130,7 +130,10 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged }:
   }
   if (step === "added" && result) return <>
     {head(t("lists.share.addedTitle", { count: result.added }), result.already ? t("lists.share.addedAlready", { count: result.already }) : "", null, 3, total)}
-    <div className="sheetacts"><button className="btn primary" type="button" data-wiz="done" onClick={onClose}>{t("lists.share.done")}</button></div></>;
+    {result.added >= 5 ? <p className="sub">{t("lists.share.tidyOffer")}</p> : null}
+    <div className="sheetacts">
+      {result.added >= 5 ? <button className="btn secondary" type="button" data-wiz="tidy" onClick={onTidy}>{t("lists.share.tidyBtn")}</button> : null}
+      <button className="btn primary" type="button" data-wiz="done" onClick={onClose}>{t("lists.share.done")}</button></div></>;
   return <>
     {head(t("lists.share.title"), t("lists.share.sub", { name: listName, count: items.length }), null)}
     {row("share", t("lists.share.share"), t("lists.share.shareSub"), () => setStep("share"))}

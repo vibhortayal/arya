@@ -10,6 +10,7 @@ import { AISLE_ORDER, GROUP_AT, OTHER } from "./aisles";
 import { itemHome, namedLists, onListItems, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
 import { useTranslation } from "../../i18n";
 import { ShareWizard } from "./ShareWizard";
+import { TidyFlow } from "./Tidy";
 
 /* Port of pwa/lists.js: the sheets behind the Lists tab (new list,
  * list options, link stores, move, and "why Arya suggests it"). The
@@ -34,6 +35,7 @@ export type SheetState =
   | { kind: "aisle"; id: string }
   | { kind: "where"; id: string }
   | { kind: "share" }
+  | { kind: "tidy" }
   | { kind: "why"; id: string };
 
 /* ---------------- store choices and the Find-a-store picker ---------------- */
@@ -207,7 +209,7 @@ function NewSheet({ moving, onClose, run, onCreate }: Pick<Common, "onClose" | "
   );
 }
 
-function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare }: Common & { onStores: () => void; onDelete: (l: NamedList) => void; onShare: () => void }) {
+function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare, onTidy }: Common & { onStores: () => void; onDelete: (l: NamedList) => void; onShare: () => void; onTidy: () => void }) {
   const { t } = useTranslation();
   const l = namedLists(data).find(x => x.id === lens) || null;
   const n = l ? data.list.items.filter(i => i.on_list && i.list === l.id).length : 0;
@@ -216,6 +218,7 @@ function MenuSheet({ data, lens, onClose, onStores, onDelete, onShare }: Common 
       <span className="sheetgrip" />
       <h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{l ? l.name : t("common.everythingElse")}</h3>
       {l ? <button className="navrow" type="button" data-ls="share" onClick={onShare}><span className="grow">{t("lists.share.menuRow")}<small>{t("lists.share.menuSub")}</small></span><span className="chev">›</span></button> : null}
+      {l ? <button className="navrow" type="button" data-ls="tidy" onClick={onTidy}><span className="grow">{t("lists.tidy.menuRow")}<small>{t("lists.tidy.menuSub")}</small></span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow" type="button" data-ls="stores" onClick={onStores}><span className="grow">{(l.stores || []).length ? t("lists.changeStores") : t("lists.linkStores")}<small>{(l.stores || []).length ? l.stores!.join(", ") : t("lists.storesUse")}</small></span><span className="chev">›</span></button> : null}
       {l ? <button className="navrow dangerrow" type="button" data-ls="delete" onClick={() => onDelete(l)}><span className="grow">{t("lists.deleteList")}<small>{n ? t("lists.deleteMoves", { count: n }) : t("lists.hasNoItems")}</small></span></button> : null}
       <div className="sheetacts"><button className="btn secondary" type="button" data-ls="close" onClick={onClose}>{t("common.done")}</button></div>
@@ -435,8 +438,9 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
   return (
     <Sheet open onClose={onClose} id="list-sheet" labelledBy="ls-title" focusKey={sheet.kind}>
       {sheet.kind === "new" && <NewSheet moving={sheet.moving} onClose={onClose} run={run} onCreate={actions.onCreate} />}
-      {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} onShare={() => setSheet({ kind: "share" })} />}
-      {sheet.kind === "share" && <ShareWizard data={data} listId={lens} listName={(namedLists(data).find(x => x.id === lens) || { name: "" }).name} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} />}
+      {sheet.kind === "menu" && <MenuSheet {...common} onStores={() => setSheet({ kind: "stores" })} onDelete={actions.onDelete} onShare={() => setSheet({ kind: "share" })} onTidy={() => setSheet({ kind: "tidy" })} />}
+      {sheet.kind === "share" && <ShareWizard data={data} listId={lens} listName={(namedLists(data).find(x => x.id === lens) || { name: "" }).name} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} onTidy={() => setSheet({ kind: "tidy" })} />}
+      {sheet.kind === "tidy" && <TidyFlow listId={lens} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
       {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} shopping={actions.shopping} onWhere={id => setSheet({ kind: "where", id })} />}
       {sheet.kind === "where" && <WhereSheet {...common} id={sheet.id} onSnap={name => actions.onSnap && actions.onSnap(name)} />}
