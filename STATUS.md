@@ -130,6 +130,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   nudge offers Snap: the camera opens inside the game and the shelf photo
   goes to Map my store's scan (people blurred first). The finish card
   lists those sections with Snap each. `2026-10-30-quest-fog-snap.md`.
+  The Quest home shows level, streak and the sticker album only once
+  there is something to show, and "New here?" only to a player who has
+  never shopped. `2026-10-30-quest-home-cards.md`.
   Resume on a Quest trip opens it in the Quest game, grabs in the cart.
   `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a

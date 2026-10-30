@@ -3,7 +3,7 @@
  * first; a returning player at their next real trip. */
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { levelOf, stageOf, streak, type Profile } from "../core/meta";
+import { levelOf, played, stageOf, streak, type Profile } from "../core/meta";
 import { ALL_STICKERS, PRACTICE_STORE, type QuestSource } from "../core/source";
 import type { ShoppingList, StoreSummary } from "../core/types";
 import { charArt, img } from "../assets";
@@ -37,11 +37,15 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
 
       <div className="qg-hero">
         <img src={img("scenes/storefront.webp")} alt="" />
-        <div className="qg-hero-stats">
-          <span className="qg-lvchip">Lv {lv.level}</span>
-          <Bar value={lv.into} max={lv.need} label="Level progress" />
-          <span className="qg-streak" title={`${st.freezesLeft} rest weeks left`}>{st.weeks} wk streak</span>
-        </div>
+        {/* Show cards only when they matter (owner, 2026-10-30): no
+            "Lv 1 · 0 wk streak" before the first real trip. */}
+        {played(profile) && (
+          <div className="qg-hero-stats">
+            <span className="qg-lvchip">Lv {lv.level}</span>
+            <Bar value={lv.into} max={lv.need} label="Level progress" />
+            <span className="qg-streak" title={`${st.freezesLeft} rest weeks left`}>{st.weeks} wk streak</span>
+          </div>
+        )}
       </div>
 
       {newbie ? (
@@ -76,12 +80,13 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
         </motion.div>
       )}
 
-      <div className="qg-tiles">
+      {/* The album shows up with its first sticker, not as "0 of 20". */}
+      {profile.stickers.length > 0 && <div className="qg-tiles">
         <button className="qg-tile" onClick={onAlbum}>
           <div className="qg-tile-art">{ALL_STICKERS.slice(0, 3).map(s => <img key={s} src={charArt(s)} alt="" className={profile.stickers.includes(s) ? "" : "locked"} />)}</div>
           <b>Sticker album</b><small>{profile.stickers.length} of {ALL_STICKERS.length}</small>
         </button>
-      </div>
+      </div>}
 
       {stores.length > 0 && (
         <div className="qg-card">
