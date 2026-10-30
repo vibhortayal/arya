@@ -93,6 +93,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, leave }}>{children}</Ctx.Provider>;
 }
 
+/* The session when there is one (the guide also renders in tests
+ * without a SessionProvider). */
+export function useSessionMaybe(): Session | null {
+  return useContext(Ctx);
+}
+
 export function useSession(): Session {
   const s = useContext(Ctx);
   if (!s) throw new Error("useSession outside SessionProvider");

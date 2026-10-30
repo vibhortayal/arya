@@ -453,6 +453,10 @@ function GroupSection() {
     try { setG(await get<GState>("/api/group")); } catch { setG({ enabled: false, group: null }); }
   }, []);
   useEffect(() => { load(); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The guide's "Start my group" lands here (nav.params.group).
+  useEffect(() => {
+    if (g.enabled && nav.params.group) document.getElementById("pf-group")?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  }, [g.enabled, nav.params.group]);
 
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
   const close = () => setSheet(null);

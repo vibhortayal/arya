@@ -1,6 +1,8 @@
-/* Arya guide (#154): opens from Settings, swipes to card 2, Try it
- * adds an item to the sample list, closes; the real lists are the
- * same as before (Try it saves nothing). Keys move and Esc closes on
+/* Arya guide (#154, owner's sections 2026-10-30): opens from Settings
+ * on Lists, Try it adds an item to the sample list, closes; swipes to
+ * card 2 (household) and its Try it shows a sample invite (no Start
+ * my group in the demo); the real lists are the same as before (Try
+ * it saves nothing). Keys move and Esc closes on
  * a desktop keyboard. Powers' "See how it works" opens the guide at
  * card 1, and a power's (i) sheet opens its own card. */
 export default async function (page, base) {
@@ -22,21 +24,10 @@ export default async function (page, base) {
   for (const gone of ["btn-tour", "btn-quest-progress"]) if (order.includes(gone)) throw new Error(gone + " should be gone from Settings");
   if (!(await page.textContent("#btn-guide")).startsWith("Help and guide")) throw new Error("help row label");
   await page.click("#btn-guide");
-  await page.waitForSelector('.gd[data-card="what"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 8") throw new Error("count: " + (await page.textContent("#gd-count")));
+  await page.waitForSelector('.gd[data-card="lists"]');
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 9") throw new Error("count: " + (await page.textContent("#gd-count")));
   if (await page.$("#gd-back")) throw new Error("Back on card 1");
   if ((await page.textContent("#gd-tour")) !== "Replay the tour") throw new Error("Replay the tour on card 1");
-
-  // Swipe left to card 2.
-  const box = await page.$eval(".gd", el => { const r = el.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2 }; });
-  await page.evaluate(({ x, y }) => {
-    const el = document.querySelector(".gd");
-    const touch = cx => new Touch({ identifier: 1, target: el, clientX: cx, clientY: y });
-    el.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, touches: [touch(x + 120)], changedTouches: [touch(x + 120)] }));
-    el.dispatchEvent(new TouchEvent("touchend", { bubbles: true, touches: [], changedTouches: [touch(x - 120)] }));
-  }, box);
-  await page.waitForSelector('.gd[data-card="lists"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 2 of 8") throw new Error("swipe did not reach card 2");
 
   // Try it: a sample Trader Joe's list; add two items.
   await page.click("#gd-try");
@@ -53,11 +44,32 @@ export default async function (page, base) {
   await page.click("#gd-try-sheet .sheethead .linkbtn");
   await page.waitForSelector("#gd-try-sheet", { state: "detached" });
 
+  // Swipe left to card 2.
+  const box = await page.$eval(".gd", el => { const r = el.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2 }; });
+  await page.evaluate(({ x, y }) => {
+    const el = document.querySelector(".gd");
+    const touch = cx => new Touch({ identifier: 1, target: el, clientX: cx, clientY: y });
+    el.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, touches: [touch(x + 120)], changedTouches: [touch(x + 120)] }));
+    el.dispatchEvent(new TouchEvent("touchend", { bubbles: true, touches: [], changedTouches: [touch(x - 120)] }));
+  }, box);
+  await page.waitForSelector('.gd[data-card="share"]');
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 2 of 9") throw new Error("swipe did not reach card 2");
+
+  // Household Try it: a sample code, Priya joins; the demo can't make a
+  // real group, so there is no Start my group.
+  await page.click("#gd-try");
+  await page.waitForSelector("#gd-try-sheet .gd-code");
+  await page.click("#gd-join");
+  await page.waitForSelector("#gd-share-after");
+  if (await page.$("#gd-start-group")) throw new Error("Start my group offered in the demo");
+  await page.click("#gd-try-sheet .sheethead .linkbtn");
+  await page.waitForSelector("#gd-try-sheet", { state: "detached" });
+
   // Keys: right and left move, Esc closes.
   await page.keyboard.press("ArrowRight");
-  await page.waitForSelector('.gd[data-card="usesoon"]');
+  await page.waitForSelector('.gd[data-card="maps"]');
   await page.keyboard.press("ArrowLeft");
-  await page.waitForSelector('.gd[data-card="lists"]');
+  await page.waitForSelector('.gd[data-card="share"]');
   await page.click("#gd-close");
   await page.waitForSelector(".gd", { state: "detached" });
 
@@ -69,14 +81,14 @@ export default async function (page, base) {
   await page.click("#btn-powers");
   await page.waitForSelector("#pw-guide");
   await page.click("#pw-guide");
-  await page.waitForSelector('.gd[data-card="what"]');
+  await page.waitForSelector('.gd[data-card="lists"]');
   await page.keyboard.press("Escape");
   await page.waitForSelector(".gd", { state: "detached" });
   await page.click("#powers-body .pwgroup summary");
   await page.click('#powers-body .infobtn[data-info="compare"]');
   await page.click('#info-sheet [data-pw="guide"]');
   await page.waitForSelector('.gd[data-card="prices"]');
-  if ((await page.textContent("#gd-count")) !== "Arya guide · 5 of 8") throw new Error("power link count");
+  if ((await page.textContent("#gd-count")) !== "Arya guide · 6 of 9") throw new Error("power link count");
   await page.click("#gd-close");
   await page.waitForSelector(".gd", { state: "detached" });
   await page.waitForSelector("#view-powers");
@@ -84,7 +96,6 @@ export default async function (page, base) {
   // Make my real list: the guide closes and the real new-list sheet opens.
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.click("#btn-guide");
-  await page.click("#gd-next");
   await page.click("#gd-try");
   await page.click("#gd-real-list");
   await page.waitForSelector("#list-sheet #ls-name");
@@ -92,11 +103,11 @@ export default async function (page, base) {
   await page.keyboard.press("Escape");
   await page.waitForSelector("#list-sheet", { state: "detached" });
 
-  // Quest's Try it opens the game's Practice Market.
+  // Store maps' Try it opens the game's Practice Market.
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.click("#btn-guide");
-  for (let k = 0; k < 6; k++) await page.keyboard.press("ArrowRight");
-  await page.waitForSelector('.gd[data-card="quest"]');
+  for (let k = 0; k < 2; k++) await page.keyboard.press("ArrowRight");
+  await page.waitForSelector('.gd[data-card="maps"]');
   await page.click("#gd-try");
   await page.waitForSelector('.qg[data-screen="play"]', { timeout: 20000 });
 }

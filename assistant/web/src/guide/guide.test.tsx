@@ -23,9 +23,11 @@ function hasKey(key: string) {
 }
 
 describe("cards", () => {
-  test("eight cards in the approved order, every text an en.json key", () => {
+  test("the owner's eight sections then the how-tos, every text an en.json key", () => {
     expect(GUIDE_CARDS.map(c => c.id)).toEqual([...GUIDE_IDS]);
-    expect(GUIDE_IDS).toEqual(["what", "lists", "usesoon", "receipts", "prices", "ask", "quest", "howto"]);
+    expect(GUIDE_IDS).toEqual(["lists", "share", "maps", "news", "receipts", "prices", "usesoon", "ask", "howto"]);
+    const art = GUIDE_CARDS.flatMap(c => c.art?.kind === "rows" ? [c.art.headKey, ...(c.art.faces || []), ...c.art.rows.flatMap(r => [r.k, r.v])] : []);
+    expect(art.filter((k): k is string => !!k).filter(k => !hasKey(k))).toEqual([]);
     const keys = GUIDE_CARDS.flatMap(c => [c.kickerKey, c.titleKey, c.bodyKey, ...(c.pointKeys || []), c.try?.labelKey,
       ...(c.howtos || []).flatMap(h => [h.titleKey, ...h.stepKeys])]).filter((k): k is string => !!k);
     expect(keys.filter(k => !hasKey(k))).toEqual([]);
@@ -37,7 +39,7 @@ describe("cards", () => {
     for (const h of HOWTOS) { expect(h.stepKeys.length).toBeGreaterThanOrEqual(2); expect(h.stepKeys.length).toBeLessThanOrEqual(4); }
   });
   test("open at a card id; an unknown id opens card 1; powers point at real cards", () => {
-    expect(guideIndex("prices")).toBe(4);
+    expect(guideIndex("prices")).toBe(5);
     expect(guideIndex("nope")).toBe(0);
     expect(guideIndex(undefined)).toBe(0);
     for (const id of Object.values(GUIDE_FOR_POWER)) expect(GUIDE_IDS).toContain(id);
@@ -95,15 +97,15 @@ describe("guide overlay", () => {
     mount();
     open();
     expect(screen.getByRole("dialog").getAttribute("aria-modal")).toBe("true");
-    expect(count()).toBe("Arya guide · 1 of 8");
+    expect(count()).toBe("Arya guide · 1 of 9");
     expect(document.activeElement!.id).toBe("gd-next");
     expect(document.getElementById("gd-back")).toBeNull();
     expect(document.querySelectorAll(".gd-dots i.on").length).toBe(1);
     act(() => { fireEvent.click(document.getElementById("gd-next")!); });
-    expect(count()).toBe("Arya guide · 2 of 8");
-    expect(screen.getByText("One list for each store")).toBeTruthy();
+    expect(count()).toBe("Arya guide · 2 of 9");
+    expect(screen.getByText("Share lists, shop together or apart")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-back")!); });
-    expect(card()).toBe("what");
+    expect(card()).toBe("lists");
     expect(document.activeElement!.id).toBe("gd-next");
     open("howto");
     expect(document.getElementById("gd-next")!.textContent).toBe("Done");
@@ -115,12 +117,12 @@ describe("guide overlay", () => {
     mount();
     open();
     key("ArrowLeft");
-    expect(card()).toBe("what");
-    key("ArrowRight");
-    key("ArrowRight");
-    expect(card()).toBe("usesoon");
-    key("ArrowLeft");
     expect(card()).toBe("lists");
+    key("ArrowRight");
+    key("ArrowRight");
+    expect(card()).toBe("maps");
+    key("ArrowLeft");
+    expect(card()).toBe("share");
     open("howto");
     key("ArrowRight");
     expect(card()).toBe("howto");
@@ -131,29 +133,31 @@ describe("guide overlay", () => {
     mount();
     open();
     swipe(-120);
-    expect(card()).toBe("lists");
+    expect(card()).toBe("share");
     swipe(-120);
-    expect(card()).toBe("usesoon");
+    expect(card()).toBe("maps");
     swipe(90);
-    expect(card()).toBe("lists");
+    expect(card()).toBe("share");
     swipe(-30);
-    expect(card()).toBe("lists");
+    expect(card()).toBe("share");
     swipe(-80, 200);
-    expect(card()).toBe("lists");
+    expect(card()).toBe("share");
   });
   test("opens at a card id (the Powers links), and from code (openGuide)", () => {
     mount();
     open("prices");
-    expect(count()).toBe("Arya guide · 5 of 8");
+    expect(count()).toBe("Arya guide · 6 of 9");
     expect(screen.getByText("Know where it's cheaper")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-close")!); });
     expect(document.querySelector(".gd")).toBeNull();
     act(() => openGuide("ask"));
     expect(card()).toBe("ask");
   });
-  test("Quest's Try it opens the game's Practice Market", () => {
+  test("Store maps' Try it opens the game's Practice Market; Store news has no Try it", () => {
     mount();
-    open("quest");
+    open("news");
+    expect(document.getElementById("gd-try")).toBeNull();
+    open("maps");
     act(() => { fireEvent.click(document.getElementById("gd-try")!); });
     expect(document.querySelector(".gd")).toBeNull();
     expect(nav.view).toBe("community");
@@ -197,6 +201,15 @@ describe("try it", () => {
     expect(document.getElementById("gd-try-sheet")).toBeNull();
     expect(card()).toBe("lists");
 
+    // Household: a sample code, then Priya joins.
+    sheet = tryAt("share");
+    expect(sheet.querySelector(".gd-code")!.textContent).toBe("K7Q 2MX");
+    expect(document.getElementById("gd-start-group")).toBeNull();
+    click("#gd-join");
+    expect(document.getElementById("gd-share-members")!.textContent).toContain("@priya");
+    expect(document.getElementById("gd-share-after")).toBeTruthy();
+    key("Escape");
+
     // Use soon: Snap turns the sample into a Use by Friday row.
     tryAt("usesoon");
     click("#gd-snap");
@@ -230,6 +243,17 @@ describe("try it", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  test("Start my group closes the guide and opens Settings at Group", () => {
+    mount();
+    tryAt("share");
+    click("#gd-join");
+    click("#gd-start-group");
+    expect(document.querySelector(".gd")).toBeNull();
+    expect(nav.view).toBe("profile");
+    expect(nav.params.group).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   test("Make my real list closes the guide and opens the real new-list flow", () => {
     mount();
     tryAt("lists");
@@ -258,11 +282,11 @@ describe("first-run tour", () => {
     act(() => { fireEvent.click(document.getElementById("fr-tour-more")!); });
     expect(document.querySelector(".fr-tour")).toBeNull();
     expect(onDone).toHaveBeenCalledTimes(1);
-    expect(card()).toBe("what");
+    expect(card()).toBe("lists");
   });
   test("Replay the tour sits on card 1 only; it closes the guide and starts the tour", () => {
     render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><Probe /></GuideProvider></TourProvider></NavProvider>);
-    open("lists");
+    open("share");
     expect(document.getElementById("gd-tour")).toBeNull();
     open();
     expect(document.getElementById("gd-tour")!.textContent).toBe("Replay the tour");

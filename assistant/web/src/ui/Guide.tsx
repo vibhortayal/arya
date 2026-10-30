@@ -67,13 +67,19 @@ function Art({ art }: { art: GuideArt }) {
   if (art.kind === "chars") {
     return <div className="gd-art"><div className="chars">{art.names.map(n => <img key={n} src={asset(`assets/characters/${n}.webp`)} alt="" />)}</div></div>;
   }
+  // A small sample screen: a heading (with faces for a shared list),
+  // then rows; a section row is a store name, bar a spending bar.
   return (
     <div className="gd-art">
       <div className="mini" aria-hidden="true">
-        <b>{t("guide.sample.art.oil")}</b>
-        <div className="r"><span>{t("guide.sample.store.tj")}</span><span className="good">{t("guide.sample.art.cheaper", { price: "$8.99" })}</span></div>
-        <div className="r"><span>{t("guide.sample.store.safeway")}</span><span>$11.49</span></div>
-        <div className="r"><span>{t("guide.sample.art.last3")}</span><span>{t("guide.sample.art.up")}</span></div>
+        {(art.headKey || art.faces) && <div className="mh">
+          {art.faces && <span className="faces">{art.faces.map((f, k) => <i key={f} className={"f" + k}>{t(f)}</i>)}</span>}
+          {art.headKey && <b>{t(art.headKey)}</b>}
+        </div>}
+        {art.rows.map((r, k) => r.section
+          ? <p className="sec" key={k}>{t(r.k)}</p>
+          : <div className="r" key={k}><span>{t(r.k)}</span>
+            {r.v && <span className={r.tone}>{r.bar != null && <i className="bar" style={{ width: `${Math.round(r.bar * 80)}px` }} />}{t(r.v)}</span>}</div>)}
       </div>
     </div>
   );
@@ -178,12 +184,13 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
   };
 
   const onTry = (k: TryKind) => {
-    // Quest's Try it is the game's own Practice Market (saves nothing).
+    // Store maps' Try it is the game's own Practice Market (saves nothing).
     if (k === "quest") { onClose(); nav.show("community", { practice: true }); return; }
     setTry(k);
   };
   const replay = () => { onClose(); tour.startTour(FIRST_RUN_TOUR); };
   const realList = () => { setTry(null); onClose(); nav.show("list", { newList: true }); };
+  const startGroup = () => { setTry(null); onClose(); nav.show("profile", { group: true }); };
 
   return createPortal(
     <>
@@ -207,7 +214,7 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
           <button className="btn primary" id="gd-next" type="button" ref={next} onClick={fwd}>{last ? t("common.done") : t("guide.next")}</button>
         </div>
       </div>
-      {tryKind && <GuideTry kind={tryKind} onClose={() => setTry(null)} onRealList={realList} />}
+      {tryKind && <GuideTry kind={tryKind} onClose={() => setTry(null)} onRealList={realList} onStartGroup={startGroup} />}
     </>,
     document.body,
   );
