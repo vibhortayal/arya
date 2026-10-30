@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
 import { post } from "../lib/api";
+import { useSession } from "../app/session";
 import { asset } from "../lib/format";
 import { Sheet } from "./Sheet";
 import { useTranslation } from "../i18n";
@@ -22,6 +23,7 @@ export const openEndOfDemo = () => set(true);
 
 export function EndOfDemo() {
   const { t } = useTranslation();
+  const { leave } = useSession();
   const open = useSyncExternalStore(f => { subs.add(f); return () => { subs.delete(f); }; }, () => isOpen);
   const [text, setText] = useState("");
   const [email, setEmail] = useState("");
@@ -30,6 +32,12 @@ export function EndOfDemo() {
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const close = () => set(false);
+  // Same exit as Settings: end the demo session and show the start page.
+  const leaveDemo = async () => {
+    await fetch("/auth/logout", { method: "POST" }).catch(() => {});
+    close();
+    await leave();
+  };
 
   const send = async () => {
     setBusy(true); setErr("");
@@ -84,6 +92,7 @@ export function EndOfDemo() {
         <a href={REPO} target="_blank" rel="noopener noreferrer">{t("endDemo.peek")}</a> {t("endDemo.star")}
       </p>
       <button className="linkbtn fr-skip" id="ed-keep" type="button" onClick={close}>{t("endDemo.keep")}</button>
+      <button className="linkbtn fr-skip" id="ed-leave" type="button" onClick={leaveDemo}>{t("endDemo.leave")}</button>
     </Sheet>
   );
 }
