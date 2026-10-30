@@ -5,6 +5,7 @@ import { useAvatar } from "../../app/avatar";
 import { loadGameDoc, serverProfileStore, type GameDoc } from "./serverProfile";
 import { AppSource } from "./appSource";
 import { FindStorePanel } from "../StoresFind";
+import { markQuestOpened } from "../../lib/questSeen";
 import { useTranslation } from "../../i18n";
 
 /* The Quest tab: the 3D shopping game on the user's own lists, stores
@@ -33,7 +34,12 @@ export function QuestMode() {
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
   // The Arya guide's Quest "Try it" (#154) starts the Practice Market.
   const practice = nav.params.practice === true;
+  // Your trips › Resume on a Quest trip picks it back up in the game.
+  const resume = typeof nav.params.resume === "string" ? nav.params.resume : undefined;
   const { setChrome } = nav;
+
+  // Opening Quest once retires Today's Quest nudge for this account.
+  useEffect(() => { markQuestOpened(s.user); }, [s.user]);
 
   // The tab bar's height, so the game's home ends above it.
   useEffect(() => {
@@ -74,6 +80,9 @@ export function QuestMode() {
       <button id="qm-map-store" className="qg-store" type="button" onClick={() => nav.show("mapper")}>
         <span><b>{t("quest.mapMyStore")}</b><small>{t("quest.mapMyStoreSub")}</small></span><span aria-hidden="true">›</span>
       </button>
+      <button id="qm-progress" className="qg-store" type="button" onClick={() => nav.show("quest-progress")}>
+        <span><b>{t("common.questProgress")}</b><small>{t("quest.progressSub")}</small></span><span aria-hidden="true">›</span>
+      </button>
       <button className="qg-store" type="button" onClick={() => nav.show("trips")}>
         <span><b>{t("quest.tripsLink")}</b><small>{t("quest.tripsLinkSub")}</small></span><span aria-hidden="true">›</span>
       </button>
@@ -83,7 +92,7 @@ export function QuestMode() {
   return (
     <div className="questmode-host">
       <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
-        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} />}
+        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homeExtra={extra} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
       </Suspense>
     </div>
   );

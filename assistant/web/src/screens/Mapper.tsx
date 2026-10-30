@@ -128,10 +128,8 @@ export function Mapper() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <p className="backrow"><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
-      <img className="mapperhero" src="/assets/scenes/storefront.webp" alt="" />
-      <p className="muted">{t("mapper.theMoreOfYourStore")}</p>
       <div id="mp-stores" className="rail">
         {names.map(n => (
           <button key={n} className="chip" data-mstore={n} aria-pressed={n === store} type="button"
@@ -145,6 +143,20 @@ export function Mapper() {
           <FindStorePanel onAdded={n => { chosen = n; setFinding(false); setView(null); load(n).catch(showErr); }} />
         </div>
       )}
+      <div id="mp-walk">
+        {v && store && (
+          <div className="group pad mp-nextcard">
+            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMapping")}</button>
+            <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
+          </div>
+        )}
+      </div>
+      <details className="mp-how" id="mp-how">
+        <summary>{t("mapper.howItWorks")}</summary>
+        <img className="mapperhero" src="/assets/scenes/storefront.webp" alt="" />
+        <p className="muted">{t("mapper.theMoreOfYourStore")}</p>
+        <p className="muted">{t("mapper.justWalkTheAislesYou")}</p>
+      </details>
       <div id="mp-cover" className="group pad">
         {!store ? <Empty>{t("mapper.pickAStoreFromMy")}</Empty> : v && (v.total ? (
           <>
@@ -158,23 +170,13 @@ export function Mapper() {
           </>
         ) : <p className="nomargin">{t("mapper.noAislesHereYetWalk")}</p>)}
       </div>
-      <div id="mp-walk">
-        {v && store && (
-          <div className="group pad mp-nextcard">
-            <span className="eyebrow">{t("mapper.zeroTyping")}</span>
-            <div className="name">{t("mapper.walkYourStore")}</div>
-            <p className="muted">{t("mapper.justWalkTheAislesYou")}</p>
-            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startTheWalk")}</button>
-          </div>
-        )}
-      </div>
       <div id="mp-next">
         {v && store && (v.next ? (
           <div className="group pad mp-nextcard">
             <span className="eyebrow">{t("mapper.teachAryaNext")}</span>
             <div className="name">{v.next.title}</div>
             <p className="muted">{v.next.why}</p>
-            <button className="btn primary wide" id="mp-start" type="button" onClick={() => openCapture(v.next!)}>{t("mapper.openCameraAboutS", { est_seconds: v.next.est_seconds })}</button>
+            <button className="btn wide" id="mp-start" type="button" onClick={() => openCapture(v.next!)}>{t("mapper.openCameraAboutS", { est_seconds: v.next.est_seconds })}</button>
           </div>
         ) : v.total ? (
           <div className="group pad"><p className="nomargin">{t("mapper.aryaKnowsEveryAisleYou")}</p></div>
@@ -200,8 +202,8 @@ export function Mapper() {
           );
         }) : <Empty>{t("mapper.nothingMappedYet")}</Empty>)}
       </div>
-      <details className="group pad">
-        <summary>{t("mapper.fineTuneAddAnAisle")}</summary>
+      <details className="group pad" id="mp-more">
+        <summary>{t("mapper.more")}</summary>
         <label className="field">{t("mapper.addAnAisle")}<input type="text" id="mp-label" placeholder={t("mapper.aisle4FrozenDairyWall")} autoComplete="off" maxLength={60}
             value={label} onChange={e => setLabel(e.target.value)} />
         </label>

@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
-import { useTour } from "../ui/Tour";
-import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
 import { useGuide } from "../ui/Guide";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
@@ -24,7 +22,7 @@ import { t, useTranslation } from "../i18n";
  * Add to Home Screen row (a2hs.js) and the Group section (group.js).
  * Profile is also the Settings tab: with no nav.params.from the Back
  * link is hidden. Quest stats, badges and mapped stores live on the
- * quest-progress view, not here.
+ * quest-progress view, opened from the Quest tab (usability pass).
  * Local helpers (not in ui/): GroupSection, Reminders. The Add to
  * Home Screen row is ui/A2hs.tsx. */
 
@@ -39,7 +37,6 @@ export function Profile() {
   const { t } = useTranslation();
   const nav = useNav();
   const town = useTown();
-  const tour = useTour();
   const guide = useGuide();
   const { demo, user, currency, setCurrency, language, languages, setLanguage, leave } = useSession();
   const { toast, showErr } = useToast();
@@ -69,14 +66,8 @@ export function Profile() {
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
 
   const s = profile?.stats;
-  const earned = (profile?.badges || []).filter(b => b.earned).length;
-  const mapped = profile?.mapped_stores || [];
   const level = profile && s
     ? t("settings.levelLine", { level: profile.level || 1, points: profile.points || 0 }) + (s.streak_weeks ? t("settings.streak", { n: s.streak_weeks }) : "") : "";
-  const questSub = profile && s
-    ? t("settings.questHunts", { count: s.hunts }) + t("settings.questBadges", { earned, total: (profile.badges || []).length })
-      + (mapped.length ? t("settings.questMapped", { count: mapped.length }) : "")
-    : t("settings.questSubEmpty");
 
   const dismiss = (sid: string) => attempt(async () => {
     if (!confirm(t("receipts.confirmDismiss"))) return;
@@ -151,12 +142,11 @@ export function Profile() {
         <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
       </div>
       <div className="group">
+        {/* One help row (usability pass): the tour replay lives inside the
+          * guide; Quest progress moved into the Quest tab. */}
         <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
-          <span className="grow">{t("settings.aryaGuide")}<span className="sub">{t("settings.aryaGuideSub")}</span></span><span className="chev">›</span></button>
+          <span className="grow">{t("settings.helpAndGuide")}<span className="sub">{t("settings.helpAndGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
-        <NavRow id="btn-quest-progress" view="quest-progress" title={t("common.questProgress")} subId="pf-quest-sub" sub={questSub} />
-        <button className="navrow" id="btn-tour" type="button" onClick={() => tour.startTour(FIRST_RUN_TOUR)}>
-          <span className="grow">{t("settings.showMeAroundAgain")}<span className="sub">{t("settings.replayTheTour")}</span></span><span className="chev">›</span></button>
         <A2hsRow demo={demo} />
       </div>
       <Reminders />
@@ -261,7 +251,7 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
     <div id="pf-avatar" className="group pad">
       <div className="avwrap"><div className="avatar big" id="pf-avatar-pic"><span id="pf-avatar-initial">{(demo ? "demo" : String(user || "A")).charAt(0).toUpperCase()}</span>
         <img id="pf-avatar-img" alt="" hidden={!loaded} src={loaded ? src : undefined} /></div>
-        <button className="avedit" id="av-edit-btn" type="button" aria-label={t("settings.editAvatar")} aria-expanded={open} onClick={() => setOpen(o => !o)}>&#9998;</button></div>
+</div>
       <p className="nomargin" style={{ textAlign: "center" }}><strong id="pf-handle" style={{ fontSize: 19 }}>{handle}</strong></p>
       <p className="muted nomargin" id="pf-level" style={{ textAlign: "center" }}>{level}</p>
       <div id="av-panel" hidden={!open}>
@@ -285,7 +275,7 @@ function AvatarCard({ handle, level }: { handle: string; level: string }) {
         </div>
       </div>
       <p id="av-status" className="muted nomargin" style={{ textAlign: "center" }}>{status}</p>
-      <p className="nomargin" style={{ textAlign: "center", marginTop: 10 }}><button className="btn compact" id="av-edit-label" type="button" onClick={() => setOpen(o => !o)}>{open ? t("common.done") : t("settings.editAvatar")}</button></p>
+      <p className="nomargin" style={{ textAlign: "center", marginTop: 10 }}><button className="btn compact" id="av-edit-label" type="button" aria-expanded={open} aria-controls="av-panel" onClick={() => setOpen(o => !o)}>{open ? t("common.done") : t("settings.editAvatar")}</button></p>
     </div>
   );
 }

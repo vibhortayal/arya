@@ -52,7 +52,8 @@ export default async function (page, base) {
   await page.click('#list-sheet [data-ls="delete"]');
   await page.waitForSelector("#lists-home");
 
-  // Start shopping from Everything else -> the sheet -> the Quest game.
+  // Start shopping from Everything else goes straight to the Quest game
+  // (usability pass): no one-option sheet.
   await page.click('#list-cards [data-open-list="else"]');
   await page.waitForSelector("#list-page");
   if (!(await page.isVisible("#list-hunt"))) {
@@ -61,11 +62,6 @@ export default async function (page, base) {
     await page.waitForSelector("#list-hunt");
   }
   await page.click("#list-hunt");
-  await page.waitForSelector("#shop-sheet [data-shop=quest]");
-  if (await page.$("#shop-sheet [data-shop=express]")) throw new Error("Express should be gone (#158)");
-  await page.click("#shop-close");
-  await page.waitForFunction(() => !document.querySelector("#shop-sheet"));
-  await page.click("#list-hunt");
-  await page.click("#shop-sheet [data-shop=quest]");
+  if (await page.$("#shop-sheet")) throw new Error("Start shopping should skip the sheet");
   await page.waitForSelector("#view-community .qg-home");
 }

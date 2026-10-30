@@ -201,7 +201,8 @@ class TestSettingsRename(unittest.TestCase):
         self.assertIn('<h2 className="largetitle">Settings</h2>', src)
         self.assertIn('<h3 className="sect">Account</h3>', src)
         self.assertNotIn('<h2 className="largetitle">Profile</h2>', src)
-        self.assertIn('ring ? "Settings, level {{level}}" : "Settings"', read(WEB, "App.tsx"))
+        # No floating avatar any more (usability pass); Settings is a tab.
+        self.assertNotIn('id="avatar-btn"', read(WEB, "App.tsx"))
 
 
 if __name__ == "__main__":

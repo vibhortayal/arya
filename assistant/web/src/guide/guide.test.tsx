@@ -77,7 +77,7 @@ describe("sample data", () => {
 let nav!: ReturnType<typeof useNav>;
 let guide!: ReturnType<typeof useGuide>;
 function Probe() { nav = useNav(); guide = useGuide(); return <p data-testid="view">{nav.view}</p>; }
-const mount = () => render(<NavProvider initial="profile"><GuideProvider><Probe /></GuideProvider></NavProvider>);
+const mount = () => render(<NavProvider initial="profile"><TourProvider><GuideProvider><Probe /></GuideProvider></TourProvider></NavProvider>);
 const count = () => document.getElementById("gd-count")?.textContent;
 const card = () => document.querySelector(".gd")?.getAttribute("data-card");
 const open = (at?: GuideId) => act(() => guide.open(at));
@@ -259,5 +259,15 @@ describe("first-run tour", () => {
     expect(document.querySelector(".fr-tour")).toBeNull();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(card()).toBe("what");
+  });
+  test("Replay the tour sits on card 1 only; it closes the guide and starts the tour", () => {
+    render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><Probe /></GuideProvider></TourProvider></NavProvider>);
+    open("lists");
+    expect(document.getElementById("gd-tour")).toBeNull();
+    open();
+    expect(document.getElementById("gd-tour")!.textContent).toBe("Replay the tour");
+    act(() => { fireEvent.click(document.getElementById("gd-tour")!); });
+    expect(document.querySelector(".gd")).toBeNull();
+    expect(document.querySelector(".fr-tour")).not.toBeNull();
   });
 });

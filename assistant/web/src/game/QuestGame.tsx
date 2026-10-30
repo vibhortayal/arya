@@ -48,9 +48,11 @@ export type QuestGameProps = {
   onAddItems?: () => void;
   /* Open straight into the Practice Market (the host's guide). */
   practice?: boolean;
+  /* A saved trip to pick back up (Your trips › Resume). */
+  resume?: string;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, onAddItems, practice }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, onAddItems, practice, resume }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -73,6 +75,15 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     setScreen({ s: "play", trip: newTrip(layout, items, { practice: true, golden: eggs }) });
   };
   useEffect(() => { if (practice) void startPractice(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Resume a saved trip where it was left: the same items, the grabs in the cart.
+  useEffect(() => {
+    if (!resume || !source.resume) return;
+    setScreen({ s: "loading" });
+    void source.resume(resume).then(r => {
+      if (!r) { setScreen({ s: "home" }); return; }
+      setScreen({ s: "play", trip: { ...newTrip(r.layout, r.items, { seed: Math.floor(Math.random() * 1e6) }), got: r.got } });
+    }).catch(() => setScreen({ s: "home" }));
+  }, [resume]); // eslint-disable-line react-hooks/exhaustive-deps
   /* Walk a built store: practice on its own layout with the player's list (nothing is saved). */
   const walkBuilt = (graph: StoreGraph, name: string) => {
     const src = list?.items.length ? list : PRACTICE_LIST;

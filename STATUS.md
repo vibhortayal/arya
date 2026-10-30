@@ -18,6 +18,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 - **Trips save on first grab (merged, #200):** a quest saves a trip when the
   first item is grabbed, not when the quest opens.
   `assistant/loops/2026-10-29-quest-trip-on-grab.md`.
+- **Usability pass (2026-10-29, PR #203):** mapping screen leads with store, then one Start mapping (How it works and More folds); Settings has one Help and guide row (Replay the tour inside the guide), Quest progress moved to the Quest tab; no floating avatar; Today drops Open Lists and retires the Quest nudge after the first Quest open; Start shopping skips the one-option sheet; tick-off hint; "× 1" hidden. Pins: `tests/test_usability_pass.py`.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account
@@ -124,6 +125,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   button, and one List sheet (add at the top, sections in walking order,
   reorder or skip behind a link). An empty list offers add or a saved list.
   `2026-10-29-quest-instore.md`.
+  Resume on a Quest trip opens it in the Quest game, grabs in the cart.
+  `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. It has a Costco list and a Trader Joe's list
   (store names only; no Trader Joe's map data ships).
