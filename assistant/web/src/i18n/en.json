@@ -188,7 +188,7 @@
     "fileAReceiptAndYour": "Add a receipt and your spending shows up here.",
     "spendLiveFromYourReceipts": "Spending, from your receipts",
     "returnsNettedAllTime": "Returns taken off, all time",
-    "allReceiptsRefundsReconcileInto": "All receipts. Returns are taken off.",
+    "allReceiptsRefundsReconcileInto": "Already subtracted from every total below.",
     "allTimeSpend": "All-time spending",
     "groceries": "Groceries",
     "foodAndHousehold": "food and household",

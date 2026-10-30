@@ -133,6 +133,12 @@ def item_prices(item_id, d, at=None):
     return {"item_id": item_id, "stores": stores, "cheaper": cheaper, "trend": trend}
 
 
+def _label(names, iid):
+    """A readable item name, never a raw id like costco-96716."""
+    n = names.get(iid)
+    return n if n and n != iid else "an item"
+
+
 def _window(rows, lo, hi):
     return [e for e in rows if lo <= _d(e["date"]) < hi]
 
@@ -159,7 +165,7 @@ def basket_change(d, names=None, today=None):
             continue
         a, b = statistics.median(then), statistics.median(now)
         per_month = sum(float(e.get("qty") or 1) for e in recent90 if e["item_id"] == iid) / 3
-        items.append({"item_id": iid, "name": names.get(iid, iid), "then": _r(a), "now": _r(b),
+        items.append({"item_id": iid, "name": _label(names, iid), "then": _r(a), "now": _r(b),
                       "pct": _pct(a, b), "month_dollars": (b - a) * per_month})
     if len(items) < BASKET_MIN_ITEMS:
         return None
@@ -200,7 +206,7 @@ def split_smarter(d, names=None, today=None):
         per_month = sum(float(e.get("qty") or 1) for e in recent90 if e["item_id"] == iid) / 3
         if per_month <= 0:
             continue
-        moves.append({"item_id": iid, "name": names.get(iid, iid), "from": usual, "to": lo,
+        moves.append({"item_id": iid, "name": _label(names, iid), "from": usual, "to": lo,
                       "from_price": _r(med[usual]), "to_price": _r(med[lo]),
                       "month_dollars": _r(gap * per_month)})
     total = _r(sum(m["month_dollars"] for m in moves))
@@ -279,7 +285,7 @@ def similar_items(item_id, d, names):
     for iid, e in last.items():
         if iid == item_id or head_word(names.get(iid, "")) != me:
             continue
-        row = {"item_id": iid, "name": names.get(iid, iid), "price": _r(e["unit"]),
+        row = {"item_id": iid, "name": _label(names, iid), "price": _r(e["unit"]),
                "store": e["store_id"], "date": e["date"]}
         theirs = size_of(row["name"])
         if mine and theirs and mine[0] == theirs[0] and theirs[1] > 0:
@@ -307,7 +313,7 @@ def ask_facts(d, names, cap=40):
             seen.append(e["item_id"])
     for iid in seen[:cap]:
         p = item_prices(iid, d)
-        out[names.get(iid, iid)] = {
+        out[_label(names, iid)] = {
             "stores": {s: {"price": v["last"], "date": v["last_date"]} for s, v in p["stores"].items()},
             "cheaper": p["cheaper"], "trend": p["trend"]}
     return out

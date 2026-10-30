@@ -217,3 +217,10 @@ class TestPowersPlainWords(unittest.TestCase):
         self.assertIn('<button className="pwneed" type="button" data-pw-act="share" onClick={() => setSheet({ kind: "share" })}>', js)
         # Arya Shoppers has no opt-in yet, so it says so instead of "Turn on".
         self.assertIn('name: "Arya shoppers", sub: "See how busy a store is right now.", need: "Coming soon"', js)
+
+
+class TestReadableNames(unittest.TestCase):
+    def test_label_never_returns_a_raw_id(self):
+        self.assertEqual(prices._label({"costco-1": "Milk"}, "costco-1"), "Milk")
+        self.assertEqual(prices._label({}, "costco-96716"), "an item")
+        self.assertEqual(prices._label({"costco-9": "costco-9"}, "costco-9"), "an item")
