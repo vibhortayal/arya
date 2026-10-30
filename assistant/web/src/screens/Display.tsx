@@ -26,7 +26,7 @@ export function Display() {
   async function resetAll() {
     try {
       await saveDisplay(DISPLAY_DEFAULT);
-      await post("/api/settings", { today_cards: null, today_sizes: { low: "m", lists: "m", report: "m", price: "m", expiry: "m", checks: "m", patterns: "m", quest: "m" } });
+      await post("/api/settings", { today_cards: null, today_sizes: { low: "m", lists: "m", report: "m", price: "m", expiry: "m", checks: "m", patterns: "m", quest: "m", watch: "m", trip: "m" } });
       toast(t("display.resetDone"));
     } catch (e) { showErr(e); }
   }

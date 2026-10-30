@@ -2009,6 +2009,9 @@
       "price": "{{count}} cheaper elsewhere",
       "expiry": "{{count}} to use soon",
       "checks": "{{count}} to check",
+      "watch_one": "{{count}} item costs more",
+      "watch_other": "{{count}} items cost more",
+      "trip": "About {{money}}",
       "addAll": "Add all",
       "addedAll": "Added to your list"
     },
@@ -2053,6 +2056,14 @@
       "quest": {
         "name": "Quest",
         "desc": "Turn your next trip into a game"
+      },
+      "watch": {
+        "name": "Price watch",
+        "desc": "What costs more than it did"
+      },
+      "trip": {
+        "name": "Next trip",
+        "desc": "Your fullest list and about what it costs"
       },
       "waiting": "Hidden until it has news"
     },
@@ -2249,6 +2260,16 @@
       "many": "{{names}} and {{count}} more lists are empty",
       "sub": "Add what you need, or tap Add on Running low.",
       "subNew": "Add what you need. Arya fills them from what you usually buy once it has a receipt."
+    },
+    "watch": {
+      "up": "Up {{pct}} since {{month}}."
+    },
+    "trip": {
+      "costs_one": "{{count}} item, about {{money}}",
+      "costs_other": "{{count}} items, about {{money}}",
+      "go": "Shop",
+      "peek_one": "{{name}}, {{count}} item",
+      "peek_other": "{{name}}, {{count}} items"
     },
     "finding": {
       "kicker": "Price watch",

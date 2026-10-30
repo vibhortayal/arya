@@ -9,8 +9,9 @@ describe("customizable Today", () => {
   });
 
   test("More cards lists what is off, in the default order", () => {
-    expect(cardsOff(["quest", "low"])).toEqual(["lists", "report", "price", "expiry", "checks", "patterns"]);
-    expect(cardsOff(DEFAULT_CARDS)).toEqual([]);
+    expect(cardsOff(["quest", "low"])).toEqual(["lists", "report", "price", "expiry", "checks", "patterns", "watch", "trip"]);
+    // The newer cards start off, in the card library.
+    expect(cardsOff(DEFAULT_CARDS)).toEqual(["watch", "trip"]);
   });
 
   test("move, remove, add", () => {
@@ -25,9 +26,9 @@ describe("customizable Today", () => {
 
   test("the answers lead Today and nothing is removed", () => {
     const money = cardsForFocus(["money"]);
-    expect(money.slice(0, 2)).toEqual(["price", "patterns"]);
-    expect([...money].sort()).toEqual([...DEFAULT_CARDS].sort());
-    expect(cardsForFocus(["faster", "waste"]).slice(0, 3)).toEqual(["expiry", "checks", "lists"]);
+    expect(money.slice(0, 3)).toEqual(["price", "watch", "patterns"]);
+    expect([...money].sort()).toEqual([...DEFAULT_CARDS, "watch"].sort());
+    expect(cardsForFocus(["faster", "waste"]).slice(0, 4)).toEqual(["expiry", "checks", "trip", "lists"]);
     expect(cardsForFocus([])).toEqual(DEFAULT_CARDS);
   });
 });
