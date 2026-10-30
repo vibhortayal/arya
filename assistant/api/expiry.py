@@ -164,9 +164,9 @@ def use_soon(flags, names, last_bought, today):
     return out
 
 
-# --- after a receipt: which of it goes off (#207) ---------------------------
+# --- after a receipt: which of it can expire or go bad (#207) -------------
 # Owner 2026-10-30: after a receipt, Today names what was bought that
-# usually goes off and asks for dates in one sheet. Guessing is $0: the
+# usually expires or goes bad and asks for dates in one sheet. Guessing is $0: the
 # character categories (api/haul.py, used for trip names) mark fruit,
 # vegetables, dairy and bakery; a short word list adds meat, fish, eggs,
 # cheese and bread. No model call.

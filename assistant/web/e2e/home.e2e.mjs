@@ -38,7 +38,7 @@ export default async function (page, base) {
     await page.keyboard.press("Escape");
     await page.waitForSelector("#expiry-sheet", { state: "detached" });
   } else if (await page.$("#perish-open")) {
-    // After a receipt (#207): one sheet of what goes off; skip one, pick a
+    // After a receipt (#207): one sheet of what can expire or go bad; skip one, pick a
     // date for another, Escape leaves without saving.
     await page.click("#perish-open");
     await page.waitForSelector("#perish-sheet .pz li");

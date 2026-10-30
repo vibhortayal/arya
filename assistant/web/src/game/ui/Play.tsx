@@ -48,6 +48,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   const [prefs, setPrefs] = useState<FeelPrefs>(feel.prefs);
   const [briefing, setBriefing] = useState(!trip.got.length && !trip.here && trip.items.length > 0);
   const [subName, setSubName] = useState("");
+  const [gestureHint, setGestureHint] = useState(false);
   const [nudge, setNudge] = useState<Nudge>(null);
   const nudged = useRef(new Set(trip.snapped));
   const nudgeTimer = useRef(0);
@@ -83,7 +84,6 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
   const walkTo = useCallback((g: Goal) => {
     setAt(null); setPage("main");
-    setNudge(n => (n && n.state !== "busy" ? null : n));
     if (g.kind === "item") setFocus(g.key);
     world.current?.walkTo(g);
     setOverview(false);
@@ -106,6 +106,17 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       }
     }
   }, [onTrip, onFinish]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Pinch and turn: said once per phone, when the first trip starts. */
+  useEffect(() => {
+    if (briefing) return;
+    let seen = true;
+    try { seen = !!localStorage.getItem("qg-gesture-hint"); if (!seen) localStorage.setItem("qg-gesture-hint", "1"); } catch { /* storage off: skip the hint */ }
+    if (seen) return;
+    setGestureHint(true);
+    const t = window.setTimeout(() => setGestureHint(false), 5000);
+    return () => clearTimeout(t);
+  }, [briefing]);
 
   /* Voice guide: says where you're headed. */
   useEffect(() => {
@@ -184,7 +195,15 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       clearTimeout(undoTimer.current);
       undoTimer.current = window.setTimeout(() => setUndo(u => (u?.key === a.key ? null : u)), 5000);
     }
-    if (a.type !== "ungrab") { setAt(null); setPage("main"); setFocus(null); }
+    if (a.type !== "ungrab") {
+      setAt(null); setPage("main"); setFocus(null);
+      // Got it walks you on to the next item (one panel: no Next to find).
+      later(() => {
+        const t = tripRef.current; if (allHandled(t)) return;
+        const c = currentStop(t), k = c ? leftIn(t, c)[0]?.key : null;
+        if (k) walkTo({ kind: "item", key: k });
+      }, a.type === "scout" ? 1000 : 650);
+    }
   };
 
   const onTapItem = (key: string) => {
@@ -204,6 +223,13 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       setNudge({ ...n, state: "done" });
       nudgeTimer.current = window.setTimeout(() => setNudge(x => (x?.state === "done" ? null : x)), 2500);
     } else setNudge({ ...n, state: "fail", note: r.note });
+  };
+  /* The compass: back to following the shopper after a zoom or turn;
+   * otherwise it flips between following and the whole store. */
+  const recenter = () => {
+    const w = world.current; if (!w) return;
+    if (w.resetView()) { setOverview(false); w.setOverview(false); return; }
+    const o = !overview; setOverview(o); w.setOverview(o);
   };
   const nudgeSec = nudge ? L.sections.find(x => x.id === nudge.section)?.short ?? "this aisle" : "";
 
@@ -248,106 +274,117 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       )}
       {coach && !banner && <GhostHand target={coach.target} />}
 
-      <AnimatePresence mode="wait" initial={false}>
-        {item && section ? (
-          <motion.section key={"shelf-" + item.key + page} className={"qg-shelf v-" + view_} initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={{ type: "spring", damping: 26, stiffness: 320 }}>
-            <button className="qg-x qg-shelf-x" onClick={() => { setAt(null); setPage("main"); }} aria-label="Walk away without choosing">✕</button>
-            <div className="qg-shelf-h">
-              <div className="qg-shelf-art" style={{ backgroundImage: view_ === "fog" ? undefined : `url(${sceneArt(section)})` }}>
-                <img className={trip.golden === item.key ? "golden" : ""} src={charArt(item.art)} alt="" />
-              </div>
-              <div>
-                <span className={"qg-tag " + view_}>{view_ === "real" ? section.short : view_ === "fog" ? "Fog · not mapped yet" : `Simulated · ${section.short}`}</span>
-                <h2>{trip.golden === item.key && <span className="qg-goldtag">★ ×2</span>}{item.name}</h2>
-                <p className="qg-hint">{hintFor(item, view_, section.typical)}</p>
-              </div>
-            </div>
-            {page === "main" && (
-              <div className="qg-choices">
-                {view_ === "fog"
-                  ? <button className="qg-got scout" onClick={() => act({ type: "scout", key: item.key })}>Found it here <small>+{SCORE.item + SCORE.scout}</small></button>
-                  : <button className={"qg-got" + (trip.golden === item.key ? " gold" : "")} onClick={() => act({ type: "grab", key: item.key })}>Grab it <small>+{SCORE.item * (trip.golden === item.key ? SCORE.golden : 1)}</small></button>}
-                <div className="qg-choice-row">
-                  <button className="qg-cant" onClick={() => setPage("nothere")}>Not here</button>
-                  <button onClick={() => setPage("sub")}>Substitute</button>
-                  <button onClick={() => act({ type: "pass", key: item.key })}>⏭ Skip</button>
-                </div>
-              </div>
-            )}
-            {page === "nothere" && (
-              <div className="qg-opts">
-                <button className="qg-opt" onClick={() => setPage("staff")}><b>Ask a staff member</b><span>Shows a card you can hand them.</span></button>
-                <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
-                <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
-                <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
-              </div>
-            )}
-            {page === "staff" && (
-              <div className="qg-staff">
-                <p>Excuse me, where can I find</p>
-                <b>{item.name}?</b>
-                <button className="qg-btn" onClick={() => setPage("main")}>Back to the shelf</button>
-              </div>
-            )}
-            {page === "sub" && (
-              <div className="qg-opts">
-                <label className="qg-sub"><span>What are you taking instead? (optional)</span>
-                  <input value={subName} onChange={e => setSubName(e.target.value)} placeholder={`Another ${item.name.toLowerCase()}`} />
-                </label>
-                <button className="qg-got" onClick={() => { act({ type: "grab", key: item.key, instead: subName.trim() || undefined }); setSubName(""); }}>Add substitute <small>+{SCORE.item}</small></button>
-                <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
-              </div>
-            )}
-          </motion.section>
-        ) : (
-          <motion.section key="dock" className="qg-dock" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}>
-            <button className="qg-cam" onClick={() => { const o = !overview; setOverview(o); world.current?.setOverview(o); }} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">{overview ? <><circle cx="12" cy="8" r="3.2" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></> : <><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M3.5 10h17M10 10v10.5" /></>}</svg>
-            </button>
-            {nudge && (
-              <div className={"qg-nudge " + nudge.state} role="status">
-                <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
-                <p>{nudge.state === "ask" ? <><b>{L.kind === "partial" ? "Spotted" : "Found"} in {nudgeSec}!</b> {L.kind === "partial" ? "Snap the shelf to clear the fog for good." : "Snap the shelf to put it on the map."}</>
-                  : nudge.state === "busy" ? <>Reading the shelf… People are blurred first.</>
-                  : nudge.state === "done" ? <><b>{nudgeSec} is on the map.</b> Thanks!</>
-                  : <>{nudge.note || "That photo didn't go through."}</>}</p>
-                {(nudge.state === "ask" || nudge.state === "fail") && <SnapButton className="qg-nudge-snap" onPhoto={f => void snap(nudge, f)}>{nudge.state === "fail" ? "Retry" : "Snap"}</SnapButton>}
-                {nudge.state !== "busy" && <button className="qg-nudge-x" onClick={() => { clearTimeout(nudgeTimer.current); if (nudge.state === "ask") noThanks.current++; setNudge(null); }} aria-label="Not now">✕</button>}
-              </div>
-            )}
-            {!total ? (
-              <>
-                <div className="qg-empty"><b>Your list is empty</b><small>Add what you need and Arya plans the walk.</small></div>
-                <AddItem dispatch={a => onTrip(reduce(tripRef.current, a))} />
-                <div className="qg-dock-row"><button onClick={onQuit}>Pick a saved list</button></div>
-              </>
-            ) : <>
-            <div className="qg-items" role="list" aria-label="Your list">
-              {left.map(i => (
-                <button role="listitem" key={i.key} className={"qg-chip" + (i.key === next ? " on" : "") + (trip.passed.includes(i.key) ? " later" : "")} onClick={() => onTapItem(i.key)} aria-label={`Walk to ${i.name}`}>
-                  <img src={charArt(i.art)} alt="" />{trip.golden === i.key && <i className="g">★</i>}
-                </button>
-              ))}
-              {!left.length && <span className="qg-alldone">Everything on your list is decided ✓</span>}
-            </div>
-            {walking ? (
-              <div className="qg-walking">{walking.kind === "checkout" ? "Heading to the checkout…" : `Zooming to ${trip.items.find(i => walking.kind === "item" && i.key === walking.key)?.name ?? "it"}…`}</div>
-            ) : nextItem && !done ? (
-              <button className="qg-go" onClick={() => walkTo({ kind: "item", key: nextItem.key })}>
-                Next: {nextItem.name} <span className="qg-go-sub">{(() => { const s = L.sections.find(x => x.id === nextItem.section)!; return sectionView(trip, s.id) === "fog" ? "in the fog" : s.short; })()}</span>
-              </button>
-            ) : (
-              <button className="qg-go fin" onClick={() => walkTo({ kind: "checkout" })}>Head to checkout</button>
-            )}
-            <div className="qg-dock-row">
-              {undo && <button className="undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
-              <button onClick={() => setSheet("list")}>List{left.length ? ` · ${left.length} left` : ""}</button>
-              {!done && <button onClick={() => walkTo({ kind: "checkout" })}>Checkout</button>}
-            </div>
-            </>}
-          </motion.section>
+      {/* One panel (owner, 2026-10-30): the list always in view on top,
+          then what is happening now: the item you are at, the walk, or
+          the checkout once everything is decided. No second state. */}
+      <section className="qg-dock qg-panel">
+        <button className="qg-cam" onClick={recenter} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 6.5l2.2 5.5L12 17.5 9.8 12z" fill="currentColor" /></svg>
+        </button>
+        {gestureHint && <div className="qg-gesture" role="status">Pinch to zoom · two fingers to turn</div>}
+        {nudge && (
+          <div className={"qg-nudge " + nudge.state} role="status">
+            <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
+            <p>{nudge.state === "ask" ? <><b>{L.kind === "partial" ? "Spotted" : "Found"} in {nudgeSec}!</b> {L.kind === "partial" ? "Snap the shelf to clear the fog for good." : "Snap the shelf to put it on the map."}</>
+              : nudge.state === "busy" ? <>Reading the shelf… People are blurred first.</>
+              : nudge.state === "done" ? <><b>{nudgeSec} is on the map.</b> Thanks!</>
+              : <>{nudge.note || "That photo didn't go through."}</>}</p>
+            {(nudge.state === "ask" || nudge.state === "fail") && <SnapButton className="qg-nudge-snap" onPhoto={f => void snap(nudge, f)}>{nudge.state === "fail" ? "Retry" : "Snap"}</SnapButton>}
+            {nudge.state !== "busy" && <button className="qg-nudge-x" onClick={() => { clearTimeout(nudgeTimer.current); if (nudge.state === "ask") noThanks.current++; setNudge(null); }} aria-label="Not now">✕</button>}
+          </div>
         )}
-      </AnimatePresence>
+        {!total ? (
+          <>
+            <div className="qg-empty"><b>Your list is empty</b><small>Add what you need and Arya plans the walk.</small></div>
+            <AddItem dispatch={a => onTrip(reduce(tripRef.current, a))} />
+            <div className="qg-dock-row"><button onClick={onQuit}>Pick a saved list</button></div>
+          </>
+        ) : <>
+          <div className="qg-strip">
+            <div className="qg-items" role="list" aria-label="Your list">
+              {trip.items.map(i => {
+                const decided = isHandled(trip, i.key) && !trip.passed.includes(i.key);
+                return (
+                  <button role="listitem" key={i.key} className={"qg-chip" + (i.key === (item?.key ?? next) ? " on" : "") + (decided ? " done" : "") + (trip.passed.includes(i.key) ? " later" : "")}
+                    onClick={() => onTapItem(i.key)} aria-label={decided ? `${i.name}, done` : `Walk to ${i.name}`} disabled={decided}>
+                    <img src={charArt(i.art)} alt="" />{trip.golden === i.key && !decided && <i className="g">★</i>}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="qg-listbtn" onClick={() => setSheet("list")}>{left.length ? `List · ${left.length} left` : "List · all done"} ›</button>
+          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            {item && section ? (
+              <motion.div key={"shelf-" + item.key + page} className={"qg-shelf v-" + view_} initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 16, opacity: 0 }} transition={{ duration: 0.16 }}>
+                <div className="qg-shelf-h">
+                  <div className="qg-shelf-art" style={{ backgroundImage: view_ === "fog" ? undefined : `url(${sceneArt(section)})` }}>
+                    <img className={trip.golden === item.key ? "golden" : ""} src={charArt(item.art)} alt="" />
+                  </div>
+                  <div>
+                    <span className={"qg-tag " + view_}>{view_ === "real" ? section.short : view_ === "fog" ? "Fog · not mapped yet" : `Simulated · ${section.short}`}</span>
+                    <h2>{trip.golden === item.key && <span className="qg-goldtag">★ ×2</span>}{item.name}</h2>
+                    <p className="qg-hint">{hintFor(item, view_, section.typical)}</p>
+                  </div>
+                </div>
+                {page === "main" && (
+                  <div className="qg-choices">
+                    {view_ === "fog"
+                      ? <button className="qg-got scout" onClick={() => act({ type: "scout", key: item.key })}>Found it here <small>+{SCORE.item + SCORE.scout}</small></button>
+                      : <button className={"qg-got" + (trip.golden === item.key ? " gold" : "")} onClick={() => act({ type: "grab", key: item.key })}>Got it <small>+{SCORE.item * (trip.golden === item.key ? SCORE.golden : 1)}</small></button>}
+                    <button className="qg-cant" onClick={() => setPage("nothere")}>Can't find it</button>
+                    <button className="qg-later" onClick={() => act({ type: "pass", key: item.key })}>Later</button>
+                  </div>
+                )}
+                {page === "nothere" && (
+                  <div className="qg-opts">
+                    <button className="qg-opt" onClick={() => setPage("staff")}><b>Ask a staff member</b><span>Shows a card you can hand them.</span></button>
+                    <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
+                    <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
+                    <button className="qg-opt" onClick={() => setPage("sub")}><b>Take something else instead</b><span>Counts as got; say what you took.</span></button>
+                    <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
+                  </div>
+                )}
+                {page === "staff" && (
+                  <div className="qg-staff">
+                    <p>Excuse me, where can I find</p>
+                    <b>{item.name}?</b>
+                    <button className="qg-btn" onClick={() => setPage("main")}>Back to the shelf</button>
+                  </div>
+                )}
+                {page === "sub" && (
+                  <div className="qg-opts">
+                    <label className="qg-sub"><span>What are you taking instead? (optional)</span>
+                      <input value={subName} onChange={e => setSubName(e.target.value)} placeholder={`Another ${item.name.toLowerCase()}`} />
+                    </label>
+                    <button className="qg-got" onClick={() => { act({ type: "grab", key: item.key, instead: subName.trim() || undefined }); setSubName(""); }}>Add substitute <small>+{SCORE.item}</small></button>
+                    <button className="qg-btn ghost" onClick={() => setPage("nothere")}>Back</button>
+                  </div>
+                )}
+              </motion.div>
+            ) : walking ? (
+              <motion.div key="walking" className="qg-walking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <span>{walking.kind === "checkout" ? "Heading to the checkout…" : `Heading to ${trip.items.find(i => walking.kind === "item" && i.key === walking.key)?.name ?? "it"}…`}</span>
+                {undo && <button className="undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
+              </motion.div>
+            ) : done ? (
+              <motion.div key="done" className="qg-donebox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <h2>That's your whole list</h2>
+                <p className="qg-hint">{got} of {total} in the cart. Head to the checkout when you're ready.</p>
+                <button className="qg-go fin" onClick={() => walkTo({ kind: "checkout" })}>Head to checkout</button>
+                {undo && <button className="qg-undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
+              </motion.div>
+            ) : nextItem ? (
+              <motion.div key="next" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <button className="qg-go" onClick={() => walkTo({ kind: "item", key: nextItem.key })}>
+                  Next: {nextItem.name} <span className="qg-go-sub">{(() => { const s = L.sections.find(x => x.id === nextItem.section)!; return sectionView(trip, s.id) === "fog" ? "in the fog" : s.short; })()}</span>
+                </button>
+                {undo && <button className="qg-undo" onClick={() => { act({ type: "ungrab", key: undo.key }); setUndo(null); }}>↶ Undo {undo.name}</button>}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </>}
+      </section>
 
       <AnimatePresence>
         {banner && (

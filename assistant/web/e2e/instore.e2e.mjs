@@ -31,11 +31,18 @@ export default async function (page, base) {
     await v.locator("#qg-mapnow").waitFor({ state: "detached" });
   }
 
-  // Let's go walks to the first item; walk away to see the dock.
-  await v.locator(".qg-shelf-x").click({ timeout: 30000 });
+  // One panel (owner 2026-10-30): at the shelf the list stays in view,
+  // there is no X, and Got it walks on to the next item by itself.
+  await v.locator(".qg-shelf .qg-got").waitFor({ timeout: 30000 });
+  if (!(await v.locator(".qg-strip .qg-chip").count())) throw new Error("the list strip should show at the shelf");
+  if (await v.locator(".qg-shelf-x").count()) throw new Error("the X is gone");
+  const first = await v.locator(".qg-shelf h2").textContent();
+  await v.locator(".qg-shelf .qg-got").click();
+  await page.waitForFunction(f => { const h = document.querySelector("#view-community .qg-shelf h2"); return h && h.textContent !== f; }, first, { timeout: 30000 });
+  if (!(await v.locator(".qg-strip .qg-chip.done").count())) throw new Error("a got item should fade in the strip");
   // Route is gone; the List button says what is left.
-  if (await v.locator(".qg-dock-row button", { hasText: /^Route$/ }).count()) throw new Error("Route button still there");
-  await v.locator(".qg-dock-row button", { hasText: /^List · \d+ left$/ }).click();
+  if (await v.getByRole("button", { name: /^Route$/ }).count()) throw new Error("Route button still there");
+  await v.locator(".qg-listbtn", { hasText: /^List · \d+ left ›$/ }).click();
   const sheet = v.locator('.qg-sheet[aria-label^="Your list"]');
   await sheet.locator(".qg-add input").fill("peanut butter");
   await sheet.locator(".qg-add button").click();
@@ -47,5 +54,5 @@ export default async function (page, base) {
   await sheet.locator(".qg-route button.sk", { hasText: "Add back" }).first().click();
   await sheet.locator(".qg-btn", { hasText: "Done" }).click();
   await sheet.locator(".qg-list-h").first().click();
-  await v.locator(".qg-shelf").waitFor({ timeout: 30000 });
+  await v.locator(".qg-shelf .qg-got").waitFor({ timeout: 30000 });
 }

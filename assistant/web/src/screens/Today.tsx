@@ -582,7 +582,7 @@ function when(days: number) {
 }
 
 /* Use soon shows only when it has something (owner, 2026-10-30): dated
- * rows, or the card naming what a recent receipt holds that goes off.
+ * rows, or the card naming what a recent receipt holds that can expire or go bad.
  * With neither, the section is gone; a date can still be added by hand
  * from What Arya can do › Use soon. */
 export function perishNames(items: { name: string }[]): string {
@@ -808,7 +808,7 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
   );
 }
 
-/* ---------------- After a receipt: dates for what goes off (#207) ----------------
+/* ---------------- After a receipt: dates for what can expire or go bad (#207) ----------------
  * One sheet for the receipt's perishables (owner, 2026-10-30). Per
  * row: snap the date (the same one Spark read as Snap a date), pick it
  * on the phone's calendar, or skip. A read date shows on the row and
