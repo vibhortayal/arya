@@ -914,6 +914,8 @@
       "removed": "Removed {{name}} from your stores.",
       "removedPlain": "Removed.",
       "removeAria": "Remove {{name}} from my stores",
+      "removeChip": "Take {{name}} off this list",
+      "showAll": "Show all {{count}} stores",
       "yours": "Your stores"
     },
     "changeStores": "Change stores",
