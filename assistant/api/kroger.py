@@ -173,24 +173,43 @@ def _clean(entry):
     return out if (out["department"] or "aisle" in out) else None
 
 
-def aisle_hint(store, item):
-    """{product, department, aisle?, side?, bay?, shelf?} for one list item
-    at one Kroger-family store, or None (not Kroger, off, no data, or any
-    failure). `store` is a stores.py directory row."""
-    item = (item or "").strip()[:80]
-    if not (enabled() and item and is_kroger_family(store.get("name"))):
-        return None
+def _hint_at(loc, item):
+    body = _get("/products", {"filter.term": item, "filter.locationId": loc,
+                              "filter.limit": 5})
+    for prod in (body or {}).get("data", []):
+        for entry in prod.get("aisleLocations") or []:
+            hint = _clean(entry)
+            if hint:
+                return {"product": prod.get("description", ""), **hint}
+    return None
+
+
+def trip_hints(store, items, limit=15):
+    """{item: hint} for the items of one trip, with one location lookup.
+    The caller keeps it in memory for the trip and drops it at checkout;
+    nothing is stored here. Items without a hint are left out. Any failure
+    returns what was gathered so far (possibly {})."""
+    names = []
+    for item in items or []:
+        n = (item or "").strip()[:80]
+        if n and n.lower() not in [x.lower() for x in names]:
+            names.append(n)
+    out = {}
+    if not (enabled() and names and is_kroger_family(store.get("name"))):
+        return out
     try:
         loc = location_id(store)
         if not loc:
-            return None
-        body = _get("/products", {"filter.term": item, "filter.locationId": loc,
-                                  "filter.limit": 5})
-        for prod in (body or {}).get("data", []):
-            for entry in prod.get("aisleLocations") or []:
-                hint = _clean(entry)
-                if hint:
-                    return {"product": prod.get("description", ""), **hint}
+            return out
+        for n in names[:limit]:
+            hint = _hint_at(loc, n)
+            if hint:
+                out[n] = hint
     except (urllib.error.URLError, OSError, ValueError, KeyError):
-        return None
-    return None
+        pass
+    return out
+
+
+def aisle_hint(store, item):
+    """One item's hint at one Kroger-family store, or None."""
+    return trip_hints(store, [item], limit=1).get((item or "").strip()[:80])

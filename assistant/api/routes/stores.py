@@ -131,3 +131,23 @@ def stores_kroger_aisle(store_id: str = "", item: str = ""):
         return {"enabled": False, "hint": None}
     return {"enabled": True, "hint": kroger.aisle_hint(store, item),
             "source": "Kroger"}
+
+
+@router.post("/api/stores/kroger-trip")
+async def stores_kroger_trip(req: Request):
+    """Aisle hints for the items of one trip, in one call. The app keeps
+    them in memory until checkout and never saves them (Kroger terms 5e)."""
+    from fastapi.concurrency import run_in_threadpool
+    from api import kroger, stores as stores_mod
+    body = await _json_obj(req)
+    store = stores_mod.get_store(str(body.get("store_id") or "").strip())
+    if store is None:
+        raise HTTPException(404, "no such store in the directory")
+    if not kroger.enabled():
+        return {"enabled": False, "hints": {}}
+    items = body.get("items")
+    if not isinstance(items, list):
+        raise HTTPException(400, "items must be a list")
+    hints = await run_in_threadpool(
+        kroger.trip_hints, store, [str(i) for i in items[:30]])
+    return {"enabled": True, "hints": hints, "source": "Kroger"}
