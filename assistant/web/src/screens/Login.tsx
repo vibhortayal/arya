@@ -11,14 +11,19 @@ import { A2hsSteps, isIOS, useA2hs } from "../ui/A2hs";
  * server reports it open. Optional email-code and Google sign-in. */
 type Mode = "setup" | "login" | "register";
 
-/* Landing flip cards (B1, owner 2026-10-29): each card wobbles until
+/* Landing flip cards (B1, owner 2026-10-29; the guide's eight sections
+ * as cards, owner option A 2026-10-30): each card wobbles until
  * it is first tapped; a tap flips it to its back. The cards a visitor
  * has tapped stay still for good (localStorage, per browser). */
 export const CARDS = [
-  { id: "habits", face: "milk" },
+  { id: "lists", face: "milk" },
+  { id: "share", face: "basket" },
+  { id: "maps", face: "binoculars" },
   { id: "news", face: "egg" },
-  { id: "quest", face: "compass" },
-  { id: "map", face: "binoculars" },
+  { id: "receipts", face: "pantry" },
+  { id: "prices", face: "olive-oil" },
+  { id: "usesoon", face: "dairy" },
+  { id: "ask", face: "compass" },
 ] as const;
 export const SEEN_KEY = "arya.landing.seen";
 

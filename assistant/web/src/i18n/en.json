@@ -839,25 +839,45 @@
     "headline": "Your grocery run, <em>smarter.</em>",
     "subhead": "One app for the list, the store and the trip.",
     "cards": {
-      "habits": {
-        "title": "Learns your habits",
-        "sub": "Knows when milk runs low",
-        "back": "Snap a receipt and Arya learns what you buy and how often. Milk goes on the list before you run out."
+      "lists": {
+        "title": "A list for every store",
+        "sub": "Learns what you buy, store by store",
+        "back": "Each item goes on its store's list. Arya learns your habits, so milk is on the list before you run out."
+      },
+      "share": {
+        "title": "Share with your household",
+        "sub": "Shop together or apart, in sync",
+        "back": "Invite your household. Anyone can add or tick off items, and every phone stays in sync."
+      },
+      "maps": {
+        "title": "Map your store",
+        "sub": "Arya walks you to each item",
+        "back": "Mapped by you and other Arya shoppers, so Arya walks you to each item. Try it as a game with Quest."
       },
       "news": {
         "title": "Store news",
         "sub": "What Arya shoppers report",
-        "back": "Arya shoppers report what's out or back in stock before you go. Pay it back: report what you see or update your store map as you shop."
+        "back": "Arya shoppers report what's out or back in stock before you go. Report what you see too."
       },
-      "quest": {
-        "title": "Quest",
-        "sub": "Earn points and level up as you shop",
-        "back": "Turn the trip into a game. Grab items, earn points, level up and unlock badges. No timers, no pressure."
+      "receipts": {
+        "title": "See where money goes",
+        "sub": "By month, store and item",
+        "back": "Snap a receipt to see spending. Receipts are kept for returns and recall refunds."
       },
-      "map": {
-        "title": "Map your store",
-        "sub": "Help others find every item",
-        "back": "Pan your phone along the aisles and Arya maps them, so you find things faster. Your aisle pictures help Arya shoppers too."
+      "prices": {
+        "title": "Know where it's cheaper",
+        "sub": "Your receipts plus Arya shoppers",
+        "back": "Is your olive oil cheaper at Trader Joe's or Safeway? Arya tells you, from your receipts and Arya shoppers."
+      },
+      "usesoon": {
+        "title": "Reduce food waste",
+        "sub": "Before it expires or goes bad",
+        "back": "Snap the date on a pack. Arya reminds you to use it before it expires or goes bad."
+      },
+      "ask": {
+        "title": "Just ask Arya",
+        "sub": "Ask about any of it",
+        "back": "Ask what you spent at Costco, or where olive oil is cheaper. Arya answers from your lists and receipts."
       }
     },
     "tryIt": "Try it now",
@@ -2281,7 +2301,7 @@
       },
       "usesoon": {
         "kicker": "Use soon",
-        "title": "Use it before it expires or goes bad",
+        "title": "Reduce food waste",
         "body": "Snap the date on a pack, or pick a use-by date for fresh food. Arya nudges you to use it in time, so less food ends up in the bin.",
         "try": "Try it with a sample yogurt"
       },
