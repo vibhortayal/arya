@@ -1,4 +1,4 @@
-/* Teach Arya your store: store chips, coverage, walk start, aisles,
+/* Map my store: store cards, coverage, walk start, aisles,
  * add an aisle, and opening the capture screen. */
 export default async function (page, base) {
   await page.goto(base + "/");
@@ -15,7 +15,11 @@ export default async function (page, base) {
 
   // Store choice, then one "Start mapping" button before anything else; the
   // illustration and long explainer wait behind "How it works".
-  if ((await page.textContent("#mp-walkstart")).trim() !== "Start mapping") throw new Error("start label");
+  // The button names the picked store (owner 2026-10-30).
+  const picked = await page.getAttribute("#mp-stores [aria-pressed=true]", "data-mstore");
+  if ((await page.textContent("#mp-walkstart")).trim() !== `Start mapping ${picked}`) throw new Error("start label");
+  if ((await page.textContent("#view-mapper h2")).trim() !== "Map my store") throw new Error("title");
+  if (!(await page.isVisible("#mp-select"))) throw new Error("Select store heading");
   const order = await page.evaluate(() => {
     const at = id => [...document.querySelectorAll("#view-mapper *")].indexOf(document.getElementById(id));
     return at("mp-stores") < at("mp-walkstart") && at("mp-walkstart") < at("mp-cover");

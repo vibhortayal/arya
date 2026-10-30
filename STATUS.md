@@ -134,6 +134,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  Map my store (one name app-wide) starts with Select store: your stores
+  as cards with addresses, then Find my store, then "Start mapping
+  <store>". `2026-10-30-map-my-store-cards.md`.
   Resume on a Quest trip opens it in the Quest game, grabs in the cart.
   `2026-10-29-quest-resume-in-game.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a

@@ -23,7 +23,7 @@ type MapView = {
   credit?: { title?: string; points?: number };
   next?: Prompt | null; segments: Seg[]; focus?: string[];
 };
-type Mine = { name: string; favorite?: boolean };
+type Mine = { name: string; favorite?: boolean; street?: string; city?: string };
 
 /* Status and side names are en.json keys. */
 const STATUS: Record<Seg["status"], [string, string]> = {
@@ -41,6 +41,10 @@ clearOnSignOut(() => { chosen = ""; });
 const q = (s: string) => encodeURIComponent(s);
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+const BagSvg = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9h16l-1.2 10.2a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8z" /><path d="M8.5 9V7a3.5 3.5 0 0 1 7 0v2" /></svg>
+);
+
 export function Mapper() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -54,6 +58,7 @@ export function Mapper() {
   // Find or add a store right here (owner 2026-10-29): open on its own
   // when My Stores is empty, since there is nothing else to pick.
   const [finding, setFinding] = useState(false);
+  const [allStores, setAllStores] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const seq = useRef(0);
   const paramStore = typeof nav.params.store === "string" ? nav.params.store : "";
@@ -85,6 +90,13 @@ export function Mapper() {
   const names = [...new Set(mine.map(s => s.name))];
   const showFind = finding || (loaded && !mine.length);
   if (store && !names.includes(store)) names.unshift(store);
+  /* Store cards (owner, 2026-10-30: chips were hard to see): three at a
+   * time, the picked one always among them; the rest behind Show all. */
+  const SHOWN = 3;
+  const top = names.slice(0, SHOWN);
+  const shown = allStores || names.length <= SHOWN ? names : !store || top.includes(store) ? top : [...top.slice(0, SHOWN - 1), store];
+  const where = (n: string) => { const m = mine.find(s => s.name === n); return [m?.street, m?.city].filter(Boolean).join(", "); };
+  const pick = (n: string) => { chosen = n; setStore(n); setView(null); setFinding(false); load(n).catch(showErr); };
 
   const openCapture = (prompt: Prompt) => nav.show("capture", { prompt, store, from: "mapper" });
 
@@ -130,23 +142,33 @@ export function Mapper() {
     <>
       <p className="backrow"><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back(); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h2 className="largetitle" style={{ fontSize: 28 }}>{t("common.teachAryaYourStore")}</h2>
-      <div id="mp-stores" className="rail">
-        {names.map(n => (
-          <button key={n} className="chip" data-mstore={n} aria-pressed={n === store} type="button"
-            onClick={() => { chosen = n; setStore(n); setView(null); setFinding(false); load(n).catch(showErr); }}>{n}</button>
+      <h3 className="sect" id="mp-select">{t("mapper.selectStore")}</h3>
+      <div id="mp-stores" className="mp-stores">
+        {shown.map(n => (
+          <button key={n} className="mp-store" data-mstore={n} aria-pressed={n === store} type="button" onClick={() => pick(n)}>
+            <span className="mp-store-ic" aria-hidden="true"><BagSvg /></span>
+            <span className="mp-store-t"><span className="name">{n}</span>{where(n) && <span className="sub">{where(n)}</span>}</span>
+            <span className="mp-store-r" aria-hidden="true">{n === store ? "✓" : ""}</span>
+          </button>
         ))}
-        <button id="mp-findstore" className="chip" type="button" aria-expanded={showFind}
-          onClick={() => setFinding(!showFind)}><span aria-hidden="true">+ </span>{t("mapper.findAnotherStore")}</button>
+        {shown.length < names.length && (
+          <button className="linkbtn mp-allstores" type="button" onClick={() => setAllStores(true)}>{t("mapper.showAllStores", { count: names.length })}</button>
+        )}
+        <button id="mp-findstore" className="mp-store mp-find" type="button" aria-expanded={showFind} aria-pressed={showFind}
+          onClick={() => setFinding(!showFind)}>
+          <span className="mp-store-ic" aria-hidden="true">+</span>
+          <span className="mp-store-t"><span className="name">{t("mapper.findMyStore")}</span><span className="sub">{t("mapper.findMyStoreSub")}</span></span>
+        </button>
       </div>
       {showFind && (
         <div id="mp-find">
-          <FindStorePanel onAdded={n => { chosen = n; setFinding(false); setView(null); load(n).catch(showErr); }} />
+          <FindStorePanel onAdded={n => { setAllStores(true); pick(n); }} />
         </div>
       )}
       <div id="mp-walk">
         {v && store && (
           <div className="group pad mp-nextcard">
-            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMapping")}</button>
+            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMappingAt", { store })}</button>
             <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
           </div>
         )}

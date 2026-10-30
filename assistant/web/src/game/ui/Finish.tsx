@@ -167,7 +167,7 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             <motion.div className="qg-card qg-mapask" {...stagger(5)}>
               <h3>Map the sections you walked?</h3>
               <p className="qg-p">Pan your phone along the shelves. Arya reads them, and the next shopper here gets a real map.</p>
-              <button className="qg-btn" onClick={onMap}>Map this store</button>
+              <button className="qg-btn" onClick={onMap}>Map my store</button>
             </motion.div>
           )}
           <motion.div {...stagger(onMap || finds.length ? 6 : 5)}>
