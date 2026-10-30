@@ -109,7 +109,7 @@ class TestReadAndAdd(V1Case):
         assert set(item) == {"id", "name", "qty", "unit", "checked", "aisle",
                              "added_at", "list_id"}
         assert item["name"] == "milk" and item["checked"] is False
-        assert item["aisle"] == "Dairy"
+        assert item["aisle"] is None   # Arya's own aisle guess is never shown
         assert item["added_at"].endswith("Z")
         assert self.get("/lists/l-nope").status_code == 404
 
@@ -203,7 +203,7 @@ class TestChangeAndDelete(V1Case):
         assert (r.json()["qty"], r.json()["unit"]) == (1.5, "gal")
         assert self.patch(unit="").json()["unit"] == ""
         assert self.patch(aisle="Refrigerated").json()["aisle"] == "Refrigerated"
-        assert self.patch(aisle="").json()["aisle"] == "Dairy"   # back to the map's
+        assert self.patch(aisle="").json()["aisle"] is None
 
     def test_move_between_lists_and_to_unfiled(self):
         assert self.patch(list_id=self.other).json()["list_id"] == self.other
@@ -315,6 +315,87 @@ class TestExportImport(V1Case):
         r = self.api.post("/api/v1/lists/import", headers=self.h,
                           content=b"milk\n" * 60000)
         assert r.status_code == 413
+
+
+def file_receipt(client, headers, merchant, day, lines, rid=None):
+    args = {"merchant": merchant, "purchased_at": day, "lines": lines}
+    if rid:
+        args["receipt_id"] = rid
+    r = client.post("/api/mcp", headers=headers, json={
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "file_receipt", "arguments": args}})
+    assert r.status_code == 200 and not r.json()["result"]["isError"], r.text
+    return r.json()["result"]["structuredContent"]["receipt_id"]
+
+
+class TestReceiptsAndAnalysis(V1Case):
+    def setUp(self):
+        super().setUp()
+        self.r1 = file_receipt(self.api, self.h, "Costco", "2026-10-01", [
+            {"decoded_name": "oat milk", "line_total": 4.5},
+            {"decoded_name": "eggs", "line_total": 6.0, "qty": 2},
+            {"decoded_name": "=HYPERLINK(\"x\")", "line_total": 1.0}], rid="r-1")
+        self.r2 = file_receipt(self.api, self.h, "Trader Joe's", "2026-10-15", [
+            {"decoded_name": "oat milk", "line_total": 4.0},
+            {"decoded_name": "oat milk", "line_total": -4.0, "line_type": "return"}], rid="r-2")
+
+    def test_list_newest_first_and_paged(self):
+        out = self.get("/receipts").json()
+        assert out["total"] == 2
+        assert [r["id"] for r in out["receipts"]] == [self.r2, self.r1]
+        assert set(out["receipts"][0]) == {"id", "merchant", "date", "total", "subtotal",
+                                           "tax", "items", "reconciles", "has_photo"}
+        assert len(self.get("/receipts?limit=1&offset=1").json()["receipts"]) == 1
+
+    def test_detail_lines_and_404(self):
+        d = self.get(f"/receipts/{self.r2}").json()
+        assert [l["line_type"] for l in d["lines"]] == ["item", "return"]
+        assert d["lines"][1]["line_total"] == -4.0
+        assert self.get("/receipts/nope").status_code == 404
+
+    def test_export_csv_and_json(self):
+        r = self.get("/receipts/export?format=csv")
+        rows = r.text.strip().splitlines()
+        assert rows[0] == "receipt_id,merchant,date,name,qty,unit_price,line_total,line_type"
+        assert any(l.startswith("r-1,Costco,2026-10-01,oat milk,") for l in rows)
+        assert "\'=HYPERLINK" in r.text.replace("'", "\\'") or "'=HYPERLINK" in r.text
+        assert len(self.get("/receipts/export").json()["receipts"]) == 2
+        assert self.get("/receipts/export?format=xml").status_code == 400
+
+    def test_delete_receipt(self):
+        assert self.api.delete(f"/api/v1/receipts/{self.r1}", headers=self.h).status_code == 200
+        assert self.get(f"/receipts/{self.r1}").status_code == 404
+        assert self.api.delete(f"/api/v1/receipts/{self.r1}", headers=self.h).status_code == 404
+
+    def test_original_404_without_photo(self):
+        assert self.get(f"/receipts/{self.r1}/original").status_code == 404
+
+    def test_spending_and_purchases_are_plain_sums(self):
+        s = self.get("/analysis/spending").json()
+        assert s["trips"] == 2 and s["spend_total"] == 11.5
+        assert s["by_month"] == {"2026-10": 11.5}
+        assert s["by_store"] == {"Costco": 11.5, "Trader Joe's": 0.0}
+        assert s["returns_total"] == 4.0
+        p = self.get("/analysis/purchases").json()["items"]
+        top = next(i for i in p if i["name"] == "oat milk")
+        assert top["times_bought"] == 2 and top["last_bought"] == "2026-10-15"
+
+    def test_other_account_sees_none_of_it(self):
+        from api import auth as _auth
+        _auth.create_user("second@example.com", "long-password")
+        other = TestClient(self.app)
+        assert other.post("/auth/login", json={"username": "second@example.com",
+                                               "password": "long-password"}).status_code == 200
+        h2 = {"Authorization": "Bearer " + other.post("/auth/token").json()["token"]}
+        assert self.api.get("/api/v1/receipts", headers=h2).json()["total"] == 0
+        assert self.api.get(f"/api/v1/receipts/{self.r1}", headers=h2).status_code == 404
+        assert self.api.delete(f"/api/v1/receipts/{self.r1}", headers=h2).status_code == 404
+        assert self.api.get("/api/v1/analysis/spending", headers=h2).json()["trips"] == 0
+        assert self.get(f"/receipts/{self.r1}").status_code == 200
+
+    def test_token_required(self):
+        for path in ("/receipts", "/receipts/export", "/analysis/spending", "/analysis/purchases"):
+            assert self.api.get("/api/v1" + path).status_code == 401
 
 
 class TestRateLimit(V1Case):

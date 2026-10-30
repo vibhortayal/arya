@@ -27,8 +27,8 @@ items not yet checked. The id `unfiled` is "Everything else": the items
 that sit on no named list. An item is
 `{id, name, qty, unit, checked, aisle, added_at, list_id}`.
 
-- `aisle` is the department. It is your own value if you set one, else
-  Arya's guess from the name, else `null`.
+- `aisle` is the department you set yourself, else `null`. Arya's own
+  guess from the name is not part of the API.
 - `added_at` is a UTC time. It is `null` for items added before the API
   existed and for items Arya suggested.
 - `checked` is for the current shopping cycle, as in the app.
@@ -84,7 +84,7 @@ Reply:
 ### PATCH /items/{id}
 
 Change any of `checked`, `qty`, `unit`, `list_id` (a list id, `unfiled`, or
-`null` for Everything else), `aisle` (`""` goes back to Arya's guess).
+`null` for Everything else), `aisle` (`""` clears it).
 Nothing changes if any field is bad.
 
 ```bash
@@ -144,6 +144,49 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/csv" \
 empty, not items, repeated, over the 500 limit, or already on a list.
 Checked state and department are applied to new items only.
 
+## Your receipts and totals
+
+Your own data only: the receipts **you** filed. Receipts filed by other
+members of your household group are not returned. Nothing here is
+inferred by Arya; totals are sums of what your receipts say.
+
+A receipt is `{id, merchant, date, total, subtotal, tax, items, reconciles,
+has_photo}`. The detail adds `lines`: `{name, qty, unit_price, line_total,
+line_type}` with `line_type` `item`, `discount` or `return` (returns are
+negative).
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" "$ARYA/receipts?limit=20&offset=0"   # newest first, max 200
+curl -s -H "Authorization: Bearer $TOKEN" $ARYA/receipts/ext-1a2b3c4d5e
+curl -s -H "Authorization: Bearer $TOKEN" $ARYA/receipts/ext-1a2b3c4d5e/original > receipt.jpg
+curl -s -X DELETE -H "Authorization: Bearer $TOKEN" $ARYA/receipts/ext-1a2b3c4d5e
+```
+
+`GET /receipts/export?format=csv|json` returns every receipt you filed.
+The CSV has one row per line, with columns
+`receipt_id,merchant,date,name,qty,unit_price,line_total,line_type`.
+
+`/receipts/{id}/original` is the photo or PDF you uploaded, if Arya kept one
+(`has_photo`). Filing a receipt through the API is not in v1; use the app
+or the agent connector.
+
+### GET /analysis/spending
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" $ARYA/analysis/spending
+# {"trips":2,"spend_total":11.5,"returns_total":4.0,
+#  "by_month":{"2026-10":11.5},"by_store":{"Costco":11.5,"Trader Joe's":0.0}}
+```
+
+`spend_total` adds up the receipt totals. `by_store` groups by the merchant
+name printed on the receipt.
+
+### GET /analysis/purchases?limit=50
+
+What you bought and when, by the name Arya read from the receipt (max 500):
+`{"items":[{"name","times_bought","qty","spent","first_bought","last_bought"}]}`,
+most often bought first. Returns and discounts are not counted as buys.
+
 ## Errors
 
 Errors are JSON, with the matching HTTP status:
@@ -170,5 +213,7 @@ Errors are JSON, with the matching HTTP status:
 
 ## Later
 
-Not in v1: webhooks, OAuth, sharing a list with another account,
-receipts, prices, and Quest data.
+Not in v1: webhooks, OAuth, sharing a list with another account, filing a
+receipt, and Quest data. Arya's own inference (what is running low,
+suggestions, aisle and store maps, prices from other households) is not
+part of the API by design: the API is for your own data.
