@@ -33,6 +33,10 @@ services:
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
       ARYA_SUPABASE_SIGNUP: ${ARYA_SUPABASE_SIGNUP:-1}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      ARYA_MAIL_FROM: ${ARYA_MAIL_FROM:-}
+      ARYA_MAIL_REPLY_TO: ${ARYA_MAIL_REPLY_TO:-}
+      ARYA_PUBLIC_URL: ${ARYA_PUBLIC_URL:-}
       # Switches read by the app. Each default matches the code's own
       # default, so an unset value behaves exactly as before.
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}

@@ -86,7 +86,19 @@ export function Login() {
   const { t } = useTranslation();
   const { status, enter } = useSession();
   const [mode, setMode] = useState<Mode>(status.has_users ? "login" : "setup");
-  const [signin, setSignin] = useState(!status.has_users || location.search.includes("signin=failed"));
+  // The password form is for beta testers and test agents (owner, 2026-10-30):
+  // it has its own page, /team, and the public sheet is email, Google and the
+  // waitlist. It stays on the public sheet while the account is being set up,
+  // while registration is open, and where email sign-in is not set up at all.
+  const team = /^\/team\/?$/.test(location.pathname) || location.search.includes("team=1");
+  const notInvited = location.search.includes("signin=notinvited");
+  const showPassword = team || mode === "setup" || !!status.registration_open || !status.email_signin;
+  const [signin, setSignin] = useState(!status.has_users || team || location.search.includes("signin=failed") || notInvited);
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [guest, setGuest] = useState(() => {
+    if (!notInvited) return "";
+    try { return sessionStorage.getItem("arya.notinvited") || ""; } catch { return ""; }
+  });
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
@@ -114,7 +126,8 @@ export function Login() {
   };
 
   const [seen, setSeen] = useState<string[]>(loadSeen);
-  const [waitlist, setWaitlist] = useState(false);
+  const [wl, setWl] = useState<{ open: boolean; email: string; done: "" | "added" | "already" }>({ open: false, email: "", done: "" });
+  const openWaitlist = (email = "", done: "" | "added" | "already" = "") => { setSignin(false); setPass(""); setStep("email"); setWl({ open: true, email, done }); };
   const [zoom, setZoom] = useState<{ id: string; from: string } | null>(null);
   const tap = (id: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -162,39 +175,49 @@ export function Login() {
             {status.registration_open ? (
               <button id="register-open" className="linkbtn" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
             ) : (
-              <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => setWaitlist(true)}>{t("landing.joinWaitlist")}</button>
+              <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => openWaitlist()}>{t("landing.joinWaitlist")}</button>
             )}
           </p>
         </div>
       </main>
 
-      <Waitlist open={waitlist} onClose={() => setWaitlist(false)} />
+      <Waitlist open={wl.open} email0={wl.email} done0={wl.done} onClose={() => setWl(w => ({ ...w, open: false }))} />
 
       {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 
-      <Sheet open={signin} onClose={() => { setSignin(false); setPass(""); }} id="signin-sheet" className="signin"
-        title={create ? t("login.createTitle") : t("login.signIn")}>
-        {status.email_signin && <EmailSignin onDone={u => enter(u, false)}
-          onWaitlist={status.registration_open ? undefined : () => { setSignin(false); setPass(""); setWaitlist(true); }} />}
-        <form id="login-form" onSubmit={submit}>
-          <label className="field">{create ? t("login.username") : t("login.emailOrUsername")}
-            <input type="text" id="login-user" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-              inputMode="email" required data-first value={user} onChange={e => setUser(e.target.value)} />
-          </label>
-          <label className="field">{t("login.password")}<input type="password" id="login-pass" autoComplete={create ? "new-password" : "current-password"} required
-              value={pass} onChange={e => setPass(e.target.value)} />
-          </label>
-          <p><button type="submit" id="login-btn" className="btn primary wide">{create ? t("login.createAccount") : t("login.signIn")}</button></p>
-          <p id="login-error" className="muted loginerr" role="alert">{err}</p>
-        </form>
-        {mode !== "setup" && status.registration_open && (
+      <Sheet open={signin} onClose={() => { setSignin(false); setPass(""); setStep("email"); }} id="signin-sheet" className="signin"
+        title={team ? t("login.teamTitle") : notInvited && guest && step === "email" ? t("login.notInvitedTitle") : step === "code" ? t("login.checkEmail") : create ? t("login.createTitle") : t("login.signIn")}>
+        {team && (
+          <p className="muted hint">{t("login.teamHint")} <button type="button" id="team-email" className="linkbtn" onClick={() => location.assign("/")}>{t("login.teamEmailLink")}</button></p>
+        )}
+        {!team && status.email_signin && (notInvited && guest ? (
+          <NotInvited email={guest} onJoin={e => joinFromGoogle(e, openWaitlist)} onOther={() => setGuest("")} />
+        ) : (
+          <EmailSignin step={step} setStep={setStep} onDone={u => enter(u, false)}
+            onJoin={status.registration_open ? undefined : e => openWaitlist(e)} />
+        ))}
+        {!team && status.email_signin && showPassword && <p className="muted">{t("login.orUseAPassword")}</p>}
+        {showPassword && (
+          <form id="login-form" onSubmit={submit}>
+            <label className="field">{create ? t("login.username") : t("login.emailOrUsername")}
+              <input type="text" id="login-user" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                inputMode="email" required data-first value={user} onChange={e => setUser(e.target.value)} />
+            </label>
+            <label className="field">{t("login.password")}<input type="password" id="login-pass" autoComplete={create ? "new-password" : "current-password"} required
+                value={pass} onChange={e => setPass(e.target.value)} />
+            </label>
+            <p><button type="submit" id="login-btn" className="btn primary wide">{create ? t("login.createAccount") : t("login.signIn")}</button></p>
+            <p id="login-error" className="muted loginerr" role="alert">{err}</p>
+          </form>
+        )}
+        {showPassword && !team && mode !== "setup" && status.registration_open && (
           <p className="nomargin"><button type="button" id="login-toggle" className="linkbtn"
             onClick={() => { setMode(mode === "login" ? "register" : "login"); setErr(""); }}>
             {create ? t("login.haveAccount") : t("login.newHere")}</button></p>
         )}
-        {mode !== "setup" && !status.registration_open && (
+        {showPassword && !team && mode !== "setup" && !status.registration_open && !status.email_signin && (
           <p className="nomargin"><button type="button" id="signin-waitlist" className="linkbtn"
-            onClick={() => { setSignin(false); setPass(""); setWaitlist(true); }}>{t("landing.noAccountWaitlist")}</button></p>
+            onClick={() => openWaitlist()}>{t("landing.noAccountWaitlist")}</button></p>
         )}
       </Sheet>
     </section>
@@ -203,11 +226,13 @@ export function Login() {
 
 /* The waitlist (owner, 2026-10-30): email only. The server answers
  * added or already; a hidden field catches bots (api/waitlist.py). */
-function Waitlist({ open, onClose }: { open: boolean; onClose: () => void }) {
+function Waitlist({ open, onClose, email0, done0 }: { open: boolean; onClose: () => void; email0: string; done0: "" | "added" | "already" }) {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(email0);
   const [err, setErr] = useState("");
-  const [done, setDone] = useState<"" | "added" | "already">("");
+  const [done, setDone] = useState<"" | "added" | "already">(done0);
+  // Opened from the sign-in sheet with the address already typed there.
+  useEffect(() => { if (open) { setEmail(email0); setDone(done0); setErr(""); } }, [open]);
   const [busy, setBusy] = useState(false);
   const [trap, setTrap] = useState("");
   const close = () => { onClose(); setErr(""); setDone(""); };
@@ -284,40 +309,110 @@ function CardZoom({ id, from, onClose }: { id: string; from: string; onClose: ()
   );
 }
 
-function EmailSignin({ onDone, onWaitlist }: { onDone: (user: string) => void; onWaitlist?: () => void }) {
+/* Google proved the address, but it is not invited: say so plainly and
+ * offer one tap onto the waitlist (the address is already proven). */
+async function joinFromGoogle(email: string, open: (email: string, done: "" | "added" | "already") => void) {
+  try {
+    const r = await postJson("/auth/waitlist", { email });
+    if (r.ok) { open(email, ((await r.json()) as { status: "added" | "already" }).status); return; }
+  } catch { /* fall through to the form, which shows the error */ }
+  open(email, "");
+}
+
+function NotInvited({ email, onJoin, onOther }: { email: string; onJoin: (email: string) => void; onOther: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div id="not-invited">
+      <p className="muted hint"><Trans i18nKey="login.notInvitedBody" values={{ email }} components={{ b: <b /> }} /></p>
+      <p><button type="button" id="ni-join" className="btn primary wide" onClick={() => onJoin(email)}>{t("landing.joinWaitlist")}</button></p>
+      <p className="muted center nomargin"><button type="button" id="ni-other" className="linkbtn" onClick={onOther}>{t("login.differentAccount")}</button></p>
+    </div>
+  );
+}
+
+function EmailSignin({ step, setStep, onDone, onJoin }: {
+  step: "email" | "code"; setStep: (s: "email" | "code") => void; onDone: (user: string) => void; onJoin?: (email: string) => void;
+}) {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
+  const [already, setAlready] = useState(false);   // came for a code they were already sent
   const [msg, setMsg] = useState(location.search.includes("signin=failed") ? t("login.googleFailed") : "");
+  const [busy, setBusy] = useState(false);
 
+  const start = async () => {
+    const r = await postJson("/auth/email/start", { email: email.trim() });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { setMsg(data.detail || t("login.wentWrong")); return false; }
+    return true;
+  };
   const submit = async (ev: FormEvent) => {
     ev.preventDefault();
-    const r = sent ? await postJson("/auth/email/verify", { email: email.trim(), code }) : await postJson("/auth/email/start", { email: email.trim() });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) { setMsg(data.detail || t("login.wentWrong")); return; }
-    if (sent) { onDone(data.user); return; }
-    setSent(true);
-    setMsg(t("login.codeIfInvited"));
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (step === "email") {
+        if (await start()) { setAlready(false); setCode(""); setMsg(""); setStep("code"); }
+        return;
+      }
+      const r = await postJson("/auth/email/verify", { email: email.trim(), code: code.trim() });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok) { onDone(data.user); return; }
+      setMsg(r.status === 401 ? t("login.codeWrong") : r.status === 403 ? t("login.emailNotInvited") : data.detail || t("login.wentWrong"));
+    } catch { setMsg(t("login.wentWrong")); }
+    finally { setBusy(false); }
   };
+  const resend = async () => { if (await start()) setMsg(t("login.newCodeSent")); };
+  const msgp = <p id="code-msg" className={"wl-err" + (msg ? "" : " empty")} role="alert">{msg}</p>;
+  const join = onJoin && (
+    <p className="muted center nomargin">{t("login.notInvitedYet")} <button type="button" id="code-waitlist" className="linkbtn" onClick={() => onJoin(email.trim())}>{t("landing.joinWaitlist")}</button></p>
+  );
 
+  if (step === "email") {
+    return (
+      <div id="email-signin">
+        <p className="muted hint">{t("login.startHint")}</p>
+        <form id="code-form" onSubmit={submit}>
+          <label className="field">{t("login.email")}<input type="email" id="code-email" autoComplete="email" autoCapitalize="none" spellCheck={false} required
+              placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </label>
+          <p><button type="submit" id="code-btn" className="btn primary wide" disabled={busy}>{t("login.emailMeCode")}</button></p>
+          <p className="center nomargin"><button type="button" id="code-have" className="linkbtn" onClick={() => { setAlready(true); setMsg(""); setStep("code"); }}>{t("login.haveCode")}</button></p>
+          <p className="muted center">{t("login.or")}</p>
+          <p><a id="google-btn" className="btn wide" href="/auth/google">{t("login.continueWithGoogle")}</a></p>
+          {msgp}
+        </form>
+        {join}
+      </div>
+    );
+  }
   return (
     <div id="email-signin">
-      <p><a id="google-btn" className="btn wide" href="/auth/google">{t("login.continueWithGoogle")}</a></p>
+      <p className="muted hint">
+        {already ? t("login.enterCodeHint") : <Trans i18nKey="login.codeSentTo" values={{ email: email.trim() }} components={{ b: <b /> }} />}{" "}
+        {!already && <button type="button" id="code-change" className="linkbtn" onClick={() => { setMsg(""); setStep("email"); }}>{t("login.changeEmail")}</button>}
+      </p>
       <form id="code-form" onSubmit={submit}>
-        <label className="field">{t("login.email")}<input type="email" id="code-email" autoComplete="email" autoCapitalize="none" spellCheck={false} required
-            value={email} onChange={e => setEmail(e.target.value)} />
-        </label>
-        {sent && (
-          <label className="field" id="code-field">{t("login.codeFromYourEmail")}<input type="text" id="code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus
-              value={code} onChange={e => setCode(e.target.value)} />
+        {already && (
+          <label className="field">{t("login.email")}<input type="email" id="code-email" autoComplete="email" autoCapitalize="none" spellCheck={false} required
+              placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
           </label>
         )}
-        <p><button type="submit" id="code-btn" className="btn wide">{sent ? t("login.signIn") : t("login.emailMeCode")}</button></p>
-        <p id="code-msg" className={"muted" + (sent ? "" : " loginerr")} role="alert">{msg}
-          {sent && onWaitlist && <> {t("login.notInvitedYet")} <button type="button" id="code-waitlist" className="linkbtn" onClick={onWaitlist}>{t("landing.joinWaitlist")}</button></>}</p>
+        <label className={"field" + (msg && !already ? " bad" : "")} id="code-field">{t("login.codeFromYourEmail")}
+          <input type="text" id="code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus required
+            value={code} onChange={e => setCode(e.target.value)} />
+        </label>
+        {msgp}
+        <p><button type="submit" id="code-btn" className="btn primary wide" disabled={busy}>{t("login.signIn")}</button></p>
       </form>
-      <p className="muted">{t("login.orUseAPassword")}</p>
+      {!already && onJoin && (
+        <>
+          <p className="muted nomargin"><b>{t("login.noEmail")}</b> {t("login.maybeNotInvited")}</p>
+          <p><button type="button" id="code-waitlist" className="btn wide" onClick={() => onJoin(email.trim())}>{t("landing.joinWaitlist")}</button></p>
+        </>
+      )}
+      {!already && <p className="center nomargin"><button type="button" id="code-resend" className="linkbtn" onClick={resend}>{t("login.sendNewCode")}</button></p>}
+      {already && join}
     </div>
   );
 }
