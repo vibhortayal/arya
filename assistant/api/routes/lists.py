@@ -71,8 +71,13 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
     known = existing_item_id(name, state.dictionary()["entries"], state.flags())
     if known:
         # Already tracked, or already typed in: the same row, not a twin.
-        flag = {"manual": True, "dismissed_on": None}
-        if qty and qty > 1:
+        # Typed again means wanted again: a tick from this trip comes
+        # off, and an add from inside a list files it there (QA
+        # 2026-10-30: "bananas" on Trader Joe's went to Everything else).
+        flag = {"manual": True, "dismissed_on": None, "checked_on": None}
+        if list_id:
+            flag["list"] = list_id
+        if qty and qty != 1:
             flag["qty_override"] = qty
         if unit:
             flag["unit"] = unit
@@ -81,7 +86,7 @@ def _add_name_to_list(name, qty=1, list_id=None, unit=""):
                 or state.names().get(known, name)}
     item_id = "manual-" + item_slug(name)
     flag = {"manual": True, "name": name, "dismissed_on": None}
-    if qty and qty > 1:
+    if qty and qty != 1:
         flag["qty_override"] = qty
     if unit:
         flag["unit"] = unit
@@ -192,15 +197,33 @@ async def list_from_text(req: Request):
         names = extract_items_model(text, client)
         typed = [(n, 1, "") for n in names]
         source = "model"
-    on_list = {i["item_id"] for i in state.derived()["smart_list"]["items"]}
+    before = {i["item_id"]: i for i in state.derived()["smart_list"]["items"]
+              if i.get("on_list")}
+    lists = {l["id"]: l["name"] for l in state.named_lists()}
     added = [_add_name_to_list(n, q, list_id, u) for n, q, u in typed]
-    # Already on the list: neither merged nor new, so not "added".
-    already = sum(1 for a in added if a["item_id"] in on_list)
+    # Already on the list, unticked and on this list: not "added". A
+    # ticked row comes back and a row on another list moves here; the
+    # toast names both so the add never looks like it did nothing.
+    already, already_names, back, moved = 0, [], [], []  # names for the toast
+    for a in added:
+        was = before.get(a["item_id"])
+        if was is None:
+            continue
+        if was.get("checked"):
+            back.append(a["name"])
+        elif list_id and was.get("list") != list_id:
+            moved.append({"name": a["name"],
+                          "from": lists.get(was.get("list")) or ""})
+        else:
+            already += 1
+            already_names.append({"name": a["name"],
+                                  "list": lists.get(was.get("list")) or ""})
     return {"added": len(added) - already, "already": already,
+            "already_names": already_names, "back": back, "moved": moved,
             "names": [a["name"] for a in added], "source": source,
             "skipped": skipped,
             # Only what newly joined the list: the client's Undo.
-            "item_ids": [a["item_id"] for a in added if a["item_id"] not in on_list]}
+            "item_ids": [a["item_id"] for a in added if a["item_id"] not in before]}
 
 
 @router.post("/api/list/judge")
@@ -264,6 +287,10 @@ async def list_from_photo(req: Request):
     media = (req.headers.get("content-type") or "").split(";")[0].strip()
     if not media.startswith("image/"):
         raise HTTPException(415, "send a photo (image)")
+    # The list the photo was taken from (?list_id=): its items go there.
+    list_id = req.query_params.get("list_id") or None
+    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
     body = await req.body()
     if not body:
         raise HTTPException(400, "empty upload")
@@ -283,7 +310,7 @@ async def list_from_photo(req: Request):
     if read["kind"] == "receipt":
         return {"kind": "receipt", "names": [], "added": 0}
     # The demo adds too: its writes land in the visitor's sandbox.
-    added = [_add_name_to_list(n) for n in read["items"]]
+    added = [_add_name_to_list(n, list_id=list_id) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],
             "added": len(added), "demo": demo}
 
@@ -294,7 +321,7 @@ async def list_remove(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    _merge_flag(item_id, {"manual": False, "dismissed_on": state.as_of()})
+    _merge_flag(item_id, {"manual": False, "dismissed_on": state.cycle()})
     groups.note("removed", item_id)
     return {"ok": True}
 
@@ -305,11 +332,19 @@ async def list_qty(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    qty = _int_field(body, "qty", 1)
-    flag = {"qty_override": max(1, qty)}
+    from api.list.intake import amount, clean_unit
+    flag = {}
     if "unit" in body:
-        from api.list.intake import clean_unit
         flag["unit"] = clean_unit(body["unit"])  # "" clears it
+    unit = flag["unit"] if "unit" in flag else state.flags().get(item_id, {}).get("unit")
+    if unit:
+        # An amount with a unit keeps one decimal: 1.5 gal, 0.5 kg.
+        try:
+            flag["qty_override"] = amount(body.get("qty", 1))
+        except (TypeError, ValueError):
+            raise HTTPException(400, "qty must be a number")
+    else:
+        flag["qty_override"] = max(1, _int_field(body, "qty", 1))
     _merge_flag(item_id, flag)
     return {"ok": True}
 
@@ -434,7 +469,7 @@ async def list_check(req: Request):
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
     _merge_flag(body["item_id"],
-                {"checked_on": state.as_of() if body.get("checked") else None})
+                {"checked_on": state.cycle() if body.get("checked") else None})
     if body.get("checked"):
         groups.note("ticked", body["item_id"])
     return {"ok": True}
@@ -445,5 +480,5 @@ async def list_check_ok(req: Request):
     body = await _json_obj(req)
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
-    _merge_flag(body["item_id"], {"check_ok": state.as_of()})
+    _merge_flag(body["item_id"], {"check_ok": state.cycle()})
     return {"ok": True}

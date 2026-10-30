@@ -23,6 +23,25 @@ type Nav = {
 
 const Ctx = createContext<Nav | null>(null);
 
+/* The phone's Back (Android, the browser's back) used to leave the app:
+ * nothing was ever put in the history (QA 2026-10-30). One guard entry
+ * sits on top; Back first closes what is open (a sheet, a list's page:
+ * useBackHandler, newest first), then goes back one view, and leaves
+ * the app only from the first view. */
+const backHandlers: (() => boolean)[] = [];
+
+/* While `active`, Back calls fn first; fn returns true when it handled it. */
+export function useBackHandler(fn: () => boolean, active = true) {
+  const ref = useRef(fn);
+  ref.current = fn;
+  useEffect(() => {
+    if (!active) return;
+    const h = () => ref.current();
+    backHandlers.push(h);
+    return () => { const i = backHandlers.lastIndexOf(h); if (i >= 0) backHandlers.splice(i, 1); };
+  }, [active]);
+}
+
 export function NavProvider({ initial = "home", children }: { initial?: ViewId; children: ReactNode }) {
   const seq = useRef(0);
   const [stack, setStack] = useState<Entry[]>([{ view: initial, params: {}, key: 0 }]);
@@ -45,6 +64,20 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
     setStack(s => (s.length > 1 ? s.slice(0, -1).map((e, i, a) => (i === a.length - 1 ? { ...e, key: ++seq.current } : e))
       : [{ view: fallback, params: {}, key: ++seq.current }]));
   }, []);
+
+  const stackRef = useRef(stack);
+  stackRef.current = stack;
+  useEffect(() => {
+    const arm = () => { try { history.pushState({ aryaBack: 1 }, ""); } catch { /* no history API */ } };
+    arm();
+    const onPop = () => {
+      for (let i = backHandlers.length - 1; i >= 0; i--) if (backHandlers[i]()) { arm(); return; }
+      if (stackRef.current.length > 1) { back(); arm(); return; }
+      history.back(); // the first view: Back leaves the app
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [back]);
 
   // Every view opens at its top, not wherever the last one was left
   // (QA 2026-10-28).

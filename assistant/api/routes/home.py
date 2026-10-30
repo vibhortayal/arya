@@ -21,7 +21,7 @@ def home():
     for p in d["patterns"]:
         prior = prior_days(nm.get(p["item_id"], ""))
         if prior and p.get("last_bought") and not p["due"]:
-            if _fl.get(p["item_id"], {}).get("check_ok") == state.as_of():
+            if _fl.get(p["item_id"], {}).get("check_ok") == state.cycle():
                 continue  # the user already answered this cycle
             if _fl.get(p["item_id"], {}).get("use_by"):
                 continue  # a real printed date beats the usual-shelf-life guess

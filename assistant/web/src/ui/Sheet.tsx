@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "../i18n";
+import { useBackHandler } from "../app/nav";
 
 /* The one bottom sheet. It replaces the three plain-JS versions
  * (static .sheetwrap blocks, huntmenu.js openSheet, expiry.js) with
@@ -36,6 +37,7 @@ export function Sheet({ open, onClose, title, className, id, labelledBy, closeLa
   const titleId = useId();
   const close = useRef(onClose);
   close.current = onClose;
+  useBackHandler(() => { close.current(); return true; }, open);
 
   useEffect(() => {
     if (!open) return;

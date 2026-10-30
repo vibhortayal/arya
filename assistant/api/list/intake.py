@@ -64,9 +64,21 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
 # --- text splitting -----------------------------------------------------
 
 def _clean_piece(s):
+    s = _lead(s)
+    s = _QTY_UNIT_TAIL.sub("", s)                  # trailing qty: x2, 2 L, x 2 kg
+    s = _QTY_UNIT_HEAD.sub("", s)                  # leading qty: 2 x eggs, 2 kg rice
+    s = re.sub(r"\s*[x×]\s*\d+\s*$", "", s)       # trailing qty: x2
+    s = re.sub(r"^\d+\s*[x×]\s+", "", s)           # leading qty: 2 x eggs
+    s = _COUNT_HEAD.sub("", s)                     # leading count: 3 avocados
+    return s.strip(" :.!").strip()
+
+
+def _lead(s):
+    """A piece without its bullet, numbering, filler and lead-in
+    ("add", "please buy", "some"): what the quantity is read from."""
     s = (s or "").strip()
     s = re.sub(r"^[\-\*•–—]+\s*", "", s)          # bullets
-    s = re.sub(r"^\d+\s*[.\)\:\-]\s*", "", s)     # numbering: 1. 2)
+    s = re.sub(r"^\d+\s*[.\)\:\-](?!\d)\s*", "", s)  # numbering: 1. 2) (not 1.5)
     s = re.sub(r"^\[\s?[xX ]?\]\s*", "", s)       # checkboxes
     for _ in range(3):
         stripped = re.sub(r"^(oh|okay|ok|so|well|um|uh|hmm)[,\s]+",
@@ -84,11 +96,7 @@ def _clean_piece(s):
             break
     if s.lower().startswith("some "):
         s = s[5:]
-    s = _QTY_UNIT_TAIL.sub("", s)                  # trailing qty: x2, 2 L, x 2 kg
-    s = _QTY_UNIT_HEAD.sub("", s)                  # leading qty: 2 x eggs, 2 kg rice
-    s = re.sub(r"\s*[x×]\s*\d+\s*$", "", s)       # trailing qty: x2
-    s = re.sub(r"^\d+\s*[x×]\s+", "", s)           # leading qty: 2 x eggs
-    return s.strip(" :.!").strip()
+    return s
 
 
 # A unit typed next to a count ("milk 2 L", "2 kg rice", "rice x 2 kg").
@@ -97,12 +105,17 @@ def _clean_piece(s):
 _UNITS = ("l|liter|liters|litre|litres|ml|kg|kgs|g|gram|grams|lb|lbs|oz|"
           "gal|gallon|gallons|pack|packs|dozen|bunch|bunches|bag|bags|"
           "box|boxes|can|cans|bottle|bottles|jar|jars")
-_UNIT_TAIL = (r"\s*(?:[x×]\s*)?(?<![\d.])(\d+)\s*(" + _UNITS + r")\b\.?\s*[.!]*\s*$")
-_UNIT_HEAD = (r"^(?<![\d.])(\d+)\s*(?:[x×]\s*)?(" + _UNITS + r")\b\.?\s+")
+# With a unit the amount may carry one decimal ("1.5 lb salmon"); a
+# bare count stays whole.
+_UNIT_TAIL = (r"\s*(?:[x×]\s*)?(?<![\d.])(\d+(?:\.\d+)?)\s*(" + _UNITS + r")\b\.?\s*[.!]*\s*$")
+_UNIT_HEAD = (r"^(?<![\d.])(\d+(?:\.\d+)?)\s*(?:[x×]\s*)?(" + _UNITS + r")\b\.?\s+")
 _QTY_UNIT_TAIL = re.compile(_UNIT_TAIL, re.I)
 _QTY_UNIT_HEAD = re.compile(_UNIT_HEAD, re.I)
 _QTY_TAIL = re.compile(r"\s*[x×]\s*(\d+)\s*[.!]*\s*$")
 _QTY_HEAD = re.compile(r"^(\d+)\s*[x×]\s+")
+# "3 avocados": a count before a word, but never a name that starts
+# with a number ("2 percent milk", "7 up", "12 grain bread").
+_COUNT_HEAD = re.compile(r"^(\d{1,2})\s+(?!(?:percent|pct|up|grain|bean|spice|layer|minute|inch)\b)(?=[^\W\d_])", re.I)
 UNIT_MAX = 16
 
 
@@ -116,12 +129,19 @@ def piece_qty_unit(piece):
     "milk 2 L" -> (2, "L"), "2 kg rice" -> (2, "kg"). Quantity is 1 and
     unit "" when it carries none. _clean_piece strips both from the
     name; this reads them, so the two stay a pair."""
-    s = (piece or "").strip()
+    s = _lead(piece)
     m = _QTY_UNIT_TAIL.search(s) or _QTY_UNIT_HEAD.match(s)
     if m:
-        return max(1, min(int(m.group(1)), 99)), m.group(2)
-    m = _QTY_TAIL.search(s) or _QTY_HEAD.match(s)
+        return amount(m.group(1)), m.group(2)
+    m = _QTY_TAIL.search(s) or _QTY_HEAD.match(s) or _COUNT_HEAD.match(s)
     return (max(1, min(int(m.group(1)), 99)), "") if m else (1, "")
+
+
+def amount(v):
+    """An amount with a unit: 0.1 to 99, one decimal at most, whole
+    numbers as int ("1.5" -> 1.5, "2" -> 2)."""
+    n = max(0.1, min(round(float(v), 1), 99.0))
+    return int(n) if n == int(n) else n
 
 
 def piece_qty(piece):

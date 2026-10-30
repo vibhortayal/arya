@@ -7,6 +7,7 @@ const FRIENDLY: Record<string, string> = {
   "no such session": "This quest ended when the demo reset. Start it again from Today.",
   "no account with that handle": "No one has that username. Check the spelling and try again.",
   "this needs a real account": "Create an account to do this. The demo keeps nothing.",
+  "model_api_key not provisioned on this runtime": "Arya's AI isn't available right now. Try again in a little while.",
 };
 
 export function friendlyError(d: unknown): string {

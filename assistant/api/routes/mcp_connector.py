@@ -77,7 +77,7 @@ def _mcp_check_item(args):
         iname = i.get("name") or nm.get(i["item_id"], i["item_id"])
         if iname.lower() == want:
             _merge_flag(i["item_id"],
-                        {"checked_on": state.as_of() if checked else None})
+                        {"checked_on": state.cycle() if checked else None})
             return {"name": iname, "checked": checked}
     raise ValueError(f"{name} is not on the list")
 
