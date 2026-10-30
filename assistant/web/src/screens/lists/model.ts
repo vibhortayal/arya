@@ -11,7 +11,7 @@ export type Item = {
   qty?: number; unit?: string; added_by?: string; also?: string[]; checked_in?: string[]; aisle?: string; not_grocery?: boolean; source?: string;
   expired_on?: string; every_days?: number; days_since?: number; due_reason?: string; judge_reason?: string;
 };
-export type NamedList = { id: string; name: string; stores?: string[] };
+export type NamedList = { id: string; name: string; stores?: string[]; store_ids?: string[] };
 export type HomeData = {
   list: { items: Item[] };
   lists?: NamedList[];
