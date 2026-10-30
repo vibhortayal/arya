@@ -853,6 +853,7 @@
     "qtyAria": "Quantity {{qty}}. Tap to change.",
     "addedBy": "Added by {{name}}",
     "checkOff": "Check off {{name}}",
+    "uncheck": "Uncheck {{name}}",
     "shopNoMap": "Quest here uses a typical store layout until someone maps it.",
     "item": "Item",
     "movedTo": "Moved {{what}} to {{dest}}.",

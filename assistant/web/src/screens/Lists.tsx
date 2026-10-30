@@ -173,7 +173,7 @@ function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item;
       <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}
         {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
-          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
+          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-pressed={!!i.checked} aria-label={t(i.checked ? "lists.uncheck" : "lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
