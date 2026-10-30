@@ -13,6 +13,7 @@ import { useTown } from "./lib/town";
 import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
+import { Developers, isDevelopersPath } from "./screens/Developers";
 import { SCREENS } from "./screens/registry";
 import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
 import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
@@ -30,6 +31,8 @@ export function App() {
 
 function Root() {
   const s = useSession();
+  /* The public developer page needs no account, so it comes first. */
+  if (isDevelopersPath(location.pathname)) return <Developers />;
   if (!s.ready) return null;
   if (!s.user) return <Login />;
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;

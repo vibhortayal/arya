@@ -8,7 +8,7 @@ Model work runs through run_in_threadpool; a slow photo read then
 stalls one worker thread, never every other request."""
 import logging, os
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import album_routes, haul_routes, hunt_routes, pack, state
@@ -72,6 +72,17 @@ def _next_moved(request: Request, path: str = ""):
     # lstrip: "/next//evil.example" must not become "//evil.example".
     q = request.url.query
     return RedirectResponse("/" + path.lstrip("/\\") + ("?" + q if q else ""), status_code=302)
+
+
+@app.get("/developers", include_in_schema=False)
+@app.get("/developers/", include_in_schema=False)
+def _developers_page():
+    """The public developer page is a screen of the React app: the shell
+    answers /developers and the app shows it before sign-in."""
+    index = os.path.join(_WEB, "index.html")
+    if not os.path.isfile(index):
+        return JSONResponse({"detail": "the app is not built"}, status_code=404)
+    return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
 class _AppFiles(StaticFiles):

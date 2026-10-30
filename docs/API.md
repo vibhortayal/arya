@@ -7,6 +7,8 @@ app. The code shows once; a new code replaces it.
 
 Base URL: `https://arya-pilot.duckdns.org/api/v1`
 
+The same guide, shorter, is the public page at `/developers`.
+
 `/api/v1` is frozen. Changes after it ships are additive only: new
 endpoints, new optional fields, new response fields. Clients must ignore
 fields they do not know. The machine-readable schema is at
