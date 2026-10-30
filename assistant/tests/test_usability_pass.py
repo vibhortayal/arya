@@ -19,7 +19,7 @@ class TestMapper(unittest.TestCase):
         m = src("screens/Mapper.tsx")
         self.assertLess(m.index('id="mp-stores"'), m.index('id="mp-walkstart"'))
         self.assertLess(m.index('id="mp-walkstart"'), m.index('id="mp-cover"'))
-        self.assertIn(">Start mapping</button>", m)
+        self.assertIn(">Start mapping {{store}}</button>", m)
         # Illustration and long text wait behind How it works.
         how = m.split('id="mp-how"')[1].split("</details>")[0]
         self.assertIn("How it works", how)

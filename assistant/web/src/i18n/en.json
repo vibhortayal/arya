@@ -920,6 +920,10 @@
     "shoppers_one": "{{count}} shopper",
     "shoppers_other": "{{count}} shoppers",
     "startMapping": "Start mapping",
+    "startMappingAt": "Start mapping {{store}}",
+    "showAllStores": "Show all my stores ({{count}})",
+    "findMyStore": "Find my store",
+    "findMyStoreSub": "Search by name or address, or add it",
     "howTo": "Walk the aisles with your phone up. Arya reads the shelves and builds the map.",
     "howItWorks": "How it works",
     "more": "More"

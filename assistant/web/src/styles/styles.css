@@ -1661,3 +1661,19 @@ button.gmember { cursor: pointer; }
   background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 27S2 18.6 2 11a10 10 0 0 1 20 0c0 7.6-10 16-10 16zm0-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 27S2 18.6 2 11a10 10 0 0 1 20 0c0 7.6-10 16-10 16zm0-12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+/* Map my store: Select store as cards (owner 2026-10-30), then Find my store. */
+.mp-stores { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.mp-store { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); border: 2px solid transparent; text-align: left; color: var(--label); }
+.mp-store[aria-pressed="true"] { border-color: var(--acc); background: var(--acc-soft); }
+.mp-store-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--fill); color: var(--secondary); font-size: 24px; font-weight: 500; }
+.mp-store-ic svg { width: 22px; height: 22px; }
+.mp-store[aria-pressed="true"] .mp-store-ic { background: var(--acc); color: #fff; }
+.mp-store-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mp-store-t .name { font-size: var(--fs-row); font-weight: 600; }
+.mp-store-t .sub { font-size: var(--fs-label); color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-store-r { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; color: #fff; font-size: 14px; font-weight: 800; }
+.mp-store[aria-pressed="true"] .mp-store-r { background: var(--acc); border-color: var(--acc); }
+.mp-find .mp-store-ic { background: transparent; border: 2px dashed var(--acc); color: var(--acc); }
+.mp-find .name { color: var(--accent-text); }
+.mp-allstores { align-self: flex-start; }
