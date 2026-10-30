@@ -2,11 +2,10 @@
 a Kroger-family store (Kroger Products API `aisleLocations`).
 
 A suggestion only. Crowd-mapping stays the core; this never writes to a
-store map. Kroger's terms (developer.kroger.com/terms, section 5e) forbid
-permanent copies and caching past the response cache header, so nothing
-here is stored: the one cache is the OAuth token (our credential, not
-Kroger content), and a Kroger response is kept only when it carries a
-`Cache-Control: max-age`. Kroger sends none today, so every lookup is live.
+store map. Nothing from Kroger is stored: the one cache is the OAuth
+token (our credential, not Kroger content), and a Kroger response is kept
+only when it carries a `Cache-Control: max-age`. Kroger sends none today,
+so every lookup is live.
 
 Off unless ARYA_KROGER_AISLES=1 and KROGER_CLIENT_ID / KROGER_CLIENT_SECRET
 are set (server side only, never logged). Every failure answers None so the
