@@ -44,8 +44,8 @@ export default async function (page, base) {
     await page.waitForTimeout(400);
     if (await page.$("#fr-welcome")) throw new Error("welcome came back after reload");
     const kick = await page.textContent("#today-getstarted .fr-k");
-    if (!/Get started · 0 of 3/i.test(kick)) throw new Error("kicker: " + kick);
-    for (const id of ["#today-quest", "#today-tip .tipline", "#today-expiry .snaprow"]) {
+    if (!/Get started · 0 of 4/i.test(kick)) throw new Error("kicker: " + kick);
+    for (const id of ["#today-quest", "#today-tip .tipline", "#today-expiry .sectrow"]) {
       if (await page.$(id)) throw new Error("should be hidden on a new Today: " + id);
     }
 
@@ -73,8 +73,11 @@ export default async function (page, base) {
     await page.click('[data-ls="create"]');
     await page.waitForFunction(() => !document.querySelector("#list-sheet"));
     await page.click('#tabs button[data-view="view-home"]');
-    await page.waitForFunction(() => /1 of 3/.test(document.querySelector("#today-getstarted .fr-k")?.textContent || ""));
+    // A list named for a store may tick step 2 (Pick your store) too.
+    await page.waitForFunction(() => /[12] of 4/.test(document.querySelector("#today-getstarted .fr-k")?.textContent || ""));
     if (!(await page.$('#today-getstarted li.done [data-gs="list"]'))) throw new Error("step 1 not ticked");
+    // Exactly one step is lit as next.
+    if ((await page.$$("#today-getstarted li.next")).length !== 1) throw new Error("one next step expected");
 
     // The x closes the card for good.
     await page.click("#gs-dismiss");

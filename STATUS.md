@@ -20,6 +20,7 @@ on `main`. A merge is not a deploy: the live site changes only after
   `assistant/loops/2026-10-29-quest-trip-on-grab.md`.
 - **Usability pass (2026-10-29, PR #203):** mapping screen leads with store, then one Start mapping (How it works and More folds); Settings has one Help and guide row (Replay the tour inside the guide), Quest progress moved to the Quest tab; no floating avatar; Today drops Open Lists and retires the Quest nudge after the first Quest open; Start shopping skips the one-option sheet; tick-off hint; "× 1" hidden. Pins: `tests/test_usability_pass.py`.
 - **Get the app (2026-10-29, PR #206):** landing header pill before Sign in on phones that can install Arya (iPhone steps sheet "Get the Arya app" or the Android prompt), jiggles every 8 s until tapped (glow with reduced motion); Today's add-to-Home-Screen card now shows from the first visit. `assistant/loops/2026-10-29-get-the-app.md`.
+- **First trip + Use soon (2026-10-30, #207):** Get started is now the first trip in four steps (list, store, start shopping, receipt; only the next one lit, "No rush" while waiting for the trip). After a receipt, Use soon names what goes off (rules only, $0) and opens one sheet to snap, pick or skip each date; Not now waits for the next receipt, two Not nows stop it. The empty "Add a use-by date" card is gone; by hand: Settings › Arya's powers › Use soon › Add a date.
 
 ## Owner registration toggle (2026-10-29, merged)
 - Registration is a flag the owner flips live in Profile (Account

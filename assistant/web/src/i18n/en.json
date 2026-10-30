@@ -1213,7 +1213,8 @@
     "later": "Turns on as you add receipts",
     "choose": "You choose to turn on",
     "seeHowItWorks": "See how it works",
-    "seeItInTheGuide": "See it in the guide"
+    "seeItInTheGuide": "See it in the guide",
+    "addADate": "Add a date"
   },
   "settings": {
     "settings": "Settings",
@@ -1645,8 +1646,6 @@
     "shopSmarterTogether": "Shop smarter together",
     "everyReceiptAndReportMakes": "Every receipt and report makes prices better for you and for other Arya shoppers.",
     "optionalYouCanTurnIt": "Optional. You can turn it off here any time.",
-    "snapAnExpiryDate": "Add a use-by date",
-    "aryaCanKeepTrackOf": "Arya tracks use-by dates and tells you what to use soon.",
     "snapADate": "Add a date",
     "usedIt": "Used it",
     "tapARowToSnooze": "Tap a row to snooze, fix the date or stop tracking.",
@@ -1725,14 +1724,17 @@
     "itemHeading": "Item",
     "gs": {
       "kicker": "Get started · {{n}} of {{total}}",
-      "title": "Three things to try first",
-      "line": "Today fills up as you use Arya: what is running low, what to use soon, and what to buy where.",
+      "title": "Your first trip with Arya",
+      "line": "Four steps, in order. Arya does the rest once you start shopping.",
       "list": "Make your first list",
-      "listSub": "One per store. Type, talk or snap it.",
-      "expiry": "Add a use-by date",
-      "expirySub": "Arya reminds you before food goes off.",
-      "receipt": "Add a receipt",
-      "receiptSub": "See your spending and price trends.",
+      "listSub": "Type, talk or snap what you need.",
+      "store": "Pick your store",
+      "storeSub": "Arya puts the list in aisle order.",
+      "shop": "Start shopping",
+      "shopSub": "At the store, Arya walks you item by item.",
+      "receipt": "Add your receipt",
+      "receiptSub": "Snap it after you pay. Arya learns your prices.",
+      "wait": "Not at the store yet? No rush. This card waits for your next trip.",
       "doneAria": "{{step}}, done",
       "dismiss": "Hide Get started"
     },
@@ -1749,7 +1751,31 @@
       "photo": "photos"
     },
     "needsYourEye_one": "Check {{count}} receipt item",
-    "needsYourEye_other": "Check {{count}} receipt items"
+    "needsYourEye_other": "Check {{count}} receipt items",
+    "perish": {
+      "title_one": "{{count}} thing from your receipt can go off",
+      "title_other": "{{count}} things from your receipt can go off",
+      "names": "{{names}}. Add dates and Arya reminds you.",
+      "andMore": "{{names}} and {{count}} more",
+      "sheetTitle": "Use-by dates",
+      "sheetLine": "Snap the date on the pack, or pick it. Skip anything you'll eat soon.",
+      "from": "From {{store}}, {{date}}",
+      "snapAria": "Snap the date for {{name}}",
+      "pick": "Pick date",
+      "pickAria": "Pick the date for {{name}}",
+      "skipAria": "Skip {{name}}",
+      "skipped": "Skipped",
+      "undo": "Undo",
+      "useBy": "Use by {{date}}",
+      "reading": "Reading…",
+      "count": "{{n}} of {{total}} set.",
+      "missing": "Missing one?",
+      "addAnother": "Add another item",
+      "saved_one": "Tracking {{count}} date. Arya reminds you in time.",
+      "saved_other": "Tracking {{count}} dates. Arya reminds you in time.",
+      "cantRead": "Arya couldn't read that date. Pick it instead.",
+      "done": "Done"
+    }
   },
   "haul": {
     "exampleOnly": "Example only",
@@ -2236,7 +2262,7 @@
       },
       "expiry": {
         "title": "Add a use-by date",
-        "s1": "On Today, under Use soon, tap Add a date.",
+        "s1": "After a receipt, Today asks for you. Any time: Settings › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
         "s4": "Arya reminds you before it goes off."

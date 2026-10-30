@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -91,13 +91,15 @@ function MoreRow({ more, onOpen }: { more: number; onOpen: () => void }) {
   return more > 0 ? <button className="morerow" type="button" data-see-more onClick={onOpen}>{t("today.seeMore", { count: more })}</button> : null;
 }
 
-/* ---------------- Get started (#163) ----------------
- * A new account's Today: one card with three first steps instead of
- * empty sections. The server sends get_started only for an account
- * that was empty when it answered the welcome, until all three are
- * done or the card is closed (api/routes/account.py first_run). */
-export type GetStarted = { list: boolean; expiry: boolean; receipt: boolean } | null | undefined;
-export const GS_STEPS = ["list", "expiry", "receipt"] as const;
+/* ---------------- Get started (#163, #207) ----------------
+ * A new account's Today: one card with the first trip in four steps
+ * (owner, 2026-10-30): list, store, shopping, receipt. Only the next
+ * step is lit. The server sends get_started only for an account that
+ * was empty when it answered the welcome, until all four are done or
+ * the card is closed (api/routes/account.py first_run). Use-by dates
+ * come after the receipt instead (the Use soon card below). */
+export type GetStarted = { list: boolean; store: boolean; shop: boolean; receipt: boolean } | null | undefined;
+export const GS_STEPS = ["list", "store", "shop", "receipt"] as const;
 export type GsStep = (typeof GS_STEPS)[number];
 export function getStartedView(gs: GetStarted): { show: boolean; done: number; steps: { key: GsStep; done: boolean }[] } {
   const steps = GS_STEPS.map(key => ({ key, done: !!gs?.[key] }));
@@ -108,6 +110,9 @@ export function getStartedView(gs: GetStarted): { show: boolean; done: number; s
 export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onStep: (k: GsStep) => void; onDismiss: () => void }) {
   const { t } = useTranslation();
   const v = getStartedView(gs);
+  const next = v.steps.findIndex(x => !x.done);
+  // List and store are ready but no trip yet: the card just waits.
+  const waiting = v.steps[next]?.key === "shop";
   return (
     <article className="fr-card" id="today-getstarted" aria-labelledby="gs-title">
       <button className="tipx fr-x" type="button" id="gs-dismiss" aria-label={t("today.gs.dismiss")} onClick={onDismiss}>×</button>
@@ -116,7 +121,7 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
       <p className="fr-s">{t("today.gs.line")}</p>
       <ul className="fr-steps">
         {v.steps.map((st, k) => (
-          <li key={st.key} className={st.done ? "done" : undefined}>
+          <li key={st.key} className={st.done ? "done" : k === next ? "next" : "later"}>
             <button type="button" data-gs={st.key} aria-label={st.done ? t("today.gs.doneAria", { step: t(`today.gs.${st.key}`) }) : undefined}
               onClick={() => onStep(st.key)}>
               <span className="fr-dot" aria-hidden="true">{st.done ? "✓" : k + 1}</span>
@@ -126,6 +131,7 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
           </li>
         ))}
       </ul>
+      {waiting && <p className="gs-wait">{t("today.gs.wait")}</p>}
     </article>
   );
 }
@@ -186,12 +192,18 @@ export function Today() {
     }).catch(() => {});
   }, [showErr, setRing, demo]);
   useEffect(() => { load(); }, [load]);
+  // What Arya can do › Use soon › Add a date opens the date sheet here.
+  useEffect(() => {
+    if (nav.params.snapDate) { nav.params.snapDate = undefined; setEx({ k: "capture" }); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---- Get started ---- */
   const firstRun = !!h && getStartedView(gs).show;
   function gsStep(k: GsStep) {
-    if (k === "list") nav.show("list", { newList: true });
-    else if (k === "expiry") setEx({ k: "capture" });
+    const first: string | undefined = (h?.lists || [])[0]?.id;
+    if (k === "list" || !first && k !== "receipt") nav.show("list", { newList: true });
+    else if (k === "store") nav.show("list", { lens: first, stores: true });
+    else if (k === "shop") nav.show("list", { lens: first });
     else nav.show("receipts", { from: "home" });
   }
   function gsDismiss() {
@@ -253,6 +265,14 @@ export function Today() {
 
   /* ---- Use soon ---- */
   const soon: Soon[] = h?.use_soon || [];
+  const perish: Perish | null = h?.perishables || null;
+  const [perishOpen, setPerishOpen] = useState(false);
+  async function perishNotNow() {
+    if (!perish) return;
+    setH((x: Home) => ({ ...x, perishables: null }));
+    try { await post("/api/expiry/nudge", { action: "not_now", date: perish.date }); }
+    catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+  }
 
   return (
     <>
@@ -316,9 +336,8 @@ export function Today() {
         })}
       </div>
       <div id="today-expiry">
-        {h && !(firstRun && !soon.length) && (
-          <UseSoon soon={soon} setEx={setEx} onDone={s => doneWith(s)} />
-        )}
+        {h && <UseSoon soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
+          onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
       </div>
       <div id="today-checks">
         {nChecks > 0 && (
@@ -366,6 +385,8 @@ export function Today() {
           <span className="chev">›</span></button>
       )}
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
+      {perish && <PerishSheet open={perishOpen} perish={perish} demo={demo}
+        onClose={() => setPerishOpen(false)} onMore={() => { setPerishOpen(false); setEx({ k: "capture" }); }} reload={load} />}
     </>
   );
 
@@ -465,6 +486,7 @@ function TipLine({ facts, setFacts }: { facts: Facts; setFacts: (f: Facts) => vo
 
 /* ---------------- Use soon and the expiry sheets (expiry.js) ---------------- */
 type Soon = { item_id: string; name: string; date: string; days: number };
+type Perish = { receipt_id: string; store: string; date: string; items: { item_id: string; name: string }[] };
 type Opt = { id: string; name: string; tag: string };
 type Read = { readable?: boolean; date: string; kind?: string; raw?: string; name?: string; match?: { item_id: string; name: string } | null };
 type ExState =
@@ -490,24 +512,35 @@ function when(days: number) {
   return t("today.when.inDays", { count: days });
 }
 
-function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) => void; onDone: (s: Soon) => void }) {
+/* Use soon shows only when it has something (owner, 2026-10-30): dated
+ * rows, or the card naming what a recent receipt holds that goes off.
+ * With neither, the section is gone; a date can still be added by hand
+ * from What Arya can do › Use soon. */
+export function perishNames(items: { name: string }[]): string {
+  const names = items.map(i => i.name);
+  return names.length > 3 ? t("today.perish.andMore", { names: names.slice(0, 3).join(", "), count: names.length - 3 }) : names.join(", ");
+}
+
+function UseSoon({ soon, perish, setEx, onDone, onPerish, onNotNow }: { soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
+  onDone: (s: Soon) => void; onPerish: () => void; onNotNow: () => void }) {
   const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
   const [soonOpen, setSoonOpen] = useState(false);
-  if (!soon.length) {
-    return (
-      <>
-        <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3></div>
-        <div className="group"><button className="hubrow snaprow" type="button" data-ex-snap onClick={snap}><img className="rowface" src={asset("assets/characters/pantry.webp")} alt="" /><span className="hr-label">{t("today.snapAnExpiryDate")}<span className="sub">{t("today.aryaCanKeepTrackOf")}</span></span><span className="chev">›</span></button></div>
-      </>
-    );
-  }
+  if (!soon.length && !perish) return null;
   const open = (id: string) => setEx({ k: "item", id });
   const capped = capRows(soon, soonOpen);
   return (
     <>
-      <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3><button className="linkbtn" type="button" data-ex-snap onClick={snap}><span aria-hidden="true">+ </span>{t("today.snapADate")}</button></div>
-      <div className="group usesoon">
+      <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3>{perish
+        ? <button className="linkbtn" type="button" id="perish-notnow" onClick={onNotNow}>{t("common.notNow")}</button>
+        : <button className="linkbtn" type="button" data-ex-snap onClick={snap}><span aria-hidden="true">+ </span>{t("today.snapADate")}</button>}</div>
+      {perish && (
+        <div className="group"><button className="hubrow snaprow" type="button" id="perish-open" onClick={onPerish}>
+          <img className="rowface" src={asset("assets/characters/pantry.webp")} alt="" />
+          <span className="hr-label">{t("today.perish.title", { count: perish.items.length })}<span className="sub">{t("today.perish.names", { names: perishNames(perish.items) })}</span></span>
+          <span className="chev">›</span></button></div>
+      )}
+      {soon.length > 0 && <><div className="group usesoon">
         {capped.shown.map(s => (
           <div className="row" key={s.item_id} tabIndex={0} role="button" data-ex-item={s.item_id}
             onClick={() => open(s.item_id)}
@@ -518,7 +551,7 @@ function UseSoon({ soon, setEx, onDone }: { soon: Soon[]; setEx: (s: ExState) =>
         ))}
         <MoreRow more={capped.more} onOpen={() => setSoonOpen(true)} />
       </div>
-      <p className="muted small listhint">{t("today.tapARowToSnooze")}</p>
+      <p className="muted small listhint">{t("today.tapARowToSnooze")}</p></>}
     </>
   );
 }
@@ -703,5 +736,109 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
       {dateRow}
       <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.trackIt")}</button>
     </>
+  );
+}
+
+/* ---------------- After a receipt: dates for what goes off (#207) ----------------
+ * One sheet for the receipt's perishables (owner, 2026-10-30). Per
+ * row: snap the date (the same one Spark read as Snap a date), pick it
+ * on the phone's calendar, or skip. A read date shows on the row and
+ * can be changed with a tap, so nothing is saved unchecked. Done saves
+ * what is set and stops asking about this receipt. */
+type PRow = { date?: string; kind?: string; skip?: boolean; reading?: boolean };
+
+const CameraSvg = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+);
+
+function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: boolean; perish: Perish; demo: boolean;
+  onClose: () => void; onMore: () => void; reload: () => void }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [rows, setRows] = useState<Record<string, PRow>>({});
+  const [busy, setBusy] = useState(false);
+  const set = (id: string, r: PRow) => setRows(x => ({ ...x, [id]: r }));
+  const nSet = perish.items.filter(i => rows[i.item_id]?.date && !rows[i.item_id]?.skip).length;
+  const minDate = isoToday();
+
+  async function snap(id: string, file?: File) {
+    set(id, { reading: true });
+    try {
+      let read: Read;
+      if (demo) read = await post("/api/expiry/read?sample=1");
+      else {
+        if (!file) throw new Error("no photo");
+        const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+        if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
+        read = await r.json();
+      }
+      if (!read.readable) throw new Error(t("today.perish.cantRead"));
+      set(id, { date: read.date, kind: read.kind });
+    } catch {
+      set(id, {});
+      toast(t("today.perish.cantRead"));
+    }
+  }
+
+  async function done() {
+    setBusy(true);
+    let saved = 0;
+    for (const it of perish.items) {
+      const r = rows[it.item_id];
+      if (!r?.date || r.skip) continue;
+      try { await post("/api/expiry/save", { item_id: it.item_id, date: r.date, kind: r.kind || "unknown" }); saved++; }
+      catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+    }
+    try { await post("/api/expiry/nudge", { action: "done", date: perish.date }); } catch { /* asked again next time */ }
+    setBusy(false);
+    onClose();
+    if (saved) toast(t("today.perish.saved", { count: saved }));
+    reload();
+  }
+
+  // A native date input laid over the button, so a tap opens the
+  // phone's own calendar on every browser.
+  const picker = (id: string, name: string, value: string, face: ReactNode) => (
+    <span className="pz-pick">{face}
+      <input type="date" min={minDate} value={value} aria-label={t("today.perish.pickAria", { name })}
+        onChange={ev => ev.target.value && set(id, { date: ev.target.value, kind: "unknown" })} /></span>
+  );
+
+  return (
+    <Sheet open={open} onClose={onClose} id="perish-sheet" labelledBy="pz-title">
+      <span className="sheetgrip" />
+      <div className="sheethead"><h3 className="hm-title" id="pz-title">{t("today.perish.sheetTitle")}</h3>
+        <button className="linkbtn" type="button" id="pz-done" data-first disabled={busy} onClick={done}>{t("today.perish.done")}</button></div>
+      <p className="muted nomargin">{t("today.perish.sheetLine")}</p>
+      <p className="muted small nomargin">{t("today.perish.from", { store: perish.store, date: fmtMD(perish.date) })}</p>
+      <ul className="pz">
+        {perish.items.map(it => {
+          const r = rows[it.item_id] || {};
+          const fid = "pz-photo-" + it.item_id;
+          return (
+            <li key={it.item_id} className={r.skip ? "skip" : undefined} data-pz={it.item_id}>
+              <Face name={it.name} />
+              <span className="grow"><b>{it.name}</b>{r.skip ? <small>{t("today.perish.skipped")}</small> : r.reading ? <small role="status">{t("today.perish.reading")}</small> : null}</span>
+              {r.skip
+                ? <button className="pz-undo" type="button" onClick={() => set(it.item_id, {})}>{t("today.perish.undo")}</button>
+                : r.date
+                  ? picker(it.item_id, it.name, r.date, <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>)
+                  : <>
+                    {demo
+                      ? <button className="pz-b" type="button" aria-label={t("today.perish.snapAria", { name: it.name })} disabled={r.reading} onClick={() => snap(it.item_id)}><CameraSvg /></button>
+                      : <><label className="pz-b" htmlFor={fid} role="button" tabIndex={0} aria-label={t("today.perish.snapAria", { name: it.name })}
+                        onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById(fid)?.click(); } }}><CameraSvg /></label>
+                        <input type="file" id={fid} accept="image/*" capture="environment" hidden
+                          onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>}
+                    {picker(it.item_id, it.name, "", <span className="pz-b">{t("today.perish.pick")}</span>)}
+                    <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => set(it.item_id, { skip: true })}>×</button>
+                  </>}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="muted small pz-foot">{t("today.perish.count", { n: nSet, total: perish.items.length })} {t("today.perish.missing")} <button className="linkbtn" type="button" id="pz-more" onClick={onMore}>{t("today.perish.addAnother")}</button></p>
+    </Sheet>
   );
 }
