@@ -1,7 +1,8 @@
-"""Landing (owner, 2026-10-29, B1 flip cards): a plain Sign in link in
-the header, "Your grocery run, smarter.", a 2x2 grid of flip cards that
-wobble until tapped, and Try it now plus Start my own list pinned at the
-bottom. The peek rows, the How it works sheet and the Quest line are
+"""Landing (owner, 2026-10-30, one screen): "Your grocery run, smarter.",
+Try it now and Sign in side by side before the cards, eight raised-button
+cards whose mascots hop until tapped (the first card beats until any card
+is tapped) and zoom up with their text on a tap, and Start my own list at
+the bottom. The peek rows, the How it works sheet and the Quest line are
 gone. Pins web/src/screens/Login.tsx; web/src/screens/login.test.tsx
 checks the flip and the register rule; web/e2e/login.e2e.mjs taps it."""
 import unittest
@@ -14,16 +15,18 @@ class TestLanding(unittest.TestCase):
         self.login = frontend.src("screens/Login.tsx").split('<section id="view-login"')[1].split("</section>")[0]
         self.front = self.login.split('id="signin-sheet"')[0]
 
-    def test_sign_in_is_a_link_in_the_header(self):
-        header = self.login.split('className="landtop"')[1].split("</header>")[0]
-        self.assertIn('id="signin-open"', header)
-        self.assertIn('className="linkbtn landsign"', header)
+    def test_sign_in_is_a_button_beside_try_it_now(self):
+        cta = self.login.split('className="landcta"')[1].split('className="landcards"')[0]
+        self.assertIn('id="demo-btn"', cta)
+        self.assertIn('id="signin-open"', cta)
+        self.assertIn('className="btn landsign"', cta)
+        self.assertLess(cta.index('id="demo-btn"'), cta.index('id="signin-open"'))
         self.assertIn('id="login-user"', self.login)  # Email or username, #64
         self.assertIn("Email or username", self.login)
 
-    def test_get_the_app_pill_before_sign_in(self):
+    def test_get_the_app_pill_in_the_header(self):
         header = self.login.split('className="landtop"')[1].split("</header>")[0]
-        self.assertLess(header.index("<GetApp />"), header.index('id="signin-open"'))
+        self.assertIn("<GetApp />", header)
         login = frontend.src("screens/Login.tsx")
         # Shows only while installing is possible (ui/A2hs.tsx), on a
         # phone; the demo rule does not apply (logged out).
@@ -42,13 +45,13 @@ class TestLanding(unittest.TestCase):
         self.assertIn("Your grocery run, <em>smarter.</em>", self.front)
         self.assertIn("One app for the list, the store and the trip.", self.front)
         self.assertIn('className="landcards"', self.front)
-        self.assertIn("aria-pressed=", self.front)
+        self.assertIn('aria-haspopup="dialog"', self.front)
         self.assertIn(">Try it now<", self.front)
         self.assertIn(">Start my own list<", self.front)
         self.assertIn("status.registration_open && (", self.front)
         self.assertIn("The demo needs no sign-up.", self.front)
-        self.assertLess(self.front.index('className="landcards"'), self.front.index('id="demo-btn"'))
-        self.assertLess(self.front.index('id="demo-btn"'), self.front.index('id="register-open"'))
+        self.assertLess(self.front.index('id="demo-btn"'), self.front.index('className="landcards"'))
+        self.assertLess(self.front.index('className="landcards"'), self.front.index('id="register-open"'))
 
     def test_card_words(self):
         en = frontend.en()["landing"]["cards"]
@@ -58,7 +61,7 @@ class TestLanding(unittest.TestCase):
         self.assertEqual([en[k]["title"] for k in keys],
                          ["A list for every store", "Share with your household", "Map your store", "Store news",
                           "See where money goes", "Know where it's cheaper", "Reduce food waste", "Just ask Arya"])
-        self.assertIn("learns your habits", en["lists"]["back"].lower())
+        self.assertIn("learns your habits", en["lists"]["back"].lower())  # the text behind the cards stays as it was
         self.assertIn("expires or goes bad", en["usesoon"]["sub"])
         for card in en.values():
             for text in card.values():

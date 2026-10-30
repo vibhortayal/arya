@@ -1,20 +1,22 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
 import { A2hsSteps, isIOS, useA2hs } from "../ui/A2hs";
 
-/* The logged-out landing (B1 flip cards, owner 2026-10-29) and
+/* The logged-out landing (B1 cards, owner 2026-10-29; one screen with the
+ * buttons first, owner 2026-10-30) and
  * sign-in. Three modes: bootstrap (no accounts yet,
  * setup), sign in, and public registration, which shows only when the
  * server reports it open. Optional email-code and Google sign-in. */
 type Mode = "setup" | "login" | "register";
 
-/* Landing flip cards (B1, owner 2026-10-29; the guide's eight sections
- * as cards, owner option A 2026-10-30): each card wobbles until
- * it is first tapped; a tap flips it to its back. The cards a visitor
- * has tapped stay still for good (localStorage, per browser). */
+/* Landing cards (owner option A, 2026-10-30): eight raised buttons.
+ * Each mascot hops until its card is first tapped; the first card also
+ * beats until any card has been tapped, so a visitor learns that they
+ * open. A tap zooms the card up over the page to show its text. The
+ * cards a visitor has tapped stay still for good (localStorage). */
 export const CARDS = [
   { id: "lists", face: "milk" },
   { id: "share", face: "basket" },
@@ -112,9 +114,13 @@ export function Login() {
   };
 
   const [seen, setSeen] = useState<string[]>(loadSeen);
-  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
-  const tap = (id: string) => {
-    setFlipped(f => ({ ...f, [id]: !f[id] }));
+  const [zoom, setZoom] = useState<{ id: string; from: string } | null>(null);
+  const tap = (id: string, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const w = Math.min(320, window.innerWidth - 40);
+    const from = `translate(${r.left + r.width / 2 - cx}px, ${r.top + r.height / 2 - cy}px) scale(${(r.width / w).toFixed(3)})`;
+    setZoom({ id, from });
     if (!seen.includes(id)) { const next = [...seen, id]; setSeen(next); saveSeen(next); }
   };
 
@@ -130,35 +136,36 @@ export function Login() {
         <header className="landtop">
           <span className="landlogo">Arya</span>
           <GetApp />
-          <button id="signin-open" className="linkbtn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
         </header>
         <div className="hero landhero">
           <h2 className="largetitle herotitle"><Trans i18nKey="landing.headline" components={{ em: <em /> }} /></h2>
           <p className="herosub nomargin landsub">{t("landing.subhead")}</p>
+          <div className="landcta">
+            <button id="demo-btn" className="btn primary" type="button" onClick={demo}>{t("landing.tryIt")}</button>
+            <button id="signin-open" className="btn landsign" type="button" onClick={() => openSignin("login")}>{t("landing.signIn")}</button>
+          </div>
           <div className="landcards">
-            {CARDS.map(c => (
-              <button key={c.id} id={"land-" + c.id} type="button" aria-pressed={!!flipped[c.id]}
-                className={"ftile" + (seen.includes(c.id) ? " seen" : "") + (flipped[c.id] ? " on" : "")}
-                onClick={() => tap(c.id)}>
-                <span className="in">
-                  <span className="face front" aria-hidden={!!flipped[c.id]}><span className="flipi" aria-hidden="true">↻</span>
-                    <img src={asset(`assets/characters/${c.face}.webp`)} alt="" />
-                    <b>{t(`landing.cards.${c.id}.title`)}</b><span className="s">{t(`landing.cards.${c.id}.sub`)}</span></span>
-                  <span className="face back" aria-hidden={!flipped[c.id]}>
-                    <b>{t(`landing.cards.${c.id}.title`)}</b><span className="s">{t(`landing.cards.${c.id}.back`)}</span></span>
-                </span>
+            {CARDS.map((c, i) => (
+              <button key={c.id} id={"land-" + c.id} type="button" aria-haspopup="dialog"
+                className={"ftile" + (seen.includes(c.id) ? " seen" : "") + (i === 0 && seen.length === 0 ? " beat" : "")}
+                onClick={e => tap(c.id, e.currentTarget)}>
+                <img src={asset(`assets/characters/${c.face}.webp`)} alt="" />
+                <span className="ftext"><b>{t(`landing.cards.${c.id}.title`)}</b><span className="s">{t(`landing.cards.${c.id}.sub`)}</span></span>
+                <span className="fchev" aria-hidden="true">›</span>
               </button>
             ))}
           </div>
         </div>
         <div className="landfoot">
-          <button id="demo-btn" className="btn primary wide" type="button" onClick={demo}>{t("landing.tryIt")}</button>
-          {status.registration_open && (
-            <button id="register-open" className="btn secondary wide" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
-          )}
-          <p className="landnote">{t("landing.demoNote")}</p>
+          <p className="landnote">{t("landing.demoNote")}
+            {status.registration_open && (
+              <button id="register-open" className="linkbtn" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
+            )}
+          </p>
         </div>
       </div>
+
+      {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 
       <Sheet open={signin} onClose={() => setSignin(false)} id="signin-sheet" className="signin"
         title={create ? t("login.createTitle") : t("login.signIn")}>
@@ -181,6 +188,33 @@ export function Login() {
         )}
       </Sheet>
     </section>
+  );
+}
+
+/* The tapped card, zoomed up over a dimmed page. It grows from the card
+ * and shrinks back to it; Escape, the backdrop and Close all go back. */
+function CardZoom({ id, from, onClose }: { id: string; from: string; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [closing, setClosing] = useState(false);
+  const close = useRef<HTMLButtonElement>(null);
+  const card = CARDS.find(c => c.id === id)!;
+  const done = () => { if (closing) onClose(); };
+  useEffect(() => {
+    close.current?.focus();
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setClosing(true); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, []);
+  return (
+    <div id="land-zoom" className={"zoombd" + (closing ? " out" : "")} onClick={() => setClosing(true)}>
+      <div className="zoomcard" role="dialog" aria-modal="true" aria-labelledby="land-zoom-title"
+        style={{ ["--from" as string]: from }} onAnimationEnd={done} onClick={e => e.stopPropagation()}>
+        <img src={asset(`assets/characters/${card.face}.webp`)} alt="" />
+        <b id="land-zoom-title">{t(`landing.cards.${id}.title`)}</b>
+        <p>{t(`landing.cards.${id}.back`)}</p>
+        <button ref={close} id="land-zoom-close" type="button" className="btn primary" onClick={() => setClosing(true)}>{t("landing.close")}</button>
+      </div>
+    </div>
   );
 }
 

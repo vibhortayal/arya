@@ -812,8 +812,7 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landpage { display: flex; flex-direction: column;
   min-height: calc(100vh - 38px - env(safe-area-inset-bottom));
   min-height: calc(100svh - 38px - env(safe-area-inset-bottom)); }
-.landtop .landsign { color: var(--ink); padding: 0 4px; min-height: 44px; margin: -6px 0; } /* 44 px target, 32 px of layout */
-/* "Get the app" pill (owner, 2026-10-29): before Sign in; jiggles
+/* "Get the app" pill (owner, 2026-10-29): in the header; jiggles
    0.6 s of every 8 s from 1.2 s after load until first tapped; with
    reduced motion, a soft glow at the same beat. */
 .landtop { gap: 8px; }
@@ -821,7 +820,6 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   border: 0; border-radius: 999px; background: var(--acc-soft); color: var(--acc); font: inherit; font-size: 15px; font-weight: 700;
   white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .landtop .gethome svg { width: 16px; height: 16px; flex: none; }
-.landtop .gethome + .landsign { margin-left: 0; }
 .landtop .gethome:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 @keyframes getjiggle { 0%, 7.5%, 100% { transform: none; } 1.25% { transform: rotate(-7deg); } 2.5% { transform: rotate(6deg); }
   3.75% { transform: rotate(-5deg); } 5% { transform: rotate(3deg); } 6.25% { transform: rotate(-1.5deg); } }
@@ -830,52 +828,79 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s infinite; }
 .a2hs-intro { margin: 0 0 2px; }
 .a2hs-tip { margin: 6px 0 0; }
-.landhero { text-align: center; margin: 0; padding-top: 18px; }
-.landhero .herotitle { font-size: 34px; }
+.landhero { text-align: center; margin: 0; padding-top: 6px; }
+.landhero .herotitle { font-size: 30px; }
 .landsub { margin-top: 4px; }
-.landcards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-.landfoot { margin-top: auto; padding-top: 20px; }
-.landfoot #register-open { margin-top: 10px; }
-.landnote { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 10px 0 0; }
-.ftile { perspective: 900px; border: 0; padding: 0; background: none; font: inherit; color: inherit; text-align: left;
-  cursor: pointer; height: 148px; -webkit-tap-highlight-color: transparent; }
-.ftile .in { position: relative; display: block; width: 100%; height: 100%;
-  transition: transform .55s cubic-bezier(.2, .8, .2, 1); transform-style: preserve-3d; }
-.ftile.on .in { transform: rotateY(180deg); }
-.ftile .face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden;
-  background: var(--panel); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-.ftile .face img { width: 48px; height: 48px; border-radius: 12px; background: #FBF5E6; }
-.ftile .face b { font-size: 15px; line-height: 1.2; }
-.ftile .face .s { font-size: 13px; line-height: 1.3; color: var(--ink2); }
-.ftile .back { transform: rotateY(180deg); background: var(--acc-soft); }
-.ftile .back b { color: var(--acc); }
-.ftile .back .s { color: var(--ink); font-size: 12.5px; line-height: 1.3; }
-.flipi { position: absolute; top: 9px; right: 11px; font-size: 15px; color: var(--ink3); }
-.ftile:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 16px; }
-@keyframes wobble { 0%, 100% { transform: rotateY(-22deg); } 50% { transform: rotateY(22deg); } }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-.ftile:not(.seen) .in { animation: wobble 1.6s ease-in-out infinite; }
-.ftile:nth-child(2):not(.seen) .in { animation-delay: -.4s; }
-.ftile:nth-child(3):not(.seen) .in { animation-delay: -.8s; }
-.ftile:nth-child(4):not(.seen) .in { animation-delay: -1.2s; }
-.ftile:nth-child(5):not(.seen) .in { animation-delay: -.2s; }
-.ftile:nth-child(6):not(.seen) .in { animation-delay: -.6s; }
-.ftile:nth-child(7):not(.seen) .in { animation-delay: -1s; }
-.ftile:nth-child(8):not(.seen) .in { animation-delay: -1.4s; }
+/* Try it now and Sign in side by side under the headline (owner,
+   2026-10-30), so both show without scrolling; Sign in is an outlined
+   button of the same height. */
+.landcta { display: flex; gap: 10px; margin-top: 10px; }
+.landcta .btn { flex: 1; min-height: 50px; }
+.landcta #demo-btn { flex: 1.5; }
+.landcta .landsign { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); font-weight: 700; }
+.landcards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.landfoot { margin-top: auto; padding-top: 8px; }
+.landnote .linkbtn { min-height: 36px; margin: -10px 0; padding: 0 0 0 10px; font-size: 14px; }
+.landnote { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 8px 0 0; }
+/* Cards are raised buttons: a visible edge and shadow, a chevron, and
+   a press that pushes them down. */
+.ftile { position: relative; display: flex; align-items: center; gap: 8px; min-height: 72px; padding: 6px 20px 6px 6px; text-align: left;
+  font: inherit; color: inherit; cursor: pointer; background: var(--panel); border: 1.5px solid var(--line); border-radius: 16px;
+  box-shadow: 0 3px 0 var(--line), 0 6px 12px rgba(0, 0, 0, .10); transition: transform .08s, box-shadow .08s; -webkit-tap-highlight-color: transparent; }
+.ftile:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.ftile img { width: 42px; height: 42px; flex: none; border-radius: 10px; background: #FBF5E6; }
+.ftile .ftext { display: block; min-width: 0; }
+.ftile b { display: block; font-size: 13.5px; line-height: 1.15; }
+.ftile .s { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.2; color: var(--ink2); }
+.ftile .fchev { position: absolute; top: 50%; right: 7px; transform: translateY(-50%); font-size: 20px; font-weight: 600; color: var(--ink3); }
+.ftile:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* Until tapped, each mascot hops, one card after another in a ripple;
+   the first card also beats until any card has been tapped. */
+@keyframes hop { 0%, 22%, 100% { transform: none; } 6% { transform: translateY(-7px) rotate(-8deg); }
+  12% { transform: rotate(6deg); } 17% { transform: translateY(-3px) rotate(-3deg); } }
+@keyframes beat { 0%, 60%, 100% { transform: none; box-shadow: 0 3px 0 var(--line), 0 6px 12px rgba(0, 0, 0, .10); }
+  12% { transform: scale(1.045); box-shadow: 0 3px 0 var(--line), 0 10px 22px rgba(228, 87, 46, .28); }
+  24% { transform: none; box-shadow: 0 3px 0 var(--line), 0 6px 12px rgba(0, 0, 0, .10); }
+  36% { transform: scale(1.035); box-shadow: 0 3px 0 var(--line), 0 9px 18px rgba(228, 87, 46, .22); } }
+.ftile:not(.seen) img { animation: hop 3.2s ease-in-out infinite; }
+.ftile:nth-child(2):not(.seen) img { animation-delay: .4s; }
+.ftile:nth-child(3):not(.seen) img { animation-delay: .8s; }
+.ftile:nth-child(4):not(.seen) img { animation-delay: 1.2s; }
+.ftile:nth-child(5):not(.seen) img { animation-delay: 1.6s; }
+.ftile:nth-child(6):not(.seen) img { animation-delay: 2s; }
+.ftile:nth-child(7):not(.seen) img { animation-delay: 2.4s; }
+.ftile:nth-child(8):not(.seen) img { animation-delay: 2.8s; }
+.ftile.beat { animation: beat 2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .ftile .in { transition: none; }
-  .ftile:not(.seen) .in { animation: pulse 1.6s ease-in-out infinite; }
+  .ftile:not(.seen) img { animation: none; }
+  .ftile.beat { animation: pulse 2s ease-in-out infinite; }
 }
-/* Narrow phones (360 px): the subtitle wraps to two lines, so the
-   cards give back a little room. */
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+/* Narrow phones (360 px): titles and hints wrap more, so the cards
+   give back a little room. */
 @media (max-width: 380px) {
-  .landhero { padding-top: 10px; }
-  .landcards { gap: 8px; margin-top: 10px; }
-  .ftile { height: 148px; }
-  .ftile .face { padding: 10px; gap: 4px; }
-  .ftile .face img { width: 40px; height: 40px; }
-  .ftile .back .s { font-size: 12px; line-height: 1.3; }
-  .landfoot { padding-top: 14px; }
+  .landhero .herotitle { font-size: 27px; }
+  .ftile { min-height: 64px; gap: 6px; padding: 5px 18px 5px 5px; }
+  .ftile img { width: 36px; height: 36px; }
+  .ftile b { font-size: 13px; }
+  .ftile .s { font-size: 11px; }
+}
+/* The zoomed card: grows from the tapped card to the middle of the
+   screen over a dimmed page, and shrinks back to it on close. */
+.zoombd { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(20, 20, 24, .5); animation: zfade .25s ease both; }
+.zoombd.out { animation: zfade .25s ease reverse both; }
+.zoomcard { box-sizing: border-box; width: min(320px, 100%); padding: 22px 20px 20px; text-align: center; background: var(--panel);
+  border-radius: 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, .35); animation: zin .35s cubic-bezier(.2, .8, .2, 1) both; }
+.zoombd.out .zoomcard { animation: zin .3s cubic-bezier(.4, 0, .6, 1) reverse both; }
+.zoomcard img { width: 84px; height: 84px; border-radius: 18px; background: #FBF5E6; }
+.zoomcard b { display: block; margin: 10px 0 6px; font-size: 20px; color: var(--acc); }
+.zoomcard p { margin: 0 0 16px; font-size: 16px; line-height: 1.45; color: var(--ink); }
+@keyframes zin { from { transform: var(--from); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes zfade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .zoomcard, .zoombd.out .zoomcard { animation: none; }
+  .zoombd, .zoombd.out { animation-duration: .01s; }
 }
 .sheethead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .loginerr { margin: 0; min-height: 1.2em; color: var(--danger, #B3261E); }
