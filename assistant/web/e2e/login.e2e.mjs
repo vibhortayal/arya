@@ -17,20 +17,19 @@ async function getTheApp(page, base) {
   try {
     await ip.goto(base + "/");
     await ip.waitForSelector("#getapp-open.jiggle");
-    // Eight cards: the buttons are one scroll away on a short phone.
-    for (const id of ["#demo-btn", "#register-open"]) {
-      await ip.locator(id).scrollIntoViewIfNeeded();
+    // Both buttons show without scrolling, with the pill in the header.
+    for (const id of ["#demo-btn", "#signin-open"]) {
       const box = await ip.locator(id).boundingBox();
-      if (!box || box.y + box.height > 664) throw new Error(id + " cannot be scrolled into view at 390x664 with the pill: " + JSON.stringify(box));
+      if (!box || box.y + box.height > 664) throw new Error(id + " is below the fold at 390x664 with the pill: " + JSON.stringify(box));
     }
-    await ip.evaluate(() => window.scrollTo(0, 0));
     for (const w of [390, 360]) {
       await ip.setViewportSize({ width: w, height: 664 });
-      const [logo, pill, sign] = await Promise.all(["landlogo", "gethome", "landsign"].map(c => ip.locator(".landtop ." + c).boundingBox()));
+      const [logo, pill] = await Promise.all(["landlogo", "gethome"].map(c => ip.locator(".landtop ." + c).boundingBox()));
       const mid = b => b.y + b.height / 2;
-      if (Math.abs(mid(logo) - mid(pill)) > 2 || Math.abs(mid(pill) - mid(sign)) > 2 || pill.height > 40)
-        throw new Error("header wraps at " + w + ": " + JSON.stringify({ logo, pill, sign }));
-      if (sign.x + sign.width > w) throw new Error("Sign in off screen at " + w);
+      if (Math.abs(mid(logo) - mid(pill)) > 2 || pill.height > 40)
+        throw new Error("header wraps at " + w + ": " + JSON.stringify({ logo, pill }));
+      const sign = await ip.locator("#signin-open").boundingBox();
+      if (!sign || sign.x + sign.width > w || sign.y + sign.height > 664) throw new Error("Sign in off screen at " + w);
     }
     await ip.click("#getapp-open");
     await ip.waitForSelector("#a2hs-sheet ol.steps li");
@@ -48,25 +47,31 @@ export default async function (page, base) {
   await page.setViewportSize({ width: 390, height: 664 });
   await page.goto(base + "/");
   await page.waitForSelector("#demo-btn");
-  // Eight cards make the landing a little taller than a short phone:
-  // the buttons are one scroll away, never cut off.
-  for (const id of ["#demo-btn", "#register-open"]) {
-    await page.locator(id).scrollIntoViewIfNeeded();
+  // One screen: Try it now and Sign in show without scrolling, and
+  // the page ends within the 664 px Safari leaves.
+  for (const id of ["#demo-btn", "#signin-open", "#register-open"]) {
     const box = await page.locator(id).boundingBox();
-    if (!box || box.y + box.height > 664) throw new Error(id + " cannot be scrolled into view at 390x664: " + JSON.stringify(box));
+    if (!box || box.y + box.height > 664) throw new Error(id + " is below the fold at 390x664: " + JSON.stringify(box));
   }
+  if (await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)) throw new Error("the landing scrolls at 390x664");
   if ((await page.$$(".ftile")).length !== 8) throw new Error("the landing has eight cards");
   await page.evaluate(() => window.scrollTo(0, 0));
   if (await page.isVisible("#how-open")) throw new Error("How it works is still on the landing");
   if (await page.$("#getapp-open")) throw new Error("Get the app shows on a desktop browser");
   await getTheApp(page, base);
 
-  // Flip once: the card stops wobbling, and stays still after a reload.
+  // Tap once: the card zooms up with its text, closes, and stays still
+  // after a reload; the first card beats until any card is tapped.
+  if (!(await page.$("#land-lists.beat"))) throw new Error("the first card does not beat");
   await page.click("#land-maps");
-  await page.waitForSelector("#land-maps.on.seen[aria-pressed=true]");
+  await page.waitForSelector("#land-zoom [role=dialog]");
+  await page.click("#land-zoom-close");
+  await page.waitForSelector("#land-zoom", { state: "detached" });
+  await page.waitForSelector("#land-maps.seen");
+  if (await page.$("#land-lists.beat")) throw new Error("the first card still beats after a tap");
   await page.reload();
-  await page.waitForSelector("#land-maps.seen:not(.on)");
-  if (await page.$("#land-lists.seen")) throw new Error("an untapped card stopped wobbling");
+  await page.waitForSelector("#land-maps.seen");
+  if (await page.$("#land-lists.seen")) throw new Error("an untapped card stopped hopping");
 
   // Start my own list → register mode.
   await page.click("#register-open");

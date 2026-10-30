@@ -854,6 +854,7 @@
   "landing": {
     "signIn": "Sign in",
     "getTheApp": "Get the app",
+    "close": "Close",
     "headline": "Your grocery run, <em>smarter.</em>",
     "subhead": "One app for the list, the store and the trip.",
     "cards": {

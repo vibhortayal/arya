@@ -35,14 +35,14 @@ test("hidden once Arya runs from the Home Screen", () => {
   expect(pill()).toBeNull();
 });
 
-test("shown on an iPhone, before Sign in, and it jiggles", () => {
+test("shown on an iPhone, in the header, and it jiggles", () => {
   env(IPHONE);
   render(<Login />);
   const p = pill()!;
   expect(p.textContent).toBe("Get the app");
   expect(p.className).toContain("jiggle");
   expect(p.className).not.toContain("glow");
-  expect(p.nextElementSibling!.id).toBe("signin-open");
+  expect(p.parentElement!.className).toBe("landtop");
 });
 
 test("a tap opens the iPhone steps and stops the jiggle for good", () => {
