@@ -228,6 +228,64 @@ async def list_from_text(req: Request):
             "item_ids": [a["item_id"] for a in added if a["item_id"] not in before]}
 
 
+@router.post("/api/list/import-preview")
+async def list_import_preview(req: Request):
+    """Read a paste (lines, CSV, JSON or anything) into a preview. Adds
+    nothing. Items already on another list are marked with that list."""
+    body = await _json_obj(req)
+    text = body.get("text") or ""
+    if not str(text).strip():
+        raise HTTPException(400, "text is required")
+    from api.list.importer import parse_paste
+
+    def by_model(t):
+        if not os.environ.get("MODEL_API_KEY"):
+            return []
+        _budget_guard()
+        from api.list.intake import extract_items_model
+        return extract_items_model(t, new_client())
+    items, source = parse_paste(str(text), by_model)
+    before = {i["item_id"]: i for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    lists = {l["id"]: l["name"] for l in state.named_lists()}
+    from api.list.intake import existing_item_id
+    ents, flags = state.dictionary()["entries"], state.flags()
+    list_id = body.get("list_id") or None
+    for it in items:
+        known = existing_item_id(it["name"], ents, flags)
+        was = before.get(known) if known else None
+        it["on_list"] = bool(was)
+        it["other_list"] = (lists.get(was.get("list")) or "") if was and was.get("list") != list_id and not was.get("checked") else ""
+    return {"items": items, "source": source}
+
+
+@router.post("/api/list/import")
+async def list_import(req: Request):
+    """Add the previewed items to one list: the same add path as typing."""
+    body = await _json_obj(req)
+    list_id = body.get("list_id") or None
+    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
+        raise HTTPException(404, "no such list")
+    rows = body.get("items")
+    if not isinstance(rows, list) or not rows:
+        raise HTTPException(400, "items is required")
+    from api import aisles
+    from api.list.importer import MAX_ITEMS, _item
+    before = {i["item_id"] for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
+    added = []
+    for r in rows[:MAX_ITEMS]:
+        it = _item(r.get("name"), r.get("qty") or 1, r.get("unit") or "", False, r.get("aisle") or "") if isinstance(r, dict) else None
+        if not it:
+            continue
+        a = _add_name_to_list(it["name"], it["qty"], list_id, it["unit"])
+        if it["aisle"] in aisles.AISLES or it["aisle"] == "Other":
+            _merge_flag(a["item_id"], {"aisle": it["aisle"]})
+        groups.note("added", a["item_id"])
+        added.append(a)
+    new_ids = [a["item_id"] for a in added if a["item_id"] not in before]
+    return {"added": len(new_ids), "already": len(added) - len(new_ids),
+            "names": [a["name"] for a in added], "item_ids": new_ids}
+
+
 @router.post("/api/list/judge")
 async def list_judge(req: Request):
     """Settle the list's unknown names: the typed items the rules and

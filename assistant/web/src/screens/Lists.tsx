@@ -1105,7 +1105,7 @@ export function Lists() {
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
             onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle,
-            shopping: shoppingHere, onSnap: snapAisle }} />
+            shopping: shoppingHere, onSnap: snapAisle, onChanged: reloadQuiet }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
