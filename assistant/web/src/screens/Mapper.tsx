@@ -17,7 +17,9 @@ type Prompt = { title: string; why?: string; est_seconds?: number; segment?: str
 type Seg = { id: string; label: string; side: string; status: "unmapped" | "mapped" | "aging" | "stale";
   contributors: number; stale_item?: number };
 type MapView = {
-  store?: string; total: number; coverage_pct: number;
+  /* coverage_pct is null while the store's size is unknown (no aisle
+   * number read yet): then only the sections seen are shown. */
+  store?: string; total: number; coverage_pct: number | null; seen: number; aisles: number; expected: number | null;
   counts: { mapped: number; aging: number; stale: number; unmapped: number };
   goal?: { sections_needed: number; pct: number } | null;
   credit?: { title?: string; points?: number };
@@ -171,12 +173,18 @@ export function Mapper() {
       <div id="mp-cover" className="group pad">
         {!store ? <Empty>{t("mapper.pickAStoreFromMy")}</Empty> : v && (v.total ? (
           <>
-            <div className="mp-count"><Trans i18nKey="mapper.coverage" values={{ pct: v.coverage_pct, store: v.store || store, mapped: v.counts.mapped, total: v.total }} components={{ b: <strong />, m: <span className="muted" /> }} /></div>
-            <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${v.coverage_pct}%` }} /></div>
-            <p className="muted nomargin">{v.counts.aging ? t("mapper.countAging", { n: v.counts.aging }) : ""}{v.counts.stale ? t("mapper.countStale", { n: v.counts.stale }) : ""}{v.counts.unmapped ? t("mapper.countNew", { n: v.counts.unmapped }) : ""}{t("mapper.teachTheAislesYouUse")}</p>
+            {v.coverage_pct === null ? (
+              <div className="mp-count"><Trans i18nKey="mapper.seenOnly" count={v.seen} values={{ count: v.seen, store: v.store || store }} components={{ b: <strong /> }} /></div>
+            ) : (
+              <>
+                <div className="mp-count"><Trans i18nKey="mapper.coverage" values={{ seen: v.seen, expected: v.expected, aisles: v.aisles }} components={{ b: <strong />, m: <span className="muted" /> }} /></div>
+                <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${v.coverage_pct}%` }} /></div>
+              </>
+            )}
+            <p className="muted nomargin">{v.coverage_pct === null ? t("mapper.sizeUnknown") : ""}{v.counts.aging ? t("mapper.countAging", { n: v.counts.aging }) : ""}{v.counts.stale ? t("mapper.countStale", { n: v.counts.stale }) : ""}{v.counts.unmapped ? t("mapper.countNew", { n: v.counts.unmapped }) : ""}{t("mapper.teachTheAislesYouUse")}</p>
             <div className="mp-me"><span className="muted">{v.goal
               ? t("mapper.goal", { count: v.goal.sections_needed, pct: v.goal.pct })
-              : t("mapper.knowsWholeStore")}</span>
+              : v.coverage_pct !== null && v.coverage_pct >= 100 ? t("mapper.knowsWholeStore") : ""}</span>
               {v.credit?.title ? <span><Trans i18nKey="mapper.credit" values={{ title: v.credit.title, points: v.credit.points }} components={{ b: <strong /> }} /></span> : null}</div>
           </>
         ) : <p className="nomargin">{t("mapper.noAislesHereYetWalk")}</p>)}

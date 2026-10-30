@@ -25,6 +25,9 @@ SEASON_STARTED = "Seasonal page. It never expires."
 SEASON_WORD = {"Halloween": "pumpkin"}
 CHAPTER_TEXT = "Map all of {store} together: {pct}%. Each shelf you add helps."
 CHAPTER_DONE = "Chapter complete. You helped map all of {store}."
+# Until Arya has read an aisle sign it does not know the store's size,
+# so the chapter counts sections instead of claiming a percentage.
+CHAPTER_SEEN = "Map {store} together: {seen} sections seen so far. Each shelf you add helps."
 CHAPTERS_MAX = 6
 
 
@@ -187,14 +190,16 @@ def chapters():
     for name in _chapter_stores():
         try:
             doc = storemap.load_map(name)
-            _counts, total, pct = storemap._coverage(doc)
+            counts, _expected, pct = storemap._coverage(doc)
         except Exception:
             continue
         helped = any(c.get("by") == me
                      for seg in doc["segments"].values()
                      for c in seg.get("captures", []))
-        earned = total > 0 and pct >= 100 and helped
+        earned = pct is not None and pct >= 100 and helped
+        text = (CHAPTER_DONE if earned else CHAPTER_SEEN if pct is None
+                else CHAPTER_TEXT)
         out.append({"store": name, "pct": pct, "earned": earned,
-                    "text": (CHAPTER_DONE if earned else CHAPTER_TEXT).format(
-                        store=name, pct=pct)})
+                    "text": text.format(store=name, pct=pct,
+                                        seen=counts["seen"])})
     return out

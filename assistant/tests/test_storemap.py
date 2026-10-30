@@ -93,7 +93,9 @@ class TestEngine(unittest.TestCase):
         self.assertTrue(ok["best"])
         self.assertEqual(ok["status"], "mapped")
         v = self.sm.view("Corner Store")
-        self.assertEqual((v["total"], v["coverage_pct"]), (1, 100))
+        # "Aisle 4" says the store has at least 4 aisles, plus the outside
+        # departments: one section seen of about 10, never "100%".
+        self.assertEqual((v["total"], v["expected"], v["coverage_pct"]), (1, 10, 10))
         self.assertTrue(v["segments"][0]["located"])
         self.assertIsNotNone(self.sm.best_image("Corner Store", sid))
 
@@ -339,14 +341,68 @@ class TestSplitAndRewards(unittest.TestCase):
         out = self.sm.ingest("Corner Store", "aisle-1:left", jpeg(1))
         rw = self.sm.award("Corner Store", out)
         self.assertEqual((rw["points"], rw["title"], rw["new_title"]), (10, "Scout", "Scout"))
-        self.assertEqual(rw["store_pct"], [0, 25])
-        self.assertEqual(rw["goal"], {"pct": 50, "sections_needed": 1})
+        self.assertEqual(rw["store_pct"], [0, 10])           # 1 of about 10
+        self.assertEqual(rw["goal"], {"pct": 25, "sections_needed": 2})
         # the same view again is a small thank-you, never negative
         out = self.sm.ingest("Corner Store", "aisle-1:left", jpeg(1))
         rw = self.sm.award("Corner Store", out)
         self.assertEqual((rw["points"], rw["new_title"]), (3, None))
         self.assertEqual(rw["total_points"], 13)
         self.assertIsNone(self.sm.award("Corner Store", {"accepted": False}))
+
+
+class TestHonestCoverage(unittest.TestCase):
+    """Owner, 2026-10-30: "Arya knows 100%" after a few photos was
+    misleading. The store's size comes from aisle numbers Arya read;
+    until then there is no percentage at all."""
+
+    def setUp(self):
+        fresh_data()
+        from api import state, storemap
+        self.sm = storemap
+        state.set_current_user("ana")
+        state.set_overlay(None)
+
+    def test_no_percentage_until_an_aisle_number_is_read(self):
+        for n, label in enumerate(["Produce", "Bakery", "Frozen"]):
+            self.sm.add_segment("Corner Store", label, "both")
+            self.sm.ingest("Corner Store", f"{self.sm.zone_key(label)}:both", jpeg(n + 1))
+        v = self.sm.view("Corner Store")
+        self.assertEqual((v["seen"], v["aisles"]), (3, 0))
+        self.assertIsNone(v["expected"])
+        self.assertIsNone(v["coverage_pct"])
+        self.assertIsNone(v["goal"])
+
+    def test_an_aisle_sign_sets_the_size(self):
+        self.sm.add_segment("Corner Store", "Produce", "both")
+        self.sm.ingest("Corner Store", "produce:both", jpeg(1))
+        self.assertEqual(self.sm.note_sign("Corner Store", "Aisle 14 Cereal Coffee"), 14)
+        self.assertIsNone(self.sm.note_sign("Corner Store", "Bakery"))
+        self.sm.note_sign("Corner Store", "Aisle 3")      # lower never shrinks it
+        v = self.sm.view("Corner Store")
+        self.assertEqual((v["aisles"], v["expected"], v["coverage_pct"]), (14, 20, 5))
+
+    def test_both_sides_of_an_aisle_are_one_section(self):
+        for side, n in (("left", 1), ("right", 2)):
+            self.sm.add_segment("Corner Store", "Aisle 1", side)
+            self.sm.ingest("Corner Store", f"aisle-1:{side}", jpeg(n))
+        self.assertEqual(self.sm.view("Corner Store")["seen"], 1)
+
+    def test_coverage_never_passes_100(self):
+        labels = ["Aisle 1", "Produce", "Bakery", "Meat", "Deli", "Dairy", "Frozen", "Snacks"]
+        for n, label in enumerate(labels):
+            self.sm.add_segment("Corner Store", label, "both")
+            self.sm.ingest("Corner Store", f"{self.sm.zone_key(label)}:both", jpeg(n + 1))
+        v = self.sm.view("Corner Store")
+        self.assertEqual((v["seen"], v["expected"], v["coverage_pct"]), (8, 7, 100))
+        self.assertIsNone(v["goal"])
+
+    def test_aisle_number_reads_signs_and_labels(self):
+        self.assertEqual(self.sm.aisle_number("AISLE #12 - Pasta"), 12)
+        self.assertEqual(self.sm.aisle_number("aisle 4"), 4)
+        self.assertIsNone(self.sm.aisle_number("Dairy wall"))
+        self.assertIsNone(self.sm.aisle_number("Aisle 0"))
+        self.assertIsNone(self.sm.aisle_number("Aisle 999"))
 
 
 class TestRoutes(unittest.TestCase):
@@ -391,7 +447,7 @@ class TestRoutes(unittest.TestCase):
         # is accepted, and the fill check ran on the scrubbed JPEG.
         self.assertEqual(len(FakeClient.shelf_sizes), 1)
         v = self.c.get("/api/storemap", params={"store": self.store}).json()
-        self.assertEqual(v["coverage_pct"], 100)
+        self.assertEqual(v["coverage_pct"], 10)       # Aisle 4: about 10 sections
         self.assertIsNone(v["next"])
         photo = self.c.get("/api/storemap/photo",
                            params={"store": self.store, "segment": sid})
@@ -411,7 +467,7 @@ class TestRoutes(unittest.TestCase):
         rw = self.capture(sid, jpeg(1)).json()["reward"]
         self.assertEqual(rw["points"], 10)
         self.assertEqual(rw["title"], "Scout")
-        self.assertEqual(rw["store_pct"], [0, 100])
+        self.assertEqual(rw["store_pct"], [0, 10])
         self.assertTrue(rw["new_section"])
 
     def test_split_route_and_walk_fill_sections(self):
@@ -428,7 +484,8 @@ class TestRoutes(unittest.TestCase):
         for k, i in enumerate(ids):
             self.assertTrue(self.capture(i, jpeg(10 + k)).json()["accepted"])
         v = self.c.get("/api/storemap", params={"store": self.store}).json()
-        self.assertEqual((v["total"], v["coverage_pct"]), (3, 100))
+        # Three parts of one aisle are one section seen, of about 15.
+        self.assertEqual((v["total"], v["seen"], v["expected"], v["coverage_pct"]), (3, 1, 15, 7))
 
     def test_nothing_is_kept_when_the_people_scrub_fails(self):
         sid = self.add()

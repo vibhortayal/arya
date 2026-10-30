@@ -307,6 +307,8 @@ async def storemap_scan(req: Request):
         raise HTTPException(400, str(e))
     for seen in read["items"]:
         storemap.note_sighting(name, seen, read["label"])
+    # An aisle number on a sign tells Arya how big the store is.
+    storemap.note_sign(name, read["sign"])
     kept_prices = storescan.save_prices(name, read["prices"]) if prices else []
     out.update({"kept": True, "label": seg["label"], "created": created,
                 "sign": read["sign"], "items": read["items"],

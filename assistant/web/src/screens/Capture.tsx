@@ -18,7 +18,9 @@ type Prompt = {
 };
 type Seg = { id: string; label: string };
 type StoreView = { segments?: Seg[]; next?: Prompt | null };
-type Reward = { points: number; new_section?: boolean; new_title?: string; store_pct: [number, number];
+/* store_pct holds nulls while the store's size is unknown (no aisle
+ * number read yet): the card then shows no percentage. */
+type Reward = { points: number; new_section?: boolean; new_title?: string; store_pct: [number | null, number | null];
   goal?: { sections_needed: number; pct: number } | null };
 type Found = { label: string; segment: string; created?: boolean; fresh: boolean };
 type Result =
@@ -238,11 +240,11 @@ export function Capture() {
     busy.current = false;
     if (ep !== epoch.current) return;
     if (!won.length || !last) { setResult({ t: "gentle" }); await mapperAfter(); return; }
-    setBarW(last.store_pct[0]);
+    setBarW(last.store_pct[0] ?? 0);
     setResult({ t: "reward", won, last });
     if (won.some(w => w.out.reward.new_section)) confetti();
     const l = last;
-    requestAnimationFrame(() => requestAnimationFrame(() => setBarW(l.store_pct[1])));
+    requestAnimationFrame(() => requestAnimationFrame(() => setBarW(l.store_pct[1] ?? 0)));
     await mapperAfter();
   };
 
@@ -637,13 +639,15 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
     : fresh.length ? t("capture.learned", { name: segLabel(fresh[0].seg) })
     : t("capture.freshAgain");
   const [a, b] = last.store_pct;
-  const goal = last.goal ? t("capture.moreSectionsTo", { count: last.goal.sections_needed, pct: last.goal.pct }) : t("capture.knowsWholeStore");
+  const sized = a !== null && b !== null;
+  const goal = last.goal ? t("capture.moreSectionsTo", { count: last.goal.sections_needed, pct: last.goal.pct })
+    : sized && b >= 100 ? t("capture.knowsWholeStore") : t("capture.sizeUnknown");
   return (
     <div className="mp-reward">
       <div className="pts">+{pts}</div>
       <div className="what">{what}</div>
-      <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>
-      <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>
+      {sized && <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>}
+      {sized && <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>}
       <div className="muted">{goal}</div>
       {last.new_title ? <div className="mp-title">{t("capture.youReNowA", { title: last.new_title })}</div> : null}
       {fresh.length ? <p className="muted">{t("capture.nextHuntHereThisAisle")}</p> : null}
