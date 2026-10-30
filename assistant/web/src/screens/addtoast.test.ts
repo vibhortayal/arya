@@ -28,3 +28,8 @@ describe("add toast", () => {
     expect(addToast({ added: 2 }, "Costco")).toBe("Added 2 items to Costco.");
   });
 });
+
+test("nothing added with pieces left out says why, not 'Added 0 items'", () => {
+  expect(addToast({ added: 0, skipped: ["organic organic organic orga"] }, "Costco")).toMatch(/^Nothing added\./);
+  expect(addToast({ added: 0 }, "Costco")).toBe("Added 0 items to Costco.");
+});

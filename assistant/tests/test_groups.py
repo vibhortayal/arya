@@ -153,7 +153,9 @@ class TestJoinAndShare(GroupsBase):
         # A new code replaces the old one.
         code2 = b.post("/api/group/invite").status_code
         self.assertEqual(code2, 404)  # Bob is not in a group yet
-        new = a.post("/api/group/invite").json()["code"]
+        self.assertEqual(a.post("/api/group/invite").json()["code"], code)  # reopening keeps it
+        new = a.post("/api/group/invite", json={"new": True}).json()["code"]
+        self.assertNotEqual(new, code)
         self.assertEqual(b.post("/api/group/join", json={"code": code}).status_code, 404)
         self.assertEqual(b.post("/api/group/join", json={"code": new}).status_code, 200)
         # Already in a group.
@@ -166,7 +168,7 @@ class TestJoinAndShare(GroupsBase):
         groups._save_registry(reg)
         self.assertEqual(c.post("/api/group/join", json={"code": new}).status_code, 404)
         # Full.
-        new = a.post("/api/group/invite").json()["code"]
+        new = a.post("/api/group/invite", json={"new": True}).json()["code"]
         old_max = groups.MAX_MEMBERS
         groups.MAX_MEMBERS = 2
         try:

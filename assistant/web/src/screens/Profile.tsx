@@ -466,8 +466,8 @@ function GroupSection() {
       : <span className={"gm" + (m.me ? "" : " other")}>{(m.handle || "?").charAt(0).toUpperCase()}</span>;
   };
 
-  const invite = () => attempt(async () => {
-    const r = await post("/api/group/invite", {});
+  const invite = (fresh = false) => attempt(async () => {
+    const r = await post("/api/group/invite", fresh ? { new: true } : {});
     setSheet({ k: "invite", code: r.code, hours: r.hours });
   });
   const startOpen = () => { const me = (user || "").split("@")[0]; setName(me ? t("settings.homeOf", { name: cap(me) }) : t("settings.ourHome")); setSheet({ k: "start" }); };
@@ -498,7 +498,7 @@ function GroupSection() {
               ? <button key={m.handle} type="button" className="row gmember" data-g="member" data-handle={m.handle} onClick={() => setSheet({ k: "member", handle: m.handle })}>{body}</button>
               : <div key={m.handle} className="row gmember">{body}</div>;
           })}
-          {n < grp.max_members && <button className="navrow" type="button" data-g="invite" onClick={invite}><span className="grow accenttext">{t("settings.inviteSomeone")}<span className="sub">{t("settings.aCodeThatWorksFor")}</span></span><span className="chev">›</span></button>}
+          {n < grp.max_members && <button className="navrow" type="button" data-g="invite" onClick={() => invite()}><span className="grow accenttext">{t("settings.inviteSomeone")}<span className="sub">{t("settings.aCodeThatWorksFor")}</span></span><span className="chev">›</span></button>}
           <button className="navrow" type="button" data-g="leave" onClick={leaveOpen}><span className="grow dangertext">{t("settings.leaveGroup")}<span className="sub">{t("settings.youKeepACopyOf")}</span></span><span className="chev">›</span></button>
         </div>
       </>)}
@@ -532,7 +532,7 @@ function GroupSection() {
                 copy(link, t("settings.linkCopied"));
               }}>{t("settings.shareLink")}</button></div>
             <p className="muted small">{t("settings.anyoneWithTheCodeCan", { max_members: grp.max_members })}</p>
-            <button className="linkbtn" type="button" id="g-newcode" onClick={invite}>{t("settings.makeANewCode")}</button>
+            <button className="linkbtn" type="button" id="g-newcode" onClick={() => invite(true)}>{t("settings.makeANewCode")}</button>
           </Sheet>
         );
       })()}

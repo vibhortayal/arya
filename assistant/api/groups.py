@@ -212,19 +212,24 @@ def rename(user, name):
     _signal(gid, user)
 
 
-def invite(user):
-    """A fresh code for the caller's group. Any member may make one; a
-    new code replaces the old, which stops working. Returns (code,
-    expires)."""
+def invite(user, fresh=False):
+    """The caller's group's live code, so reopening the invite sheet
+    never changes a code someone already holds. A new code is made only
+    when none is live (none yet, or it expired) or when asked for with
+    fresh=True; it replaces the old, which stops working. Any member may
+    ask. Returns (code, expires)."""
     with _root_lock():
         reg = _registry()
         gid = reg["member_of"].get(user)
         if not gid:
             raise LookupError("you are not in a group")
+        live = reg["groups"][gid].get("invite")
+        if not fresh and live and live.get("code") and live["expires"] > time.time():
+            return live["code"], live["expires"]
         code = "".join(secrets.choice(_ALPHABET) for _ in range(CODE_LEN))
         expires = int(time.time()) + INVITE_TTL
-        reg["groups"][gid]["invite"] = {"hash": _hash(code), "expires": expires,
-                                        "by": user}
+        reg["groups"][gid]["invite"] = {"hash": _hash(code), "code": code,
+                                        "expires": expires, "by": user}
         _save_registry(reg)
     return code, expires
 

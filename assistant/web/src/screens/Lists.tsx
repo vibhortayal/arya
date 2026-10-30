@@ -80,6 +80,7 @@ export function addToast(r: AddResult, where: string): string {
   if (back.length) out.push(t("lists.backOnList", { names: nameList(back), count: back.length }));
   for (const m of moved) out.push(m.from ? t("lists.movedHereFrom", { name: m.name, from: m.from }) : t("lists.movedHere", { name: m.name }));
   for (const a of already) out.push(t("lists.alreadyOnNamed", { name: a.name, where: a.list || t("common.everythingElse") }));
+  if (!out.length && !r.added && (r.skipped || []).length) return t("lists.nothingAdded");
   if (!out.length) out.push(t("lists.addedNTo", { count: r.added, where }));
   const skip = (r.skipped || []).length ? t("lists.leftOut", { names: r.skipped!.join(", ") }) : "";
   return out.join(" ") + skip;
@@ -165,7 +166,8 @@ function ListRow({ i, picking, picked, onQty, onReload, chip }: { i: Item; picki
   return (
     <div className="swipewrap" data-wrap-id={i.item_id}>
       <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>{t("lists.move")}</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>{t("common.remove")}</button></div>
-      <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}>
+      <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}
+        {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
         <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
@@ -429,6 +431,11 @@ export function Lists() {
     if (navigator.vibrate) try { navigator.vibrate(12); } catch { /* no haptics */ }
   }, []);
 
+  const togglePick = (id: string) => {
+    const next = new Set(selRef.current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSel(next);
+  };
   const onRows = async (ev: MouseEvent<HTMLElement>) => {
     const t = ev.target as HTMLElement;
     const link = t.closest<HTMLElement>(".item-link");
@@ -436,10 +443,7 @@ export function Lists() {
     if (selRef.current) {
       const r = t.closest<HTMLElement>(".listrow");
       if (!r) return;
-      const id = r.dataset.rowId!;
-      const next = new Set(selRef.current);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      setSel(next);
+      togglePick(r.dataset.rowId!);
       return;
     }
     const b = t.closest<HTMLElement>("[data-act]");
@@ -457,6 +461,7 @@ export function Lists() {
   };
   const onRowsKey = (ev: KeyboardEvent<HTMLElement>) => {
     const r = (ev.target as HTMLElement).closest?.(".listrow") as HTMLElement | null;
+    if (r && ev.target === r && selRef.current && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); togglePick(r.dataset.rowId!); return; }
     if (r && ev.target === r && (ev.key === "Delete" || ev.key === "Backspace")) { ev.preventDefault(); removeItems([r.dataset.rowId!]); }
   };
 
@@ -582,7 +587,7 @@ export function Lists() {
       }
       const r = await post<AddResult>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
       // Text typed while the request ran stays; only the sent text clears.
-      if (textRef.current.trim() === txt) changeText("");
+      if (textRef.current.trim() === txt && (r.added || !(r.skipped || []).length)) changeText("");
       setStatus("");
       toast(addToast(r, here ? here.name : t("lists.yourList")));
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});

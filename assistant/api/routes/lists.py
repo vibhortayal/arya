@@ -197,6 +197,8 @@ async def list_from_text(req: Request):
         names = extract_items_model(text, client)
         typed = [(n, 1, "") for n in names]
         source = "model"
+        if not names:  # say what was left out instead of adding 0 in silence
+            skipped = skipped_pieces(text)
     before = {i["item_id"]: i for i in state.derived()["smart_list"]["items"]
               if i.get("on_list")}
     lists = {l["id"]: l["name"] for l in state.named_lists()}

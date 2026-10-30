@@ -716,6 +716,7 @@
     "movedHere": "{{name}} moved here.",
     "alreadyOnNamed": "{{name}} is already on {{where}}.",
     "leftOut": " Left out (not items): {{names}}.",
+    "nothingAdded": "Nothing added. An item is a short name (up to 60 characters), not a sentence.",
     "yourList": "your list",
     "addedNTo_one": "Added {{count}} item to {{where}}.",
     "addedNTo_other": "Added {{count}} items to {{where}}.",

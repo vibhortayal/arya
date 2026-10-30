@@ -123,6 +123,17 @@ class TestFromText(unittest.TestCase):
         for n in ("Milk", "Eggs", "Bread", "butter"):
             assert n in names, names
 
+    def test_one_too_long_item_says_it_was_left_out(self):
+        # Pilot 2026-10-29: a ~190-character item added 0 with no reason.
+        StubClient.extract_items = []
+        try:
+            r = self.c.post("/api/list/from-text", json={"text": "organic " * 24})
+        finally:
+            StubClient.extract_items = ["milk", "eggs"]
+        body = r.json()
+        assert r.status_code == 200 and body["added"] == 0, body
+        assert body["skipped"], body
+
     def test_chatter_falls_back_to_one_model_call(self):
         r = self.c.post("/api/list/from-text", json={
             "text": "Hey! Can you grab the stuff we talked about "
