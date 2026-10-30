@@ -119,6 +119,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   server and Settings counts it. `2026-10-29-quest-one-progress.md`.
   Your trips is history only: resume or end open trips, see finished
   ones. Bundles is cut from the Quest home. `2026-10-29-quest-trips-history.md`.
+  In the store: a one-row header, one quiet "Typical layout · Map it" cue
+  (its sheet maps the store now or after the trip), a small whole-store
+  button, and one List sheet (add at the top, sections in walking order,
+  reorder or skip behind a link). An empty list offers add or a saved list.
+  `2026-10-29-quest-instore.md`.
 - **Demo:** a fictional household in a per-visitor sandbox; nothing a
   visitor does reaches disk. It has a Costco list and a Trader Joe's list
   (store names only; no Trader Joe's map data ships).

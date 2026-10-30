@@ -38,9 +38,9 @@ export type QuestGameProps = {
   /* The player's avatar picture: the shopper wears it as a face. */
   avatar?: string | null;
   /* The host's Map my store (owner, 2026-10-29: easy to reach). Offered
-   * on a real trip at a store that is not fully mapped: a card at the
-   * start that only informs, and one offer at the end. Never mid-trip,
-   * where leaving the game would lose the trip. */
+   * on a real trip at a store that is not fully mapped: the in-store
+   * cue's Map it (which ends the trip, keeping its grabs) and one offer
+   * at the end. */
   onMapStore?: (store: { id: string; name: string }) => void;
   /* The app's store search, for Build a store's "Which store?". */
   findStore?: (onAdded: () => void) => ReactNode;
@@ -116,6 +116,14 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     setScreen({ s: "finish", trip, rewards: r.rewards });
   };
 
+  /* "Map it now" mid-trip: a trip with grabs ends (they stay checked off
+   * on the list); an empty one was never saved. Then the host's Map my store. */
+  const mapNow = async (trip: Trip) => {
+    if (trip.got.length && source.end) await source.end().catch(() => {});
+    setScreen({ s: "home" });
+    onMapStore?.({ id: trip.layout.id, name: trip.layout.name });
+  };
+
   const key = screen.s === "play" ? "play" : screen.s;
   return (
     <div className="qg" data-screen={screen.s}>
@@ -129,7 +137,8 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
           {screen.s === "play" && (
             <Play trip={screen.trip} avatar={avatar} source={screen.trip.practice ? silent : source}
               onTrip={t => setScreen(sc => (sc.s === "play" ? { s: "play", trip: t } : sc))}
-              onFinish={finish} onQuit={() => setScreen({ s: "home" })} onEnd={source.end ? async () => { await source.end!(); setScreen({ s: "home" }); } : undefined} mapOffer={!!onMapStore && needsMap(screen.trip)} />
+              onFinish={finish} onQuit={() => setScreen({ s: "home" })} onEnd={source.end ? async () => { await source.end!(); setScreen({ s: "home" }); } : undefined}
+              onMap={onMapStore && needsMap(screen.trip) ? () => void mapNow(screen.trip) : undefined} />
           )}
           {screen.s === "finish" && (
             <Finish trip={screen.trip} rewards={screen.rewards} profile={profile}
