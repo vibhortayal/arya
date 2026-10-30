@@ -27,6 +27,7 @@
 .qg-btn.big { min-height: 58px; font-size: 18px; }
 .qg-btn.ghost { background: transparent; box-shadow: none; color: var(--q-ink2); min-height: 44px; }
 .qg-ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; background: var(--q-panel); box-shadow: 0 1px 3px rgba(0,0,0,.08); flex: none; }
+.qg-edit { min-height: 44px; padding: 0 8px; background: none; border: 0; color: var(--q-acc); font-size: 17px; font-weight: 600; flex: none; }
 
 /* kind badges */
 .qg-kind { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }

@@ -1,7 +1,7 @@
 /* The quest hub (home), the store picker and the sticker album.
  * One big action at a time: a new player is pointed at practice
  * first; a returning player at their next real trip. */
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { levelOf, played, stageOf, streak, type Profile } from "../core/meta";
 import { ALL_STICKERS, PRACTICE_STORE, type QuestSource } from "../core/source";
@@ -10,22 +10,37 @@ import { charArt, img } from "../assets";
 import { Bar, KindBadge, Sheet } from "./bits";
 import { HowTo } from "./Play";
 
-export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild, onAddItems, onPick }: {
+/* The home panels the player can reorder and hide (card library,
+ * owner 2026-10-30): the host's own panels (Map my store, ...) join
+ * these by id. "cta" (Ready for a quest) always shows. */
+export const HOME_PANELS = ["cta", "album", "stores"] as const;
+
+export function Home({ profile, newbie, list, lists = [], onList, onPractice, onQuest, onAlbum, onExit, extra, onBuild, onAddItems, onPick, panels = {}, order, hidden = [], onEdit }: {
   profile: Profile; newbie: boolean; list: ShoppingList | null; lists?: ShoppingList[]; onList?: (l: ShoppingList) => void;
   onPractice: () => void; onQuest: () => void; onAlbum: () => void; onExit?: () => void; extra?: ReactNode; onBuild?: () => void;
   /* An empty list: the host's way to add items (the Lists tab). */
   onAddItems?: () => void;
   /* A list with its own store: Start goes there; this picks another. */
   onPick?: () => void;
+  /* The host's panels by id, and the player's order and hidden ids
+   * ("stats" hides the level and streak). onEdit shows Edit. */
+  panels?: Record<string, ReactNode>;
+  order?: string[];
+  hidden?: string[];
+  onEdit?: () => void;
 }) {
   const lv = levelOf(profile.xp), st = streak(profile.weeks, new Date());
   const [how, setHow] = useState(false);
   const stores = Object.entries(profile.stores);
+  const cta = <HomeCta newbie={newbie} list={list} lists={lists} onList={onList} onPractice={onPractice} onQuest={onQuest} onAddItems={onAddItems} onPick={onPick} />;
+  const album = <HomeAlbum profile={profile} onAlbum={onAlbum} />;
+  const building = <HomeStores stores={stores} />;
   return (
     <div className="qg-home">
       <header className="qg-home-h">
         {onExit && <button className="qg-ic" onClick={onExit} aria-label="Close Quest">‹</button>}
         <h1>Quest</h1>
+        {onEdit && <button className="qg-edit" id="qg-editbtn" onClick={onEdit}>Edit</button>}
         <button className="qg-ic" onClick={() => setHow(true)} aria-label="How to play">?</button>
       </header>
       {onBuild && (
@@ -39,7 +54,7 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
         <img src={img("scenes/storefront.webp")} alt="" />
         {/* Show cards only when they matter (owner, 2026-10-30): no
             "Lv 1 · 0 wk streak" before the first real trip. */}
-        {played(profile) && (
+        {played(profile) && !hidden.includes("stats") && (
           <div className="qg-hero-stats">
             <span className="qg-lvchip">Lv {lv.level}</span>
             <Bar value={lv.into} max={lv.need} label="Level progress" />
@@ -48,7 +63,21 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
         )}
       </div>
 
-      {newbie ? (
+      {(order?.length ? [...order, ...HOME_PANELS, ...Object.keys(panels)] : [...HOME_PANELS, ...Object.keys(panels)])
+        .filter((id, i, all) => all.indexOf(id) === i && (id === "cta" || !hidden.includes(id)))
+        .map(id => <Fragment key={id}>{id === "cta" ? cta : id === "album" ? album : id === "stores" ? building : panels[id]}</Fragment>)}
+
+      {extra}
+      <Sheet open={how} onClose={() => setHow(false)} title="How to play" tall><HowTo /></Sheet>
+    </div>
+  );
+}
+
+function HomeCta({ newbie, list, lists, onList, onPractice, onQuest, onAddItems, onPick }: {
+  newbie: boolean; list: ShoppingList | null; lists: ShoppingList[]; onList?: (l: ShoppingList) => void;
+  onPractice: () => void; onQuest: () => void; onAddItems?: () => void; onPick?: () => void;
+}) {
+  return newbie ? (
         <motion.div className="qg-cta" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
           <p className="qg-kicker">New here? Start with practice</p>
           <h2>Play the Practice Market</h2>
@@ -78,29 +107,28 @@ export function Home({ profile, newbie, list, lists = [], onList, onPractice, on
               </>}
           <button className="qg-btn ghost" onClick={onPractice}>Practice</button>
         </motion.div>
-      )}
+      );
+}
 
-      {/* The album shows up with its first sticker, not as "0 of 20". */}
-      {profile.stickers.length > 0 && <div className="qg-tiles">
+function HomeAlbum({ profile, onAlbum }: { profile: Profile; onAlbum: () => void }) {
+  /* The album shows up with its first sticker, not as "0 of 20". */
+  return profile.stickers.length > 0 ? <div className="qg-tiles">
         <button className="qg-tile" onClick={onAlbum}>
           <div className="qg-tile-art">{ALL_STICKERS.slice(0, 3).map(s => <img key={s} src={charArt(s)} alt="" className={profile.stickers.includes(s) ? "" : "locked"} />)}</div>
           <b>Sticker album</b><small>{profile.stickers.length} of {ALL_STICKERS.length}</small>
         </button>
-      </div>}
+      </div> : null;
+}
 
-      {stores.length > 0 && (
+function HomeStores({ stores }: { stores: [string, Profile["stores"][string]][] }) {
+  return stores.length > 0 ? (
         <div className="qg-card">
           <h3>Stores you're building</h3>
           {stores.map(([id, g]) => { const s = stageOf(g); return (
             <div key={id} className="qg-growth"><span>{id === PRACTICE_STORE.id ? "Practice" : id.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")}</span><Bar value={s.pct} max={100} label="Mapped" /><small>{s.name}</small></div>
           ); })}
         </div>
-      )}
-
-      {extra}
-      <Sheet open={how} onClose={() => setHow(false)} title="How to play" tall><HowTo /></Sheet>
-    </div>
-  );
+      ) : null;
 }
 
 export function Pick({ source, newbie, first, onPick, onPractice, onBack }: { source: QuestSource; newbie: boolean; first?: string; onPick: (s: StoreSummary) => void; onPractice: () => void; onBack: () => void }) {

@@ -19,6 +19,7 @@ export type Layouts = {
   lists?: { order?: string[] | null; hidden?: string[] | null; flags?: string[] | null };
   ask?: { chips?: string[] | null };
   spending?: { on?: string[] | null };
+  quest?: { order?: string[] | null; hidden?: string[] | null };
 };
 export function applyDisplay(d: Display): void {
   const root = document.documentElement;
