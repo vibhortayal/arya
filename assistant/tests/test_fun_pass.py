@@ -35,7 +35,7 @@ class TestLanding(unittest.TestCase):
         self.assertNotIn("models/trader-joes/frames-web", login)
         self.assertNotIn("caststrip", login)
         self.assertIn("src={asset(`assets/characters/${c.face}.webp`)}", login)
-        for c in ("milk", "egg", "compass", "binoculars"):
+        for c in ("milk", "basket", "binoculars", "egg", "pantry", "olive-oil", "dairy", "compass"):
             self.assertIn(f'face: "{c}"', login)
             self.assertTrue((PWA / "assets" / "characters" / f"{c}.webp").exists(), c)
 

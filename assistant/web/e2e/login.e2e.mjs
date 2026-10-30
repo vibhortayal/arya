@@ -3,7 +3,7 @@
  * wobbling for good; "Start my own list" opens the sheet in register
  * mode while registration is open (the e2e API runs with
  * ARYA_REGISTRATION_OPEN=1) and is gone when it is closed; both
- * buttons fit in Safari's visible area (390 x 664). "Get the app"
+ * buttons are reachable on Safari's visible area (390 x 664) with one scroll (eight cards). "Get the app"
  * (owner, 2026-10-29): not on this desktop browser; on an iPhone it
  * sits in the one-line header before Sign in, even at 360 wide, and
  * opens the steps sheet. */
@@ -17,10 +17,13 @@ async function getTheApp(page, base) {
   try {
     await ip.goto(base + "/");
     await ip.waitForSelector("#getapp-open.jiggle");
+    // Eight cards: the buttons are one scroll away on a short phone.
     for (const id of ["#demo-btn", "#register-open"]) {
+      await ip.locator(id).scrollIntoViewIfNeeded();
       const box = await ip.locator(id).boundingBox();
-      if (!box || box.y + box.height > 664) throw new Error(id + " is below the fold at 390x664 with the pill: " + JSON.stringify(box));
+      if (!box || box.y + box.height > 664) throw new Error(id + " cannot be scrolled into view at 390x664 with the pill: " + JSON.stringify(box));
     }
+    await ip.evaluate(() => window.scrollTo(0, 0));
     for (const w of [390, 360]) {
       await ip.setViewportSize({ width: w, height: 664 });
       const [logo, pill, sign] = await Promise.all(["landlogo", "gethome", "landsign"].map(c => ip.locator(".landtop ." + c).boundingBox()));
@@ -45,20 +48,25 @@ export default async function (page, base) {
   await page.setViewportSize({ width: 390, height: 664 });
   await page.goto(base + "/");
   await page.waitForSelector("#demo-btn");
+  // Eight cards make the landing a little taller than a short phone:
+  // the buttons are one scroll away, never cut off.
   for (const id of ["#demo-btn", "#register-open"]) {
+    await page.locator(id).scrollIntoViewIfNeeded();
     const box = await page.locator(id).boundingBox();
-    if (!box || box.y + box.height > 664) throw new Error(id + " is below the fold at 390x664: " + JSON.stringify(box));
+    if (!box || box.y + box.height > 664) throw new Error(id + " cannot be scrolled into view at 390x664: " + JSON.stringify(box));
   }
+  if ((await page.$$(".ftile")).length !== 8) throw new Error("the landing has eight cards");
+  await page.evaluate(() => window.scrollTo(0, 0));
   if (await page.isVisible("#how-open")) throw new Error("How it works is still on the landing");
   if (await page.$("#getapp-open")) throw new Error("Get the app shows on a desktop browser");
   await getTheApp(page, base);
 
   // Flip once: the card stops wobbling, and stays still after a reload.
-  await page.click("#land-quest");
-  await page.waitForSelector("#land-quest.on.seen[aria-pressed=true]");
+  await page.click("#land-maps");
+  await page.waitForSelector("#land-maps.on.seen[aria-pressed=true]");
   await page.reload();
-  await page.waitForSelector("#land-quest.seen:not(.on)");
-  if (await page.$("#land-habits.seen")) throw new Error("an untapped card stopped wobbling");
+  await page.waitForSelector("#land-maps.seen:not(.on)");
+  if (await page.$("#land-lists.seen")) throw new Error("an untapped card stopped wobbling");
 
   // Start my own list → register mode.
   await page.click("#register-open");

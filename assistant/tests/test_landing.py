@@ -52,13 +52,22 @@ class TestLanding(unittest.TestCase):
 
     def test_card_words(self):
         en = frontend.en()["landing"]["cards"]
-        self.assertEqual([en[k]["title"] for k in ("habits", "news", "quest", "map")],
-                         ["Learns your habits", "Store news", "Quest", "Map your store"])
+        # The guide's eight sections, in its order (owner, 2026-10-30).
+        keys = ("lists", "share", "maps", "news", "receipts", "prices", "usesoon", "ask")
+        self.assertEqual(list(en), list(keys))
+        self.assertEqual([en[k]["title"] for k in keys],
+                         ["A list for every store", "Share with your household", "Map your store", "Store news",
+                          "See where money goes", "Know where it's cheaper", "Rescue food waste", "Just ask Arya"])
+        self.assertIn("learns your habits", en["lists"]["back"].lower())
+        self.assertIn("expires or goes bad", en["usesoon"]["sub"])
+        for card in en.values():
+            for text in card.values():
+                self.assertNotIn("optional", text.lower())
         self.assertIn("Arya shoppers", en["news"]["sub"])
         for card in en.values():
             for text in card.values():
                 self.assertNotIn("fellow", text.lower())
-        self.assertNotIn("blur", en["map"]["back"].lower())
+        self.assertNotIn("blur", en["maps"]["back"].lower())
 
     def test_old_landing_is_gone(self):
         for gone in ("peek", "questline", "landmeta", "how-open", "how-sheet", "treasure hunt", "Meta API live"):
