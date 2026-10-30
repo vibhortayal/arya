@@ -8,7 +8,7 @@ import { t } from "../../i18n";
 
 export type Item = {
   item_id: string; name: string; on_list?: boolean; checked?: boolean; list?: string | null;
-  qty?: number; unit?: string; added_by?: string; not_grocery?: boolean; source?: string;
+  qty?: number; unit?: string; added_by?: string; aisle?: string; not_grocery?: boolean; source?: string;
   expired_on?: string; every_days?: number; days_since?: number; due_reason?: string; judge_reason?: string;
 };
 export type NamedList = { id: string; name: string; stores?: string[] };

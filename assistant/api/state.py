@@ -14,7 +14,7 @@ from api.cart.build import prepare
 
 import contextvars
 
-from api import pgstore
+from api import aisles, pgstore
 
 _current_user = contextvars.ContextVar("arya_user", default=None)
 # The demo sandbox (review 2026-10-28): a demo visitor's writes land in
@@ -674,6 +674,9 @@ def derived():
         item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
         # Deterministic and cached only, never a model call here: the
         # list shows "Not a grocery item? Added anyway" for these.
+        aisle = aisles.aisle_for(item["name"])
+        if aisle:
+            item["aisle"] = aisle  # the department the list groups under
         g = classify_grocery(item["name"], verdicts)
         if g["kind"] == "other":
             item["not_grocery"] = g["sub"] or "other"

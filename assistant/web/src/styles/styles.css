@@ -1744,3 +1744,15 @@ a.navrow, .ed-links .navrow { color: var(--ink); }
 .sheet .srow .navrow { text-align: left; }
 .sheet .srow .rmstore { color: var(--tertiary); font-size: 24px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 0; }
 .nearlbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--secondary); margin: 14px 0 2px; }
+
+/* Long lists (owner 2026-10-30): department headers that fold, and a
+   find field from 25 items. */
+.aisle { margin-top: 14px; }
+.aisle:first-child { margin-top: 0; }
+.aisle .group { margin: 0; }
+.aisle-h { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; border: 0; background: none; padding: 0 4px; font: inherit; text-align: left; color: var(--secondary); cursor: pointer; }
+.aisle-h b { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.aisle-h .n { font-size: 13px; color: var(--tertiary); }
+.aisle-h .chev { margin-left: auto; color: var(--tertiary); transform: rotate(90deg); }
+.aisle.shut .aisle-h .chev { transform: none; }
+.listfind { display: block; width: 100%; box-sizing: border-box; min-height: 44px; margin: 0 0 10px; padding: 0 16px; border: 0; border-radius: var(--radius); background: var(--group); color: var(--ink); font: inherit; font-size: 17px; }

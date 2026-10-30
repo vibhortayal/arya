@@ -811,6 +811,12 @@
     "newListMenu": "New list…",
     "questWalksYou": "A game with points and badges",
     "firstListTitle": "Create your first list",
+    "findInList": "Find in this list",
+    "noMatch": "Nothing on this list matches \"{{q}}\".",
+    "aisle": {
+      "Produce": "Produce", "Bakery": "Bakery", "Deli": "Deli", "Dairy": "Dairy",
+      "Pantry": "Pantry", "Frozen": "Frozen", "Household": "Household", "Other": "Other"
+    },
     "firstListLine": "One list per store. Arya fills it as it learns.",
     "createFirstList": "Create your first list",
     "searchLists_one": "Search {{count}} list",

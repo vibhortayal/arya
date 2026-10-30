@@ -19,6 +19,7 @@ import {
   askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
   suggestHome, suggestions, suggestWhy, type HomeData, type Item,
 } from "./lists/model";
+import { FIND_AT, groupByAisle, loadFolded, matchesFind, saveFolded } from "./lists/aisles";
 import { autoMode, filterLists, markOpened, readMode, readOpened, readView, recentLists, viewMode, writeMode, writeView,
   type ListsMode, type ListsView } from "./lists/adaptive";
 import { t, useTranslation } from "../i18n";
@@ -219,6 +220,14 @@ export function Lists() {
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState("");
   const [doneOpen, setDoneOpen] = useState(false);
+  const [find, setFind] = useState("");
+  const [folded, setFolded] = useState<Set<string>>(loadFolded);
+  const toggleFold = (key: string) => setFolded(prev => {
+    const next = new Set(prev);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    saveFolded(next);
+    return next;
+  });
   // Today's Get started step 1 opens the new-list sheet (once).
   // Step 2 (Pick your store) opens that list's store picker.
   const [sheet, setSheet] = useState<SheetState | null>(() => (nav.params.newList ? { kind: "new", moving: null }
@@ -286,6 +295,13 @@ export function Lists() {
   const rows = data ? onListItems(data).filter(i => itemHome(data, i) === lid) : [];
   const open = rows.filter(i => !i.checked), done = rows.filter(i => i.checked);
   const groceries = open.filter(i => !i.not_grocery), errands = open.filter(i => i.not_grocery);
+  /* A long list gets a find field (25+ open items) and department
+   * headers (12+), owner 2026-10-30. A search shows a flat result. */
+  const findOn = open.length >= FIND_AT;
+  const q = findOn ? find.trim() : "";
+  const gShown = q ? groceries.filter(i => matchesFind(i, q)) : groceries;
+  const eShown = q ? errands.filter(i => matchesFind(i, q)) : errands;
+  const aisleGroups = q ? null : groupByAisle(groceries);
   const selEff = useMemo(() => (sel ? new Set([...sel].filter(x => open.some(i => i.item_id === x))) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sel, data, effLens]);
@@ -963,14 +979,25 @@ export function Lists() {
           </div>
 
           {open.length && !selEff ? <p className="muted small tickhint" id="list-tickhint">{t("lists.tickHint")}</p> : null}
+          {findOn ? <input type="search" id="list-find" className="listfind" maxLength={80} autoComplete="off" value={find}
+            placeholder={t("lists.findInList")} aria-label={t("lists.findInList")} onChange={e => setFind(e.target.value)} /> : null}
           <div id="smart-list" ref={smart} onClick={onRows} onKeyDown={onRowsKey}>
-            {groceries.length ? <div className="group">{groceries.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
-              : errands.length ? null
+            {q && !gShown.length && !eShown.length ? <p className="empty" id="list-nomatch">{t("lists.noMatch", { q })}</p> : null}
+            {aisleGroups ? aisleGroups.map(g => {
+              const key = `${lid}:${g.aisle}`, shut = folded.has(key);
+              return (
+                <div className={"aisle" + (shut ? " shut" : "")} key={g.aisle} data-aisle={g.aisle}>
+                  <button className="aisle-h" type="button" aria-expanded={!shut} onClick={() => toggleFold(key)}>
+                    <b>{t(`lists.aisle.${g.aisle}`)}</b><span className="n">{g.items.length}</span><span className="chev" aria-hidden="true">›</span></button>
+                  {shut ? null : <div className="group">{g.items.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>}
+                </div>);
+            }) : gShown.length ? <div className="group">{gShown.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
+              : errands.length || q ? null
                 : <div className="group pad"><div className="emptyface-wrap"><img className="emptyface" src="/assets/characters/pantry.webp" alt="" />
                   <p className="empty">{t("lists.nothingOnYetTypeSpeak", { name })}</p></div></div>}
-            {errands.length ? <>
+            {eShown.length ? <>
               <p className="grouplabel">{t("lists.otherErrands")}</p>
-              <div className="group">{errands.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
+              <div className="group">{eShown.map(i => <ListRow key={i.item_id} {...rowProps(i)} />)}</div>
             </> : null}
           </div>
 
