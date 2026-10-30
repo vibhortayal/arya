@@ -532,10 +532,10 @@ function RouteEdit({ trip, dispatch, onDone }: { trip: Trip; dispatch: (a: Actio
 
 export function HowTo() {
   const steps: [string, string, string][] = [
-    ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Tap Next, or any item card, and your shopper walks there."],
-    ["basket.webp", "Look first, then choose", "At the shelf, pick Grab it, Not here, Substitute or Skip. Only a grab earns points; skipping never costs anything."],
-    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it: you just mapped it for everyone."],
-    ["egg.webp", "Golden item", "One item each trip is golden and worth double. Nothing to lose, no timer, no lives."],
+    ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Your shopper walks to the next item by itself; tap any picture in your list to go there instead."],
+    ["basket.webp", "Look first, then choose", "At the shelf, tap Got it, Can't find it or Later. Only Got it earns points; Later and Can't find it never cost anything."],
+    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you just mapped it for everyone."],
+    ["egg.webp", "Golden item", "Each trip, one item from your own list is picked at random and worth double. Arya never adds items or shows ads. No timer, no lives."],
   ];
   return (
     <div className="qg-howto">
@@ -564,10 +564,10 @@ function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
         {g && (
           <div className="qg-mission-gold">
             <img src={charArt(g.art)} alt="" />
-            <span><b>★ Golden: {g.name}</b>Worth double today.</span>
+            <span><b>★ Golden: {g.name}</b>Picked at random from your list. Worth double.</span>
           </div>
         )}
-        <p className="qg-p" style={{ marginTop: 12 }}>No timer and nothing to lose. Shop at your own pace.</p>
+        <p className="qg-p" style={{ marginTop: 12 }}>Arya never adds products or ads. No timer, nothing to lose.</p>
         <button className="qg-btn primary big" onClick={onStart}>Let's go</button>
       </motion.div>
     </motion.div>

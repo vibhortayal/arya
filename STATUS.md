@@ -146,6 +146,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  The golden item says it is picked at random from your own list and
+  that Arya never adds products or ads; How to play matches today's
+  buttons. `2026-10-30-quest-golden-wording.md`.
   Quest colors have one job each: green for grabbed or mapped, gold for
   golden, the app orange, neutral for the rest (no blue badges or black
   chips); the 3D simulated store stays a blue blueprint. `2026-10-30-quest-colors.md`.
