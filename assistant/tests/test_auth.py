@@ -238,3 +238,60 @@ class TestSupabaseSignin(unittest.TestCase):
         with mock.patch.dict(os.environ, env):
             r = self.c.get("/auth/google", follow_redirects=False)
         self.assertIn("redirect_to=https%3A%2F%2Farya.example.org%2Fauth%2Fcallback", r.headers["location"])
+
+
+class TestOwnGoogleSignin(unittest.TestCase):
+    ENV = {"ARYA_SUPABASE_AUTH": "1", "SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon",
+           "GOOGLE_OAUTH_CLIENT_ID": "cid.apps.googleusercontent.com", "GOOGLE_OAUTH_CLIENT_SECRET": "s",
+           "ARYA_PUBLIC_URL": "https://arya.example.org"}
+
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api.main import app
+        from api.deps import _verify_hits
+        _verify_hits.clear()
+        self.c = TestClient(app)
+        self.addCleanup(_verify_hits.clear)
+
+    def _token(self, **claims):
+        import base64, json
+        body = {"aud": "cid.apps.googleusercontent.com", "iss": "https://accounts.google.com",
+                "email": "G@Example.com", "email_verified": True, **claims}
+        part = base64.urlsafe_b64encode(json.dumps(body).encode()).decode().rstrip("=")
+        return "h." + part + ".s"
+
+    def _go(self, token, state="st", cookie="st"):
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"id_token": token}
+        self.c.cookies.set("arya_goauth", cookie)
+        with mock.patch.dict(os.environ, {**self.ENV, "ARYA_REGISTRATION_OPEN": "1"}), \
+                mock.patch("api.google_oauth.httpx.post", return_value=resp):
+            return self.c.get("/auth/google/callback?code=c&state=" + state, follow_redirects=False)
+
+    def test_start_redirects_to_google_on_arya_domain(self):
+        with mock.patch.dict(os.environ, self.ENV):
+            r = self.c.get("/auth/google", follow_redirects=False)
+        self.assertIn("accounts.google.com", r.headers["location"])
+        self.assertIn("redirect_uri=https%3A%2F%2Farya.example.org%2Fauth%2Fgoogle%2Fcallback", r.headers["location"])
+        self.assertIn("arya_goauth=", r.headers["set-cookie"])
+
+    def test_callback_signs_in(self):
+        r = self._go(self._token())
+        self.assertEqual((r.status_code, r.headers["location"]), (303, "/"))
+        self.assertEqual(self.c.get("/auth/me").json()["user"], "g@example.com")
+
+    def test_state_mismatch_and_bad_claims_refused(self):
+        self.assertEqual(self._go(self._token(), state="other").headers["location"], "/?signin=failed")
+        for bad in ({"aud": "someone-else"}, {"email_verified": False}, {"iss": "https://evil.example"}):
+            self.assertEqual(self._go(self._token(**bad)).headers["location"], "/?signin=failed")
+        self.assertEqual(self.c.get("/auth/me").json()["user"], None)
+
+    def test_not_invited_offers_waitlist(self):
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"id_token": self._token()}
+        self.c.cookies.set("arya_goauth", "st")
+        with mock.patch.dict(os.environ, self.ENV), \
+                mock.patch("api.google_oauth.httpx.post", return_value=resp):
+            os.environ.pop("ARYA_REGISTRATION_OPEN", None)
+            r = self.c.get("/auth/google/callback?code=c&state=st", follow_redirects=False)
+        self.assertIn("/auth/callback#notinvited=g%40example.com", r.headers["location"])
