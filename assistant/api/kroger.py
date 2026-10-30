@@ -21,9 +21,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, wait
 
 BASE = "https://api.kroger.com/v1"
 TIMEOUT = 8
+WORKERS = 5      # concurrent product lookups per trip
+BUDGET_S = 10    # give up on stragglers; the screen just shows no hint
 
 # Brands that share Kroger's catalog (store name contains one of these).
 FAMILY = ["kroger", "ralphs", "fred meyer", "harris teeter", "king soopers",
@@ -184,7 +187,8 @@ def _hint_at(loc, item):
 
 
 def trip_hints(store, items, limit=15):
-    """{item: hint} for the items of one trip, with one location lookup.
+    """{item: hint} for the items of one trip: one location lookup, then the
+    items looked up concurrently.
     The caller keeps it in memory for the trip and drops it at checkout;
     nothing is stored here. Items without a hint are left out. Any failure
     returns what was gathered so far (possibly {})."""
@@ -198,14 +202,28 @@ def trip_hints(store, items, limit=15):
         return out
     try:
         loc = location_id(store)
-        if not loc:
-            return out
-        for n in names[:limit]:
-            hint = _hint_at(loc, n)
+    except (urllib.error.URLError, OSError, ValueError, KeyError):
+        return out
+    if not loc:
+        return out
+
+    def one(n):
+        try:
+            return n, _hint_at(loc, n)
+        except (urllib.error.URLError, OSError, ValueError, KeyError):
+            return n, None
+
+    # Concurrent lookups: the token is already warm from the location call.
+    pool = ThreadPoolExecutor(max_workers=WORKERS)
+    try:
+        futures = [pool.submit(one, n) for n in names[:limit]]
+        done, _ = wait(futures, timeout=BUDGET_S)
+        for f in done:
+            n, hint = f.result()
             if hint:
                 out[n] = hint
-    except (urllib.error.URLError, OSError, ValueError, KeyError):
-        pass
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
     return out
 
 

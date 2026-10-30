@@ -88,6 +88,38 @@ class TestKroger(unittest.TestCase):
         self.assertEqual(sorted(out), ["pasta", "rice"])
         self.assertEqual(sum("/locations" in u for u in fake.urls), 1)
 
+    def test_trip_hints_look_items_up_concurrently(self):
+        import time
+        self.on()
+        base = Fake(PASTA)
+        def slow(url, headers, data=None):
+            if "/products" in url:
+                time.sleep(0.3)
+            return base(url, headers, data)
+        kroger._http = slow
+        t = time.time()
+        out = kroger.trip_hints(STORE, ["a", "b", "c", "d", "e"])
+        self.assertEqual(len(out), 5)
+        self.assertLess(time.time() - t, 1.0)   # sequential would be 1.5 s
+
+    def test_slow_straggler_is_dropped_not_waited_for(self):
+        import time
+        self.on()
+        base = Fake(PASTA)
+        def slow(url, headers, data=None):
+            if "/products" in url and "filter.term=stuck" in url:
+                time.sleep(2)
+            return base(url, headers, data)
+        kroger._http = slow
+        old, kroger.BUDGET_S = kroger.BUDGET_S, 0.5
+        try:
+            t = time.time()
+            out = kroger.trip_hints(STORE, ["pasta", "stuck"])
+        finally:
+            kroger.BUDGET_S = old
+        self.assertEqual(list(out), ["pasta"])
+        self.assertLess(time.time() - t, 1.5)
+
     def test_trip_hints_off_returns_empty(self):
         self.assertEqual(kroger.trip_hints(STORE, ["milk"]), {})
 
