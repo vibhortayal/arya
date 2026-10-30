@@ -81,7 +81,7 @@ Reply:
   they are. To move one, `PATCH` its `list_id`. (In the app a person can
   keep an item on more than one list. The API shows such an item once, under
   its main list, and its ticks there are the main list's.)
-- `skipped`: pieces of `text` that were not items (a bare number, a sentence).
+- `skipped`: pieces of `text` that were not items (a bare number). A line with a sentence in it is skipped whole, so no piece of it is added.
 - `items`: the items now on the list for the names you sent.
 - `text` is split by fixed rules. The API makes no model calls.
 
