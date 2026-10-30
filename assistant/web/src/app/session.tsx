@@ -13,6 +13,13 @@ export const DISPLAY_DEFAULT: Display = { text: 1, spacing: "comfortable", bold:
 /* Text size steps: the styles are in px, so the page zooms, as a
  * phone's Display Zoom does. */
 export const TEXT_ZOOM = [0.9, 1, 1.1, 1.2, 1.35];
+/* Edit mode on other screens (card library): what each screen keeps,
+ * as lists of ids or texts (api/routes/account.py LAYOUT_SCREENS). */
+export type Layouts = {
+  lists?: { order?: string[] | null; hidden?: string[] | null; flags?: string[] | null };
+  ask?: { chips?: string[] | null };
+  spending?: { on?: string[] | null };
+};
 export function applyDisplay(d: Display): void {
   const root = document.documentElement;
   const z = TEXT_ZOOM[d.text] ?? 1;
@@ -48,6 +55,9 @@ type Session = {
   display: Display;
   /* Changes some Display settings, shows them at once and saves them. */
   saveDisplay: (d: Partial<Display>) => Promise<void>;
+  layouts: Layouts;
+  /* Replaces one screen's layout, shows it at once and saves it. */
+  saveLayout: <K extends keyof Layouts>(screen: K, v: Layouts[K]) => Promise<void>;
   /* Either welcome choice: saved per account on the server. */
   markOnboarded: () => void;
   /* After sign out or account delete: back to the Login screen
@@ -77,6 +87,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [shopMode, setShopMode] = useState<ShopMode | null>(null);
   const [questNudge, setQuestNudge] = useState(false);
   const [display, setDisplay] = useState<Display>(DISPLAY_DEFAULT);
+  const [layouts, setLayouts] = useState<Layouts>({});
   useEffect(() => { applyDisplay(display); }, [display]);
 
   useEffect(() => {
@@ -94,13 +105,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // setting comes with it (Auto until then).
   useEffect(() => {
     if (!user) return;
-    get<{ currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display }>("/api/settings")
+    get<{ currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display; layouts?: Layouts }>("/api/settings")
       .then(s => {
         setCurrency({ code: s.currency, symbol: s.symbol });
         setOnboarded(s.onboarded !== false);
         setShopMode(s.shop_mode ?? null);
         setQuestNudge(!!s.quest_nudge);
         if (s.display) setDisplay({ ...DISPLAY_DEFAULT, ...s.display });
+        setLayouts(s.layouts || {});
         if (s.language) setLanguage(s.language);
         if (s.languages?.length) setLanguages(s.languages);
       }).catch(() => {});
@@ -133,17 +145,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.display) setDisplay({ ...DISPLAY_DEFAULT, ...r.display });
   }, []);
 
+  const saveLayout = useCallback(async <K extends keyof Layouts>(screen: K, v: Layouts[K]) => {
+    setLayouts(x => ({ ...x, [screen]: v }));
+    const r = await post<{ layouts?: Layouts }>("/api/settings", { layouts: { [screen]: v } });
+    if (r.layouts) setLayouts(r.layouts);
+  }, []);
+
   const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
 
   const leave = useCallback(async () => {
     runLeaveHooks();
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
-    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT);
+    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT); setLayouts({});
     (window as any).__aryaUser = undefined;
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, leave }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

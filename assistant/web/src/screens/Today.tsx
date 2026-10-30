@@ -16,6 +16,7 @@ import { t, useTranslation } from "../i18n";
 import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
 import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
 import { EditTitle } from "../ui/EditList";
+import { arrange } from "../lib/layout";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -188,7 +189,7 @@ const HOLD_MS = 500;
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency, demo, user, questNudge, patchShop, saveShopMode } = useSession();
+  const { currency, demo, user, questNudge, patchShop, saveShopMode, layouts = {} } = useSession();
   // The Quest nudge retires once this account has opened Quest.
   const [questSeen] = useState(() => questOpened(user));
   const town = useTown();
@@ -327,13 +328,15 @@ export function Today() {
 
   /* ---- Your lists ---- */
   const listItems = items.filter(i => !i.checked && i.on_list && !i.not_grocery);
-  const lists: any[] = h?.lists || [];
+  // In the order Lists keeps, without the lists hidden there (Edit Lists).
+  const allLists: any[] = h?.lists || [];
+  const lists: any[] = arrange(allLists.map(l => l.id), layouts.lists?.order, layouts.lists?.hidden).shown.map(id => allLists.find(l => l.id === id));
   const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id || (i.also || []).includes(l.id)) }));
   const cards = allCards.filter(c => c.items.length);
   const emptyNames = allCards.filter(c => !c.items.length).map(c => c.name);
-  const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));
-  if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
-  const noLists = !listItems.length && !lists.length;
+  const rest = listItems.filter(i => !i.list || !allLists.some(l => l.id === i.list));
+  if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: allLists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
+  const noLists = !listItems.length && !allLists.length;
   const listCap = big("lists") ? { shown: cards, seeAll: false } : capLists(cards, cards.length);
 
   /* ---- Your patterns ---- */
@@ -413,7 +416,7 @@ export function Today() {
           )}
           {h && listCap.seeAll && (
             <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
-              <span>{t("today.seeAllLists", { count: lists.length })}</span><span aria-hidden="true">›</span></button>
+              <span>{t("today.seeAllLists", { count: allLists.length })}</span><span aria-hidden="true">›</span></button>
           )}
         </div>
       </>
@@ -585,7 +588,7 @@ export function Today() {
   });
 
   /* The one question: once, after the first list (not on the demo). */
-  const askShow = !!h && !focusAsked && lists.length > 0 && !editing;
+  const askShow = !!h && !focusAsked && allLists.length > 0 && !editing;
   function answerAsk(picked: FocusId[] | null) {
     setFocusAsked(true);
     const body = picked ? { today_asked: true, today_cards: cardsForFocus(picked) } : { today_asked: true };

@@ -10,6 +10,7 @@ import { decode } from "../ui/AddReceiptSheet";
 import { languageToast, offerFor, offerRefused, refuseOffer } from "../lib/language";
 import "../ui/language.css";
 import { t, useTranslation } from "../i18n";
+import { EditList, EditTitle } from "../ui/EditList";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -102,7 +103,10 @@ const post_photo = (url: string, f: File) =>
 
 export function Chat() {
   const { t } = useTranslation();
-  const { language, languages, setLanguage } = useSession();
+  const { language, languages, setLanguage, layouts = {}, saveLayout } = useSession();
+  // Edit mode (card library, 2026-10-30): your own quick questions.
+  const [editing, setEditing] = useState(false);
+  const [newQ, setNewQ] = useState("");
   const { toast } = useToast();
   const nav = useNav();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
@@ -287,14 +291,45 @@ export function Chat() {
     }
   };
 
+  /* The quick questions: Arya's own (askChips) until the person edits
+   * them; then theirs, kept as they arranged them. */
+  const chips = layouts.ask?.chips ?? askChips(home);
+  const ideas = [...askChips(home), t("ask.ideas.useSoon"), t("ask.ideas.dinners"), t("ask.ideas.cheapest")].filter((q, k, a) => !chips.includes(q) && a.indexOf(q) === k);
+  const saveChips = (next: string[] | null, msg?: string) => {
+    const prev = layouts.ask?.chips ?? null;
+    saveLayout("ask", { chips: next }).catch(e => toast(e instanceof Error ? e.message : String(e)));
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => { saveLayout("ask", { chips: prev }).catch(() => {}); } });
+  };
+  function addQ(ev: FormEvent) {
+    ev.preventDefault();
+    const q = newQ.trim().slice(0, 120);
+    if (!q || chips.includes(q)) return;
+    saveChips([...chips, q], t("edit.added", { name: q }));
+    setNewQ("");
+  }
+
   return (
     <>
-      <h1 className="largetitle">{t("common.askArya")}</h1>
+      {log.length === 0
+        ? <EditTitle id="ask-editbtn" title={t("common.askArya")} editTitle={t("ask.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
+        : <h1 className="largetitle">{t("common.askArya")}</h1>}
+      {editing && log.length === 0 ? (
+        <>
+          <EditList id="ask-edit" on={chips} off={ideas} name={q => q} sub={() => ""} desc={() => ""}
+            hint={t("ask.editHint")} moreTitle={t("ask.ideasTitle")}
+            onChange={saveChips} onReset={() => saveChips(null)} />
+          <form id="ask-addq" className="addq" onSubmit={addQ}>
+            <input type="text" id="ask-newq" value={newQ} maxLength={120} placeholder={t("ask.addQuestion")} aria-label={t("ask.addQuestion")}
+              onChange={e => setNewQ(e.target.value)} />
+            <button type="submit" className="btn primary" disabled={!newQ.trim()}>{t("common.add")}</button>
+          </form>
+        </>
+      ) : <>
       <div id="chat-log" ref={logEl}>
         {log.length === 0 ? (
           <div id="chat-empty">
             <p className="muted">{t("ask.askAboutYourListYour")}</p>
-            {askChips(home).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
+            {chips.map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
             <button id="ask-map-store" className="chip" type="button" onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (
@@ -369,6 +404,7 @@ export function Chat() {
         </div>
       </form>
       <p id="voice-note" className="muted" hidden={note === null}>{note}</p>
+      </>}
     </>
   );
 }

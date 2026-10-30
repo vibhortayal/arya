@@ -209,6 +209,16 @@
     "nextLevelAt": "Next level at {{points}} points"
   },
   "analysis": {
+    "editTitle": "Edit Spending",
+    "editHint": "Drag to reorder. Remove what you don't need; it waits under More.",
+    "moreSections": "More",
+    "sections": {
+      "prices": "Your prices",
+      "spend": "This month",
+      "months": "By month",
+      "stores": "By store",
+      "top": "Top items"
+    },
     "sameItemsYouBuyOften": "Based on {{items}} items you buy often.{{dollars}}",
     "splitSmarterSaveAboutA": "Buy each item where it's cheaper: save about {{month_dollars}} a month",
     "ofFoodExpiredIn": "{{dollars}} of food expired in {{month}}",
@@ -315,6 +325,15 @@
     }
   },
   "ask": {
+    "editTitle": "Edit questions",
+    "editHint": "Your quick questions on Ask. Drag to reorder, remove what you never tap.",
+    "ideasTitle": "Ideas",
+    "addQuestion": "Add your own question",
+    "ideas": {
+      "useSoon": "What goes bad this week?",
+      "dinners": "Plan dinners from my lists",
+      "cheapest": "Where is my list cheapest?"
+    },
     "askAboutYourListYour": "Ask about your list, your spending, or what is running low.",
     "replyInFromNowOn": "Reply in {{text}} from now on?",
     "youCanChangeThisAny": "You can change this any time in Settings › Ask replies in.",
@@ -713,6 +732,18 @@
     }
   },
   "lists": {
+    "editTitle": "Edit Lists",
+    "editHint": "Drag to reorder. Hiding a list keeps it and its items; it just leaves Lists and Today.",
+    "hiddenLists": "Hidden lists",
+    "hiddenSub": "Hidden from Lists and Today",
+    "noHidden": "No hidden lists. Tap the minus on a list to hide it.",
+    "showOnEach": "Show on each list",
+    "flag": {
+      "hide-preview": "Items preview",
+      "hide-previewSub": "The first few items under the name",
+      "hide-suggestions": "Suggestions",
+      "hide-suggestionsSub": "The suggestions pill"
+    },
     "unit": "unit",
     "unitForExampleKgOr": "Unit, for example kg or L",
     "move": "Move",
