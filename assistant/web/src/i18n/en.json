@@ -1921,6 +1921,76 @@
   },
   "today": {
     "today": "Today",
+    "cards": {
+      "low": {
+        "name": "Running low",
+        "desc": "Things you usually buy by now"
+      },
+      "lists": {
+        "name": "Your lists",
+        "desc": "One card per list"
+      },
+      "report": {
+        "name": "Store alerts",
+        "desc": "Items people say are out at a store"
+      },
+      "price": {
+        "name": "Cheaper elsewhere",
+        "desc": "Price gaps on what is on your lists"
+      },
+      "expiry": {
+        "name": "Use soon",
+        "desc": "Food that will go bad soon"
+      },
+      "checks": {
+        "name": "Still good?",
+        "desc": "Quick checks on food you may still have"
+      },
+      "patterns": {
+        "name": "Spending",
+        "desc": "This month's spend and price changes"
+      },
+      "quest": {
+        "name": "Quest",
+        "desc": "Turn your next trip into a game"
+      },
+      "waiting": "Hidden until it has news"
+    },
+    "edit": {
+      "edit": "Edit",
+      "title": "Edit Today",
+      "hint": "Drag to reorder. A card with nothing to say stays hidden until it does.",
+      "more": "More cards",
+      "reset": "Reset Today",
+      "resetDone": "Today is back to the default",
+      "removed": "{{name}} removed from Today",
+      "added": "{{name}} added to Today",
+      "remove": "Remove {{name}}",
+      "add": "Add {{name}}",
+      "move": "Move {{name}}. Use the up and down arrow keys.",
+      "allOn": "Every card is on Today."
+    },
+    "menu": {
+      "label": "Card options",
+      "edit": "Edit Today",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove from Today"
+    },
+    "ask": {
+      "title": "What matters most to you?",
+      "line": "Pick any. Arya puts those cards first on Today. You can change it any time.",
+      "go": "Set up Today",
+      "done": "Today is set up. Touch and hold a card to change it.",
+      "money": "Spending less",
+      "moneySub": "Cheaper elsewhere and spending",
+      "waste": "Wasting less food",
+      "wasteSub": "Use soon and Still good?",
+      "stock": "Never running out",
+      "stockSub": "Running low and store alerts",
+      "faster": "Shopping faster",
+      "fasterSub": "Your lists first"
+    },
     "onList": "On list",
     "yourLists": "Your lists",
     "storeAlerts": "Store alerts",
