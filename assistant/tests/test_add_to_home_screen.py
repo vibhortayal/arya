@@ -27,7 +27,7 @@ class TestAddToHomeScreen(unittest.TestCase):
         sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</ol>")[0]
         self.assertIn("Add to Home Screen", sheet)
         self.assertIn("Open as Web App", sheet)
-        self.assertIn("plain Safari tab", sheet)
+        self.assertIn("plain browser tab", sheet)
 
     def test_when_it_shows(self):
         js = frontend.src("ui/A2hs.tsx")
@@ -45,7 +45,7 @@ class TestAddToHomeScreen(unittest.TestCase):
         sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</Sheet>")[0]
         self.assertIn("Get the Arya app", sheet)
         self.assertIn("Free, no app store.", sheet)
-        self.assertIn("Tip: sign in from the Home Screen app. iPhone keeps it separate from Safari.", sheet)
+        self.assertIn("Tip: sign in from the Home Screen app. iPhone keeps it separate from your browser.", sheet)
         self.assertNotIn("pwa", frontend.en()["a2hs"].__repr__().lower())
 
     def test_android_runs_the_native_prompt_iphone_opens_steps(self):
