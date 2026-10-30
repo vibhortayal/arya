@@ -22,6 +22,13 @@ def _path():
 
 
 def rows():
+    """All rows. The file lives in the data root, so read it with the
+    per-user context cleared (a signed-in owner would otherwise read
+    their own folder)."""
+    return _root_call(_read)
+
+
+def _read():
     p = _path()
     if not os.path.exists(p):
         return []
@@ -82,6 +89,43 @@ def _rewrite(keep):
     with open(tmp, "w") as fh:
         fh.write("".join(json.dumps(r) + "\n" for r in keep))
     os.replace(tmp, _path())
+
+
+def approve(emails):
+    """Mark addresses as invited (owner). They may then sign in with an
+    email code or Google. Returns the addresses that were on the list and
+    not approved yet. Nothing is mailed here."""
+    want = {(e or "").strip().lower() for e in emails}
+
+    def _go():
+        with state.file_lock(_FILE):
+            have, done, now = rows(), [], int(time.time())
+            for r in have:
+                if r.get("email") in want and not r.get("approved"):
+                    r["approved"] = now
+                    done.append(r["email"])
+            if done:
+                _rewrite(have)
+            return done
+    return _root_call(_go)
+
+
+def send_invite(email):
+    """Email the sign-in code to an approved address through Supabase.
+    Best effort: True if the mail was handed over."""
+    from api import supabase_auth
+    if not supabase_auth.configured():
+        return False
+    try:
+        supabase_auth.send_code(clean(email))
+        return True
+    except (supabase_auth.AuthError, ValueError):
+        return False
+
+
+def is_approved(email):
+    email = (email or "").strip().lower()
+    return _root_call(lambda: any(r.get("email") == email and r.get("approved") for r in rows()))
 
 
 def purge():
