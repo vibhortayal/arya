@@ -284,7 +284,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
         <button className="qg-cam" onClick={recenter} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 6.5l2.2 5.5L12 17.5 9.8 12z" fill="currentColor" /></svg>
         </button>
-        {gestureHint && <div className="qg-gesture" role="status">Pinch to zoom · two fingers to turn</div>}
+        {gestureHint && <div className="qg-gesture" role="status">{window.matchMedia?.("(pointer: coarse)")?.matches ? "Pinch to zoom · two fingers to turn" : "Scroll to zoom"}</div>}
         {nudge && (
           <div className={"qg-nudge " + nudge.state} role="status">
             <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>

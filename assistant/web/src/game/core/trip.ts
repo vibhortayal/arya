@@ -213,7 +213,9 @@ export function tally(t: Trip): { label: string; pts: number }[] {
   const lines: { label: string; pts: number }[] = [];
   const goldenGot = t.golden && t.got.includes(t.golden);
   const plain = t.got.length - (goldenGot ? 1 : 0);
-  if (plain) lines.push({ label: `${plain} item${plain === 1 ? "" : "s"} in the cart`, pts: plain * SCORE.item });
+  // The golden item has its own line, so with one the plain count says "other"
+  // and the two lines add up to the "N of M in the cart" shown during the trip.
+  if (plain) lines.push({ label: `${plain} ${goldenGot ? "other " : ""}item${plain === 1 ? "" : "s"} in the cart`, pts: plain * SCORE.item });
   if (goldenGot) lines.push({ label: "Golden item", pts: SCORE.item * SCORE.golden });
   const clears = t.cleared;
   if (clears.length) lines.push({ label: `${clears.length} section${clears.length === 1 ? "" : "s"} cleared`, pts: clears.length * SCORE.clear });

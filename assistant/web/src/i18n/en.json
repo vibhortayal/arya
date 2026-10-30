@@ -408,7 +408,7 @@
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
     "join": "Join",
-    "alreadyIn": "You are already in {{name}}. Leave it first to join another group."
+    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it."
   },
   "hunt": {
     "thatHuntIsGoneThe": "This quest ended when the demo reset. Start it again from Today.",
@@ -611,6 +611,7 @@
     "priceByStore": "Price by store",
     "recentHistory": "Recent history",
     "addToList": "Add to list",
+    "onYourList": "On your list",
     "neverSuggest": "Stop suggesting this",
     "thisExpired": "Mark as expired",
     "every": "about every {{days}} days",
@@ -734,6 +735,9 @@
       "addedTitle_one": "Added {{count}} item",
       "addedTitle_other": "Added {{count}} items",
       "addedAlready": "{{count}} were already on the list.",
+      "addedMerged_one": "{{count}} name matched an item that is already there, so it was merged.",
+      "addedMerged_other": "{{count}} names matched items that are already there, so they were merged.",
+      "addedNothing": "Nothing new to add",
       "done": "Done",
       "tidyOffer": "Arya can tidy them up.",
       "tidyBtn": "Tidy up"
@@ -1437,6 +1441,7 @@
     "shopModeAsk": "Ask me each time",
     "preferencesSub": "Prices show in this currency. Arya answers in this language.",
     "exportMyData": "Export my data",
+    "exportStarted": "Your export is downloading as arya-export.json.",
     "everythingAryaHoldsForYou": "Everything Arya holds for you, as one file",
     "deleteMyAccount": "Delete my account",
     "eraseYourAccountAndAll": "Erase your account and all of its data",
@@ -2398,7 +2403,7 @@
         "body": "Milk from Trader Joe's, blueberries from Costco, cottage cheese from Safeway? Arya keeps a separate, tidy list for each store and puts every item on the right one. Type it, say it, or snap a paper list.",
         "s1": "Tap the Lists tab, then New list.",
         "s2": "Choose the store the list is for.",
-        "s3": "Tap Add an item. Type it, say it, or snap a paper list."
+        "s3": "Type an item in the add box at the top of a list, say it, or snap a paper list."
       },
       "share": {
         "kicker": "Your household",

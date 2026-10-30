@@ -10,6 +10,9 @@ router = APIRouter()
 @router.get("/api/items/{item_id}")
 def item_route(item_id: str):
     detail = state.item_detail(item_id)
+    # The page offers "Add to list" only when it is not on one already.
+    detail["on_list"] = any(i["item_id"] == item_id and i.get("on_list")
+                            for i in state.derived()["smart_list"]["items"])
     if detail["entry"] is None and detail["pattern"] is None:
         # A typed item has no receipts yet: show its page with the name
         # it was typed as, instead of a 404 (first-timer play-test).

@@ -80,6 +80,10 @@ class TestAlso(unittest.TestCase):
         row = [r for r in self.c.get("/api/quest/plan").json()["list"] if r["name"].lower() == "milk"][0]
         self.assertEqual((row["list"], row["also"]), (self.a, [self.b]))
 
+    def test_item_page_knows_when_it_is_on_a_list(self):
+        self.add("Milk", self.a)
+        self.assertTrue(self.c.get("/api/items/" + self.id("Milk")).json()["on_list"])
+
     def test_bulk_import_move_mode(self):
         self.add("Milk", self.a)
         self.c.post("/api/list/import", json={"list_id": self.b, "mode": "move", "items": [{"name": "Milk"}]})
