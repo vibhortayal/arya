@@ -1978,3 +1978,7 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .boldtext .sub, .boldtext .muted, .boldtext .name, .boldtext .hr-label, .boldtext .navrow { font-weight: 600; }
 .nopics .rowface, .nopics .rowimg { display: none; }
 .nomotion *, .nomotion *::before, .nomotion *::after { animation: none !important; transition: none !important; }
+
+/* Price watch and Next trip (card library, 2026-10-30) */
+#today-watch .hubrow:last-child, #today-trip .hubrow:last-child { border-bottom: none; }
+#today-watch .hubrow .sub, #today-trip .hubrow .sub { font-weight: 400; }

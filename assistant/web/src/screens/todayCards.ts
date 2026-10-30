@@ -5,11 +5,12 @@
  * the default. A card that is on still hides when it has nothing to
  * say (relevant cards, owner 2026-10-30). */
 
-export const CARD_IDS = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"] as const;
+export const CARD_IDS = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip"] as const;
 export type CardId = (typeof CARD_IDS)[number];
 
-/* Today's order before it was customizable. */
-export const DEFAULT_CARDS: CardId[] = [...CARD_IDS];
+/* Today's order before it was customizable. The cards added later
+ * (Price watch, Next trip) start in the card library, off. */
+export const DEFAULT_CARDS: CardId[] = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"];
 
 const isCard = (x: unknown): x is CardId => (CARD_IDS as readonly string[]).includes(x as string);
 
@@ -43,10 +44,10 @@ export const addCard = (on: CardId[], id: CardId): CardId[] => (on.includes(id) 
 export const FOCUS_IDS = ["money", "waste", "stock", "faster"] as const;
 export type FocusId = (typeof FOCUS_IDS)[number];
 export const FOCUS_CARDS: Record<FocusId, CardId[]> = {
-  money: ["price", "patterns"],
+  money: ["price", "watch", "patterns"],
   waste: ["expiry", "checks"],
   stock: ["low", "report"],
-  faster: ["lists"],
+  faster: ["trip", "lists"],
 };
 
 export function cardsForFocus(picked: FocusId[]): CardId[] {
@@ -63,6 +64,7 @@ export type Size = "s" | "m" | "l";
 export const SIZES_OF: Record<CardId, Size[]> = {
   low: ["s", "m", "l"], lists: ["s", "m", "l"], report: ["s", "m", "l"], price: ["s", "m", "l"],
   expiry: ["s", "m", "l"], checks: ["s", "m", "l"], patterns: ["s", "m"], quest: ["s", "m"],
+  watch: ["s", "m", "l"], trip: ["s", "m"],
 };
 export function sizeOf(sizes: unknown, id: CardId): Size {
   const s = sizes && typeof sizes === "object" ? (sizes as Record<string, unknown>)[id] : undefined;
@@ -74,4 +76,5 @@ export const LIBRARY_GROUPS = ["all", "money", "food", "shop"] as const;
 export type LibraryGroup = (typeof LIBRARY_GROUPS)[number];
 export const CARD_GROUP: Record<CardId, Exclude<LibraryGroup, "all">> = {
   low: "food", lists: "shop", report: "shop", price: "money", expiry: "food", checks: "food", patterns: "money", quest: "shop",
+  watch: "money", trip: "shop",
 };

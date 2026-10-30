@@ -125,6 +125,37 @@ export function findingLine(ins: Insights, h: Home, currency?: Parameters<typeof
   return null;
 }
 
+/* Price watch (card library, 2026-10-30): what costs more than it did,
+ * from the same receipts as the Did you know? line, with the store that
+ * has it for less when the gap is worth a detour. */
+export type WatchRow = { key: string; name: string; pct: string; cheaperAt: string | null };
+export function watchRows(ins: Insights, h: Home): WatchRow[] {
+  return (ins?.basket?.movers || []).filter(m => m.pct >= FINDING_MIN_PCT).map((m, k) => {
+    const by = Object.entries<any>((m.item_id && h?.price_by_store?.[m.item_id]) || {}).filter(([, p]) => p && p.median > 0);
+    by.sort((a, b) => a[1].median - b[1].median);
+    const gap = by.length >= 2 && by[by.length - 1][1].median - by[0][1].median >= 0.25;
+    return { key: m.item_id || "w" + k, name: m.name, pct: `${m.pct.toFixed(m.pct < 10 ? 1 : 0).replace(/\.0$/, "")}%`, cheaperAt: gap ? by[0][0] : null };
+  });
+}
+
+/* Next trip: the list with the most to get, and about what it costs:
+ * each item at its usual price at one of the list's stores, else at its
+ * cheapest. Null cost when no item has a price yet. */
+export type Trip = { id: string; name: string; count: number; cost: number | null };
+export function nextTrip(cards: { id: string; name: string; items: { item_id: string }[] }[], lists: { id: string; stores?: string[] }[], h: Home): Trip | null {
+  const best = [...cards].filter(c => c.items.length).sort((a, b) => b.items.length - a.items.length)[0];
+  if (!best) return null;
+  const stores = lists.find(l => l.id === best.id)?.stores || [];
+  let cost = 0, priced = 0;
+  for (const i of best.items) {
+    const by = Object.entries<any>(h?.price_by_store?.[i.item_id] || {}).filter(([, p]) => p && p.median > 0);
+    if (!by.length) continue;
+    const at = by.find(([s]) => stores.includes(s)) || by.sort((a, b) => a[1].median - b[1].median)[0];
+    cost += at[1].median; priced++;
+  }
+  return { id: best.id, name: best.name, count: best.items.length, cost: priced ? cost : null };
+}
+
 /* "From your receipts up to …" only when the last one is a week old. */
 export const STALE_DAYS = 7;
 export function staleThrough(asOf: string | undefined, today: string): boolean {
@@ -206,6 +237,7 @@ export function Today() {
   const [ex, setEx] = useState<ExState>(null);
   const [gs, setGs] = useState<GetStarted>(null);
   const [lowOpen, setLowOpen] = useState(false);
+  const [watchOpen, setWatchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const live = useRef(true);
   // Customizable Today: the saved card order (null = the default), the
@@ -335,6 +367,10 @@ export function Today() {
   if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
   const noLists = !listItems.length && !lists.length;
   const listCap = big("lists") ? { shown: cards, seeAll: false } : capLists(cards, cards.length);
+
+  const trip = h ? nextTrip(cards, lists, h) : null;
+  const watch = h ? watchRows(ins, h) : [];
+  const watchCap = capRows(watch, watchOpen || big("watch"));
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
@@ -467,6 +503,39 @@ export function Today() {
         <div id="today-tip">{!(lastMonth && months) && tip}</div>
       </>
     ),
+    watch: (
+      <div id="today-watch">
+        {watch.length > 0 && (
+          <>
+            <h3 className="sect">{t("today.cards.watch.name")}</h3>
+            <div className="group">
+              {watchCap.shown.map(w => (
+                <button className="hubrow" key={w.key} data-watch={w.key} type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                  <span className="hr-label">{w.name}<span className="sub">{t("today.watch.up", { pct: w.pct, month: ins!.basket!.since_month })}{w.cheaperAt ? " " + t("today.finding.cheaperAt", { store: w.cheaperAt }) : ""}</span></span>
+                  <span className="chev" aria-hidden="true">›</span></button>
+              ))}
+              <MoreRow more={watchCap.more} onOpen={() => setWatchOpen(true)} />
+            </div>
+          </>
+        )}
+      </div>
+    ),
+    trip: (
+      <div id="today-trip">
+        {trip && (
+          <>
+            <h3 className="sect">{t("today.cards.trip.name")}</h3>
+            <div className="group">
+              <button className="hubrow" id="today-trip-btn" data-open-list={trip.id} type="button" onClick={() => nav.show("list", { lens: trip.id })}>
+                <span className="hr-label">{trip.name}<span className="sub">{trip.cost != null
+                  ? t("today.trip.costs", { count: trip.count, money: money(trip.cost, currency) })
+                  : t("common.itemCount", { count: trip.count })}</span></span>
+                <span className="hr-action">{t("today.trip.go")}</span><span className="chev" aria-hidden="true">›</span></button>
+            </div>
+          </>
+        )}
+      </div>
+    ),
     quest: (
       <>
         {questNudge && (
@@ -498,6 +567,8 @@ export function Today() {
     checks: nChecks > 0,
     patterns: !!(lastMonth && months) || !!tip,
     quest: !!questNudge || (listItems.length > 0 && !questSeen),
+    watch: watch.length > 0,
+    trip: !!trip,
   };
   const peek = (id: CardId): string => {
     if (id === "low") return low.map(i => i.name).slice(0, 3).join(", ");
@@ -505,6 +576,8 @@ export function Today() {
     if (id === "report" || id === "price") return alertRows.find(r => r.kind === id)?.name || "";
     if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
     if (id === "checks") return checkLabel;
+    if (id === "watch") return watch.map(w => w.name).slice(0, 3).join(", ");
+    if (id === "trip" && trip) return t("today.trip.peek", { name: trip.name, count: trip.count });
     if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
     return t(`today.cards.${id}.desc`);
   };
@@ -525,6 +598,8 @@ export function Today() {
     if (id === "report" || id === "price") return t(`today.small.${id}`, { count: alertRows.filter(r => r.kind === id).length });
     if (id === "expiry") return t("today.small.expiry", { count: soon.length + (perish?.items.length || 0) });
     if (id === "checks") return t("today.small.checks", { count: nChecks });
+    if (id === "watch") return t("today.small.watch", { count: watch.length });
+    if (id === "trip" && trip) return trip.cost != null ? t("today.small.trip", { money: money(trip.cost, currency) }) : t("common.itemCount", { count: trip.count });
     return id === "patterns" ? peek(id) : name(id);
   };
   async function addAllLow() {
