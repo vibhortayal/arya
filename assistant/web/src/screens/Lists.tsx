@@ -10,7 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
@@ -738,7 +738,8 @@ export function Lists() {
       setStatus("");
       if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
       if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
-      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
+      const saved = lineSavings(rec.lines || []);
+      toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
     } catch (e) {
       setStatus("");
       toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
@@ -1005,7 +1006,17 @@ export function Lists() {
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
                 aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
-              {typed ? <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit} aria-label={addLabel} title={addLabel}>
+              {!typed || listening ? (
+                <span className="inicons">
+                  <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}
+                    aria-label={t("lists.talkToAdd")} title={t("lists.talkToAdd")}><IconMic /></button>
+                  <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.photoToAdd")} title={t("lists.photoToAdd")} {...pickerProps("add-photo")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+                  </label>
+                  {findOn && !finding ? <button className="iconbtn" id="list-find-open" type="button" aria-label={t("lists.findInList")} title={t("lists.findInList")} onClick={() => setFinding(true)}><IconSearch /></button> : null}
+                </span>
+              ) : null}
+              {typed && !listening ? <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit} aria-label={addLabel} title={addLabel}>
                 {looksLikeAsk(text)
                   ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
                   : <span aria-hidden="true">+</span>}
@@ -1013,24 +1024,16 @@ export function Lists() {
             </div>
             <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} here={name} />
             </div>
-            {/* Voice and photo say what they do (owner, 2026-10-30): bare
-              * icons were not obvious. */}
+            {/* Voice, photo and find sit inside the box as labelled icon buttons
+              * (owner picked option A, 2026-10-30): the grey box with a row of
+              * chips under it wasted a line and read as disabled. */}
             {findOn && finding ? (
               <div className="caprow findbar">
                 <span className="findfield"><IconSearch /><input type="search" id="list-find" maxLength={80} autoComplete="off" autoFocus value={find}
                   placeholder={t("lists.findInList")} aria-label={t("lists.findInList")} onChange={e => setFind(e.target.value)} /></span>
                 <button className="linkbtn" id="list-find-cancel" type="button" onClick={() => { setFinding(false); setFind(""); }}>{t("common.cancel")}</button>
               </div>
-            ) : (
-              <div className="caprow">
-                <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
-                <label className="chip" htmlFor="add-photo" {...pickerProps("add-photo")}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
-                  {t("lists.photoToAdd")}
-                </label>
-                {findOn ? <button className="chip findchip" id="list-find-open" type="button" aria-label={t("lists.findInList")} onClick={() => setFinding(true)}><IconSearch /></button> : null}
-              </div>
-            )}
+            ) : null}
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>

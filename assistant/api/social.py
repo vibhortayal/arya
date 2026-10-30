@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from api import groups, quest, state
 from api.optimizer import _squash
 from api.curator import _tokens
+from api.ledger.build import receipt_savings
 
 
 # --- friends ---------------------------------------------------------------
@@ -371,6 +372,7 @@ def receipt_detail(receipt_id):
             out.update({
                 "subtotal": r.get("subtotal"), "tax": r.get("tax"),
                 "source_type": r.get("source_type"),
+                "savings": receipt_savings(r),
                 "lines": [{"name": ln.get("decoded_name") or ln.get("raw"),
                            "qty": signed(ln, "qty") if ln.get("qty") is not None else 1,
                            "unit_price": signed(ln, "unit_price"),

@@ -69,6 +69,40 @@ def first_run(cur):
     return {"onboarded": onboarded, "get_started": gs}
 
 
+# Today's cards (customizable Today, owner 2026-10-30). "today_cards"
+# is the ordered list of cards shown; absent means the default. The
+# ids match web/src/screens/todayCards.ts.
+TODAY_CARDS = ("low", "lists", "report", "price", "expiry", "checks", "patterns", "quest")
+
+
+# Card sizes (card library, 2026-10-30): "s" one line, "m" the usual
+# capped card, "l" everything. Absent means "m".
+TODAY_SIZES = ("s", "m", "l")
+# Settings > Display: applied by the web app on every screen.
+DISPLAY = {"text": (0, 1, 2, 3, 4), "spacing": ("compact", "comfortable"),
+           "bold": (True, False), "pictures": (True, False), "motion": (True, False)}
+DISPLAY_DEFAULT = {"text": 1, "spacing": "comfortable", "bold": False, "pictures": True, "motion": True}
+
+
+def _today_sizes(cur):
+    sizes = cur.get("today_sizes")
+    if not isinstance(sizes, dict):
+        return {}
+    return {k: v for k, v in sizes.items() if k in TODAY_CARDS and v in TODAY_SIZES}
+
+
+def _display(cur):
+    d = cur.get("display") if isinstance(cur.get("display"), dict) else {}
+    return {k: d[k] if k in d and d[k] in ok else DISPLAY_DEFAULT[k] for k, ok in DISPLAY.items()}
+
+
+def _today_cards(cur):
+    cards = cur.get("today_cards")
+    if isinstance(cards, list):
+        return [c for i, c in enumerate(cards) if c in TODAY_CARDS and c not in cards[:i]]
+    return None
+
+
 SHOP_MODES = ("quest", "list", "ask")
 NUDGE_AFTER = 3        # list-only trips before the Quest card shows
 NUDGE_SNOOZE = 5       # more trips after "Not now"
@@ -98,6 +132,10 @@ def settings_get():
             "currencies": [{"code": c, "symbol": v} for c, v in CURRENCIES.items()],
             "shop_mode": cur.get("shop_mode") if cur.get("shop_mode") in SHOP_MODES else None,
             "quest_nudge": _quest_nudge(cur),
+            "today_cards": _today_cards(cur),
+            "today_asked": bool(cur.get("today_asked")),
+            "today_sizes": _today_sizes(cur),
+            "display": _display(cur),
             **first_run(cur)}
 
 
@@ -111,13 +149,28 @@ async def settings_set(req: Request):
     mode = body.get("shop_mode")
     nudge = body.get("quest_nudge")
     trip = body.get("list_trip") is True
+    cards = body.get("today_cards", "absent")
+    asked = body.get("today_asked") is True
+    sizes = body.get("today_sizes")
+    display = body.get("display")
+    if sizes is not None and (not isinstance(sizes, dict) or any(
+            k not in TODAY_CARDS or v not in TODAY_SIZES for k, v in sizes.items())):
+        raise HTTPException(400, "today_sizes maps a card to s, m or l")
+    if display is not None and (not isinstance(display, dict) or any(
+            k not in DISPLAY or v not in DISPLAY[k] or type(v) is not type(DISPLAY[k][0]) for k, v in display.items())):
+        raise HTTPException(400, "display takes text 0-4, spacing, bold, pictures, motion")
+    if cards != "absent" and cards is not None:
+        if (not isinstance(cards, list) or len(cards) > len(TODAY_CARDS)
+                or any(c not in TODAY_CARDS for c in cards)):
+            raise HTTPException(400, "today_cards must be a list of: " + ", ".join(TODAY_CARDS))
     if mode is not None and mode not in SHOP_MODES:
         raise HTTPException(400, "shop_mode must be one of " + ", ".join(SHOP_MODES))
     if nudge is not None and nudge not in ("snooze", "off"):
         raise HTTPException(400, "quest_nudge must be snooze or off")
     if (code is None and lang is None and not onboard and not dismiss
-            and mode is None and nudge is None and not trip):
-        raise HTTPException(400, "send currency, language, onboarded, get_started_dismissed or shop_mode")
+            and mode is None and nudge is None and not trip
+            and cards == "absent" and not asked and sizes is None and display is None):
+        raise HTTPException(400, "send currency, language, onboarded, get_started_dismissed, shop_mode or today_cards")
     if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
     if lang is not None and lang not in LANGUAGES:
@@ -147,6 +200,18 @@ async def settings_set(req: Request):
                 cur["quest_nudge_off"] = True
         if nudge == "off":
             cur["quest_nudge_off"] = True
+        if cards != "absent":
+            if cards is None:
+                cur.pop("today_cards", None)   # back to the default
+            else:
+                cur["today_cards"] = list(dict.fromkeys(cards))
+        if asked:
+            cur["today_asked"] = True
+        if sizes is not None:
+            # Merged in: one card's size changes at a time.
+            cur["today_sizes"] = {**_today_sizes(cur), **sizes}
+        if display is not None:
+            cur["display"] = {**_display(cur), **display}
         state._save("settings.json", cur)
     return settings_get()
 

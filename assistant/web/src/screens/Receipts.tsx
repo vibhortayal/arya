@@ -5,7 +5,7 @@ import { useToast } from "../ui/Toast";
 import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { fmtDate, fmtShort, fmtWeekday, money } from "../lib/format";
+import { fmtDate, fmtShort, fmtWeekday, lineSavings, money } from "../lib/format";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 
@@ -124,7 +124,8 @@ export function Receipts() {
         if (!quiet) toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) }));
         return { ok: true, duplicate: true };
       }
-      if (!quiet) toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
+      const saved = lineSavings(rec.lines || []);
+      if (!quiet) toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
       loadScan().catch(showErr);
       loadArchive().catch(() => {});
       return { ok: true };

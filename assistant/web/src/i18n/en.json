@@ -96,7 +96,8 @@
       "theReceipt": "the receipt",
       "couldNotReadFile": "Couldn't read that file. Try again, or try another file.",
       "couldNotReadPhoto": "Couldn't read that photo. Take it once more, in good light.",
-      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check."
+      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check.",
+      "filedSaved": "Added {{merchant}}, {{n}} items. You saved {{amount}} with coupons and deals. Anything Arya isn't sure about is in Receipts, under To check."
     },
     "doneDot": "Done.",
     "undone": "Undone.",
@@ -214,8 +215,12 @@
     "yourPrices": "Your prices over time",
     "fileAReceiptAndYour": "Add a receipt and your spending shows up here.",
     "spendLiveFromYourReceipts": "Spending, from your receipts",
-    "returnsNettedAllTime": "Returns taken off, all time",
-    "allReceiptsRefundsReconcileInto": "Already subtracted from every total below.",
+    "returnsRow": "Returns",
+    "returnsRowSub_one": "{{count}} return, already taken off",
+    "returnsRowSub_other": "{{count}} returns, already taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals, discounts",
+    "afterReturns": "after returns",
     "allTimeSpend": "All-time spending",
     "groceries": "Groceries",
     "foodAndHousehold": "food and household",
@@ -729,7 +734,7 @@
     "yesItSThere": "Still have it",
     "notThere": "Used up",
     "deletePhoto": "Delete photo",
-    "nothingOnYetTypeSpeak": "Nothing on {{name}} yet. Type, speak or snap a list above.",
+    "nothingOnYetTypeSpeak": "Type, speak or snap a list to add items.",
     "otherErrands": "Not groceries",
     "tapToSeeWhy": "Tap to see why",
     "add": "Add",
@@ -1139,6 +1144,9 @@
     "demoNote": "The demo needs no sign-up.",
     "invitationNote": "Sign-in is by invitation for now.",
     "joinWaitlist": "Join the waitlist",
+    "appsSoon": "iPhone and Android apps coming soon",
+    "appStoreAlt": "App Store, coming soon",
+    "googlePlayAlt": "Google Play, coming soon",
     "privacy": "Privacy policy",
     "terms": "Terms of service",
     "noAccountWaitlist": "No account yet? Join the waitlist"
@@ -1781,6 +1789,8 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "returnsNetted": "Returns taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals and discounts, already taken off",
     "viewReceipt": "View receipt",
     "theFiledReceiptPhoto": "The receipt photo",
     "deleteReceipt": "Delete receipt",
@@ -1949,6 +1959,104 @@
   },
   "today": {
     "today": "Today",
+    "sizes": {
+      "label": "Size",
+      "s": "Small",
+      "m": "Medium",
+      "l": "Large",
+      "sHelp": "One line. Tap it to see more.",
+      "mHelp": "The first few rows.",
+      "lHelp": "Every row."
+    },
+    "small": {
+      "low": "{{count}} running low",
+      "lists": "{{count}} lists, {{items}} to get",
+      "report": "{{count}} store alerts",
+      "price": "{{count}} cheaper elsewhere",
+      "expiry": "{{count}} to use soon",
+      "checks": "{{count}} to check",
+      "addAll": "Add all",
+      "addedAll": "Added to your list"
+    },
+    "library": {
+      "title": "Card library",
+      "all": "All",
+      "money": "Money",
+      "food": "Food",
+      "shop": "Shopping",
+      "sizes": "Sizes: {{sizes}}",
+      "none": "Every card in this group is on Today."
+    },
+    "cards": {
+      "low": {
+        "name": "Running low",
+        "desc": "Things you usually buy by now"
+      },
+      "lists": {
+        "name": "Your lists",
+        "desc": "One card per list"
+      },
+      "report": {
+        "name": "Store alerts",
+        "desc": "Items people say are out at a store"
+      },
+      "price": {
+        "name": "Cheaper elsewhere",
+        "desc": "Price gaps on what is on your lists"
+      },
+      "expiry": {
+        "name": "Use soon",
+        "desc": "Food that will go bad soon"
+      },
+      "checks": {
+        "name": "Still good?",
+        "desc": "Quick checks on food you may still have"
+      },
+      "patterns": {
+        "name": "Spending",
+        "desc": "This month's spend and price changes"
+      },
+      "quest": {
+        "name": "Quest",
+        "desc": "Turn your next trip into a game"
+      },
+      "waiting": "Hidden until it has news"
+    },
+    "edit": {
+      "edit": "Edit",
+      "title": "Edit Today",
+      "hint": "Drag to reorder. A card with nothing to say stays hidden until it does.",
+      "more": "More cards",
+      "reset": "Reset Today",
+      "resetDone": "Today is back to the default",
+      "removed": "{{name}} removed from Today",
+      "added": "{{name}} added to Today",
+      "remove": "Remove {{name}}",
+      "add": "Add {{name}}",
+      "move": "Move {{name}}. Use the up and down arrow keys.",
+      "allOn": "Every card is on Today."
+    },
+    "menu": {
+      "label": "Card options",
+      "edit": "Edit Today",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove from Today"
+    },
+    "ask": {
+      "title": "What matters most to you?",
+      "line": "Pick any. Arya puts those cards first on Today. You can change it any time.",
+      "go": "Set up Today",
+      "done": "Today is set up. Touch and hold a card to change it.",
+      "money": "Spending less",
+      "moneySub": "Cheaper elsewhere and spending",
+      "waste": "Wasting less food",
+      "wasteSub": "Use soon and Still good?",
+      "stock": "Never running out",
+      "stockSub": "Running low and store alerts",
+      "faster": "Shopping faster",
+      "fasterSub": "Your lists first"
+    },
     "onList": "On list",
     "yourLists": "Your lists",
     "storeAlerts": "Store alerts",
@@ -2676,5 +2784,36 @@
     "settingsSub_one": "{{count}} waiting",
     "settingsSub_other": "{{count}} waiting",
     "settingsNone": "Nobody waiting"
+  },
+  "edit": {
+    "remove": "Remove {{name}}",
+    "add": "Add {{name}}",
+    "move": "Move {{name}}. Use the up and down arrow keys.",
+    "removed": "{{name}} removed",
+    "added": "{{name}} added",
+    "more": "More",
+    "reset": "Reset to default",
+    "allOn": "Everything is already on."
+  },
+  "display": {
+    "title": "Display",
+    "sub": "Text size, spacing, pictures",
+    "text": "Text size",
+    "textSmaller": "Smaller",
+    "textLarger": "Larger",
+    "sample": "Whole Milk 1 gal · Every ~7 days",
+    "spacing": "Spacing",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "look": "Look",
+    "bold": "Bold text",
+    "pictures": "Item pictures",
+    "picturesSub": "The little faces next to items",
+    "motion": "Animations",
+    "motionSub": "Your phone's Reduce Motion setting turns them down too",
+    "customize": "Customize",
+    "today": "Today cards",
+    "resetAll": "Reset all to default",
+    "resetDone": "Display and Today are back to the default"
   }
 }
