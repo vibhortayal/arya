@@ -17,7 +17,6 @@ const Chat = screen(() => import("./Chat"), "Chat");
 const Feedback = screen(() => import("./Feedback"), "Feedback");
 const GroupJoin = screen(() => import("./GroupJoin"), "GroupJoin");
 const NewList = screen(() => import("./NewList"), "NewList");
-const Store = screen(() => import("./Store"), "Store");
 const StoresMine = screen(() => import("./StoresMine"), "StoresMine");
 const Capture = screen(() => import("./Capture"), "Capture");
 const Item = screen(() => import("./Item"), "Item");
@@ -27,7 +26,6 @@ const Muse = screen(() => import("./Muse"), "Muse");
 const Optimize = screen(() => import("./Optimize"), "Optimize");
 const Lists = screen(() => import("./Lists"), "Lists");
 const Quest = screen(() => import("./Quest"), "Quest");
-const StoresAdd = screen(() => import("./StoresAdd"), "StoresAdd");
 const StoresFind = screen(() => import("./StoresFind"), "StoresFind");
 const Powers = screen(() => import("./Powers"), "Powers");
 const Display = screen(() => import("./Display"), "Display");
@@ -60,7 +58,6 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   usage: Usage,
   "group-join": GroupJoin,
   newlist: NewList,
-  store: Store,
   "stores-mine": StoresMine,
   capture: Capture,
   community: QuestMode,
@@ -72,7 +69,6 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   home: Today,
   item: Item,
   list: Lists,
-  "stores-add": StoresAdd,
   "stores-find": StoresFind,
   powers: Powers,
   display: Display,

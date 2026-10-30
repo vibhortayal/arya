@@ -3,8 +3,8 @@
  * is not a view. The tab bar shows five of them. */
 export const VIEWS = [
   "home", "list", "receipts", "chat", "analysis", "item", "profile",
-  "group-join", "quest-progress", "muse", "powers", "about", "feedback", "newlist", "store",
-  "stores-find", "stores-mine", "stores-add", "mapper", "capture", "optimize",
+  "group-join", "quest-progress", "muse", "powers", "about", "feedback", "newlist",
+  "stores-find", "stores-mine", "mapper", "capture", "optimize",
   "mode", "hunt", "express", "finish", "score", "album", "community", "race",
   "friends", "receipt", "reveal", "rreview", "haul", "trips", "waitlist", "display", "usage",
 ] as const;
@@ -17,7 +17,7 @@ export const TABS: ViewId[] = ["home", "list", "chat", "community", "profile"];
 /* A pushed page keeps its parent tab lit (UI/UX pass, issue 10). */
 export const PARENT_TAB: Partial<Record<ViewId, ViewId>> = {
   receipts: "profile", receipt: "profile", analysis: "profile", powers: "profile", about: "profile", feedback: "profile",
-  muse: "profile", waitlist: "profile", display: "profile", usage: "profile", "stores-mine": "profile", "stores-find": "profile", "stores-add": "profile", "group-join": "profile",
-  item: "list", newlist: "list", store: "list", optimize: "list",
+  muse: "profile", waitlist: "profile", display: "profile", usage: "profile", "stores-mine": "profile", "stores-find": "profile", "group-join": "profile",
+  item: "list", newlist: "list", optimize: "list",
   "quest-progress": "community", trips: "community", mapper: "community", album: "community", friends: "community", race: "community",
 };

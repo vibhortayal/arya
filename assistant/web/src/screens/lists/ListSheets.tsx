@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sheet } from "../../ui/Sheet";
 import { InfoBtn, InfoSheet } from "../../ui/Info";
 import { useToast } from "../../ui/Toast";
+import { StoreSearch, useStoreSearch } from "../../ui/StoreFinder";
 import { get, post } from "../../lib/api";
 import { MONTHS, fmtShort, money } from "../../lib/format";
-import { clearOnSignOut, useSession } from "../../app/session";
+import { useSession } from "../../app/session";
 import { charFor } from "../../lib/characters";
 import { AISLE_ORDER, GROUP_AT, OTHER } from "./aisles";
 import { itemHome, namedLists, onListItems, sameStore, suggestHome, suggestWhy, type HomeData, type Item, type NamedList } from "./model";
@@ -47,8 +48,6 @@ type Choice = { name: string; id: string; where: string; fresh?: boolean };
 export type StoreLink = { stores: string[]; ids: string[] };
 export const NO_LINK: StoreLink = { stores: [], ids: [] };
 const linkOf = (l: { stores?: string[]; store_ids?: string[] }): StoreLink => ({ stores: [...(l.stores || [])], ids: [...(l.store_ids || [])] });
-type Sugg = { place_id: string; name: string; secondary: string };
-type Places = { suggestions?: Sugg[]; provisioned?: boolean };
 
 const storeWhere = (s: { street?: string; city?: string }) => [s.street, s.city].filter(Boolean).join(", ");
 
@@ -70,11 +69,6 @@ async function storeChoices(extra: string[] = []): Promise<Choice[]> {
   extra.forEach(n => add(n));
   return rows;
 }
-
-let placesSession = "";
-let geo: { lat: number; lng: number } | null = null;
-clearOnSignOut(() => { placesSession = ""; geo = null; });
-const session = () => placesSession || (placesSession = `l${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`);
 
 /* Untick one store; its name stays while another branch of that name is
  * still ticked. */
@@ -104,11 +98,6 @@ function StorePicker({ extra, picked, setPicked, compact }: { extra?: string[]; 
   const [showAll, setShowAll] = useState(false);
   const { toast } = useToast();
   const [choices, setChoices] = useState<Choice[] | null>(null);
-  const [find, setFind] = useState("");
-  const [goog, setGoog] = useState<{ d: Places; head: string } | null>(null);
-  const [busyPick, setBusyPick] = useState("");
-  const timer = useRef<number | undefined>(undefined);
-  const findRef = useRef("");
   const pickedRef = useRef(picked);
   pickedRef.current = picked;
   const alive = useRef(true);
@@ -128,49 +117,17 @@ function StorePicker({ extra, picked, setPicked, compact }: { extra?: string[]; 
       }
       if (ids.length !== p.ids.length) setPicked({ stores: p.stores, ids });
     });
-    return () => { alive.current = false; clearTimeout(timer.current); };
+    return () => { alive.current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const suggest = async (q: string) => {
-    const g = geo ? `&lat=${geo.lat}&lng=${geo.lng}` : "";
-    const d = await get<Places>(`/api/stores/places?q=${encodeURIComponent(q)}&session=${session()}${g}`);
-    if (!alive.current || findRef.current.trim() !== q) return; // typed on: stale
-    setGoog({ d, head: t("common.fromGoogle") });
-  };
-  const onFind = (v: string) => {
-    setFind(v); findRef.current = v;
-    clearTimeout(timer.current);
-    const q = v.trim();
-    if (q.length < 3) { setGoog(null); return; }
-    timer.current = window.setTimeout(() => suggest(q).catch(() => setGoog(null)), 300);
-  };
-  const nearMe = () => {
-    if (!navigator.geolocation) { toast(t("common.location.cannot")); return; }
-    navigator.geolocation.getCurrentPosition(p => {
-      (async () => {
-        try {
-          geo = { lat: p.coords.latitude, lng: p.coords.longitude };
-          const d = await get<Places>(`/api/stores/places?q=&lat=${geo.lat}&lng=${geo.lng}`);
-          if (alive.current) setGoog({ d, head: t("common.location.nearYou") });
-        } catch (e) { toast(errMsg(e)); }
-      })();
-    }, () => toast(t("common.location.allow")), { timeout: 8000 });
-  };
-  const pickPlace = async (s: Sugg) => {
-    setBusyPick(s.place_id);
-    try {
-      const row = await post<{ id: string; name: string; street?: string; city?: string }>("/api/stores/places/pick", { place_id: s.place_id, name: s.name });
-      placesSession = ""; // the pick ends Google's billing session
-      if (!alive.current) return;
-      setChoices(c => [{ name: row.name, id: row.id, where: storeWhere(row), fresh: true }, ...(c || []).filter(x => x.id !== row.id)]);
-      const p = pickedRef.current;
-      setPicked({ stores: p.stores.includes(row.name) ? p.stores : [...p.stores, row.name], ids: p.ids.includes(row.id) ? p.ids : [...p.ids, row.id] });
-      setFind(""); findRef.current = ""; setGoog(null);
-      toast(t("lists.stores.added", { name: row.name }));
-    } catch (e) { toast(errMsg(e)); }
-    setBusyPick("");
-  };
+  const search = useStoreSearch(row => {
+    if (!alive.current) return;
+    setChoices(c => [{ name: row.name, id: row.id, where: storeWhere(row), fresh: true }, ...(c || []).filter(x => x.id !== row.id)]);
+    const p = pickedRef.current;
+    setPicked({ stores: p.stores.includes(row.name) ? p.stores : [...p.stores, row.name], ids: p.ids.includes(row.id) ? p.ids : [...p.ids, row.id] });
+    toast(t("lists.stores.added", { name: row.name }));
+  });
   const removeStore = async (id: string) => {
     try {
       await post("/api/stores/mine/remove", { store_id: id });
@@ -185,7 +142,7 @@ function StorePicker({ extra, picked, setPicked, compact }: { extra?: string[]; 
   const toggle = (c: Choice) => setPicked(on(c) ? unpick(picked, c, choices || [])
     : { stores: picked.stores.includes(c.name) ? picked.stores : [...picked.stores, c.name], ids: c.id ? [...picked.ids, c.id] : picked.ids });
 
-  const q = find.trim().toLowerCase();
+  const q = search.q.trim().toLowerCase();
   const all = choices || [];
   const matches = q ? all.filter(c => (c.name + " " + c.where).toLowerCase().includes(q)) : all;
   const limit = q || showAll ? matches.length : compact ? 2 : 5;
@@ -211,24 +168,7 @@ function StorePicker({ extra, picked, setPicked, compact }: { extra?: string[]; 
           ))}
         </div>
       ) : null}
-      <div className="findrow">
-        <input type="text" id="ls-find" maxLength={80} placeholder={t("lists.findAStoreNameOr")} autoComplete="off" aria-label={t("lists.findAStore")}
-          value={find} onChange={e => onFind(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} />
-        <button className="chip" type="button" data-ls="near" onClick={nearMe}><span className="pinic" aria-hidden="true" />{t("lists.nearMe")}</button>
-      </div>
-      <div id="ls-goog" className="gdrop" hidden={!goog}>
-        {goog && ((goog.d.suggestions || []).length
-          ? <>
-            <div className="ghead">{goog.head}</div>
-            {(goog.d.suggestions || []).map(r => (
-              <button key={r.place_id} className="gitem" type="button" data-ls-pick={r.place_id} data-ls-pname={r.name}
-                disabled={busyPick === r.place_id} onClick={() => pickPlace(r)}>
-                <span className="name">{r.name}</span><span className="sub">{r.secondary}</span>
-              </button>))}
-          </>
-          : <div className="ghead">{goog.d.provisioned === false ? t("common.googleNotSetUp") : t("common.noStoresFound")}</div>)}
-      </div>
+      <StoreSearch search={search} id="ls-find" />
       <div id="ls-stores">
         {choices && (!choices.length
           ? <p className="sub">{t("lists.noStoresYetFindOne")}</p>

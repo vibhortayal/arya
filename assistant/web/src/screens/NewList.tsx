@@ -1154,7 +1154,7 @@ export function NewList() {
 
   return (
     <>
-      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("list"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }} id="nl-title">{store ? t("newList.questAt", { store }) : t("newList.yourQuest")}</h1>
       <p className="muted" id="nl-sub">{t("newList.intro")}</p>
       <div id="nl-deck" hidden={!deck} onKeyDown={onDeckKey}>{deck}</div>

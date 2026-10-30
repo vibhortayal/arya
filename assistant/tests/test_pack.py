@@ -33,7 +33,7 @@ def newlist():
 def screen():
     """NewList's markup: its return, from the Back link on."""
     nl = newlist()
-    return nl[nl.index('<p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("store"); }}>'):]
+    return nl[nl.index('<p><a href="#" className="qback" onClick={ev => { ev.preventDefault(); nav.back("list"); }}>'):]
 
 
 def body(text, header, end="\n  };"):
@@ -88,7 +88,6 @@ class TestPackShell(unittest.TestCase):
         self.assertLess(start.index("addFromText"), start.index("await optimize(false);"))
         self.assertLess(start.index('post("/api/list/add"'), start.index("await optimize(false);"))
         self.assertIn("const raw = pickedRows().map(r => rawItem(r));", start)
-        self.assertIn('(replace ? nav.replace : nav.show)("newlist", params);', src("screens/Store.tsx"))
         self.assertNotIn("Often bought here, not on your list", nl)
 
     def test_pack_is_a_safe_module(self):

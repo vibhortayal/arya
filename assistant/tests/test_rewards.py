@@ -96,19 +96,8 @@ class TestPlanAHunt(unittest.TestCase):
         # Quest mode (#158): a new trip starts in the game, which picks
         # the store first; Your trips has no New quest (usability audit).
         self.assertNotIn('id="btn-new-hunt"', quest)
-        store = src("screens/Store.tsx")
-        self.assertIn('try { p = await get("/api/quest/plan"); }', store)
-        # Tap-to-advance (owner phone pass, 2026-10-28): picking a
-        # store starts the plan — the Choose items button is gone.
-        self.assertIn('(replace ? nav.replace : nav.show)("newlist", params);', store)
-        for row in ("onClick={() => { setSelId(s.id); setName(s.name); pickStore(s.name, s.id); }}",
-                    "const histPick = (h: string) => { setSelId(null); setName(h); pickStore(h, null); };"):
-            self.assertIn(row, store)
-        self.assertIn("Where are you shopping?", store)
         self.assertIn('<div id="nl-plan">', src("screens/NewList.tsx"))
-        for f in (store, src("screens/NewList.tsx")):
-            self.assertNotIn('id="st-next"', f)
-            self.assertNotIn("Choose items", f)
+        self.assertNotIn("Choose items", src("screens/NewList.tsx"))
 
     def test_buckets_and_list_management(self):
         nl = src("screens/NewList.tsx")

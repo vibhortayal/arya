@@ -50,7 +50,6 @@
     "fromGoogle": "From Google",
     "favorites": "Favorites",
     "findStores": "Find stores",
-    "addAStore": "Add a store",
     "new": "New",
     "share": "Share",
     "howThisWorks": "How this works",
@@ -778,9 +777,6 @@
     "clear": "Clear",
     "aTreasureHuntWithPoints": "A game with points and badges",
     "justTheListWithAisle": "Your list in aisle order",
-    "findAStoreNameOr": "Find a store (name or ZIP)",
-    "findAStore": "Find a store",
-    "nearMe": "Near me",
     "noStoresYetFindOne": "No stores yet. Find one above, then tick it.",
     "name": "Name",
     "costcoIndianStoreParty": "Costco, Indian Store, Party…",
@@ -1783,13 +1779,34 @@
       "hint": "Hide what you don't use. Play and Map my store stay.",
       "reset": "Reset Quest",
       "resetDone": "Quest is back to the default",
-      "cta": { "name": "Ready for a quest?", "desc": "Start a quest or practice" },
-      "stats": { "name": "Level and streak", "desc": "Shows after your first real trip" },
-      "map": { "name": "Map my store", "desc": "Learn the aisles" },
-      "progress": { "name": "Quest progress", "desc": "Quests, badges and mapped stores" },
-      "trips": { "name": "Your trips", "desc": "Open quests, finished trips and friends" },
-      "album": { "name": "Sticker album", "desc": "Shows with your first sticker" },
-      "stores": { "name": "Stores you're building", "desc": "How much of each store is mapped" }
+      "cta": {
+        "name": "Ready for a quest?",
+        "desc": "Start a quest or practice"
+      },
+      "stats": {
+        "name": "Level and streak",
+        "desc": "Shows after your first real trip"
+      },
+      "map": {
+        "name": "Map my store",
+        "desc": "Learn the aisles"
+      },
+      "progress": {
+        "name": "Quest progress",
+        "desc": "Quests, badges and mapped stores"
+      },
+      "trips": {
+        "name": "Your trips",
+        "desc": "Open quests, finished trips and friends"
+      },
+      "album": {
+        "name": "Sticker album",
+        "desc": "Shows with your first sticker"
+      },
+      "stores": {
+        "name": "Stores you're building",
+        "desc": "How much of each store is mapped"
+      }
     },
     "progressSub": "Quests, badges and mapped stores"
   },
@@ -1960,44 +1977,19 @@
     "haulPhotoIntro": "A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.",
     "readingHaul": "Reading your haul…"
   },
-  "store": {
-    "whereAreYouShopping": "Where are you shopping?",
-    "typeAStoreOrTap": "Type a store — or tap one below",
-    "storesComeFromGoogleWith": "Tap your store to start the plan.",
-    "stores": "{{name}} stores",
-    "noStoresInYourStores": "No stores in your stores yet. Find one or add one below.",
-    "allMyStores": "All my stores",
-    "fromYourReceipts": "From your receipts",
-    "showAllStores": "Show all {{histCount}} stores",
-    "searchByZipAddressOr": "Search by ZIP, address, or name",
-    "aStoreThatIsNot": "A store Arya doesn't have yet",
-    "fitLead": "{{n}} of your {{total}} list items usually here · ",
-    "usually": "Usually: {{names}}",
-    "pickFirst": "Pick or name the store first.",
-    "pickFromList": "Pick your store from the list."
-  },
-  "storesAdd": {
-    "searchGoogleForTheStore": "Search Google for the store",
-    "everyStoreCarriesItsReal": "Every store carries its real name and address from Google. Tap yours to add it.",
-    "theStoreJoinsTheShared": "Arya shoppers will see this store too."
-  },
   "storesFind": {
-    "zipAddressOrName": "ZIP, address, or name",
-    "search": "Search",
     "noStoresMatchAddIt": "No stores match. Add it, and other Arya shoppers can find it too.",
     "added": "Added",
     "theDirectoryIsSharedBy": "Every Arya shopper sees these stores. Add one to shop it.",
     "inYourStores": "{{name}} is in your stores.",
     "all": "All",
-    "withQuests": "Mapped",
-    "nearZip": "Near this ZIP"
+    "withQuests": "Mapped"
   },
   "storesMine": {
     "myStores": "My stores",
     "noStoresYetFindOne": "No stores yet. Find one or add one below.",
     "allMyStores": "All my stores",
-    "searchTheDirectoryByZip": "Search all stores by ZIP, address, or name",
-    "aStoreThatIsNot": "A store Arya doesn't have yet",
+    "searchByNameZipOrAddress": "Search by name, ZIP or address, or add one from Google",
     "scene": {
       "cloud": "Mapped, 3D view",
       "strip": "Photo view"
@@ -2886,5 +2878,10 @@
     "today": "Today cards",
     "resetAll": "Reset all to default",
     "resetDone": "Display and Today are back to the default"
+  },
+  "storeFinder": {
+    "label": "Find a store",
+    "placeholder": "Name, ZIP or address",
+    "nearMe": "Near me"
   }
 }

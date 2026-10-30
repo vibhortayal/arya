@@ -18,7 +18,7 @@ test("re-showing the view on top replaces it, so one Back leaves it", () => {
 
 test("reset drops the set-up screens: Back from a new hunt lands on the Quest tab", () => {
   mount();
-  for (const v of ["community", "store", "newlist", "optimize", "mode"] as const) act(() => nav.show(v));
+  for (const v of ["community", "newlist", "optimize", "mode"] as const) act(() => nav.show(v));
   act(() => nav.reset("hunt", { session: { id: "s1" } }));
   expect(nav.view).toBe("hunt");
   expect((nav.params.session as { id: string }).id).toBe("s1");

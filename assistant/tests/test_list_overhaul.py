@@ -160,7 +160,6 @@ class TestStartShopping(unittest.TestCase):
         self.assertNotIn('id="shop-sugg"', js)
         self.assertIn('id="list-suggest"', js)
         self.assertIn('nav.show("community", { listId: here ? here.id : "all" });', js)
-        self.assertIn("const params = { store, storeId, fromList, fastMode };", src("screens/Store.tsx"))
         self.assertIn("if (D.fastMode && !D.fastDone) {", src("screens/NewList.tsx"))
         # The fast trip skips the bag and the mode screen, and a Quest
         # opens already playing.
