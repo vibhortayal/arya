@@ -1,6 +1,7 @@
 /* Live e2e runner: checks the deployed site the way real users would,
  * with three tester accounts at once (group sharing, live sync, privacy
- * between households). Every e2e-live/*.live.mjs exports default
+ * between households), and tour.live.mjs walks tester C through every
+ * screen of the app. Every e2e-live/*.live.mjs exports default
  * async (t) and throws on failure; t carries signed-in pages.
  *
  * No password lives here. Passwords come from the environment (GitHub

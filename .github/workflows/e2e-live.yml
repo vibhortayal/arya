@@ -2,7 +2,8 @@ name: e2e-live
 
 # Checks the deployed site the way real users do, with three tester
 # accounts (sign-in, group sharing, live sync, privacy between
-# households). Manual only, like tests.yml (owner: no run on every PR).
+# households, and a tour of every screen as tester C). Manual only,
+# like tests.yml (owner: no run on every PR).
 # Start it from the Actions tab with "Run workflow". Needs three repository secrets:
 # ARYA_TESTER_A_PASSWORD, ARYA_TESTER_B_PASSWORD, ARYA_TESTER_C_PASSWORD.
 # The tester emails default to tester-a@test.arya and so on.
@@ -19,7 +20,7 @@ on:
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     # One run at a time: the testers share groups and lists.
     concurrency: e2e-live
     defaults:
