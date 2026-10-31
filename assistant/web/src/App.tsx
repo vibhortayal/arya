@@ -17,6 +17,7 @@ import { Login } from "./screens/Login";
 // The public developer page and Join a group load only when opened (#17).
 const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
 import { SCREENS, preloadTabScreens } from "./screens/registry";
+import { openGuide } from "./ui/Guide";
 import { WelcomeSheet, showWelcome, demoWelcomePending, clearDemoWelcome } from "./ui/FirstRun";
 import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
 import { ErrorBoundary, ScreenSkeleton } from "./ui/ErrorBoundary";
@@ -174,7 +175,7 @@ function Shell() {
         </nav>
       )}
       {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
-        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(FIRST_RUN_TOUR); }} onSkip={answerWelcome} />
+        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(FIRST_RUN_TOUR, s.demo ? { onDone: () => openGuide() } : undefined); }} onSkip={answerWelcome} />
       )}
     </>
   );
