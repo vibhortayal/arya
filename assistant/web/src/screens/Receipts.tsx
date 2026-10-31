@@ -165,6 +165,7 @@ export function Receipts() {
     <>
       <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h1>
+      <p className="muted small" id="rc-ai-note">{t("ai.receiptsLine")}</p>
       <p id="rc-count" className="subtitle">{count}</p>
       <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>
       <div id="review" className="group eyegroup" hidden={!hasReview}>
