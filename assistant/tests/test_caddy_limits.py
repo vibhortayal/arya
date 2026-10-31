@@ -1,6 +1,7 @@
-"""Audit H4 (2026-10-30): uploads are read whole before the app checks
-their size, so Caddy caps every request body for the app's site. Pins
-deploy/Caddyfile."""
+"""Audit 2026-10-30, pins deploy/Caddyfile for the app's site.
+H4: uploads are read whole before the app checks their size, so Caddy
+caps every request body. H2 stopgap: the Range header is dropped.
+L9: a Permissions-Policy, and no Server header."""
 import os
 import re
 import unittest
@@ -21,6 +22,20 @@ class TestCaddyLimits(unittest.TestCase):
         # 16 MB), far below what could fill the VM's memory.
         self.assertGreaterEqual(int(m.group(1)), 20)
         self.assertLessEqual(int(m.group(1)), 100)
+
+    def test_range_header_never_reaches_the_app(self):
+        self.assertRegex(self.site, r"(?m)^\s*request_header -Range\s*$")
+
+    def test_permissions_policy_allows_camera_mic_and_location_for_this_site_only(self):
+        m = re.search(r'Permissions-Policy "([^"]+)"', self.site)
+        self.assertIsNotNone(m)
+        policy = m.group(1)
+        for feature in ("camera", "microphone", "geolocation"):
+            self.assertIn(f"{feature}=(self)", policy)
+        self.assertIn("payment=()", policy)
+
+    def test_server_header_is_removed(self):
+        self.assertRegex(self.site, r"(?m)^\s*-Server\s*$")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,10 @@ from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, grou
                         intake, items, lists, lists_v1, mcp_connector, prices, quest,
                         questmap, receipts, review, shelf, storemap, stores, town)
 
-app = FastAPI(title="Arya API")
+# No /docs, /redoc or /openapi.json: they listed every route, admin
+# ones included, to anyone (audit M2, 2026-10-30). The public Lists
+# API keeps its own schema at /api/v1/openapi.json.
+app = FastAPI(title="Arya API", docs_url=None, redoc_url=None, openapi_url=None)
 app.middleware("http")(require_login)
 _log = logging.getLogger("arya.api")
 
