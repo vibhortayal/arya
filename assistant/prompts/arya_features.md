@@ -1,15 +1,15 @@
 Tabs: Today, Lists, Ask, Quest, Help, Settings.
 Arya is a grocery list that learns what the household buys, so the list writes itself. The list is the main part. Quest is optional.
 Arya sends no order and makes no payment. Prices come only from the household's own receipts and from Arya shoppers who choose to share. Arya never uses store sites, flyers or web prices.
-A new account has few cards on Today until the first receipt is added. The demo is a fictional household; changes are not saved.
+A new account has few Today cards until the first receipt. The demo is a fictional household; changes are not saved.
 ## help | help tab guide tour tutorial lost confused learn started begin
 Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app, with numbered steps and a button that opens it.
-At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.  The tour has six steps (Today, Lists, Ask, Quest, Help, Settings). In the demo the tour is longer: it stops on each screen and then on each main card of that screen, and Skip Today (or the name of the screen) jumps to the next screen. In the demo, the welcome, the tour and then the full guide appear every time someone taps Try it now. Three names: the Tour is the bubbles, the Arya guide is the swipeable cards, the Help tab is everything else.
+At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback. The tour has six steps (Today, Lists, Ask, Quest, Help, Settings). In the demo the tour is longer: it stops on each screen and each main card on it, and Skip Today (or the screen's name) jumps to the next screen. In the demo, the welcome, the tour and the full guide appear every time someone taps Try it now. Names: the Tour is the bubbles, the Arya guide is the swipeable cards, the Help tab is the rest.
 In the demo, Send feedback opens Finish demo, which takes your note and an email to reply to.
 Each topic has "Still stuck? Ask Arya".
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new
 Lists tab: one list for each store, such as Costco. Tap New list and choose a store.
-Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list or photograph one item. Arya always shows what it understood: for one item it asks "Add Peach?", and when it cannot tell it says why and offers Try again or Type it instead. If the microphone hears nothing or is blocked, it says so the same way.
+Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list or photograph one item. Arya always shows what it understood: for one item it asks "Add Peach?", and when it cannot tell it says why and offers Try again or Type it instead. A silent or blocked microphone is handled the same way.
 Tap the circle to tick an item off as you shop. Tap the three dots to move an item to another list or remove it. Tap Select to act on several items. Tap the pencil to rename a list.
 Under "Suggested for ..." Arya shows due items. Tap one to see why, then Add.
 Three dots at the top of a list: Share, export or import, Tidy up with Arya.
@@ -27,7 +27,7 @@ Arya uses AI to read photos, receipts and voice and to answer questions, and it 
 Arya is not a food-safety check: look at the date on the pack, and if food looks or smells off, do not eat it. Nothing read from a photo or receipt is saved until you confirm.
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
 Receipts: open Today, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick a PDF, paste order text or say it.
-Arya reads the receipt and checks the total. It keeps every receipt, so you can open one for a return or recall refund.
+Arya reads the receipt and checks the total. It keeps every receipt for a return or recall refund.
 A return is taken off the spending. Only you and your group see your receipts.
 ## spending | spending spend analysis month store budget money pay paid
 Spending: open Today, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
@@ -42,7 +42,7 @@ Start shopping: open a list and tap Start shopping. Settings, Preferences, "When
 Or tap "Or just tick items as I shop" and tick items with no game. That also makes Just my list your choice for Start shopping; change it in Settings, Preferences, "When I start shopping".
 Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: point the camera at a shelf and Arya finds the next item. People in frames are blurred before anything is kept.
-Quest progress (Quest tab) shows quests, badges and mapped stores. Your trips and receipts shows finished trips and friends.
+Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
 ## map my store | map my store scan aisle layout walk video photos mapped build dream
 Map my store: open the Quest tab and tap Map my store, or tap the Map my store chip on Ask.
@@ -60,22 +60,22 @@ Ask can add to a list, mark out or expired, never suggest and snooze. An item wi
 Settings, Preferences, Currency and language changes the answer language: English, Spanish or Hindi.
 ## sharing | share group household invite code friends haul sync together partner family
 Share lists with a household: open Settings, tap Start a group and give it a name. Tap Invite someone and send the code. Everyone sees the same lists and receipts. Leaving a group has clear rules for what you keep.
-Groups need an account: the demo has no Start a group row. In the demo, say that sharing works once they sign up.
+Groups need an account: the demo has no Start a group row; say sharing works once they sign up.
 Friends: Quest tab, Your trips and receipts, Friends. Add a friend by username.
-Share a haul: after a trip, share a photo of what you bought from the score screen. It is a photo only.
+Share a haul: after a trip, share a photo of what you bought from the score screen (photo only).
 Share a list as a checklist, or export or import one: the three dots on a list, Share, export or import.
 ## customize | edit customize today card cards hide reorder resize library display text size zoom spacing
 Change Today: tap Edit on Today, or touch and hold a card. Drag to reorder, tap the red minus to hide, tap the green plus to add from the card library, choose a card size, or tap Reset.
-Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hidden until they do.
+Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hidden.
 Settings, Preferences, Display changes text size, spacing, bold text, pictures and motion.
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
 Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, How Arya uses AI, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. Help and Settings both hold the guide and the tour.
 The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs.
-Sign-in is by invitation for now. On the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Tap Try it now for the demo; tap Finish demo to leave it.
-Use Arya in another AI app lets you add to your list from an AI app you already use.
+Sign-in is by invitation for now; on the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Try it now opens the demo; Finish demo leaves it.
+Use Arya in another AI app lets you add to your list from an AI app you use.
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
-Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. The copy is deleted when you sign out; the demo keeps none.
+Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. Signing out deletes it; the demo keeps none.
