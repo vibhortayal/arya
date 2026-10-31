@@ -36,7 +36,7 @@ class FeatureSheet(unittest.TestCase):
         first = raw().splitlines()[0]
         for t in re.findall(r"\b(Today|Lists|Ask|Quest|Settings)\b", first):
             self.assertIn(t, labels)
-        self.assertEqual(len(labels), 5)
+        self.assertEqual(len(labels), 6)
         self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
 
     def test_small(self):

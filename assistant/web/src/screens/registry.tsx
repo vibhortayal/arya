@@ -14,6 +14,7 @@ function screen<K extends string>(load: () => Promise<Record<K, ComponentType>>,
 const About = screen(() => import("./About"), "About");
 const Analysis = screen(() => import("./Analysis"), "Analysis");
 const Chat = screen(() => import("./Chat"), "Chat");
+const Help = screen(() => import("./Help"), "Help");
 const Feedback = screen(() => import("./Feedback"), "Feedback");
 const GroupJoin = screen(() => import("./GroupJoin"), "GroupJoin");
 const NewList = screen(() => import("./NewList"), "NewList");
@@ -53,6 +54,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   about: About,
   analysis: Analysis,
   chat: Chat,
+  help: Help,
   feedback: Feedback,
   waitlist: WaitlistAdmin,
   usage: Usage,
@@ -88,9 +90,9 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   haul: HaulCard,
 };
 
-/* Lists, Ask, Quest, Settings: the four tabs beside Today. */
+/* Lists, Ask, Quest, Help, Settings: the tabs beside Today. */
 export function preloadTabScreens() {
-  for (const load of [() => import("./Lists"), () => import("./Chat"), () => import("./quest/QuestMode"), () => import("./Profile")]) {
+  for (const load of [() => import("./Lists"), () => import("./Chat"), () => import("./quest/QuestMode"), () => import("./Help"), () => import("./Profile")]) {
     load().catch(() => { /* offline: the tap loads it, or shows nothing */ });
   }
 }

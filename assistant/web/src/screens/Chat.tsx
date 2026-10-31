@@ -308,6 +308,16 @@ export function Chat() {
     setNewQ("");
   }
 
+  // Help's "Still stuck?" and its ask box open Ask with the question
+  // already sent. Once per arrival (nav.key changes on every show()).
+  const asked = useRef(-1);
+  useEffect(() => {
+    const q = nav.params.ask;
+    if (typeof q !== "string" || !q.trim() || asked.current === nav.key) return;
+    asked.current = nav.key;
+    void send(q);
+  }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       {log.length === 0
