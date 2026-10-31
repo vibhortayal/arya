@@ -30,7 +30,7 @@ MAX_IMPORT_ROWS = 500
 v1 = FastAPI(
     title="Arya Lists API", version="1.0.0", docs_url=None, redoc_url=None,
     description="Read and write your own Arya lists. Authenticate with "
-                "your personal API token: Authorization: Bearer <token>.")
+                "your personal API token: Authorization: Bearer YOUR_CODE.")
 
 _CODES = {400: "bad_request", 401: "unauthorized", 404: "not_found",
           405: "method_not_allowed", 409: "conflict", 413: "too_large",
@@ -431,3 +431,78 @@ def analysis_spending():
 @v1.get("/analysis/purchases")
 def analysis_purchases(limit: int = 50):
     return {"items": open_data.purchases(_own(), min(max(limit, 1), 500))}
+
+
+# ---- the schema, as developers read it ---------------------------------
+# FastAPI names operations after the function and path
+# (get_lists_lists_get). The reference page at /developers/reference
+# draws this schema, so each operation gets a plain id, a one-line
+# summary and a short description here, in one place, and the schema
+# declares the bearer code and the error shape. The routes are untouched.
+
+_OPS = {
+    ("get", "/lists"): ("listLists", "Lists", "Your lists",
+        "Every list you have, with how many items are still open. The id `unfiled` is Everything else."),
+    ("get", "/lists/{list_id}"): ("getList", "Lists", "One list and its items",
+        "The list and every item on it."),
+    ("post", "/lists/{list_id}/items"): ("addItems", "Lists", "Add items",
+        "Send `items` (names or objects) or `text` (free text, split the way the app splits it), not both. "
+        "At most 50 items. Names already on the list are not added twice. Names on a different list are "
+        "reported in `also_on` and not moved."),
+    ("patch", "/items/{item_id}"): ("updateItem", "Lists", "Change an item",
+        "Change any of `checked`, `qty`, `unit`, `list_id` and `aisle`. Nothing changes if any field is bad."),
+    ("delete", "/items/{item_id}"): ("deleteItem", "Lists", "Remove an item", "Removes the item from your lists."),
+    ("get", "/lists/{list_id}/export"): ("exportList", "Export and import", "Export a list",
+        "`format` is `json` (default), `csv` or `text` (a checklist, one item per line)."),
+    ("post", "/lists/import"): ("importList", "Export and import", "Import a list",
+        "Send the file as the request body. The format is `csv` when the Content-Type contains csv, else text. "
+        "`list` names the list to fill (default Imported); it is created if missing. At most 500 rows."),
+    ("get", "/receipts"): ("listReceipts", "Receipts and spending", "Your receipts",
+        "The receipts you filed, newest first. `limit` is at most 200."),
+    ("get", "/receipts/export"): ("exportReceipts", "Export and import", "Export every receipt",
+        "Every receipt you filed, as `json` (default) or `csv` (one row per line)."),
+    ("get", "/receipts/{receipt_id}"): ("getReceipt", "Receipts and spending", "One receipt",
+        "The receipt with its lines. Lines are `item`, `discount` or `return`."),
+    ("get", "/receipts/{receipt_id}/original"): ("getReceiptOriginal", "Receipts and spending", "The receipt photo or PDF",
+        "The file you uploaded, if Arya kept one (`has_photo`)."),
+    ("delete", "/receipts/{receipt_id}"): ("deleteReceipt", "Receipts and spending", "Delete a receipt",
+        "Removes the receipt and its photo."),
+    ("get", "/analysis/spending"): ("getSpending", "Receipts and spending", "Spending totals",
+        "Sums of what your receipts say, by month and by store. Nothing is inferred."),
+    ("get", "/analysis/purchases"): ("listPurchases", "Receipts and spending", "What you bought",
+        "Items by the name read from your receipts, most often bought first. `limit` is at most 500."),
+}
+_ERROR = {"description": "Error", "content": {"application/json": {"schema": {
+    "type": "object", "properties": {"error": {"type": "object", "properties": {
+        "code": {"type": "string", "example": "not_found"},
+        "message": {"type": "string", "example": "no such list"}}}}}}}}
+_ERRORS = {"401": "No, wrong or revoked code", "429": "Over the hourly limit; wait Retry-After seconds"}
+
+
+def _openapi():
+    if v1.openapi_schema:
+        return v1.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+    spec = get_openapi(title=v1.title, version=v1.version, description=v1.description,
+                       routes=v1.routes, servers=[{"url": "/api/v1"}])
+    spec["info"]["description"] += (
+        " New here? Start with the [quickstart](/developers). Make your code in Arya under Settings, Use Arya in another AI app. "
+        "600 calls an hour per account. Errors are {\"error\": {\"code\", \"message\"}}.")
+    spec.setdefault("components", {})["securitySchemes"] = {"bearerAuth": {
+        "type": "http", "scheme": "bearer",
+        "description": "Your personal code, sent as Authorization: Bearer YOUR_CODE."}}
+    spec["security"] = [{"bearerAuth": []}]
+    spec["tags"] = [{"name": n} for n in dict.fromkeys(v[1] for v in _OPS.values())]
+    for path, methods in spec["paths"].items():
+        for method, op in methods.items():
+            meta = _OPS.get((method, path))
+            if meta:
+                op["operationId"], tag, op["summary"], op["description"] = meta[0], meta[1], meta[2], meta[3]
+                op["tags"] = [tag]
+            for code, why in _ERRORS.items():
+                op["responses"].setdefault(code, {**_ERROR, "description": why})
+    v1.openapi_schema = spec
+    return spec
+
+
+v1.openapi = _openapi

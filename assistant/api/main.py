@@ -119,6 +119,16 @@ def _developers_page():
     return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
+@app.get("/developers/reference", include_in_schema=False)
+def _developers_reference():
+    """The interactive Lists API reference: Scalar (vendored, served from
+    /vendor, no inline script) drawing /api/v1/openapi.json. Public."""
+    page = os.path.join(_PWA, "developers", "reference.html")
+    if not os.path.isfile(page):
+        return JSONResponse({"detail": "not found"}, status_code=404)
+    return FileResponse(page, headers={"Cache-Control": "no-cache"})
+
+
 _BUILT_DIR = os.path.realpath(os.path.join(_WEB, "app"))
 _PWA_CACHED = tuple(os.path.realpath(os.path.join(_PWA, d)) + os.sep
                     for d in ("assets", "icons"))
