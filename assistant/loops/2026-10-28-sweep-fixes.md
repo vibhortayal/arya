@@ -50,7 +50,7 @@ deploy gate like everything else.
 - Demo cannot start a hunt (403 on /api/quest/optimize — the whole
   quest lifecycle sits outside the demo live-doors; needs an
   ephemeral-demo-session design decision).
-- Quest UI findings (frozen): coincident photo-scene stop dots,
+- Quest UI findings (parked): coincident photo-scene stop dots,
   uncheck-after-GRAB scene restart/stranding, finish/score loop.
 - Receipts archive: unsettled row store-name letter-wrap; raw
   unstyled file input on the photo door. Shop-Off cross-account

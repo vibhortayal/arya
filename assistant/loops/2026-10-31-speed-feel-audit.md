@@ -44,7 +44,7 @@ No model calls, $0.
 
 ## Not done
 - #11 two workers, #13 one three.js, #37 demo data cleanup: skipped (risk
-  before the freeze / needs the owner).
+  of regressions / needs the owner).
 - Ask streaming (SSE): next step; the reply is JSON with actions, so it
   needs a streaming parser and streamed cost logging.
 - #25 icons: Pillow's 256-colour quantize banded the shadows; needs
