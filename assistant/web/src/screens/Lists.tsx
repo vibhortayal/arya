@@ -865,10 +865,13 @@ export function Lists() {
     if (shopMode === null) saveShopMode(mode).catch(e => toast(errMsg(e)));
     if (mode === "quest") startHunt(); else startList();
   };
-  // Or just tick items as I shop: this trip without the game.
-  // One trip only (retest 2026-10-31 #13): it used to save Just my list
-  // as the default without a word; Settings keeps that choice.
-  const tickAsIShop = () => { startList(); };
+  // Or just tick items as I shop: turns on Just my list for good (owner,
+  // option B, 2026-10-30; Settings can switch it back), so the link goes
+  // away once that is the saved choice. The toast says so (retest #13).
+  const tickAsIShop = () => {
+    saveShopMode("list").then(() => toast(t("lists.tickSaved"))).catch(e => toast(errMsg(e)));
+    startList();
+  };
   const finishTrip = () => {
     setDoneStep(null);
     setShopping(null);
