@@ -33,6 +33,7 @@ export type SheetState =
   | { kind: "stores" }
   | { kind: "move"; ids: string[] }
   | { kind: "row"; id: string }
+  | { kind: "edit"; id: string }
   | { kind: "aisle"; id: string }
   | { kind: "where"; id: string }
   | { kind: "share" }
@@ -342,6 +343,59 @@ function RowSheet({ data, id, run, onClose, onMove, onAlso, onAisle, onRemove, s
   );
 }
 
+/* Edit item (owner, 2026-10-31): tap a row to change its name, amount,
+ * unit and note, move it, or delete it. The name and amount were baked
+ * into one string before; now each is its own field. */
+const UNIT_CHIPS = ["ct", "lb", "oz", "gal", "kg", "pack"];
+export function EditSheet({ data, id, run, onClose, onSave, onRemove, onHistory, onMove, onMore }: Common & {
+  id: string; onSave: SheetActions["onEdit"]; onRemove: (ids: string[]) => Promise<void>; onHistory: (id: string) => void;
+  onMove: (id: string) => void; onMore: (id: string) => void }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const item = data.list.items.find(i => i.item_id === id) || ({} as Partial<Item>);
+  const [name, setName] = useState(item.name || "");
+  const [qty, setQty] = useState(String(item.qty || 1));
+  const [unit, setUnit] = useState(item.unit || "");
+  const [note, setNote] = useState(item.note || "");
+  const listName = (namedLists(data).find(l => l.id === item.list) || { name: "" }).name;
+  const step = (d: number) => {
+    const n = Number(qty) || 0;
+    const next = Math.round((n + d) * 10) / 10;
+    setQty(String(Math.min(99, Math.max(unit.trim() ? 0.1 : 1, next))));
+  };
+  const save = () => {
+    const nm = name.trim();
+    if (!nm) { toast(t("lists.editNameEmpty")); return; }
+    const u = unit.trim();
+    const n = u ? Math.min(99, Math.max(0.1, Math.round((Number(qty) || 1) * 10) / 10)) : Math.min(99, Math.max(1, Math.round(Number(qty) || 1)));
+    run(async () => { await onSave(id, { name: nm, qty: n, unit: u, note: note.trim() }); onClose(); });
+  };
+  return (
+    <>
+      <span className="sheetgrip" />
+      <div className="editsheet-head"><h3 id="ls-title" className="largetitle" style={TITLE_STYLE}>{t("lists.editItem")}</h3>
+        <button className="linkbtn" type="button" data-ls="close" onClick={onClose}>{t("common.cancel")}</button></div>
+      <label className="field">{t("lists.editName")}<input type="text" id="es-name" maxLength={60} autoComplete="off" value={name} onChange={e => setName(e.target.value)} /></label>
+      <span className="field">{t("lists.editAmount")}</span>
+      <div className="editamount">
+        <button className="btn secondary" type="button" aria-label={t("lists.editLess")} onClick={() => step(-1)}>−</button>
+        <input type="number" id="es-qty" className="qtyinput" inputMode="decimal" step="any" min="0.1" aria-label={t("common.quantity")} value={qty} onChange={e => setQty(e.target.value)} />
+        <button className="btn secondary" type="button" aria-label={t("lists.editMore")} onClick={() => step(1)}>+</button>
+        <input type="text" id="es-unit" className="qtyinput qtyunit" maxLength={16} autoComplete="off" placeholder={t("lists.unit")} aria-label={t("lists.unitForExampleKgOr")} value={unit} onChange={e => setUnit(e.target.value)} />
+      </div>
+      <div className="pchips">{UNIT_CHIPS.map(u => <button key={u} type="button" className={"chip" + (unit.trim() === u ? " on" : "")} onClick={() => setUnit(unit.trim() === u ? "" : u)}>{u}</button>)}</div>
+      <label className="field">{t("lists.editNote")}<input type="text" id="es-note" maxLength={60} autoComplete="off" placeholder={t("lists.editNotePlaceholder")} value={note} onChange={e => setNote(e.target.value)} /></label>
+      {listName ? <button className="navrow" type="button" data-ls="edit-list" onClick={() => onMove(id)}><span className="grow">{t("lists.editList")}</span><span className="sub">{listName}</span><span className="chev">›</span></button> : null}
+      {!id.startsWith("manual-") ? <button className="navrow" type="button" data-ls="edit-history" onClick={() => { onClose(); onHistory(id); }}><span className="grow">{t("lists.editHistory")}</span><span className="chev">›</span></button> : null}
+      <button className="navrow" type="button" data-ls="edit-more" onClick={() => onMore(id)}><span className="grow">{t("lists.editMoreOptions")}</span><span className="chev">›</span></button>
+      <div className="sheetacts">
+        <button className="btn primary" type="button" id="es-save" onClick={save}>{t("lists.editSave")}</button>
+        <button className="btn secondary dangertext" type="button" data-ls="edit-delete" onClick={() => run(async () => { onClose(); await onRemove([id]); })}>{t("lists.editDelete")}</button>
+      </div>
+    </>
+  );
+}
+
 /* Where? (8): what Arya knows about the aisle, and a way to help map it. */
 function WhereSheet({ data, id, run, onClose, onSnap }: Common & { id: string; onSnap: (name: string) => void }) {
   const { t } = useTranslation();
@@ -463,6 +517,8 @@ export type SheetActions = {
   onSnap?: (name: string) => void;
   onChanged?: () => void;
   onAlso: (id: string, listId: string) => Promise<void>;
+  onEdit: (id: string, f: { name: string; qty: number; unit: string; note: string }) => Promise<void>;
+  onHistory: (id: string) => void;
 };
 
 export function ListSheet({ sheet, setSheet, data, lens, actions }:
@@ -483,6 +539,8 @@ export function ListSheet({ sheet, setSheet, data, lens, actions }:
       {sheet.kind === "share" && <ShareWizard data={data} listId={lens} listName={(namedLists(data).find(x => x.id === lens) || { name: "" }).name} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} onTidy={() => setSheet({ kind: "tidy" })} />}
       {sheet.kind === "tidy" && <TidyFlow listId={lens} onClose={onClose} onChanged={() => actions.onChanged && actions.onChanged()} />}
       {sheet.kind === "stores" && <StoresSheet {...common} onSave={actions.onSaveStores} />}
+      {sheet.kind === "edit" && <EditSheet {...common} id={sheet.id} onSave={actions.onEdit} onRemove={actions.onRemove} onHistory={actions.onHistory}
+        onMove={id => setSheet({ kind: "move", ids: [id] })} onMore={id => setSheet({ kind: "row", id })} />}
       {sheet.kind === "row" && <RowSheet {...common} id={sheet.id} onMove={id => setSheet({ kind: "move", ids: [id] })} onAlso={id => setSheet({ kind: "also", id })} onAisle={id => setSheet({ kind: "aisle", id })} onRemove={actions.onRemove} shopping={actions.shopping} onWhere={id => setSheet({ kind: "where", id })} />}
       {sheet.kind === "where" && <WhereSheet {...common} id={sheet.id} onSnap={name => actions.onSnap && actions.onSnap(name)} />}
       {sheet.kind === "also" && <AlsoSheet {...common} id={sheet.id} onAlso={actions.onAlso} />}

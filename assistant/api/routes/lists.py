@@ -580,6 +580,32 @@ async def list_qty(req: Request):
     return {"ok": True}
 
 
+@router.post("/api/list/edit")
+async def list_edit(req: Request):
+    """Edit one list item in one call (owner, 2026-10-31): name, amount,
+    unit and note. Any key may be left out. The name is a display name
+    kept on the item's flag; empty is refused. Works the same in the
+    demo, where the write lands in the visitor's own overlay."""
+    body = await _json_obj(req)
+    item_id = body.get("item_id")
+    if not item_id or not isinstance(item_id, str):
+        raise HTTPException(400, "item_id is required")
+    fields = {}
+    if "name" in body:
+        name = body["name"].strip()[:60].strip() if isinstance(body["name"], str) else ""
+        if not name:
+            raise HTTPException(400, "name cannot be empty")
+        fields["name"] = name
+    if "note" in body:
+        note = body["note"].strip()[:60] if isinstance(body["note"], str) else ""
+        fields["note"] = note
+    if "qty" in body or "unit" in body:
+        await run_in_threadpool(_set_qty, item_id, body)
+    if fields:
+        await run_in_threadpool(_merge_flag, item_id, fields)
+    return {"ok": True}
+
+
 # ---- Named lists (owner, 2026-10-29): Costco, Trader Joe's, Indian
 # Store, Party... An item sits on one list at a time (flag "list");
 # an item on no list shows under "Everything else". Deleting a list

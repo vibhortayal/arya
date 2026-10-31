@@ -48,6 +48,15 @@ DRIFT = {"milk": 0.12, "eggs": 0.18, "bread": 0.08, "coffee": -0.06, "yogurt": 0
          "avocado": 0.10, "chicken": 0.06, "bananas": 0.05, "organicmilk": 0.04}
 TRIPS = 26
 
+# A list row shows a clean name with the pack size as a separate amount
+# and unit (owner, 2026-10-31: "Paper Towels 6 ct" was one string, with
+# nothing to edit). Receipts and the dictionary keep the full product
+# label, because price comparison reads the size from it; the list row
+# carries a display name flag, an amount and a unit.
+LIST_ROWS = {"papertowel": ("Paper Towels", 6, "ct"), "rice": ("Jasmine Rice", 10, "lb"),
+             "avocado": ("Avocados", 4, "ct"), "pasta": ("Pasta", 2, "lb"),   # two 1 lb packs
+             "eggs": ("Pasture Eggs", 12, "ct")}
+
 
 def price_for(key, merchant, t):
     base = ITEMS[key][1]
@@ -131,10 +140,13 @@ def demo_lists():
         "demo-papertowel": {"manual": True, "list": "l-demo-costco"},
         "demo-rice": {"manual": True, "list": "l-demo-costco"},
         "demo-avocado": {"manual": True, "list": "l-demo-tj"},
-        "demo-pasta": {"manual": True, "list": "l-demo-tj", "qty_override": 2},
-        "manual-hummus": {"manual": True, "name": "Hummus", "list": "l-demo-tj"},
-        "manual-basil": {"manual": True, "name": "Basil", "list": "l-demo-tj"},
+        "demo-pasta": {"manual": True, "list": "l-demo-tj"},
+        "manual-hummus": {"manual": True, "name": "Hummus", "list": "l-demo-tj", "qty_override": 10, "unit": "oz"},
+        "manual-basil": {"manual": True, "name": "Basil", "list": "l-demo-tj", "qty_override": 1, "unit": "bunch"},
     }
+    for key, (name, q, u) in LIST_ROWS.items():
+        if f"demo-{key}" in flags:
+            flags[f"demo-{key}"].update({"name": name, "qty_override": q, "unit": u})
     return lists, flags
 
 
@@ -148,7 +160,8 @@ def town_rename(receipts, lists, flags):
         l["name"] = NAMES.get(l["name"], l["name"])
         l["stores"] = [NAMES.get(x, x) for x in l["stores"]]
     # The eggs the Demo Town story turns on: on the Costco list, as the weekly run builds it.
-    flags["demo-eggs"] = {"manual": True, "list": "l-demo-costco"}
+    name, q, u = LIST_ROWS["eggs"]
+    flags["demo-eggs"] = {"manual": True, "list": "l-demo-costco", "name": name, "qty_override": q, "unit": u}
 
 
 def main(out_root):

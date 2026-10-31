@@ -10,7 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { asset, fmtDate, keepUnit, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
@@ -118,64 +118,19 @@ const sightingLine = (sg: Sighting) => (SIGHTING_STATES.includes(sg.state) ? t(`
 
 /* ---------------- one list row ---------------- */
 
-function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: string, q: number, u: string) => Promise<void>; onCancel: () => void }) {
-  const { t } = useTranslation();
-  const [editing, setEditing] = useState(false);
-  const [q, setQ] = useState("");
-  const [u, setU] = useState("");
-  const done = useRef(false);
-  const wrap = useRef<HTMLSpanElement>(null);
-  const qInput = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (editing) { qInput.current?.focus(); qInput.current?.select(); } }, [editing]);
-  if (!editing) {
-    const one = !item.unit && Number(item.qty || 1) === 1;
-    return (
-      <button className={"qtybtn" + (one ? " one" : "")} data-act="qty" data-id={item.item_id} type="button"
-        aria-label={t("lists.qtyAria", { qty: qtyTag(item) || "1" })}
-        onClick={() => { done.current = false; setQ(String(Number(item.qty) || 1)); setU(item.unit || ""); setEditing(true); }}>
-        {/* "× 1" says nothing: the count shows only above 1 (usability
-          * pass); the empty button still opens the quantity editor. */}
-        {item.unit ? qtyFmt(item.qty) + " " + item.unit : one ? "" : "× " + qtyFmt(item.qty)}
-      </button>
-    );
-  }
-  const commit = async () => {
-    if (done.current) return; done.current = true;
-    const unit = u.trim();
-    // With a unit the amount keeps one decimal (1.5 gal); a bare count is whole.
-    const n = unit ? Math.min(99, Math.max(0.1, Math.round((Number(q) || 1) * 10) / 10)) : Math.max(1, Math.round(Number(q) || 1));
-    try {
-      if (n !== Number(item.qty) || unit !== (item.unit || "")) await onCommit(item.item_id, n, unit);
-      else onCancel();
-    } catch { /* the caller toasts */ }
-    setEditing(false);
-  };
-  return (
-    <span className="qtyedit" ref={wrap}
-      onBlur={ev => { if (!wrap.current?.contains(ev.relatedTarget as Node | null)) commit(); }}
-      onKeyDown={ev => {
-        if (ev.key === "Enter") { ev.preventDefault(); commit(); }
-        if (ev.key === "Escape") { done.current = true; setEditing(false); onCancel(); }
-      }}>
-      <input type="number" min={u.trim() ? "0.1" : "1"} step={u.trim() ? "0.1" : "1"} inputMode={u.trim() ? "decimal" : "numeric"} className="qtyinput" aria-label={t("common.quantity")} ref={qInput}
-        value={q} onChange={e => setQ(e.target.value)} />
-      <input type="text" maxLength={16} autoComplete="off" className="qtyinput qtyunit" placeholder={t("lists.unit")} aria-label={t("lists.unitForExampleKgOr")}
-        value={u} onChange={e => setU(e.target.value)} />
-    </span>
-  );
-}
-
 /* Typing in the composer re-renders the screen; a row whose item and
  * state did not change is skipped (speed audit #15). The callbacks it
  * gets are stable, and Demo Town's chip always redraws. */
 const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked
   && (a.also || []).join("|") === (b.also || []).join("|") && !a.chip && !b.chip
-  && a.onQty === b.onQty && a.onReload === b.onReload);
+ );
 
-function ListRowView({ i, picking, picked, onQty, onReload, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
-  onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void; chip?: ReactNode }) {
+function ListRowView({ i, picking, picked, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
+  chip?: ReactNode }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
+  // Name and size are separate: "6 ct" or "x2" under a clean name (owner, 2026-10-31).
+  const size = qtyTag(i);
   return (
     <div className="swipewrap" data-wrap-id={i.item_id}>
       <div className="acts" aria-hidden="true"><button type="button" className="mv" data-act="move" data-id={i.item_id} tabIndex={-1}>{t("lists.move")}</button><button type="button" className="rm" data-act="remove" data-id={i.item_id} tabIndex={-1}>{t("common.remove")}</button></div>
@@ -183,13 +138,14 @@ function ListRowView({ i, picking, picked, onQty, onReload, chip, also }: { i: I
         {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-pressed={!!i.checked} aria-label={t(i.checked ? "lists.uncheck" : "lists.checkOff", { name: i.name })}><IconCheck /></button>}
-        <div className="grow">{picking ? <span className="name">{keepUnit(i.name)}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{keepUnit(i.name)}</a>}
+        <div className="grow"><span className="name">{keepUnit(i.name)}</span>
+          {size ? <span className="sub size">{size}</span> : null}
+          {i.note ? <span className="sub note">{i.note}</span> : null}
           {sub ? <span className="sub">{sub}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
           {i.not_grocery && !picking ? <span className="sub notgrocery">{t("lists.notAGroceryItemAdded")}{" "}<button className="linkbtn" type="button" data-act="ng-keep" data-id={i.item_id}>{t("lists.itIsGroceries")}</button> · <button className="linkbtn" type="button" data-act="ng-remove" data-id={i.item_id}>{t("common.remove")}</button></span> : null}</div>
-        {picking ? null : <QtyBtn item={i} onCommit={onQty} onCancel={onReload} />}
         {picking ? null : <button className="morebtn" type="button" data-act="more" data-id={i.item_id} aria-label={t("lists.moreFor", { name: i.name })}><IconMore /></button>}
       </div>
     </div>
@@ -547,15 +503,12 @@ export function Lists() {
       for (const id of ids) await write(id, () => post("/api/list/remove", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) }));
     } catch (e) { unhide(); toast(errMsg(e)); }
   };
-  const setQty = async (id: string, qty: number, unit: string) => {
+  const editItem = async (id: string, f: { name: string; qty: number; unit: string; note: string }) => {
     const was = dataRef.current?.list.items.find(i => i.item_id === id);
-    patch(i => ({ ...i, qty, unit }), id);
-    try { await write(id, () => post("/api/list/qty", { item_id: id, qty, unit })); }
-    catch (e) { if (was) patch(() => ({ ...was }), id); toast(errMsg(e)); }
+    patch(i => ({ ...i, ...f }), id);
+    try { await write(id, () => post("/api/list/edit", { item_id: id, ...f })); }
+    catch (e) { if (was) patch(() => ({ ...was }), id); throw e; }
   };
-  const qtyRef = useRef(setQty);
-  qtyRef.current = setQty;
-  const onQtyStable = useCallback((id: string, q: number, u: string) => qtyRef.current(id, q, u), []);
   /* A tick (or untick) on this list. The item's own list keeps
    * `checked`; an extra list keeps its tick in `checked_in`. */
   const setTick = (id: string, on: boolean) => {
@@ -585,8 +538,6 @@ export function Lists() {
   };
   const onRows = async (ev: MouseEvent<HTMLElement>) => {
     const t = ev.target as HTMLElement;
-    const link = t.closest<HTMLElement>(".item-link");
-    if (link) { ev.preventDefault(); nav.show("item", { id: link.dataset.id }); return; }
     if (selRef.current) {
       const r = t.closest<HTMLElement>(".listrow");
       if (!r) return;
@@ -594,7 +545,12 @@ export function Lists() {
       return;
     }
     const b = t.closest<HTMLElement>("[data-act]");
-    if (!b) return;
+    if (!b) {
+      // A tap on the rest of the row opens Edit item (owner, 2026-10-31).
+      const r = t.closest<HTMLElement>(".listrow");
+      if (r && !t.closest(".acts") && !r.closest(".swipewrap.open")) setSheet({ kind: "edit", id: r.dataset.rowId! });
+      return;
+    }
     const act = b.dataset.act, id = b.dataset.id!;
     const item = dataRef.current ? onListItems(dataRef.current).find(i => i.item_id === id && itemHome(dataRef.current!, i) === lid) : undefined;
     try {
@@ -928,7 +884,7 @@ export function Lists() {
 
   /* ---- paint ---- */
   const listStores = here ? here.stores || [] : [];
-  const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: onQtyStable, onReload: reloadQuiet,
+  const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id),
     chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
   /* Demo Town: send items to the list of another store, making it when there is none. */
   const toStoreList = async (ids: string[], store: string) => {
@@ -1301,7 +1257,7 @@ export function Lists() {
         <ListSheet sheet={sheet} setSheet={setSheet} data={data} lens={effLens}
           actions={{ onCreate: createList, onSaveStores: saveStores, onDelete: deleteList, onMove: moveTo,
             onWhyAdd: addSuggestion, onWhyNot: dismissSuggestion, onWhyNever: neverSuggest, onRemove: removeItems, onAisle: setAisle,
-            shopping: shoppingHere, onSnap: snapAisle, onChanged: reloadQuiet, onAlso: alsoOn }} />
+            shopping: shoppingHere, onSnap: snapAisle, onChanged: reloadQuiet, onAlso: alsoOn, onEdit: editItem, onHistory: id => nav.show("item", { id }) }} />
       )}
 
       {town ? <TownItemSheet town={town} itemId={townItem} listStores={listStores} onClose={() => setTownItem(null)}
