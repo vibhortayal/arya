@@ -281,8 +281,9 @@ class TestStoreShell(unittest.TestCase):
                           ("screens/StoresMine.tsx", ("sm-list",))):
             for fid in fids:
                 self.assertIn(f'id="{fid}"', self.src(rel), fid)
-        # Settings carries the Stores navrow
-        self.assertIn('<NavRow view="stores-mine" title="Stores"', self.src("screens/Profile.tsx"))
+        # The Lists tab carries the Stores row (moved from Settings, 2026-10-31)
+        self.assertIn('id="lists-stores"', self.src("screens/Lists.tsx"))
+        self.assertIn('nav.show("stores-mine")', self.src("screens/Lists.tsx"))
 
 
 if __name__ == "__main__":

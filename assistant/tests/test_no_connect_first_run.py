@@ -26,7 +26,7 @@ class NoConnectOnFirstRun(unittest.TestCase):
         muse = src("screens/Muse.tsx")
         self.assertIn('id="profile-token-row"', muse)
         self.assertIn('data-copy-prompt="1"', muse)
-        self.assertIn('view="muse"', src("screens/Profile.tsx"))
+        self.assertIn('"muse"', src("screens/About.tsx"))  # About Arya holds the row
 
 
 if __name__ == "__main__":

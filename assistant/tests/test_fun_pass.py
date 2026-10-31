@@ -167,7 +167,7 @@ class TestPlanComposer(unittest.TestCase):
         # photo items are ticked into this quest, not just the list
         self.assertIn("D.pick[key] = { name: n, qty: (D.pick[key] || {}).qty || 1, on: true };", q)
         # a receipt photo is never filed mid-plan
-        self.assertIn("That looks like a receipt. Add it from Settings › Receipts.", q)
+        self.assertIn("That looks like a receipt. Add it from Today › Receipts.", q)
 
 
 class TestQuietMilestones(unittest.TestCase):

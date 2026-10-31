@@ -6,4 +6,4 @@ by ARYA_STORE (json default | dual | pg), tools/migrate_json_to_pg.py,
 tests/test_pgstore_seam.py, compose and .env.example.
 Models run: none. Cost: $0.
 Next: owner sets arya_app password and DATABASE_URL on the VM; run dual,
-migrate, compare, then pg. Real community tables (stage 2) after the freeze.
+migrate, compare, then pg. Real community tables (stage 2) after Nov 4.

@@ -58,7 +58,8 @@ export default async function (page, base) {
     // The Esc key closes a tour replayed from Settings > Help and guide.
     await page.click('#tabs button[data-view="view-profile"]');
     if (await page.$("#btn-tour")) throw new Error("tour replay should live inside the guide");
-    await page.click("#btn-guide");
+    await page.click('#tabs button[data-view="view-help"]');
+    await page.click("#help-guide");
     for (let k = 0; k < 7; k++) await page.keyboard.press("ArrowRight");
     await page.click("#gd-tour");
     await page.waitForSelector(".gd", { state: "detached" });

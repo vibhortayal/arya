@@ -211,7 +211,7 @@ prompt or contract change re-runs the affected sets.
 
 ## 7. Demo
 The judge path is `docs/quest/JUDGE-PLAYBOOK.md`. The video beats are
-in `docs/quest/SUBMISSION.md`. Day minus 1 (Nov 3): freeze, final dry
+in `docs/quest/SUBMISSION.md`. Day minus 1 (Nov 3): final dry
 run, restore test of the nightly sync. Owner-only steps: the API key on
 the VM, the hostname, the final submission (explicit approval).
 Submission target 6:00 PM ET; the deadline is 9:00 PM ET.

@@ -28,7 +28,7 @@ fixes. make quest hunt play usable and demoable in all modes".
   pitch, the Meta models, and "Try the demo — play the Trader Joe's
   hunt"; sign-in folds below. Demo Ask and typing are enabled;
   demo copy says changes last for the visit. Tab bar centers on
-  laptops. SW arya-v33. No quest UI file changed (Hunt v2 freeze).
+  laptops. SW arya-v33. No quest UI file changed.
 - **Docs.** README "Measured results" is the one source for the
   receipt-photo numbers (Wonder 97/98 hand-adjudicated, Spark
   92/98; Gate 0 Spark 90/98) and the localizer number (held-out
@@ -55,7 +55,7 @@ grab, finish, score — all 200s, no page errors. Quest at Costco
 
 - Quest UI defects seen in the check (dense overlay over the scene,
   toast over the rail, the Express list button covered) belong to
-  the Hunt v2 rebuild, frozen pending the owner's approval.
+  the Hunt v2 rebuild, pending the owner's approval.
 - The Optimizer merged "pasta sauce" into "Pasta 1 lb" on the demo
   dictionary (token-subset match); Undo recovers it. Worth a rule.
 - Open-weights job (Spark Open on Modal/Baseten) not started.
