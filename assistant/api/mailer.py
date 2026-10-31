@@ -7,6 +7,8 @@ import html
 import json
 import logging
 import os
+import threading
+import time
 import urllib.error
 import urllib.request
 
@@ -70,3 +72,53 @@ def waitlist_joined(email, app_url):
         f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">You got this because {e} asked to join the Arya waitlist.<br>This address is not monitored. For help, or to be taken off the list, write to {html.escape(reply_to())}.</p>'
         "</div>")
     return send(email, subject, text, body)
+
+
+# --- owner heads-up when someone joins the waitlist (owner, 2026-10-31) ---
+_notify_lock = threading.Lock()
+_notify_sent = []          # times of recent owner mails (this process)
+_notify_capped_at = None   # when the "paused" notice last went out
+
+
+def notify_to():
+    """Dedicated address first, else the ops address. Empty = off."""
+    return (os.environ.get("ARYA_WAITLIST_NOTIFY_EMAIL") or os.environ.get("ARYA_OPS_EMAIL") or "").strip()
+
+
+def waitlist_owner_notice(email, app_url, now=None):
+    """Mail the owner that a new address joined. Called only for a new
+    address (a repeat never gets here). At most ARYA_WAITLIST_NOTIFY_PER_HOUR
+    (default 10) mails an hour; past that one "paused" notice goes out and
+    the rest stay silent (they are all on the Waitlist screen). Best effort;
+    never raises, never logs the address."""
+    try:
+        to = notify_to()
+        if not to or not configured():
+            return False
+        now = time.time() if now is None else now
+        cap = max(1, int(os.environ.get("ARYA_WAITLIST_NOTIFY_PER_HOUR", "10")))
+        global _notify_capped_at
+        with _notify_lock:
+            _notify_sent[:] = [t for t in _notify_sent if now - t < 3600]
+            if len(_notify_sent) >= cap:
+                if _notify_capped_at is not None and now - _notify_capped_at < 3600:
+                    return False
+                _notify_capped_at = now
+                paused = True
+            else:
+                _notify_sent.append(now)
+                paused = False
+        where = "Settings, then Waitlist, at " + app_url
+        stamp = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(now))
+        if paused:
+            subject = "[Arya] Many waitlist joins: emails paused for an hour"
+            text = (f"More than {cap} people joined the waitlist within an hour, so single emails "
+                    f"are paused until it calms down. Everyone is on the list: {where}\n")
+        else:
+            subject = "[Arya] New waitlist join"
+            text = f"{email} asked to join the waitlist at {stamp}.\n\nReview: {where}\n"
+        body = "<pre style=\"font:14px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap\">" + html.escape(text) + "</pre>"
+        return send(to, subject, text, body)
+    except Exception as e:  # noqa: BLE001
+        log.warning("waitlist owner notice failed: %s", type(e).__name__)
+        return False

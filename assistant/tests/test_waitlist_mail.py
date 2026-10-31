@@ -69,6 +69,51 @@ class TestWaitlistMail(unittest.TestCase):
         self.assertEqual(seen["body"]["reply_to"], "support@teamnightshift.org")
         self.assertEqual(seen["body"]["to"], ["x@example.com"])
 
+    def test_owner_notice_sent_once_to_notify_then_ops_address(self):
+        os.environ["ARYA_OPS_EMAIL"] = "ops@example.com"
+        os.environ.pop("ARYA_WAITLIST_NOTIFY_EMAIL", None)
+        try:
+            with mock.patch("api.mailer.send", return_value=True) as send:
+                self.join("n1@example.com"); self.join("n1@example.com")
+            owner = [c for c in send.call_args_list if c[0][0] == "ops@example.com"]
+            self.assertEqual(len(owner), 1)
+            self.assertIn("n1@example.com", owner[0][0][2])
+            os.environ["ARYA_WAITLIST_NOTIFY_EMAIL"] = "me@example.com"
+            with mock.patch("api.mailer.send", return_value=True) as send:
+                self.join("n2@example.com")
+            self.assertIn("me@example.com", [c[0][0] for c in send.call_args_list])
+        finally:
+            os.environ.pop("ARYA_OPS_EMAIL"); os.environ.pop("ARYA_WAITLIST_NOTIFY_EMAIL", None)
+
+    def test_owner_notice_off_without_address_and_failure_is_quiet(self):
+        os.environ.pop("ARYA_OPS_EMAIL", None); os.environ.pop("ARYA_WAITLIST_NOTIFY_EMAIL", None)
+        from api import mailer
+        with mock.patch("api.mailer.send") as send:
+            self.assertFalse(mailer.waitlist_owner_notice("a@example.com", "http://x"))
+        send.assert_not_called()
+        os.environ["ARYA_OPS_EMAIL"] = "ops@example.com"
+        try:
+            with mock.patch("api.mailer.send", side_effect=RuntimeError("boom")):
+                self.assertEqual(self.join("z@example.com").json(), {"status": "added"})
+        finally:
+            os.environ.pop("ARYA_OPS_EMAIL")
+
+    def test_owner_notice_hourly_cap_then_one_paused_notice(self):
+        from api import mailer
+        mailer._notify_sent.clear(); mailer._notify_capped_at = None
+        os.environ["ARYA_OPS_EMAIL"] = "ops@example.com"; os.environ["ARYA_WAITLIST_NOTIFY_PER_HOUR"] = "2"
+        try:
+            with mock.patch("api.mailer.send", return_value=True) as send:
+                for i in range(6):
+                    mailer.waitlist_owner_notice(f"u{i}@example.com", "http://x", now=1000.0 + i)
+                self.assertEqual(send.call_count, 3)   # 2 singles + 1 paused
+                self.assertIn("paused", send.call_args_list[2][0][1])
+                mailer.waitlist_owner_notice("late@example.com", "http://x", now=1000.0 + 3700)
+                self.assertEqual(send.call_count, 4)
+        finally:
+            os.environ.pop("ARYA_OPS_EMAIL"); os.environ.pop("ARYA_WAITLIST_NOTIFY_PER_HOUR")
+            mailer._notify_sent.clear(); mailer._notify_capped_at = None
+
     def test_html_escapes_the_address(self):
         from api import mailer
         with mock.patch("api.mailer.send", return_value=True) as send:

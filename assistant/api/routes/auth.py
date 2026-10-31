@@ -3,7 +3,7 @@ import os
 import secrets
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
@@ -99,8 +99,17 @@ async def auth_register(req: Request):
     return _set_session_cookie(JSONResponse({"user": name}), auth.new_session(name))
 
 
+def _quiet(fn, *a):
+    """Run a background mail; whatever happens, the visitor's join stands."""
+    try:
+        fn(*a)
+    except Exception as e:  # noqa: BLE001
+        import logging
+        logging.getLogger("arya.mailer").warning("waitlist mail failed: %s", type(e).__name__)
+
+
 @router.post("/auth/waitlist")
-async def auth_waitlist(req: Request):
+async def auth_waitlist(req: Request, bg: BackgroundTasks):
     """Join the sign-in waitlist (owner, 2026-10-30): public, an email
     and nothing else (api/waitlist.py). A hidden field a person never
     fills, and 5 tries an hour per IP, keep it quiet. Answers
@@ -121,9 +130,13 @@ async def auth_waitlist(req: Request):
         status = waitlist.join(body.get("email", ""))
         if status == "added":
             from api import mailer
-            if mailer.configured():   # best effort: never blocks joining
-                await run_in_threadpool(mailer.waitlist_joined, waitlist.clean(body.get("email", "")),
-                                        os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url).rstrip("/"))
+            addr = waitlist.clean(body.get("email", ""))
+            url = os.environ.get("ARYA_PUBLIC_URL") or str(req.base_url).rstrip("/")
+            # best effort, after the answer is sent: a slow or failing mail
+            # never blocks or breaks joining
+            if mailer.configured():
+                bg.add_task(_quiet, mailer.waitlist_joined, addr, url)
+            bg.add_task(mailer.waitlist_owner_notice, addr, url)
         return {"status": status}
     except PermissionError as e:
         raise HTTPException(429, str(e))
