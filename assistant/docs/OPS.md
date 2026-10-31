@@ -1,0 +1,36 @@
+# OPS — watching Arya and what to do when it breaks
+
+Written 2026-10-31 from the ops review. Everything here runs on the VM,
+from `assistant/deploy`. The owner is the only operator.
+
+## What watches the app
+| Thing | Where | Alerts you when |
+|---|---|---|
+| Outside uptime check on `https://arya.teamnightshift.org/health` | UptimeRobot or Better Stack, free plan | The site is down, or `/health` answers 503 (data folder not writable, or free disk under `ARYA_HEALTH_MIN_FREE_MB`, default 500) |
+| Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
+| Backup dead-man ping | Healthchecks.io free plan, pinged at the end of `backup.sh` | The nightly backup did not finish |
+
+## One-time setup on the VM
+1. Add to `assistant/deploy/.env`: `ARYA_OPS_EMAIL=you@example.com` (and `RESEND_API_KEY` is already there). `chmod 600 .env`.
+2. `git pull`, then `docker compose up -d --build` (not `restart`: restart does not re-read `.env`).
+3. Try it: `docker compose exec -T api python -m harness.ops report`. Then with `--email`.
+4. Cron (`crontab -e`), times in the VM's zone:
+   ```
+   17 3 * * *  /home/ubuntu/arya/assistant/deploy/backup.sh >> /var/log/arya-backup.log 2>&1
+   30 13 * * * cd /home/ubuntu/arya/assistant/deploy && docker compose exec -T api python -m harness.ops report --email >> /var/log/arya-ops.log 2>&1
+   ```
+5. Backups: set `ARYA_BACKUP_REMOTE` (rclone remote, for example a Cloudflare R2 bucket), then run `backup.sh` by hand once and check the file arrived off the VM.
+6. Restore test (do it once, into a scratch folder, not over live data): `mkdir /tmp/restore-test && tar xzf ~/arya-backups/arya-data-*.tar.gz -C /tmp/restore-test` and open a few files. Read `restore.sh` before running it for real.
+7. Take one Oracle boot-volume backup before judging.
+8. Make sure `support@teamnightshift.org` forwards to you (Cloudflare Email Routing, free). Arya's paused-account message sends people there.
+
+## What the numbers mean
+The cost ledger (`cost-ledger.jsonl` in the data folder) has one row per model call. Since 2026-10-31 a row also has `ms` (how long the call took), and a failed call has a row with `ok: false`, `cost_usd: 0` and `err` (`http_429`, `timeout`, `unreachable`, `shape`, `error`). Older rows have none of these. Failed rows do not count toward anyone's usage or the daily budget. A refusal that comes back as a normal 200 answer is not a failure row.
+
+## When something breaks
+- **Site down**: `docker compose ps`, then `docker compose logs --tail 100 api caddy`. `docker compose up -d` brings it back.
+- **503 from `/health`, "disk nearly full"**: `df -h`, `docker system df`. Old images: `docker image prune`. Do not delete the `arya-data` volume.
+- **A model type failing**: the report shows the error kinds. `http_401` is a bad or expired key; `http_429` is a rate limit; `timeout` or `unreachable` is Meta or the network. Wonder failing while Spark works: set `ARYA_PHOTO_READER=spark` and `docker compose up -d`.
+- **Pause all paid reads fast**: set `ARYA_DAILY_BUDGET_USD=0` and `ARYA_DEMO_DAILY_BUDGET_USD=0` in `.env`, `docker compose up -d`. Lists, Today and sign-in keep working.
+- **A frozen account**: the owner calls `POST /api/usage/unfreeze` (no screen yet).
+- **Restore**: `restore.sh <archive>` after reading it; stop the api first.
