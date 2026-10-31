@@ -85,6 +85,16 @@ If a guideline conflicts with these, these win:
 - **Prices** come only from the user's own receipts and lists — no scraping,
   no retailer APIs, no web search (SPEC FR-11.1). Community price comparison
   is opt-in and not live (SPEC FR-11.7).
+- **Help upkeep:** when a change adds or removes a feature, changes
+  navigation, or moves things around in the app's UI, update the Help and
+  Ask Arya's knowledge in the same PR. Help is the Help tab
+  (`assistant/web/src/screens/Help.tsx`, topics in
+  `assistant/web/src/guide/helpTopics.ts`, text under `help.topics.*` in
+  `en.json`) and the guide cards (`assistant/web/src/guide/cards.ts`,
+  text under `guide.*`). Ask Arya answers from
+  `assistant/prompts/arya_features.md`; keep it in step with the Help
+  topics. Also check the feature docs (`assistant/docs/USER-JOURNEYS.md`,
+  `assistant/docs/DEMO.md`).
 - **Spec beats code:** if SPEC.md and the code disagree, the spec wins — fix
   the code, or flag it and let the owner decide.
 
