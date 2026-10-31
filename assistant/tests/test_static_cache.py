@@ -20,6 +20,18 @@ class StaticCacheControl(unittest.TestCase):
         p = os.path.join(main._PWA, "vendor", "three.module.js")
         self.assertEqual(main._static_cache_control(p), "public, max-age=604800")
 
+    def test_boot_script_is_revalidated_like_the_shell(self):
+        # boot.js keeps its name across builds, so it must not be cached
+        # by guesswork (audit 2026-10-30).
+        import tempfile
+        from fastapi.testclient import TestClient
+        from starlette.applications import Starlette
+        with tempfile.TemporaryDirectory() as d:
+            open(os.path.join(d, "boot.js"), "w").write("/* */")
+            app = Starlette()
+            app.mount("/", main._AppFiles(d), name="app")
+            self.assertEqual(TestClient(app).get("/boot.js").headers.get("cache-control"), "no-cache")
+
 
 if __name__ == "__main__":
     unittest.main()

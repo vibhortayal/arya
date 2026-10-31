@@ -108,6 +108,20 @@ class TestAuth(unittest.TestCase):
         c.post("/auth/registration", json={"open": False})
         self.assertFalse(c.get("/auth/status").json()["registration_open"])  # toggle wins
 
+    @mock.patch.dict(os.environ, {"ARYA_OWNER_USERNAME": "owner", "ARYA_WAITLIST_ADMINS": "owner"})
+    def test_me_says_who_sees_the_owner_rows(self):
+        # Audit L7: Settings shows the owner rows only when /auth/me says
+        # so, and nobody else calls the owner-only routes.
+        c = self.c
+        c.post("/auth/setup", json={"username": "owner", "password": "correct horse"})
+        me = c.get("/auth/me").json()
+        self.assertTrue(me["owner"])
+        self.assertTrue(me["waitlist_admin"])
+        with mock.patch.dict(os.environ, {"ARYA_OWNER_USERNAME": "someone", "ARYA_WAITLIST_ADMINS": ""}):
+            me = c.get("/auth/me").json()
+            self.assertFalse(me["owner"])
+            self.assertFalse(me["waitlist_admin"])
+
     def test_registration_toggle_needs_login_and_owner(self):
         c = self.c
         # logged out: the state endpoint refuses outright
