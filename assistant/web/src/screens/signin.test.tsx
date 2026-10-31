@@ -48,6 +48,14 @@ test("/team shows the password form and not the email block", () => {
   expect(document.querySelector("#signin-sheet h3")!.textContent).toBe("Team sign-in");
 });
 
+test("the password form posts (never GET) and names its fields for password managers", () => {
+  history.replaceState({}, "", "/team");
+  render(<Login />);
+  expect($("login-form").getAttribute("method")).toBe("post");
+  expect($("login-user").getAttribute("name")).toBe("username");
+  expect($("login-pass").getAttribute("name")).toBe("password");
+});
+
 test("?team=1 works too", () => {
   history.replaceState({}, "", "/?team=1");
   render(<Login />);
