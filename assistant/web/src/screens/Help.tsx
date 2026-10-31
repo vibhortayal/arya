@@ -4,7 +4,8 @@ import { HELP_TOPICS, type HelpTopic } from "../guide/helpTopics";
 import { useTranslation } from "../i18n";
 import { useGuide } from "../ui/Guide";
 import { useTour } from "../ui/Tour";
-import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
+import { useIsDemo } from "../app/session";
+import { useTourSteps } from "../onboarding/demoTour";
 import { Chip, Group, Section } from "../ui/kit";
 import "./help.css";
 
@@ -19,6 +20,8 @@ export function Help() {
   const nav = useNav();
   const guide = useGuide();
   const tour = useTour();
+  const tourSteps = useTourSteps();
+  const demo = useIsDemo();
   const [open, setOpen] = useState<HelpTopic | null>(null);
   const [q, setQ] = useState("");
 
@@ -84,8 +87,8 @@ export function Help() {
             <span className="grow">{t("help.guide")}<span className="sub">{t("help.guideSub")}</span></span><span className="chev">›</span></button>
           <button className="navrow" id="help-powers" type="button" onClick={() => nav.show("powers")}>
             <span className="grow">{t("help.powers")}<span className="sub">{t("help.powersSub")}</span></span><span className="chev">›</span></button>
-          <button className="navrow" id="help-tour" type="button" onClick={() => tour.startTour(FIRST_RUN_TOUR)}>
-            <span className="grow">{t("help.tour")}<span className="sub">{t("help.tourSub")}</span></span><span className="chev">›</span></button>
+          <button className="navrow" id="help-tour" type="button" onClick={() => tour.startTour(tourSteps)}>
+            <span className="grow">{t("help.tour")}<span className="sub">{t(demo ? "help.tourSubDemo" : "help.tourSub")}</span></span><span className="chev">›</span></button>
           <button className="navrow" id="help-feedback" type="button" onClick={() => nav.show("feedback")}>
             <span className="grow">{t("help.feedback")}<span className="sub">{t("help.feedbackSub")}</span></span><span className="chev">›</span></button>
         </Group>

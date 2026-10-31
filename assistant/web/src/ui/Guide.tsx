@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from "react-dom";
 import { GUIDE_CARDS, guideIndex, type GuideCard, type GuideId } from "../guide/cards";
 import { useTour } from "./Tour";
-import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
+import { useTourSteps } from "../onboarding/demoTour";
 import { useTranslation } from "../i18n";
 
 /* The Arya guide (#154, owner-approved mockup 2026-10-29): a
@@ -74,6 +74,7 @@ function Card({ card }: { card: GuideCard }) {
 export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: () => void }) {
   const { t } = useTranslation();
   const tour = useTour();
+  const tourSteps = useTourSteps();
   const [i, setI] = useState(start);
   const [dir, setDir] = useState<"" | "fwd" | "bwd">("");
   const wrap = useRef<HTMLDivElement>(null);
@@ -142,7 +143,7 @@ export function GuideOverlay({ start = 0, onClose }: { start?: number; onClose: 
     if (dx < 0) { if (!last) go(i + 1); } else bwd();
   };
 
-  const replay = () => { onClose(); tour.startTour(FIRST_RUN_TOUR); };
+  const replay = () => { onClose(); tour.startTour(tourSteps); };
 
   return createPortal(
     <>

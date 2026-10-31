@@ -22,7 +22,7 @@ export const markDemoStart = () => { try { sessionStorage.setItem(DEMO_KEY, "1")
 export const demoWelcomePending = () => { try { return sessionStorage.getItem(DEMO_KEY) === "1"; } catch { return false; } };
 export const clearDemoWelcome = () => { try { sessionStorage.removeItem(DEMO_KEY); } catch { /* ignore */ } };
 
-export function WelcomeSheet({ onTour, onSkip }: { onTour: () => void; onSkip: () => void }) {
+export function WelcomeSheet({ onTour, onSkip, demo = false }: { onTour: () => void; onSkip: () => void; demo?: boolean }) {
   const { t } = useTranslation();
   return (
     <Sheet open onClose={onSkip} id="fr-welcome" className="fr-welcome" labelledBy="fr-welcome-title">
@@ -35,7 +35,7 @@ export function WelcomeSheet({ onTour, onSkip }: { onTour: () => void; onSkip: (
         <div><b>{t("firstRun.welcome.reminders")}</b>{t("firstRun.welcome.remindersSub")}</div>
         <div><b>{t("firstRun.welcome.spending")}</b>{t("firstRun.welcome.spendingSub")}</div>
       </div>
-      <button className="btn primary wide fr-go" id="fr-tour-start" type="button" data-first onClick={onTour}>{t("firstRun.welcome.showMe")}</button>
+      <button className="btn primary wide fr-go" id="fr-tour-start" type="button" data-first onClick={onTour}>{t(demo ? "firstRun.welcome.showMeDemo" : "firstRun.welcome.showMe")}</button>
       <button className="linkbtn fr-skip" id="fr-skip" type="button" onClick={onSkip}>{t("firstRun.welcome.skip")}</button>
     </Sheet>
   );

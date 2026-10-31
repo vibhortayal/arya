@@ -2758,6 +2758,7 @@
       "spending": "Spending",
       "spendingSub": "From your receipts",
       "showMe": "Show me around · 30 sec",
+      "showMeDemo": "Show me every screen · 2 min",
       "skip": "Skip for now"
     },
     "tour": {
@@ -2788,9 +2789,82 @@
       "guideLink": "Want the full guide?"
     }
   },
+  "demoTour": {
+    "today_tab": {
+      "title": "Today",
+      "line": "What needs you now: what is running low, what to use soon, and your lists. Edit Today changes what shows."
+    },
+    "today_low": {
+      "title": "Running low",
+      "line": "Arya notices what you buy often and says when it is due. Tap Add to put it on a list."
+    },
+    "today_lists": {
+      "title": "Your lists",
+      "line": "One card for each store. Tap a card to open that list."
+    },
+    "today_soon": {
+      "title": "Use soon",
+      "line": "Food from your receipts that can go bad. Add a date and Arya reminds you."
+    },
+    "today_edit": {
+      "title": "Edit Today",
+      "line": "Hide, reorder or add cards. Make this screen yours."
+    },
+    "lists_tab": {
+      "title": "Lists",
+      "line": "One list for each store. Add items by typing, talking or snapping a photo."
+    },
+    "lists_cards": {
+      "title": "A list for each store",
+      "line": "Tap a list to add items and tick them off. Start shopping is inside it."
+    },
+    "lists_new": {
+      "title": "New list",
+      "line": "Start a list for any store or trip."
+    },
+    "ask_tab": {
+      "title": "Ask",
+      "line": "Ask Arya about your food and spending. It answers from your receipts."
+    },
+    "ask_box": {
+      "title": "Ask anything",
+      "line": "Type or talk. Try: How much was milk at Costco?"
+    },
+    "ask_photo": {
+      "title": "Add a photo",
+      "line": "Snap a receipt, your fridge or a date. Arya reads it."
+    },
+    "quest_tab": {
+      "title": "Quest",
+      "line": "Turn a store trip into a game with points and badges."
+    },
+    "quest_map": {
+      "title": "Map my store",
+      "line": "Walk a store once and Arya learns where things are. Quest shows the way next time."
+    },
+    "help_tab": {
+      "title": "Help",
+      "line": "Answers, how-to topics and the Arya guide live here. Take the tour again from here."
+    },
+    "help_ask": {
+      "title": "Ask how",
+      "line": "Not sure how something works? Ask here, or open a topic below."
+    },
+    "settings_tab": {
+      "title": "Settings",
+      "line": "Your group, language, currency, reminders, display and account."
+    },
+    "settings_prefs": {
+      "title": "Preferences",
+      "line": "Language, currency, reminders and display. You can leave these as they are."
+    }
+  },
   "tour": {
     "skip": "Skip",
     "next": "Next",
+    "skipTour": "Skip tour",
+    "skipScreen": "Skip {{screen}}",
+    "chip": "{{screen}} · {{n}} of {{of}}",
     "stepOf": "Step {{n}} of {{total}}"
   },
   "guide": {
@@ -3190,6 +3264,7 @@
     "powersSub": "Everything Arya does, and what you can turn on",
     "tour": "Take the tour again",
     "tourSub": "Six steps, 30 seconds",
+    "tourSubDemo": "A stop on every screen, about 2 minutes",
     "feedback": "Send feedback",
     "feedbackSub": "Tell us what is missing or confusing",
     "topics": {
