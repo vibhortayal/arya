@@ -22,8 +22,10 @@ class TestProfileSimple(unittest.TestCase):
         prof = profile_view()
         for el in ("pf-stats", "pf-badges", "pf-spots", "pf-stores", "profile-token-row"):
             self.assertNotIn(f'id="{el}"', prof)
-        for el in ("btn-muse", "btn-about"):
-            self.assertIn(f'id="{el}"', prof)
+        # About Arya (2026-10-31): Settings has one row to it; the Muse row
+        # lives on that page.
+        self.assertIn('id="btn-about"', prof)
+        self.assertIn('"btn-muse"', src("screens/About.tsx"))
         # Usability pass: Quest progress moved into the Quest tab.
         self.assertNotIn('id="btn-quest-progress"', prof)
         self.assertIn('id="qm-progress"', src("screens/quest/QuestMode.tsx"))

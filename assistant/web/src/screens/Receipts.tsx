@@ -163,7 +163,7 @@ export function Receipts() {
 
   return (
     <>
-      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("common.receipts")}</h1>
       <p id="rc-count" className="subtitle">{count}</p>
       <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>

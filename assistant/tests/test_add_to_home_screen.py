@@ -11,7 +11,7 @@ class TestAddToHomeScreen(unittest.TestCase):
         # The card on Today, above the cards (Running low first by
         # default, customizable Today); the row in Settings.
         self.assertIn("<A2hsCard", today)
-        self.assertIn("<A2hsRow", frontend.src("screens/Profile.tsx"))
+        self.assertIn("<A2hsRow", frontend.src("screens/About.tsx"))  # Settings > About Arya (2026-10-31)
         self.assertIn('id="btn-a2hs"', a2hs)
         self.assertIn('id="a2hs-sheet"', a2hs)
         self.assertIn("data-a2hs-x", a2hs)  # the card's close

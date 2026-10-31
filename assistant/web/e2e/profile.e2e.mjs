@@ -8,10 +8,14 @@ export default async function (page, base) {
   await page.waitForSelector("#view-profile");
   // Opened as a tab (no params.from): no Back link.
   if (await page.$("#pf-back")) throw new Error("Back link should be hidden on the Settings tab");
-  for (const sel of ["#pf-avatar", "#av-edit-label", "#profile-account", "#pf-currency", "#btn-receipts", "#btn-signout2"])
+  for (const sel of ["#pf-avatar", "#av-edit-label", "#profile-account", "#pf-currency", "#btn-about", "#btn-signout2"])
     await page.waitForSelector(sel, { state: "attached" });
   const acct = await page.textContent("#profile-account");
-  if (!acct.includes("Signed in as") || !acct.includes("demo")) throw new Error("account rows wrong: " + acct);
+  // Account holds Export and Delete; About Arya sits below it; Sign out is last (2026-10-31).
+  if (!acct.includes("Export my data") || !acct.includes("Delete my account")) throw new Error("account rows wrong: " + acct);
+  const ids = await page.$$eval("#view-profile .navrow, #view-profile .btn.wide", els => els.map(e => e.id));
+  if (ids[ids.length - 1] !== "btn-signout2" || ids.indexOf("btn-about") < ids.indexOf("btn-del-account")) throw new Error("Settings order wrong: " + ids);
+  for (const gone of ["btn-receipts", "btn-analysis", "btn-guide", "btn-feedback", "btn-powers", "btn-muse", "btn-usage"]) if (ids.includes(gone)) throw new Error(gone + " should have left Settings");
   // Avatar editor opens and closes.
   await page.click("#av-edit-label");
   await page.waitForSelector("#av-panel", { state: "visible" });

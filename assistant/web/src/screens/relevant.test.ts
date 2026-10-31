@@ -1,5 +1,5 @@
 import { askChips } from "./Chat";
-import { profileLine, receiptsSub } from "./Profile";
+import { profileLine } from "./Profile";
 
 /* Relevant cards (owner 2026-10-30): Ask's starter chips come from the
  * household's data; Settings shows no zero scores. */
@@ -30,10 +30,5 @@ describe("settings", () => {
     expect(profileLine(p(0))).toBe("Your first quest earns Level 1");
     expect(profileLine(p(0, 26))).toBe("26 weeks of shopping with Arya");
     expect(profileLine(p(120, 3))).toBe("Level 2 · 120 points · 3-week streak");
-  });
-  test("receipts say who sees them", () => {
-    expect(receiptsSub(0, null)).toBe("Only you see them");
-    expect(receiptsSub(39, null)).toBe("39 receipts · only you see them");
-    expect(receiptsSub(1, "Tayals")).toBe("1 receipt · only you and Tayals see them");
   });
 });

@@ -9,10 +9,11 @@ export default async function (page, base) {
   await page.reload();
   await page.waitForSelector("#tabs");
   // Reached from Profile's "Connect an AI agent" row, as in the old app.
-  await page.evaluate(() => window.__aryaShow("profile"));
+  await page.evaluate(() => window.__aryaShow("about"));
   await page.waitForSelector("#btn-muse");
   if (!(await page.textContent("#btn-muse")).includes("Use Arya in another AI app")) throw new Error("profile row text");
   const demoGet = page.waitForResponse(r => r.url().endsWith("/auth/token") && r.request().method() === "GET");
+  await page.evaluate(() => window.__aryaShow("about"));
   await page.click("#btn-muse");
   await page.waitForSelector("#view-muse");
   if ((await page.textContent("#view-muse h1")) !== "Use Arya in another AI app") throw new Error("title");
@@ -34,7 +35,8 @@ export default async function (page, base) {
     return route.fulfill({ status: 405, json: {} });
   });
   await page.click("#pfm-back");
-  await page.waitForSelector("#view-profile");
+  await page.waitForSelector("#view-about");
+  await page.evaluate(() => window.__aryaShow("about"));
   await page.click("#btn-muse");
   await page.waitForSelector("#profile-token-row button[data-mint]");
   if (!(await page.textContent("#profile-token-row")).includes("No code yet.")) throw new Error("no-token row");
@@ -44,9 +46,10 @@ export default async function (page, base) {
   if ((await page.inputValue("#profile-token-row [data-token-value]")) !== "arya_e2e_token") throw new Error("minted token not shown");
   await page.click("#profile-token-row button[data-copy]");
   await page.waitForFunction(() => document.body.textContent.includes("Code copied."));
-  // Back to Profile; reopening repaints with an active code that can be revoked.
+  // Back to About Arya; reopening repaints with an active code that can be revoked.
   await page.click("#pfm-back");
-  await page.waitForSelector("#view-profile");
+  await page.waitForSelector("#view-about");
+  await page.evaluate(() => window.__aryaShow("about"));
   await page.click("#btn-muse");
   await page.waitForSelector("#profile-token-row button[data-revoke]");
   if (!(await page.textContent("#profile-token-row")).includes("Your code is on.")) throw new Error("active row");

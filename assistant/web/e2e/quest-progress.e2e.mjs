@@ -8,7 +8,7 @@ export default async function (page, base) {
   await page.waitForSelector("#tabs");
   // Settings no longer carries it; the Quest tab's home does.
   await page.click('#tabs button[data-view="view-profile"]');
-  await page.waitForSelector("#btn-guide");
+  await page.waitForSelector("#btn-about");
   if (await page.$("#btn-quest-progress")) throw new Error("Quest progress should have left Settings");
   await page.click('#tabs button[data-view="view-community"]');
   await page.waitForSelector("#qm-progress", { timeout: 20000 });

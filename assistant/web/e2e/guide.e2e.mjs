@@ -15,14 +15,14 @@ export default async function (page, base) {
   page.on("request", r => { if (/\/api\//.test(r.url()) && r.method() !== "GET") sent.push(r.method() + " " + r.url()); });
 
   // Settings > Arya guide, above Arya's powers.
+  // The guide opens from the Help tab (Settings has no Help row, 2026-10-31).
   await page.click('#tabs button[data-view="view-profile"]');
-  await page.waitForSelector("#btn-guide");
+  await page.waitForSelector("#btn-about");
   const order = await page.$$eval("#view-profile .navrow", rs => rs.map(r => r.id));
-  if (order.indexOf("btn-guide") !== order.indexOf("btn-powers") - 1) throw new Error("Arya guide is not just above Arya's powers: " + order.join(","));
-  // One help row (usability pass): no separate tour row, no Quest progress.
-  for (const gone of ["btn-tour", "btn-quest-progress"]) if (order.includes(gone)) throw new Error(gone + " should be gone from Settings");
-  if (!(await page.textContent("#btn-guide")).startsWith("Help and guide")) throw new Error("help row label");
-  await page.click("#btn-guide");
+  for (const gone of ["btn-guide", "btn-tour", "btn-quest-progress", "btn-feedback"]) if (order.includes(gone)) throw new Error(gone + " should be gone from Settings");
+  await page.click('#tabs button[data-view="view-help"]');
+  await page.waitForSelector("#help-guide");
+  await page.click("#help-guide");
   await page.waitForSelector('.gd[data-card="lists"]');
   if ((await page.textContent("#gd-count")) !== "Arya guide · 1 of 8") throw new Error("count: " + (await page.textContent("#gd-count")));
   if (await page.$("#gd-back")) throw new Error("Back on card 1");
@@ -58,6 +58,7 @@ export default async function (page, base) {
   if ((await lists()) !== before) throw new Error("real lists changed");
 
   // Powers: See how it works opens the guide; a power's (i) opens its card.
+  await page.evaluate(() => window.__aryaShow("about"));
   await page.click("#btn-powers");
   await page.waitForSelector("#pw-guide");
   await page.click("#pw-guide");
@@ -74,8 +75,8 @@ export default async function (page, base) {
   await page.waitForSelector("#view-powers");
 
   // Every card keeps you on it: walk all eight, no link out, then Replay on the last.
-  await page.evaluate(() => window.__aryaShow("profile"));
-  await page.click("#btn-guide");
+  await page.evaluate(() => window.__aryaShow("help"));
+  await page.click("#help-guide");
   for (let k = 0; k < 7; k++) {
     if (await page.$("#gd-try, .gd .try, .gd-card a, .gd-card ol.steps button")) throw new Error("link out on card " + (k + 1));
     if (!(await page.$(".gd ol.steps li"))) throw new Error("no steps on card " + (k + 1));

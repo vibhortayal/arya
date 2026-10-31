@@ -64,7 +64,7 @@ describe("guide overlay", () => {
     expect(document.querySelectorAll(".gd-dots i.on").length).toBe(1);
     act(() => { fireEvent.click(document.getElementById("gd-next")!); });
     expect(count()).toBe("Arya guide · 2 of 15");
-    expect(screen.getByText("Share lists, shop together or apart")).toBeTruthy();
+    expect(screen.getByText("Shared lists to shop in sync")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-back")!); });
     expect(card()).toBe("lists");
     expect(document.activeElement!.id).toBe("gd-next");
