@@ -19,10 +19,7 @@ from api import deps, feedback, mailer, state, waitlist
 from api.auth import users as _users
 from api.cost_ledger import CostLedger
 
-FAIL_RATE = 0.10        # a mode failing more than this (with MIN_CALLS) is flagged
-MIN_CALLS = 5
-SLOW_P95_MS = 20000
-BUDGET_WARN = 0.8
+from api.ops_summary import BUDGET_WARN, FAIL_RATE, MIN_CALLS, SLOW_P95_MS
 
 
 def _num(name, default):

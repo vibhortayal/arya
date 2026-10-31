@@ -131,6 +131,7 @@ export function Profile() {
       </div>
       <h3 className="sect">{t("settings.account")}</h3>
       <div className="group" id="profile-account">
+        {admin.owner && <OpsRow />}
         {admin.owner && <RegistrationRow />}
         {admin.waitlist && <WaitlistRow />}
         <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
@@ -264,6 +265,21 @@ const keyBytes = (b64: string) => {
 
 /* Owner-only (ARYA_WAITLIST_ADMINS): the list call answers 403 to anyone
  * else, so every other account, and any failure, renders nothing. */
+function OpsRow() {
+  const { t } = useTranslation();
+  const nav = useNav();
+  const [quiet, setQuiet] = useState<boolean | null>(null);
+  useEffect(() => {
+    get<{ needs: unknown[] }>("/api/ops").then(d => setQuiet(d.needs.length === 0), () => setQuiet(null));
+  }, [nav.key]);
+  return (
+    <button className="navrow" id="btn-ops" type="button" onClick={() => nav.show("ops")}>
+      <span className="grow">{t("ops.rowTitle")}<span className="sub">{t("ops.rowSub")}</span></span>
+      {quiet !== null && <span className={"opschip " + (quiet ? "ok" : "bad")}>{quiet ? t("ops.quiet") : t("ops.needsLook")}</span>}
+      <span className="chev">›</span></button>
+  );
+}
+
 function WaitlistRow() {
   const { t } = useTranslation();
   const nav = useNav();

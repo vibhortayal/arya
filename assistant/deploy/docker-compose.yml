@@ -89,6 +89,9 @@ services:
       KROGER_CLIENT_SECRET: ${KROGER_CLIENT_SECRET:-}
     volumes:
       - arya-data:/app/data
+      # The nightly backups, read only, so the Ops screen can show the
+      # age of the newest one. backup.sh writes to ~/arya-backups.
+      - /home/ubuntu/arya-backups:/backups:ro
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

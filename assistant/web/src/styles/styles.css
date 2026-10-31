@@ -2161,3 +2161,12 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .prefrow.inline .curpick { flex: 1; max-width: none; }
 .signedin { text-align: center; margin: -6px 0 14px; }
 .aboutcredit { padding-top: 14px; }
+
+/* Ops screen (owner, 2026-10-31): status chips and a spend bar. */
+.opschip { display: inline-flex; align-items: center; border-radius: 980px; padding: 3px 10px; font-size: 13px; font-weight: 700; white-space: nowrap; margin: 0 8px; }
+.row .money .opschip { margin: 0; }
+.opschip.ok { background: #e3f4ea; color: #1c7a45; }
+.opschip.bad { background: #fbe6e6; color: var(--danger); }
+.opsbar { display: block; height: 6px; background: var(--fill); border-radius: 3px; margin-top: 8px; }
+.opsbar > span { display: block; height: 6px; background: var(--accent); border-radius: 3px; }
+.opsbar > span.bad { background: var(--danger); }

@@ -60,12 +60,25 @@ def _client_ip(req):
     return req.client.host if req.client else "?"
 
 
+def _reads_gate(demo=False):
+    """The owner's Ops switches: paid reads paused for everyone, or the
+    demo's live reads off. Lists, Today and sign-in never come here."""
+    from api import site_flags
+    if site_flags.ai_paused():
+        raise HTTPException(503, "Arya's reading is paused for now. "
+                            "Everything else still works.")
+    if (demo or state.in_sandbox()) and not site_flags.demo_live():
+        raise HTTPException(503, "The demo's live reads are off right now. "
+                            "Everything else still works.")
+
+
 def _budget_guard(demo=False):
     """Stage 6 hardening: a daily ceiling on model spend (default $10),
     far above real household use, bounding any single bad day. The
     demo household has its own smaller bucket (default $2): a crowd
     of judges can exhaust the demo's day, never the real accounts'
     (review 2026-10-28, H4)."""
+    _reads_gate(demo)
     if demo or state.in_sandbox():
         box = state._overlay.get()
         share = float(os.environ.get("ARYA_DEMO_SESSION_BUDGET_USD", "0.40"))
@@ -293,6 +306,7 @@ def _is_waitlist_admin(user):
 
 def new_client():
     """A Meta client that books its spend on this request's ledger."""
+    _reads_gate()
     return MetaClient(ledger=_ledger())
 
 
