@@ -43,6 +43,11 @@ export function qtyTag(it?: { qty?: number; unit?: string } | null): string {
 }
 
 /* Asset URLs come from the current PWA's static mount, shared by both apps. */
+/* "Paper Towels 6 ct" never breaks between "6" and "ct" (audit L5):
+ * a no-break space joins a number to the unit after it. */
+export function keepUnit(name: string): string {
+  return name.replace(/(\d)\s+(?=(?:ct|count|pk|pack|lb|lbs|oz|fl oz|gal|qt|pt|kg|g|ml|l|dozen|doz)\b)/gi, "$1\u00a0");
+}
 export const asset = (p: string) => "/" + p.replace(/^\/+/, "");
 
 /* What coupons, deals and discounts took off a filed receipt (the same

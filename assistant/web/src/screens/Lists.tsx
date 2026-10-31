@@ -10,7 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { asset, fmtDate, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, keepUnit, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
@@ -176,7 +176,7 @@ function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item;
         {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
           : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-pressed={!!i.checked} aria-label={t(i.checked ? "lists.uncheck" : "lists.checkOff", { name: i.name })}><IconCheck /></button>}
-        <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
+        <div className="grow">{picking ? <span className="name">{keepUnit(i.name)}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{keepUnit(i.name)}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
@@ -1036,7 +1036,7 @@ export function Lists() {
             <div className="addwrap">
             <div className={"addline onebox" + (typed ? " typed" : "")}>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
-                placeholder={t("lists.addItemHere")} autoComplete="off" aria-label={t("lists.addTo", { name })}
+                placeholder={t("lists.addItemHere")} autoComplete="off" enterKeyHint="done" aria-label={t("lists.addTo", { name })}
                 value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste}
                 onBlur={() => setSugOpen(false)} onFocus={() => setSugOpen(true)}
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"

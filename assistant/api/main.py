@@ -156,7 +156,7 @@ class _AppFiles(StaticFiles):
 
     def file_response(self, full_path, *args, **kwargs):
         resp = super().file_response(full_path, *args, **kwargs)
-        if os.path.basename(full_path) in ("index.html", "sw.js"):
+        if os.path.basename(full_path) in ("index.html", "sw.js", "boot.js"):
             resp.headers["Cache-Control"] = "no-cache"
         else:
             cc = _static_cache_control(full_path)

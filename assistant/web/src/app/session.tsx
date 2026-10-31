@@ -35,6 +35,9 @@ type Session = {
   ready: boolean;
   user: string | null;
   demo: boolean;
+  /* Owner rows in Settings (registration switch, waitlist): false
+   * until /auth/me says otherwise, and offline. */
+  admin: { owner: boolean; waitlist: boolean };
   status: AuthStatus;
   currency: Currency;
   enter: (user: string, demo: boolean) => void;
@@ -99,13 +102,14 @@ function leaveTeamPath(): void {
 }
 
 declare global {
-  interface Window { __boot?: { status: Promise<AuthStatus>; me: Promise<{ user?: string | null; demo?: boolean } | null> } }
+  interface Window { __boot?: { status: Promise<AuthStatus>; me: Promise<{ user?: string | null; demo?: boolean; owner?: boolean; waitlist_admin?: boolean } | null> } }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
+  const [admin, setAdmin] = useState({ owner: false, waitlist: false });
   const [status, setStatus] = useState<AuthStatus>({ has_users: true, registration_open: false });
   const [currency, setCurrency] = useState<Currency>({ code: "USD", symbol: "$" });
   const [language, setLanguage] = useState("auto");
@@ -127,7 +131,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // null: no answer (no signal, or the server is down), which is
       // not the same as "signed out" ({ user: null }).
       const me = await (boot?.me ?? fetch("/auth/me").then(r => (r.ok ? r.json() : null))).catch(() => null);
-      if (me && me.user) { setUser(me.user); setDemo(!!me.demo); remember(me.user, !!me.demo); leaveTeamPath(); }
+      if (me && me.user) { setUser(me.user); setDemo(!!me.demo); setAdmin({ owner: !!me.owner, waitlist: !!me.waitlist_admin }); remember(me.user, !!me.demo); leaveTeamPath(); }
       else if (me) remember(null);
       else {
         // A reload in a store with no signal opens the app as the last
@@ -205,11 +209,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     remember(null);
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
-    setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT); setLayouts({});
+    setUser(null); setDemo(false); setAdmin({ owner: false, waitlist: false }); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT); setLayouts({});
     (window as any).__aryaUser = undefined;
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ready, user, demo, admin, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

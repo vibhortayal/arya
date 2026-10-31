@@ -387,7 +387,11 @@ def auth_me(req: Request):
     info = auth.session_info(req.cookies.get(auth.COOKIE))
     if not info:
         return {"user": None, "demo": False}
-    return info
+    # Settings shows the owner rows only to their accounts, so nobody
+    # else calls the owner-only routes and logs a 401 or 403 (audit L7).
+    real = not info["demo"]
+    return {**info, "owner": real and _is_owner(info["user"]),
+            "waitlist_admin": real and _is_waitlist_admin(info["user"])}
 
 
 @router.post("/auth/token")

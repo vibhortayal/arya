@@ -39,7 +39,7 @@ export function Profile() {
   const nav = useNav();
   const town = useTown();
   const guide = useGuide();
-  const { demo, user, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
+  const { demo, user, admin, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
@@ -178,8 +178,8 @@ export function Profile() {
               <option value="ask">{t("settings.shopModeAsk")}</option>
             </select>
           </div></div>
-        <RegistrationRow />
-        <WaitlistRow />
+        {admin.owner && <RegistrationRow />}
+        {admin.waitlist && <WaitlistRow />}
       </div>
       <div className="group">
         <NavRow id="btn-feedback" view="feedback" title={t("settings.featureRequestContactUs")} sub={t("settings.tellUsWhatToBuild")} />
