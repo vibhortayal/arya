@@ -1,3 +1,5 @@
+import { keepRead, savedRead, clearSaved, markServedSaved, markLive } from "./offline";
+
 /* One door to the backend: same paths, same cookies, same error
  * wording as the plain-JS app (pwa/app.js api/post/put). */
 
@@ -76,7 +78,15 @@ export const get = <T = any>(path: string): Promise<T> => {
   const kept = fresh.get(path);
   if (!p && kept && Date.now() - kept.at < (KEEP_MS[path] || 0)) p = kept.p as Promise<T>;
   if (!p) {
-    p = api<T>(path);
+    // A good read is kept as the offline copy; with no connection a
+    // kept copy answers instead (lib/offline.ts). Server errors (401,
+    // 500) are never answered from the copy.
+    p = api<T>(path).then(v => { keepRead(path, v); markLive(); return v; }, e => {
+      const c = e instanceof TypeError ? savedRead<T>(path) : null;
+      if (!c) throw e;
+      markServedSaved();
+      return c.data;
+    });
     inflight.set(path, p);
     const done = () => { if (inflight.get(path) === p) inflight.delete(path); };
     p.then(done, done);
@@ -88,10 +98,12 @@ export const get = <T = any>(path: string): Promise<T> => {
   }
   return p.then(v => (v !== null && typeof v === "object" ? structuredClone(v) : v));
 };
+/* A read the page made itself (boot.js) keeps its copy too. */
+export const keepBootRead = keepRead;
 export const post = <T = any>(path: string, body?: unknown) => api<T>(path, json("POST", body));
 export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json("PUT", body));
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
 /* Multipart upload (receipt photos, audio, shelf shots). */
 export const upload = <T = any>(path: string, form: FormData) => api<T>(path, { method: "POST", body: form });
 /* Signing in or out drops every kept read: they were the last account's. */
-export const forgetReads = () => { fresh.clear(); inflight.clear(); };
+export const forgetReads = () => { fresh.clear(); inflight.clear(); clearSaved(); };
