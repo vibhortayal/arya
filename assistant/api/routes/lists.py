@@ -187,6 +187,11 @@ async def list_add(req: Request):
         groups.note("added", item_id)
         return {"item_id": item_id}
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
+    if "list" not in fields and not state.flags().get(item_id, {}).get("list"):
+        # Running low's Add and the like: the item's usual store's list (retest #5).
+        home = state.usual_list(item_id)
+        if home:
+            fields["list"] = home
     _list_add_extras(item_id, body, fields)
     groups.note("added", item_id)
     return {"item_id": item_id}

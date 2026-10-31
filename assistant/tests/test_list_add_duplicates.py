@@ -46,6 +46,16 @@ class TestExistingItemId(unittest.TestCase):
         self.assertIsNone(existing_item_id("pear", pea, {}))
         self.assertIsNone(existing_item_id("zzzz", ENTRIES, {}))
 
+    def test_pack_size_is_not_part_of_the_name(self):
+        # Retest 2026-10-31 #6: receipt names carry a size.
+        sized = [{"item_id": "m", "canonical_name": "Whole Milk 1 gal", "aliases": []},
+                 {"item_id": "a", "canonical_name": "Avocados 4 ct", "aliases": []},
+                 {"item_id": "y", "canonical_name": "Greek Yogurt 32 oz", "aliases": []}]
+        self.assertEqual(existing_item_id("mlik", sized, {}), "m")
+        self.assertEqual(existing_item_id("avocados", sized, {}), "a")
+        self.assertEqual(existing_item_id("greek yogurt", sized, {}), "y")
+        self.assertIsNone(existing_item_id("yogurt", sized + [{"item_id": "v", "canonical_name": "Vanilla Yogurt 6 oz", "aliases": []}], {}))
+
     def test_typed_item_is_reused(self):
         fl = {"manual-bagels": {"manual": True, "name": "Bagels"}}
         self.assertEqual(existing_item_id("bagel", ENTRIES, fl), "manual-bagels")

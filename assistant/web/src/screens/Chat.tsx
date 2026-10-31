@@ -261,7 +261,8 @@ export function Chat() {
       history.push({ role: "assistant", content: res.reply });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
       if (offer) offered = true;
-      add({ kind: "arya", text: res.reply },
+      // The ✓ lines confirm the actions; an empty reply adds no bubble of its own (retest #9).
+      add(...(res.reply.trim() || !(res.applied || []).length ? [{ kind: "arya" as const, text: res.reply }] : []),
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
         ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
@@ -332,7 +333,9 @@ export function Chat() {
     <>
       {log.length === 0
         ? <EditTitle id="ask-editbtn" title={t("common.askArya")} editTitle={t("ask.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
-        : <h1 className="largetitle">{t("common.askArya")}</h1>}
+        : <div className="titlerow"><h1 className="largetitle">{t("common.askArya")}</h1>
+            {/* Back to the starter questions and Edit (retest 2026-10-31 #9). */}
+            <button type="button" id="ask-new" className="linkbtn titleedit" onClick={() => { lines.length = 0; history.length = 0; epoch++; setBusy(false); setLog([]); }}>{t("ask.newChat")}</button></div>}
       {editing && log.length === 0 ? (
         <>
           <EditList id="ask-edit" on={chips} off={ideas} name={q => q} sub={() => ""} desc={() => ""}

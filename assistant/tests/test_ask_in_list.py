@@ -88,9 +88,16 @@ class TestAskSurfaces(unittest.TestCase):
         self.assertEqual(out["proposed"], [])
 
     def test_unknown_risky_item_is_skipped_not_proposed(self):
-        out = self.ask([{"type": "ran_out", "item": "Unicorn"}], surface="list")
+        out = self.ask([{"type": "mark_expired", "item": "Unicorn"}], surface="list")
         self.assertEqual(out["proposed"], [])
         self.assertIn("don't track Unicorn", out["skipped"][0])
+
+    def test_ran_out_of_a_new_item_adds_it(self):
+        # Retest 2026-10-31 #4: "we just ran out of X" for an X with no receipt.
+        out = self.ask([{"type": "ran_out", "item": "Unicorn"}], surface="list")
+        self.assertEqual(out["proposed"], [])
+        self.assertEqual(out["skipped"], [])
+        self.assertIn("Added Unicorn", out["applied"][0])
 
     def test_confirm_route_only_applies_risky_types(self):
         r = self.c.post("/api/chat/apply", json={"actions": [{"type": "add_to_list", "item": "x"}]})

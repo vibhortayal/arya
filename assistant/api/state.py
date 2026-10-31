@@ -563,6 +563,31 @@ def today_ref():
     return max(as_of() or "", _date.today().isoformat())
 
 
+def usual_list(item_id):
+    """The id of the named list for the store the household buys an
+    item at most often, or None (no receipt for it, or no list for that
+    store). An add that names no list goes there, not to Everything
+    else (retest 2026-10-31 #5: Whole Milk, 16 of 25 buys at Trader
+    Jill's). Deterministic, $0."""
+    from collections import Counter
+    n = Counter()
+    for r in receipts():
+        if any(ln.get("item_id") == item_id and ln.get("line_type", "item") == "item"
+               for ln in r.get("lines") or []):
+            n[_norm_name(r.get("merchant"))] += 1
+    if not n:
+        return None
+    top = n.most_common(1)[0][0]
+    if not top:
+        return None
+    for lst in named_lists():
+        for st in lst.get("stores") or []:
+            k = _norm_name(st)
+            if k and (k == top or top.startswith(k + " ") or k.startswith(top + " ")):
+                return lst["id"]
+    return None
+
+
 def _norm_name(s):
     import re as _re
     return _re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
