@@ -2815,12 +2815,12 @@
       "running": {
         "kicker": "Running low",
         "title": "Never run out",
-        "body": "Arya learns how often you buy things, from your receipts. It shows what is about to run out, and why.",
-        "s1": "Open the Today tab. Look at Running low.",
-        "s2": "Tap Add to put an item on its list.",
-        "s3": "Tap an item to see why Arya suggests it.",
-        "s4": "In Ask, say \"we finished the yogurt\" to mark it as out."
-      },
+      "body": "Arya learns how often you buy things, from your receipts. It shows what is about to run out by learning your consumption patterns and frequency.",
+      "s1": "Open the Today tab. Look at Running low.",
+      "s2": "Tap an item to see why Arya suggests it.",
+      "s3": "In Ask, say \"we finished the yogurt\" to mark it as out.",
+      "s4": "Arya then adds yogurt to the right store list."
+    },
       "quest": {
         "kicker": "Quest",
         "title": "Shop like a game",
