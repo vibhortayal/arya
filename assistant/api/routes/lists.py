@@ -169,6 +169,22 @@ def _list_add_extras(item_id, body, fields):
     state.update_flag(item_id, change)
 
 
+@router.post("/api/list/sample-receipt")
+async def list_sample_receipt(req: Request):
+    """Demo only: a sample receipt for the items ticked in Just my list
+    (retest 2026-10-31 #16), the tick-mode twin of the Quest's sample."""
+    if not state.in_sandbox():
+        raise HTTPException(403, "sample receipts are for the demo only")
+    body = await _json_obj(req)
+    ids = [str(i) for i in (body.get("item_ids") or []) if i][:60]
+    from api import quest
+    try:
+        rec = quest.sample_list_receipt(str(body.get("store") or "")[:60], ids)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"merchant": rec["merchant"], "lines": len(rec["lines"]), "total": rec["total"]}
+
+
 @router.post("/api/list/add")
 async def list_add(req: Request):
     body = await _json_obj(req)

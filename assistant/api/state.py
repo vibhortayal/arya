@@ -1158,6 +1158,28 @@ def resolve_dictionary(item_id, name):
     return None
 
 
+def shelf_price(e):
+    """A ledger entry's price for one, as api/prices.py counts it: a
+    household purchase at a store, the line divided by its quantity;
+    None for anything else (a gift card for someone else, a return)."""
+    from api.prices import unit_price
+    if e.get("event_type") != "purchase" or not e.get("store_id") or e.get("allocation") == "FOR-OTHERS":
+        return None
+    u = unit_price(e)
+    return round(u, 2) if u is not None else None
+
+
+def price_summary(prices):
+    """One store's prices for an item, oldest first: min, median, max,
+    count and last. The one median every screen shows (retest
+    2026-10-31 #11: Today said $4.56 and Spending $4.54 for the same
+    milk, an upper median against a true one). Same rule as
+    api/prices.py: statistics.median, to the cent."""
+    import statistics
+    return {"min": min(prices), "median": round(statistics.median(prices), 2), "max": max(prices),
+            "count": len(prices), "last": prices[-1]}
+
+
 def item_detail(item_id):
     item_id = group_map().get(item_id, item_id)
     d = derived()
@@ -1165,11 +1187,11 @@ def item_detail(item_id):
     pattern = next((p for p in d["patterns"] if p["item_id"] == item_id), None)
     history = [e for e in d["entries"] if e["item_id"] == item_id]
     prices = {}
-    for e in history:
-        if e["event_type"] == "purchase":
-            prices.setdefault(e["store_id"], []).append(e["price"])
-    price_by_store = {s: {"min": min(v), "median": sorted(v)[len(v) // 2], "max": max(v), "count": len(v)}
-                      for s, v in prices.items()}
+    for e in sorted(history, key=lambda e: e["date"]):
+        u = shelf_price(e)
+        if u is not None:
+            prices.setdefault(e["store_id"], []).append(u)
+    price_by_store = {s: price_summary(v) for s, v in prices.items()}
     return {"entry": entry, "pattern": pattern,
             "history": sorted(history, key=lambda e: e["date"], reverse=True),
             "price_by_store": price_by_store}

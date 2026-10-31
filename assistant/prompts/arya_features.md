@@ -39,6 +39,7 @@ Or tap "Or just tick items as I shop" and tick items with no game. That also mak
 Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: point the camera at a shelf and Arya finds the next item. People in frames are blurred before anything is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores. Your trips and receipts shows finished trips and friends.
+When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
 ## map my store | map my store scan aisle layout walk video photos mapped build dream
 Map my store: open the Quest tab and tap Map my store, or tap the Map my store chip on Ask.
 Choose the store. Walk the aisles with the camera and tap Done when you finish. Arya builds the map in the background and shows a "map ready" card.

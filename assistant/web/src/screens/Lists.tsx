@@ -216,7 +216,7 @@ export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
-  const { user, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
+  const { user, demo, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
   // Edit mode on Lists (card library, 2026-10-30): order, hide, and
   // what each list shows.
   const [editing, setEditing] = useState(false);
@@ -1260,6 +1260,13 @@ export function Lists() {
           <h3 id="done-title" className="largetitle" style={{ fontSize: 22, margin: "0 0 4px" }}>{t("lists.doneTitle")}</h3>
           <p className="sub">{t("lists.doneSummary", { done: done.length, left: open.length })}</p>
           <button className="btn primary wide" id="done-receipt" type="button" onClick={() => { setDoneStep("clear"); document.getElementById("add-photo")?.click(); }}>{t("lists.addReceipt")}</button>
+          {/* The demo has no paper receipt: a sample one, as Use soon has a sample date (retest 2026-10-31 #16). */}
+          {demo ? <button className="btn wide" id="done-sample" type="button" onClick={() => guard(async () => {
+            const r = await post<{ merchant: string; lines: number; total: number }>("/api/list/sample-receipt",
+              { store: (here && here.stores && here.stores[0]) || (here ? here.name : ""), item_ids: done.map(i => i.item_id) });
+            toast(t("lists.sampleFiled", { merchant: r.merchant, count: r.lines, amount: money(r.total) }));
+            setDoneStep("clear");
+          })}>{t("addReceiptSheet.useASampleReceipt")} <span className="demotag">{t("common.demo")}</span></button> : null}
           <button className="btn secondary wide" id="done-skip" type="button" onClick={() => (done.length ? setDoneStep("clear") : finishTrip())}>{t("lists.skipReceipt")}</button>
           <button className="linkbtn" id="done-keep" type="button" onClick={() => setDoneStep(null)}>{t("lists.keepShopping")}</button>
         </div>
