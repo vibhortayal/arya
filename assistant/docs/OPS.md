@@ -19,6 +19,9 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Unfreeze** on a frozen account.
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
 
+## Feedback emails
+Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`, up to `ARYA_FEEDBACK_MAIL_CAP` a day (default 20; the daily report still counts them all). To email every note saved so far, once: `docker compose exec -T api python -m harness.feedback_mail`.
+
 ## One-time setup on the VM
 1. Add to `assistant/deploy/.env`: `ARYA_OPS_EMAIL=you@example.com` (and `RESEND_API_KEY` is already there). `chmod 600 .env`.
 2. `git pull`, then `docker compose up -d --build` (not `restart`: restart does not re-read `.env`).
