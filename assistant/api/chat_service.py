@@ -22,22 +22,61 @@ def _feature_flags():
             "registration_open": _registration_open()}
 
 
-def feature_sheet(flags=None):
-    """What Arya can do, for questions about Arya itself. Lines tagged
-    [if flag] appear only when that switch is on, so Ask never claims
-    a feature that is off."""
-    flags = _feature_flags() if flags is None else flags
-    out = []
-    with open(FEATURES_PATH, encoding="utf-8") as fh:
-        for line in fh.read().splitlines():
-            m = re.match(r"\[if (\w+)\]\s*(.*)", line)
-            if m:
-                if flags.get(m.group(1)):
-                    out.append(m.group(2))
-            elif line.strip():
-                out.append(line)
-    return "\n".join(out)
+_GENERIC = re.compile(r"\b(how (do|can|to|does)|where (do|can|is|are)|what can|what does|what is arya|what do you do|"
+                      r"help|feature|guide|tutorial|can arya|does arya|show me around|get started|new here)\b", re.I)
+MAX_SECTIONS = 3
 
+
+def _sections(text):
+    """The sheet as (overview lines, [(title, keywords, lines)])."""
+    head, secs = [], []
+    for line in text.splitlines():
+        m = re.match(r"##\s*([^|]+)\|\s*(.*)", line)
+        if m:
+            secs.append((m.group(1).strip(), set(m.group(2).lower().split()), []))
+        elif line.strip():
+            (secs[-1][2] if secs else head).append(line)
+    return head, secs
+
+
+def _stem(w):
+    return w[:-1] if len(w) > 3 and w.endswith("s") else w
+
+
+def _pick(secs, question):
+    """The sections that answer this question: the best keyword
+    matches, or all of them for a general "how do I / what can" ask
+    with no clear topic. A data question gets none, so Ask stays small."""
+    words = {_stem(w) for w in re.findall(r"[a-z']+", (question or "").lower())}
+    scored = []
+    for i, (_t_, kws, _l) in enumerate(secs):
+        n = len(words & {_stem(k) for k in kws})
+        if n:
+            scored.append((-n, i))
+    if scored:
+        return [secs[i] for _n, i in sorted(scored)[:MAX_SECTIONS]]
+    return secs if _GENERIC.search(question or "") else []
+
+
+def feature_sheet(flags=None, question=None):
+    """What Arya can do, for questions about Arya itself. The overview
+    always goes; with a `question`, only the topics it matches follow
+    (without one, every topic). Lines tagged [if flag] appear only
+    when that switch is on, so Ask never claims a feature that is off."""
+    flags = _feature_flags() if flags is None else flags
+    with open(FEATURES_PATH, encoding="utf-8") as fh:
+        head, secs = _sections(fh.read())
+    if question is not None:
+        secs = _pick(secs, question)
+    out = []
+    for line in head + [l for _t_, _k, ls in secs for l in ls]:
+        m = re.match(r"\[if (\w+)\]\s*(.*)", line)
+        if m:
+            if flags.get(m.group(1)):
+                out.append(m.group(2))
+        else:
+            out.append(line)
+    return "\n".join(out)
 
 
 # ---- Language (owner, 2026-10-29; assistant/docs/MULTILINGUAL-ASK.md).
@@ -262,6 +301,13 @@ PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer 
                "Arya shoppers. The photo is not saved. If it is unclear, say so.")
 
 
+def _asked(history):
+    """The last two things the user said: a follow-up such as "how do I
+    do that?" still finds the topic from the message before it."""
+    us = [str(h.get("content", "")) for h in history or [] if h.get("role") == "user"]
+    return " ".join(us[-2:])
+
+
 def chat(history, client, surface=None, context=None, image=None):
     """One Ask Arya turn. On the Ask tab every action applies at once.
     From the List or a hunt (surface "list"/"hunt"; owner, 2026-10-29)
@@ -273,7 +319,7 @@ def chat(history, client, surface=None, context=None, image=None):
     ctx = context if isinstance(context, dict) else {}
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())},
-                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet()}]
+                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet(question=_asked(history))}]
     if surface and ctx:
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
     lang = _language_setting()
