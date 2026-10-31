@@ -57,6 +57,8 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
   const world = useRef<WorldApi | null>(null);
+  const noWorld = useRef(false);
+  const arrive = useRef<(g: Goal) => void>(() => {});
   const tripRef = useRef(trip); tripRef.current = trip;
   const timers = useRef<number[]>([]);
   const undoTimer = useRef(0);
@@ -88,7 +90,8 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   const walkTo = useCallback((g: Goal) => {
     setAt(null); setPage("main");
     if (g.kind === "item") setFocus(g.key);
-    world.current?.walkTo(g);
+    // No 3D store on this phone: the walk is instant (retest 2026-10-31 #1).
+    if (noWorld.current) arrive.current(g); else world.current?.walkTo(g);
     setOverview(false);
   }, []);
 
@@ -109,6 +112,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       }
     }
   }, [onTrip, onFinish]); // eslint-disable-line react-hooks/exhaustive-deps
+  arrive.current = onArrive;
 
   /* Pinch and turn: said once per phone, when the first trip starts. */
   useEffect(() => {
@@ -244,7 +248,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
     <div className={"qg-play qg-live " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
       <div className="qg-worldwrap">
         <Suspense fallback={<div className="qg-loading">Opening the store…</div>}>
-          <World3D trip={trip} avatar={avatar} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} />
+          <World3D trip={trip} avatar={avatar} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} onFail={() => { noWorld.current = true; }} />
         </Suspense>
       </div>
 

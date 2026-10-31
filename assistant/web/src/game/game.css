@@ -322,6 +322,8 @@
 .qg-live.is-sim { background: #F3F7FD; }
 .qg-worldwrap { position: absolute; inset: 0; z-index: 0; }
 .qg-world { position: absolute !important; inset: 0; touch-action: none; }
+.qg-noworld { display: grid; place-items: center; padding: 96px 24px; text-align: center; color: var(--q-ink2); background: var(--q-bg); touch-action: auto; }
+.qg-noworld p { max-width: 280px; line-height: 1.45; }
 .qg-loading { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; color: var(--q-ink2); }
 .qg-live .qg-hud { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(251,244,230,.95) 60%, rgba(251,244,230,0)); }
 .qg-live.is-sim .qg-hud { background: linear-gradient(180deg, rgba(251,244,230,.95) 60%, rgba(251,244,230,0)); }
