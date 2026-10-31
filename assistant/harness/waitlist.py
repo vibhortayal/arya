@@ -17,7 +17,7 @@ def main(argv):
     cmd = argv[0] if argv else ""
     if cmd == "list":
         for r in sorted(waitlist.rows(), key=lambda r: r.get("at", 0)):
-            print(r.get("email", "") + ("  approved" if r.get("approved") else ""))
+            print(r.get("email", "") + ("  rejected" if r.get("rejected") else "  approved" if r.get("approved") else ""))
     elif cmd == "approve" and len(argv) >= 2:
         done = waitlist.approve([a for a in argv[1:] if not a.startswith("--")])
         print(f"approved {len(done)}")

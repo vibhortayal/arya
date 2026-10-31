@@ -153,7 +153,8 @@ def waitlist_list(req: Request):
     """Owner only: who is waiting, oldest first."""
     from api import waitlist
     _owner_only(req)
-    return {"rows": [{"email": r["email"], "at": r.get("at", 0), "approved": bool(r.get("approved"))}
+    return {"rows": [{"email": r["email"], "at": r.get("at", 0), "approved": bool(r.get("approved")) and not r.get("rejected"),
+                      "rejected": bool(r.get("rejected"))}
                      for r in sorted(waitlist.rows(), key=lambda r: r.get("at", 0))]}
 
 
@@ -170,6 +171,24 @@ async def waitlist_approve(req: Request):
         for e in done:
             sent += bool(await run_in_threadpool(waitlist.send_invite, e))
     return {"approved": len(done), "emailed": sent}
+
+
+@router.post("/auth/waitlist/reject")
+async def waitlist_reject(req: Request):
+    """Owner only: say no. The row stays marked rejected; nothing is mailed."""
+    from api import waitlist
+    _owner_only(req)
+    _, emails = await _emails(req)
+    return {"rejected": len(waitlist.reject(emails))}
+
+
+@router.post("/auth/waitlist/restore")
+async def waitlist_restore(req: Request):
+    """Owner only: move approved or rejected addresses back to waiting."""
+    from api import waitlist
+    _owner_only(req)
+    _, emails = await _emails(req)
+    return {"restored": len(waitlist.restore(emails))}
 
 
 @router.post("/auth/waitlist/remove")
