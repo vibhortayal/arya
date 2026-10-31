@@ -67,8 +67,8 @@ export function EndOfDemo() {
         <>
           <p className="ed-line">{t("endDemo.line1")} <b>{t("endDemo.openToFew")}</b> {t("endDemo.line2")}</p>
           <label className="field" htmlFor="ed-text">{t("endDemo.feedback")}
-            <textarea id="ed-text" rows={3} maxLength={1000} placeholder={t("endDemo.feedbackHint")}
-              value={text} onChange={e => setText(e.target.value)} data-first />
+            <textarea id="ed-text" rows={2} maxLength={1000} placeholder={t("endDemo.feedbackHint")}
+              value={text} onChange={e => setText(e.target.value)} />
           </label>
           <label className="field" htmlFor="ed-email">{t("endDemo.email")} <span className="muted">{t("endDemo.emailWhy")}</span>
             <input id="ed-email" type="text" inputMode="email" autoCapitalize="off" autoComplete="email" placeholder="you@example.com" maxLength={200}
@@ -83,16 +83,15 @@ export function EndOfDemo() {
           {err && <p className="ed-err" id="ed-err" role="alert">{err}</p>}
         </>
       )}
-      <p className="fr-k ed-direct">{t("endDemo.direct")}</p>
-      <div className="group ed-links">
-        <a className="navrow" href={LINKEDIN} target="_blank" rel="noopener noreferrer"><span className="grow">LinkedIn<span className="sub">linkedin.com/in/vibhortayal</span></span><span className="chev">›</span></a>
-        <a className="navrow" href={GITHUB} target="_blank" rel="noopener noreferrer"><span className="grow">GitHub<span className="sub">github.com/vibhortayal</span></span><span className="chev">›</span></a>
+      <div className="ed-links">
+        <a className="btn" href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a className="btn" href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a className="btn" href={REPO} target="_blank" rel="noopener noreferrer">{t("endDemo.codeShort")}</a>
       </div>
-      <p className="muted ed-code">
-        <a href={REPO} target="_blank" rel="noopener noreferrer">{t("endDemo.peek")}</a> {t("endDemo.star")}
-      </p>
-      <button className="linkbtn fr-skip" id="ed-keep" type="button" onClick={close}>{t("endDemo.keep")}</button>
-      <button className="linkbtn fr-skip" id="ed-leave" type="button" onClick={leaveDemo}>{t("endDemo.leave")}</button>
+      <div className="ed-foot">
+        <button className="linkbtn" id="ed-keep" type="button" onClick={close}>{t("endDemo.keep")}</button>
+        <button className="linkbtn" id="ed-leave" type="button" onClick={leaveDemo}>{t("endDemo.leave")}</button>
+      </div>
     </Sheet>
   );
 }
