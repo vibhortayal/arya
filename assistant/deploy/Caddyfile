@@ -2,6 +2,15 @@
 # automatically once DNS points at this VM and ports 80/443 are reachable.
 # The old DuckDNS name stays up as a permanent redirect (see below).
 arya.teamnightshift.org {
+	# The app reads an upload whole before it checks the size (12 MB
+	# photo, 10 MB PDF or recording), so a huge body could fill the
+	# VM's memory first; the demo, open to anyone, reaches the photo
+	# doors. Caddy refuses any body over 40 MB with 413 (audit H4,
+	# 2026-10-30). 40 MB leaves room for a 12 MB photo sent as base64
+	# and for a large Costco order import.
+	request_body {
+		max_size 40MB
+	}
 	# Owner concept pages (static HTML dropped into ~/arya-pages on
 	# the VM; never in the repo). They are single-file mockups with
 	# inline scripts, so this path alone relaxes the CSP below; the
