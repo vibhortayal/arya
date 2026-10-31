@@ -3,12 +3,13 @@
  * swipeable cards that tell what Arya does and how to do it. Each card
  * has a short line and 2 to 4 numbered steps that use the app's own
  * button names. Nothing in the guide leaves the cards. Fifteen cards,
- * in the order a new user needs them (owner, 2026-10-31). Cards are data;
+ * in a shopper's own order: plan, before the trip, in the store, after
+ * the trip, then anytime (owner, 2026-10-31). Cards are data;
  * ui/Guide.tsx draws them. Every text field is an en.json key
  * (guide.*). */
 
 export const GUIDE_IDS = [
-  "lists", "share", "shopping", "quest", "friends", "maps", "news", "receipts", "running", "usesoon", "prices", "ask",
+  "lists", "share", "running", "news", "shopping", "quest", "maps", "friends", "receipts", "usesoon", "prices", "ask",
   "today", "powers", "settings",
 ] as const;
 export type GuideId = (typeof GUIDE_IDS)[number];

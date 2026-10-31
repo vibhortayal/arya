@@ -2816,7 +2816,7 @@
       "running": {
         "kicker": "Running low",
         "title": "Never run out",
-        "body": "Arya learns how often you buy things. It shows what is about to run out, and why.",
+        "body": "Arya learns how often you buy things, from your receipts. It shows what is about to run out, and why.",
         "s1": "Open the Today tab. Look at Running low.",
         "s2": "Tap Add to put an item on its list.",
         "s3": "Tap an item to see why Arya suggests it.",
