@@ -20,9 +20,9 @@ function hasKey(key: string) {
 }
 
 describe("cards", () => {
-  test("the owner's eight sections, each an en.json key", () => {
+  test("the owner's fifteen sections, in a new user's order, each an en.json key", () => {
     expect(GUIDE_CARDS.map(c => c.id)).toEqual([...GUIDE_IDS]);
-    expect(GUIDE_IDS).toEqual(["lists", "share", "maps", "news", "receipts", "prices", "usesoon", "ask"]);
+    expect(GUIDE_IDS).toEqual(["lists", "share", "running", "news", "shopping", "quest", "maps", "friends", "receipts", "usesoon", "prices", "ask", "today", "powers", "settings"]);
     const keys = GUIDE_CARDS.flatMap(c => [c.kickerKey, c.titleKey, c.bodyKey, ...c.stepKeys]);
     expect(keys.filter(k => !hasKey(k))).toEqual([]);
   });
@@ -30,7 +30,7 @@ describe("cards", () => {
     for (const c of GUIDE_CARDS) { expect(c.stepKeys.length).toBeGreaterThanOrEqual(2); expect(c.stepKeys.length).toBeLessThanOrEqual(4); }
   });
   test("open at a card id; an unknown id opens card 1; powers point at real cards", () => {
-    expect(guideIndex("prices")).toBe(5);
+    expect(guideIndex("prices")).toBe(10);
     expect(guideIndex("nope")).toBe(0);
     expect(guideIndex(undefined)).toBe(0);
     for (const id of Object.values(GUIDE_FOR_POWER)) expect(GUIDE_IDS).toContain(id);
@@ -58,19 +58,19 @@ describe("guide overlay", () => {
     mount();
     open();
     expect(screen.getByRole("dialog").getAttribute("aria-modal")).toBe("true");
-    expect(count()).toBe("Arya guide · 1 of 8");
+    expect(count()).toBe("Arya guide · 1 of 15");
     expect(document.activeElement!.id).toBe("gd-next");
     expect(document.getElementById("gd-back")).toBeNull();
     expect(document.querySelectorAll(".gd-dots i.on").length).toBe(1);
     act(() => { fireEvent.click(document.getElementById("gd-next")!); });
-    expect(count()).toBe("Arya guide · 2 of 8");
-    expect(screen.getByText("Share lists, shop together or apart")).toBeTruthy();
+    expect(count()).toBe("Arya guide · 2 of 15");
+    expect(screen.getByText("Shared lists to shop in sync")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-back")!); });
     expect(card()).toBe("lists");
     expect(document.activeElement!.id).toBe("gd-next");
-    open("ask");
+    open("settings");
     expect(document.getElementById("gd-next")!.textContent).toBe("Done");
-    expect(document.querySelectorAll("ol.steps li").length).toBe(3);
+    expect(document.querySelectorAll("ol.steps li").length).toBe(4);
     act(() => { fireEvent.click(document.getElementById("gd-next")!); });
     expect(document.querySelector(".gd")).toBeNull();
   });
@@ -81,12 +81,12 @@ describe("guide overlay", () => {
     expect(card()).toBe("lists");
     key("ArrowRight");
     key("ArrowRight");
-    expect(card()).toBe("maps");
+    expect(card()).toBe("running");
     key("ArrowLeft");
     expect(card()).toBe("share");
-    open("ask");
+    open("settings");
     key("ArrowRight");
-    expect(card()).toBe("ask");
+    expect(card()).toBe("settings");
     key("Escape");
     expect(document.querySelector(".gd")).toBeNull();
   });
@@ -96,7 +96,7 @@ describe("guide overlay", () => {
     swipe(-120);
     expect(card()).toBe("share");
     swipe(-120);
-    expect(card()).toBe("maps");
+    expect(card()).toBe("running");
     swipe(90);
     expect(card()).toBe("share");
     swipe(-30);
@@ -107,7 +107,7 @@ describe("guide overlay", () => {
   test("opens at a card id (the Powers links), and from code (openGuide)", () => {
     mount();
     open("prices");
-    expect(count()).toBe("Arya guide · 6 of 8");
+    expect(count()).toBe("Arya guide · 11 of 15");
     expect(screen.getByText("Know where it's cheaper")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-close")!); });
     expect(document.querySelector(".gd")).toBeNull();
@@ -158,7 +158,7 @@ describe("first-run tour", () => {
     expect(document.getElementById("gd-tour")).toBeNull();
     open("usesoon");
     expect(document.getElementById("gd-tour")).toBeNull();
-    open("ask");
+    open("settings");
     expect(document.getElementById("gd-tour")!.textContent).toBe("Replay the tour");
     act(() => { fireEvent.click(document.getElementById("gd-tour")!); });
     expect(document.querySelector(".gd")).toBeNull();

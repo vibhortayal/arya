@@ -23,7 +23,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   { id: "prices", group: "how", steps: 3, notes: 2, opens: "powers" },
   { id: "shopping", group: "how", steps: 3, notes: 2, opens: "community" },
   { id: "map", group: "how", steps: 4, notes: 2, opens: "mapper" },
-  { id: "news", group: "how", steps: 3, notes: 1, opens: "home" },
+  { id: "news", group: "how", steps: 3, notes: 2, opens: "home" },
   { id: "share", group: "how", steps: 3, notes: 2, opens: "profile" },
   { id: "usesoon", group: "how", steps: 4, notes: 1, opens: "powers" },
   { id: "customize", group: "how", steps: 3, notes: 2, opens: "home" },

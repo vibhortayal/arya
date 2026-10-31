@@ -48,7 +48,7 @@ Build (Quest tab) lets you shape a store in the game. The Quest tab Edit button 
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up at the top of a list. It shows what Arya shoppers report: out of stock, back in stock, quiet times.
 To report an empty shelf, find "Report something yourself" on Today and tap Out of stock.
-In the demo this news is simulated.
+Store news needs reports from other Arya shoppers. It fills up as more shoppers near you use Arya. In a new account it may show little. In the demo this news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi
 Ask tab: type a question or tap Talk to speak. Arya answers from the household's own lists and receipts. It does not speak aloud.
 Tap Photo to send a picture. Choose Add to list, File receipt, Check my fridge or Read the date. A photo changes nothing unless you pick an action.
@@ -65,7 +65,7 @@ Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hid
 Settings, Preferences, Display changes text size, spacing, bold text, pictures and motion.
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
 Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. The Help tab holds the guide, the tour and Send feedback.
-The Guide (Help tab, Guide): eight cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
+The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs and the share for all Arya.
 Sign-in is by invitation for now. On the landing page tap Join the waitlist. Tap Try it now for the demo; tap Finish demo to leave it.
 Use Arya in another AI app lets you add to your list from an AI app you already use.
