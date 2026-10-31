@@ -94,7 +94,7 @@ If a guideline conflicts with these, these win:
   text under `guide.*`). Ask Arya answers from
   `assistant/prompts/arya_features.md`; keep it in step with the Help
   topics. Also check the feature docs (`assistant/docs/USER-JOURNEYS.md`,
-  `assistant/docs/DEMO.md`).
+  `assistant/docs/DEMO.md`, and `docs/DEMO-FEATURES.md` once PR #249 merges).
 - **Spec beats code:** if SPEC.md and the code disagree, the spec wins — fix
   the code, or flag it and let the owner decide.
 
