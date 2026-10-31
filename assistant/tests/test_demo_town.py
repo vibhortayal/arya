@@ -44,6 +44,18 @@ class TestTownOn(TownCase):
         flags = json.load(open(os.path.join(self.base, "users", "demo", "flags.json")))
         self.assertEqual(flags["demo-eggs"]["list"], "l-demo-costco")
 
+    def test_store_pickers_name_town_stores_only(self):
+        # Retest 2026-10-31 #3: the demo's pickers named real stores.
+        mine = [s["name"] for s in self.c.get("/api/stores/mine").json()["stores"]]
+        self.assertIn("Trader Jill's", mine)
+        found = {s["name"] for s in self.c.get("/api/stores/search?q=").json()["stores"]}
+        self.assertIn("Safeday", found)
+        self.assertFalse(found & {"Trader Joe's", "Costco Wholesale", "Sprouts Farmers Market"})
+        tj = next(s for s in self.c.get("/api/stores/search?q=jill").json()["stores"])
+        r = self.c.post("/api/quest/sessions", json={"store_id": tj["id"], "items": [{"name": "Basil"}], "draft": True})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["store"], "Trader Jill's")
+
     def test_baseline_is_calm_but_not_empty(self):
         h = self.hints()
         self.assertEqual(h["label"], "Simulated")

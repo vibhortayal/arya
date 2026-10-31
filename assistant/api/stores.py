@@ -35,6 +35,8 @@ SEED_STORES = [
 # A fresh account's My Stores starts with the seeds; these two are
 # starred (the wireframe's Favorites: Trader Joe's and Costco).
 _SEED_FAVORITES = {"seed-trader-joes-91709", "seed-costco-91709"}
+# Demo Town's version of the same: the household's usual stores.
+_TOWN_FAVORITES = {"Trader Jill's", "Costcozy"}
 
 
 def _now():
@@ -62,9 +64,27 @@ def _root_save(name, obj):
         state._current_user.reset(tok)
 
 
+def _town_rows():
+    """Demo Town (ARYA_DEMO_TOWN=1, demo visitor only): the simulated
+    town's stores stand in for the whole directory, so the demo's store
+    pickers name Trader Jill's and Safeday, never a real store or a
+    store a real account added (retest 2026-10-31 #3). None otherwise."""
+    from api import town
+    if not town.active():
+        return None
+    return [{"id": "town-" + re.sub(r"[^a-z0-9]+", "-", s["name"].lower()).strip("-"),
+             "name": s["name"], "street": "", "city": "Demo Town (simulated)",
+             "state": "", "zip": "", "scene": "strip", "created_by": "town"}
+            for s in sorted(town.pack()["stores"], key=lambda s: s.get("near", 99))]
+
+
 def directory():
     """All directory stores, seeds ensured. Returns a list of store
-    dicts: id, name, street, city, state, zip, scene, created_by."""
+    dicts: id, name, street, city, state, zip, scene, created_by.
+    The demo in Demo Town sees the town's stores only (_town_rows)."""
+    rows = _town_rows()
+    if rows is not None:
+        return rows
     data = _root_load("stores.json", None)
     stores = list(data.get("stores", [])) if data else []
     have = {s["id"] for s in stores}
@@ -244,6 +264,11 @@ def _mine_entries():
     Joe's and Costco starred) so a new account starts with the
     stores its household already shops."""
     entries = state._load("my_stores.json", None)
+    town = _town_rows()
+    if town is not None and (entries is None or not any(e["store_id"].startswith("town-") for e in entries["entries"])):
+        # Demo Town: the household's stores, nearest first; its two usual stores starred.
+        entries = {"entries": [{"store_id": r["id"], "favorite": r["name"] in _TOWN_FAVORITES, "added_at": _now()} for r in town[:4]]}
+        state._save("my_stores.json", entries)
     if entries is None:
         entries = {"entries": [
             {"store_id": s["id"],
