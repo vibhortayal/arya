@@ -15,6 +15,8 @@ your receipt.
 Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift,
 Indie track). Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
+**For developers:** open Lists API and docs at https://arya.teamnightshift.org/developers.
+
 **Live demo:** https://arya.teamnightshift.org. Tap "Try it now". It opens a
 fictional household with no account. Your changes live in a sandbox for your
 visit only; nothing reaches disk or another visitor.
