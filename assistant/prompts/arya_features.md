@@ -3,19 +3,19 @@ Arya is a grocery list that learns what the household buys, so the list writes i
 Arya sends no order and makes no payment. Prices come only from the household's own receipts and from Arya shoppers who choose to share. Arya never uses store sites, flyers or web prices.
 A new account has few cards on Today until the first receipt is added. The demo is a fictional household; changes are not saved.
 ## help | help tab guide tour tutorial lost confused learn started begin
-Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app with numbered steps and a button that opens the feature.
+Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app, with numbered steps and a button that opens it.
 At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.  The tour has six steps (Today, Lists, Ask, Quest, Help, Settings). In the demo, the welcome, the tour and then the full guide appear every time someone taps Try it now.
 In the demo, Send feedback opens Finish demo, which takes your note and an email to reply to.
-Each topic has "Still stuck? Ask Arya", which sends the question to the Ask tab.
+Each topic has "Still stuck? Ask Arya".
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new
 Lists tab: one list for each store, such as Costco. Tap New list and choose a store.
 Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list or photograph one item. Arya always shows what it understood: for one item it asks "Add Peach?", and when it cannot tell it says why and offers Try again or Type it instead. If the microphone hears nothing or is blocked, it says so the same way.
 Tap the circle to tick an item off as you shop. Tap the three dots to move an item to another list or remove it. Tap Select to act on several items. Tap the pencil to rename a list.
-Under "Suggested for ..." Arya shows items that are due. Tap one to see why. Tap Add to put it on the list.
-Tap the three dots at the top of a list for Share, export or import, and Tidy up with Arya.
+Under "Suggested for ..." Arya shows due items. Tap one to see why, then Add.
+Three dots at the top of a list: Share, export or import, Tidy up with Arya.
 ## running low | running low due suggest suggestion pattern often about to run out why
 Running low: Today tab, card "Running low", and the suggestions under each list. Arya uses how often the household buys an item and the last date.
-Tap an item to see why it is suggested. Tap Add to put it on the list. Arya needs a buying history, so add receipts first.
+Tap an item to see why. Tap Add to put it on the list. Arya needs a buying history, so add receipts first.
 Say "we finished the yogurt" in Ask to mark an item as out. Say "never suggest X" to stop a suggestion.
 ## use soon | use soon expire expiry date goes bad waste food fresh dated photo remind
 Use soon: Arya tracks expiry dates and reminds you to use food in time.
@@ -23,11 +23,11 @@ After a first receipt, Today asks you to add dates. At any time open Settings, A
 Tap Take a photo of the date on the pack. Check the item and the date. Tap Looks right, track it.
 Today shows a card "Use soon" and a "Still good?" check. Settings, About Arya, Arya's powers, Food waste shows what expired food cost this month.
 ## ai | ai wrong accurate accuracy trust mistake mistakes incorrect disclaimer reliable safe expiry food safety double-check
-Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where AI is used.
-Arya is not a food-safety check: always look at the date on the pack, and if food looks or smells off, do not eat it. Photo and receipt reads are shown to you and nothing is saved until you confirm.
+Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where.
+Arya is not a food-safety check: look at the date on the pack, and if food looks or smells off, do not eat it. Nothing read from a photo or receipt is saved until you confirm.
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
 Receipts: open Today, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick a PDF, paste order text or say it.
-Arya reads the receipt and checks that the total is right. It keeps every receipt, so you can open one for a return or a recall refund.
+Arya reads the receipt and checks the total. It keeps every receipt, so you can open one for a return or recall refund.
 A return is taken off the spending. Only you and your group see your receipts.
 ## spending | spending spend analysis month store budget money pay paid
 Spending: open Today, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
@@ -52,7 +52,7 @@ Build (Quest tab) lets you shape a store in the game. The Quest tab Edit button 
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up at the top of a list. It shows what Arya shoppers report: out of stock, back in stock, quiet times.
 To report an empty shelf, find "Report something yourself" on Today and tap Out of stock.
-Store news needs reports from other Arya shoppers. It fills up as more shoppers near you use Arya. In a new account it may show little. In the demo this news is simulated.
+Store news needs reports from other Arya shoppers, so a new account may show little. In the demo this news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi
 Ask tab: type a question or tap Talk to speak. Arya answers from the household's own lists and receipts. It does not speak aloud.
 Tap Photo to send a picture. Choose Add to list, File receipt, Check my fridge or Read the date. A photo changes nothing unless you pick an action.
@@ -71,11 +71,11 @@ Settings, Preferences, Display changes text size, spacing, bold text, pictures a
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
 Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, How Arya uses AI, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. The Help tab holds the guide, the tour and Send feedback.
 The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
-Keeping Arya running shows what the AI reading costs and the share for all Arya.
+Keeping Arya running shows what the AI reading costs.
 Sign-in is by invitation for now. On the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Tap Try it now for the demo; tap Finish demo to leave it.
 Use Arya in another AI app lets you add to your list from an AI app you already use.
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
-Arya opens with no signal. A bar at the top says "You're offline". You can look through your lists, Today, stores and other screens as they were last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. The copy is deleted when you sign out; the demo keeps none.
+Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. The copy is deleted when you sign out; the demo keeps none.
