@@ -80,6 +80,10 @@ so next week's list writes itself.
   guard stops app spend. The Wonder proof run over the 9 public receipts
   cost $1.12.
 
+## Responsible AI
+
+Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web.
+
 ## Evidence
 
 - Gate 0 (photo decode), hand-labeled before decoding: public set
