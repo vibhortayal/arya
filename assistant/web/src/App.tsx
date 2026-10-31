@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, type ComponentType } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -32,6 +32,9 @@ export function App() {
 
 function Root() {
   const s = useSession();
+  // index.html's start shell held the page until now; Login or the app
+  // takes over in the same frame.
+  useLayoutEffect(() => { if (s.ready) document.getElementById("boot")?.remove(); }, [s.ready]);
   /* The public developer page needs no account, so it comes first. */
   if (isDevelopersPath(location.pathname)) return <Developers />;
   if (!s.ready) return null;

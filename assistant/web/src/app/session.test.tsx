@@ -19,7 +19,7 @@ beforeEach(() => {
     return json({ currency: "USD", symbol: "$" });
   }));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); history.replaceState({}, "", "/"); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); history.replaceState({}, "", "/"); window.__boot = undefined; });
 
 let session: ReturnType<typeof useSession>;
 function Probe() {
@@ -74,4 +74,24 @@ test("signing in on /team leaves the address at /, and sign out forgets the acco
   expect(localStorage.getItem("arya.lastUser")).not.toBeNull();
   await act(async () => { await session.leave(); });
   expect(localStorage.getItem("arya.lastUser")).toBeNull();
+});
+
+test("the sign-in calls boot.js started are used, not sent again (audit M1)", async () => {
+  window.__boot = {
+    status: Promise.resolve({ has_users: true, registration_open: false }),
+    me: Promise.resolve({ user: "tester-a@test.arya", demo: false }),
+  };
+  await boot();
+  expect(who()).toBe("tester-a@test.arya");
+  const urls = (fetch as unknown as { mock: { calls: [string][] } }).mock.calls.map(c => c[0]);
+  expect(urls).not.toContain("/auth/me");
+  expect(urls).not.toContain("/auth/status");
+  expect(window.__boot).toBeUndefined();
+});
+
+test("boot.js got no answer: still opens the last account offline", async () => {
+  localStorage.setItem("arya.lastUser", JSON.stringify({ user: "tester-a@test.arya", demo: false }));
+  window.__boot = { status: Promise.reject(new TypeError("Failed to fetch")), me: Promise.reject(new TypeError("Failed to fetch")) };
+  await boot();
+  expect(who()).toBe("tester-a@test.arya");
 });

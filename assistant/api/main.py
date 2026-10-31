@@ -121,20 +121,24 @@ def _developers_page():
 
 _BUILT_DIR = os.path.realpath(os.path.join(_WEB, "app"))
 _PWA_CACHED = tuple(os.path.realpath(os.path.join(_PWA, d)) + os.sep
-                    for d in ("assets", "icons", "vendor"))
+                    for d in ("assets", "icons"))
+_PWA_VENDOR = os.path.realpath(os.path.join(_PWA, "vendor")) + os.sep
 
 
 def _static_cache_control(full_path):
     """Hashed build files (web/dist/app/) never change under their name,
     so they are cached for a year and a repeat visit skips the round
     trip; a new build names new files and index.html (no-cache) points
-    at them. Images, icons and three.js keep their names across edits:
-    an hour, then the browser revalidates by ETag."""
+    at them. Images and icons keep their names across edits: a day,
+    then the browser revalidates by ETag. three.js (/vendor, 670 KB)
+    changes only with a deliberate upgrade: a week (audit M7)."""
     p = os.path.realpath(full_path)
     if p.startswith(_BUILT_DIR + os.sep):
         return "public, max-age=31536000, immutable"
+    if p.startswith(_PWA_VENDOR):
+        return "public, max-age=604800"
     if p.startswith(_PWA_CACHED):
-        return "public, max-age=3600"
+        return "public, max-age=86400"
     return None
 
 

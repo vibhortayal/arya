@@ -897,10 +897,12 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
    the first card also beats until any card has been tapped. */
 @keyframes hop { 0%, 22%, 100% { transform: none; } 6% { transform: translateY(-7px) rotate(-8deg); }
   12% { transform: rotate(6deg); } 17% { transform: translateY(-3px) rotate(-3deg); } }
-@keyframes beat { 0%, 60%, 100% { transform: none; box-shadow: 0 3px 0 var(--line), 0 6px 12px rgba(0, 0, 0, .10); }
-  12% { transform: scale(1.045); box-shadow: 0 3px 0 var(--line), 0 10px 22px rgba(228, 87, 46, .28); }
-  24% { transform: none; box-shadow: 0 3px 0 var(--line), 0 6px 12px rgba(0, 0, 0, .10); }
-  36% { transform: scale(1.035); box-shadow: 0 3px 0 var(--line), 0 9px 18px rgba(228, 87, 46, .22); } }
+@keyframes beat { 0%, 60%, 100% { transform: none; } 12% { transform: scale(1.045); } 24% { transform: none; } 36% { transform: scale(1.035); } }
+/* The glow is a layer whose opacity moves, so the beat stays on the
+   compositor (it animated box-shadow, a repaint every frame). */
+@keyframes beatglow { 0%, 60%, 100% { opacity: 0; } 12% { opacity: 1; } 24% { opacity: 0; } 36% { opacity: .75; } }
+.ftile.beat::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  box-shadow: 0 10px 22px rgba(228, 87, 46, .28); animation: beatglow 2s ease-in-out infinite; }
 .ftile:not(.seen) img { animation: hop 3.2s ease-in-out infinite; }
 .ftile:nth-child(2):not(.seen) img { animation-delay: .4s; }
 .ftile:nth-child(3):not(.seen) img { animation-delay: .8s; }
@@ -913,6 +915,7 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 @media (prefers-reduced-motion: reduce) {
   .ftile:not(.seen) img { animation: none; }
   .ftile.beat { animation: none; }
+  .ftile.beat::after { animation: none; }
 }
 /* Narrow phones (360 px): titles and hints wrap more, so the cards
    give back a little room. */

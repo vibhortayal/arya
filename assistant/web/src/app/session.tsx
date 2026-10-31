@@ -98,6 +98,10 @@ function leaveTeamPath(): void {
   if (/^\/team\/?$/.test(location.pathname)) history.replaceState(null, "", "/" + location.search + location.hash);
 }
 
+declare global {
+  interface Window { __boot?: { status: Promise<AuthStatus>; me: Promise<{ user?: string | null; demo?: boolean } | null> } }
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<string | null>(null);
@@ -115,11 +119,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const st = await get<AuthStatus>("/auth/status").catch(() => ({ has_users: true, registration_open: false }));
+      // public/boot.js started both calls while the bundle downloaded.
+      const boot = window.__boot;
+      window.__boot = undefined;
+      const st = await (boot?.status ?? get<AuthStatus>("/auth/status")).catch(() => ({ has_users: true, registration_open: false }));
       setStatus(st);
       // null: no answer (no signal, or the server is down), which is
       // not the same as "signed out" ({ user: null }).
-      const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
+      const me = await (boot?.me ?? fetch("/auth/me").then(r => (r.ok ? r.json() : null))).catch(() => null);
       if (me && me.user) { setUser(me.user); setDemo(!!me.demo); remember(me.user, !!me.demo); leaveTeamPath(); }
       else if (me) remember(null);
       else {
