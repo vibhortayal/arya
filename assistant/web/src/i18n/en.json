@@ -1134,7 +1134,28 @@
     "tickHint": "Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.",
     "moveToAnother": "Move to another list",
     "moreFor": "More for {{name}}: move or remove",
-    "tickedOff": "{{name}} checked off."
+    "tickedOff": "{{name}} checked off.",
+    "input": {
+      "iSee": "I see a {{name}}",
+      "looksLike": "This looks like {{name}}",
+      "addQ": "Add {{name}}?",
+      "addName": "Add {{name}}",
+      "editName": "Edit name",
+      "tryAgain": "Try again",
+      "typeInstead": "Type it instead",
+      "notRight": "Not right?",
+      "cantTell": "I couldn't tell what this is",
+      "cantTellBody": "I couldn't find anything to add in that photo. Nothing was added.",
+      "cantRead": "I couldn't read that photo",
+      "cantReadBody": "Something went wrong, or the photo is too big. Nothing was added.",
+      "heardNothing": "I didn't hear anything",
+      "heardNothingBody": "Hold the phone closer, then try again.",
+      "voiceFailed": "I couldn't turn that into text",
+      "voiceFailedBody": "It may be the connection. Nothing was added.",
+      "noVoice": "Voice isn't available here",
+      "micBlocked": "The microphone is blocked",
+      "micBlockedBody": "Allow the microphone for Arya in your browser's site settings, or type instead."
+    }
   },
   "login": {
     "signIn": "Sign in",

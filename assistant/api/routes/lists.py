@@ -1,5 +1,6 @@
 """The shopping list: add, remove, quantity, move, check, named lists, and the staple judge that gates admission."""
 import datetime
+import logging
 import os
 
 from fastapi import APIRouter, HTTPException, Request
@@ -10,6 +11,7 @@ from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _int_field, _json_obj, new_client
 from api.routes.items import _merge_flag
 
+log = logging.getLogger("arya.input")
 router = APIRouter()
 
 
@@ -484,6 +486,14 @@ async def list_from_photo(req: Request):
         raise HTTPException(502, str(e)[:200])
     if read["kind"] == "receipt":
         return {"kind": "receipt", "names": [], "added": 0}
+    if read["kind"] == "item":
+        # One clear product: offered back as "Add Peach?", not added.
+        return {"kind": "item", "item": read["item"],
+                "confident": read["confident"], "names": [], "added": 0}
+    if read["kind"] == "unclear":
+        log.info("input failure: photo unclear (%s)", read.get("reason", ""))
+        return {"kind": "unclear", "reason": read.get("reason", ""),
+                "names": [], "added": 0}
     # The demo adds too: its writes land in the visitor's sandbox.
     added = [_add_name_to_list(n, list_id=list_id) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],

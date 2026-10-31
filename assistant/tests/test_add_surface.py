@@ -180,6 +180,20 @@ class TestFromPhoto(unittest.TestCase):
         assert list_names(self.c) == before
         assert self.c.get("/api/quest/receipts").json()["receipts"] == []
 
+    def test_single_item_photo_is_offered_not_added(self):
+        StubClient.photo_reply = {"kind": "item", "item": "peach", "confident": True}
+        before = list_names(self.c)
+        body = self._photo().json()
+        assert body["kind"] == "item" and body["item"] == "peach"
+        assert body["confident"] is True and body["added"] == 0
+        assert list_names(self.c) == before
+
+    def test_empty_list_photo_is_unclear_with_a_reason(self):
+        StubClient.photo_reply = {"kind": "list", "items": []}
+        body = self._photo().json()
+        assert body["kind"] == "unclear" and body["added"] == 0
+        assert body["reason"]
+
     def test_rejects_non_image(self):
         r = self.c.post("/api/list/from-photo", content=b"x",
                         headers={"Content-Type": "text/plain"})
