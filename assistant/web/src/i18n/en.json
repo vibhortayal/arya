@@ -1608,7 +1608,6 @@
   },
   "settings": {
     "settings": "Settings",
-    "finishedReceiptMissingOfCollected": "{{slice}} · {{items_collected}} of {{items_total}} in cart · No receipt yet",
     "stores": "Stores",
     "yourStoresFavoritesAndThe": "Your stores and favorites",
     "whatAryaCanDoAnd": "What Arya does for you, and what you can turn on",
@@ -2049,6 +2048,8 @@
   },
   "today": {
     "today": "Today",
+    "tripsNeedReceipt_one": "{{count}} trip needs a receipt",
+    "tripsNeedReceipt_other": "{{count}} trips need a receipt",
     "sizes": {
       "label": "Size",
       "s": "Small",
