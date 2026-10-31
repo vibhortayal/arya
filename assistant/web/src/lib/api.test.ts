@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { get, post } from "./api";
+import { get, post, forgetReads } from "./api";
 
 const reply = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 
@@ -28,5 +28,32 @@ describe("get shares a read that is still on its way", () => {
     const second = get("/api/z");
     await Promise.all([first, second]);
     expect(f).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("offline copy", () => {
+  afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
+
+  test("a failed read is answered from the last good copy; a server error is not", async () => {
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ items: [1] }));
+    await get("/api/home");
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
+    expect(await get("/api/home")).toEqual({ items: [1] });
+    await expect(get("/api/usage")).rejects.toBeInstanceOf(TypeError);
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response("{}", { status: 500 })));
+    await expect(get("/api/home")).rejects.toThrow();
+  });
+
+  test("the demo keeps no copy, and signing out deletes them", async () => {
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "demo", demo: true }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ a: 1 }));
+    await get("/api/today");
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
+    await get("/api/settings");
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
+    forgetReads();
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
   });
 });

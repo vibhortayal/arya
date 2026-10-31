@@ -74,3 +74,5 @@ Use Arya in another AI app lets you add to your list from an AI app you already 
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
+## offline | offline no signal no network no connection airplane wifi internet saved copy
+Arya opens with no signal. A bar at the top says "You're offline". You can look through your lists, Today, stores and other screens as they were last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. The copy is deleted when you sign out; the demo keeps none.

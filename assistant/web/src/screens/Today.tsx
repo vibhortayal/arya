@@ -3,7 +3,7 @@ import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
 import { questOpened } from "../lib/questSeen";
-import { get, post, friendlyError } from "../lib/api";
+import { get, post, friendlyError, keepBootRead } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { A2hsCard } from "../ui/A2hs";
@@ -290,7 +290,7 @@ export function Today() {
     // boot.js may have started this read before the app loaded.
     const early = window.__bootData?.today as Promise<TodayData> | undefined;
     if (window.__bootData) window.__bootData.today = undefined;
-    try { d = await (early ? early.catch(() => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
+    try { d = await (early ? early.then(v => { keepBootRead("/api/today", v); return v; }, () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
     catch (e) { if (live.current && !todayMem) setLoadFailed(true); showErr(e); return; }
     if (!live.current || !d.home) { if (live.current && !todayMem) setLoadFailed(true); return; }
     todayMem = d;

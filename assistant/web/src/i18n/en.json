@@ -1,4 +1,7 @@
 {
+  "offline": {
+    "bar": "You're offline. You can still look through your lists and screens as they were last saved. Changes, Ask Arya, photos, voice, sharing and sync need a connection."
+  },
   "common": {
     "back": "Back",
     "about": "About",

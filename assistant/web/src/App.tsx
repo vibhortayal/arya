@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -10,6 +10,7 @@ import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
+import { isOffline, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
 import { isDevelopersPath, joinCodeFromUrl } from "./lib/paths";
 import { TabAsk, TabHelp, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
@@ -134,6 +135,7 @@ function Shell() {
   const [, answered] = useState(0);
   const answerWelcome = () => { if (s.demo) { clearDemoWelcome(); answered(n => n + 1); } else s.markOnboarded(); };
   useInviteLink();
+  const offline = useSyncExternalStore(subscribeOffline, isOffline);
   // Back from the demo's first screen returns to the start page, as
   // "Leave the demo" does, instead of leaving the site (pilot audit, 2026-10-30).
   useBackHandler(() => {
@@ -154,6 +156,7 @@ function Shell() {
     <>
       {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
         <button id="demo-finish" className="linkbtn" type="button" onClick={openEndOfDemo}>{t("endDemo.finish")}</button></p>}
+      {nav.chrome && offline && <p id="offlinebar" role="status" className="note">{t("offline.bar")}</p>}
       {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
