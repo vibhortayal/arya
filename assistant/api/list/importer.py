@@ -6,6 +6,7 @@ person says so."""
 import csv
 import io
 import json
+import re
 
 MAX_ITEMS = 200
 MAX_CHARS = 20000
@@ -92,6 +93,29 @@ def _csv_rows(text):
     return list(csv.DictReader(io.StringIO(text), delimiter=delim))
 
 
+_MARK = re.compile(r"^\s*(?:[-*•–]\s|\d+[.)]\s|\[[ xX]?\]|[☐☑✓✔])")
+_HEADING = re.compile(r"^[A-Za-z][A-Za-z' &/]{1,30}:?$")
+
+
+def _drop_headings(text):
+    """A line like "Groceries" or "Costco:" above the items is a heading,
+    not an item. In a paste where the items carry bullets, boxes or
+    numbers, a bare short capitalised line is a heading; a line ending in
+    a colon is one when there are other lines."""
+    lines = text.splitlines()
+    if len([l for l in lines if l.strip()]) < 2:
+        return text
+    marked = any(_MARK.match(l) for l in lines)
+    keep = []
+    for l in lines:
+        t = l.strip()
+        if t and not _MARK.match(l) and _HEADING.match(t) and len(t.split()) <= 3 \
+                and (t.endswith(":") or (marked and t[0].isupper())):
+            continue
+        keep.append(l)
+    return "\n".join(keep)
+
+
 def parse_paste(text, model_extract=None):
     """-> (items, source). `model_extract(text)` is the model fallback and
     may be None (no key): then unreadable text gives no items."""
@@ -111,7 +135,7 @@ def parse_paste(text, model_extract=None):
             return items[:MAX_ITEMS], source
     from api.list.intake import split_list_items_units
     if not (text[0] in "[{"):
-        plain = [_item(n, q, u) for n, q, u in split_list_items_units(text)]
+        plain = [_item(n, q, u) for n, q, u in split_list_items_units(_drop_headings(text))]
         plain = [i for i in plain if i]
         if plain:
             return plain[:MAX_ITEMS], "split"

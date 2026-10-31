@@ -26,7 +26,7 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState<Found[]>([]);
   const [dupes, setDupes] = useState<"both" | "move" | "skip">("both");
-  const [result, setResult] = useState<{ added: number; already: number } | null>(null);
+  const [result, setResult] = useState<{ added: number; already: number; merged?: number } | null>(null);
 
   const items = onListItems(data).filter(i => i.list === listId);
   const rows = toRows(items, deptOf);
@@ -70,7 +70,7 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
     if (!chosen.length) return;
     setBusy(true);
     try {
-      const r = await post<{ added: number; already: number }>("/api/list/import", { list_id: listId, items: chosen, mode: dupes === "move" ? "move" : "both" });
+      const r = await post<{ added: number; already: number; merged?: number }>("/api/list/import", { list_id: listId, items: chosen, mode: dupes === "move" ? "move" : "both" });
       setResult(r);
       setStep("added");
       onChanged();
@@ -129,14 +129,14 @@ export function ShareWizard({ data, listId, listName, onClose, onChanged, onTidy
           <button key={i} className="navrow wizfound" type="button" aria-pressed={f.on} data-wiz="found"
             onClick={() => setFound(found.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))}>
             <span className={"wizcheck" + (f.on ? " on" : "")} aria-hidden="true">{f.on ? "✓" : ""}</span>
-            <span className="grow">{f.name}{f.qty > 1 ? ` ×${f.qty}` : ""}</span>
+            <span className="grow">{f.name}{f.unit ? ` ${f.qty} ${f.unit}` : f.qty > 1 ? ` ×${f.qty}` : ""}</span>
             {f.other_list ? <span className="wiztag">{t("lists.share.onOther", { name: f.other_list })}</span> : null}
           </button>))}
       </div>
       <div className="sheetacts"><button className="btn primary" type="button" data-wiz="add" disabled={busy || !n} onClick={addAll}>{t("lists.share.add", { count: n })}</button></div></>;
   }
   if (step === "added" && result) return <>
-    {head(t("lists.share.addedTitle", { count: result.added }), result.already ? t("lists.share.addedAlready", { count: result.already }) : "", null, 3, total)}
+    {head(result.added ? t("lists.share.addedTitle", { count: result.added }) : t("lists.share.addedNothing"), [result.already ? t("lists.share.addedAlready", { count: result.already }) : "", result.merged ? t("lists.share.addedMerged", { count: result.merged }) : ""].filter(Boolean).join(" "), null, 3, total)}
     {result.added >= 5 ? <p className="sub">{t("lists.share.tidyOffer")}</p> : null}
     <div className="sheetacts">
       {result.added >= 5 ? <button className="btn secondary" type="button" data-wiz="tidy" onClick={onTidy}>{t("lists.share.tidyBtn")}</button> : null}

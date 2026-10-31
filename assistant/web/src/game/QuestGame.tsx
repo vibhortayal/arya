@@ -3,7 +3,8 @@
  * this folder. Screens: hub -> pick a store -> play -> finish.
  * Practice runs on a silent source and never touches the profile. */
 import { useEffect, useRef, useMemo, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { motionOff } from "../lib/motion";
 import { applyTrip, played, type Profile, type Rewards } from "./core/meta";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
 import { newTrip, type Trip } from "./core/trip";
@@ -37,6 +38,12 @@ export type QuestGameProps = {
   onScreen?: (s: Screen["s"]) => void;
   /* Host links shown at the foot of the game's home (trips, receipts). */
   homeExtra?: ReactNode;
+  /* Quest home panels the host adds, and the player's order and hidden
+   * ids; onEditHome shows Edit on the home (Hub.tsx Home). */
+  homePanels?: Record<string, ReactNode>;
+  homeOrder?: string[];
+  homeHidden?: string[];
+  onEditHome?: () => void;
   /* The player's avatar picture: the shopper wears it as a face. */
   avatar?: string | null;
   /* The host's Map my store (owner, 2026-10-29: easy to reach). Offered
@@ -54,7 +61,7 @@ export type QuestGameProps = {
   resume?: string;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, avatar, onMapStore, findStore, onAddItems, practice, resume }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, homePanels, homeOrder, homeHidden, onEditHome, avatar, onMapStore, findStore, onAddItems, practice, resume }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -142,10 +149,11 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
 
   const key = screen.s === "play" ? "play" : screen.s;
   return (
+    <MotionConfig reducedMotion={motionOff() ? "always" : "user"}>
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
+          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} panels={homePanels} order={homeOrder} hidden={homeHidden} onEdit={onEditHome} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
           {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} first={list?.store} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
@@ -166,5 +174,6 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
         </motion.div>
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }

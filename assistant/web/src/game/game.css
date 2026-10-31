@@ -27,6 +27,7 @@
 .qg-btn.big { min-height: 58px; font-size: 18px; }
 .qg-btn.ghost { background: transparent; box-shadow: none; color: var(--q-ink2); min-height: 44px; }
 .qg-ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; background: var(--q-panel); box-shadow: 0 1px 3px rgba(0,0,0,.08); flex: none; }
+.qg-edit { min-height: 44px; padding: 0 8px; background: none; border: 0; color: var(--q-acc); font-size: 17px; font-weight: 600; flex: none; }
 
 /* kind badges */
 .qg-kind { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
@@ -288,7 +289,7 @@
 .qg-big { font-size: 26px; font-weight: 800; }
 .qg-row2 small { font-size: 13px; color: var(--q-ink2); }
 .qg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.qg-chips button { min-height: 40px; padding: 0 14px; border-radius: 99px; background: #F4F1EA; font-weight: 700; font-size: 14px; }
+.qg-chips button { min-height: 44px; padding: 0 14px; border-radius: 99px; background: #F4F1EA; font-weight: 700; font-size: 14px; }
 .qg-chips button.on { background: var(--q-panel); color: var(--q-ink); box-shadow: inset 0 0 0 2px var(--q-ink); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -368,7 +369,7 @@
 
 /* ---- Play | Build and the Build screens ---- */
 .qg-seg { display: flex; gap: 4px; padding: 4px; margin: 0 0 12px; border-radius: 14px; background: #ECE6DA; }
-.qg-seg button { flex: 1; min-height: 40px; border-radius: 11px; font-weight: 800; font-size: 15px; color: var(--q-ink2); }
+.qg-seg button { flex: 1; min-height: 44px; border-radius: 11px; font-weight: 800; font-size: 15px; color: var(--q-ink2); }
 .qg-seg button.on { background: var(--q-panel); color: var(--q-ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .qg-build { padding: 12px 16px 40px; max-width: 520px; margin: 0 auto; }
 .qg-build > div > .qg-p { margin-bottom: 12px; }
@@ -488,3 +489,4 @@
 .qg-listbtn, .qg-live .qg-cue, .qg-live .qg-hud .qg-ic { position: relative; }
 .qg-listbtn::before, .qg-live .qg-cue::before, .qg-live .qg-hud .qg-ic::before { content: ""; position: absolute; inset: -8px -3px; }
 .qg-live .qg-hud .qg-ic::before { inset: -3px; }
+.qg-store.qm-ready { box-shadow: inset 0 0 0 2px #C2410C, 0 2px 0 var(--q-line); }

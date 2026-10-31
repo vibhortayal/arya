@@ -27,7 +27,7 @@ import { knownZone } from "../../game/map/classify";
 import type { Answers } from "../../game/map/answers";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
-type PlanRow = { name: string; qty?: number; list?: string | null };
+type PlanRow = { name: string; qty?: number; list?: string | null; also?: string[]; on_list?: boolean };
 type NamedList = { id: string; name: string; stores?: string[] };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
@@ -130,10 +130,11 @@ export class AppSource implements QuestSource {
       get<{ lists: NamedList[] }>("/api/lists").catch(() => ({ lists: [] as NamedList[] })),
     ]);
     const item = (r: PlanRow) => ({ name: r.name, art: charFor(r.name) || artFor(r.name) });
-    const rows = (plan.list || []).filter(r => r.name);
+    // Only what is on a list (suggestions are not shopping), and an item on two lists counts on both, as on Lists.
+    const rows = (plan.list || []).filter(r => r.name && r.on_list !== false);
     const out: ShoppingList[] = [{ id: "all", name: "Everything", items: rows.map(item) }];
     for (const l of named.lists || []) {
-      const its = rows.filter(r => r.list === l.id);
+      const its = rows.filter(r => r.list === l.id || (r.also || []).includes(l.id));
       if (its.length) out.push({ id: l.id, name: l.name, items: its.map(item), ...(l.stores?.[0] ? { store: l.stores[0] } : {}) });
     }
     return out;

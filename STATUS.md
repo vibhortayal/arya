@@ -1,11 +1,23 @@
 # STATUS — where Arya stands (2026-10-29)
 
-Live: https://arya-pilot.duckdns.org. Deadline: Nov 4, 2026, 9:00 PM ET.
+Live: https://arya.teamnightshift.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions
 live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Trips row on Today; Sign out up (2026-10-31, PR open):** trips with no receipt are one Today row that opens Receipts, not cards in Settings; Sign out sits above Export and Delete. `assistant/loops/2026-10-31-settings-trips.md`.
+- **UI polish (merged, #300):** a new list row no longer shows Move/Remove through it; first-run picks are padded; Quest row chevrons sit at the edge; chips, selects and Quest buttons are 44 px; Ask puts its questions by the field and waits for text before Send. `assistant/loops/2026-10-31-ui-polish.md`.
+- **Small polish (merged, #299):** `boot.js` revalidates; the owner rows in Settings show only for owners (no 401/403 noise for others); the add field shows "done"; quantity and unit never wrap apart. `assistant/loops/2026-10-30-small-polish.md`.
+- **Start shell and cache lifetimes (merged, #298):** the start page headline paints before the bundle (`#boot`, `pwa/boot.js` starts the sign-in calls early); images and icons cache a day, three.js a week. Local FCP 4.3 s to 1.7 s. `assistant/loops/2026-10-30-start-shell.md`.
+- **pypdf 6 (merged, #297):** pypdf 5.9 to 6.21.4, which closes about 60 crafted-PDF loop and memory advisories; text extraction unchanged. `assistant/loops/2026-10-30-pypdf-6.md`.
+- **Security headers (merged, #296):** `/docs`, `/redoc` and `/openapi.json` are off (the Lists API schema stays); Caddy drops `Range` until the Starlette upgrade; `Permissions-Policy` for camera, microphone and location; no `Server` header. `assistant/loops/2026-10-30-security-headers.md`.
+- **Upload size cap (merged, #295):** Caddy refuses request bodies over 40 MB (413), so an oversized upload can no longer fill memory before the app checks its size. `assistant/loops/2026-10-30-caddy-body-cap.md`.
+- **Offline session and sign-in form (merged, #294):** a reload with no signal opens the app as the last account instead of the sign-in page; signing in on `/team` leaves the address at `/`; the password form posts and names its fields. `assistant/loops/2026-10-30-offline-session-signin.md`.
+- **Map my store walk in the background (2026-10-30, PR open):** the walk is full screen and only coaches; nothing is read while walking and only Done ends it. Sharp frames wait on the phone (IndexedDB) until there is signal, go up one by one, and are read by a server job (`/api/storemap/jobs`, resumed after a restart). Map my store then shows Building your map and Your map is ready with the sections to check; "Upload a video or photos" feeds the same job. `assistant/loops/2026-10-30-background-store-scan.md`.
+- **Honest store coverage (merged, #292):** "Arya knows N%" counted only the sections a scan had itself created, so any store read 100% after one photo. Now the size comes from aisle numbers Arya read (signs and "Aisle N" sections) plus 6 outside departments; sides of one aisle count once. With no aisle number read there is no % at all: "Arya has seen 3 sections". Album chapters follow. `assistant/loops/2026-10-30-honest-coverage.md`.
+- **Keeping Arya running (2026-10-30, PR open):** Settings row and screen show each account's lifetime AI cost (`GET /api/usage`) and, from 50 accounts, the totals for everyone. Ledger rows now carry `user` and `kind`; rows from before have neither. No limit bar, no money ask. A heads-up at $3 a month, a pause at $5, and an hourly $1 trip-wire that switches an account's paid reads off for 24 h (owner exempt). `assistant/loops/2026-10-30-keeping-arya-running.md`.
+- **Ask photo (2026-10-30, PR open):** Talk and Photo are labelled chips under the Ask field; a photo opens a chooser over the existing readers (list, receipt, fridge, expiry date) plus a one-shot "Ask about this photo" (`/api/chat` takes an optional `image`, never stored, no price judgments). The speaker toggle and all spoken replies are gone. `assistant/loops/2026-10-30-ask-photo.md`.
 - **Token guardrails (2026-10-30, PR open):** one hourly allowance (600) for every route an API token reaches; a short blocked list (bulk model spend, groups, push, feedback, settings, account export) answers 403 to a token; the app is unaffected; `ARYA_TOKEN_GUARDS=off` lifts it. Two key types are after Nov 4. `assistant/loops/2026-10-30-token-guardrails.md`.
 - **Developer page (2026-10-30, PR open):** public `/developers` (React screen, no sign-in): what the API is, how to get a code, a copy-paste curl, every endpoint. The server answers `/developers` with the app shell. Say "open platform" only after the API is deployed. `assistant/loops/2026-10-30-developers-page.md`.
 - **Open Lists API v1 (2026-10-30, PR open):** `/api/v1` lists, items, add, change, delete, export and import with the connector's token; `docs/API.md`; schema at `/api/v1/openapi.json`. Say "Your lists, your data. Export anytime." until it is merged and deployed; only then "open platform". `assistant/loops/2026-10-30-lists-api-v1.md`.
@@ -144,6 +156,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
   never shopped. `2026-10-30-quest-home-cards.md`.
+  The golden item says it is picked at random from your own list and
+  that Arya never adds products or ads; How to play matches today's
+  buttons. `2026-10-30-quest-golden-wording.md`.
   Quest colors have one job each: green for grabbed or mapped, gold for
   golden, the app orange, neutral for the rest (no blue badges or black
   chips); the 3D simulated store stays a blue blueprint. `2026-10-30-quest-colors.md`.

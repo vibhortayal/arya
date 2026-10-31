@@ -3,6 +3,8 @@ import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { get, post } from "../lib/api";
 import { t, Trans, useTranslation } from "../i18n";
+import { addFrame, discardWalk, finishWalk as queueFinish, startWalk, type LocalWalk } from "../lib/scanQueue";
+import { grab, sameView, sharpness, thumb } from "../lib/frames";
 
 /* Port of pwa/index.html #view-capture and pwa/mapper.js (openCapture,
  * the cam* functions, upload, teach confirm, reward card). The Shell
@@ -18,7 +20,9 @@ type Prompt = {
 };
 type Seg = { id: string; label: string };
 type StoreView = { segments?: Seg[]; next?: Prompt | null };
-type Reward = { points: number; new_section?: boolean; new_title?: string; store_pct: [number, number];
+/* store_pct holds nulls while the store's size is unknown (no aisle
+ * number read yet): the card then shows no percentage. */
+type Reward = { points: number; new_section?: boolean; new_title?: string; store_pct: [number | null, number | null];
   goal?: { sections_needed: number; pct: number } | null };
 type Found = { label: string; segment: string; created?: boolean; fresh: boolean };
 type Result =
@@ -28,12 +32,6 @@ type Result =
   | { t: "reward"; won: { out: any; seg: string }[]; last: Reward }
   | { t: "teach"; found: Found[]; pts: number; title: string | null; extra?: ScanExtra };
 type ScanExtra = { signs: string[]; prices: { item: string; price: number }[]; people: number };
-/* One live scan answer (POST /api/storemap/scan). */
-type ScanOut = { kept: boolean; paused?: string; label?: string; segment?: string; created?: boolean; sign?: string;
-  items?: string[]; prices?: { item: string; price: number }[]; people?: number; frames_left?: number;
-  boxes?: { shelf: number[][]; sign: number[][] }; reward?: { points: number; new_section?: boolean; new_title?: string } };
-type Live = { coach: string; sub: string; paused: boolean; kept: number;
-  marks: { kind: "shelf" | "sign"; box: number[]; tag?: string }[] };
 
 const CAM_TICK_MS = 250;
 const PHOTO_SETTLE_MS = 1500;   // steady this long, then snap
@@ -42,59 +40,31 @@ const WALK_BUCKET_MS = 2000;    // keep the sharpest frame per 2 s
 const WALK_SECONDS_PER_PART = 8;
 const WALK_MAX_MS = 45000;
 const M_WALK_SEND = 6;          // sharpest frames sent
-/* Guided scan (owner, 2026-10-29: pan, never tap): one sharp frame
- * goes to Arya about every 4 s while the shopper pans; the sweep is
- * full after SCAN_FULL kept frames. */
-const SCAN_EVERY_MS = 4000;
-export const SCAN_FULL = 10;
+/* Map my store's walk (owner, 2026-10-30): full screen, coaching only,
+ * nothing read while walking. The sharpest frame of every 2 s is saved
+ * on the phone (lib/scanQueue) and read in the background after Done.
+ * Only Done ends the walk; a gentle nudge at 4 min, a stop at 6. */
+const SCAN_SOFT_MS = 4 * 60 * 1000;
+const SCAN_HARD_MS = 6 * 60 * 1000;
+const SCAN_TIP_MS = 9000;
 const PRICES_KEY = "arya-scan-prices";
 const readPricesOpt = () => { try { return localStorage.getItem(PRICES_KEY) === "1"; } catch { return false; } };
 
-/* Where a box on the frame lands on the screen: the video fills its
- * box with object-fit: cover, so the frame is scaled up and centred. */
-export function coverBox(box: number[], vw: number, vh: number, cw: number, ch: number) {
-  const sc = Math.max(cw / vw, ch / vh), ox = (cw - vw * sc) / 2, oy = (ch - vh * sc) / 2;
-  const [x1, y1, x2, y2] = box;
-  return { left: ox + x1 * vw * sc, top: oy + y1 * vh * sc, width: (x2 - x1) * vw * sc, height: (y2 - y1) * vh * sc };
-}
-
 type Frame = { c: HTMLCanvasElement; score: number };
-type WalkState = { t0: number; buckets: Frame[]; maxSharp: number; shownParts: number;
-  /* The guided scan: the sharpest frame since the last send, and what came back. */
-  scan?: { best: Frame | null; lastSent: number; inflight: boolean; off: boolean; errors: number; kept: number;
-    found: Map<string, Found>; pts: number; title: string | null; signs: string[];
-    prices: { item: string; price: number }[]; people: number } };
+type WalkState = { t0: number; buckets: Frame[]; maxSharp: number; shownParts: number };
+type ScanState = { w: LocalWalk; t0: number; bucket: number; best: Frame | null; last: Uint8Array | null;
+  saving: Promise<void>; saved: number; maxSharp: number };
+type ScanView = { el: number; coach: string; good: boolean; ready: boolean };
+const mmss = (ms: number) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
-/* ---- frame grading on the phone (no network, no model) ---- */
-function sharpness(canvas: HTMLCanvasElement) {
-  const w = 160, h = Math.max(1, Math.round(canvas.height * 160 / canvas.width));
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  const ctx = c.getContext("2d")!; ctx.drawImage(canvas, 0, 0, w, h);
-  const d = ctx.getImageData(0, 0, w, h).data;
-  const g = new Float32Array(w * h);
-  let luma = 0;
-  for (let i = 0; i < w * h; i++) { g[i] = 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2]; luma += g[i]; }
-  let sum = 0, sq = 0, n = 0;
-  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
-    const l = -4 * g[y * w + x] + g[y * w + x - 1] + g[y * w + x + 1] + g[(y - 1) * w + x] + g[(y + 1) * w + x];
-    sum += l; sq += l * l; n++;
-  }
-  return { sharp: sq / n - (sum / n) * (sum / n), luma: luma / (w * h) };
-}
+/* ---- frame grading on the phone (no network, no model): lib/frames ---- */
 function camHint(g: { sharp: number; luma: number }, rel: number, walk: boolean): [string, boolean] {
   if (g.luma < 45) return [t("capture.hint.dark"), false];
   if (g.luma > 225) return [t("capture.hint.glare"), false];
   if (rel < 0.5) return [walk ? t("capture.hint.slower") : t("capture.hint.holdStill"), false];
   return [walk ? t("capture.hint.steadyWalk") : t("capture.hint.holding"), true];
 }
-function camGrab(video: HTMLVideoElement) {
-  const scale = Math.min(1, 1280 / (video.videoWidth || 1280));
-  const c = document.createElement("canvas");
-  c.width = Math.round((video.videoWidth || 1280) * scale);
-  c.height = Math.round((video.videoHeight || 960) * scale);
-  c.getContext("2d")!.drawImage(video, 0, 0, c.width, c.height);
-  return c;
-}
+const camGrab = (video: HTMLVideoElement) => grab(video);
 const camBlob = (c: HTMLCanvasElement) => new Promise<Blob>(res => c.toBlob(b => res(b as Blob), "image/jpeg", 0.88));
 
 async function postBlob(url: string, blob: Blob) {
@@ -151,9 +121,9 @@ export function Capture() {
   const [result, setResult] = useState<Result | null>(null);
   const [barW, setBarW] = useState<number | null>(null);
   const [after, setAfter] = useState<string | null>(null);
-  const [live, setLive] = useState<Live | null>(null);
+  const [scan, setScan] = useState<ScanView | null>(null);
+  const [online, setOnline] = useState(() => navigator.onLine !== false);
   const [pricesOpt, setPricesOpt] = useState(readPricesOpt);
-  const camBox = useRef<HTMLDivElement>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
@@ -161,6 +131,7 @@ export function Capture() {
   const stream = useRef<MediaStream | null>(null);
   const timer = useRef<number | null>(null);
   const walk = useRef<WalkState | null>(null);
+  const scanRef = useRef<ScanState | null>(null);
   const busy = useRef(false);
   const epoch = useRef(0);
   const P = useRef(prompt); P.current = prompt;
@@ -189,7 +160,7 @@ export function Capture() {
     setPrompt(p); P.current = p;
     setGoLabel(t("capture.openCamera")); setGoDisabled(false);
     setVideoOpt(p.media === "both");
-    setCamOn(false); setControls(true); setResult(null); setAfter(null); setBarW(null); setLive(null);
+    setCamOn(false); setControls(true); setResult(null); setAfter(null); setBarW(null); setScan(null);
     setParts({ n: 0, on: 0 }); setHint({ text: "", good: false });
     if (photoRef.current) photoRef.current.value = "";
     if (videoInRef.current) videoInRef.current.value = "";
@@ -207,8 +178,19 @@ export function Capture() {
     loadView(st).catch(() => {});
   }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Leaving the screen always turns the camera off.
-  useEffect(() => () => { epoch.current++; walk.current = null; camStop(); }, [camStop]);
+  // Leaving the screen always turns the camera off. A walk in progress
+  // is kept: its frames are already on the phone and go up later.
+  useEffect(() => () => {
+    epoch.current++; walk.current = null; camStop();
+    const sc = scanRef.current; scanRef.current = null;
+    if (sc) { nav.setChrome(true); void sc.saving.then(() => (sc.w.frames ? queueFinish(sc.w) : discardWalk(sc.w))); }
+  }, [camStop]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const on = () => setOnline(true), off = () => setOnline(false);
+    window.addEventListener("online", on); window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
 
   const upload = (blob: Blob, kind: string, segment?: string) =>
     postBlob(`/api/storemap/capture?store=${encodeURIComponent(S.current)}&segment=${encodeURIComponent(segment || P.current.segment || "")}&kind=${kind}`, blob);
@@ -238,11 +220,11 @@ export function Capture() {
     busy.current = false;
     if (ep !== epoch.current) return;
     if (!won.length || !last) { setResult({ t: "gentle" }); await mapperAfter(); return; }
-    setBarW(last.store_pct[0]);
+    setBarW(last.store_pct[0] ?? 0);
     setResult({ t: "reward", won, last });
     if (won.some(w => w.out.reward.new_section)) confetti();
     const l = last;
-    requestAnimationFrame(() => requestAnimationFrame(() => setBarW(l.store_pct[1])));
+    requestAnimationFrame(() => requestAnimationFrame(() => setBarW(l.store_pct[1] ?? 0)));
     await mapperAfter();
   };
 
@@ -307,69 +289,68 @@ export function Capture() {
     camStop();
     const frames: { blob: Blob; score: number }[] = [];
     for (const b of w.buckets.filter(Boolean)) frames.push({ blob: await camBlob(b.c), score: b.score });
-    if (P.current.teach && w.scan && w.scan.kept > 0) { showScan(w.scan); return; }
     if (P.current.teach) { await teachSend(teachPicks(frames)); return; }
     await sendWalk(frames, secs);
   };
 
-  /* The scan's summary: the sections it found (each removable), what
-   * signs and prices it read, and how many people it blurred. */
-  const showScan = async (sc: NonNullable<WalkState["scan"]>) => {
-    setLive(null); setControls(false); setCamOn(false);
-    const list = [...sc.found.values()];
-    setResult({ t: "teach", found: list, pts: sc.pts, title: sc.title,
-      extra: { signs: sc.signs, prices: sc.prices, people: sc.people } });
-    if (list.some(f => f.fresh)) confetti();
-    await mapperAfter();
+  /* Map my store's walk: keep the sharpest frame of every 2 s on the
+   * phone, skipping one that shows what the last one did. */
+  const scanKeep = (sc: ScanState, f: Frame) => {
+    const th = thumb(f.c);
+    if (sameView(sc.last, th)) return;
+    sc.last = th; sc.saved++;
+    sc.saving = sc.saving.then(async () => { await addFrame(sc.w, await camBlob(f.c)); }).catch(() => {});
   };
 
-  /* One frame to Arya while the shopper pans. The phone keeps going
-   * whatever comes back: a pause, a miss or an error never asks for a
-   * retake. Two errors in a row end the live reads, and Done falls
-   * back to sending the walk's sharpest frames. */
-  const scanFrame = async (w: WalkState, f: Frame) => {
-    const sc = w.scan!;
-    sc.inflight = true; sc.lastSent = Date.now();
-    const ep = epoch.current;
-    try {
-      const blob = await camBlob(f.c);
-      const out = await postBlob(`/api/storemap/scan?store=${encodeURIComponent(S.current)}` + (pricesOpt ? "&prices=1" : ""), blob) as ScanOut;
-      if (ep !== epoch.current || walk.current !== w) return;
-      sc.errors = 0;
-      if (out.paused) {
-        setLive(l => ({ ...(l || { kept: 0, marks: [] }), coach: t("capture.scan.wait"), sub: t("capture.scan.waitSub"), paused: true, marks: [] }));
-        return;
-      }
-      if (!out.kept || !out.label || !out.segment) {
-        setLive(l => ({ ...(l || { kept: 0, marks: [] }), coach: t("capture.scan.looking"), sub: t("capture.scan.keepPanning"), paused: false, marks: [] }));
-        return;
-      }
-      sc.kept++;
-      const cur = sc.found.get(out.segment) || { label: out.label, segment: out.segment, created: out.created, fresh: false };
-      if (out.reward) {
-        sc.pts += out.reward.points;
-        if (out.reward.new_section) cur.fresh = true;
-        if (out.reward.new_title) sc.title = out.reward.new_title;
-      }
-      sc.found.set(out.segment, cur);
-      if (out.sign && !sc.signs.includes(out.sign)) sc.signs.push(out.sign);
-      for (const pr of out.prices || []) sc.prices.push(pr);
-      sc.people += out.people || 0;
-      const items = (out.items || []).slice(0, 3).join(", ");
-      const marks: Live["marks"] = [
-        ...(out.boxes?.sign || []).map((box, i) => ({ kind: "sign" as const, box, tag: i === 0 ? out.sign : undefined })),
-        ...(out.boxes?.shelf || []).slice(0, 4).map((box, i) => ({ kind: "shelf" as const, box, tag: i === 0 ? out.label : undefined })),
-      ];
-      setLive({ coach: items ? t("capture.scan.seeItems", { label: out.label, items }) : t("capture.scan.see", { label: out.label }),
-        sub: t("capture.scan.keepPanning"), paused: false, kept: sc.kept, marks });
-      if (sc.kept >= SCAN_FULL) finishWalk();
-    } catch (e) {
-      if (ep !== epoch.current) return;
-      const msg = e instanceof Error ? e.message : String(e);
-      // The day's cap: say so once and stop reading; the walk can still finish.
-      if (/mapped a lot today/i.test(msg)) { sc.off = true; toast(msg); return; }
-      if (++sc.errors >= 2) sc.off = true;
-    } finally { sc.inflight = false; }
+  const backToMapper = () => {
+    if (nav.params.from === "mapper") nav.back("mapper");
+    else nav.replace("mapper", { store: S.current });
+  };
+
+  /* Done (keep) or the X (throw away). Frames go up in the background. */
+  const endScan = async (keep: boolean) => {
+    const sc = scanRef.current; scanRef.current = null;
+    if (!sc) return;
+    camStop(); nav.setChrome(true); setScan(null);
+    if (keep && sc.best) scanKeep(sc, sc.best);
+    await sc.saving;
+    if (!keep || !sc.w.frames) {
+      await discardWalk(sc.w).catch(() => {});
+      if (keep) toast(t("capture.scan.noFrames"));
+      backToMapper();
+      return;
+    }
+    await queueFinish(sc.w).catch(() => {});
+    toast(t("capture.scan.sent"));
+    backToMapper();
+  };
+
+  const stopScan = () => {
+    if (window.confirm(t("capture.scan.discardAsk"))) void endScan(false);
+  };
+
+  const startScan = async () => {
+    const v = videoRef.current!;
+    let w: LocalWalk;
+    try { w = await startWalk(S.current, "scan", pricesOpt); }
+    catch { camStop(); toast(t("capture.scan.noStorage")); return; }
+    const sc: ScanState = { w, t0: Date.now(), bucket: 0, best: null, last: null, saving: Promise.resolve(), saved: 0, maxSharp: 1 };
+    scanRef.current = sc;
+    nav.setChrome(false); setControls(false);
+    setScan({ el: 0, coach: t("capture.scan.start"), good: false, ready: false });
+    timer.current = window.setInterval(() => {
+      const s2 = scanRef.current;
+      if (!s2 || !v.videoWidth) return;
+      const el = Date.now() - s2.t0;
+      const c = camGrab(v), g = sharpness(c);
+      s2.maxSharp = Math.max(s2.maxSharp, g.sharp);
+      const [text, ok] = camHint(g, g.sharp / s2.maxSharp, true);
+      const b = Math.floor(el / WALK_BUCKET_MS);
+      if (b !== s2.bucket) { if (s2.best) scanKeep(s2, s2.best); s2.best = null; s2.bucket = b; }
+      if (ok && (!s2.best || g.sharp > s2.best.score)) s2.best = { c, score: g.sharp };
+      setScan({ el, coach: text, good: ok, ready: true });
+      if (el >= SCAN_HARD_MS) void endScan(true);
+    }, CAM_TICK_MS * 2);
   };
 
   async function camStart() {
@@ -421,12 +402,6 @@ export function Capture() {
     setGoLabel(t("capture.done")); setGoDisabled(false);
     const n0 = (P.current.parts || [P.current.segment]).length;
     walk.current = { t0: Date.now(), buckets: [], maxSharp: 1, shownParts: n0 };
-    if (P.current.teach) {
-      // First read after about 1.5 s, then every 4 s.
-      walk.current.scan = { best: null, lastSent: Date.now() - SCAN_EVERY_MS + 1500, inflight: false, off: false, errors: 0, kept: 0,
-        found: new Map(), pts: 0, title: null, signs: [], prices: [], people: 0 };
-      setLive({ coach: t("capture.scan.start"), sub: t("capture.scan.startSub"), paused: false, kept: 0, marks: [] });
-    }
     setParts({ n: n0, on: 0 });
     timer.current = window.setInterval(() => {
       const w = walk.current;
@@ -439,14 +414,6 @@ export function Capture() {
       const b = Math.floor(el / WALK_BUCKET_MS);
       const score = g.sharp * (ok ? 1 : 0.5);
       if (!w.buckets[b] || score > w.buckets[b].score) w.buckets[b] = { c, score };
-      const sc = w.scan;
-      if (sc && !sc.off) {
-        if (ok && (!sc.best || score > sc.best.score)) sc.best = { c, score };
-        if (!sc.inflight && sc.best && Date.now() - sc.lastSent >= SCAN_EVERY_MS) {
-          const f = sc.best; sc.best = null;
-          void scanFrame(w, f);
-        }
-      }
       const want = P.current.splittable ? Math.max(1, Math.min(6, Math.round(el / 1000 / WALK_SECONDS_PER_PART))) : n0;
       w.shownParts = want;
       setParts({ n: want, on: Math.min(want, Math.floor(el / 1000 / WALK_SECONDS_PER_PART) + 1) });
@@ -456,6 +423,7 @@ export function Capture() {
 
   const go = async (asVideo = false) => {
     if (busy.current) return;
+    if (scanRef.current) { void endScan(true); return; }
     if (walk.current) { finishWalk(); return; }      // the button is "Done" mid-walk
     const isWalk = asVideo || P.current.kind === "walk";
     if (!(await camStart())) {
@@ -464,6 +432,7 @@ export function Capture() {
       return;
     }
     setVideoOpt(false);
+    if (isWalk && P.current.teach && !asVideo) { void startScan(); return; }
     if (isWalk) camWalk(); else camPhoto();
   };
 
@@ -525,6 +494,7 @@ export function Capture() {
   };
   const back = (ev: React.MouseEvent) => {
     ev.preventDefault();
+    if (scanRef.current) { stopScan(); return; }
     walk.current = null; camStop();
     nav.back("mapper");
   };
@@ -534,22 +504,23 @@ export function Capture() {
       <p><a href="#" className="qback" onClick={back}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 26 }} id="cp-title">{prompt.title}</h1>
       <p className="muted" id="cp-why">{prompt.why || ""}</p>
-      <div className={"cp-cam" + (live ? " scanning" : "")} id="cp-cam" hidden={!camOn} ref={camBox}>
+      <div className={"cp-cam" + (scan ? " full" : "")} id="cp-cam" hidden={!camOn}>
         <video id="cp-live" ref={videoRef} playsInline muted autoPlay></video>
-        {live ? (
+        {scan ? (
           <>
-            <div className="cp-grid" aria-hidden="true"></div>
-            {!live.paused && <div className="cp-sweep" aria-hidden="true"></div>}
-            <ScanMarks live={live} video={videoRef.current} box={camBox.current} />
-            <div className="cp-guide" aria-hidden="true">
-              <div className="cp-track"><span style={{ width: `${Math.min(100, live.kept * 100 / SCAN_FULL)}%` }}></span>
-                <b>{live.paused ? t("capture.scan.paused") : <>{t("capture.scan.panArrow")}<span aria-hidden="true"> →</span></>}</b></div>
-              <div className="cp-chips">
-                <span className={hint.good ? "ok" : ""}>{hint.good ? t("capture.scan.steady") : hint.text}</span>
-                <span>{t("capture.scan.frames", { count: live.kept })}</span>
-              </div>
+            <div className="cp-fs-top">
+              <button className="cp-fs-x" id="cp-stop" type="button" aria-label={t("capture.scan.stop")} onClick={stopScan}>✕</button>
+              <span className="cp-fs-rec"><i aria-hidden="true"></i>{mmss(scan.el)}</span>
+              <span className="cp-fs-store">{S.current.split("|")[0]}</span>
             </div>
-            <div className={"cp-coach" + (live.paused ? " wait" : "")} id="cp-coach" aria-live="polite"><b>{live.coach}</b><span>{live.sub}</span></div>
+            {scan.el < SCAN_TIP_MS && <div className="cp-fs-tip">{t("capture.scan.tip")}</div>}
+            {scan.el >= SCAN_SOFT_MS && <div className="cp-fs-tip">{t("capture.scan.long")}</div>}
+            <div className="cp-fs-bottom">
+              <div className={"cp-fs-coach" + (!scan.ready ? "" : scan.good ? " good" : " warn")} id="cp-coach" aria-live="polite">
+                {scan.ready && scan.good ? t("capture.scan.good") : scan.coach}</div>
+              <div className="cp-fs-saved">{online ? t("capture.scan.saving") : t("capture.scan.offline")}</div>
+              <button className="cp-fs-done" id="cp-done" type="button" onClick={() => void endScan(true)}>{t("capture.done")}</button>
+            </div>
           </>
         ) : (
           <>
@@ -637,40 +608,19 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
     : fresh.length ? t("capture.learned", { name: segLabel(fresh[0].seg) })
     : t("capture.freshAgain");
   const [a, b] = last.store_pct;
-  const goal = last.goal ? t("capture.moreSectionsTo", { count: last.goal.sections_needed, pct: last.goal.pct }) : t("capture.knowsWholeStore");
+  const sized = a !== null && b !== null;
+  const goal = last.goal ? t("capture.moreSectionsTo", { count: last.goal.sections_needed, pct: last.goal.pct })
+    : sized && b >= 100 ? t("capture.knowsWholeStore") : t("capture.sizeUnknown");
   return (
     <div className="mp-reward">
       <div className="pts">+{pts}</div>
       <div className="what">{what}</div>
-      <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>
-      <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>
+      {sized && <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>}
+      {sized && <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>}
       <div className="muted">{goal}</div>
       {last.new_title ? <div className="mp-title">{t("capture.youReNowA", { title: last.new_title })}</div> : null}
       {fresh.length ? <p className="muted">{t("capture.nextHuntHereThisAisle")}</p> : null}
       {partial ? <p className="muted">{t("capture.someOfItWasA")}</p> : null}
-    </div>
-  );
-}
-
-/* Keep an outline (and its label) inside the camera box. */
-export function clampBox(r: { left: number; top: number; width: number; height: number }, cw: number, ch: number) {
-  const left = Math.max(0, r.left), top = Math.max(0, r.top);
-  return { left, top, width: Math.max(0, Math.min(cw, r.left + r.width) - left), height: Math.max(0, Math.min(ch, r.top + r.height) - top) };
-}
-
-/* The outlines Arya drew: SAM's boxes on the frame it read. Only what
- * was found is drawn; people never are. They fade after a moment,
- * because the read lags the live view by a few seconds. */
-function ScanMarks({ live, video, box }: { live: Live; video: HTMLVideoElement | null; box: HTMLDivElement | null }) {
-  if (!video || !box || !video.videoWidth || !live.marks.length) return null;
-  const cw = box.clientWidth, ch = box.clientHeight;
-  return (
-    <div className="cp-marks" key={live.kept} aria-hidden="true">
-      {live.marks.map((m, i) => (
-        <div key={i} className={"cp-mark " + m.kind} style={clampBox(coverBox(m.box, video.videoWidth, video.videoHeight, cw, ch), cw, ch)}>
-          {m.tag && <span>{m.tag}</span>}
-        </div>
-      ))}
     </div>
   );
 }

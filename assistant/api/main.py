@@ -18,7 +18,10 @@ from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, grou
                         intake, items, lists, lists_v1, mcp_connector, prices, quest,
                         questmap, receipts, review, shelf, storemap, stores, town)
 
-app = FastAPI(title="Arya API")
+# No /docs, /redoc or /openapi.json: they listed every route, admin
+# ones included, to anyone (audit M2, 2026-10-30). The public Lists
+# API keeps its own schema at /api/v1/openapi.json.
+app = FastAPI(title="Arya API", docs_url=None, redoc_url=None, openapi_url=None)
 app.middleware("http")(require_login)
 _log = logging.getLogger("arya.api")
 
@@ -54,6 +57,17 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 groups.router, questmap.router, town.router):
     app.include_router(_router)
 
+def _resume_scan_jobs():
+    """Background store scans a deploy restart interrupted carry on."""
+    from api import scanjobs
+    try:
+        scanjobs.resume()
+    except Exception:
+        _log.exception("could not resume scan jobs")
+
+
+app.router.on_startup.append(_resume_scan_jobs)
+
 # The open Lists API is its own small app, so its errors and schema
 # (/api/v1/openapi.json) stay separate from the app's routes.
 app.mount("/api/v1", lists_v1.v1)
@@ -74,6 +88,26 @@ def _next_moved(request: Request, path: str = ""):
     return RedirectResponse("/" + path.lstrip("/\\") + ("?" + q if q else ""), status_code=302)
 
 
+@app.get("/team", include_in_schema=False)
+@app.get("/team/", include_in_schema=False)
+def _team_page():
+    """Team sign-in (owner, 2026-10-30): the password form for beta testers
+    and test agents lives here, off the public sign-in page. Not a secret:
+    the password route stays rate limited. The shell shows the form."""
+    index = os.path.join(_WEB, "index.html")
+    if not os.path.isfile(index):
+        return JSONResponse({"detail": "the app is not built"}, status_code=404)
+    return FileResponse(index, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/privacy", include_in_schema=False)
+@app.get("/terms", include_in_schema=False)
+def _legal_redirect(request: Request):
+    """The public privacy policy and terms are static pages (pwa/privacy/,
+    pwa/terms/); the bare path goes to the folder so relative links work."""
+    return RedirectResponse(request.url.path + "/", status_code=301)
+
+
 @app.get("/developers", include_in_schema=False)
 @app.get("/developers/", include_in_schema=False)
 def _developers_page():
@@ -83,6 +117,39 @@ def _developers_page():
     if not os.path.isfile(index):
         return JSONResponse({"detail": "the app is not built"}, status_code=404)
     return FileResponse(index, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/developers/reference", include_in_schema=False)
+def _developers_reference():
+    """The interactive Lists API reference: Scalar (vendored, served from
+    /vendor, no inline script) drawing /api/v1/openapi.json. Public."""
+    page = os.path.join(_PWA, "developers", "reference.html")
+    if not os.path.isfile(page):
+        return JSONResponse({"detail": "not found"}, status_code=404)
+    return FileResponse(page, headers={"Cache-Control": "no-cache"})
+
+
+_BUILT_DIR = os.path.realpath(os.path.join(_WEB, "app"))
+_PWA_CACHED = tuple(os.path.realpath(os.path.join(_PWA, d)) + os.sep
+                    for d in ("assets", "icons"))
+_PWA_VENDOR = os.path.realpath(os.path.join(_PWA, "vendor")) + os.sep
+
+
+def _static_cache_control(full_path):
+    """Hashed build files (web/dist/app/) never change under their name,
+    so they are cached for a year and a repeat visit skips the round
+    trip; a new build names new files and index.html (no-cache) points
+    at them. Images and icons keep their names across edits: a day,
+    then the browser revalidates by ETag. three.js (/vendor, 670 KB)
+    changes only with a deliberate upgrade: a week (audit M7)."""
+    p = os.path.realpath(full_path)
+    if p.startswith(_BUILT_DIR + os.sep):
+        return "public, max-age=31536000, immutable"
+    if p.startswith(_PWA_VENDOR):
+        return "public, max-age=604800"
+    if p.startswith(_PWA_CACHED):
+        return "public, max-age=86400"
+    return None
 
 
 class _AppFiles(StaticFiles):
@@ -99,8 +166,12 @@ class _AppFiles(StaticFiles):
 
     def file_response(self, full_path, *args, **kwargs):
         resp = super().file_response(full_path, *args, **kwargs)
-        if os.path.basename(full_path) in ("index.html", "sw.js"):
+        if os.path.basename(full_path) in ("index.html", "sw.js", "boot.js"):
             resp.headers["Cache-Control"] = "no-cache"
+        else:
+            cc = _static_cache_control(full_path)
+            if cc:
+                resp.headers["Cache-Control"] = cc
         return resp
 
 

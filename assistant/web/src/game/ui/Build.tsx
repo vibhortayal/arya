@@ -48,7 +48,6 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
   const [a, setA] = useState<Answers>({ type: "supermarket", look: "market", focus: [] });
   const [saved, setSaved] = useState<SavedMap[]>([]);
   const [stores, setStores] = useState<StoreSummary[] | null>(null);
-  const [finding, setFinding] = useState(false);
   const loadStores = () => void source.nearbyStores().then(setStores).catch(() => setStores([]));
   useEffect(() => { void source.maps?.().then(setSaved).catch(() => {}); }, [source]);
   useEffect(() => { if (step.s === "which") loadStores(); }, [step.s, source]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -107,9 +106,7 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
             </button>
           ))}
           {stores && !stores.length && <p className="qg-p">{findStore ? "Find the store you shop at, or build a dream store." : "Add a store you shop at in Lists first, or build a dream store."}</p>}
-          {findStore && stores && (finding || !stores.length
-            ? <div className="qg-findstore">{findStore(() => { setFinding(false); loadStores(); })}</div>
-            : <button id="qg-findstore" className="qg-btn ghost" onClick={() => setFinding(true)}>+ Find or add a store</button>)}
+          {findStore && stores && <div className="qg-findstore">{findStore(() => loadStores())}</div>}
         </Q>
       )}
 

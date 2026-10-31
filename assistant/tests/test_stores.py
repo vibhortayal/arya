@@ -272,38 +272,17 @@ class TestStoreShell(unittest.TestCase):
 
     def test_store_views_exist(self):
         views, reg = self.src("app/views.ts"), self.src("screens/registry.tsx")
-        for vid in ("store", "stores-find", "stores-mine", "stores-add"):
+        for vid in ("stores-find", "stores-mine"):
             self.assertIn(f'"{vid}"', views)
             self.assertIn(f"{vid}", reg)
-        # Add a store is a Google pick since the owner's 2026-10-28
-        # ruling (stores are picked from the API, never typed): the
-        # sa-* address form is replaced by sa-q + sa-results, and
-        # the hunt picker carries the st-goog suggestions box.
+        # One shared finder (ui/StoreFinder) everywhere; Find stores
+        # keeps the directory results and chips.
         for rel, fids in (("screens/StoresFind.tsx", ("sf-q", "sf-chips", "sf-results")),
-                          ("screens/StoresMine.tsx", ("sm-list",)),
-                          ("screens/StoresAdd.tsx", ("sa-q", "sa-results")),
-                          ("screens/Store.tsx", ("st-mine", "st-goog"))):
+                          ("screens/StoresMine.tsx", ("sm-list",))):
             for fid in fids:
                 self.assertIn(f'id="{fid}"', self.src(rel), fid)
-        # the old free-text-only chips are gone from the pick
-        self.assertNotIn('id="st-chips"', self.src("screens/Store.tsx"))
         # Settings carries the Stores navrow
         self.assertIn('<NavRow view="stores-mine" title="Stores"', self.src("screens/Profile.tsx"))
-
-    def test_pick_and_views_use_the_api(self):
-        store, mine, find = self.src("screens/Store.tsx"), self.src("screens/StoresMine.tsx"), self.src("screens/StoresFind.tsx")
-        self.assertIn('get("/api/stores/mine")', store)
-        self.assertIn("/api/stores/search?q=", find)
-        self.assertIn('"/api/stores/favorite"', store)
-        self.assertIn('"/api/stores/places/pick"', store)
-        self.assertIn("store_id: D.storeId || undefined,", self.src("screens/Mode.tsx"))
-        self.assertIn("Favorites", store)
-        # the star is a drawn SVG path, never an emoji
-        self.assertIn("export function StarSvg(", mine)
-        self.assertIn("<svg", mine.split("export function StarSvg(")[1].split("\n}")[0])
-        self.assertIn("<StarSvg filled={!!s.favorite} />", store)
-        for text in (store, mine):
-            self.assertNotIn("⭐", text)
 
 
 if __name__ == "__main__":

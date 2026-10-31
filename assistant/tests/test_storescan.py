@@ -113,6 +113,13 @@ class TestScanRoute(unittest.TestCase):
         # People are scrubbed before the read; the read never sees them.
         self.assertLess(FakeScanClient.prompts.index("person"), FakeScanClient.prompts.index("chat"))
 
+    def test_an_aisle_sign_sizes_the_store(self):
+        FakeScanClient.reads = [READ.replace('"Aisle 4 Dairy"', '"Aisle 12 Dairy"')]
+        self.scan(jpeg(1))
+        v = self.c.get("/api/storemap", params={"store": "New Store|s-1"}).json()
+        self.assertEqual((v["aisles"], v["expected"], v["seen"]), (12, 18, 1))
+        self.assertEqual(v["coverage_pct"], 6)
+
     def test_the_read_sees_only_the_scrubbed_frame(self):
         import base64
         FakeScanClient.people = [[100, 100, 300, 300]]

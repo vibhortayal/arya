@@ -86,7 +86,8 @@ class TestHuntMenuShell(unittest.TestCase):
         self.assertIn('<Sheet open onClose={close} id="hunt-sheet" labelledBy="hm-title"', src("screens/hunt/HuntMenu.tsx"))
         sheet = src("ui/Sheet.tsx")
         self.assertIn('role="dialog" aria-modal="true"', sheet)
-        self.assertIn("if (!open) return null;", sheet)
+        # Closing keeps the sheet mounted for its exit animation (ui/Sheet.tsx).
+        self.assertIn("if (!mounted && !open) return null;", sheet)
 
     def test_hunt_view_new_surfaces(self):
         h = hunt()
@@ -154,7 +155,7 @@ class TestHuntMenuShell(unittest.TestCase):
     def test_toast_close_button_and_live_region(self):
         t = src("ui/Toast.tsx")
         self.assertIn('className="toastclose" aria-label="Dismiss"', t)
-        self.assertLess(t.index("{cur?.msg}"), t.index('className="toastact"'))
+        self.assertLess(t.index("{view?.msg}"), t.index('className="toastact"'))
         self.assertIn("clearTimeout(timer.current)", t)
         self.assertIn("toastMs(msg, !!opts?.action)", t)
         self.assertIn('<div id="toast" role="status" aria-live="polite"', t)

@@ -322,8 +322,19 @@ async def list_import(req: Request):
             _merge_flag(a["item_id"], {"aisle": it["aisle"]})
         groups.note("added", a["item_id"])
         added.append(a)
-    new_ids = [a["item_id"] for a in added if a["item_id"] not in before]
-    return {"added": len(new_ids), "already": len(added) - len(new_ids),
+    # Names that read as the same item fold into one row ("zz import3" and
+    # "zz import4" into "zz import1"): count the rows that are new, and say
+    # how many names folded into a row that was already there.
+    new_ids, already, merged = [], 0, 0
+    for a in added:
+        i = a["item_id"]
+        if i in before:
+            already += 1
+        elif i in new_ids:
+            merged += 1
+        else:
+            new_ids.append(i)
+    return {"added": len(new_ids), "already": already, "merged": merged,
             "names": [a["name"] for a in added], "item_ids": new_ids}
 
 
@@ -561,6 +572,19 @@ def _clean_list_fields(body, current=None):
             if st and st.lower() not in {x.lower() for x in stores}:
                 stores.append(st)
         out["stores"] = stores[:state.MAX_LIST_STORES]
+        # Two branches can share a name (two Trader Joe's), so the picker
+        # also keeps which directory stores were chosen. Optional: lists
+        # saved before this have names only.
+        ids = body.get("store_ids") or []
+        if not isinstance(ids, list):
+            raise HTTPException(400, "store_ids must be a list")
+        keep = []
+        for sid in ids:
+            sid = str(sid or "").strip()[:80]
+            if sid and sid not in keep:
+                keep.append(sid)
+        if keep or (current and "store_ids" in current):
+            out["store_ids"] = keep[:state.MAX_LIST_STORES]
     return out
 
 

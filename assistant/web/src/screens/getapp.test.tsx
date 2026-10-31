@@ -80,3 +80,52 @@ test("blocked storage: the pill still works and jiggles", () => {
   fireEvent.click(pill()!);
   expect(pill()!.className).not.toContain("jiggle");
 });
+
+const FB_IPHONE = IPHONE.replace("Mobile/15E148", "Mobile/15E148 [FBAN/FBIOS;FBAV/450.0]");
+const CHROME_IPHONE = IPHONE.replace(/Version\/18.0 /, "").replace("Safari/604.1", "CriOS/130.0 Safari/604.1");
+
+test("iPhone steps name no browser, in Safari or Chrome", () => {
+  for (const ua of [IPHONE, CHROME_IPHONE]) {
+    env(ua);
+    render(<Login />);
+    fireEvent.click(pill()!);
+    const sheet = document.getElementById("a2hs-sheet")!;
+    expect(sheet.textContent).not.toMatch(/Safari|Chrome/);
+    expect(sheet.textContent).toContain("Look for it in your browser's menu.");
+    expect(document.getElementById("a2hs-copy")).toBeNull();
+    cleanup(); vi.restoreAllMocks(); localStorage.clear();
+  }
+});
+
+test("inside another app: a generic hint and Copy link, no Safari", () => {
+  env(FB_IPHONE);
+  render(<Login />);
+  fireEvent.click(pill()!);
+  const sheet = document.getElementById("a2hs-sheet")!;
+  expect(sheet.textContent).toContain("Opened from another app? Open this page in your phone's browser first.");
+  expect(sheet.textContent).not.toContain("Safari");
+  expect(document.getElementById("a2hs-copy")).toBeTruthy();
+});
+
+test("desktop: the phone line with Copy link, no install steps", () => {
+  env(DESKTOP);
+  render(<Login />);
+  expect(document.body.textContent).toContain("Arya is made for your phone.");
+  expect(document.getElementById("landdesk-copy")).toBeTruthy();
+  expect(pill()).toBeNull();
+});
+
+test("a phone does not get the desktop line", () => {
+  env(IPHONE);
+  render(<Login />);
+  expect(document.getElementById("landdesk-copy")).toBeNull();
+});
+
+test("store badges are shown unlinked, with the coming-soon caption", () => {
+  env(DESKTOP);
+  const { container } = render(<Login />);
+  const apps = container.querySelector(".landapps")!;
+  expect(apps.textContent).toMatch(/coming soon/i);
+  expect(apps.querySelectorAll("img").length).toBe(2);
+  expect(apps.querySelector("a, button")).toBeNull();
+});

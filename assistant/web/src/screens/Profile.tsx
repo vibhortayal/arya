@@ -10,9 +10,8 @@ import { useTown } from "../lib/town";
 import { A2hsRow } from "../ui/A2hs";
 import { Row } from "../ui/kit";
 import { IconPen } from "../ui/icons";
-import { AddReceiptSheet, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { get, post } from "../lib/api";
-import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
+import { CURRENCY_SYMBOLS, MONTHS, asset } from "../lib/format";
 import { characterManifest } from "../lib/characters";
 import { languageToast } from "../lib/language";
 import { t, useTranslation } from "../i18n";
@@ -31,20 +30,18 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
 
 type QProfile = { handle: string; level?: number; points?: number; stats: { hunts: number; streak_weeks?: number }; badges?: { id: string; earned?: boolean }[]; mapped_stores?: string[] };
-type Unsettled = { session_id: string; store: string; finished_at?: string; items_collected: number; items_total: number };
-type Archive = { receipts: unknown[]; unsettled?: Unsettled[] };
+type Archive = { receipts: unknown[] };
 
 export function Profile() {
   const { t } = useTranslation();
   const nav = useNav();
   const town = useTown();
   const guide = useGuide();
-  const { demo, user, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
+  const { demo, user, admin, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
   const [archive, setArchive] = useState<Archive>({ receipts: [] });
-  const [ar, setAr] = useState<ReceiptTarget | null>(null);
   const [groupName, setGroupName] = useState<string | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [delPw, setDelPw] = useState("");
@@ -66,20 +63,12 @@ export function Profile() {
   }, []);
   useEffect(() => { load().catch(showErr); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const unsettled = archive.unsettled || [];
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
 
   // No zero scores (relevant cards, owner 2026-10-30): level and points
   // once a quest has earned any; before that the streak alone, or what
   // the first quest gives.
   const level = profileLine(profile);
-
-  const dismiss = (sid: string) => attempt(async () => {
-    if (!confirm(t("receipts.confirmDismiss"))) return;
-    await post(`/api/quest/sessions/${encodeURIComponent(sid)}/delete`, {});
-    toast(t("receipts.huntDismissed"));
-    load().catch(showErr);
-  });
 
   const pickCurrency = (code: string) => attempt(async () => {
     const prev = currency;
@@ -125,17 +114,6 @@ export function Profile() {
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
       {town ? <DirectorPanel /> : null}
       <GroupSection />
-      <div id="pf-missing" className="group" hidden={!unsettled.length}>
-        {unsettled.map(e => (
-          <div key={e.session_id} className="sessrow">
-            <span className="grow"><span className="name">{e.store}</span>
-              <span className="sub">{t("settings.finishedReceiptMissingOfCollected", { slice: fmtShort(String(e.finished_at || "").slice(0, 10)), items_collected: e.items_collected, items_total: e.items_total })}</span></span>
-            <button className="btn" data-upload={e.session_id} data-store={e.store} type="button"
-              onClick={() => setAr({ sessionId: e.session_id, label: e.store })}>{t("common.addReceipt")}</button>
-            <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>{t("common.dismiss")}</button>
-          </div>
-        ))}
-      </div>
       {/* Most of this tab is the user's data, not settings: a "Your data"
         * heading groups Stores, Receipts and Spending (labels audit,
         * judgement call 4; the tab keeps the name Settings). */}
@@ -152,6 +130,8 @@ export function Profile() {
         <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
           <span className="grow">{t("settings.helpAndGuide")}<span className="sub">{t("settings.helpAndGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
+        <NavRow id="btn-display" view="display" title={t("display.title")} sub={t("display.sub")} />
+        <NavRow id="btn-usage" view="usage" title={t("usage.title")} sub={t("settings.usageSub")} />
         <A2hsRow demo={demo} />
       </div>
       <Reminders />
@@ -176,15 +156,19 @@ export function Profile() {
               <option value="ask">{t("settings.shopModeAsk")}</option>
             </select>
           </div></div>
-        <RegistrationRow />
+        {admin.owner && <RegistrationRow />}
+        {admin.waitlist && <WaitlistRow />}
       </div>
       <div className="group">
         <NavRow id="btn-feedback" view="feedback" title={t("settings.featureRequestContactUs")} sub={t("settings.tellUsWhatToBuild")} />
         <NavRow id="btn-muse" view="muse" title={t("settings.connectAnAiAgent")} sub={t("settings.useAryaFromYourOwn")} />
         <NavRow id="btn-about" view="about" title={t("common.about")} sub={t("settings.builtOnMetaModels")} />
       </div>
+      {/* Sign out sits above Export and Delete, away from the red row (audit M9). */}
+      <p style={{ margin: "22px 0" }}><button id="btn-signout2" className="btn secondary wide" type="button"
+        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
       <div className="group">
-        <a className="navrow" href="/api/account/export"><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
+        <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
         <button className="navrow" id="btn-del-account" type="button" onClick={() => setDelOpen(o => !o)}>
           <span className="grow">{t("settings.deleteMyAccount")}<span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
         <div id="del-account-box" className="pad" hidden={!delOpen}>
@@ -194,10 +178,7 @@ export function Profile() {
           <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>{t("settings.eraseEverything")}</button></p>
         </div>
       </div>
-      <p style={{ marginTop: 22 }}><button id="btn-signout2" className="btn secondary wide" type="button"
-        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
 
-      <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => load().catch(showErr)} />
     </>
   );
 }
@@ -315,6 +296,23 @@ const keyBytes = (b64: string) => {
   const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
   return Uint8Array.from(raw, c => c.charCodeAt(0));
 };
+
+/* Owner-only (ARYA_WAITLIST_ADMINS): the list call answers 403 to anyone
+ * else, so every other account, and any failure, renders nothing. */
+function WaitlistRow() {
+  const { t } = useTranslation();
+  const nav = useNav();
+  const [waiting, setWaiting] = useState<number | null>(null);
+  useEffect(() => {
+    get<{ rows: { approved: boolean }[] }>("/auth/waitlist/list")
+      .then(d => setWaiting(d.rows.filter(r => !r.approved).length), () => setWaiting(null));
+  }, [nav.key]);
+  if (waiting === null) return null;
+  return (
+    <button className="navrow" id="btn-waitlist" type="button" onClick={() => nav.show("waitlist")}>
+      <span className="grow">{t("waitlistAdmin.settingsRow")}<span className="sub">{waiting ? t("waitlistAdmin.settingsSub", { count: waiting }) : t("waitlistAdmin.settingsNone")}</span></span><span className="chev">›</span></button>
+  );
+}
 
 function RegistrationRow() {
   const { t } = useTranslation();

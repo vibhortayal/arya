@@ -23,7 +23,7 @@ const SHELL = BUILD.map(e => new URL(e.url, self.registration.scope).pathname);
 // Files the app loads at runtime from the static folder (pwa/): kept
 // for offline use as the old shell kept them. Best effort: one missing
 // file must not stop the install.
-const STATIC = ["/scene.js", "/vendor/three.module.js", "/manifest.json",
+const STATIC = ["/scene.js", "/boot.js", "/vendor/three.module.js", "/manifest.json",
   "/icons/favicon.ico", "/icons/favicon-32.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png",
   "/assets/characters/manifest.json", "/assets/scenes/hero.webp", "/assets/scenes/score-party.webp",
   "/assets/scenes/aisle-art.webp", "/assets/scenes/storefront.webp",

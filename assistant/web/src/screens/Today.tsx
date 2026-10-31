@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -13,6 +13,10 @@ import { useToast } from "../ui/Toast";
 import { TownFeed } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
+import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
+import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
+import { EditTitle } from "../ui/EditList";
+import { arrange } from "../lib/layout";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -122,6 +126,37 @@ export function findingLine(ins: Insights, h: Home, currency?: Parameters<typeof
   return null;
 }
 
+/* Price watch (card library, 2026-10-30): what costs more than it did,
+ * from the same receipts as the Did you know? line, with the store that
+ * has it for less when the gap is worth a detour. */
+export type WatchRow = { key: string; name: string; pct: string; cheaperAt: string | null };
+export function watchRows(ins: Insights, h: Home): WatchRow[] {
+  return (ins?.basket?.movers || []).filter(m => m.pct >= FINDING_MIN_PCT).map((m, k) => {
+    const by = Object.entries<any>((m.item_id && h?.price_by_store?.[m.item_id]) || {}).filter(([, p]) => p && p.median > 0);
+    by.sort((a, b) => a[1].median - b[1].median);
+    const gap = by.length >= 2 && by[by.length - 1][1].median - by[0][1].median >= 0.25;
+    return { key: m.item_id || "w" + k, name: m.name, pct: `${m.pct.toFixed(m.pct < 10 ? 1 : 0).replace(/\.0$/, "")}%`, cheaperAt: gap ? by[0][0] : null };
+  });
+}
+
+/* Next trip: the list with the most to get, and about what it costs:
+ * each item at its usual price at one of the list's stores, else at its
+ * cheapest. Null cost when no item has a price yet. */
+export type Trip = { id: string; name: string; count: number; cost: number | null };
+export function nextTrip(cards: { id: string; name: string; items: { item_id: string }[] }[], lists: { id: string; stores?: string[] }[], h: Home): Trip | null {
+  const best = [...cards].filter(c => c.items.length).sort((a, b) => b.items.length - a.items.length)[0];
+  if (!best) return null;
+  const stores = lists.find(l => l.id === best.id)?.stores || [];
+  let cost = 0, priced = 0;
+  for (const i of best.items) {
+    const by = Object.entries<any>(h?.price_by_store?.[i.item_id] || {}).filter(([, p]) => p && p.median > 0);
+    if (!by.length) continue;
+    const at = by.find(([s]) => stores.includes(s)) || by.sort((a, b) => a[1].median - b[1].median)[0];
+    cost += at[1].median; priced++;
+  }
+  return { id: best.id, name: best.name, count: best.items.length, cost: priced ? cost : null };
+}
+
 /* "From your receipts up to …" only when the last one is a week old. */
 export const STALE_DAYS = 7;
 export function staleThrough(asOf: string | undefined, today: string): boolean {
@@ -179,10 +214,13 @@ export function GetStartedCard({ gs, onStep, onDismiss }: { gs: GetStarted; onSt
   );
 }
 
+/* How long a finger rests on a card before its menu opens. */
+const HOLD_MS = 500;
+
 export function Today() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency, demo, user, questNudge, patchShop, saveShopMode } = useSession();
+  const { currency, demo, user, questNudge, patchShop, saveShopMode, layouts = {} } = useSession();
   // The Quest nudge retires once this account has opened Quest.
   const [questSeen] = useState(() => questOpened(user));
   const town = useTown();
@@ -191,6 +229,9 @@ export function Today() {
   const [h, setH] = useState<Home | null>(null);
   const [news, setNews] = useState<any[] | null>(null);
   const [eyeCount, setEyeCount] = useState(0);
+  /* Finished trips with no receipt yet: one row here, the list and its
+   * actions on Receipts (audit M9; they used to sit in Settings). */
+  const [noReceipt, setNoReceipt] = useState<{ store: string; finished_at?: string }[]>([]);
   const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
   const [ins, setIns] = useState<Insights>(null);
@@ -200,21 +241,31 @@ export function Today() {
   const [ex, setEx] = useState<ExState>(null);
   const [gs, setGs] = useState<GetStarted>(null);
   const [lowOpen, setLowOpen] = useState(false);
+  const [watchOpen, setWatchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const live = useRef(true);
+  // Customizable Today: the saved card order (null = the default), the
+  // one question, edit mode and the touch-and-hold menu.
+  const [cardsSaved, setCardsSaved] = useState<CardId[] | null>(null);
+  const [focusAsked, setFocusAsked] = useState(true);
+  const [editing, setEditing] = useState(false);
+  // Card sizes; a Small card tapped open shows as Medium until you leave.
+  const [sizes, setSizes] = useState<Partial<Record<CardId, Size>>>({});
+  const [peekOpen, setPeekOpen] = useState<Set<CardId>>(new Set());
+  const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
+  const big = (id: CardId) => sz(id) === "l";
+  const [menu, setMenu] = useState<{ id: CardId; top: number } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
 
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
   useCharacters();
 
   const load = useCallback(async () => {
-    let home: Home, st: { get_started?: GetStarted } | null;
-    try {
-      [home, st] = await Promise.all([get("/api/home"), demo ? null : get("/api/settings").catch(() => null)]);
-    } catch (e) { showErr(e); return; }
-    if (!live.current) return;
-    setGs(st?.get_started ?? null);
-    setH(home);
-    setAdded(new Set());
+    let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean; today_sizes?: Partial<Record<CardId, Size>> } | null;
+    const first = Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
+    // None of these reads needs /api/home, so they start right behind it
+    // instead of waiting for it (and for settings) to come back.
     get("/api/quest/news").then(n => live.current && setNews(n.news || []), () => live.current && setNews([]));
     get("/api/dashboard").then(d => live.current && setMonths({ spend: d.spend_by_month || {} }), () => live.current && setMonths(null));
     // powers.js loadFacts: a failed read keeps the last facts (at first
@@ -222,6 +273,8 @@ export function Today() {
     get<Insights>("/api/prices/insights").then(r => live.current && setIns(r), () => live.current && setIns(null));
     get<Facts>("/api/powers").then(f => live.current && setFacts(f),
       () => live.current && setFacts(f => f || { receipts: 0, stores: 0, share_prices: false }));
+    get<{ unsettled?: { store: string; finished_at?: string }[] }>("/api/quest/receipts")
+      .then(a => live.current && setNoReceipt(a.unsettled || []), () => live.current && setNoReceipt([]));
     Promise.all([
       get("/api/review").catch(() => ({ lines: [], unresolved: [] })),
       get("/api/curator").catch(() => ({ proposals: [] })),
@@ -235,11 +288,22 @@ export function Today() {
       const pct = Math.max(0, Math.min(100, Math.round((p.points - p.level_floor) / span * 100)));
       setRing({ pct, level: p.level });
     }).catch(() => {});
+    try { [home, st] = await first; } catch (e) { showErr(e); return; }
+    if (!live.current) return;
+    setGs(demo ? null : st?.get_started ?? null);
+    setCardsSaved(st?.today_cards ?? null);
+    setSizes(st?.today_sizes || {});
+    // Asked once; someone who already arranged Today is not asked.
+    setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
+    setH(home);
+    setAdded(new Set());
   }, [showErr, setRing, demo]);
   useEffect(() => { load(); }, [load]);
   // What Arya can do › Use soon › Add a date opens the date sheet here.
   useEffect(() => {
     if (nav.params.snapDate) { nav.params.snapDate = undefined; setEx({ k: "capture" }); }
+    // Settings > Display > Today cards opens Today in edit mode.
+    if (nav.params.edit) { nav.params.edit = undefined; setEditing(true); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---- Get started ---- */
@@ -276,7 +340,7 @@ export function Today() {
 
   /* ---- Store alerts ---- */
   const alertRows = h && news ? storeAlerts(h, news, currency) : [];
-  const lowCap = capRows(low, lowOpen);
+  const lowCap = capRows(low, lowOpen || big("low"));
 
   /* ---- Still good? ---- */
   // The after-receipt card already asks about these; no repeats.
@@ -302,14 +366,20 @@ export function Today() {
 
   /* ---- Your lists ---- */
   const listItems = items.filter(i => !i.checked && i.on_list && !i.not_grocery);
-  const lists: any[] = h?.lists || [];
-  const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id) }));
+  // In the order Lists keeps, without the lists hidden there (Edit Lists).
+  const allLists: any[] = h?.lists || [];
+  const lists: any[] = arrange(allLists.map(l => l.id), layouts.lists?.order, layouts.lists?.hidden).shown.map(id => allLists.find(l => l.id === id));
+  const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id || (i.also || []).includes(l.id)) }));
   const cards = allCards.filter(c => c.items.length);
   const emptyNames = allCards.filter(c => !c.items.length).map(c => c.name);
-  const rest = listItems.filter(i => !i.list || !lists.some(l => l.id === i.list));
-  if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: lists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
-  const noLists = !listItems.length && !lists.length;
-  const listCap = capLists(cards, cards.length);
+  const rest = listItems.filter(i => !i.list || !allLists.some(l => l.id === i.list));
+  if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: allLists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
+  const noLists = !listItems.length && !allLists.length;
+  const listCap = big("lists") ? { shown: cards, seeAll: false } : capLists(cards, cards.length);
+
+  const trip = h ? nextTrip(cards, lists, h) : null;
+  const watch = h ? watchRows(ins, h) : [];
+  const watchCap = capRows(watch, watchOpen || big("watch"));
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
@@ -326,140 +396,329 @@ export function Today() {
     catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   }
 
+  /* ---- Customizable Today (todayCards.ts) ---- */
+  const on = cardsOn(cardsSaved);
+  const alertSection = (kind: "report" | "price", id: string, head: string) => {
+    /* Out-of-stock reports and price tips are two kinds of row, so
+     * each gets its own heading (labels audit, 2026-10-29) and is its
+     * own card (customizable Today). */
+    const rows = alertRows.filter(r => r.kind === kind);
+    const capped = capRows(rows, alertsOpen || big(kind));
+    return <div id={id}>{rows.length > 0 && <><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
+      <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
+        <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
+  };
+  const sections: Record<CardId, ReactNode> = {
+    low: (
+          <div id="today-low">
+            {low.length > 0 && (
+              <>
+                <h3 className="sect">{t("common.runningLow")}</h3>
+                <div className="group">
+                  {lowCap.shown.map(i => (
+                    <div className="row" key={i.item_id}>
+                      <Face name={i.name} />
+                      <div className="grow">
+                        <a href="#" className="name item-link" data-id={i.item_id}
+                          onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
+                        <span className="sub">{cap(i.reason)}</span></div>
+                      {onList.has(i.item_id) || added.has(i.item_id)
+                        ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : t("today.onYourList")}>{t("today.onList")}</span>
+                        : <button className="chip" data-low-add={i.item_id} type="button" aria-label={t("today.addToYourList", { name: i.name })}
+                          disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
+                    </div>
+                  ))}
+                  <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
+                </div>
+              </>
+            )}
+          </div>
+    ),
+    lists: (
+      <>
+        <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
+          <h3 className="sect">{t("today.yourLists")}</h3>
+        </div>
+        <div id="today-lists">
+          {h && !noLists && cards.length > 0 && (
+            <div className="listcards">
+              {listCap.shown.map(c => (
+                <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
+                  <span className="lc-top"><span className="lc-name">{c.name}</span>
+                    <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span><span className="chev" aria-hidden="true">›</span></span>
+                  <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : t("today.nothingToGet")}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {h && !noLists && emptyNames.length > 0 && (
+            <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
+              <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
+              <span className="chev" aria-hidden="true">›</span></button></div>
+          )}
+          {h && listCap.seeAll && (
+            <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
+              <span>{t("today.seeAllLists", { count: allLists.length })}</span><span aria-hidden="true">›</span></button>
+          )}
+        </div>
+      </>
+    ),
+    report: alertSection("report", "today-alerts", "today.storeAlerts"),
+    price: alertSection("price", "today-cheaper", "today.cheaperElsewhere"),
+    expiry: (
+          <div id="today-expiry">
+            {h && <UseSoon large={big("expiry")} soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
+              onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
+          </div>
+    ),
+    checks: (
+          <div id="today-checks">
+            {nChecks > 0 && (
+              <div className={"group checkfold" + (checksOpen || big("checks") ? " open" : "")}>
+                <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen || big("checks")) as "true" | "false"}
+                  onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
+                  <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
+                <div className="checkrows" hidden={!checksOpen && !big("checks")}>
+                  {checks.map(c => (
+                    <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
+                      <span className="chipset">
+                        <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
+                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
+                  ))}
+                  {seen.map((s, k) => (
+                    <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
+                      <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+    ),
+    patterns: (
+      <>
+        <div id="today-patterns">
+          {lastMonth && months && (
+            <>
+              <h3 className="sect">{t("today.yourPatterns")}</h3>
+              <div className="group">
+                <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                  <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
+                  <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
+                {tip}
+              </div>
+            </>
+          )}
+        </div>
+        <div id="today-tip">{!(lastMonth && months) && tip}</div>
+      </>
+    ),
+    watch: (
+      <div id="today-watch">
+        {watch.length > 0 && (
+          <>
+            <h3 className="sect">{t("today.cards.watch.name")}</h3>
+            <div className="group">
+              {watchCap.shown.map(w => (
+                <button className="hubrow" key={w.key} data-watch={w.key} type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                  <span className="hr-label">{w.name}<span className="sub">{t("today.watch.up", { pct: w.pct, month: ins!.basket!.since_month })}{w.cheaperAt ? " " + t("today.finding.cheaperAt", { store: w.cheaperAt }) : ""}</span></span>
+                  <span className="chev" aria-hidden="true">›</span></button>
+              ))}
+              <MoreRow more={watchCap.more} onOpen={() => setWatchOpen(true)} />
+            </div>
+          </>
+        )}
+      </div>
+    ),
+    trip: (
+      <div id="today-trip">
+        {trip && (
+          <>
+            <h3 className="sect">{t("today.cards.trip.name")}</h3>
+            <div className="group">
+              <button className="hubrow" id="today-trip-btn" data-open-list={trip.id} type="button" onClick={() => nav.show("list", { lens: trip.id })}>
+                <span className="hr-label">{trip.name}<span className="sub">{trip.cost != null
+                  ? t("today.trip.costs", { count: trip.count, money: money(trip.cost, currency) })
+                  : t("common.itemCount", { count: trip.count })}</span></span>
+                <span className="hr-action">{t("today.trip.go")}</span><span className="chev" aria-hidden="true">›</span></button>
+            </div>
+          </>
+        )}
+      </div>
+    ),
+    quest: (
+      <>
+        {questNudge && (
+          <div id="today-questnudge" className="fr-card">
+            <p className="fr-h">{t("today.questNudge.title")}</p>
+            <p className="fr-s">{t("today.questNudge.sub")}</p>
+            <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
+            <div className="fr-links">
+              <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
+              <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
+            </div>
+          </div>
+        )}
+        {listItems.length > 0 && !questSeen && (
+          <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+            <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
+            <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
+            <span className="chev">›</span></button>
+        )}
+      </>
+    ),
+  };
+  const has: Record<CardId, boolean> = {
+    low: low.length > 0,
+    lists: !!h && !noLists,
+    report: alertRows.some(r => r.kind === "report"),
+    price: alertRows.some(r => r.kind === "price"),
+    expiry: soon.length > 0 || !!perish,
+    checks: nChecks > 0,
+    patterns: !!(lastMonth && months) || !!tip,
+    quest: !!questNudge || (listItems.length > 0 && !questSeen),
+    watch: watch.length > 0,
+    trip: !!trip,
+  };
+  const peek = (id: CardId): string => {
+    if (id === "low") return low.map(i => i.name).slice(0, 3).join(", ");
+    if (id === "lists") return cards.map(c => c.name).join(", ");
+    if (id === "report" || id === "price") return alertRows.find(r => r.kind === id)?.name || "";
+    if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
+    if (id === "checks") return checkLabel;
+    if (id === "watch") return watch.map(w => w.name).slice(0, 3).join(", ");
+    if (id === "trip" && trip) return t("today.trip.peek", { name: trip.name, count: trip.count });
+    if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
+    return t(`today.cards.${id}.desc`);
+  };
+  function saveCards(next: CardId[] | null, msg?: string) {
+    const prev = Array.isArray(cardsSaved) ? cardsOn(cardsSaved) : null;
+    setCardsSaved(next);
+    setFocusAsked(true);
+    post("/api/settings", { today_cards: next }).catch(e => { setCardsSaved(prev); showErr(e); });
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => saveCards(prev) });
+  }
+  const name = (id: CardId) => t(`today.cards.${id}.name`);
+
+  /* A Small card: one line under its heading; tapping it opens the
+   * card at Medium (Running low adds everything instead). */
+  const smallLine = (id: CardId): string => {
+    if (id === "low") return t("today.small.low", { count: low.length });
+    if (id === "lists") return t("today.small.lists", { count: cards.length, items: listItems.length });
+    if (id === "report" || id === "price") return t(`today.small.${id}`, { count: alertRows.filter(r => r.kind === id).length });
+    if (id === "expiry") return t("today.small.expiry", { count: soon.length + (perish?.items.length || 0) });
+    if (id === "checks") return t("today.small.checks", { count: nChecks });
+    if (id === "watch") return t("today.small.watch", { count: watch.length });
+    if (id === "trip" && trip) return trip.cost != null ? t("today.small.trip", { money: money(trip.cost, currency) }) : t("common.itemCount", { count: trip.count });
+    return id === "patterns" ? peek(id) : name(id);
+  };
+  async function addAllLow() {
+    const ids = low.filter(i => !onList.has(i.item_id) && !added.has(i.item_id)).map(i => i.item_id);
+    try {
+      for (const id of ids) await post("/api/list/add", { item_id: id });
+      setAdded(a => new Set([...a, ...ids]));
+      toast(t("today.small.addedAll"));
+    } catch (e) { showErr(e); }
+  }
+  const small = (id: CardId) => (
+    <div id={`today-small-${id}`} className="smallcard">
+      <h3 className="sect">{name(id)}</h3>
+      <div className="group"><div className="row">
+        <button type="button" className="grow smalltap" data-small={id} onClick={() => setPeekOpen(o => new Set(o).add(id))}>
+          <span className="name">{smallLine(id)}</span>
+          {id !== "patterns" && <span className="sub">{peek(id)}</span>}</button>
+        {id === "low"
+          ? <button type="button" className="chip" data-low-addall onClick={addAllLow}>{t("today.small.addAll")}</button>
+          : <span className="chev" aria-hidden="true">›</span>}
+      </div></div>
+    </div>
+  );
+  function saveSize(id: CardId, s: Size) {
+    setSizes(x => ({ ...x, [id]: s }));
+    setPeekOpen(o => { const n = new Set(o); n.delete(id); return n; });
+    post("/api/settings", { today_sizes: { [id]: s } }).catch(showErr);
+  }
+  function resetToday() {
+    saveCards(null);
+    setSizes({});
+    post("/api/settings", { today_sizes: Object.fromEntries(Object.keys(SIZES_OF).map(k => [k, "m"])) }).catch(showErr);
+    toast(t("today.edit.resetDone"));
+  }
+
+  /* Touch and hold a card for its menu (right-click on a desktop). A
+   * hold that opened the menu swallows the click that follows. */
+  const holdProps = (id: CardId) => ({
+    onPointerDown: (e: ReactPointerEvent) => {
+      if (e.pointerType === "mouse") return;
+      const x = e.clientX, y = e.clientY;
+      clearTimeout(hold.current.timer);
+      hold.current = { x, y, fired: false, timer: window.setTimeout(() => {
+        hold.current.fired = true;
+        navigator.vibrate?.(10);
+        setMenu({ id, top: y + 12 });
+      }, HOLD_MS) };
+    },
+    onPointerMove: (e: ReactPointerEvent) => {
+      if (Math.hypot(e.clientX - hold.current.x, e.clientY - hold.current.y) > 10) clearTimeout(hold.current.timer);
+    },
+    onPointerUp: () => clearTimeout(hold.current.timer),
+    onPointerCancel: () => clearTimeout(hold.current.timer),
+    onClickCapture: (e: ReactMouseEvent) => {
+      if (hold.current.fired) { e.preventDefault(); e.stopPropagation(); hold.current.fired = false; }
+    },
+    onContextMenu: (e: ReactMouseEvent) => { e.preventDefault(); clearTimeout(hold.current.timer); setMenu({ id, top: e.clientY + 12 }); },
+  });
+
+  /* The one question: once, after the first list (not on the demo). */
+  const askShow = !!h && !focusAsked && allLists.length > 0 && !editing;
+  function answerAsk(picked: FocusId[] | null) {
+    setFocusAsked(true);
+    const body = picked ? { today_asked: true, today_cards: cardsForFocus(picked) } : { today_asked: true };
+    if (picked) setCardsSaved(cardsForFocus(picked));
+    post("/api/settings", body).then(() => picked && toast(t("today.ask.done")), showErr);
+  }
+
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <div className="titlerow"><h1 className="largetitle">{t("today.today")}</h1></div>
-      {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
-      <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
-      {town ? <TownFeed town={town} /> : null}
-      <div id="today-low">
-        {low.length > 0 && (
-          <>
-            <h3 className="sect">{t("common.runningLow")}</h3>
-            <div className="group">
-              {lowCap.shown.map(i => (
-                <div className="row" key={i.item_id}>
-                  <Face name={i.name} />
-                  <div className="grow">
-                    <a href="#" className="name item-link" data-id={i.item_id}
-                      onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
-                    <span className="sub">{cap(i.reason)}</span></div>
-                  {onList.has(i.item_id) || added.has(i.item_id)
-                    ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : t("today.onYourList")}>{t("today.onList")}</span>
-                    : <button className="chip" data-low-add={i.item_id} type="button" aria-label={t("today.addToYourList", { name: i.name })}
-                      disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
-                </div>
-              ))}
-              <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
+      <EditTitle id="today-editbtn" title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
+      {editing ? (
+        <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
+      ) : (
+        <>
+          {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
+          <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+          {town ? <TownFeed town={town} /> : null}
+          {noReceipt.length > 0 && (
+            <div className="group" id="today-noreceipt">
+              <button className="navrow" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
+                <span className="grow">{t("today.tripsNeedReceipt", { count: noReceipt.length })}
+                  <span className="sub">{[...new Set(noReceipt.map(e => e.store))].join(", ")} · {noReceipt.map(e => fmtShort(String(e.finished_at || "").slice(0, 10))).filter(Boolean).join(", ")}</span></span>
+                <span className="chev">›</span></button>
             </div>
-          </>
-        )}
-      </div>
-      <div className="sectrow" id="today-lists-row" hidden={!h || noLists}>
-        <h3 className="sect">{t("today.yourLists")}</h3>
-      </div>
-      <div id="today-lists">
-        {h && !noLists && cards.length > 0 && (
-          <div className="listcards">
-            {listCap.shown.map(c => (
-              <button className="listcard" key={c.id} data-open-list={c.id} type="button" onClick={() => nav.show("list", { lens: c.id })}>
-                <span className="lc-top"><span className="lc-name">{c.name}</span>
-                  <span className="lc-count">{t("common.itemCount", { count: c.items.length })}</span><span className="chev" aria-hidden="true">›</span></span>
-                <span className="lc-items">{c.items.length ? c.items.slice(0, 3).map(i => i.name).join(", ") + (c.items.length > 3 ? "…" : "") : t("today.nothingToGet")}</span>
-              </button>
-            ))}
+          )}
+          {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>)}
+          <div id="today-eye">
+            {eyeCount > 0 && (
+              <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
+                <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
+            )}
           </div>
-        )}
-        {h && !noLists && emptyNames.length > 0 && (
-          <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
-            <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
-            <span className="chev" aria-hidden="true">›</span></button></div>
-        )}
-        {h && listCap.seeAll && (
-          <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
-            <span>{t("today.seeAllLists", { count: lists.length })}</span><span aria-hidden="true">›</span></button>
-        )}
-      </div>
-      <div id="today-alerts">
-        {/* Out-of-stock reports and price tips are two kinds of row, so
-          * each gets its own heading (labels audit, 2026-10-29). */}
-        {([["report", "today.storeAlerts"], ["price", "today.cheaperElsewhere"]] as const).map(([kind, head]) => {
-          const rows = alertRows.filter(r => r.kind === kind);
-          const capped = capRows(rows, alertsOpen);
-          return rows.length > 0 && <Fragment key={kind}><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
-            <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
-              <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></Fragment>;
-        })}
-      </div>
-      <div id="today-expiry">
-        {h && <UseSoon soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
-          onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
-      </div>
-      <div id="today-checks">
-        {nChecks > 0 && (
-          <div className={"group checkfold" + (checksOpen ? " open" : "")}>
-            <button className="hubrow" type="button" data-checks-fold aria-expanded={String(checksOpen) as "true" | "false"}
-              onClick={() => { checksOpenMem = !checksOpen; setChecksOpenState(checksOpenMem); }}>
-              <span className="hr-label">{t("today.stillGoodToCheck", { nChecks })}{checkLabel ? <span className="sub">{checkLabel}</span> : null}</span><span className="chev">›</span></button>
-            <div className="checkrows" hidden={!checksOpen}>
-              {checks.map(c => (
-                <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                  <span className="chipset">
-                    <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
-                    <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
-              ))}
-              {seen.map((s, k) => (
-                <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
-                  <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div id="today-eye">
-        {eyeCount > 0 && (
-          <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
-            <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
-        )}
-      </div>
-      <div id="today-patterns">
-        {lastMonth && months && (
-          <>
-            <h3 className="sect">{t("today.yourPatterns")}</h3>
-            <div className="group">
-              <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
-                <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
-                <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
-              {tip}
-            </div>
-          </>
-        )}
-      </div>
-      <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
-      <div id="today-tip">{!(lastMonth && months) && tip}</div>
-      {questNudge && (
-        <div id="today-questnudge" className="fr-card">
-          <p className="fr-h">{t("today.questNudge.title")}</p>
-          <p className="fr-s">{t("today.questNudge.sub")}</p>
-          <button className="btn primary wide" type="button" onClick={() => { saveShopMode("quest").catch(() => {}); nav.show("community"); }}>{t("today.questNudge.try")}</button>
-          <div className="fr-links">
-            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "snooze" }).catch(() => {})}>{t("today.questNudge.notNow")}</button>
-            <button className="linkbtn" type="button" onClick={() => patchShop({ quest_nudge: "off" }).catch(() => {})}>{t("today.questNudge.never")}</button>
-          </div>
-        </div>
+          <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
+        </>
       )}
-      {listItems.length > 0 && !questSeen && (
-        <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
-          <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
-          <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
-          <span className="chev">›</span></button>
+      {menu && (
+        <CardMenu id={menu.id} top={menu.top} first={on.indexOf(menu.id) === 0} last={on.indexOf(menu.id) === on.length - 1}
+          onClose={closeMenu} onEdit={() => setEditing(true)}
+          onMove={d => saveCards(moveCard(on, menu.id, on.indexOf(menu.id) + d))}
+          onRemove={() => saveCards(removeCard(on, menu.id), t("today.edit.removed", { name: name(menu.id) }))} />
       )}
+      {askShow && <AskSheet onSkip={() => answerAsk(null)} onDone={answerAsk} />}
       <ExpirySheets ex={ex} setEx={setEx} soon={soon} demo={demo} reload={load} />
       {perish && <PerishSheet open={perishOpen} perish={perish} demo={demo}
         onClose={() => setPerishOpen(false)} onMore={() => { setPerishOpen(false); setEx({ k: "capture" }); }} reload={load} />}
     </>
   );
+
 
   /* Used up: offer, never assume, to put it back on the shopping list
    * (expiry.js done). */
@@ -605,14 +864,14 @@ export function perishNames(items: { name: string }[]): string {
   return names.length > 3 ? t("today.perish.andMore", { names: names.slice(0, 3).join(", "), count: names.length - 3 }) : names.join(", ");
 }
 
-function UseSoon({ soon, perish, setEx, onDone, onPerish, onNotNow }: { soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
+function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow }: { large?: boolean; soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
   onDone: (s: Soon) => void; onPerish: () => void; onNotNow: () => void }) {
   const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
   const [soonOpen, setSoonOpen] = useState(false);
   if (!soon.length && !perish) return null;
   const open = (id: string) => setEx({ k: "item", id });
-  const capped = capRows(soon, soonOpen);
+  const capped = capRows(soon, soonOpen || !!large);
   return (
     <>
       <div className="sectrow"><h3 className="sect">{t("common.useSoon")}</h3>{perish

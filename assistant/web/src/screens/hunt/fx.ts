@@ -5,6 +5,7 @@
 import { faceFor, characterManifest, type Manifest } from "../../lib/characters";
 import { Q, QPTS, qProgress, qnorm, type Session } from "./model";
 import { t } from "../../i18n";
+import { motionOff } from "../../lib/motion";
 
 export const QFX = { on: false, ctx: null as AudioContext | null };
 try { QFX.on = localStorage.getItem("arya-sound") === "1"; } catch { /* off */ }
@@ -107,7 +108,7 @@ export function qRewardGrab(sess: Session, before: number, opts: { wasSuggested:
 export function qConfetti() {
   const cv = document.getElementById("confetti") as HTMLCanvasElement | null;
   if (!cv || !cv.getContext) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (motionOff()) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const W = window.innerWidth, H = window.innerHeight;
   cv.width = W * dpr; cv.height = H * dpr;

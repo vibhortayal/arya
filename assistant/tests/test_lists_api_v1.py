@@ -134,6 +134,16 @@ class TestReadAndAdd(V1Case):
         assert set(names) == {"milk", "eggs", "bread"}
         assert names["eggs"]["qty"] == 3
 
+    def test_add_text_drops_a_sentence_whole(self):
+        lid = self.make_list()
+        text = ("milk\neggs x 3\nbread\n42\n"
+                "This is a long sentence that is not an item at all, really.")
+        r = self.post(f"/lists/{lid}/items", json={"text": text})
+        assert r.status_code == 200, r.text
+        assert {i["name"] for i in r.json()["items"]} == {"milk", "eggs", "bread"}
+        assert "42" in r.json()["skipped"]
+        assert any(s.startswith("This is a long") for s in r.json()["skipped"])
+
     def test_add_dedups_with_already_reply(self):
         lid = self.make_list()
         self.add(lid, "milk")
@@ -396,6 +406,41 @@ class TestReceiptsAndAnalysis(V1Case):
     def test_token_required(self):
         for path in ("/receipts", "/receipts/export", "/analysis/spending", "/analysis/purchases"):
             assert self.api.get("/api/v1" + path).status_code == 401
+
+
+class TestSchemaForDevelopers(V1Case):
+    """The reference page draws this schema: plain ids, summaries, the
+    bearer scheme and the error shape."""
+
+    def spec(self):
+        return self.api.get("/api/v1/openapi.json").json()
+
+    def test_every_operation_has_a_plain_id_summary_and_tag(self):
+        ids = []
+        for path, methods in self.spec()["paths"].items():
+            for method, op in methods.items():
+                ids.append(op["operationId"])
+                self.assertNotIn("_" + method, op["operationId"], (method, path))
+                self.assertTrue(op["summary"] and op["description"] and op["tags"], (method, path))
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(len(ids), 14)
+
+    def test_bearer_scheme_and_error_responses(self):
+        spec = self.spec()
+        self.assertEqual(spec["components"]["securitySchemes"]["bearerAuth"]["scheme"], "bearer")
+        self.assertEqual(spec["security"], [{"bearerAuth": []}])
+        op = spec["paths"]["/lists"]["get"]
+        self.assertIn("401", op["responses"])
+        self.assertIn("429", op["responses"])
+
+    def test_reference_page_is_public_and_has_no_inline_script(self):
+        r = self.c.get("/developers/reference")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("/api/v1/openapi.json", r.text)
+        import re
+        for attrs, body in re.findall(r"<script\b([^>]*)>(.*?)</script>", r.text, re.S):
+            self.assertEqual(body.strip(), "")
+        self.assertEqual(self.c.get("/vendor/scalar/standalone.js").status_code, 200)
 
 
 class TestRateLimit(V1Case):

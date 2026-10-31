@@ -96,6 +96,12 @@ export default async function (page, base) {
     // and the four empty ones folded into one row.
     await page.evaluate(() => window.__aryaShow("home"));
     await page.waitForSelector("#today-seeall");
+    // Today asks once, after the first list, what matters most: skip it.
+    const ask = page.locator("#today-ask");
+    if (await ask.waitFor({ timeout: 4000 }).then(() => true, () => false)) {
+      await ask.getByRole("button", { name: "Skip" }).first().click();
+      await ask.waitFor({ state: "detached" });
+    }
     if ((await page.$$("#today-lists .listcard")).length !== 4) throw new Error("Today tiles: not 4");
     const see = await page.textContent("#today-seeall");
     if (!see.includes("See all 10 lists")) throw new Error("See all: " + see);

@@ -11,6 +11,7 @@ import { useTranslation } from "../i18n";
  * nav.show("item", { id }). */
 
 type Detail = {
+  on_list?: boolean;
   entry?: { canonical_name: string } | null;
   pattern?: any;
   price_by_store: Record<string, { count: number; min: number; max: number }>;
@@ -91,8 +92,10 @@ export function Item() {
             </div>
           </>}
           <p style={{ marginTop: 20, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className="btn secondary" id="btn-add" type="button"
-              onClick={() => act(() => post("/api/list/add", { item_id: id }), t("common.addedToList"))}>{t("item.addToList")}</button>
+            {d.on_list
+              ? <button className="btn secondary" id="btn-add" type="button" disabled>{t("item.onYourList")}</button>
+              : <button className="btn secondary" id="btn-add" type="button"
+                onClick={() => act(() => post("/api/list/add", { item_id: id }), t("common.addedToList"))}>{t("item.addToList")}</button>}
             <button className="btn secondary" id="btn-never" type="button"
               onClick={() => act(() => post(`/api/items/${eid}/flag`, { never: true }), t("item.neverToast"))}>{t("item.neverSuggest")}</button>
             <button className="btn secondary" id="btn-expired" type="button"

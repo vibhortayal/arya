@@ -5,6 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { FindStorePanel } from "./StoresFind";
+import { ScanStatus, UploadWalk } from "./MapScanStatus";
 import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
@@ -17,7 +18,9 @@ type Prompt = { title: string; why?: string; est_seconds?: number; segment?: str
 type Seg = { id: string; label: string; side: string; status: "unmapped" | "mapped" | "aging" | "stale";
   contributors: number; stale_item?: number };
 type MapView = {
-  store?: string; total: number; coverage_pct: number;
+  /* coverage_pct is null while the store's size is unknown (no aisle
+   * number read yet): then only the sections seen are shown. */
+  store?: string; total: number; coverage_pct: number | null; seen: number; aisles: number; expected: number | null;
   counts: { mapped: number; aging: number; stale: number; unmapped: number };
   goal?: { sections_needed: number; pct: number } | null;
   credit?: { title?: string; points?: number };
@@ -57,9 +60,8 @@ export function Mapper() {
   const [label, setLabel] = useState("");
   // Find or add a store right here (owner 2026-10-29): open on its own
   // when My Stores is empty, since there is nothing else to pick.
-  const [finding, setFinding] = useState(false);
   const [allStores, setAllStores] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const seq = useRef(0);
   const paramStore = typeof nav.params.store === "string" ? nav.params.store : "";
 
@@ -73,7 +75,6 @@ export function Mapper() {
     const s = pick || chosen || (fav ? fav.name : "");
     chosen = s;
     setMine(list);
-    setLoaded(true);
     setStore(s);
     if (!s) { setView(null); return; }
     const v: MapView = await get(`/api/storemap?store=${q(s)}`);
@@ -88,7 +89,6 @@ export function Mapper() {
   }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const names = [...new Set(mine.map(s => s.name))];
-  const showFind = finding || (loaded && !mine.length);
   if (store && !names.includes(store)) names.unshift(store);
   /* Store cards (owner, 2026-10-30: chips were hard to see): three at a
    * time, the picked one always among them; the rest behind Show all. */
@@ -96,7 +96,7 @@ export function Mapper() {
   const top = names.slice(0, SHOWN);
   const shown = allStores || names.length <= SHOWN ? names : !store || top.includes(store) ? top : [...top.slice(0, SHOWN - 1), store];
   const where = (n: string) => { const m = mine.find(s => s.name === n); return [m?.street, m?.city].filter(Boolean).join(", "); };
-  const pick = (n: string) => { chosen = n; setStore(n); setView(null); setFinding(false); load(n).catch(showErr); };
+  const pick = (n: string) => { chosen = n; setStore(n); setView(null); load(n).catch(showErr); };
 
   const openCapture = (prompt: Prompt) => nav.show("capture", { prompt, store, from: "mapper" });
 
@@ -154,22 +154,18 @@ export function Mapper() {
         {shown.length < names.length && (
           <button className="linkbtn mp-allstores" type="button" onClick={() => setAllStores(true)}>{t("mapper.showAllStores", { count: names.length })}</button>
         )}
-        <button id="mp-findstore" className="mp-store mp-find" type="button" aria-expanded={showFind} aria-pressed={showFind}
-          onClick={() => setFinding(!showFind)}>
-          <span className="mp-store-ic" aria-hidden="true">+</span>
-          <span className="mp-store-t"><span className="name">{t("mapper.findMyStore")}</span><span className="sub">{t("mapper.findMyStoreSub")}</span></span>
-        </button>
       </div>
-      {showFind && (
-        <div id="mp-find">
-          <FindStorePanel onAdded={n => { setAllStores(true); pick(n); }} />
-        </div>
-      )}
+      <div id="mp-find">
+        <FindStorePanel onAdded={n => { setAllStores(true); pick(n); }} />
+      </div>
+      {store && <ScanStatus store={store} onMapChanged={() => { load(store).catch(() => {}); }} />}
+      {uploading && store && <UploadWalk store={store} onClose={() => setUploading(false)} />}
       <div id="mp-walk">
         {v && store && (
           <div className="group pad mp-nextcard">
             <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMappingAt", { store })}</button>
             <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
+            <button className="btn wide mp-upload" id="mp-upload" type="button" onClick={() => setUploading(true)}>{t("mapScan.uploadButton")}</button>
           </div>
         )}
       </div>
@@ -182,12 +178,18 @@ export function Mapper() {
       <div id="mp-cover" className="group pad">
         {!store ? <Empty>{t("mapper.pickAStoreFromMy")}</Empty> : v && (v.total ? (
           <>
-            <div className="mp-count"><Trans i18nKey="mapper.coverage" values={{ pct: v.coverage_pct, store: v.store || store, mapped: v.counts.mapped, total: v.total }} components={{ b: <strong />, m: <span className="muted" /> }} /></div>
-            <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${v.coverage_pct}%` }} /></div>
-            <p className="muted nomargin">{v.counts.aging ? t("mapper.countAging", { n: v.counts.aging }) : ""}{v.counts.stale ? t("mapper.countStale", { n: v.counts.stale }) : ""}{v.counts.unmapped ? t("mapper.countNew", { n: v.counts.unmapped }) : ""}{t("mapper.teachTheAislesYouUse")}</p>
+            {v.coverage_pct === null ? (
+              <div className="mp-count"><Trans i18nKey="mapper.seenOnly" count={v.seen} values={{ count: v.seen, store: v.store || store }} components={{ b: <strong /> }} /></div>
+            ) : (
+              <>
+                <div className="mp-count"><Trans i18nKey="mapper.coverage" values={{ seen: v.seen, expected: v.expected, aisles: v.aisles }} components={{ b: <strong />, m: <span className="muted" /> }} /></div>
+                <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${v.coverage_pct}%` }} /></div>
+              </>
+            )}
+            <p className="muted nomargin">{v.coverage_pct === null ? t("mapper.sizeUnknown") : ""}{v.counts.aging ? t("mapper.countAging", { n: v.counts.aging }) : ""}{v.counts.stale ? t("mapper.countStale", { n: v.counts.stale }) : ""}{v.counts.unmapped ? t("mapper.countNew", { n: v.counts.unmapped }) : ""}{t("mapper.teachTheAislesYouUse")}</p>
             <div className="mp-me"><span className="muted">{v.goal
               ? t("mapper.goal", { count: v.goal.sections_needed, pct: v.goal.pct })
-              : t("mapper.knowsWholeStore")}</span>
+              : v.coverage_pct !== null && v.coverage_pct >= 100 ? t("mapper.knowsWholeStore") : ""}</span>
               {v.credit?.title ? <span><Trans i18nKey="mapper.credit" values={{ title: v.credit.title, points: v.credit.points }} components={{ b: <strong /> }} /></span> : null}</div>
           </>
         ) : <p className="nomargin">{t("mapper.noAislesHereYetWalk")}</p>)}

@@ -132,12 +132,26 @@ describe("trip rules", () => {
     expect(t.events.some(e => e.t === "allDone")).toBe(true);
     expect(tally(t).reduce((s, l) => s + l.pts, 0)).toBe(t.points);
   });
+  it("the tally's cart count matches the trip: the golden item is one of them", async () => {
+    let t = await practiceTrip();
+    for (const it of t.items) t = reduce(t, { type: "grab", key: it.key });
+    const cart = tally(t).filter(l => /in the cart/.test(l.label))[0];
+    const n = Number(cart.label.split(" ")[0]);
+    const golden = t.golden && t.got.includes(t.golden) ? 1 : 0;
+    expect(n + golden).toBe(t.got.length);
+    if (golden) expect(cart.label).toContain("other");
+  });
   it("the golden item is never in fog", async () => {
     const { layout, items } = await open("safeway-kirkland");
     for (let seed = 0; seed < 20; seed++) {
       const g = newTrip(layout, items, { seed }).golden!;
       expect(viewOf(layout, items.find(i => i.key === g)!.section)).not.toBe("fog");
     }
+  });
+  it("the golden item is always one of the player's own items", async () => {
+    const { layout, items } = await open("safeway-kirkland");
+    const own = new Set(items.map(i => i.key));
+    for (let seed = 0; seed < 50; seed++) expect(own.has(newTrip(layout, items, { seed }).golden!)).toBe(true);
   });
 });
 

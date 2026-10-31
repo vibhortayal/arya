@@ -268,53 +268,15 @@ async def storemap_scan(req: Request):
     _budget_guard(demo=_is_demo(req))
     client = new_client()
     left = storescan.count_frame()
-    jpeg, people, share = await run_in_threadpool(
-        shelfscan.scrub_people_boxes, body, client, media_type=media)
-    if jpeg is None:
+    try:
+        out = await run_in_threadpool(storescan.read_and_keep, name, body,
+                                      client, media, prices)
+    except storescan.ScrubFailed:
         raise HTTPException(
             503, "could not blur people out of the photo, so nothing was kept")
-    if share >= storescan.PEOPLE_PAUSE_SHARE:
-        return {"paused": "people", "kept": False, "frames_left": left}
-    try:
-        read = await run_in_threadpool(storescan.read_frame, client, jpeg, prices)
-    except ValueError:
-        read = {"label": "", "sign": "", "items": [], "prices": []}
-    if not read["label"]:
-        return {"kept": False, "label": "", "frames_left": left}
-    from PIL import Image
-    import io
-    W, H = Image.open(io.BytesIO(jpeg)).size
-    shelves, signs, fill = [], [], None
-    try:
-        shelves, _u, _c = await run_in_threadpool(
-            client.segment, jpeg, "grocery shelf", media_type="image/jpeg")
-        if shelves:
-            fill = min(1.0, sum((b["box"][2] - b["box"][0]) * (b["box"][3] - b["box"][1])
-                                for b in shelves) / float(W * H))
-    except Exception:
-        shelves = []
-    if read["sign"]:
-        try:
-            signs, _u, _c = await run_in_threadpool(
-                client.segment, jpeg, "aisle sign", media_type="image/jpeg")
-        except Exception:
-            signs = []
-    try:
-        seg, created = storemap.add_segment(name, read["label"], "both")
-        out = storemap.ingest(name, seg["id"], jpeg, kind="walk",
-                              shelf_fill=fill, people=len(people))
     except ValueError as e:
         raise HTTPException(400, str(e))
-    for seen in read["items"]:
-        storemap.note_sighting(name, seen, read["label"])
-    kept_prices = storescan.save_prices(name, read["prices"]) if prices else []
-    out.update({"kept": True, "label": seg["label"], "created": created,
-                "sign": read["sign"], "items": read["items"],
-                "prices": [{"item": p["item"], "price": p["price"]} for p in kept_prices],
-                "people": len(people), "frames_left": left,
-                "boxes": {"shelf": storescan.norm_boxes(shelves, W, H),
-                          "sign": storescan.norm_boxes(signs, W, H, cap=3)}})
-    out["reward"] = storemap.award(name, out)
+    out["frames_left"] = left
     return out
 
 
@@ -350,3 +312,76 @@ async def storemap_split(req: Request):
         raise HTTPException(400, str(e))
     return {"created": created,
             "segments": [{"id": k["id"], "label": k["label"]} for k in kids]}
+
+
+# --- background scans (api/scanjobs.py) --------------------------------------
+# Owner, 2026-10-30: the walk only coaches; frames wait on the phone
+# until there is signal, then go up one by one and are read in the
+# background. The app shows "Building your map" and then the card
+# "Your map is ready" with the sections found.
+
+@router.post("/api/storemap/jobs")
+async def storemap_job_create(req: Request):
+    """Open a job for a walk: {store, frames, source, prices}."""
+    from api import scanjobs
+    body = await _json_obj(req)
+    name = _map_store(body.get("store"))
+    if not os.environ.get("MODEL_API_KEY"):
+        raise HTTPException(503, "Shelf reading isn't on right now. Your walk "
+                                 "stays on your phone; Arya sends it later.")
+    _budget_guard(demo=_is_demo(req))
+    try:
+        return scanjobs.create(name, body.get("frames"),
+                               source=body.get("source") or "scan",
+                               prices=bool(body.get("prices")))
+    except OverflowError as e:
+        raise HTTPException(429, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.put("/api/storemap/jobs/{job_id}/frames/{n}")
+async def storemap_job_frame(job_id: str, n: int, req: Request):
+    """One frame of a walk (a JPEG). Sending it again replaces it."""
+    from api import scanjobs, storemap
+    media = (req.headers.get("content-type") or "").split(";")[0].strip()
+    if not media.startswith("image/"):
+        raise HTTPException(415, "send a photo (image)")
+    body = await req.body()
+    try:
+        storemap.score_image(body)
+    except Exception:
+        raise HTTPException(400, "that file is not a readable photo")
+    try:
+        return scanjobs.put_frame(job_id, n, body)
+    except KeyError:
+        raise HTTPException(404, "no such walk")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.post("/api/storemap/jobs/{job_id}/commit")
+async def storemap_job_commit(job_id: str):
+    """Every frame is up: read the walk in the background."""
+    from api import scanjobs
+    try:
+        return await run_in_threadpool(scanjobs.commit, job_id)
+    except KeyError:
+        raise HTTPException(404, "no such walk")
+
+
+@router.get("/api/storemap/jobs")
+def storemap_jobs(store: str = ""):
+    """This account's recent walks, newest first, with what each found."""
+    from api import scanjobs
+    return {"jobs": scanjobs.jobs(store or None)}
+
+
+@router.post("/api/storemap/jobs/{job_id}/seen")
+async def storemap_job_seen(job_id: str):
+    """The shopper checked the sections: the ready card goes away."""
+    from api import scanjobs
+    try:
+        return scanjobs.mark_seen(job_id)
+    except KeyError:
+        raise HTTPException(404, "no such walk")

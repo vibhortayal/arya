@@ -180,6 +180,11 @@ handle the nightly backup. CI is manual only
 | `ARYA_REGISTRATION_OPEN` | `0` | open password sign-up |
 | `ARYA_PHOTO_READER` | `wonder` | receipt photo reader; `spark` from Nov 4 |
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
+| `ARYA_USER_HEAVY_MONTHLY_USD` | `3` | one account's month of AI spend that shows a heads-up on its usage screen |
+| `ARYA_USER_MONTHLY_CEILING_USD` | `5` | one account's month of AI spend that pauses its paid reads until the 1st |
+| `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); the owner can lift it with `POST /api/usage/unfreeze` |
+| `ARYA_COST_PUBLIC_MIN` | `50` | accounts with spend before the whole-Arya totals show on the usage screen |
+| `ARYA_COST_PAID_BY` | `Hackathon credits` | who the usage screen says pays for the AI reading |
 | `ARYA_DEMO_DAILY_BUDGET_USD` | `20` (code default `2`) | demo household's day bucket |
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
@@ -378,7 +383,8 @@ Each agent has a narrow job and a named limit.
 - One Oracle VM (Always Free; no new cloud resources). Docker Compose:
   the API and Caddy with Let's Encrypt. No database container: data is
   JSON files, or Supabase with `ARYA_STORE`. Public name:
-  arya-pilot.duckdns.org, with a DuckDNS updater on the VM.
+  arya.teamnightshift.org (Cloudflare A record, DNS only). The old
+  arya-pilot.duckdns.org name is a permanent Caddy redirect to it.
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
 - Settings come from `deploy/.env` (VM only). Compose passes only the

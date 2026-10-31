@@ -27,6 +27,7 @@ export class ApiError extends Error {
 export const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
+  if (opts?.method && opts.method !== "GET") inflight.clear();
   let r: Response;
   const headers = new Headers(opts?.headers || {});
   headers.set("X-Arya-Client", CLIENT_ID);
@@ -46,7 +47,22 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
 const json = (method: string, body?: unknown): RequestInit =>
   ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
 
-export const get = <T = any>(path: string) => api<T>(path);
+/* Two screens asking for the same path while the first read is still
+ * on its way (Today and the session both read /api/settings at start)
+ * share one request. Each caller gets its own copy, and any write
+ * clears the table so a read after a write is never answered with
+ * data from before it. */
+const inflight = new Map<string, Promise<unknown>>();
+export const get = <T = any>(path: string): Promise<T> => {
+  let p = inflight.get(path) as Promise<T> | undefined;
+  if (!p) {
+    p = api<T>(path);
+    inflight.set(path, p);
+    const done = () => { if (inflight.get(path) === p) inflight.delete(path); };
+    p.then(done, done);
+  }
+  return p.then(v => (v !== null && typeof v === "object" ? structuredClone(v) : v));
+};
 export const post = <T = any>(path: string, body?: unknown) => api<T>(path, json("POST", body));
 export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json("PUT", body));
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });

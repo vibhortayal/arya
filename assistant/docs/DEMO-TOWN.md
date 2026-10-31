@@ -33,6 +33,8 @@ With the flag off nothing changes: no routes, no chips, real-style names in the 
 | Closed or incident | 3 households within 2 hours | 6 hours, "not confirmed by the store" |
 | Community price | 5 households over 30 days | median only |
 
+The town keeps its own clock: outside 10:00-20:00 local it reads 11:00 of the same day, so a judge who opens the demo at night still finds the stores open.
+
 Nobody is named. A visitor's own report counts as one household, so a judge can watch the rule work.
 "I see them here" cancels one "out" report.
 

@@ -26,7 +26,7 @@ a shelf tag.
 A per-account daily frame cap bounds the spend (ARYA_SCAN_DAILY_FRAMES,
 default 120: about ten 45-second walks).
 """
-import base64, json, os, re
+import base64, io, json, os, re
 from datetime import date
 
 from api import state
@@ -158,3 +158,64 @@ def save_prices(store, rows, at=None):
     d["prices"] = (d.get("prices") or [])[-(MAX_PRICES - len(new)):] + new
     state._save(PRICES_FILE, d)
     return new
+
+
+class ScrubFailed(RuntimeError):
+    """The people scrub could not run, so nothing may be read or kept."""
+
+
+def read_and_keep(name, body, client, media="image/jpeg", prices=False,
+                  outlines=True):
+    """One frame, start to finish, in the privacy order: people are
+    scrubbed first (ScrubFailed when that cannot run), a frame mostly
+    of people is paused, the scrubbed frame is read, and a frame with a
+    shelf lands on the store map like a teach capture. Shared by the
+    live scan route and the background scan jobs (api/scanjobs.py);
+    outlines=False skips the aisle-sign outline, which only the live
+    overlay draws. Raises ValueError when the map refuses the frame."""
+    from api import shelfscan, storemap
+    jpeg, people, share = shelfscan.scrub_people_boxes(body, client,
+                                                       media_type=media)
+    if jpeg is None:
+        raise ScrubFailed("could not blur people out of the photo")
+    if share >= PEOPLE_PAUSE_SHARE:
+        return {"paused": "people", "kept": False}
+    try:
+        read = read_frame(client, jpeg, prices)
+    except ValueError:
+        read = {"label": "", "sign": "", "items": [], "prices": []}
+    if not read["label"]:
+        return {"kept": False, "label": ""}
+    from PIL import Image
+    W, H = Image.open(io.BytesIO(jpeg)).size
+    shelves, signs, fill = [], [], None
+    try:
+        shelves, _u, _c = client.segment(jpeg, "grocery shelf",
+                                         media_type="image/jpeg")
+        if shelves:
+            fill = min(1.0, sum((b["box"][2] - b["box"][0]) * (b["box"][3] - b["box"][1])
+                                for b in shelves) / float(W * H))
+    except Exception:
+        shelves = []
+    if outlines and read["sign"]:
+        try:
+            signs, _u, _c = client.segment(jpeg, "aisle sign",
+                                           media_type="image/jpeg")
+        except Exception:
+            signs = []
+    seg, created = storemap.add_segment(name, read["label"], "both")
+    out = storemap.ingest(name, seg["id"], jpeg, kind="walk",
+                          shelf_fill=fill, people=len(people))
+    for seen in read["items"]:
+        storemap.note_sighting(name, seen, read["label"])
+    # An aisle number on a sign tells Arya how big the store is.
+    storemap.note_sign(name, read["sign"])
+    kept_prices = save_prices(name, read["prices"]) if prices else []
+    out.update({"kept": True, "label": seg["label"], "segment": seg["id"],
+                "created": created, "sign": read["sign"], "items": read["items"],
+                "prices": [{"item": p["item"], "price": p["price"]} for p in kept_prices],
+                "people": len(people),
+                "boxes": {"shelf": norm_boxes(shelves, W, H),
+                          "sign": norm_boxes(signs, W, H, cap=3)}})
+    out["reward"] = storemap.award(name, out)
+    return out

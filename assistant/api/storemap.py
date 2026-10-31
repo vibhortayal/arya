@@ -772,14 +772,70 @@ TITLES = [(1, "Scout"), (5, "Pathfinder"), (15, "Cartographer"),
 GOALS = (25, 50, 75, 100)
 
 
+# How big a store is (owner, 2026-10-30: "Arya knows 100%" after three
+# photos was misleading). Arya cannot measure a store, but it can count
+# it: numbered aisle signs say how many aisles there are, and a typical
+# supermarket adds a few departments round the outside wall. Until a
+# sign or an "Aisle N" section has been read the size is unknown and no
+# percentage is shown at all. Sections seen are counted by zone, so the
+# two sides of one aisle are one section.
+PERIMETER_SECTIONS = 6        # produce, bakery, meat, deli, dairy, frozen
+_AISLE_SIGN = re.compile(r"\baisle\s*#?\s*(\d{1,3})\b", re.I)
+
+
+def aisle_number(text):
+    """The aisle number in a sign or label ("Aisle 14 Cereal" -> 14),
+    or None."""
+    m = _AISLE_SIGN.search(text or "")
+    n = int(m.group(1)) if m else 0
+    return n if 0 < n <= 120 else None
+
+
+def aisles_counted(doc):
+    """The highest aisle number Arya has read in this store: from aisle
+    signs and from "Aisle N" sections. 0 when none has been read."""
+    best = int(doc.get("aisle_signs") or 0)
+    for seg in doc["segments"].values():
+        m = re.match(r"aisle-(\d+)$", seg.get("zone") or "")
+        if m and int(m.group(1)) <= 120:
+            best = max(best, int(m.group(1)))
+    return best
+
+
+def note_sign(name, text):
+    """Remember the highest aisle number a sign showed, so the store's
+    size is known even before every aisle has a section."""
+    n = aisle_number(text)
+    if not n or not (name or "").strip():
+        return None
+    with _Lock():
+        doc = load_map(name)
+        if n > int(doc.get("aisle_signs") or 0):
+            doc["aisle_signs"] = n
+            _save_map(doc)
+    return n
+
+
 def _coverage(doc):
+    """(counts, expected, pct): counts per segment status; expected is
+    the store's estimated section count (aisles counted plus the
+    outside departments) or None while the size is unknown; pct is
+    the share of those sections seen, or None while unknown."""
     now = datetime.now()
     counts = {"unmapped": 0, "mapped": 0, "aging": 0, "stale": 0}
+    seen = set()
     for seg in doc["segments"].values():
-        counts[segment_status(seg, now)] += 1
-    total = sum(counts.values())
-    pct = round(100 * counts["mapped"] / total) if total else 0
-    return counts, total, pct
+        st = segment_status(seg, now)
+        counts[st] += 1
+        if st == "mapped":
+            seen.add(seg.get("zone") or seg["id"])
+    counts["seen"] = len(seen)
+    aisles = aisles_counted(doc)
+    if not aisles:
+        return counts, None, None
+    expected = aisles + PERIMETER_SECTIONS
+    pct = round(100 * min(len(seen), expected) / expected)
+    return counts, expected, pct
 
 
 def title_for(sections):
@@ -792,11 +848,13 @@ def title_for(sections):
 
 def next_goal(doc):
     """The next 25% step and how many more sections reach it, or
-    None when the map is complete."""
-    counts, total, pct = _coverage(doc)
+    None when the map is complete or the store's size is unknown."""
+    counts, expected, pct = _coverage(doc)
+    if expected is None:
+        return None
     for g in GOALS:
         if pct < g:
-            need = max(1, math.ceil(g * total / 100.0) - counts["mapped"])
+            need = max(1, math.ceil(g * expected / 100.0) - counts["seen"])
             return {"pct": g, "sections_needed": need}
     return None
 
@@ -870,12 +928,13 @@ def view(name, focus=None):
             "stale_item": (seg.get("stale") or {}).get("item"),
             "baseline": seg.get("baseline") is not None})
     total = len(rows)
+    cov, expected, pct = _coverage(doc)
+    # coverage_pct is None while the store's size is unknown: the app
+    # then says how many sections Arya has seen, never a percentage.
     return {"store": doc["store"], "segments": rows, "counts": counts,
-            "total": total,
-            "coverage_pct": round(100 * counts["mapped"] / total) if total else 0,
-            "mapped_or_aging_pct": round(
-                100 * (counts["mapped"] + counts["aging"]) / total)
-            if total else 0,
+            "total": total, "seen": cov["seen"],
+            "aisles": aisles_counted(doc), "expected": expected,
+            "coverage_pct": pct,
             "unplaced": list(doc["unplaced"]),
             "goal": next_goal(doc), "credit": my_credit(),
             "next": next_prompt(name, focus)}

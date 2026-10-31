@@ -1,4 +1,4 @@
-import { fmtDate, fmtShort, fmtWeekday, qtyTag, money } from "./format";
+import { fmtDate, fmtShort, fmtWeekday, keepUnit, qtyTag, money } from "./format";
 import { friendlyError } from "./api";
 
 test("format helpers match the plain-JS app", () => {
@@ -24,4 +24,13 @@ describe("fmtWeekday", () => {
     expect(fmtWeekday("2020-10-27")).toBe("Tue, Oct 27, 2020");
     expect(fmtWeekday("nope")).toBe("nope");
   });
+});
+
+test("keepUnit joins a number to its unit with a no-break space (audit L5)", () => {
+  expect(keepUnit("Paper Towels 6 ct")).toBe("Paper Towels 6 ct");
+  expect(keepUnit("Jasmine Rice 10 lb")).toBe("Jasmine Rice 10 lb");
+  expect(keepUnit("Greek Yogurt 32 oz")).toBe("Greek Yogurt 32 oz");
+  expect(keepUnit("Whole Milk 1 gal")).toBe("Whole Milk 1 gal");
+  expect(keepUnit("7 Grain Bread")).toBe("7 Grain Bread");
+  expect(keepUnit("Basil")).toBe("Basil");
 });

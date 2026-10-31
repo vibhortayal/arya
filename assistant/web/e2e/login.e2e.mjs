@@ -3,7 +3,8 @@
  * wobbling for good; "Start my own list" opens the sheet in register
  * mode while registration is open (the e2e API runs with
  * ARYA_REGISTRATION_OPEN=1) and is gone when it is closed; both
- * buttons are reachable on Safari's visible area (390 x 664) with one scroll (eight cards). "Get the app"
+ * Try it now and Sign in fit Safari's visible area (390 x 664) above the
+ * eight cards; Start my own list is one scroll down. "Get the app"
  * (owner, 2026-10-29): not on this desktop browser; on an iPhone it
  * sits in the one-line header before Sign in, even at 360 wide, and
  * opens the steps sheet. */
@@ -47,13 +48,15 @@ export default async function (page, base) {
   await page.setViewportSize({ width: 390, height: 664 });
   await page.goto(base + "/");
   await page.waitForSelector("#demo-btn");
-  // One screen: Try it now and Sign in show without scrolling, and
-  // the page ends within the 664 px Safari leaves.
-  for (const id of ["#demo-btn", "#signin-open", "#register-open"]) {
+  // Try it now and Sign in show without scrolling (above the cards);
+  // Start my own list sits under the cards, one scroll away.
+  for (const id of ["#demo-btn", "#signin-open"]) {
     const box = await page.locator(id).boundingBox();
     if (!box || box.y + box.height > 664) throw new Error(id + " is below the fold at 390x664: " + JSON.stringify(box));
   }
-  if (await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)) throw new Error("the landing scrolls at 390x664");
+  await page.locator("#register-open").scrollIntoViewIfNeeded();
+  const reg = await page.locator("#register-open").boundingBox();
+  if (!reg || reg.y < 0 || reg.y + reg.height > 664) throw new Error("#register-open cannot be scrolled into view: " + JSON.stringify(reg));
   if ((await page.$$(".ftile")).length !== 8) throw new Error("the landing has eight cards");
   await page.evaluate(() => window.scrollTo(0, 0));
   if (await page.isVisible("#how-open")) throw new Error("How it works is still on the landing");

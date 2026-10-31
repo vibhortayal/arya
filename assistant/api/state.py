@@ -7,14 +7,14 @@ from the stored receipts. Postgres replaces the files when volume demands.
 import copy, hashlib, json, os, tempfile, threading
 from datetime import date, timedelta
 
-from api.ledger.build import build_ledger
+from api.ledger.build import build_ledger, receipt_savings
 from api.patterns.engine import summarize
 from api.list.build import build_list
 from api.cart.build import prepare
 
 import contextvars
 
-from api import aisles, pgstore
+from api import aisles, pgstore, storename
 
 _current_user = contextvars.ContextVar("arya_user", default=None)
 # The demo sandbox (review 2026-10-28): a demo visitor's writes land in
@@ -437,6 +437,19 @@ def dictionary():
 
 def names():
     return {e["item_id"]: e["canonical_name"] for e in dictionary()["entries"]}
+
+
+def names_with_receipts():
+    """Dictionary names, plus a readable name for any receipt line whose
+    item is not in the dictionary yet (decoded name, else the receipt text)."""
+    nm = names()
+    for r in receipts():
+        for ln in r["lines"]:
+            if ln.get("line_type") == "discount" or not ln.get("sku"):
+                continue
+            iid = ln.get("item_id") or f"costco-{ln['sku']}"
+            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
+    return nm
 
 
 def fee_skus():
@@ -912,15 +925,11 @@ def dashboard():
     # positive size (the app prints the minus).
     spend = round(sum(e["price"] for e in entries), 2)
     returns = round(-sum(e["price"] for e in entries if e["event_type"] == "return"), 2)
+    returns_count = sum(1 for e in entries if e["event_type"] == "return")
+    savings = [x for x in (receipt_savings(r) for r in rs) if x]
     others = round(sum(e["price"] for e in entries if e["allocation"] in ("FOR_OTHERS", "FOR-OTHERS")), 2)
     by_month, by_store, by_item = {}, {}, {}
-    nm = names()
-    for r in rs:  # a receipt line not yet in the dictionary still has a name
-        for ln in r["lines"]:
-            if ln.get("line_type") == "discount" or not ln.get("sku"):
-                continue
-            iid = ln.get("item_id") or f"costco-{ln['sku']}"
-            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
+    nm = names_with_receipts()
     verdicts = grocery_verdicts()
     kind_of = {}      # item_id -> "other" sub, or None for groceries
     for e in entries:
@@ -944,11 +953,14 @@ def dashboard():
     top = sorted(((k, v) for k, v in net_by_item.items()
                   if v > 0 and not kind_of.get(k)), key=lambda kv: -kv[1])[:10]
     other_total = round(other_total, 2)
-    return {"spend_total": spend, "returns_total": returns, "for_others_total": others,
+    return {"spend_total": spend, "returns_total": returns, "returns_count": returns_count,
+            "savings_total": round(sum(savings), 2), "savings_count": len(savings),
+            "for_others_total": others,
             "spend_groceries": round(spend - other_total, 2),
             "spend_other": other_total, "other_by_kind": other_by_kind,
             "trip_count": len(rs), "spend_by_month": dict(sorted(by_month.items())),
             "spend_by_store": by_store,
+            "store_notes": {v["label"]: v["sub"] for v in storename.labels(rs).values() if v["sub"]},
             "top_items": [{"item_id": k, "name": nm.get(k, k), "spend": v} for k, v in top]}
 
 
@@ -999,6 +1011,20 @@ def update_receipt_line(receipt_id, idx, fields):
                 _save("receipts.json", rs)
                 return r["lines"][idx]
     return None
+
+
+def link_receipt_store(receipt_id, store_id):
+    """A receipt settled against a shopping trip carries that trip's
+    directory store, so its spend and prices group under the trip's
+    store (the label only applies when the receipt agrees with it)."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id:
+                r["store_ref"] = store_id
+                _save("receipts.json", rs)
+                return True
+    return False
 
 
 def teach_name(sku, name):

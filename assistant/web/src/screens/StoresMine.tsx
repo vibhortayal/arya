@@ -94,8 +94,7 @@ export function StoresMine() {
         {rest.length > 0 && <><h3 className="sect">{t("storesMine.allMyStores")}</h3><div className="group">{rest.map(row)}</div></>}
       </div>
       <div className="group">
-        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">{t("common.findStores")}<span className="sub">{t("storesMine.searchTheDirectoryByZip")}</span></span><span className="chev">›</span></button>
-        <button className="navrow" type="button" onClick={() => nav.show("stores-add")}><span className="grow">{t("common.addAStore")}<span className="sub">{t("storesMine.aStoreThatIsNot")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("stores-find")}><span className="grow">{t("common.findStores")}<span className="sub">{t("storesMine.searchByNameZipOrAddress")}</span></span><span className="chev">›</span></button>
       </div>
     </>
   );

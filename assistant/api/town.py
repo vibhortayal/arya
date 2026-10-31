@@ -124,7 +124,14 @@ def _live(g, now):
 
 
 def _local(now):
-    return datetime.fromtimestamp(now, timezone(timedelta(hours=pack()["tz_offset_h"])))
+    """The town's own wall clock: the visitor's time of day, but a judge
+    who opens the demo at 2 AM still finds the stores open. Outside
+    10:00-20:00 the town reads 11:00 of the same weekday, so hours and
+    busy chips never depend on when the demo is opened."""
+    t = datetime.fromtimestamp(now, timezone(timedelta(hours=pack()["tz_offset_h"])))
+    if not 10 <= t.hour < 20:
+        t = t.replace(hour=11, minute=0, second=0, microsecond=0)
+    return t
 
 
 def _busy(store, now, groups):
@@ -195,7 +202,10 @@ def hints(now=None):
 
     cache = {}
     items = {}
-    names = state.names()
+    names = dict(state.names())
+    for item_id, f in state.flags().items():   # typed items (Hummus, Basil) have no receipt name
+        if isinstance(f, dict) and f.get("name") and item_id not in names:
+            names[item_id] = f["name"]
     for it_id, nm in names.items():
         it = _match(nm)
         if not it:

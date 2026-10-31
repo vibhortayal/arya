@@ -7,6 +7,7 @@ from this module at call time, so a test can swap deps.MetaClient or
 deps._LEDGER and every router sees it."""
 import json
 import os
+import time
 
 from fastapi import HTTPException
 
@@ -80,8 +81,92 @@ def _budget_guard(demo=False):
     else:
         cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
         spent = CostLedger(_LEDGER).spent_today("app")
+        user = state._owner()
+        if user and not _is_owner(user):
+            reason = reading_off(user)
+            if reason:
+                raise HTTPException(429, reason)
     if spent >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
+
+
+def user_limits():
+    """(heavy, ceiling) in dollars a month for one real account.
+    Heavy only shows a heads-up on the usage screen; the ceiling pauses
+    paid reads until the 1st. Both are far above a typical user (about
+    15 cents) and 0 turns one off. The owner is never limited."""
+    def env(name, default):
+        try:
+            return max(0.0, float(os.environ.get(name, default)))
+        except ValueError:
+            return float(default)
+    return env("ARYA_USER_HEAVY_MONTHLY_USD", "3"), env("ARYA_USER_MONTHLY_CEILING_USD", "5")
+
+
+def _hourly_limit():
+    try:
+        return max(0.0, float(os.environ.get("ARYA_USER_HOURLY_FREEZE_USD", "1")))
+    except ValueError:
+        return 1.0
+
+
+def _freeze_path():
+    return os.path.join(state.base_dir(), "frozen-accounts.json")
+
+
+def _freezes():
+    try:
+        with open(_freeze_path()) as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    return doc if isinstance(doc, dict) else {}
+
+
+def frozen_until(user):
+    """When this account's paid reads come back (epoch seconds), or 0."""
+    until = _freezes().get(user, {}).get("until", 0)
+    return until if isinstance(until, (int, float)) and until > time.time() else 0
+
+
+def freeze(user, usd_hour):
+    """Switch an account's paid reads off for ARYA_USER_FREEZE_HOURS
+    (default 24). Only paid reads: sign-in, lists and Today stay up."""
+    try:
+        hours = max(1.0, float(os.environ.get("ARYA_USER_FREEZE_HOURS", "24")))
+    except ValueError:
+        hours = 24.0
+    doc = _freezes()
+    doc[user] = {"at": int(time.time()), "until": int(time.time() + hours * 3600),
+                 "usd_hour": round(usd_hour, 2)}
+    state.write_json_atomic(_freeze_path(), doc)
+
+
+def unfreeze(user):
+    doc = _freezes()
+    if doc.pop(user, None) is not None:
+        state.write_json_atomic(_freeze_path(), doc)
+
+
+def reading_off(user, act=True):
+    """Why this real account may not make paid calls now, or "".
+    Monthly ceiling: until the 1st. Hourly trip-wire: freezes the
+    account's paid reads (the owner can lift it at once). act=False
+    only asks, so a read-only screen never freezes anyone."""
+    if frozen_until(user):
+        return ("Arya's reading is switched off for this account after unusual use. "
+                "It comes back on its own, or write to support@teamnightshift.org.")
+    use = CostLedger(_LEDGER).usage(user)
+    ceiling = user_limits()[1]
+    if ceiling and use["month_usd"] >= ceiling:
+        return "Arya's reading is paused for you until the 1st. Lists, Today and typing still work."
+    hourly = _hourly_limit()
+    if hourly and use["hour_usd"] >= hourly:
+        if act:
+            freeze(user, use["hour_usd"])
+        return ("Arya's reading is switched off for this account after unusual use. "
+                "It comes back on its own, or write to support@teamnightshift.org.")
+    return ""
 
 
 # Spend a demo visit has caused, kept in that visitor's in-memory sandbox
@@ -105,7 +190,7 @@ def _ledger():
     everything else from the app bucket."""
     if state.in_sandbox():
         return _SessionLedger(_LEDGER, bucket="demo")
-    return CostLedger(_LEDGER, bucket="app")
+    return CostLedger(_LEDGER, bucket="app", user=state._owner())
 
 
 async def _json_body(req):

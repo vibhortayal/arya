@@ -5,9 +5,11 @@ your data with you. The same personal API token that the agent connector
 uses works here. Make one in Arya under Settings › Use Arya in another AI
 app. The code shows once; a new code replaces it.
 
-Base URL: `https://arya-pilot.duckdns.org/api/v1`
+Base URL: `https://arya.teamnightshift.org/api/v1`
 
-The same guide, shorter, is the public page at `/developers`.
+The same guide, shorter, is the public page at `/developers`, with a
+five-minute quickstart in curl, Python and JavaScript. The interactive
+reference (try the calls from the browser) is at `/developers/reference`.
 
 `/api/v1` is frozen. Changes after it ships are additive only: new
 endpoints, new optional fields, new response fields. Clients must ignore
@@ -15,7 +17,7 @@ fields they do not know. The machine-readable schema is at
 `/api/v1/openapi.json` (public, no token needed).
 
 ```bash
-export ARYA=https://arya-pilot.duckdns.org/api/v1
+export ARYA=https://arya.teamnightshift.org/api/v1
 export TOKEN=...   # your code
 ```
 
@@ -81,7 +83,7 @@ Reply:
   they are. To move one, `PATCH` its `list_id`. (In the app a person can
   keep an item on more than one list. The API shows such an item once, under
   its main list, and its ticks there are the main list's.)
-- `skipped`: pieces of `text` that were not items (a bare number, a sentence).
+- `skipped`: pieces of `text` that were not items (a bare number). A line with a sentence in it is skipped whole, so no piece of it is added.
 - `items`: the items now on the list for the names you sent.
 - `text` is split by fixed rules. The API makes no model calls.
 

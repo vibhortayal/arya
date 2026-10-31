@@ -50,7 +50,6 @@
     "fromGoogle": "From Google",
     "favorites": "Favorites",
     "findStores": "Find stores",
-    "addAStore": "Add a store",
     "new": "New",
     "share": "Share",
     "howThisWorks": "How this works",
@@ -96,7 +95,8 @@
       "theReceipt": "the receipt",
       "couldNotReadFile": "Couldn't read that file. Try again, or try another file.",
       "couldNotReadPhoto": "Couldn't read that photo. Take it once more, in good light.",
-      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check."
+      "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check.",
+      "filedSaved": "Added {{merchant}}, {{n}} items. You saved {{amount}} with coupons and deals. Anything Arya isn't sure about is in Receipts, under To check."
     },
     "doneDot": "Done.",
     "undone": "Undone.",
@@ -141,6 +141,33 @@
     "builtBy": "Built by",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
   },
+  "usage": {
+    "title": "Keeping Arya running",
+    "intro": "Arya is free. Reading receipts and photos, answering Ask and mapping stores use a paid AI model. This is what that costs and how much of it you have used.",
+    "sinceYouJoined": "Since you joined",
+    "ofReadingSince": "of AI reading since {{since}}",
+    "nothingYet": "Nothing yet. Arya has not read anything for you.",
+    "thisMonth": "This month",
+    "kind": {
+      "reads": "Receipts and photos",
+      "ask": "Ask Arya",
+      "maps": "Store maps and Quest",
+      "helps": "Lists, voice and extras"
+    },
+    "calls_one": "{{count}} time",
+    "calls_other": "{{count}} times",
+    "heavy": "You are one of the heaviest users this month. Nothing is wrong and nothing changes. Arya's AI reading is paid for by one person, so a lighter month helps keep it free for everyone.",
+    "paused": "Arya's reading is paused for you right now after unusual use. Lists, Today and typing still work. It comes back on its own, or write to support@teamnightshift.org.",
+    "whole": "Arya as a whole, so far",
+    "paidReading": "AI reading",
+    "paidBy": "Paid by {{who}}",
+    "people": "People using Arya",
+    "peopleSub": "Have had something read",
+    "average": "Average per person",
+    "averageSub": "AI reading only",
+    "private": "Only you see your numbers. The totals above count everyone together.",
+    "couldNotLoad": "Could not load your usage."
+  },
   "album": {
     "couldNotLoadYourAlbum": "Could not load your album.",
     "loadingYourAlbum": "Loading your album.",
@@ -181,14 +208,32 @@
     "nextLevelAt": "Next level at {{points}} points"
   },
   "analysis": {
+    "editTitle": "Edit Spending",
+    "editHint": "Drag to reorder. Remove what you don't need; it waits under More.",
+    "moreSections": "More",
+    "sections": {
+      "prices": "Your prices",
+      "spend": "This month",
+      "months": "By month",
+      "stores": "By store",
+      "top": "Top items"
+    },
     "sameItemsYouBuyOften": "Based on {{items}} items you buy often.{{dollars}}",
-    "splitSmarterSaveAboutA": "Buy each item where it's cheaper: save about {{month_dollars}} a month",
+    "splitHead_one": "Switch {{count}} item and save about {{month_dollars}} a month",
+    "splitHead_other": "Switch {{count}} items and save about {{month_dollars}} a month",
+    "splitSub": "Compared with the store where you usually buy each one.",
+    "splitMove": "{{to}} {{toPrice}}, not {{from}} {{fromPrice}}",
+    "splitFoot": "From your receipts, last 6 months.",
     "ofFoodExpiredIn": "{{dollars}} of food expired in {{month}}",
     "yourPrices": "Your prices over time",
     "fileAReceiptAndYour": "Add a receipt and your spending shows up here.",
     "spendLiveFromYourReceipts": "Spending, from your receipts",
-    "returnsNettedAllTime": "Returns taken off, all time",
-    "allReceiptsRefundsReconcileInto": "All receipts. Returns are taken off.",
+    "returnsRow": "Returns",
+    "returnsRowSub_one": "{{count}} return, already taken off",
+    "returnsRowSub_other": "{{count}} returns, already taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals, discounts",
+    "afterReturns": "after returns",
     "allTimeSpend": "All-time spending",
     "groceries": "Groceries",
     "foodAndHousehold": "food and household",
@@ -206,7 +251,6 @@
     "basketLess": "Your basket costs {{pct}} less than in {{month}}",
     "aboutMore": " About {{amount}} more a month.",
     "aboutLess": " About {{amount}} less a month.",
-    "buyAt": "Buy {{names}} at {{store}}.",
     "mostly": "Mostly {{names}}",
     "trips_one": "{{count}} trip",
     "trips_other": "{{count}} trips",
@@ -214,6 +258,38 @@
     "acrossReceipt_other": "Across {{count}} receipts added this month",
     "monthTotal": "{{month}} total",
     "addAReceipt": "Add a receipt"
+  },
+  "mapScan": {
+    "savedTitle": "Saved on your phone",
+    "savedSub_one": "{{count}} frame waiting for signal. It sends by itself; you can keep shopping.",
+    "savedSub_other": "{{count}} frames waiting for signal. They send by themselves; you can keep shopping.",
+    "sendingTitle": "Sending your walk…",
+    "sendingSub": "{{sent}} of {{total}} frames sent. Keep Arya open a moment.",
+    "buildingTitle": "Building your {{store}} map…",
+    "buildingSub": "Arya has read {{done}} of {{total}} frames. We'll tell you when it's ready.",
+    "readyTitle": "Your {{store}} map is ready",
+    "readySub_one": "{{count}} section found, {{fresh}} new. Check it so Arya gets it right.",
+    "readySub_other": "{{count}} sections found, {{fresh}} new. Check them so Arya gets it right.",
+    "check_one": "Check the section",
+    "check_other": "Check the {{count}} sections",
+    "emptyTitle": "Arya couldn't find shelves in that walk",
+    "emptySub": "Try again inside the store, with the shelves in view.",
+    "failedTitle": "That walk couldn't be read",
+    "looksRight": "Looks right",
+    "ok": "OK",
+    "readyToast": "Your {{store}} map is ready. Open Map my store to check it.",
+    "uploadButton": "Upload a video or photos",
+    "upload": {
+      "title": "Upload a video or photos",
+      "why": "Already filmed {{store}}? Pick a video (up to 5 minutes) or photos of the aisles. Arya picks the sharp frames on your phone; the video itself never leaves your phone.",
+      "mine": "I filmed this myself",
+      "mineSub": "In a store that allows it. People are blurred and never kept.",
+      "choose": "Choose from Photos",
+      "picking": "Picking the sharp frames…",
+      "photos": "Reading photo {{done}} of {{total}}…",
+      "video": "Picking frames from the video… {{pct}}%",
+      "nothing": "No usable frames in that. Try a video or photos of the shelves."
+    }
   },
   "capture": {
     "recordAShortVideo": "Record a short video",
@@ -259,8 +335,19 @@
     "moreSectionsTo_one": "{{count}} more section to {{pct}}%",
     "moreSectionsTo_other": "{{count}} more sections to {{pct}}%",
     "knowsWholeStore": "Arya knows the whole store!",
-    "storePct": "Arya now knows <b>{{to}}%</b> of this store, up from {{a}}%",
+    "storePct": "Arya has now seen <b>{{to}}%</b> of this store, up from {{a}}%",
+    "sizeUnknown": "Arya doesn't know how big this store is yet. An aisle sign in a photo lets it count the aisles.",
     "scan": {
+      "good": "Good, keep going",
+      "tip": "Start at the front of the store: pan slowly across the aisle signs, then walk the aisles you shop.",
+      "long": "Still mapping? Tap Done when you're through.",
+      "saving": "✓ Saving sharp frames on your phone",
+      "offline": "No signal · frames are safe on your phone",
+      "stop": "Stop and throw this walk away",
+      "discardAsk": "Stop mapping and throw this walk away?",
+      "sent": "Got it. Arya is building your map. We'll tell you when it's ready.",
+      "noFrames": "No sharp frames were kept. Try again with the shelves in view.",
+      "noStorage": "This phone can't keep the walk right now. Try again, or upload a video instead.",
       "start": "Pan slowly along the shelves.",
       "startSub": "No need to tap. Arya picks the sharp frames.",
       "see": "Good. I see {{label}}.",
@@ -283,6 +370,15 @@
     }
   },
   "ask": {
+    "editTitle": "Edit questions",
+    "editHint": "Your quick questions on Ask. Drag to reorder, remove what you never tap.",
+    "ideasTitle": "Ideas",
+    "addQuestion": "Add your own question",
+    "ideas": {
+      "useSoon": "What goes bad this week?",
+      "dinners": "Plan dinners from my lists",
+      "cheapest": "Where is my list cheapest?"
+    },
     "askAboutYourListYour": "Ask about your list, your spending, or what is running low.",
     "replyInFromNowOn": "Reply in {{text}} from now on?",
     "youCanChangeThisAny": "You can change this any time in Settings › Ask replies in.",
@@ -290,7 +386,6 @@
     "yes": "Yes, {{text}}",
     "speakYourMessage": "Speak your message",
     "message": "Message",
-    "toggleSpokenReplies": "Read replies aloud",
     "suggest": {
       "addEggs": "Add eggs to my list",
       "needIt": "Do I need {{name}}?",
@@ -304,8 +399,57 @@
     "couldNotAnswer": "Arya couldn't answer that. Try again in a moment.",
     "tryAgain": "Try again",
     "voiceEmpty": "That did not come through. Try again, or type it.",
-    "listening": "Listening… tap the mic again to send.",
-    "mapStoreReply": "Happy to. In Quest, tap Map my store and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures."
+    "listening": "Listening… tap Stop to send.",
+    "mapStoreReply": "Happy to. In Quest, tap Map my store and pan your phone along the shelves. I'll read the aisles and keep people out of the pictures.",
+    "talk": "Talk",
+    "stop": "Stop",
+    "stopTalking": "Stop and send",
+    "photoWord": "Photo",
+    "notSaved": "not saved",
+    "removePhoto": "Remove ×",
+    "askAboutPhoto": "Ask about this photo",
+    "yourPhoto": "Your photo",
+    "photoNotImage": "That file is not a photo.",
+    "gotPhoto": "Got your photo.",
+    "whatToDo": "What should Arya do with it?",
+    "opt": {
+      "list": "Add to my list",
+      "listSub": "Handwritten or typed list",
+      "receipt": "File a receipt",
+      "receiptSub": "Prices and items",
+      "fridge": "Check my fridge",
+      "fridgeSub": "Photo is kept so you can compare. Delete any time.",
+      "date": "Read the date",
+      "dateSub": "Expiry date on a pack",
+      "ask": "Ask about this photo",
+      "askSub": "Type a question about it. Not saved."
+    },
+    "chooserNote": "Other photos are read and not saved.",
+    "neverMind": "Never mind",
+    "reading": {
+      "list": "Reading your list…",
+      "receipt": "Reading your receipt…",
+      "fridge": "Looking in your fridge…",
+      "date": "Reading the date…"
+    },
+    "workingNote": "A few seconds. Not saved.",
+    "photoFail": "I could not read that photo.",
+    "photoFailBody": "It may be blurry or too dark. Nothing was changed.",
+    "tryAnotherPhoto": "Try another photo",
+    "looksLikeReceipt": "That looks like a receipt, not a list.",
+    "noListFound": "I could not find a list in that photo.",
+    "nothingChanged": "Nothing was changed.",
+    "addedItems": "Added to your list: {{names}}.",
+    "fridgeSaw": "I can see: {{names}}.",
+    "fridgeNone": "I could not see any food in that photo.",
+    "fridgeKept": "The photo is kept so you can compare later. You can delete it any time.",
+    "dateNone": "I could not read a date on that.",
+    "dateRead": "{{name}} expires {{date}}.",
+    "thisItem": "This item",
+    "trackIt": "Track it",
+    "nameIt": "What is this item called? Type its name and I will track it.",
+    "trackFail": "I could not save that date. Nothing was changed. Try Track it again.",
+    "dateTracked": "Tracking {{name}} until {{date}}. It will show under Use soon."
   },
   "express": {
     "reportedMissingAtThisStore": "Reported missing at this store.",
@@ -408,7 +552,7 @@
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
     "join": "Join",
-    "alreadyIn": "You are already in {{name}}. Leave it first to join another group."
+    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it."
   },
   "hunt": {
     "thatHuntIsGoneThe": "This quest ended when the demo reset. Start it again from Today.",
@@ -611,6 +755,7 @@
     "priceByStore": "Price by store",
     "recentHistory": "Recent history",
     "addToList": "Add to list",
+    "onYourList": "On your list",
     "neverSuggest": "Stop suggesting this",
     "thisExpired": "Mark as expired",
     "every": "about every {{days}} days",
@@ -632,6 +777,18 @@
     }
   },
   "lists": {
+    "editTitle": "Edit Lists",
+    "editHint": "Drag to reorder. Hiding a list keeps it and its items; it just leaves Lists and Today.",
+    "hiddenLists": "Hidden lists",
+    "hiddenSub": "Hidden from Lists and Today",
+    "noHidden": "No hidden lists. Tap the minus on a list to hide it.",
+    "showOnEach": "Show on each list",
+    "flag": {
+      "hide-preview": "Items preview",
+      "hide-previewSub": "The first few items under the name",
+      "hide-suggestions": "Suggestions",
+      "hide-suggestionsSub": "The suggestions pill"
+    },
     "unit": "unit",
     "unitForExampleKgOr": "Unit, for example kg or L",
     "move": "Move",
@@ -655,7 +812,7 @@
     "yesItSThere": "Still have it",
     "notThere": "Used up",
     "deletePhoto": "Delete photo",
-    "nothingOnYetTypeSpeak": "Nothing on {{name}} yet. Type, speak or snap a list above.",
+    "nothingOnYetTypeSpeak": "Type, speak or snap a list to add items.",
     "otherErrands": "Not groceries",
     "tapToSeeWhy": "Tap to see why",
     "add": "Add",
@@ -663,9 +820,6 @@
     "clear": "Clear",
     "aTreasureHuntWithPoints": "A game with points and badges",
     "justTheListWithAisle": "Your list in aisle order",
-    "findAStoreNameOr": "Find a store (name or ZIP)",
-    "findAStore": "Find a store",
-    "nearMe": "Near me",
     "noStoresYetFindOne": "No stores yet. Find one above, then tick it.",
     "name": "Name",
     "costcoIndianStoreParty": "Costco, Indian Store, Party…",
@@ -734,6 +888,9 @@
       "addedTitle_one": "Added {{count}} item",
       "addedTitle_other": "Added {{count}} items",
       "addedAlready": "{{count}} were already on the list.",
+      "addedMerged_one": "{{count}} name matched an item that is already there, so it was merged.",
+      "addedMerged_other": "{{count}} names matched items that are already there, so they were merged.",
+      "addedNothing": "Nothing new to add",
       "done": "Done",
       "tidyOffer": "Arya can tidy them up.",
       "tidyBtn": "Tidy up"
@@ -773,6 +930,7 @@
     "shopHow": "How do you want to shop?",
     "shopQuestSub": "Arya walks you through the store, finds each item and earns you points.",
     "shopJustList": "Just my list",
+    "tickAsIShop": "Or just tick items as I shop",
     "shopJustListSub": "In a rush? Check items off as you go. No game.",
     "shopAskEvery": "Ask me every time",
     "shopSaved": "Your pick is saved. Change it any time in Settings.",
@@ -802,6 +960,7 @@
     "qtyAria": "Quantity {{qty}}. Tap to change.",
     "addedBy": "Added by {{name}}",
     "checkOff": "Check off {{name}}",
+    "uncheck": "Uncheck {{name}}",
     "shopNoMap": "Quest here uses a typical store layout until someone maps it.",
     "item": "Item",
     "movedTo": "Moved {{what}} to {{dest}}.",
@@ -910,6 +1069,8 @@
       "removed": "Removed {{name}} from your stores.",
       "removedPlain": "Removed.",
       "removeAria": "Remove {{name}} from my stores",
+      "removeChip": "Take {{name}} off this list",
+      "showAll": "Show all {{count}} stores",
       "yours": "Your stores"
     },
     "changeStores": "Change stores",
@@ -931,8 +1092,14 @@
     "findInList": "Find in this list",
     "noMatch": "Nothing on this list matches \"{{q}}\".",
     "aisle": {
-      "Produce": "Produce", "Bakery": "Bakery", "Deli": "Deli", "Dairy": "Dairy",
-      "Pantry": "Pantry", "Frozen": "Frozen", "Household": "Household", "Other": "Other"
+      "Produce": "Produce",
+      "Bakery": "Bakery",
+      "Deli": "Deli",
+      "Dairy": "Dairy",
+      "Pantry": "Pantry",
+      "Frozen": "Frozen",
+      "Household": "Household",
+      "Other": "Other"
     },
     "firstListLine": "One list per store. Arya fills it as it learns.",
     "createFirstList": "Create your first list",
@@ -978,7 +1145,27 @@
     "googleFailed": "Google sign-in did not finish. Try again.",
     "wentWrong": "Something went wrong. Try again in a moment.",
     "emailedCode": "We emailed you a code. Enter it here.",
-    "emailMeCode": "Email me a code"
+    "emailMeCode": "Email me a code",
+    "notInvitedYet": "Not invited yet?",
+    "teamTitle": "Team sign-in",
+    "teamHint": "For beta testers and test agents. Everyone else:",
+    "teamEmailLink": "sign in with email",
+    "startHint": "Arya is open by invitation for now. Enter your email and we will send you a code.",
+    "haveCode": "I already have a code",
+    "or": "or",
+    "checkEmail": "Check your email",
+    "codeSentTo": "If <b>{{email}}</b> is invited, a code is on its way.",
+    "changeEmail": "Change email",
+    "enterCodeHint": "Enter the email you were invited with and the code from our email.",
+    "noEmail": "No email after a minute?",
+    "maybeNotInvited": "You may not be invited yet.",
+    "sendNewCode": "Send a new code",
+    "newCodeSent": "If that email is invited, a new code is on its way.",
+    "codeWrong": "That code did not work. Check it, or send a new one.",
+    "emailNotInvited": "That email is not invited yet.",
+    "notInvitedTitle": "Not on the list yet",
+    "notInvitedBody": "<b>{{email}}</b> signed in with Google, but that account is not invited yet. Join the waitlist and we will email you a code when a spot opens.",
+    "differentAccount": "Use a different account"
   },
   "landing": {
     "signIn": "Sign in",
@@ -1033,6 +1220,11 @@
     "demoNote": "The demo needs no sign-up.",
     "invitationNote": "Sign-in is by invitation for now.",
     "joinWaitlist": "Join the waitlist",
+    "appsSoon": "iPhone and Android apps coming soon",
+    "appStoreAlt": "App Store, coming soon",
+    "googlePlayAlt": "Google Play, coming soon",
+    "privacy": "Privacy policy",
+    "terms": "Terms of service",
     "noAccountWaitlist": "No account yet? Join the waitlist"
   },
   "waitlist": {
@@ -1042,7 +1234,7 @@
     "privacy": "We use your email only to send your invite. Ask us to delete it any time.",
     "yourData": "Your lists, your data. Export anytime.",
     "addedTitle": "You’re on the list",
-    "addedBody": "We will email {{email}} when there is a spot for your household.",
+    "addedBody": "We will email a sign-in code to {{email}} when your spot opens. Then come back here, tap Sign in and enter it.",
     "alreadyTitle": "You’re already on the list",
     "alreadyBody": "Nothing more to do. We will email you when a spot opens for your household.",
     "done": "Done",
@@ -1087,17 +1279,20 @@
       "step1": "Hold the phone upright at chest height, shelves in view.",
       "step2": "Walk slowly, the way you shop.",
       "step3": "Pass the aisles you use. Skip the rest — other Arya shoppers fill them in.",
-      "step4": "Tap Done at the end. Arya names each section it saw, and you check them."
+      "step4": "Tap Done at the end. Arya reads your walk in the background and tells you when the map is ready, so you can check it."
     },
     "nameFirst": "Name the aisle first.",
     "addedTeach": "Added. Open the camera to map it.",
     "alreadyHas": "Arya already has that aisle.",
-    "coverage": "Arya knows <b>{{pct}}%</b> of {{store}} <m>· {{mapped}} of {{total}} sections</m>",
+    "coverage": "Arya has seen <b>{{seen}}</b> of about <b>{{expected}}</b> sections <m>· {{aisles}} aisles counted from signs</m>",
+    "seenOnly_one": "Arya has seen <b>{{count}}</b> section of {{store}}",
+    "seenOnly_other": "Arya has seen <b>{{count}}</b> sections of {{store}}",
+    "sizeUnknown": "Arya doesn't know how big this store is yet. Pan across the aisle signs at the front once and it can count the aisles. ",
     "countAging": "{{n}} with old photos. ",
     "countStale": "{{n}} need new photos. ",
     "countNew": "{{n}} not mapped yet. ",
-    "goal_one": "{{count}} more section and Arya knows {{pct}}%",
-    "goal_other": "{{count}} more sections and Arya knows {{pct}}%",
+    "goal_one": "About {{count}} more section to {{pct}}%",
+    "goal_other": "About {{count}} more sections to {{pct}}%",
     "knowsWholeStore": "Arya knows this whole store.",
     "credit": "<b>{{title}} badge</b> · {{points}} points",
     "bothSides": "both sides",
@@ -1113,7 +1308,7 @@
     "showAllStores": "Show all my stores ({{count}})",
     "findMyStore": "Find my store",
     "findMyStoreSub": "Search by name or address, or add it",
-    "howTo": "Walk the aisles with your phone up. Arya reads the shelves and builds the map.",
+    "howTo": "Hold your phone up and walk the aisles. Arya only coaches you while you walk, then builds the map in the background.",
     "howItWorks": "How it works",
     "more": "More"
   },
@@ -1413,10 +1608,10 @@
   },
   "settings": {
     "settings": "Settings",
-    "finishedReceiptMissingOfCollected": "{{slice}} · {{items_collected}} of {{items_total}} in cart · No receipt yet",
     "stores": "Stores",
     "yourStoresFavoritesAndThe": "Your stores and favorites",
     "whatAryaCanDoAnd": "What Arya does for you, and what you can turn on",
+    "usageSub": "What the AI reading costs, and your share",
     "spendingByMonthAndStore": "By month, store and item",
     "account": "Account",
     "signedInAs": "Signed in as",
@@ -1437,6 +1632,7 @@
     "shopModeAsk": "Ask me each time",
     "preferencesSub": "Prices show in this currency. Arya answers in this language.",
     "exportMyData": "Export my data",
+    "exportStarted": "Your export is downloading as arya-export.json.",
     "everythingAryaHoldsForYou": "Everything Arya holds for you, as one file",
     "deleteMyAccount": "Delete my account",
     "eraseYourAccountAndAll": "Erase your account and all of its data",
@@ -1622,7 +1818,43 @@
     "tripsLinkSub": "Open quests, finished trips and friends",
     "openingQuest": "Opening Quest…",
     "mapMyStore": "Map my store",
-    "mapMyStoreSub": "Pan along the shelves; Arya learns the aisles",
+    "mapMyStoreSub": "Walk the aisles; Arya builds the map",
+    "mapReadySub": "Your map is ready. Check what Arya found",
+    "mapBuildingSub": "Arya is building your map…",
+    "edit": {
+      "title": "Edit Quest",
+      "hint": "Hide what you don't use. Play and Map my store stay.",
+      "reset": "Reset Quest",
+      "resetDone": "Quest is back to the default",
+      "cta": {
+        "name": "Ready for a quest?",
+        "desc": "Start a quest or practice"
+      },
+      "stats": {
+        "name": "Level and streak",
+        "desc": "Shows after your first real trip"
+      },
+      "map": {
+        "name": "Map my store",
+        "desc": "Learn the aisles"
+      },
+      "progress": {
+        "name": "Quest progress",
+        "desc": "Quests, badges and mapped stores"
+      },
+      "trips": {
+        "name": "Your trips",
+        "desc": "Open quests, finished trips and friends"
+      },
+      "album": {
+        "name": "Sticker album",
+        "desc": "Shows with your first sticker"
+      },
+      "stores": {
+        "name": "Stores you're building",
+        "desc": "How much of each store is mapped"
+      }
+    },
     "progressSub": "Quests, badges and mapped stores"
   },
   "questProgress": {
@@ -1671,6 +1903,8 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "returnsNetted": "Returns taken off",
+    "youSaved": "You saved",
+    "youSavedSub": "coupons, deals and discounts, already taken off",
     "viewReceipt": "View receipt",
     "theFiledReceiptPhoto": "The receipt photo",
     "deleteReceipt": "Delete receipt",
@@ -1790,44 +2024,19 @@
     "haulPhotoIntro": "A photo of the haul: Arya spots the products in it — extras included — and the photo can front your haul card. The photo itself is not kept.",
     "readingHaul": "Reading your haul…"
   },
-  "store": {
-    "whereAreYouShopping": "Where are you shopping?",
-    "typeAStoreOrTap": "Type a store — or tap one below",
-    "storesComeFromGoogleWith": "Tap your store to start the plan.",
-    "stores": "{{name}} stores",
-    "noStoresInYourStores": "No stores in your stores yet. Find one or add one below.",
-    "allMyStores": "All my stores",
-    "fromYourReceipts": "From your receipts",
-    "showAllStores": "Show all {{histCount}} stores",
-    "searchByZipAddressOr": "Search by ZIP, address, or name",
-    "aStoreThatIsNot": "A store Arya doesn't have yet",
-    "fitLead": "{{n}} of your {{total}} list items usually here · ",
-    "usually": "Usually: {{names}}",
-    "pickFirst": "Pick or name the store first.",
-    "pickFromList": "Pick your store from the list."
-  },
-  "storesAdd": {
-    "searchGoogleForTheStore": "Search Google for the store",
-    "everyStoreCarriesItsReal": "Every store carries its real name and address from Google. Tap yours to add it.",
-    "theStoreJoinsTheShared": "Arya shoppers will see this store too."
-  },
   "storesFind": {
-    "zipAddressOrName": "ZIP, address, or name",
-    "search": "Search",
     "noStoresMatchAddIt": "No stores match. Add it, and other Arya shoppers can find it too.",
     "added": "Added",
     "theDirectoryIsSharedBy": "Every Arya shopper sees these stores. Add one to shop it.",
     "inYourStores": "{{name}} is in your stores.",
     "all": "All",
-    "withQuests": "Mapped",
-    "nearZip": "Near this ZIP"
+    "withQuests": "Mapped"
   },
   "storesMine": {
     "myStores": "My stores",
     "noStoresYetFindOne": "No stores yet. Find one or add one below.",
     "allMyStores": "All my stores",
-    "searchTheDirectoryByZip": "Search all stores by ZIP, address, or name",
-    "aStoreThatIsNot": "A store Arya doesn't have yet",
+    "searchByNameZipOrAddress": "Search by name, ZIP or address, or add one from Google",
     "scene": {
       "cloud": "Mapped, 3D view",
       "strip": "Photo view"
@@ -1839,6 +2048,117 @@
   },
   "today": {
     "today": "Today",
+    "tripsNeedReceipt_one": "{{count}} trip needs a receipt",
+    "tripsNeedReceipt_other": "{{count}} trips need a receipt",
+    "sizes": {
+      "label": "Size",
+      "s": "Small",
+      "m": "Medium",
+      "l": "Large",
+      "sHelp": "One line. Tap it to see more.",
+      "mHelp": "The first few rows.",
+      "lHelp": "Every row."
+    },
+    "small": {
+      "low": "{{count}} running low",
+      "lists": "{{count}} lists, {{items}} to get",
+      "report": "{{count}} store alerts",
+      "price": "{{count}} cheaper elsewhere",
+      "expiry": "{{count}} to use soon",
+      "checks": "{{count}} to check",
+      "watch_one": "{{count}} item costs more",
+      "watch_other": "{{count}} items cost more",
+      "trip": "About {{money}}",
+      "addAll": "Add all",
+      "addedAll": "Added to your list"
+    },
+    "library": {
+      "title": "Card library",
+      "all": "All",
+      "money": "Money",
+      "food": "Food",
+      "shop": "Shopping",
+      "sizes": "Sizes: {{sizes}}",
+      "none": "Every card in this group is on Today."
+    },
+    "cards": {
+      "low": {
+        "name": "Running low",
+        "desc": "Things you usually buy by now"
+      },
+      "lists": {
+        "name": "Your lists",
+        "desc": "One card per list"
+      },
+      "report": {
+        "name": "Store alerts",
+        "desc": "Items people say are out at a store"
+      },
+      "price": {
+        "name": "Cheaper elsewhere",
+        "desc": "Price gaps on what is on your lists"
+      },
+      "expiry": {
+        "name": "Use soon",
+        "desc": "Food that will go bad soon"
+      },
+      "checks": {
+        "name": "Still good?",
+        "desc": "Quick checks on food you may still have"
+      },
+      "patterns": {
+        "name": "Spending",
+        "desc": "This month's spend and price changes"
+      },
+      "quest": {
+        "name": "Quest",
+        "desc": "Turn your next trip into a game"
+      },
+      "watch": {
+        "name": "Price watch",
+        "desc": "What costs more than it did"
+      },
+      "trip": {
+        "name": "Next trip",
+        "desc": "Your fullest list and about what it costs"
+      },
+      "waiting": "Hidden until it has news"
+    },
+    "edit": {
+      "edit": "Edit",
+      "title": "Edit Today",
+      "hint": "Drag to reorder. A card with nothing to say stays hidden until it does.",
+      "more": "More cards",
+      "reset": "Reset Today",
+      "resetDone": "Today is back to the default",
+      "removed": "{{name}} removed from Today",
+      "added": "{{name}} added to Today",
+      "remove": "Remove {{name}}",
+      "add": "Add {{name}}",
+      "move": "Move {{name}}. Use the up and down arrow keys.",
+      "allOn": "Every card is on Today."
+    },
+    "menu": {
+      "label": "Card options",
+      "edit": "Edit Today",
+      "up": "Move up",
+      "down": "Move down",
+      "remove": "Remove from Today"
+    },
+    "ask": {
+      "title": "What matters most to you?",
+      "line": "Pick any. Arya puts those cards first on Today. You can change it any time.",
+      "go": "Set up Today",
+      "done": "Today is set up. Touch and hold a card to change it.",
+      "money": "Spending less",
+      "moneySub": "Cheaper elsewhere and spending",
+      "waste": "Wasting less food",
+      "wasteSub": "Use soon and Still good?",
+      "stock": "Never running out",
+      "stockSub": "Running low and store alerts",
+      "faster": "Shopping faster",
+      "fasterSub": "Your lists first"
+    },
     "onList": "On list",
     "yourLists": "Your lists",
     "storeAlerts": "Store alerts",
@@ -1997,6 +2317,16 @@
       "many": "{{names}} and {{count}} more lists are empty",
       "sub": "Add what you need, or tap Add on Running low.",
       "subNew": "Add what you need. Arya fills them from what you usually buy once it has a receipt."
+    },
+    "watch": {
+      "up": "Up {{pct}} since {{month}}."
+    },
+    "trip": {
+      "costs_one": "{{count}} item, about {{money}}",
+      "costs_other": "{{count}} items, about {{money}}",
+      "go": "Shop",
+      "peek_one": "{{name}}, {{count}} item",
+      "peek_other": "{{name}}, {{count}} items"
     },
     "finding": {
       "kicker": "Price watch",
@@ -2180,17 +2510,23 @@
     "addAryaToYourHome": "Add Arya to your Home Screen",
     "getTheAryaApp": "Get the Arya app",
     "intro": "Free, no app store. Arya opens full screen like any app and can remind you when milk runs low.",
-    "tip": "Tip: sign in from the Home Screen app. iPhone keeps it separate from Safari.",
+    "tip": "Tip: sign in from the Home Screen app. iPhone keeps it separate from your browser.",
     "addToHomeScreen": "Add to Home Screen",
-    "ifItIsOffArya": "If it is off, Arya opens as a plain Safari tab with the address bar, and reminders cannot work.",
+    "ifItIsOffArya": "If it is off, Arya opens as a plain browser tab with the address bar, and reminders cannot work.",
     "fullScreenWithReminders": "Full screen, with reminders.",
     "opensFullScreenAndLets": "Opens full screen and lets reminders work",
-    "step1": "Tap <b>Share</b> at the bottom of Safari.",
+    "step1": "Tap <b>Share</b>.",
     "step2": "Scroll and tap <b>Add to Home Screen</b>.",
     "step3": "Leave <b>Open as Web App</b> <tog></tog> switched <b>on</b>.",
     "step4": "Tap <b>Add</b>, then open Arya from your Home Screen.",
     "install": "Install",
-    "showHow": "Show how"
+    "showHow": "Show how",
+    "findShare": "Can't see Share? Look for it in your browser's menu.",
+    "otherApp": "Opened from another app? Open this page in your phone's browser first.",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyFailed": "Could not copy. Copy the address from your browser.",
+    "desktop": "Arya is made for your phone. Open this page there to add it to your Home Screen. You can still try it here."
   },
   "addReceiptSheet": {
     "thisTripSReceiptPhoto": "This trip's receipt photo",
@@ -2267,7 +2603,8 @@
     "lists": "Lists",
     "ask": "Ask",
     "quest": "Quest",
-    "settings": "Settings"
+    "settings": "Settings",
+    "help": "Help"
   },
   "town": {
     "sim": "Simulated",
@@ -2398,7 +2735,7 @@
         "body": "Milk from Trader Joe's, blueberries from Costco, cottage cheese from Safeway? Arya keeps a separate, tidy list for each store and puts every item on the right one. Type it, say it, or snap a paper list.",
         "s1": "Tap the Lists tab, then New list.",
         "s2": "Choose the store the list is for.",
-        "s3": "Tap Add an item. Type it, say it, or snap a paper list."
+        "s3": "Type an item in the add box at the top of a list, say it, or snap a paper list."
       },
       "share": {
         "kicker": "Your household",
@@ -2484,7 +2821,7 @@
     "brand": "Arya",
     "title": "Arya for developers",
     "linksLabel": "Developer links",
-    "reference": "Full reference",
+    "reference": "Interactive reference",
     "schema": "API schema",
     "openApp": "Open the app",
     "backToApp": "Back to Arya",
@@ -2492,23 +2829,16 @@
     "headline2": "your data.",
     "sub": "Read and write your own lists and receipts from a script or another app. Export anytime.",
     "getCode": "Get your code",
-    "step1": "1. Get your code",
+    "step1": "Get your code",
     "step1Body": "In Arya, open Settings, then Use Arya in another AI app, then Make my code. It shows once. A new code replaces the old one.",
     "sameCode": "The same code works for the Lists API and the agent connector.",
-    "step2": "2. Try it",
-    "answersJson": "Answers JSON.",
+    "step2": "Make your first call",
+    "answersJson": "Replies with your lists",
     "copy": "Copy",
     "copied": "Copied.",
     "copyFailed": "Could not copy. Select the text and copy it.",
-    "good": "Good to know",
-    "ownTitle": "Only your own data.",
-    "ownBody": "The API shows what you filed or typed. It does not include Arya's own suggestions or store maps.",
-    "limitsTitle": "Limits.",
-    "limitsBody": "600 calls an hour. Requests up to 256 KB. Over the limit you get a 429 and a Retry-After header.",
-    "errorsTitle": "Errors.",
-    "errorsBody": "JSON like",
-    "stableTitle": "Stable.",
-    "stableBody": "Version 1 will not change. New things are only added.",
+    "limitsBody": "shared with the agent connector. 256 KB a request, 50 items an add, 500 rows an import.",
+    "stableBody": "Version 1 will not change. New things are only added. Only your own data is in the API: no Arya suggestions or store maps.",
     "gLists": "Lists and items",
     "gExport": "Take it with you",
     "gReceipts": "Your receipts and spending",
@@ -2525,6 +2855,273 @@
     "rSpending": "Totals by month and by store",
     "rPurchases": "What you bought, and when",
     "later": "Not yet",
-    "laterBody": "Webhooks, sign-in with OAuth, sharing a list with another account, filing a receipt, and Quest data."
+    "laterBody": "Webhooks, sign-in with OAuth, sharing a list with another account, filing a receipt, and Quest data.",
+    "brandSub": "Developers",
+    "search": "Search endpoints",
+    "referenceShort": "Reference",
+    "guide": "Full guide on GitHub",
+    "tryRef": "Try it in the reference",
+    "onThisPage": "On this page",
+    "nQuick": "Quickstart",
+    "nAuth": "Authentication",
+    "nEndpoints": "Endpoints",
+    "nErrors": "Errors",
+    "nLimits": "Limits",
+    "nChangelog": "Changelog",
+    "nNot": "Not yet",
+    "quickLead": "Three steps. About five minutes.",
+    "step3": "Add something",
+    "youGetBack": "You get back",
+    "authLead": "One header, one code.",
+    "authBody1": "Send your code as",
+    "authBody2": "on every call. It reaches only your own account. Lost it or leaked it? Make a new code in Settings and the old one stops working at once.",
+    "endpointsLead": "Every one answers JSON.",
+    "openRef": "Open the interactive reference",
+    "endpointsLead2": "to try them from the browser.",
+    "noMatch": "No endpoint matches that.",
+    "exampleTitle": "Example: add items",
+    "reply": "Reply",
+    "errorsLead": "Always",
+    "eBad": "A bad or unknown field",
+    "eAuth": "No, wrong or revoked code",
+    "eNotFound": "No such list, item or receipt",
+    "eLarge": "Body over 256 KB",
+    "eRate": "Over the hourly limit. Wait Retry-After seconds",
+    "eServer": "Our fault. Try again",
+    "limitsHead": "600 calls an hour per account,",
+    "log2Date": "Oct 30",
+    "log2": "Receipts, spending totals, and one 600-an-hour allowance for every route.",
+    "log1Date": "Oct 30",
+    "log1": "Lists, items, export and import."
+  },
+  "waitlistAdmin": {
+    "title": "Waitlist",
+    "waiting_one": "{{count}} waiting. Approve to let them sign in.",
+    "waiting_other": "{{count}} waiting. Approve to let them sign in.",
+    "nobody": "Nobody is waiting.",
+    "empty": "No one is on the waitlist yet. People join from the link on the sign-in screen.",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "oldestFirst": "Oldest first",
+    "joinedToday": "Joined today",
+    "joinedYesterday": "Joined yesterday",
+    "joinedOn": "Joined {{date}}",
+    "approvedLine": "Approved · {{when}}",
+    "approve": "Approve",
+    "approveN": "Approve {{count}}",
+    "remove": "Remove",
+    "approveTitle_one": "Approve {{count}} person?",
+    "approveTitle_other": "Approve {{count}} people?",
+    "approveBody": "They can sign in with an email code or Google. “Approve and email” sends the code now. They can ask for a new code any time on the sign-in screen.",
+    "approveAndEmail": "Approve and email",
+    "approveQuiet": "Approve, do not email",
+    "removeTitle_one": "Remove {{count}} person?",
+    "removeTitle_other": "Remove {{count}} people?",
+    "removeBody": "Their email is deleted from the waitlist. They can join again.",
+    "approvedToast_one": "Approved {{count}} person.",
+    "approvedToast_other": "Approved {{count}} people.",
+    "approvedSomeFailed": "Approved {{n}}, but only {{sent}} emails went out. They can request a code themselves.",
+    "removedToast_one": "Removed {{count}} person.",
+    "removedToast_other": "Removed {{count}} people.",
+    "settingsRow": "Waitlist",
+    "settingsSub_one": "{{count}} waiting",
+    "settingsSub_other": "{{count}} waiting",
+    "settingsNone": "Nobody waiting"
+  },
+  "edit": {
+    "remove": "Remove {{name}}",
+    "add": "Add {{name}}",
+    "move": "Move {{name}}. Use the up and down arrow keys.",
+    "removed": "{{name}} removed",
+    "added": "{{name}} added",
+    "more": "More",
+    "reset": "Reset to default",
+    "allOn": "Everything is already on."
+  },
+  "display": {
+    "title": "Display",
+    "sub": "Text size, spacing, pictures",
+    "text": "Text size",
+    "textSmaller": "Smaller",
+    "textLarger": "Larger",
+    "sample": "Whole Milk 1 gal · Every ~7 days",
+    "spacing": "Spacing",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "look": "Look",
+    "bold": "Bold text",
+    "pictures": "Item pictures",
+    "picturesSub": "The little faces next to items",
+    "motion": "Animations",
+    "motionSub": "Your phone's Reduce Motion setting turns them down too",
+    "customize": "Customize",
+    "today": "Today cards",
+    "resetAll": "Reset all to default",
+    "resetDone": "Display and Today are back to the default"
+  },
+  "storeFinder": {
+    "label": "Find a store",
+    "placeholder": "Name, ZIP or address",
+    "nearMe": "Near me"
+  },
+  "help": {
+    "title": "Help",
+    "intro": "Ask Arya how to do anything, or pick a topic.",
+    "askPlaceholder": "Ask Arya how to...",
+    "askLabel": "Ask Arya a how-to question",
+    "ask": "Ask",
+    "sample1": "How do I map my store?",
+    "sample2": "Where are my receipts?",
+    "sample3": "How do I share my list?",
+    "startHere": "Start here",
+    "howTo": "How to",
+    "more": "More",
+    "back": "Help",
+    "goodToKnow": "Good to know",
+    "stuck": "Still stuck? Ask Arya",
+    "stuckQ": "Help me with: {{topic}}",
+    "guide": "Read the full guide",
+    "guideSub": "Eight cards that show each part of Arya",
+    "powers": "Arya's powers",
+    "powersSub": "Everything Arya does, and what you can turn on",
+    "tour": "Take the tour again",
+    "tourSub": "Five steps, 30 seconds",
+    "feedback": "Send feedback",
+    "feedbackSub": "Tell us what is missing or confusing",
+    "topics": {
+      "receipt": {
+        "title": "Add your first receipt",
+        "sub": "Arya learns what you buy and how often",
+        "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
+        "s1": "Open Settings, then Receipts.",
+        "s2": "Tap Add receipt. Take a photo or pick a PDF.",
+        "s3": "Arya adds it and checks the total.",
+        "n1": "Only you and your group see your receipts.",
+        "n2": "A return is taken off your spending.",
+        "cta": "Open Receipts"
+      },
+      "additem": {
+        "title": "Add an item to a list",
+        "sub": "Type it, say it, or snap a paper list",
+        "body": "Every list is one store. Add items in the box at the top of a list.",
+        "s1": "Open the Lists tab.",
+        "s2": "Open a list, or tap New list and choose a store.",
+        "s3": "Type an item in the box \"Add item here...\".",
+        "s4": "Tap the microphone to say it, or the camera to read a paper list.",
+        "n1": "Tap the circle to tick an item off as you shop.",
+        "n2": "Tap the three dots to move an item or remove it.",
+        "cta": "Open Lists"
+      },
+      "ask": {
+        "title": "Ask Arya a question",
+        "sub": "What is running low? Where is milk cheaper?",
+        "body": "Ask in your own words. Arya answers from your lists and receipts.",
+        "s1": "Tap the Ask tab.",
+        "s2": "Type your question, or tap Talk to say it.",
+        "s3": "Or tap a sample question.",
+        "n1": "Arya can also add items, or mark an item as out.",
+        "n2": "Tap Photo to send a picture, such as the date on a pack.",
+        "cta": "Open Ask"
+      },
+      "lists": {
+        "title": "Lists",
+        "sub": "One list for each store",
+        "body": "Arya keeps a separate list for each store and suggests what is due.",
+        "s1": "Open the Lists tab and tap New list.",
+        "s2": "Choose the store.",
+        "s3": "Add items in the box at the top of the list.",
+        "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
+        "n1": "Tap Select to move or remove several items.",
+        "n2": "The three dots on a list open Share, export or import.",
+        "cta": "Open Lists"
+      },
+      "receipts": {
+        "title": "Receipts and spending",
+        "sub": "Add a receipt, see where money goes",
+        "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
+        "s1": "Open Settings, then Receipts, and tap Add receipt.",
+        "s2": "Take a photo, pick a PDF, or paste order text.",
+        "s3": "Open Settings, then Spending, to see it by month, store and item.",
+        "n1": "Ask \"What did I spend in October?\" for one month.",
+        "cta": "Open Spending"
+      },
+      "prices": {
+        "title": "Prices",
+        "sub": "Which store is cheaper, what went up",
+        "body": "Prices come from your own receipts, and from Arya shoppers who choose to share.",
+        "s1": "Add receipts from two stores.",
+        "s2": "Look at the cards \"Cheaper elsewhere\" and \"Price watch\" on Today.",
+        "s3": "Open Settings, then Arya's powers, for Compare your stores and Price trends.",
+        "n1": "Community prices are off until you turn them on: Settings, Arya's powers, Community prices.",
+        "n2": "Arya never uses store sites, flyers or web prices.",
+        "cta": "Open Arya's powers"
+      },
+      "shopping": {
+        "title": "Shopping and Quest",
+        "sub": "Start shopping, tick items, play",
+        "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
+        "s1": "Open a list and tap Start shopping.",
+        "s2": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
+        "n1": "Settings, then \"When I start shopping\", sets what opens.",
+        "n2": "Quest has no timers and no lives.",
+        "cta": "Open Quest"
+      },
+      "map": {
+        "title": "Map my store",
+        "sub": "Walk the aisles, Arya builds the map",
+        "body": "Walk the aisles once. Arya builds the store map, then walks you to each item in order.",
+        "s1": "Open the Quest tab.",
+        "s2": "Tap Map my store and choose the store.",
+        "s3": "Walk the aisles with the camera. Tap Done when you finish.",
+        "s4": "Arya builds the map in the background. A card tells you when it is ready.",
+        "n1": "No signal? Frames save on your phone and send later.",
+        "n2": "Arya blurs people in the frames before anything is kept.",
+        "cta": "Open Map my store"
+      },
+      "news": {
+        "title": "Store news",
+        "sub": "What Arya shoppers report",
+        "body": "Arya shoppers report what is out of stock or back on the shelf, so you skip a wasted trip.",
+        "s1": "Open the Today tab.",
+        "s2": "Look at \"Near you today\" for news from your stores.",
+        "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
+        "n1": "A heads-up also shows at the top of a list.",
+        "cta": "Open Today"
+      },
+      "share": {
+        "title": "Share with your household",
+        "sub": "Groups, invite code, friends",
+        "body": "A group shares lists and receipts. Every phone stays in sync.",
+        "s1": "Open Settings and tap Start a group. Give it a name.",
+        "s2": "Tap Invite someone and send them the code.",
+        "s3": "When they join, you share the same lists.",
+        "n1": "Friends: Quest tab, then Your trips and receipts, then Friends.",
+        "n2": "To send one list, tap the three dots on it, then Share, export or import.",
+        "cta": "Open Settings"
+      },
+      "usesoon": {
+        "title": "Use soon",
+        "sub": "Expiry dates and reminders",
+        "body": "Add a date to food. Arya reminds you to use it before it goes bad.",
+        "s1": "After a receipt, Today asks you for dates.",
+        "s2": "Any time: Settings, Arya's powers, Use soon, Add a date.",
+        "s3": "Tap Take a photo of the date on the pack.",
+        "s4": "Check the item and the date, then tap Looks right, track it.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check.",
+        "cta": "Open Arya's powers"
+      },
+      "customize": {
+        "title": "Change Today",
+        "sub": "Move, hide and add cards",
+        "body": "Make Today show what you care about.",
+        "s1": "Tap Edit on Today, or touch and hold a card.",
+        "s2": "Drag a card to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card from the library.",
+        "n1": "Lists, Ask and Quest have an Edit button too.",
+        "n2": "Settings, then Display, changes text size and spacing.",
+        "cta": "Open Today"
+      }
+    }
   }
 }

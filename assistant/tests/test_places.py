@@ -188,52 +188,26 @@ class TestPlacesEndpoints(unittest.TestCase):
 class TestListSheetFindStore(unittest.TestCase):
     def test_list_sheets_carry_the_google_picker_and_remove(self):
         l = src("screens/lists/ListSheets.tsx")
-        for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
-                       "/api/stores/mine/remove", "data-ls-pick",
-                       "data-ls-rm", 'id="ls-find"', "Near you"):
+        for needle in ("/api/stores/mine/remove", "data-ls-rm",
+                       "<StoreSearch ", 'id="ls-find"'):
             self.assertIn(needle, l)
+        f = src("ui/StoreFinder.tsx")
+        for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
+                       "data-pick", "data-near", "Near you"):
+            self.assertIn(needle, f)
         self.assertEqual(l.count("<StorePicker "), 2)  # New list + Link stores
 
 
 class TestPickerClient(unittest.TestCase):
-    def test_picker_wiring(self):
-        q = src("screens/Store.tsx")
-        for needle in ("/api/stores/places?q=", "/api/stores/places/pick",
-                       "data-gpick", "From Google",
-                       "Pick your store from the list"):
-            self.assertIn(needle, q)
-        self.assertNotIn('id="sa-form"', q)
-
     def test_find_stores_wiring(self):
         # Find stores carries the same live Google dropdown as the
         # hunt picker and Add a store (owner, 2026-10-28: the Find
         # box searched the directory only, so a real store not yet
         # in the directory could never be found by name or address).
         q = src("screens/StoresFind.tsx")
-        self.assertIn('<div id="sf-goog" className="gdrop"', q)
-        self.assertIn("/api/stores/places?q=", q)
-        self.assertIn("data-gpick", q)
-
-
-class TestPickerRefreshOnBack(unittest.TestCase):
-    """A store added via Find / Add a store must be selectable when
-    the player comes Back to the picker: the picker is redrawn from
-    My Stores, not left as it was drawn before they left it. The old
-    node harness over quest.js questBack runs under vitest in
-    web/src/screens/store.test.tsx."""
-
-    def test_picker_reloads_on_every_open(self):
-        q = src("screens/Store.tsx")
-        self.assertIn("// from Find / Add, so a store added there can be picked).", q)
-        self.assertIn("const m = await loadMine().catch(() => [] as MyStore[]);", q)
-        self.assertIn("}, [nav.key]);", q)
-        # App.tsx keys each screen by its stack entry, so Back remounts it.
-        self.assertIn('className="view" key={nav.key}>', src("App.tsx"))
-
-    def test_vitest_covers_back(self):
-        t = src("screens/store.test.tsx")
-        self.assertIn("Back to the picker reloads My Stores and draws the new store", t)
-        self.assertIn("Back elsewhere leaves the picker alone", t)
+        self.assertIn("<StoreSearch ", q)
+        self.assertIn("useStoreSearch(", q)
+        self.assertIn("/api/stores/search?q=", q)
 
 
 class TestAddressOnlySearch(unittest.TestCase):
@@ -252,12 +226,3 @@ class TestAddressOnlySearch(unittest.TestCase):
             names = [s["name"] for s in stores.search(q)]
             self.assertEqual(names, ["Trader Joe's"], q)
         self.assertEqual(stores.search("4455 Armitage Boston"), [])
-
-    def test_client_picks_own_store_by_typed_address(self):
-        # quest.js qStoreAtAddress, inline in Store.tsx pickStore: every
-        # typed word must be in one of My Stores' addresses.
-        q = src("screens/Store.tsx")
-        pick = q.split("const pickStore = (nm: string, storeId: string | null) => {")[1].split("\n  };")[0]
-        self.assertIn("const hay = norm(`${s.street} ${s.city} ${s.state} ${s.zip}`);", pick)
-        self.assertIn("return toks.every(t => hay.includes(t));", pick)
-        self.assertIn("if (hits.length === 1) {", pick)

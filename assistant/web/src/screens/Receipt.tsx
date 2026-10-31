@@ -13,7 +13,7 @@ import { useTranslation } from "../i18n";
 type Line = { name: string; qty?: number; line_type?: string; status?: string; line_total?: number | null };
 type Detail = {
   receipt_id: string; merchant: string; purchased_at: string; source_type?: string; lines: Line[];
-  subtotal?: number | null; tax?: number | null; total: number; returns_total?: number;
+  subtotal?: number | null; tax?: number | null; total: number; returns_total?: number; savings?: number;
   totals_reconcile?: boolean; photo?: boolean; media_type?: string;
 };
 
@@ -72,6 +72,7 @@ export function Receipt() {
             {r.subtotal != null && <Row name={t("receipt.subtotal")} right={m(r.subtotal)} />}
             {r.tax != null && <Row name={t("receipt.tax")} right={m(r.tax)} />}
             <Row name={t("common.total")} right={m(r.total)} />
+            {r.savings ? <Row name={t("receipt.youSaved")} sub={t("receipt.youSavedSub")} right={<span className="saved">{m(r.savings)}</span>} /> : null}
             {r.returns_total ? <Row name={t("receipt.returnsNetted")} right={<span className="return">−{m(r.returns_total)}</span>} /> : null}
           </div>
           <p className="muted">{r.totals_reconcile

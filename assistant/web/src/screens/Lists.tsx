@@ -10,10 +10,10 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
-import { asset, fmtDate, qtyFmt, qtyTag } from "../lib/format";
+import { asset, fmtDate, keepUnit, lineSavings, money, qtyFmt, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
-import { ListSheet, type SheetState } from "./lists/ListSheets";
+import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
 import {
   alsoNames, askLaterHas, cache, itemHome, lensName, lensState, namedLists, onListItems, sameStore,
@@ -24,6 +24,8 @@ import { autoMode, filterLists, markOpened, readMode, readOpened, readView, rece
   type ListsMode, type ListsView } from "./lists/adaptive";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
+import { EditList, EditTitle } from "../ui/EditList";
+import { arrange } from "../lib/layout";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -173,8 +175,8 @@ function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item;
       <div className={"row listrow" + (i.checked ? " checked" : "") + (picked ? " picked" : "")} tabIndex={0} data-row-id={i.item_id}
         {...(picking ? { role: "checkbox", "aria-checked": picked } : {})}>
         {picking ? <span className="pick" data-act="pick" data-id={i.item_id}><IconCheck /></span>
-          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-label={t("lists.checkOff", { name: i.name })}><IconCheck /></button>}
-        <div className="grow">{picking ? <span className="name">{i.name}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{i.name}</a>}
+          : <button className="check" type="button" data-act="check" data-id={i.item_id} aria-pressed={!!i.checked} aria-label={t(i.checked ? "lists.uncheck" : "lists.checkOff", { name: i.name })}><IconCheck /></button>}
+        <div className="grow">{picking ? <span className="name">{keepUnit(i.name)}</span> : <a href="#" className="name item-link" data-id={i.item_id}>{keepUnit(i.name)}</a>}
           {sub ? <span className="sub">{sub}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
@@ -207,7 +209,10 @@ export function Lists() {
   const nav = useNav();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
-  const { user, shopMode, saveShopMode, patchShop } = useSession();
+  const { user, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
+  // Edit mode on Lists (card library, 2026-10-30): order, hide, and
+  // what each list shows.
+  const [editing, setEditing] = useState(false);
   useCharacters();
 
   const [data, setData] = useState<HomeData | null>(cache.data);
@@ -300,6 +305,15 @@ export function Lists() {
 
   /* ---- derived ---- */
   const lists = namedLists(data);
+  const lay = layouts.lists || {};
+  const arranged = arrange(lists.map(l => l.id), lay.order, lay.hidden);
+  const homeLists = arranged.shown.map(id => lists.find(l => l.id === id)!);
+  const flags = new Set(lay.flags || []);
+  function saveListsLayout(v: typeof lay, msg?: string) {
+    const prev = layouts.lists || {};
+    saveLayout("lists", v).catch(showErr);
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => { saveLayout("lists", prev).catch(showErr); } });
+  }
   // A lens whose list is gone falls back to the cards.
   const effLens = data && lens !== "home" && lens !== "else" && !lists.some(l => l.id === lens) ? "home" : lens;
   const here = lists.find(l => l.id === effLens) || null;
@@ -376,7 +390,8 @@ export function Lists() {
       await reload();
     }) });
   };
-  const createList = async (listName: string, stores: string[], moving: string[] | null) => {
+  const createList = async (listName: string, link: StoreLink, moving: string[] | null) => {
+    let { stores } = link;
     // A list named after one of your stores ("Costco") links it unless
     // you picked stores yourself (QA 2026-10-30: it said "No store linked").
     if (!stores.length) {
@@ -386,15 +401,15 @@ export function Lists() {
         if (hit) stores = [hit.name];
       } catch { /* no stores: the list stays unlinked */ }
     }
-    const l = await post<{ id: string; name: string }>("/api/lists", { name: listName, stores });
+    const l = await post<{ id: string; name: string }>("/api/lists", { name: listName, stores, store_ids: link.ids });
     if (moving) { await reload(); await moveTo(moving, l.id); return; }
     setSheet(null);
     setLens(l.id);
     await reload();
     toast(t("lists.created", { name: l.name }));
   };
-  const saveStores = async (id: string, stores: string[]) => {
-    await post("/api/lists/update", { id, stores });
+  const saveStores = async (id: string, link: StoreLink) => {
+    await post("/api/lists/update", { id, stores: link.stores, store_ids: link.ids });
     setSheet(null);
     await reload();
   };
@@ -737,7 +752,8 @@ export function Lists() {
       setStatus("");
       if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
       if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
-      toast(t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }));
+      const saved = lineSavings(rec.lines || []);
+      toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
     } catch (e) {
       setStatus("");
       toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
@@ -775,6 +791,12 @@ export function Lists() {
   const pick = (mode: "quest" | "list") => {
     if (shopMode === null) saveShopMode(mode).catch(e => toast(errMsg(e)));
     if (mode === "quest") startHunt(); else startList();
+  };
+  // Or just tick items as I shop: turns on Just my list for good (Settings
+  // can switch it back), so the link goes away once that is the saved choice.
+  const tickAsIShop = () => {
+    saveShopMode("list").catch(e => toast(errMsg(e)));
+    startList();
   };
   const finishTrip = () => {
     setDoneStep(null);
@@ -874,10 +896,10 @@ export function Lists() {
     }
     const at: Record<string, number> = { ...readOpened() };
     for (const [id, r] of Object.entries(g.recent || {})) if (id) at[id] = Math.max(at[id] || 0, r.at * 1000);
-    const az = [...lists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    const az = [...homeLists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
     return <>
       <h3 className="sect">{t("lists.recent")}</h3>
-      <div className="group">{recentLists(lists, at).map(l => navRow(l.id, l.name))}</div>
+      <div className="group">{recentLists(homeLists, at).map(l => navRow(l.id, l.name))}</div>
       <h3 className="sect">{t("lists.allAToZ")}</h3>
       <div className="group">{az.map(l => navRow(l.id, l.name))}{elseUsed ? navRow("else", elseName) : null}</div>
     </>;
@@ -893,24 +915,47 @@ export function Lists() {
   const sugg = data && !selEff && onPage ? suggestions(data).filter(i => suggestHome(data, i) === lid) : [];
   const shoppingHere = shopping !== null && shopping === effLens && onPage;
   const startBar = (!!open.length || shoppingHere) && !selEff;
+  const tickLink = startBar && !shoppingHere && shopMode !== "list";
   const nSel = selEff ? selEff.size : 0;
 
   return (
     <>
       {!onPage && (
-        <div id="lists-home">
-          <h1 className="largetitle">{t("lists.lists")}</h1>
+        <div id="lists-home" className={(flags.has("hide-preview") ? "nopreview " : "") + (flags.has("hide-suggestions") ? "nosugg" : "")}>
+          {data && lists.length > 0
+            ? <EditTitle id="lists-editbtn" title={t("lists.lists")} editTitle={t("lists.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
+            : <h1 className="largetitle">{t("lists.lists")}</h1>}
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
               <span>{t("lists.sharedWith", { name: grp.name, value: (() => {
-                const ns = others.map(m => cap(m.handle));
+                const ns = others.map(m => "@" + m.handle);
                 return ns.length <= 2 ? ns.join(t("lists.and")) : t("lists.namesAndMore", { names: ns.slice(0, 2).join(", "), n: ns.length - 2 });
               })() })}</span>
             </p>
           ) : null}
           <p id="list-line" className="subtitle">{homeLine}</p>
-          {listsEmpty(data) ? (
+          {editing && data && lists.length > 0 ? (
+            <>
+              <EditList id="lists-edit" on={arranged.shown} off={arranged.hidden}
+                name={id => lists.find(l => l.id === id)?.name || ""}
+                sub={id => t("common.itemCount", { count: onListItems(data).filter(i => !i.checked && itemHome(data, i) === id).length })}
+                desc={() => t("lists.hiddenSub")}
+                hint={t("lists.editHint")} moreTitle={t("lists.hiddenLists")} emptyMore={t("lists.noHidden")}
+                onChange={(next, msg) => saveListsLayout({ ...lay, order: next, hidden: lists.map(l => l.id).filter(id => !next.includes(id)) }, msg)}
+                onReset={() => saveListsLayout({})} />
+              <h3 className="sect">{t("lists.showOnEach")}</h3>
+              <div className="group">
+                {(["hide-preview", "hide-suggestions"] as const).map(f => (
+                  <div className="hubrow" key={f}>
+                    <span className="hr-label">{t(`lists.flag.${f}`)}<span className="sub">{t(`lists.flag.${f}Sub`)}</span></span>
+                    <button type="button" className="sw" role="switch" data-flag={f} aria-checked={!flags.has(f)} aria-label={t(`lists.flag.${f}`)}
+                      onClick={() => saveListsLayout({ ...lay, flags: flags.has(f) ? [...flags].filter(x => x !== f) : [...flags, f] })}><i></i></button>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : listsEmpty(data) ? (
             <div id="list-cards">
               <div className="fr-card fr-empty" id="list-empty">
                 <img src={asset("assets/characters/basket.webp")} alt="" />
@@ -935,7 +980,7 @@ export function Lists() {
           )}
           {mode === "tiles" ? (
             <div id="list-cards" className="listcards" data-mode="tiles">
-              {lists.map(l => tile(l.id, l.name))}
+              {homeLists.map(l => tile(l.id, l.name))}
               {elseUsed ? tile("else", elseName) : null}
             </div>
           ) : mode === "dense" ? (
@@ -943,8 +988,8 @@ export function Lists() {
           ) : (
           <div id="list-cards">
             {data ? <>
-              {lists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
-              {card("else", t("common.everythingElse"), lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore"))}
+              {homeLists.map(l => card(l.id, l.name, (l.stores || []).length ? (l.stores!.length === 1 && sameStore(l.stores![0], l.name) ? "" : l.stores!.join(" · ")) : t("lists.noStoreLinked")))}
+              {elseUsed || !lists.length ? card("else", elseName, lists.length ? t("lists.notOnAListYet") : t("lists.makeAListPerStore")) : null}
             </> : loadFailed
               ? <div className="empty" role="alert"><p>{t("lists.couldNotLoad")}</p>
                   <button className="btn" id="lists-retry" type="button" onClick={() => { setLoadFailed(false); reload().catch(e => { if (alive.current) setLoadFailed(true); showErr(e); }); }}>{t("lists.retry")}</button></div>
@@ -957,7 +1002,7 @@ export function Lists() {
       )}
 
       {onPage && data && (
-        <div id="list-page" className={startBar ? "hasstart" : undefined}>
+        <div id="list-page" className={startBar ? "hasstart" + (tickLink ? " hastick" : "") : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
           {shoppingHere ? <p className="shopinglabel" id="list-shopping">{t("lists.shoppingLabel")}</p> : null}
           <div className="lhead">
@@ -991,13 +1036,23 @@ export function Lists() {
             <div className="addwrap">
             <div className={"addline onebox" + (typed ? " typed" : "")}>
               <input type="text" id="add-text" ref={field} className={looksLikeAsk(text) ? "askish" : undefined}
-                placeholder={t("lists.addItemHere")} autoComplete="off" aria-label={t("lists.addTo", { name })}
+                placeholder={t("lists.addItemHere")} autoComplete="off" enterKeyHint="done" aria-label={t("lists.addTo", { name })}
                 value={text} onChange={e => changeText(e.target.value)} onKeyDown={onFieldKey} onPaste={onPaste}
                 onBlur={() => setSugOpen(false)} onFocus={() => setSugOpen(true)}
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
                 aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
-              {typed ? <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit} aria-label={addLabel} title={addLabel}>
+              {!typed || listening ? (
+                <span className="inicons">
+                  <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}
+                    aria-label={t("lists.talkToAdd")} title={t("lists.talkToAdd")}><IconMic /></button>
+                  <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.photoToAdd")} title={t("lists.photoToAdd")} {...pickerProps("add-photo")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+                  </label>
+                  {findOn && !finding ? <button className="iconbtn" id="list-find-open" type="button" aria-label={t("lists.findInList")} title={t("lists.findInList")} onClick={() => setFinding(true)}><IconSearch /></button> : null}
+                </span>
+              ) : null}
+              {typed && !listening ? <button className="btn primary" id="add-submit" type="button" disabled={adding} onClick={submit} aria-label={addLabel} title={addLabel}>
                 {looksLikeAsk(text)
                   ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
                   : <span aria-hidden="true">+</span>}
@@ -1005,24 +1060,16 @@ export function Lists() {
             </div>
             <SuggestDrop rows={sugShown} idx={sugIdx} q={lastSegment(text)} onPick={pickSug} here={name} />
             </div>
-            {/* Voice and photo say what they do (owner, 2026-10-30): bare
-              * icons were not obvious. */}
+            {/* Voice, photo and find sit inside the box as labelled icon buttons
+              * (owner picked option A, 2026-10-30): the grey box with a row of
+              * chips under it wasted a line and read as disabled. */}
             {findOn && finding ? (
               <div className="caprow findbar">
                 <span className="findfield"><IconSearch /><input type="search" id="list-find" maxLength={80} autoComplete="off" autoFocus value={find}
                   placeholder={t("lists.findInList")} aria-label={t("lists.findInList")} onChange={e => setFind(e.target.value)} /></span>
                 <button className="linkbtn" id="list-find-cancel" type="button" onClick={() => { setFinding(false); setFind(""); }}>{t("common.cancel")}</button>
               </div>
-            ) : (
-              <div className="caprow">
-                <button className={"chip" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}><IconMic />{t("lists.talkToAdd")}</button>
-                <label className="chip" htmlFor="add-photo" {...pickerProps("add-photo")}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
-                  {t("lists.photoToAdd")}
-                </label>
-                {findOn ? <button className="chip findchip" id="list-find-open" type="button" aria-label={t("lists.findInList")} onClick={() => setFinding(true)}><IconSearch /></button> : null}
-              </div>
-            )}
+            ) : null}
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
@@ -1107,6 +1154,7 @@ export function Lists() {
 
           <div id="list-startbar" className="startbar" hidden={!startBar}>
             <button id="list-hunt" className="btn primary wide" type="button" onClick={() => (shoppingHere ? setDoneStep("ask") : begin())}>{shoppingHere ? (open.length ? t("lists.doneShoppingLeft", { count: open.length }) : t("lists.doneShoppingAll")) : t("lists.startShoppingItem", { count: open.length })}</button>
+            {tickLink ? <button id="list-tick-link" className="linkbtn startlink" type="button" onClick={tickAsIShop}>{t("lists.tickAsIShop")}</button> : null}
           </div>
         </div>
       )}

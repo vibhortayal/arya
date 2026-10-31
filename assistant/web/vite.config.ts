@@ -11,7 +11,7 @@ import { VitePWA } from "vite-plugin-pwa";
  * /assets/ images. */
 const API = process.env.ARYA_API || "http://localhost:8000";
 const PROXY = ["/api", "/auth", "/decode", "/import", "/eyes", "/assets", "/models", "/vendor", "/icons", "/mcp",
-  "/scene.js", "/manifest.json", "/auth-callback.js"];
+  "/scene.js", "/boot.js", "/manifest.json", "/auth-callback.js"];
 
 export default defineConfig({
   base: "/",

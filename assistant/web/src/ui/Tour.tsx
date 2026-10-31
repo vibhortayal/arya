@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
   type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "../i18n";
+import { motionOff } from "../lib/motion";
 
 /* Coach-mark tours (first run #153; reused by other tours).
  *
@@ -90,7 +91,7 @@ export function tourLayout(r: Box, vw: number, vh: number, placement: TourStep["
 
 const resolve = (t: TourStep["target"]) => (typeof t === "function" ? t() : document.querySelector(t));
 const FOCUSABLE = "button:not([disabled])";
-const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
+const reduced = motionOff;
 
 function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () => void; onSkip: () => void }) {
   const { t } = useTranslation();

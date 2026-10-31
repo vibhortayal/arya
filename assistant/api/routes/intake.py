@@ -5,7 +5,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
-from api import state
+from api import state, stores
 from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, extract_pdf_text,
                                 normalize_costco_json)
 from api.demo_guard import _is_demo
@@ -14,12 +14,18 @@ from api.deps import _budget_guard, _json_body, _json_obj, new_client
 router = APIRouter()
 
 
+async def _find_stores(*receipts):
+    """Name the receipts' stores through Google Places before filing."""
+    await run_in_threadpool(stores.resolve_merchants, [r.get("merchant") for r in receipts])
+
+
 @router.post("/import/costco-json")
 async def import_costco_json(req: Request):
     obj = await _json_body(req)
     if not isinstance(obj, dict) or "itemArray" not in obj:
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
+    await _find_stores(dec)
     state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, new_client())
     return dec
@@ -31,6 +37,7 @@ async def import_bulk(req: Request):
     if not isinstance(objs, list):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
+    await _find_stores(*decs)
     added = state.add_receipts(decs)
     await run_in_threadpool(state.judge_pending, new_client())
     return {"received": len(decs), "added": added, "total_receipts": len(state.receipts())}
@@ -44,6 +51,7 @@ async def decode_text_route(req: Request):
     _budget_guard()
     client = new_client()
     dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
+    await _find_stores(dec)
     state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, new_client())
     return dec
@@ -72,6 +80,7 @@ async def intake_order_text(req: Request):
     client = new_client()
     dec = await run_in_threadpool(decode_order_text, text, client)
     _need_receipt_date(dec)
+    await _find_stores(dec)
     state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, new_client())
     return {"receipt_id": dec["receipt_id"], "merchant": dec["merchant"],
@@ -117,6 +126,7 @@ async def intake_structured(req: Request):
            "lines": lines, "subtotal": body.get("subtotal"),
            "tax": body.get("tax"), "total": body.get("total"),
            "totals_reconcile": reconcile, "image_ref": None}
+    await _find_stores(dec)
     added = state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, new_client())
     # The ledger counts a line only when it has a sku, so a line
@@ -195,6 +205,7 @@ async def decode_pdf(req: Request):
         # (the hunt doors settle by its id) and file nothing twice.
         return {"added": 0, "duplicate": True,
                 "total_receipts": len(state.receipts()), "receipt": dup}
+    await _find_stores(receipt)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, "application/pdf")})
     if not added:
@@ -239,6 +250,7 @@ async def decode_photo_route(req: Request):
     if dup is not None:
         return {"added": 0, "duplicate": True,
                 "total_receipts": len(state.receipts()), "receipt": dup}
+    await _find_stores(receipt)
     added = state.add_receipts(
         [receipt], media={receipt["receipt_id"]: (body, media)})
     if not added:

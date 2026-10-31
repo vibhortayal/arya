@@ -19,6 +19,8 @@ type Nav = {
   /* Full-screen modes (the hunt) hide the tab bar, avatar and demo bar. */
   chrome: boolean;
   setChrome: (on: boolean) => void;
+  /* How many views are stacked: Back from 1 leaves the app. */
+  depth: number;
 };
 
 const Ctx = createContext<Nav | null>(null);
@@ -83,8 +85,8 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
   // (QA 2026-10-28).
   useEffect(() => { window.scrollTo(0, 0); }, [top.view, top.key]);
 
-  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, reset, back, chrome, setChrome }),
-    [top, show, replace, reset, back, chrome]);
+  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, reset, back, chrome, setChrome, depth: stack.length }),
+    [top, show, replace, reset, back, chrome, stack.length]);
 
   // Test and parity hook: tools/parity.mjs opens screens directly.
   useEffect(() => { (window as any).__aryaShow = show; }, [show]);

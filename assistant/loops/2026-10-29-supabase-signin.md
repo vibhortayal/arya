@@ -20,7 +20,7 @@ Owner's word: "lets add supabase auth. That way we can capture real users"
 - Known gap: an existing password account named like an email is claimed
   by whoever proves that email. Fine while registration is locked.
 - Owner steps in the Supabase dashboard: enable Email and Google
-  providers; add `https://arya-pilot.duckdns.org/auth/callback` to the
+  providers; add `https://arya.teamnightshift.org/auth/callback` to the
   redirect allow-list; edit the Magic Link email template to include
   `{{ .Token }}` so the code shows.
 - Tests: suite green (6 new). SW arya-v75.

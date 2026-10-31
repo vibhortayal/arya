@@ -22,3 +22,9 @@ export function useInstallPrompt(): { prompt: any; take: () => any } {
   }, []);
   return { prompt: deferred, take: () => { const ev = deferred; deferred = null; notify(); return ev; } };
 }
+
+/* Browsers inside other apps (Instagram, Facebook, Mail links and so on)
+ * cannot add to the Home Screen. User-agent clues are a guess, so the
+ * sheet only hints; it never blocks. */
+export const inAppBrowser = () =>
+  /FBAN|FBAV|FB_IAB|Instagram|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|MicroMessenger|; wv\)/i.test(navigator.userAgent);

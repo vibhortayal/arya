@@ -16,7 +16,7 @@ def price_item(item_id: str, at: str = ""):
     so "cheaper" compares against it."""
     iid = state.group_map().get(item_id, item_id)
     d = state.derived()
-    nm = state.names()
+    nm = state.names_with_receipts()
     out = prices.item_prices(iid, d, at=at or None)
     out["similar"] = prices.similar_items(iid, d, nm)
     size = prices.size_of(nm.get(iid, ""))
@@ -31,7 +31,7 @@ def price_item(item_id: str, at: str = ""):
 def price_insights():
     from api.deps import _d_today
     d = state.derived()
-    return prices.insights(d, state.flags(), state.names(), today=_d_today().isoformat())
+    return prices.insights(d, state.flags(), state.names_with_receipts(), today=_d_today().isoformat())
 
 
 def _settings():

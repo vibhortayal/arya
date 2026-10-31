@@ -4,17 +4,27 @@ import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
 import { useNav } from "../app/nav";
-import { IconMic, IconSpeaker } from "../ui/icons";
-import { languageToast, offerFor, offerRefused, refuseOffer, voiceLang } from "../lib/language";
+import { IconMic } from "../ui/icons";
+import { pickerProps } from "../ui/picker";
+import { decode } from "../ui/AddReceiptSheet";
+import { languageToast, offerFor, offerRefused, refuseOffer } from "../lib/language";
 import "../ui/language.css";
 import { t, useTranslation } from "../i18n";
+import { EditList, EditTitle } from "../ui/EditList";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
  * An "offer" line is the one-time "Reply in <language> from now on?"
  * card (assistant/docs/MULTILINGUAL-ASK.md): on Auto, after a reply to
  * a non-English message; at most once per session, never after No. */
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err"; text: string; code?: string };
+/* Photos (owner 2026-10-30, mockup NHfgHczqWEcnSvUGpKd3Rm): the Photo chip
+ * opens the camera, then Arya asks what to do with it. Add to my list,
+ * File a receipt, Check my fridge and Read the date use the readers that
+ * already exist; Ask about this photo sends it once with the next
+ * question and keeps nothing. No voice out: Arya's replies are text. */
+type Chip = { label: string; run: () => void };
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working"; text: string; code?: string;
+  url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
 const history: Msg[] = [];
@@ -24,7 +34,6 @@ let offered = false;
 let epoch = 0;
 clearOnSignOut(() => {
   lines.length = 0; history.length = 0; epoch++; offered = false;
-  if ("speechSynthesis" in window) speechSynthesis.cancel();
 });
 /* Suggested questions: en.json keys, sent as the question text. */
 /* Starter chips come from the household's own data (relevant cards,
@@ -63,29 +72,59 @@ export function askChips(h: ChipHome, today: Date = new Date()): string[] {
 export const wantsMapStore = (q: string) =>
   /\b(map|mapping|scan|scanning|teach)\b/i.test(q) && /\b(store|shop|aisles?|shelves|supermarket)\b/i.test(q) && !/\breceipts?\b/i.test(q);
 
-const readSpeak = () => { try { return localStorage.getItem("arya-speak") === "1"; } catch { return false; } };
+/* A photo asked about is shrunk first: the question and the picture go in
+ * one request, so it stays well under the server's cap. */
+export async function shrinkPhoto(f: File, max = 1600): Promise<{ media_type: string; data: string }> {
+  const b64 = (blob: Blob) => new Promise<string>((ok, no) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).split(",")[1] || "");
+    r.onerror = () => no(r.error);
+    r.readAsDataURL(blob);
+  });
+  try {
+    const bmp = await createImageBitmap(f);
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise<Blob | null>(ok => c.toBlob(ok, "image/jpeg", 0.85));
+    if (blob) return { media_type: "image/jpeg", data: await b64(blob) };
+  } catch { /* fall through to the original */ }
+  if (f.size > 5_000_000) throw new Error("photo too large");
+  return { media_type: f.type || "image/jpeg", data: await b64(f) };
+}
+type ExpiryRead = { readable: boolean; name?: string | null; date?: string | null; kind?: string; match?: { item_id: string; name: string } | null };
+const readJson = async (r: Response) => {
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
+  return r.json();
+};
+const post_photo = (url: string, f: File) =>
+  fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
 
 export function Chat() {
   const { t } = useTranslation();
-  const { language, languages, setLanguage } = useSession();
+  const { language, languages, setLanguage, layouts = {}, saveLayout } = useSession();
+  // Edit mode (card library, 2026-10-30): your own quick questions.
+  const [editing, setEditing] = useState(false);
+  const [newQ, setNewQ] = useState("");
   const { toast } = useToast();
   const nav = useNav();
   const [log, setLog] = useState<Line[]>(() => lines.slice());
   const [text, setText] = useState("");
-  const [speakOn, setSpeakOn] = useState(readSpeak);
+  const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [listening, setListening] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [home, setHome] = useState<ChipHome>(null);
   useEffect(() => { let live = true; get<ChipHome>("/api/home").then(h => live && setHome(h), () => {}); return () => { live = false; }; }, []);
   const capture = useRef<Capture | null>(null);
-  const speakRef = useRef(speakOn);
+  const job = useRef(0);
+  const picker = useRef<HTMLInputElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const naming = useRef<((name: string) => Promise<void>) | null>(null);
   const logEl = useRef<HTMLDivElement>(null);
-  speakRef.current = speakOn;
 
-  useEffect(() => {
-    (logEl.current?.lastElementChild as HTMLElement | null | undefined)?.scrollIntoView?.({ block: "end" });
-  }, [log]);
+  const toEnd = () => (logEl.current?.lastElementChild as HTMLElement | null | undefined)?.scrollIntoView?.({ block: "end" });
+  useEffect(() => { toEnd(); }, [log]);
 
   // The mic never outlives the screen.
   useEffect(() => () => { capture.current?.cancel(); capture.current = null; }, []);
@@ -106,18 +145,83 @@ export function Chat() {
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
   };
 
-  const toggleSpeak = () => {
-    const next = !speakOn;
-    setSpeakOn(next);
-    try { localStorage.setItem("arya-speak", next ? "1" : "0"); } catch { /* ignore */ }
-    if (!next && "speechSynthesis" in window) speechSynthesis.cancel();
+  const drop = (l: Line) => { const i = lines.indexOf(l); if (i >= 0) lines.splice(i, 1); };
+
+  /* ---- Photo: pick, choose, run ---- */
+  const onPhoto = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const f = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { toast(t("ask.photoNotImage")); return; }
+    add({ kind: "photo", text: "", url: URL.createObjectURL(f) }, { kind: "choose", text: "", file: f });
   };
-  const speak = (t: string) => {
-    if (!speakRef.current || !("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = voiceLang(language, t);
-    speechSynthesis.speak(u);
+  const failed = (w: Line, retry: () => void) => {
+    drop(w);
+    add({ kind: "arya", text: t("ask.photoFail"), sub: t("ask.photoFailBody"), chips: [{ label: t("ask.tryAnotherPhoto"), run: retry }] });
+  };
+  /* One reader at a time; Cancel (or the next photo) makes a late answer
+   * from an older job land nowhere. */
+  const run = async (c: Line, kind: "list" | "receipt" | "fridge" | "date") => {
+    const f = c.file!;
+    drop(c);
+    const w: Line = { kind: "working", text: t("ask.reading." + kind), job: ++job.current };
+    add(w);
+    const mine = epoch, jid = job.current;
+    const live = () => mine === epoch && jid === job.current;
+    const done = (...l: Line[]) => { if (!live()) return; drop(w); add(...l); };
+    try {
+      if (kind === "list") {
+        const out = await post_photo("/api/list/from-photo", f) as { kind: string; names: string[]; added: number };
+        if (out.kind === "receipt") {
+          done({ kind: "arya", text: t("ask.looksLikeReceipt"), chips: [{ label: t("ask.opt.receipt"), run: () => run({ kind: "choose", text: "", file: f }, "receipt") }] });
+        } else if (!out.added) {
+          done({ kind: "arya", text: t("ask.noListFound"), sub: t("ask.nothingChanged") });
+        } else {
+          done({ kind: "arya", text: t("ask.addedItems", { names: out.names.join(", ") }) });
+        }
+      } else if (kind === "receipt") {
+        const out = await decode(f);
+        const rec = out.receipt || {};
+        if (out.demo) done({ kind: "arya", text: t("common.receiptFile.demo") });
+        else if (out.duplicate) done({ kind: "arya", text: t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: rec.purchased_at ? String(rec.purchased_at).slice(0, 10) : "" }) });
+        else done({ kind: "arya", text: t("common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length }) });
+      } else if (kind === "fridge") {
+        const rec = await post_photo("/eyes/photo", f) as { sightings?: { name: string }[] };
+        const names = (rec.sightings || []).map(x => x.name);
+        done(names.length
+          ? { kind: "arya", text: t("ask.fridgeSaw", { names: names.join(", ") }), sub: t("ask.fridgeKept") }
+          : { kind: "arya", text: t("ask.fridgeNone"), sub: t("ask.fridgeKept") });
+      } else {
+        const rd = await post_photo("/api/expiry/read", f) as ExpiryRead;
+        if (!rd.readable || !rd.date) done({ kind: "arya", text: t("ask.dateNone"), sub: t("ask.nothingChanged"), chips: [{ label: t("ask.tryAnotherPhoto"), run: () => picker.current?.click() }] });
+        else {
+          const when = new Date(rd.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+          const name = rd.match?.name || rd.name || t("ask.thisItem");
+          const track = async (nm: string | null | undefined) => {
+            try {
+              await post("/api/expiry/save", { item_id: rd.match?.item_id, name: nm, date: rd.date, kind: rd.kind });
+              const typed = !!naming.current;
+              naming.current = null;
+              add({ kind: "sys", text: t("ask.dateTracked", { name: (typed && nm) || name, date: when }) });
+            } catch (e) { add({ kind: "sys", text: t("ask.trackFail") }); }
+          };
+          done({ kind: "arya", text: t("ask.dateRead", { name, date: when }), chips: [{ label: t("ask.trackIt"), run: async () => {
+            if (rd.match?.item_id || rd.name) await track(rd.name);
+            else { naming.current = track; add({ kind: "arya", text: t("ask.nameIt") }); input.current?.focus(); }
+          } }] });
+        }
+      }
+    } catch (e) {
+      if (live()) failed(w, () => picker.current?.click());
+    }
+  };
+  const cancelWork = (w: Line) => { job.current++; drop(w); setLog(lines.slice()); };
+  const askAbout = (c: Line) => {
+    drop(c);
+    const p = lines.filter(l => l.kind === "photo").pop();
+    setPending({ file: c.file!, url: p?.url || URL.createObjectURL(c.file!) });
+    setLog(lines.slice());
+    input.current?.focus();
   };
 
   /* A failed answer leaves a "Try again" chip that asks the same question
@@ -131,15 +235,19 @@ export function Chat() {
     const q = raw.trim();
     if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
+    if (naming.current) { const go = naming.current; add({ kind: "me", text: q }); await go(q.slice(0, 80)); return; }
     if (wantsMapStore(q)) {
       add({ kind: "me", text: q }, { kind: "map", text: t("ask.mapStoreReply") });
       return;
     }
     history.push({ role: "user", content: q });
+    const pic = again ? null : pending;
+    if (pic) { setPending(null); add({ kind: "photo", text: "", url: pic.url }); }
     if (!again) add({ kind: "me", text: q }); else setLog(lines.slice());
     const mine = epoch;
     try {
-      const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", { messages: history });
+      const image = pic ? await shrinkPhoto(pic.file) : undefined;
+      const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", image ? { messages: history, image } : { messages: history });
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
@@ -148,7 +256,6 @@ export function Chat() {
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
         ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
-      speak(res.reply);
     } catch (e) {
       if (mine !== epoch) return;
       history.pop();
@@ -184,14 +291,55 @@ export function Chat() {
     }
   };
 
+  /* The quick questions: Arya's own (askChips) until the person edits
+   * them; then theirs, kept as they arranged them. */
+  const chips = layouts.ask?.chips ?? askChips(home);
+  const ideas = [...askChips(home), t("ask.ideas.useSoon"), t("ask.ideas.dinners"), t("ask.ideas.cheapest")].filter((q, k, a) => !chips.includes(q) && a.indexOf(q) === k);
+  const saveChips = (next: string[] | null, msg?: string) => {
+    const prev = layouts.ask?.chips ?? null;
+    saveLayout("ask", { chips: next }).catch(e => toast(e instanceof Error ? e.message : String(e)));
+    if (msg) toast(msg, { action: t("common.undo"), onAction: () => { saveLayout("ask", { chips: prev }).catch(() => {}); } });
+  };
+  function addQ(ev: FormEvent) {
+    ev.preventDefault();
+    const q = newQ.trim().slice(0, 120);
+    if (!q || chips.includes(q)) return;
+    saveChips([...chips, q], t("edit.added", { name: q }));
+    setNewQ("");
+  }
+
+  // Help's "Still stuck?" and its ask box open Ask with the question
+  // already sent. Once per arrival (nav.key changes on every show()).
+  const asked = useRef(-1);
+  useEffect(() => {
+    const q = nav.params.ask;
+    if (typeof q !== "string" || !q.trim() || asked.current === nav.key) return;
+    asked.current = nav.key;
+    void send(q);
+  }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
-      <h1 className="largetitle">{t("common.askArya")}</h1>
+      {log.length === 0
+        ? <EditTitle id="ask-editbtn" title={t("common.askArya")} editTitle={t("ask.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
+        : <h1 className="largetitle">{t("common.askArya")}</h1>}
+      {editing && log.length === 0 ? (
+        <>
+          <EditList id="ask-edit" on={chips} off={ideas} name={q => q} sub={() => ""} desc={() => ""}
+            hint={t("ask.editHint")} moreTitle={t("ask.ideasTitle")}
+            onChange={saveChips} onReset={() => saveChips(null)} />
+          <form id="ask-addq" className="addq" onSubmit={addQ}>
+            <input type="text" id="ask-newq" value={newQ} maxLength={120} placeholder={t("ask.addQuestion")} aria-label={t("ask.addQuestion")}
+              onChange={e => setNewQ(e.target.value)} />
+            <button type="submit" className="btn primary" disabled={!newQ.trim()}>{t("common.add")}</button>
+          </form>
+        </>
+      ) : <>
       <div id="chat-log" ref={logEl}>
         {log.length === 0 ? (
           <div id="chat-empty">
             <p className="muted">{t("ask.askAboutYourListYour")}</p>
-            {askChips(home).map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
+            {chips.map(q => <button key={q} className="chip" type="button" data-ask={q} onClick={() => send(q)}>{q}</button>)}
             <button id="ask-map-store" className="chip" type="button" onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
           </div>
         ) : log.map((l, i) => l.kind === "offer" ? (
@@ -215,17 +363,58 @@ export function Chat() {
             <p>{l.text}</p>
             <button className="chip" type="button" data-ask-retry onClick={() => retry(l.code!)}>{t("ask.tryAgain")}</button>
           </div>
+        ) : l.kind === "photo" ? (
+          <div key={i} className="bubble me photo"><img src={l.url} alt={t("ask.yourPhoto")} onLoad={toEnd} /></div>
+        ) : l.kind === "choose" ? (
+          <div key={i} className="bubble arya choose" id="photo-choose">
+            <p><b>{t("ask.gotPhoto")}</b> {t("ask.whatToDo")}</p>
+            {(["list", "receipt", "fridge", "date"] as const).map(k => (
+              <button key={k} type="button" className="pick" data-photo-do={k} onClick={() => run(l, k)}>
+                <b>{t("ask.opt." + k)}</b><span className="muted">{t("ask.opt." + k + "Sub")}</span>
+              </button>
+            ))}
+            <button type="button" className="pick" data-photo-do="ask" onClick={() => askAbout(l)}>
+              <b>{t("ask.opt.ask")}</b><span className="muted">{t("ask.opt.askSub")}</span>
+            </button>
+            <p className="muted small">{t("ask.chooserNote")}</p>
+            <button type="button" className="linkbtn tall" data-photo-never onClick={() => { drop(l); setLog(lines.slice()); }}>{t("ask.neverMind")}</button>
+          </div>
+        ) : l.kind === "working" ? (
+          <div key={i} className="bubble arya" role="status">
+            <p>{l.text}</p>
+            <p className="muted small">{t("ask.workingNote")}</p>
+            <button type="button" className="linkbtn tall" data-photo-cancel onClick={() => cancelWork(l)}>{t("common.cancel")}</button>
+          </div>
+        ) : l.chips || l.sub ? (
+          <div key={i} className="bubble arya">
+            <p>{l.text}</p>
+            {l.sub ? <p className="muted small">{l.sub}</p> : null}
+            {(l.chips || []).map(c => <button key={c.label} type="button" className="chip tall" data-photo-chip onClick={c.run}>{c.label}</button>)}
+          </div>
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
       <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); send(text); }}>
-        <button id="btn-mic" type="button" className={"iconbtn" + (listening ? " listening" : "")} aria-label={t("ask.speakYourMessage")} onClick={mic}><IconMic /></button>
-        <input type="text" id="chat-input" ref={input} placeholder={t("common.askArya")} autoComplete="off" aria-label={t("ask.message")}
+        {pending ? (
+          <div className="spchip" id="ask-photo-strip">
+            <img src={pending.url} alt="" />
+            <span className="grow"><b>{t("ask.photoWord")}</b> <span className="muted">· {t("ask.notSaved")}</span></span>
+            <button type="button" className="linkbtn tall" data-photo-remove onClick={() => setPending(null)}>{t("ask.removePhoto")}</button>
+          </div>
+        ) : null}
+        <input type="text" id="chat-input" ref={input} placeholder={pending ? t("ask.askAboutPhoto") : t("common.askArya")} autoComplete="off" aria-label={t("ask.message")}
           value={text} onChange={e => setText(e.target.value)} />
-        <button id="btn-speak" type="button" className={"iconbtn" + (speakOn ? " on" : "")} aria-label={t("ask.toggleSpokenReplies")}
-          aria-pressed={speakOn} onClick={toggleSpeak}><IconSpeaker /></button>
-        <button type="submit" className="btn primary" id="chat-send">{t("common.send")}</button>
+        <button type="submit" className="btn primary" id="chat-send" disabled={!text.trim() && !pending}>{t("common.send")}</button>
+        <div className="caprow">
+          <button id="btn-mic" type="button" className={"chip" + (listening ? " listening" : "")} aria-label={listening ? t("ask.stopTalking") : t("ask.speakYourMessage")} onClick={mic}><IconMic />{listening ? t("ask.stop") : t("ask.talk")}</button>
+          <label className="chip" htmlFor="ask-photo" {...pickerProps("ask-photo")}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
+            {t("ask.photoWord")}
+          </label>
+          <input type="file" id="ask-photo" ref={picker} accept="image/*" hidden onChange={onPhoto} />
+        </div>
       </form>
       <p id="voice-note" className="muted" hidden={note === null}>{note}</p>
+      </>}
     </>
   );
 }

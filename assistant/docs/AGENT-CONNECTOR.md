@@ -19,7 +19,7 @@ source of truth.
    client; the token works with any MCP client.)
 2. Add Arya as a remote MCP server in your assistant:
 
-   - URL: `https://arya-pilot.duckdns.org/api/mcp`
+   - URL: `https://arya.teamnightshift.org/api/mcp`
    - Transport: streamable HTTP (stateless; one POST per message)
    - Header: `Authorization: Bearer <your token>`
 
@@ -49,6 +49,8 @@ source of truth.
 | `check_item` | Check an item off (or uncheck it) by name. |
 | `file_receipt` | File a receipt the agent has already read. Arya verifies the arithmetic, files the lines, and learns from them; it spends no perception tokens of its own. |
 | `get_receipts` | Recent filed receipts: merchant, date, total. |
+
+`get_list` and `add_items` work on one flat list and take no list id. The Lists API (`/api/v1`, see `docs/API.md`) is list-aware: it reads and writes each list by id.
 
 ## The showcased client
 

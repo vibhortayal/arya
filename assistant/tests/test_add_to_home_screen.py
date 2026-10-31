@@ -8,13 +8,14 @@ from tests import frontend
 class TestAddToHomeScreen(unittest.TestCase):
     def test_wired_into_the_shell(self):
         a2hs, today = frontend.src("ui/A2hs.tsx"), frontend.src("screens/Today.tsx")
-        # The card on Today, above Running low; the row in Settings.
+        # The card on Today, above the cards (Running low first by
+        # default, customizable Today); the row in Settings.
         self.assertIn("<A2hsCard", today)
         self.assertIn("<A2hsRow", frontend.src("screens/Profile.tsx"))
         self.assertIn('id="btn-a2hs"', a2hs)
         self.assertIn('id="a2hs-sheet"', a2hs)
         self.assertIn("data-a2hs-x", a2hs)  # the card's close
-        self.assertLess(today.index('id="today-a2hs"'), today.index('id="today-low"'))
+        self.assertLess(today.index('id="today-a2hs"'), today.index("{on.map(id =>"))
 
     def test_install_and_close_meet_the_44px_touch_floor(self):
         # Pilot 2026-10-29: Install was 38 px and the x 36 px.
@@ -26,7 +27,7 @@ class TestAddToHomeScreen(unittest.TestCase):
         sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</ol>")[0]
         self.assertIn("Add to Home Screen", sheet)
         self.assertIn("Open as Web App", sheet)
-        self.assertIn("plain Safari tab", sheet)
+        self.assertIn("plain browser tab", sheet)
 
     def test_when_it_shows(self):
         js = frontend.src("ui/A2hs.tsx")
@@ -44,7 +45,7 @@ class TestAddToHomeScreen(unittest.TestCase):
         sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</Sheet>")[0]
         self.assertIn("Get the Arya app", sheet)
         self.assertIn("Free, no app store.", sheet)
-        self.assertIn("Tip: sign in from the Home Screen app. iPhone keeps it separate from Safari.", sheet)
+        self.assertIn("Tip: sign in from the Home Screen app. iPhone keeps it separate from your browser.", sheet)
         self.assertNotIn("pwa", frontend.en()["a2hs"].__repr__().lower())
 
     def test_android_runs_the_native_prompt_iphone_opens_steps(self):

@@ -250,7 +250,7 @@ function draw(g: G, H: number, c: Card, o: Opts) {
   g.fillStyle = GREY; g.font = "600 32px system-ui, sans-serif";
   g.fillText(creditLine(o), W / 2, H - 96);
   g.font = "500 26px system-ui, sans-serif";
-  g.fillText("arya-pilot.duckdns.org", W / 2, H - 56);
+  g.fillText("arya.teamnightshift.org", W / 2, H - 56);
 }
 const toBlob = (cv: HTMLCanvasElement, type: string) => new Promise<Blob | null>(r => cv.toBlob(r, type));
 async function paintLook(c: Card, o: Opts, look: string) {

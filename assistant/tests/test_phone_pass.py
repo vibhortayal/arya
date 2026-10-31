@@ -11,16 +11,6 @@ from tests.frontend import read, src
 
 
 class TestPhonePassBatch(unittest.TestCase):
-    def test_store_picker_tap_advances_and_folds(self):
-        js = src("screens/Store.tsx")
-        self.assertNotIn('id="st-next"', js)
-        # Receipt stores: top 3, the rest behind the fold.
-        self.assertIn("const shown = histAll ? hist : hist.slice(0, 3);", js)
-        self.assertIn("Show all {{histCount}} stores", js)
-        self.assertIn('data-histall="1"', js)
-        # The typed store starts the plan on Enter.
-        self.assertIn('onKeyDown={ev => { if (ev.key === "Enter") { ev.preventDefault(); pickStore(name, selId); } }}', js)
-
     def test_check_the_list_is_skippable(self):
         js = src("screens/Optimize.tsx")
         self.assertIn('id="opt-skip"', js)

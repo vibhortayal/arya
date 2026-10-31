@@ -1,5 +1,5 @@
 /* Start shopping goes straight into the store (UI/UX pass 2026-10-30):
- * no one-option sheet, no lobby, no second "Where are you shopping?"
+ * past the how-to-shop sheet, no lobby, no second "Where are you shopping?"
  * for a list that already names its store ("Costco" finds "Costco
  * Wholesale"). In the store, the strip chips, the list button and the
  * HUD icons are 44pt tap targets. */
@@ -14,7 +14,9 @@ export default async function (page, base) {
   await card.click();
   await page.waitForSelector("#list-page");
   await page.click("#list-hunt");
-  if (await page.$("#shop-sheet")) throw new Error("Start shopping should skip the sheet");
+  // The how-to-shop sheet (Quest or Just my list) asks until a pick is saved.
+  const quest = page.locator('#shop-sheet [data-shop="quest"]');
+  if (await quest.waitFor({ timeout: 3000 }).then(() => true, () => false)) await quest.click();
   const v = page.locator("#view-community");
   await page.waitForSelector('#view-community .qg[data-screen="play"]', { timeout: 15000 });
   if (await v.locator(".qg-pick").count()) throw new Error("the store was asked for again");

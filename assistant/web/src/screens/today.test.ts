@@ -1,4 +1,4 @@
-import { emptyListsLine, findingLine, staleThrough, storeAlerts, todaysTip } from "./Today";
+import { emptyListsLine, findingLine, nextTrip, staleThrough, storeAlerts, todaysTip, watchRows } from "./Today";
 
 /* Today's Store alerts rows, as the plain-JS app's node harness ran
  * app.js storeAlertRows (tests/test_list_first.py TestStoreAlerts). */
@@ -75,5 +75,25 @@ describe("relevant cards (owner 2026-10-30)", () => {
     expect(staleThrough("2026-10-27", "2026-10-30")).toBe(false);
     expect(staleThrough("2026-10-20", "2026-10-30")).toBe(true);
     expect(staleThrough(undefined, "2026-10-30")).toBe(false);
+  });
+});
+
+describe("Price watch and Next trip cards", () => {
+  const h = { price_by_store: { s: { "Trader Joe's": { median: 3.99 }, Safeway: { median: 5.49 } }, m: { Costco: { median: 4 }, Safeway: { median: 3 } } } };
+  test("watch rows keep movers of 5% or more, with the cheaper store", () => {
+    const ins = { basket: { since_month: "June", movers: [{ item_id: "s", name: "Sourdough", pct: 6.6 }, { item_id: "x", name: "Rice", pct: 12 }, { name: "Salt", pct: 2 }] } };
+    const rows = watchRows(ins, h);
+    expect(rows.map(r => r.name)).toEqual(["Sourdough", "Rice"]);
+    expect(rows[0]).toMatchObject({ pct: "6.6%", cheaperAt: "Trader Joe's" });
+    expect(rows[1]).toMatchObject({ pct: "12%", cheaperAt: null });
+    expect(watchRows(null, h)).toEqual([]);
+  });
+  test("next trip is the fullest list, priced at its own store first", () => {
+    const cards = [{ id: "a", name: "Safeway", items: [{ item_id: "s" }] }, { id: "b", name: "Costco", items: [{ item_id: "m" }, { item_id: "z" }] }];
+    expect(nextTrip(cards, [{ id: "b", stores: ["Costco"] }], h)).toEqual({ id: "b", name: "Costco", count: 2, cost: 4 });
+    // no store on the list: the cheapest price
+    expect(nextTrip(cards, [], h)?.cost).toBe(3);
+    expect(nextTrip([{ id: "c", name: "New", items: [{ item_id: "z" }] }], [], h)?.cost).toBeNull();
+    expect(nextTrip([], [], h)).toBeNull();
   });
 });

@@ -284,7 +284,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
         <button className="qg-cam" onClick={recenter} aria-label={overview ? "Follow my shopper" : "See the whole store"} aria-pressed={overview}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 6.5l2.2 5.5L12 17.5 9.8 12z" fill="currentColor" /></svg>
         </button>
-        {gestureHint && <div className="qg-gesture" role="status">Pinch to zoom · two fingers to turn</div>}
+        {gestureHint && <div className="qg-gesture" role="status">{window.matchMedia?.("(pointer: coarse)")?.matches ? "Pinch to zoom · two fingers to turn" : "Scroll to zoom"}</div>}
         {nudge && (
           <div className={"qg-nudge " + nudge.state} role="status">
             <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
@@ -532,10 +532,10 @@ function RouteEdit({ trip, dispatch, onDone }: { trip: Trip; dispatch: (a: Actio
 
 export function HowTo() {
   const steps: [string, string, string][] = [
-    ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Tap Next, or any item card, and your shopper walks there."],
-    ["basket.webp", "Look first, then choose", "At the shelf, pick Grab it, Not here, Substitute or Skip. Only a grab earns points; skipping never costs anything."],
-    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it: you just mapped it for everyone."],
-    ["egg.webp", "Golden item", "One item each trip is golden and worth double. Nothing to lose, no timer, no lives."],
+    ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Your shopper walks to the next item by itself; tap any picture in your list to go there instead."],
+    ["basket.webp", "Look first, then choose", "At the shelf, tap Got it, Can't find it or Later. Only Got it earns points; Later and Can't find it never cost anything."],
+    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you just mapped it for everyone."],
+    ["egg.webp", "Golden item", "Each trip, one item from your own list is picked at random and worth double. Arya never adds items or shows ads. No timer, no lives."],
   ];
   return (
     <div className="qg-howto">
@@ -564,10 +564,10 @@ function Mission({ trip, onStart }: { trip: Trip; onStart: () => void }) {
         {g && (
           <div className="qg-mission-gold">
             <img src={charArt(g.art)} alt="" />
-            <span><b>★ Golden: {g.name}</b>Worth double today.</span>
+            <span><b>★ Golden: {g.name}</b>Picked at random from your list. Worth double.</span>
           </div>
         )}
-        <p className="qg-p" style={{ marginTop: 12 }}>No timer and nothing to lose. Shop at your own pace.</p>
+        <p className="qg-p" style={{ marginTop: 12 }}>Arya never adds products or ads. No timer, nothing to lose.</p>
         <button className="qg-btn primary big" onClick={onStart}>Let's go</button>
       </motion.div>
     </motion.div>

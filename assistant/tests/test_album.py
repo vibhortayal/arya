@@ -131,8 +131,15 @@ class TestPages(unittest.TestCase):
         add("Durian")
         self.assertEqual(page(self.album.view(today=NOV), "Other finds")["count"], 1)
         better = aisles_index_with(("Produce", ["durian"]))
-        with mock.patch("api.aisles._INDEX", better):
-            v = self.album.view(today=NOV)
+        from api import aisles
+        # _classify is memoized on the text (#279): the swapped-in map must
+        # not see answers cached from the old one, nor leave its own behind.
+        aisles._classify.cache_clear()
+        try:
+            with mock.patch("api.aisles._INDEX", better):
+                v = self.album.view(today=NOV)
+        finally:
+            aisles._classify.cache_clear()
         self.assertEqual(page(v, "Produce")["count"], 1)
         self.assertIsNone(page(v, "Other finds"))
 
@@ -293,18 +300,25 @@ class TestChaptersAndFirstMapper(unittest.TestCase):
     def test_chapters_show_coverage_for_known_stores(self):
         from api import quest
         quest.create_session("Corner Store", "quest", [{"name": "Milk"}])
-        self.sm.add_segment("Corner Store", "Aisle 4", "left")
-        self.sm.add_segment("Corner Store", "Aisle 5", "left")
-        self.sm.ingest("Corner Store", "aisle-4:left", jpeg(1))
+        # No aisle number read yet: sections seen, never a percentage.
+        self.sm.add_segment("Corner Store", "Produce", "both")
+        self.sm.ingest("Corner Store", "produce:both", jpeg(1))
         ch = {c["store"]: c for c in self.album.chapters()}
         c = ch["Corner Store"]
-        self.assertEqual(c["pct"], 50)
+        self.assertIsNone(c["pct"])
         self.assertFalse(c["earned"])
-        self.assertEqual(c["text"], "Map all of Corner Store together: 50%. "
+        self.assertEqual(c["text"], "Map Corner Store together: 1 sections seen so far. "
                                     "Each shelf you add helps.")
         # My Stores are chapters too.
         self.assertIn("Trader Joe's", ch)
-        self.sm.ingest("Corner Store", "aisle-5:left", jpeg(2))
+        # "Aisle 1" sizes the store: 1 aisle + 6 outside departments.
+        self.sm.add_segment("Corner Store", "Aisle 1", "left")
+        self.sm.ingest("Corner Store", "aisle-1:left", jpeg(2))
+        c = {x["store"]: x for x in self.album.chapters()}["Corner Store"]
+        self.assertEqual(c["pct"], 29)
+        self.assertEqual(c["text"], "Map all of Corner Store together: 29%. "
+                                    "Each shelf you add helps.")
+        map_whole(self.sm)
         c = {x["store"]: x for x in self.album.chapters()}["Corner Store"]
         self.assertEqual(c["pct"], 100)
         self.assertTrue(c["earned"])
@@ -329,14 +343,22 @@ class TestChaptersAndFirstMapper(unittest.TestCase):
 
     def test_a_chapter_is_not_earned_by_someone_who_never_helped(self):
         from api import state
-        self.sm.add_segment("Corner Store", "Aisle 4", "left")
-        self.sm.ingest("Corner Store", "aisle-4:left", jpeg(1))
+        map_whole(self.sm)
         state.set_current_user("ben")
         from api import quest
         quest.create_session("Corner Store", "quest", [{"name": "Milk"}])
         c = {x["store"]: x for x in self.album.chapters()}["Corner Store"]
         self.assertEqual(c["pct"], 100)
         self.assertFalse(c["earned"])
+
+
+def map_whole(sm, store="Corner Store"):
+    """Every section of a one-aisle store: Aisle 1 plus the six
+    outside departments."""
+    for n, label in enumerate(["Aisle 1", "Produce", "Bakery", "Meat",
+                               "Deli", "Dairy", "Frozen"]):
+        sm.add_segment(store, label, "both")
+        sm.ingest(store, f"{sm.zone_key(label)}:both", jpeg(40 + n))
 
 
 def receipt(i, ok=True, rid=None):
