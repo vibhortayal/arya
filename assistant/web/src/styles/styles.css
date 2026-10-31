@@ -1923,6 +1923,9 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .devnav a { padding: 7px 10px; border-radius: 8px; color: var(--secondary); }
 .devnav a.on { background: var(--fill); color: var(--label); }
 .devmain { min-width: 0; }
+/* Room under the last section so Limits, Changelog and Not yet can scroll
+   up to the top when their link is used. */
+.devmain { padding-bottom: 80vh; }
 .devsec { scroll-margin-top: 16px; }
 .devh { font-size: 22px; letter-spacing: -0.02em; margin: 34px 0 4px; }
 .devlead { color: var(--secondary); margin: 0 0 10px; font-size: 15px; }

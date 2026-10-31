@@ -87,3 +87,10 @@ test("the interactive reference is linked", () => {
   const { container } = page();
   expect(container.querySelector(`a[href="${REF_PATH}"]`)).toBeTruthy();
 });
+
+test("using a link on the side list marks that section", () => {
+  const { container } = page();
+  const link = container.querySelector('.devnav a[href="#n"]') as HTMLElement;
+  fireEvent.click(link);
+  expect(link.getAttribute("aria-current")).toBe("true");
+});
