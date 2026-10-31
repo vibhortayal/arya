@@ -26,5 +26,6 @@ export const HELP_TOPICS: HelpTopic[] = [
   { id: "news", group: "how", steps: 3, notes: 2, opens: "home" },
   { id: "share", group: "how", steps: 3, notes: 2, opens: "profile" },
   { id: "usesoon", group: "how", steps: 4, notes: 1, opens: "powers" },
+  { id: "ai", group: "how", steps: 3, notes: 2, opens: "about" },
   { id: "customize", group: "how", steps: 3, notes: 2, opens: "home" },
 ];

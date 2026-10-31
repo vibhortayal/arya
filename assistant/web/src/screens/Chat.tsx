@@ -150,11 +150,17 @@ export function Chat() {
   const drop = (l: Line) => { const i = lines.indexOf(l); if (i >= 0) lines.splice(i, 1); };
 
   /* ---- Photo: pick, choose, run ---- */
+  /* One-time notice the first time a photo or voice is read (owner, 2026-10-31). */
+  const aiOnce = () => {
+    try { if (localStorage.getItem("arya-ai-notice")) return; localStorage.setItem("arya-ai-notice", "1"); } catch { return; }
+    toast(t("ai.once"));
+  };
   const onPhoto = (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     ev.target.value = "";
     if (!f) return;
     if (!f.type.startsWith("image/")) { toast(t("ask.photoNotImage")); return; }
+    aiOnce();
     add({ kind: "photo", text: "", url: URL.createObjectURL(f) }, { kind: "choose", text: "", file: f });
   };
   const failed = (w: Line, retry: () => void) => {
@@ -275,6 +281,7 @@ export function Chat() {
   };
 
   const mic = async () => {
+    if (!capture.current) aiOnce();
     if (capture.current) {
       const wav = capture.current.stop();
       capture.current = null;
@@ -429,6 +436,7 @@ export function Chat() {
           </label>
           <input type="file" id="ask-photo" ref={picker} accept="image/*" hidden onChange={onPhoto} />
         </div>
+        <p className="muted small" id="ask-ai-note" style={{ textAlign: "center", margin: "8px 4px 0" }}>{t("ai.askLine")}</p>
       </form>
       <p id="voice-note" className="muted" hidden={note === null}>{note}</p>
       </>}

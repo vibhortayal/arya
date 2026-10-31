@@ -1110,6 +1110,7 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
         <div className="exkv"><span className="exk">{t("today.itemHeading")}</span><span className="exv">{picker}</span></div>
         {dateRow}
         <button className="btn primary wide" id="ex-save" type="button" data-first disabled={busy} onClick={save}>{t("today.looksRightTrackIt")}</button>
+        <p className="muted small excenter" id="ex-ai-note" style={{ color: "var(--accent-text)" }}><b>{t("ai.dateBold")}</b> {t("ai.dateRest")}</p>
         <p className="muted small excenter">{t("today.nothingIsSavedUntilYou")}</p>
       </>
     );

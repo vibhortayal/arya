@@ -6,7 +6,7 @@ export const VIEWS = [
   "group-join", "quest-progress", "muse", "powers", "about", "feedback", "newlist",
   "stores-find", "stores-mine", "mapper", "capture", "optimize",
   "mode", "hunt", "express", "finish", "score", "album", "community", "race",
-  "friends", "receipt", "reveal", "rreview", "haul", "trips", "waitlist", "display", "usage",
+  "friends", "receipt", "reveal", "rreview", "haul", "trips", "waitlist", "display", "usage", "ai",
 ] as const;
 export type ViewId = (typeof VIEWS)[number];
 export type ViewParams = Record<string, unknown>;
@@ -18,7 +18,7 @@ export const TABS: ViewId[] = ["home", "list", "chat", "community", "help", "pro
 /* A pushed page keeps its parent tab lit (UI/UX pass, issue 10). */
 export const PARENT_TAB: Partial<Record<ViewId, ViewId>> = {
   receipts: "home", receipt: "home", analysis: "home", powers: "profile", about: "profile", feedback: "profile",
-  muse: "profile", waitlist: "profile", display: "profile", usage: "profile", "stores-mine": "list", "stores-find": "list", "group-join": "profile",
+  muse: "profile", waitlist: "profile", display: "profile", usage: "profile", ai: "profile", "stores-mine": "list", "stores-find": "list", "group-join": "profile",
   item: "list", newlist: "list", optimize: "list",
   "quest-progress": "community", trips: "community", mapper: "community", album: "community", friends: "community", race: "community",
 };

@@ -148,6 +148,32 @@
     "builtBy": "Built by",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
   },
+  "ai": {
+    "title": "How Arya uses AI",
+    "rowSub": "Where AI is used and when to double-check",
+    "intro": "Arya uses AI to read photos, receipts and voice, and to answer your questions. AI can be wrong. Use your own judgment, especially for food and money.",
+    "where": "Where Arya uses AI",
+    "ask": "Ask Arya",
+    "askSub": "Answers about your lists and spending",
+    "receipts": "Receipts",
+    "receiptsSub": "Reads items and totals. Unsure lines are marked To check",
+    "photos": "Photos and voice",
+    "photosSub": "Reads lists, dates and your fridge. You confirm before anything is saved",
+    "maps": "Store maps",
+    "mapsSub": "Guesses a layout from your walk. People are blurred",
+    "prices": "Prices",
+    "pricesSub": "Come from you and other Arya shoppers, not the web",
+    "food": "Food safety",
+    "foodBody": "Arya is not a food-safety check. Look at the date on the pack. If food looks or smells off, do not eat it.",
+    "models": "Models",
+    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them.",
+    "askLine": "Arya uses AI and can be wrong. Check anything important.",
+    "once": "Arya reads photos and voice with AI. It can misread, so you check before anything is saved.",
+    "dateBold": "Arya can misread a date.",
+    "dateRest": "Check the pack yourself. If food looks or smells off, do not eat it.",
+    "receiptsLine": "Arya reads receipts with AI. Lines it is unsure about are marked To check.",
+    "footer": "How Arya uses AI"
+  },
   "usage": {
     "title": "Keeping Arya running",
     "intro": "Arya is free. Reading receipts and photos, answering Ask and mapping stores use a paid AI model. This is what that costs and how much of it you have used.",
@@ -2594,7 +2620,7 @@
       "row2": "What counts",
       "row2Text": "A store counts as cheaper only when it saves at least 25 cents and 5%.",
       "row3": "What it is not",
-      "row3Text": "Prices change. This is what you paid, not today's shelf price."
+      "row3Text": "Prices change. This is what you paid, not today's shelf price. Check the shelf price."
     },
     "similar": {
       "title": "Similar items",
@@ -3218,6 +3244,17 @@
         "n1": "Friends: Quest tab, then Your trips and receipts, then Friends.",
         "n2": "To send one list, tap the three dots on it, then Share, export or import.",
         "cta": "Open Settings"
+      },
+      "ai": {
+        "title": "When to double-check Arya",
+        "sub": "Where Arya uses AI and can be wrong",
+        "body": "Arya uses AI to read photos, receipts and voice and to answer questions. It can be wrong.",
+        "s1": "Open Settings, then About Arya.",
+        "s2": "Tap How Arya uses AI.",
+        "s3": "Read where AI is used and what to check.",
+        "n1": "Always check an expiry date on the pack yourself. If food looks or smells off, do not eat it.",
+        "n2": "You confirm photo and receipt reads before they are saved.",
+        "cta": "Open About Arya"
       },
       "usesoon": {
         "title": "Use soon",
