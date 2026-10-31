@@ -76,6 +76,28 @@ const onLeave = new Set<() => void>();
 export function clearOnSignOut(fn: () => void): void { onLeave.add(fn); }
 function runLeaveHooks() { onLeave.forEach(fn => { try { fn(); } catch { /* keep going */ } }); }
 
+/* The last signed-in account, so a reload with no signal can open the
+ * app instead of the sign-in page. Only the name: the session cookie
+ * stays the proof, and sign out removes it. */
+const LAST_USER = "arya.lastUser";
+function remember(user: string | null, demo = false): void {
+  try {
+    if (user) localStorage.setItem(LAST_USER, JSON.stringify({ user, demo }));
+    else localStorage.removeItem(LAST_USER);
+  } catch { /* private mode: no offline reopen */ }
+}
+function lastUser(): { user: string; demo: boolean } | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(LAST_USER) || "null");
+    return v && typeof v.user === "string" ? { user: v.user, demo: !!v.demo } : null;
+  } catch { return null; }
+}
+/* /team only opens the password form: once signed in, the address bar
+ * (and a bookmark or Home Screen icon made from it) reads / (audit M6). */
+function leaveTeamPath(): void {
+  if (/^\/team\/?$/.test(location.pathname)) history.replaceState(null, "", "/" + location.search + location.hash);
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<string | null>(null);
@@ -95,8 +117,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     (async () => {
       const st = await get<AuthStatus>("/auth/status").catch(() => ({ has_users: true, registration_open: false }));
       setStatus(st);
+      // null: no answer (no signal, or the server is down), which is
+      // not the same as "signed out" ({ user: null }).
       const me = await fetch("/auth/me").then(r => (r.ok ? r.json() : null)).catch(() => null);
-      if (me && me.user) { setUser(me.user); setDemo(!!me.demo); }
+      if (me && me.user) { setUser(me.user); setDemo(!!me.demo); remember(me.user, !!me.demo); leaveTeamPath(); }
+      else if (me) remember(null);
+      else {
+        // A reload in a store with no signal opens the app as the last
+        // account (audit H1, 2026-10-30), not the sign-in page. When the
+        // signal is back, a session that ended meanwhile signs out.
+        const last = lastUser();
+        if (last) {
+          setUser(last.user); setDemo(last.demo);
+          addEventListener("online", () => {
+            fetch("/auth/me").then(r => (r.ok ? r.json() : null)).then(m => {
+              if (m && !m.user) { remember(null); setUser(null); setDemo(false); }
+            }).catch(() => {});
+          }, { once: true });
+        }
+      }
       setReady(true);
     })();
   }, []);
@@ -152,10 +191,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.layouts) setLayouts(r.layouts);
   }, []);
 
-  const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; }, []);
+  const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
 
   const leave = useCallback(async () => {
     runLeaveHooks();
+    remember(null);
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
     setUser(null); setDemo(false); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT); setLayouts({});

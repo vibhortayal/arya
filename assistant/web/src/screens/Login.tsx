@@ -215,12 +215,12 @@ export function Login() {
         ))}
         {!team && status.email_signin && showPassword && <p className="muted">{t("login.orUseAPassword")}</p>}
         {showPassword && (
-          <form id="login-form" onSubmit={submit}>
+          <form id="login-form" method="post" onSubmit={submit}>
             <label className="field">{create ? t("login.username") : t("login.emailOrUsername")}
-              <input type="text" id="login-user" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+              <input type="text" id="login-user" name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false}
                 inputMode="email" required data-first value={user} onChange={e => setUser(e.target.value)} />
             </label>
-            <label className="field">{t("login.password")}<input type="password" id="login-pass" autoComplete={create ? "new-password" : "current-password"} required
+            <label className="field">{t("login.password")}<input type="password" id="login-pass" name="password" autoComplete={create ? "new-password" : "current-password"} required
                 value={pass} onChange={e => setPass(e.target.value)} />
             </label>
             <p><button type="submit" id="login-btn" className="btn primary wide">{create ? t("login.createAccount") : t("login.signIn")}</button></p>
