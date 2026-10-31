@@ -4,6 +4,8 @@ import { EndOfDemo, openEndOfDemo } from "./EndOfDemo";
 
 const leave = vi.fn(async () => {});
 vi.mock("../app/session", () => ({ useSession: () => ({ leave }) }));
+vi.mock("./Tour", () => ({ useTour: () => ({ startTour: vi.fn() }) }));
+vi.mock("../onboarding/demoTour", () => ({ useTourSteps: () => [] }));
 const post = vi.fn();
 vi.mock("../lib/api", () => ({ post: (...a: unknown[]) => post(...a) }));
 

@@ -1692,6 +1692,8 @@
     "signedInAsUser": "Signed in as {{user}}",
     "arya": "Arya",
     "aboutArya": "About Arya",
+    "helpTourSub": "Replay the Tour: a stop on every screen",
+    "helpGuideSub": "Swipe through cards on each part of Arya",
     "aboutAryaSub": "Powers, other AI apps, running costs, install",
     "shopMode": "When I start shopping",
     "shopModeSub": "What Start shopping opens.",
@@ -2865,7 +2867,9 @@
     "skipTour": "Skip tour",
     "skipScreen": "Skip {{screen}}",
     "chip": "{{screen}} · {{n}} of {{of}}",
-    "stepOf": "Step {{n}} of {{total}}"
+    "stepOf": "Step {{n}} of {{total}}",
+    "closedToast": "Tour closed. You can replay it any time in Settings.",
+    "replay": "Replay"
   },
   "guide": {
     "count": "Arya guide · {{n}} of {{total}}",
@@ -3013,13 +3017,13 @@
     "feedbackHint": "What worked, what didn't, what you'd want next",
     "email": "Your email",
     "emailWhy": "(so I can invite you)",
-    "fine": "Sending feedback puts you on the beta testers list. I use your email only to invite you.",
+    "fine": "Joins the beta list. Used only to invite you.",
     "send": "Send feedback",
     "thanksTitle": "Thank you. You're on the list.",
     "thanksLine": "Arya is open to a few people at a time. I read every note and I'll write to you when a spot opens.",
-    "direct": "Or write to me directly",
-    "peek": "Peek inside Arya's code",
-    "star": "and leave a star ★ if you find it useful.",
+    "codeShort": "Code ★",
+    "replayTour": "Replay the tour",
+    "openGuide": "Arya guide",
     "keep": "Keep exploring",
     "leave": "Leave the demo",
     "finish": "Finish demo"
