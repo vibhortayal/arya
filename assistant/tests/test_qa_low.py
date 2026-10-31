@@ -32,9 +32,10 @@ class TestLows(unittest.TestCase):
     def test_grab_before_start_explains(self):
         self.assertIn("Tap Start the quest first.", src("screens/Hunt.tsx"))
 
-    def test_demo_feedback_send_is_disabled(self):
-        self.assertIn('id="fb-send" className="btn primary wide" type="button" disabled={demo || busy}',
-                      src("screens/Feedback.tsx"))
+    def test_demo_feedback_send_opens_finish_demo(self):
+        # Retest 2026-10-31 #14: in the demo, Send opens the Finish demo sheet.
+        fb = src("screens/Feedback.tsx")
+        self.assertIn('id="fb-send" className="btn primary wide" type="button" onClick={openEndOfDemo}', fb)
 
 
 if __name__ == "__main__":
