@@ -13,7 +13,7 @@ FAIL_RATE = 0.10        # a type or feature failing more than this is flagged
 MIN_CALLS = 5
 SLOW_P95_MS = 20000
 BUDGET_WARN = 0.8
-BACKUP_DIR = os.environ.get("ARYA_BACKUP_MOUNT", "/backups")
+BACKUP_DIR = "/backups"   # compose mounts the VM backups folder here, read only
 BACKUP_STALE_H = 30
 
 KIND_LABEL = {"reads": "Photo and receipt reads", "ask": "Ask", "maps": "Store maps", "helps": "Other helps"}
