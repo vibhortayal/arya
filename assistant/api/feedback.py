@@ -76,7 +76,7 @@ def submit(user, kind, text):
 # the visitor's email (how the owner invites them to the beta) and the
 # name "demo-visitor". Capped per email per day, plus a day-wide cap so
 # the one demo write that reaches disk stays bounded. The address is
-# stored with the note and never logged or mailed.
+# stored with the note and never logged. The owner gets each note by email (api/mailer.py).
 DEMO_USER = "demo-visitor"
 DEMO_DAILY_CAP = 200
 DEMO_EMAIL_CAP = 3

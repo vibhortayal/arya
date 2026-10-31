@@ -7,6 +7,7 @@ import html
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.request
 
@@ -70,3 +71,49 @@ def waitlist_joined(email, app_url):
         f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">You got this because {e} asked to join the Arya waitlist.<br>This address is not monitored. For help, or to be taken off the list, write to {html.escape(reply_to())}.</p>'
         "</div>")
     return send(email, subject, text, body)
+
+
+# --- feedback to the owner (owner, 2026-10-31) -----------------------------
+# Each new feedback note is mailed to ARYA_OPS_EMAIL. Off while that or
+# RESEND_API_KEY is unset. Best effort: never blocks the person sending.
+# A day cap (ARYA_FEEDBACK_MAIL_CAP, default 20, per process) keeps the demo
+# box from filling the inbox; the daily ops report still counts every note.
+_mail_day = {"day": "", "n": 0}
+
+
+def _fmt_note(n):
+    when = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(n.get("at", 0)))
+    who = n.get("user", "") + (f" <{n['contact']}>" if n.get("contact") else "")
+    return n.get("kind", ""), who, when, n.get("text", "")
+
+
+def feedback_note(note):
+    to = os.environ.get("ARYA_OPS_EMAIL", "")
+    if not to or not configured():
+        return False
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    if _mail_day["day"] != day:
+        _mail_day.update(day=day, n=0)
+    if _mail_day["n"] >= int(os.environ.get("ARYA_FEEDBACK_MAIL_CAP", "20")):
+        return False
+    _mail_day["n"] += 1
+    kind, who, when, text = _fmt_note(note)
+    body = f"New {kind} from {who}\n{when}\n\n{text}\n"
+    return send(to, f"[Arya] New {kind}: {text[:60]}", body,
+                '<pre style="font:14px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">'
+                + html.escape(body) + "</pre>")
+
+
+def feedback_backlog(notes):
+    """One email with every note given (oldest first)."""
+    to = os.environ.get("ARYA_OPS_EMAIL", "")
+    if not to or not configured() or not notes:
+        return False
+    parts = []
+    for n in notes:
+        kind, who, when, text = _fmt_note(n)
+        parts.append(f"[{kind}] {who}, {when}\n{text}")
+    body = f"{len(notes)} feedback note(s) so far:\n\n" + "\n\n---\n\n".join(parts) + "\n"
+    return send(to, f"[Arya] All feedback so far ({len(notes)})", body,
+                '<pre style="font:14px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">'
+                + html.escape(body) + "</pre>")
