@@ -59,6 +59,8 @@ class TestApi(unittest.TestCase):
         import tempfile
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         os.environ["ARYA_INSECURE_COOKIE"] = "1"
+        # Ambient disk state is not under test here (see test_event_loop).
+        os.environ["ARYA_HEALTH_MIN_FREE_MB"] = "0"
         from fastapi.testclient import TestClient
         from api.main import app
         c = TestClient(app)

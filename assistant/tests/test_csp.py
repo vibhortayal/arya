@@ -100,10 +100,15 @@ class TestDemoSessionsInMemory(unittest.TestCase):
 
 class TestHealthAndBuckets(unittest.TestCase):
     def test_health_is_liveness_only(self):
+        from unittest import mock
         from fastapi.testclient import TestClient
         from api.main import app
-        self.assertEqual(TestClient(app).get("/health").json(),
-                         {"status": "ok", "service": "arya-api", "stage": 3})
+        # Pin the disk floor: free space on the host running the tests is
+        # ambient state, not liveness. The 503 path has its own test
+        # (test_ops.test_full_disk_answers_503).
+        with mock.patch.dict(os.environ, {"ARYA_HEALTH_MIN_FREE_MB": "0"}):
+            self.assertEqual(TestClient(app).get("/health").json(),
+                             {"status": "ok", "service": "arya-api", "stage": 3})
 
     def test_rate_buckets_drop_idle_ips(self):
         import time
