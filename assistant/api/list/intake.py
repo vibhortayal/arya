@@ -50,14 +50,27 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
                                      personal=True)
     dec = parse_json(out)
     kind = dec.get("kind")
-    if kind not in ("list", "receipt"):
+    if kind not in ("list", "receipt", "item", "unclear"):
         kind = "list"
+    if kind == "item":
+        name = _clean_piece(str(dec.get("item") or ""))
+        if not _sensible(name):
+            return {"kind": "unclear", "items": [],
+                    "reason": "I couldn't tell what this is."}
+        return {"kind": "item", "items": [], "item": name,
+                "confident": bool(dec.get("confident"))}
+    if kind == "unclear":
+        return {"kind": "unclear", "items": [],
+                "reason": str(dec.get("reason") or "").strip()[:120]}
     items = []
     if kind == "list":
         for raw in dec.get("items") or []:
             name = _clean_piece(str(raw))
             if _sensible(name):
                 items.append(name)
+    if kind == "list" and not items:
+        return {"kind": "unclear", "items": [],
+                "reason": "I couldn't find anything to add in that photo."}
     return {"kind": kind, "items": items}
 
 

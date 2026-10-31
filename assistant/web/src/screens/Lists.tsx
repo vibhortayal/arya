@@ -211,6 +211,10 @@ const EMPTY_CARD_TEXT = false;
 
 /* ---------------- the screen ---------------- */
 
+type InCard =
+  | { kind: "item"; name: string; sure: boolean; url?: string }
+  | { kind: "unclear"; title: string; body: string; retry: "photo" | "mic"; url?: string };
+
 export function Lists() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -276,6 +280,13 @@ export function Lists() {
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
   const capture = useRef<Capture | null>(null);
+  /* What Arya understood from a photo or voice, or why it could not tell:
+   * a card under the add box, never a silent miss. The photo thumbnail stays
+   * until the card is dismissed so Try again and Edit lose nothing. */
+  const [inCard, setInCard] = useState<InCard | null>(null);
+  const closeCard = () => setInCard(c => { if (c && c.url) URL.revokeObjectURL(c.url); return null; });
+  const failCard = (title: string, body: string, retry: "photo" | "mic", file?: File) =>
+    setInCard({ kind: "unclear", title, body, retry, url: file ? URL.createObjectURL(file) : undefined });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const field = useRef<HTMLInputElement>(null);
   const smart = useRef<HTMLDivElement>(null);
@@ -774,20 +785,22 @@ export function Lists() {
       setStatus(t("common.voice.transcribing"));
       try {
         const spoken = await transcribeBlob(wav);
-        setStatus(spoken ? "" : t("common.voice.empty"));
+        setStatus("");
+        if (!spoken) failCard(t("lists.input.heardNothing"), t("lists.input.heardNothingBody"), "mic");
         if (spoken) {
           const ok = await ask.run(spoken, here ? { list: here.name, list_id: here.id } : {});
           if (!ok) { const cur = textRef.current.trim(); changeText(cur ? `${cur}, ${spoken}` : spoken); }
         }
-      } catch (e) { setStatus(""); toast(t("common.voice.failed", { error: errMsg(e) })); }
+      } catch (e) { setStatus(""); failCard(t("lists.input.voiceFailed"), t("lists.input.voiceFailedBody"), "mic"); }
       return;
     }
-    if (!voiceSupported()) { setStatus(t("common.voice.unsupported")); return; }
+    if (!voiceSupported()) { failCard(t("lists.input.noVoice"), t("common.voice.unsupported"), "mic"); return; }
+    closeCard();
     try {
       capture.current = await startCapture();
       setListening(true);
       setStatus(t("common.voice.listening"));
-    } catch { setStatus(t("common.voice.refused")); }
+    } catch { failCard(t("lists.input.micBlocked"), t("lists.input.micBlockedBody"), "mic"); }
   };
 
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -795,6 +808,7 @@ export function Lists() {
     const input = ev.target;
     if (!f) return;
     setReceiptFile(null);
+    closeCard();
     setStatus(t("lists.readingPhoto"));
     try {
       const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
@@ -802,16 +816,32 @@ export function Lists() {
       const out = await r.json();
       setStatus("");
       if (out.kind === "receipt") setReceiptFile(f);
+      else if (out.kind === "item") setInCard({ kind: "item", name: out.item, sure: !!out.confident, url: URL.createObjectURL(f) });
+      else if (out.kind === "unclear" || !out.added) failCard(t("lists.input.cantTell"), out.reason || t("lists.input.cantTellBody"), "photo", f);
       else {
         toast(t("lists.addedNTo", { count: out.added, where: here ? here.name : t("lists.yourList") }));
         reloadQuiet();
       }
     } catch (e) {
       setStatus("");
-      toast(t("lists.couldNotReadPhoto", { error: errMsg(e) }));
+      failCard(t("lists.input.cantRead"), t("lists.input.cantReadBody"), "photo", f);
     }
     input.value = "";
   };
+  const cardAdd = async (name: string) => {
+    closeCard();
+    try {
+      const r = await post<AddResult>("/api/list/from-text", here ? { text: name, list_id: here.id } : { text: name });
+      toast(addToast(r, here ? here.name : t("lists.yourList")));
+      reload().then(() => flashNewRows(r.names || [])).catch(() => {});
+    } catch (e) { toast(errMsg(e)); }
+  };
+  const cardEdit = (name: string) => { closeCard(); changeText(name); requestAnimationFrame(() => field.current?.focus()); };
+  const cardRetry = (how: "photo" | "mic") => {
+    closeCard();
+    if (how === "photo") document.getElementById("add-photo")?.click(); else void mic();
+  };
+  const cardType = () => { closeCard(); requestAnimationFrame(() => field.current?.focus()); };
   /* app.js fileReceiptPhoto, for the camera's receipt offer. */
   const fileReceipt = async () => {
     const f = receiptFile;
@@ -1153,6 +1183,28 @@ export function Lists() {
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
             <p className="muted nomargin" id="add-status">{status}</p>
+            {inCard ? (
+              <div className="group pad answercard" id="add-input-card" role="status" style={{ marginTop: 10 }}>
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  {inCard.url ? <img src={inCard.url} alt="" style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", flex: "none" }} /> : null}
+                  <div>
+                    {inCard.kind === "item"
+                      ? <><p className="muted nomargin" style={{ fontSize: 14 }}>{inCard.sure ? t("lists.input.iSee", { name: inCard.name }) : t("lists.input.looksLike", { name: inCard.name })}</p>
+                          <p style={{ margin: "2px 0 0", fontSize: 18 }}><strong>{t("lists.input.addQ", { name: inCard.name })}</strong></p></>
+                      : <><p className="nomargin"><strong>{inCard.title}</strong></p>
+                          <p className="muted nomargin" style={{ fontSize: 14 }}>{inCard.body}</p></>}
+                  </div>
+                </div>
+                <div className="sheetacts">
+                  {inCard.kind === "item" ? <>
+                    <button className="btn secondary" type="button" data-ic="edit" onClick={() => cardEdit(inCard.name)}>{t("lists.input.editName")}</button>
+                    <button className="btn primary" type="button" data-ic="add" onClick={() => cardAdd(inCard.name)}>{t("lists.input.addName", { name: inCard.name })}</button></> : <>
+                    <button className="btn secondary" type="button" data-ic="type" onClick={cardType}>{t("lists.input.typeInstead")}</button>
+                    <button className="btn primary" type="button" data-ic="retry" onClick={() => cardRetry(inCard.retry)}>{t("lists.input.tryAgain")}</button></>}
+                </div>
+                {inCard.kind === "item" ? <p className="muted nomargin" style={{ fontSize: 13, marginTop: 8 }}>{t("lists.input.notRight")} <button className="linkbtn" type="button" data-ic="again" onClick={() => cardRetry("photo")}>{t("lists.input.tryAgain")}</button></p> : null}
+              </div>
+            ) : null}
             <div id="add-receipt-offer">
               {receiptFile ? <>
                 <p className="nomargin" style={{ marginTop: 10 }}>{t("lists.thisLooksLikeAReceipt")}</p>

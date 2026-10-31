@@ -8,7 +8,7 @@ At the bottom of Help: Read the full guide, Arya's powers, Take the tour again a
 Each topic has "Still stuck? Ask Arya", which sends the question to the Ask tab.
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new
 Lists tab: one list for each store, such as Costco. Tap New list and choose a store.
-Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list.
+Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list or photograph one item. Arya always shows what it understood: for one item it asks "Add Peach?", and when it cannot tell it says why and offers Try again or Type it instead. If the microphone hears nothing or is blocked, it says so the same way.
 Tap the circle to tick an item off as you shop. Tap the three dots to move an item to another list or remove it. Tap Select to act on several items. Tap the pencil to rename a list.
 Under "Suggested for ..." Arya shows items that are due. Tap one to see why. Tap Add to put it on the list.
 Tap the three dots at the top of a list for Share, export or import, and Tidy up with Arya.
