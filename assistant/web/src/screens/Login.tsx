@@ -194,7 +194,7 @@ export function Login() {
               <img src={asset("assets/badges/google-play.png")} width="139" height="40" alt={t("landing.googlePlayAlt")} />
             </div>
           </div>
-          <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a></p>
+          <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a> · <a href="/developers">{t("landing.developers")}</a></p>
         </div>
       </main>
 
