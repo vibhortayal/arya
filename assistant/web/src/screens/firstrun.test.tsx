@@ -85,6 +85,13 @@ describe("tour layout", () => {
     expect(top.tip).toEqual({ top: 86 });
     expect(top.arrowX).toBe(18);
   });
+  test("a tall bubble flips to the roomy side and never leaves the screen (short phones)", () => {
+    const card = { left: 20, top: 434, width: 320, height: 160 };
+    const l = tourLayout(card, 360, 640, "below", 202);
+    expect(l.above).toBe(true);
+    const far = tourLayout({ left: 20, top: 300, width: 320, height: 160 }, 360, 640, "below", 202);
+    expect("top" in far.tip && far.tip.top + 202 <= 640 - 12).toBe(true);
+  });
   test("the first-run tour is six tab steps", () => {
     expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "help", "settings"]);
   });

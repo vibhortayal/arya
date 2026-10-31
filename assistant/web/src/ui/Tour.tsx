@@ -82,14 +82,22 @@ const GAP = 16, EDGE = 16, HALF = 9;
  * the target, the bubble sits 16px above it (or below, when asked or
  * when there is more room below) with its arrow under the target's
  * centre, kept off the bubble's rounded corners. */
-export function tourLayout(r: Box, vw: number, vh: number, placement: TourStep["placement"] = "auto") {
+export function tourLayout(r: Box, vw: number, vh: number, placement: TourStep["placement"] = "auto", tipH = 0) {
   const tipWidth = vw - 2 * EDGE;
   const arrowX = Math.max(18, Math.min(tipWidth - 18 - 2 * HALF, r.left + r.width / 2 - EDGE - HALF));
-  const above = placement === "above" || (placement !== "below" && r.top >= vh - (r.top + r.height));
+  let above = placement === "above" || (placement !== "below" && r.top >= vh - (r.top + r.height));
+  // With the bubble's real height known: use the other side when this one is too small, and never
+  // let the bubble (and its buttons) cross 12px from the screen edge, even if it must cover the target.
+  if (tipH) {
+    const roomAbove = r.top - GAP - 12, roomBelow = vh - (r.top + r.height) - GAP - 12;
+    if (above && roomAbove < tipH && roomBelow >= tipH) above = false;
+    else if (!above && roomBelow < tipH && roomAbove >= tipH) above = true;
+  }
+  const far = Math.max(12, vh - tipH - 12);
   return {
     hole: { left: r.left + 4, top: r.top + 2, width: Math.max(0, r.width - 8), height: Math.max(0, r.height - 8) },
     above,
-    tip: above ? { bottom: vh - r.top + GAP } : { top: r.top + r.height + GAP },
+    tip: above ? { bottom: Math.min(Math.max(12, vh - r.top + GAP), far) } : { top: Math.min(Math.max(12, r.top + r.height + GAP), far) },
     arrowX,
   };
 }
@@ -105,6 +113,8 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
   const [vp, setVp] = useState({ w: innerWidth, h: innerHeight });
   const next = useRef<HTMLButtonElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
+  const tipEl = useRef<HTMLDivElement>(null);
+  const [tipH, setTipH] = useState(0);
   const step = steps[i];
   const last = i === steps.length - 1;
   // Per-screen tour: this step's place among the steps of its screen, and where the next screen starts.
@@ -120,7 +130,8 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
     let el: Element | null = null;
     const measure = () => {
       const r = el?.getBoundingClientRect();
-      setBox(r ? { left: r.left, top: r.top, width: r.width, height: r.height } : null);
+      // A hidden or zero-size target (display:none, a hidden input) has no place on screen: show the plain scrim.
+      setBox(r && (r.width > 0 || r.height > 0) ? { left: r.left, top: r.top, width: r.width, height: r.height } : null);
       setVp({ w: innerWidth, h: innerHeight });
     };
     const find = () => {
@@ -143,6 +154,8 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
     return () => { alive = false; cancelAnimationFrame(raf); cancelAnimationFrame(queued); removeEventListener("resize", onMove); removeEventListener("scroll", onMove, true); };
   }, [step]);
 
+  // The bubble's real height decides which side fits and how far it may move (short phones).
+  useLayoutEffect(() => { const h = tipEl.current?.offsetHeight ?? 0; if (h !== tipH) setTipH(h); });
   useEffect(() => { next.current?.focus(); }, [i]);
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
@@ -159,14 +172,14 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
     else if (!ev.shiftKey && document.activeElement === z) { ev.preventDefault(); a.focus(); }
   };
 
-  const lay = box ? tourLayout(box, vp.w, vp.h, step.placement) : null;
+  const lay = box ? tourLayout(box, vp.w, vp.h, step.placement, tipH) : null;
   const tipStyle: CSSProperties = { ...(lay ? lay.tip : { bottom: 96 }) };
   (tipStyle as Record<string, string | number>)["--ax"] = (lay ? lay.arrowX : -999) + "px";
   return createPortal(
     <div className={"fr-tour" + (lay ? "" : " nohole")} ref={wrap} role="dialog" aria-modal="true" data-tour-step={step.id}
       aria-labelledby="fr-tip-title" aria-describedby="fr-tip-line" onKeyDown={onKeyDown}>
       {lay && <div className="fr-hole" style={lay.hole} />}
-      <div className={"fr-tip" + (lay && !lay.above ? " below" : "")} style={tipStyle}>
+      <div className={"fr-tip" + (lay && !lay.above ? " below" : "")} style={tipStyle} ref={tipEl}>
         {scr && (
           <div className="fr-chiprow">
             <span className="fr-chip">{t("tour.chip", { screen: screenName, n: mates.indexOf(step) + 1, of: mates.length })}</span>
