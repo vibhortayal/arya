@@ -353,9 +353,21 @@ def _link(key, tracked):
         if k == key:
             return item_id
     words = set(key.split())
+    # A pack size is not part of the name: "milk" is half of "whole
+    # milk 1 gal" and "avocado" all of "avocados 4 ct" (retest
+    # 2026-10-31 #6: "mlik" and "3 avocados" made new rows).
     hits = {item_id for item_id, k in tracked
-            if words < set(k.split()) and len(words) * 2 >= len(k.split())}
+            if (core := _core(k)) and words <= core and len(words) * 2 >= len(core)}
     return hits.pop() if len(hits) == 1 else None
+
+
+_SIZE_WORDS = {"oz", "fl", "lb", "lbs", "ct", "count", "gal", "qt", "pt", "g", "kg", "ml", "l",
+               "pk", "pack", "dozen", "doz"}
+
+
+def _core(key):
+    """A tracked key's words without its pack size ("1 gal", "32 oz")."""
+    return {w for w in key.split() if w not in _SIZE_WORDS and not re.fullmatch(r"\d+(\.\d+)?[a-z]{0,3}", w)}
 
 
 def existing_item_id(name, dictionary_entries, flags):

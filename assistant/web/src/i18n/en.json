@@ -377,6 +377,7 @@
     }
   },
   "ask": {
+    "newChat": "New chat",
     "editTitle": "Edit questions",
     "editHint": "Your quick questions on Ask. Drag to reorder, remove what you never tap.",
     "ideasTitle": "Ideas",
@@ -896,7 +897,8 @@
       "add_other": "Add {{count}} items",
       "addedTitle_one": "Added {{count}} item",
       "addedTitle_other": "Added {{count}} items",
-      "addedAlready": "{{count}} were already on the list.",
+      "addedAlready_one": "{{count}} was already on the list.",
+      "addedAlready_other": "{{count}} were already on the list.",
       "addedMerged_one": "{{count}} name matched an item that is already there, so it was merged.",
       "addedMerged_other": "{{count}} names matched items that are already there, so they were merged.",
       "addedNothing": "Nothing new to add",
@@ -940,6 +942,7 @@
     "shopQuestSub": "Arya walks you through the store, finds each item and earns you points.",
     "shopJustList": "Just my list",
     "tickAsIShop": "Or just tick items as I shop",
+    "tickSaved": "Start shopping now opens Just my list. Change it in Settings, Preferences.",
     "shopJustListSub": "In a rush? Check items off as you go. No game.",
     "shopAskEvery": "Ask me every time",
     "shopSaved": "Your pick is saved. Change it any time in Settings.",
@@ -3032,7 +3035,7 @@
         "s1": "Tap the Ask tab.",
         "s2": "Type your question, or tap Talk to say it.",
         "s3": "Or tap a sample question.",
-        "n1": "Arya can also add items, or mark an item as out.",
+        "n1": "Arya can also add items, or mark an item as out. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
         "cta": "Open Ask"
       },

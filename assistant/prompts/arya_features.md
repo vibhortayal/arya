@@ -35,7 +35,7 @@ You need receipts from two stores to compare. Ask "Where is milk cheaper?" for a
 Community prices are opt-in: Settings, About Arya, Arya's powers, Community prices, Turn on. They show prices other Arya shoppers paid. They start when enough households near you share.
 ## shopping | start shopping shop trip quest express game points badges level streak walk find camera aisle practice map
 Start shopping: open a list and tap Start shopping. Settings, Preferences, "When I start shopping", chooses what opens: Start a Quest, Just my list, or Ask me each time.
-Or tap "Or just tick items as I shop" and tick items with no game.
+Or tap "Or just tick items as I shop" and tick items with no game. That also makes Just my list your choice for Start shopping; change it in Settings, Preferences, "When I start shopping".
 Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: point the camera at a shelf and Arya finds the next item. People in frames are blurred before anything is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores. Your trips and receipts shows finished trips and friends.
@@ -51,7 +51,7 @@ In the demo this news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi
 Ask tab: type a question or tap Talk to speak. Arya answers from the household's own lists and receipts. It does not speak aloud.
 Tap Photo to send a picture. Choose Add to list, File receipt, Check my fridge or Read the date. A photo changes nothing unless you pick an action.
-Ask can add to a list, mark out or expired, never suggest and snooze. Tap Edit on Ask to change the quick questions.
+Ask can add to a list, mark out or expired, never suggest and snooze. An item with no list named goes on the list for the store you usually buy it at. Tap Edit on Ask to change the quick questions. After a chat, tap New chat to clear it and see the quick questions again.
 Settings, Preferences, Currency and language changes the answer language: English, Spanish or Hindi.
 ## sharing | share group household invite code friends haul sync together partner family
 Share lists with a household: open Settings, tap Start a group and give it a name. Tap Invite someone and send the code. Everyone sees the same lists and receipts. Leaving a group has clear rules for what you keep.
