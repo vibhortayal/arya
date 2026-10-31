@@ -950,6 +950,8 @@
     "doneTitle": "Done shopping?",
     "doneSummary": "{{done}} checked off, {{left}} still on your list.",
     "addReceipt": "Add your receipt",
+    "sampleFiled_one": "Filed a sample receipt from {{merchant}}: {{count}} item, {{amount}}.",
+    "sampleFiled_other": "Filed a sample receipt from {{merchant}}: {{count}} items, {{amount}}.",
     "skipReceipt": "Skip the receipt",
     "keepShopping": "Keep shopping",
     "clearTitle": "Clear the checked off items?",
@@ -1064,7 +1066,7 @@
       "trendDown": "Down {{pct}}% since {{since_month}}",
       "centsPerOz": "{{cents}}¢/oz",
       "each": "{{price}} each",
-      "priceAt": "{{price}} at {{store}}",
+      "priceAt": "last {{price}} at {{store}}",
       "buysThere_one": "{{count}} buy there",
       "buysThere_other": "{{count}} buys there",
       "forList": " for {{name}}"

@@ -501,6 +501,36 @@ def sample_receipt(session_id):
     return attach_receipt(session_id, rid)
 
 
+def sample_list_receipt(store, item_ids):
+    """The demo's sample receipt for a tick-mode trip (retest 2026-10-31
+    #16): the same lines as sample_receipt (the last price paid for
+    each ticked item, else SAMPLE_PRICE), filed under the list's store,
+    with no hunt to settle. Demo sandbox only (the route checks), so
+    nothing reaches disk. Returns the filed receipt."""
+    prices, names = {}, state.names()
+    for e in state.derived()["entries"]:
+        if e.get("event_type") == "purchase":
+            prices[e["item_id"]] = e["price"]
+    fl = state.flags()
+    lines = []
+    for iid in item_ids or []:
+        name = fl.get(iid, {}).get("name") or names.get(iid)
+        if not name:
+            continue
+        price = prices.get(iid, SAMPLE_PRICE)
+        lines.append({"decoded_name": name, "item_id": iid, "qty": 1, "unit_price": price,
+                      "line_total": price, "line_type": "item", "status": "auto"})
+    if not lines:
+        raise ValueError("Tick something first, then the sample receipt has something to list.")
+    subtotal = round(sum(ln["line_total"] for ln in lines), 2)
+    rec = {"receipt_id": _new_id("sample", (store or "") + _now()), "merchant": store or "Sample store",
+           "purchased_at": _today(), "source_type": "sample", "live": True,
+           "lines": lines, "subtotal": subtotal, "tax": 0, "total": subtotal,
+           "totals_reconcile": True, "image_ref": None}
+    state.add_receipts([rec])
+    return rec
+
+
 def progress(sess):
     total = len(sess["items"])
     done = sum(1 for i in sess["items"] if i.get("checked"))
