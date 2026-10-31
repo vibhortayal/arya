@@ -90,7 +90,8 @@ describe("tour layout", () => {
     const l = tourLayout(card, 360, 640, "below", 202);
     expect(l.above).toBe(true);
     const mid = tourLayout({ left: 20, top: 200, width: 320, height: 200 }, 360, 640, "below", 240);
-    expect("top" in mid.tip && mid.tip.top + 240 <= 640 - 12).toBe(true);
+    expect(mid.above).toBe(false);
+    expect((mid.tip as { top: number }).top + 240).toBeLessThanOrEqual(640 - 12);
   });
   test("the first-run tour is six tab steps", () => {
     expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "help", "settings"]);
