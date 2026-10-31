@@ -45,7 +45,7 @@ class TestSettingsHelp(unittest.TestCase):
     def test_tour_replays_from_the_guide(self):
         g = src_raw("ui/Guide.tsx")
         self.assertIn('id="gd-tour"', g)
-        self.assertIn("tour.startTour(FIRST_RUN_TOUR)", g)
+        self.assertIn("tour.startTour(tourSteps)", g)
 
     def test_quest_progress_lives_in_quest(self):
         q = src_raw("screens/quest/QuestMode.tsx")
