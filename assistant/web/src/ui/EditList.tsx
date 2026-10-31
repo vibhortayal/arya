@@ -23,12 +23,12 @@ const Grip = () => (
 );
 
 /* The title row: the page title, and Edit, which turns into Done. */
-export function EditTitle({ title, editTitle, editing, onToggle, id, small }: { title: string; editTitle: string; editing: boolean; onToggle: () => void; id?: string; small?: boolean }) {
+export function EditTitle({ title, editTitle, editing, onToggle, id, small, editLabel }: { title: string; editTitle: string; editing: boolean; onToggle: () => void; id?: string; small?: boolean; editLabel?: string }) {
   const { t } = useTranslation();
   return (
     <div className="titlerow"><h1 className="largetitle" style={small ? { fontSize: 28 } : undefined}>{editing ? editTitle : title}</h1>
       <button type="button" id={id} className={"linkbtn titleedit" + (editing ? " done" : "")} onClick={onToggle}>
-        {editing ? t("common.done") : t("today.edit.edit")}</button></div>
+        {editing ? t("common.done") : editLabel || t("today.edit.edit")}</button></div>
   );
 }
 

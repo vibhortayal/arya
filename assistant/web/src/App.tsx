@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -11,13 +11,15 @@ import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { useTown } from "./lib/town";
-import { joinCodeFromUrl } from "./screens/GroupJoin";
+import { isDevelopersPath, joinCodeFromUrl } from "./lib/paths";
 import { TabAsk, TabHelp, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
-import { Developers, isDevelopersPath } from "./screens/Developers";
+// The public developer page and Join a group load only when opened (#17).
+const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
 import { SCREENS, preloadTabScreens } from "./screens/registry";
 import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
 import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
+import { ErrorBoundary, ScreenSkeleton } from "./ui/ErrorBoundary";
 import { t } from "./i18n";
 
 export function App() {
@@ -36,7 +38,7 @@ function Root() {
   // takes over in the same frame.
   useLayoutEffect(() => { if (s.ready) document.getElementById("boot")?.remove(); }, [s.ready]);
   /* The public developer page needs no account, so it comes first. */
-  if (isDevelopersPath(location.pathname)) return <Developers />;
+  if (isDevelopersPath(location.pathname)) return <Suspense fallback={null}><Developers /></Suspense>;
   if (!s.ready) return null;
   if (!s.user) return <Login />;
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
@@ -152,7 +154,7 @@ function Shell() {
       {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
-          <Suspense fallback={null}><Screen /></Suspense>
+          <ErrorBoundary key={nav.view}><Suspense fallback={<ScreenSkeleton />}><Screen /></Suspense></ErrorBoundary>
         </section>
       </main>
       {nav.chrome && (
@@ -162,7 +164,7 @@ function Shell() {
             const lit = nav.view === v || PARENT_TAB[nav.view] === v;
             return (
               <button key={v} type="button" data-view={"view-" + v} className={lit ? "active" : undefined} aria-current={lit ? "page" : undefined}
-                onClick={() => nav.show(v)}>
+                onClick={() => nav.tab(v)}>
                 <Icon /><span>{t(TAB_LABEL[v])}</span>
               </button>
             );

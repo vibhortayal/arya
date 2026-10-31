@@ -158,7 +158,8 @@ class TestHuntMenuShell(unittest.TestCase):
         self.assertLess(t.index("{view?.msg}"), t.index('className="toastact"'))
         self.assertIn("clearTimeout(timer.current)", t)
         self.assertIn("toastMs(msg, !!opts?.action)", t)
-        self.assertIn('<div id="toast" role="status" aria-live="polite"', t)
+        # The live region stays mounted; only its text changes (audit #38).
+        self.assertIn('<div id="toastlive" role="status" aria-live="polite">\n      <div id="toast" hidden={!cur}>', t)
 
     def test_hunt_css_rules(self):
         css = read("hunt.css")

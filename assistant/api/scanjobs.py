@@ -215,6 +215,8 @@ def commit(job_id):
         _finish(job_id, error=None)
         return public(_find(_load(), job_id))
     ctx = contextvars.copy_context()
+    # The job outlives this request: it must not read the request's memo.
+    ctx.run(state._memo.set, None)
     user, group = state._current_user.get(), state.current_group()
     if not state.in_sandbox():
         _pending_add(user, group, job_id)

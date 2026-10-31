@@ -12,9 +12,7 @@ const fmtCode = (c: string) => (c.length === 6 ? c.slice(0, 3) + " " + c.slice(3
 const cleanCode = (s: unknown) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 const initial = (h?: string) => (h || "?").charAt(0).toUpperCase();
 
-export function joinCodeFromUrl(): string {
-  try { return new URLSearchParams(location.search).get("join") || ""; } catch { return ""; }
-}
+export { joinCodeFromUrl } from "../lib/paths";
 
 type Preview = { name: string; invited_by: string; people: number; lists: number; my_lists: number; full?: boolean };
 

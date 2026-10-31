@@ -3,8 +3,10 @@
  * vite-plugin-pwa (injectManifest) builds it and fills in
  * self.__WB_MANIFEST: the built shell, every file hashed. No workbox
  * runtime; the rules are the old pwa/sw.js rules:
- *   - network first for every GET it handles, so a new build is never
- *     masked by an old cache; the cache is only the offline fallback;
+ *   - hashed build files (/app/) cache first; page loads network first
+ *     with a 2.5 s timeout, then the cached shell; every other GET it
+ *     handles network first, so a new build is never masked by an old
+ *     cache;
  *   - API, sign-in, uploads and Eyes are not answered by the worker at
  *     all (the old worker re-fetched them itself; the browser now
  *     sends them as if no worker were there);
@@ -62,19 +64,40 @@ self.addEventListener("fetch", e => {
   // API, sign-in, uploads and Eyes: the worker does not answer, so the
   // browser sends them as if there were no worker (no cache, no copy).
   if (BYPASS.some(p => url.pathname.startsWith(p))) return;
-  // Network first for the shell: a new build is never masked by an old cache.
-  e.respondWith(fetch(e.request)
-    .then(resp => {
-      if (resp.ok) {
-        const copy = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-      }
-      return resp;
-    })
-    .catch(() => caches.match(e.request, { ignoreSearch: e.request.mode === "navigate" })
-      .then(hit => hit || (e.request.mode === "navigate" ? caches.match("/index.html") : undefined))
-      .then(hit => hit || Response.error())));
+  // Built files (/app/) carry a content hash in their name, so the
+  // cache answers them at once (speed audit #21). Page loads race the
+  // network for 2.5 s and then fall back to the cached shell, so weak
+  // in-store signal never holds the app's first paint. Everything else
+  // stays network first: a new build is never masked by an old cache.
+  e.respondWith(url.pathname.startsWith("/app/") ? cacheFirst(e.request)
+    : networkFirst(e.request, e.request.mode === "navigate" ? 2500 : 0));
 });
+
+function keep(req, resp) {
+  if (resp.ok) {
+    const copy = resp.clone();
+    caches.open(CACHE).then(c => c.put(req, copy));
+  }
+  return resp;
+}
+function cacheFirst(req) {
+  return caches.match(req).then(hit => hit || fetch(req).then(resp => keep(req, resp)));
+}
+function networkFirst(req, wait) {
+  const net = fetch(req)
+    .then(resp => keep(req, resp));
+  const cached = () => caches.match(req, { ignoreSearch: req.mode === "navigate" })
+    .then(hit => hit || (req.mode === "navigate" ? caches.match("/index.html") : undefined));
+  if (!wait) return net.catch(() => cached().then(hit => hit || Response.error()));
+  return new Promise(resolve => {
+    let done = false;
+    const finish = r => { if (!done && r) { done = true; resolve(r); } };
+    // Slow network: the cached shell answers; the network copy still lands in the cache.
+    const timer = setTimeout(() => cached().then(finish), wait);
+    net.then(r => { clearTimeout(timer); finish(r); },
+      () => { clearTimeout(timer); cached().then(hit => finish(hit || Response.error())); });
+  });
+}
 
 /* Push reminders: show the notification, open the list on tap. The
  * server only sends when the reminders flag is on. */

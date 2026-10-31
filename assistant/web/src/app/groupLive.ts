@@ -36,7 +36,11 @@ export function useGroupLive(): void {
         return;
       }
       const n = navRef.current;
-      if (RELOADS.has(n.view)) n.replace(n.view, n.params);
+      if (!RELOADS.has(n.view)) return;
+      // A screen that can refresh in place takes the event (Today,
+      // Lists); the rest are shown again. No blank flash (#3).
+      const ev = new Event("arya-live", { cancelable: true });
+      if (window.dispatchEvent(ev)) n.replace(n.view, n.params);
     };
     const disconnect = () => { es.current?.close(); es.current = null; };
     const connect = () => {

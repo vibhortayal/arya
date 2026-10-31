@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { get, post } from "../lib/api";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode, useMemo } from "react";
+import { get, post, forgetReads } from "../lib/api";
 import type { Currency } from "../lib/format";
 import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
 import { applyLanguage } from "../i18n";
@@ -102,7 +102,11 @@ function leaveTeamPath(): void {
 }
 
 declare global {
-  interface Window { __boot?: { status: Promise<AuthStatus>; me: Promise<{ user?: string | null; demo?: boolean; owner?: boolean; waitlist_admin?: boolean } | null> } }
+  interface Window {
+    __boot?: { status: Promise<AuthStatus>; me: Promise<{ user?: string | null; demo?: boolean; owner?: boolean; waitlist_admin?: boolean } | null> };
+    /* Started by boot.js for a returning account; each is read once. */
+    __bootData?: { settings?: Promise<any>; today?: Promise<any> };
+  }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -126,6 +130,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // public/boot.js started both calls while the bundle downloaded.
       const boot = window.__boot;
       window.__boot = undefined;
+      window.__bootData = { settings: (boot as any)?.settings, today: (boot as any)?.today };
       const st = await (boot?.status ?? get<AuthStatus>("/auth/status")).catch(() => ({ has_users: true, registration_open: false }));
       setStatus(st);
       // null: no answer (no signal, or the server is down), which is
@@ -156,7 +161,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // setting comes with it (Auto until then).
   useEffect(() => {
     if (!user) return;
-    get<{ currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display; layouts?: Layouts }>("/api/settings")
+    type S = { currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display; layouts?: Layouts };
+    const early = window.__bootData?.settings as Promise<S> | undefined;
+    if (window.__bootData) window.__bootData.settings = undefined;
+    (early ? early.catch(() => get<S>("/api/settings")) : get<S>("/api/settings"))
       .then(s => {
         setCurrency({ code: s.currency, symbol: s.symbol });
         setOnboarded(s.onboarded !== false);
@@ -202,10 +210,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.layouts) setLayouts(r.layouts);
   }, []);
 
-  const enter = useCallback((u: string, d: boolean) => { setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
+  const enter = useCallback((u: string, d: boolean) => { forgetReads(); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
 
   const leave = useCallback(async () => {
     runLeaveHooks();
+    forgetReads();
     remember(null);
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);
@@ -213,7 +222,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     (window as any).__aryaUser = undefined;
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, demo, admin, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave }}>{children}</Ctx.Provider>;
+  // One object per change, not per render (speed audit #14): every
+  // useSession() screen re-rendered whenever the provider did.
+  const value = useMemo(() => ({ ready, user, demo, admin, status, currency, enter, setCurrency, language, languages, setLanguage, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave }),
+    [ready, user, demo, admin, status, currency, enter, language, languages, onboarded, markOnboarded, shopMode, questNudge, saveShopMode, patchShop, display, saveDisplay, layouts, saveLayout, leave]);
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

@@ -16,6 +16,9 @@ type Nav = {
    * (quest.js `Q.stack = ["view-community"]` once a hunt is made). */
   reset: (view: ViewId, params?: ViewParams, under?: ViewId) => void;
   back: (fallback?: ViewId) => void;
+  /* A tab bar tap: the stack becomes [Today, tab], so Back goes up to
+   * Today and then leaves, not through every tab visited (#35). */
+  tab: (view: ViewId) => void;
   /* Full-screen modes (the hunt) hide the tab bar, avatar and demo bar. */
   chrome: boolean;
   setChrome: (on: boolean) => void;
@@ -62,6 +65,9 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
   const reset = useCallback((view: ViewId, params: ViewParams = {}, under: ViewId = "community") => {
     setStack([{ view: under, params: {}, key: ++seq.current }, { view, params, key: ++seq.current }]);
   }, []);
+  const tab = useCallback((view: ViewId) => {
+    setStack(() => [...(view === "home" ? [] : [{ view: "home" as ViewId, params: {}, key: ++seq.current }]), { view, params: {}, key: ++seq.current }]);
+  }, []);
   const back = useCallback((fallback: ViewId = "home") => {
     setStack(s => (s.length > 1 ? s.slice(0, -1).map((e, i, a) => (i === a.length - 1 ? { ...e, key: ++seq.current } : e))
       : [{ view: fallback, params: {}, key: ++seq.current }]));
@@ -85,8 +91,8 @@ export function NavProvider({ initial = "home", children }: { initial?: ViewId; 
   // (QA 2026-10-28).
   useEffect(() => { window.scrollTo(0, 0); }, [top.view, top.key]);
 
-  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, reset, back, chrome, setChrome, depth: stack.length }),
-    [top, show, replace, reset, back, chrome, stack.length]);
+  const nav = useMemo<Nav>(() => ({ view: top.view, params: top.params, key: top.key, show, replace, reset, back, tab, chrome, setChrome, depth: stack.length }),
+    [top, show, replace, reset, back, tab, chrome, stack.length]);
 
   // Test and parity hook: tools/parity.mjs opens screens directly.
   useEffect(() => { (window as any).__aryaShow = show; }, [show]);

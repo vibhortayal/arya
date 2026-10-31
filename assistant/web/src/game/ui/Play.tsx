@@ -250,7 +250,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
       {/* HUD: back, where you are, the basket, help. */}
       <header className="qg-hud">
-        <button className="qg-ic" onClick={() => setSheet("quit")} aria-label="Leave the quest">‹</button>
+        <button className="qg-ic" onClick={() => (trip.practice ? onQuit() : setSheet("quit"))} aria-label="Leave the quest">‹</button>
         <div className="qg-where">
           <b>{trip.practice && L.id === "practice" ? "Practice Market" : L.name}</b>
         </div>
@@ -425,6 +425,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
           ))}
         </div>
       </Sheet>
+      {/* Practice never saves, so leaving it asks nothing (speed audit #34). */}
       <Sheet open={sheet === "quit"} onClose={() => setSheet(null)} title="Leave this quest?">
         <p className="qg-p">{trip.practice ? "Practice never saves, so nothing is lost." : !got ? "Nothing is in the cart yet, so this trip is not saved." : `You have ${got} of ${total} in the cart. Finish now to keep your points, or keep going.`}</p>
         <div className="qg-opts">

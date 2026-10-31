@@ -17,6 +17,6 @@ export function coachFor(trip: Trip, view: "map" | "section", item: QuestItem | 
   if (sectionView === "fog") return { text: "Fog: nobody has mapped this part. Look around. If you spot it, tap Found it here to put it on the map.", target: ".qg-got" };
   if (trip.golden === item.key) return { text: "A golden item! Each trip has one, and it's worth double.", target: ".qg-got" };
   if (!item.spot && trip.scouted.includes(item.section)) return { text: "Can't see it? Tap Not here: you can ask staff or tell other shoppers.", target: ".qg-cant" };
-  if (!trip.got.length) return { text: "You're at the shelf. Nothing goes in the cart until you choose: tap Grab it once it's in your real cart.", target: ".qg-got" };
+  if (!trip.got.length) return { text: "You're at the shelf. Nothing goes in the cart until you choose: tap Got it once it's in your real cart.", target: ".qg-got" };
   return { text: "Grab everything in one section on one visit for a clean sweep bonus.", target: ".qg-got" };
 }

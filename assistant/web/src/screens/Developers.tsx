@@ -9,8 +9,7 @@ import { useToast } from "../ui/Toast";
  * full interactive reference is the spec drawn by Scalar at
  * /developers/reference (a static page, not part of this bundle). Text
  * is docs/API.md in short form. */
-export const DEV_PATH = "/developers";
-export const isDevelopersPath = (path: string) => path.replace(/\/+$/, "") === DEV_PATH;
+export { DEV_PATH, isDevelopersPath } from "../lib/paths";
 
 export const REFERENCE_URL = "https://github.com/vibhortayal/arya/blob/main/docs/API.md";
 export const SCHEMA_PATH = "/api/v1/openapi.json";
