@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useNav } from "../app/nav";
-import { useGuide } from "../ui/Guide";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { DirectorPanel } from "../ui/Town";
 import { useTown } from "../lib/town";
-import { A2hsRow } from "../ui/A2hs";
-import { Row } from "../ui/kit";
 import { IconPen } from "../ui/icons";
 import { get, post } from "../lib/api";
 import { CURRENCY_SYMBOLS, MONTHS, asset } from "../lib/format";
@@ -30,31 +27,21 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
 
 type QProfile = { handle: string; level?: number; points?: number; stats: { hunts: number; streak_weeks?: number }; badges?: { id: string; earned?: boolean }[]; mapped_stores?: string[] };
-type Archive = { receipts: unknown[] };
 
 export function Profile() {
   const { t } = useTranslation();
   const nav = useNav();
   const town = useTown();
-  const guide = useGuide();
   const { demo, user, admin, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
   const { toast, showErr } = useToast();
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
-  const [archive, setArchive] = useState<Archive>({ receipts: [] });
-  const [groupName, setGroupName] = useState<string | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [delPw, setDelPw] = useState("");
 
   const load = useCallback(async () => {
-    const [p, a] = await Promise.all([
-      get<QProfile>("/api/quest/profile").catch(() => null),
-      get<Archive>("/api/quest/receipts").catch(() => ({ receipts: [] })),
-    ]);
+    const p = await get<QProfile>("/api/quest/profile").catch(() => null);
     setProfile(p);
-    // Who sees the receipts: you alone, or you and your group by name.
-    get<{ group: { name: string } | null }>("/api/group").then(g => setGroupName(g?.group?.name || null), () => setGroupName(null));
-    setArchive(a);
     // renderProfile marked the earned badges seen (quest.js qMarkBadgesSeen).
     if (p) {
       try { localStorage.setItem("arya-seen-badges", JSON.stringify((p.badges || []).filter(b => b.earned).map(b => b.id))); }
@@ -112,33 +99,16 @@ export function Profile() {
       {from && <p><a href="#" id="pf-back" onClick={ev => { ev.preventDefault(); nav.back(from as any); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>}
       <h1 className="largetitle">{t("settings.settings")}</h1>
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
+      {!demo && user ? <p className="muted small nomargin signedin">{t("settings.signedInAsUser", { user })}</p> : null}
       {town ? <DirectorPanel /> : null}
       <GroupSection />
-      {/* Most of this tab is the user's data, not settings: a "Your data"
-        * heading groups Stores, Receipts and Spending (labels audit,
-        * judgement call 4; the tab keeps the name Settings). */}
-      <h3 className="sect" id="pf-data-head">{t("settings.yourData")}</h3>
-      <div className="group">
-        <NavRow view="stores-mine" title={t("settings.stores")} sub={t("settings.yourStoresFavoritesAndThe")} />
-        <NavRow id="btn-receipts" view="receipts" title={t("common.receipts")} subId="pf-receipts-sub"
-          sub={receiptsSub(archive.receipts.length, groupName)} />
-        <NavRow id="btn-analysis" view="analysis" title={t("common.analysis")} sub={t("settings.spendingByMonthAndStore")} />
-      </div>
-      <div className="group">
-        {/* One help row (usability pass): the tour replay lives inside the
-          * guide; Quest progress moved into the Quest tab. */}
-        <button className="navrow" id="btn-guide" type="button" onClick={() => guide.open()}>
-          <span className="grow">{t("settings.helpAndGuide")}<span className="sub">{t("settings.helpAndGuideSub")}</span></span><span className="chev">›</span></button>
-        <NavRow id="btn-powers" view="powers" title={t("common.aryaSPowers")} sub={t("settings.whatAryaCanDoAnd")} />
-        <NavRow id="btn-display" view="display" title={t("display.title")} sub={t("display.sub")} />
-        <NavRow id="btn-usage" view="usage" title={t("usage.title")} sub={t("settings.usageSub")} />
-        <A2hsRow demo={demo} />
-      </div>
-      <Reminders />
-      <h3 className="sect">{t("settings.account")}</h3>
-      <div className="group" id="profile-account">
-        <Row name={t("settings.signedInAs")} right={demo ? "demo" : user || ""} />
-        <div className="row prefrow" id="pf-prefs"><div className="grow"><span className="name">{t("settings.preferences")}</span><span className="sub">{t("settings.preferencesSub")}</span></div>
+      {/* Settings is only settings (owner, 2026-10-31): Stores moved to
+        * Lists, Receipts and Spending to Today, Help and Feedback live in
+        * the Help tab, and Powers, the other-AI-app row, Keeping Arya
+        * running and Add to Home Screen sit on the About Arya page. */}
+      <h3 className="sect">{t("settings.preferences")}</h3>
+      <div className="group" id="pf-prefs-group">
+        <div className="row prefrow" id="pf-prefs"><div className="grow"><span className="name">{t("settings.currencyAndLanguage")}</span><span className="sub">{t("settings.currencyAndLanguageSub")}</span></div>
           <div className="prefpicks">
             <select id="pf-currency" className="curpick" aria-label={t("settings.currency")} value={currency.code} onChange={ev => pickCurrency(ev.target.value)}>
               {["USD", "EUR", "GBP", "INR", "CAD", "AUD"].map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
@@ -147,7 +117,7 @@ export function Profile() {
               {languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
             </select>
           </div></div>
-        <div className="row prefrow" id="pf-shopmode"><div className="grow"><span className="name">{t("settings.shopMode")}</span><span className="sub">{t("settings.shopModeSub")}</span></div>
+        <div className="row prefrow inline" id="pf-shopmode"><div className="grow"><span className="name">{t("settings.shopMode")}</span></div>
           <div className="prefpicks">
             <select id="pf-shopmode-select" className="curpick" aria-label={t("settings.shopMode")} value={shopMode || "ask"}
               onChange={ev => attempt(async () => { await saveShopMode(ev.target.value as "quest" | "list" | "ask"); })}>
@@ -156,18 +126,13 @@ export function Profile() {
               <option value="ask">{t("settings.shopModeAsk")}</option>
             </select>
           </div></div>
+        <NavRow id="btn-display" view="display" title={t("display.title")} sub={t("display.sub")} />
+        <Reminders />
+      </div>
+      <h3 className="sect">{t("settings.account")}</h3>
+      <div className="group" id="profile-account">
         {admin.owner && <RegistrationRow />}
         {admin.waitlist && <WaitlistRow />}
-      </div>
-      <div className="group">
-        <NavRow id="btn-feedback" view="feedback" title={t("settings.featureRequestContactUs")} sub={t("settings.tellUsWhatToBuild")} />
-        <NavRow id="btn-muse" view="muse" title={t("settings.connectAnAiAgent")} sub={t("settings.useAryaFromYourOwn")} />
-        <NavRow id="btn-about" view="about" title={t("common.about")} sub={t("settings.builtOnMetaModels")} />
-      </div>
-      {/* Sign out sits above Export and Delete, away from the red row (audit M9). */}
-      <p style={{ margin: "22px 0" }}><button id="btn-signout2" className="btn secondary wide" type="button"
-        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
-      <div className="group">
         <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
         <button className="navrow" id="btn-del-account" type="button" onClick={() => setDelOpen(o => !o)}>
           <span className="grow">{t("settings.deleteMyAccount")}<span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
@@ -178,7 +143,13 @@ export function Profile() {
           <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>{t("settings.eraseEverything")}</button></p>
         </div>
       </div>
-
+      <h3 className="sect">{t("settings.arya")}</h3>
+      <div className="group">
+        <NavRow id="btn-about" view="about" title={t("settings.aboutArya")} sub={t("settings.aboutAryaSub")} />
+      </div>
+      {/* Sign out is the last button on the screen (owner, 2026-10-31). */}
+      <p style={{ margin: "22px 0" }}><button id="btn-signout2" className="btn secondary wide" type="button"
+        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
     </>
   );
 }
@@ -190,12 +161,6 @@ export function profileLine(profile: QProfile | null): string {
   if ((profile.points || 0) > 0) return t("settings.levelLine", { level: profile.level || 1, points: profile.points }) + (s.streak_weeks ? t("settings.streak", { n: s.streak_weeks }) : "");
   return s.streak_weeks ? t("settings.shoppingWeeks", { count: s.streak_weeks }) : t("settings.firstQuestLevel");
 }
-
-export function receiptsSub(count: number, group: string | null): string {
-  const who = group ? t("settings.seenBy.group", { group }) : t("settings.seenBy.you");
-  return count ? t("settings.receiptsCount", { count }) + " · " + who : cap1(who);
-}
-const cap1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 function AvatarCard({ handle, level }: { handle: string; level: string }) {
   const { t } = useTranslation();
@@ -415,8 +380,6 @@ function Reminders() {
   const on = cfg.subscribed;
   return (
     <div id="pf-reminders" hidden={!cfg.enabled}>
-      <h3 className="sect">{t("settings.reminders")}</h3>
-      <div className="group">
         <div className="row"><span className="grow"><span className="name" style={{ fontWeight: 550 }}>{t("settings.remindMe")}</span>
           <span className="sub" id="rem-sub">{on ? t("settings.remOn") : t("settings.remOff")}</span></span>
           <button className="sw" id="rem-switch" type="button" role="switch" aria-checked={on} aria-label={t("settings.remindMe")} disabled={busy || noSwitch} onClick={toggle}><i></i></button></div>
@@ -428,7 +391,6 @@ function Reminders() {
               <button type="button" id="rem-dp" aria-label={t("settings.moreDays")} onClick={() => days(1)}>+</button></span></div>
           <button className="navrow" id="rem-test" type="button" disabled={testBusy} onClick={test}><span className="grow accenttext">{t("settings.sendMeATestReminder")}<span className="sub">{t("settings.arrivesInAFewSeconds")}</span></span><span className="chev">›</span></button>
         </div>
-      </div>
       <p className="muted small remnote" id="rem-note">{note}</p>
     </div>
   );

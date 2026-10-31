@@ -361,7 +361,7 @@ function WhereSheet({ data, id, run, onClose, onSnap }: Common & { id: string; o
  * last bought, and where it is usually bought, all from receipts. */
 type Hist = { event_type: string; date: string; store_id?: string };
 type ItemInfo = { pattern?: { median_interval_days?: number; purchase_count: number; last_bought?: string; days_since_last?: number };
-  history?: Hist[]; price_by_store?: Record<string, { count: number; median: number }> };
+  history?: Hist[]; price_by_store?: Record<string, { count: number; median: number; last?: number }> };
 type Prices = { trend?: { pct: number; since_month: string; from_price: number; to_price: number; store: string };
   cheaper?: { store: string; price: number; vs_price: number; vs_store: string; date: string };
   similar?: { name: string; store: string; date: string; price: number; per_price?: number; per?: string }[];
@@ -426,7 +426,10 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
   const stores = ch ? [] : Object.entries((d && d.price_by_store) || {}).sort((a, b) => b[1].count - a[1].count);
   if (stores.length) {
     const [s0, v0] = stores[0];
-    const others = stores.slice(1, 3).map(([s, v]) => t("lists.why.priceAt", { price: $(v.median), store: s })).join(" · ");
+    // Another store's line is the last price paid there, so it matches that
+    // store's latest receipt (retest 2026-10-31 #11: "$5.60 at Safeday"
+    // was a median next to a $5.80 receipt).
+    const others = stores.slice(1, 3).map(([s, v]) => t("lists.why.priceAt", { price: $(v.last ?? v.median), store: s })).join(" · ");
     rows.push(<div className="whyrow" key="usual"><Ic k="tag" /><div><b>{t("lists.usuallyFrom", { s0, median: $(v0.median) })}</b><span className="sub">{others || t("lists.why.buysThere", { count: v0.count })}</span></div></div>);
   }
   if (!rows.length) rows.push(<div className="whyrow" key="why"><Ic k="cal" /><div><b>{suggestWhy(it)}</b>{it.judge_reason ? <span className="sub">{it.judge_reason}</span> : null}</div></div>);

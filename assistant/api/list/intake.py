@@ -50,14 +50,27 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
                                      personal=True)
     dec = parse_json(out)
     kind = dec.get("kind")
-    if kind not in ("list", "receipt"):
+    if kind not in ("list", "receipt", "item", "unclear"):
         kind = "list"
+    if kind == "item":
+        name = _clean_piece(str(dec.get("item") or ""))
+        if not _sensible(name):
+            return {"kind": "unclear", "items": [],
+                    "reason": "I couldn't tell what this is."}
+        return {"kind": "item", "items": [], "item": name,
+                "confident": bool(dec.get("confident"))}
+    if kind == "unclear":
+        return {"kind": "unclear", "items": [],
+                "reason": str(dec.get("reason") or "").strip()[:120]}
     items = []
     if kind == "list":
         for raw in dec.get("items") or []:
             name = _clean_piece(str(raw))
             if _sensible(name):
                 items.append(name)
+    if kind == "list" and not items:
+        return {"kind": "unclear", "items": [],
+                "reason": "I couldn't find anything to add in that photo."}
     return {"kind": kind, "items": items}
 
 
@@ -353,9 +366,21 @@ def _link(key, tracked):
         if k == key:
             return item_id
     words = set(key.split())
+    # A pack size is not part of the name: "milk" is half of "whole
+    # milk 1 gal" and "avocado" all of "avocados 4 ct" (retest
+    # 2026-10-31 #6: "mlik" and "3 avocados" made new rows).
     hits = {item_id for item_id, k in tracked
-            if words < set(k.split()) and len(words) * 2 >= len(k.split())}
+            if (core := _core(k)) and words <= core and len(words) * 2 >= len(core)}
     return hits.pop() if len(hits) == 1 else None
+
+
+_SIZE_WORDS = {"oz", "fl", "lb", "lbs", "ct", "count", "gal", "qt", "pt", "g", "kg", "ml", "l",
+               "pk", "pack", "dozen", "doz"}
+
+
+def _core(key):
+    """A tracked key's words without its pack size ("1 gal", "32 oz")."""
+    return {w for w in key.split() if w not in _SIZE_WORDS and not re.fullmatch(r"\d+(\.\d+)?[a-z]{0,3}", w)}
 
 
 def existing_item_id(name, dictionary_entries, flags):

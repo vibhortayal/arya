@@ -1,3 +1,4 @@
+import { markDemoStart } from "../ui/FirstRun";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
@@ -126,7 +127,7 @@ export function Login() {
 
   const demo = async () => {
     const r = await fetch("/auth/demo", { method: "POST" });
-    if (r.ok) { enter("demo", true); return; }
+    if (r.ok) { markDemoStart(); enter("demo", true); return; }
     setErr((await detail(r)) || t("login.demoFailed"));
     setSignin(true);
   };

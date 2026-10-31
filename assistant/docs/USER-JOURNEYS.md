@@ -48,7 +48,7 @@ her head and forgets milk.
 | Step | What Priya does | What Arya shows |
 |---|---|---|
 | 1 | Opens the app, taps **Try it now** or creates an account. | Landing: "Your grocery run, smarter." Three real rows (Whole Milk "Running low"). |
-| 2 | Settings, **Receipts**, **Choose Files**. She picks the Costco PDF from Oct 17. More than one file is fine. | One progress line per file, then one summary: filed, already filed, could not read. |
+| 2 | Today, **Receipts** (the card at the bottom), **Choose Files**. She picks the Costco PDF from Oct 17. More than one file is fine. | One progress line per file, then one summary: filed, already filed, could not read. |
 | 3 | Waits a few seconds. | Muse Spark reads the lines. Code adds them up. The receipt shows a check mark and its total only if the lines match the printed total. |
 | 4 | Files the same PDF again by mistake. | "Already filed." Arya compares a fingerprint (store, date, lines, total) and does not count the trip twice. |
 | 5 | Opens **Today**. | **Running low** lists items that are due. |
@@ -195,7 +195,7 @@ at" line, because there is no better store in the data.
 
 ![Analysis](img/j-analysis.png)
 
-**Arya's powers.** Settings has a page that lists what Arya already
+**Arya's powers.** Settings, About Arya, has a page that lists what Arya already
 does and what turns on next, with one line per power. One "Did you
 know?" line shows on Today each day.
 
@@ -312,7 +312,7 @@ on screen and what is left, so "this" and "it" work.
 `ARYA_PUSH_REMINDERS=1`, makes VAPID keys and adds a daily cron line
 (see `assistant/docs/PUSH-REMINDERS.md`). Demo accounts never see it.
 
-1. Settings, **Reminders**. Priya turns it on and picks the notice
+1. Settings, Preferences, **Remind me**. Priya turns it on and picks the notice
    window (1 to 7 days, default 2).
 2. At 9:00 the daily job runs. It sends at most one push per account
    per day. No model call. $0.

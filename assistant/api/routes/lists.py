@@ -1,5 +1,6 @@
 """The shopping list: add, remove, quantity, move, check, named lists, and the staple judge that gates admission."""
 import datetime
+import logging
 import os
 
 from fastapi import APIRouter, HTTPException, Request
@@ -10,6 +11,7 @@ from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _int_field, _json_obj, new_client
 from api.routes.items import _merge_flag
 
+log = logging.getLogger("arya.input")
 router = APIRouter()
 
 
@@ -169,6 +171,22 @@ def _list_add_extras(item_id, body, fields):
     state.update_flag(item_id, change)
 
 
+@router.post("/api/list/sample-receipt")
+async def list_sample_receipt(req: Request):
+    """Demo only: a sample receipt for the items ticked in Just my list
+    (retest 2026-10-31 #16), the tick-mode twin of the Quest's sample."""
+    if not state.in_sandbox():
+        raise HTTPException(403, "sample receipts are for the demo only")
+    body = await _json_obj(req)
+    ids = [str(i) for i in (body.get("item_ids") or []) if i][:60]
+    from api import quest
+    try:
+        rec = quest.sample_list_receipt(str(body.get("store") or "")[:60], ids)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"merchant": rec["merchant"], "lines": len(rec["lines"]), "total": rec["total"]}
+
+
 @router.post("/api/list/add")
 async def list_add(req: Request):
     body = await _json_obj(req)
@@ -187,6 +205,11 @@ async def list_add(req: Request):
         groups.note("added", item_id)
         return {"item_id": item_id}
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
+    if "list" not in fields and not state.flags().get(item_id, {}).get("list"):
+        # Running low's Add and the like: the item's usual store's list (retest #5).
+        home = state.usual_list(item_id)
+        if home:
+            fields["list"] = home
     _list_add_extras(item_id, body, fields)
     groups.note("added", item_id)
     return {"item_id": item_id}
@@ -484,6 +507,14 @@ async def list_from_photo(req: Request):
         raise HTTPException(502, str(e)[:200])
     if read["kind"] == "receipt":
         return {"kind": "receipt", "names": [], "added": 0}
+    if read["kind"] == "item":
+        # One clear product: offered back as "Add Peach?", not added.
+        return {"kind": "item", "item": read["item"],
+                "confident": read["confident"], "names": [], "added": 0}
+    if read["kind"] == "unclear":
+        log.info("input failure: photo unclear (%s)", read.get("reason", ""))
+        return {"kind": "unclear", "reason": read.get("reason", ""),
+                "names": [], "added": 0}
     # The demo adds too: its writes land in the visitor's sandbox.
     added = [_add_name_to_list(n, list_id=list_id) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],

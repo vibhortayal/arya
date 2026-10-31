@@ -171,11 +171,17 @@ def _zone_lines(g):
         for z in g["zones"])
 
 
+# A slow model call kept "Arya is building your store" spinning for the
+# client's full 120 s (retest 2026-10-31 #2). Past this, the answers' own
+# store stands.
+BUILD_TIMEOUT_S = 30
+
+
 def _ask(client, prompt, cache_key):
     from api.meta_client import parse_json
     text, _usage, _cost = client.chat([{"role": "user", "content": prompt}], mode="standard", personal=True,
                                       reasoning_effort="low", temperature=0.4, schema=BUILD_SCHEMA,
-                                      cache_key=cache_key)
+                                      cache_key=cache_key, timeout=BUILD_TIMEOUT_S)
     return parse_json(text) or {}
 
 

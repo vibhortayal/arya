@@ -1926,6 +1926,9 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .devnav a { padding: 7px 10px; border-radius: 8px; color: var(--secondary); }
 .devnav a.on { background: var(--fill); color: var(--label); }
 .devmain { min-width: 0; }
+/* Room under the last section so Limits, Changelog and Not yet can scroll
+   up to the top when their link is used. */
+.devmain { padding-bottom: 80vh; }
 .devsec { scroll-margin-top: 16px; }
 .devh { font-size: 22px; letter-spacing: -0.02em; margin: 34px 0 4px; }
 .devlead { color: var(--secondary); margin: 0 0 10px; font-size: 15px; }
@@ -2146,3 +2149,12 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 :root.lowend, :root.nomotion { --tabbar: var(--panel); }
 .lowend *, .nomotion * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 #list-cards .listcard:active, #today-lists .listcard:active { background: var(--fill); }
+
+/* Settings (2026-10-31): shop mode on one line, the signed-in email under
+ * the avatar card, and the credits row on About Arya. */
+.prefrow.inline { flex-wrap: nowrap; align-items: center; gap: 10px; }
+.prefrow.inline .grow { flex: 1 1 40%; }
+.prefrow.inline .prefpicks { width: auto; flex: 0 1 58%; }
+.prefrow.inline .curpick { flex: 1; max-width: none; }
+.signedin { text-align: center; margin: -6px 0 14px; }
+.aboutcredit { padding-top: 14px; }

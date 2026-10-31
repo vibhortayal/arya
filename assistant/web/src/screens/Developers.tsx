@@ -146,7 +146,7 @@ export function Developers() {
       <div className="devwrap">
         <nav className="devnav" aria-label={t("developers.onThisPage")}>
           {SECTIONS.map(id => (
-            <a key={id} href={"#" + id} className={active === id ? "on" : ""}
+            <a key={id} href={"#" + id} className={active === id ? "on" : ""} onClick={() => setActive(id)}
               aria-current={active === id ? "true" : undefined}>{t("developers." + NAV_KEY[id])}</a>
           ))}
         </nav>

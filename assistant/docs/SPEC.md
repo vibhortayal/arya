@@ -247,7 +247,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 - FR-11.2 The system shows the own-receipt price trend of an item, the cheaper store, and similar items. Trends show as words and up or down percentages. No line graphs.
 - FR-11.3 Spending has "Your prices": personal inflation, split smarter, and food waste.
 - FR-11.4 Ask answers price questions from precomputed facts.
-- FR-11.5 Settings has "Arya's powers": one screen, one line per power, in the groups "Working for you," "Turns on as you add receipts," and "You choose to turn on." Quest is not listed. An (i) button on each power holds the caveats. A card states the fact in one line.
+- FR-11.5 Settings, About Arya, has "Arya's powers": one screen, one line per power, in the groups "Working for you," "Turns on as you add receipts," and "You choose to turn on." Quest is not listed. An (i) button on each power holds the caveats. A card states the fact in one line.
 - FR-11.6 Today shows one "Did you know?" card a day.
 - FR-11.7 Community prices, Deals, and Arya Shoppers (live presence: Quiet, Busy, Packed) are opt-in and not live. The opt-in records a choice only. A community figure would need 5 or more households over 30 days, a median, and no names. Roadmap.
 
@@ -304,14 +304,18 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-The app is list first. It has five tabs: Today, Lists, Ask, Quest,
-Settings. Settings opens Profile (account, Group, Reminders, Arya's
-powers, Add to Home Screen, feedback). Receipts and Spending are
-reached from Profile. Item and category detail opens from any list.
+The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
+Settings. Settings has Group, Preferences (currency and language, When I
+start shopping, Display, Reminders), Account (Export my data, Delete my
+account), About Arya and, last, Sign out. About Arya has Arya's powers,
+Use Arya in another AI app, Add to Home Screen and Keeping Arya running.
+Stores are on Lists. Receipts and Spending are on Today, in a card at the
+bottom. Help has the guide, the tour and feedback. Item and category
+detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
 2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own. Ask takes typed or spoken questions through labelled Talk and Photo buttons under the field. A photo opens a chooser (add to my list, file a receipt, check my fridge, read the date, or ask about this photo); asking about a photo sends it once with the question, keeps nothing, and never judges a price from the picture. Replies are text only, never spoken.
-3. Spending (from Profile). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
+3. Spending (from Today). Spend by category over time. Trip history. Top items. The returns total. The bought-for-others subtotal of Section 6.2.
 4. Item and category detail. Purchase timeline. Cadence. Pack sizes. Price trend by store. Run-out range. Purchase and return history. Controls: add to list now, snooze suggestion, never suggest, change allocation.
 
 Honesty rules for all screens:

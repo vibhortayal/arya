@@ -44,17 +44,15 @@ def home():
     # One pass over the ledger, then a lookup per item (speed audit #10:
     # this was items x entries).
     by_item = {}
-    for e in d["entries"]:
-        if e["event_type"] == "purchase":
-            by_item.setdefault(e["item_id"], {}).setdefault(e["store_id"], []).append(e["price"])
+    for e in sorted(d["entries"], key=lambda e: e["date"]):
+        u = state.shelf_price(e)
+        if u is not None:
+            by_item.setdefault(e["item_id"], {}).setdefault(e["store_id"], []).append(u)
     pbs = {}
     for item in d["smart_list"]["items"]:
         prices = by_item.get(gm.get(item["item_id"], item["item_id"]))
         if prices:
-            pbs[item["item_id"]] = {
-                s: {"min": min(v), "median": sorted(v)[len(v) // 2],
-                    "max": max(v), "count": len(v)}
-                for s, v in prices.items()}
+            pbs[item["item_id"]] = {s: state.price_summary(v) for s, v in prices.items()}
     from api import expiry
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
     use_soon = expiry.use_soon(_fl, nm, last_bought, _d_today())

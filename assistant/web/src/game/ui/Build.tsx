@@ -58,7 +58,9 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
     const mine = target?.kind === "store";
     const base: StoreGraph = { ...fromAnswers({ ...a, name }), id: mine ? `mine:${target.store.id}` : "build", source: mine ? "mine" : "dream" };
     // Arya's pass names things and fills a cuisine in; the answers' store stands if it cannot.
-    const g = await (source.build ? source.build(a, base).catch(() => base) : Promise.resolve(base));
+    // Never wait on it for long: past 40 s the answers' store stands (retest 2026-10-31 #2).
+    const late = new Promise<StoreGraph>(ok => window.setTimeout(() => ok(base), 40000));
+    const g = await (source.build ? Promise.race([source.build(a, base).catch(() => base), late]) : Promise.resolve(base));
     setStep({ s: "made", graph: { ...g, look: a.look, name } });
   };
   const back = () => {

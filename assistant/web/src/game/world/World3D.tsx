@@ -8,7 +8,7 @@
  * a blueprint, an unmapped section sits under fog with a "?" sign, and
  * nothing here claims a shelf Arya has not seen. */
 import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { Component, useEffect, useMemo, useRef, type ReactNode, type RefObject } from "react";
 import * as THREE from "three";
 import { charArt } from "../assets";
 import { reducedMotion } from "../fx/feel";
@@ -39,6 +39,9 @@ type Props = {
   onArrive: (g: Goal) => void;
   onWalking: (g: Goal | null) => void;
   onTapItem: (key: string) => void;
+  /* The phone cannot draw the store (no WebGL, or the renderer failed):
+   * the screen around the world carries on without it. */
+  onFail?: () => void;
 };
 
 const hex = (n: number) => "#" + n.toString(16).padStart(6, "0");
@@ -143,17 +146,51 @@ const softTex = () => canvasTex(128, 128, c => {
  * at 1x pixels (speed audit #12). */
 const LOW_END = typeof navigator !== "undefined" && (navigator.hardwareConcurrency || 8) <= 4;
 
+/* WebGL is there at all (retest 2026-10-31 #1: a browser without it
+ * blanked the whole app). Asked once; the probe's context is let go. */
+let glOk: boolean | null = null;
+export function canDraw3D() {
+  if (glOk !== null) return glOk;
+  try {
+    const gl = document.createElement("canvas").getContext("webgl2") || document.createElement("canvas").getContext("webgl");
+    glOk = !!gl;
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  } catch { glOk = false; }
+  return glOk;
+}
+
+/* What shows in the world's place when it cannot be drawn. */
+function NoWorld({ onFail }: { onFail?: () => void }) {
+  useEffect(() => { onFail?.(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="qg-world qg-noworld" role="note">
+      <p><b>This browser can't draw the 3D store.</b><br />Your list still works: open it and tap an item to grab it.</p>
+    </div>
+  );
+}
+
+/* A renderer that throws (lost or refused context) stays inside the world. */
+class WorldGuard extends Component<{ children: ReactNode; onFail?: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.warn("Arya 3D:", e); }
+  render() { return this.state.failed ? <NoWorld onFail={this.props.onFail} /> : this.props.children; }
+}
+
 export function World3D(p: Props) {
+  if (!canDraw3D()) return <NoWorld onFail={p.onFail} />;
   // frameloop="demand": a frame is drawn only while something moves
   // (the shopper, a flight, the camera settling, other shoppers in
   // practice). A still store draws nothing, so a sheet over it costs no
   // GPU time and the phone stays cool (speed audit #12).
   return (
+    <WorldGuard onFail={p.onFail}>
     <Canvas className="qg-world" frameloop="demand" shadows={!LOW_END} dpr={LOW_END ? 1 : [1, 1.5]}
       gl={{ antialias: !LOW_END, powerPreference: LOW_END ? "default" : "high-performance" }}
       camera={{ fov: 42, near: 0.5, far: 200, position: [10, 30, 40] }} onCreated={({ gl }) => { gl.toneMapping = THREE.NoToneMapping; }}>
       <Store {...p} />
     </Canvas>
+    </WorldGuard>
   );
 }
 

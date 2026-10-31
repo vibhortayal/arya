@@ -163,14 +163,18 @@ def snapshot():
         "running_low": [nm.get(p["item_id"], p["item_id"])
                         for p in state.running_low(d)
                         if p["item_id"] not in checked],
+        # Only what is on a list; Arya's suggestions are not (they show
+        # under "Suggested" on Lists until someone adds them).
         "on_list": [i.get("name") or nm.get(i["item_id"], i["item_id"])
-                    for i in d["smart_list"]["items"] if not i.get("checked")],
+                    for i in d["smart_list"]["items"] if not i.get("checked") and i.get("on_list")],
+        "suggested": [i.get("name") or nm.get(i["item_id"], i["item_id"])
+                      for i in d["smart_list"]["items"] if not i.get("checked") and not i.get("on_list")],
         # Named lists (Costco, Indian Store...) and what sits on each.
         "named_lists": [
             {"name": l["name"], "stores": l.get("stores", []),
              "items": [i.get("name") or nm.get(i["item_id"], i["item_id"])
                        for i in d["smart_list"]["items"]
-                       if i.get("list") == l["id"] and not i.get("checked")]}
+                       if i.get("list") == l["id"] and not i.get("checked") and i.get("on_list")]}
             for l in state.named_lists()],
         "currency": _currency_line(),
         "spend_total": dash["spend_total"], "returns_total": dash["returns_total"],
@@ -254,6 +258,14 @@ def apply_actions(actions, added=None):
         nm = state.names().get(item_id, item_id)
         fl = dict(state.flags().get(item_id, {}))
         t = a.get("type")
+        if t in ("add_to_list", "ran_out") and not target and not fl.get("list"):
+            # No list named: the list for the store it is usually bought at (retest #5).
+            home = state.usual_list(item_id)
+            if home:
+                fl["list"] = home
+                lst = next((x for x in state.named_lists() if x["id"] == home), None)
+                if lst:
+                    dest = _t("dest_named", " to {list}", list=lst["name"])
         if t == "add_to_list":
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
@@ -353,7 +365,9 @@ def chat(history, client, surface=None, context=None, image=None):
                     a["list"] = here["name"]
     proposed, now = [], actions
     if surface:
-        now = [a for a in actions if a.get("type") not in RISKY]
+        # "We ran out of X" for an X Arya has never seen is just an add (retest #4).
+        now = [a for a in actions if a.get("type") not in RISKY
+               or (a.get("type") == "ran_out" and not _resolve(a.get("item")))]
         for a in actions:
             if a.get("type") in RISKY:
                 iid = _resolve(a.get("item"))
@@ -363,7 +377,7 @@ def chat(history, client, surface=None, context=None, image=None):
     applied, skipped = apply_actions(now, added)
     if surface:
         for a in actions:
-            if a.get("type") in RISKY and not _resolve(a.get("item")):
+            if a.get("type") in RISKY and a.get("type") != "ran_out" and not _resolve(a.get("item")):
                 skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
                                   item=a.get("item")))
     return {"reply": dec.get("reply", ""), "applied": applied, "skipped": skipped,

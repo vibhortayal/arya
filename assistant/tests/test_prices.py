@@ -163,7 +163,7 @@ class TestClientWiring(unittest.TestCase):
     def test_powers_page_daily_card_and_analysis_are_wired(self):
         self.assertIn('"powers"', src("app/views.ts"))
         self.assertIn("  powers: Powers,", src("screens/registry.tsx"))
-        self.assertIn('id="btn-powers" view="powers"', src("screens/Profile.tsx"))
+        self.assertIn('"btn-powers", "powers"', src("screens/About.tsx"))
         self.assertIn('id="today-tip"', src("screens/Today.tsx"))
         self.assertIn('id="an-prices"', src("screens/Analysis.tsx"))
         self.assertIn('id="info-sheet"', src("ui/Info.tsx"))
