@@ -36,7 +36,7 @@ export function demoTour(go: (view: ViewId) => void): TourStep[] {
   s("lists", "list", "new", '#list-new', "above"),
   s("ask", "chat", "tab", '#tabs button[data-view="view-chat"]', "above"),
   s("ask", "chat", "box", '#chat-form', "above"),
-  s("ask", "chat", "photo", '#ask-photo', "above"),
+  s("ask", "chat", "photo", 'label[for="ask-photo"]', "above"),
   s("quest", "community", "tab", '#tabs button[data-view="view-community"]', "above"),
   s("quest", "community", "map", '#qm-map-store', "above"),
   s("help", "help", "tab", '#tabs button[data-view="view-help"]', "above"),
