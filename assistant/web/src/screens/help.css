@@ -1,0 +1,12 @@
+/* The Help tab (mockup PmHxJbYVus8evkxaYP8KEN). */
+.help-intro { margin: -4px 0 12px; }
+.help-ask { display: flex; gap: 8px; margin-bottom: 10px; }
+.help-ask input {
+  flex: 1; min-width: 0; font: inherit; font-size: 17px; color: var(--label);
+  background: var(--fill); border: 0; border-radius: 10px; padding: 11px 12px;
+}
+.help-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.help-back { margin: 2px 0 6px; }
+.help-body { margin: -4px 0 4px; }
+.help-note { display: block; color: var(--label); font-size: 15px; }
+.help-actions { display: grid; gap: 10px; margin-top: 18px; }

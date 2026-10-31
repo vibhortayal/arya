@@ -47,17 +47,17 @@ def seed_receipt(c, merchant, date, lines, rid):
 
 
 class TestShellContract(unittest.TestCase):
-    def test_four_tabs_no_add_no_dashboard(self):
+    def test_six_tabs_no_add_no_dashboard(self):
         # The Add tab is gone (owner, 2026-10-28): adding lives on
         # the List page. List first, Quest second (owner, 2026-10-29):
         # Crew folded into the Quest tab; its view id stays
         # community. Settings tab (owner, 2026-10-29) opens Profile.
         views = frontend.src("app/views.ts")
         tabs = re.search(r"TABS: ViewId\[\] = \[([^\]]*)\]", views).group(1)
-        self.assertEqual(re.findall(r'"([^"]+)"', tabs), ["home", "list", "chat", "community", "profile"])
+        self.assertEqual(re.findall(r'"([^"]+)"', tabs), ["home", "list", "chat", "community", "help", "profile"])
         app = frontend.src("App.tsx")
         labels = re.search(r"TAB_LABEL[^{]*\{([^}]*)\}", app).group(1)
-        self.assertEqual(re.findall(r':\s*"([^"]+)"', labels), ["Today", "Lists", "Ask", "Quest", "Settings"])
+        self.assertEqual(re.findall(r':\s*"([^"]+)"', labels), ["Today", "Lists", "Ask", "Quest", "Help", "Settings"])
         self.assertIn('data-view={"view-" + v}', app)
         self.assertNotIn('"scan"', views)
 

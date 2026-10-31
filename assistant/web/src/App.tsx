@@ -12,7 +12,7 @@ import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { useTown } from "./lib/town";
 import { joinCodeFromUrl } from "./screens/GroupJoin";
-import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
+import { TabAsk, TabHelp, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
 import { Login } from "./screens/Login";
 import { Developers, isDevelopersPath } from "./screens/Developers";
 import { SCREENS, preloadTabScreens } from "./screens/registry";
@@ -42,9 +42,9 @@ function Root() {
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
 }
 
-const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, profile: TabSettings };
+const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, help: TabHelp, profile: TabSettings };
 /* Tab names are en.json keys. */
-const TAB_LABEL: Record<string, string> = { home: "tabs.today", list: "tabs.lists", chat: "tabs.ask", community: "tabs.quest", profile: "tabs.settings" };
+const TAB_LABEL: Record<string, string> = { home: "tabs.today", list: "tabs.lists", chat: "tabs.ask", community: "tabs.quest", help: "tabs.help", profile: "tabs.settings" };
 
 /* An invite link (/?join=CODE) opens Join a group once the app knows
  * who is signed in (group.js afterSignIn; the demo skips it). */

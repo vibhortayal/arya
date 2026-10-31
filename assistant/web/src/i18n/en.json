@@ -2603,7 +2603,8 @@
     "lists": "Lists",
     "ask": "Ask",
     "quest": "Quest",
-    "settings": "Settings"
+    "settings": "Settings",
+    "help": "Help"
   },
   "town": {
     "sim": "Simulated",
@@ -2932,5 +2933,165 @@
     "label": "Find a store",
     "placeholder": "Name, ZIP or address",
     "nearMe": "Near me"
+  },
+  "help": {
+    "title": "Help",
+    "intro": "Ask Arya how to do anything, or pick a topic.",
+    "askPlaceholder": "Ask Arya how to...",
+    "askLabel": "Ask Arya a how-to question",
+    "ask": "Ask",
+    "sample1": "How do I map my store?",
+    "sample2": "Where are my receipts?",
+    "sample3": "How do I share my list?",
+    "startHere": "Start here",
+    "howTo": "How to",
+    "more": "More",
+    "back": "Help",
+    "goodToKnow": "Good to know",
+    "stuck": "Still stuck? Ask Arya",
+    "stuckQ": "Help me with: {{topic}}",
+    "guide": "Read the full guide",
+    "guideSub": "Eight cards that show each part of Arya",
+    "powers": "Arya's powers",
+    "powersSub": "Everything Arya does, and what you can turn on",
+    "tour": "Take the tour again",
+    "tourSub": "Five steps, 30 seconds",
+    "feedback": "Send feedback",
+    "feedbackSub": "Tell us what is missing or confusing",
+    "topics": {
+      "receipt": {
+        "title": "Add your first receipt",
+        "sub": "Arya learns what you buy and how often",
+        "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
+        "s1": "Open Settings, then Receipts.",
+        "s2": "Tap Add receipt. Take a photo or pick a PDF.",
+        "s3": "Arya adds it and checks the total.",
+        "n1": "Only you and your group see your receipts.",
+        "n2": "A return is taken off your spending.",
+        "cta": "Open Receipts"
+      },
+      "additem": {
+        "title": "Add an item to a list",
+        "sub": "Type it, say it, or snap a paper list",
+        "body": "Every list is one store. Add items in the box at the top of a list.",
+        "s1": "Open the Lists tab.",
+        "s2": "Open a list, or tap New list and choose a store.",
+        "s3": "Type an item in the box \"Add item here...\".",
+        "s4": "Tap the microphone to say it, or the camera to read a paper list.",
+        "n1": "Tap the circle to tick an item off as you shop.",
+        "n2": "Tap the three dots to move an item or remove it.",
+        "cta": "Open Lists"
+      },
+      "ask": {
+        "title": "Ask Arya a question",
+        "sub": "What is running low? Where is milk cheaper?",
+        "body": "Ask in your own words. Arya answers from your lists and receipts.",
+        "s1": "Tap the Ask tab.",
+        "s2": "Type your question, or tap Talk to say it.",
+        "s3": "Or tap a sample question.",
+        "n1": "Arya can also add items, or mark an item as out.",
+        "n2": "Tap Photo to send a picture, such as the date on a pack.",
+        "cta": "Open Ask"
+      },
+      "lists": {
+        "title": "Lists",
+        "sub": "One list for each store",
+        "body": "Arya keeps a separate list for each store and suggests what is due.",
+        "s1": "Open the Lists tab and tap New list.",
+        "s2": "Choose the store.",
+        "s3": "Add items in the box at the top of the list.",
+        "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
+        "n1": "Tap Select to move or remove several items.",
+        "n2": "The three dots on a list open Share, export or import.",
+        "cta": "Open Lists"
+      },
+      "receipts": {
+        "title": "Receipts and spending",
+        "sub": "Add a receipt, see where money goes",
+        "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
+        "s1": "Open Settings, then Receipts, and tap Add receipt.",
+        "s2": "Take a photo, pick a PDF, or paste order text.",
+        "s3": "Open Settings, then Spending, to see it by month, store and item.",
+        "n1": "Ask \"What did I spend in October?\" for one month.",
+        "cta": "Open Spending"
+      },
+      "prices": {
+        "title": "Prices",
+        "sub": "Which store is cheaper, what went up",
+        "body": "Prices come from your own receipts, and from Arya shoppers who choose to share.",
+        "s1": "Add receipts from two stores.",
+        "s2": "Look at the cards \"Cheaper elsewhere\" and \"Price watch\" on Today.",
+        "s3": "Open Settings, then Arya's powers, for Compare your stores and Price trends.",
+        "n1": "Community prices are off until you turn them on: Settings, Arya's powers, Community prices.",
+        "n2": "Arya never uses store sites, flyers or web prices.",
+        "cta": "Open Arya's powers"
+      },
+      "shopping": {
+        "title": "Shopping and Quest",
+        "sub": "Start shopping, tick items, play",
+        "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
+        "s1": "Open a list and tap Start shopping.",
+        "s2": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
+        "n1": "Settings, then \"When I start shopping\", sets what opens.",
+        "n2": "Quest has no timers and no lives.",
+        "cta": "Open Quest"
+      },
+      "map": {
+        "title": "Map my store",
+        "sub": "Walk the aisles, Arya builds the map",
+        "body": "Walk the aisles once. Arya builds the store map, then walks you to each item in order.",
+        "s1": "Open the Quest tab.",
+        "s2": "Tap Map my store and choose the store.",
+        "s3": "Walk the aisles with the camera. Tap Done when you finish.",
+        "s4": "Arya builds the map in the background. A card tells you when it is ready.",
+        "n1": "No signal? Frames save on your phone and send later.",
+        "n2": "Arya blurs people in the frames before anything is kept.",
+        "cta": "Open Map my store"
+      },
+      "news": {
+        "title": "Store news",
+        "sub": "What Arya shoppers report",
+        "body": "Arya shoppers report what is out of stock or back on the shelf, so you skip a wasted trip.",
+        "s1": "Open the Today tab.",
+        "s2": "Look at \"Near you today\" for news from your stores.",
+        "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
+        "n1": "A heads-up also shows at the top of a list.",
+        "cta": "Open Today"
+      },
+      "share": {
+        "title": "Share with your household",
+        "sub": "Groups, invite code, friends",
+        "body": "A group shares lists and receipts. Every phone stays in sync.",
+        "s1": "Open Settings and tap Start a group. Give it a name.",
+        "s2": "Tap Invite someone and send them the code.",
+        "s3": "When they join, you share the same lists.",
+        "n1": "Friends: Quest tab, then Your trips and receipts, then Friends.",
+        "n2": "To send one list, tap the three dots on it, then Share, export or import.",
+        "cta": "Open Settings"
+      },
+      "usesoon": {
+        "title": "Use soon",
+        "sub": "Expiry dates and reminders",
+        "body": "Add a date to food. Arya reminds you to use it before it goes bad.",
+        "s1": "After a receipt, Today asks you for dates.",
+        "s2": "Any time: Settings, Arya's powers, Use soon, Add a date.",
+        "s3": "Tap Take a photo of the date on the pack.",
+        "s4": "Check the item and the date, then tap Looks right, track it.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check.",
+        "cta": "Open Arya's powers"
+      },
+      "customize": {
+        "title": "Change Today",
+        "sub": "Move, hide and add cards",
+        "body": "Make Today show what you care about.",
+        "s1": "Tap Edit on Today, or touch and hold a card.",
+        "s2": "Drag a card to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card from the library.",
+        "n1": "Lists, Ask and Quest have an Edit button too.",
+        "n2": "Settings, then Display, changes text size and spacing.",
+        "cta": "Open Today"
+      }
+    }
   }
 }
