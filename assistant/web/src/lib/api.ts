@@ -50,9 +50,7 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // offline outbox keys on it) but reads as what it is.
     if ((e as Error)?.name === "TimeoutError") throw new TypeError("The connection is too slow right now — try again in a moment.");
     if ((e as Error)?.name === "AbortError") throw e;
-    throw new TypeError(typeof navigator !== "undefined" && navigator.onLine === false
-      ? "You're offline. This needs a connection. Try again when you're back online."
-      : "No connection right now — try again when you're back online.");
+    throw new TypeError("No connection right now — try again when you're back online.");
   }
   if (!r.ok) {
     const detail = (await r.json().catch(() => ({}))).detail;

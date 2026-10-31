@@ -15,7 +15,7 @@ connection.
 - boot.js's early `/api/settings` and `/api/today` reads keep a copy too
   (`keepBootRead`).
 - A quiet bar (`#offlinebar`, shell) says "You're offline" and what needs
-  a connection. Writes offline fail fast with an offline-worded error.
+  a connection. Writes offline already fail fast with "No connection right now".
   Read-only on purpose: no write queue (conflicts with group live sync).
 - Help upkeep: `prompts/arya_features.md` has an `offline` section.
 - Tests: `lib/api.test.ts` (copy used on network failure, not on 500, no
