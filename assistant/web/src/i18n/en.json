@@ -2719,9 +2719,13 @@
         "title": "Quest",
         "line": "Turn a store trip into a game with points and badges. Try it once you have a list."
       },
+      "help": {
+        "title": "Help",
+        "line": "Stuck? The guide, how-to topics, Ask Arya and feedback are here. You can replay this tour from here too."
+      },
       "settings": {
         "title": "Settings",
-        "line": "Your group, currency and language, display and account. The Help tab has the guide and replays this tour."
+        "line": "Your group, currency and language, display and account."
       },
       "guideLink": "Want the full guide?"
     }
@@ -2994,7 +2998,7 @@
     "powers": "Arya's powers",
     "powersSub": "Everything Arya does, and what you can turn on",
     "tour": "Take the tour again",
-    "tourSub": "Five steps, 30 seconds",
+    "tourSub": "Six steps, 30 seconds",
     "feedback": "Send feedback",
     "feedbackSub": "Tell us what is missing or confusing",
     "topics": {

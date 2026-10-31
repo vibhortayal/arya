@@ -9,9 +9,18 @@ import { useTranslation } from "../i18n";
 /* The welcome shows to a signed-in account (never the demo) that the
  * server says has not answered it and holds no data. null = settings
  * not loaded yet, so nothing flashes. */
-export function showWelcome(user: string | null, demo: boolean, onboarded: boolean | null): boolean {
-  return !!user && !demo && onboarded === false;
+export function showWelcome(user: string | null, demo: boolean, onboarded: boolean | null, demoPending = false): boolean {
+  if (demo) return !!user && demoPending; // the demo: every time "Try it now" is tapped
+  return !!user && onboarded === false;
 }
+
+/* "Try it now" marks the start of a demo visit (owner, 2026-10-31: show
+ * the welcome and the tour every time). The mark lasts for this tab until
+ * the welcome is answered, so a reload mid-demo does not ask again. */
+const DEMO_KEY = "arya-demo-welcome";
+export const markDemoStart = () => { try { sessionStorage.setItem(DEMO_KEY, "1"); } catch { /* private window */ } };
+export const demoWelcomePending = () => { try { return sessionStorage.getItem(DEMO_KEY) === "1"; } catch { return false; } };
+export const clearDemoWelcome = () => { try { sessionStorage.removeItem(DEMO_KEY); } catch { /* ignore */ } };
 
 export function WelcomeSheet({ onTour, onSkip }: { onTour: () => void; onSkip: () => void }) {
   const { t } = useTranslation();

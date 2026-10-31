@@ -16,7 +16,8 @@ describe("welcome", () => {
     expect(showWelcome("ann", false, false)).toBe(true);
     expect(showWelcome("ann", false, true)).toBe(false);
     expect(showWelcome("ann", false, null)).toBe(false); // settings not loaded: no flash
-    expect(showWelcome("demo", true, false)).toBe(false);
+    expect(showWelcome("demo", true, true)).toBe(false); // demo: only after "Try it now"
+    expect(showWelcome("demo", true, true, true)).toBe(true);
     expect(showWelcome(null, false, false)).toBe(false);
   });
 });
@@ -84,8 +85,8 @@ describe("tour layout", () => {
     expect(top.tip).toEqual({ top: 86 });
     expect(top.arrowX).toBe(18);
   });
-  test("the first-run tour is five tab steps", () => {
-    expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "settings"]);
+  test("the first-run tour is six tab steps", () => {
+    expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "help", "settings"]);
   });
 });
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -17,7 +17,7 @@ import { Login } from "./screens/Login";
 // The public developer page and Join a group load only when opened (#17).
 const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
 import { SCREENS, preloadTabScreens } from "./screens/registry";
-import { WelcomeSheet, showWelcome } from "./ui/FirstRun";
+import { WelcomeSheet, showWelcome, demoWelcomePending, clearDemoWelcome } from "./ui/FirstRun";
 import { EndOfDemo, openEndOfDemo } from "./ui/EndOfDemo";
 import { ErrorBoundary, ScreenSkeleton } from "./ui/ErrorBoundary";
 import { t } from "./i18n";
@@ -130,6 +130,8 @@ function Shell() {
   const town = useTown();
   const Screen = SCREENS[nav.view];
   const tour = useTour();
+  const [, answered] = useState(0);
+  const answerWelcome = () => { if (s.demo) { clearDemoWelcome(); answered(n => n + 1); } else s.markOnboarded(); };
   useInviteLink();
   // Back from the demo's first screen returns to the start page, as
   // "Leave the demo" does, instead of leaving the site (pilot audit, 2026-10-30).
@@ -171,8 +173,8 @@ function Shell() {
           })}
         </nav>
       )}
-      {showWelcome(s.user, s.demo, s.onboarded) && (
-        <WelcomeSheet onTour={() => { s.markOnboarded(); tour.startTour(FIRST_RUN_TOUR); }} onSkip={s.markOnboarded} />
+      {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
+        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(FIRST_RUN_TOUR); }} onSkip={answerWelcome} />
       )}
     </>
   );
