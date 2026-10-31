@@ -10,9 +10,8 @@ import { useTown } from "../lib/town";
 import { A2hsRow } from "../ui/A2hs";
 import { Row } from "../ui/kit";
 import { IconPen } from "../ui/icons";
-import { AddReceiptSheet, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { get, post } from "../lib/api";
-import { CURRENCY_SYMBOLS, MONTHS, asset, fmtShort } from "../lib/format";
+import { CURRENCY_SYMBOLS, MONTHS, asset } from "../lib/format";
 import { characterManifest } from "../lib/characters";
 import { languageToast } from "../lib/language";
 import { t, useTranslation } from "../i18n";
@@ -31,8 +30,7 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const cap = (h: string) => (h ? h.charAt(0).toUpperCase() + h.slice(1) : "");
 
 type QProfile = { handle: string; level?: number; points?: number; stats: { hunts: number; streak_weeks?: number }; badges?: { id: string; earned?: boolean }[]; mapped_stores?: string[] };
-type Unsettled = { session_id: string; store: string; finished_at?: string; items_collected: number; items_total: number };
-type Archive = { receipts: unknown[]; unsettled?: Unsettled[] };
+type Archive = { receipts: unknown[] };
 
 export function Profile() {
   const { t } = useTranslation();
@@ -44,7 +42,6 @@ export function Profile() {
   const from = nav.params.from as string | undefined;
   const [profile, setProfile] = useState<QProfile | null>(null);
   const [archive, setArchive] = useState<Archive>({ receipts: [] });
-  const [ar, setAr] = useState<ReceiptTarget | null>(null);
   const [groupName, setGroupName] = useState<string | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [delPw, setDelPw] = useState("");
@@ -66,20 +63,12 @@ export function Profile() {
   }, []);
   useEffect(() => { load().catch(showErr); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const unsettled = archive.unsettled || [];
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
 
   // No zero scores (relevant cards, owner 2026-10-30): level and points
   // once a quest has earned any; before that the streak alone, or what
   // the first quest gives.
   const level = profileLine(profile);
-
-  const dismiss = (sid: string) => attempt(async () => {
-    if (!confirm(t("receipts.confirmDismiss"))) return;
-    await post(`/api/quest/sessions/${encodeURIComponent(sid)}/delete`, {});
-    toast(t("receipts.huntDismissed"));
-    load().catch(showErr);
-  });
 
   const pickCurrency = (code: string) => attempt(async () => {
     const prev = currency;
@@ -125,17 +114,6 @@ export function Profile() {
       <AvatarCard handle={profile ? "@" + profile.handle : ""} level={level} />
       {town ? <DirectorPanel /> : null}
       <GroupSection />
-      <div id="pf-missing" className="group" hidden={!unsettled.length}>
-        {unsettled.map(e => (
-          <div key={e.session_id} className="sessrow">
-            <span className="grow"><span className="name">{e.store}</span>
-              <span className="sub">{t("settings.finishedReceiptMissingOfCollected", { slice: fmtShort(String(e.finished_at || "").slice(0, 10)), items_collected: e.items_collected, items_total: e.items_total })}</span></span>
-            <button className="btn" data-upload={e.session_id} data-store={e.store} type="button"
-              onClick={() => setAr({ sessionId: e.session_id, label: e.store })}>{t("common.addReceipt")}</button>
-            <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>{t("common.dismiss")}</button>
-          </div>
-        ))}
-      </div>
       {/* Most of this tab is the user's data, not settings: a "Your data"
         * heading groups Stores, Receipts and Spending (labels audit,
         * judgement call 4; the tab keeps the name Settings). */}
@@ -186,6 +164,9 @@ export function Profile() {
         <NavRow id="btn-muse" view="muse" title={t("settings.connectAnAiAgent")} sub={t("settings.useAryaFromYourOwn")} />
         <NavRow id="btn-about" view="about" title={t("common.about")} sub={t("settings.builtOnMetaModels")} />
       </div>
+      {/* Sign out sits above Export and Delete, away from the red row (audit M9). */}
+      <p style={{ margin: "22px 0" }}><button id="btn-signout2" className="btn secondary wide" type="button"
+        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
       <div className="group">
         <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
         <button className="navrow" id="btn-del-account" type="button" onClick={() => setDelOpen(o => !o)}>
@@ -197,10 +178,7 @@ export function Profile() {
           <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>{t("settings.eraseEverything")}</button></p>
         </div>
       </div>
-      <p style={{ marginTop: 22 }}><button id="btn-signout2" className="btn secondary wide" type="button"
-        onClick={signOut}>{demo ? t("endDemo.leave") : t("settings.signOut")}</button></p>
 
-      <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => load().catch(showErr)} />
     </>
   );
 }

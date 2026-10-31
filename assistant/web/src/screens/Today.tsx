@@ -229,6 +229,9 @@ export function Today() {
   const [h, setH] = useState<Home | null>(null);
   const [news, setNews] = useState<any[] | null>(null);
   const [eyeCount, setEyeCount] = useState(0);
+  /* Finished trips with no receipt yet: one row here, the list and its
+   * actions on Receipts (audit M9; they used to sit in Settings). */
+  const [noReceipt, setNoReceipt] = useState<{ store: string; finished_at?: string }[]>([]);
   const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
   const [ins, setIns] = useState<Insights>(null);
@@ -270,6 +273,8 @@ export function Today() {
     get<Insights>("/api/prices/insights").then(r => live.current && setIns(r), () => live.current && setIns(null));
     get<Facts>("/api/powers").then(f => live.current && setFacts(f),
       () => live.current && setFacts(f => f || { receipts: 0, stores: 0, share_prices: false }));
+    get<{ unsettled?: { store: string; finished_at?: string }[] }>("/api/quest/receipts")
+      .then(a => live.current && setNoReceipt(a.unsettled || []), () => live.current && setNoReceipt([]));
     Promise.all([
       get("/api/review").catch(() => ({ lines: [], unresolved: [] })),
       get("/api/curator").catch(() => ({ proposals: [] })),
@@ -683,6 +688,14 @@ export function Today() {
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
           {town ? <TownFeed town={town} /> : null}
+          {noReceipt.length > 0 && (
+            <div className="group" id="today-noreceipt">
+              <button className="navrow" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
+                <span className="grow">{t("today.tripsNeedReceipt", { count: noReceipt.length })}
+                  <span className="sub">{[...new Set(noReceipt.map(e => e.store))].join(", ")} · {noReceipt.map(e => fmtShort(String(e.finished_at || "").slice(0, 10))).filter(Boolean).join(", ")}</span></span>
+                <span className="chev">›</span></button>
+            </div>
+          )}
           {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>)}
           <div id="today-eye">
             {eyeCount > 0 && (

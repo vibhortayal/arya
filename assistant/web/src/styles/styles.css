@@ -289,9 +289,11 @@ textarea {
 /* Missing-receipt card (Settings): the note takes the full width and the
    two buttons share the row under it, so a 390 px phone never squeezes
    the store name into one word per line. */
-#pf-missing .sessrow { flex-wrap: wrap; }
-#pf-missing .sessrow .grow { flex: 1 1 100%; }
-#pf-missing .sessrow .btn { flex: 1; }
+/* Trips with no receipt (Receipts; they moved from Settings, audit M9):
+   at 390 px the store name was squeezed beside two buttons. */
+#rc-archive div.sessrow { flex-wrap: wrap; }
+#rc-archive div.sessrow .grow { flex: 1 1 100%; }
+#rc-archive div.sessrow .btn { flex: 1; }
 .track { display: block; height: 6px; background: var(--fill); border-radius: 3px; margin-top: 7px; overflow: hidden; }
 .track .bar { display: block; height: 100%; }
 .rail { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; -webkit-overflow-scrolling: touch; }

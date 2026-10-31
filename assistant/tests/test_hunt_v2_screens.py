@@ -19,8 +19,8 @@ class TestHuntV2Screens(unittest.TestCase):
         table = js.split("QSTATE_KEY: Record<string, string> = {")[1].split("}")[0]
         self.assertIn('"No receipt yet"', table)
         self.assertIn('"Finished · Receipt added"', table)
-        # Profile's missing-receipt rows use the same words.
-        self.assertIn("in cart · No receipt yet", src("screens/Profile.tsx"))
+        # The missing-receipt rows (Receipts) use the same words.
+        self.assertIn("No receipt yet", src("screens/Receipts.tsx"))
 
     def test_today_hero_clears_on_finish(self):
         js = src("screens/Quest.tsx")
@@ -40,23 +40,28 @@ class TestHuntV2Screens(unittest.TestCase):
         prog = src("screens/QuestProgress.tsx")
         self.assertIn(">Quests finished<", prog)
         self.assertIn(">Receipt added<", prog)
-        self.assertIn('id="pf-missing"', src("screens/Profile.tsx"))
+        # Audit M9 (2026-10-31): trips with no receipt are one Today row
+        # that opens Receipts, not cards in Settings.
+        today = src("screens/Today.tsx")
+        self.assertIn('id="today-noreceipt"', today)
+        self.assertIn('nav.show("receipts", { from: "home" })', today.split('id="today-noreceipt"')[1])
+        self.assertNotIn('id="pf-missing"', src("screens/Profile.tsx"))
 
     def test_missing_receipt_card_wraps_on_a_phone(self):
         # Pilot 2026-10-30: at 390 px the store name was squeezed into a
         # one-word column beside the two buttons.
         css = src("styles/styles.css")
-        self.assertIn("#pf-missing .sessrow { flex-wrap: wrap; }", css)
-        self.assertIn("#pf-missing .sessrow .grow { flex: 1 1 100%; }", css)
+        self.assertIn("#rc-archive div.sessrow { flex-wrap: wrap; }", css)
+        self.assertIn("#rc-archive div.sessrow .grow { flex: 1 1 100%; }", css)
 
     def test_add_receipt_is_reachable_everywhere(self):
         self.assertIn("export function AddReceiptSheet(", src("ui/AddReceiptSheet.tsx"))
         score = src("screens/Score.tsx")
         self.assertIn('id="score-addreceipt"', score)
-        for rel in ("screens/Score.tsx", "screens/Receipts.tsx", "screens/Profile.tsx", "screens/haul/Reveal.tsx"):
+        for rel in ("screens/Score.tsx", "screens/Receipts.tsx", "screens/haul/Reveal.tsx"):
             self.assertIn("<AddReceiptSheet ", src(rel), rel)
-        # Profile's missing-receipt row opens it.
-        self.assertIn("onClick={() => setAr({ sessionId: e.session_id, label: e.store })}>Add receipt", src("screens/Profile.tsx"))
+        # The missing-receipt row on Receipts opens it.
+        self.assertIn("onClick={() => { setAr({ sessionId: e.session_id, label: e.store }); }}>Add receipt", src("screens/Receipts.tsx"))
 
     def test_copy_never_claims_verified(self):
         for rel in ("screens/Finish.tsx", "ui/AddReceiptSheet.tsx", "screens/Score.tsx"):
