@@ -7,7 +7,9 @@ app. The code shows once; a new code replaces it.
 
 Base URL: `https://arya.teamnightshift.org/api/v1`
 
-The same guide, shorter, is the public page at `/developers`.
+The same guide, shorter, is the public page at `/developers`, with a
+five-minute quickstart in curl, Python and JavaScript. The interactive
+reference (try the calls from the browser) is at `/developers/reference`.
 
 `/api/v1` is frozen. Changes after it ships are additive only: new
 endpoints, new optional fields, new response fields. Clients must ignore

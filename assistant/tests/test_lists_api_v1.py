@@ -408,6 +408,41 @@ class TestReceiptsAndAnalysis(V1Case):
             assert self.api.get("/api/v1" + path).status_code == 401
 
 
+class TestSchemaForDevelopers(V1Case):
+    """The reference page draws this schema: plain ids, summaries, the
+    bearer scheme and the error shape."""
+
+    def spec(self):
+        return self.api.get("/api/v1/openapi.json").json()
+
+    def test_every_operation_has_a_plain_id_summary_and_tag(self):
+        ids = []
+        for path, methods in self.spec()["paths"].items():
+            for method, op in methods.items():
+                ids.append(op["operationId"])
+                self.assertNotIn("_" + method, op["operationId"], (method, path))
+                self.assertTrue(op["summary"] and op["description"] and op["tags"], (method, path))
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(len(ids), 14)
+
+    def test_bearer_scheme_and_error_responses(self):
+        spec = self.spec()
+        self.assertEqual(spec["components"]["securitySchemes"]["bearerAuth"]["scheme"], "bearer")
+        self.assertEqual(spec["security"], [{"bearerAuth": []}])
+        op = spec["paths"]["/lists"]["get"]
+        self.assertIn("401", op["responses"])
+        self.assertIn("429", op["responses"])
+
+    def test_reference_page_is_public_and_has_no_inline_script(self):
+        r = self.c.get("/developers/reference")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("/api/v1/openapi.json", r.text)
+        import re
+        for attrs, body in re.findall(r"<script\b([^>]*)>(.*?)</script>", r.text, re.S):
+            self.assertEqual(body.strip(), "")
+        self.assertEqual(self.c.get("/vendor/scalar/standalone.js").status_code, 200)
+
+
 class TestRateLimit(V1Case):
     def test_429_with_retry_after_shared_with_mcp(self):
         os.environ["ARYA_MCP_RATE"] = "3"
