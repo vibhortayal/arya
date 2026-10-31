@@ -4,6 +4,9 @@ import { useSession } from "../app/session";
 import { asset } from "../lib/format";
 import { Sheet } from "./Sheet";
 import { useTranslation } from "../i18n";
+import { useTour } from "./Tour";
+import { openGuide } from "./Guide";
+import { useTourSteps } from "../onboarding/demoTour";
 import "./enddemo.css";
 
 /* End of the demo (owner-approved wireframe 2026-10-29): a thank-you,
@@ -24,6 +27,8 @@ export const openEndOfDemo = () => set(true);
 export function EndOfDemo() {
   const { t } = useTranslation();
   const { leave } = useSession();
+  const tour = useTour();
+  const tourSteps = useTourSteps();
   const open = useSyncExternalStore(f => { subs.add(f); return () => { subs.delete(f); }; }, () => isOpen);
   const [text, setText] = useState("");
   const [email, setEmail] = useState("");
@@ -87,6 +92,10 @@ export function EndOfDemo() {
         <a className="btn" href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a className="btn" href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub</a>
         <a className="btn" href={REPO} target="_blank" rel="noopener noreferrer">{t("endDemo.codeShort")}</a>
+      </div>
+      <div className="ed-links">
+        <button className="btn" id="ed-replay" type="button" onClick={() => { close(); tour.startTour(tourSteps); }}>{t("endDemo.replayTour")}</button>
+        <button className="btn" id="ed-guide" type="button" onClick={() => { close(); openGuide(); }}>{t("endDemo.openGuide")}</button>
       </div>
       <div className="ed-foot">
         <button className="linkbtn" id="ed-keep" type="button" onClick={close}>{t("endDemo.keep")}</button>

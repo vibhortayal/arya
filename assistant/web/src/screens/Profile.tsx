@@ -13,6 +13,9 @@ import { characterManifest } from "../lib/characters";
 import { languageToast } from "../lib/language";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
+import { useTour } from "../ui/Tour";
+import { openGuide } from "../ui/Guide";
+import { useTourSteps } from "../onboarding/demoTour";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -31,6 +34,8 @@ type QProfile = { handle: string; level?: number; points?: number; stats: { hunt
 export function Profile() {
   const { t } = useTranslation();
   const nav = useNav();
+  const tour = useTour();
+  const tourSteps = useTourSteps();
   const town = useTown();
   const { demo, user, admin, currency, setCurrency, language, languages, setLanguage, shopMode, saveShopMode, leave } = useSession();
   const { toast, showErr } = useToast();
@@ -146,6 +151,10 @@ export function Profile() {
       </div>
       <h3 className="sect">{t("settings.arya")}</h3>
       <div className="group">
+        <button className="navrow" id="btn-replay-tour" type="button" onClick={() => tour.startTour(tourSteps)}>
+          <span className="grow">{t("help.tour")}<span className="sub">{t("settings.helpTourSub")}</span></span><span className="chev">›</span></button>
+        <button className="navrow" id="btn-open-guide" type="button" onClick={() => openGuide()}>
+          <span className="grow">{t("help.guide")}<span className="sub">{t("settings.helpGuideSub")}</span></span><span className="chev">›</span></button>
         <NavRow id="btn-about" view="about" title={t("settings.aboutArya")} sub={t("settings.aboutAryaSub")} />
       </div>
       {/* Sign out is the last button on the screen (owner, 2026-10-31). */}

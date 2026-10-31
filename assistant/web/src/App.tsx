@@ -8,6 +8,7 @@ import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
 import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
+import { useTranslation } from "./i18n";
 import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { isOffline, subscribeOffline } from "./lib/offline";
@@ -132,6 +133,8 @@ function Shell() {
   const town = useTown();
   const Screen = SCREENS[nav.view];
   const tour = useTour();
+  const { toast } = useToast();
+  const { t } = useTranslation();
   const tourSteps = useTourSteps();
   const [, answered] = useState(0);
   const answerWelcome = () => { if (s.demo) { clearDemoWelcome(); answered(n => n + 1); } else s.markOnboarded(); };
@@ -179,7 +182,7 @@ function Shell() {
         </nav>
       )}
       {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
-        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(tourSteps, s.demo ? { onDone: () => openGuide() } : undefined); }} onSkip={answerWelcome} demo={s.demo} />
+        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(tourSteps, s.demo ? { onDone: () => openGuide(), onSkip: () => toast(t("tour.closedToast"), { action: t("tour.replay"), onAction: () => tour.startTour(tourSteps) }) } : undefined); }} onSkip={answerWelcome} demo={s.demo} />
       )}
     </>
   );

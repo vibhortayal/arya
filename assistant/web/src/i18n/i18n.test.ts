@@ -20,7 +20,7 @@ const ALLOWED: Record<string, string[]> = {
   // The author's name on About.
   "screens/About.tsx": ["Vibhor Tayal"],
   // The owner's profiles on the end-of-demo sheet: site names and addresses.
-  "ui/EndOfDemo.tsx": ["LinkedIn", "GitHub", "linkedin.com/in/vibhortayal", "github.com/vibhortayal"],
+  "ui/EndOfDemo.tsx": ["LinkedIn", "GitHub"],
 };
 
 const ROOT = resolve(process.cwd(), "src");
