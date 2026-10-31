@@ -22,7 +22,7 @@ function hasKey(key: string) {
 describe("cards", () => {
   test("the owner's fifteen sections, in a new user's order, each an en.json key", () => {
     expect(GUIDE_CARDS.map(c => c.id)).toEqual([...GUIDE_IDS]);
-    expect(GUIDE_IDS).toEqual(["lists", "share", "shopping", "quest", "maps", "news", "receipts", "friends", "running", "usesoon", "prices", "ask", "today", "powers", "settings"]);
+    expect(GUIDE_IDS).toEqual(["lists", "share", "shopping", "quest", "friends", "maps", "news", "receipts", "running", "usesoon", "prices", "ask", "today", "powers", "settings"]);
     const keys = GUIDE_CARDS.flatMap(c => [c.kickerKey, c.titleKey, c.bodyKey, ...c.stepKeys]);
     expect(keys.filter(k => !hasKey(k))).toEqual([]);
   });

@@ -8,7 +8,7 @@
  * (guide.*). */
 
 export const GUIDE_IDS = [
-  "lists", "share", "shopping", "quest", "maps", "news", "receipts", "friends", "running", "usesoon", "prices", "ask",
+  "lists", "share", "shopping", "quest", "friends", "maps", "news", "receipts", "running", "usesoon", "prices", "ask",
   "today", "powers", "settings",
 ] as const;
 export type GuideId = (typeof GUIDE_IDS)[number];
