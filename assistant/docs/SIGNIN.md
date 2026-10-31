@@ -13,7 +13,9 @@ the buttons follow it: Approve / Reject (waiting), Back to waiting / Reject (app
 Approve / Back to waiting / Delete (rejected). **Reject** keeps the row marked
 `rejected` in `waitlist.jsonl`: no mail, the person still gets "already on the list" if they
 rejoin, and sign-in says "not invited yet" like any other address. **Delete** erases the
-row, so the person can join again. Approved means approved and not signed in yet: the
+row, so the person can join again. If an approved person joins the waitlist again
+(`POST /auth/waitlist` answers `approved`), the sheet says "You've already been approved",
+with Sign in and Continue with Google; no mail is sent and no row is added. Approved means approved and not signed in yet: the
 row is deleted at first sign-in. API: `POST /auth/waitlist/reject`, `/restore`, `/remove`.
 
 ## What a person sees

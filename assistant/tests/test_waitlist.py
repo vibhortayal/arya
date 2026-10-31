@@ -40,6 +40,16 @@ class TestWaitlist(unittest.TestCase):
             self.assertEqual(self.join(f"u{i}@example.com").status_code, 200)
         self.assertEqual(self.join("u6@example.com").status_code, 429)
 
+    def test_repeat_join_answers_approved_only_for_invited(self):
+        from api import waitlist
+        self.assertEqual(self.join("a@example.com").json(), {"status": "added"})
+        self.assertEqual(self.join("a@example.com").json(), {"status": "already"})
+        waitlist.approve(["a@example.com"])
+        self.assertEqual(self.join("a@example.com").json(), {"status": "approved"})
+        waitlist.reject(["a@example.com"])
+        self.assertEqual(self.join("a@example.com").json(), {"status": "already"})
+        self.assertEqual(len(waitlist.rows()), 1)
+
     def test_full_list(self):
         from api import waitlist
         old = waitlist.MAX_ROWS
