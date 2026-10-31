@@ -48,6 +48,15 @@ function testerEmail(key) {
 }
 
 // Signs one tester in through the /team password form; returns the page.
+// A new account gets the one Today question as a sheet over the app.
+// Skip it, as a user can, so it does not cover the tabs.
+async function skipAsk(page) {
+  const sheet = page.locator("#today-ask");
+  if (!(await sheet.waitFor({ state: "visible", timeout: 4000 }).then(() => true, () => false))) return;
+  await sheet.getByRole("button", { name: "Skip", exact: true }).click();
+  await sheet.waitFor({ state: "hidden" });
+}
+
 async function signIn(key) {
   const user = testerEmail(key);
   const pass = process.env[`ARYA_TESTER_${key}_PASSWORD`];
@@ -65,6 +74,7 @@ async function signIn(key) {
   // The page's own message only; never the address or password.
   if (done !== "in") throw new Error(`tester ${key} could not sign in: ` + await page.textContent("#login-error"));
   if (new URL(page.url()).pathname !== "/") throw new Error(`tester ${key}: address after sign-in is ${page.url()}, not /`);
+  await skipAsk(page);
   return page;
 }
 
@@ -80,7 +90,7 @@ async function api(page, path, body) {
   }, [path, body]);
 }
 
-const t = { base: BASE, testerEmail, api, newPhone, stamp: "zz-e2e-" + Date.now().toString(36), users: {} };
+const t = { base: BASE, testerEmail, api, newPhone, skipAsk, stamp: "zz-e2e-" + Date.now().toString(36), users: {} };
 let failed = 0;
 try {
   if (files.some(f => !["demo.live.mjs", "known-issues.live.mjs"].includes(f))) {

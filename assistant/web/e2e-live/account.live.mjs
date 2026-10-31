@@ -8,6 +8,7 @@ export default async function (t) {
     const got = JSON.stringify(me.json).toLowerCase();
     if (me.status !== 200 || !got.includes(want.split("@")[0])) throw new Error(`tester ${k}: /auth/me is ${me.status} ${got}`);
     await page.reload();
+    await t.skipAsk(page);
     await page.waitForSelector("#tabs");
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.waitForSelector("#pf-group:not([hidden])", { timeout: 10000 })
