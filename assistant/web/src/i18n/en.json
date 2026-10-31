@@ -2766,7 +2766,7 @@
       "news": {
         "kicker": "Store news",
         "title": "Know what's in stock before you go",
-        "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. Seen a gap? Report it and help the next shopper.",
+        "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. Seen a gap? Report it and help the next shopper. Store news needs reports from other Arya shoppers. It fills up as more shoppers near you use Arya.",
         "s1": "Open Today to see what Arya shoppers report at your stores.",
         "s2": "Seen an empty shelf? Under Report something yourself, tap Out of stock."
       },
@@ -3159,7 +3159,8 @@
         "s2": "Look at \"Near you today\" for news from your stores.",
         "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
         "n1": "A heads-up also shows at the top of a list.",
-        "cta": "Open Today"
+        "cta": "Open Today",
+        "n2": "Store news needs reports from other Arya shoppers. It fills up as more shoppers near you use Arya."
       },
       "share": {
         "title": "Share with your household",
