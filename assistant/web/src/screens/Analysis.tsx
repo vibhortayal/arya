@@ -173,7 +173,7 @@ export function Analysis() {
 
   return (
     <>
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <EditTitle id="an-editbtn" small title={t("common.analysis")} editTitle={t("analysis.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
         <EditList id="an-edit" on={on} off={offS} name={id => t(`analysis.sections.${id}`)} sub={() => ""} desc={() => ""}

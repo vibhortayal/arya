@@ -24,7 +24,7 @@ export default async function (page, base) {
   // Settings: the row sits under Currency with the four options.
   await page.evaluate(() => window.__aryaShow("profile"));
   await page.waitForSelector("#pf-language");
-  const order = await page.$$eval("#profile-account select", s => s.map(e => e.id));
+  const order = await page.$$eval("#pf-prefs-group select", s => s.map(e => e.id));
   if (order.indexOf("pf-language") !== order.indexOf("pf-currency") + 1 || order.indexOf("pf-currency") < 0) throw new Error("Language row should follow Currency: " + order);
   const opts = await page.$$eval("#pf-language option", o => o.map(e => e.value + "=" + e.textContent));
   if (opts.join() !== "auto=Auto,en=English,es=Español,hi=हिन्दी") throw new Error("options wrong: " + opts);

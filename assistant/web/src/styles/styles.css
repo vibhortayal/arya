@@ -2146,3 +2146,12 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 :root.lowend, :root.nomotion { --tabbar: var(--panel); }
 .lowend *, .nomotion * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 #list-cards .listcard:active, #today-lists .listcard:active { background: var(--fill); }
+
+/* Settings (2026-10-31): shop mode on one line, the signed-in email under
+ * the avatar card, and the credits row on About Arya. */
+.prefrow.inline { flex-wrap: nowrap; align-items: center; gap: 10px; }
+.prefrow.inline .grow { flex: 1 1 40%; }
+.prefrow.inline .prefpicks { width: auto; flex: 0 1 58%; }
+.prefrow.inline .curpick { flex: 1; max-width: none; }
+.signedin { text-align: center; margin: -6px 0 14px; }
+.aboutcredit { padding-top: 14px; }

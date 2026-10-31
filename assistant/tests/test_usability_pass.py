@@ -32,11 +32,15 @@ class TestMapper(unittest.TestCase):
 
 class TestSettingsHelp(unittest.TestCase):
     def test_one_help_row_and_powers(self):
+        # Settings has no Help row any more (owner, 2026-10-31): the Help tab
+        # holds the guide, the tour and feedback; Powers sits on About Arya.
         p = src("screens/Profile.tsx")
-        self.assertIn("Help and guide", p)
+        self.assertNotIn('id="btn-guide"', p)
+        self.assertNotIn('id="btn-feedback"', p)
         self.assertNotIn('id="btn-tour"', p)
         self.assertNotIn('id="btn-quest-progress"', p)
-        self.assertLess(p.index('id="btn-guide"'), p.index('id="btn-powers"'))
+        self.assertIn('"btn-powers"', src("screens/About.tsx"))
+        self.assertIn('id="help-guide"', src("screens/Help.tsx"))
 
     def test_tour_replays_from_the_guide(self):
         g = src_raw("ui/Guide.tsx")

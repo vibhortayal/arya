@@ -1070,6 +1070,11 @@ export function Lists() {
           </div>
           )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
+          {/* Stores moved here from Settings (owner, 2026-10-31). */}
+          <div className="group listsstores">
+            <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
+              <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
+          </div>
           </>}
         </div>
       )}

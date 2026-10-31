@@ -13,7 +13,7 @@ import { useTranslation } from "../i18n";
  *   guide.open("prices");    // at a card id (guide/cards.ts)
  *
  * Code outside React (a tour step) calls openGuide(id). It never shows
- * by itself: Settings > Help and guide, Powers > See how it works (and a
+ * by itself: the Help tab > Guide, Powers > See how it works (and a
  * power's (i) sheet), and the last first-run tour step open it.
  *
  * Next / Back, a left or right swipe, and the arrow keys move between

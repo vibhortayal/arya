@@ -7,9 +7,9 @@ from tests.frontend import src
 
 class TestSignedIn(unittest.TestCase):
     def test_receipts_back_works_from_profile(self):
-        # Back is the nav stack: Receipts opened from Settings (or
-        # Today) returns there; a cold open falls back to Settings.
-        self.assertIn('id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}',
+        # Back is the nav stack: Receipts opened from Today returns there;
+        # a cold open falls back to Today (it moved out of Settings, 2026-10-31).
+        self.assertIn('id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("home"); }}',
                       src("screens/Receipts.tsx"))
 
     def test_archive_dates_carry_the_year(self):
