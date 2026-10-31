@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -927,11 +927,11 @@ function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow }: { l
       )}
       {soon.length > 0 && <><div className="group usesoon">
         {capped.shown.map(s => (
-          <div className="row" key={s.item_id} tabIndex={0} role="button" data-ex-item={s.item_id}
-            onClick={() => open(s.item_id)}
-            onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => { if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(s.item_id); } }}>
+          // The row opens the item; its name is the real button, so Used it is
+          // not a button inside a button (retest 2026-10-31 #25).
+          <div className="row" key={s.item_id} data-ex-item={s.item_id} onClick={() => open(s.item_id)}>
             <Face name={s.name} />
-            <div className="grow"><span className="name">{s.name}</span><span className="sub"><b>{fmtLong(s.date)}</b> · {when(s.days)}</span></div>
+            <button type="button" className="grow rowopen" onClick={ev => { ev.stopPropagation(); open(s.item_id); }}><span className="name">{s.name}</span><span className="sub"><b>{fmtLong(s.date)}</b> · {when(s.days)}</span></button>
             <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>{t("today.usedIt")}</button></div>
         ))}
         <MoreRow more={capped.more} onOpen={() => setSoonOpen(true)} />

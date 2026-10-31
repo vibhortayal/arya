@@ -4,11 +4,12 @@ import { useSession } from "../app/session";
 import { get, post } from "../lib/api";
 import { Chip, Empty, Row } from "../ui/kit";
 import { useTranslation } from "../i18n";
+import { openEndOfDemo } from "../ui/EndOfDemo";
 
 /* Port of Feature request / Contact us (pwa/index.html #view-feedback,
  * app.js "Feature request / Contact us"). One note, a kind; the
- * username rides the session. Demo visitors see the form but the send
- * is disabled; the owner also sees what came in. */
+ * username rides the session. A demo visitor's Send opens the Finish
+ * demo sheet, the demo's one feedback door; the owner also sees what came in. */
 type Kind = "idea" | "bug" | "question";
 type Note = { text: string; kind: string; user: string; at: number; contact?: string };
 
@@ -47,6 +48,9 @@ export function Feedback() {
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("feedback.featureRequestContactUs")}</h1>
       <div className="group pad">
         <p className="muted nomargin">{t("feedback.weReadEveryNoteIt")}</p>
+        {/* The demo's one feedback door is the Finish demo sheet, which asks
+          * for an email so the owner can reply (retest 2026-10-31 #14). */}
+        {demo ? <p><button id="fb-send" className="btn primary wide" type="button" onClick={openEndOfDemo} style={{ marginTop: 10 }}>{t("feedback.sendFromFinish")}</button></p> : <>
         <div className="row" id="fb-kinds" style={{ marginTop: 10, gap: 8 }}>
           {(["idea", "bug", "question"] as Kind[]).map(k => (
             <Chip key={k} data-kind={k} pressed={kind === k} onClick={() => setKind(k)}>{k[0].toUpperCase() + k.slice(1)}</Chip>
@@ -56,7 +60,8 @@ export function Feedback() {
         <textarea id="fb-text" rows={5} maxLength={1000} placeholder={t("feedback.whatWouldMakeAryaBetter")}
           value={text} onChange={e => setText(e.target.value)} />
         <p className="muted nomargin" id="fb-count">{text.length} / 1000</p>
-        <p><button id="fb-send" className="btn primary wide" type="button" disabled={demo || busy} onClick={send}>{t("common.send")}</button></p>
+        <p><button id="fb-send" className="btn primary wide" type="button" disabled={busy} onClick={send}>{t("common.send")}</button></p>
+        </>}
         <p className="muted nomargin" id="fb-status">{status}</p>
       </div>
       <div id="fb-owner" hidden={notes === null}>

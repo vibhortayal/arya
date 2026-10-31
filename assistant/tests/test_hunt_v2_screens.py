@@ -39,7 +39,7 @@ class TestHuntV2Screens(unittest.TestCase):
     def test_profile_counts_finished_and_attached_apart(self):
         prog = src("screens/QuestProgress.tsx")
         self.assertIn(">Quests finished<", prog)
-        self.assertIn(">Receipt added<", prog)
+        self.assertIn(">Quests with a receipt<", prog)  # retest 2026-10-31 #18
         # Audit M9 (2026-10-31): trips with no receipt are one Today row
         # that opens Receipts, not cards in Settings.
         today = src("screens/Today.tsx")

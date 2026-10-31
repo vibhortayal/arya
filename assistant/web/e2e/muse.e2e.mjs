@@ -19,7 +19,9 @@ export default async function (page, base) {
   if ((await page.textContent("#view-muse h1")) !== "Use Arya in another AI app") throw new Error("title");
   if ((await demoGet).status() !== 401) throw new Error("demo should not read a token");
   await page.waitForTimeout(100);
-  if ((await page.$$("#profile-token-row > *")).length) throw new Error("demo row should stay empty");
+  // No code buttons in the demo; one line says why (retest 2026-10-31 #24).
+  if ((await page.$$("#profile-token-row button")).length) throw new Error("demo row should have no code buttons");
+  if (!(await page.$("#muse-demo"))) throw new Error("demo line missing");
   await page.click("[data-copy-prompt]");
   await page.waitForFunction(() => document.body.textContent.includes("Setup prompt copied."));
 
