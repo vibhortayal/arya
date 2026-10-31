@@ -13,10 +13,12 @@ class StaticCacheControl(unittest.TestCase):
         self.assertIsNone(main._static_cache_control(os.path.join(main._WEB, "index.html")))
         self.assertIsNone(main._static_cache_control(os.path.join(main._PWA, "scene.js")))
 
-    def test_images_icons_and_three_get_an_hour(self):
-        for d in ("assets", "icons", "vendor"):
+    def test_images_and_icons_get_a_day_and_three_a_week(self):
+        for d in ("assets", "icons"):
             p = os.path.join(main._PWA, d, "x.webp")
-            self.assertEqual(main._static_cache_control(p), "public, max-age=3600")
+            self.assertEqual(main._static_cache_control(p), "public, max-age=86400")
+        p = os.path.join(main._PWA, "vendor", "three.module.js")
+        self.assertEqual(main._static_cache_control(p), "public, max-age=604800")
 
 
 if __name__ == "__main__":

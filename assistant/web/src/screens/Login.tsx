@@ -190,8 +190,8 @@ export function Login() {
           <div className="landapps">
             <p className="landappscap">{t("landing.appsSoon")}</p>
             <div className="landbadges">
-              <img src={asset("assets/badges/app-store.svg")} alt={t("landing.appStoreAlt")} />
-              <img src={asset("assets/badges/google-play.png")} alt={t("landing.googlePlayAlt")} />
+              <img src={asset("assets/badges/app-store.svg")} width="120" height="40" alt={t("landing.appStoreAlt")} />
+              <img src={asset("assets/badges/google-play.png")} width="139" height="40" alt={t("landing.googlePlayAlt")} />
             </div>
           </div>
           <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a></p>

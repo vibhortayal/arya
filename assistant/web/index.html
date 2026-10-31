@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arya</title>
+<meta name="description" content="Arya is a grocery list that learns what your household buys, so the list writes itself.">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icons/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32">
@@ -14,6 +15,10 @@
 <meta name="theme-color" content="#EFEFF1">
 </head>
 <body>
+<!-- The start page's first lines, drawn before the bundle runs (audit M1).
+     public boot.js drops it for a returning account; App.tsx removes it. -->
+<div id="boot"><section class="view"><main class="landpage"><header class="landtop"><span class="landlogo">Arya</span></header><div class="hero landhero"><h1 class="largetitle herotitle">Your grocery run, <em>smarter.</em></h1><p class="herosub nomargin landsub">One app for the list, the store and the trip.</p></div></main></section></div>
+<script src="/boot.js"></script>
 <div id="root"></div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
