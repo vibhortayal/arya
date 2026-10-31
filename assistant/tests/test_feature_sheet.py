@@ -34,7 +34,7 @@ class FeatureSheet(unittest.TestCase):
         tabs = frontend.src("App.tsx").split("const TAB_LABEL", 1)[1].split("};", 1)[0]
         labels = re.findall(r':\s*"([^"]+)"', tabs)
         first = raw().splitlines()[0]
-        for t in re.findall(r"\b(Today|Lists|Ask|Quest|Settings)\b", first):
+        for t in re.findall(r"\b(Today|Lists|Ask|Quest|Help|Settings)\b", first):
             self.assertIn(t, labels)
         self.assertEqual(len(labels), 6)
         self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
@@ -52,6 +52,7 @@ class FeatureSheet(unittest.TestCase):
         f = lambda q: chat_service.feature_sheet(flags, question=q)
         self.assertIn("Map my store: open the Quest tab", f("how do I map my store?"))
         self.assertIn("Start a group", f("how do I share my list with my wife"))
+        self.assertIn("Help tab: tap Help", f("where is the help tab"))
         self.assertIn("tap Edit on Today", f("can I move the cards around"))
         self.assertIn("Receipts: open Settings", f("where do I add a receipt"))
         # no topic words but a general ask: everything

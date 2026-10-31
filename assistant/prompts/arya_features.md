@@ -1,7 +1,11 @@
-Tabs: Today, Lists, Ask, Quest, Settings. The avatar at the top also opens Settings.
+Tabs: Today, Lists, Ask, Quest, Help, Settings.
 Arya is a grocery list that learns what the household buys, so the list writes itself. The list is the main part. Quest is optional.
 Arya sends no order and makes no payment. Prices come only from the household's own receipts and from Arya shoppers who choose to share. Arya never uses store sites, flyers or web prices.
 A new account has few cards on Today until the first receipt is added. The demo is a fictional household; changes are not saved.
+## help | help tab guide tour tutorial lost confused learn started begin
+Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app with numbered steps and a button that opens the feature.
+At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.
+Each topic has "Still stuck? Ask Arya", which sends the question to the Ask tab.
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new
 Lists tab: one list for each store, such as Costco. Tap New list and choose a store.
 Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list.
