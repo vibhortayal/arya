@@ -54,6 +54,7 @@ services:
       ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-20}
       ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
       ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
+      ARYA_FEEDBACK_MAIL_CAP: ${ARYA_FEEDBACK_MAIL_CAP:-20}
       # Keeping Arya running: per real account, a month's AI spend that
       # shows a heads-up, a higher one that pauses paid reads until the
       # 1st, and an hour's spend that switches the account's paid reads

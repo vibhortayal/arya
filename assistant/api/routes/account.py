@@ -1,6 +1,7 @@
 """Account-level routes: settings, data export, feedback and push reminders."""
 import os
 
+from starlette.concurrency import run_in_threadpool
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
@@ -272,12 +273,22 @@ async def feedback_submit(req: Request):
     from api import feedback
     user = state._current_user.get()
     try:
-        feedback.submit(user, body.get("kind", ""), body.get("text", ""))
+        note = feedback.submit(user, body.get("kind", ""), body.get("text", ""))
     except PermissionError as e:
         raise HTTPException(429, str(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
+    await _mail_note(note)
     return {"ok": True}
+
+
+async def _mail_note(note):
+    """Email the owner the new note (api/mailer.py). Never blocks or fails the send."""
+    from api import mailer
+    try:
+        await run_in_threadpool(mailer.feedback_note, note)
+    except Exception:
+        pass
 
 
 @router.post("/api/demo/feedback")
@@ -297,11 +308,12 @@ async def demo_feedback_submit(req: Request):
                                  "ARYA_DEMO_FEEDBACK_IP_RATE", 10):
         raise HTTPException(429, "that is enough for now, thank you")
     try:
-        feedback.submit_demo(body.get("text", ""), body.get("email", ""))
+        note = feedback.submit_demo(body.get("text", ""), body.get("email", ""))
     except PermissionError as e:
         raise HTTPException(429, str(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
+    await _mail_note(note)
     return {"ok": True}
 
 
