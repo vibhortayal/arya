@@ -125,7 +125,7 @@ a.name { color: var(--label); }
 .btn.wide { width: 100%; }
 .chip {
   border: none; background: var(--fill); color: var(--label); border-radius: 980px;
-  padding: 8px 14px; min-height: 36px; font-size: 15px; font-weight: 600;
+  padding: 8px 14px; min-height: 44px; font-size: 15px; font-weight: 600;
 }
 .chip:active { background: var(--accent); color: #fff; }
 
@@ -586,6 +586,10 @@ body.hunting .questmode-host { bottom: 0; z-index: 20; }
 .qm-links { padding: 8px 0 0; }
 .qm-links + .qm-links { padding-top: 0; }
 .qm-links .qg-store { justify-content: space-between; }
+/* These rows have no picture, so the text is the first span: it takes
+   the width and the chevron stays at the right edge (audit L2). */
+.qm-links .qg-store > span:first-child { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qm-links .qg-store > span:nth-child(2) { flex: none; }
 .qm-links small { display: block; }
 .hunthud {
   position: sticky; top: 0; z-index: 7; display: flex; align-items: center; gap: 8px;
@@ -1174,6 +1178,8 @@ label.btn.wide { display: block; text-align: center; box-sizing: border-box; }
 /* Ask: the input rides just above the tab bar even on an empty log. */
 #view-chat:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
 #view-chat #chat-log { flex: 1; }
+/* Starter questions sit just above the field, where the thumb is (audit L4). */
+#view-chat #chat-empty { margin-top: auto; }
 .avrow { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 .avrow input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 10px 14px; min-height: 44px; border: 0; border-radius: 980px; background: var(--fill); color: var(--label); box-sizing: border-box; }
 .btn.compact { padding: 8px 18px; flex: none; }
@@ -1208,7 +1214,9 @@ input[type=file]::file-selector-button {
   .listrow .qtyedit { margin-left: auto; }
 }
 .listrow.flash { animation: rowflash 1.6s ease-out; }
-@keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: transparent; } }
+/* Ends on the row's own colour: a transparent end let the swipe actions
+   (Move, Remove) show through a just-added row (audit M4). */
+@keyframes rowflash { from { background: var(--accent-soft, #FCE3DA); } to { background: var(--group); } }
 @media (prefers-reduced-motion: reduce) { .listrow.flash { animation: none; } }
 .g-fold summary { cursor: pointer; padding: 10px 4px; color: var(--secondary); font-size: 15px; min-height: 44px; display: flex; align-items: center; }
 
@@ -1248,6 +1256,11 @@ input[type=file]::file-selector-button {
 .listhead .iconbtn svg { width: 24px; height: 24px; }
 .pen { flex: none; width: 36px; height: 36px; border: none; background: transparent; color: var(--secondary); display: grid; place-items: center; }
 .pen svg { width: 18px; height: 18px; }
+/* Small controls that keep their look but take a 44 px tap (audit L1). */
+.pen, #perish-notnow, .landdesk .linkbtn, .landnote a { position: relative; }
+.pen::before { content: ""; position: absolute; inset: -5px; }
+#perish-notnow::before { content: ""; position: absolute; inset: -11px -6px; }
+.landdesk .linkbtn::before, .landnote a::before { content: ""; position: absolute; inset: -12px -4px; }
 .liststores { color: var(--secondary); font-size: 15px; margin: 0 0 8px; }
 .sheet .navrow .tick { margin-left: auto; color: var(--accent-text); font-weight: 700; visibility: hidden; }
 .sheet .navrow[aria-pressed="true"] .tick { visibility: visible; }
@@ -1331,7 +1344,7 @@ body.hunting #view-hunt.full .askbar {
 .prefrow .grow { flex-basis: 100%; }
 .prefpicks { display: flex; gap: 8px; width: 100%; }
 .prefpicks .curpick { flex: 1; min-width: 0; }
-.curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 17px; }
+.curpick { width: auto; margin: 0; padding: 8px 10px; font-size: 17px; min-height: 44px; }
 .notgrocery { display: block; }
 .notgrocery .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
 
@@ -1970,6 +1983,7 @@ body.dev { max-width: 1080px; padding-bottom: 40px; }
 .cardmenu button:focus-visible, .egrip:focus-visible, .eminus:focus-visible, .etile.eadd:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .askline { margin: 0 0 10px; }
 .asklist { border: 1px solid var(--sep); border-radius: 12px; overflow: hidden; }
+.asklist .navrow { padding-left: 14px; padding-right: 14px; }
 .asklist .navrow:last-child { border-bottom: 0; }
 @media (prefers-reduced-motion: no-preference) {
   .etile { transition: transform .18s, box-shadow .18s; }

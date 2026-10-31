@@ -6,7 +6,8 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
-- **Small polish (2026-10-30, PR open):** `boot.js` revalidates; the owner rows in Settings show only for owners (no 401/403 noise for others); the add field shows "done"; quantity and unit never wrap apart. `assistant/loops/2026-10-30-small-polish.md`.
+- **UI polish (2026-10-31, PR open):** a new list row no longer shows Move/Remove through it; first-run picks are padded; Quest row chevrons sit at the edge; chips, selects and Quest buttons are 44 px; Ask puts its questions by the field and waits for text before Send. `assistant/loops/2026-10-31-ui-polish.md`.
+- **Small polish (merged, #299):** `boot.js` revalidates; the owner rows in Settings show only for owners (no 401/403 noise for others); the add field shows "done"; quantity and unit never wrap apart. `assistant/loops/2026-10-30-small-polish.md`.
 - **Start shell and cache lifetimes (merged, #298):** the start page headline paints before the bundle (`#boot`, `pwa/boot.js` starts the sign-in calls early); images and icons cache a day, three.js a week. Local FCP 4.3 s to 1.7 s. `assistant/loops/2026-10-30-start-shell.md`.
 - **pypdf 6 (merged, #297):** pypdf 5.9 to 6.21.4, which closes about 60 crafted-PDF loop and memory advisories; text extraction unchanged. `assistant/loops/2026-10-30-pypdf-6.md`.
 - **Security headers (merged, #296):** `/docs`, `/redoc` and `/openapi.json` are off (the Lists API schema stays); Caddy drops `Range` until the Starlette upgrade; `Permissions-Policy` for camera, microphone and location; no `Server` header. `assistant/loops/2026-10-30-security-headers.md`.
