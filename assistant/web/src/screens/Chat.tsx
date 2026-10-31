@@ -393,7 +393,7 @@ export function Chat() {
         ) : null}
         <input type="text" id="chat-input" ref={input} placeholder={pending ? t("ask.askAboutPhoto") : t("common.askArya")} autoComplete="off" aria-label={t("ask.message")}
           value={text} onChange={e => setText(e.target.value)} />
-        <button type="submit" className="btn primary" id="chat-send">{t("common.send")}</button>
+        <button type="submit" className="btn primary" id="chat-send" disabled={!text.trim() && !pending}>{t("common.send")}</button>
         <div className="caprow">
           <button id="btn-mic" type="button" className={"chip" + (listening ? " listening" : "")} aria-label={listening ? t("ask.stopTalking") : t("ask.speakYourMessage")} onClick={mic}><IconMic />{listening ? t("ask.stop") : t("ask.talk")}</button>
           <label className="chip" htmlFor="ask-photo" {...pickerProps("ask-photo")}>
