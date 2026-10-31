@@ -5,10 +5,9 @@
 Arya is a grocery list that learns. It reads your receipts, checks every
 line against the printed total, and learns what your household buys, how
 often, and at which store. The list then mostly writes itself: what is
-running low, what to use soon, and where you usually buy it. Think of it as
-Waze for grocery shopping.
+running low, what to use soon, and where you usually buy it.
 
-Quest is an optional tab for when shopping should feel like a game. It turns
+Start shopping - Go on a Quest to make the chore feel like a game. It turns
 your list into a hunt through a model of your store and ends on a photo of
 your receipt.
 
