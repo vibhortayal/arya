@@ -10,6 +10,10 @@ import asyncio, os, tempfile, time, unittest
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["MODEL_API_KEY"] = "test-key"
+# The disk floor is ambient host state, not what this test measures; the
+# data dir sits on the host tmpfs, which can be smaller than the floor.
+# The floor itself is covered by test_ops.test_full_disk_answers_503.
+os.environ["ARYA_HEALTH_MIN_FREE_MB"] = "0"
 
 
 class TestEventLoopFree(unittest.IsolatedAsyncioTestCase):

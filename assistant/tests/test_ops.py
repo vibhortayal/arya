@@ -1,6 +1,7 @@
 """Ops review 2026-10-31: failed and slow model calls are booked, /health
 tells the uptime monitor about a full disk, and the ops report reads it."""
 import json, os, tempfile, time, unittest
+from collections import namedtuple
 from unittest import mock
 
 from api.cost_ledger import CostLedger
@@ -91,7 +92,11 @@ class TestOpsReport(unittest.TestCase):
         from api import deps
         from harness import ops
         d = tempfile.mkdtemp()
+        # The report warns when free disk < max(4x the health floor, 2 GB);
+        # the host's free space is ambient state, so stub disk_usage.
+        usage = namedtuple("usage", "total used free")(10**11, 0, 10**11)
         with mock.patch.dict(os.environ, {"ARYA_DATA_DIR": d}), \
+                mock.patch("shutil.disk_usage", return_value=usage), \
                 mock.patch.object(deps, "_LEDGER", os.path.join(d, "cost-ledger.jsonl")):
             subject, text = ops.build(24)
             self.assertIn("all quiet", subject)
