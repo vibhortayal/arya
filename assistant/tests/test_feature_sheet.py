@@ -58,6 +58,19 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Use soon:", f("what can you do?"))
         self.assertIn("Receipts: open Settings", f("what can you do?"))
 
+    def test_other_languages_get_every_topic(self):
+        seen = {}
+
+        class C:
+            def chat(self, messages, **kw):
+                seen["sheet"] = next(m["content"] for m in messages if m["content"].startswith("ABOUT ARYA:"))
+                return '{"reply":"ok","actions":[]}', 0, 0
+        chat_service.chat([{"role": "user", "content": "¿Cómo comparto mi lista?"}], C())
+        self.assertIn("Start a group", seen["sheet"])
+        self.assertIn("Receipts: open Settings", seen["sheet"])
+        chat_service.chat([{"role": "user", "content": "how much was milk?"}], C())
+        self.assertNotIn("Start a group", seen["sheet"])
+
     def test_follow_up_keeps_topic(self):
         h = [{"role": "user", "content": "how do I add a receipt?"}, {"role": "assistant", "content": "x"},
              {"role": "user", "content": "and then?"}]

@@ -317,12 +317,16 @@ def chat(history, client, surface=None, context=None, image=None):
     from api import state
     system = open(PROMPT_PATH).read().split("SYSTEM:", 1)[1].strip()
     ctx = context if isinstance(context, dict) else {}
+    lang = _language_setting()
+    # Topic words are English: a fixed es/hi account, or text in another
+    # script, gets every topic so the model can still answer in kind.
+    asked = _asked(history)
+    topics_for = None if lang in ("es", "hi") or re.search(r"[^\x00-\x7f\u2018\u2019\u201c\u201d\u2014]", asked) else asked
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())},
-                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet(question=_asked(history))}]
+                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet(question=topics_for)}]
     if surface and ctx:
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
-    lang = _language_setting()
     if lang != "auto":
         messages.append({"role": "user", "content": f"REPLY LANGUAGE: {LANGUAGES[lang]} ({lang})"})
     for h in (history or [])[-10:]:
