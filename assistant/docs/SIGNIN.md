@@ -3,6 +3,8 @@
 Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
 (2026-10-30): https://claude.ai/artifact/PbmjdCuX1TVqkcFGZPJR9E
 
+Owner heads-up mail on each new join: see "Waitlist join emails" in OPS.md.
+
 ## Waitlist screen (owner, 2026-10-31)
 
 Settings, Waitlist (admins only) has three sections: **Waiting** (top), **Approved**,

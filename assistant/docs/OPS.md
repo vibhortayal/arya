@@ -36,6 +36,9 @@ Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`
 7. Take one Oracle boot-volume backup before judging.
 8. Make sure `support@teamnightshift.org` forwards to you (Cloudflare Email Routing, free). Arya's paused-account message sends people there.
 
+## Waitlist join emails
+When a new address joins the waitlist the app emails you "[Arya] New waitlist join" with the address, the time and where to review it (Settings, Waitlist). Set `ARYA_WAITLIST_NOTIFY_EMAIL` in `.env`; if empty it uses `ARYA_OPS_EMAIL`; if both are empty or `RESEND_API_KEY` is missing nothing is sent. It is sent after the visitor's answer, so a slow or failing mail never blocks joining. A repeat of the same address sends nothing. At most `ARYA_WAITLIST_NOTIFY_PER_HOUR` (default 10) mails an hour per API process; past that one "many joins, emails paused" notice goes out and the rest stay on the Waitlist screen. The address is never written to the logs.
+
 ## What the numbers mean
 The cost ledger (`cost-ledger.jsonl` in the data folder) has one row per model call. Since 2026-10-31 a row also has `ms` (how long the call took), and a failed call has a row with `ok: false`, `cost_usd: 0` and `err` (`http_429`, `timeout`, `unreachable`, `shape`, `error`). Older rows have none of these. Failed rows do not count toward anyone's usage or the daily budget. A refusal that comes back as a normal 200 answer is not a failure row.
 

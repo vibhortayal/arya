@@ -72,6 +72,10 @@ services:
       # report --email, see docs/OPS.md) and the free disk below which
       # /health answers 503 so the outside uptime check alerts.
       ARYA_OPS_EMAIL: ${ARYA_OPS_EMAIL:-}
+      # Heads-up mail to the owner when a new address joins the waitlist.
+      # Falls back to ARYA_OPS_EMAIL; max N mails an hour, then one "paused".
+      ARYA_WAITLIST_NOTIFY_EMAIL: ${ARYA_WAITLIST_NOTIFY_EMAIL:-}
+      ARYA_WAITLIST_NOTIFY_PER_HOUR: ${ARYA_WAITLIST_NOTIFY_PER_HOUR:-10}
       ARYA_HEALTH_MIN_FREE_MB: ${ARYA_HEALTH_MIN_FREE_MB:-500}
       ARYA_PUSH_REMINDERS: ${ARYA_PUSH_REMINDERS:-0}
       ARYA_GROUPS: ${ARYA_GROUPS:-1}
