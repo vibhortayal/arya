@@ -54,6 +54,17 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 groups.router, questmap.router, town.router):
     app.include_router(_router)
 
+def _resume_scan_jobs():
+    """Background store scans a deploy restart interrupted carry on."""
+    from api import scanjobs
+    try:
+        scanjobs.resume()
+    except Exception:
+        _log.exception("could not resume scan jobs")
+
+
+app.router.on_startup.append(_resume_scan_jobs)
+
 # The open Lists API is its own small app, so its errors and schema
 # (/api/v1/openapi.json) stay separate from the app's routes.
 app.mount("/api/v1", lists_v1.v1)

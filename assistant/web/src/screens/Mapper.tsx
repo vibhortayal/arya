@@ -5,6 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Empty } from "../ui/kit";
 import { get, post } from "../lib/api";
 import { FindStorePanel } from "./StoresFind";
+import { ScanStatus, UploadWalk } from "./MapScanStatus";
 import { Trans, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
@@ -60,6 +61,7 @@ export function Mapper() {
   // Find or add a store right here (owner 2026-10-29): open on its own
   // when My Stores is empty, since there is nothing else to pick.
   const [allStores, setAllStores] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const seq = useRef(0);
   const paramStore = typeof nav.params.store === "string" ? nav.params.store : "";
 
@@ -156,11 +158,14 @@ export function Mapper() {
       <div id="mp-find">
         <FindStorePanel onAdded={n => { setAllStores(true); pick(n); }} />
       </div>
+      {store && <ScanStatus store={store} onMapChanged={() => { load(store).catch(() => {}); }} />}
+      {uploading && store && <UploadWalk store={store} onClose={() => setUploading(false)} />}
       <div id="mp-walk">
         {v && store && (
           <div className="group pad mp-nextcard">
             <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMappingAt", { store })}</button>
             <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
+            <button className="btn wide mp-upload" id="mp-upload" type="button" onClick={() => setUploading(true)}>{t("mapScan.uploadButton")}</button>
           </div>
         )}
       </div>

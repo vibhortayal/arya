@@ -9,7 +9,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 # Set by compose itself, or only by tests.
-NOT_FROM_ENV_FILE = {"ARYA_DATA_DIR", "ARYA_INSECURE_COOKIE"}
+NOT_FROM_ENV_FILE = {"ARYA_DATA_DIR", "ARYA_INSECURE_COOKIE", "ARYA_SCAN_JOBS_INLINE"}
 
 
 def read_by_code():

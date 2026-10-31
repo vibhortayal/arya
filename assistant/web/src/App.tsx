@@ -9,6 +9,7 @@ import { useGroupLive } from "./app/groupLive";
 import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { get } from "./lib/api";
+import { startQueue } from "./lib/scanQueue";
 import { useTown } from "./lib/town";
 import { joinCodeFromUrl } from "./screens/GroupJoin";
 import { TabAsk, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
@@ -82,6 +83,38 @@ function useListFromHash() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
+/* Map my store walks wait on the phone and go up when there is signal
+ * (lib/scanQueue). While a walk is being read, ask now and then; when
+ * one is ready, say so once, wherever the shopper is. */
+function useScanQueue() {
+  const { toast } = useToast();
+  const s = useSession();
+  useEffect(() => {
+    if (!s.user) return;
+    startQueue();
+    let watching = new Set<string>();
+    const told = new Set<string>();
+    const check = async () => {
+      try {
+        const r = await get<{ jobs: { id: string; store: string; status: string; seen: boolean }[] }>("/api/storemap/jobs");
+        const jobs = r.jobs || [];
+        for (const j of jobs) {
+          if (watching.has(j.id) && j.status === "ready" && !j.seen && !told.has(j.id)) {
+            told.add(j.id);
+            toast(t("mapScan.readyToast", { store: j.store.split("|")[0] }));
+          }
+        }
+        watching = new Set(jobs.filter(j => j.status === "queued" || j.status === "reading").map(j => j.id));
+      } catch { /* try again next time */ }
+    };
+    const sent = () => { void check(); };
+    window.addEventListener("arya-scan-sent", sent);
+    const id = window.setInterval(() => { if (watching.size) void check(); }, 10000);
+    void check();
+    return () => { window.removeEventListener("arya-scan-sent", sent); clearInterval(id); };
+  }, [s.user]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 /* pwa/index.html's shell: the demo bar, one view at a time, and the
  * tab bar. No floating avatar (usability pass, owner 2026-10-29): it
  * did what the Settings tab does and covered page titles; the avatar
@@ -102,6 +135,7 @@ function Shell() {
   });
   useListFromHash();
   useGroupLive();
+  useScanQueue();
   useEffect(() => {
     // After first paint and a quiet moment, fetch the other tabs' code.
     const idle = (window as { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
