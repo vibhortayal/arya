@@ -142,6 +142,9 @@
     "reload": "Reload"
   },
   "about": {
+    "whatAryaCanDo": "What Arya can do",
+    "useElsewhere": "Use Arya elsewhere",
+    "behind": "Behind Arya",
     "builtBy": "Built by",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists and labels the shelves, Muse Wonder reads receipt photos, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
   },
@@ -385,7 +388,7 @@
     },
     "askAboutYourListYour": "Ask about your list, your spending, or what is running low.",
     "replyInFromNowOn": "Reply in {{text}} from now on?",
-    "youCanChangeThisAny": "You can change this any time in Settings › Ask replies in.",
+    "youCanChangeThisAny": "You can change this any time in Settings › Preferences.",
     "noThanks": "No, thanks",
     "yes": "Yes, {{text}}",
     "speakYourMessage": "Speak your message",
@@ -805,6 +808,8 @@
     "couldNotLoad": "Couldn't load your lists.",
     "retry": "Retry",
     "newList": "New list",
+    "storesRow": "Stores",
+    "storesRowSub": "Your stores and favorites",
     "listName": "List name",
     "listOptions": "List options",
     "speakYourList": "Speak your list",
@@ -1408,7 +1413,7 @@
     "typeFirst": "Type an item first.",
     "saved": "Saved.",
     "readingPhoto": "Reading the photo…",
-    "looksLikeReceipt": "That looks like a receipt. Add it from Settings › Receipts.",
+    "looksLikeReceipt": "That looks like a receipt. Add it from Today › Receipts.",
     "addedToQuest_one": "Added {{count}} item to the quest.",
     "addedToQuest_other": "Added {{count}} items to the quest.",
     "noItemsInPhoto": "No list items found in that photo.",
@@ -1615,29 +1620,27 @@
   },
   "settings": {
     "settings": "Settings",
-    "stores": "Stores",
-    "yourStoresFavoritesAndThe": "Your stores and favorites",
     "whatAryaCanDoAnd": "What Arya does for you, and what you can turn on",
     "usageSub": "What the AI reading costs, and your share",
-    "spendingByMonthAndStore": "By month, store and item",
     "account": "Account",
-    "signedInAs": "Signed in as",
     "currency": "Currency",
     "howPricesShowAryaDoes": "Shows prices in this currency. It doesn't convert them.",
     "language": "Ask replies in",
     "whatAryaAnswersInAuto": "Auto matches the language you type",
-    "featureRequestContactUs": "Send feedback",
-    "tellUsWhatToBuild": "Tell us what to build, what broke, or ask a question",
     "connectAnAiAgent": "Use Arya in another AI app",
     "useAryaFromYourOwn": "Add to your list from the AI app you already use",
-    "builtOnMetaModels": "Built on Meta models",
     "preferences": "Preferences",
+    "currencyAndLanguage": "Currency and language",
+    "currencyAndLanguageSub": "Prices, and the language Ask replies in",
+    "signedInAsUser": "Signed in as {{user}}",
+    "arya": "Arya",
+    "aboutArya": "About Arya",
+    "aboutAryaSub": "Powers, other AI apps, running costs, install",
     "shopMode": "When I start shopping",
     "shopModeSub": "What Start shopping opens.",
     "shopModeQuest": "Start a Quest",
     "shopModeList": "Just my list",
     "shopModeAsk": "Ask me each time",
-    "preferencesSub": "Prices show in this currency. Arya answers in this language.",
     "exportMyData": "Export my data",
     "exportStarted": "Your export is downloading as arya-export.json.",
     "everythingAryaHoldsForYou": "Everything Arya holds for you, as one file",
@@ -1656,7 +1659,6 @@
     "drawnAsACartoonThen": "Drawn as a cartoon, then dropped.",
     "yourNewAvatar": "Your new avatar",
     "useThis": "Use this",
-    "reminders": "Reminders",
     "remindMe": "Remind me",
     "registration": "Registration",
     "registrationOn": "Open — anyone can create an account",
@@ -1746,15 +1748,6 @@
     "sameForGroup": "Same for the group, from what is left.",
     "becomesOwner": "@{{handle}} becomes the owner",
     "youLeft": "You left {{name}}. Your lists are a copy now.",
-    "yourData": "Your data",
-    "helpAndGuide": "Help and guide",
-    "helpAndGuideSub": "What Arya does, things to try, and the tour again",
-    "receiptsCount_one": "{{count}} receipt",
-    "receiptsCount_other": "{{count}} receipts",
-    "seenBy": {
-      "you": "only you see them",
-      "group": "only you and {{group}} see them"
-    },
     "shoppingWeeks_one": "{{count}} week of shopping with Arya",
     "shoppingWeeks_other": "{{count}} weeks of shopping with Arya",
     "firstQuestLevel": "Your first quest earns Level 1"
@@ -1991,7 +1984,7 @@
     "time": "Time",
     "theTotalDidNotReconcile": "The lines don't add up to the total. Check them in Receipts.",
     "challengeAFriendToBeat": "Challenge a friend to beat this",
-    "noReceiptYetAddThis": "No receipt yet. Add it any time from Settings › Receipts.",
+    "noReceiptYetAddThis": "No receipt yet. Add it any time from Today › Receipts.",
     "addTheReceipt": "Add the receipt",
     "badges": "Badges",
     "new": "New",
@@ -2055,6 +2048,12 @@
   },
   "today": {
     "today": "Today",
+    "receiptsRowSub": "Add one, or look back",
+    "seenBy": {
+      "you": "only you see them",
+      "group": "only you and {{group}} see them"
+    },
+    "spendingRowSub": "By month, store and item",
     "tripsNeedReceipt_one": "{{count}} trip needs a receipt",
     "tripsNeedReceipt_other": "{{count}} trips need a receipt",
     "sizes": {
@@ -2706,11 +2705,11 @@
     "tour": {
       "today": {
         "title": "Today",
-        "line": "What needs you today: running low, use soon, and tips."
+        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are at the bottom."
       },
       "lists": {
         "title": "Lists",
-        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list."
+        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list. Your stores are at the bottom."
       },
       "ask": {
         "title": "Ask",
@@ -2722,7 +2721,7 @@
       },
       "settings": {
         "title": "Settings",
-        "line": "Your stores, receipts and spending. Replay this tour any time here."
+        "line": "Your group, currency and language, display and account. The Help tab has the guide and replays this tour."
       },
       "guideLink": "Want the full guide?"
     }
@@ -2774,7 +2773,7 @@
         "kicker": "Receipts",
         "title": "See where your money goes",
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
-        "s1": "Settings › Receipts, or the camera on a list.",
+        "s1": "Today › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
         "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund."
       },
@@ -2783,14 +2782,14 @@
         "title": "Know where it's cheaper",
         "body": "From your own receipts and from Arya shoppers who share prices, Arya tells you whether your organic olive oil is cheaper at Trader Joe's or at Safeway.",
         "s1": "Add receipts from two stores.",
-        "s2": "Open Settings › Arya's powers › Compare your stores.",
+        "s2": "Open Settings › About Arya › Arya's powers › Compare your stores.",
         "s3": "Arya shows which store is cheaper per item, and adds prices from Arya shoppers who share them."
       },
       "usesoon": {
         "kicker": "Use soon",
         "title": "Reduce food waste",
         "body": "Snap the date on a pack, or pick a use-by date for fresh food. Arya nudges you to use it in time, so less food ends up in the bin.",
-        "s1": "After a receipt, Today asks for you. Any time: Settings › Arya's powers › Use soon › Add a date.",
+        "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
         "s4": "Arya reminds you what to use before it expires or goes bad."
@@ -2840,7 +2839,7 @@
     "sub": "Read and write your own lists and receipts from a script or another app. Export anytime.",
     "getCode": "Get your code",
     "step1": "Get your code",
-    "step1Body": "In Arya, open Settings, then Use Arya in another AI app, then Make my code. It shows once. A new code replaces the old one.",
+    "step1Body": "In Arya, open Settings, then About Arya, then Use Arya in another AI app, then Make my code. It shows once. A new code replaces the old one.",
     "sameCode": "The same code works for the Lists API and the agent connector.",
     "step2": "Make your first call",
     "answersJson": "Replies with your lists",
@@ -2884,7 +2883,7 @@
     "youGetBack": "You get back",
     "authLead": "One header, one code.",
     "authBody1": "Send your code as",
-    "authBody2": "on every call. It reaches only your own account. Lost it or leaked it? Make a new code in Settings and the old one stops working at once.",
+    "authBody2": "on every call. It reaches only your own account. Lost it or leaked it? Make a new code in Settings › About Arya and the old one stops working at once.",
     "endpointsLead": "Every one answers JSON.",
     "openRef": "Open the interactive reference",
     "endpointsLead2": "to try them from the browser.",
@@ -3003,7 +3002,7 @@
         "title": "Add your first receipt",
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
-        "s1": "Open Settings, then Receipts.",
+        "s1": "Open Today, then Receipts.",
         "s2": "Tap Add receipt. Take a photo or pick a PDF.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
@@ -3049,9 +3048,9 @@
         "title": "Receipts and spending",
         "sub": "Add a receipt, see where money goes",
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
-        "s1": "Open Settings, then Receipts, and tap Add receipt.",
+        "s1": "Open Today, then Receipts, and tap Add receipt.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Open Settings, then Spending, to see it by month, store and item.",
+        "s3": "Open Today, then Spending, to see it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "cta": "Open Spending"
       },
@@ -3061,8 +3060,8 @@
         "body": "Prices come from your own receipts, and from Arya shoppers who choose to share.",
         "s1": "Add receipts from two stores.",
         "s2": "Look at the cards \"Cheaper elsewhere\" and \"Price watch\" on Today.",
-        "s3": "Open Settings, then Arya's powers, for Compare your stores and Price trends.",
-        "n1": "Community prices are off until you turn them on: Settings, Arya's powers, Community prices.",
+        "s3": "Open Settings, then About Arya, then Arya's powers, for Compare your stores and Price trends.",
+        "n1": "Community prices are off until you turn them on: Settings, About Arya, Arya's powers, Community prices.",
         "n2": "Arya never uses store sites, flyers or web prices.",
         "cta": "Open Arya's powers"
       },
@@ -3073,7 +3072,7 @@
         "s1": "Open a list and tap Start shopping.",
         "s2": "Or tap \"Or just tick items as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
-        "n1": "Settings, then \"When I start shopping\", sets what opens.",
+        "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
         "cta": "Open Quest"
       },
@@ -3115,7 +3114,7 @@
         "sub": "Expiry dates and reminders",
         "body": "Add a date to food. Arya reminds you to use it before it goes bad.",
         "s1": "After a receipt, Today asks you for dates.",
-        "s2": "Any time: Settings, Arya's powers, Use soon, Add a date.",
+        "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
         "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check.",
@@ -3129,7 +3128,7 @@
         "s2": "Drag a card to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card from the library.",
         "n1": "Lists, Ask and Quest have an Edit button too.",
-        "n2": "Settings, then Display, changes text size and spacing.",
+        "n2": "Settings, then Preferences, then Display, changes text size and spacing.",
         "cta": "Open Today"
       }
     }

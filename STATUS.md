@@ -193,9 +193,18 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   5-step tour, a Get started card on Today and one first-list card on Lists.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
+- **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
+  Preferences (currency and language, When I start shopping, Display,
+  Reminders), Account (Export, Delete), About Arya, and Sign out last.
+  About Arya holds Arya's powers, Use Arya in another AI app, Add to Home
+  Screen, Keeping Arya running and the credits. Stores moved to Lists;
+  Receipts and Spending to a card at the bottom of Today. Help and Send
+  feedback left Settings (the Help tab has both). Guide, tour, Ask's
+  `arya_features.md` and the docs name the new paths.
+  `assistant/loops/2026-10-31-settings-trim.md`.
 - **Arya guide (merged, #187):** an 8-card swipeable guide with Try-it sheets
   on client-side sample data (nothing saved or sent). It opens from
-  Settings > Arya guide, Powers > See how it works, and the last first-run
+  Help tab > Guide, Powers > See how it works, and the last first-run
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
 
 ## Feature flags
