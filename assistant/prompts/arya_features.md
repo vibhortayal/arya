@@ -64,7 +64,7 @@ Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hid
 Settings, Display changes text size, spacing, bold text, pictures and motion.
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
 Settings holds: Stores, Receipts, Spending, Help and guide, Arya's powers, Display, Keeping Arya running, Preferences (currency, language, When I start shopping), Send feedback, Use Arya in another AI app, About, Export my data and Delete my account.
-Help and guide: eight cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
+Help and guide: fifteen cards that show how each part works, in the order a new user needs them. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs and the share for all Arya.
 Sign-in is by invitation for now. On the landing page tap Join the waitlist. Tap Try it now for the demo; tap Finish demo to leave it.
 Use Arya in another AI app lets you add to your list from an AI app you already use.

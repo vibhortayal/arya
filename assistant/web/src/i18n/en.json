@@ -2801,7 +2801,69 @@
         "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costco?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
         "s1": "Tap the Ask tab.",
         "s2": "Type or say your question, or tap a suggestion.",
-        "s3": "Arya answers from your own lists and receipts."
+        "s3": "Arya answers from your own lists and receipts.",
+        "s4": "Tap Photo to send a picture, such as the date on a pack."
+      },
+      "shopping": {
+        "kicker": "In the store",
+        "title": "Start shopping",
+        "body": "Pick a list and shop it. Play a Quest, or just tick items off.",
+        "s1": "Open the Lists tab. Open a list.",
+        "s2": "Tap Start shopping.",
+        "s3": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s4": "Choose what Start shopping opens in Settings, under \"When I start shopping\"."
+      },
+      "running": {
+        "kicker": "Running low",
+        "title": "Never run out",
+        "body": "Arya learns how often you buy things. It shows what is about to run out, and why.",
+        "s1": "Open the Today tab. Look at Running low.",
+        "s2": "Tap Add to put an item on its list.",
+        "s3": "Tap an item to see why Arya suggests it.",
+        "s4": "In Ask, say \"we finished the yogurt\" to mark it as out."
+      },
+      "quest": {
+        "kicker": "Quest",
+        "title": "Shop like a game",
+        "body": "Quest turns your list into a game. You get points, a level and badges. There are no timers and no lives.",
+        "s1": "Open the Quest tab. Tap Start a quest.",
+        "s2": "Choose Everything, or one store.",
+        "s3": "Tap Find it for me to use the camera on a shelf.",
+        "s4": "Open Quest progress to see badges and mapped stores."
+      },
+      "friends": {
+        "kicker": "Friends and hauls",
+        "title": "Share what you found",
+        "body": "Add friends. After a trip, share a photo of what you bought.",
+        "s1": "Open the Quest tab. Tap Your trips and receipts.",
+        "s2": "Tap Friends. Add a friend by username.",
+        "s3": "After a trip, share a photo of your haul."
+      },
+      "today": {
+        "kicker": "Today",
+        "title": "Make Today yours",
+        "body": "Show the cards you use. Hide the rest.",
+        "s1": "Tap Edit on Today, or touch and hold a card.",
+        "s2": "Drag a card to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card from the library.",
+        "s4": "Lists, Ask and Quest have an Edit button too."
+      },
+      "powers": {
+        "kicker": "Powers",
+        "title": "See everything Arya does",
+        "body": "Powers lists what Arya does for you now. It also shows what you can turn on.",
+        "s1": "Open Settings, then About Arya, then Arya's powers. Or tap the Help tab.",
+        "s2": "Tap i on a power to learn how it works.",
+        "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
+      },
+      "settings": {
+        "kicker": "Your settings",
+        "title": "Settings, your way",
+        "body": "Change how Arya looks and speaks. Your data stays yours.",
+        "s1": "Open Settings. Tap Display for text size and spacing.",
+        "s2": "Under Preferences, choose your currency and language.",
+        "s3": "Under Account, tap Export my data to get a copy of everything.",
+        "s4": "Open About Arya, then \"Use Arya in another AI app\", to add to your list from it."
       }
     },
     "replayTour": "Replay the tour"
@@ -2991,7 +3053,7 @@
     "stuck": "Still stuck? Ask Arya",
     "stuckQ": "Help me with: {{topic}}",
     "guide": "Read the full guide",
-    "guideSub": "Eight cards that show each part of Arya",
+    "guideSub": "Fifteen cards that show each part of Arya",
     "powers": "Arya's powers",
     "powersSub": "Everything Arya does, and what you can turn on",
     "tour": "Take the tour again",
