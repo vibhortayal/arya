@@ -4,7 +4,7 @@ Arya sends no order and makes no payment. Prices come only from the household's 
 A new account has few cards on Today until the first receipt is added. The demo is a fictional household; changes are not saved.
 ## help | help tab guide tour tutorial lost confused learn started begin
 Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app, with numbered steps and a button that opens it.
-At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.  The tour has six steps (Today, Lists, Ask, Quest, Help, Settings). In the demo, the welcome, the tour and then the full guide appear every time someone taps Try it now.
+At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.  The tour has six steps (Today, Lists, Ask, Quest, Help, Settings). In the demo the tour is longer: it stops on each screen and then on each main card of that screen, and Skip Today (or the name of the screen) jumps to the next screen. In the demo, the welcome, the tour and then the full guide appear every time someone taps Try it now. Three names: the Tour is the bubbles, the Arya guide is the swipeable cards, the Help tab is everything else.
 In the demo, Send feedback opens Finish demo, which takes your note and an email to reply to.
 Each topic has "Still stuck? Ask Arya".
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new

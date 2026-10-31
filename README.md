@@ -67,6 +67,20 @@ The five tabs are Today, Lists, Ask, Quest and Settings.
 - **Demo Town** (off by default, `ARYA_DEMO_TOWN=1`): the demo household shops
   at invented stores in a simulated neighborhood, labelled as simulated.
 
+## Names for the help parts
+
+Three parts help a new person. Use these words in the app, the docs, and code review.
+
+| Name | What it is | Where in the code |
+|---|---|---|
+| **Tour** | Bubbles over a dimmed screen that point at things. Real accounts get six stops (one per tab). The demo gets a stop for each tab and each main card on it, with "Skip Today" to jump to the next screen. | `web/src/ui/Tour.tsx`, `onboarding/firstRunTour.ts`, `onboarding/demoTour.ts` |
+| **Arya guide** | The swipeable cards (fifteen), each with a Try it. Opens from Help tab, Arya's powers, or the end of the Tour. | `web/src/ui/Guide.tsx`, `guide/cards.ts` |
+| **Help tab** | Everything else: the ask box, first steps, a how-to topic for each feature, plus links to the Arya guide, Arya's powers, the Tour and Send feedback. | `web/src/screens/Help.tsx`, `guide/helpTopics.ts` |
+
+Ask Arya answers how-to questions from `assistant/prompts/arya_features.md`.
+When a change moves or adds UI, update the Tour, the Arya guide, the Help
+tab and that file in the same PR.
+
 ## How it fits together
 
 <p align="center">

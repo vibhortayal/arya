@@ -229,6 +229,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+/* True in the demo; false for a real account or when there is no provider (tests, isolated screens). */
+export function useIsDemo(): boolean { return !!useContext(Ctx)?.demo; }
+
 export function useSession(): Session {
   const s = useContext(Ctx);
   if (!s) throw new Error("useSession outside SessionProvider");

@@ -16,6 +16,10 @@ import { motionOff } from "../lib/motion";
  *   onEnter    runs before the target is measured (e.g. nav.show(view));
  *              the tour waits up to a second for the target to appear
  *   placement  "above" | "below" | "auto" (default: the side with room)
+ *   screen     optional en.json key for the screen this step belongs to
+ *              (the demo's per-screen Tour). Steps with a screen show a
+ *              chip ("TODAY · 2 OF 5"), a bar for the whole Tour, and
+ *              "Skip Today", which jumps to the next screen's first step
  *   more       optional link under the line, { labelKey, onClick }: it
  *              ends the tour as Done does, then runs onClick (the
  *              first-run tour's "Want the full guide?")
@@ -36,6 +40,7 @@ export type TourStep = {
   bodyKey: string;
   onEnter?: () => void;
   placement?: "above" | "below" | "auto";
+  screen?: string;
   more?: { labelKey: string; onClick: () => void };
 };
 export type TourOptions = { onDone?: () => void; onSkip?: () => void };
@@ -102,6 +107,11 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
   const wrap = useRef<HTMLDivElement>(null);
   const step = steps[i];
   const last = i === steps.length - 1;
+  // Per-screen tour: this step's place among the steps of its screen, and where the next screen starts.
+  const scr = step.screen;
+  const mates = scr ? steps.filter(x => x.screen === scr) : [];
+  const nextScreen = scr ? steps.findIndex((x, k) => k > i && x.screen !== scr) : -1;
+  const screenName = scr ? t(scr) : "";
 
   // Enter the step, wait for its target, bring it into view, then
   // follow resize and scroll.
@@ -157,6 +167,13 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
       aria-labelledby="fr-tip-title" aria-describedby="fr-tip-line" onKeyDown={onKeyDown}>
       {lay && <div className="fr-hole" style={lay.hole} />}
       <div className={"fr-tip" + (lay && !lay.above ? " below" : "")} style={tipStyle}>
+        {scr && (
+          <div className="fr-chiprow">
+            <span className="fr-chip">{t("tour.chip", { screen: screenName, n: mates.indexOf(step) + 1, of: mates.length })}</span>
+            <span className="fr-total">{t("tour.stepOf", { n: i + 1, total: steps.length })}</span>
+            <div className="fr-bar" aria-hidden="true"><i style={{ width: Math.round(((i + 1) / steps.length) * 100) + "%" }} /></div>
+          </div>
+        )}
         <h4 id="fr-tip-title">{t(step.titleKey)}</h4>
         <p id="fr-tip-line">{t(step.bodyKey)}</p>
         {step.more && (
@@ -164,10 +181,15 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
             onClick={() => { const go = step.more!.onClick; onDone(); go(); }}>{t(step.more.labelKey)}</button>
         )}
         <div className="fr-row">
-          <span className="fr-pips" role="img" aria-label={t("tour.stepOf", { n: i + 1, total: steps.length })}>
-            {steps.map((s, k) => <i key={s.id} className={k === i ? "on" : undefined} />)}
-          </span>
-          <button className="fr-skipbtn" id="fr-tour-skip" type="button" onClick={onSkip}>{t("tour.skip")}</button>
+          {scr
+            ? <span className="fr-pips" />
+            : <span className="fr-pips" role="img" aria-label={t("tour.stepOf", { n: i + 1, total: steps.length })}>
+                {steps.map((s, k) => <i key={s.id} className={k === i ? "on" : undefined} />)}
+              </span>}
+          <button className="fr-skipbtn" id="fr-tour-skip" type="button" onClick={onSkip}>{scr ? t("tour.skipTour") : t("tour.skip")}</button>
+          {nextScreen > 0 && (
+            <button className="fr-skipbtn" id="fr-tour-skipscreen" type="button" onClick={() => setI(nextScreen)}>{t("tour.skipScreen", { screen: screenName })}</button>
+          )}
           <button className="btn primary" id="fr-tour-next" type="button" ref={next}
             onClick={() => (last ? onDone() : setI(i + 1))}>{last ? t("common.done") : t("tour.next")}</button>
         </div>

@@ -4,7 +4,7 @@ import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
 import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
-import { FIRST_RUN_TOUR } from "./onboarding/firstRunTour";
+import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
 import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
@@ -132,6 +132,7 @@ function Shell() {
   const town = useTown();
   const Screen = SCREENS[nav.view];
   const tour = useTour();
+  const tourSteps = useTourSteps();
   const [, answered] = useState(0);
   const answerWelcome = () => { if (s.demo) { clearDemoWelcome(); answered(n => n + 1); } else s.markOnboarded(); };
   useInviteLink();
@@ -178,7 +179,7 @@ function Shell() {
         </nav>
       )}
       {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
-        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(FIRST_RUN_TOUR, s.demo ? { onDone: () => openGuide() } : undefined); }} onSkip={answerWelcome} />
+        <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(tourSteps, s.demo ? { onDone: () => openGuide() } : undefined); }} onSkip={answerWelcome} demo={s.demo} />
       )}
     </>
   );
