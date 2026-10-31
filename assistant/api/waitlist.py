@@ -52,14 +52,17 @@ def clean(email):
 
 
 def join(email):
-    """Add an address. Returns "added", or "already" if it was listed."""
+    """Add an address. Returns "added"; "approved" if it was already
+    invited (so the page can say to sign in); "already" if it was
+    listed any other way (waiting or rejected, nothing revealed)."""
     email = clean(email)
 
     def _go():
         with state.file_lock(_FILE):
             have = rows()
-            if any(r.get("email") == email for r in have):
-                return "already"
+            for r in have:
+                if r.get("email") == email:
+                    return "approved" if r.get("approved") and not r.get("rejected") else "already"
             if len(have) >= MAX_ROWS:
                 raise PermissionError("the waitlist is full for now")
             os.makedirs(os.path.dirname(_path()), exist_ok=True)

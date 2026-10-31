@@ -133,8 +133,8 @@ export function Login() {
   };
 
   const [seen, setSeen] = useState<string[]>(loadSeen);
-  const [wl, setWl] = useState<{ open: boolean; email: string; done: "" | "added" | "already" }>({ open: false, email: "", done: "" });
-  const openWaitlist = (email = "", done: "" | "added" | "already" = "") => { setSignin(false); setPass(""); setStep("email"); setWl({ open: true, email, done }); };
+  const [wl, setWl] = useState<{ open: boolean; email: string; done: Done }>({ open: false, email: "", done: "" });
+  const openWaitlist = (email = "", done: Done = "") => { setSignin(false); setPass(""); setStep("email"); setWl({ open: true, email, done }); };
   const [zoom, setZoom] = useState<{ id: string; from: string } | null>(null);
   const tap = (id: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -199,7 +199,8 @@ export function Login() {
         </div>
       </main>
 
-      <Waitlist open={wl.open} email0={wl.email} done0={wl.done} onClose={() => setWl(w => ({ ...w, open: false }))} />
+      <Waitlist open={wl.open} email0={wl.email} done0={wl.done} google={!!status.email_signin} onSignin={() => openSignin("login")}
+        onClose={() => setWl(w => ({ ...w, open: false }))} />
 
       {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 
@@ -242,13 +243,15 @@ export function Login() {
   );
 }
 
+type Done = "" | "added" | "already" | "approved";
+
 /* The waitlist (owner, 2026-10-30): email only. The server answers
- * added or already; a hidden field catches bots (api/waitlist.py). */
-function Waitlist({ open, onClose, email0, done0 }: { open: boolean; onClose: () => void; email0: string; done0: "" | "added" | "already" }) {
+ * added, already or approved (invited: offer sign-in); a hidden field catches bots (api/waitlist.py). */
+function Waitlist({ open, onClose, email0, done0, onSignin, google }: { open: boolean; onClose: () => void; email0: string; done0: Done; onSignin: () => void; google: boolean }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState(email0);
   const [err, setErr] = useState("");
-  const [done, setDone] = useState<"" | "added" | "already">(done0);
+  const [done, setDone] = useState<Done>(done0);
   // Opened from the sign-in sheet with the address already typed there.
   useEffect(() => { if (open) { setEmail(email0); setDone(done0); setErr(""); } }, [open]);
   const [busy, setBusy] = useState(false);
@@ -260,7 +263,7 @@ function Waitlist({ open, onClose, email0, done0 }: { open: boolean; onClose: ()
     setBusy(true); setErr("");
     try {
       const r = await postJson("/auth/waitlist", { email: email.trim(), website: trap });
-      if (r.ok) { setDone(((await r.json()) as { status: "added" | "already" }).status); return; }
+      if (r.ok) { setDone(((await r.json()) as { status: Done }).status); return; }
       setErr(r.status === 400 ? t("waitlist.badEmail") : r.status === 429 ? t("waitlist.tooMany") : t("login.wentWrong"));
     } catch { setErr(t("login.wentWrong")); }
     finally { setBusy(false); }
@@ -269,10 +272,15 @@ function Waitlist({ open, onClose, email0, done0 }: { open: boolean; onClose: ()
     <Sheet open={open} onClose={close} id="waitlist-sheet" className="signin" title={t("landing.joinWaitlist")}>
       {done ? (
         <div className="wl-done" id="waitlist-done">
-          <img src={asset(`assets/characters/${done === "added" ? "basket" : "milk"}.webp`)} alt="" />
-          <h4>{t(done === "added" ? "waitlist.addedTitle" : "waitlist.alreadyTitle")}</h4>
-          <p>{done === "added" ? t("waitlist.addedBody", { email: email.trim().toLowerCase() }) : t("waitlist.alreadyBody")}</p>
-          <button type="button" id="waitlist-close" className="btn primary wide" onClick={close}>{t("waitlist.done")}</button>
+          <img src={asset(`assets/characters/${done === "already" ? "milk" : "basket"}.webp`)} alt="" />
+          <h4>{t(done === "added" ? "waitlist.addedTitle" : done === "approved" ? "waitlist.approvedTitle" : "waitlist.alreadyTitle")}</h4>
+          <p>{done === "added" ? t("waitlist.addedBody", { email: email.trim().toLowerCase() }) : done === "approved" ? t("waitlist.approvedBody") : t("waitlist.alreadyBody")}</p>
+          {done === "approved" ? (<>
+            <button type="button" id="waitlist-signin" className="btn primary wide" onClick={() => { close(); onSignin(); }}>{t("login.signIn")}</button>
+            {google && <p><a id="waitlist-google" className="btn wide" href="/auth/google">{t("login.continueWithGoogle")}</a></p>}
+          </>) : (
+            <button type="button" id="waitlist-close" className="btn primary wide" onClick={close}>{t("waitlist.done")}</button>
+          )}
         </div>
       ) : (
         <form id="waitlist-form" onSubmit={submit}>
@@ -329,10 +337,10 @@ function CardZoom({ id, from, onClose }: { id: string; from: string; onClose: ()
 
 /* Google proved the address, but it is not invited: say so plainly and
  * offer one tap onto the waitlist (the address is already proven). */
-async function joinFromGoogle(email: string, open: (email: string, done: "" | "added" | "already") => void) {
+async function joinFromGoogle(email: string, open: (email: string, done: Done) => void) {
   try {
     const r = await postJson("/auth/waitlist", { email });
-    if (r.ok) { open(email, ((await r.json()) as { status: "added" | "already" }).status); return; }
+    if (r.ok) { open(email, ((await r.json()) as { status: Done }).status); return; }
   } catch { /* fall through to the form, which shows the error */ }
   open(email, "");
 }

@@ -134,3 +134,16 @@ test("open registration keeps the password form and hides the waitlist", () => {
   expect($("login-form")).toBeTruthy();
   expect($("code-waitlist")).toBeNull();
 });
+
+test("an approved person who joins again is told so and offered sign-in", async () => {
+  render(<Login />); open();
+  type("code-email", "sam@example.com"); await submit();
+  await waitFor(() => expect($("code-input")).toBeTruthy());
+  act(() => { fireEvent.click($("code-waitlist")); });
+  replies["/auth/waitlist"] = () => json({ status: "approved" });
+  await act(async () => { fireEvent.submit($("waitlist-form")); });
+  await waitFor(() => expect($("waitlist-done").textContent).toContain("already been approved"));
+  expect($("waitlist-google")).toBeTruthy();
+  act(() => { fireEvent.click($("waitlist-signin")); });
+  expect($("signin-sheet")).toBeTruthy();
+});

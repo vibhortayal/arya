@@ -113,7 +113,8 @@ async def auth_waitlist(req: Request, bg: BackgroundTasks):
     """Join the sign-in waitlist (owner, 2026-10-30): public, an email
     and nothing else (api/waitlist.py). A hidden field a person never
     fills, and 5 tries an hour per IP, keep it quiet. Answers
-    {"status": "added" | "already"}."""
+    {"status": "added" | "already" | "approved"} ("approved": the address
+    was already invited, so the page says to sign in)."""
     import os as _os, time as _t
     from api import waitlist
     ip = _client_ip(req)

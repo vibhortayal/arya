@@ -1304,6 +1304,8 @@
     "addedBody": "We will email a sign-in code to {{email}} when your spot opens. Then come back here, tap Sign in and enter it.",
     "alreadyTitle": "You’re already on the list",
     "alreadyBody": "Nothing more to do. We will email you when a spot opens for your household.",
+    "approvedTitle": "You’ve already been approved",
+    "approvedBody": "Check your email for your sign-in code, then tap Sign in and enter it. Or sign in with Google.",
     "done": "Done",
     "badEmail": "That email does not look right. Check it and try again.",
     "tooMany": "Too many tries. Wait a few minutes and try again."
