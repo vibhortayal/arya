@@ -69,7 +69,7 @@ Settings, Preferences, Display changes text size, spacing, bold text, pictures a
 Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. The Help tab holds the guide, the tour and Send feedback.
 The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs and the share for all Arya.
-Sign-in is by invitation for now. On the landing page tap Join the waitlist. Tap Try it now for the demo; tap Finish demo to leave it.
+Sign-in is by invitation for now. On the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Tap Try it now for the demo; tap Finish demo to leave it.
 Use Arya in another AI app lets you add to your list from an AI app you already use.
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.

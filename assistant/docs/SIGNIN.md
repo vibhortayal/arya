@@ -3,6 +3,17 @@
 Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
 (2026-10-30): https://claude.ai/artifact/PbmjdCuX1TVqkcFGZPJR9E
 
+## Waitlist screen (owner, 2026-10-31)
+
+Settings, Waitlist (admins only) has three sections: **Waiting** (top), **Approved**,
+**Rejected**, each with a count and an empty line. Tick people in one section at a time;
+the buttons follow it: Approve / Reject (waiting), Back to waiting / Reject (approved),
+Approve / Back to waiting / Delete (rejected). **Reject** keeps the row marked
+`rejected` in `waitlist.jsonl`: no mail, the person still gets "already on the list" if they
+rejoin, and sign-in says "not invited yet" like any other address. **Delete** erases the
+row, so the person can join again. Approved means approved and not signed in yet: the
+row is deleted at first sign-in. API: `POST /auth/waitlist/reject`, `/restore`, `/remove`.
+
 ## What a person sees
 
 - **Public sheet** (Sign in on the landing): email code first, Google second,

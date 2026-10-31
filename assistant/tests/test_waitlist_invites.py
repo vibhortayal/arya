@@ -118,6 +118,28 @@ class TestInvites(unittest.TestCase):
         self.assertEqual(self.c.post("/auth/waitlist/remove", json={"emails": ["maya@example.com", "x@y.co"]}).json(), {"removed": 1})
         self.assertEqual(self.guest.post("/auth/login", json={"username": "boss", "password": "pw-123456"}).status_code, 200)
 
+    def test_reject_keeps_the_row_blocks_sign_in_and_can_be_undone(self):
+        self.c.post("/auth/waitlist/approve", json={"emails": ["maya@example.com"]})
+        r = self.c.post("/auth/waitlist/reject", json={"emails": ["maya@example.com", "x@y.co"]})
+        self.assertEqual(r.json(), {"rejected": 1})
+        rows = {x["email"]: x for x in self.c.get("/auth/waitlist/list").json()["rows"]}
+        self.assertEqual((rows["maya@example.com"]["approved"], rows["maya@example.com"]["rejected"]), (False, True))
+        self.assertEqual(self.guest.post("/auth/waitlist", json={"email": "maya@example.com"}).json(), {"status": "already"})
+        user = {"email": "maya@example.com", "email_confirmed_at": "t"}
+        with mock.patch("api.supabase_auth.httpx.post", return_value=resp(200, {"user": user})):
+            self.assertEqual(self.guest.post("/auth/email/verify", json={"email": "maya@example.com", "code": "1"}).status_code, 403)
+        self.assertEqual(self.c.post("/auth/waitlist/restore", json={"emails": ["maya@example.com"]}).json(), {"restored": 1})
+        rows = {x["email"]: x for x in self.c.get("/auth/waitlist/list").json()["rows"]}
+        self.assertEqual((rows["maya@example.com"]["approved"], rows["maya@example.com"]["rejected"]), (False, False))
+        self.c.post("/auth/waitlist/reject", json={"emails": ["maya@example.com"]})
+        self.c.post("/auth/waitlist/approve", json={"emails": ["maya@example.com"]})   # approve undoes a reject
+        rows = {x["email"]: x for x in self.c.get("/auth/waitlist/list").json()["rows"]}
+        self.assertEqual((rows["maya@example.com"]["approved"], rows["maya@example.com"]["rejected"]), (True, False))
+
+    def test_reject_and_restore_are_owner_only(self):
+        for path in ("reject", "restore"):
+            self.assertEqual(self.guest.post("/auth/waitlist/" + path, json={"emails": ["maya@example.com"]}).status_code, 401)
+
     def test_cli_approve_and_list(self):
         import io, contextlib
         from harness import waitlist as cli

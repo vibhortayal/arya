@@ -103,6 +103,38 @@ def approve(emails):
             for r in have:
                 if r.get("email") in want and not r.get("approved"):
                     r["approved"] = now
+                    r.pop("rejected", None)
+                    done.append(r["email"])
+            if done:
+                _rewrite(have)
+            return done
+    return _root_call(_go)
+
+
+def reject(emails):
+    """Mark addresses as rejected (owner, 2026-10-31). The row stays, so the
+    person cannot rejoin and show up in Waiting again; they see nothing
+    different (join still answers "already") and no mail is sent. Returns
+    the addresses that were on the list and not rejected yet."""
+    return _mark(emails, lambda r, now: (r.pop("approved", None), r.__setitem__("rejected", now)),
+                 lambda r: not r.get("rejected"))
+
+
+def restore(emails):
+    """Put addresses back to waiting: clears approved and rejected."""
+    return _mark(emails, lambda r, now: (r.pop("approved", None), r.pop("rejected", None)),
+                 lambda r: r.get("approved") or r.get("rejected"))
+
+
+def _mark(emails, change, applies):
+    want = {(e or "").strip().lower() for e in emails}
+
+    def _go():
+        with state.file_lock(_FILE):
+            have, done, now = rows(), [], int(time.time())
+            for r in have:
+                if r.get("email") in want and applies(r):
+                    change(r, now)
                     done.append(r["email"])
             if done:
                 _rewrite(have)
@@ -125,7 +157,7 @@ def send_invite(email):
 
 def is_approved(email):
     email = (email or "").strip().lower()
-    return _root_call(lambda: any(r.get("email") == email and r.get("approved") for r in rows()))
+    return _root_call(lambda: any(r.get("email") == email and r.get("approved") and not r.get("rejected") for r in rows()))
 
 
 def purge():
