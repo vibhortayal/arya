@@ -10,6 +10,15 @@ from `assistant/deploy`. The owner is the only operator.
 | Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
 | Backup dead-man ping | Healthchecks.io free plan, pinged at the end of `backup.sh` | The nightly backup did not finish |
 
+## The Ops screen (owner only)
+Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Needs a look"). It needs `ARYA_OWNER_USERNAME` set, like the Registration switch. It shows what needs a look, the box (disk, newest backup), spend against the daily caps, model calls with failures and slow calls, and the controls:
+- **Pause all paid reads** (asks first): no model call starts for anyone, demo included. Lists, Today and sign-in keep working.
+- **Photo reader** Spark or Wonder: beats `ARYA_PHOTO_READER`, no redeploy.
+- **Demo live reads**: off stops only the demo household's paid reads.
+- **Registration**: the existing switch.
+- **Unfreeze** on a frozen account.
+The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
+
 ## One-time setup on the VM
 1. Add to `assistant/deploy/.env`: `ARYA_OPS_EMAIL=you@example.com` (and `RESEND_API_KEY` is already there). `chmod 600 .env`.
 2. `git pull`, then `docker compose up -d --build` (not `restart`: restart does not re-read `.env`).
@@ -31,6 +40,6 @@ The cost ledger (`cost-ledger.jsonl` in the data folder) has one row per model c
 - **Site down**: `docker compose ps`, then `docker compose logs --tail 100 api caddy`. `docker compose up -d` brings it back.
 - **503 from `/health`, "disk nearly full"**: `df -h`, `docker system df`. Old images: `docker image prune`. Do not delete the `arya-data` volume.
 - **A model type failing**: the report shows the error kinds. `http_401` is a bad or expired key; `http_429` is a rate limit; `timeout` or `unreachable` is Meta or the network. Wonder failing while Spark works: set `ARYA_PHOTO_READER=spark` and `docker compose up -d`.
-- **Pause all paid reads fast**: set `ARYA_DAILY_BUDGET_USD=0` and `ARYA_DEMO_DAILY_BUDGET_USD=0` in `.env`, `docker compose up -d`. Lists, Today and sign-in keep working.
-- **A frozen account**: the owner calls `POST /api/usage/unfreeze` (no screen yet).
+- **Pause all paid reads fast**: Settings, Ops and health, Pause all paid reads. If the app is unreachable, set `ARYA_DAILY_BUDGET_USD=0` and `ARYA_DEMO_DAILY_BUDGET_USD=0` in `.env` and run `docker compose up -d`.
+- **A frozen account**: the Unfreeze button on the Ops screen.
 - **Restore**: `restore.sh <archive>` after reading it; stop the api first.

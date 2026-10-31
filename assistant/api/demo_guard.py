@@ -36,7 +36,7 @@ _TOKEN_BLOCKED = (
     ("/api/expiry/read", None), ("/api/quest/scan-shelf", None),
     ("/api/quest/haul-photo", None), ("/decode/", None), ("/eyes/photo", None),
     ("/api/group", None), ("/api/quest/friends", None),
-    ("/api/feedback", None), ("/api/demo/feedback", None),
+    ("/api/feedback", None), ("/api/demo/feedback", None), ("/api/ops", None),
     ("/api/push/", None), ("/api/settings", ("POST",)),
     ("/api/powers/share", None), ("/api/account/export", None),
     ("/api/quest/receipts/", ("POST",)),

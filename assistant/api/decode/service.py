@@ -264,10 +264,12 @@ PHOTO_WONDER_TIMEOUT_S = 90
 
 def photo_reader():
     """Which model reads receipt photos: ARYA_PHOTO_READER=wonder
-    (default, the amendment path) or spark. The amendment expires
+    (default, the amendment path) or spark; the owner's Ops screen
+    switch (site.json) wins over the environment. The amendment expires
     2026-11-04; flipping this env var and restarting moves the
     live site onto Spark Standard with no deploy."""
-    v = os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
+    from api import site_flags
+    v = site_flags.photo_reader() or os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
     return "standard" if v in ("spark", "standard") else "wonder"
 
 

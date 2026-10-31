@@ -6,6 +6,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Ops screen (2026-10-31, PR open):** owner-only Settings row and screen: needs a look, disk and backup age, spend against caps, model calls with failures and slow calls, and switches (pause all paid reads, photo reader, demo live reads, registration, Unfreeze) kept in `site.json`. `assistant/loops/2026-10-31-ops-screen.md`, `assistant/docs/OPS.md`.
 - **Ops monitoring (2026-10-31, PR open):** failed and slow model calls are now booked in the cost ledger (`ok:false`, `err`, `ms`); `/health` answers 503 on a full disk or unwritable data folder so an outside uptime check can alert; `python -m harness.ops report --email` is the owner's daily digest. VM setup and break-glass steps: `assistant/docs/OPS.md`. `assistant/loops/2026-10-31-ops-monitoring.md`.
 - **Speed and feel audit (2026-10-31, PR open):** list taps are optimistic with Undo; the Quest 3D world draws only while something moves; Today is one `/api/today` read with a cache; Ask shows typing dots; an error boundary and a cache-first service worker for hashed files. `assistant/loops/2026-10-31-speed-feel-audit.md`.
 - **Trips row on Today; Sign out up (2026-10-31, PR open):** trips with no receipt are one Today row that opens Receipts, not cards in Settings; Sign out sits above Export and Delete. `assistant/loops/2026-10-31-settings-trips.md`.
