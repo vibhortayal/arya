@@ -41,7 +41,24 @@ async def _model_failure(request, exc):
 @app.get("/health")
 def health():
     # No receipt count: /health runs with no account, so it counted the
-    # root plane, which holds none (review M11). Liveness only.
+    # root plane, which holds none (review M11). Liveness, plus two cheap
+    # checks the outside uptime monitor can alert on (ops review
+    # 2026-10-31): the data folder is writable and the disk is not nearly
+    # full. Healthy answers keep the same body; a problem answers 503.
+    import shutil
+    problems = []
+    base = state.base_dir()
+    if not os.access(base, os.W_OK):
+        problems.append("data folder not writable")
+    try:
+        floor = float(os.environ.get("ARYA_HEALTH_MIN_FREE_MB", "500")) * 1024 * 1024
+        if shutil.disk_usage(base).free < floor:
+            problems.append("disk nearly full")
+    except (OSError, ValueError):
+        problems.append("disk check failed")
+    if problems:
+        return JSONResponse({"status": "degraded", "service": "arya-api",
+                             "problems": problems}, status_code=503)
     return {"status": "ok", "service": "arya-api", "stage": 3}
 
 

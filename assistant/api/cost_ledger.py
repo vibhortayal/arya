@@ -43,11 +43,21 @@ class CostLedger:
         # real accounts' daily budget (review 2026-10-28, H4).
         self.bucket = bucket
 
-    def record(self, mode, model, input_tokens, cached_tokens, output_tokens, cost_usd):
+    def record(self, mode, model, input_tokens=0, cached_tokens=0, output_tokens=0,
+               cost_usd=0.0, ms=None, ok=True, err=""):
+        """One row per model call. ms is how long the call took; ok=False
+        books a failed call (cost 0, err names the kind of failure) so
+        error rates and slow calls can be counted (ops review 2026-10-31).
+        Rows from before these fields have neither."""
         row = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "mode": mode, "model": model,
                "bucket": self.bucket, "kind": usage_kind.get() or "helps",
                "input_tokens": input_tokens, "cached_tokens": cached_tokens,
                "output_tokens": output_tokens, "cost_usd": round(cost_usd, 6)}
+        if ms is not None:
+            row["ms"] = int(ms)
+        if not ok:
+            row["ok"] = False
+            row["err"] = err
         if self.user and self.bucket == "app":
             row["user"] = self.user
         os.makedirs(os.path.dirname(os.path.abspath(self.path)), exist_ok=True)
@@ -91,7 +101,7 @@ class CostLedger:
         out = {"lifetime_usd": 0.0, "month_usd": 0.0, "hour_usd": 0.0, "since": "",
                "kinds": {k: {"n": 0, "usd": 0.0} for k in KINDS}}
         for r in self.rows():
-            if not user or r.get("user") != user:
+            if not user or r.get("user") != user or r.get("ok") is False:
                 continue
             c = r["cost_usd"]
             out["lifetime_usd"] += c
@@ -115,7 +125,40 @@ class CostLedger:
         (rows with a user; the demo and old rows are left out)."""
         total, people = 0.0, set()
         for r in self.rows():
-            if r.get("bucket", "app") == "app" and r.get("user"):
+            if r.get("bucket", "app") == "app" and r.get("user") and r.get("ok") is not False:
                 total += r["cost_usd"]
                 people.add(r["user"])
         return {"usd": round(total, 4), "people": len(people)}
+
+    def health(self, hours=24):
+        """What the ops report needs from the last `hours`: calls, failures
+        and p50/p95 latency by model mode and by kind, plus spend per
+        account. Failed rows count as calls with cost 0."""
+        since = time.time() - hours * 3600
+        by_mode, by_kind, users = {}, {}, {}
+        for r in self.rows():
+            if _epoch(r.get("ts")) < since:
+                continue
+            failed = r.get("ok") is False
+            for table, key in ((by_mode, r.get("mode", "?")),
+                               (by_kind, r.get("kind") or "helps")):
+                t = table.setdefault(key, {"calls": 0, "failed": 0, "usd": 0.0,
+                                           "ms": [], "errs": {}})
+                t["calls"] += 1
+                t["usd"] += r.get("cost_usd", 0)
+                if failed:
+                    t["failed"] += 1
+                    t["errs"][r.get("err") or "error"] = t["errs"].get(r.get("err") or "error", 0) + 1
+                if isinstance(r.get("ms"), int):
+                    t["ms"].append(r["ms"])
+            if r.get("user") and not failed:
+                users[r["user"]] = users.get(r["user"], 0.0) + r.get("cost_usd", 0)
+        for table in (by_mode, by_kind):
+            for t in table.values():
+                ms = sorted(t.pop("ms"))
+                t["p50_ms"] = ms[len(ms) // 2] if ms else None
+                t["p95_ms"] = ms[min(len(ms) - 1, int(len(ms) * 0.95))] if ms else None
+                t["usd"] = round(t["usd"], 4)
+        top = sorted(users.items(), key=lambda kv: -kv[1])[:5]
+        return {"hours": hours, "by_mode": by_mode, "by_kind": by_kind,
+                "top_users": [(u, round(v, 4)) for u, v in top]}
