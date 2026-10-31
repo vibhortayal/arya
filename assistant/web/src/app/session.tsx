@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode, useMemo } from "react";
-import { get, post, forgetReads } from "../lib/api";
+import { get, post, forgetReads, keepBootRead } from "../lib/api";
 import type { Currency } from "../lib/format";
 import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
 import { applyLanguage } from "../i18n";
@@ -164,7 +164,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     type S = { currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display; layouts?: Layouts };
     const early = window.__bootData?.settings as Promise<S> | undefined;
     if (window.__bootData) window.__bootData.settings = undefined;
-    (early ? early.catch(() => get<S>("/api/settings")) : get<S>("/api/settings"))
+    (early ? early.then(v => { keepBootRead("/api/settings", v); return v; }, () => get<S>("/api/settings")) : get<S>("/api/settings"))
       .then(s => {
         setCurrency({ code: s.currency, symbol: s.symbol });
         setOnboarded(s.onboarded !== false);

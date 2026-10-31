@@ -22,6 +22,9 @@ Use soon: Arya tracks expiry dates and reminds you to use food in time.
 After a first receipt, Today asks you to add dates. At any time open Settings, About Arya, Arya's powers, Use soon, Add a date.
 Tap Take a photo of the date on the pack. Check the item and the date. Tap Looks right, track it.
 Today shows a card "Use soon" and a "Still good?" check. Settings, About Arya, Arya's powers, Food waste shows what expired food cost this month.
+## ai | ai wrong accurate accuracy trust mistake mistakes incorrect disclaimer reliable safe expiry food safety double-check
+Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where AI is used.
+Arya is not a food-safety check: always look at the date on the pack, and if food looks or smells off, do not eat it. Photo and receipt reads are shown to you and nothing is saved until you confirm.
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
 Receipts: open Today, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick a PDF, paste order text or say it.
 Arya reads the receipt and checks that the total is right. It keeps every receipt, so you can open one for a return or a recall refund.
@@ -66,7 +69,7 @@ Change Today: tap Edit on Today, or touch and hold a card. Drag to reorder, tap 
 Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hidden until they do.
 Settings, Preferences, Display changes text size, spacing, bold text, pictures and motion.
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
-Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. The Help tab holds the guide, the tour and Send feedback.
+Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, How Arya uses AI, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. The Help tab holds the guide, the tour and Send feedback.
 The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs and the share for all Arya.
 Sign-in is by invitation for now. On the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Tap Try it now for the demo; tap Finish demo to leave it.
@@ -74,3 +77,5 @@ Use Arya in another AI app lets you add to your list from an AI app you already 
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
+## offline | offline no signal no network no connection airplane wifi internet saved copy
+Arya opens with no signal. A bar at the top says "You're offline". You can look through your lists, Today, stores and other screens as they were last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. The copy is deleted when you sign out; the demo keeps none.

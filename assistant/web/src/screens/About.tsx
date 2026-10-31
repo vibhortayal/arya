@@ -20,7 +20,10 @@ export function About() {
       <p><a href="#" id="pfa-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("settings.aboutArya")}</h1>
       <h3 className="sect">{t("about.whatAryaCanDo")}</h3>
-      <div className="group">{row("btn-powers", "powers", t("common.aryaSPowers"), t("settings.whatAryaCanDoAnd"))}</div>
+      <div className="group">
+        {row("btn-powers", "powers", t("common.aryaSPowers"), t("settings.whatAryaCanDoAnd"))}
+        {row("btn-ai", "ai", t("ai.title"), t("ai.rowSub"))}
+      </div>
       <h3 className="sect">{t("about.useElsewhere")}</h3>
       <div className="group">
         {row("btn-muse", "muse", t("settings.connectAnAiAgent"), t("settings.useAryaFromYourOwn"))}

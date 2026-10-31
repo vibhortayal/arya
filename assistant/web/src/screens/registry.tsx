@@ -59,6 +59,7 @@ const Reveal = screen(() => import("./haul/Reveal"), "Reveal");
 const WaitlistAdmin = screen(() => import("./WaitlistAdmin"), "WaitlistAdmin");
 const Usage = screen(() => import("./Usage"), "Usage");
 const Ops = screen(() => import("./Ops"), "Ops");
+const AiNotice = screen(() => import("./AiNotice"), "AiNotice");
 
 /* One entry per screen: the type makes every view in app/views.ts
  * name its screen. Signed out, App renders Login instead. */
@@ -71,6 +72,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   waitlist: WaitlistAdmin,
   usage: Usage,
   ops: Ops,
+  ai: AiNotice,
   "group-join": GroupJoin,
   newlist: NewList,
   "stores-mine": StoresMine,
