@@ -261,7 +261,10 @@ describe("the deck", () => {
     fireEvent.keyDown($("#pack-card")!, { key: "ArrowRight" });
     expect(deckName()).toBe("Hummus");
     await waitFor(() => expect(document.activeElement).toBe($("#pack-card")));
-    await settle();
+    // Wait out the whole leave (ANIM_MS + 40 ms), not only the card motion: a
+    // second key press that overlaps the first leave's cleanup timer lost focus
+    // about one run in two under load.
+    await new Promise(r => setTimeout(r, 400));
     fireEvent.keyDown($("#pack-card")!, { key: "ArrowLeft" });
     expect(deckName()).toBe("Pasture Eggs 12 ct");
     await waitFor(() => expect(document.activeElement).toBe($("#pack-card")));
