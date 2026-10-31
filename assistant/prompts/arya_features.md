@@ -5,6 +5,7 @@ A new account has few cards on Today until the first receipt is added. The demo 
 ## help | help tab guide tour tutorial lost confused learn started begin
 Help tab: tap Help in the tab bar. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app with numbered steps and a button that opens the feature.
 At the bottom of Help: Read the full guide, Arya's powers, Take the tour again and Send feedback.
+In the demo, Send feedback opens Finish demo, which takes your note and an email to reply to.
 Each topic has "Still stuck? Ask Arya", which sends the question to the Ask tab.
 ## lists | list lists store add item type voice mic camera paper tick circle move remove select rename suggestion suggested new
 Lists tab: one list for each store, such as Costco. Tap New list and choose a store.
@@ -55,6 +56,7 @@ Ask can add to a list, mark out or expired, never suggest and snooze. Tap Edit o
 Settings, Preferences, language changes the answer language: English, Spanish or Hindi.
 ## sharing | share group household invite code friends haul sync together partner family
 Share lists with a household: open Settings, tap Start a group and give it a name. Tap Invite someone and send the code. Everyone sees the same lists and receipts. Leaving a group has clear rules for what you keep.
+Groups need an account: the demo has no Start a group row. In the demo, say that sharing works once they sign up. Friends: Quest tab, Your trips and receipts, Friends.
 Friends: Quest tab, Your trips and receipts, Friends. Add a friend by username.
 Share a haul: after a trip, share a photo of what you bought from the score screen. It is a photo only.
 Share a list as a checklist, or export or import one: the three dots on a list, Share, export or import.

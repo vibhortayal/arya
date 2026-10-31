@@ -26,7 +26,7 @@ describe("store alerts", () => {
       b: { Costco: { median: 3.0 } } } };
     const rows = storeAlerts(h, []);
     expect(rows).toHaveLength(1);
-    expect(rows[0].name).toContain("Milk is cheaper at Costco");
+    expect(rows[0].name).toContain("Milk: cheaper at Costco");
     expect(rows[0].sub).toContain("$4.29 there, $4.79 at Trader Joe's");
     h.price_by_store.m["Trader Joe's"].median = 4.39; // 10 cents: not news
     expect(storeAlerts(h, [])).toEqual([]);

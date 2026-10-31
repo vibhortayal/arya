@@ -84,8 +84,8 @@ describe("tour layout", () => {
     expect(top.tip).toEqual({ top: 86 });
     expect(top.arrowX).toBe(18);
   });
-  test("the first-run tour is five tab steps", () => {
-    expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "settings"]);
+  test("the first-run tour is one step per tab (retest #24 adds Help)", () => {
+    expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "help", "settings"]);
   });
 });
 

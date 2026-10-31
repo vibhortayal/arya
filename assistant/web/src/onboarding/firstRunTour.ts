@@ -19,5 +19,6 @@ export const FIRST_RUN_TOUR: TourStep[] = [
   tab("list", "lists"),
   tab("chat", "ask"),
   tab("community", "quest"),
+  tab("help", "help"),
   { ...tab("profile", "settings"), more: { labelKey: "firstRun.tour.guideLink", onClick: () => openGuide() } },
 ];

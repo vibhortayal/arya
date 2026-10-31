@@ -1,4 +1,5 @@
-/* Feedback: kinds toggle, counter, demo send is disabled, Back works. */
+/* Feedback in the demo: no form; Send from Finish demo opens the end-of-demo
+ * sheet, the demo's one feedback door (retest 2026-10-31 #14). Back works. */
 export default async function (page, base) {
   await page.goto(base + "/");
   await page.evaluate(() => fetch("/auth/demo", { method: "POST" }));
@@ -6,14 +7,11 @@ export default async function (page, base) {
   await page.waitForSelector("#tabs");
   await page.evaluate(() => window.__aryaShow("feedback"));
   await page.waitForSelector("#view-feedback");
-  const pressed = async k => page.getAttribute(`#fb-kinds [data-kind="${k}"]`, "aria-pressed");
-  if ((await pressed("idea")) !== "true") throw new Error("idea not pressed by default");
-  await page.click('#fb-kinds [data-kind="bug"]');
-  if ((await pressed("bug")) !== "true" || (await pressed("idea")) !== "false") throw new Error("kind toggle failed");
-  await page.fill("#fb-text", "hello");
-  if ((await page.textContent("#fb-count")).trim() !== "5 / 1000") throw new Error("counter");
-  if (!(await page.isDisabled("#fb-send"))) throw new Error("send should be disabled in the demo");
-  if (!(await page.textContent("#fb-status")).includes("Create an account to send feedback")) throw new Error("demo status");
+  if (await page.$("#fb-text")) throw new Error("the demo should not show a form it cannot send");
+  if (!(await page.textContent("#fb-status")).includes("Finish demo")) throw new Error("demo status");
+  await page.click("#fb-send");
+  await page.waitForSelector("#ed-text");
+  await page.keyboard.press("Escape");
   await page.click("#fb-back");
   await page.waitForFunction(() => !document.querySelector("#view-feedback"));
 }

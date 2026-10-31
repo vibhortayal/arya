@@ -112,7 +112,7 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
 
       {step.s === "dreamname" && target?.kind === "dream" && (
         <Q kicker="Dream store" title="What's it called?">
-          <TextAnswer source={source} value={target.name} placeholder="Snack Palace" onChange={v => setTarget({ kind: "dream", name: v })} />
+          <TextAnswer source={source} value={target.name} placeholder="Snack Palace" label="Your store's name" onChange={v => setTarget({ kind: "dream", name: v })} />
           <button className="qg-btn primary big" disabled={!target.name.trim()} onClick={() => setStep({ s: "type" })}>Next</button>
         </Q>
       )}
@@ -127,7 +127,7 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
             ))}
           </div>
           {(a.type === "cuisine" || a.type === "single") && (
-            <TextAnswer source={source} value={a.cuisine || ""} placeholder={a.type === "cuisine" ? "Turkish" : "Cheese"} onChange={v => setA(x => ({ ...x, cuisine: v }))} />
+            <TextAnswer source={source} value={a.cuisine || ""} placeholder={a.type === "cuisine" ? "Turkish" : "Cheese"} label={a.type === "cuisine" ? "Which cuisine" : "What it sells most"} onChange={v => setA(x => ({ ...x, cuisine: v }))} />
           )}
           <button className="qg-btn primary big" disabled={(a.type === "cuisine" || a.type === "single") && !a.cuisine?.trim()} onClick={() => setStep({ s: "look" })}>Next</button>
         </Q>
@@ -155,7 +155,7 @@ export function Build({ source, onBack, onWalk, findStore }: { source: QuestSour
             })}
           </div>
           <p className="qg-small">Anything else? Say it or type it (optional).</p>
-          <TextAnswer source={source} value={a.extra || ""} placeholder="An olive bar by the doors" onChange={v => setA(x => ({ ...x, extra: v }))} />
+          <TextAnswer source={source} value={a.extra || ""} placeholder="An olive bar by the doors" label="Anything else, optional" onChange={v => setA(x => ({ ...x, extra: v }))} />
           <button className="qg-btn primary big" onClick={make}>Build my store</button>
         </Q>
       )}
@@ -182,7 +182,8 @@ function Q({ kicker, title, children }: { kicker: string; title: string; childre
 }
 
 /* A typed answer with a mic: Arya transcribes what you say into the box. */
-function TextAnswer({ source, value, placeholder, onChange }: { source: QuestSource; value: string; placeholder: string; onChange: (v: string) => void }) {
+/* label names the box for a screen reader; the placeholder is only an example (retest #25). */
+function TextAnswer({ source, value, placeholder, label, onChange }: { source: QuestSource; value: string; placeholder: string; label: string; onChange: (v: string) => void }) {
   const [rec, setRec] = useState<{ stop(): Promise<string>; cancel(): void } | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => () => rec?.cancel(), [rec]);
@@ -197,7 +198,7 @@ function TextAnswer({ source, value, placeholder, onChange }: { source: QuestSou
   };
   return (
     <div className="qg-say">
-      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} maxLength={80} />
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} aria-label={label} maxLength={80} />
       {source.voice && <button className={"qg-mic" + (rec ? " on" : "")} onClick={mic} disabled={busy} aria-label={rec ? "Stop and use what I said" : "Say it"}>{busy ? "…" : rec ? "Stop" : "Say"}</button>}
     </div>
   );
@@ -242,7 +243,7 @@ function Made({ source, graph, name, target, saved, onGraph, onWalk, onSaved }: 
       {source.change && (
         <div className="qg-card">
           <h3>Change something</h3>
-          <TextAnswer source={source} value={say} placeholder="Move frozen to the back wall" onChange={setSay} />
+          <TextAnswer source={source} value={say} placeholder="Move frozen to the back wall" label="A change to make" onChange={setSay} />
           <div className="qg-made-acts">
             <button className="qg-btn" onClick={change} disabled={busy || !say.trim()}>{busy ? "Arya is on it…" : "Do it"}</button>
             {undo.current.length > 0 && <button className="qg-btn ghost" onClick={() => onGraph(undo.current.pop()!)}>Undo</button>}

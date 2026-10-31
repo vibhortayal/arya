@@ -22,8 +22,8 @@ export default async function (page, base) {
     await page.click("#fr-tour-start");
     await page.waitForFunction(() => !document.querySelector("#fr-welcome"));
 
-    // Five steps, each around its tab, focus on Next, Done at the end.
-    const want = ["today", "lists", "ask", "quest", "settings"];
+    // Six steps, one per tab, focus on Next, Done at the end.
+    const want = ["today", "lists", "ask", "quest", "help", "settings"];
     for (let k = 0; k < want.length; k++) {
       await page.waitForSelector(`.fr-tour[data-tour-step="${want[k]}"] .fr-hole`);
       if ((await page.evaluate(() => document.activeElement?.id)) !== "fr-tour-next") throw new Error("focus not on Next at " + want[k]);

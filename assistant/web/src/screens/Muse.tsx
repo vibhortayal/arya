@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
+import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { api, post } from "../lib/api";
 import { useTranslation } from "../i18n";
@@ -24,6 +25,7 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export function Muse() {
   const { t } = useTranslation();
   const nav = useNav();
+  const { demo } = useSession();
   const { toast } = useToast();
   // null = not loaded (row empty); a string = a freshly minted token shown once.
   const [has, setHas] = useState<boolean | null>(null);
@@ -65,7 +67,7 @@ export function Muse() {
               <button className="btn" data-copy="1" onClick={copy}>{t("muse.copy")}</button>
               <span className="sub">{t("muse.copyItNowItIs")}</span>
             </>
-          ) : has === null ? null : (
+          ) : has === null ? (demo ? <span className="sub grow" id="muse-demo">{t("muse.demoNoCode")}</span> : null) : (
             <>
               <span className="sub grow">{has ? t("muse.active") : t("muse.noCode")}</span>
               <button className="btn" data-mint="1" onClick={mint}>{has ? t("muse.newCode") : t("muse.makeCode")}</button>

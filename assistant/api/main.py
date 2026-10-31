@@ -152,6 +152,15 @@ def _static_cache_control(full_path):
     return None
 
 
+_NOT_FOUND_PAGE = """<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · Arya</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:17px/1.5 system-ui,-apple-system,sans-serif;background:#EFEFF1;color:#1B1B1E}
+main{max-width:320px;padding:24px;text-align:center}h1{font-size:24px;margin:0 0 8px}p{margin:0 0 20px;color:#5f5f66}
+a{display:inline-block;padding:12px 22px;border-radius:12px;background:#C2410C;color:#fff;text-decoration:none;font-weight:600}</style>
+</head><body><main><h1>This page isn't here</h1><p>The link may be old or mistyped.</p><a href="/">Open Arya</a></main></body></html>"""
+
+
 class _AppFiles(StaticFiles):
     """StaticFiles over several folders, first match wins. The shell
     (index.html) and the worker are revalidated on every load, so a
@@ -163,6 +172,20 @@ class _AppFiles(StaticFiles):
 
     def get_directories(self, directory=None, packages=None):
         return list(self._dirs)
+
+    async def get_response(self, path, scope):
+        """A page that does not exist gets a plain page with a way home,
+        not {"detail":"Not Found"} (retest 2026-10-31 #12). API paths
+        and non-browser requests keep the JSON 404."""
+        from starlette.exceptions import HTTPException as _StarletteHTTP
+        from fastapi.responses import HTMLResponse
+        try:
+            return await super().get_response(path, scope)
+        except _StarletteHTTP as e:
+            accept = dict(scope.get("headers") or []).get(b"accept", b"").decode("latin-1")
+            if e.status_code != 404 or scope.get("method") != "GET" or "text/html" not in accept or path.startswith("api"):
+                raise
+            return HTMLResponse(_NOT_FOUND_PAGE, status_code=404, headers={"Cache-Control": "no-cache"})
 
     def file_response(self, full_path, *args, **kwargs):
         resp = super().file_response(full_path, *args, **kwargs)

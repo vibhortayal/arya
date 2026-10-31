@@ -486,7 +486,8 @@
     "whatWouldMakeAryaBetter": "What would make Arya better?",
     "received": "Received",
     "nothingYet": "Nothing yet.",
-    "signInToSend": "Create an account to send feedback.",
+    "signInToSend": "In the demo, feedback goes through Finish demo, with your email so we can reply.",
+    "sendFromFinish": "Send from Finish demo",
     "sent": "Sent. Thank you."
   },
   "finish": {
@@ -1341,6 +1342,7 @@
     "noCode": "No code yet.",
     "newCode": "Make a new code",
     "makeCode": "Make my code",
+    "demoNoCode": "Codes need an account, so the demo has no Make my code button. Here is how it works once you have one.",
     "promptCopied": "Setup prompt copied."
   },
   "newList": {
@@ -1820,6 +1822,7 @@
     "boardRow_other": "{{count}} items · {{time}} · {{date}}",
     "yourTrips": "Your trips",
     "yourTripsSub": "Every quest, its receipt, and your friends.",
+    "tripsEmpty": "No quests yet. Start one from the Quest tab and it shows here, with its receipt.",
     "newQuest": "New quest",
     "tripsLink": "Your trips and receipts",
     "tripsLinkSub": "Open quests, finished trips and friends",
@@ -1866,7 +1869,7 @@
   },
   "questProgress": {
     "huntsFinished": "Quests finished",
-    "receiptAttached": "Receipt added",
+    "receiptAttached": "Quests with a receipt",
     "streak": "Streak",
     "pointsLevelsAndSomeBadges": "Only quests with a receipt count toward points and levels.",
     "storeChangesYouSpotted": "Store changes you reported",
@@ -2209,7 +2212,7 @@
     "alertReports_one": "{{count}} report · {{date}}",
     "alertReports_other": "{{count}} reports · {{date}}",
     "alertOnYourList": " · it's on your list",
-    "alertPrice": "{{name}} is cheaper at {{store}}",
+    "alertPrice": "{{name}}: cheaper at {{store}}",
     "alertUsuallyPay": "{{price}} there, {{usual}} at {{store}}",
     "andMore": " and {{n}} more",
     "stillGoodToast": "Still good. Arya will ask again in a few days.",
@@ -2720,6 +2723,10 @@
         "title": "Quest",
         "line": "Turn a store trip into a game with points and badges. Try it once you have a list."
       },
+      "help": {
+        "title": "Help",
+        "line": "Short how-tos for every part of Arya, the full guide, and Take the tour again."
+      },
       "settings": {
         "title": "Settings",
         "line": "Your stores, receipts and spending. Replay this tour any time here."
@@ -3102,7 +3109,7 @@
       "share": {
         "title": "Share with your household",
         "sub": "Groups, invite code, friends",
-        "body": "A group shares lists and receipts. Every phone stays in sync.",
+        "body": "A group shares lists and receipts. Every phone stays in sync. Groups need an account, so the demo has no Start a group row.",
         "s1": "Open Settings and tap Start a group. Give it a name.",
         "s2": "Tap Invite someone and send them the code.",
         "s3": "When they join, you share the same lists.",

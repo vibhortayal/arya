@@ -52,12 +52,14 @@ export function Quest() {
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
 
   const [sessions, setSessions] = useState<Sess[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     let list: Sess[] = [];
     try { list = (await get("/api/quest/sessions")).sessions || []; } catch { list = []; }
     if (!live.current) return;
     setSessions(list);
+    setLoaded(true);
     // The avatar's level ring (the level itself lives in Quest progress).
     get("/api/quest/profile").then(p => {
       if (!p || !live.current || !p.level) return;
@@ -136,6 +138,12 @@ export function Quest() {
       <div id="quest-sessions">
         {open_.map(s => <Fragment key={s.id}>{openRow(s)}</Fragment>)}
         {done.length > 0 && <><p className="g-group">{t("quest.finished")}</p>{done.map(s => <Fragment key={s.id}>{gameRow(s)}</Fragment>)}</>}
+      </div>
+      {/* Retest 2026-10-31 #8: the page said receipts and friends and showed neither. */}
+      {loaded && !sessions.length ? <p className="muted" id="trips-empty">{t("quest.tripsEmpty")}</p> : null}
+      <div className="group" id="trips-links">
+        <button className="navrow" type="button" onClick={() => nav.show("receipts", { from: "trips" })}><span className="grow">{t("common.receipts")}</span><span className="chev">›</span></button>
+        <button className="navrow" type="button" onClick={() => nav.show("friends")}><span className="grow">{t("common.friends")}</span><span className="chev">›</span></button>
       </div>
     </>
   );

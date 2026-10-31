@@ -1202,11 +1202,11 @@ export function Lists() {
               <div className="group">{sugg.map(i => {
                 const c = charFor(i.name);
                 return (
-                  <div className="row sugrow" key={i.item_id} data-why={i.item_id} tabIndex={0} role="button" aria-label={t("lists.whySuggests", { name: i.name })}
-                    onClick={() => setSheet({ kind: "why", id: i.item_id })}
-                    onKeyDown={ev => { if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); setSheet({ kind: "why", id: i.item_id }); } }}>
+                  // The name is the Why button, Add sits beside it: no button inside a button (retest #25).
+                  <div className="row sugrow" key={i.item_id} data-why={i.item_id} onClick={() => setSheet({ kind: "why", id: i.item_id })}>
                     {c ? <img className="rowface" src={`/assets/characters/${c}`} alt="" /> : null}
-                    <div className="grow"><span className="name">{i.name}</span><span className="why"><IconSpark />{suggestWhy(i)}</span></div>
+                    <button type="button" className="grow rowopen" aria-label={t("lists.whySuggests", { name: i.name })}
+                      onClick={ev => { ev.stopPropagation(); setSheet({ kind: "why", id: i.item_id }); }}><span className="name">{i.name}</span><span className="why"><IconSpark />{suggestWhy(i)}</span></button>
                     <button className="addchip" type="button" data-sugg-add={i.item_id} aria-label={t("lists.addName", { name: i.name })}
                       onClick={ev => { ev.stopPropagation(); addSuggestion(i.item_id); }}><span aria-hidden="true">+ </span>{t("lists.add")}</button>
                   </div>);
