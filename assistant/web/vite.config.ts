@@ -16,6 +16,9 @@ const PROXY = ["/api", "/auth", "/decode", "/import", "/eyes", "/assets", "/mode
 export default defineConfig({
   base: "/",
   build: { assetsDir: "app" },
+  // en.json (145 KB) ships as a JSON.parse string, which parses faster
+  // than the same data as a JS object literal (speed audit #16).
+  json: { stringify: true },
   plugins: [
     react(),
     VitePWA({

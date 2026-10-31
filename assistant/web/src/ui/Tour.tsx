@@ -125,9 +125,12 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
     };
     step.onEnter?.();
     find();
-    addEventListener("resize", measure);
-    addEventListener("scroll", measure, true);
-    return () => { alive = false; cancelAnimationFrame(raf); removeEventListener("resize", measure); removeEventListener("scroll", measure, true); };
+    // Scroll and resize fire many times a frame: measure once per frame (#20).
+    let queued = 0;
+    const onMove = () => { if (!queued) queued = requestAnimationFrame(() => { queued = 0; measure(); }); };
+    addEventListener("resize", onMove);
+    addEventListener("scroll", onMove, true);
+    return () => { alive = false; cancelAnimationFrame(raf); cancelAnimationFrame(queued); removeEventListener("resize", onMove); removeEventListener("scroll", onMove, true); };
   }, [step]);
 
   useEffect(() => { next.current?.focus(); }, [i]);

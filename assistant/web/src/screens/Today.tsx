@@ -38,6 +38,17 @@ let checksOpenMem = false;
 clearOnSignOut(() => { checksOpenMem = false; });
 
 type Home = any;
+
+/* The last /api/today this account saw (speed audit #3): a return to
+ * Today paints at once from it and refreshes behind, as Lists does
+ * (lists/model.ts cache). Only the very first load shows skeletons. */
+type TodayData = {
+  home: Home | null; settings: any; news: any; dashboard: any; insights: Insights; powers: Facts | null;
+  quest_receipts: any; review: any; curator: any; profile: any;
+};
+let todayMem: TodayData | null = null;
+const eyesOf = (d: TodayData) => ((d.review?.lines || []).length + (d.review?.unresolved || []).length + (d.curator?.proposals || []).length);
+clearOnSignOut(() => { todayMem = null; });
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const isoToday = () => {
   const n = new Date();
@@ -226,31 +237,33 @@ export function Today() {
   const town = useTown();
   const { toast, showErr } = useToast();
   const { setRing } = useAvatar();
-  const [h, setH] = useState<Home | null>(null);
-  const [news, setNews] = useState<any[] | null>(null);
-  const [eyeCount, setEyeCount] = useState(0);
+  const mem = todayMem;
+  const [h, setH] = useState<Home | null>(mem?.home ?? null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [news, setNews] = useState<any[] | null>(mem ? mem.news?.news || [] : null);
+  const [eyeCount, setEyeCount] = useState(mem ? eyesOf(mem) : 0);
   /* Finished trips with no receipt yet: one row here, the list and its
    * actions on Receipts (audit M9; they used to sit in Settings). */
-  const [noReceipt, setNoReceipt] = useState<{ store: string; finished_at?: string }[]>([]);
-  const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(null);
-  const [facts, setFacts] = useState<Facts | null>(null);
-  const [ins, setIns] = useState<Insights>(null);
+  const [noReceipt, setNoReceipt] = useState<{ store: string; finished_at?: string }[]>(mem?.quest_receipts?.unsettled || []);
+  const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(mem?.dashboard ? { spend: mem.dashboard.spend_by_month || {} } : null);
+  const [facts, setFacts] = useState<Facts | null>(mem?.powers ?? null);
+  const [ins, setIns] = useState<Insights>(mem?.insights ?? null);
   const [checksOpen, setChecksOpenState] = useState(checksOpenMem);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [ex, setEx] = useState<ExState>(null);
-  const [gs, setGs] = useState<GetStarted>(null);
+  const [gs, setGs] = useState<GetStarted>(mem && !demo ? mem.settings?.get_started ?? null : null);
   const [lowOpen, setLowOpen] = useState(false);
   const [watchOpen, setWatchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const live = useRef(true);
   // Customizable Today: the saved card order (null = the default), the
   // one question, edit mode and the touch-and-hold menu.
-  const [cardsSaved, setCardsSaved] = useState<CardId[] | null>(null);
+  const [cardsSaved, setCardsSaved] = useState<CardId[] | null>(mem?.settings?.today_cards ?? null);
   const [focusAsked, setFocusAsked] = useState(true);
   const [editing, setEditing] = useState(false);
   // Card sizes; a Small card tapped open shows as Medium until you leave.
-  const [sizes, setSizes] = useState<Partial<Record<CardId, Size>>>({});
+  const [sizes, setSizes] = useState<Partial<Record<CardId, Size>>>(mem?.settings?.today_sizes || {});
   const [peekOpen, setPeekOpen] = useState<Set<CardId>>(new Set());
   const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
   const big = (id: CardId) => sz(id) === "l";
@@ -261,43 +274,50 @@ export function Today() {
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
   useCharacters();
 
+  /* One request for the whole screen (speed audit #2): /api/today
+   * answers what were ten reads, and the server builds the ledger
+   * once for all of them. A part the server could not read comes back
+   * null and keeps what the screen had. */
   const load = useCallback(async () => {
-    let home: Home, st: { get_started?: GetStarted; today_cards?: CardId[] | null; today_asked?: boolean; today_sizes?: Partial<Record<CardId, Size>> } | null;
-    const first = Promise.all([get("/api/home"), get("/api/settings").catch(() => null)]);
-    // None of these reads needs /api/home, so they start right behind it
-    // instead of waiting for it (and for settings) to come back.
-    get("/api/quest/news").then(n => live.current && setNews(n.news || []), () => live.current && setNews([]));
-    get("/api/dashboard").then(d => live.current && setMonths({ spend: d.spend_by_month || {} }), () => live.current && setMonths(null));
+    let d: TodayData;
+    // boot.js may have started this read before the app loaded.
+    const early = window.__bootData?.today as Promise<TodayData> | undefined;
+    if (window.__bootData) window.__bootData.today = undefined;
+    try { d = await (early ? early.catch(() => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
+    catch (e) { if (live.current && !todayMem) setLoadFailed(true); showErr(e); return; }
+    if (!live.current || !d.home) { if (live.current && !todayMem) setLoadFailed(true); return; }
+    todayMem = d;
+    const st = d.settings;
+    setNews(d.news?.news || []);
+    if (d.dashboard) setMonths({ spend: d.dashboard.spend_by_month || {} });
+    if (d.insights) setIns(d.insights);
     // powers.js loadFacts: a failed read keeps the last facts (at first
     // the defaults), so the tip still shows.
-    get<Insights>("/api/prices/insights").then(r => live.current && setIns(r), () => live.current && setIns(null));
-    get<Facts>("/api/powers").then(f => live.current && setFacts(f),
-      () => live.current && setFacts(f => f || { receipts: 0, stores: 0, share_prices: false }));
-    get<{ unsettled?: { store: string; finished_at?: string }[] }>("/api/quest/receipts")
-      .then(a => live.current && setNoReceipt(a.unsettled || []), () => live.current && setNoReceipt([]));
-    Promise.all([
-      get("/api/review").catch(() => ({ lines: [], unresolved: [] })),
-      get("/api/curator").catch(() => ({ proposals: [] })),
-    ]).then(([q, cur]) => {
-      if (live.current) setEyeCount((q.lines || []).length + (q.unresolved || []).length + (cur.proposals || []).length);
-    });
+    setFacts(f => d.powers || f || { receipts: 0, stores: 0, share_prices: false });
+    if (d.quest_receipts) setNoReceipt(d.quest_receipts.unsettled || []);
+    setEyeCount(eyesOf(d));
     // The avatar ring fills toward the next level.
-    get("/api/quest/profile").then(p => {
-      if (!p || !p.level || !live.current) return;
+    const p = d.profile;
+    if (p && p.level) {
       const span = (p.next_level_at - p.level_floor) || 1;
       const pct = Math.max(0, Math.min(100, Math.round((p.points - p.level_floor) / span * 100)));
       setRing({ pct, level: p.level });
-    }).catch(() => {});
-    try { [home, st] = await first; } catch (e) { showErr(e); return; }
-    if (!live.current) return;
+    }
     setGs(demo ? null : st?.get_started ?? null);
     setCardsSaved(st?.today_cards ?? null);
     setSizes(st?.today_sizes || {});
     // Asked once; someone who already arranged Today is not asked.
     setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
-    setH(home);
+    setLoadFailed(false);
+    setH(d.home);
     setAdded(new Set());
   }, [showErr, setRing, demo]);
+  // Group live sync reloads Today in place instead of remounting it (#3).
+  useEffect(() => {
+    const onLive = (ev: Event) => { ev.preventDefault(); load(); };
+    window.addEventListener("arya-live", onLive);
+    return () => window.removeEventListener("arya-live", onLive);
+  }, [load]);
   useEffect(() => { load(); }, [load]);
   // What Arya can do › Use soon › Add a date opens the date sheet here.
   useEffect(() => {
@@ -453,7 +473,7 @@ export function Today() {
           )}
           {h && !noLists && emptyNames.length > 0 && (
             <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
-              <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(facts?.receipts ? "today.emptyLists.sub" : "today.emptyLists.subNew")}</span></span>
+              <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(!facts?.receipts ? "today.emptyLists.subNew" : low.length && on.includes("low") ? "today.emptyLists.sub" : "today.emptyLists.subNoLow")}</span></span>
               <span className="chev" aria-hidden="true">›</span></button></div>
           )}
           {h && listCap.seeAll && (
@@ -680,11 +700,16 @@ export function Today() {
   return (
     <>
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
-      <EditTitle id="today-editbtn" title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
+      <EditTitle id="today-editbtn" editLabel={t("today.edit.editToday")} title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
         <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
       ) : (
         <>
+          {/* First load: skeleton rows; a failed one: a Retry card, not an empty page (#3, #32). */}
+          {!h && (loadFailed
+            ? <div className="empty" role="alert" id="today-failed"><p>{t("today.couldNotLoad")}</p>
+                <button className="btn" type="button" onClick={() => { setLoadFailed(false); load(); }}>{t("lists.retry")}</button></div>
+            : <div className="skel" role="status" aria-label={t("common.loading")}><i /><i /><i /></div>)}
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
           {town ? <TownFeed town={town} /> : null}

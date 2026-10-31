@@ -159,10 +159,14 @@ class TestServiceWorker(unittest.TestCase):
         # A bypass is a true bypass: the worker does not answer it.
         self.assertIn("if (BYPASS.some(p => url.pathname.startsWith(p))) return;", fetch)
         self.assertEqual(fetch.count("e.respondWith("), 1)
-        # Network first; the cache is only the offline fallback, and a
-        # page load offline gets the shell.
-        self.assertLess(fetch.index("fetch(e.request)\n    .then"), fetch.index("caches.match(e.request"))
-        self.assertIn('caches.match("/index.html")', fetch)
+        # Hashed build files cache first (speed audit #21); page loads
+        # race the network for 2.5 s, then the shell; the rest network
+        # first, the cache only the offline fallback.
+        self.assertIn('url.pathname.startsWith("/app/") ? cacheFirst(e.request)', fetch)
+        self.assertIn('networkFirst(e.request, e.request.mode === "navigate" ? 2500 : 0)', fetch)
+        nf = w.split("function networkFirst(")[1]
+        self.assertLess(nf.index("fetch(req)\n    .then"), nf.index("caches.match(req"))
+        self.assertIn('caches.match("/index.html")', nf)
 
     def test_push_reminders_kept(self):
         w = sw()

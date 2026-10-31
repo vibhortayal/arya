@@ -1,4 +1,4 @@
-import { lazy, type ComponentType } from "react";
+import { lazy, useState, type ComponentType } from "react";
 import type { ViewId } from "../app/views";
 import { Today } from "./Today";
 
@@ -6,9 +6,20 @@ import { Today } from "./Today";
  * shell and Today, not the whole app. App wraps the screen in Suspense.
  * The tab screens are fetched once the app is idle (preloadTabScreens),
  * so a tab tap does not wait on the network. */
+type Preloadable = ComponentType & { preload?: () => Promise<unknown> };
 function screen<K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K): ComponentType {
-  const Lazy = lazy(() => load().then(m => ({ default: m[name] })));
-  return Lazy as unknown as ComponentType;
+  // Once the chunk is in (preloaded on idle), the screen renders at once
+  // instead of suspending for a frame on a blank page (speed audit #28).
+  // Each mount picks one of the two and keeps it, so state is never lost.
+  let ready: ComponentType<object> | null = null;
+  const get = () => load().then(m => { ready = m[name] as ComponentType<object>; return { default: ready }; });
+  const Lazy = lazy(get);
+  const Screen: Preloadable = (props: object) => {
+    const [C] = useState(() => ready);
+    return C ? <C {...props} /> : <Lazy {...props} />;
+  };
+  Screen.preload = get;
+  return Screen;
 }
 
 const About = screen(() => import("./About"), "About");
@@ -92,7 +103,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
 
 /* Lists, Ask, Quest, Help, Settings: the tabs beside Today. */
 export function preloadTabScreens() {
-  for (const load of [() => import("./Lists"), () => import("./Chat"), () => import("./quest/QuestMode"), () => import("./Help"), () => import("./Profile")]) {
-    load().catch(() => { /* offline: the tap loads it, or shows nothing */ });
+  for (const v of ["list", "chat", "community", "help", "profile"] as const) {
+    (SCREENS[v] as Preloadable).preload?.().catch(() => { /* offline: the tap loads it, or shows the skeleton */ });
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useBackHandler, useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
@@ -165,7 +165,14 @@ function QtyBtn({ item, onCommit, onCancel }: { item: Item; onCommit: (id: strin
   );
 }
 
-function ListRow({ i, picking, picked, onQty, onReload, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
+/* Typing in the composer re-renders the screen; a row whose item and
+ * state did not change is skipped (speed audit #15). The callbacks it
+ * gets are stable, and Demo Town's chip always redraws. */
+const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked
+  && (a.also || []).join("|") === (b.also || []).join("|") && !a.chip && !b.chip
+  && a.onQty === b.onQty && a.onReload === b.onReload);
+
+function ListRowView({ i, picking, picked, onQty, onReload, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
   onQty: (id: string, q: number, u: string) => Promise<void>; onReload: () => void; chip?: ReactNode }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
@@ -294,12 +301,54 @@ export function Lists() {
     return h;
   }, [loadGroup]);
   const reloadQuiet = useCallback(() => { reload().catch(showErr); }, [reload, showErr]);
+  /* Optimistic taps (speed audit #1, #26): a tick, remove or quantity
+   * change shows at once, the POST goes behind it, and one quiet
+   * reload follows once the taps stop and every write is back. A
+   * failed write rolls back and says so. */
+  const pending = useRef(0);
+  const settle = useRef<number | undefined>(undefined);
+  const reconcile = useCallback(() => {
+    clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => {
+      if (pending.current > 0) { reconcile(); return; }
+      reload().then(() => { if (alive.current) setGone(new Set()); }).catch(showErr);
+    }, 900);
+  }, [reload, showErr]);
+  useEffect(() => () => clearTimeout(settle.current), []);
+  const patch = (fn: (i: Item) => Item | null, id: string) => {
+    const d = dataRef.current;
+    if (!d) return;
+    const next: HomeData = { ...d, list: { ...d.list, items: d.list.items.map(i => (i.item_id === id ? fn(i) || i : i)) } };
+    cache.data = next; dataRef.current = next;
+    if (alive.current) setData(next);
+  };
+  // Writes for one item go out in order, so a fast double tap ends in
+  // the state the second tap asked for.
+  const chain = useRef(new Map<string, Promise<unknown>>());
+  const write = (id: string, fn: () => Promise<unknown>) => {
+    pending.current++;
+    const run = (chain.current.get(id) || Promise.resolve()).catch(() => {}).then(fn);
+    chain.current.set(id, run);
+    return run.finally(() => { pending.current--; if (chain.current.get(id) === run) chain.current.delete(id); reconcile(); });
+  };
+  // A row just ticked stays in place, filled and struck through, for a
+  // moment before it slides into Checked off.
+  const [hold, setHold] = useState<Set<string>>(new Set());
+  // Rows removed here but not yet confirmed by a reload ("id|list").
+  const [gone, setGone] = useState<Set<string>>(new Set());
   const loadEyes = useCallback(async () => {
     const r = await get<{ records: EyesRec[] }>("/api/eyes").catch(() => ({ records: [] as EyesRec[] }));
     if (alive.current) setEyes(r.records || []);
   }, []);
 
   useEffect(() => { reload().catch(e => { if (alive.current) setLoadFailed(true); showErr(e); }); loadEyes(); }, [reload, loadEyes, showErr]);
+
+  // Group live sync refreshes the list in place (#3).
+  useEffect(() => {
+    const onLive = (ev: Event) => { ev.preventDefault(); reconcile(); };
+    window.addEventListener("arya-live", onLive);
+    return () => window.removeEventListener("arya-live", onLive);
+  }, [reconcile]);
 
   const ask = useAsk(reloadQuiet);
 
@@ -319,8 +368,8 @@ export function Lists() {
   const here = lists.find(l => l.id === effLens) || null;
   const lid = here ? here.id : "else";
   const name = data ? lensName(data, lid) : "";
-  const rows = data ? onListItems(data).filter(i => itemHome(data, i) === lid) : [];
-  const open = rows.filter(i => !i.checked), done = rows.filter(i => i.checked);
+  const rows = data ? onListItems(data).filter(i => itemHome(data, i) === lid && !gone.has(i.item_id + "|" + lid)) : [];
+  const open = rows.filter(i => !i.checked || hold.has(i.item_id)), done = rows.filter(i => i.checked && !hold.has(i.item_id));
   const groceries = open.filter(i => !i.not_grocery), errands = open.filter(i => i.not_grocery);
   /* A long list gets a find field (25+ open items) and department
    * headers (12+), owner 2026-10-30. A search shows a flat result. */
@@ -474,20 +523,44 @@ export function Lists() {
     if (!ids.length) return;
     const d = dataRef.current!;
     const names = ids.map(id => (d.list.items.find(i => i.item_id === id) || {} as Partial<Item>).name || t("lists.item"));
+    const keys = ids.map(id => id + "|" + lid);
+    const unhide = () => setGone(prev => { const n = new Set(prev); keys.forEach(k => n.delete(k)); return n; });
+    setGone(prev => new Set([...prev, ...keys]));
+    if (selRef.current) setSel(null);
+    toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
+      unhide();
+      try { for (const id of ids) await write(id, () => post("/api/list/add", { item_id: id })); }
+      catch (e) { toast(errMsg(e)); }
+    } });
     try {
-      for (const id of ids) await post("/api/list/remove", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) });
-      if (selRef.current) setSel(null);
-      reloadQuiet();
-      toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
-        try { for (const id of ids) await post("/api/list/add", { item_id: id }); reloadQuiet(); }
-        catch (e) { toast(errMsg(e)); }
-      } });
-    } catch (e) { toast(errMsg(e)); }
+      for (const id of ids) await write(id, () => post("/api/list/remove", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) }));
+    } catch (e) { unhide(); toast(errMsg(e)); }
   };
   const setQty = async (id: string, qty: number, unit: string) => {
-    try { await post("/api/list/qty", { item_id: id, qty, unit }); }
-    catch (e) { toast(errMsg(e)); }
-    reloadQuiet();
+    const was = dataRef.current?.list.items.find(i => i.item_id === id);
+    patch(i => ({ ...i, qty, unit }), id);
+    try { await write(id, () => post("/api/list/qty", { item_id: id, qty, unit })); }
+    catch (e) { if (was) patch(() => ({ ...was }), id); toast(errMsg(e)); }
+  };
+  const qtyRef = useRef(setQty);
+  qtyRef.current = setQty;
+  const onQtyStable = useCallback((id: string, q: number, u: string) => qtyRef.current(id, q, u), []);
+  /* A tick (or untick) on this list. The item's own list keeps
+   * `checked`; an extra list keeps its tick in `checked_in`. */
+  const setTick = (id: string, on: boolean) => {
+    const local = (i: Item, v: boolean): Item => (lid !== "else" && i.list !== lid && (i.also || []).includes(lid)
+      ? { ...i, checked_in: v ? [...new Set([...(i.checked_in || []), lid])] : (i.checked_in || []).filter(x => x !== lid) }
+      : { ...i, checked: v });
+    patch(i => local(i, on), id);
+    if (on) {
+      try { navigator.vibrate?.(10); } catch { /* no haptics */ }
+      setHold(prev => new Set(prev).add(id));
+      window.setTimeout(() => { if (alive.current) setHold(prev => { const n = new Set(prev); n.delete(id); return n; }); }, 400);
+    }
+    const name = (dataRef.current?.list.items.find(i => i.item_id === id) || { name: "" }).name;
+    if (on) toast(t("lists.tickedOff", { name }), { action: t("common.undo"), onAction: () => setTick(id, false) });
+    write(id, () => post("/api/list/check", { item_id: id, checked: on, ...(lid !== "else" ? { list_id: lid } : {}) }))
+      .catch(e => { patch(i => local(i, !on), id); toast(errMsg(e)); });
   };
   const startSelect = useCallback((id: string | null) => {
     setSel(new Set(id ? [id] : []));
@@ -514,7 +587,7 @@ export function Lists() {
     const act = b.dataset.act, id = b.dataset.id!;
     const item = dataRef.current ? onListItems(dataRef.current).find(i => i.item_id === id && itemHome(dataRef.current!, i) === lid) : undefined;
     try {
-      if (act === "check") await post("/api/list/check", { item_id: id, checked: !(item && item.checked), ...(lid !== "else" ? { list_id: lid } : {}) });
+      if (act === "check") { setTick(id, !(item && item.checked)); return; }
       else if (act === "ng-keep") await post("/api/list/grocery-verdict", { item_id: id, kind: "grocery" });
       else if (act === "ng-remove" || act === "remove") { await removeItems([id]); return; }
       else if (act === "move") { setSheet({ kind: "move", ids: [id] }); return; }
@@ -824,7 +897,7 @@ export function Lists() {
 
   /* ---- paint ---- */
   const listStores = here ? here.stores || [] : [];
-  const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: setQty, onReload: reloadQuiet,
+  const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id), onQty: onQtyStable, onReload: reloadQuiet,
     chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
   /* Demo Town: send items to the list of another store, making it when there is none. */
   const toStoreList = async (ids: string[], store: string) => {

@@ -12,5 +12,8 @@ import "./styles/haul.css";
 import { App } from "./App";
 import { registerWorker } from "./app/sw-register";
 
+/* A phone with 4 cores or fewer drops the costly blur (styles.css). */
+if ((navigator.hardwareConcurrency || 8) <= 4) document.documentElement.classList.add("lowend");
+
 createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
 registerWorker();

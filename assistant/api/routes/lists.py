@@ -518,7 +518,7 @@ async def list_remove(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    still_on = _remove_item(item_id, body.get("list_id"))
+    still_on = await run_in_threadpool(_remove_item, item_id, body.get("list_id"))
     return {"ok": True, "still_on": still_on} if still_on else {"ok": True}
 
 
@@ -545,7 +545,7 @@ async def list_qty(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    _set_qty(item_id, body)
+    await run_in_threadpool(_set_qty, item_id, body)
     return {"ok": True}
 
 
@@ -705,7 +705,7 @@ async def list_move(req: Request):
     item_id = body.get("item_id")
     if not item_id:
         raise HTTPException(400, "item_id is required")
-    _move_item(item_id, body.get("list_id") or None, body.get("from_list"))
+    await run_in_threadpool(_move_item, item_id, body.get("list_id") or None, body.get("from_list"))
     return {"ok": True}
 
 
@@ -751,7 +751,9 @@ async def list_check(req: Request):
     body = await _json_obj(req)
     if not body.get("item_id"):
         raise HTTPException(400, "item_id is required")
-    _set_checked(body["item_id"], body.get("checked"), body.get("list_id"))
+    # File writes off the event loop (speed audit #9): the tap's write
+    # never holds up the reads around it.
+    await run_in_threadpool(_set_checked, body["item_id"], body.get("checked"), body.get("list_id"))
     return {"ok": True}
 
 

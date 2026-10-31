@@ -247,10 +247,42 @@ def _session_record(all_sessions, token):
     return rec
 
 
+_SESSIONS_SEEN = (None, {})  # (file key, parsed sessions), swapped whole
+
+
+def _session_fast(token):
+    """The session for a hashed token from an in-memory copy of
+    sessions.json, re-read only when the file changes (speed audit #9:
+    the login check parsed the file on every request). None when the
+    store is Postgres or the token is not there under its hashed key;
+    the caller then takes the locked path as before."""
+    from api import pgstore
+    if pgstore.mode() == "pg" and pgstore.uses_pg(_owner(), "sessions.json"):
+        return None
+    p = _path("sessions.json")
+    try:
+        st = os.stat(p)
+    except OSError:
+        return None
+    global _SESSIONS_SEEN
+    key = (p, st.st_mtime_ns, st.st_size)
+    seen_key, data = _SESSIONS_SEEN
+    if seen_key != key:
+        try:
+            with open(p) as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            return None
+        _SESSIONS_SEEN = (key, data)
+    return data.get(_session_key(token))
+
+
 def session_info(token):
     if not token:
         return None
     s = _demo_session(token)
+    if s is None:
+        s = _session_fast(token)
     if s is None:
         with _file_lock("sessions.json"):
             s = _session_record(_load("sessions.json", {}), token)

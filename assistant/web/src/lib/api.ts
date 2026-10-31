@@ -26,15 +26,28 @@ export class ApiError extends Error {
  * (app/groupLive.ts) skips the echo of this tab's own changes. */
 export const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 
+/* No request waits forever (speed audit #6): a read gives up after
+ * 20 s, a write or a model call (Ask, photo reads) after 130 s. A caller
+ * can pass its own signal instead. */
+const READ_MS = 20000, WRITE_MS = 130000; // writes outlast the server's own 120 s model timeout
+function deadline(ms: number): AbortSignal | undefined {
+  const T = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout;
+  return typeof T === "function" ? T.call(AbortSignal, ms) : undefined;
+}
+
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
-  if (opts?.method && opts.method !== "GET") inflight.clear();
+  const write = !!opts?.method && opts.method !== "GET";
+  if (write) { inflight.clear(); fresh.clear(); }
   let r: Response;
   const headers = new Headers(opts?.headers || {});
   headers.set("X-Arya-Client", CLIENT_ID);
-  try { r = await fetch(path, { ...opts, headers }); }
-  catch {
-    // A network failure stays a TypeError (the hunt's offline outbox
-    // keys on it) but reads as what it is.
+  const signal = opts?.signal ?? deadline(write ? WRITE_MS : READ_MS);
+  try { r = await fetch(path, { ...opts, headers, ...(signal ? { signal } : {}) }); }
+  catch (e) {
+    // A network failure (or a timeout) stays a TypeError (the hunt's
+    // offline outbox keys on it) but reads as what it is.
+    if ((e as Error)?.name === "TimeoutError") throw new TypeError("The connection is too slow right now — try again in a moment.");
+    if ((e as Error)?.name === "AbortError") throw e;
     throw new TypeError("No connection right now — try again when you're back online.");
   }
   if (!r.ok) {
@@ -53,13 +66,25 @@ const json = (method: string, body?: unknown): RequestInit =>
  * clears the table so a read after a write is never answered with
  * data from before it. */
 const inflight = new Map<string, Promise<unknown>>();
+/* A few reads that many screens ask for and that only change through
+ * this tab's own writes are kept 30 s (speed audit #7): /api/group was
+ * fetched by three callers on every screen. Any write clears them. */
+const KEEP_MS: Record<string, number> = { "/api/group": 30000, "/api/settings": 30000 };
+const fresh = new Map<string, { at: number; p: Promise<unknown> }>();
 export const get = <T = any>(path: string): Promise<T> => {
   let p = inflight.get(path) as Promise<T> | undefined;
+  const kept = fresh.get(path);
+  if (!p && kept && Date.now() - kept.at < (KEEP_MS[path] || 0)) p = kept.p as Promise<T>;
   if (!p) {
     p = api<T>(path);
     inflight.set(path, p);
     const done = () => { if (inflight.get(path) === p) inflight.delete(path); };
     p.then(done, done);
+    if (KEEP_MS[path]) {
+      const mine = { at: Date.now(), p: p as Promise<unknown> };
+      fresh.set(path, mine);
+      p.catch(() => { if (fresh.get(path) === mine) fresh.delete(path); });
+    }
   }
   return p.then(v => (v !== null && typeof v === "object" ? structuredClone(v) : v));
 };
@@ -68,3 +93,5 @@ export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json(
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
 /* Multipart upload (receipt photos, audio, shelf shots). */
 export const upload = <T = any>(path: string, form: FormData) => api<T>(path, { method: "POST", body: form });
+/* Signing in or out drops every kept read: they were the last account's. */
+export const forgetReads = () => { fresh.clear(); inflight.clear(); };

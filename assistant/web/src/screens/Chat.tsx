@@ -23,7 +23,7 @@ import { EditList, EditTitle } from "../ui/EditList";
  * already exist; Ask about this photo sends it once with the next
  * question and keeps nothing. No voice out: Arya's replies are text. */
 type Chip = { label: string; run: () => void };
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working"; text: string; code?: string;
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string;
   url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
@@ -114,6 +114,8 @@ export function Chat() {
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [listening, setListening] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  // An answer is on its way: Send waits, so a second tap never asks twice (#4).
+  const [busy, setBusy] = useState(false);
   const [home, setHome] = useState<ChipHome>(null);
   useEffect(() => { let live = true; get<ChipHome>("/api/home").then(h => live && setHome(h), () => {}); return () => { live = false; }; }, []);
   const capture = useRef<Capture | null>(null);
@@ -245,9 +247,16 @@ export function Chat() {
     if (pic) { setPending(null); add({ kind: "photo", text: "", url: pic.url }); }
     if (!again) add({ kind: "me", text: q }); else setLog(lines.slice());
     const mine = epoch;
+    // "Arya is thinking…" shows at once, so the wait never looks broken
+    // (speed audit #4, #30).
+    const think: Line = { kind: "thinking", text: t("common.aryaThinking") };
+    add(think);
+    setBusy(true);
+    const stop = () => { drop(think); if (mine === epoch) setBusy(false); };
     try {
       const image = pic ? await shrinkPhoto(pic.file) : undefined;
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", image ? { messages: history, image } : { messages: history });
+      stop();
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
@@ -257,7 +266,8 @@ export function Chat() {
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
         ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
     } catch (e) {
-      if (mine !== epoch) return;
+      stop();
+      if (mine !== epoch) { setLog(lines.slice()); return; }
       history.pop();
       add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
@@ -379,6 +389,10 @@ export function Chat() {
             <p className="muted small">{t("ask.chooserNote")}</p>
             <button type="button" className="linkbtn tall" data-photo-never onClick={() => { drop(l); setLog(lines.slice()); }}>{t("ask.neverMind")}</button>
           </div>
+        ) : l.kind === "thinking" ? (
+          <div key={i} className="bubble arya thinking" role="status" aria-label={l.text}>
+            <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+          </div>
         ) : l.kind === "working" ? (
           <div key={i} className="bubble arya" role="status">
             <p>{l.text}</p>
@@ -393,7 +407,7 @@ export function Chat() {
           </div>
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
-      <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); send(text); }}>
+      <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); if (!busy) send(text); }}>
         {pending ? (
           <div className="spchip" id="ask-photo-strip">
             <img src={pending.url} alt="" />
@@ -403,7 +417,7 @@ export function Chat() {
         ) : null}
         <input type="text" id="chat-input" ref={input} placeholder={pending ? t("ask.askAboutPhoto") : t("common.askArya")} autoComplete="off" aria-label={t("ask.message")}
           value={text} onChange={e => setText(e.target.value)} />
-        <button type="submit" className="btn primary" id="chat-send" disabled={!text.trim() && !pending}>{t("common.send")}</button>
+        <button type="submit" className="btn primary" id="chat-send" disabled={busy || (!text.trim() && !pending)}>{t("common.send")}</button>
         <div className="caprow">
           <button id="btn-mic" type="button" className={"chip" + (listening ? " listening" : "")} aria-label={listening ? t("ask.stopTalking") : t("ask.speakYourMessage")} onClick={mic}><IconMic />{listening ? t("ask.stop") : t("ask.talk")}</button>
           <label className="chip" htmlFor="ask-photo" {...pickerProps("ask-photo")}>

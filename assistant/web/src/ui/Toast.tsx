@@ -55,7 +55,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{ toast, showErr, hide }}>
       {children}
-      <div id="toast" role="status" aria-live="polite" hidden={!cur}>
+      {/* The live region stays mounted (only the pill inside it hides),
+        * so every screen reader announces each toast (speed audit #38). */}
+      <div id="toastlive" role="status" aria-live="polite">
+      <div id="toast" hidden={!cur}>
         {view?.msg}
         {view?.opts?.action && (
           <button type="button" className="toastact" onClick={() => { const f = view.opts?.onAction; hide(); f?.(); }}>{view.opts.action}</button>
@@ -63,6 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <button type="button" className="toastclose" aria-label={t("common.dismiss")} onClick={hide}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
+      </div>
       </div>
     </Ctx.Provider>
   );

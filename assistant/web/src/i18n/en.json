@@ -135,7 +135,11 @@
     "backPlain": "Back",
     "notHereShort": "Not here",
     "addedToList": "Added to your list.",
-    "noPhotoNudge": "No photo of this aisle yet. Found it? <snap>Map this aisle</snap> so other Arya shoppers can find it."
+    "noPhotoNudge": "No photo of this aisle yet. Found it? <snap>Map this aisle</snap> so other Arya shoppers can find it.",
+    "screenFailed": "This screen didn't load.",
+    "loading": "Loading",
+    "newVersion": "A new version of Arya is ready.",
+    "reload": "Reload"
   },
   "about": {
     "builtBy": "Built by",
@@ -1124,7 +1128,8 @@
     },
     "tickHint": "Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.",
     "moveToAnother": "Move to another list",
-    "moreFor": "More for {{name}}: move or remove"
+    "moreFor": "More for {{name}}: move or remove",
+    "tickedOff": "{{name}} checked off."
   },
   "login": {
     "signIn": "Sign in",
@@ -2138,7 +2143,8 @@
       "remove": "Remove {{name}}",
       "add": "Add {{name}}",
       "move": "Move {{name}}. Use the up and down arrow keys.",
-      "allOn": "Every card is on Today."
+      "allOn": "Every card is on Today.",
+      "editToday": "Edit Today"
     },
     "menu": {
       "label": "Card options",
@@ -2318,7 +2324,8 @@
       "some": "{{names}} and {{last}} are empty",
       "many": "{{names}} and {{count}} more lists are empty",
       "sub": "Add what you need, or tap Add on Running low.",
-      "subNew": "Add what you need. Arya fills them from what you usually buy once it has a receipt."
+      "subNew": "Add what you need. Arya fills them from what you usually buy once it has a receipt.",
+      "subNoLow": "Add what you need from Lists."
     },
     "watch": {
       "up": "Up {{pct}} since {{month}}."
@@ -2336,7 +2343,8 @@
       "cheaperAt": "Cheaper at {{store}}.",
       "move": "Buy {{name}} at {{store}}: about {{money}} a month less."
     },
-    "turnTheListInto": "Turn your list into a game with points and badges."
+    "turnTheListInto": "Turn your list into a game with points and badges.",
+    "couldNotLoad": "Couldn't load Today. Check your connection and try again."
   },
   "haul": {
     "exampleOnly": "Example only",

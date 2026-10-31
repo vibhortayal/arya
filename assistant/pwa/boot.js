@@ -19,4 +19,15 @@
   status.catch(function () {});
   me.catch(function () {});
   window.__boot = { status: status, me: me };
+  // Someone signed in last time also gets their settings and Today
+  // started now, not one round trip after /auth/me (speed audit #5).
+  // A signed-out answer (401) just falls back to the app's own read.
+  if (returning) {
+    var json = function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+    var hdr = { headers: { "X-Arya-Client": "boot" } };
+    window.__boot.settings = fetch("/api/settings", hdr).then(json);
+    window.__boot.today = fetch("/api/today", hdr).then(json);
+    window.__boot.settings.catch(function () {});
+    window.__boot.today.catch(function () {});
+  }
 })();

@@ -7,7 +7,7 @@
  * Honesty rules carry over from the map: a simulated store is drawn as
  * a blueprint, an unmapped section sits under fog with a "?" sign, and
  * nothing here claims a shelf Arya has not seen. */
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { charArt } from "../assets";
@@ -76,7 +76,8 @@ function loadImg(src: string, then: (im: HTMLImageElement) => void) {
   let im = imgCache.get(src);
   if (im?.complete && im.naturalWidth) { then(im); return; }
   if (!im) { im = new Image(); im.src = src; imgCache.set(src, im); }
-  im.addEventListener("load", () => then(im!), { once: true });
+  // The world draws on demand: a picture that arrives late asks for a frame.
+  im.addEventListener("load", () => { then(im!); invalidate(); }, { once: true });
 }
 
 /* An item's sticker card, floating over its shelf. */
@@ -138,9 +139,18 @@ const softTex = () => canvasTex(128, 128, c => {
 });
 
 /* ------------------------------------------------------------ the world */
+/* A phone with 4 cores or fewer draws without shadows or antialiasing,
+ * at 1x pixels (speed audit #12). */
+const LOW_END = typeof navigator !== "undefined" && (navigator.hardwareConcurrency || 8) <= 4;
+
 export function World3D(p: Props) {
+  // frameloop="demand": a frame is drawn only while something moves
+  // (the shopper, a flight, the camera settling, other shoppers in
+  // practice). A still store draws nothing, so a sheet over it costs no
+  // GPU time and the phone stays cool (speed audit #12).
   return (
-    <Canvas className="qg-world" shadows dpr={[1, 1.5]} gl={{ antialias: true, powerPreference: "high-performance" }}
+    <Canvas className="qg-world" frameloop="demand" shadows={!LOW_END} dpr={LOW_END ? 1 : [1, 1.5]}
+      gl={{ antialias: !LOW_END, powerPreference: LOW_END ? "default" : "high-performance" }}
       camera={{ fov: 42, near: 0.5, far: 200, position: [10, 30, 40] }} onCreated={({ gl }) => { gl.toneMapping = THREE.NoToneMapping; }}>
       <Store {...p} />
     </Canvas>
@@ -174,7 +184,14 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     zoom: 1, yaw: 0,              // the player's pinch and two-finger turn
     camT: new THREE.Vector3(ENTRY_AT.x, 0, ENTRY_AT.z),
     clock: 0,
+    // Keep drawing until this clock time (fades, pulses after a change).
+    awake: 1.5,
+    npcWake: 0,                   // a timer that wakes the world when a resting shopper sets off
   });
+  useEffect(() => () => clearTimeout(sim.current.npcWake), []);
+  const wake = (sec = 1.2) => { const s = sim.current; s.awake = Math.max(s.awake, s.clock + sec); invalidate(); };
+  // A new trip state (a grab, a pass, fog lifting) or focus animates for a moment.
+  useEffect(() => { wake(); }, [trip, focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const cb = useRef({ onArrive, onWalking, onTapItem }); cb.current = { onArrive, onWalking, onTapItem };
   const spotsRef = useRef(S); spotsRef.current = S;
 
@@ -193,6 +210,7 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
         s.me.speed = zoomSpeed(pathLen(s.me.p, s.me.path), reducedMotion());
         s.overview = false;
         cb.current.onWalking(g.kind === "point" ? null : g);
+        wake();
       },
       screenOf(what) {
         const v = what === "player" ? new THREE.Vector3(s.me.p.x, 1.4, s.me.p.z) : (() => { const sp = spotsRef.current.find(x => x.key === what); return sp ? new THREE.Vector3(sp.at.x, 2.25, sp.at.z) : null; })();
@@ -204,9 +222,10 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
       pickup(key) {
         const sp = spotsRef.current.find(x => x.key === key);
         if (sp) s.flights.push({ key, t: 0, from: new THREE.Vector3(sp.at.x, 2.2, sp.at.z) });
+        wake();
       },
-      setOverview(on) { s.overview = on; },
-      resetView() { const had = Math.abs(s.zoom - 1) > 0.05 || Math.abs(s.yaw) > 0.05; s.zoom = 1; s.yaw = 0; return had; },
+      setOverview(on) { s.overview = on; wake(); },
+      resetView() { const had = Math.abs(s.zoom - 1) > 0.05 || Math.abs(s.yaw) > 0.05; s.zoom = 1; s.yaw = 0; wake(); return had; },
       busy() { return s.me.path.length > 0; },
     };
     onReady(api);
@@ -247,8 +266,24 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     const k = rm ? 20 : s.me.moving ? 9 : 3.2; // keep up with a zoom, settle softly after
     s.camT.lerp(tgt, 1 - Math.exp(-dt * k));
     const dir = new THREE.Vector3(0.28, 1.05, 0.9).normalize().multiplyScalar(dist).applyAxisAngle(UP, s.yaw);
-    camera.position.lerp(s.camT.clone().add(dir), 1 - Math.exp(-dt * k));
+    const camWant = s.camT.clone().add(dir);
+    camera.position.lerp(camWant, 1 - Math.exp(-dt * k));
     camera.lookAt(s.camT);
+    // Ask for the next frame only while something still moves.
+    const moving = s.me.path.length > 0 || s.me.moving || s.flights.length > 0
+      || s.clock < s.awake || s.camT.distanceTo(tgt) > 0.01 || camera.position.distanceTo(camWant) > 0.01;
+    const npcBusy = !rm && s.npcs.some(n => n.path.length > 0 || n.moving);
+    if (moving || npcBusy) invalidate();
+    else if (!rm && s.npcs.length && !s.npcWake) {
+      // Everyone is resting: no frames until the first stroller sets off.
+      const wait = Math.max(0.05, Math.min(...s.npcs.map(n => n.pause))), t0 = performance.now();
+      s.npcWake = window.setTimeout(() => {
+        s.npcWake = 0;
+        const gone = (performance.now() - t0) / 1000;
+        s.npcs.forEach(n => { n.pause -= gone; });
+        invalidate();
+      }, wait * 1000);
+    }
   });
   /* Pinch to zoom, two fingers to turn (owner, 2026-10-30); the mouse
    * wheel zooms on a computer. One finger still taps and walks. */
@@ -266,9 +301,10 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
       let da = now.a - last.a; if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
       s.yaw -= da;
       last = now;
+      wake(0.3);
     };
     const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) last = null; };
-    const wheel = (e: WheelEvent) => { e.preventDefault(); s.zoom = Math.min(2.6, Math.max(0.45, s.zoom * Math.exp(e.deltaY * 0.0015))); };
+    const wheel = (e: WheelEvent) => { e.preventDefault(); s.zoom = Math.min(2.6, Math.max(0.45, s.zoom * Math.exp(e.deltaY * 0.0015))); wake(0.3); };
     el.addEventListener("pointerdown", down); el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
     el.addEventListener("wheel", wheel, { passive: false });
@@ -289,6 +325,7 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     s.me.speed = zoomSpeed(pathLen(s.me.p, s.me.path), reducedMotion());
     s.overview = false;
     cb.current.onWalking(null);
+    wake();
   };
 
   const cur = currentStop(trip), reach = Math.max(FL.w, FL.d) / 2 + 5;

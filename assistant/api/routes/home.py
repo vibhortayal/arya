@@ -41,13 +41,15 @@ def home():
     # for these keys (review 2026-10-28, M9). Same aggregation as
     # state.item_detail, computed once over the derived entries.
     gm = state.group_map()
+    # One pass over the ledger, then a lookup per item (speed audit #10:
+    # this was items x entries).
+    by_item = {}
+    for e in d["entries"]:
+        if e["event_type"] == "purchase":
+            by_item.setdefault(e["item_id"], {}).setdefault(e["store_id"], []).append(e["price"])
     pbs = {}
     for item in d["smart_list"]["items"]:
-        iid = gm.get(item["item_id"], item["item_id"])
-        prices = {}
-        for e in d["entries"]:
-            if e["item_id"] == iid and e["event_type"] == "purchase":
-                prices.setdefault(e["store_id"], []).append(e["price"])
+        prices = by_item.get(gm.get(item["item_id"], item["item_id"]))
         if prices:
             pbs[item["item_id"]] = {
                 s: {"min": min(v), "median": sorted(v)[len(v) // 2],
@@ -69,6 +71,30 @@ def home():
             "list": d["smart_list"], "lists": state.named_lists(),
             "cart": state.get_cart(), "seen": seen, "checks": checks, "price_by_store": pbs,
             "use_soon": use_soon, "perishables": perish}
+
+
+@router.get("/api/today")
+def today_route():
+    """Everything the Today screen reads, in one request (speed audit
+    #2): it sent about ten GETs, and each one rebuilt the ledger. Here
+    the per-request memo (state.derived) builds it once. Each part
+    fails on its own: a part that errors is null and the screen keeps
+    its last copy, as it did when the reads were separate."""
+    import logging
+    from api.routes import account, avatar, intake, prices, receipts, review
+    parts = {"home": home, "settings": account.settings_get, "news": avatar.quest_news,
+             "dashboard": dashboard_route, "insights": prices.price_insights,
+             "powers": prices.powers_state, "quest_receipts": receipts.quest_receipt_archive,
+             "review": review.review_route, "curator": intake.curator_pending,
+             "profile": avatar.quest_profile}
+    out = {}
+    for k, fn in parts.items():
+        try:
+            out[k] = fn()
+        except Exception:
+            logging.getLogger("arya.api").exception("today: %s failed", k)
+            out[k] = None
+    return out
 
 
 @router.get("/api/dashboard")

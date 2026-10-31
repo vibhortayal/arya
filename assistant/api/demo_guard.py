@@ -124,6 +124,7 @@ async def require_login(request, call_next):
     if path == "/api/v1/openapi.json":
         protected = False
     state.set_overlay(None)
+    state.start_request_memo()
     # Which open tab sent this (live sync skips a tab's own echo).
     from api import live
     live.client_id.set(request.headers.get("x-arya-client", "")[:40])

@@ -191,6 +191,8 @@ def load_at(d, owner, name, default):
 
 
 def save_at(d, owner, name, obj):
+    if name not in _MEMO_KEEP:
+        _forget()
     p = os.path.join(d, name)
     ov = _overlay.get()
     if ov is not None and name not in _WRITE_THROUGH:
@@ -272,7 +274,44 @@ def group_members():
     return groups.member_names(gid)
 
 
+# Per-request memo (speed audit #8): one Today load called derived()
+# three times and re-read the receipts about six. The middleware opens
+# a fresh memo for each request (start_request_memo); any write in the
+# request clears it, so a read after a write is never stale. Outside a
+# request (scripts, tests calling functions directly) nothing is kept.
+_memo = contextvars.ContextVar("arya_memo", default=None)
+
+
+# Stores that receipts() and derived() never read: writing them keeps the memo.
+_MEMO_KEEP = {"cart.json"}
+
+
+def start_request_memo():
+    _memo.set({})
+
+
+def _forget():
+    m = _memo.get()
+    if m:
+        m.clear()
+
+
+def _memoized(name, build):
+    m = _memo.get()
+    if m is None:
+        return build()
+    key = (name, _current_user.get(), _current_group.get(), id(_overlay.get()))
+    if key not in m:
+        m[key] = build()
+    # Callers may change what they get: each one gets its own copy.
+    return copy.deepcopy(m[key])
+
+
 def receipts():
+    return _memoized("receipts", _receipts)
+
+
+def _receipts():
     """Every receipt the account can see: its own, plus each group
     member's while it is in a group (owner, 2026-10-29: a receipt
     belongs to whoever filed it; the group sees all of them). In a
@@ -579,6 +618,10 @@ def _group_entries(entries):
 
 
 def derived():
+    return _memoized("derived", _derived)
+
+
+def _derived():
     rs = receipts()
     entries = _group_entries(build_ledger(rs, fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=today_ref())
