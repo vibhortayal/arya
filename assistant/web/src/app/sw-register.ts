@@ -11,6 +11,7 @@ import { t } from "../i18n";
  * precache never competes with the first screen's API calls (speed
  * audit #24). When a new build takes over an open tab, a toast offers
  * Reload (#23). */
+const UPDATE_MS = 10 * 60 * 1000;
 export function registerWorker(): void {
   if (import.meta.env.DEV || !("serviceWorker" in navigator)) return;
   const had = !!navigator.serviceWorker.controller;
@@ -21,6 +22,8 @@ export function registerWorker(): void {
     navigator.serviceWorker.register("/sw.js").then(reg => {
       // Coming back to the app checks for a new build.
       document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => {}); });
+      // So does an app left open in front, every 10 minutes (re-audit N8).
+      window.setInterval(() => { if (document.visibilityState === "visible") reg.update().catch(() => {}); }, UPDATE_MS);
     }).catch(() => { /* the app works without it */ });
   };
   const idle = () => {

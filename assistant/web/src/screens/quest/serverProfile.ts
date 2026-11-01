@@ -27,6 +27,8 @@ export function serverProfileStore(key: string, doc: GameDoc | null): ProfileSto
     load: () => ({ ...own, xp: own.xp + base, weeks: [...new Set([...own.weeks, ...doc.weeks])].sort() }),
     save: p => {
       own = { ...p, xp: Math.max(0, p.xp - base) };
+      // The kept doc (QuestMode's return-visit copy) follows the save.
+      doc.profile = own;
       local.save(own);
       send(own);
     },

@@ -40,3 +40,6 @@ real account. The step-by-step version is
 - Live decode is slow: the network path adds seconds. Keep one receipt
   already decoded; cut to it and keep talking.
 - The demo household needs no network path to the model: it always opens.
+- A deploy ends every open demo (demo sessions live in server memory).
+  The open app goes back to the start page and says "Arya was updated.
+  Start the demo again." Do not deploy while judges use the demo.

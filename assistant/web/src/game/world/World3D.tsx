@@ -42,6 +42,9 @@ type Props = {
   /* The phone cannot draw the store (no WebGL, or the renderer failed):
    * the screen around the world carries on without it. */
   onFail?: () => void;
+  /* A sheet or the mission card covers the store: the other shoppers
+   * stand still, so no frames are drawn under it (re-audit N3). */
+  still?: boolean;
 };
 
 const hex = (n: number) => "#" + n.toString(16).padStart(6, "0");
@@ -196,7 +199,7 @@ export function World3D(p: Props) {
 
 
 
-function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }: Props) {
+function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem, still }: Props) {
   const L = trip.layout;
   const bp = L.kind === "simulated";
   const P = useMemo(() => palette(bp, L.look), [bp, L.look]);
@@ -211,7 +214,8 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     me: { p: { ...ENTRY_AT }, heading: Math.PI, path: [] as V2[], walk: 0, moving: false, speed: 8, pause: 0, zoom: true } as Walker,
     goal: null as Goal | null,
     // Other shoppers stroll only in practice: in a real store they would be one more thing to watch.
-    npcs: !trip.practice ? [] : [
+    // A low-end phone skips them too: they kept it drawing every frame (re-audit N3).
+    npcs: !trip.practice || LOW_END ? [] : [
       { p: nearestOpen(G, { x: FL.w * 0.37, z: FL.d * 0.41 }), heading: 0, path: [], walk: 0, moving: false, speed: 1.1, pause: 1 },
       { p: nearestOpen(G, { x: FL.w * 0.8, z: 2.6 }), heading: 0, path: [], walk: 2, moving: false, speed: 0.9, pause: 3 },
       { p: nearestOpen(G, { x: FL.w * 0.67, z: FL.d * 0.76 }), heading: 0, path: [], walk: 1, moving: false, speed: 1.0, pause: 0 },
@@ -224,11 +228,15 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     // Keep drawing until this clock time (fades, pulses after a change).
     awake: 1.5,
     npcWake: 0,                   // a timer that wakes the world when a resting shopper sets off
+    npcTick: 0,                   // the next frame while only the other shoppers move (30 fps)
   });
-  useEffect(() => () => clearTimeout(sim.current.npcWake), []);
+  useEffect(() => () => { clearTimeout(sim.current.npcWake); clearTimeout(sim.current.npcTick); }, []);
+  const stillRef = useRef(!!still); stillRef.current = !!still;
   const wake = (sec = 1.2) => { const s = sim.current; s.awake = Math.max(s.awake, s.clock + sec); invalidate(); };
   // A new trip state (a grab, a pass, fog lifting) or focus animates for a moment.
   useEffect(() => { wake(); }, [trip, focus]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The cover lifts: the other shoppers walk on.
+  useEffect(() => { if (!still) wake(0.1); }, [still]); // eslint-disable-line react-hooks/exhaustive-deps
   const cb = useRef({ onArrive, onWalking, onTapItem }); cb.current = { onArrive, onWalking, onTapItem };
   const spotsRef = useRef(S); spotsRef.current = S;
 
@@ -283,7 +291,8 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
       cb.current.onWalking(null);
       if (g && g.kind !== "point") cb.current.onArrive(g);
     });
-    if (!rm) for (const n of s.npcs) {
+    const npcsOn = !rm && !stillRef.current;
+    if (npcsOn) for (const n of s.npcs) {
       if (!n.path.length) {
         n.pause -= dt;
         if (n.pause <= 0) {
@@ -309,9 +318,13 @@ function Store({ trip, avatar, focus, onReady, onArrive, onWalking, onTapItem }:
     // Ask for the next frame only while something still moves.
     const moving = s.me.path.length > 0 || s.me.moving || s.flights.length > 0
       || s.clock < s.awake || s.camT.distanceTo(tgt) > 0.01 || camera.position.distanceTo(camWant) > 0.01;
-    const npcBusy = !rm && s.npcs.some(n => n.path.length > 0 || n.moving);
-    if (moving || npcBusy) invalidate();
-    else if (!rm && s.npcs.length && !s.npcWake) {
+    const npcBusy = npcsOn && s.npcs.some(n => n.path.length > 0 || n.moving);
+    if (moving) invalidate();
+    else if (npcBusy) {
+      // Only the strollers move: 30 frames a second is enough for them (re-audit N3).
+      if (!s.npcTick) s.npcTick = window.setTimeout(() => { s.npcTick = 0; invalidate(); }, 33);
+    }
+    else if (npcsOn && s.npcs.length && !s.npcWake) {
       // Everyone is resting: no frames until the first stroller sets off.
       const wait = Math.max(0.05, Math.min(...s.npcs.map(n => n.pause))), t0 = performance.now();
       s.npcWake = window.setTimeout(() => {
