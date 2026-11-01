@@ -287,7 +287,7 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
-Update 2026-11-01 (owner decision): Spark runs on the Contributor tier. Meta's docs: "In Contributor mode, your content may be used to train future Meta models, in exchange for a lower price." and "In Standard mode, your content is not used to train Meta models." So lists, list photos, date photos, fridge and shelf photos, Ask Arya questions and the Spark fallback for receipts may be used to train Meta models. Receipt photos stay on Wonder (Standard) through Nov 4. ARYA_SPARK_TIER=standard reverts.
+Update 2026-11-01 (owner decision): Spark runs on the Contributor tier. Meta's docs: "In Contributor mode, your content may be used to train future Meta models, in exchange for a lower price." and "In Standard mode, your content is not used to train Meta models." So lists, list photos, date photos, fridge and shelf photos, Ask Arya questions and the Spark fallback for receipts may be used to train Meta models. Receipt photos stay on Wonder (Standard) while the receipt reader is wonder; spark and auto read them with Spark first. ARYA_SPARK_TIER=standard reverts.
 The Meta models page lists no personal-data restriction for Contributor variants; the earlier line "Meta terms bar personal data on Contributor mode" is not in that page and was removed.
 The app and its privacy page say plainly that Spark content may be used to train Meta models.
 The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.

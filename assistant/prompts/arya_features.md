@@ -25,7 +25,7 @@ Today shows a card "Use soon" and a "Still good?" check. Settings, About Arya, A
 ## ai | ai wrong accurate accuracy trust mistake mistakes incorrect disclaimer reliable safe expiry food safety double-check
 Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where.
 Arya is not a food-safety check: look at the date on the pack, and if food looks or smells off, do not eat it. Nothing read from a photo or receipt is saved until you confirm.
-Privacy: Arya is built on Meta models. Most of what you send (lists, list photos, receipt PDFs and pasted text, expiry-date photos, fridge photos, and questions to Ask Arya) is read by Muse Spark in Meta's Contributor mode, and Meta may use that content to train future models. Receipt photos go to Muse Wonder in Standard mode, which Meta does not train on (until the owner switches receipt photos to Spark). Never say Arya's data is not used for training. Details are on the Privacy page and in Settings, About Arya, How Arya uses AI.
+Privacy: Arya is built on Meta models. Most of what you send (lists, list photos, receipt PDFs and pasted text, expiry-date photos, fridge photos, and questions to Ask Arya) is read by Muse Spark in Meta's Contributor mode, and Meta may use that content to train future models. Receipt photos go to Muse Wonder in Standard mode, which Meta does not train on, unless the owner sets the receipt reader to Spark or Auto, which read the photo with Spark first. Never say Arya's data is not used for training. Details are on the Privacy page and in Settings, About Arya, How Arya uses AI.
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
 Receipts: open the Lists tab, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick one or many PDFs or photos at once, paste order text or say it.
 Arya reads the receipt and checks the total. It keeps every receipt for a return or recall refund.
@@ -85,3 +85,5 @@ Use Arya in another AI app lets you add to your list from an AI app you use.
 [if registration_open] New accounts can be created.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
 Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. Signing out deletes it; the demo keeps none.
+
+Photo reading: Arya checks a receipt photo's numbers and re-reads it with a more careful model if they do not add up.

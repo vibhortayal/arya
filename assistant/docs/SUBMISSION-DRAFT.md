@@ -102,6 +102,15 @@ Arya uses Meta models to read receipts, photos and voice, and to answer question
   hand adjudication, with 0 price errors and 7/7 arithmetic. Wonder
   reads receipt photos in the app until Nov 4 (MODEL-POLICY amendment);
   Spark is the automatic fallback on any failure.
+- Design choice, tested before it was built: Wonder read the Gate 0
+  photos best (97 of 98 lines, no price errors, about $0.12 and 34 s a
+  receipt) and Spark read them cheaper and faster (about $0.013 and 9 s)
+  with 4 price errors that its own confidence did not flag. We kept
+  Wonder first because a wrong price is worse than a slow answer. We then
+  built an "auto" reader that reads with Spark, checks the arithmetic, and
+  calls Wonder only when a check fails. It is available as an owner
+  switch; it is not the default and we have not yet measured it on the
+  photos, so no accuracy claim is made for it.
 - Staple judge: precision 0.79 against a purchase-cadence proxy on
   the owner's 114 receipts. The eval method and the disagreement
   lists are in the research repo.

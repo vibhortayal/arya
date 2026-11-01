@@ -56,6 +56,27 @@ Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
 cannot carry Wonder's latency). This amendment expires Nov 4; the
 production policy above is unchanged.
 
+**Auto reader (built 2026-11-01, NOT the default, NOT yet measured on
+photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
+reads with Spark first and runs the checks in `api/decode/checks.py`
+(lines add up to the subtotal, subtotal plus tax equals the total, the
+footer item count, impossible prices, too many unsure lines, a price far
+from the same item number's earlier price on the account). Only a
+receipt that fails them is re-read by Wonder; a Spark failure goes
+straight to Wonder; if Wonder is down the Spark read is kept with every
+line sent to review. The receipt records `decoded_by` and `second_read`
+(the reasons), so it is never silent. Why it exists: Wonder won the eval
+on accuracy, but Spark is about nine times cheaper per receipt and about
+four times faster, and cheap arithmetic can catch most of its mistakes.
+Known gap, from the Gate 0 notes: a price rotation (two prices swapped
+between lines) keeps the sum, so arithmetic alone misses it; the price
+history check covers it only for item numbers seen before. Before the
+default changes, run `python3 -m harness.photo_reader_eval --photos DIR`
+on the Gate 0 photos and require that every price where Spark and Wonder
+differ is on a flagged receipt. After Nov 4 the amendment above ends;
+auto is the way to keep Wonder's accuracy only where the checks say it
+is needed, if the owner extends it, and Spark-only otherwise.
+
 **Demo budget.** Each demo visit may spend `ARYA_DEMO_SESSION_BUDGET_USD`
 (default $0.40) on live reads, held in that visitor's in-memory sandbox;
 all demo visits together stay under `ARYA_DEMO_DAILY_BUDGET_USD`
@@ -93,7 +114,8 @@ Contributor mode" was not found there and is withdrawn until someone can cite it
   and list photos, receipt PDF and pasted-text decode, order-text decode,
   Costco name expansion, expiry-date photos, fridge (Eyes) photos, shelf-scan crops, Quest list matching and
   Curator suggestions, and the Spark fallback for receipt photos and PDFs.
-- What does not: receipt photos while ARYA_PHOTO_READER is wonder (default
-  through Nov 4; the Wonder call is Standard). After the Nov 4 switch to
-  spark, receipt photos are on Contributor too. SAM, Muse Voice and the
+- What does not: receipt photos while the photo reader is wonder (default
+  through Nov 4; the Wonder call is Standard). With the reader on spark or
+  auto, Spark (Contributor) reads the receipt photo first, so it can train;
+  auto then sends the photo to Wonder again only if the checks fail. SAM, Muse Voice and the
   open-weights client are unchanged.

@@ -40,7 +40,7 @@ async def ops_controls(req: Request):
             changes[key] = body[key]
     if "photo_reader" in body:
         if body["photo_reader"] not in (None, *site_flags.PHOTO_READERS):
-            raise HTTPException(400, "photo_reader must be spark, wonder or null")
+            raise HTTPException(400, "photo_reader must be spark, wonder, auto or null")
         changes["photo_reader"] = body["photo_reader"]
     if not changes:
         raise HTTPException(400, "nothing to change")
