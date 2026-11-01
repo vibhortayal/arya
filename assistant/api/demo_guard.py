@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from fastapi.responses import JSONResponse
 
-from api import state, auth
+from api import state, auth, site_flags
 from api.cost_ledger import kind_for_path, usage_kind
 from api.deps import _client_ip, _prune
 
@@ -159,6 +159,10 @@ async def require_login(request, call_next):
                     {"detail": "too many calls this hour; try again later"},
                     status_code=429,
                     headers={"Retry-After": str(_retry_after(_token_hits, info["user"]))})
+        if not info["demo"] and site_flags.disabled(info["user"]):
+            return JSONResponse(
+                {"detail": "This account is switched off. Write to support@teamnightshift.org."},
+                status_code=403)
         if info["demo"]:
             if request.method != "GET":
                 if path.startswith(_DEMO_CLOSED):

@@ -84,3 +84,59 @@ class TestOpsSettings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOpsAccounts(unittest.TestCase):
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import state, site_flags
+        state.set_current_user(None)
+        site_flags._cache["at"] = 0.0
+        from api.main import app
+        self.c = TestClient(app)
+        self.c.post("/auth/setup", json={"username": "owner-a", "password": "correct horse"})
+        from api import auth
+        auth.create_user("kim@test.arya", "pw-123456")
+        os.environ["ARYA_OWNER_USERNAME"] = "owner-a"
+        self.c.post("/auth/login", json={"username": "owner-a", "password": "correct horse"})
+
+    def tearDown(self):
+        from api import state
+        state.set_current_user(None)
+        os.environ.pop("ARYA_OWNER_USERNAME", None)
+
+    def login(self, u, p):
+        self.c.post("/auth/logout")
+        return self.c.post("/auth/login", json={"username": u, "password": p})
+
+    def test_switch_an_account_off_and_on(self):
+        names = [a["user"] for a in self.c.get("/api/ops/accounts").json()["accounts"]]
+        self.assertIn("kim@test.arya", names)
+        self.assertEqual(self.c.post("/api/ops/accounts", json={"user": "owner-a", "disabled": True}).status_code, 400)
+        self.assertEqual(self.c.post("/api/ops/accounts", json={"user": "kim@test.arya", "disabled": True}).status_code, 200)
+        self.login("kim@test.arya", "pw-123456")
+        self.assertEqual(self.c.get("/api/usage").status_code, 403)
+        self.login("owner-a", "correct horse")
+        self.c.post("/api/ops/accounts", json={"user": "kim@test.arya", "disabled": False})
+        self.login("kim@test.arya", "pw-123456")
+        self.assertNotEqual(self.c.get("/api/usage").status_code, 403)
+
+    def test_owner_change_needs_password_and_can_be_undone(self):
+        post = lambda b: self.c.post("/api/ops/owner", json=b)
+        self.assertEqual(post({"username": "ghost@x", "password": "correct horse"}).status_code, 400)
+        self.assertEqual(post({"username": "kim@test.arya", "password": "wrong"}).status_code, 403)
+        self.assertEqual(post({"username": "kim@test.arya", "password": "correct horse"}).status_code, 200)
+        self.login("kim@test.arya", "pw-123456")
+        self.assertEqual(self.c.get("/api/ops").status_code, 200)
+        self.login("owner-a", "correct horse")
+        self.assertEqual(self.c.get("/api/ops").status_code, 200)
+
+    def test_old_owner_loses_rights_after_a_day(self):
+        from api import site_flags
+        self.c.post("/api/ops/owner", json={"username": "kim@test.arya", "password": "correct horse"})
+        site_flags.set_nested("owner", "at", 1)
+        os.environ["ARYA_OWNER_USERNAME"] = "someone-else"
+        self.login("owner-a", "correct horse")
+        self.assertEqual(self.c.get("/api/ops").status_code, 403)
+        self.login("kim@test.arya", "pw-123456")
+        self.assertEqual(self.c.get("/api/ops").status_code, 200)
