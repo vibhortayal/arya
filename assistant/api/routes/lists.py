@@ -190,6 +190,11 @@ async def list_sample_receipt(req: Request):
 @router.post("/api/list/add")
 async def list_add(req: Request):
     body = await _json_obj(req)
+    # File writes (and any model call) off the event loop (re-audit #9).
+    return await run_in_threadpool(_list_add, body)
+
+
+def _list_add(body):
     item_id = body.get("item_id")
     if not item_id and not body.get("name"):
         raise HTTPException(400, "item_id or name is required")
@@ -259,6 +264,11 @@ async def list_from_text(req: Request):
     (chat text with chatter in it) does one Spark Standard
     extraction call run."""
     body = await _json_obj(req)
+    # File writes (and any model call) off the event loop (re-audit #9).
+    return await run_in_threadpool(_list_from_text, body)
+
+
+def _list_from_text(body):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
@@ -296,6 +306,11 @@ async def list_import_preview(req: Request):
     """Read a paste (lines, CSV, JSON or anything) into a preview. Adds
     nothing. Items already on another list are marked with that list."""
     body = await _json_obj(req)
+    # File writes (and any model call) off the event loop (re-audit #9).
+    return await run_in_threadpool(_list_import_preview, body)
+
+
+def _list_import_preview(body):
     text = body.get("text") or ""
     if not str(text).strip():
         raise HTTPException(400, "text is required")
@@ -325,6 +340,11 @@ async def list_import_preview(req: Request):
 async def list_import(req: Request):
     """Add the previewed items to one list: the same add path as typing."""
     body = await _json_obj(req)
+    # File writes (and any model call) off the event loop (re-audit #9).
+    return await run_in_threadpool(_list_import, body)
+
+
+def _list_import(body):
     list_id = body.get("list_id") or None
     if list_id and not any(l["id"] == list_id for l in state.named_lists()):
         raise HTTPException(404, "no such list")
@@ -669,6 +689,11 @@ def _create_list(fields):
 @router.post("/api/lists")
 async def lists_create(req: Request):
     body = await _json_obj(req)
+    # File writes (and any model call) off the event loop (re-audit #9).
+    return await run_in_threadpool(_lists_create, body)
+
+
+def _lists_create(body):
     return _create_list(_clean_list_fields(body))
 
 

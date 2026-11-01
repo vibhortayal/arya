@@ -61,6 +61,16 @@ class TestSpeedAudit(unittest.TestCase):
             state._memo.set(None)
             state.set_current_user(None)
 
+    def test_memo_copies_are_deep_and_fall_back(self):
+        # re-audit N6: pickle copies, deepcopy when pickle cannot.
+        from api import state
+        v = {"a": [{"b": 1}]}
+        c = state._clone(v)
+        c["a"][0]["b"] = 2
+        self.assertEqual(v["a"][0]["b"], 1)
+        odd = {"f": lambda: 1}
+        self.assertIs(state._clone(odd)["f"], odd["f"])
+
     def test_tick_round_trips_off_the_event_loop(self):
         self.c.post("/api/list/add", json={"name": "Milk"})
         iid = next(i["item_id"] for i in self.c.get("/api/home").json()["list"]["items"] if i["name"] == "Milk")
