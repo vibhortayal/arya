@@ -20,6 +20,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 
+from api import own_key
 from api import state
 
 log = logging.getLogger("arya.receiptjobs")
@@ -238,7 +239,7 @@ def file_one(body, media):
     from api import stores
     from api.decode.service import decode_photo, decode_scanned_pdf, decode_text, extract_pdf_text
     from api.deps import _budget_guard, new_client
-    if not os.environ.get("MODEL_API_KEY"):
+    if not own_key.model_ready():
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     client = new_client()
@@ -255,6 +256,10 @@ def file_one(body, media):
             receipt = decode_photo(body, client, media_type=media)
     except ValueError as e:
         raise HTTPException(422, str(e))
+    except own_key.OwnKeyFailed as e:
+        # 503 is systemic: the whole job pauses with this reason, rather
+        # than every file failing one by one (BYOK review 19).
+        raise HTTPException(503, str(e))
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt job model error (%s)", str(e)[:120])
         raise HTTPException(502, str(e)[:200])

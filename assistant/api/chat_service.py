@@ -17,7 +17,9 @@ FEATURES_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "arya_f
 def _feature_flags():
     from api import reminders, supabase_auth
     from api.deps import _registration_open
-    return {"push_reminders": reminders.flag_on(),
+    from api import own_key
+    return {"own_key": own_key.enabled(), "not_own_key": not own_key.enabled(),
+            "push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
             "registration_open": _registration_open()}
 

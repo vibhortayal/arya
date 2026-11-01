@@ -5,6 +5,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import state
 from api.deps import _budget_guard, _json_obj, new_client
 
@@ -23,7 +24,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not os.environ.get("MODEL_API_KEY"):
+    if not own_key.model_ready():
         raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
     _budget_guard()
     from api.eyes.service import detect, match_item

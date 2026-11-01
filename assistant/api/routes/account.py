@@ -418,3 +418,46 @@ async def unfreeze_route(req: Request):
     user = str(body.get("user") or "").strip().lower()
     deps.unfreeze(user)
     return {"ok": True, "user": user}
+
+
+# ---- Use my own Meta key (api/own_key.py; BYOK review 2026-11-01).
+# The key is never echoed: replies carry only its last 4 characters.
+
+@router.get("/api/account/own-key")
+def own_key_get():
+    from api import own_key
+    if not own_key.available():
+        return {"available": False, "set": False, "ends": None, "status": None}
+    return {"available": True, **own_key.status()}
+
+
+@router.put("/api/account/own-key")
+async def own_key_put(req: Request):
+    from api import own_key
+    if not own_key.available():
+        raise HTTPException(503, "Using your own Meta key isn't available.")
+    body = await _json_obj(req)
+    key = own_key.clean(body.get("key"))
+    if key is None:
+        raise HTTPException(400, "That isn't a Meta Model API key. It starts with LLM_.")
+    user = state._owner()
+    if not own_key.allow_try(user, deps._client_ip(req)):
+        raise HTTPException(429, "Too many tries. Wait an hour and try again.")
+    try:
+        ok = await run_in_threadpool(own_key.check, key)
+    except RuntimeError:
+        raise HTTPException(503, "Meta couldn't check the key right now. Try again in a minute.")
+    if not ok:
+        raise HTTPException(422, "Meta didn't accept this key. Check it at dev.meta.ai and try again.")
+    own_key.save(user, key)
+    return {"saved": True, "ends": own_key.ends(key)}
+
+
+@router.delete("/api/account/own-key")
+def own_key_delete():
+    from api import own_key
+    user = state._owner()
+    if not user or state.in_sandbox():
+        raise HTTPException(403, "this needs a real account")
+    own_key.remove(user)
+    return {"removed": True}

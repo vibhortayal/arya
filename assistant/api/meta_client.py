@@ -187,10 +187,29 @@ def estimate_cost(mode, input_tokens, cached_tokens=0, output_tokens=0):
 
 
 class MetaClient:
-    def __init__(self, api_key=None, transport=None, ledger=None):
+    def __init__(self, api_key=None, transport=None, ledger=None, own_user=None):
         self.api_key = api_key if api_key is not None else os.environ.get("MODEL_API_KEY", "")
         self.transport = transport  # injectable for tests: fn(method, url, headers, body) -> (status, payload)
         self.ledger = ledger        # optional cost_ledger.CostLedger
+        # The account whose own Meta key this is (api/own_key.py), or
+        # None for the app's key. An own-key client scrubs the key out of
+        # every answer and turns a key failure into OwnKeyFailed.
+        self.own_user = own_user
+
+    def _own_check(self, status, payload, model=""):
+        """For an own-key client: no copy of the key survives in the
+        payload (it ends up in error text, logs and 502 details), and a
+        refused or empty key marks the account's key and fails this read.
+        Nothing is retried on the app's key (BYOK review 7, 17, 18)."""
+        if not self.own_user:
+            return status, payload
+        from api import own_key
+        if self.api_key and self.api_key in json.dumps(payload, default=str):
+            payload = json.loads(own_key.scrub(json.dumps(payload, default=str), self.api_key))
+        if own_key.key_failure(status, payload, model):
+            own_key.mark_needs_attention(self.own_user)
+            raise own_key.OwnKeyFailed()
+        return status, payload
 
     @staticmethod
     def _ms():
@@ -263,6 +282,10 @@ class MetaClient:
         time.sleep(delay)
 
     def _send_once(self, path, body, timeout=None):
+        status, payload = self._post_json(path, body, timeout)
+        return self._own_check(status, payload, (body or {}).get("model", ""))
+
+    def _post_json(self, path, body, timeout=None):
         url = BASE + path
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {self.api_key}"}
@@ -436,6 +459,10 @@ class MetaClient:
         return out, payload.get("usage") or {}, cost
 
     def _send_multipart(self, path, fields, file_part, json_fields=None):
+        status, payload = self._post_multipart(path, fields, file_part, json_fields)
+        return self._own_check(status, payload, (fields or {}).get("model", ""))
+
+    def _post_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,
         content_type, bytes). json_fields are emitted as parts with
         Content-Type: application/json (the ASR endpoint's 'request'

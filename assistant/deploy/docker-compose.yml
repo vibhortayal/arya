@@ -47,6 +47,11 @@ services:
       # default, so an unset value behaves exactly as before.
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-auto}
       ARYA_SPARK_TIER: ${ARYA_SPARK_TIER:-standard}
+      # Use my own Meta key (api/own_key.py): off unless ARYA_BYOK=1 and a
+      # vault secret is set. Losing the secret means every saved key must
+      # be entered again.
+      ARYA_BYOK: ${ARYA_BYOK:-0}
+      ARYA_KEY_VAULT_SECRET: ${ARYA_KEY_VAULT_SECRET:-}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
       ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}
       ARYA_WAITLIST_ADMINS: ${ARYA_WAITLIST_ADMINS:-}

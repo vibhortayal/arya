@@ -94,6 +94,11 @@ Use Arya in another AI app lets you add to your list from an AI app you use.
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
+## own key | own key byok api meta llm limit cap paused budget daily pay credit dev.meta.ai
+[if own_key] Use your own Meta key: when Arya's daily limit is reached, the message offers Use your own Meta key, which opens Settings. Only a Meta Model API key works (it starts with LLM_); keys from other AI providers do not. Make a key just for Arya at dev.meta.ai, API keys, Create API key, and name it Arya. Meta keys have no per-key spending cap, so set a usage limit on your Meta billing page and check dev.meta.ai/usage.
+[if own_key] With a key saved, your receipts, scans, questions, voice and pictures run on your Meta account, not Arya's, and Arya's daily limits do not apply. In a group it also pays for Arya's judgments on items your uploads add. Store lookup, aisle data and email still run on Arya's own accounts. The key is kept encrypted on Arya's server, sent only to Meta, never shown again (only its last 4 characters) and never logged. Remove deletes it, and so does deleting your account.
+[if own_key] If Meta rejects the key or it runs out of credit, Arya stops using it and says so in Settings; reads then count against Arya's normal daily limit again. If you suspect misuse, delete the key at dev.meta.ai first, then remove it in Arya. The key stays under Meta's terms, and you are responsible for its use.
+[if not_own_key] Arya has a daily limit on AI reads; when it is reached, reading pauses until tomorrow and everything else keeps working.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
 Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. Signing out deletes it; the demo keeps none.
 

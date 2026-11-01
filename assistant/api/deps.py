@@ -92,13 +92,24 @@ def _budget_guard(demo=False):
             raise HTTPException(503, "The demo's live reads are paused for today. "
                                 "Everything else still works.")
     else:
+        from api import own_key
+        if own_key.for_current_user():
+            # The person's own Meta key pays: the app's dollar caps do
+            # not apply. The pause switch above and the non-dollar caps
+            # (scan frames, per-IP limits) still do (BYOK review 13).
+            return
+        offer = {own_key.OFFER_HEADER: "own-key"} if own_key.available() else None
         cap = settings.get("daily_budget_usd")
         spent = CostLedger(_LEDGER).spent_today("app")
         user = state._owner()
         if user and not _is_owner(user):
             reason = reading_off(user)
             if reason:
-                raise HTTPException(429, reason)
+                raise HTTPException(429, reason, headers=offer)
+        if spent >= cap:
+            raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow",
+                                headers=offer)
+        return
     if spent >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
 
@@ -299,8 +310,16 @@ def _is_waitlist_admin(user):
 
 
 def new_client():
-    """A Meta client that books its spend on this request's ledger."""
+    """A Meta client that books its spend on this request's ledger. A
+    real account with its own Meta key gets a client on that key, booked
+    to the "own_key" bucket (api/own_key.py). The key is looked up for
+    the context user on every call; no client is kept."""
     _reads_gate()
+    from api import own_key
+    key = own_key.for_current_user()
+    if key:
+        return MetaClient(api_key=key, own_user=state._owner(),
+                          ledger=CostLedger(_LEDGER, bucket="own_key", user=state._owner()))
     return MetaClient(ledger=_ledger())
 
 
