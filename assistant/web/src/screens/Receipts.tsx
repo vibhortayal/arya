@@ -5,7 +5,7 @@ import { useToast } from "../ui/Toast";
 import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { Empty, Row } from "../ui/kit";
 import { get, post } from "../lib/api";
-import { fmtDate, fmtShort, fmtWeekday, lineSavings, money } from "../lib/format";
+import { fmtDate, fmtShort, fmtWeekday, lineSavings, money, qtyFmt } from "../lib/format";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 
@@ -18,6 +18,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 type Line = { receipt_id: string; idx: number; decoded_name?: string; raw: string; date?: string;
+  merchant?: string; sku?: string; qty?: number; line_total?: number | null; confidence?: number;
   suggested?: { name: string; source?: string }; alternatives?: string[] };
 type Unresolved = { item_id: string; name: string; candidates?: string[]; sources?: Record<string, string> };
 type Proposal = { id: string; kind: string; into_name?: string; names: string[]; reason: string };
@@ -174,7 +175,16 @@ export function Receipts() {
           return (
             <div key={key} style={{ display: "contents" }}>
               <div className="row"><div className="grow"><span className="name">{l.decoded_name || l.raw}</span>
-                <span className="sub">{t("receipts.unverifiedFrom", { date: fmtDate(l.date), raw: l.raw })}</span></div></div>
+                <span className="sub">{[l.merchant, l.date && fmtShort(l.date), l.line_total != null && money(l.line_total, currency)].filter(Boolean).join(" · ") || t("receipts.unverifiedFrom", { date: fmtDate(l.date), raw: l.raw })}</span></div></div>
+              {open["d:" + key] && (
+                <div className="detail" id={"detail-" + key}>
+                  {l.line_total != null && <Row name={t("receipts.paid")} right={`${money(l.line_total, currency)}${l.qty && l.qty !== 1 ? ` (${qtyFmt(l.qty)} × ${money(l.line_total / l.qty, currency)})` : ""}`} />}
+                  {l.merchant && <Row name={t("receipts.where")} right={l.merchant} />}
+                  {l.date && <Row name={t("receipts.when")} right={fmtDate(l.date)} />}
+                  <Row name={t("receipts.printedAs")} right={l.raw} />
+                  {l.sku && <Row name={t("receipts.itemNumber")} right={l.sku} />}
+                  {l.confidence != null && <Row name={t("receipts.confidence")} right={`${t(l.confidence >= 0.8 ? "receipts.confHigh" : l.confidence >= 0.65 ? "receipts.confMedium" : "receipts.confLow")} (${Math.round(l.confidence * 100)}%)`} />}
+                </div>)}
               <div className="actions">
                 <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, t("receipts.confirmed"))}>{t("common.looksRight")}</button>
                 {l.suggested && <>
@@ -187,6 +197,7 @@ export function Receipts() {
                     onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, t("receipts.setTo", { name: a }))}>{t("receipts.itIs", { a })}</button>
                 ))}
                 <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.fixTheName")}</button>
+                <button className="chip" data-more={key} aria-expanded={!!open["d:" + key]} onClick={() => toggle("d:" + key)}>{t(open["d:" + key] ? "receipts.fewerDetails" : "receipts.moreDetails")}</button>
               </div>
               {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, t("receipts.setTo", { name })), "data-save-line", key)}
             </div>
