@@ -367,3 +367,37 @@ class TestReceiptInputsAcceptPdf(unittest.TestCase):
         self.assertIn("const out = await decode(file);", frontend.src("screens/Receipts.tsx"))
         self.assertIn('pdf ? "/decode/pdf" : "/decode/photo"', frontend.src("ui/AddReceiptSheet.tsx"))
         self.assertIn('isPdf ? "/decode/pdf" : "/decode/photo"', frontend.src("screens/haul/state.ts"))
+
+
+class TestExpandCostcoNames(unittest.TestCase):
+    def _dec(self):
+        return {"lines": [
+            {"raw": "BL 3PC KING", "sku": "1", "line_type": "item", "decoded_name": "BL 3PC KING",
+             "confidence": 1.0, "status": "auto"},
+            {"raw": "BANANAS", "sku": "2", "line_type": "item", "decoded_name": "BANANAS",
+             "confidence": 1.0, "status": "auto"}]}
+
+    def test_low_confidence_goes_to_review(self):
+        from api.decode.service import expand_costco_names
+
+        class C:
+            def chat(self, messages, **kw):
+                assert kw.get("personal") is True
+                return json.dumps({"names": [{"n": 0, "name": "Sheet Set, King (3 pc)", "confidence": 0.6,
+                                              "alternatives": ["Bath Towel Set"]}]}), {}, 0.0
+        dec = self._dec()
+        self.assertEqual(expand_costco_names(dec, C()), 1)
+        self.assertEqual(dec["lines"][0]["status"], "unverified")
+        self.assertEqual(dec["lines"][0]["decoded_name"], "Sheet Set, King (3 pc)")
+        self.assertEqual(dec["lines"][1]["decoded_name"], "BANANAS")  # not abbreviated: untouched
+
+    def test_failure_and_taught_skus_leave_receipt_alone(self):
+        from api.decode.service import expand_costco_names
+
+        class Boom:
+            def chat(self, *a, **k):
+                raise RuntimeError("down")
+        dec = self._dec()
+        self.assertEqual(expand_costco_names(dec, Boom()), 0)
+        self.assertEqual(expand_costco_names(dec, Boom(), skip_skus={"1"}), 0)
+        self.assertEqual(dec["lines"][0]["decoded_name"], "BL 3PC KING")

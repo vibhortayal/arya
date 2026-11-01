@@ -7,8 +7,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
 from api import state, stores
-from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, extract_pdf_text,
-                                normalize_costco_json)
+from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, expand_costco_names,
+                                extract_pdf_text, normalize_costco_json)
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _json_body, _json_obj, new_client
 
@@ -20,12 +20,29 @@ async def _find_stores(*receipts):
     await run_in_threadpool(stores.resolve_merchants, [r.get("merchant") for r in receipts])
 
 
+async def _expand_names(decs):
+    """Read abbreviated names on JSON-export lines (best effort, skipped
+    without a key or over budget). Lines the household already named stay."""
+    if not os.environ.get("MODEL_API_KEY"):
+        return
+    try:
+        _budget_guard()
+    except HTTPException:
+        return
+    taught = {e["sku"] for e in state.dictionary()["entries"]
+              if e.get("sku") and (e.get("resolution") or {}).get("status") == "manual"}
+    client = new_client()
+    for dec in decs:
+        await run_in_threadpool(expand_costco_names, dec, client, taught)
+
+
 @router.post("/import/costco-json")
 async def import_costco_json(req: Request):
     obj = await _json_body(req)
     if not isinstance(obj, dict) or "itemArray" not in obj:
         raise HTTPException(422, "not a Costco warehouse receipt object")
     dec = normalize_costco_json(obj)
+    await _expand_names([dec])
     await _find_stores(dec)
     state.add_receipts([dec])
     await run_in_threadpool(state.judge_pending, new_client())
@@ -38,6 +55,7 @@ async def import_bulk(req: Request):
     if not isinstance(objs, list):
         raise HTTPException(422, "expected a list of Costco receipt objects")
     decs = [normalize_costco_json(o) for o in objs if isinstance(o, dict) and "itemArray" in o]
+    await _expand_names(decs)
     await _find_stores(*decs)
     added = state.add_receipts(decs)
     await run_in_threadpool(state.judge_pending, new_client())
