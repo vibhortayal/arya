@@ -1085,6 +1085,14 @@ class _as_receipt_owner:
         return False
 
 
+def receipt_line(receipt_id, idx):
+    with _as_receipt_owner(receipt_id):
+        for r in own_receipts():
+            if r["receipt_id"] == receipt_id and 0 <= idx < len(r["lines"]):
+                return dict(r["lines"][idx])
+    return None
+
+
 def update_receipt_line(receipt_id, idx, fields):
     with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
         rs = own_receipts()
@@ -1094,6 +1102,62 @@ def update_receipt_line(receipt_id, idx, fields):
                 _save("receipts.json", rs)
                 return r["lines"][idx]
     return None
+
+
+def _same_item_key(ln):
+    """Costco item numbers name one product; a line with none matches on
+    its printed text."""
+    sku = (ln.get("sku") or "").strip()
+    if sku:
+        return "sku:" + sku
+    raw = " ".join(str(ln.get("raw") or "").lower().split())
+    return "raw:" + raw if raw else None
+
+
+def apply_line_fix_to_same_item(receipt_id, idx, line, name=None, decoded_name=None):
+    """A fix to one receipt line applies to every other line of the same
+    item on the filer's receipts, so a bulk add is fixed once, not once
+    per receipt. name: a rename, sets every matching line. No name (a
+    confirm): only unverified lines still reading decoded_name are
+    marked right. Returns the OTHER lines changed, each with the values
+    it had, so the fix can be undone."""
+    key = _same_item_key(line or {})
+    if not key:
+        return []
+    changed = []
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            for i, ln in enumerate(r["lines"]):
+                if _same_item_key(ln) != key or ln.get("line_type") in ("discount",):
+                    continue
+                if r["receipt_id"] == receipt_id and i == idx:
+                    continue
+                before = {"receipt_id": r["receipt_id"], "idx": i,
+                          "decoded_name": ln.get("decoded_name"), "status": ln.get("status")}
+                if name:
+                    if ln.get("decoded_name") == name and ln.get("status") == "auto":
+                        continue
+                    ln["decoded_name"] = name
+                    ln["status"] = "auto"
+                elif ln.get("status") == "unverified" and ln.get("decoded_name") == decoded_name:
+                    ln["status"] = "auto"
+                else:
+                    continue
+                changed.append(before)
+        if changed:
+            _save("receipts.json", rs)
+    return changed
+
+
+def undo_line_fixes(changes):
+    """Put lines back as apply_line_fix_to_same_item reported them."""
+    n = 0
+    for c in changes[:500]:
+        if update_receipt_line(c["receipt_id"], c["idx"],
+                               {"decoded_name": c.get("decoded_name"), "status": c.get("status") or "unverified"}):
+            n += 1
+    return n
 
 
 def link_receipt_store(receipt_id, store_id):
