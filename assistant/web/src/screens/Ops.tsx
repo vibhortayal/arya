@@ -176,7 +176,7 @@ export function Ops() {
 
           <Section title={t("opsSettings.settings")} />
           <Group>
-            {(["models", "limits", "caps"] as const).map(pg => (
+            {(["models", "limits", "caps", "accounts", "data"] as const).map(pg => (
               <button key={pg} className="navrow" id={"ops-set-" + pg} type="button" onClick={() => nav.show("ops-settings", { page: pg })}>
                 <span className="grow">{t("opsSettings.title_" + pg)}<span className="sub">{t("opsSettings.sub_" + pg)}</span></span><span className="chev">›</span></button>
             ))}

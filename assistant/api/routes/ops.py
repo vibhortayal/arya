@@ -2,6 +2,7 @@
 switches that stop spend fast. Owner only (ARYA_OWNER_USERNAME). The
 registration switch and Unfreeze keep their own routes."""
 import json
+import os
 import time
 
 from fastapi import APIRouter, HTTPException, Request
@@ -105,3 +106,125 @@ def _log(user, what):
     line = json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "user": user, "set": what})
     with open(os.path.join(state.base_dir(), "ops-changes.jsonl"), "a") as fh:
         fh.write(line + "\n")
+
+
+def _accounts():
+    """Every real account: spend today, frozen, switched off, owner."""
+    tok = state._current_user.set(None)   # accounts live in the data root
+    try:
+        names = sorted(_users())
+    finally:
+        state._current_user.reset(tok)
+    from api import deps
+    from api.cost_ledger import CostLedger
+    today = dict(CostLedger(deps._LEDGER).health(24)["top_users"])
+    frozen = deps._freezes()
+    return [{"user": n, "usd_24h": round(today.get(n, 0), 2), "owner": deps._is_owner(n),
+             "frozen": deps.frozen_until(n) > 0 and n in frozen, "disabled": site_flags.disabled(n)}
+            for n in names if n != "demo"]
+
+
+@router.get("/api/ops/accounts")
+def ops_accounts():
+    _owner_only()
+    o = site_flags.raw().get("owner") or {}
+    return {"accounts": _accounts(), "owner": {"username": o.get("username"), "previous": o.get("previous"),
+            "at": o.get("at"), "undo_s": site_flags.OWNER_UNDO_S}}
+
+
+@router.post("/api/ops/accounts")
+async def ops_account_set(req: Request):
+    """Switch an account off or back on. Its sign-in and every call then
+    answer 403 until switched on again. The owner cannot be switched off."""
+    me = _owner_only()
+    body = await _json_obj(req)
+    acct = str(body.get("user") or "").strip().lower()
+    if not isinstance(body.get("disabled"), bool):
+        raise HTTPException(400, "disabled must be true or false")
+    if acct not in {a["user"].lower() for a in _accounts()}:
+        raise HTTPException(400, f"{acct or 'that'} is not an account")
+    from api import deps
+    if deps._is_owner(acct):
+        raise HTTPException(400, "the owner account cannot be switched off")
+    site_flags.set_nested("disabled", acct, True if body["disabled"] else None)
+    _log(me, {"disabled": {acct: body["disabled"]}})
+    return {"ok": True}
+
+
+@router.post("/api/ops/owner")
+async def ops_owner_set(req: Request):
+    """Name a new owner account. Guards against a lock-out: the account
+    must exist and have signed in before (it has a password), the
+    current owner must confirm with their password, and the old owner
+    keeps owner rights for 24 hours so a wrong pick can be undone from
+    it. If locked out anyway: docs/OPS.md, "Recover the owner"."""
+    me = _owner_only()
+    body = await _json_obj(req)
+    target = str(body.get("username") or "").strip().lower()
+    from api import auth, deps
+    known = {a["user"].lower() for a in _accounts()}
+    if target not in known:
+        raise HTTPException(400, f"{target or 'that'} is not an account")
+    tok = state._current_user.set(None)   # accounts live in the data root
+    try:
+        has_pw = bool((auth.users().get(auth.resolve_login_name(me)) or {}).get("hash"))
+        pw_ok = auth.verify(me, str(body.get("password") or ""))
+    finally:
+        state._current_user.reset(tok)
+    if has_pw and not pw_ok:
+        raise HTTPException(403, "that password is not right")
+    if not has_pw and str(body.get("confirm") or "").strip().lower() != target:
+        # A Google-only owner has no password: type the new owner's name instead.
+        raise HTTPException(403, "type the new owner's account name to confirm")
+    if deps._is_owner(target) and target == me.lower():
+        raise HTTPException(400, "that account is already the owner")
+    site_flags.set_nested("owner", "username", target)
+    site_flags.set_nested("owner", "previous", me.lower())
+    site_flags.set_nested("owner", "at", int(time.time()))
+    _log(me, {"owner": {"from": me.lower(), "to": target}})
+    return {"ok": True, "owner": target}
+
+
+@router.post("/api/ops/delete")
+async def ops_delete(req: Request):
+    """Erase one account's receipts or learned names. The owner must
+    type the account name (confirm); a copy is saved first."""
+    me = _owner_only()
+    body = await _json_obj(req)
+    from api import ops_data
+    acct = str(body.get("user") or "").strip().lower()
+    what = body.get("what")
+    if what not in ops_data.WHAT:
+        raise HTTPException(400, "what must be receipts or names")
+    if acct not in {a["user"].lower() for a in _accounts()}:
+        raise HTTPException(400, f"{acct or 'that'} is not an account")
+    if str(body.get("confirm") or "").strip().lower() != acct:
+        raise HTTPException(400, "type the account name to confirm")
+    try:
+        out = ops_data.delete_data(acct, what)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    _log(me, {"deleted": {"user": acct, "what": what, "removed": out["removed"]}})
+    return {"ok": True, **out}
+
+
+@router.get("/api/ops/mirror")
+def ops_mirror():
+    _owner_only()
+    from api import ops_data, pgstore
+    return {"store": pgstore.mode(), "configured": bool(os.environ.get("DATABASE_URL")), **ops_data.job()}
+
+
+@router.post("/api/ops/mirror")
+async def ops_mirror_run(req: Request):
+    me = _owner_only()
+    body = await _json_obj(req)
+    from api import ops_data
+    try:
+        started = ops_data.start(str(body.get("kind") or ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not started:
+        raise HTTPException(409, "a job is already running")
+    _log(me, {"mirror": body.get("kind")})
+    return {"ok": True}

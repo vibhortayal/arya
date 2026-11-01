@@ -279,8 +279,12 @@ def _is_owner(user):
     """The site owner is whoever the operator names in
     ARYA_OWNER_USERNAME. Unset means nobody is owner, so the
     registration toggle stays unreachable (fail closed)."""
+    from api import site_flags
+    me = (user or "").strip().lower()
+    if me and me in site_flags.owners():   # named in Ops (owner change)
+        return True
     owner = (os.environ.get("ARYA_OWNER_USERNAME") or "").strip().lower()
-    return bool(owner) and (user or "").strip().lower() == owner
+    return bool(owner) and me == owner
 
 
 def _is_waitlist_admin(user):
