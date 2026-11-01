@@ -32,7 +32,7 @@ class TestEyes(unittest.TestCase):
             def __init__(self, ledger=None):
                 self.calls = 0
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 payload = reads[min(self.calls, 1)]
                 self.calls += 1
                 return json.dumps(payload), {}, 0.02
@@ -76,7 +76,7 @@ class TestEyesOwner(unittest.TestCase):
             def __init__(self, ledger=None):
                 self.calls = 0
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 payload = reads[min(self.calls, 1)]
                 self.calls += 1
                 return json.dumps(payload), {}, 0.02
@@ -130,7 +130,7 @@ class TestChat(unittest.TestCase):
             def __init__(self, ledger=None):
                 pass
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 snap = messages[1]["content"]
                 assert "Whole Milk 1 gal" in snap  # snapshot carries the model
                 return json.dumps({"reply": "Yogurt is on the list. Milk is due too.",

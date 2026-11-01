@@ -323,15 +323,21 @@ def insights(d, flags, names, today=None):
             "waste": food_waste(flags, d, names, today)}
 
 
-def ask_facts(d, names, cap=40):
+def ask_facts(d, names, cap=40, first=()):
     """Price facts for Ask Arya: per item, the latest price at each
     store, the cheaper store and the trend, already worked out, so the
-    model reads numbers and never computes them."""
+    model reads numbers and never computes them. Items in `first` (the
+    ones on a list) come before the most recently bought, so "where is
+    my list cheapest?" has the list's own prices."""
     out = {}
     seen = []
+    bought = set()
     for e in reversed(_buys(d)):
+        bought.add(e["item_id"])
         if e["item_id"] not in seen:
             seen.append(e["item_id"])
+    lead = [i for i in dict.fromkeys(first or ()) if i in bought]
+    seen = lead + [i for i in seen if i not in lead]
     for iid in seen[:cap]:
         p = item_prices(iid, d)
         out[_label(names, iid)] = {

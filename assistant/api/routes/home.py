@@ -7,18 +7,13 @@ from api.deps import _d_today
 router = APIRouter()
 
 
-@router.get("/api/home")
-def home():
-    d = state.derived()
-    nm = state.names()
+def still_good_checks(d, nm, _fl):
+    """The "Still good?" questions Today asks now, freshest first, at
+    most MAX_CHECKS. Today and Ask Arya both read this one rule."""
     from api.eyes.service import MAX_CHECKS, short_name, should_check
     from api import shelflife
     _shelf = shelflife.known()
-    seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
-             "date": p["seen"]["date"], "kind": p["seen"].get("kind")}
-            for p in d["patterns"] if p.get("seen")]
     checks = []
-    _fl = state.flags()
     _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for p in d["patterns"]:
         # Spark's shelf life for this item when it has answered, else
@@ -45,6 +40,18 @@ def home():
     # The freshest few first: a long list of questions reads as nagging.
     checks.sort(key=lambda c: c["_age"])
     checks = [{k: v for k, v in c.items() if k != "_age"} for c in checks[:MAX_CHECKS]]
+    return checks
+
+
+@router.get("/api/home")
+def home():
+    d = state.derived()
+    nm = state.names()
+    seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
+             "date": p["seen"]["date"], "kind": p["seen"].get("kind")}
+            for p in d["patterns"] if p.get("seen")]
+    _fl = state.flags()
+    checks = still_good_checks(d, nm, _fl)
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
