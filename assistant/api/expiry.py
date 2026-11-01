@@ -138,20 +138,22 @@ def tracked(flag):
 
 # --- the use-soon list ----------------------------------------------------
 
-def use_soon(flags, names, last_bought, today):
-    """Items whose date is within AHEAD_DAYS (or up to FADE_DAYS past),
+def use_soon(flags, names, last_bought, today, ahead=AHEAD_DAYS, skip_snoozed=True):
+    """Items whose date is within `ahead` days (or up to FADE_DAYS past),
     soonest first. A snoozed item waits; an item bought again since the
-    date was set is a new package, so its old date is not shown."""
+    date was set is a new package, so its old date is not shown. Ask
+    Arya reads a longer window with snoozed items kept: a snooze quiets
+    Today, it does not change the date on the pack."""
     out = []
     for item_id, f in flags.items():
         d = parse_iso(f.get("use_by"))
         if d is None:
             continue
         days = (d - today).days
-        if days > AHEAD_DAYS or days < -FADE_DAYS:
+        if days > ahead or days < -FADE_DAYS:
             continue
         snz = parse_iso(f.get("use_by_snooze"))
-        if snz and snz >= today:
+        if skip_snoozed and snz and snz >= today:
             continue
         lb, set_on = parse_iso(last_bought.get(item_id)), parse_iso(f.get("use_by_set"))
         if lb and set_on and lb > set_on:

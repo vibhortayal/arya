@@ -187,13 +187,44 @@ def snapshot():
         # Prices from the household's own receipts, worked out in code
         # (api/prices.py) so the model only reads them (owner, 2026-10-29).
         "prices": _price_facts(d, nm),
+        # Food dates (owner, 2026-11-01: "What goes bad this week?" had
+        # no data behind it). use_by: printed dates the household saved,
+        # the same rows Today's Use soon card reads, over a longer
+        # window. still_good: Today's "Still good?" questions, which are
+        # shelf-life estimates from the purchase date, not printed dates.
+        **_food_dates(d, nm),
         "review_pending": len(state.review_queue()["lines"]),
     }
 
 
+ASK_DATES_AHEAD = 30
+ASK_DATES_MAX = 20
+
+
+def _food_dates(d, nm):
+    from api import expiry, state
+    from api.deps import _d_today
+    from api.routes.home import still_good_checks
+    fl = state.flags()
+    last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
+    dated = expiry.use_soon(fl, nm, last_bought, _d_today(),
+                            ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+    use_by = [{"name": r["name"], "date": r["date"], "kind": r["kind"],
+               "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]
+    still = []
+    for c in still_good_checks(d, nm, fl):
+        lb = next((p.get("last_bought") for p in d["patterns"]
+                   if p["item_id"] == c["item_id"]), None)
+        still.append({"name": c["name"], "bought": lb})
+    return {"today": _d_today().isoformat(), "use_by": use_by, "still_good": still}
+
+
 def _price_facts(d, nm):
-    from api import prices
-    return prices.ask_facts(d, nm)
+    from api import prices, state
+    gm = state.group_map()
+    on_list = [gm.get(i["item_id"], i["item_id"]) for i in d["smart_list"]["items"]
+               if i.get("on_list") and not i.get("checked")]
+    return prices.ask_facts(d, nm, first=on_list)
 
 
 def _resolve(name):
@@ -353,7 +384,10 @@ def chat(history, client, surface=None, context=None, image=None):
         uri = f"data:{image['media_type']};base64,{image['data']}"
         last["content"] = [{"type": "text", "text": str(last["content"])},
                            {"type": "image_url", "image_url": {"url": uri}}]
-    out, _u, _c = client.chat(messages, mode="standard", personal=True)
+    # The system prompt leads every request unchanged, so a stable cache
+    # key lets the API reuse that prefix (cheaper input, faster).
+    out, _u, _c = client.chat(messages, mode="standard", personal=True,
+                              cache_key="arya-ask-v1")
     dec = parse_json(out)
     actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)] if not image else []
     if surface:

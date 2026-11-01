@@ -26,7 +26,7 @@ class TestChatPhoto(unittest.TestCase):
             def __init__(self, ledger=None):
                 pass
 
-            def chat(self, messages, mode=None, personal=None):
+            def chat(self, messages, mode=None, personal=None, **kw):
                 seen.append(messages)
                 return json.dumps({"reply": "That is a jar of basil pesto.",
                                    "actions": [{"type": "add_to_list", "item": "Fresh Basil"}]}), {}, 0.01
