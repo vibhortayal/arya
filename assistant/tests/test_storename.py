@@ -116,3 +116,45 @@ class TestTripLinkedReceipts(unittest.TestCase):
     def test_unknown_or_missing_link_falls_back(self):
         self.assertEqual(self.lab("Costco Fremont #778", ref="gone")["label"], "Costco Fremont")
         self.assertEqual(self.lab("Safeway", ref=None)["label"], "Safeway")
+
+
+class TestOwnerReceipts(unittest.TestCase):
+    """The spellings on the owner's 114-receipt batch (2026-11-01)."""
+    RAWS = ["Costco Wholesale", "Costco Wholesale Sunnyvale #423", "SUNNYVALE #423", "COSTCO WHOLESALE",
+            "COSTCO WHOLESALE CYPRESS CA #748", "COSTCO WHOLESALE SUNNYVALE #423", "Costco",
+            "Costco Wholesale - CYPRESS CA #748", "FREMONT #778", "Costco Wholesale Fremont #778",
+            "COSTCO WHOLESALE SANTA CLARA #129"]
+
+    def test_one_readable_name_per_store(self):
+        m = storename.merge(self.RAWS, stores=[])
+        for raw in ("Costco Wholesale Sunnyvale #423", "SUNNYVALE #423", "COSTCO WHOLESALE SUNNYVALE #423"):
+            self.assertEqual(m[raw]["label"], "Costco Sunnyvale")
+        for raw in ("COSTCO WHOLESALE CYPRESS CA #748", "Costco Wholesale - CYPRESS CA #748"):
+            self.assertEqual(m[raw]["label"], "Costco Cypress")
+        self.assertEqual(m["FREMONT #778"]["label"], "Costco Fremont")
+        self.assertEqual(m["COSTCO WHOLESALE SANTA CLARA #129"]["label"], "Costco Santa Clara")
+
+    def test_bare_names_stay_honest(self):
+        m = storename.merge(self.RAWS, stores=[])
+        for raw in ("Costco Wholesale", "COSTCO WHOLESALE", "Costco"):
+            self.assertEqual(m[raw]["label"], "Costco, location unknown")
+
+    def test_address_read_from_the_photo_wins(self):
+        recs = [{"receipt_id": "a", "merchant": "Costco Wholesale",
+                 "store_info": {"chain": "Costco", "city": "SUNNYVALE", "number": "423"}},
+                {"receipt_id": "b", "merchant": "COSTCO WHOLESALE SUNNYVALE #423"},
+                {"receipt_id": "c", "merchant": "Costco Wholesale"}]
+        out = storename.labels(recs, stores=[])
+        self.assertEqual(out["a"]["label"], "Costco Sunnyvale")
+        self.assertEqual(out["b"]["label"], "Costco Sunnyvale")
+        self.assertEqual(out["c"]["label"], "Costco, location unknown")
+
+
+class TestStoreInfoFromPhoto(unittest.TestCase):
+    def test_reader_address_is_kept_on_the_receipt(self):
+        from api.decode import service
+        dec = {"store": "COSTCO WHOLESALE", "date": "2026-10-01", "lines": [], "subtotal": 0, "tax": 0, "total": 0,
+               "store_info": {"chain": "Costco", "number": "423", "street": "", "city": "Sunnyvale", "state": None, "zip": "94086"}}
+        rec = service._photo_record(dec, b"x", "m")
+        self.assertEqual(rec["store_info"], {"chain": "Costco", "number": "423", "city": "Sunnyvale", "zip": "94086"})
+        self.assertNotIn("store_info", service._photo_record({**dec, "store_info": None}, b"y", "m"))

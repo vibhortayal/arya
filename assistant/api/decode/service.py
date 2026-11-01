@@ -431,6 +431,12 @@ def _photo_record(dec, image_bytes, decoded_by):
            "image_ref": None, "decoded_by": decoded_by}
     if _num(dec.get("items_sold")):
         rec["items_sold"] = dec["items_sold"]
+    info = dec.get("store_info")
+    if isinstance(info, dict):
+        keep = {k: str(info[k]).strip() for k in ("chain", "number", "street", "city", "state", "zip")
+                if info.get(k) not in (None, "")}
+        if keep:
+            rec["store_info"] = keep
     return rec
 
 

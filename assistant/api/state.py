@@ -1047,12 +1047,19 @@ def dashboard():
 
 def review_queue():
     lines = []
-    for r in receipts():
+    rs = receipts()
+    try:
+        from api import storename
+        names = storename.labels(rs)
+    except Exception:
+        names = {}
+    for r in rs:
         for li, ln in enumerate(r["lines"]):
             if ln.get("status") == "unverified":
                 lines.append({"receipt_id": r["receipt_id"], "idx": li, "date": r["purchased_at"],
                               "raw": ln["raw"], "decoded_name": ln.get("decoded_name"),
-                              "merchant": r.get("merchant"), "sku": ln.get("sku"),
+                              "merchant": (names.get(r["receipt_id"]) or {}).get("label") or r.get("merchant"),
+                              "sku": ln.get("sku"),
                               "qty": ln.get("qty"), "line_total": ln.get("line_total"),
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", []),
