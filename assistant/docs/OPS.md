@@ -22,6 +22,9 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Recent changes**: the last changes from `ops-changes.jsonl`.
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
 
+## Recover the owner
+Ops can name a different owner account (Settings, Ops and health, Accounts). Your old account keeps owner rights for 24 hours, so a wrong pick is undone by signing in with it and naming the right account. If both are lost: on the VM, remove the `"owner"` key from `site.json` in the data folder (the owner is then `ARYA_OWNER_USERNAME` from `.env` again), or set `ARYA_OWNER_USERNAME` in `.env` and run `docker compose up -d`. The environment account is always an owner. A switched-off account (Accounts) gets 403 on every call; switch it back on from the same page, or remove its name from `"disabled"` in `site.json`.
+
 ## Feedback emails
 Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`, up to `ARYA_FEEDBACK_MAIL_CAP` a day (default 20; the daily report still counts them all). To email every note saved so far, once: `docker compose exec -T api python -m harness.feedback_mail`.
 

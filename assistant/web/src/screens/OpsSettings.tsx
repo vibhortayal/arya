@@ -16,7 +16,9 @@ type OpsData = {
   settings: Record<string, Setting>;
   overrides: Record<string, Record<string, number>>;
 };
-type Page = "models" | "limits" | "caps";
+type Page = "models" | "limits" | "caps" | "accounts";
+type Acct = { user: string; usd_24h: number; owner: boolean; frozen: boolean; disabled: boolean };
+type Accounts = { accounts: Acct[]; owner: { username: string | null; previous: string | null; at: number | null; undo_s: number } };
 
 function Num({ k, s, busy, onSave }: { k: string; s: Setting; busy: boolean; onSave: (k: string, v: number | null) => void }) {
   const { t } = useTranslation();
@@ -50,13 +52,25 @@ export function OpsSettings() {
   const [okey, setOkey] = useState("hourly_freeze_usd");
   const [oval, setOval] = useState("");
 
-  const load = useCallback(() => { get<OpsData>("/api/ops").then(setD, () => toast(t("ops.couldNotLoad"))); }, [t, toast]);
+  const [acc, setAcc] = useState<Accounts | null>(null);
+  const [newOwner, setNewOwner] = useState("");
+  const [pw, setPw] = useState("");
+  const load = useCallback(() => {
+    get<OpsData>("/api/ops").then(setD, () => toast(t("ops.couldNotLoad")));
+    if (page === "accounts") get<Accounts>("/api/ops/accounts").then(setAcc, () => toast(t("ops.couldNotLoad")));
+  }, [t, toast, page]);
   useEffect(() => { load(); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = async (body: Record<string, unknown>) => {
     setBusy(true);
     try { await post("/api/ops/controls", body); load(); }
     catch (e) { toast(e instanceof Error && e.message ? e.message : t("ops.couldNotSave")); load(); }
+    setBusy(false);
+  };
+  const act = async (url: string, body: Record<string, unknown>, ok?: string) => {
+    setBusy(true);
+    try { await post(url, body); if (ok) toast(ok); load(); }
+    catch (e) { toast(e instanceof Error && e.message ? e.message : t("ops.couldNotSave")); }
     setBusy(false);
   };
   const saveSetting = (k: string, v: number | null) => send({ settings: { [k]: v } });
@@ -142,6 +156,41 @@ export function OpsSettings() {
             </div>
           </Group>
           <p className="muted small" style={{ margin: "10px 4px 30px" }}>{t("opsSettings.limitsFooter")}</p>
+        </>
+      )}
+      {acc && page === "accounts" && (
+        <>
+          <Section title={t("opsSettings.everyone")} />
+          <Group>
+            {acc.accounts.map(a => (
+              <Row key={a.user} name={a.user}
+                sub={[a.owner ? t("opsSettings.ownerTag") : "", a.frozen ? t("opsSettings.frozenTag") : "", a.disabled ? t("opsSettings.offTag") : "", `$${a.usd_24h.toFixed(2)} ${t("opsSettings.today")}`].filter(Boolean).join(" · ")}
+                right={a.owner ? undefined : (
+                  <span style={{ display: "inline-flex", gap: 6 }}>
+                    {a.frozen && <Chip disabled={busy} onClick={() => act("/api/usage/unfreeze", { user: a.user }, t("ops.unfrozen", { user: a.user }))}>{t("ops.unfreeze")}</Chip>}
+                    <Chip disabled={busy} onClick={() => act("/api/ops/accounts", { user: a.user, disabled: !a.disabled })}>{a.disabled ? t("opsSettings.switchOn") : t("opsSettings.switchOff")}</Chip>
+                  </span>)} />
+            ))}
+            <button className="navrow" id="os-waitlist" type="button" onClick={() => nav.show("waitlist")}>
+              <span className="grow">{t("opsSettings.invites")}<span className="sub">{t("opsSettings.invitesSub")}</span></span><span className="chev">›</span></button>
+          </Group>
+          <Section title={t("opsSettings.ownerSection")} />
+          <Group>
+            <Row name={t("opsSettings.ownerName")} sub={acc.owner.username || t("opsSettings.ownerEnv")} />
+            <div className="pad" id="os-owner">
+              <p className="muted nomargin">{t("opsSettings.ownerNote")}</p>
+              <select id="os-newowner" className="curpick" style={{ width: "100%", marginTop: 8 }} aria-label={t("opsSettings.newOwner")} value={newOwner} onChange={ev => setNewOwner(ev.target.value)}>
+                <option value="">{t("opsSettings.newOwner")}</option>
+                {acc.accounts.filter(a => !a.owner).map(a => <option key={a.user} value={a.user}>{a.user}</option>)}
+              </select>
+              <input id="os-ownerpw" type="password" className="curpick" style={{ width: "100%", marginTop: 8 }} placeholder={t("opsSettings.yourPassword")} aria-label={t("opsSettings.yourPassword")}
+                value={pw} onChange={ev => setPw(ev.target.value)} />
+              <p style={{ margin: "10px 0 0" }}>
+                <Button kind="danger" wide disabled={busy || !newOwner}
+                  onClick={async () => { await act("/api/ops/owner", { username: newOwner, password: pw, confirm: newOwner }, t("opsSettings.ownerChanged")); setPw(""); setNewOwner(""); }}>{t("opsSettings.changeOwner")}</Button>
+              </p>
+            </div>
+          </Group>
         </>
       )}
       {d && page === "caps" && (

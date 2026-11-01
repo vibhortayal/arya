@@ -120,6 +120,26 @@ def set_nested_user(top, user, key, value):
         doc.pop(top, None)
     state.write_json_atomic(p, doc)
     _cache["at"] = 0.0
+OWNER_UNDO_S = 24 * 3600
+
+
+def owners():
+    """Usernames Ops treats as owner besides ARYA_OWNER_USERNAME: the
+    account named in Ops, and for 24 hours after a change the previous
+    one, so a wrong pick can be undone from the old account."""
+    o = _doc().get("owner")
+    if not isinstance(o, dict) or not o.get("username"):
+        return ()
+    out = [str(o["username"]).lower()]
+    prev = o.get("previous")
+    if prev and time.time() - float(o.get("at", 0)) < OWNER_UNDO_S:
+        out.append(str(prev).lower())
+    return tuple(out)
+
+
+def disabled(user):
+    d = _doc().get("disabled")
+    return isinstance(d, dict) and str(user or "").lower() in d
 
 
 def set_flags(changes):
