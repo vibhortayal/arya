@@ -28,6 +28,9 @@ def _d(s):
     return None
 
 
+LAPSED_DAYS = 120  # silent this long AND over 2x the rhythm: lapsed
+
+
 def net_purchases(entries):
     """Kept purchase events after returns netting, by item_id."""
     kept = {}
@@ -87,8 +90,11 @@ def summarize(entries, as_of=None):
                 season_share, seasonal_months = best[0], best[1]
         if n < 3 or median_gap is None:
             state_name, verdict = "not-enough-history", "fewer than 3 kept purchases"
-        elif median_gap >= 2 and since > 4 * median_gap:
-            state_name, verdict = "lapsed", "silent for over 4x its rhythm"
+        elif median_gap >= 2 and (since > 4 * median_gap
+                                  or (since > 2 * median_gap and since > LAPSED_DAYS)):
+            # Over a year of silence on a 136-day rhythm is a habit that
+            # stopped, not an item that is due (owner, 2026-11-01).
+            state_name, verdict = "lapsed", "silent for over 4x its rhythm, or 2x and 4+ months"
         else:
             state_name, verdict = "pattern", "3+ kept purchases"
         has_pattern = state_name == "pattern"

@@ -462,7 +462,7 @@ function WhySheet({ data, id, onClose, onAdd, onNot, onNever }: Pick<Common, "da
       dots.push(w === 0 && !got ? <i className="now" key={w} /> : <i className={got ? "" : "gap"} key={w} />);
     }
     const first = hist.length ? hist[hist.length - 1].date : null;
-    rows.push(<div className="whyrow" key="rhythm"><Ic k="cal" /><div><b>{t("lists.youBuyItEveryDays", { median_interval_days: Math.round(p.median_interval_days) })}</b><span className="sub">{t("lists.time", { count: p.purchase_count })}{first ? t("lists.why.sinceMonth", { month: MONTHS[Number(first.slice(5, 7)) - 1] }) : ""}{t("lists.last8Weeks")}</span><span className="dots" aria-hidden="true">{dots}</span></div></div>);
+    rows.push(<div className="whyrow" key="rhythm"><Ic k="cal" /><div><b>{t("lists.youBuyItEveryDays", { median_interval_days: Math.round(p.median_interval_days) })}</b><span className="sub">{t("lists.time", { count: p.purchase_count })}{first ? t("lists.why.sinceMonth", { month: MONTHS[Number(first.slice(5, 7)) - 1] + (first.slice(0, 4) !== String(new Date().getFullYear()) ? " " + first.slice(0, 4) : "") }) : ""}{t("lists.last8Weeks")}</span><span className="dots" aria-hidden="true">{dots}</span></div></div>);
   }
   if (p && p.last_bought) {
     const last = hist[0];

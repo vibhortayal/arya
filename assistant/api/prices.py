@@ -29,6 +29,7 @@ MIN_SPAN_DAYS = 28       # first to last buy, for a trend
 TREND_MIN_PCT = 2.0      # smaller moves read as "steady" and are not shown
 GAP_MIN = 0.25           # dollars per unit before a store counts as cheaper
 GAP_MIN_PCT = 5.0
+CHEAPER_MAX_AGE_DAYS = 365  # the other store's price may not be older than this
 BASKET_MIN_ITEMS = 3
 SIMILAR_CAP = 3
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August",
@@ -79,6 +80,15 @@ def _month_word(iso):
     return MONTHS[int(iso[5:7]) - 1]
 
 
+def chain_of(store):
+    """The chain a store label belongs to: its first word, so "COSTCO
+    SUNNYVALE", "Costco - NEWARK" and "Costco Wholesale #778 Fremont"
+    are one chain. Two warehouses of one chain share prices, so
+    that is not a deal."""
+    m = re.search(r"[a-z0-9]+", str(store or "").lower().replace("'", ""))
+    return m.group(0) if m else ""
+
+
 def _by_store(rows):
     by = {}
     for e in rows:
@@ -121,7 +131,11 @@ def item_prices(item_id, d, at=None):
     cheaper = None
     if len(stores) >= 2 and rows:
         usual = at if at in stores else _usual(by)
-        lo = min(stores, key=lambda s: stores[s]["last"])
+        # Only another chain, and a price seen within a year of the
+        # one it is compared with, can be a deal.
+        others = [s for s in stores if chain_of(s) != chain_of(usual)
+                  and (_d(stores[usual]["last_date"]) - _d(stores[s]["last_date"])).days <= CHEAPER_MAX_AGE_DAYS]
+        lo = min(others, key=lambda s: stores[s]["last"]) if others else usual
         a, b = stores[usual]["last"], stores[lo]["last"]
         if lo != usual and a - b >= GAP_MIN and _pct(b, a) >= GAP_MIN_PCT:
             cheaper = {"store": lo, "price": b, "date": stores[lo]["last_date"],
@@ -199,7 +213,10 @@ def split_smarter(d, names=None, today=None):
             continue
         med = {s: statistics.median(x["unit"] for x in v) for s, v in by.items()}
         usual = _usual(by)
-        lo = min(med, key=med.get)
+        rivals = [s for s in med if chain_of(s) != chain_of(usual)]
+        if not rivals:
+            continue
+        lo = min(rivals, key=med.get)
         gap = med[usual] - med[lo]
         if lo == usual or gap < GAP_MIN or _pct(med[lo], med[usual]) < GAP_MIN_PCT:
             continue

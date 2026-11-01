@@ -4,7 +4,7 @@ cart.json, flags.json. Derived state (ledger/patterns/list) is recomputed
 on read — at household scale that is milliseconds, and it can never drift
 from the stored receipts. Postgres replaces the files when volume demands.
 """
-import copy, hashlib, json, os, pickle, tempfile, threading
+import copy, hashlib, json, os, pickle, re, tempfile, threading
 from datetime import date, timedelta
 
 from api.ledger.build import build_ledger, receipt_savings
@@ -489,6 +489,26 @@ def names():
     return {e["item_id"]: e["canonical_name"] for e in dictionary()["entries"]}
 
 
+_RAW_ID = re.compile(r"^costco-\d+$", re.I)
+
+
+def _unreadable(name, iid):
+    """A name that is empty, the item's own id, or a bare Costco item
+    number ("costco-1736931") tells the person nothing."""
+    n = str(name or "").strip()
+    return not n or n == iid or bool(_RAW_ID.match(n))
+
+
+def readable_names():
+    """item_id -> a name worth showing: the dictionary's, else a
+    receipt's decoded or printed text. Ids with neither are left out."""
+    out = {}
+    for iid, n in names_with_receipts().items():
+        if not _unreadable(n, iid):
+            out[iid] = n
+    return out
+
+
 def names_with_receipts():
     """Dictionary names, plus a readable name for any receipt line whose
     item is not in the dictionary yet (decoded name, else the receipt text)."""
@@ -698,8 +718,14 @@ def _derived():
     for p in patterns:
         if p["item_id"] in judged:
             p["judge"] = judged[p["item_id"]]
+    # An item with no readable name cannot be suggested (it would show
+    # as "costco-1736931"); it waits until a name is learned. The
+    # household's own word (added by hand, "I'm out") still counts.
+    readable = readable_names()
     visible = [p for p in patterns
                if not hidden(p["item_id"]) and p["item_id"] not in unresolved_ids
+               and (p["item_id"] in readable or fl.get(p["item_id"], {}).get("manual")
+                    or fl.get(p["item_id"], {}).get("name"))
                and _admitted(p, judged, fl)]
     admitted_ids = {p["item_id"] for p in visible}
     for p in patterns:
@@ -769,7 +795,7 @@ def _derived():
     verdicts = grocery_verdicts()
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
-        item["name"] = f.get("name") or names().get(item["item_id"], item["item_id"])
+        item["name"] = f.get("name") or readable.get(item["item_id"]) or names().get(item["item_id"], item["item_id"])
         # Deterministic and cached only, never a model call here: the
         # list shows "Not a grocery item? Added anyway" for these.
         # The household's own pick wins over the keyword map.
@@ -822,32 +848,35 @@ def save_second_seat(report):
 def judge_pending(client, limit=60):
     """Judge every pattern (2+ buys) whose verdict is missing or stale.
     Returns how many items were judged. Never raises to the caller."""
-    from api.judge import judge_batch, facts_line
+    from api.judge import judge_batch, facts_line, VERSION
     if not getattr(client, "api_key", ""):
         return 0
     entries = _group_entries(build_ledger(receipts(), fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=today_ref())
     judged = judgments()
-    nm = names()
+    # Readable names only: a bare item number cannot be judged (and is
+    # never suggested); it is judged once a name is learned.
+    nm = readable_names()
     pending = []
     for p in patterns:
-        if p["purchase_count"] < 2:
+        if p["purchase_count"] < 2 or p["item_id"] not in nm:
             continue
         cur = judged.get(p["item_id"])
-        if cur is None or p["purchase_count"] - cur.get("buys", 0) >= 2:
+        if (cur is None or cur.get("v", 1) < VERSION
+                or p["purchase_count"] - cur.get("buys", 0) >= 2):
             pending.append(p)
     done = 0
     for i in range(0, min(len(pending), limit), 25):
         batch = pending[i:i + 25]
         try:
-            verdicts = judge_batch(client, [(p["item_id"], facts_line(nm.get(p["item_id"], p["item_id"]), p))
+            verdicts = judge_batch(client, [(p["item_id"], facts_line(nm[p["item_id"]], p))
                                             for p in batch])
         except Exception:
             break
         for p in batch:
             v = verdicts.get(p["item_id"])
             if v:
-                judged[p["item_id"]] = {**v, "buys": p["purchase_count"]}
+                judged[p["item_id"]] = {**v, "buys": p["purchase_count"], "v": VERSION}
                 done += 1
     if done:
         # Merge under the lock: a concurrent judge run's verdicts
@@ -889,6 +918,28 @@ def _cadence_staple(p):
             and (p.get("median_interval_days") or 0) >= 2)
 
 
+# Owner, 2026-11-01: "if something is bought once in 2 months or more,
+# we need a clear established pattern for that before we suggest it."
+# Weekly to every-two-months items keep the usual rule. A slower item
+# needs 4+ kept buys, a steady rhythm (longest gap at most twice the
+# shortest) and a last buy no later than 1.5x its rhythm ago: a habit
+# still running, not one that stopped.
+FREQUENT_MAX_DAYS = 60
+LONG_MIN_BUYS = 4
+LONG_MAX_SPREAD = 2.0
+LONG_MAX_OVERDUE = 1.5
+
+
+def _established(p):
+    gap = p.get("median_interval_days") or 0
+    if gap <= FREQUENT_MAX_DAYS:
+        return True
+    spread = (p.get("analysis") or {}).get("gap_spread")
+    return (p["purchase_count"] >= LONG_MIN_BUYS
+            and spread is not None and spread <= LONG_MAX_SPREAD
+            and (p.get("days_since_last") or 0) <= LONG_MAX_OVERDUE * gap)
+
+
 def _admitted(p, judged, fl):
     """May this pattern appear on the list? Judge says yes (or the user
     added it by hand); unresolved names stay off. An unjudged item is
@@ -906,7 +957,9 @@ def _admitted(p, judged, fl):
     elif not v.get("list_ok"):
         return False
     if p.get("history_state") == "lapsed":
-        return False  # silent for over 4x its rhythm: not due, just gone
+        return False  # silent too long for its rhythm: not due, just gone
+    if not _established(p):
+        return False  # a long cycle without a clear, current rhythm
     if not v or v.get("class") == "SEASONAL":
         months = (p.get("analysis") or {}).get("seasonal_months")
         if months and as_of():
