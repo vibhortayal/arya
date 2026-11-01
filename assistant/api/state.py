@@ -893,6 +893,10 @@ def judge_pending(client, limit=60):
     # has turned clean names on), so the judge reads the clean name.
     from api.dictionary import clean
     clean.clean_new(client)
+    try:  # To check: propose names before asking the household
+        clean.suggest_review(client, limit=60)
+    except Exception:
+        pass
     entries = _group_entries(build_ledger(receipts(), fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=today_ref())
     judged = judgments()
@@ -1162,7 +1166,8 @@ def review_queue():
                               "qty": ln.get("qty"), "line_total": ln.get("line_total"),
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", []),
-                              "suggested": ln.get("suggested")})
+                              "suggested": ln.get("suggested"),
+                              "suggest_tried": bool(ln.get("suggest_tried"))})
     unresolved = [{"item_id": e["item_id"], "name": e["canonical_name"],
                    "candidates": e["resolution"].get("candidates", []),
                    "sources": e["resolution"].get("sources", {})}
@@ -1340,6 +1345,51 @@ def suggest_line(receipt_id, idx, name, source):
                 _save("receipts.json", rs)
                 return True
     return False
+
+
+def suggest_lines(items):
+    """Arya's own proposals for To check lines, written in one save per
+    filer: items are (receipt_id, idx, suggestion or None). None marks a
+    line Arya could not read (suggest_tried), so it is not asked again.
+    Only unverified lines with no suggestion yet are written."""
+    if not items:
+        return 0
+    me = _current_user.get()
+    owner_of = {}
+    for m in group_members() or [me]:
+        rs = own_receipts() if m == me else load_at(user_dir(m), m, "receipts.json", [])
+        for r in rs:
+            owner_of.setdefault(r["receipt_id"], m)
+    by_owner = {}
+    for rid, idx, s in items:
+        if rid in owner_of:
+            by_owner.setdefault(owner_of[rid], []).append((rid, idx, s))
+    n = 0
+    for owner, rows in by_owner.items():
+        ctx = as_user(owner, _current_group.get()) if owner != me else None
+        if ctx:
+            ctx.__enter__()
+        try:
+            with file_lock("receipts.json"):
+                rs = own_receipts()
+                by = {r["receipt_id"]: r for r in rs}
+                for rid, idx, s in rows:
+                    r = by.get(rid)
+                    if not r or not 0 <= idx < len(r["lines"]):
+                        continue
+                    ln = r["lines"][idx]
+                    if ln.get("status") != "unverified" or ln.get("suggested"):
+                        continue
+                    if s:
+                        ln["suggested"] = s
+                        n += 1
+                    else:
+                        ln["suggest_tried"] = True
+                _save("receipts.json", rs)
+        finally:
+            if ctx:
+                ctx.__exit__(None, None, None)
+    return n
 
 
 def resolve_dictionary(item_id, name):

@@ -4,6 +4,7 @@ Run inside the api container (the key is in its environment):
   python -m harness.clean_names vibhor15@gmail.com            # dry run: count + before/after sample
   python -m harness.clean_names vibhor15@gmail.com --apply    # write the dry run's names, turn on for new receipts
   python -m harness.clean_names vibhor15@gmail.com --undo     # put every old name back, turn off
+  python -m harness.clean_names vibhor15@gmail.com --suggest  # To check: propose a name for every waiting item
 
 The dry run makes the model calls (one per 25 items) and saves the plan
 in the account's data folder; --apply writes that saved plan, so what you
@@ -19,6 +20,10 @@ def run(user, mode="dry", client=None):
     from api import groups
     # A household group shares one name book: clean that one.
     with state.as_user(user, groups.group_id_for(user)):
+        if mode == "suggest":
+            n = clean.suggest_review(client or deps.new_client(), limit=10000)
+            print(f"To check: Arya proposed a name for {n} items (nothing settled; tap to accept)")
+            return n
         if mode == "undo":
             res = clean.undo()
             print(f"names put back: {res['restored']} | kept because you set them: {res['kept_by_you']}")
@@ -43,5 +48,6 @@ def run(user, mode="dry", client=None):
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    mode = "apply" if "--apply" in sys.argv else "undo" if "--undo" in sys.argv else "dry"
+    mode = ("apply" if "--apply" in sys.argv else "undo" if "--undo" in sys.argv
+            else "suggest" if "--suggest" in sys.argv else "dry")
     run(args[0], mode)

@@ -3476,7 +3476,7 @@
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
-        "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check.",
+        "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check with its best guess, one tap to accept.",
         "cta": "Open Receipts"
       },
       "additem": {
