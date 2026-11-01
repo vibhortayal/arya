@@ -9,10 +9,11 @@ from tests import frontend
 
 class CrewVisibility(unittest.TestCase):
     def test_settings_tab_opens_profile(self):
-        # Owner 2026-10-29: a Settings tab next to Quest opens Profile.
+        # Owner 2026-10-29: Settings opens Profile; since the shopper's
+        # bar (2026-11-01) it is in More unless pinned.
         app = frontend.src("App.tsx")
-        self.assertIn('profile: "Settings"', app)
-        self.assertIn('"profile"]', frontend.src("app/views.ts").split("TABS")[1])
+        self.assertIn('profile: "Settings"', frontend.src("ui/Bar.tsx"))
+        self.assertIn('"help", "profile"] as const', frontend.src("lib/bar.ts"))
         self.assertNotIn("<header>", frontend.app())
         # Usability pass (owner 2026-10-29): no floating avatar; it did
         # what the Settings tab does and covered page titles.

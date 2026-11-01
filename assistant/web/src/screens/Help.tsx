@@ -3,6 +3,7 @@ import { useBackHandler, useNav } from "../app/nav";
 import { HELP_TOPICS, type HelpTopic } from "../guide/helpTopics";
 import { useTranslation } from "../i18n";
 import { useGuide } from "../ui/Guide";
+import { openBarEditor } from "../ui/Bar";
 import { useTour } from "../ui/Tour";
 import { useIsDemo } from "../app/session";
 import { useTourSteps } from "../onboarding/demoTour";
@@ -53,7 +54,7 @@ export function Help() {
           </Section>
         )}
         <div className="help-actions">
-          <button className="btn primary" id="help-open" type="button" onClick={() => nav.show(open.opens)}>{t(key(id, "cta"))}</button>
+          <button className="btn primary" id="help-open" type="button" onClick={() => (open.opens === "bar-editor" ? openBarEditor() : nav.show(open.opens))}>{t(key(id, "cta"))}</button>
           <button className="btn" id="help-stuck" type="button"
             onClick={() => ask(t("help.stuckQ", { topic: t(key(id, "title")) }))}>{t("help.stuck")}</button>
         </div>

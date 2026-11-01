@@ -34,7 +34,7 @@ visit only; nothing reaches disk or another visitor.
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 
-The five tabs are Today, Lists, Ask, Quest and Settings.
+The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
 
 ## What is in it
 
@@ -73,8 +73,8 @@ Three parts help a new person. Use these words in the app, the docs, and code re
 
 | Name | What it is | Where in the code |
 |---|---|---|
-| **Tour** | Bubbles over a dimmed screen that point at things. Real accounts get six stops (one per tab). The demo gets a stop for each tab and each main card on it, with "Skip Today" to jump to the next screen. | `web/src/ui/Tour.tsx`, `onboarding/firstRunTour.ts`, `onboarding/demoTour.ts` |
-| **Arya guide** | The swipeable cards (fifteen), each with a Try it. Opens from Help tab, Arya's powers, or the end of the Tour. | `web/src/ui/Guide.tsx`, `guide/cards.ts` |
+| **Tour** | Bubbles over a dimmed screen that point at things. Real accounts get one stop per place on their bar, then More, then "Make the bar yours". The demo gets a stop for each screen and each main card on it, in the shopper's bar order, with "Skip Today" to jump to the next screen. | `web/src/ui/Tour.tsx`, `onboarding/firstRunTour.ts`, `onboarding/demoTour.ts` |
+| **Arya guide** | The swipeable cards (sixteen), each with a Try it. Opens from Help tab, Arya's powers, or the end of the Tour. | `web/src/ui/Guide.tsx`, `guide/cards.ts` |
 | **Help tab** | Everything else: the ask box, first steps, a how-to topic for each feature, plus links to the Arya guide, Arya's powers, the Tour and Send feedback. | `web/src/screens/Help.tsx`, `guide/helpTopics.ts` |
 
 Ask Arya answers how-to questions from `assistant/prompts/arya_features.md`.

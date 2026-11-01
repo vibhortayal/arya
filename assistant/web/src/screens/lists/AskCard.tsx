@@ -1,4 +1,5 @@
 import { useCallback, useState, type ReactNode } from "react";
+import { withBar } from "../../lib/bar";
 import { post } from "../../lib/api";
 import { useToast } from "../../ui/Toast";
 import type { NamedList } from "./model";
@@ -39,7 +40,7 @@ export function useAsk(onChange: () => void) {
   const run = useCallback(async (text: string, context: Record<string, unknown>): Promise<boolean> => {
     setCard({ q: text, kind: "thinking" });
     try {
-      const res = await post<Res>("/api/chat", { messages: [{ role: "user", content: text }], surface: "list", context });
+      const res = await post<Res>("/api/chat", withBar({ messages: [{ role: "user", content: text }], surface: "list", context }));
       setCard({ q: text, kind: "show", res });
       if ((res.added || []).length || (res.applied || []).length) onChange();
       return true;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { withBar } from "../../lib/bar";
 import { post } from "../../lib/api";
 import { Sheet } from "../../ui/Sheet";
 import { useToast } from "../../ui/Toast";
@@ -55,7 +56,7 @@ export function AskSheet({ open, onClose, onChange }: { open: boolean; onClose: 
     setText("");
     setCard({ q: t, res: null });
     try {
-      const res = await post<Res>("/api/chat", { messages: [{ role: "user", content: t }], surface: "hunt", context: context() });
+      const res = await post<Res>("/api/chat", withBar({ messages: [{ role: "user", content: t }], surface: "hunt", context: context() }));
       setCard({ q: t, res });
       if ((res.added || []).length || (res.applied || []).length) onChange();
     } catch (e) { setCard(null); toast(e instanceof Error ? e.message : String(e)); }

@@ -4,7 +4,7 @@ import { listsEmpty } from "./Lists";
 import type { HomeData } from "./lists/model";
 import { showWelcome } from "../ui/FirstRun";
 import { TourProvider, tourLayout, useTour, type TourStep } from "../ui/Tour";
-import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
+import { firstRunTour } from "../onboarding/firstRunTour";
 
 /* First run (#153, #163): who sees the welcome, the Get started card's
  * states, the Lists first-list card, and the tour. */
@@ -93,8 +93,9 @@ describe("tour layout", () => {
     expect(mid.above).toBe(false);
     expect((mid.tip as { top: number }).top + 240).toBeLessThanOrEqual(640 - 12);
   });
-  test("the first-run tour is six tab steps", () => {
-    expect(FIRST_RUN_TOUR.map(s => s.id)).toEqual(["today", "lists", "ask", "quest", "help", "settings"]);
+  test("the first-run tour follows the bar, then More, then Make the bar yours", () => {
+    expect(firstRunTour().map(s => s.id)).toEqual(["today", "lists", "quest", "ask", "more", "bar"]);
+    expect(firstRunTour(["list", "receipts", "stores-mine"]).map(s => s.id)).toEqual(["lists", "receipts", "stores", "more", "bar"]);
   });
 });
 

@@ -204,6 +204,15 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   5-step tour, a Get started card on Today and one first-list card on Lists.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
+- **The shopper's bottom bar (2026-11-01):** the bar holds four places the
+  shopper picks, then More (always there; it holds Help, Settings and the
+  rest). Default Today, Lists, Quest, Ask, More. Pinnable: Today, Lists,
+  Receipts, Stores, Spending, Ask, Quest, Help, Settings. Touch and hold
+  the bar, or More, Customize bar. Saved as `layouts.bar.on`. The Tour
+  follows the bar and ends with "Make the bar yours"; the guide has a
+  Your bar card; Help has Change the bar; Ask gets YOUR BAR with every
+  question. Receipts and Spending now light Lists, not Today. Today's
+  icon is a calendar. `assistant/loops/2026-11-01-custom-bar.md`.
 - **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
   Preferences (currency and language, When I start shopping, Display,
   Reminders), Account (Export, Delete), About Arya, and Sign out last.

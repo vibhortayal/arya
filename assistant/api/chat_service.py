@@ -344,6 +344,35 @@ PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer 
                "Arya shoppers. The photo is not saved. If it is unclear, say so.")
 
 
+# The shopper's bottom bar (owner, 2026-11-01; web/src/lib/bar.ts, same
+# ids and default). Ask says where a place is from the bar the shopper
+# sees, so the app sends it with each question; the saved one is the
+# fallback.
+BAR_NAMES = {"home": "Today", "list": "Lists", "receipts": "Receipts", "stores-mine": "Stores",
+             "analysis": "Spending", "chat": "Ask", "community": "Quest", "help": "Help", "profile": "Settings"}
+DEFAULT_BAR = ["home", "list", "community", "chat"]
+BAR_MAX = 4
+
+
+def _clean_bar(bar):
+    if not isinstance(bar, list):
+        return None
+    on = [b for i, b in enumerate(bar) if isinstance(b, str) and b in BAR_NAMES and b not in bar[:i]][:BAR_MAX]
+    return on or None
+
+
+def bar_line(bar=None):
+    """YOUR BAR for the model: the places on this shopper's bar, then
+    what is in More."""
+    on = _clean_bar(bar)
+    if on is None:
+        from api import state
+        saved = (state._load("settings.json", {}).get("layouts") or {}).get("bar")
+        on = _clean_bar(saved.get("on") if isinstance(saved, dict) else None) or DEFAULT_BAR
+    more = [BAR_NAMES[k] for k in BAR_NAMES if k not in on]
+    return "YOUR BAR: " + ", ".join(BAR_NAMES[k] for k in on) + ", More. In More: " + ", ".join(more) + "."
+
+
 def _asked(history):
     """The last two things the user said: a follow-up such as "how do I
     do that?" still finds the topic from the message before it."""
@@ -351,7 +380,7 @@ def _asked(history):
     return " ".join(us[-2:])
 
 
-def chat(history, client, surface=None, context=None, image=None):
+def chat(history, client, surface=None, context=None, image=None, bar=None):
     """One Ask Arya turn. On the Ask tab every action applies at once.
     From the List or a hunt (surface "list"/"hunt"; owner, 2026-10-29)
     adds still apply at once, with the added items returned so the
@@ -367,7 +396,7 @@ def chat(history, client, surface=None, context=None, image=None):
     topics_for = None if lang in ("es", "hi") or re.search(r"[^\x00-\x7f\u2018\u2019\u201c\u201d\u2014]", asked) else asked
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": "HOUSEHOLD SNAPSHOT:\n" + json.dumps(snapshot())},
-                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet(question=topics_for)}]
+                {"role": "user", "content": "ABOUT ARYA:\n" + feature_sheet(question=topics_for) + "\n" + bar_line(bar)}]
     if surface and ctx:
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
     if lang != "auto":

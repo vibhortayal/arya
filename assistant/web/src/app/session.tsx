@@ -22,6 +22,8 @@ export type Layouts = {
   ask?: { chips?: string[] | null };
   spending?: { on?: string[] | null };
   quest?: { order?: string[] | null; hidden?: string[] | null };
+  /* The bottom bar's four places, in order (lib/bar.ts). */
+  bar?: { on?: string[] | null };
 };
 export function applyDisplay(d: Display): void {
   const root = document.documentElement;
@@ -256,6 +258,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
 /* True in the demo; false for a real account or when there is no provider (tests, isolated screens). */
 export function useIsDemo(): boolean { return !!useContext(Ctx)?.demo; }
+/* The saved bottom bar (lib/bar.ts barOf cleans it); none outside a session. */
+export function useSavedBar(): unknown { return useContext(Ctx)?.layouts?.bar?.on; }
 
 export function useSession(): Session {
   const s = useContext(Ctx);

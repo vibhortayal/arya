@@ -74,9 +74,14 @@ class TestLayouts(TestTodayCards):
         # Quest home panels (Edit Quest)
         r = self.post(layouts={"quest": {"order": ["trips", "cta"], "hidden": ["album"]}})
         self.assertEqual(r["layouts"]["quest"], {"order": ["trips", "cta"], "hidden": ["album"]})
+        # The shopper's bottom bar (owner, 2026-11-01); the app cleans ids.
+        r = self.post(layouts={"bar": {"on": ["list", "receipts", "stores-mine"]}})
+        self.assertEqual(r["layouts"]["bar"], {"on": ["list", "receipts", "stores-mine"]})
+        self.assertEqual(self.c.get("/api/settings").json()["layouts"]["bar"]["on"], ["list", "receipts", "stores-mine"])
 
     def test_layouts_validated(self):
         self.post(400, layouts={"nope": {"on": []}})
         self.post(400, layouts={"lists": {"order": "a"}})
         self.post(400, layouts={"ask": {"chips": ["x" * 121]}})
         self.post(400, layouts={"spending": {"on": [1]}})
+        self.post(400, layouts={"bar": ["list"]})

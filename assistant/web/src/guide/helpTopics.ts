@@ -11,7 +11,8 @@ export type HelpTopic = {
   group: "start" | "how";
   steps: number;
   notes: number;
-  opens: ViewId;
+  /* The screen the button opens, or the bar editor. */
+  opens: ViewId | "bar-editor";
 };
 
 export const HELP_TOPICS: HelpTopic[] = [
@@ -28,4 +29,5 @@ export const HELP_TOPICS: HelpTopic[] = [
   { id: "usesoon", group: "how", steps: 4, notes: 2, opens: "powers" },
   { id: "ai", group: "how", steps: 3, notes: 3, opens: "about" },
   { id: "customize", group: "how", steps: 3, notes: 2, opens: "home" },
+  { id: "bar", group: "how", steps: 3, notes: 2, opens: "bar-editor" },
 ];

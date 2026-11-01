@@ -4,11 +4,12 @@ import { NavProvider, useNav } from "../app/nav";
 import { GuideProvider } from "../ui/Guide";
 import { TourProvider } from "../ui/Tour";
 import { HELP_TOPICS } from "../guide/helpTopics";
-import { TABS, VIEWS } from "../app/views";
+import { VIEWS } from "../app/views";
+import { BAR_ITEMS, DEFAULT_BAR, moreOf } from "../lib/bar";
 import { Help } from "./Help";
 
-/* The Help tab (owner pick A, 2026-10-31): six tabs with Help beside
- * Settings; topics are data with real en.json text; a topic opens, goes
+/* The Help tab (owner pick A, 2026-10-31; in More by default since the
+ * shopper's bar, 2026-11-01); topics are data with real en.json text; a topic opens, goes
  * back with Back, opens its feature, and "Still stuck?" and the ask box
  * send a question to Ask. */
 
@@ -22,9 +23,10 @@ const mount = () => render(
 const get = (path: string): unknown => path.split(".").reduce<unknown>((d, p) => (d && typeof d === "object" ? (d as Record<string, unknown>)[p] : undefined), en);
 
 describe("tab and topics", () => {
-  test("Help is a view and a tab, next to Settings", () => {
+  test("Help is a view any shopper can pin; by default it is in More", () => {
     expect(VIEWS).toContain("help");
-    expect(TABS).toEqual(["home", "list", "chat", "community", "help", "profile"]);
+    expect(BAR_ITEMS).toContain("help");
+    expect(moreOf(DEFAULT_BAR)).toContain("help");
     expect(get("tabs.help")).toBe("Help");
   });
   test("every topic has its text, 2 to 4 steps, and opens a real view", () => {
@@ -36,7 +38,7 @@ describe("tab and topics", () => {
       for (let i = 1; i <= tp.steps; i++) expect(typeof get(base + "s" + i)).toBe("string");
       for (let i = 1; i <= tp.notes; i++) expect(typeof get(base + "n" + i)).toBe("string");
       expect(get(base + "s" + (tp.steps + 1))).toBeUndefined();
-      expect(VIEWS).toContain(tp.opens);
+      if (tp.opens !== "bar-editor") expect(VIEWS).toContain(tp.opens);
     }
   });
   test("a step stays a short sentence", () => {

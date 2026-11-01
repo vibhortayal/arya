@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
 import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
@@ -261,7 +262,7 @@ export function Chat() {
     const stop = () => { drop(think); if (mine === epoch) setBusy(false); };
     try {
       const image = pic ? await shrinkPhoto(pic.file) : undefined;
-      const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", image ? { messages: history, image } : { messages: history });
+      const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply });

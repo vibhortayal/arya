@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AvatarProvider } from "./app/avatar";
 import { NavProvider, useBackHandler, useNav } from "./app/nav";
 import { SessionProvider, useSession } from "./app/session";
@@ -6,7 +6,6 @@ import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
 import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
-import { PARENT_TAB, TABS, type ViewId } from "./app/views";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { useTranslation } from "./i18n";
 import { get } from "./lib/api";
@@ -14,7 +13,7 @@ import { startQueue } from "./lib/scanQueue";
 import { isOffline, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
 import { isDevelopersPath, joinCodeFromUrl } from "./lib/paths";
-import { TabAsk, TabHelp, TabLists, TabQuest, TabSettings, TabToday } from "./ui/icons";
+import { BottomBar } from "./ui/Bar";
 import { Login } from "./screens/Login";
 // The public developer page and Join a group load only when opened (#17).
 const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
@@ -47,9 +46,6 @@ function Root() {
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
 }
 
-const TAB_ICON: Record<string, ComponentType> = { home: TabToday, list: TabLists, chat: TabAsk, community: TabQuest, help: TabHelp, profile: TabSettings };
-/* Tab names are en.json keys. */
-const TAB_LABEL: Record<string, string> = { home: "tabs.today", list: "tabs.lists", chat: "tabs.ask", community: "tabs.quest", help: "tabs.help", profile: "tabs.settings" };
 
 /* An invite link (/?join=CODE) opens Join a group once the app knows
  * who is signed in (group.js afterSignIn; the demo skips it). */
@@ -167,20 +163,7 @@ function Shell() {
           <ErrorBoundary key={nav.view}><Suspense fallback={<ScreenSkeleton />}><Screen /></Suspense></ErrorBoundary>
         </section>
       </main>
-      {nav.chrome && (
-        <nav id="tabs" aria-label={t("tabs.label")}>
-          {TABS.map((v: ViewId) => {
-            const Icon = TAB_ICON[v];
-            const lit = nav.view === v || PARENT_TAB[nav.view] === v;
-            return (
-              <button key={v} type="button" data-view={"view-" + v} className={lit ? "active" : undefined} aria-current={lit ? "page" : undefined}
-                onClick={() => nav.tab(v)}>
-                <Icon /><span>{t(TAB_LABEL[v])}</span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
+      {nav.chrome && <BottomBar />}
       {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
         <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(tourSteps, s.demo ? { onDone: () => openGuide(), onSkip: () => toast(t("tour.closedToast"), { action: t("tour.replay"), onAction: () => tour.startTour(tourSteps) }) } : undefined); }} onSkip={answerWelcome} demo={s.demo} />
       )}

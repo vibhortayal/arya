@@ -47,7 +47,8 @@ async def chat_route(req: Request):
         image = _chat_image(body.get("image"))
         surface = body.get("surface") if body.get("surface") in ("list", "hunt") else None
         return await run_in_threadpool(run_chat, body.get("messages", []), client,
-                                       surface=surface, context=body.get("context"), image=image)
+                                       surface=surface, context=body.get("context"), image=image,
+                                       bar=body.get("bar"))
     except RuntimeError as e:
         raise HTTPException(502, str(e)[:200])
 
