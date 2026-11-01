@@ -257,8 +257,13 @@ async def decode_photo_route(req: Request):
         receipt = await run_in_threadpool(decode_photo, body, client,
                                           media_type=media)
     except RuntimeError as e:
+        logging.getLogger("arya.input").warning("input failure: receipt photo model error (%s)", str(e)[:120])
         raise HTTPException(502, str(e)[:200])
-    _need_receipt_date(receipt)
+    try:
+        _need_receipt_date(receipt)
+    except HTTPException:
+        logging.getLogger("arya.input").info("input failure: receipt photo had no readable date")
+        raise
     if demo:
         # The demo files into the visitor's sandbox (never disk), so a
         # hunt can finish on its receipt; the batch judge does not run.

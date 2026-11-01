@@ -22,7 +22,11 @@ export async function decode(file: File) {
     headers: { "Content-Type": pdf ? "application/pdf" : (file.type || "image/jpeg") },
     body: file,
   });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
+  if (!r.ok) {
+    const e = new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`) as Error & { status?: number };
+    e.status = r.status;
+    throw e;
+  }
   return r.json();
 }
 

@@ -88,3 +88,11 @@ class TestHomeWithUSDatedReceipt(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestCostcoPrintedDates(unittest.TestCase):
+    """Costco prints the date with the time after it, or glued on."""
+    def test_time_after_or_glued(self):
+        self.assertEqual(_iso_day("04/26/202416:23"), "2024-04-26")
+        self.assertEqual(_iso_day("P7 04/26/2024 03:58"), "2024-04-26")
+        self.assertEqual(_iso_day("04/26/2024 3:58 PM"), "2024-04-26")

@@ -16,6 +16,11 @@ import { pickerProps } from "../ui/picker";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+type FileResult = { ok: boolean; duplicate?: boolean; reason?: string; stop?: boolean };
+/* The server refuses every read the same way: 401 signed out, 429 an
+ * account limit, 503 reading paused / budget / no key. Trying the next
+ * file would fail identically. */
+const isSystemic = (e: unknown) => [401, 429, 503].includes((e as { status?: number })?.status ?? 0);
 
 type Line = { receipt_id: string; idx: number; decoded_name?: string; raw: string; date?: string;
   merchant?: string; sku?: string; qty?: number; line_total?: number | null; confidence?: number;
@@ -43,6 +48,9 @@ export function Receipts() {
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
+  // Files a bulk add could not read, each with the reason, kept on screen
+  // (a toast alone vanished before the owner could read it).
+  const [failures, setFailures] = useState<{ name: string; reason: string }[]>([]);
 
   const loadScan = useCallback(async () => {
     const q = await get("/api/review");
@@ -109,7 +117,7 @@ export function Receipts() {
   const fileOne = async (file: File, label: string | undefined, withPreview: boolean, quiet: boolean) => {
     if (!file || !file.size) {
       if (!quiet) toast(t("common.receiptFile.empty"));
-      return { ok: false } as { ok: boolean; duplicate?: boolean };
+      return { ok: false, reason: t("common.receiptFile.empty") } as FileResult;
     }
     setStatus(label || t("common.receiptFile.reading"));
     if (withPreview) setPreview(null);
@@ -119,21 +127,21 @@ export function Receipts() {
       setStatus("");
       if (out.demo) {
         if (withPreview) setPreview(rec); else setStatus(t("common.receiptFile.demo"));
-        return { ok: true };
+        return { ok: true } as FileResult;
       }
       if (out.duplicate) {
         if (!quiet) toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) }));
-        return { ok: true, duplicate: true };
+        return { ok: true, duplicate: true } as FileResult;
       }
       const saved = lineSavings(rec.lines || []);
       if (!quiet) toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
       loadScan().catch(showErr);
       loadArchive().catch(() => {});
-      return { ok: true };
+      return { ok: true } as FileResult;
     } catch (e) {
       setStatus("");
       if (!quiet) toast(t(isPdfFile(file) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
-      return { ok: false };
+      return { ok: false, reason: errMsg(e), stop: isSystemic(e) } as FileResult;
     }
   };
 
@@ -142,13 +150,22 @@ export function Receipts() {
     ev.target.value = "";
     if (!files.length) return;
     if (files.length === 1) { await fileOne(files[0], undefined, true, false); return; }
-    let filed = 0, dup = 0, failed = 0;
+    let filed = 0, dup = 0, skipped = 0;
+    const bad: { name: string; reason: string }[] = [];
+    setFailures([]);
     for (let i = 0; i < files.length; i++) {
       const res = await fileOne(files[i], t("receipts.readingN", { i: i + 1, n: files.length, name: files[i].name }), false, true);
-      if (res.duplicate) dup++; else if (res.ok) filed++; else failed++;
+      if (res.duplicate) dup++; else if (res.ok) filed++; else bad.push({ name: files[i].name, reason: res.reason || "" });
+      // A paused reader, a spent budget or a missing key fails every file
+      // the same way: stop, say why, and do not burn through the rest.
+      if (res.stop) { skipped = files.length - i - 1; break; }
     }
     setStatus("");
-    toast(t("receipts.bulkDone", { count: filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "", failed: failed ? t("receipts.bulkFailed", { n: failed }) : "" }));
+    setFailures(bad);
+    const why = bad.length ? t("receipts.bulkWhy", { reason: bad[0].reason }) : "";
+    toast(t("receipts.bulkDone", { count: filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "",
+      failed: bad.length ? t("receipts.bulkFailed", { n: bad.length }) + why : "",
+      skipped: skipped ? t("receipts.bulkSkipped", { n: skipped }) : "" }));
     loadScan().catch(showErr);
     loadArchive().catch(() => {});
   };
@@ -260,6 +277,14 @@ export function Receipts() {
         <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>
         <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden onChange={onFiles} />
         <p className="muted nomargin" id="rc-photo-status">{status}</p>
+        {failures.length > 0 && (
+          <div id="rc-photo-failures" role="alert">
+            <p className="muted nomargin"><strong>{t("receipts.failedHead", { count: failures.length })}</strong></p>
+            {failures.slice(0, 5).map(f => <p key={f.name} className="muted small nomargin">{f.name}: {f.reason}</p>)}
+            {failures.length > 5 && <p className="muted small nomargin">{t("receipts.failedMore", { n: failures.length - 5 })}</p>}
+            <p className="nomargin"><button type="button" className="chip" onClick={() => setFailures([])}>{t("common.dismiss")}</button></p>
+          </div>
+        )}
         <div id="rc-photo-preview">
           {preview && (
             <div className="group pad" style={{ marginTop: 10 }}>

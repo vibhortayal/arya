@@ -38,7 +38,21 @@ def _iso_day(v):
             return datetime.strptime(s, fmt).strftime("%Y-%m-%d")
         except ValueError:
             continue
+    # A date with the time after it, or glued onto it: Costco prints
+    # "04/26/202416:23" and "P7 04/26/2024 03:58". Take the day only.
+    for rx in _US_DAYS:
+        m = rx.search(s)
+        if m:
+            try:
+                return datetime.strptime("/".join(m.groups()), "%m/%d/%Y" if len(m.group(3)) == 4 else "%m/%d/%y").strftime("%Y-%m-%d")
+            except ValueError:
+                continue
     return v
+
+
+# 4-digit year first (may run straight into a clock time), then 2-digit.
+_US_DAYS = (re.compile(r"(?<!\d)(\d{1,2})/(\d{1,2})/(20\d{2})"),
+            re.compile(r"(?<!\d)(\d{1,2})/(\d{1,2})/(\d{2})(?!\d)"))
 
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "decode_v2.md")
 AUTO_THRESHOLD = 0.8
@@ -346,6 +360,18 @@ def _photo_read(messages, client, **kw):
     return parse_json(out)
 
 
+def _refund_totals(lines, subtotal, tax, total):
+    """A refund receipt prints its totals with a trailing minus
+    ("107.97-"), which readers often return as a positive number. When
+    every line is a return the totals are negative too, so the sum of
+    the lines still reconciles with the subtotal."""
+    if lines and all(l.get("line_type") == "return" for l in lines):
+        def neg(v):
+            return -abs(v) if _num(v) else v
+        return neg(subtotal), neg(tax), neg(total)
+    return subtotal, tax, total
+
+
 def decode_photo(image_bytes, client, media_type="image/jpeg"):
     """Receipt photo -> DecodedReceipt via meta_client vision.
     Personal data: handled under the MODEL-POLICY hackathon amendment
@@ -386,12 +412,13 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
         if l.get("needs_user_check"):
             line["status"] = "unverified"
         lines.append(line)
-    lines, reconcile = _finish(lines, dec.get("subtotal"))
+    subtotal, tax, total = _refund_totals(lines, dec.get("subtotal"), dec.get("tax"), dec.get("total"))
+    lines, reconcile = _finish(lines, subtotal)
     rid = "dec-" + hashlib.sha1(image_bytes).hexdigest()[:10]
     return {"receipt_id": rid, "source_type": "grocery",
             "merchant": dec.get("store"), "purchased_at": _iso_day(dec.get("date")),
-            "lines": lines, "subtotal": dec.get("subtotal"), "tax": dec.get("tax"),
-            "total": dec.get("total"), "totals_reconcile": reconcile,
+            "lines": lines, "subtotal": subtotal, "tax": tax,
+            "total": total, "totals_reconcile": reconcile,
             "image_ref": None, "decoded_by": decoded_by}
 
 
