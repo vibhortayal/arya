@@ -23,6 +23,10 @@ No model calls, $0.
 - N10: the coach dot points near the left end of a wide button, off the
   "+10" chip.
 - N11: `/api/town/hints` is kept 30 s like `/api/group`.
+- N4 (part): Quest keeps the game profile from the last visit
+  (`QuestMode` `docMem`, kept current by saves, refreshed in place,
+  dropped on sign out). Second visit to the tab: home in ~50 ms (was
+  ~900 ms locally). The first-visit skeleton waits for a mockup.
 - #19: the Get the app glow animates opacity on a fixed shadow; the map
   reward bar grows with `transform: scaleX`.
 - #38 was already fixed: the preview card sits under `aria-hidden="true"`.
