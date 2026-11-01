@@ -69,8 +69,10 @@ class TestSnapshotDates(unittest.TestCase):
         snap = json.loads(messages[1]["content"].split("\n", 1)[1])
         self.assertIn("still_good", snap)
         self.assertEqual(snap["today"], _d_today().isoformat())
-        row = next(u for u in snap["use_by"] if u["name"].startswith("Greek Yogurt"))
-        self.assertEqual((row["date"], row["days_left"], row["kind"]), (when, 3, "use_by"))
+        row = next(u for u in snap["pack_dates"] if u["name"].startswith("Greek Yogurt"))
+        # The kind goes as words, never the key "use_by" (Tester run 1).
+        self.assertEqual((row["date"], row["days_left"], row["label"]), (when, 3, "use by"))
+        self.assertNotIn("use_by", json.dumps(snap))
 
 
 if __name__ == "__main__":
