@@ -148,7 +148,7 @@ export function QuestMode() {
 
   return (
     <div className="questmode-host">
-      <Suspense fallback={<div className="qm-loading" role="status">{t("quest.openingQuest")}</div>}>
+      <Suspense fallback={<QuestSkeleton />}>
         {editing && (
           <div className="qm-edit" id="quest-edit">
             <EditTitle title={t("quest.edit.title")} editTitle={t("quest.edit.title")} editing onToggle={() => setEditing(false)} id="quest-editdone" />
@@ -161,9 +161,31 @@ export function QuestMode() {
           </div>
         )}
         <div hidden={editing} className="qm-game">
-        {!store ? <div className="qm-loading" role="status">{t("quest.openingQuest")}</div> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homePanels={panels} homeOrder={order} homeHidden={hidden} onEditHome={() => setEditing(true)} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
+        {!store ? <QuestSkeleton /> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homePanels={panels} homeOrder={order} homeHidden={hidden} onEditHome={() => setEditing(true)} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
         </div>
       </Suspense>
+    </div>
+  );
+}
+
+/* The first visit draws the home's shape at once (re-audit N4, mockup
+ * approved 2026-11-01): the title, the Play/Build bar, the picture,
+ * the main card and two rows, in the places the real home puts them.
+ * Its own styles (styles.css .qm-skel): game.css is not loaded yet. */
+function QuestSkeleton() {
+  const { t } = useTranslation();
+  return (
+    <div className="qm-skel" role="status" aria-label={t("quest.openingQuest")}>
+      <h1>{t("tabs.quest")}</h1>
+      <div className="qms-sk qms-seg" />
+      <div className="qms-sk qms-hero" />
+      <div className="qms-card">
+        <span className="qms-line" style={{ width: "42%" }} /><span className="qms-line qms-big" style={{ width: "72%" }} />
+        <span className="qms-line" style={{ width: "94%" }} /><span className="qms-line" style={{ width: "86%" }} /><span className="qms-line" style={{ width: "58%" }} />
+        <div className="qms-sk qms-btn" />
+      </div>
+      <div className="qms-card qms-row"><span className="qms-line" style={{ width: "40%" }} /><span className="qms-line qms-sm" style={{ width: "66%" }} /></div>
+      <div className="qms-card qms-row"><span className="qms-line" style={{ width: "44%" }} /><span className="qms-line qms-sm" style={{ width: "60%" }} /></div>
     </div>
   );
 }
