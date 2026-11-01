@@ -4,25 +4,28 @@ Two paths. Path A is the live presentation on the owner's account (real
 data, 114 trips). Path B is the judge self-serve path (demo household).
 The video follows Path A beats; the narration is Path B safe.
 
-## Beats (fixed order)
+## Beats (fixed order; matches video script v4, `/mnt/project-files/demo-video/`)
 
-1. **Scan.** Upload a receipt PDF. Arya reads it and states the total.
-   Say: "The receipt is a sensor. Every line is checked by arithmetic."
-2. **Verified total.** The receipt shows "Total checks out."
-   Say: "If the lines do not add to the total, nothing posts silently.
-   The bad lines wait in the review queue."
-3. **Learn.** Open the item. Show buys, the interval, the price by store.
-   Say: "Patterns are math, not prompts. Three kept buys make a cadence."
-4. **The list writes itself.** Open Today. Show Running low with date
-   ranges and reasons, and your lists under it (Lists tab for each store).
-5. **A return changes the ledger.** Open Spending. Show
-   the returns total and the trip it came from. Say: "Returns are
-   first class. A returned item is never suggested again."
-6. **Ask Arya.** Type: "We finished the Greek yogurt." The action
-   applies and the list updates. Ask: "What did we spend on coffee?"
-   Say: "The agent answers from the model. It does not invent numbers."
-7. **Start shopping.** Open a list and tap "Start shopping". A quest opens
-   at that list's store. Say: "Arya guides the shop. Nothing buys itself."
+1. **Why and bridge** (presenter, about 1:04). Groceries, scattered notes, no
+   shared memory. Say: "I built Arya during this hackathon. I downloaded 114
+   receipts from the Costco app, three years of my own shopping."
+2. **Proof** (owner's real account: Spending, Receipts, Item). Arya checked all
+   114 lines against the printed totals, in plain code. Show egg whites in 35 of
+   114 trips, and almond flour at $13.59 in one Costco and $16.99 in another.
+   Say: "Patterns are math, not prompts." No model read those 114 as photos;
+   Spark only expands the receipt abbreviations.
+3. **One trip.** The list is already made from what you buy. Add by typing, by
+   voice or by a photo of a paper list. Start shopping: the quest walks you item
+   to item; tap Got it. At a stop, Find it for me (SAM 3.1 finds the shelf,
+   Spark checks it). Empty shelf: Not here? warns the next shopper. At checkout,
+   snap the receipt: Spark reads it first, Arya checks the math, and Wonder
+   re-reads only if the checks flag it.
+4. **At home.** Today shows Use soon (the spinach). Ask Arya: "We finished the
+   yogurt." The list updates. Say: "The agent answers from the model. It does not
+   invent numbers."
+5. **Limits and close.** Honest limits: it depends on its community. The
+   developer portal is live (`/developers`, API reference, MCP connector). Do
+   not say "I have started building".
 
 ## Judge path (no narration)
 
