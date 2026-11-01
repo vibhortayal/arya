@@ -2197,3 +2197,7 @@ body.hunting #offlinebar { display: none !important; }
 .chip.on { background: var(--accent); color: #fff; }
 .listrow .sub.size { color: var(--secondary); }
 .sheet:has(.editsheet-head) .sheetacts { flex-direction: column; }
+
+/* Receipts > To check: the in-place "More details" panel. */
+.detail { margin: 0 0 10px; padding: 4px 14px; background: var(--panel); border-radius: 12px; }
+.detail .row { min-height: 40px; padding: 8px 0; }

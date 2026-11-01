@@ -1052,6 +1052,8 @@ def review_queue():
             if ln.get("status") == "unverified":
                 lines.append({"receipt_id": r["receipt_id"], "idx": li, "date": r["purchased_at"],
                               "raw": ln["raw"], "decoded_name": ln.get("decoded_name"),
+                              "merchant": r.get("merchant"), "sku": ln.get("sku"),
+                              "qty": ln.get("qty"), "line_total": ln.get("line_total"),
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", []),
                               "suggested": ln.get("suggested")})
