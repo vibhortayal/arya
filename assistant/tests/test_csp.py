@@ -107,8 +107,10 @@ class TestHealthAndBuckets(unittest.TestCase):
         # ambient state, not liveness. The 503 path has its own test
         # (test_ops.test_full_disk_answers_503).
         with mock.patch.dict(os.environ, {"ARYA_HEALTH_MIN_FREE_MB": "0"}):
-            self.assertEqual(TestClient(app).get("/health").json(),
-                             {"status": "ok", "service": "arya-api", "stage": 3})
+            with mock.patch.dict(os.environ, {"GIT_COMMIT": "abc1234"}):
+                self.assertEqual(TestClient(app).get("/health").json(),
+                                 {"status": "ok", "service": "arya-api", "stage": 3,
+                                  "commit": "abc1234"})
 
     def test_rate_buckets_drop_idle_ips(self):
         import time
