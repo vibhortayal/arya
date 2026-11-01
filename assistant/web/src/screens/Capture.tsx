@@ -616,7 +616,7 @@ function ResultBody({ r, view, barW, segLabel, onPick, onDiscard }: {
       <div className="pts">+{pts}</div>
       <div className="what">{what}</div>
       {sized && <div className="muted"><Trans i18nKey="capture.storePct" values={{ a, to: b }} components={{ b: <strong /> }} /></div>}
-      {sized && <div className="track" aria-hidden="true"><span className="bar" style={{ width: `${barW ?? a}%` }}></span></div>}
+      {sized && <div className="track" aria-hidden="true"><span className="bar" style={{ transform: `scaleX(${Math.min(100, Math.max(0, barW ?? a ?? 0)) / 100})` }}></span></div>}
       <div className="muted">{goal}</div>
       {last.new_title ? <div className="mp-title">{t("capture.youReNowA", { title: last.new_title })}</div> : null}
       {fresh.length ? <p className="muted">{t("capture.nextHuntHereThisAisle")}</p> : null}

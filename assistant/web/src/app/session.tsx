@@ -1,5 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode, useMemo } from "react";
-import { get, post, forgetReads, keepBootRead } from "../lib/api";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, useMemo } from "react";
+import { get, post, forgetReads, keepBootRead, SESSION_ENDED } from "../lib/api";
+import { toastGlobal } from "../ui/Toast";
+import { t } from "../i18n";
 import type { Currency } from "../lib/format";
 import { DEFAULT_LANGUAGES, type Language } from "../lib/language";
 import { applyLanguage } from "../i18n";
@@ -77,6 +79,9 @@ const Ctx = createContext<Session | null>(null);
  * next account never sees it (the old app reloaded the page). */
 const onLeave = new Set<() => void>();
 export function clearOnSignOut(fn: () => void): void { onLeave.add(fn); }
+/* True from sign out until the next sign in: a read still on its way
+ * when the person signs out gets a 401 that is not news (re-audit N1). */
+let leaving = false;
 function runLeaveHooks() { onLeave.forEach(fn => { try { fn(); } catch { /* keep going */ } }); }
 
 /* The last signed-in account, so a reload with no signal can open the
@@ -210,9 +215,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.layouts) setLayouts(r.layouts);
   }, []);
 
-  const enter = useCallback((u: string, d: boolean) => { forgetReads(); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
+  const enter = useCallback((u: string, d: boolean) => { leaving = false; forgetReads(); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
 
   const leave = useCallback(async () => {
+    leaving = true;
     runLeaveHooks();
     forgetReads();
     remember(null);
@@ -221,6 +227,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(null); setDemo(false); setAdmin({ owner: false, waitlist: false }); setCurrency({ code: "USD", symbol: "$" }); setLanguage("auto"); setOnboarded(null); setShopMode(null); setQuestNudge(false); setDisplay(DISPLAY_DEFAULT); setLayouts({});
     (window as any).__aryaUser = undefined;
   }, []);
+
+  // A 401 on a signed-in session (lib/api): the server forgot it, as a
+  // deploy does to every demo session (re-audit N1). Back to the start
+  // page with one plain sentence, not a screen of failed loads.
+  const who = useRef({ user, demo }); who.current = { user, demo };
+  useEffect(() => {
+    let ending = false;
+    const onEnd = () => {
+      if (ending || leaving || !who.current.user) return;
+      ending = true;
+      const wasDemo = who.current.demo;
+      leave().finally(() => {
+        ending = false; leaving = false;
+        toastGlobal(t(wasDemo ? "common.sessionEndedDemo" : "common.sessionEnded"));
+      });
+    };
+    addEventListener(SESSION_ENDED, onEnd);
+    return () => removeEventListener(SESSION_ENDED, onEnd);
+  }, [leave]);
 
   // One object per change, not per render (speed audit #14): every
   // useSession() screen re-rendered whenever the provider did.

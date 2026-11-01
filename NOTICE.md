@@ -4,8 +4,8 @@ Arya's own code and documents are all rights reserved (see `LICENSE`).
 The items below are not covered by that grant, or need attribution.
 
 ## Code
-- **three.js r160** — `assistant/pwa/vendor/three.module.js`. MIT License,
-  Copyright 2010-2023 Three.js Authors. The license header is kept in the file.
+- **three.js** (npm `three`, bundled by the web build) — MIT License,
+  Copyright 2010-2025 Three.js Authors.
 - **Scalar API Reference 1.76.4** — `assistant/pwa/vendor/scalar/standalone.js`. MIT License,
   Copyright (c) Scalar. Draws the Lists API schema at `/developers/reference`.
 - **impeccable** design skill — `.claude/skills/impeccable/`. Apache License 2.0

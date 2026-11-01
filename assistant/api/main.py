@@ -157,8 +157,8 @@ def _static_cache_control(full_path):
     so they are cached for a year and a repeat visit skips the round
     trip; a new build names new files and index.html (no-cache) points
     at them. Images and icons keep their names across edits: a day,
-    then the browser revalidates by ETag. three.js (/vendor, 670 KB)
-    changes only with a deliberate upgrade: a week (audit M7)."""
+    then the browser revalidates by ETag. Vendored files (/vendor) change
+    only with a deliberate upgrade: a week (audit M7)."""
     p = os.path.realpath(full_path)
     if p.startswith(_BUILT_DIR + os.sep):
         return "public, max-age=31536000, immutable"

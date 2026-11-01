@@ -248,7 +248,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
     <div className={"qg-play qg-live " + (L.kind === "simulated" ? "is-sim" : "")} ref={root}>
       <div className="qg-worldwrap">
         <Suspense fallback={<div className="qg-loading">Opening the store…</div>}>
-          <World3D trip={trip} avatar={avatar} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} onFail={() => { noWorld.current = true; }} />
+          <World3D trip={trip} avatar={avatar} focus={at ?? focus} onReady={api => { world.current = api; }} onArrive={onArrive} onWalking={setWalking} onTapItem={onTapItem} onFail={() => { noWorld.current = true; }} still={briefing || !!sheet} />
         </Suspense>
       </div>
 

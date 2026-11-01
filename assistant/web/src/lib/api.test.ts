@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { get, post, forgetReads } from "./api";
+import { get, post, forgetReads, forgetKept, SESSION_ENDED } from "./api";
 
 const reply = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 
@@ -55,5 +55,42 @@ describe("offline copy", () => {
     expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
     forgetReads();
     expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
+  });
+});
+
+describe("a lost session (re-audit N1)", () => {
+  afterEach(() => vi.restoreAllMocks());
+  const r401 = (detail: string) => () => Promise.resolve(new Response(JSON.stringify({ detail }), { status: 401 }));
+
+  test("a 401 'login required' from /api/ says the session ended", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(r401("login required"));
+    const heard = vi.fn();
+    addEventListener(SESSION_ENDED, heard);
+    await expect(get("/api/lost")).rejects.toThrow();
+    removeEventListener(SESSION_ENDED, heard);
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
+
+  test("a wrong code at sign in is not a lost session", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(r401("wrong email or password"));
+    const heard = vi.fn();
+    addEventListener(SESSION_ENDED, heard);
+    await expect(post("/auth/login", {})).rejects.toThrow();
+    removeEventListener(SESSION_ENDED, heard);
+    expect(heard).not.toHaveBeenCalled();
+  });
+});
+
+describe("kept reads", () => {
+  afterEach(() => { vi.restoreAllMocks(); forgetReads(); });
+
+  test("Demo Town hints are kept 30 s; forgetKept drops them (N7, N11)", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockImplementation(reply({ ok: 1 }));
+    await get("/api/town/hints");
+    await get("/api/town/hints");
+    expect(f).toHaveBeenCalledTimes(1);
+    forgetKept();
+    await get("/api/town/hints");
+    expect(f).toHaveBeenCalledTimes(2);
   });
 });

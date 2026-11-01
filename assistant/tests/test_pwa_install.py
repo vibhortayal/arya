@@ -60,8 +60,13 @@ class TestManifest(unittest.TestCase):
 
     def test_icons_are_precached(self):
         static = sw().split("const STATIC = [")[1].split("];")[0]
+        # The small icons are kept for offline use; the 512 px ones the
+        # browser fetches itself to install (re-audit #24).
         for icon in json.loads(read("manifest.json"))["icons"]:
-            self.assertIn(f'"/{icon["src"]}"', static)
+            if icon["sizes"] == "512x512":
+                self.assertNotIn(f'"/{icon["src"]}"', static)
+            else:
+                self.assertIn(f'"/{icon["src"]}"', static)
 
     def test_icons_served_without_login(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
@@ -120,8 +125,10 @@ class TestServedAtRoot(unittest.TestCase):
         # is what the React app loads at runtime.
         for name in ("index.html", "app.js", "quest.js", "lists.js", "sw.js", "styles.css", "powers.js"):
             self.assertFalse(os.path.exists(os.path.join(STATIC, name)), name)
-        for name in ("scene.js", "manifest.json", "icons/favicon.ico", "vendor/three.module.js"):
+        for name in ("scene.js", "manifest.json", "icons/favicon.ico"):
             self.assertTrue(os.path.exists(os.path.join(STATIC, name)), name)
+        # three.js comes from the build now (re-audit #13), one copy.
+        self.assertFalse(os.path.exists(os.path.join(STATIC, "vendor", "three.module.js")))
 
 
 class TestServiceWorker(unittest.TestCase):
@@ -164,6 +171,8 @@ class TestServiceWorker(unittest.TestCase):
         # first, the cache only the offline fallback.
         self.assertIn('url.pathname.startsWith("/app/") ? cacheFirst(e.request)', fetch)
         self.assertIn('networkFirst(e.request, e.request.mode === "navigate" ? 2500 : 0)', fetch)
+        # Pictures under /assets/ answer from the cache and refresh behind (re-audit #21).
+        self.assertIn("picture ? staleWhileRevalidate(e)", fetch)
         nf = w.split("function networkFirst(")[1]
         self.assertLess(nf.index("fetch(req)\n    .then"), nf.index("caches.match(req"))
         self.assertIn('caches.match("/index.html")', nf)
@@ -177,8 +186,11 @@ class TestServiceWorker(unittest.TestCase):
 
     def test_runtime_files_are_precached(self):
         static = sw().split("const STATIC = [")[1].split("];")[0]
-        for f in ("/scene.js", "/vendor/three.module.js", "/manifest.json", "/assets/characters/manifest.json"):
+        for f in ("/scene.js", "/manifest.json", "/assets/characters/manifest.json"):
             self.assertIn(f'"{f}"', static, f)
+        # Big files are cached on first use, not at install (re-audit #24).
+        for f in ("/vendor/three.module.js", "/icons/icon-512.png", "/icons/maskable-512.png", "/assets/scenes/hero.webp"):
+            self.assertNotIn(f'"{f}"', static, f)
         # Best effort: one missing file never stops the install.
         self.assertIn("STATIC.map(u => c.add(u).catch(() => {}))", sw())
 

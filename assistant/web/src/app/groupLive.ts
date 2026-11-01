@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CLIENT_ID, get } from "../lib/api";
+import { CLIENT_ID, forgetKept, get } from "../lib/api";
 import { useNav } from "./nav";
 import { useSession } from "./session";
 
@@ -35,6 +35,8 @@ export function useGroupLive(): void {
         }
         return;
       }
+      // Someone else changed the group: the 30 s keeps are out of date.
+      forgetKept();
       const n = navRef.current;
       if (!RELOADS.has(n.view)) return;
       // A screen that can refresh in place takes the event (Today,

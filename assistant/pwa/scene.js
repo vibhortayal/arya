@@ -73,7 +73,10 @@
  */
 const SCENE_BASE = (document.currentScript && document.currentScript.src)
   || document.baseURI;
-const THREE_URL = new URL("vendor/three.module.js", SCENE_BASE).href;
+/* three.js comes from the app's own build (the npm "three" the Quest
+ * world uses, one lazy chunk): ui/Scene.tsx sets window.__aryaThree
+ * before it loads this file. The vendored r160 copy is gone (re-audit
+ * #13). Without it the cloud driver falls back to "strip". */
 const SceneDrivers = {};
 
 function createSceneView(el, driverName) {
@@ -152,7 +155,7 @@ function cloudLoadingView(host) {
 }
 
 async function buildCloudView(host, modelUrl) {
-  const THREE = await import(THREE_URL);
+  const THREE = await window.__aryaThree();
   const murl = new URL(modelUrl, SCENE_BASE).href;
   const manifest = await (await fetch(murl)).json();
   const buf = await (await fetch(new URL(manifest.bin, murl))).arrayBuffer();

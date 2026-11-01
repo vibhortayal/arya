@@ -5,7 +5,7 @@ import { t } from "../i18n";
  * is: 930 lines of three.js drivers (photo walk, point cloud, strip)
  * plus the motion layer, with no DOM of its own beyond the mount
  * element. It loads once as a classic script from the static folder
- * at / (it finds vendor/three.module.js next to itself) and exposes
+ * at / (three.js comes from this build: window.__aryaThree) and exposes
  * globals: createSceneView, createMotionLook, createStepDetector,
  * MotionMath. The node harnesses in tests/ (test_motion_nav,
  * test_photo_driver) run it as this classic script. */
@@ -39,6 +39,9 @@ export function loadScene(): Promise<SceneGlobals> {
     if (typeof w.esc !== "function") {
       w.esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
     }
+    // The point-cloud driver asks for three.js here: the build's own
+    // copy, shared with the Quest world (re-audit #13).
+    w.__aryaThree = () => import("three");
     loading = new Promise((resolve, reject) => {
       const s = document.createElement("script");
       s.src = "/scene.js";
