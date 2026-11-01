@@ -158,15 +158,26 @@ class TestJoinAndShare(GroupsBase):
         self.assertNotEqual(new, code)
         self.assertEqual(b.post("/api/group/join", json={"code": code}).status_code, 404)
         self.assertEqual(b.post("/api/group/join", json={"code": new}).status_code, 200)
-        # Already in a group.
-        self.assertEqual(b.post("/api/group/join", json={"code": new}).status_code, 400)
+        # One code, one person: Bob's claim used it up.
+        r = c.post("/api/group/join", json={"code": new})
+        self.assertEqual(r.status_code, 404)
+        self.assertIn("already used", r.json()["detail"])
+        # Already in a group: a clear "leave it first", at preview and join.
+        another = a.post("/api/group/invite").json()["code"]
+        self.assertNotEqual(another, new)
+        r = b.post("/api/group/join", json={"code": another})
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("leave it first", r.json()["detail"])
+        r = b.get("/api/group/preview", params={"code": another})
+        self.assertEqual(r.status_code, 409)
+        self.assertIn("Leave group", r.json()["detail"])
         self.assertEqual(b.post("/api/group", json={"name": "Other"}).status_code, 400)
         # Expired.
         reg = groups._registry()
         gid = reg["member_of"]["bob"]
         reg["groups"][gid]["invite"]["expires"] = int(time.time()) - 1
         groups._save_registry(reg)
-        self.assertEqual(c.post("/api/group/join", json={"code": new}).status_code, 404)
+        self.assertEqual(c.post("/api/group/join", json={"code": another}).status_code, 404)
         # Full.
         new = a.post("/api/group/invite", json={"new": True}).json()["code"]
         old_max = groups.MAX_MEMBERS
@@ -177,6 +188,21 @@ class TestJoinAndShare(GroupsBase):
             self.assertIn("full", r.json()["detail"])
         finally:
             groups.MAX_MEMBERS = old_max
+
+    def test_removed_member_is_told_once(self):
+        a, b = self.c["alice"], self.c["bob"]
+        code = self.make_group()
+        self.assertEqual(b.post("/api/group/join", json={"code": code}).status_code, 200)
+        self.assertEqual(a.post("/api/group/remove", json={"handle": "bob"}).status_code, 200)
+        first = b.get("/api/group").json()
+        self.assertIsNone(first["group"])
+        self.assertTrue(first["removed_from"]["name"])
+        self.assertTrue(first["removed_from"]["at"])
+        # Joining a group again clears it.
+        code = a.post("/api/group/invite").json()["code"]
+        self.assertEqual(b.post("/api/group/join", json={"code": code}).status_code, 200)
+        self.assertEqual(b.post("/api/group/leave").status_code, 200)
+        self.assertNotIn("removed_from", b.get("/api/group").json())
 
     def test_wrong_codes_are_rate_limited(self):
         b = self.c["bob"]
