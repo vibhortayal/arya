@@ -153,6 +153,15 @@ The scored reports and the Gate 0 labels and results are in
 [`docs/evals/`](docs/evals/). The companion research repo,
 `vibhortayal/meta-hackathon-research`, holds the earlier spikes.
 
+## Known limits
+
+- **Testing data.** Arya was tested on one household's receipts (114 Costco
+  receipts) and a small public receipt set. Data was limited, so the results
+  in "Measured results" come from small samples.
+- **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
+  phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
+  390x568, not on those phones.
+
 ## Where things are
 
 | Path | What |

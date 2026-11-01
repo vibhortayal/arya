@@ -14,6 +14,10 @@ another visitor. No store ships pre-mapped: a store's map comes only
 from shoppers' guided scans, with people blurred by SAM first. Camera,
 microphone and chat call the Meta API live.
 
+**Known limits.** Testing data is limited to one household, and limited data
+was available. Real-device testing was done only on an iPhone 17 Pro; other
+phone sizes were checked in a browser (360x640, 390x844, 430x932, 390x568).
+
 **What you need.** A grocery receipt photo for step 6. Without one, tap
 **Use a sample receipt** or **Skip**.
 

@@ -135,6 +135,12 @@ Arya uses Meta models to read receipts, photos and voice, and to answer question
   visitor's changes live in a sandbox for that visit only. The step-by-step
   path is `docs/quest/JUDGE-PLAYBOOK.md`.
 
+## Known limits
+
+Testing data is limited to one household, and limited data was available.
+Real-device testing was done only on an iPhone 17 Pro. Other phone sizes were
+checked in a browser at 360x640, 390x844, 430x932 and 390x568.
+
 ## Team
 
 Team Nightshift, Indie track. One representative, one builder agent.
