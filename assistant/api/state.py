@@ -1215,6 +1215,55 @@ def update_receipt_line(receipt_id, idx, fields):
     return None
 
 
+def lines_add_up(r):
+    """Do this receipt's lines still add up to its printed subtotal (or
+    total less tax)? The printed numbers are never changed by an edit."""
+    target = r.get("subtotal")
+    if target is None and r.get("total") is not None:
+        target = float(r["total"]) - float(r.get("tax") or 0)
+    if target is None:
+        return None
+    s = round(sum(float(l.get("line_total") or 0) for l in r.get("lines", [])), 2)
+    return abs(s - float(target)) <= 0.05
+
+
+def edit_receipt_line(receipt_id, idx, qty=None, line_total=None, name=None):
+    """The full line edit (owner, 2026-11-01): price and quantity on a
+    filed line; the printed total stays as printed. The first edit keeps
+    the line's read values in `edited_from`. Returns (line, summary) or
+    (None, None); summary says whether the lines still add up."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] != receipt_id or not 0 <= idx < len(r["lines"]):
+                continue
+            ln = r["lines"][idx]
+            ln.setdefault("edited_from", {"qty": ln.get("qty"), "line_total": ln.get("line_total"),
+                                          "unit_price": ln.get("unit_price")})
+            if qty is not None:
+                ln["qty"] = qty
+            if line_total is not None:
+                ln["line_total"] = round(float(line_total), 2)
+            if name:
+                ln["decoded_name"] = name
+            q = ln.get("qty")
+            if isinstance(q, (int, float)) and q and ln.get("line_total") is not None:
+                ln["unit_price"] = round(float(ln["line_total"]) / q, 2)
+            ln["status"] = "manual"
+            if "reader_reconcile" not in r:
+                r["reader_reconcile"] = bool(r.get("totals_reconcile"))
+            ok = lines_add_up(r)
+            # A receipt whose edited lines no longer match its printed total
+            # stops counting as checked (and is not shared as a price source).
+            r["totals_reconcile"] = bool(ok)
+            r["lines_edited"] = True
+            _save("receipts.json", rs)
+            lines_sum = round(sum(float(l.get("line_total") or 0) for l in r["lines"]), 2)
+            return ln, {"lines_sum": lines_sum, "subtotal": r.get("subtotal"), "tax": r.get("tax"),
+                        "total": r.get("total"), "adds_up": ok, "lines_edited": True}
+    return None, None
+
+
 def _same_item_key(ln):
     """Costco item numbers name one product; a line with none matches on
     its printed text."""
