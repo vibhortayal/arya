@@ -34,7 +34,7 @@ export function applyDisplay(d: Display): void {
   root.classList.toggle("nopics", !d.pictures);
   root.classList.toggle("nomotion", !d.motion);
 }
-export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean };
+export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean; own_key_signup?: boolean };
 type Session = {
   ready: boolean;
   user: string | null;

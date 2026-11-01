@@ -95,6 +95,8 @@ Use Arya in another AI app lets you add to your list from an AI app you use.
 [if push_reminders] Reminders: Settings, Preferences, Remind me sends at most one push a day when a staple is about to run out.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
+## own key signup | sign up signup join account create account own key byok meta key llm waitlist invite
+[if byok] Sign up with your own Meta key: sign-in is by invitation (the waitlist), but if you have a Meta Model API key you can sign up now. On the sign-in page tap Get your own account, then I have my own Meta key. Enter your email and key (it starts with LLM_), tick that you are responsible for the key under Meta's terms, and tap Check key and email me a code. Arya checks the key with Meta, emails a code, and creates the account when you enter it; nothing is saved before that. Such an account runs only on your own key, never on Arya's: if the key is removed or Meta rejects it, Ask, receipt reading and scans pause (Today shows Fix my Meta key) and your lists keep working. Join the waitlist instead if you want Arya to cover the AI.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
 Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. Signing out deletes it; the demo keeps none.
 
