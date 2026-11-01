@@ -23,7 +23,7 @@ Say "we finished the yogurt" in Ask to mark an item as out. Say "never suggest X
 Use soon: Arya tracks expiry dates and reminds you to use food in time.
 After a first receipt, Today asks you to add dates. At any time open Settings, About Arya, Arya's powers, Use soon, Add a date.
 Tap Take a photo of the date on the pack. Check the item and the date. Tap Looks right, track it.
-Today shows a card "Use soon" and a "Still good?" check. Settings, About Arya, Arya's powers, Food waste shows what expired food cost this month.
+Today shows a card "Use soon" and a "Still good?" check. "Still good?" asks about fresh food (milk, berries, eggs, meat) only in the few days after its usual shelf life (Meta Spark estimates how long each item keeps), counted from the purchase date on the receipt, never for food bought over 30 days ago, and at most 3 at a time. Settings, About Arya, Arya's powers, Food waste shows what expired food cost this month.
 ## ai | ai wrong accurate accuracy trust mistake mistakes incorrect disclaimer reliable safe expiry food safety double-check
 Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where.
 Arya is not a food-safety check: look at the date on the pack, and if food looks or smells off, do not eat it. Nothing read from a photo or receipt is saved until you confirm.

@@ -14,6 +14,46 @@ PRIORS = [("spinach", 5), ("lettuce", 5), ("salad", 5), ("berries", 5),
           ("egg", 21), ("chicken", 4), ("beef", 4), ("pork", 4), ("fish", 3)]
 
 
+# "Still good?" asks only while an item could still be at home: from its
+# usual shelf life to half that again (at least 3 days), and never once
+# the purchase is over CHECK_MAX_DAYS old (owner, 2026-11-01: after a
+# bulk upload of old receipts it asked about milk from months ago).
+CHECK_MAX_DAYS = 30
+
+
+def still_good_window(prior):
+    """(first, last) day after purchase that "Still good?" may ask."""
+    return prior, min(prior + max(3, prior // 2), CHECK_MAX_DAYS)
+
+
+def should_check(age, prior):
+    if not prior or age is None:
+        return False
+    lo, hi = still_good_window(prior)
+    return lo <= age <= hi
+
+
+MAX_CHECKS = 3  # asked at once on Today; the rest wait their turn
+
+_SIZE = re.compile(r"^\d+(\.\d+)?\s*(dz|ct|oz|lb|lbs|pk|gal|ml|l|kg|g|count|ea)$", re.I)
+
+
+def short_name(name):
+    """A name for a question: "2% MILK ORGANIC" -> "2% Milk Organic",
+    "Kirkland Signature 5DZ EGGS 5 dozen" -> "Kirkland Signature Eggs",
+    a long product title is cut at its first comma."""
+    n = str(name or "").split(",")[0].strip()
+    n = re.sub(r"\b\d+\s*dozen\b", " ", n, flags=re.I)
+    words = []
+    for w in n.split():
+        if _SIZE.match(w):
+            continue
+        if w.isupper() and len(w) > 2 and w.isalpha():
+            w = w.capitalize()
+        words.append(w)
+    return " ".join(words) or str(name or "")
+
+
 def prior_days(name):
     n = (name or "").lower()
     for key, days in PRIORS:
