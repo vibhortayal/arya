@@ -154,7 +154,8 @@ recommendations; the owner can change them.
 | Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Sonnet 5.5 | Tester, then Doc maintainer (what changed) |
 | UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | Tester, then Doc maintainer |
 | Quest builder | The Quest game and store designer | Other screens, deploys | Opus | Tester, Doc maintainer |
-| Tester | Tests main after each merged batch (the owner or coordinator triggers it) in a sandbox at 390x844 before deploy; report only | Fixing code, deploying | Sonnet 5.5 | Failures go to the owner and the builder who wrote the PR |
+| Merger | Merges approved PRs one at a time with squash, in a recommended order (docs and smallest first, then PRs touching shared files, later ones rebase first); reports conflicts to the owner and the builder; merges once they are resolved | Code, force-pushes, deploys, owner holds | Sonnet 5.5 | Tester and Ops are informed by the owner; conflicts go to the owner and the builder |
+| Tester | Tests each PR before it merges, and main after a batch when the owner or coordinator asks, in a sandbox at 390x844 before deploy; report only | Fixing code, deploying | Sonnet 5.5 | Failures go to the owner and the builder who wrote the PR |
 | Ops | Deploys, backups, the VM, the Ops screen settings | Feature code | Sonnet 5.5 | Reports the live commit to the owner and the Doc maintainer |
 | Doc maintainer | STATUS.md, USER-JOURNEYS, feature docs, Help tab, guide cards, Ask knowledge, this file | Feature code, deploys | Sonnet 5.5 | Small docs PRs after merges |
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys during judging | Sonnet 5.5 | Owner |
@@ -163,8 +164,15 @@ recommendations; the owner can change them.
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
-1. A builder opens a PR based on `main`. The owner merges, or tells a thread to.
-2. The Tester tests the merged batch and reports to the owner, and tells the
+1. A builder opens a PR based on `main`. The Merger merges it, not the owner. A PR
+   merges only when: it is based on `main` with no conflicts; the Tester says
+   PASS or it is docs-only; there are no new test failures versus `main`; the
+   owner approved the mockup for UI changes; Help, guide and Ask upkeep is done
+   and the PR template is filled; and no other open PR touches the same files.
+   The Merger merges one at a time with squash, never force-pushes and respects
+   owner holds. If a PR conflicts, the Merger reports it to the owner and the
+   builder, and merges after it is resolved. The Merger never deploys.
+2. The Tester tests the PR before it merges (and main after a batch, when the owner or coordinator asks) and reports to the owner, and tells the
    builder who wrote a failing PR. The Tester does not fix.
 3. After a merge, the builder tells the Doc maintainer what changed and which
    screens or paths moved. The Doc maintainer updates STATUS.md and the docs in a
@@ -172,7 +180,7 @@ recommendations; the owner can change them.
    avoid merge conflicts. Help, guide cards and Ask knowledge for a change still
    ship in the builder's own PR (see Help upkeep above); the Doc maintainer
    checks them afterwards.
-4. Builders do not tell Ops that a merge is ready. The owner merges, the Tester
+4. Builders do not tell Ops that a merge is ready. The Merger merges, the Tester
    reports to the owner, and the owner says "deploy" in the Ops thread. **Only Ops
    deploys, and only after that word.** No deploys after the Nov 4,
    9:00 PM ET submission and during judging, except a rollback, which also
