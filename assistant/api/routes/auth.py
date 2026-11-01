@@ -105,7 +105,7 @@ def _quiet(fn, *a):
         fn(*a)
     except Exception as e:  # noqa: BLE001
         import logging
-        logging.getLogger("arya.mailer").warning("waitlist mail failed: %s", type(e).__name__)
+        logging.getLogger("arya.mailer").warning("background mail failed: %s", type(e).__name__)
 
 
 @router.post("/auth/waitlist")
@@ -375,6 +375,38 @@ async def auth_logout(req: Request):
     return resp
 
 
+@router.post("/auth/account/delete/code")
+async def auth_delete_code(req: Request):
+    """Email the 6-digit code that confirms deleting an account with no
+    password (signed in by email code or Google). Password accounts
+    confirm with their password instead (owner, 2026-11-01)."""
+    from api import mailer, state
+    info = auth.session_info(req.cookies.get(auth.COOKIE))
+    if not info or info["demo"]:
+        raise HTTPException(403, "the demo household has no account to delete")
+    user = info["user"]
+    tok = state._current_user.set(None)
+    try:
+        if auth.has_password(user):
+            raise HTTPException(400, "this account confirms with its password")
+    finally:
+        state._current_user.reset(tok)
+    if "@" not in user or not mailer.configured():
+        raise HTTPException(503, "Arya can't email a code right now. "
+                            "Write to support@teamnightshift.org and we will delete your data.")
+    _email_guard(req, _code_hits, 5)
+    try:
+        code = auth.new_delete_code(user)
+    except PermissionError as e:
+        raise HTTPException(429, str(e))
+    minutes = auth.DELETE_CODE_TTL // 60
+    if not await run_in_threadpool(mailer.account_delete_code, user, code, minutes):
+        auth._delete_codes.pop(user, None)   # let them ask again at once
+        raise HTTPException(502, "Arya couldn't send the email. Try again in a minute, "
+                            "or write to support@teamnightshift.org.")
+    return {"sent": True, "to": user, "minutes": minutes}
+
+
 @router.post("/auth/account/delete")
 async def auth_delete_account(req: Request):
     """Erase the caller's account (Tranche 1, register #2):
@@ -398,8 +430,13 @@ async def auth_delete_account(req: Request):
             state._current_user.reset(tok)
 
     everyone = _root_call(lambda: list(auth.users()))
-    if not _root_call(lambda: auth.verify(user, body.get("password", ""))):
-        raise HTTPException(401, "that password does not match this account")
+    if _root_call(lambda: auth.has_password(user)):
+        if not _root_call(lambda: auth.verify(user, body.get("password", ""))):
+            raise HTTPException(401, "that password does not match this account")
+    elif not auth.check_delete_code(user, body.get("code", "")):
+        # Email-code and Google accounts have no password: they confirm
+        # with the code /auth/account/delete/code emailed them.
+        raise HTTPException(401, "that code is wrong or has expired")
     social.scrub_handle(user.split("@")[0], everyone, skip=user)
     # Leave any group first, so the others keep their lists and the
     # group's owner passes on (owner, 2026-10-29).
@@ -423,7 +460,10 @@ def auth_me(req: Request):
     # Settings shows the owner rows only to their accounts, so nobody
     # else calls the owner-only routes and logs a 401 or 403 (audit L7).
     real = not info["demo"]
+    # has_password picks the confirm box on "Delete my account":
+    # a password, or a code emailed to the account (owner, 2026-11-01).
     return {**info, "owner": real and _is_owner(info["user"]),
+            "has_password": real and auth.has_password(info["user"]),
             "waitlist_admin": real and _is_waitlist_admin(info["user"])}
 
 

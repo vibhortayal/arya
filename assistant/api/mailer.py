@@ -44,7 +44,7 @@ def send(to, subject, text, body_html):
         with urllib.request.urlopen(req, timeout=10):
             return True
     except (urllib.error.URLError, OSError, ValueError) as e:
-        log.warning("mail to a waitlist address failed: %s", type(e).__name__)
+        log.warning("mail failed: %s", type(e).__name__)
         return False
 
 
@@ -72,6 +72,34 @@ def waitlist_joined(email, app_url):
         f'<p><a href="{u}" style="display:inline-block;background:#C2410C;color:#fff;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:999px">Try the demo</a></p>'
         "<p>Joined by mistake? Ignore this email. We only write again to send your invitation.</p>"
         f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">You got this because {e} asked to join the Arya waitlist.<br>This address is not monitored. For help, or to be taken off the list, write to {html.escape(reply_to())}.</p>'
+        "</div>")
+    return send(email, subject, text, body)
+
+
+def account_delete_code(email, code, minutes):
+    """The code that confirms erasing an account (owner, 2026-11-01).
+    Accounts made by email code or Google have no password, so this
+    email is how they prove it is really them. True if Resend took it."""
+    subject = f"{code} is your code to delete your Arya account"
+    text = (
+        f"Your code is {code}\n\n"
+        "Type it in Arya to erase your account. This deletes your lists, receipts "
+        "and photos for good.\n\n"
+        f"The code works for {minutes} minutes.\n\n"
+        "Didn't ask to delete your account? Ignore this email and nothing happens. "
+        "Someone may have your phone or your Arya session open: sign out on devices "
+        f"you don't use, and write to {reply_to()} if anything looks wrong.\n")
+    c = html.escape(code)
+    body = (
+        '<div style="font:15px/1.55 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1b1b1e;max-width:520px;margin:0 auto;padding:22px">'
+        '<div style="font-weight:800;font-size:22px;letter-spacing:-.02em;margin-bottom:12px">Arya</div>'
+        '<h1 style="font-size:20px;margin:0 0 8px">Your code to delete your account</h1>'
+        f'<p style="font-size:30px;font-weight:800;letter-spacing:.18em;margin:14px 0">{c}</p>'
+        "<p>Type it in Arya to erase your account. This deletes your lists, receipts and photos for good.</p>"
+        f"<p>The code works for {int(minutes)} minutes.</p>"
+        '<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">'
+        "Didn't ask to delete your account? Ignore this email and nothing happens. "
+        f"If anything looks wrong, write to {html.escape(reply_to())}.</p>"
         "</div>")
     return send(email, subject, text, body)
 
