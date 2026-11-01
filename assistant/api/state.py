@@ -1181,6 +1181,24 @@ def link_receipt_store(receipt_id, store_id):
     return False
 
 
+def set_receipt_store_info(receipt_id, info, meta=None):
+    """Attach the header read from a receipt photo: store_info (chain,
+    number, street, city, state, zip) and receipt_meta (phone, time,
+    register, payments, tax lines...). Only those two fields change;
+    lines, totals and everything else on the receipt stay as they are."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id:
+                if info:
+                    r["store_info"] = dict(info)
+                if meta:
+                    r["receipt_meta"] = dict(meta)
+                _save("receipts.json", rs)
+                return True
+    return False
+
+
 def teach_name(sku, name):
     """A user-confirmed line name teaches the dictionary entry for its SKU."""
     if not sku:

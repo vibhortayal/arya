@@ -386,6 +386,8 @@ def receipt_detail(receipt_id):
             out.update({
                 "subtotal": r.get("subtotal"), "tax": r.get("tax"),
                 "source_type": r.get("source_type"),
+                **({"store_info": r["store_info"]} if r.get("store_info") else {}),
+                **({"receipt_meta": r["receipt_meta"]} if r.get("receipt_meta") else {}),
                 "savings": receipt_savings(r),
                 "lines": [{"name": ln.get("decoded_name") or ln.get("raw"),
                            "qty": signed(ln, "qty") if ln.get("qty") is not None else 1,

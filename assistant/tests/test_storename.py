@@ -158,3 +158,40 @@ class TestStoreInfoFromPhoto(unittest.TestCase):
         rec = service._photo_record(dec, b"x", "m")
         self.assertEqual(rec["store_info"], {"chain": "Costco", "number": "423", "city": "Sunnyvale", "zip": "94086"})
         self.assertNotIn("store_info", service._photo_record({**dec, "store_info": None}, b"y", "m"))
+
+
+class TestReceiptMeta(unittest.TestCase):
+    def test_everything_printed_is_kept_and_numbers_are_cut_to_four_digits(self):
+        from api.decode import service
+        meta = service.clean_receipt_meta({
+            "phone": "(408) 730-9034", "time": "14:07", "register": "Reg 12", "transaction_no": "0042 0113",
+            "cashier": "Maria", "member_last4": "111122223333",
+            "payments": [{"method": "VISA", "last4": "4111111111111234", "amount": 214.38}, {"method": "", "amount": 1}],
+            "tax_lines": [{"label": "TAX A", "amount": 3.1}, {"label": "x"}],
+            "other": ["Thank you for shopping", "Card 4111111111111234 approved"], "junk": "dropped"})
+        self.assertEqual(meta["member_last4"], "3333")
+        self.assertEqual(meta["payments"], [{"method": "VISA", "last4": "1234", "amount": 214.38}])
+        self.assertEqual(meta["tax_lines"], [{"label": "TAX A", "amount": 3.1}])
+        self.assertNotIn("junk", meta)
+        self.assertNotIn("4111111111111234", " ".join(meta["other"]))
+        self.assertEqual(meta["phone"], "(408) 730-9034")
+
+    def test_photo_record_and_backfill_keep_lines_untouched(self):
+        import os, tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import state
+        from api.decode import service
+        dec = {"store": "COSTCO WHOLESALE", "date": "2026-10-01", "lines": [], "subtotal": 0, "tax": 0, "total": 0,
+               "store_info": {"chain": "Costco", "city": "Sunnyvale", "number": "423"},
+               "receipt_meta": {"cashier": "Maria"}}
+        rec = service._photo_record(dec, b"z", "m")
+        self.assertEqual(rec["receipt_meta"], {"cashier": "Maria"})
+        rec.update(receipt_id="bf1", merchant="Costco Wholesale", purchased_at="2026-10-01", lines=[
+            {"raw": "MILK", "decoded_name": "Milk", "qty": 1, "line_total": 3.0, "line_type": "item", "status": "auto"}])
+        rec.pop("store_info"); rec.pop("receipt_meta")
+        state.set_current_user(None)
+        state.add_receipts([rec])
+        self.assertTrue(state.set_receipt_store_info("bf1", {"city": "Sunnyvale"}, {"cashier": "Maria"}))
+        got = [r for r in state.own_receipts() if r["receipt_id"] == "bf1"][0]
+        self.assertEqual(got["store_info"], {"city": "Sunnyvale"})
+        self.assertEqual(got["lines"][0]["line_total"], 3.0)
