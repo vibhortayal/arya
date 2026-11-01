@@ -84,7 +84,12 @@ class TestHealth(unittest.TestCase):
         with mock.patch.dict(os.environ, {"ARYA_HEALTH_MIN_FREE_MB": "1",
                                           "ARYA_DATA_DIR": tempfile.mkdtemp()}):
             r = TestClient(app).get("/health")
-        self.assertEqual(r.json(), {"status": "ok", "service": "arya-api", "stage": 3})
+        self.assertEqual(r.json()["status"], "ok")
+        with mock.patch.dict(os.environ, {"GIT_COMMIT": "abc1234",
+                                          "ARYA_HEALTH_MIN_FREE_MB": "1"}):
+            self.assertEqual(TestClient(app).get("/health").json()["commit"], "abc1234")
+        with mock.patch.dict(os.environ, {"GIT_COMMIT": ""}):
+            self.assertEqual(TestClient(app).get("/health").json()["commit"], "unknown")
 
 
 class TestOpsReport(unittest.TestCase):

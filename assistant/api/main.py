@@ -38,6 +38,12 @@ async def _model_failure(request, exc):
                         status_code=502)
 
 
+def _commit():
+    """The git commit this image was built from (build arg GIT_COMMIT),
+    so the owner can tell what is deployed. "unknown" when not passed."""
+    return os.environ.get("GIT_COMMIT") or "unknown"
+
+
 @app.get("/health")
 def health():
     # No receipt count: /health runs with no account, so it counted the
@@ -58,8 +64,10 @@ def health():
         problems.append("disk check failed")
     if problems:
         return JSONResponse({"status": "degraded", "service": "arya-api",
-                             "problems": problems}, status_code=503)
-    return {"status": "ok", "service": "arya-api", "stage": 3}
+                             "commit": _commit(), "problems": problems},
+                            status_code=503)
+    return {"status": "ok", "service": "arya-api", "stage": 3,
+            "commit": _commit()}
 
 
 # Order matters only where two paths could match the same request; this

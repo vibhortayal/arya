@@ -34,7 +34,7 @@ Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`
 
 ## One-time setup on the VM
 1. Add to `assistant/deploy/.env`: `ARYA_OPS_EMAIL=you@example.com` (and `RESEND_API_KEY` is already there). `chmod 600 .env`.
-2. `git pull`, then `docker compose up -d --build` (not `restart`: restart does not re-read `.env`).
+2. `git pull`, then `GIT_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build` (not `restart`: restart does not re-read `.env`). `/health` then shows which commit is running (`curl -s https://arya.teamnightshift.org/health`); without `GIT_COMMIT` it says `"unknown"`.
 3. Try it: `docker compose exec -T api python -m harness.ops report`. Then with `--email`.
 4. Cron (`crontab -e`), times in the VM's zone:
    ```

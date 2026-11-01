@@ -15,6 +15,10 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.api
+      # /health reports this. Deploy with
+      #   GIT_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     # Come back after a VM reboot or a crash. unless-stopped keeps a
     # deliberate `docker compose stop` stopped.
     restart: unless-stopped
