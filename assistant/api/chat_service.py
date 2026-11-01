@@ -397,7 +397,24 @@ def apply_actions(actions, added=None):
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
             continue
-        item_id = _resolve(a.get("item"))
+        qty, unit, said = 1, "", a.get("item")
+        if a.get("type") in ("add_to_list", "ran_out"):
+            # An add reads the quantity out of the words ("two lemons" ->
+            # Lemons x 2), and matches only a name that IS a tracked item:
+            # "oat milk" must not become "Milk - 2%" (owner, 2026-11-01).
+            from api.list.intake import existing_item_id, split_list_items_units
+            parsed = split_list_items_units(str(said or ""))
+            if parsed:
+                said, qty, unit = parsed[0]
+            q = a.get("qty")
+            if isinstance(q, (int, float)) and not isinstance(q, bool) and 1 <= q <= 99:
+                qty = int(q)
+            a = dict(a, item=said)
+            item_id = existing_item_id(said or "", state.dictionary()["entries"], state.flags())
+            if item_id and item_id.startswith("manual-"):
+                item_id = None   # a typed row: handled below, same as a new name
+        else:
+            item_id = _resolve(a.get("item"))
         target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
         if a.get("type") == "add_to_list" and a.get("list") and target is None:
             ask = _which_list(a["list"])
@@ -425,6 +442,10 @@ def apply_actions(actions, added=None):
                 if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                     added.append({"item_id": tid, "name": name})
                 fl.update({"manual": True, "dismissed_on": None})
+                if qty != 1:
+                    fl["qty_override"] = qty
+                if unit:
+                    fl["unit"] = unit
                 if tid.startswith("manual-"):
                     fl["name"] = name
                 if target:
@@ -433,7 +454,8 @@ def apply_actions(actions, added=None):
                 note = ""
                 if state.classify_grocery(name)["kind"] == "other":
                     note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
-                applied.append(_t("added", "Added {name}{dest}.", name=name, dest=dest) + note)
+                shown = f"{name} \u00d7{qty}" if qty != 1 else name
+                applied.append(_t("added", "Added {name}{dest}.", name=shown, dest=dest) + note)
                 continue
         if not item_id:
             skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
@@ -454,9 +476,13 @@ def apply_actions(actions, added=None):
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
             fl["manual"] = True
+            if qty != 1:
+                fl["qty_override"] = qty
+            if unit:
+                fl["unit"] = unit
             if target:
                 fl["list"] = target["id"]
-            applied.append(_t("added", "Added {name}{dest}.", name=nm, dest=dest))
+            applied.append(_t("added", "Added {name}{dest}.", name=f"{nm} \u00d7{qty}" if qty != 1 else nm, dest=dest))
         elif t == "ran_out":
             fl["out"] = today
             applied.append(_t("ran_out", "Marked {name} as out — it's on the list.", name=nm))
