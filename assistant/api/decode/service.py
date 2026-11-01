@@ -305,7 +305,7 @@ def decode_scanned_pdf(pdf_bytes, client):
     reader and merge the pages into one receipt. The model proposes,
     arithmetic disposes: totals come from the last page that has them,
     and _finish re-checks the merged lines against the subtotal."""
-    recs = [decode_photo(img, client, media_type="image/jpeg")
+    recs = [decode_photo(img, client, media_type="image/jpeg", page=True)
             for img in render_pdf_pages(pdf_bytes)]
     first = recs[0]
     lines = [ln for r in recs for ln in r["lines"]]
@@ -332,26 +332,25 @@ def load_photo_prompt():
     return text.split("SYSTEM:", 1)[1].strip() + "\n\n" + load_hints()
 
 
-# Photo decode reads with Wonder first, per the MODEL-POLICY hackathon
-# amendment (through 2026-11-04; WONDER-EVAL.md is the evidence: Gate 0
-# public photos, Wonder 98.98% identity+price vs Spark 93.88%, price
-# errors 0 vs 4, silent errors 0 vs 4). Wonder's cost is latency —
-# 34.4 s mean / 60.5 s p95 in the eval — so the attempt is bounded at
-# 90 s (p95 plus headroom) and ANY failure (timeout, HTTP error,
-# unparseable output) falls back to Spark Standard, the previous
-# production reader at its production configuration. The receipt
-# records the reader in decoded_by, so a fallback is never silent.
+# Wonder is the second reader (WONDER-EVAL.md: Gate 0 public photos,
+# Wonder 98.98% identity+price vs Spark 93.88%, price errors 0 vs 4).
+# Its cost is latency (34.4 s mean / 60.5 s p95 in the eval), so every
+# Wonder attempt is bounded at 90 s (p95 plus headroom). With
+# ARYA_PHOTO_READER=wonder, ANY Wonder failure (timeout, HTTP error,
+# unparseable output) falls back to Spark. The receipt records the
+# reader in decoded_by, so a fallback is never silent.
 PHOTO_WONDER_TIMEOUT_S = 90
 
 
 def photo_reader():
-    """Which model reads receipt photos: ARYA_PHOTO_READER=wonder
-    (default, the amendment path) or spark; the owner's Ops screen
-    switch (site.json) wins over the environment. The amendment expires
-    2026-11-04; flipping this env var and restarting moves the
-    live site onto Spark Standard with no deploy."""
+    """Which model reads receipt photos. ARYA_PHOTO_READER=auto (the
+    default): Muse Spark reads first and Muse Wonder re-reads only a
+    receipt the arithmetic checks flag (decode/checks.py). spark: Spark
+    only. wonder: Wonder first, Spark if Wonder fails. The owner's Ops
+    screen switch (site.json) wins over the environment, with no
+    redeploy."""
     from api import site_flags
-    v = site_flags.photo_reader() or os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
+    v = site_flags.photo_reader() or os.environ.get("ARYA_PHOTO_READER", "auto").strip().lower()
     if v == "auto":
         return "auto"
     return "standard" if v in ("spark", "standard") else "wonder"
@@ -374,11 +373,11 @@ def _refund_totals(lines, subtotal, tax, total):
     return subtotal, tax, total
 
 
-def decode_photo(image_bytes, client, media_type="image/jpeg"):
+def decode_photo(image_bytes, client, media_type="image/jpeg", page=False):
     """Receipt photo -> DecodedReceipt via meta_client vision.
-    Personal data: handled under the MODEL-POLICY hackathon amendment
-    (Wonder for this path through 2026-11-04; the Spark fallback runs on the
-    tier set by ARYA_SPARK_TIER, Contributor by default since 2026-11-01).
+    Reader: photo_reader() (Spark first, Wonder on a flagged read, by
+    default). Spark runs on the tier set by ARYA_SPARK_TIER (Standard
+    by default); MODEL-POLICY.md has the policy and its history.
     Prompt: prompts/decode_photo_v1.md (spike-2 verified, Gate 0 passed).
     Photo semantics: price is the PAID amount (discounts already folded by
     the prompt); the discount value rides on the line for display, and any
@@ -391,6 +390,12 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
                     {"type": "text", "text": "Decode this receipt photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
     reader = photo_reader()
+    if reader == "auto" and page:
+        # One page of a scanned PDF has no totals of its own, so the
+        # receipt checks would flag every page and pay for a Wonder
+        # re-read each time. Spark reads the page; the merged receipt is
+        # checked once (decode_scanned_pdf, _finish).
+        reader = "standard"
     if reader == "auto":
         return _decode_auto(messages, client, image_bytes)
     try:

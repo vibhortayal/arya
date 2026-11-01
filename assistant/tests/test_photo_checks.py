@@ -112,12 +112,28 @@ class TestAutoReader(unittest.TestCase):
         self.assertIn("wonder_failed", r["second_read"])
         self.assertTrue(all(l["status"] == "unverified" for l in r["lines"]))
 
-    def test_default_reader_is_unchanged(self):
+    def test_default_reader_is_auto(self):
+        # Since 2026-11-01 (judge review, finding 1) the default is auto:
+        # a clean Spark read is the only call.
         os.environ.pop("ARYA_PHOTO_READER")
         c = FakeClient(dec([3.99]), dec([3.99]))
         service.decode_photo(b"img5", c)
-        self.assertEqual(c.calls, ["wonder"])
+        self.assertEqual(c.calls, ["standard"])
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDefaultReaderIsAuto(unittest.TestCase):
+    """Judge review 2026-11-01, finding 1: the code default matches the
+    README (Spark first, Wonder only on a flagged read)."""
+
+    def test_no_env_no_switch_means_auto(self):
+        from unittest import mock
+        from api.decode import service
+        from api import site_flags
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ARYA_PHOTO_READER", None)
+            with mock.patch.object(site_flags, "photo_reader", return_value=None):
+                self.assertEqual(service.photo_reader(), "auto")
