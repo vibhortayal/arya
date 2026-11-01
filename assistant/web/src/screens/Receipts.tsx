@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
@@ -37,6 +37,43 @@ type Rec = { receipt_id: string; merchant: string; purchased_at: string; items?:
 type Unsettled = { session_id: string; store: string; finished_at?: string; items_collected: number; items_total: number };
 type Archive = { receipts: Rec[]; unsettled?: Unsettled[] };
 
+/* Archive filters. Dates are the receipt's own purchase day (YYYY-MM-DD),
+ * compared as text, so there is no time zone to get wrong. */
+const DATE_KEYS = ["all", "month", "30", "year", "custom"] as const;
+const SORT_KEYS = ["new", "old", "high", "low", "store"] as const;
+type DateKey = (typeof DATE_KEYS)[number];
+type SortKey = (typeof SORT_KEYS)[number];
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const day = (r: Rec) => String(r.purchased_at).slice(0, 10);
+const amt = (r: Rec) => (r.total != null ? r.total : 0);
+function dateRange(key: DateKey, from: string, to: string, now = new Date()): [string, string] {
+  if (key === "month") return [ymd(now).slice(0, 8) + "01", "9999"];
+  if (key === "30") return [ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30)), "9999"];
+  if (key === "year") return [`${now.getFullYear()}-01-01`, "9999"];
+  if (key === "custom") return [from || "0000", to || "9999"];
+  return ["0000", "9999"];
+}
+export function filterReceipts(list: Rec[], f: { query: string; date: DateKey; from: string; to: string; sort: SortKey }, now = new Date()): Rec[] {
+  const q = f.query.trim().toLowerCase().replace(/^\$/, "");
+  const [lo, hi] = dateRange(f.date, f.from, f.to, now);
+  const out = list.filter(r => {
+    const d = day(r);
+    if (d < lo || d > hi) return false;
+    if (!q) return true;
+    const money = r.total != null ? Math.abs(r.total).toFixed(2) : "";
+    return (r.merchant || "").toLowerCase().includes(q) || (r.by || "").toLowerCase().includes(q) || money.includes(q);
+  });
+  const newest = (a: Rec, b: Rec) => day(b).localeCompare(day(a));
+  const cmp: Record<SortKey, (a: Rec, b: Rec) => number> = {
+    new: newest,
+    old: (a, b) => -newest(a, b),
+    high: (a, b) => amt(b) - amt(a) || newest(a, b),
+    low: (a, b) => amt(a) - amt(b) || newest(a, b),
+    store: (a, b) => (a.merchant || "").localeCompare(b.merchant || "", undefined, { sensitivity: "base" }) || newest(a, b),
+  };
+  return out.sort(cmp[f.sort]);
+}
+
 export function Receipts() {
   const { t } = useTranslation();
   const nav = useNav();
@@ -48,6 +85,11 @@ export function Receipts() {
   // No "No receipts filed yet." until the archive has actually loaded.
   const [loaded, setLoaded] = useState(false);
   const [who, setWho] = useState("all");
+  const [query, setQuery] = useState("");
+  const [dateKey, setDateKey] = useState<DateKey>("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [sort, setSort] = useState<SortKey>("new");
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
@@ -95,7 +137,12 @@ export function Receipts() {
     : shared && people.length
       ? t("receipts.countShared", { count: archive.receipts.length, people: people.length + 1, mine: mineCount })
       : t("receipts.countMine", { count: archive.receipts.length });
-  const shown = archive.receipts.filter(r => whoNow === "all" || (whoNow === "mine" ? r.mine : r.by === whoNow));
+  const ofWho = useMemo(() => archive.receipts.filter(r => whoNow === "all" || (whoNow === "mine" ? r.mine : r.by === whoNow)),
+    [archive.receipts, whoNow]);
+  const shown = useMemo(() => filterReceipts(ofWho, { query, date: dateKey, from, to, sort }), [ofWho, query, dateKey, from, to, sort]);
+  const filtered = !!query.trim() || dateKey !== "all";
+  const clearFilters = () => { setQuery(""); setDateKey("all"); setFrom(""); setTo(""); };
+  const sum = shown.reduce((n, r) => n + (r.total != null && !(r.returns_total && !r.items) ? r.total : 0), 0);
   const unsettled = archive.unsettled || [];
 
   const dismiss = (sid: string) => attempt(async () => {
@@ -226,8 +273,38 @@ export function Receipts() {
           <button key={k} type="button" className={whoNow === k ? "on" : ""} data-rc-who={k} aria-pressed={whoNow === k} onClick={() => setWho(k)}>{label}</button>
         ))}
       </div>
+      {archive.receipts.length > 0 && (
+        <div id="rc-filter" className="rcfilter">
+          <div className="rcfield">
+            <input type="search" id="rc-search" className="lv-search" autoComplete="off" maxLength={80} value={query}
+              placeholder={t("receipts.searchPlaceholder")} aria-label={t("receipts.searchPlaceholder")}
+              onChange={e => setQuery(e.target.value)} />
+          </div>
+          <div className="rcbar">
+            <select id="rc-date" className={"rcsel" + (dateKey !== "all" ? " act" : "")} aria-label={t("receipts.dateLabel")}
+              value={dateKey} onChange={e => setDateKey(e.target.value as DateKey)}>
+              {DATE_KEYS.map(k => <option key={k} value={k}>{t("receipts.date_" + k)}</option>)}
+            </select>
+            <select id="rc-sort" className={"rcsel" + (sort !== "new" ? " act" : "")} aria-label={t("receipts.sortLabel")}
+              value={sort} onChange={e => setSort(e.target.value as SortKey)}>
+              {SORT_KEYS.map(k => <option key={k} value={k}>{t("receipts.sort_" + k)}</option>)}
+            </select>
+          </div>
+          {dateKey === "custom" && (
+            <div className="rcdates">
+              <input type="date" id="rc-from" value={from} max={to || undefined} aria-label={t("receipts.dateFrom")} onChange={e => setFrom(e.target.value)} />
+              <span className="sub">{t("receipts.dateTo")}</span>
+              <input type="date" id="rc-to" value={to} min={from || undefined} aria-label={t("receipts.dateToAria")} onChange={e => setTo(e.target.value)} />
+            </div>)}
+          <p className="rcsum" id="rc-sum" aria-live="polite">
+            <span>{filtered
+              ? t("receipts.sumFiltered", { shown: shown.length, all: ofWho.length }) + (shown.length ? " · " + money(sum, currency) : "")
+              : t("receipts.sumAll", { count: shown.length }) + (shown.length ? " · " + money(sum, currency) : "")}</span>
+            {filtered && <button type="button" className="rcclear" id="rc-clear" onClick={clearFilters}>{t("receipts.clear")}</button>}
+          </p>
+        </div>)}
       <div id="rc-archive" className="group">
-        {!loaded ? null : !unsettled.length && !shown.length ? <Empty>{t("receipts.noReceiptsFiledYet")}</Empty> : <>
+        {!loaded ? null : !unsettled.length && !ofWho.length ? <Empty>{t("receipts.noReceiptsFiledYet")}</Empty> : <>
           {unsettled.map(e => (
             <div key={e.session_id} className="sessrow">
               <span className="grow"><span className="name">{e.store}</span>
@@ -238,6 +315,10 @@ export function Receipts() {
               <button className="btn" data-dismiss={e.session_id} type="button" onClick={() => dismiss(e.session_id)}>{t("common.dismiss")}</button>
             </div>
           ))}
+          {!shown.length && ofWho.length > 0 && (
+            <div className="rcnone" id="rc-none"><strong>{t("receipts.noMatch")}</strong>
+              <span className="sub">{t("receipts.noMatchSub")}</span>
+              <button type="button" className="rcclear" onClick={clearFilters}>{t("receipts.clearFilters")}</button></div>)}
           {shown.map(r => (
             <button key={r.receipt_id} className="sessrow" data-receipt={r.receipt_id} type="button"
               onClick={() => nav.show("receipt", { receipt_id: r.receipt_id, id: r.receipt_id })}>
