@@ -21,12 +21,15 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catc
 
 export const installed = () => (typeof matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) || (navigator as any).standalone === true;
 export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+export const isAndroid = () => /android/i.test(navigator.userAgent);
 
 /* Something to offer (the install prompt, or iPhone steps), and the go action. */
 export function useA2hs(demo: boolean) {
   const { prompt: deferred, take } = useInstallPrompt();
   const [steps, setSteps] = useState(false);
-  const available = !installed() && !demo && (!!deferred || isIOS());
+  // Android without the browser's prompt (another browser, or Chrome
+  // before it offers) gets the steps too (owner, 2026-11-01).
+  const available = !installed() && !demo && (!!deferred || isIOS() || isAndroid());
   const go = async () => {
     if (deferred) {
       const ev = take();
@@ -49,24 +52,59 @@ export function CopyLink({ id }: { id: string }) {
   return <button className="linkbtn" type="button" id={id} onClick={copy}>{t(state === "ok" ? "a2hs.linkCopied" : state === "fail" ? "a2hs.copyFailed" : "a2hs.copyLink")}</button>;
 }
 
-/* The iPhone steps, one copy for the landing, Today and Settings. */
+/* The steps, one copy for the landing, Today and Settings. An iPhone /
+ * Android switch starts on this phone's kind (owner, 2026-11-01). */
 export function A2hsSteps({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
+  const [os, setOs] = useState<"ios" | "android">(() => (isAndroid() ? "android" : "ios"));
   return (
     <Sheet open={open} onClose={onClose} id="a2hs-sheet" title={t("a2hs.getTheAryaApp")}>
       <p className="muted a2hs-intro">{t("a2hs.intro")}</p>
-      <ol className="steps">
+      <div className="a2hs-seg" role="group" aria-label={t("a2hs.whichPhone")}>
+        {(["ios", "android"] as const).map(o => (
+          <button key={o} type="button" data-os={o} aria-pressed={os === o} className={os === o ? "on" : undefined}
+            onClick={() => setOs(o)}>{t(o === "ios" ? "a2hs.iphone" : "a2hs.android")}</button>
+        ))}
+      </div>
+      {os === "android" ? (
+        <ol className="steps" id="a2hs-android">
+          <li><span><Trans i18nKey="a2hs.android1" components={{ b: <b /> }} /></span></li>
+          <li><span><Trans i18nKey="a2hs.android2" components={{ b: <b /> }} /></span></li>
+          <li><span><Trans i18nKey="a2hs.android3" components={{ b: <b /> }} /></span></li>
+        </ol>
+      ) : <>
+      <ol className="steps" id="a2hs-ios">
         <li><span><Trans i18nKey="a2hs.step1" components={{ b: <b /> }} /></span></li>
         <li><span><Trans i18nKey="a2hs.step2" components={{ b: <b /> }} /></span></li>
         <li><span><Trans i18nKey="a2hs.step3" components={{ b: <b />, tog: <i className="tog" aria-hidden="true" /> }} /><span className="keepon">{t("a2hs.ifItIsOffArya")}</span></span></li>
         <li><span><Trans i18nKey="a2hs.step4" components={{ b: <b /> }} /></span></li>
       </ol>
       <p className="muted small a2hs-tip">{t("a2hs.findShare")}</p>
+      </>}
       {inAppBrowser() && (
         <p className="muted small a2hs-tip">{t("a2hs.otherApp")} <CopyLink id="a2hs-copy" /></p>
       )}
-      <p className="muted small a2hs-tip">{t("a2hs.tip")}</p>
+      {os === "ios" && <p className="muted small a2hs-tip">{t("a2hs.tip")}</p>}
     </Sheet>
+  );
+}
+
+/* Landing (owner, 2026-11-01): in place of "apps coming soon", a card
+ * on any phone where Arya is not installed yet. Install runs the
+ * browser's prompt where there is one; otherwise Show me how. */
+export function A2hsLandCard() {
+  const { t } = useTranslation();
+  const a = useA2hs(false);
+  if (!a.available || !(isIOS() || isAndroid())) return <A2hsSteps open={a.steps} onClose={a.closeSteps} />;
+  return (
+    <>
+      <div className="a2land" id="land-a2hs">
+        <img src="/icons/apple-touch-180.png" width="48" height="48" alt="" />
+        <div className="grow"><b>{t("a2hs.addAryaToYourHome")}</b><span className="sub">{t("a2hs.landSub")}</span></div>
+        <button className="btn primary" type="button" id="land-a2hs-go" onClick={a.go}>{a.deferred ? t("a2hs.install") : t("a2hs.showMeHow")}</button>
+      </div>
+      <A2hsSteps open={a.steps} onClose={a.closeSteps} />
+    </>
   );
 }
 

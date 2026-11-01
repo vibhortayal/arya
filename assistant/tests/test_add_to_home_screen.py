@@ -24,7 +24,8 @@ class TestAddToHomeScreen(unittest.TestCase):
         self.assertIn(".a2hs-x { flex: none; width: 44px; height: 44px;", css)
 
     def test_ios_steps_say_to_keep_open_as_web_app_on(self):
-        sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-sheet"')[1].split("</ol>")[0]
+        # The iPhone list (the sheet also has Android steps, owner 2026-11-01).
+        sheet = frontend.src("ui/A2hs.tsx").split('id="a2hs-ios"')[1].split("</ol>")[0]
         self.assertIn("Add to Home Screen", sheet)
         self.assertIn("Open as Web App", sheet)
         self.assertIn("plain browser tab", sheet)

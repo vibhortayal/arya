@@ -1307,9 +1307,6 @@
     "demoNote": "The demo needs no sign-up.",
     "invitationNote": "Sign-in is by invitation for now.",
     "joinWaitlist": "Join the waitlist",
-    "appsSoon": "iPhone and Android apps coming soon",
-    "appStoreAlt": "App Store, coming soon",
-    "googlePlayAlt": "Google Play, coming soon",
     "privacy": "Privacy policy",
     "terms": "Terms of service",
     "developers": "Developers",
@@ -2741,6 +2738,14 @@
     "step4": "Tap <b>Add</b>, then open Arya from your Home Screen.",
     "install": "Install",
     "showHow": "Show how",
+    "showMeHow": "Show me how",
+    "landSub": "Free, no app store. Opens full screen, like an app.",
+    "whichPhone": "Which phone",
+    "iphone": "iPhone",
+    "android": "Android",
+    "android1": "Tap the menu <b>⋮</b> at the top right.",
+    "android2": "Tap <b>Add to Home screen</b> or <b>Install app</b>.",
+    "android3": "Tap <b>Install</b>, then open Arya from your Home screen.",
     "findShare": "Can't see Share? Look for it in your browser's menu.",
     "otherApp": "Opened from another app? Open this page in your phone's browser first.",
     "copyLink": "Copy link",
@@ -3738,6 +3743,17 @@
         "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
         "n2": "The bar starts as Today, Lists, Quest, Ask and More. Reset to default brings it back.",
         "cta": "Customize bar"
+      },
+      "install": {
+        "title": "Put Arya on your Home Screen",
+        "sub": "Free, no app store",
+        "body": "Arya has no App Store or Google Play app. Add it to your Home Screen instead: it opens full screen, like an app, and can send reminders.",
+        "s1": "iPhone: tap Share, then Add to Home Screen. Leave Open as Web App on, then tap Add.",
+        "s2": "Android: tap Install if Arya offers it. Or tap the menu ⋮ at the top right, then Add to Home screen or Install app.",
+        "s3": "Open Arya from your Home Screen and sign in there.",
+        "n1": "On the sign-in page, Add Arya to your Home Screen shows the steps. In the app it is in Settings, About Arya.",
+        "n2": "Once Arya runs from your Home Screen, these steps no longer show.",
+        "cta": "Open About Arya"
       }
     }
   }

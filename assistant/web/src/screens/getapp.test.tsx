@@ -121,11 +121,43 @@ test("a phone does not get the desktop line", () => {
   expect(document.getElementById("landdesk-copy")).toBeNull();
 });
 
-test("store badges are shown unlinked, with the coming-soon caption", () => {
-  env(DESKTOP);
+test("no store badges or coming-soon line any more (owner, 2026-11-01)", () => {
+  env(IPHONE);
   const { container } = render(<Login />);
-  const apps = container.querySelector(".landapps")!;
-  expect(apps.textContent).toMatch(/coming soon/i);
-  expect(apps.querySelectorAll("img").length).toBe(2);
-  expect(apps.querySelector("a, button")).toBeNull();
+  expect(container.textContent).not.toMatch(/coming soon/i);
+  expect(container.querySelector(".landapps")).toBeNull();
+});
+
+const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36";
+
+test("an iPhone gets the Add to Home Screen card; Show me how opens the iPhone steps", () => {
+  env(IPHONE);
+  render(<Login />);
+  const card = document.getElementById("land-a2hs")!;
+  expect(card.textContent).toContain("Add Arya to your Home Screen");
+  fireEvent.click(document.getElementById("land-a2hs-go")!);
+  expect(document.getElementById("land-a2hs-go")!.textContent).toBe("Show me how");
+  expect(document.querySelector('#a2hs-sheet [data-os="ios"]')!.getAttribute("aria-pressed")).toBe("true");
+  expect(document.getElementById("a2hs-ios")).toBeTruthy();
+});
+
+test("Android without the browser's prompt: Show me how opens the Android steps; the switch shows iPhone's", () => {
+  env(ANDROID);
+  render(<Login />);
+  fireEvent.click(document.getElementById("land-a2hs-go")!);
+  const sheet = document.getElementById("a2hs-sheet")!;
+  expect(sheet.querySelector("#a2hs-android")!.textContent).toContain("Add to Home screen");
+  fireEvent.click(sheet.querySelector('[data-os="ios"]')!);
+  expect(document.getElementById("a2hs-ios")).toBeTruthy();
+  expect(document.getElementById("a2hs-android")).toBeNull();
+});
+
+test("no card once installed, or on a computer", () => {
+  env(IPHONE, { "(display-mode: standalone)": true });
+  render(<Login />);
+  expect(document.getElementById("land-a2hs")).toBeNull();
+  cleanup(); vi.restoreAllMocks();
+  env(DESKTOP);
+  render(<Login />);
+  expect(document.getElementById("land-a2hs")).toBeNull();
 });
