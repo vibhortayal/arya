@@ -23,6 +23,13 @@ class OwnKeyCase(unittest.TestCase):
         state.set_current_user(None)
         own_key._user_hits.clear()
         own_key._ip_hits.clear()
+        deps._verify_hits.clear()   # the shared per-IP sign-in code throttles
+        deps._code_hits.clear()
+        for b in (own_key._start_ip, own_key._start_email, own_key._create_ip):
+            b.clear()
+        from api import meta_client
+        self._mc = deps.MetaClient
+        deps.MetaClient = meta_client.MetaClient  # other test files leave a fake here
         self.deps = deps
         self._ledger = deps._LEDGER
         deps._LEDGER = os.path.join(tempfile.mkdtemp(), "ledger.jsonl")
@@ -39,6 +46,7 @@ class OwnKeyCase(unittest.TestCase):
         from api import state
         state.set_current_user(None)
         self.deps._LEDGER = self._ledger
+        self.deps.MetaClient = self._mc
         self.env.stop()
 
     def save(self, ok=True, key=KEY):
