@@ -8,3 +8,6 @@ media/
 *.mp4
 *.mov
 .DS_Store
+
+# Per-machine Claude Code permissions (never commit)
+.claude/settings.local.json
