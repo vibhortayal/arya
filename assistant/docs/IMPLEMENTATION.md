@@ -37,8 +37,9 @@ disagreement goes to the review queue.
 ### Budgets and modes
 - Meta API dollars: the $150 credit, metered from the first call.
   Engine caps: $10/day for the app, $2/day for the demo bucket.
-- Contributor mode: synthetic data only (it can train on inputs).
-- Standard mode: gates, rehearsals, the demo, all real user data.
+- Contributor mode (owner, 2026-11-01): now the Spark tier for the app,
+  so Spark content can train Meta models. `ARYA_SPARK_TIER=standard` reverts.
+- Standard mode: Wonder, gates and eval scoring.
 - Muse Code: Contributor OFF before code work.
 
 ## 2. Foundations
@@ -221,8 +222,9 @@ network fails; the Hatch service if Oracle fails; pre-shot video if a
 live beat fails.
 
 ## 8. Design flags
-- **F1 Contributor mode:** synthetic data only; real receipts are
-  Standard-only everywhere.
+- **F1 Contributor mode:** Spark runs on it since 2026-11-01 (owner
+  decision); real content sent to Spark can train Meta models. Receipt
+  photos stay on Wonder (Standard) until the Nov 4 switch to Spark.
 - **F2 SAM on video:** hosted SAM caps a request at 15,000 frames;
   SAM runs on stills ($0.0025 an image).
 - **F3 Spark latency:** low effort, short prompts, cached prefixes,

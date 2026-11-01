@@ -1,4 +1,5 @@
 import json, os, unittest
+from api.meta_client import spark_model
 from api.decode.service import decode_text, normalize_costco_json
 
 GOLDEN = os.path.join(os.path.dirname(__file__), "..", "golden")
@@ -238,7 +239,7 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         client = FlipClient()
         with mock.patch.dict(os.environ, {"ARYA_PHOTO_READER": "spark"}):
             dec = decode_photo(b"fake-jpeg-bytes", client)
-        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertEqual(dec["decoded_by"], spark_model())
         self.assertTrue(dec["totals_reconcile"])
         self.assertEqual([c["mode"] for c in client.calls], ["standard"])
 
@@ -247,7 +248,7 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         client = FlipClient(wonder_exc=TimeoutError("read timed out"))
         dec = decode_photo(b"fake-jpeg-bytes", client)
         # The SAME photo completes via Spark, marked as Spark-read.
-        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertEqual(dec["decoded_by"], spark_model())
         self.assertTrue(dec["totals_reconcile"])
         self.assertEqual(dec["lines"][0]["decoded_name"], "MILK WHL GAL")
         self.assertEqual([c["mode"] for c in client.calls], ["wonder", "standard"])
@@ -256,14 +257,14 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         from api.decode.service import decode_photo
         client = FlipClient(wonder_exc=RuntimeError("Meta API HTTP 500: boom"))
         dec = decode_photo(b"fake-jpeg-bytes", client)
-        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertEqual(dec["decoded_by"], spark_model())
         self.assertEqual([c["mode"] for c in client.calls], ["wonder", "standard"])
 
     def test_wonder_garbage_output_falls_back_to_spark(self):
         from api.decode.service import decode_photo
         client = FlipClient(wonder_out="I cannot read this receipt.")
         dec = decode_photo(b"fake-jpeg-bytes", client)
-        self.assertEqual(dec["decoded_by"], "muse-spark-1.3")
+        self.assertEqual(dec["decoded_by"], spark_model())
 
     def test_non_photo_paths_have_no_decoded_by(self):
         # Scope pin: the flip is photo-only. Text decode stays Spark and

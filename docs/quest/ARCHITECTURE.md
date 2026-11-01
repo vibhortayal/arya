@@ -49,7 +49,7 @@ kept in the account.
 
 ## Cost rules
 - Math, routing, planning and patterns are code, $0.
-- Spark Standard for volume judgment; personal data is Standard-only.
+- Spark (Contributor tier since 2026-11-01) for volume judgment; content sent to Spark may train Meta models.
 - Engine spend caps: $10/day for the app, $2/day for the demo bucket.
 - Find it for me scans one item: one item's SAM and Spark calls.
 

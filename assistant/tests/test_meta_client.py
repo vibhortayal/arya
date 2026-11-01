@@ -1,4 +1,7 @@
 import unittest
+import os
+from unittest import mock
+import api.meta_client as mc
 from api.meta_client import MetaClient, estimate_cost
 
 
@@ -18,10 +21,41 @@ class TestMetaClient(unittest.TestCase):
         text, usage, cost = c.chat([{"role": "user", "content": "hi"}], mode="standard", personal=True)
         self.assertTrue(cap["url"].endswith("/v1/chat/completions"))
         self.assertEqual(cap["headers"]["Authorization"], "Bearer test-key")
-        self.assertEqual(cap["body"]["model"], "muse-spark-1.3")
+        # Owner decision 2026-11-01: Spark runs on the Contributor tier.
+        self.assertEqual(cap["body"]["model"], "muse-spark-1.3-contributor")
         self.assertEqual(cap["body"]["reasoning_effort"], "low")
         self.assertEqual(usage["cached_tokens"], 400)
+        self.assertAlmostEqual(cost, estimate_cost("contributor", 1000, 400, 200), places=9)
+
+    def test_spark_tier_standard_switch(self):
+        cap = {}
+        with mock.patch.dict(os.environ, {"ARYA_SPARK_TIER": "standard"}):
+            c = MetaClient(api_key="k", transport=fake_transport(cap))
+            _t, _u, cost = c.chat([{"role": "user", "content": "hi"}], mode="standard", personal=True)
+        self.assertEqual(cap["body"]["model"], "muse-spark-1.3")
         self.assertAlmostEqual(cost, estimate_cost("standard", 1000, 400, 200), places=9)
+
+    def test_wonder_ignores_spark_tier(self):
+        cap = {}
+        c = MetaClient(api_key="k", transport=fake_transport(cap))
+        c.chat([], mode="wonder", personal=True)
+        self.assertEqual(cap["body"]["model"], "muse-wonder-1.0")
+
+    def test_gate_waits_then_fails_fast(self):
+        now = [0.0]
+        slept = []
+        g = mc._RateGate(limit=2, window=60, max_wait=20,
+                         clock=lambda: now[0], sleep=slept.append)
+        g.acquire(); g.acquire()
+        now[0] = 45.0
+        g.acquire()                       # waits 15 s for the oldest slot
+        self.assertEqual(slept, [15.0])
+        g = mc._RateGate(limit=1, window=60, max_wait=5,
+                         clock=lambda: now[0], sleep=slept.append)
+        g.acquire()
+        now[0] += 1
+        with self.assertRaises(RuntimeError):
+            g.acquire()                   # next slot is 59 s away > max_wait
 
     def test_personal_contributor_refused(self):
         c = MetaClient(api_key="k", transport=fake_transport({}))
