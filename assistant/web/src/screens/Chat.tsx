@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
-import { get, post } from "../lib/api";
+import { ApiError, get, post } from "../lib/api";
+import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { useToast } from "../ui/Toast";
 import { useNav } from "../app/nav";
@@ -24,7 +25,7 @@ import { EditList, EditTitle } from "../ui/EditList";
  * already exist; Ask about this photo sends it once with the next
  * question and keeps nothing. No voice out: Arya's replies are text. */
 type Chip = { label: string; run: () => void };
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string;
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string; offer?: string;
   url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
 type Msg = { role: "user" | "assistant"; content: string };
 const lines: Line[] = [];
@@ -277,6 +278,8 @@ export function Chat() {
       stop();
       if (mine !== epoch) { setLog(lines.slice()); return; }
       history.pop();
+      // Arya's daily limit (or a failed own key): a card that offers the shopper's own Meta key.
+      if (e instanceof ApiError && isOwnKeyOffer(e.offer)) { add({ kind: "err", text: e.message, code: q, offer: e.offer }); return; }
       add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
   };
@@ -378,6 +381,12 @@ export function Chat() {
           <div key={i} className="bubble arya">
             <p>{l.text}</p>
             <button className="btn primary" type="button" data-map-open onClick={() => nav.show("mapper")}>{t("quest.mapMyStore")}</button>
+          </div>
+        ) : l.kind === "err" && l.offer ? (
+          <div key={i} className="group ok-capcard" role="alert" data-own-key-card>
+            <b>{l.text}</b>
+            <span className="sub">{t(l.offer === "own-key-fix" ? "ownKey.capFixBody" : "ownKey.capBody")}</span>
+            <button className="btn primary wide" type="button" data-own-key-go onClick={requestOwnKey}>{t(l.offer === "own-key-fix" ? "ownKey.capFixButton" : "ownKey.capButton")}</button>
           </div>
         ) : l.kind === "err" ? (
           <div key={i} className="bubble arya" role="alert">
