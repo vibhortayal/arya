@@ -2,6 +2,7 @@
 switches that stop spend fast. Owner only (ARYA_OWNER_USERNAME). The
 registration switch and Unfreeze keep their own routes."""
 import json
+import os
 import time
 
 from fastapi import APIRouter, HTTPException, Request
@@ -182,3 +183,48 @@ async def ops_owner_set(req: Request):
     site_flags.set_nested("owner", "at", int(time.time()))
     _log(me, {"owner": {"from": me.lower(), "to": target}})
     return {"ok": True, "owner": target}
+
+
+@router.post("/api/ops/delete")
+async def ops_delete(req: Request):
+    """Erase one account's receipts or learned names. The owner must
+    type the account name (confirm); a copy is saved first."""
+    me = _owner_only()
+    body = await _json_obj(req)
+    from api import ops_data
+    acct = str(body.get("user") or "").strip().lower()
+    what = body.get("what")
+    if what not in ops_data.WHAT:
+        raise HTTPException(400, "what must be receipts or names")
+    if acct not in {a["user"].lower() for a in _accounts()}:
+        raise HTTPException(400, f"{acct or 'that'} is not an account")
+    if str(body.get("confirm") or "").strip().lower() != acct:
+        raise HTTPException(400, "type the account name to confirm")
+    try:
+        out = ops_data.delete_data(acct, what)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    _log(me, {"deleted": {"user": acct, "what": what, "removed": out["removed"]}})
+    return {"ok": True, **out}
+
+
+@router.get("/api/ops/mirror")
+def ops_mirror():
+    _owner_only()
+    from api import ops_data, pgstore
+    return {"store": pgstore.mode(), "configured": bool(os.environ.get("DATABASE_URL")), **ops_data.job()}
+
+
+@router.post("/api/ops/mirror")
+async def ops_mirror_run(req: Request):
+    me = _owner_only()
+    body = await _json_obj(req)
+    from api import ops_data
+    try:
+        started = ops_data.start(str(body.get("kind") or ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not started:
+        raise HTTPException(409, "a job is already running")
+    _log(me, {"mirror": body.get("kind")})
+    return {"ok": True}

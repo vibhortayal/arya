@@ -22,6 +22,10 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Recent changes**: the last changes from `ops-changes.jsonl`.
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
 
+## Accounts and data tools (Ops)
+- **Accounts**: switch an account off or on, unfreeze, change the owner, and open the waitlist.
+- **Data tools**: erase one account's receipts or learned names (owner types the account name; a copy is first saved to `ops-deleted/` in the data folder, restore by copying it back), and run the Supabase mirror **Backfill** (copies every file into the database) or **Verify** (compares every file to the database) as a background job. Both need `DATABASE_URL`.
+
 ## Recover the owner
 Ops can name a different owner account (Settings, Ops and health, Accounts). Your old account keeps owner rights for 24 hours, so a wrong pick is undone by signing in with it and naming the right account. If both are lost: on the VM, remove the `"owner"` key from `site.json` in the data folder (the owner is then `ARYA_OWNER_USERNAME` from `.env` again), or set `ARYA_OWNER_USERNAME` in `.env` and run `docker compose up -d`. The environment account is always an owner. A switched-off account (Accounts) gets 403 on every call; switch it back on from the same page, or remove its name from `"disabled"` in `site.json`.
 

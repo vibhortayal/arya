@@ -16,7 +16,8 @@ type OpsData = {
   settings: Record<string, Setting>;
   overrides: Record<string, Record<string, number>>;
 };
-type Page = "models" | "limits" | "caps" | "accounts";
+type Page = "models" | "limits" | "caps" | "accounts" | "data";
+type Mirror = { store: string; configured: boolean; state: string; kind: string; done: number; total: number; result: string; ok: boolean | null };
 type Acct = { user: string; usd_24h: number; owner: boolean; frozen: boolean; disabled: boolean };
 type Accounts = { accounts: Acct[]; owner: { username: string | null; previous: string | null; at: number | null; undo_s: number } };
 
@@ -53,10 +54,18 @@ export function OpsSettings() {
   const [oval, setOval] = useState("");
 
   const [acc, setAcc] = useState<Accounts | null>(null);
+  const [mir, setMir] = useState<Mirror | null>(null);
+  const [delUser, setDelUser] = useState("");
+  const [delWhat, setDelWhat] = useState("receipts");
+  const [delConfirm, setDelConfirm] = useState("");
   const [newOwner, setNewOwner] = useState("");
   const [pw, setPw] = useState("");
   const load = useCallback(() => {
     get<OpsData>("/api/ops").then(setD, () => toast(t("ops.couldNotLoad")));
+    if (page === "data") {
+      get<Mirror>("/api/ops/mirror").then(setMir, () => toast(t("ops.couldNotLoad")));
+      get<Accounts>("/api/ops/accounts").then(setAcc, () => {});
+    }
     if (page === "accounts") get<Accounts>("/api/ops/accounts").then(setAcc, () => toast(t("ops.couldNotLoad")));
   }, [t, toast, page]);
   useEffect(() => { load(); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -73,6 +82,11 @@ export function OpsSettings() {
     catch (e) { toast(e instanceof Error && e.message ? e.message : t("ops.couldNotSave")); }
     setBusy(false);
   };
+  useEffect(() => {
+    if (page !== "data" || mir?.state !== "running") return;
+    const id = setTimeout(load, 1500);
+    return () => clearTimeout(id);
+  }, [page, mir, load]);
   const saveSetting = (k: string, v: number | null) => send({ settings: { [k]: v } });
 
   const of = (group: string) => d ? Object.entries(d.settings).filter(([, s]) => s.group === group) : [];
@@ -190,6 +204,43 @@ export function OpsSettings() {
                   onClick={async () => { await act("/api/ops/owner", { username: newOwner, password: pw, confirm: newOwner }, t("opsSettings.ownerChanged")); setPw(""); setNewOwner(""); }}>{t("opsSettings.changeOwner")}</Button>
               </p>
             </div>
+          </Group>
+        </>
+      )}
+      {page === "data" && mir && (
+        <>
+          <Section title={t("opsSettings.deleteTitle")} />
+          <Group>
+            <div className="pad" id="os-delete">
+              <p className="muted nomargin">{t("opsSettings.deleteNote")}</p>
+              <select id="os-deluser" className="curpick" style={{ width: "100%", marginTop: 8 }} aria-label={t("opsSettings.whichAccount")} value={delUser} onChange={ev => setDelUser(ev.target.value)}>
+                <option value="">{t("opsSettings.whichAccount")}</option>
+                {(acc?.accounts || []).map(a => <option key={a.user} value={a.user}>{a.user}</option>)}
+              </select>
+              <select id="os-delwhat" className="curpick" style={{ width: "100%", marginTop: 8 }} aria-label={t("opsSettings.whatDelete")} value={delWhat} onChange={ev => setDelWhat(ev.target.value)}>
+                <option value="receipts">{t("opsSettings.delReceipts")}</option>
+                <option value="names">{t("opsSettings.delNames")}</option>
+              </select>
+              <input id="os-delconfirm" className="curpick" style={{ width: "100%", marginTop: 8 }} placeholder={t("opsSettings.typeName")} aria-label={t("opsSettings.typeName")}
+                value={delConfirm} onChange={ev => setDelConfirm(ev.target.value)} />
+              <p style={{ margin: "10px 0 0" }}>
+                <Button kind="danger" wide disabled={busy || !delUser || delConfirm.trim().toLowerCase() !== delUser.toLowerCase()}
+                  onClick={async () => { await act("/api/ops/delete", { user: delUser, what: delWhat, confirm: delConfirm }, t("opsSettings.deleted")); setDelConfirm(""); }}>{t("opsSettings.deleteNow")}</Button>
+              </p>
+            </div>
+          </Group>
+          <Section title={t("opsSettings.mirrorTitle")} />
+          <Group>
+            <Row name={t("opsSettings.mirrorStore")} sub={mir.configured ? t("opsSettings.mirrorMode", { mode: mir.store }) : t("opsSettings.mirrorNone")} />
+            <Row name={t("opsSettings.backfill")} sub={t("opsSettings.backfillSub")}
+              right={<Chip disabled={busy || !mir.configured || mir.state === "running"} onClick={() => act("/api/ops/mirror", { kind: "backfill" })}>{t("opsSettings.run")}</Chip>} />
+            <Row name={t("opsSettings.verify")} sub={t("opsSettings.verifySub")}
+              right={<Chip disabled={busy || !mir.configured || mir.state === "running"} onClick={() => act("/api/ops/mirror", { kind: "verify" })}>{t("opsSettings.run")}</Chip>} />
+            {(mir.state === "running" || mir.result) && (
+              <Row name={mir.state === "running" ? t("opsSettings.running", { done: mir.done, total: mir.total }) : mir.result}
+                sub={mir.state === "running" ? "" : t("opsSettings.lastRun", { kind: mir.kind })}
+                right={mir.state === "running" ? undefined : <span className={"opschip " + (mir.ok ? "ok" : "bad")}>{mir.ok ? t("ops.ok") : t("ops.check")}</span>} />
+            )}
           </Group>
         </>
       )}
