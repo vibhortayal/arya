@@ -2006,6 +2006,12 @@
       "sample": "a sample"
     }
   },
+  "toCheck": {
+    "showMore": "Show {{n}} more",
+    "count": "{{items}} to check · {{lines}} receipt lines",
+    "rowSub": "{{items}} to check · {{lines}} receipt lines",
+    "allClear": "All clear. Nothing needs your eye."
+  },
   "receiptJob": {
     "sending": "Sending {{sent}} of {{total}} receipts",
     "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
@@ -2023,6 +2029,7 @@
     "unsent": "{{count}} could not be sent: {{reason}}"
   },
   "receipts": {
+    "more": "More",
     "correctName": "Correct name",
     "needsYourEye": "To check",
     "unverifiedFrom": "Arya isn't sure · {{date}} · printed as “{{raw}}”",
