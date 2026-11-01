@@ -26,11 +26,11 @@ Today shows a card "Use soon" and a "Still good?" check. Settings, About Arya, A
 Arya uses AI to read photos, receipts and voice and to answer questions, and it can be wrong. Check anything important. Settings, About Arya, How Arya uses AI explains where.
 Arya is not a food-safety check: look at the date on the pack, and if food looks or smells off, do not eat it. Nothing read from a photo or receipt is saved until you confirm.
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
-Receipts: open Today, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick a PDF, paste order text or say it.
+Receipts: open the Lists tab, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick one or many PDFs or photos at once, paste order text or say it.
 Arya reads the receipt and checks the total. It keeps every receipt for a return or recall refund.
 A return is taken off the spending. Only you and your group see your receipts.
 ## spending | spending spend analysis month store budget money pay paid
-Spending: open Today, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
+Spending: open the Lists tab, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
 Ask "What did I spend in October?" for one month. Arya adds up the receipts with code, not by guessing.
 ## prices | price prices cheaper cheapest compare expensive trend inflation community deals pricier similar ounce watch
 Cheaper elsewhere and Price watch are cards on Today. They show when an item is cheaper at another store, or has gone up 5% or more.
@@ -69,7 +69,7 @@ Change Today: tap Edit on Today, or touch and hold a card. Drag to reorder, tap 
 Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hidden.
 Settings, Preferences, Display changes text size, spacing, bold text, pictures and motion.
 ## settings | settings account currency language export delete data powers help guide tour feedback agent connector usage cost stores sign in invite waitlist demo
-Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, How Arya uses AI, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores is on the Lists tab, at the bottom. Receipts and Spending are on Today, in a card at the bottom. Help and Settings both hold the guide and the tour.
+Settings holds: Group, Preferences (currency and language, When I start shopping, Display), Account (Export my data, Delete my account), About Arya (Arya's powers, How Arya uses AI, Use Arya in another AI app, Add to Home Screen, Keeping Arya running, who built it), and Sign out as the last button. Stores, Receipts and Spending are on the Lists tab, in one group at the bottom. Help and Settings both hold the guide and the tour.
 The Guide (Help tab, Guide): fifteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs.
 Sign-in is by invitation for now; on the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Someone who was already approved and joins again is told they are approved and offered Sign in or Google. Try it now opens the demo; Finish demo leaves it.

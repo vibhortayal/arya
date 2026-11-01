@@ -108,7 +108,7 @@ export function Profile() {
       {town ? <DirectorPanel /> : null}
       <GroupSection />
       {/* Settings is only settings (owner, 2026-10-31): Stores moved to
-        * Lists, Receipts and Spending to Today, Help and Feedback live in
+        * Lists, Receipts and Spending to Lists (2026-11-01), Help and Feedback live in
         * the Help tab, and Powers, the other-AI-app row, Keeping Arya
         * running and Add to Home Screen sit on the About Arya page. */}
       <h3 className="sect">{t("settings.preferences")}</h3>
