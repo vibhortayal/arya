@@ -11,7 +11,7 @@ per item and re-judged only when the purchase count moves materially."""
 import json
 import os
 
-_PROMPT = open(os.path.join(os.path.dirname(__file__), "prompts", "staple_judge_v1.md")).read()
+_PROMPT = open(os.path.join(os.path.dirname(__file__), "prompts", "staple_judge_v2.md")).read()
 SCHEMA = ("StapleVerdicts", {
     "type": "object",
     "properties": {"verdicts": {"type": "array", "items": {
@@ -22,6 +22,7 @@ SCHEMA = ("StapleVerdicts", {
                        "reason": {"type": "string"}},
         "required": ["item_id", "class"]}}},
     "required": ["verdicts"]})
+VERSION = 2  # bump when the prompt or the facts change: verdicts re-judge
 CLASSES = {"STAPLE", "SEASONAL", "OCCASIONAL", "ONE_OFF", "NOT_CONSUMABLE"}
 
 
@@ -29,6 +30,7 @@ def facts_line(name, p):
     a = p.get("analysis") or {}
     return (f"{name} | buys {p['purchase_count']} | last {p['last_bought']} | "
             f"gaps {a.get('gaps_days')} | median gap {p.get('median_interval_days')}d | "
+            f"days since last buy {p.get('days_since_last')} | "
             f"typical qty {p.get('typical_qty')} | total ${p.get('total_spend')} | "
             f"seasonal months {a.get('seasonal_months')}")
 
@@ -40,7 +42,7 @@ def judge_batch(client, items):
         [{"role": "system", "content": _PROMPT},
          {"role": "user", "content": listing}],
         mode="standard", personal=True, reasoning_effort="low",
-        schema=SCHEMA, cache_key="arya-staple-judge-v1")
+        schema=SCHEMA, cache_key="arya-staple-judge-v2")
     start, end = text.find("{"), text.rfind("}")
     if start < 0:
         return {}

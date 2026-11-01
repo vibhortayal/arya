@@ -14,7 +14,8 @@ Tap the circle to tick an item off as you shop. Tap an item to edit it: change i
 Under "Suggested for ..." Arya shows due items. Tap one to see why, then Add.
 Three dots at the top of a list: Share, export or import, Tidy up with Arya.
 ## running low | running low due suggest suggestion pattern often about to run out why
-Running low: Today tab, card "Running low", and the suggestions under each list. Arya uses how often the household buys an item and the last date.
+Running low: Today tab, card "Running low", and the suggestions under each list. Arya uses how often the household buys an item and the last date, and suggests mostly staples (things you use up and rebuy).
+Weekly to every-two-months items need 3 buys. Items bought less often than every two months need 4 or more buys at a steady rhythm, and a last buy not long past the usual gap. Items not bought for a long while, and items with no readable name yet (only an item number), are not suggested.
 Tap an item to see why. Tap Add to put it on the list. Arya needs a buying history, so add receipts first.
 Say "we finished the yogurt" in Ask to mark an item as out. Say "never suggest X" to stop a suggestion.
 ## use soon | use soon expire expiry date goes bad waste food fresh dated photo remind
@@ -39,7 +40,7 @@ Costco names like "BL 3PC KING" are short codes. Arya tries to read them, using 
 Spending: open the Lists tab, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
 Ask "What did I spend in October?" for one month. Arya adds up the receipts with code, not by guessing.
 ## prices | price prices cheaper cheapest compare expensive trend inflation community deals pricier similar ounce watch
-Cheaper elsewhere and Price watch are cards on Today. They show when an item is cheaper at another store, or has gone up 5% or more.
+Cheaper elsewhere and Price watch are cards on Today. They show when an item is cheaper at another store, or has gone up 5% or more. "Cheaper at" only compares different chains (Costco against Trader Joe's), never two Costco warehouses, and only prices from the last year.
 Open Settings, About Arya, Arya's powers for Compare your stores, Price trends, Similar items (price for each ounce) and Buy where it's cheaper.
 You need receipts from two stores to compare. Ask "Where is milk cheaper?" for a quick answer.
 Community prices are opt-in: Settings, About Arya, Arya's powers, Community prices, Turn on. They show prices other Arya shoppers paid. They start when enough households near you share.

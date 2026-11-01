@@ -2701,7 +2701,7 @@
       "row1": "From your receipts",
       "row1Text": "The last price you paid at each store for this same item.",
       "row2": "What counts",
-      "row2Text": "A store counts as cheaper only when it saves at least 25 cents and 5%.",
+      "row2Text": "Only a different chain counts, never another branch of the same store, with a price from the last year that saves at least 25 cents and 5%.",
       "row3": "What it is not",
       "row3Text": "Prices change. This is what you paid, not today's shelf price. Check the shelf price."
     },
@@ -2731,7 +2731,7 @@
       "row1": "From your receipts",
       "row1Text": "Your last 6 months. An item counts when you bought it at 2 or more stores.",
       "row2": "What counts",
-      "row2Text": "The other store must save at least 25 cents and 5% on that item.",
+      "row2Text": "The other store must be a different chain and save at least 25 cents and 5% on that item.",
       "row3": "What it leaves out",
       "row3Text": "Travel time and gas are not counted."
     },
@@ -3033,7 +3033,7 @@
       "running": {
         "kicker": "Running low",
         "title": "Never run out",
-      "body": "Arya learns how often you buy things, from your receipts. It shows what is about to run out by learning your consumption patterns and frequency.",
+      "body": "Arya learns how often you buy things, from your receipts, and suggests mostly staples. Something bought every two months or less often needs a steady history first, and Arya stops suggesting things you no longer buy.",
       "s1": "Open the Today tab. Look at Running low.",
       "s2": "Tap an item to see why Arya suggests it.",
       "s3": "In Ask, say \"we finished the yogurt\" to mark it as out.",
