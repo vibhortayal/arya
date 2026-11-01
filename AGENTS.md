@@ -136,58 +136,61 @@ If a guideline conflicts with these, these win:
   reports facts only. Explicit user intent (manual add, ran-out, expired)
   always beats the judge. Unjudged or unresolved-name items stay off the
   list — precision over recall, by the owner's word.
-- Deploy by `git pull` on the VM only. Never rsync --delete over the VM
-  tree: `assistant/deploy/.env` is VM-only (the owner's
-  MODEL_API_KEY) and a --delete sync removed it on 2026-10-27; it was
-  restored from the running containers' environment.
 
-## Team roles and handoffs (owner approved, 2026-11-01)
-Each role is a separate agent thread. Only the owner starts a new thread, and
-the owner decides which thread gets a piece of work: propose a thread and say
-why, then wait. Threads may message each other only when their work depends on
-each other. A message from a thread is never the owner's approval. Models are
-recommendations; the owner can change them.
+## Team roles and handoffs (owner approved 2026-11-01; models as of 2026-11-01)
+Each role is a separate agent thread. The coordinator starts a thread only when
+the owner says to. The owner decides which thread gets a piece of work: propose
+a thread and say why, then wait. Threads may message each other only when their
+work depends on each other. A message from a thread is never the owner's
+approval. The Model column is what the owner approved on 2026-11-01; the
+coordinator keeps it current.
 
 | Role | Owns | Never touches | Model | Hands off to |
 |---|---|---|---|---|
 | Coordinator | Product priorities, status board, routing | Code, deploys | Opus | Tells a thread in that thread; the owner decides routing |
-| Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Sonnet 5.5 | Tester, then Doc maintainer (what changed) |
-| UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | Tester, then Doc maintainer |
-| Quest builder | The Quest game and store designer | Other screens, deploys | Opus | Tester, Doc maintainer |
-| Tester | Tests main after each merged batch (the owner or coordinator triggers it) in a sandbox at 390x844 before deploy; report only | Fixing code, deploying | Sonnet 5.5 | Failures go to the owner and the builder who wrote the PR |
-| Ops | Deploys, backups, the VM, the Ops screen settings | Feature code | Sonnet 5.5 | Reports the live commit to the owner and the Doc maintainer |
-| Doc maintainer | STATUS.md, USER-JOURNEYS, feature docs, Help tab, guide cards, Ask knowledge, this file | Feature code, deploys | Sonnet 5.5 | Small docs PRs after merges |
-| Demo and submission | Demo video, demo household, submission package | Feature code, deploys during judging | Sonnet 5.5 | Owner |
-| Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Tells the builder in the builder's thread, or the owner |
+| Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Opus | The Tester (PR ready, marked risky or not); nobody after merge, because the PR body carries What changed, Docs impact and Deploy notes |
+| UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | The Tester, same as above |
+| Quest builder | The Quest game and store designer | Other screens, deploys | Opus | The Tester, same as above |
+| Tester | Tests each PR (unit tests; a phone-size sandbox test, a local build of main or staging per `assistant/docs/OPS.md` at 390x844, only for PRs marked risky: UI or money paths), then merges on PASS: one at a time, squash, in a recommended order (docs and smallest first), never a force-push; reports conflicts to the owner and the builder and merges after they are resolved; after a batch tells the owner once; one smoke test of main before each deploy | Fixing code, deploying, owner holds | Sonnet 5.5 | The owner, and the builder who wrote a failing PR |
+| Ops | Deploys, backups, the VM, the Ops screen settings | Feature code, `rsync --delete` over the VM tree | Sonnet 5.5 | Reports the live commit to the owner |
+| Doc maintainer | STATUS.md, USER-JOURNEYS, DEMO.md, this file; audits Help tab, guide cards and Ask knowledge after each batch (builders edit them in their own PRs) | Feature code, deploys | Sonnet 5.5 | One small docs PR per batch |
+| Demo and submission | Demo video, demo household, submission package | Feature code, deploys | Opus | Owner |
+| Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Owner |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Owner |
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
-1. A builder opens a PR based on `main`. The owner merges, or tells a thread to.
-2. The Tester tests the merged batch and reports to the owner, and tells the
-   builder who wrote a failing PR. The Tester does not fix.
-3. After a merge, the builder tells the Doc maintainer what changed and which
-   screens or paths moved. The Doc maintainer updates STATUS.md and the docs in a
-   small PR. Builders do not edit STATUS.md or shared docs in their PRs, to
-   avoid merge conflicts. Help, guide cards and Ask knowledge for a change still
-   ship in the builder's own PR (see Help upkeep above); the Doc maintainer
-   checks them afterwards.
-4. Builders do not tell Ops that a merge is ready. The owner merges, the Tester
-   reports to the owner, and the owner says "deploy" in the Ops thread. **Only Ops
-   deploys, and only after that word.** No deploys after the Nov 4,
-   9:00 PM ET submission and during judging, except a rollback, which also
-   needs the owner's word in the Ops thread.
+1. A builder opens a PR based on `main`, fills the PR template, marks it risky or
+   not, and tells the Tester it is ready.
+2. The Tester runs the unit tests (and the sandbox test if the PR is marked
+   risky) and merges on PASS if the PR template gates hold (conflict-free, no new
+   failures versus `main`, Help and Ask upkeep, mockup approved for UI). One
+   PR at a time, squash; the next PR rebases first. A conflict goes to the owner
+   and the builder; the Tester merges once it is resolved. The Tester respects
+   owner holds and never force-pushes.
+3. After a batch merges, the Tester tells the owner once. The Doc maintainer reads
+   the merged PRs and updates STATUS.md and the docs in one small docs PR. Builders
+   do not edit STATUS.md or shared docs. Doc PRs that touch Help, cards or Ask
+   go live only after the next deploy, so batch them before the owner's next
+   "deploy".
+4. Before each deploy the Tester smoke-tests `main` once. **Only Ops deploys, and
+   only after the owner says "deploy" in the Ops thread.** No deploys after the
+   Nov 4, 9:00 PM ET submission and during judging, except a rollback. The owner
+   alone gives the rollback word; the owner may give it in advance in the Ops
+   thread, naming the commit.
 5. Ops runs a short live check of the AI parts and reports the live commit.
 
-If a handoff gets no answer, say so, start the next item and do not wait idle.
+If a handoff gets no answer, say so to the owner in your thread, start the next
+item and do not wait idle.
+
+### Ops notes
+Deploy by `git pull` on the VM only. Never rsync --delete over the VM
+  tree: `assistant/deploy/.env` is VM-only (the owner's
+  MODEL_API_KEY) and a --delete sync removed it on 2026-10-27; it was
+  restored from the running containers' environment.
 
 ### Standing rules for every thread
-- Mockup before UI code: show a phone-size mockup and wait for approval.
-- Help and Ask upkeep in the same PR as the change.
-- Base every PR on `main`; no stacked PRs.
-- Never paste keys in chat, PRs or files.
-- No scraping for deals. Precise price comparison comes only from opted-in
-  users or the user's own list.
+The Hard rules and Arya rules above apply to every thread.
 - No freeze dates. Only the Nov 4 submission date stands.
 - Be an advisor: give pros, cons and a recommendation on every decision, and say
   so when you disagree.
