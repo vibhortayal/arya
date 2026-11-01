@@ -160,7 +160,7 @@ recommendations; the owner can change them.
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys during judging | Sonnet 5.5 | Owner |
 | Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Tells the builder in the builder's thread, or the owner |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Owner |
-| Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester, then Ops |
+| Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
 1. A builder opens a PR based on `main`. The owner merges, or tells a thread to.
