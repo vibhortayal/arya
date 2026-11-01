@@ -23,11 +23,11 @@ class FeatureSheet(unittest.TestCase):
 
     def test_gated_lines_hidden_when_off(self):
         off = chat_service.feature_sheet({k: False for k in KNOWN_FLAGS})
-        self.assertNotIn("Heads-up days", off)
+        self.assertNotIn("days-before stepper", off)
         self.assertIn("not switched on yet", off)
         self.assertNotIn("[if", off)
         on = chat_service.feature_sheet({k: True for k in KNOWN_FLAGS})
-        self.assertIn("Heads-up days", on)
+        self.assertIn("days-before stepper", on)
         self.assertNotIn("[if", on)
 
     def test_bar_named_in_sheet_matches_app(self):
