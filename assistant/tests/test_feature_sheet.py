@@ -60,7 +60,12 @@ class FeatureSheet(unittest.TestCase):
 
     def test_sizes(self):
         flags = {k: True for k in KNOWN_FLAGS}
-        self.assertLess(len(chat_service.feature_sheet(flags)), 9500)
+        # The whole document (no question) has grown past 9.5 KB, but Ask
+        # never sends it whole: a question gets the overview plus the
+        # sections it matches. So guard both: the whole file against
+        # runaway growth, and what one question sends (the real cost).
+        self.assertLess(len(chat_service.feature_sheet(flags)), 24000)
+        self.assertLess(len(chat_service.feature_sheet(flags, question="how do I add a receipt?")), 8000)
         # A data question gets the overview only; a topic gets its section.
         base = chat_service.feature_sheet(flags, question="how much was milk at Costco?")
         self.assertLess(len(base), 900)

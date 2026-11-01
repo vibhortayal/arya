@@ -52,7 +52,10 @@ class TestNoJudge(unittest.TestCase):
             for k, v in nm.items()]})
 
     def test_steady_rhythm_counts_without_a_verdict(self):
-        for d in (80, 66, 52, 38):
+        # Days are counted from today (QA 2026-10-28), and an item silent
+        # for far longer than its rhythm is "lapsed", not due. So the last
+        # buy is one rhythm (14 days) ago: due now.
+        for d in (56, 42, 28, 14):
             self.buy("Eggs", "2002", d, "e")
         self.name("2002", {"2002": "Eggs"})
         self.assertEqual(self.low(), ["Eggs"])
