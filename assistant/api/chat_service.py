@@ -533,6 +533,45 @@ def _asked(history):
     return " ".join(us[-2:])
 
 
+def _turns(history):
+    """The last ten turns for the model. An assistant turn whose reply was
+    empty (actions only) still goes in, marked done with what the app
+    applied; dropping it left two user messages in a row, and the model
+    applied the earlier one's actions again (live Ask run, 2026-11-01)."""
+    out = []
+    for h in (history or [])[-10:]:
+        role = h.get("role")
+        if role not in ("user", "assistant"):
+            continue
+        text = str(h.get("content") or "").strip()
+        if role == "assistant":
+            done = [str(x) for x in (h.get("applied") or []) if x][:10]
+            if done:
+                text = (text + "\n" if text else "") + "(done: " + " ".join(done) + ")"
+            text = text or "(done)"
+        elif not text:
+            continue
+        out.append({"role": role, "content": text[:2000]})
+    return out
+
+
+# Prompt section names the model must never show (live Ask run: "ABOUT ARYA
+# doesn't say more").
+_LABELS = re.compile(r"\b(?:[Tt]he\s+)?(ABOUT ARYA|HOUSEHOLD SNAPSHOT|CURRENT SCREEN|YOUR BAR|REPLY LANGUAGE)(?:\s+(?:message|section))?\b")
+_LABEL_SAYS = {"ABOUT ARYA": "Arya's guide", "HOUSEHOLD SNAPSHOT": "your data", "CURRENT SCREEN": "this screen",
+               "YOUR BAR": "your bar", "REPLY LANGUAGE": "your language setting"}
+
+
+def _scrub_labels(reply):
+    if not isinstance(reply, str) or not reply:
+        return reply
+    def say(m):
+        w = _LABEL_SAYS[m.group(1)]
+        start = not reply[:m.start()].strip() or reply[:m.start()].rstrip()[-1] in ".!?\n"
+        return w[0].upper() + w[1:] if start else w
+    return _LABELS.sub(say, reply)
+
+
 def chat(history, client, surface=None, context=None, image=None, bar=None):
     """One Ask Arya turn. On the Ask tab every action applies at once.
     From the List or a hunt (surface "list"/"hunt"; owner, 2026-10-29)
@@ -554,9 +593,8 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
         messages.append({"role": "user", "content": "CURRENT SCREEN:\n" + json.dumps(ctx)[:2000]})
     if lang != "auto":
         messages.append({"role": "user", "content": f"REPLY LANGUAGE: {LANGUAGES[lang]} ({lang})"})
-    for h in (history or [])[-10:]:
-        if h.get("role") in ("user", "assistant") and h.get("content"):
-            messages.append({"role": h["role"], "content": str(h["content"])[:2000]})
+    for m in _turns(history):
+        messages.append(m)
     if image:
         # One-shot "ask about this photo": the picture rides on the last
         # question and is not stored. Prices are never judged from a
@@ -596,7 +634,7 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
             if a.get("type") in RISKY and a.get("type") != "ran_out" and not _resolve(a.get("item")):
                 skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
                                   item=a.get("item")))
-    return {"reply": dec.get("reply", ""), "applied": applied, "skipped": skipped,
+    return {"reply": _scrub_labels(dec.get("reply", "")), "applied": applied, "skipped": skipped,
             "added": added, "proposed": proposed}
 
 
