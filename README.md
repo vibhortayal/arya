@@ -95,8 +95,10 @@ answer questions, and every call goes through one module
 or Supabase Postgres. Details, feature flags and the VM runbook:
 [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
 
-Personal data runs in Standard mode only; `meta_client.py` enforces it, and
-the open-weights client refuses personal data. Cost rules are in
+Spark runs on Meta's Contributor tier by default (owner decision
+2026-11-01), so content sent to Spark may be used to train future Meta models;
+`ARYA_SPARK_TIER=standard` switches it back. Wonder stays on Standard. The
+open-weights client refuses personal data. Cost rules are in
 [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 ## Run it yourself

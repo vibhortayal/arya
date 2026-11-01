@@ -95,7 +95,7 @@ enforced there. `open_client.py` is the only other model client.
 
 | Job | Model | Notes |
 |---|---|---|
-| Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard) | cached prefixes, low effort |
+| Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3-contributor` (Spark tier; `ARYA_SPARK_TIER=standard` for `muse-spark-1.3`) | cached prefixes, low effort; content may train Meta models |
 | Receipt photo reader (default) | `muse-wonder-1.0`, 90 s bound | any failure falls back to Spark; `decoded_by` records which read it |
 | Receipt photo reader after Nov 4 | Spark | set `ARYA_PHOTO_READER=spark` in `deploy/.env`, then `docker compose up -d` (not `restart`); no code change |
 | Avatar and look images | `muse-image-1.0` | |
@@ -364,9 +364,9 @@ Each agent has a narrow job and a named limit.
 ## 10. Cost control
 
 - MODEL-POLICY.md is normative: deterministic work in code at $0;
-  Spark 1.3 Standard, low effort, cached prefixes for volume reasoning;
-  Contributor for evaluation and synthetic data only — never personal
-  data; Wonder is banned from volume paths.
+  Spark 1.3 Contributor (owner decision 2026-11-01), low effort, cached
+  prefixes for volume reasoning, behind a client-side 140 requests/min
+  gate (Contributor limit: 150); Wonder is banned from volume paths.
 - Every model call is written to a cost ledger. The app's daily
   ceiling (`ARYA_DAILY_BUDGET_USD`, $10) stops app model spend; the
   demo household spends from a separate bucket

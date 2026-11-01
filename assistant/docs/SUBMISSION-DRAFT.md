@@ -71,9 +71,12 @@ so next week's list writes itself.
 - SAM 3.1 finds shelves and signs in the guided store scan, boxes items
   for Find it for me, and finds people so they are blurred before any
   frame is kept.
-- Personal data runs in Standard mode only. Contributor mode is used
-  only on synthetic or public fixtures in eval loops. This rule is
-  enforced in code, not in policy text.
+- Spark runs on Meta's discounted Contributor tier (owner decision
+  2026-11-01), so content sent to Spark may be used to train future Meta
+  models; Wonder (receipt photos) runs on Standard, which is not used for
+  training. A switch (`ARYA_SPARK_TIER=standard`) puts Spark back on
+  Standard. A client-side gate keeps Spark under Contributor's 150
+  requests a minute.
 - All math — ledger, returns netting, cadence, spend — is deterministic
   code. The model reads and speaks; it never calculates.
 - Cost: every model call is written to a cost ledger, and a daily budget
@@ -82,7 +85,7 @@ so next week's list writes itself.
 
 ## Responsible AI
 
-Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web.
+Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web. Arya says plainly (privacy page, How Arya uses AI) that content sent to Muse Spark, such as lists, list and date photos, fridge photos and questions, may be used by Meta to train future models; receipt photos go to Muse Wonder, which Meta does not train on.
 
 ## Evidence
 

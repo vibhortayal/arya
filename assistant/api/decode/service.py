@@ -13,7 +13,7 @@ import hashlib
 import re, json, os
 from datetime import datetime
 
-from api.meta_client import MODELS, parse_json
+from api.meta_client import MODELS, parse_json, spark_model
 
 
 def _iso_day(v):
@@ -377,8 +377,8 @@ def _refund_totals(lines, subtotal, tax, total):
 def decode_photo(image_bytes, client, media_type="image/jpeg"):
     """Receipt photo -> DecodedReceipt via meta_client vision.
     Personal data: handled under the MODEL-POLICY hackathon amendment
-    (Wonder for this path through 2026-11-04; meta_client still refuses
-    Contributor for personal payloads).
+    (Wonder for this path through 2026-11-04; the Spark fallback runs on the
+    tier set by ARYA_SPARK_TIER, Contributor by default since 2026-11-01).
     Prompt: prompts/decode_photo_v1.md (spike-2 verified, Gate 0 passed).
     Photo semantics: price is the PAID amount (discounts already folded by
     the prompt); the discount value rides on the line for display, and any
@@ -402,7 +402,7 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
         decoded_by = MODELS["wonder"]
     except Exception:
         dec = _photo_read(messages, client, mode="standard")
-        decoded_by = MODELS["standard"]
+        decoded_by = spark_model()
     return _photo_record(dec, image_bytes, decoded_by)
 
 
@@ -458,7 +458,7 @@ def _decode_auto(messages, client, image_bytes):
     spark = None
     try:
         dec = _photo_read(messages, client, mode="standard")
-        spark = _photo_record(dec, image_bytes, MODELS["standard"])
+        spark = _photo_record(dec, image_bytes, spark_model())
         reasons = checks.validate(spark, _known_sku_prices())
     except Exception:
         reasons = ["spark_failed"]

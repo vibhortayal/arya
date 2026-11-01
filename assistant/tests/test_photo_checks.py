@@ -89,7 +89,7 @@ class TestAutoReader(unittest.TestCase):
         c = FakeClient(dec([3.99, 7.49, 4.29]))
         r = service.decode_photo(b"img1", c)
         self.assertEqual(c.calls, ["standard"])
-        self.assertEqual(r["decoded_by"], service.MODELS["standard"])
+        self.assertEqual(r["decoded_by"], service.spark_model())
         self.assertNotIn("second_read", r)
 
     def test_failed_check_goes_to_wonder(self):
@@ -108,7 +108,7 @@ class TestAutoReader(unittest.TestCase):
     def test_wonder_down_keeps_spark_and_flags_every_line(self):
         c = FakeClient(dec([3.99, 1.49], subtotal=9.0), wonder_err=True)
         r = service.decode_photo(b"img4", c)
-        self.assertEqual(r["decoded_by"], service.MODELS["standard"])
+        self.assertEqual(r["decoded_by"], service.spark_model())
         self.assertIn("wonder_failed", r["second_read"])
         self.assertTrue(all(l["status"] == "unverified" for l in r["lines"]))
 

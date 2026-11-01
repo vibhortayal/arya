@@ -171,7 +171,7 @@
     "food": "Food safety",
     "foodBody": "Arya is not a food-safety check. Look at the date on the pack. If food looks or smells off, do not eat it.",
     "models": "Models",
-    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them.",
+    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them. Most of it goes to Muse Spark, where Meta may use it to train future models. Receipt photos go to Muse Wonder, which Meta does not train on, unless the receipt reader is set to Spark or Auto.",
     "askLine": "Arya uses AI and can be wrong. Check anything important.",
     "once": "Arya reads photos and voice with AI. It can misread, so you check before anything is saved.",
     "dateBold": "Arya can misread a date.",
@@ -3462,6 +3462,7 @@
         "s3": "Read where AI is used and what to check.",
         "n1": "Always check an expiry date on the pack yourself. If food looks or smells off, do not eat it.",
         "n2": "You confirm photo and receipt reads before they are saved.",
+        "n3": "Most of what you send to Arya is read by Muse Spark, and Meta may use it to train future models. Receipt photos are not used that way, unless the receipt reader is set to Spark or Auto.",
         "cta": "Open About Arya"
       },
       "usesoon": {

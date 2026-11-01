@@ -72,7 +72,7 @@ Rule 1. Each claim has a confidence value and a repair path.
 Rule 2. A confident claim is asserted. An unsure claim is asked. A contradicted claim is demoted and asked.
 Rule 3. No line, item, or state is silently guessed.
 Rule 4. A state with no evidence is "unknown." The system shows "unknown." The system asks for evidence.
-Rule 5. Real personal data goes to Standard mode models only. Section 7.3 gives the reason.
+Rule 5. Superseded 2026-11-01 by the owner: Spark runs on the Contributor tier and Wonder on Standard. Section 7.3 states what that means.
 Rule 6. Arithmetic is computed by code. A model narrates. A model does not do arithmetic.
 Rule 7. Corrections from the user are final. A correction takes effect at once.
 Rule 8. A discount line is structure, not identity. The system attaches it to its parent item. The system never asks the user about it.
@@ -287,10 +287,9 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
-Real receipts and home photos go to Standard mode models only.
-A Contributor mode model can be trained on inputs. Meta terms bar personal data on Contributor mode.
-Contributor mode is for synthetic data in development loops only.
-The demo states one fact in plain words: photos and receipts go to the Meta API for processing, in Standard mode, with no training on the data.
+Update 2026-11-01 (owner decision): Spark runs on the Contributor tier. Meta's docs: "In Contributor mode, your content may be used to train future Meta models, in exchange for a lower price." and "In Standard mode, your content is not used to train Meta models." So lists, list photos, date photos, fridge and shelf photos, Ask Arya questions and the Spark fallback for receipts may be used to train Meta models. Receipt photos stay on Wonder (Standard) while the receipt reader is wonder; spark and auto read them with Spark first. ARYA_SPARK_TIER=standard reverts.
+The Meta models page lists no personal-data restriction for Contributor variants; the earlier line "Meta terms bar personal data on Contributor mode" is not in that page and was removed.
+The app and its privacy page say plainly that Spark content may be used to train Meta models.
 The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
 
 ### 7.4 Connectivity and degradation

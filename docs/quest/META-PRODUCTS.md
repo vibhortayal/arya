@@ -15,7 +15,7 @@ ffmpeg, Postgres) does plumbing only.
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
 
 ## Rules
-- Personal data is Standard-only; Contributor mode is eval and
+- Spark runs on Contributor (owner, 2026-11-01): content may train Meta models. Wonder is Standard. Contributor was previously eval and
   synthetic data only.
 - Model output is a proposal: receipts must reconcile, low-confidence
   lines queue for review, identity changes need the user's approval.

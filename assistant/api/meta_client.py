@@ -6,11 +6,18 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
 - Endpoint note: §2.2 lists POST /v1/responses; spikes 1-2 verified
   POST /v1/chat/completions end-to-end on this team's key. This client uses
   the verified endpoint. Revisit if the responses endpoint is adopted.
-- Mode discipline: personal data (the owner's real records) is Standard
-  only. Contributor mode is for eval loops on synthetic/public data and is
-  refused for personal payloads.
+- Spark tier (owner decision, 2026-11-01): the "standard" mode that every
+  caller asks for means "Muse Spark". It runs as muse-spark-1.3-contributor
+  by default, which Meta may use to train future models (Meta docs: "In
+  Contributor mode, your content may be used to train future Meta models, in
+  exchange for a lower price."). Set ARYA_SPARK_TIER=standard to go back to
+  muse-spark-1.3 Standard ("your content is not used to train Meta models")
+  with no code change. Explicitly asking for mode="contributor" with
+  personal=True is still refused. Wonder is always Standard.
+- Contributor is limited to 150 requests a minute (Standard: 3,000), so
+  Spark calls on the Contributor tier pass a client-side gate.
 """
-import contextvars, functools, json, os, random, time, urllib.error, urllib.request, uuid
+import collections, contextvars, functools, json, os, random, threading, time, urllib.error, urllib.request, uuid
 
 BASE = "https://api.meta.ai/v1"
 
@@ -22,6 +29,25 @@ MODELS = {
     "voice": "muse-voice-transcribe-1.0",
     "sam": "sam-3.1",
 }
+
+def spark_tier():
+    """Which tier the app's Spark ("standard") calls run on: "contributor"
+    (default, owner decision 2026-11-01) or "standard"
+    (ARYA_SPARK_TIER=standard)."""
+    v = os.environ.get("ARYA_SPARK_TIER", "contributor").strip().lower()
+    return "standard" if v == "standard" else "contributor"
+
+
+def resolve_mode(mode):
+    """The tier that actually serves a call: Spark requests follow
+    spark_tier(); every other mode is what it says."""
+    return spark_tier() if mode == "standard" else mode
+
+
+def spark_model():
+    """The model id Spark calls run on right now."""
+    return MODELS[spark_tier()]
+
 
 # USD per 1M tokens: (input, cached_input, output). MODEL-POLICY.md is the
 # source; keep the two in sync.
@@ -40,6 +66,47 @@ SAM_USD_PER_IMAGE = 2.50 / 1000.0
 
 # Muse Image is billed per image generated (MODEL-POLICY.md).
 IMAGE_USD_PER_IMAGE = 0.01
+
+
+# Contributor allows 150 requests a minute per team (Meta pricing and rate
+# limits page). Stay under it with a sliding window; a call that would have
+# to wait longer than GATE_MAX_WAIT_S fails fast (the app answers 502 and the
+# user retries) instead of hanging a request thread.
+CONTRIBUTOR_RPM = 150
+GATE_LIMIT = 140
+GATE_WINDOW_S = 60.0
+GATE_MAX_WAIT_S = 20.0
+
+
+class _RateGate:
+    def __init__(self, limit=GATE_LIMIT, window=GATE_WINDOW_S,
+                 max_wait=GATE_MAX_WAIT_S, clock=time.monotonic,
+                 sleep=time.sleep):
+        self.limit, self.window, self.max_wait = limit, window, max_wait
+        self._clock, self._sleep = clock, sleep
+        self._stamps = collections.deque()
+        self._lock = threading.Lock()
+
+    def acquire(self):
+        """Take a slot, waiting for one if the window is full. Raises
+        RuntimeError when the wait would exceed max_wait."""
+        with self._lock:
+            now = self._clock()
+            while self._stamps and now - self._stamps[0] >= self.window:
+                self._stamps.popleft()
+            wait = 0.0
+            if len(self._stamps) >= self.limit:
+                wait = self.window - (now - self._stamps[0])
+                if wait > self.max_wait:
+                    raise RuntimeError(
+                        "Arya's AI is busy right now, try again in a minute")
+            # Book the slot at the time it will actually be used.
+            self._stamps.append(now + wait)
+        if wait > 0:
+            self._sleep(wait)
+
+
+CONTRIBUTOR_GATE = _RateGate()
 
 
 # Transient statuses worth another try (Meta error-handling docs: retry
@@ -82,7 +149,7 @@ def _watched(mode_of):
             try:
                 return fn(self, *a, **k)
             except RuntimeError as e:
-                mode = mode_of(a, k)
+                mode = resolve_mode(mode_of(a, k))
                 if self.ledger is not None:
                     self.ledger.record(mode=mode, model=MODELS.get(mode, mode),
                                        ms=self._ms(), ok=False, err=_err_kind(e))
@@ -237,7 +304,12 @@ class MetaClient:
         tolerant parser. cache_key is a stable prefix name sent as
         prompt_cache_key (automatic prefix caching, cheaper input)."""
         if personal and mode == "contributor":
-            raise ValueError("personal data is Standard-only (MODEL-POLICY rule 3)")
+            raise ValueError("personal data may not be sent with an explicit "
+                             "contributor request (MODEL-POLICY rule 3); "
+                             "Spark calls use mode='standard'")
+        mode = resolve_mode(mode)
+        if mode == "contributor":
+            CONTRIBUTOR_GATE.acquire()
         body = {"model": MODELS[mode], "messages": messages,
                 "temperature": temperature}
         if reasoning_effort is not None:
