@@ -3338,7 +3338,7 @@
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
         "s1": "Open Lists, then Receipts.",
-        "s2": "Tap Add receipts. Take a photo or pick several PDFs at once.",
+        "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
