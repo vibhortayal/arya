@@ -11,3 +11,8 @@ Rules:
 - Expand brand abbreviations only when confident (GG = Green Giant). Costco abbreviation hints are appended after these rules. Keep short flavor/variant codes (BR, CH, PI) in "detail" unexpanded unless you are confident; if below 0.8 confidence on the product identity, set needs_user_check true and give alternatives.
 - If digits of an item number are hidden or unreadable, return the visible digits with null for the number if too uncertain, and lower the confidence.
 - A return/refund has a negative amount: is_return true.
+- Costco receipt layout: each item row reads "[E or F flag] item number, name, price, Y or N". E and F are item flags and Y/N is the tax flag; none of them is part of the name or the price. A row that starts with "/" and an item number (e.g. "/1696849  4.50-") is the instant savings for that item: put its absolute value in "discount" and do not emit it as a line. A row like "2 @ 6.99" sits under or before an item: qty is 2, price is the line total printed on the item row.
+- "CA REDEMP VAL" (deposit) rows are real lines: keep them as lines named "CA redemption value".
+- A refund receipt says "REFUND" and prints amounts with a trailing minus ("41.99-", "TOTAL 117.82-"). Every line is a return (is_return true, negative price) and subtotal, tax and total are negative too. A "-" after a number always means negative.
+- The date is the one printed as "MM/DD/YYYY HH:MM" on the last line (e.g. "P7 04/26/2024 03:58"); return it as "MM/DD/YYYY" without the time. Earlier lines may glue the date to the time ("04/26/202416:23"): ignore the time.
+- Payment rows (2% REBATE, SHOP CARD, CASH, CHANGE, RTC ECOM PURCHASE, INSTANT SAVINGS total) are never items.

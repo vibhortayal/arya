@@ -96,8 +96,8 @@
       "duplicate": "You already added this {{merchant}} receipt from {{date}}.",
       "thatReceipt": "that receipt",
       "theReceipt": "the receipt",
-      "couldNotReadFile": "Couldn't read that file. Try again, or try another file.",
-      "couldNotReadPhoto": "Couldn't read that photo. Take it once more, in good light.",
+      "couldNotReadFile": "Couldn't read that file: {{error}}",
+      "couldNotReadPhoto": "Couldn't read that photo: {{error}}",
       "filed": "Added {{merchant}}, {{n}} items. Anything Arya isn't sure about is in Receipts, under To check.",
       "filedSaved": "Added {{merchant}}, {{n}} items. You saved {{amount}} with coupons and deals. Anything Arya isn't sure about is in Receipts, under To check."
     },
@@ -2067,8 +2067,13 @@
     "countShared_other": "{{count}} receipts from {{people}} people · {{mine}} yours",
     "countMine_one": "{{count}} receipt. Arya checks every total.",
     "countMine_other": "{{count}} receipts. Arya checks every total.",
-    "bulkDone_one": "Added {{count}} receipt.{{dup}}{{failed}}",
-    "bulkDone_other": "Added {{count}} receipts.{{dup}}{{failed}}"
+    "bulkWhy": " Reason: {{reason}}",
+    "bulkSkipped": " Stopped there, {{n}} not tried.",
+    "failedHead_one": "{{count}} receipt could not be read:",
+    "failedHead_other": "{{count}} receipts could not be read:",
+    "failedMore": "…and {{n}} more with the same kind of problem.",
+    "bulkDone_one": "Added {{count}} receipt.{{dup}}{{failed}}{{skipped}}",
+    "bulkDone_other": "Added {{count}} receipts.{{dup}}{{failed}}{{skipped}}"
   },
   "score": {
     "scoringTheHunt": "Adding up your quest…",

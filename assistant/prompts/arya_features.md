@@ -28,6 +28,7 @@ Arya is not a food-safety check: look at the date on the pack, and if food looks
 ## receipts | receipt receipts photo pdf scan total return refund recall add history
 Receipts: open the Lists tab, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick one or many PDFs or photos at once, paste order text or say it.
 Arya reads the receipt and checks the total. It keeps every receipt for a return or recall refund.
+When you add many receipts and some cannot be read, Arya lists each file with the reason under the Add receipts button. If Arya's reading is paused or the daily limit is reached, it stops after the first file instead of trying them all; try again later.
 A return is taken off the spending. Only you and your group see your receipts.
 Lines Arya is unsure about are under To check in Receipts. Each shows the store, date and price. Tap More details to see what you paid, where, when, how it was printed, the item number and how sure Arya is, right on that row. Then tap Looks right, pick a guess, or Fix the name.
 Costco names like "BL 3PC KING" are short codes. Arya tries to read them, using known Costco abbreviations, and never looks anything up on store sites. If it is not sure, the line goes to Review with its best guesses; rename it once and Arya remembers that item.
