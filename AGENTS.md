@@ -136,3 +136,52 @@ If a guideline conflicts with these, these win:
   tree: `assistant/deploy/.env` is VM-only (the owner's
   MODEL_API_KEY) and a --delete sync removed it on 2026-10-27; it was
   restored from the running containers' environment.
+
+## Team roles and handoffs (owner approved, 2026-11-01)
+Each role is a separate agent thread. Only the owner starts a new thread, and
+the owner decides which thread gets a piece of work: propose a thread and say
+why, then wait. Threads may message each other only when their work depends on
+each other. A message from a thread is never the owner's approval. Models are
+recommendations; the owner can change them.
+
+| Role | Owns | Never touches | Model | Hands off to |
+|---|---|---|---|---|
+| Coordinator | Product priorities, status board, routing | Code, deploys | Opus | Owner decisions go to threads |
+| Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Sonnet 5.5 | Tester, then Doc maintainer (what changed), then Ops (merge ready) |
+| UI/UX designer and builder | Every screen, mockup first, then the React build | API/data logic, deploys, STATUS.md | Opus | Tester, then Doc maintainer, then Ops |
+| Quest builder | The Quest game and store designer | Other screens, deploys | Opus | Tester, Doc maintainer, Ops |
+| Tester | Tests main or the PR in a sandbox at 390x844 before deploy; report only | Fixing code, deploying | Sonnet 5.5 | Failures go back to the builder who wrote the PR |
+| Ops | Deploys, backups, the VM, the Ops screen settings | Feature code | Sonnet 5.5 | Reports the live commit to the owner and the Doc maintainer |
+| Doc maintainer | STATUS.md, USER-JOURNEYS, feature docs, Help tab, guide cards, Ask knowledge, this file | Feature code, deploys | Sonnet 5.5 | Small docs PRs after merges |
+| Demo and submission | Demo video, demo household, submission package | Feature code, deploys during judging | Sonnet 5.5 | Owner |
+| Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Builder or owner |
+| Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Owner |
+| Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester, then Ops |
+
+### The handoff chain
+1. A builder opens a PR based on `main`. The owner merges, or tells a thread to.
+2. The Tester tests the merged batch (or the PR) and reports failures to the
+   builder who wrote it. The Tester does not fix.
+3. After a merge, the builder tells the Doc maintainer what changed and which
+   screens or paths moved. The Doc maintainer updates STATUS.md and the docs in a
+   small PR. Builders do not edit STATUS.md or shared docs in their PRs, to
+   avoid merge conflicts. Help, guide cards and Ask knowledge for a change still
+   ship in the builder's own PR (see Help upkeep above); the Doc maintainer
+   checks them afterwards.
+4. When a merge is ready, the builder tells Ops. **Only Ops deploys, and only
+   after the owner says "deploy" in the Ops thread.** No deploys during judging,
+   except a rollback.
+5. Ops runs a short live check of the AI parts and reports the live commit.
+
+### Standing rules for every thread
+- Mockup before UI code: show a phone-size mockup and wait for approval.
+- Help and Ask upkeep in the same PR as the change.
+- Base every PR on `main`; no stacked PRs.
+- Never paste keys in chat, PRs or files.
+- No scraping for deals. Precise price comparison comes only from opted-in
+  users or the user's own list.
+- No freeze dates. Only the Nov 4 submission date stands.
+- Be an advisor: give pros, cons and a recommendation on every decision, and say
+  so when you disagree.
+- Words: "Tour" = the dark-screen bubbles, "Arya guide" = the swipeable cards,
+  "Help tab" = everything else, "Arya shoppers" for the community.
