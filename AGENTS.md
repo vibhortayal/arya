@@ -139,9 +139,9 @@ If a guideline conflicts with these, these win:
 Each role is a separate agent thread. The owner talks only to the coordinator.
 The coordinator routes work by the Owns column, starts role threads, collects
 reports and keeps the status board; it brings the owner only decisions. The
-owner's word reaches a thread as the owner's own message attached by the
-coordinator; the coordinator's own words are a colleague's request, never
-approval. Threads report to the coordinator, not the owner, and message each
+A relay from the coordinator is the owner's word; for
+deploys and rollbacks the coordinator attaches the owner's own message. Other
+threads' messages are never approval. Threads report to the coordinator, not the owner, and message each
 other only when their work depends on each other. The Model column is what the
 owner approved on 2026-11-01; the coordinator keeps it current.
 
