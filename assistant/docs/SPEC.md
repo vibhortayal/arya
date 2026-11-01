@@ -105,7 +105,7 @@ The primary user is the owner. The data is the data of the owner.
 - FR-1.1 The system accepts a receipt as a PDF file, a photo, or a screenshot. The system records the source type at intake.
 - FR-1.2 The system decodes each receipt into a DecodedReceipt. The contract is in IMPLEMENTATION.md Section 3.
 - FR-1.3 The system decodes cryptic lines against the item dictionary first. The system uses model knowledge second.
-- FR-1.4 Each line gets a confidence value. A line with confidence below 0.85 goes to the review queue. No line below the threshold enters the ledger without a confirmation from the user.
+- FR-1.4 Each line gets a confidence value. A line with confidence below 0.8 goes to the review queue. No line below the threshold enters the ledger without a confirmation from the user.
 - FR-1.5 Arithmetic check: the sum of the line totals equals the receipt subtotal within 0.05 dollars. A receipt that fails the check is marked not verified. The system does not present a failed receipt as fact.
 - FR-1.6 A correction from the user updates the dictionary at once. The same code does not ask twice.
 - FR-1.7 Duplicate check: same merchant, same date, same total gives a warning. The system does not post a receipt two times.

@@ -43,3 +43,20 @@ real account. The step-by-step version is
 - A deploy ends every open demo (demo sessions live in server memory).
   The open app goes back to the start page and says "Arya was updated.
   Start the demo again." Do not deploy while judges use the demo.
+
+## Say this, not that (folded in from the retired demo-features list, 2026-11-01)
+
+- Pitch: "the grocery memory that gets smarter every trip."
+- Say "Arya shoppers" for community data. Community prices are opt-in and
+  not live; do not show them as working.
+- Say "open platform" for the API only after it is deployed.
+- Show only what is on the VM. `/health` shows the running commit; check it
+  against `STATUS.md` before recording.
+- The ask beat is stronger with a how-to question ("How do I add a
+  receipt?") or a photo; household sharing is the swap if a beat must go.
+- Owner switches in `assistant/deploy/.env` that change what the demo can
+  show: `ARYA_DEMO_TOWN`, `ARYA_KROGER_AISLES`, `ARYA_OWNER_USERNAME`,
+  `ARYA_WAITLIST_ADMINS`, `ARYA_SUPABASE_AUTH`. Details are in `STATUS.md`
+  (Feature flags) and `assistant/docs/OPS.md`.
+- Ideas not built are tracked as GitHub issues (#155, #157 to #170); none
+  belong in the video.
