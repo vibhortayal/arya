@@ -312,10 +312,14 @@ def badge_shelf():
 # without an upload carry neither — no original exists and none
 # is invented. Nothing here is estimated.
 
-def _receipt_summary(r):
+def _receipt_summary(r, label=None):
     lines = r.get("lines", [])
     return {"receipt_id": r["receipt_id"],
-            "merchant": r.get("merchant", ""),
+            # One readable name per store (storename.py); the printed text
+            # stays on the receipt as merchant_raw.
+            "merchant": (label or {}).get("label") or r.get("merchant", ""),
+            "merchant_raw": r.get("merchant", ""),
+            **({"store_sub": label["sub"]} if (label or {}).get("sub") else {}),
             "purchased_at": r.get("purchased_at"),
             "total": r.get("total"),
             "totals_reconcile": bool(r.get("totals_reconcile")),
@@ -333,10 +337,19 @@ def _receipt_summary(r):
                if r.get("member") else {})}
 
 
+def _store_labels(rs):
+    try:
+        from api import storename
+        return storename.labels(rs)
+    except Exception:  # a naming problem never hides a receipt
+        return {}
+
+
 def receipt_archive():
     rs = sorted(state.receipts(),
                 key=lambda r: r.get("purchased_at") or "", reverse=True)
-    return [_receipt_summary(r) for r in rs]
+    names = _store_labels(rs)
+    return [_receipt_summary(r, names.get(r["receipt_id"])) for r in rs]
 
 
 def unsettled_hunts():
@@ -361,9 +374,10 @@ def unsettled_hunts():
 
 
 def receipt_detail(receipt_id):
-    for r in state.receipts():
+    all_r = state.receipts()
+    for r in all_r:
         if r["receipt_id"] == receipt_id:
-            out = _receipt_summary(r)
+            out = _receipt_summary(r, _store_labels(all_r).get(receipt_id))
 
             def signed(ln, key):  # a return reads negative, even filed before returns were signed
                 v = ln.get(key)
@@ -372,6 +386,8 @@ def receipt_detail(receipt_id):
             out.update({
                 "subtotal": r.get("subtotal"), "tax": r.get("tax"),
                 "source_type": r.get("source_type"),
+                **({"store_info": r["store_info"]} if r.get("store_info") else {}),
+                **({"receipt_meta": r["receipt_meta"]} if r.get("receipt_meta") else {}),
                 "savings": receipt_savings(r),
                 "lines": [{"name": ln.get("decoded_name") or ln.get("raw"),
                            "qty": signed(ln, "qty") if ln.get("qty") is not None else 1,

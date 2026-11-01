@@ -431,7 +431,92 @@ def _photo_record(dec, image_bytes, decoded_by):
            "image_ref": None, "decoded_by": decoded_by}
     if _num(dec.get("items_sold")):
         rec["items_sold"] = dec["items_sold"]
+    keep = clean_store_info(dec.get("store_info"))
+    if keep:
+        rec["store_info"] = keep
+    meta = clean_receipt_meta(dec.get("receipt_meta"))
+    if meta:
+        rec["receipt_meta"] = meta
     return rec
+
+
+_STORE_INFO_KEYS = ("chain", "number", "street", "city", "state", "zip")
+
+STORE_HEADER_PROMPT = (
+    "You read everything on a paper store receipt photo EXCEPT the item lines: the "
+    "store brand, store or warehouse number and address at the top, and the details "
+    "printed around the items. Return ONLY a JSON object: {\"store_info\": {\"chain\": str|null, "
+    "\"number\": str|null, \"street\": str|null, \"city\": str|null, \"state\": str|null, "
+    "\"zip\": str|null}, \"receipt_meta\": {\"phone\": str|null, \"time\": str|null, "
+    "\"register\": str|null, \"transaction_no\": str|null, \"cashier\": str|null, "
+    "\"member_last4\": str|null, \"payments\": [{\"method\": str, \"last4\": str|null, "
+    "\"amount\": number|null}], \"tax_lines\": [{\"label\": str, \"amount\": number}], "
+    "\"other\": [str]}}. Copy what is printed. Use null for anything not printed; never "
+    "guess a city from the brand and never read the item lines. For any card or "
+    "membership number return ONLY its last 4 digits.")
+
+
+def clean_store_info(info):
+    if not isinstance(info, dict):
+        return {}
+    return {k: str(info[k]).strip() for k in _STORE_INFO_KEYS if info.get(k) not in (None, "")}
+
+
+_META_TEXT = ("phone", "time", "register", "transaction_no", "cashier")
+
+
+def _last4(v):
+    d = re.sub(r"\D", "", str(v or ""))
+    return d[-4:] if d else ""
+
+
+def clean_receipt_meta(meta):
+    """Everything else printed on a receipt, kept small and safe: plain
+    strings only, card and membership numbers cut to their last 4 digits
+    (a full number is never stored), long digit runs elsewhere masked."""
+    if not isinstance(meta, dict):
+        return {}
+
+    def txt(v, n=120):
+        t = re.sub(r"\d{9,}", lambda m: "…" + m.group(0)[-4:], str(v).strip())
+        return t[:n]
+    out = {k: txt(meta[k], 60) for k in _META_TEXT if meta.get(k) not in (None, "")}
+    if _last4(meta.get("member_last4")):
+        out["member_last4"] = _last4(meta["member_last4"])
+    pays = []
+    for p in (meta.get("payments") or [])[:6]:
+        if isinstance(p, dict) and p.get("method"):
+            row = {"method": txt(p["method"], 40)}
+            if _last4(p.get("last4")):
+                row["last4"] = _last4(p["last4"])
+            if _num(p.get("amount")):
+                row["amount"] = p["amount"]
+            pays.append(row)
+    if pays:
+        out["payments"] = pays
+    taxes = [{"label": txt(t["label"], 40), "amount": t["amount"]}
+             for t in (meta.get("tax_lines") or [])[:6]
+             if isinstance(t, dict) and t.get("label") and _num(t.get("amount"))]
+    if taxes:
+        out["tax_lines"] = taxes
+    other = [txt(o, 100) for o in (meta.get("other") or [])[:10] if isinstance(o, str) and o.strip()]
+    if other:
+        out["other"] = other
+    return out
+
+
+def read_store_info(image_bytes, client, media_type="image/jpeg"):
+    """Header-only re-read of a filed receipt's photo: the store's
+    chain, number and address. One short call; no lines are read, so
+    nothing on the receipt can change but its store."""
+    import base64
+    data_uri = f"data:{media_type};base64," + base64.b64encode(image_bytes).decode()
+    messages = [{"role": "system", "content": STORE_HEADER_PROMPT},
+                {"role": "user", "content": [
+                    {"type": "text", "text": "Read the store header."},
+                    {"type": "image_url", "image_url": {"url": data_uri}}]}]
+    dec = _photo_read(messages, client, mode="standard")
+    return clean_store_info(dec.get("store_info")), clean_receipt_meta(dec.get("receipt_meta"))
 
 
 def _known_sku_prices():

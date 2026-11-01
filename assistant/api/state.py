@@ -1047,12 +1047,19 @@ def dashboard():
 
 def review_queue():
     lines = []
-    for r in receipts():
+    rs = receipts()
+    try:
+        from api import storename
+        names = storename.labels(rs)
+    except Exception:
+        names = {}
+    for r in rs:
         for li, ln in enumerate(r["lines"]):
             if ln.get("status") == "unverified":
                 lines.append({"receipt_id": r["receipt_id"], "idx": li, "date": r["purchased_at"],
                               "raw": ln["raw"], "decoded_name": ln.get("decoded_name"),
-                              "merchant": r.get("merchant"), "sku": ln.get("sku"),
+                              "merchant": (names.get(r["receipt_id"]) or {}).get("label") or r.get("merchant"),
+                              "sku": ln.get("sku"),
                               "qty": ln.get("qty"), "line_total": ln.get("line_total"),
                               "confidence": ln.get("confidence"),
                               "alternatives": ln.get("alternatives", []),
@@ -1169,6 +1176,24 @@ def link_receipt_store(receipt_id, store_id):
         for r in rs:
             if r["receipt_id"] == receipt_id:
                 r["store_ref"] = store_id
+                _save("receipts.json", rs)
+                return True
+    return False
+
+
+def set_receipt_store_info(receipt_id, info, meta=None):
+    """Attach the header read from a receipt photo: store_info (chain,
+    number, street, city, state, zip) and receipt_meta (phone, time,
+    register, payments, tax lines...). Only those two fields change;
+    lines, totals and everything else on the receipt stay as they are."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] == receipt_id:
+                if info:
+                    r["store_info"] = dict(info)
+                if meta:
+                    r["receipt_meta"] = dict(meta)
                 _save("receipts.json", rs)
                 return True
     return False

@@ -116,3 +116,82 @@ class TestTripLinkedReceipts(unittest.TestCase):
     def test_unknown_or_missing_link_falls_back(self):
         self.assertEqual(self.lab("Costco Fremont #778", ref="gone")["label"], "Costco Fremont")
         self.assertEqual(self.lab("Safeway", ref=None)["label"], "Safeway")
+
+
+class TestOwnerReceipts(unittest.TestCase):
+    """The spellings on the owner's 114-receipt batch (2026-11-01)."""
+    RAWS = ["Costco Wholesale", "Costco Wholesale Sunnyvale #423", "SUNNYVALE #423", "COSTCO WHOLESALE",
+            "COSTCO WHOLESALE CYPRESS CA #748", "COSTCO WHOLESALE SUNNYVALE #423", "Costco",
+            "Costco Wholesale - CYPRESS CA #748", "FREMONT #778", "Costco Wholesale Fremont #778",
+            "COSTCO WHOLESALE SANTA CLARA #129"]
+
+    def test_one_readable_name_per_store(self):
+        m = storename.merge(self.RAWS, stores=[])
+        for raw in ("Costco Wholesale Sunnyvale #423", "SUNNYVALE #423", "COSTCO WHOLESALE SUNNYVALE #423"):
+            self.assertEqual(m[raw]["label"], "Costco Sunnyvale")
+        for raw in ("COSTCO WHOLESALE CYPRESS CA #748", "Costco Wholesale - CYPRESS CA #748"):
+            self.assertEqual(m[raw]["label"], "Costco Cypress")
+        self.assertEqual(m["FREMONT #778"]["label"], "Costco Fremont")
+        self.assertEqual(m["COSTCO WHOLESALE SANTA CLARA #129"]["label"], "Costco Santa Clara")
+
+    def test_bare_names_stay_honest(self):
+        m = storename.merge(self.RAWS, stores=[])
+        for raw in ("Costco Wholesale", "COSTCO WHOLESALE", "Costco"):
+            self.assertEqual(m[raw]["label"], "Costco, location unknown")
+
+    def test_address_read_from_the_photo_wins(self):
+        recs = [{"receipt_id": "a", "merchant": "Costco Wholesale",
+                 "store_info": {"chain": "Costco", "city": "SUNNYVALE", "number": "423"}},
+                {"receipt_id": "b", "merchant": "COSTCO WHOLESALE SUNNYVALE #423"},
+                {"receipt_id": "c", "merchant": "Costco Wholesale"}]
+        out = storename.labels(recs, stores=[])
+        self.assertEqual(out["a"]["label"], "Costco Sunnyvale")
+        self.assertEqual(out["b"]["label"], "Costco Sunnyvale")
+        self.assertEqual(out["c"]["label"], "Costco, location unknown")
+
+
+class TestStoreInfoFromPhoto(unittest.TestCase):
+    def test_reader_address_is_kept_on_the_receipt(self):
+        from api.decode import service
+        dec = {"store": "COSTCO WHOLESALE", "date": "2026-10-01", "lines": [], "subtotal": 0, "tax": 0, "total": 0,
+               "store_info": {"chain": "Costco", "number": "423", "street": "", "city": "Sunnyvale", "state": None, "zip": "94086"}}
+        rec = service._photo_record(dec, b"x", "m")
+        self.assertEqual(rec["store_info"], {"chain": "Costco", "number": "423", "city": "Sunnyvale", "zip": "94086"})
+        self.assertNotIn("store_info", service._photo_record({**dec, "store_info": None}, b"y", "m"))
+
+
+class TestReceiptMeta(unittest.TestCase):
+    def test_everything_printed_is_kept_and_numbers_are_cut_to_four_digits(self):
+        from api.decode import service
+        meta = service.clean_receipt_meta({
+            "phone": "(408) 730-9034", "time": "14:07", "register": "Reg 12", "transaction_no": "0042 0113",
+            "cashier": "Maria", "member_last4": "111122223333",
+            "payments": [{"method": "VISA", "last4": "4111111111111234", "amount": 214.38}, {"method": "", "amount": 1}],
+            "tax_lines": [{"label": "TAX A", "amount": 3.1}, {"label": "x"}],
+            "other": ["Thank you for shopping", "Card 4111111111111234 approved"], "junk": "dropped"})
+        self.assertEqual(meta["member_last4"], "3333")
+        self.assertEqual(meta["payments"], [{"method": "VISA", "last4": "1234", "amount": 214.38}])
+        self.assertEqual(meta["tax_lines"], [{"label": "TAX A", "amount": 3.1}])
+        self.assertNotIn("junk", meta)
+        self.assertNotIn("4111111111111234", " ".join(meta["other"]))
+        self.assertEqual(meta["phone"], "(408) 730-9034")
+
+    def test_photo_record_and_backfill_keep_lines_untouched(self):
+        import os, tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import state
+        from api.decode import service
+        dec = {"store": "COSTCO WHOLESALE", "date": "2026-10-01", "lines": [], "subtotal": 0, "tax": 0, "total": 0,
+               "store_info": {"chain": "Costco", "city": "Sunnyvale", "number": "423"},
+               "receipt_meta": {"cashier": "Maria"}}
+        rec = service._photo_record(dec, b"z", "m")
+        self.assertEqual(rec["receipt_meta"], {"cashier": "Maria"})
+        rec.update(receipt_id="bf1", merchant="Costco Wholesale", purchased_at="2026-10-01", lines=[
+            {"raw": "MILK", "decoded_name": "Milk", "qty": 1, "line_total": 3.0, "line_type": "item", "status": "auto"}])
+        rec.pop("store_info"); rec.pop("receipt_meta")
+        state.set_current_user(None)
+        state.add_receipts([rec])
+        self.assertTrue(state.set_receipt_store_info("bf1", {"city": "Sunnyvale"}, {"cashier": "Maria"}))
+        got = [r for r in state.own_receipts() if r["receipt_id"] == "bf1"][0]
+        self.assertEqual(got["store_info"], {"city": "Sunnyvale"})
+        self.assertEqual(got["lines"][0]["line_total"], 3.0)

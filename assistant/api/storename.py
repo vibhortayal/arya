@@ -33,11 +33,34 @@ def _chain(word):
     return re.sub(r"[^a-z0-9]", "", (word or "").lower())
 
 
+_STATES = {"AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC","ON","BC","AB","QC"}
+_SMALL = {"of", "the", "and", "at", "de", "la", "del"}
+
+
+def _human(word):
+    """SUNNYVALE -> Sunnyvale. Mixed-case words and short brand codes
+    (BJ's, HEB) keep their spelling; a word printed in capitals becomes
+    capitalised."""
+    if word.isupper() and len(word) > 3:
+        return word.capitalize()
+    if word.isupper() and word.lower() in _SMALL:
+        return word.lower()
+    if word.isupper() and len(word) == 3 and word.isalpha() and word.lower() in {"our", "new", "san", "los"}:
+        return word.capitalize()
+    return word
+
+
 def _parse(raw):
     s = str(raw or "").strip()
     m = _NUM.search(s)
     words = [w for w in _NUM.sub(" ", s).split() if w.lower() not in _NOISE]
-    return words, (m.group(1) if m else None)
+    words = [w for w in words if re.search(r"[A-Za-z0-9]", w)]
+    # "CYPRESS CA": a trailing state code is not part of the place.
+    if len(words) >= 3 and words[-1].upper() in _STATES:
+        words = words[:-1]
+    # A leading chain word keeps its own case; everything printed in
+    # capitals reads like a person wrote it.
+    return [_human(w) for w in words], (m.group(1) if m else None)
 
 
 def _directory():
@@ -76,6 +99,18 @@ def merge(raws, stores=None):
     raws = [r for r in dict.fromkeys(raws) if r]
     stores = _directory() if stores is None else stores
     parsed = {r: _parse(r) for r in raws}
+    # "SUNNYVALE #423" has no chain word: the printed header line was just
+    # the warehouse name. When the same store number appears with a chain
+    # (Costco ... #423), that spelling takes the chain too.
+    first_words = [_chain(w[0]) for w, n in parsed.values() if w]
+    owner = {}
+    for r, (w, n) in parsed.items():
+        if w and n and len(w) >= 2 and first_words.count(_chain(w[0])) >= 2:
+            owner.setdefault(n, w[0])
+    for r, (w, n) in list(parsed.items()):
+        if w and n and n in owner and _chain(w[0]) != _chain(owner[n]) \
+                and first_words.count(_chain(w[0])) == 1:
+            parsed[r] = ([owner[n]] + w, n)
     found = {}                                  # (chain, number) -> directory store
     for r, (words, num) in parsed.items():
         st = _match(words, stores) if words else None
@@ -121,12 +156,26 @@ def _agrees(merchant, store):
     return len(words) < 2 or not city or city in " ".join(words[1:]).lower()
 
 
+def _printed(r):
+    """The text a receipt's store goes by. A photo read after the reader
+    started returning the header's address carries store_info (chain,
+    city, number); that is a better key than the one line the model
+    copied as "store"."""
+    info = r.get("store_info") or {}
+    chain = str(info.get("chain") or "").strip()
+    city = str(info.get("city") or "").strip()
+    num = str(info.get("number") or "").strip().lstrip("#")
+    if chain and (city or num):
+        return " ".join(x for x in (chain, city, f"#{num}" if num else "") if x)
+    return r.get("merchant")
+
+
 def labels(receipts, stores=None):
     """{receipt_id: {"label", "sub"}}: merge() for every receipt, and a
     receipt linked to its trip's store takes that store's label."""
     receipts = list(receipts)
     stores = _directory() if stores is None else stores
-    by_merchant = merge((r.get("merchant") for r in receipts), stores)
+    by_merchant = merge((_printed(r) for r in receipts), stores)
     by_id = {s.get("id"): s for s in stores}
     out = {}
     for r in receipts:
@@ -135,5 +184,5 @@ def labels(receipts, stores=None):
             sub = ", ".join(x for x in (ref.get("street"), ref.get("city")) if x)
             out[r["receipt_id"]] = {"label": _store_label(ref), "sub": sub}
         else:
-            out[r["receipt_id"]] = by_merchant.get(r.get("merchant")) or {"label": r.get("merchant"), "sub": None}
+            out[r["receipt_id"]] = by_merchant.get(_printed(r)) or {"label": r.get("merchant"), "sub": None}
     return out
