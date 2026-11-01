@@ -878,9 +878,12 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landtop .gethome:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 @keyframes getjiggle { 0%, 7.5%, 100% { transform: none; } 1.25% { transform: rotate(-7deg); } 2.5% { transform: rotate(6deg); }
   3.75% { transform: rotate(-5deg); } 5% { transform: rotate(3deg); } 6.25% { transform: rotate(-1.5deg); } }
-@keyframes getglow { 0%, 7.5%, 100% { box-shadow: 0 0 0 0 transparent; } 3.75% { box-shadow: 0 0 0 6px var(--acc-soft), 0 0 14px 2px var(--acc-soft); } }
+/* The glow is a fixed shadow on a layer that fades in and out: only opacity animates (re-audit #19). */
+.landtop .gethome.glow { position: relative; }
+.landtop .gethome.glow::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 6px var(--acc-soft), 0 0 14px 2px var(--acc-soft); animation: getglow 8s ease-in-out 1.2s 2; }
+@keyframes getglow { 0%, 7.5%, 100% { opacity: 0; } 3.75% { opacity: 1; } }
 .landtop .gethome.jiggle { animation: getjiggle 8s ease-in-out 1.2s 2; }
-.landtop .gethome.glow { animation: getglow 8s ease-in-out 1.2s 2; }
 .a2hs-intro { margin: 0 0 2px; }
 .a2hs-tip { margin: 6px 0 0; }
 .a2hs-tip .linkbtn, .landdesk .linkbtn { display: inline; min-height: 0; padding: 0; font-size: inherit; }
@@ -1116,7 +1119,8 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .mp-reward .pts { font-size: 34px; font-weight: 800; color: var(--accent); animation: mp-pop .5s ease-out; }
 .mp-reward .what { font-size: 17px; font-weight: 600; margin: 4px 0 10px; }
 .mp-reward .track { margin: 8px 0 4px; }
-.mp-reward .bar { transition: width .9s ease-out; }
+/* Full width, scaled to the share: the fill grows with transform, not width (re-audit #19). */
+.mp-reward .bar { width: 100%; transform-origin: left center; transition: transform .9s ease-out; }
 .mp-title { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 980px; background: var(--accent); color: #fff; font-weight: 700; animation: mp-pop .5s ease-out .3s both; }
 .mp-me { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; font-size: 15px; }
 .mp-offer { border: 2px dashed var(--accent); }

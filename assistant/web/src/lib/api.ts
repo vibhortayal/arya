@@ -39,7 +39,11 @@ function deadline(ms: number): AbortSignal | undefined {
 
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const write = !!opts?.method && opts.method !== "GET";
-  if (write) { inflight.clear(); fresh.clear(); }
+  if (write) {
+    inflight.clear(); fresh.clear();
+    // boot.js's early Today is from before this change (re-audit N5).
+    if (typeof window !== "undefined" && window.__bootData) window.__bootData.today = undefined;
+  }
   let r: Response;
   const headers = new Headers(opts?.headers || {});
   headers.set("X-Arya-Client", CLIENT_ID);
@@ -54,10 +58,17 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
   }
   if (!r.ok) {
     const detail = (await r.json().catch(() => ({}))).detail;
+    // The server no longer knows this tab's session (a deploy drops
+    // every demo session, re-audit N1): app/session.tsx ends it.
+    if (r.status === 401 && detail === "login required" && path.startsWith("/api/")) sessionEnded();
     throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status);
   }
   return r.json();
 }
+
+/* Sent once per lost session; app/session.tsx listens. */
+export const SESSION_ENDED = "arya-session-ended";
+function sessionEnded() { try { dispatchEvent(new Event(SESSION_ENDED)); } catch { /* no window (tests) */ } }
 
 const json = (method: string, body?: unknown): RequestInit =>
   ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
@@ -71,7 +82,8 @@ const inflight = new Map<string, Promise<unknown>>();
 /* A few reads that many screens ask for and that only change through
  * this tab's own writes are kept 30 s (speed audit #7): /api/group was
  * fetched by three callers on every screen. Any write clears them. */
-const KEEP_MS: Record<string, number> = { "/api/group": 30000, "/api/settings": 30000 };
+// Demo Town's hints were read on every tab switch (re-audit N11).
+const KEEP_MS: Record<string, number> = { "/api/group": 30000, "/api/settings": 30000, "/api/town/hints": 30000 };
 const fresh = new Map<string, { at: number; p: Promise<unknown> }>();
 export const get = <T = any>(path: string): Promise<T> => {
   let p = inflight.get(path) as Promise<T> | undefined;
@@ -105,5 +117,8 @@ export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json(
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
 /* Multipart upload (receipt photos, audio, shelf shots). */
 export const upload = <T = any>(path: string, form: FormData) => api<T>(path, { method: "POST", body: form });
+/* Another member's change (app/groupLive.ts) can make a kept read
+ * stale, e.g. /api/group after someone joins (re-audit N7). */
+export const forgetKept = () => { fresh.clear(); };
 /* Signing in or out drops every kept read: they were the last account's. */
 export const forgetReads = () => { fresh.clear(); inflight.clear(); clearSaved(); };
