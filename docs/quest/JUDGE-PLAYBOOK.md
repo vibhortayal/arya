@@ -75,7 +75,7 @@ becomes an action that the server validates before it applies.
 ### 6. Finish with a receipt
 When the list is done, tap **Head to checkout**, then **Add your
 receipt**. **Snap the receipt** with a photo, or tap **Use a sample
-receipt**. Receipt photos are read by Meta's Muse Spark on the Contributor tier, so Meta may use them to train future Meta models; if that matters to you, tap **Use a sample receipt**. **Muse Spark** reads each line, and code checks that the lines add up
+receipt**. **Muse Spark** reads each line, and code checks that the lines add up
 to the printed total. If Spark fails, or the checks flag the read (the
 lines don't add up, or too many lines are unsure), **Muse Wonder 1.0**
 reads the receipt again. Arya records which model read the receipt. On
