@@ -1,0 +1,18 @@
+{
+ "lists": [
+  {
+   "id": "l-demo-costco",
+   "name": "Costco",
+   "stores": [
+    "Costco"
+   ]
+  },
+  {
+   "id": "l-demo-tj",
+   "name": "Trader Joe's",
+   "stores": [
+    "Trader Joe's"
+   ]
+  }
+ ]
+}

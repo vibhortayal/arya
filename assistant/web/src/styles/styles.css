@@ -2216,3 +2216,14 @@ body.hunting #offlinebar { display: none !important; }
 /* Receipts > To check: the in-place "More details" panel. */
 .detail { margin: 0 0 10px; padding: 4px 14px; background: var(--panel); border-radius: 12px; }
 .detail .row { min-height: 40px; padding: 8px 0; }
+
+/* Today: Next trip, the main action (2026-11-01). */
+.tripcard { background: var(--group); border-radius: var(--radius); padding: 16px; }
+.tripcard .tc-open { display: block; width: 100%; text-align: left; background: none; border: none; padding: 0 0 14px; color: inherit; }
+.tripcard .lc-top { display: flex; align-items: center; gap: 10px; }
+.tripcard .lc-name { flex: 1; min-width: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.tripcard .lc-count { font-variant-numeric: tabular-nums; color: var(--secondary); font-size: 15px; font-weight: 600; }
+.tripcard .lc-top .chev { color: var(--tertiary); font-size: 22px; }
+.tripcard .lc-items { display: block; font-size: 15px; margin-top: 8px; line-height: 1.4; color: var(--secondary); overflow-wrap: anywhere; }
+.tripcard .tc-empty { margin: 0 0 14px; color: var(--secondary); font-size: 15px; }
+.tripcard .tc-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }

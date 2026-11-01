@@ -8,9 +8,9 @@
 export const CARD_IDS = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip"] as const;
 export type CardId = (typeof CARD_IDS)[number];
 
-/* Today's order before it was customizable. The cards added later
- * (Price watch, Next trip) start in the card library, off. */
-export const DEFAULT_CARDS: CardId[] = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"];
+/* Today's order before it was customizable. Next trip leads (the main
+ * action, 2026-11-01); Price watch starts in the card library, off. */
+export const DEFAULT_CARDS: CardId[] = ["trip", "low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"];
 
 const isCard = (x: unknown): x is CardId => (CARD_IDS as readonly string[]).includes(x as string);
 
