@@ -93,6 +93,52 @@ class TestListActions(AskCase):
             self.assertIsNone(chat_service._list_for("Indian Store"))
 
 
+class TestAmbiguousListNames(AskCase):
+    """Tester on #384: two lists that fit must ask before any change."""
+
+    def setUp(self):
+        super().setUp()
+        self.rename_list("Costco", "Costcozy")
+        from api import state
+        with state.as_user("owner"):
+            ls = state._load("lists.json", None)
+            extra = dict(ls["lists"][0], id="costco-run", name="Costco Run")
+            ls["lists"].append(extra)
+            state._save("lists.json", ls)
+
+    def flags(self):
+        from api import state
+        with state.as_user("owner"):
+            return state.flags()
+
+    def test_ambiguous_add_asks_first_and_adds_nothing(self):
+        before = self.flags()
+        out = self.ask("add oat milk to Costco", [{"type": "add_to_list", "item": "oat milk", "list": "Costco"}])
+        self.assertEqual(out["applied"], [])
+        self.assertEqual(out["added"], [])
+        self.assertEqual(out["skipped"], ["More than one list fits Costco: Costcozy or Costco Run. Which one?"])
+        self.assertEqual(self.flags(), before)
+
+    def test_ambiguous_remove_asks_which(self):
+        out = self.ask("remove rice from Costco", [{"type": "remove_from_list", "item": "rice", "list": "Costco"}])
+        self.assertEqual(out["applied"], [])
+        self.assertEqual(out["skipped"], ["More than one list fits Costco: Costcozy or Costco Run. Which one?"])
+        self.assertIn("Jasmine Rice", self.on_list("Costcozy"))
+
+    def test_a_full_name_still_picks_one(self):
+        out = self.ask("add oat milk to Costco Run",
+                       [{"type": "add_to_list", "item": "oat milk", "list": "costco run"}])
+        self.assertEqual(out["applied"], ["Added oat milk to Costco Run."])
+
+    def test_one_letter_is_not_a_list_name(self):
+        from api import chat_service, state
+        with state.as_user("owner"):
+            self.assertEqual(chat_service._list_matches("c"), [])
+            self.assertEqual(chat_service._list_matches("co"), [])
+        out = self.ask("add eggs to c", [{"type": "add_to_list", "item": "eggs", "list": "c"}])
+        self.assertEqual(out["skipped"], ["You have no list called c, so eggs went to Everything else."])
+
+
 class TestReceiptFacts(AskCase):
     def test_counts_last_biggest_and_trips_per_store(self):
         self.ask("how many receipts do I have?")

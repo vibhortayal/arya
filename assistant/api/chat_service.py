@@ -300,6 +300,9 @@ def _list_key(name):
     return " ".join(w)
 
 
+LIST_MIN_CHARS = 3
+
+
 def _list_matches(name):
     """The named lists the user may mean, best first: the exact name,
     else names that start with what they said or the other way round
@@ -315,7 +318,9 @@ def _list_matches(name):
     exact = [l for l, k in keys if k == want]
     if exact:
         return exact[:1]
-    pref = [l for l, k in keys if k and (k.startswith(want) or want.startswith(k))]
+    if len(want) < LIST_MIN_CHARS:
+        return []  # "c" is not a list name (Tester, #384)
+    pref = [l for l, k in keys if len(k) >= LIST_MIN_CHARS and (k.startswith(want) or want.startswith(k))]
     if pref:
         return pref
     close = difflib.get_close_matches(want, [k for _l, k in keys], n=3, cutoff=0.75)
@@ -331,13 +336,14 @@ def _list_for(name):
     return m[0] if len(m) == 1 else None
 
 
-def _no_list_note(name, item):
+def _which_list(name):
+    """The question to ask when a list name fits more than one list,
+    or None. Nothing is added or removed until the user says which."""
     m = _list_matches(name)
     if len(m) > 1:
-        return _t("which_list", "More than one list fits {list} ({names}), so {item} went to Everything else. Say which one.",
-                  list=name, names=", ".join(l["name"] for l in m), item=item)
-    return _t("no_list", "You have no list called {list}, so {item} went to Everything else.",
-              list=name, item=item)
+        return _t("which_list", "More than one list fits {list}: {names}. Which one?",
+                  list=name, names=" or ".join(l["name"] for l in m))
+    return None
 
 
 def _on_list_rows(target=None):
@@ -385,7 +391,8 @@ def apply_actions(actions, added=None):
         if a.get("type") == "remove_from_list":
             target = _list_for(a.get("list")) if a.get("list") else None
             if a.get("list") and target is None:
-                skipped.append(_t("no_list_remove", "You have no list called {list}.", list=a["list"]))
+                skipped.append(_which_list(a["list"])
+                               or _t("no_list_remove", "You have no list called {list}.", list=a["list"]))
                 continue
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
@@ -393,7 +400,14 @@ def apply_actions(actions, added=None):
         item_id = _resolve(a.get("item"))
         target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
         if a.get("type") == "add_to_list" and a.get("list") and target is None:
-            skipped.append(_no_list_note(a["list"], a.get("item")))
+            ask = _which_list(a["list"])
+            if ask:
+                # Ask first; adding to Everything else and then asking
+                # leaves a stray row (Tester, #384).
+                skipped.append(ask)
+                continue
+            skipped.append(_t("no_list", "You have no list called {list}, so {item} went to Everything else.",
+                              list=a["list"], item=a.get("item")))
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
                 else _t("dest_list", " to your list"))
         if not item_id and a.get("type") in ("add_to_list", "ran_out"):
