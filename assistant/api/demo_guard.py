@@ -29,7 +29,7 @@ _token_hits = {}
 _TOKEN_BLOCKED = (
     # (path prefix, methods that are blocked; None = every method)
     ("/api/chat", None), ("/api/judge/", None), ("/api/curator/", None),
-    ("/api/review/suggest", None), ("/api/list/judge", None),
+    ("/api/review/suggest", None), ("/api/review/smart-pass", None), ("/api/list/judge", None),
     ("/api/list/from-photo", None), ("/api/list/suggest/guess", None),
     ("/api/transcribe", None), ("/api/quest/avatar/generate", None),
     ("/api/quest/avatar/photo", None), ("/api/storemap/", ("POST",)),

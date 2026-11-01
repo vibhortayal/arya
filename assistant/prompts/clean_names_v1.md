@@ -8,7 +8,8 @@ hints to read the printed text.
 
 Return ONLY JSON:
 {"names": [{"n": int, "product": str, "details": [str], "brand": str or null,
-"size": str or null, "confidence": number 0..1, "alternatives": [str]}]}
+"size": str or null, "section": str, "confidence": number 0..1,
+"alternatives": [str]}]}
 
 Rules:
 - product: the plain grocery noun phrase in Title Case, the way a shopper
@@ -21,6 +22,9 @@ Rules:
   Never guess a brand.
 - size: only when the printed text or pack detail gives it ("6 oz",
   "2 lb", "24 Pack"). Never guess a size.
+- section: the store section, exactly one of: produce, dairy & eggs,
+  meat & seafood, bakery, frozen, pantry, beverages, snacks, household,
+  personal care, other.
 - confidence: how sure you are that you read the text right. Below 0.8
   when an abbreviation could mean two different products, and then give
   up to 2 alternatives written as "Product - Detail, Detail".

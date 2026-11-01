@@ -1,8 +1,11 @@
 """Receipt review: suggestions, the review queue, and line-by-line resolution."""
+import os
+
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 
 from api import state
-from api.deps import _int_field, _json_obj
+from api.deps import _budget_guard, _int_field, _json_obj, new_client
 
 router = APIRouter()
 
@@ -60,12 +63,28 @@ async def review_line(req: Request):
                                          {"status": "auto", "decoded_name": name})
         if line:
             state.teach_name(line.get("sku"), name, item_id=line.get("item_id"))
+            if body.get("section"):
+                from api.dictionary import clean
+                clean.save_section(line.get("sku"), line.get("item_id") or f"costco-{line.get('sku')}",
+                                   str(body["section"]).lower())
             others = state.apply_line_fix_to_same_item(receipt_id, idx, line, name=name)
     else:
         raise HTTPException(400, "action must be confirm or rename")
     if line is None:
         raise HTTPException(404, "no such line")
     return {"ok": True, "also": len(others), "undo": others}
+
+
+@router.post("/api/review/smart-pass")
+async def review_smart_pass():
+    """Arya proposes a clean name for each To check item that has none
+    (one Spark text call per 25 items; items already tried are skipped).
+    The screen calls this when it opens, then reads /api/review again."""
+    from api.dictionary import clean
+    if not os.environ.get("MODEL_API_KEY"):
+        return {"suggested": await run_in_threadpool(clean.suggest_review, None)}
+    _budget_guard()
+    return {"suggested": await run_in_threadpool(clean.suggest_review, new_client())}
 
 
 @router.post("/api/review/undo")

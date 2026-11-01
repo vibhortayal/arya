@@ -35,6 +35,7 @@ from collections import Counter
 from api import state
 from api.decode.service import load_hints, looks_abbreviated
 from api.dictionary.build import FEE_RE
+from api.dictionary.enrich import SECTIONS
 from api.meta_client import parse_json
 from api.prices import chain_of
 
@@ -151,7 +152,9 @@ def _ask(client, batch):
             continue
         alts = [" ".join(str(a).split()) for a in (v.get("alternatives") or [])
                 if isinstance(a, str) and a.strip()][:2]
-        got[n] = (name, conf, [a for a in alts if a.lower() != name.lower()])
+        sec = str(v.get("section") or "").lower().strip()
+        got[n] = (name, conf, [a for a in alts if a.lower() != name.lower()],
+                  sec if sec in SECTIONS else None)
     return got
 
 
@@ -171,7 +174,7 @@ def plan(client, items=None):
             if not hit:
                 failed += 1
                 continue
-            name, conf, alts = hit
+            name, conf, alts = hit[:3]
             if name.lower() == (c["current"] or "").lower():
                 same += 1
                 continue
@@ -315,3 +318,89 @@ def summary(p, sample=25):
         for c in unsure[:10]:
             rows.append(f"  {c['before']}  ->  {c['after']}?  ({c['confidence']:.2f}; or {', '.join(c['alternatives']) or '-'})")
     return "\n".join(rows)
+
+
+# --- To check smart pass ----------------------------------------------------
+# Before To check asks, Arya proposes a name for each unsure receipt line:
+# line["suggested"] = {name, section, confidence, by: "arya"}. A proposal
+# only: the line stays unverified until the household taps it (rename) or
+# keeps the printed name (confirm). A name the household already taught,
+# or one the clean pass wrote, is reused with no model call. Lines the
+# model could not read get suggest_tried, so reopening To check does not
+# pay for them again.
+
+SUGGEST_LIMIT = 150
+
+
+def _learned():
+    """sku -> a settled name from the name book (taught or cleaned)."""
+    out = {}
+    for e in state.dictionary()["entries"]:
+        st = (e.get("resolution") or {}).get("status")
+        if e.get("sku") and e.get("canonical_name") and st != "unresolved" and (
+                st in ("manual", "resolved") or e.get("named_by")):
+            out[e["sku"]] = {"name": e["canonical_name"], "section": e.get("section_guess")}
+    return out
+
+
+def suggest_review(client=None, limit=SUGGEST_LIMIT):
+    """Fill suggested on To check lines that have none. Returns how many
+    items (groups of lines with one item number) got a suggestion."""
+    lines = [ln for ln in state.review_queue()["lines"]
+             if not ln.get("suggested") and not ln.get("suggest_tried")]
+    if not lines:
+        return 0
+    groups = {}
+    for ln in lines:
+        groups.setdefault(ln.get("sku") or ln.get("raw") or "", []).append(ln)
+    learned = _learned()
+    writes, ask, found = [], [], 0
+    for key, g in groups.items():
+        hit = learned.get(g[0].get("sku")) if g[0].get("sku") else None
+        if hit and hit["name"].lower() != (g[0].get("decoded_name") or "").lower():
+            s = {"name": hit["name"], "section": hit["section"], "confidence": 1.0, "by": "arya"}
+            found += 1
+            writes += [(ln["receipt_id"], ln["idx"], s) for ln in g]
+        else:
+            ask.append(g)
+    ask = ask[:limit]
+    if ask and getattr(client, "api_key", ""):
+        items = []
+        for g in ask:
+            prices = [float(ln["line_total"]) / (float(ln.get("qty") or 1) or 1)
+                      for ln in g if isinstance(ln.get("line_total"), (int, float)) and ln["line_total"] > 0]
+            printed = list(dict.fromkeys(x for ln in g for x in (ln.get("raw"), ln.get("decoded_name")) if x))
+            items.append({"sku": g[0].get("sku") or "", "printed": printed[:3],
+                          "store": chain_of(g[0].get("merchant")), "detail": "",
+                          "price": round(statistics.median(prices), 2) if prices else None})
+        for i in range(0, len(items), BATCH):
+            try:
+                got = _ask(client, items[i:i + BATCH])
+            except Exception:
+                got = {}
+            for n, g in enumerate(ask[i:i + BATCH]):
+                hit = got.get(n)
+                if hit and hit[0].lower() != (g[0].get("decoded_name") or "").lower():
+                    s = {"name": hit[0], "section": hit[3], "confidence": round(hit[1], 2), "by": "arya"}
+                    found += 1
+                else:
+                    s = None  # could not read it: remember, do not ask again
+                writes += [(ln["receipt_id"], ln["idx"], s) for ln in g]
+    state.suggest_lines(writes)
+    return found
+
+
+def save_section(sku, item_id, section):
+    """The household accepted a suggestion: keep its shelf section on
+    the item when the item has none yet."""
+    if section not in SECTIONS:
+        return
+    with state.file_lock("dictionary.json"):
+        d = state.dictionary()
+        for e in d["entries"]:
+            if e["item_id"] == item_id or (sku and e.get("sku") == sku):
+                if not e.get("section_guess"):
+                    e["section_guess"] = section
+                    e["label_by"] = "household"
+                    state._save("dictionary.json", d)
+                return
