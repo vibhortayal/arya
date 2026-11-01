@@ -55,12 +55,12 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
   quantity (tap the amount to change it), swipe to Move or Remove. Every
   part is a target; the name opens the item page. In a hunt, tapping the
   circle grabs the item.
-- Tab bar: fixed, backdrop blur, five tabs (Today, Lists, Ask, Quest,
-  Settings) with drawn SVG icons (1.8 stroke, one weight) + 11px labels.
-  Active = accent. The tab bar hides during a hunt. The avatar floats
-  top-right.
-- Chat: bubbles, round input, mic and speaker icon buttons (44px). Mic
-  turns danger-red while listening.
+- Tab bar: fixed, backdrop blur, four places the shopper picks (default
+  Today, Lists, Quest, Ask) then More, with drawn SVG icons (1.8 stroke,
+  one weight) + 11px labels. Active = accent. The tab bar hides during a
+  hunt. There is no floating avatar (removed 2026-10-29).
+- Chat: bubbles, round input, Talk and Photo chips (44px). Talk turns
+  danger-red while listening. Ask does not speak aloud.
 - Buttons: primary pill = accent with white text; secondary pill =
   fill. Chips = small pills for queue actions. Sheets drag down to
   dismiss.

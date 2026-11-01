@@ -293,7 +293,7 @@ before milk runs out.
 **Status.** Shipped. **Needs a model.** Without `MODEL_API_KEY` the
 Ask tab says it could not answer.
 
-In the Ask tab Priya can type or speak:
+In the Ask tab Priya can type, or tap **Talk** to speak. Arya answers in text only:
 
 | She says | Arya does |
 |---|---|
@@ -301,6 +301,7 @@ In the Ask tab Priya can type or speak:
 | "What do we spend on coffee?" | Answers from the ledger (Coffee Beans 12 oz, $104.80 over 26 weeks in the demo). It does not invent a number. |
 | "Where is milk cheaper?" | Reads the price facts that code computed from her receipts (see Journey 4). The model only reads them. |
 | "What is Arya?" | Answers about Arya itself. |
+| A photo (Photo chip under the Ask field) | Opens a chooser over the existing readers (list, receipt, fridge, expiry date), or "Ask about this photo" once. The photo is not stored. |
 
 **During a hunt** a bar "Ask Arya..." sits at the bottom. It opens a
 sheet with three quick questions: "Where's the {item}?", "Is there a
