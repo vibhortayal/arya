@@ -27,7 +27,7 @@ import { EditList, EditTitle } from "../ui/EditList";
 type Chip = { label: string; run: () => void };
 type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string; offer?: string;
   url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; applied?: string[] };
 const lines: Line[] = [];
 const history: Msg[] = [];
 let offered = false;
@@ -266,7 +266,7 @@ export function Chat() {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
-      history.push({ role: "assistant", content: res.reply });
+      history.push({ role: "assistant", content: res.reply, ...(res.applied?.length ? { applied: res.applied } : {}) });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
       if (offer) offered = true;
       // The ✓ lines confirm the actions; an empty reply adds no bubble of its own (retest #9).
