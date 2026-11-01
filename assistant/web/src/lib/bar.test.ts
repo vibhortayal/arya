@@ -24,6 +24,8 @@ describe("bar", () => {
     expect(litTab("stores-find", DEFAULT_BAR)).toBe("list");
     const mine = barOf(["list", "receipts", "stores-mine"]);
     expect(litTab("receipt", mine)).toBe("receipts");
+    expect(litTab("tocheck", DEFAULT_BAR)).toBe("list");
+    expect(litTab("tocheck", mine)).toBe("receipts");
     expect(litTab("stores-find", mine)).toBe("stores-mine");
   });
   test("a place in More lights More; a screen with no place lights nothing", () => {

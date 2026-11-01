@@ -31,7 +31,7 @@ export const moreOf = (bar: BarItem[]): BarItem[] => BAR_ITEMS.filter(i => !bar.
 /* A pushed page's own place when that place can be pinned: Receipts and
  * Spending live on Lists (PR #340), Stores is Lists' Stores row. */
 const OWN: Partial<Record<ViewId, BarItem>> = {
-  receipt: "receipts", "stores-find": "stores-mine",
+  receipt: "receipts", tocheck: "receipts", "stores-find": "stores-mine",
 };
 const HOME_OF: Partial<Record<BarItem, BarItem>> = { receipts: "list", analysis: "list", "stores-mine": "list" };
 

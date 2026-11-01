@@ -18,7 +18,7 @@ export type ViewParams = Record<string, unknown>;
  * Receipts and Spending open from Lists (PR #340); lib/bar.ts litTab
  * lights a pinned Receipts or Spending first. */
 export const PARENT_TAB: Partial<Record<ViewId, ViewId>> = {
-  receipts: "list", tocheck: "home", receipt: "list", analysis: "list", powers: "profile", about: "profile", feedback: "profile",
+  receipts: "list", tocheck: "list", receipt: "list", analysis: "list", powers: "profile", about: "profile", feedback: "profile",
   muse: "profile", waitlist: "profile", display: "profile", usage: "profile", ops: "profile", "ops-settings": "profile", ai: "profile", "stores-mine": "list", "stores-find": "list", "group-join": "profile",
   item: "list", newlist: "list", optimize: "list",
   "quest-progress": "community", trips: "community", mapper: "community", album: "community", friends: "community", race: "community",
