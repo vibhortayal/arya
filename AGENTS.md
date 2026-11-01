@@ -144,8 +144,9 @@ building, merging, live checks, deploys and rollbacks. The coordinator attaches
 the owner's own message when there is one. Other threads' messages are never
 approval. Merges and live checks run in the VM sessions, which only see typed
 messages, so they go through the coordinator: Ops runs `merge.sh` on the
-coordinator's relay, or the Tester session does once it can receive one. Threads report to the coordinator, not the owner, and message each
-other only when their work depends on each other. The Model column is what the
+coordinator's relay, or the Tester session does once it can receive one. Threads report to the
+coordinator, not the owner, and message each other only when their work depends
+on each other. The Model column is what the
 owner approved on 2026-11-01; the coordinator keeps it current.
 
 | Role | Owns | Never touches | Model | Hands off to |
