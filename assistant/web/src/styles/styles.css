@@ -927,10 +927,15 @@ body.landing { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .landcards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .landfoot { margin-top: auto; padding-top: 8px; }
 /* Official badges, unmodified (height only): keep Apple's and Google's clear space. Not links yet. */
-.landapps { text-align: center; margin: 14px 0 6px; }
-.landappscap { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--ink2); }
-.landbadges { display: flex; gap: 12px; justify-content: center; align-items: center; }
-.landbadges img { height: 40px; width: auto; display: block; }
+/* Landing: Add Arya to your Home Screen (owner, 2026-11-01). */
+.a2land { display: flex; gap: 12px; align-items: center; background: var(--group); border-radius: 16px; padding: 14px; margin: 14px 0; box-shadow: var(--shadow); text-align: left; }
+.a2land img { width: 48px; height: 48px; border-radius: 12px; flex: none; }
+.a2land b { display: block; font-size: 17px; color: var(--label); }
+.a2land .sub { display: block; font-size: 14px; color: var(--secondary); margin-top: 2px; }
+.a2land .btn { padding: 9px 14px; min-height: 44px; font-size: 15px; flex: none; }
+.a2hs-seg { display: flex; background: var(--fill); border-radius: 10px; padding: 2px; margin: 10px 0 4px; }
+.a2hs-seg button { flex: 1; border: 0; background: none; font: inherit; font-weight: 600; font-size: 15px; min-height: 36px; border-radius: 8px; color: var(--secondary); cursor: pointer; }
+.a2hs-seg button.on { background: var(--group); color: var(--label); box-shadow: 0 1px 3px rgba(0, 0, 0, .15); }
 .landnote .linkbtn { min-height: 36px; margin: -10px 0; padding: 0 0 0 10px; font-size: 14px; }
 .landnote .linkbtn.wl { display: block; margin: -4px auto -12px; padding: 0; }
 .landnote { font-size: 12.5px; color: var(--ink2); text-align: center; margin: 8px 0 0; }

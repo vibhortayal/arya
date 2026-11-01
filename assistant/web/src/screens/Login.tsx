@@ -4,7 +4,7 @@ import { useSession } from "../app/session";
 import { Sheet } from "../ui/Sheet";
 import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
-import { A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
+import { A2hsLandCard, A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
 import { motionOff } from "../lib/motion";
 
 /* The logged-out landing (B1 cards, owner 2026-10-29; one screen with the
@@ -188,13 +188,7 @@ export function Login() {
               <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => openWaitlist()}>{t("landing.joinWaitlist")}</button>
             )}
           </p>
-          <div className="landapps">
-            <p className="landappscap">{t("landing.appsSoon")}</p>
-            <div className="landbadges">
-              <img src={asset("assets/badges/app-store.svg")} width="120" height="40" alt={t("landing.appStoreAlt")} />
-              <img src={asset("assets/badges/google-play.png")} width="139" height="40" alt={t("landing.googlePlayAlt")} />
-            </div>
-          </div>
+          <A2hsLandCard />
           <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a> · <a href="/terms/#ai">{t("ai.footer")}</a> · <a href="/developers">{t("landing.developers")}</a></p>
         </div>
       </main>
