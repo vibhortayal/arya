@@ -123,10 +123,15 @@ class TestNewUserSeesNoEmptyNoise(unittest.TestCase):
 
 class TestReceiptsEyeHidesWhenEmpty(unittest.TestCase):
     def test_needs_your_eye_shows_only_when_something_needs_it(self):
-        js = src("screens/Receipts.tsx")
-        self.assertIn('id="eye-head" hidden={!hasReview && !hasCur}', js)
+        # The review queue moved to its own screen, To check (Receipts
+        # keeps one summary row): the groups show only when there is
+        # something to check, and an all-clear line otherwise.
+        js = src("screens/ToCheck.tsx")
+        self.assertIn('loaded && !hasReview && !hasCur', js)
         self.assertIn('id="review" className="group eyegroup" hidden={!hasReview}', js)
+        self.assertIn('id="curator" hidden={!hasCur}', js)
         self.assertNotIn("Every line is verified", js)
+        self.assertNotIn("Every line is verified", src("screens/Receipts.tsx"))
 
 
 class TestQuestTab(unittest.TestCase):

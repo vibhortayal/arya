@@ -3142,7 +3142,7 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you what to use before it expires or goes bad."
+        "s4": "Arya reminds you what to use before it expires. Switch on Remind me in Settings, Preferences."
       },
       "ask": {
         "kicker": "Ask Arya",
@@ -3218,7 +3218,7 @@
         "title": "Settings, your way",
         "body": "Change how Arya looks and speaks. Your data stays yours.",
         "s1": "Tap More, then Settings. Tap Display for text size and spacing.",
-        "s2": "Under Preferences, choose your currency and language.",
+        "s2": "Under Preferences, choose your currency and language, and switch on Remind me.",
         "s3": "Under Account, tap Export my data to get a copy of everything. Delete my account erases it all; we email you a code to confirm, or ask for your password if you have one.",
         "s4": "Open About Arya, then \"Use Arya in another AI app\", to add to your list from it."
       }
@@ -3754,6 +3754,17 @@
         "n1": "On the sign-in page, Add Arya to your Home Screen shows the steps. In the app it is in Settings, About Arya.",
         "n2": "Once Arya runs from your Home Screen, these steps no longer show.",
         "cta": "Open About Arya"
+      },
+      "reminders": {
+        "title": "Get reminders",
+        "sub": "A nudge when something is about to run out",
+        "body": "Arya can send one reminder a day, at most, when a staple is about to run out or food needs using. You turn it on once, in Settings.",
+        "s1": "Tap More, then Settings.",
+        "s2": "Under Preferences, switch on Remind me and allow notifications.",
+        "s3": "Pick how many days ahead you want to hear. Tap Send me a test reminder to check.",
+        "n1": "On iPhone, add Arya to your Home Screen first (iOS 16.4 or newer), then open it from there.",
+        "n2": "If you do not see Remind me, reminders are not switched on yet.",
+        "cta": "Open Settings"
       },
       "ownkey": {
         "title": "Use your own Meta key",
