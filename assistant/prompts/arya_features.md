@@ -84,3 +84,5 @@ Use Arya in another AI app lets you add to your list from an AI app you use.
 [if registration_open] New accounts can be created.
 ## offline | offline no signal no network no connection airplane wifi internet saved copy
 Arya opens with no signal. A bar says "You're offline". You can look through lists, Today, stores and other screens as last saved on this phone. Changes, Ask Arya, photos, voice, sharing and live sync need a connection; Arya says so when you try. Map my store walks and a shopping trip keep what you do on the phone and send it when the signal is back. Open Arya once with signal first, so there is a saved copy. Signing out deletes it; the demo keeps none.
+
+Photo reading: Arya checks a receipt photo's numbers and re-reads it with a more careful model if they do not add up.

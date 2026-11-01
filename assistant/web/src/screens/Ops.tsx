@@ -19,7 +19,7 @@ type OpsData = {
   box: { disk_free_gb: number; disk_total_gb: number; disk_ok: boolean; backup: { hours: number | null; ok: boolean } | null };
   spend: { app: { spent: number; cap: number }; demo: { spent: number; cap: number }; credit: { left: number; total: number } };
   calls: Call[];
-  controls: { ai_paused: boolean; demo_live: boolean; photo_reader: "spark" | "wonder"; registration_open: boolean };
+  controls: { ai_paused: boolean; demo_live: boolean; photo_reader: "spark" | "wonder" | "auto"; registration_open: boolean };
   people: { accounts: number; top: [string, number][]; waitlist: number; feedback_new: number };
 };
 
@@ -137,6 +137,7 @@ export function Ops() {
                   onChange={ev => setControl({ photo_reader: ev.target.value })}>
                   <option value="spark">{t("ops.readerSpark")}</option>
                   <option value="wonder">{t("ops.readerWonder")}</option>
+                  <option value="auto">{t("ops.readerAuto")}</option>
                 </select>
               </div></div>
             <div className="row">
