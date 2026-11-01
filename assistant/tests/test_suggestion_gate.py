@@ -88,3 +88,37 @@ class TestCheaperNeedsAnotherChain(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestNumberedNamesGetFixed(unittest.TestCase):
+    """An item that showed as "costco-791185" (owner, 2026-11-01)."""
+
+    def setUp(self):
+        import os, tempfile
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        state.set_current_user(None)
+        self.receipts = [
+            {"receipt_id": "a", "purchased_at": "2026-01-02", "lines": [
+                {"sku": "791185", "raw": "KS BATH TISSUE", "line_type": "item"},
+                {"sku": "555", "raw": "", "line_type": "item"}]},
+            {"receipt_id": "b", "purchased_at": "2026-03-02", "lines": [
+                {"sku": "791185", "raw": "KS BATH TISS", "decoded_name": "Kirkland Bath Tissue",
+                 "line_type": "item"}]}]
+        self._orig = state.receipts
+        state.receipts = lambda: self.receipts
+        state._save("dictionary.json", {"entries": [
+            {"item_id": "costco-791185", "sku": "791185", "canonical_name": "costco-791185"}]})
+
+    def tearDown(self):
+        state.receipts = self._orig
+
+    def test_a_numbered_dictionary_name_takes_the_receipts_decoded_name(self):
+        nm = state.names()
+        self.assertEqual(nm["costco-791185"], "Kirkland Bath Tissue")
+        self.assertNotIn("costco-555", state.readable_names())
+
+    def test_renaming_teaches_the_dictionary_even_with_no_entry(self):
+        state.learn_item_name("costco-555", "Paper Plates")
+        self.assertEqual(state.names()["costco-555"], "Paper Plates")
+        state.teach_name("791185", "Toilet Paper")
+        self.assertEqual(state.names()["costco-791185"], "Toilet Paper")
