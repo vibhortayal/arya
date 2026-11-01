@@ -38,8 +38,8 @@ The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds He
 
 ## What is in it
 
-- **Receipts.** A photo or PDF goes in. Muse Wonder reads photos (Muse Spark
-  is the fallback); code checks every line against the printed total before
+- **Receipts.** A photo or PDF goes in. Muse Spark reads photos first and Muse
+  Wonder re-reads any the checks flag; code checks every line against the printed total before
   anything posts. Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
 - **Lists.** Type, talk, photograph a note, or use your own assistant through
@@ -128,7 +128,7 @@ Tests, from the repo root:
 
 ## Measured results
 
-- **Receipt photos, production reader (Muse Wonder 1.0, Spark fallback).**
+- **Receipt photos, Muse Wonder 1.0 alone (now the backup reader).**
   On the Gate 0 public set (9 receipts, 98 lines): 97 of 98 lines have the
   right product and price after hand adjudication, with zero price errors
   and arithmetic matching on 7 of 7 receipts. The automatic scorer gives

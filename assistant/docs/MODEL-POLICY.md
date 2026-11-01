@@ -42,9 +42,17 @@ model that holds its score is still the default, spend goes through the ledger,
 and large batches get a capped trial first. The in-code caps (daily and demo
 budgets) are unchanged.
 
-## Hackathon amendment (2026-10-27, per WONDER-EVAL.md)
-Through Nov 4, judge-facing PHOTO DECODE runs muse-wonder-1.0, with a
-timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
+## Hackathon amendment (2026-10-27, per WONDER-EVAL.md; changed 2026-11-01)
+**Owner decision 2026-11-01:** receipt photos are read by the **auto
+reader** (Ops "Photo reader" = "Spark first, Wonder as backup"): Spark
+reads first, and Wonder re-reads only when Spark fails or the checks
+below flag the read (arithmetic, low confidence on too many lines). Wonder
+stays allowed as that second reader through Nov 9, which covers judging
+(Nov 5-8). The text below is the original amendment (Wonder first, Spark
+fallback), kept for the eval record.
+
+Original (2026-10-27): through Nov 4, judge-facing PHOTO DECODE runs
+muse-wonder-1.0, with a timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
 98 lines, hand-adjudicated): Wonder 98.98% identity+price vs Spark
 93.88%; price errors 0 vs 4; silent (unflagged) errors 0 vs 4 — Wonder
 read the pub-05 price rotation correctly, the error class arithmetic
@@ -54,11 +62,11 @@ an interactive path. Cost $0.118/receipt vs $0.013 — immaterial against
 the hackathon credit. The staple judge, the shelf-life estimate for
 "Still good?" (api/shelflife.py, item names only, cached per item) and
 Ask Arya STAY on Spark Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
-cannot carry Wonder's latency). This amendment expires Nov 4; the
+cannot carry Wonder's latency). This amendment expires Nov 9; the
 production policy above is unchanged.
 
-**Auto reader (built 2026-11-01, NOT the default, NOT yet measured on
-photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
+**Auto reader (built 2026-11-01; the owner's pick for judging on
+2026-11-01; NOT yet measured on photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
 reads with Spark first and runs the checks in `api/decode/checks.py`
 (lines add up to the subtotal, subtotal plus tax equals the total, the
 footer item count, impossible prices, too many unsure lines, a price far
@@ -74,7 +82,7 @@ between lines) keeps the sum, so arithmetic alone misses it; the price
 history check covers it only for item numbers seen before. Before the
 default changes, run `python3 -m harness.photo_reader_eval --photos DIR`
 on the Gate 0 photos and require that every price where Spark and Wonder
-differ is on a flagged receipt. After Nov 4 the amendment above ends;
+differ is on a flagged receipt. After Nov 9 the amendment above ends;
 auto is the way to keep Wonder's accuracy only where the checks say it
 is needed, if the owner extends it, and Spark-only otherwise.
 
@@ -116,7 +124,7 @@ Contributor mode" was not found there and is withdrawn until someone can cite it
   Costco name expansion, expiry-date photos, fridge (Eyes) photos, shelf-scan crops, Quest list matching and
   Curator suggestions, and the Spark fallback for receipt photos and PDFs.
 - What does not: receipt photos while the photo reader is wonder (default
-  through Nov 4; the Wonder call is Standard). With the reader on spark or
+  through Nov 9; the Wonder call is Standard). With the reader on spark or
   auto, Spark (Contributor) reads the receipt photo first, so it can train;
   auto then sends the photo to Wonder again only if the checks fail. SAM, Muse Voice and the
   open-weights client are unchanged.
