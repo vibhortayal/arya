@@ -3,7 +3,8 @@
  * vite-plugin-pwa (injectManifest) builds it and fills in
  * self.__WB_MANIFEST: the built shell, every file hashed. No workbox
  * runtime; the rules are the old pwa/sw.js rules:
- *   - hashed build files (/app/) cache first; page loads network first
+ *   - hashed build files (/app/) cache first; pictures under /assets/
+ *     from the cache, refreshed behind; page loads network first
  *     with a 2.5 s timeout, then the cached shell; every other GET it
  *     handles network first, so a new build is never masked by an old
  *     cache;
@@ -25,10 +26,12 @@ const SHELL = BUILD.map(e => new URL(e.url, self.registration.scope).pathname);
 // Files the app loads at runtime from the static folder (pwa/): kept
 // for offline use as the old shell kept them. Best effort: one missing
 // file must not stop the install.
-const STATIC = ["/scene.js", "/boot.js", "/vendor/three.module.js", "/manifest.json",
-  "/icons/favicon.ico", "/icons/favicon-32.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-180.png",
-  "/assets/characters/manifest.json", "/assets/scenes/hero.webp", "/assets/scenes/score-party.webp",
-  "/assets/scenes/aisle-art.webp", "/assets/scenes/storefront.webp",
+// Small files only (re-audit #24): the 512 px icons (the browser fetches
+// them itself to install), the scene art and three.js (now part of the
+// build) are cached when first used, by the /assets/ rule below.
+const STATIC = ["/scene.js", "/boot.js", "/manifest.json",
+  "/icons/favicon.ico", "/icons/favicon-32.png", "/icons/icon-192.png", "/icons/apple-touch-180.png",
+  "/assets/characters/manifest.json",
   ...["compass", "basket", "binoculars", "blueberry", "banana", "raspberry", "mandarin", "egg",
     "cheese", "bread", "pasta", "pizza", "hummus", "olive-oil", "peanut-butter", "almond", "milk",
     "fruit", "vegetable", "dairy", "bakery", "frozen", "pantry"].map(n => `/assets/characters/${n}.webp`)];
@@ -69,7 +72,12 @@ self.addEventListener("fetch", e => {
   // network for 2.5 s and then fall back to the cached shell, so weak
   // in-store signal never holds the app's first paint. Everything else
   // stays network first: a new build is never masked by an old cache.
+  // Pictures under /assets/ answer from the cache at once and refresh
+  // behind (re-audit #21): their names do not change when a picture
+  // is redrawn, so the next view gets the new one.
+  const picture = url.pathname.startsWith("/assets/") && IMAGE.test(url.pathname);
   e.respondWith(url.pathname.startsWith("/app/") ? cacheFirst(e.request)
+    : picture ? staleWhileRevalidate(e)
     : networkFirst(e.request, e.request.mode === "navigate" ? 2500 : 0));
 });
 
@@ -79,6 +87,15 @@ function keep(req, resp) {
     caches.open(CACHE).then(c => c.put(req, copy));
   }
   return resp;
+}
+const IMAGE = /\.(webp|png|jpe?g|svg|avif|gif)$/i;
+function staleWhileRevalidate(e) {
+  const req = e.request;
+  const net = fetch(req).then(resp => keep(req, resp));
+  return caches.match(req).then(hit => {
+    if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+    return net;
+  });
 }
 function cacheFirst(req) {
   return caches.match(req).then(hit => hit || fetch(req).then(resp => keep(req, resp)));
