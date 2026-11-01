@@ -2306,3 +2306,7 @@ body.hunting #offlinebar { display: none !important; }
 .ok-capcard{padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
 .ok-capcard b{font-size:17px}
 .ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
+
+/* Still good? answers (owner, 2026-11-01): three equal buttons in one row, even at 360 px. */
+.checkchips { display: flex; gap: 8px; flex-wrap: nowrap; }
+.checkchips .chip { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; white-space: nowrap; justify-content: center; text-align: center; }

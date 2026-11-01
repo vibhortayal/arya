@@ -2371,6 +2371,7 @@
     "stillGoodToCheck": "Still good? · {{nChecks}} to check",
     "stillGood": "Still good",
     "itExpired": "It expired",
+    "iFinishedIt": "I finished it",
     "seenInTheInStock": "Seen in your {{place}} on {{date}}. You have it, so it's off your list.",
     "yourPatterns": "Spending",
     "spent": "{{value}}: {{money}} spent",
@@ -2412,6 +2413,7 @@
     "andMore": " and {{n}} more",
     "stillGoodToast": "Still good. Arya will ask again in a few days.",
     "markedExpiredToast": "Marked expired. Arya suggests it on your list.",
+    "finishedToast": "Finished. {{name}} is on your list for next time.",
     "yourList": "Your list",
     "onYourList": "On your list",
     "addToYourList": "Add {{name}} to your list",
@@ -3142,7 +3144,7 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you what to use before it expires. Switch on Remind me in Settings, Preferences."
+        "s4": "Arya reminds you what to use before it expires. When Today asks Still good?, tap Still good, It expired or I finished it. Switch on Remind me in Settings, Preferences."
       },
       "ask": {
         "kicker": "Ask Arya",
@@ -3718,7 +3720,7 @@
         "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
-        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, It expired (counts as food waste) or I finished it (used up, not waste: it goes back on your list for next time).",
         "n2": "Ask Arya knows these dates too: ask \"What goes bad this week?\"",
         "cta": "Open Arya's powers"
       },
