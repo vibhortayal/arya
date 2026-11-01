@@ -96,8 +96,7 @@ enforced there. `open_client.py` is the only other model client.
 | Job | Model | Notes |
 |---|---|---|
 | Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3-contributor` (Spark tier; `ARYA_SPARK_TIER=standard` for `muse-spark-1.3`) | cached prefixes, low effort; content may train Meta models |
-| Receipt photo reader (default) | `muse-wonder-1.0`, 90 s bound | any failure falls back to Spark; `decoded_by` records which read it |
-| Receipt photo reader after Nov 4 | Spark | set `ARYA_PHOTO_READER=spark` in `deploy/.env`, then `docker compose up -d` (not `restart`); no code change |
+| Receipt photo reader (default, `auto`) | Spark first; `muse-wonder-1.0` (90 s bound) re-reads only a receipt the arithmetic checks flag | `decoded_by` records which read was kept; `ARYA_PHOTO_READER=spark` or `wonder`, or the Ops "Photo reader" switch, changes it with no code change |
 | Avatar and look images | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
 | Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
@@ -180,7 +179,7 @@ handle the nightly backup. CI is manual only
 | `ARYA_SUPABASE_AUTH` | `0` | email code and Google sign-in; needs `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `ARYA_SUPABASE_SIGNUP` | `1` | `0` limits Supabase sign-in to existing accounts |
 | `ARYA_REGISTRATION_OPEN` | `0` | open password sign-up |
-| `ARYA_PHOTO_READER` | `wonder` | receipt photo reader; `spark` from Nov 4 |
+| `ARYA_PHOTO_READER` | `auto` | receipt photo reader: `auto` (Spark first, Wonder on a flagged read), `spark` or `wonder` |
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
 | `ARYA_USER_HEAVY_MONTHLY_USD` | `3` | one account's month of AI spend that shows a heads-up on its usage screen |
 | `ARYA_USER_MONTHLY_CEILING_USD` | `5` | one account's month of AI spend that pauses its paid reads until the 1st |

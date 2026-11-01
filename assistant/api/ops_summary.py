@@ -121,8 +121,8 @@ def summary(hours=24):
         "spend": spend, "calls": calls, "frozen": frozen,
         "controls": {**{"ai_paused": site_flags.ai_paused(), "demo_live": site_flags.demo_live(),
                         "photo_reader": site_flags.photo_reader()
-                        or ("spark" if os.environ.get("ARYA_PHOTO_READER", "wonder").lower() in ("spark", "standard")
-                            else "wonder")},
+                        or {"spark": "spark", "standard": "spark", "wonder": "wonder"}.get(
+                            os.environ.get("ARYA_PHOTO_READER", "auto").strip().lower(), "auto")},
                      "spark_tier": meta_client.spark_tier(),
                      "open_model": site_flags.open_model(), "reasoning_effort": site_flags.reasoning_effort(),
                      "registration_open": deps._registration_open()},

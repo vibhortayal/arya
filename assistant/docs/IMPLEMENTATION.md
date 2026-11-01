@@ -62,7 +62,7 @@ rules. Base URL https://api.meta.ai/v1; the key comes from env
 
 Client rules:
 
-- Photo receipts read with Muse Wonder (90 s bound, Spark fallback) under the hackathon amendment, which ends Nov 4, 2026. `ARYA_PHOTO_READER=spark` switches back.
+- Photo receipts: Muse Spark reads first; Muse Wonder (90 s bound) re-reads only a receipt the arithmetic checks flag (`ARYA_PHOTO_READER=auto`, the default). `spark` and `wonder` force one reader.
 - Parse streaming output with care. Spark emits a non-standard stream event.
 - SAM accepts text prompts only. One concept per request. A maximum of 16 tracked objects per frame. A maximum of 15,000 frames per request. Video format is MP4 or MOV only.
 - Team rate ceilings: 3,000 requests per minute on Standard, 150 on Contributor. Eval loops on Contributor throttle to 100.
@@ -224,7 +224,8 @@ live beat fails.
 ## 8. Design flags
 - **F1 Contributor mode:** Spark runs on it since 2026-11-01 (owner
   decision); real content sent to Spark can train Meta models. Receipt
-  photos stay on Wonder (Standard) until the Nov 4 switch to Spark.
+  photos are read by Spark first too; a Wonder re-read of a flagged
+  receipt runs on Standard.
 - **F2 SAM on video:** hosted SAM caps a request at 15,000 frames;
   SAM runs on stills ($0.0025 an image).
 - **F3 Spark latency:** low effort, short prompts, cached prefixes,

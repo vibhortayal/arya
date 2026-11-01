@@ -45,7 +45,7 @@ services:
       ARYA_PUBLIC_URL: ${ARYA_PUBLIC_URL:-}
       # Switches read by the app. Each default matches the code's own
       # default, so an unset value behaves exactly as before.
-      ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-wonder}
+      ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-auto}
       ARYA_SPARK_TIER: ${ARYA_SPARK_TIER:-contributor}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
       ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}

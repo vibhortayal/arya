@@ -57,7 +57,7 @@ so next week's list writes itself.
 
 ## How Meta models are used
 
-- Muse Spark 1.3 (Standard) reads receipt PDFs and list photos
+- Muse Spark 1.3 (Contributor tier) reads receipt PDFs and list photos
   (vision); is the first reader for receipt photos;
   labels store shelves; and powers the Ask Arya agent and the staple
   judge.

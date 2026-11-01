@@ -41,7 +41,7 @@ a fresh shelf photo only after SAM finds every person and pixelates
 them; if that step fails, nothing is kept.
 
 ### 5. Settle (account)
-`receipt photo → Muse Wonder (Spark fallback) → arithmetic check → ledger, patterns`
+`receipt photo → Muse Spark → arithmetic check (flagged: Muse Wonder re-reads) → ledger, patterns`
 
 Totals must reconcile or lines queue for review. Returns net against
 purchases. The receipt banks the hunt's points; the original image is

@@ -265,7 +265,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 | Interaction | Budget | Note |
 |---|---|---|
 | Receipt decode, PDF to draft | 20 s or less | Progress is visible |
-| Receipt decode, photo to draft | 30 s or less (Wonder, under the amendment: 90 s bound, then Spark) | Progress is visible |
+| Receipt decode, photo to draft | 30 s or less (Spark; a flagged read adds a Wonder re-read, 90 s bound) | Progress is visible |
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
 | Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
@@ -287,7 +287,7 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
-Update 2026-11-01 (owner decision): Spark runs on the Contributor tier. Meta's docs: "In Contributor mode, your content may be used to train future Meta models, in exchange for a lower price." and "In Standard mode, your content is not used to train Meta models." So lists, list photos, date photos, fridge and shelf photos, Ask Arya questions and the Spark fallback for receipts may be used to train Meta models. Receipt photos stay on Wonder (Standard) while the receipt reader is wonder; spark and auto read them with Spark first. ARYA_SPARK_TIER=standard reverts.
+Update 2026-11-01 (owner decision): Spark runs on the Contributor tier. Meta's docs: "In Contributor mode, your content may be used to train future Meta models, in exchange for a lower price." and "In Standard mode, your content is not used to train Meta models." So lists, list photos, date photos, fridge and shelf photos, Ask Arya questions and the Spark fallback for receipts may be used to train Meta models. Receipt photos are read by Spark first (auto, the default); a Wonder re-read of a flagged receipt runs on Standard. With the reader set to wonder, photos stay on Standard. ARYA_SPARK_TIER=standard reverts.
 The Meta models page lists no personal-data restriction for Contributor variants; the earlier line "Meta terms bar personal data on Contributor mode" is not in that page and was removed.
 The app and its privacy page say plainly that Spark content may be used to train Meta models.
 The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
@@ -436,7 +436,7 @@ Groceries are the first domain. Groceries are not the final domain.
 - Retailer planogram data and retailer integrations.
 - Live guidance on glasses. Glasses record video only.
 - Always-listening voice. Turn-by-turn indoor positioning.
-- Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback). Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
+- Muse Wonder is in the pipeline as built: it re-reads a receipt photo when Spark's read fails the arithmetic checks (`ARYA_PHOTO_READER=auto`, the default). MODEL-POLICY.md keeps the history of the reader choice.
 - The mapper network and consensus maps. Section 11 covers these items as vision.
 
 Design flags live in IMPLEMENTATION.md Section 8.
