@@ -35,12 +35,13 @@ models, three.js, `scene.js`, the manifest, icons), served beside the
 build. Rules for app work: `web/PORTING.md`.
 
 ## Hard rules (no exceptions without the owner's word)
-1. **Spark runs on the Contributor tier (owner, 2026-11-01).** Content sent
-   to Spark may be used to train future Meta models; Wonder stays Standard.
-   `ARYA_SPARK_TIER=standard` puts Spark back on Standard with no code
-   change. Never say or imply in the app, docs or PRs that Spark content is
-   not used for training. An explicit `mode="contributor"` with
-   `personal=True` is still refused by `meta_client`.
+1. **Spark and Wonder run in Meta's Standard mode (owner, 2026-11-01).**
+   Content sent to them is not used to train Meta models. Do not state more
+   than that in the app, docs or PRs. A community (Contributor) tier is only
+   an option the owner could turn on later, with user opt-in; it is not built.
+   Moving Spark off Standard needs the owner's word and a matching update to
+   the privacy page, About Arya and Ask knowledge first. An explicit
+   `mode="contributor"` with `personal=True` is still refused by `meta_client`.
 2. **Cost policy binds.** Cheapest model that holds the golden-set score.
    Math, patterns, and list logic are deterministic code ($0), not prompts.
    Wonder is banned from volume paths.

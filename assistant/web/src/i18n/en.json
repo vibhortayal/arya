@@ -171,7 +171,7 @@
     "food": "Food safety",
     "foodBody": "Arya is not a food-safety check. Look at the date on the pack. If food looks or smells off, do not eat it.",
     "models": "Models",
-    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them. Most of it goes to Muse Spark, where Meta may use it to train future models. Receipt photos are read by Spark first. Only a photo that Arya's checks flag is re-read by Muse Wonder, which Meta does not train on.",
+    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them. Most of it goes to Muse Spark, in Meta's Standard mode, which Meta does not use for training. Receipt photos are read by Spark first. Only a photo that Arya's checks flag is re-read by Muse Wonder, also in Standard mode.",
     "askLine": "Arya uses AI and can be wrong. Check anything important.",
     "once": "Arya reads photos and voice with AI. It can misread, so you check before anything is saved.",
     "dateBold": "Arya can misread a date.",
@@ -3707,7 +3707,7 @@
         "s3": "Read where AI is used and what to check.",
         "n1": "Always check an expiry date on the pack yourself. If food looks or smells off, do not eat it.",
         "n2": "You confirm photo and receipt reads before they are saved.",
-        "n3": "Most of what you send to Arya is read by Muse Spark, and Meta may use it to train future models. Receipt photos are read by Spark first. Only a photo that Arya's checks flag is re-read by Muse Wonder, which Meta does not train on.",
+        "n3": "Most of what you send to Arya is read by Muse Spark in Meta's Standard mode, which Meta does not use for training. Receipt photos are read by Spark first. Only a photo that Arya's checks flag is re-read by Muse Wonder.",
         "cta": "Open About Arya"
       },
       "usesoon": {
