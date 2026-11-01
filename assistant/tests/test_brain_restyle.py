@@ -195,12 +195,12 @@ class TestCuratorCardGating(unittest.TestCase):
     trigger on Receipts."""
 
     def test_card_hidden_without_proposals(self):
-        js = frontend.src("screens/Receipts.tsx")
+        js = frontend.src("screens/ToCheck.tsx")
         self.assertIn("const hasCur = proposals.length > 0;", js)
         self.assertIn('<div id="curator" hidden={!hasCur}>', js)
 
     def test_card_is_the_approved_wireframe(self):
-        app = frontend.src("screens/Receipts.tsx")
+        app = frontend.src("screens/ToCheck.tsx")
         self.assertIn("Are these the same item?", app)
         self.assertIn("Should these stay separate?", app)
         self.assertIn("Yes, same item", app)

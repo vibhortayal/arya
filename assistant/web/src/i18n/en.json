@@ -2006,7 +2006,14 @@
       "sample": "a sample"
     }
   },
+  "toCheck": {
+    "showMore": "Show {{n}} more",
+    "count": "{{items}} to check · {{lines}} receipt lines",
+    "rowSub": "{{items}} to check · {{lines}} receipt lines",
+    "allClear": "All clear. Nothing needs your eye."
+  },
   "receipts": {
+    "more": "More",
     "correctName": "Correct name",
     "needsYourEye": "To check",
     "unverifiedFrom": "Arya isn't sure · {{date}} · printed as “{{raw}}”",

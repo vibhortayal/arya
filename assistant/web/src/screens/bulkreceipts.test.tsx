@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { NavProvider } from "../app/nav";
 import { ToastProvider } from "../ui/Toast";
+import { ToCheck } from "./ToCheck";
 import { Receipts } from "./Receipts";
 
 /* A bulk receipt add that fails says why (114 files once answered only
@@ -60,7 +61,7 @@ test("lines of one product on several receipts become one row, fixed with one ta
     if (s.includes("/api/quest/receipts")) return json({ receipts: [] });
     return json({});
   }));
-  render(<ToastProvider><NavProvider initial="receipts"><Receipts /></NavProvider></ToastProvider>);
+  render(<ToastProvider><NavProvider initial="tocheck"><ToCheck /></NavProvider></ToastProvider>);
   await waitFor(() => expect($("[data-group-confirm]")).not.toBeNull());
   expect(document.querySelectorAll("[data-group-confirm]")).toHaveLength(1);
   expect($("[data-group-confirm]")!.textContent).toBe("Looks right, all 3");

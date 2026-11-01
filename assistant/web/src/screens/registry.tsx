@@ -45,6 +45,7 @@ const Profile = screen(() => import("./Profile"), "Profile");
 const QuestProgress = screen(() => import("./QuestProgress"), "QuestProgress");
 const Receipt = screen(() => import("./Receipt"), "Receipt");
 const Receipts = screen(() => import("./Receipts"), "Receipts");
+const ToCheck = screen(() => import("./ToCheck"), "ToCheck");
 const Album = screen(() => import("./Album"), "Album");
 const Express = screen(() => import("./Express"), "Express");
 const Finish = screen(() => import("./Finish"), "Finish");
@@ -93,6 +94,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   "quest-progress": QuestProgress,
   receipt: Receipt,
   receipts: Receipts,
+  tocheck: ToCheck,
   album: Album,
   express: Express, // only for Express runs started before Quest mode (#158)
   finish: Finish,

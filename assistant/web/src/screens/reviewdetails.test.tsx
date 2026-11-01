@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { NavProvider } from "../app/nav";
 import { ToastProvider } from "../ui/Toast";
-import { Receipts } from "./Receipts";
+import { ToCheck } from "./ToCheck";
 
 /* Receipts > To check (owner, 2026-11-01): the row names where, when and
  * how much; "More details" opens the rest in place, never leaves the screen. */
@@ -20,7 +20,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 test("More details opens price, store, date and item number in place", async () => {
-  render(<ToastProvider><NavProvider initial="receipts"><section id="view-receipts"><Receipts /></section></NavProvider></ToastProvider>);
+  render(<ToastProvider><NavProvider initial="tocheck"><section id="view-tocheck"><ToCheck /></section></NavProvider></ToastProvider>);
   await waitFor(() => expect($("#review .name")).not.toBeNull());
   expect($("#review .sub")!.textContent).toContain("Costco Newark");
   expect($("#review .sub")!.textContent).toContain("$18.99");
