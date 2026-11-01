@@ -160,3 +160,33 @@ class TestRoutes(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGroceryLexicon(unittest.TestCase):
+    """Intelligence review 2026-11-01 (3.7): a built-in word list in
+    tier 2 replaces live model guesses while typing."""
+
+    def test_the_word_list_loads_and_is_plain(self):
+        words = suggest.lexicon()
+        self.assertGreater(len(words), 400)
+        self.assertEqual(len({suggest.key(w) for w in words}), len(words))
+        self.assertFalse([w for w in words if w.startswith("#") or len(w) > 40])
+
+    def test_typing_finds_it_with_no_model(self):
+        names = [r["name"] for r in suggest.shared("rasp")]
+        self.assertIn("Raspberries", names)
+        self.assertIn("Dishwasher Pods", [r["name"] for r in suggest.shared("dishw")])
+
+    def test_live_guesses_are_off_by_default(self):
+        saved = {k: os.environ.get(k) for k in ("MODEL_API_KEY", "ARYA_SUGGEST_GUESSES")}
+
+        def restore():
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+        self.addCleanup(restore)
+        os.environ["MODEL_API_KEY"] = "k"
+        os.environ.pop("ARYA_SUGGEST_GUESSES", None)
+        self.assertFalse(suggest.guess_enabled())

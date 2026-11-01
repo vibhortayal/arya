@@ -7,7 +7,12 @@ Three tiers, shown in this order:
    name -> household count; a name needs MIN_HOUSEHOLDS households.
 3. Guesses: one cached Spark call for a thin prefix, scoped to
    grocery and household item names, post-filtered. Never per
-   keystroke; the client waits for a pause.
+   keystroke; the client waits for a pause. OFF by default since
+   2026-11-01 (intelligence review 3.7): a network round trip in the
+   middle of typing was little value. Tier 2 now carries a built-in
+   grocery word list (lexicon.txt, extended once with Spark by
+   harness/build_grocery_lexicon.py), instant and $0.
+   ARYA_SUGGEST_GUESSES=1 turns live guesses back on.
 """
 import json, os, re, tempfile, time
 
@@ -168,9 +173,26 @@ def shared_names():
     return doc["names"]
 
 
+_LEXICON = os.path.join(os.path.dirname(__file__), "lexicon.txt")
+_lexicon_cache = None
+
+
+def lexicon():
+    """The built-in grocery word list, read once per process."""
+    global _lexicon_cache
+    if _lexicon_cache is None:
+        try:
+            with open(_LEXICON) as fh:
+                _lexicon_cache = [ln.strip() for ln in fh
+                                  if ln.strip() and not ln.startswith("#")]
+        except OSError:
+            _lexicon_cache = []
+    return _lexicon_cache
+
+
 def _seed():
     from api import aisles
-    out = []
+    out = list(lexicon())
     for phrases in aisles._RULES.values():
         for ph in phrases:
             if ph not in SEED_SKIP and len(ph) > 2:
@@ -226,7 +248,7 @@ _SYSTEM = (
 
 
 def guess_enabled():
-    return os.environ.get("ARYA_SUGGEST_GUESSES", "1") != "0" \
+    return os.environ.get("ARYA_SUGGEST_GUESSES", "0") == "1" \
         and bool(os.environ.get("MODEL_API_KEY"))
 
 
