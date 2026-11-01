@@ -78,10 +78,14 @@ class TestLists(unittest.TestCase):
         self.assertIn('else if (shopMode === "list") startList();', js)
 
     def test_tick_hint(self):
-        self.assertIn("Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.", src("screens/Lists.tsx"))
+        self.assertIn("Tap the circle to tick an item off as you shop. Tap an item to edit it.", src("screens/Lists.tsx"))
 
     def test_qty_only_above_one(self):
-        self.assertIn(': one ? "" : "× " + qtyFmt(item.qty)', src_raw("screens/Lists.tsx"))
+        # The amount shows under the name only above 1 or with a unit (qtyTag);
+        # since 2026-10-31 it is edited in the Edit item sheet, not on the row.
+        src = src_raw("screens/Lists.tsx")
+        self.assertIn("qtyTag(i)", src)
+        self.assertNotIn("QtyBtn", src)
 
 
 if __name__ == "__main__":

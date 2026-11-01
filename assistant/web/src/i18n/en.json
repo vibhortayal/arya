@@ -827,6 +827,19 @@
       "hide-suggestions": "Suggestions",
       "hide-suggestionsSub": "The suggestions pill"
     },
+    "editItem": "Edit item",
+    "editName": "Name",
+    "editAmount": "Amount",
+    "editMore": "Amount, up",
+    "editLess": "Amount, down",
+    "editNote": "Note (optional)",
+    "editNotePlaceholder": "Brand, size, where in the store",
+    "editList": "List",
+    "editHistory": "Buying history",
+    "editMoreOptions": "More options",
+    "editNameEmpty": "Give the item a name.",
+    "editSave": "Save",
+    "editDelete": "Delete item",
     "unit": "unit",
     "unitForExampleKgOr": "Unit, for example kg or L",
     "move": "Move",
@@ -1166,7 +1179,7 @@
       "freezer": "Freezer",
       "fruit": "Fruit bowl"
     },
-    "tickHint": "Tap the circle to tick an item off as you shop. Tap ⋯ to move or remove it.",
+    "tickHint": "Tap the circle to tick an item off as you shop. Tap an item to edit it.",
     "moveToAnother": "Move to another list",
     "moreFor": "More for {{name}}: move or remove",
     "tickedOff": "{{name}} checked off.",
@@ -3294,7 +3307,7 @@
         "s3": "Type an item in the box \"Add item here...\".",
         "s4": "Tap the microphone to say it, or the camera to read a paper list.",
         "n1": "Tap the circle to tick an item off as you shop.",
-        "n2": "Tap the three dots to move an item or remove it.",
+        "n2": "Tap an item to change its name, amount or unit, add a note, move it or delete it.",
         "cta": "Open Lists"
       },
       "ask": {

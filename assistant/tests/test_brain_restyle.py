@@ -91,7 +91,7 @@ class TestShellContract(unittest.TestCase):
 
     def test_list_actions_wired(self):
         js = frontend.app()
-        for path in ("/api/list/check", "/api/list/qty", "/api/list/remove",
+        for path in ("/api/list/check", "/api/list/edit", "/api/list/remove",
                      "/api/list/check-ok", "/expired"):
             self.assertIn(path, js)
         self.assertNotIn("renderDash", js)
