@@ -889,6 +889,10 @@ def judge_pending(client, limit=60):
     from api.judge import judge_batch, facts_line, VERSION
     if not getattr(client, "api_key", ""):
         return 0
+    # New receipt items get their clean list name first (once the owner
+    # has turned clean names on), so the judge reads the clean name.
+    from api.dictionary import clean
+    clean.clean_new(client)
     entries = _group_entries(build_ledger(receipts(), fee_skus=fee_skus()))
     patterns = summarize(entries, as_of=today_ref())
     judged = judgments()

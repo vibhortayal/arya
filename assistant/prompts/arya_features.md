@@ -37,6 +37,7 @@ In Receipts, a To check row opens its own screen. There, To check shows one row 
 A return is taken off the spending. Only you and your group see your receipts.
 Lines Arya is unsure about are under the To check row in Receipts, which opens the list. Each shows the store, date and price. Tap More details to see what you paid, where, when, how it was printed, the item number and how sure Arya is, right on that row. Then tap Looks right, pick a guess, or Fix the name.
 Costco names like "BL 3PC KING" are short codes. Arya tries to read them, using known Costco abbreviations, and never looks anything up on store sites. If it is not sure, the line goes to Review with its best guesses; rename it once and Arya remembers that item.
+Clean names: Arya turns printed names into list names, product first, for example "ORG BLACKBRY" becomes "Blackberries - Organic", and reuses the name for that item number. Receipts, prices and totals are not changed. A name it is not sure of waits in To check and is not suggested until you answer. A name you set always wins.
 ## spending | spending spend analysis month store budget money pay paid
 Spending: open the Lists tab, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
 Ask "What did I spend in October?" for one month. Arya adds up the receipts with code, not by guessing.
