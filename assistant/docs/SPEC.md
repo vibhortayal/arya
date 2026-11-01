@@ -309,8 +309,7 @@ Settings. Settings has Group, Preferences (currency and language, When I
 start shopping, Display, Reminders), Account (Export my data, Delete my
 account), About Arya and, last, Sign out. About Arya has Arya's powers,
 Use Arya in another AI app, Add to Home Screen and Keeping Arya running.
-Stores are on Lists. Receipts and Spending are on Today, in a card at the
-bottom. Help has the guide, the tour and feedback. Item and category
+Stores, Receipts and Spending are on Lists, in one group at the bottom. Help has the guide, the tour and feedback. Item and category
 detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.

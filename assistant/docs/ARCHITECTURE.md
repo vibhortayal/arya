@@ -40,7 +40,7 @@ on a Docker volume, in Supabase Postgres, or both.
   Settings opens the Profile page (Group, Preferences with Reminders,
   Account, About Arya, Sign out last). About Arya is the `about` view:
   Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping
-  Arya running. Stores are on Lists; Receipts and Spending are on Today.
+  Arya running. Stores, Receipts and Spending are on Lists.
 - Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
   injectManifest). It precaches the built shell and the runtime files of
   the static folder. It is network first. It sends `/api/`, `/auth/`,

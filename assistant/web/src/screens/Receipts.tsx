@@ -245,7 +245,7 @@ export function Receipts() {
         })}
       </div>
       <div className="group pad">
-        <label className="btn primary wide receiptbtn" htmlFor="rc-photo" {...pickerProps("rc-photo")}>{t("common.addReceipt")}</label>
+        <label className="btn primary wide receiptbtn" htmlFor="rc-photo" {...pickerProps("rc-photo")}>{t("receipts.addReceipts")}</label>
         <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>
         <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden onChange={onFiles} />
         <p className="muted nomargin" id="rc-photo-status">{status}</p>

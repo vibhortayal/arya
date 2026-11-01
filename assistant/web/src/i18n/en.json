@@ -856,6 +856,12 @@
     "newList": "New list",
     "storesRow": "Stores",
     "storesRowSub": "Your stores and favorites",
+    "receiptsRowSub": "Add several at once, or look back",
+    "seenBy": {
+      "you": "only you see them",
+      "group": "only you and {{group}} see them"
+    },
+    "spendingRowSub": "By month, store and item",
     "listName": "List name",
     "listOptions": "List options",
     "speakYourList": "Speak your list",
@@ -1487,7 +1493,7 @@
     "typeFirst": "Type an item first.",
     "saved": "Saved.",
     "readingPhoto": "Reading the photo…",
-    "looksLikeReceipt": "That looks like a receipt. Add it from Today › Receipts.",
+    "looksLikeReceipt": "That looks like a receipt. Add it from Lists › Receipts.",
     "addedToQuest_one": "Added {{count}} item to the quest.",
     "addedToQuest_other": "Added {{count}} items to the quest.",
     "noItemsInPhoto": "No list items found in that photo.",
@@ -2010,7 +2016,8 @@
     "fixTheName": "Fix the name",
     "nameNotSettledKeptOff": "Kept off your list until you confirm the name",
     "setTheName": "Set the name",
-    "addAReceiptPhotoOr": "Add a receipt photo or PDF",
+    "addReceipts": "Add receipts",
+    "addAReceiptPhotoOr": "Pick several photos or PDFs at once",
     "readLiveKeptForThis": "Read just now. Kept until you leave the demo.",
     "archive": "All receipts",
     "whoseReceipts": "Whose receipts",
@@ -2061,7 +2068,7 @@
     "time": "Time",
     "theTotalDidNotReconcile": "The lines don't add up to the total. Check them in Receipts.",
     "challengeAFriendToBeat": "Challenge a friend to beat this",
-    "noReceiptYetAddThis": "No receipt yet. Add it any time from Today › Receipts.",
+    "noReceiptYetAddThis": "No receipt yet. Add it any time from Lists › Receipts.",
     "addTheReceipt": "Add the receipt",
     "badges": "Badges",
     "new": "New",
@@ -2125,12 +2132,6 @@
   },
   "today": {
     "today": "Today",
-    "receiptsRowSub": "Add one, or look back",
-    "seenBy": {
-      "you": "only you see them",
-      "group": "only you and {{group}} see them"
-    },
-    "spendingRowSub": "By month, store and item",
     "tripsNeedReceipt_one": "{{count}} trip needs a receipt",
     "tripsNeedReceipt_other": "{{count}} trips need a receipt",
     "sizes": {
@@ -2783,7 +2784,7 @@
     "tour": {
       "today": {
         "title": "Today",
-        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are at the bottom."
+        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are on the Lists tab."
       },
       "lists": {
         "title": "Lists",
@@ -2930,7 +2931,7 @@
         "kicker": "Receipts",
         "title": "See where your money goes",
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
-        "s1": "Today › Receipts, or the camera on a list.",
+        "s1": "Lists › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
         "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund."
       },
@@ -3293,8 +3294,8 @@
         "title": "Add your first receipt",
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
-        "s1": "Open Today, then Receipts.",
-        "s2": "Tap Add receipt. Take a photo or pick a PDF.",
+        "s1": "Open Lists, then Receipts.",
+        "s2": "Tap Add receipts. Take a photo or pick several PDFs at once.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
@@ -3339,9 +3340,9 @@
         "title": "Receipts and spending",
         "sub": "Add a receipt, see where money goes",
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
-        "s1": "Open Today, then Receipts, and tap Add receipt.",
+        "s1": "Open Lists, then Receipts, and tap Add receipts.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Open Today, then Spending, to see it by month, store and item.",
+        "s3": "Open Lists, then Spending, to see it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "cta": "Open Spending"
       },

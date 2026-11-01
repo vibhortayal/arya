@@ -54,10 +54,10 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Start a group", f("how do I share my list with my wife"))
         self.assertIn("Help tab: tap Help", f("where is the help tab"))
         self.assertIn("tap Edit on Today", f("can I move the cards around"))
-        self.assertIn("Receipts: open Today", f("where do I add a receipt"))
+        self.assertIn("Receipts: open the Lists tab", f("where do I add a receipt"))
         # no topic words but a general ask: everything
         self.assertIn("Use soon:", f("what can you do?"))
-        self.assertIn("Receipts: open Today", f("what can you do?"))
+        self.assertIn("Receipts: open the Lists tab", f("what can you do?"))
 
     def test_other_languages_get_every_topic(self):
         seen = {}
@@ -68,7 +68,7 @@ class FeatureSheet(unittest.TestCase):
                 return '{"reply":"ok","actions":[]}', 0, 0
         chat_service.chat([{"role": "user", "content": "¿Cómo comparto mi lista?"}], C())
         self.assertIn("Start a group", seen["sheet"])
-        self.assertIn("Receipts: open Today", seen["sheet"])
+        self.assertIn("Receipts: open the Lists tab", seen["sheet"])
         chat_service.chat([{"role": "user", "content": "how much was milk?"}], C())
         self.assertNotIn("Start a group", seen["sheet"])
 

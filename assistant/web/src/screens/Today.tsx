@@ -246,8 +246,6 @@ export function Today() {
   const [eyeCount, setEyeCount] = useState(mem ? eyesOf(mem) : 0);
   /* Finished trips with no receipt yet: one row here, the list and its
    * actions on Receipts (audit M9; they used to sit in Settings). */
-  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
-  const [groupName, setGroupName] = useState<string | null>(null);
   const [noReceipt, setNoReceipt] = useState<{ store: string; finished_at?: string }[]>(mem?.quest_receipts?.unsettled || []);
   const [months, setMonths] = useState<{ spend: Record<string, number> } | null>(mem?.dashboard ? { spend: mem.dashboard.spend_by_month || {} } : null);
   const [facts, setFacts] = useState<Facts | null>(mem?.powers ?? null);
@@ -276,11 +274,6 @@ export function Today() {
   const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
 
   useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
-  // After first paint: one small read, so the first load is not slowed.
-  useEffect(() => {
-    if (!h) return;
-    get<{ group: { name: string } | null }>("/api/group").then(g => { if (live.current) setGroupName(g?.group?.name || null); }, () => {});
-  }, [!!h]); // eslint-disable-line react-hooks/exhaustive-deps
   useCharacters();
 
   /* One request for the whole screen (speed audit #2): /api/today
@@ -739,16 +732,6 @@ export function Today() {
                 <span className="hr-label">{t("today.needsYourEye", { count: eyeCount })}</span><span className="chev">›</span></button>
             )}
           </div>
-          {/* Receipts and Spending moved here from Settings (owner, 2026-10-31).
-            * A fixed card: it stays when the Spending card is hidden in Edit Today. */}
-          {h && (
-            <div className="group" id="today-money">
-              <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
-                <span className="grow">{t("common.receipts")}<span className="sub">{t("today.receiptsRowSub")} · {groupName ? t("today.seenBy.group", { group: groupName }) : t("today.seenBy.you")}</span></span><span className="chev">›</span></button>
-              <button className="navrow" id="btn-analysis" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
-                <span className="grow">{t("common.analysis")}<span className="sub">{t("today.spendingRowSub")}</span></span><span className="chev">›</span></button>
-            </div>
-          )}
           <p id="today-through" className="muted small throughline">{h?.as_of && staleThrough(h.as_of, isoToday()) ? t("today.dataThrough", { date: fmtDate(h.as_of) }) : ""}</p>
         </>
       )}
