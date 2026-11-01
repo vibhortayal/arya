@@ -113,6 +113,28 @@ class TestSmartPassRoutes(unittest.TestCase):
         state.set_current_user(None)
         self.assertEqual(e["section_guess"], "dairy & eggs")
 
+    def test_accept_many_in_one_call_with_one_undo(self):
+        state.set_current_user("owner")
+        state.add_receipts([receipt("r10", [("983220", "ORG YELLOW", 8.99)]),
+                            receipt("r11", [("983220", "ORG YELLOW", 8.99), ("555", "PO THICK", 12.99)])])
+        state.set_current_user(None)
+        q = {(l["receipt_id"], l["sku"]): l for l in self.c.get("/api/review").json()["lines"]}
+        items = [{"receipt_id": "r10", "idx": 0, "name": "Bananas - Organic", "section": "produce"},
+                 {"receipt_id": "r9", "idx": 0, "name": "Butter - Unsalted"}]
+        r = self.c.post("/api/review/accept", json={"items": items}).json()
+        self.assertEqual(r["done"], 2)
+        left = {l["sku"] for l in self.c.get("/api/review").json()["lines"]}
+        self.assertEqual(left, {"555"})  # both ORG YELLOW lines settled by one item
+        self.assertEqual(len(r["undo"]), 3)
+        self.c.post("/api/review/undo", json={"changes": r["undo"]})
+        back = {(l["receipt_id"], l["sku"]) for l in self.c.get("/api/review").json()["lines"]}
+        self.assertEqual(back, set(q))
+        # a settled line is skipped; bad input is refused
+        self.assertEqual(self.c.post("/api/review/accept", json={"items": items[:1]}).json()["done"], 1)
+        self.assertEqual(self.c.post("/api/review/accept", json={"items": items[:1]}).json()["done"], 0)
+        self.assertEqual(self.c.post("/api/review/accept", json={"items": []}).status_code, 400)
+        self.assertEqual(self.c.post("/api/review/accept", json={"items": [{"receipt_id": "r9"}]}).status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
