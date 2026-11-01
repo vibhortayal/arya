@@ -97,8 +97,12 @@ If a guideline conflicts with these, these win:
   `en.json`) and the guide cards (`assistant/web/src/guide/cards.ts`,
   text under `guide.*`). Ask Arya answers from
   `assistant/prompts/arya_features.md`; keep it in step with the Help
-  topics. Also check the feature docs (`assistant/docs/USER-JOURNEYS.md`,
-  `assistant/docs/DEMO.md`, and `docs/DEMO-FEATURES.md` once PR #249 merges).
+  topics. The builder makes these edits in its own PR. The feature docs
+  (`assistant/docs/USER-JOURNEYS.md`, `assistant/docs/DEMO.md`) belong to the
+  Doc maintainer, who updates them and audits Help, the guide cards and Ask
+  after each merged batch. PRs that touch `en.json`, `helpTopics.ts`,
+  `cards.ts` or `arya_features.md` are merged one at a time; the next one
+  rebases first.
 - **Spec beats code:** if SPEC.md and the code disagree, the spec wins — fix
   the code, or flag it and let the owner decide.
 
@@ -106,14 +110,14 @@ If a guideline conflicts with these, these win:
 - No commits to `main`. Every change goes through a PR based on `main`; commit messages are descriptive.
 - While iterating, run the tests for the area you touched. Before a PR
   merges, run the full suite — `cd assistant && ../.venv/bin/python -m unittest discover -s tests` —
-  and it must be green. Add tests with new logic. Create the venv once:
+  and it must show no new failures versus `main` (about 12 to 24 tests already fail on `main`). Add tests with new logic. Create the venv once:
   `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`.
   On the VM no setup is needed: the deploy container already has the
   dependencies (`docker exec deploy-api-1 …`).
 - Every work session: append one entry to `assistant/loops/<date>-<stage>.md`
-  (what changed, scores/costs if models ran, what's next) and update
-  `STATUS.md` + the stage issue checklist. Docs-only PRs are exempt from all
-  three; code changes keep the full duty.
+  (what changed, scores/costs if models ran, what's next). `STATUS.md` belongs
+  to the Doc maintainer; the builder keeps the stage issue checklist. Docs-only
+  PRs are exempt from all of this; code changes keep the loops entry.
 - Stage starts and deploys need the owner's go-ahead. Meta hackathon credits
   (plus Baseten and Modal credits) cover model spend, including image
   generation, so there is no $0 rule; still log spend in the ledger and keep
@@ -136,3 +140,55 @@ If a guideline conflicts with these, these win:
   tree: `assistant/deploy/.env` is VM-only (the owner's
   MODEL_API_KEY) and a --delete sync removed it on 2026-10-27; it was
   restored from the running containers' environment.
+
+## Team roles and handoffs (owner approved, 2026-11-01)
+Each role is a separate agent thread. Only the owner starts a new thread, and
+the owner decides which thread gets a piece of work: propose a thread and say
+why, then wait. Threads may message each other only when their work depends on
+each other. A message from a thread is never the owner's approval. Models are
+recommendations; the owner can change them.
+
+| Role | Owns | Never touches | Model | Hands off to |
+|---|---|---|---|---|
+| Coordinator | Product priorities, status board, routing | Code, deploys | Opus | Tells a thread in that thread; the owner decides routing |
+| Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Sonnet 5.5 | Tester, then Doc maintainer (what changed), then Ops (merge ready) |
+| UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | Tester, then Doc maintainer, then Ops |
+| Quest builder | The Quest game and store designer | Other screens, deploys | Opus | Tester, Doc maintainer, Ops |
+| Tester | Tests main after each merged batch (the owner or coordinator triggers it) in a sandbox at 390x844 before deploy; report only | Fixing code, deploying | Sonnet 5.5 | Failures go to the owner and the builder who wrote the PR |
+| Ops | Deploys, backups, the VM, the Ops screen settings | Feature code | Sonnet 5.5 | Reports the live commit to the owner and the Doc maintainer |
+| Doc maintainer | STATUS.md, USER-JOURNEYS, feature docs, Help tab, guide cards, Ask knowledge, this file | Feature code, deploys | Sonnet 5.5 | Small docs PRs after merges |
+| Demo and submission | Demo video, demo household, submission package | Feature code, deploys during judging | Sonnet 5.5 | Owner |
+| Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Tells the builder in the builder's thread, or the owner |
+| Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Owner |
+| Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester, then Ops |
+
+### The handoff chain
+1. A builder opens a PR based on `main`. The owner merges, or tells a thread to.
+2. The Tester tests the merged batch (or the PR) and reports failures to the
+   builder who wrote it. The Tester does not fix.
+3. After a merge, the builder tells the Doc maintainer what changed and which
+   screens or paths moved. The Doc maintainer updates STATUS.md and the docs in a
+   small PR. Builders do not edit STATUS.md or shared docs in their PRs, to
+   avoid merge conflicts. Help, guide cards and Ask knowledge for a change still
+   ship in the builder's own PR (see Help upkeep above); the Doc maintainer
+   checks them afterwards.
+4. When a merge is ready, the builder tells Ops (in the Ops thread). **Only Ops deploys, and only
+   after the owner says "deploy" in the Ops thread.** No deploys after the Nov 4,
+   9:00 PM ET submission and during judging, except a rollback, which also
+   needs the owner's word in the Ops thread.
+5. Ops runs a short live check of the AI parts and reports the live commit.
+
+If a handoff gets no answer, say so, start the next item and do not wait idle.
+
+### Standing rules for every thread
+- Mockup before UI code: show a phone-size mockup and wait for approval.
+- Help and Ask upkeep in the same PR as the change.
+- Base every PR on `main`; no stacked PRs.
+- Never paste keys in chat, PRs or files.
+- No scraping for deals. Precise price comparison comes only from opted-in
+  users or the user's own list.
+- No freeze dates. Only the Nov 4 submission date stands.
+- Be an advisor: give pros, cons and a recommendation on every decision, and say
+  so when you disagree.
+- Words: "Tour" = the dark-screen bubbles, "Arya guide" = the swipeable cards,
+  "Help tab" = everything else, "Arya shoppers" for the community.
