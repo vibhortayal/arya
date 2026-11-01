@@ -80,7 +80,9 @@ class TestShellContract(unittest.TestCase):
 
     def test_receipts_view_has_its_own_photo_action(self):
         view = frontend.src("screens/Receipts.tsx")
-        assert "Add a receipt photo" in view
+        # The picker takes several photos or PDFs now (button "Add receipts").
+        assert "Add receipts" in view
+        assert "Pick several photos or PDFs at once" in view
         assert 'id="rc-photo"' in view
 
 
