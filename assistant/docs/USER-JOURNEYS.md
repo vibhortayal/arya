@@ -51,6 +51,7 @@ her head and forgets milk.
 | 2 | Lists, **Receipts** (the group at the bottom), **Add receipts**. She picks the Costco PDF from Oct 17. More than one file is fine. | One progress line per file, then one summary: filed, already filed, could not read. |
 | 3 | Waits a few seconds. | Muse Spark reads the lines. Code adds them up. The receipt shows a check mark and its total only if the lines match the printed total. |
 | 4 | Files the same PDF again by mistake. | "Already filed." Arya compares a fingerprint (store, date, lines, total) and does not count the trip twice. |
+| 5 | Wants one old receipt. In **Receipts**, types the store in the search box, opens **Date** and picks a range, and picks **Store A to Z** or **Highest total** in **Sort**. | A line shows how many receipts match and their total. **Clear** removes the filters. |
 | 5 | Opens **Today**. | **Running low** lists items that are due. |
 
 **Sample data: the Costco receipt, Oct 17**
@@ -347,6 +348,7 @@ an **Add to Home Screen** row while installing is possible.
 | Capability | Status |
 |---|---|
 | Receipts (photo, PDF, many files), duplicate guard, returns netted | Shipped |
+| Receipts search, Date menu, Sort menu | Shipped |
 | Running low, why sheet, patterns | Shipped |
 | Named lists, smart add, swipe to Move, Select | Shipped |
 | Start shopping, Quest | Shipped |
