@@ -6,6 +6,7 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
+- **Clean receipt names (2026-11-01, PR open):** printed text such as "ORG BLACKBRY" becomes "Blackberries - Organic" in the name book, learned per item number; receipts and totals are not changed; unsure names go to To check; off until the owner runs `python -m harness.clean_names <account>` (dry run) then `--apply`; `--undo` puts every name back. `assistant/loops/2026-11-01-clean-names.md`.
 - **Quest first-visit skeleton (2026-11-01, PR open):** the Quest tab draws grey cards in the home's shape while it loads, not a blank page. `assistant/loops/2026-11-01-quest-skeleton.md`.
 - **Re-audit server fixes (2026-11-01, PR open):** per-request memo copies about 4x faster; list add, paste, import and new list run off the event loop (paste no longer holds every request during its model call). `assistant/loops/2026-11-01-reaudit-server.md`.
 - **Re-audit loading fixes (2026-11-01, PR open):** one three.js (the build's); the worker precaches about 1.85 MB less; `/assets/` pictures answer from the cache and refresh behind; icons about half the size. `assistant/loops/2026-11-01-reaudit-loading.md`.
