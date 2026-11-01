@@ -1,6 +1,5 @@
-> Public copy of the staple-judge evaluation, 2026-10-27. Item names from the
-> owner's receipts are left out; every number is unchanged. Source data is the
-> owner's private account and is not in this repo.
+> Staple-judge evaluation, 2026-10-27, on the owner's own 114 Costco receipts
+> (shared with the owner's approval). The raw receipts and state files are not in this repo.
 
 # Staple-judge accuracy — one defensible number
 
@@ -62,45 +61,55 @@ Every disagreement below is at K=4, M=3.
 
 ## Disagreements at the primary setting
 
-Item names are left out of this public copy because they come from one
-household's real receipts. The shape of the disagreements:
-
 ### Judge admitted, proxy does not corroborate (11 of 52)
 
-Ten of the eleven miss the bar by exactly one receipt or one month.
-- **Three buys over three months (7):** slow-cycle household goods and a few
-  foods (soap, lotion, salt, milk, a snack). They are bought rarely because
-  they last; a cadence bar built for food under-counts them. One produce item
-  bought in a single winter and never again is the weakest admit in hindsight.
-- **Four buys inside two months (3):** a real every-two-weeks rhythm in
-  Nov to Dec 2023 that does not reappear under the same item number later
-  (bought elsewhere, or a new item number).
-- **The one clear error (1):** a foil product, 2 buys 703 days apart, judged
-  STAPLE ("long-life foil rebought"). It is also the only uncorroborated
-  admit under the looser K=3, M=2 proxy.
+Ten of the eleven miss the bar by exactly one receipt or one month. All
+eleven are slow-cycle or short-window items where the judge's stated
+reason is plausible on its face:
+
+- **Three buys, three months (7):** Avocados; Hand Wash; Kirkland
+  Signature Bodywash; Kirkland Signature Pink Salt; Lubriderm; Organic
+  2% Milk; Power Up Mega Omega Trail Mix. Soap, lotion, salt and foil are
+  bought rarely *because* they last; a cadence bar built for food
+  under-counts them. Avocados (Nov 2023–Jan 2024, then nothing) is the
+  weakest of this group in hindsight.
+- **Four buys inside two months (3):** Kirkland Signature Butter Quarters,
+  Kirkland Signature Organic Whole Milk, Mini Cukes — a genuine
+  every-~2-weeks rhythm in Nov–Dec 2023 that does not reappear under the
+  same SKUs later in the corpus (bought elsewhere, or re-SKU'd).
+- **The one clear error (1):** Reynlds Foil — 2 buys, 703 days apart,
+  judged STAPLE ("long-life foil rebought"). It is also the only
+  uncorroborated admit under the looser K=3, M=2 proxy.
 
 ### Proxy staple, judge kept off (14 of 55)
 
-All fourteen are class OCCASIONAL and every judge reason cites gap
-irregularity. They are produce, nuts and seeds, one towel and one frozen
-chicken product, bought 4 to 6 times. None were left unjudged: the judge saw
-all of them and declined. This is the product's stated policy made visible
-(precision over recall: a missed item costs the user one tap, an unnecessary
-suggestion costs trust). Twice-a-year pantry goods (nuts and seeds) are the
-arguable cases: a human might call them staples; the judge calls a 150 to
-250-day median gap "occasional", and under its own prompt that is defensible.
+All fourteen carry the class OCCASIONAL, and every judge reason cites gap
+irregularity: Buter Croiss (5 receipts), Cantaloupe (6), KS Lightly
+Breaded Chicken Breast Chunks (5), KS Pine Nuts (4), KS Pistachio (5),
+KS Towel (5), KS Walnuts (6), Mixed Pepper (4), Nmcholstoff+ (4),
+Organic Broc 2Lb (4), Organic Brussels (4), Organic Gre Bean (4),
+Pumpkin Seed (5), Red Onions (4). None were left unjudged — the judge
+saw all of them and declined. This is the product's stated policy made
+visible (precision over recall: a missed item costs the user one tap, an
+unnecessary suggestion costs trust). Twice-a-year pantry goods (walnuts,
+pistachios, pine nuts, pumpkin seeds) are the arguable cases: a human
+might call them staples; the judge calls a 150–250-day median gap
+"occasional," and under its own prompt that is a defensible call.
 
 ## Second signal: owner behavior
 
-- **Flags:** the owner's state has no `flags.json`: no list edits (no "never
-  suggest", no dismissals, no manual adds) against the judge's output, so
-  there is no owner-vs-judge settlement signal to report.
-- **The live list:** the cart prepared from the smart list held 5 items. The 4
-  pattern-surfaced items (the list went 16 to 4 in the first judge sweep) are
-  all corroborated proxy staples at the primary setting (4/4). The fifth is
-  judge-admitted (3 buys at a 23-day median gap) and sits in the proxy-miss
-  group by one month of spread; owner behavior (it is on his active list)
-  sides with the judge.
+- **Flags:** the owner's state has no `flags.json` — he has recorded no
+  list edits (no "never suggest", no dismissals, no manual adds) against
+  the judge's output. There is therefore no owner-vs-judge settlement
+  signal to report; absence of overrides is noted, not scored.
+- **The live list:** the cart prepared from the current smart list holds
+  5 items. The 4 pattern-surfaced items — Organic Raspberry, Mandarins,
+  Kirkland Signature Almonds, Slice Almond (the list that went 16 → 4 in
+  the first judge sweep) — are **all corroborated proxy staples at the
+  primary setting (4/4)**. The fifth, Power Up Mega Omega Trail Mix, is
+  judge-admitted (STAPLE, 3 buys at a 23-day median gap) and sits in the
+  proxy-miss group above by one month of spread — owner behavior (it is
+  on his active list, qty 2) sides with the judge.
 
 ## Sensitivity and how to read the headline
 

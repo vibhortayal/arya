@@ -6,7 +6,7 @@ Every number in the repo README's "Measured results" has a file here.
 |---|---|
 | Gate 0: 90 of 98 lines on 9 public receipt photos (Spark), arithmetic 7 of 7 | [GATE-0-REPORT.md](GATE-0-REPORT.md) |
 | Wonder 97 of 98 vs Spark 92 of 98 on the same set, latency and cost | [WONDER-EVAL.md](WONDER-EVAL.md) |
-| Staple judge precision 0.79 (41 of 52) against a cadence proxy | [JUDGE-EVAL.md](JUDGE-EVAL.md) (item names removed) |
+| Staple judge precision 0.79 (41 of 52) against a cadence proxy | [JUDGE-EVAL.md](JUDGE-EVAL.md) |
 
 `gate0-public-set/` holds the hand labels (written before any decode), the raw
 model results, the scores, the two scripts (`decode_public.py`, `score_public.py`)
