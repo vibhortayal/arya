@@ -126,7 +126,8 @@ class TestCleanNames(unittest.TestCase):
         self.assertEqual(res, {"restored": 2, "kept_by_you": 1})
         nm = state.names()
         self.assertEqual(nm["costco-222"], before["costco-222"])
-        self.assertNotIn("costco-111", nm)  # created by the pass, gone again
+        self.assertEqual(nm["costco-111"], "ORG BLACKBRY")  # entry the pass made is gone again
+        self.assertNotIn("costco-111", {e["item_id"] for e in state.dictionary()["entries"]})
         self.assertEqual(nm["costco-333"], "Bath Sheets")
         self.assertFalse(clean.is_on())
         self.assertNotIn("group", next(e for e in state.dictionary()["entries"]
