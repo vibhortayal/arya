@@ -10,7 +10,7 @@ import { A2hsCard } from "../ui/A2hs";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
-import { TownFeed } from "../ui/Town";
+import { TownFeed, SimPill, outAt } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
 import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
@@ -155,8 +155,8 @@ export function watchRows(ins: Insights, h: Home): WatchRow[] {
 /* Next trip: the list with the most to get, and about what it costs:
  * each item at its usual price at one of the list's stores, else at its
  * cheapest. Null cost when no item has a price yet. */
-export type Trip = { id: string; name: string; count: number; cost: number | null };
-export function nextTrip(cards: { id: string; name: string; items: { item_id: string }[] }[], lists: { id: string; stores?: string[] }[], h: Home): Trip | null {
+export type Trip = { id: string; name: string; count: number; cost: number | null; items: { item_id: string; name: string }[]; stores: string[] };
+export function nextTrip(cards: { id: string; name: string; items: { item_id: string; name: string }[] }[], lists: { id: string; stores?: string[] }[], h: Home): Trip | null {
   const best = [...cards].filter(c => c.items.length).sort((a, b) => b.items.length - a.items.length)[0];
   if (!best) return null;
   const stores = lists.find(l => l.id === best.id)?.stores || [];
@@ -167,7 +167,7 @@ export function nextTrip(cards: { id: string; name: string; items: { item_id: st
     const at = by.find(([s]) => stores.includes(s)) || by.sort((a, b) => a[1].median - b[1].median)[0];
     cost += at[1].median; priced++;
   }
-  return { id: best.id, name: best.name, count: best.items.length, cost: priced ? cost : null };
+  return { id: best.id, name: best.name, count: best.items.length, cost: priced ? cost : null, items: best.items, stores };
 }
 
 /* "From your receipts up to …" only when the last one is a week old. */
@@ -402,6 +402,8 @@ export function Today() {
   const listCap = big("lists") ? { shown: cards, seeAll: false } : capLists(cards, cards.length);
 
   const trip = h ? nextTrip(cards, lists, h) : null;
+  // Items of the trip that Demo Town says are out at the list's store.
+  const tripOut = trip && town ? trip.items.map(i => outAt(town, i.item_id, trip.stores) && (town.items[i.item_id]?.name || i.name)).filter((x): x is string => !!x) : [];
   const watch = h ? watchRows(ins, h) : [];
   const watchCap = capRows(watch, watchOpen || big("watch"));
 
@@ -555,18 +557,29 @@ export function Today() {
     ),
     trip: (
       <div id="today-trip">
-        {trip && (
-          <>
-            <h3 className="sect">{t("today.cards.trip.name")}</h3>
-            <div className="group">
-              <button className="hubrow" id="today-trip-btn" data-open-list={trip.id} type="button" onClick={() => nav.show("list", { lens: trip.id })}>
-                <span className="hr-label">{trip.name}<span className="sub">{trip.cost != null
-                  ? t("today.trip.costs", { count: trip.count, money: money(trip.cost, currency) })
-                  : t("common.itemCount", { count: trip.count })}</span></span>
-                <span className="hr-action">{t("today.trip.go")}</span><span className="chev" aria-hidden="true">›</span></button>
-            </div>
-          </>
-        )}
+        <h3 className="sect">{t("today.cards.trip.name")}</h3>
+        <div className="tripcard">
+          {trip ? (
+            <>
+              <button className="tc-open" id="today-trip-btn" data-open-list={trip.id} type="button" onClick={() => nav.show("list", { lens: trip.id })}>
+                <span className="lc-top"><span className="lc-name">{trip.name}</span>
+                  <span className="lc-count">{t("common.itemCount", { count: trip.count })}</span><span className="chev" aria-hidden="true">›</span></span>
+                <span className="lc-items">{trip.items.slice(0, 4).map(i => i.name).join(", ") + (trip.count > 4 ? "…" : "")}
+                  {tripOut.length > 0 && <> · {tripOut.length === 1 ? t("today.trip.outOne", { item: tripOut[0] }) : t("today.trip.outMany", { count: tripOut.length })} <SimPill /></>}</span>
+              </button>
+              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => nav.show("community", { listId: trip.id === "else" ? "all" : trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
+            </>
+          ) : (
+            <>
+              <p className="tc-empty">{t("today.trip.empty")}</p>
+              <button className="btn primary wide" id="today-trip-add" type="button" onClick={() => nav.show("list")}>{t("today.trip.addItems")}</button>
+            </>
+          )}
+          <div className="tc-links">
+            {trip ? <button className="linkbtn" id="today-trip-add-link" type="button" onClick={() => nav.show("list")}>{t("today.trip.addItems")}</button> : <span />}
+            <button className="linkbtn" id="today-trip-scan" type="button" onClick={() => nav.show("receipts", { from: "home" })}>{t(facts && !facts.receipts ? "today.trip.firstReceipt" : "today.trip.scan")}</button>
+          </div>
+        </div>
       </div>
     ),
     quest: (
@@ -601,7 +614,7 @@ export function Today() {
     patterns: !!(lastMonth && months) || !!tip,
     quest: !!questNudge || (listItems.length > 0 && !questSeen),
     watch: watch.length > 0,
-    trip: !!trip,
+    trip: !!h && !firstRun,
   };
   const peek = (id: CardId): string => {
     if (id === "low") return low.map(i => i.name).slice(0, 3).join(", ");
@@ -610,7 +623,7 @@ export function Today() {
     if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
     if (id === "checks") return checkLabel;
     if (id === "watch") return watch.map(w => w.name).slice(0, 3).join(", ");
-    if (id === "trip" && trip) return t("today.trip.peek", { name: trip.name, count: trip.count });
+    if (id === "trip") return trip ? t("today.trip.peek", { name: trip.name, count: trip.count }) : t("today.trip.empty");
     if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
     return t(`today.cards.${id}.desc`);
   };
@@ -632,7 +645,7 @@ export function Today() {
     if (id === "expiry") return t("today.small.expiry", { count: soon.length + (perish?.items.length || 0) });
     if (id === "checks") return t("today.small.checks", { count: nChecks });
     if (id === "watch") return t("today.small.watch", { count: watch.length });
-    if (id === "trip" && trip) return trip.cost != null ? t("today.small.trip", { money: money(trip.cost, currency) }) : t("common.itemCount", { count: trip.count });
+    if (id === "trip") return !trip ? t("today.trip.empty") : trip.cost != null ? t("today.small.trip", { money: money(trip.cost, currency) }) : t("common.itemCount", { count: trip.count });
     return id === "patterns" ? peek(id) : name(id);
   };
   async function addAllLow() {
@@ -692,6 +705,11 @@ export function Today() {
     onContextMenu: (e: ReactMouseEvent) => { e.preventDefault(); clearTimeout(hold.current.timer); setMenu({ id, top: e.clientY + 12 }); },
   });
 
+  /* Next trip, when it leads Today, sits right under the title, above the
+   * town news (owner, option A, 2026-11-01); anywhere else it is a card. */
+  const tripFirst = on[0] === "trip";
+  const tcard = (id: CardId) => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>;
+
   /* The one question: once, after the first list (not on the demo). */
   const askShow = !!h && !focusAsked && allLists.length > 0 && !editing;
   function answerAsk(picked: FocusId[] | null) {
@@ -716,6 +734,7 @@ export function Today() {
             : <div className="skel" role="status" aria-label={t("common.loading")}><i /><i /><i /></div>)}
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+          {tripFirst && tcard("trip")}
           {town ? <TownFeed town={town} /> : null}
           {noReceipt.length > 0 && (
             <div className="group" id="today-noreceipt">
@@ -725,7 +744,7 @@ export function Today() {
                 <span className="chev">›</span></button>
             </div>
           )}
-          {on.map(id => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>)}
+          {on.map(id => (id === "trip" && tripFirst ? null : tcard(id)))}
           <div id="today-eye">
             {eyeCount > 0 && (
               <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>

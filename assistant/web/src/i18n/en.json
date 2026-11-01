@@ -2254,7 +2254,7 @@
       },
       "trip": {
         "name": "Next trip",
-        "desc": "Your fullest list and about what it costs"
+        "desc": "Start shopping, add items, scan a receipt"
       },
       "waiting": "Hidden until it has news"
     },
@@ -2462,7 +2462,16 @@
       "costs_other": "{{count}} items, about {{money}}",
       "go": "Shop",
       "peek_one": "{{name}}, {{count}} item",
-      "peek_other": "{{name}}, {{count}} items"
+      "peek_other": "{{name}}, {{count}} items",
+      "start_one": "Start shopping · {{count}} item",
+      "start_other": "Start shopping · {{count}} items",
+      "addItems": "Add items",
+      "scan": "Scan a receipt",
+      "firstReceipt": "Add your first receipt",
+      "empty": "Nothing on your lists yet",
+      "outOne": "{{item}} is out here today",
+      "outMany_one": "{{count}} item is out here today",
+      "outMany_other": "{{count}} items are out here today"
     },
     "finding": {
       "kicker": "Price watch",
@@ -3049,7 +3058,7 @@
       "today": {
         "kicker": "Today",
         "title": "Make Today yours",
-        "body": "Show the cards you use. Hide the rest.",
+        "body": "Show the cards you use. Hide the rest. Next trip, at the top, starts your shopping.",
         "s1": "Tap Edit on Today, or touch and hold a card.",
         "s2": "Drag a card to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card from the library.",
@@ -3412,7 +3421,7 @@
         "title": "Shopping and Quest",
         "sub": "Start shopping, tick items, play",
         "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
-        "s1": "Open a list and tap Start shopping.",
+        "s1": "Tap Start shopping on Today, or open a list and tap it there.",
         "s2": "Or tap \"Or just tick items as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
@@ -3483,7 +3492,7 @@
         "s1": "Tap Edit on Today, or touch and hold a card.",
         "s2": "Drag a card to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card from the library.",
-        "n1": "Lists, Ask and Quest have an Edit button too.",
+        "n1": "Next trip is the first card. It has Start shopping, Add items and Scan a receipt. Lists, Ask and Quest have an Edit button too.",
         "n2": "Settings, then Preferences, then Display, changes text size and spacing.",
         "cta": "Open Today"
       }

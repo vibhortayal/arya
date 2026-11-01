@@ -89,11 +89,11 @@ describe("Price watch and Next trip cards", () => {
     expect(watchRows(null, h)).toEqual([]);
   });
   test("next trip is the fullest list, priced at its own store first", () => {
-    const cards = [{ id: "a", name: "Safeway", items: [{ item_id: "s" }] }, { id: "b", name: "Costco", items: [{ item_id: "m" }, { item_id: "z" }] }];
-    expect(nextTrip(cards, [{ id: "b", stores: ["Costco"] }], h)).toEqual({ id: "b", name: "Costco", count: 2, cost: 4 });
+    const cards = [{ id: "a", name: "Safeway", items: [{ item_id: "s", name: "Soap" }] }, { id: "b", name: "Costco", items: [{ item_id: "m", name: "Milk" }, { item_id: "z", name: "Zucchini" }] }];
+    expect(nextTrip(cards, [{ id: "b", stores: ["Costco"] }], h)).toEqual({ id: "b", name: "Costco", count: 2, cost: 4, items: cards[1].items, stores: ["Costco"] });
     // no store on the list: the cheapest price
     expect(nextTrip(cards, [], h)?.cost).toBe(3);
-    expect(nextTrip([{ id: "c", name: "New", items: [{ item_id: "z" }] }], [], h)?.cost).toBeNull();
+    expect(nextTrip([{ id: "c", name: "New", items: [{ item_id: "z", name: "Zucchini" }] }], [], h)?.cost).toBeNull();
     expect(nextTrip([], [], h)).toBeNull();
   });
 });
