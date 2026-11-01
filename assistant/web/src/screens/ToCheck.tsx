@@ -96,7 +96,7 @@ export function ToCheck() {
     <>
       <p><a href="#" id="tc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("receipts"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("receipts.needsYourEye")}</h1>
-      <p className="subtitle" id="tc-count">{items ? t("toCheck.count", { items, lines }) : ""}</p>
+      <p className="subtitle" id="tc-count">{items ? (lines > items ? t("toCheck.count", { items, lines }) : t("toCheck.rowSub", { count: items })) : ""}</p>
       {loaded && !hasReview && !hasCur && <p className="muted" id="tc-empty">{t("toCheck.allClear")}</p>}
       <div id="review" className="group eyegroup" hidden={!hasReview}>
         {vGroups.map(g => {
