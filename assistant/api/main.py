@@ -16,7 +16,7 @@ from api.demo_guard import require_login
 from api.deps import _PWA
 from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
                         intake, items, lists, lists_v1, mcp_connector, ops, prices, quest,
-                        questmap, receipts, review, shelf, storemap, stores, town)
+                        questmap, receiptjobs, receipts, review, shelf, storemap, stores, town)
 
 # No /docs, /redoc or /openapi.json: they listed every route, admin
 # ones included, to anyone (audit M2, 2026-10-30). The public Lists
@@ -71,7 +71,8 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 album_routes.router, shelf.router, friends.router,
                 avatar.router, receipts.router, hunt_routes.router,
                 storemap.router, haul_routes.router, prices.router,
-                groups.router, questmap.router, town.router, ops.router):
+                groups.router, questmap.router, town.router, ops.router,
+                receiptjobs.router):
     app.include_router(_router)
 
 def _resume_scan_jobs():
@@ -84,6 +85,18 @@ def _resume_scan_jobs():
 
 
 app.router.on_startup.append(_resume_scan_jobs)
+
+
+def _resume_receipt_jobs():
+    """Background receipt batches a deploy restart interrupted carry on."""
+    from api import receiptjobs
+    try:
+        receiptjobs.resume()
+    except Exception:
+        _log.exception("could not resume receipt jobs")
+
+
+app.router.on_startup.append(_resume_receipt_jobs)
 
 # The open Lists API is its own small app, so its errors and schema
 # (/api/v1/openapi.json) stay separate from the app's routes.

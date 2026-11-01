@@ -77,7 +77,7 @@ def _demo_rate(bucket, key, limit_env, default):
 # stay closed to the demo.
 _DEMO_CLOSED = ("/import", "/decode/pdf", "/decode/text", "/eyes/photo",
                 "/api/curator/run", "/api/judge/run", "/api/review/suggest",
-                "/api/intake/", "/api/quest/avatar/generate",
+                "/api/intake/", "/api/receipts/jobs", "/api/quest/avatar/generate",
                 "/api/quest/avatar/photo", "/api/feedback", "/api/push/",
                 "/api/group")
 # Doors that can call the Meta API: the per-IP live-door cap applies.
