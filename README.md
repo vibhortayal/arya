@@ -36,6 +36,36 @@ visit only; nothing reaches disk or another visitor.
 
 The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
 
+## Verify it without signing in
+
+Everything below runs in the demo household, no account needed. Each row
+says what to tap, what you see, which Meta model runs, and where the code
+is. "Live" means the demo calls the Meta Model API when you tap; each visit
+has a small allowance (about $0.40) and the demo as a whole has a daily cap,
+so a busy judging day can run out. When that happens the app says so and the
+sample buttons still work.
+
+| Feature | Tap | You see | Meta model | Code |
+|---|---|---|---|---|
+| Receipt read and arithmetic check | Lists, Receipts, Add receipt, Snap (or "Use a sample receipt") | Lines, "Total checks out", which model read it | Muse Spark 1.3 reads first; Muse Wonder 1.0 re-reads a flagged read (live); the sample is code-built, no model | `assistant/api/decode/service.py`, `decode/checks.py` |
+| Add by voice | A list, the mic | Items added, with Undo | Muse Voice Transcribe (live) | `assistant/api/voice/service.py` |
+| Add from a photo of a note | A list, the camera | The items Arya read, "Add N items?" | Muse Spark vision (live) | `assistant/api/list/intake.py` |
+| Running low and the staple judge | Today, Running low; a suggestion's "why" | Cadence, last buy, the judge's verdict | Judged before the demo was built: Muse Spark judge, Muse Spark Open second seat (no live call) | `assistant/api/judge.py`, `assistant/api/patterns/` |
+| Ask Arya | Ask, type a question or tap a chip | An answer from the household data; a stated fact becomes an action you confirm | Muse Spark (live) | `assistant/api/chat_service.py` |
+| Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
+| Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
+| Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
+| Map my store | Quest tab, Map my store | A guided scan; people blurred before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
+| Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
+
+Every live call goes through `assistant/api/meta_client.py` and is booked
+in a cost ledger with model, tokens and cost; the owner's Ops screen shows
+the day's spend. Spark and Wonder both run in Meta's Standard mode. No store
+ships pre-mapped and the demo never reaches disk.
+
+No camera or microphone on a laptop: use the sample buttons, or run the full
+loop on a phone. The window should be about 390 px wide.
+
 ## What is in it
 
 - **Receipts.** A photo or PDF goes in. Muse Spark reads photos first and Muse
@@ -120,6 +150,19 @@ Open http://localhost:8000 and tap "Try it now". For front-end work,
 `npm run dev` in `assistant/web` starts Vite. The full Docker setup (API and
 Caddy) is in `assistant/deploy/`; settings are listed in
 [`assistant/deploy/.env.example`](assistant/deploy/.env.example).
+
+### Run it with your own Meta key
+
+To run the live model calls from your own checkout, make a Meta Model API
+key just for this (dev.meta.ai, API keys, Create API key) and put it in a
+local `.env` or in the command above as `MODEL_API_KEY`. Copy
+`assistant/deploy/.env.example` to `.env` for the Docker setup; its
+`MODEL_API_KEY=` line is blank on purpose. Never commit a filled `.env`.
+The key is sent only to `api.meta.ai`. Meta keys have no spending cap of
+their own, so set a usage limit on your Meta billing page, and delete the
+key at Meta when you are done. Photo receipts are read with Spark first;
+`ARYA_PHOTO_READER` (`auto` by default, or `spark`, or `wonder`) changes
+that.
 
 Tests, from the repo root:
 

@@ -12,7 +12,7 @@ for the steps that use them.
 an in-memory sandbox for your visit only; nothing reaches disk or
 another visitor. No store ships pre-mapped: a store's map comes only
 from shoppers' guided scans, with people blurred by SAM first. Camera,
-microphone and chat call the Meta API live.
+microphone and chat call the Meta API live, within a small per-visit allowance. If the allowance or the day's cap is used up, the app says so; the sample buttons still work.
 
 **Known limits.** Testing data is limited to one household, and limited data
 was available. Real-device testing was done only on an iPhone 17 Pro; other
@@ -51,7 +51,7 @@ against a purchase-cadence proxy on the owner's receipts).
 In a list, use the add row: type an item, or use the mic (**Muse Voice Transcribe**) takes
 "two gallons of milk, eggs, and blueberries"; the camera (**Muse Spark**
 vision) reads a photo of a handwritten note. Adds apply at once, with
-Undo.
+Undo. On a laptop with no camera, type the items instead; the photo read is shown on a phone.
 
 ### 4. Start a quest
 On Today, tap **Start shopping** on the next trip, then **Let's go**.
@@ -85,6 +85,7 @@ lines don't add up, or too many lines are unsure), **Muse Wonder 1.0**
 reads the receipt again. Arya records which model read the receipt. On
 the Gate 0 public set, Wonder alone got 97 of 98 lines right after hand
 adjudication, with zero price errors.
+A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a sample receipt if you would rather not send one.
 
 ---
 
