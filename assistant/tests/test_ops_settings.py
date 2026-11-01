@@ -140,3 +140,61 @@ class TestOpsAccounts(unittest.TestCase):
         self.assertEqual(self.c.get("/api/ops").status_code, 403)
         self.login("kim@test.arya", "pw-123456")
         self.assertEqual(self.c.get("/api/ops").status_code, 200)
+
+
+class TestOpsData(TestOpsAccounts):
+    def test_delete_needs_typed_name_saves_a_copy(self):
+        from api import state
+        with state.as_user("kim@test.arya"):
+            state._save("receipts.json", [{"id": 1}, {"id": 2}])
+        post = lambda b: self.c.post("/api/ops/delete", json=b)
+        self.assertEqual(post({"user": "kim@test.arya", "what": "receipts", "confirm": "nope"}).status_code, 400)
+        self.assertEqual(post({"user": "kim@test.arya", "what": "bogus", "confirm": "kim@test.arya"}).status_code, 400)
+        r = post({"user": "kim@test.arya", "what": "receipts", "confirm": "kim@test.arya"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["removed"], 2)
+        with state.as_user("kim@test.arya"):
+            self.assertEqual(state._load("receipts.json", None), [])
+        d = os.path.join(state.base_dir(), "ops-deleted")
+        self.assertEqual(len(os.listdir(d)), 1)
+        self.assertEqual(json.load(open(os.path.join(d, os.listdir(d)[0]))), [{"id": 1}, {"id": 2}])
+        self.assertEqual(post({"user": "kim@test.arya", "what": "names", "confirm": "kim@test.arya"}).status_code, 200)
+
+    def test_mirror_needs_a_database_and_owner(self):
+        os.environ.pop("DATABASE_URL", None)
+        self.assertEqual(self.c.post("/api/ops/mirror", json={"kind": "verify"}).status_code, 400)
+        self.assertEqual(self.c.get("/api/ops/mirror").json()["configured"], False)
+        self.login("kim@test.arya", "pw-123456")
+        self.assertEqual(self.c.post("/api/ops/mirror", json={"kind": "verify"}).status_code, 403)
+        self.assertEqual(self.c.post("/api/ops/delete", json={}).status_code, 403)
+
+
+class TestMirrorJob(unittest.TestCase):
+    def test_backfill_then_verify_with_a_fake_database(self):
+        import time as _t
+        from unittest import mock
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        os.environ["DATABASE_URL"] = "postgres://x"
+        os.environ["ARYA_STORE"] = "dual"
+        try:
+            from api import ops_data, pgstore, state
+            state.write_json_atomic(os.path.join(state.base_dir(), "users", "kim", "lists.json"), {"a": 1})
+            db = {}
+            with mock.patch.object(pgstore, "write", lambda o, n, obj: db.__setitem__((o, n), obj)), \
+                 mock.patch.object(pgstore, "read", lambda o, n: db.get((o, n), pgstore._MISSING)):
+                self.assertTrue(ops_data.start("verify"))
+                while ops_data.job()["state"] == "running":
+                    _t.sleep(0.01)
+                self.assertFalse(ops_data.job()["ok"])
+                self.assertTrue(ops_data.start("backfill"))
+                while ops_data.job()["state"] == "running":
+                    _t.sleep(0.01)
+                self.assertTrue(ops_data.job()["ok"], ops_data.job())
+                ops_data.start("verify")
+                while ops_data.job()["state"] == "running":
+                    _t.sleep(0.01)
+                self.assertTrue(ops_data.job()["ok"])
+                self.assertIn("1 of 1 match", ops_data.job()["result"])
+        finally:
+            os.environ.pop("DATABASE_URL", None)
+            os.environ.pop("ARYA_STORE", None)
