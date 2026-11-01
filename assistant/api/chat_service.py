@@ -19,7 +19,9 @@ def _feature_flags():
     from api.deps import _registration_open
     return {"push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
-            "registration_open": _registration_open()}
+            "registration_open": _registration_open(),
+            # Own Meta key (BYOK): off unless the operator sets ARYA_BYOK=1.
+            "byok": os.environ.get("ARYA_BYOK", "").strip().lower() in ("1", "true", "yes", "on")}
 
 
 _GENERIC = re.compile(r"\b(how (do|can|to|does)|where (do|can|is|are)|what can|what does|what is arya|what do you do|"

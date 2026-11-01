@@ -7,7 +7,7 @@ import unittest
 from api import chat_service
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open"}
+KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open", "byok"}
 
 
 def raw():
@@ -28,6 +28,19 @@ class FeatureSheet(unittest.TestCase):
         on = chat_service.feature_sheet({k: True for k in KNOWN_FLAGS})
         self.assertIn("Remind me", on)
         self.assertNotIn("[if", on)
+
+    def test_own_key_line_only_when_byok_on(self):
+        off = chat_service.feature_sheet({k: False for k in KNOWN_FLAGS})
+        self.assertNotIn("Your own Meta key", off)
+        on = chat_service.feature_sheet({k: k == "byok" for k in KNOWN_FLAGS})
+        self.assertIn("Your own Meta key", on)
+        asked = chat_service.feature_sheet({k: k == "byok" for k in KNOWN_FLAGS},
+                                           question="I hit the daily limit, can I use my own key?")
+        self.assertIn("Your own Meta key", asked)
+        # and the install steps do not drag it in
+        inst = chat_service.feature_sheet({k: k == "byok" for k in KNOWN_FLAGS},
+                                          question="How do I install Arya on my phone?")
+        self.assertNotIn("Your own Meta key", inst)
 
     def test_bar_named_in_sheet_matches_app(self):
         # The shopper's bar (owner, 2026-11-01): the sheet's default bar,
