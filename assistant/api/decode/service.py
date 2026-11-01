@@ -352,6 +352,8 @@ def photo_reader():
     live site onto Spark Standard with no deploy."""
     from api import site_flags
     v = site_flags.photo_reader() or os.environ.get("ARYA_PHOTO_READER", "wonder").strip().lower()
+    if v == "auto":
+        return "auto"
     return "standard" if v in ("spark", "standard") else "wonder"
 
 
@@ -388,8 +390,11 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
                 {"role": "user", "content": [
                     {"type": "text", "text": "Decode this receipt photo."},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
+    reader = photo_reader()
+    if reader == "auto":
+        return _decode_auto(messages, client, image_bytes)
     try:
-        if photo_reader() == "standard":
+        if reader == "standard":
             raise RuntimeError("Wonder disabled by ARYA_PHOTO_READER")
         dec = _photo_read(messages, client, mode="wonder",
                           reasoning_effort=None,
@@ -398,6 +403,10 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
     except Exception:
         dec = _photo_read(messages, client, mode="standard")
         decoded_by = MODELS["standard"]
+    return _photo_record(dec, image_bytes, decoded_by)
+
+
+def _photo_record(dec, image_bytes, decoded_by):
     lines = []
     for l in dec.get("lines", []):
         name = " ".join(x for x in [l.get("brand"), l.get("product"), l.get("detail")] if x).strip()
@@ -415,11 +424,61 @@ def decode_photo(image_bytes, client, media_type="image/jpeg"):
     subtotal, tax, total = _refund_totals(lines, dec.get("subtotal"), dec.get("tax"), dec.get("total"))
     lines, reconcile = _finish(lines, subtotal)
     rid = "dec-" + hashlib.sha1(image_bytes).hexdigest()[:10]
-    return {"receipt_id": rid, "source_type": "grocery",
-            "merchant": dec.get("store"), "purchased_at": _iso_day(dec.get("date")),
-            "lines": lines, "subtotal": subtotal, "tax": tax,
-            "total": total, "totals_reconcile": reconcile,
-            "image_ref": None, "decoded_by": decoded_by}
+    rec = {"receipt_id": rid, "source_type": "grocery",
+           "merchant": dec.get("store"), "purchased_at": _iso_day(dec.get("date")),
+           "lines": lines, "subtotal": subtotal, "tax": tax,
+           "total": total, "totals_reconcile": reconcile,
+           "image_ref": None, "decoded_by": decoded_by}
+    if _num(dec.get("items_sold")):
+        rec["items_sold"] = dec["items_sold"]
+    return rec
+
+
+def _known_sku_prices():
+    """Item number -> prices already on this account's receipts, for the
+    price-changed check. Empty when there is no account in context."""
+    try:
+        from api import state
+        out = {}
+        for r in state.own_receipts():
+            for l in r.get("lines", []):
+                if l.get("sku") and _num(l.get("line_total")) and l.get("line_type", "item") == "item":
+                    out.setdefault(str(l["sku"]), []).append(l["line_total"])
+        return out
+    except Exception:
+        return {}
+
+
+def _decode_auto(messages, client, image_bytes):
+    """Spark reads first; cheap arithmetic checks (decode/checks.py) judge
+    the result; Wonder re-reads only a receipt that fails them. A Spark
+    failure goes straight to Wonder. The record says which reader filed it
+    and why a second read happened, so nothing is silent."""
+    from api.decode import checks
+    spark = None
+    try:
+        dec = _photo_read(messages, client, mode="standard")
+        spark = _photo_record(dec, image_bytes, MODELS["standard"])
+        reasons = checks.validate(spark, _known_sku_prices())
+    except Exception:
+        reasons = ["spark_failed"]
+    if spark is not None and not reasons:
+        return spark
+    try:
+        dec = _photo_read(messages, client, mode="wonder", reasoning_effort=None,
+                          timeout=PHOTO_WONDER_TIMEOUT_S)
+        rec = _photo_record(dec, image_bytes, MODELS["wonder"])
+        rec["second_read"] = reasons
+        return rec
+    except Exception:
+        if spark is None:
+            raise
+        # Wonder is down: keep Spark's read and send every line to review.
+        for ln in spark["lines"]:
+            if ln.get("line_type", "item") != "discount":
+                ln["status"] = "unverified"
+        spark["second_read"] = reasons + ["wonder_failed"]
+        return spark
 
 
 ORDER_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..",

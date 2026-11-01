@@ -5,7 +5,7 @@ a redeploy.
 
   ai_paused    True: no paid model call starts (lists, Today, sign-in work)
   demo_live    False: the demo household's live reads are off
-  photo_reader "spark" or "wonder": overrides ARYA_PHOTO_READER
+  photo_reader "spark", "wonder" or "auto" (Spark first, Wonder only if the checks fail): overrides ARYA_PHOTO_READER
 
 Unset means the environment decides, exactly as before."""
 import json
@@ -16,7 +16,7 @@ from api import state
 
 _TTL_S = 3.0
 _cache = {"at": 0.0, "path": "", "doc": {}}
-PHOTO_READERS = ("spark", "wonder")
+PHOTO_READERS = ("spark", "wonder", "auto")
 
 
 def _path():
