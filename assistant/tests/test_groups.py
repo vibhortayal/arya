@@ -160,11 +160,18 @@ class TestJoinAndShare(GroupsBase):
         self.assertEqual(b.post("/api/group/join", json={"code": new}).status_code, 200)
         # One code, one person: Bob's claim used it up.
         r = c.post("/api/group/join", json={"code": new})
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 410)
         self.assertIn("already used", r.json()["detail"])
+        from fastapi.testclient import TestClient
+        anon = TestClient(c.app)
+        self.assertEqual(anon.get(f"/auth/group-invite/{new}").json()["status"], "used")
+        self.assertEqual(anon.get("/auth/group-invite/QQQQQQ").status_code, 404)
         # Already in a group: a clear "leave it first", at preview and join.
         another = a.post("/api/group/invite").json()["code"]
         self.assertNotEqual(another, new)
+        pub = TestClient(c.app).get(f"/auth/group-invite/{another}").json()
+        self.assertEqual(set(pub), {"group_name", "inviter_handle", "member_count", "status"})
+        self.assertEqual((pub["status"], pub["member_count"]), ("ok", 2))
         r = b.post("/api/group/join", json={"code": another})
         self.assertEqual(r.status_code, 409)
         self.assertIn("leave it first", r.json()["detail"])
@@ -177,7 +184,9 @@ class TestJoinAndShare(GroupsBase):
         gid = reg["member_of"]["bob"]
         reg["groups"][gid]["invite"]["expires"] = int(time.time()) - 1
         groups._save_registry(reg)
-        self.assertEqual(c.post("/api/group/join", json={"code": another}).status_code, 404)
+        r = c.post("/api/group/join", json={"code": another})
+        self.assertEqual(r.status_code, 410)
+        self.assertIn("expired", r.json()["detail"])
         # Full.
         new = a.post("/api/group/invite", json={"new": True}).json()["code"]
         old_max = groups.MAX_MEMBERS

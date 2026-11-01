@@ -100,9 +100,25 @@ def group_preview(req: Request, code: str = ""):
         raise HTTPException(409, busy)
     p = groups.preview(code)
     if p is None:
+        st, _g = groups.code_status(code)
+        if st in ("used", "expired"):
+            raise HTTPException(410, groups.USED_CODE if st == "used" else groups.EXPIRED_CODE)
         raise HTTPException(404, groups.WRONG_CODE)
     mine = state.named_lists()
     return {**p, "my_lists": len(mine)}
+
+
+@router.get("/auth/group-invite/{code}")
+def group_invite_public(req: Request, code: str):
+    """Public (no sign-in): what an invite link leads to, so the page can
+    name the group before sign-in. Rate-limited like code guesses."""
+    if not groups.enabled():
+        raise HTTPException(404, groups.WRONG_CODE)
+    _rate(req)
+    p = groups.public_preview(code)
+    if p is None:
+        raise HTTPException(404, groups.WRONG_CODE)
+    return p
 
 
 @router.post("/api/group/join")
@@ -112,6 +128,8 @@ async def group_join(req: Request):
     body = await _json_obj(req)
     try:
         groups.join(user, body.get("code", ""))
+    except groups.CodeGone as e:
+        raise HTTPException(410, str(e))
     except LookupError as e:
         raise HTTPException(404, str(e))
     except ValueError as e:

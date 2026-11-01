@@ -249,6 +249,40 @@ WRONG_CODE = ("That code is wrong, already used or expired. Each code works for 
               "ask for a new one.")
 
 
+USED_CODE = "That code was already used. Each code works for one person; ask for a new one."
+EXPIRED_CODE = "That code has expired. Codes work for 48 hours; ask for a new one."
+
+
+class CodeGone(LookupError):
+    """A real code that no longer works: used, or past its 48 hours."""
+
+
+def code_status(code, reg=None):
+    """("ok" | "used" | "expired", group) for a real code, else (None, None)."""
+    if len(normalize_code(code)) != CODE_LEN:
+        return None, None
+    reg = reg or _registry()
+    h, now = _hash(code), time.time()
+    for g in reg["groups"].values():
+        inv = g.get("invite")
+        if inv and secrets.compare_digest(inv["hash"], h):
+            return ("ok" if inv["expires"] > now else "expired"), g
+        if any(u.get("hash") and secrets.compare_digest(u["hash"], h) for u in g.get("used") or []):
+            return "used", g
+    return None, None
+
+
+def public_preview(code):
+    """The invite page before sign-in: the group's name, who invited,
+    how many people, and whether the code still works. Nothing else."""
+    st, g = code_status(code)
+    if not g:
+        return None
+    by = (g.get("invite") or {}).get("by") if st != "used" else None
+    return {"group_name": g["name"], "inviter_handle": handle(by) if by else None,
+            "member_count": len(g["members"]), "status": st}
+
+
 def already_in_msg(reg, user):
     g = reg["groups"].get(reg["member_of"].get(user)) or {}
     return (f"You're already in {g.get('name') or 'a group'}. Arya has one group per person: "
@@ -293,6 +327,9 @@ def join(user, code):
             raise ValueError(already_in_msg(reg, user))
         gid, g = _find_by_code(reg, code)
         if not g:
+            st, _g = code_status(code, reg)
+            if st in ("used", "expired"):
+                raise CodeGone(USED_CODE if st == "used" else EXPIRED_CODE)
             raise LookupError(WRONG_CODE)
         if len(g["members"]) >= MAX_MEMBERS:
             raise ValueError(f"that group is full ({MAX_MEMBERS} people)")
@@ -303,6 +340,8 @@ def join(user, code):
         reg["member_of"][user] = gid
         # One code, one person (owner's group test, 2026-11-01): the code
         # stops working once claimed; the next person gets a new one.
+        inv = g.get("invite") or {}
+        g["used"] = (g.get("used") or [])[-9:] + [{"hash": inv.get("hash"), "at": int(time.time())}]
         g["invite"] = None
         reg.get("removed", {}).pop(user, None)
         _save_registry(reg)
