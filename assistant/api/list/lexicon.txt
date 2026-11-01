@@ -1,0 +1,487 @@
+# Grocery word list for the Add field's auto-suggest (tier 2, $0, offline).
+# One name per line; '#' lines are sections. Extend with Meta Spark:
+#   python -m harness.build_grocery_lexicon   (needs MODEL_API_KEY, writes this file)
+# Produce
+Apples
+Gala Apples
+Honeycrisp Apples
+Granny Smith Apples
+Bananas
+Oranges
+Navel Oranges
+Mandarins
+Clementines
+Lemons
+Limes
+Grapefruit
+Grapes
+Red Grapes
+Green Grapes
+Strawberries
+Blueberries
+Raspberries
+Blackberries
+Cherries
+Peaches
+Nectarines
+Plums
+Pears
+Mangoes
+Pineapple
+Watermelon
+Cantaloupe
+Honeydew
+Kiwi
+Pomegranate
+Avocados
+Tomatoes
+Cherry Tomatoes
+Grape Tomatoes
+Roma Tomatoes
+Cucumbers
+Persian Cucumbers
+Bell Peppers
+Red Bell Peppers
+Jalapenos
+Onions
+Red Onions
+Yellow Onions
+Green Onions
+Shallots
+Garlic
+Ginger
+Potatoes
+Russet Potatoes
+Yukon Gold Potatoes
+Sweet Potatoes
+Carrots
+Baby Carrots
+Celery
+Broccoli
+Broccoli Florets
+Cauliflower
+Cabbage
+Red Cabbage
+Brussels Sprouts
+Spinach
+Baby Spinach
+Kale
+Lettuce
+Romaine Lettuce
+Iceberg Lettuce
+Spring Mix
+Arugula
+Salad Kit
+Zucchini
+Yellow Squash
+Butternut Squash
+Eggplant
+Asparagus
+Green Beans
+Snap Peas
+Snow Peas
+Corn on the Cob
+Mushrooms
+Portobello Mushrooms
+Cilantro
+Parsley
+Basil
+Mint
+Dill
+Rosemary
+Thyme
+Beets
+Radishes
+Leeks
+Okra
+Bok Choy
+Lemongrass
+Curry Leaves
+Coconut
+Dates
+Figs
+Raisins
+Dried Cranberries
+Dried Mango
+Edamame
+Bean Sprouts
+Tofu
+Firm Tofu
+Tempeh
+Hummus
+Guacamole
+Salsa
+Pico de Gallo
+# Dairy and eggs
+Milk
+Whole Milk
+2% Milk
+1% Milk
+Skim Milk
+Organic Milk
+Lactose Free Milk
+Almond Milk
+Oat Milk
+Soy Milk
+Coconut Milk
+Half and Half
+Heavy Cream
+Whipping Cream
+Sour Cream
+Cream Cheese
+Cottage Cheese
+Butter
+Unsalted Butter
+Salted Butter
+Ghee
+Margarine
+Eggs
+Large Eggs
+Brown Eggs
+Egg Whites
+Yogurt
+Greek Yogurt
+Plain Yogurt
+Vanilla Yogurt
+Kefir
+Cheese
+Cheddar Cheese
+Mozzarella
+Shredded Mozzarella
+Shredded Cheese
+Parmesan
+Swiss Cheese
+Provolone
+Feta
+Goat Cheese
+Brie
+Gouda
+Pepper Jack
+American Cheese
+String Cheese
+Ricotta
+Paneer
+Buttermilk
+Coffee Creamer
+# Meat and seafood
+Chicken Breast
+Chicken Thighs
+Chicken Drumsticks
+Chicken Wings
+Whole Chicken
+Rotisserie Chicken
+Ground Chicken
+Ground Turkey
+Ground Beef
+Steak
+Ribeye Steak
+Sirloin Steak
+Beef Stew Meat
+Pork Chops
+Pork Tenderloin
+Pork Shoulder
+Bacon
+Turkey Bacon
+Ham
+Sliced Turkey
+Deli Turkey
+Deli Ham
+Salami
+Pepperoni
+Hot Dogs
+Sausage
+Italian Sausage
+Breakfast Sausage
+Lamb
+Ground Lamb
+Salmon
+Salmon Fillets
+Smoked Salmon
+Shrimp
+Cod
+Tilapia
+Tuna Steaks
+Crab
+Scallops
+Meatballs
+# Bakery
+Bread
+Whole Wheat Bread
+White Bread
+Sourdough Bread
+Multigrain Bread
+Rye Bread
+Bagels
+English Muffins
+Croissants
+Muffins
+Hamburger Buns
+Hot Dog Buns
+Dinner Rolls
+Tortillas
+Flour Tortillas
+Corn Tortillas
+Pita Bread
+Naan
+Baguette
+Cake
+Cookies
+Donuts
+Pie
+# Pantry
+Rice
+White Rice
+Brown Rice
+Jasmine Rice
+Basmati Rice
+Quinoa
+Couscous
+Pasta
+Spaghetti
+Penne
+Macaroni
+Lasagna Noodles
+Egg Noodles
+Ramen
+Rice Noodles
+Flour
+All Purpose Flour
+Whole Wheat Flour
+Bread Flour
+Almond Flour
+Sugar
+Brown Sugar
+Powdered Sugar
+Honey
+Maple Syrup
+Baking Soda
+Baking Powder
+Yeast
+Vanilla Extract
+Chocolate Chips
+Cocoa Powder
+Oats
+Rolled Oats
+Oatmeal
+Cereal
+Granola
+Pancake Mix
+Peanut Butter
+Almond Butter
+Jam
+Jelly
+Nutella
+Olive Oil
+Extra Virgin Olive Oil
+Vegetable Oil
+Canola Oil
+Avocado Oil
+Coconut Oil
+Sesame Oil
+Cooking Spray
+Vinegar
+Apple Cider Vinegar
+Balsamic Vinegar
+Rice Vinegar
+Soy Sauce
+Hot Sauce
+Sriracha
+Ketchup
+Mustard
+Mayonnaise
+Ranch Dressing
+Salad Dressing
+Barbecue Sauce
+Pasta Sauce
+Marinara Sauce
+Pesto
+Tomato Paste
+Tomato Sauce
+Canned Tomatoes
+Diced Tomatoes
+Chicken Broth
+Vegetable Broth
+Beef Broth
+Black Beans
+Kidney Beans
+Chickpeas
+Pinto Beans
+Refried Beans
+Lentils
+Red Lentils
+Split Peas
+Canned Tuna
+Canned Salmon
+Canned Corn
+Soup
+Salt
+Sea Salt
+Black Pepper
+Cumin
+Turmeric
+Paprika
+Chili Powder
+Garam Masala
+Cinnamon
+Oregano
+Garlic Powder
+Onion Powder
+Bay Leaves
+Red Pepper Flakes
+Curry Powder
+Nuts
+Almonds
+Cashews
+Walnuts
+Pecans
+Pistachios
+Peanuts
+Mixed Nuts
+Trail Mix
+Sunflower Seeds
+Chia Seeds
+Flax Seeds
+Pumpkin Seeds
+# Snacks
+Chips
+Potato Chips
+Tortilla Chips
+Pretzels
+Popcorn
+Crackers
+Goldfish Crackers
+Rice Cakes
+Granola Bars
+Protein Bars
+Fruit Snacks
+Applesauce
+Chocolate
+Dark Chocolate
+Candy
+Gum
+Beef Jerky
+Seaweed Snacks
+# Frozen
+Frozen Vegetables
+Frozen Peas
+Frozen Corn
+Frozen Broccoli
+Frozen Spinach
+Frozen Berries
+Frozen Blueberries
+Frozen Strawberries
+Frozen Mango
+Frozen Pizza
+Frozen Waffles
+Frozen Dumplings
+Frozen Shrimp
+Frozen Fish
+Frozen Chicken
+Frozen Meals
+Frozen Burritos
+Ice Cream
+Frozen Yogurt
+Popsicles
+French Fries
+Hash Browns
+Tater Tots
+# Drinks
+Water
+Bottled Water
+Sparkling Water
+Coffee
+Ground Coffee
+Coffee Beans
+Coffee Pods
+Instant Coffee
+Tea
+Green Tea
+Black Tea
+Chai
+Orange Juice
+Apple Juice
+Juice
+Lemonade
+Soda
+Diet Soda
+Kombucha
+Sports Drink
+Energy Drink
+Coconut Water
+Beer
+Wine
+Red Wine
+White Wine
+# Household
+Paper Towels
+Toilet Paper
+Tissues
+Napkins
+Paper Plates
+Plastic Cups
+Aluminum Foil
+Plastic Wrap
+Parchment Paper
+Zip Bags
+Sandwich Bags
+Freezer Bags
+Trash Bags
+Kitchen Trash Bags
+Dish Soap
+Dishwasher Detergent
+Dishwasher Pods
+Laundry Detergent
+Laundry Pods
+Fabric Softener
+Dryer Sheets
+Bleach
+All Purpose Cleaner
+Glass Cleaner
+Disinfecting Wipes
+Sponges
+Scrub Brush
+Light Bulbs
+Batteries
+AA Batteries
+AAA Batteries
+Matches
+Candles
+Air Freshener
+# Personal care
+Shampoo
+Conditioner
+Body Wash
+Bar Soap
+Hand Soap
+Toothpaste
+Toothbrush
+Dental Floss
+Mouthwash
+Deodorant
+Razors
+Shaving Cream
+Lotion
+Sunscreen
+Lip Balm
+Cotton Balls
+Cotton Swabs
+Band Aids
+Pain Reliever
+Vitamins
+Multivitamin
+Feminine Pads
+Tampons
+Contact Lens Solution
+Hand Sanitizer
+# Baby
+Diapers
+Baby Wipes
+Baby Formula
+Baby Food
+Diaper Cream
+# Pet
+Dog Food
+Cat Food
+Cat Litter
+Dog Treats
+Cat Treats

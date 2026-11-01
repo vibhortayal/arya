@@ -870,7 +870,7 @@ async def list_suggest(q: str = ""):
 async def list_suggest_guess(req: Request):
     """Tier 3: a few cached Spark guesses for a prefix, grocery and
     household items only. Off for the demo, with no key, with
-    ARYA_SUGGEST_GUESSES=0, over the daily budget or the per-account
+    ARYA_SUGGEST_GUESSES not 1 (the default), over the daily budget or the per-account
     daily cap; every one of those is just no guesses."""
     from api.list import suggest
     body = await _json_obj(req)
