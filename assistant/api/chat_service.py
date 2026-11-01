@@ -183,6 +183,12 @@ def snapshot():
         "top_items_spend": [{"name": t["name"], "spend": t["spend"]}
                             for t in dash["top_items"][:8]],
         "trips": dash["trip_count"], "top_items": [t["name"] for t in dash["top_items"][:8]],
+        # Receipt-level facts (Tester run 1, 2026-11-01: "show me my last
+        # receipt", "biggest receipt", "trips to Costco" had no data) and
+        # spend per store per month, so "what about last month only?"
+        # can keep the stores the question was about.
+        "receipts": _receipt_facts(d, nm),
+        "spend_by_store_month": _store_months(d),
         "items": pats,
         # Prices from the household's own receipts, worked out in code
         # (api/prices.py) so the model only reads them (owner, 2026-10-29).
@@ -201,6 +207,56 @@ ASK_DATES_AHEAD = 30
 ASK_DATES_MAX = 20
 
 
+RECENT_RECEIPTS = 8
+
+
+def _receipt_facts(d, nm):
+    """Per receipt, from the ledger (the same net amounts as Spending):
+    date, store, amount, item count and its three biggest lines. Code
+    does the counting and sorting; the model only reads it."""
+    per = {}
+    for e in d["entries"]:
+        r = per.setdefault(e["receipt_id"], {"date": e["date"], "store": e["store_id"],
+                                             "amount": 0.0, "items": 0, "_lines": []})
+        r["amount"] += e["price"]
+        if e["event_type"] == "purchase":
+            r["items"] += 1
+            r["_lines"].append((e["price"], nm.get(e["item_id"], e["item_id"])))
+    rows = []
+    for r in per.values():
+        r["amount"] = round(r["amount"], 2)
+        r["top_lines"] = [n for _p, n in sorted(r.pop("_lines"), key=lambda x: -x[0])[:3]]
+        rows.append(r)
+    rows.sort(key=lambda r: r["date"])
+    by_store = {}
+    for r in rows:
+        s = by_store.setdefault(r["store"], {"receipts": 0, "spend": 0.0, "last": None})
+        s["receipts"] += 1
+        s["spend"] = round(s["spend"] + r["amount"], 2)
+        s["last"] = r["date"]
+    return {"count": len(rows),
+            "first_date": rows[0]["date"] if rows else None,
+            "last": rows[-1] if rows else None,
+            "biggest": max(rows, key=lambda r: r["amount"]) if rows else None,
+            "by_store": by_store,
+            "recent": rows[-RECENT_RECEIPTS:][::-1]}
+
+
+def _store_months(d):
+    """{store: {YYYY-MM: net spend}}, the same sums as spend_by_store."""
+    out = {}
+    for e in d["entries"]:
+        m = out.setdefault(e["store_id"], {})
+        m[e["date"][:7]] = round(m.get(e["date"][:7], 0) + e["price"], 2)
+    return {s: dict(sorted(m.items())) for s, m in out.items()}
+
+
+# A pack date's kind as words: "use by Nov 3", never the key "use_by"
+# (Tester run 1, 2026-11-01).
+KIND_WORDS = {"use_by": "use by", "best_by": "best by", "expires": "expires",
+              "packed": "packed on", "unknown": "date on the pack"}
+
+
 def _food_dates(d, nm):
     from api import expiry, state
     from api.deps import _d_today
@@ -209,14 +265,15 @@ def _food_dates(d, nm):
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
     dated = expiry.use_soon(fl, nm, last_bought, _d_today(),
                             ahead=ASK_DATES_AHEAD, skip_snoozed=False)
-    use_by = [{"name": r["name"], "date": r["date"], "kind": r["kind"],
-               "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]
+    pack = [{"name": r["name"], "date": r["date"],
+             "label": KIND_WORDS.get(r["kind"], KIND_WORDS["unknown"]),
+             "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]
     still = []
     for c in still_good_checks(d, nm, fl):
         lb = next((p.get("last_bought") for p in d["patterns"]
                    if p["item_id"] == c["item_id"]), None)
         still.append({"name": c["name"], "bought": lb})
-    return {"today": _d_today().isoformat(), "use_by": use_by, "still_good": still}
+    return {"today": _d_today().isoformat(), "pack_dates": pack, "still_good": still}
 
 
 def _price_facts(d, nm):
@@ -233,13 +290,94 @@ def _resolve(name):
     return match_item(name or "", state.name_index())
 
 
-def _list_for(name):
-    """A named list by the name the user said (case-blind), or None."""
+def _list_key(name):
+    """A list name for matching: lower case, no punctuation, no
+    apostrophe-s, and no trailing word "list"."""
+    w = re.sub(r"'s\b", "", str(name or "").lower().replace("\u2019", "'"))
+    w = re.sub(r"[^a-z0-9\s]", " ", w).split()
+    if len(w) > 1 and w[-1] == "list":
+        w = w[:-1]
+    return " ".join(w)
+
+
+LIST_MIN_CHARS = 3
+
+
+def _list_matches(name):
+    """The named lists the user may mean, best first: the exact name,
+    else names that start with what they said or the other way round
+    (owner, 2026-11-01: "Costco" means Costcozy), else a close spelling
+    or a store the list is for."""
+    import difflib
     from api import state
-    want = " ".join(str(name or "").split()).lower()
+    want = _list_key(name)
     if not want:
-        return None
-    return next((l for l in state.named_lists() if l["name"].lower() == want), None)
+        return []
+    lists = state.named_lists()
+    keys = [(l, _list_key(l["name"])) for l in lists]
+    exact = [l for l, k in keys if k == want]
+    if exact:
+        return exact[:1]
+    if len(want) < LIST_MIN_CHARS:
+        return []  # "c" is not a list name (Tester, #384)
+    pref = [l for l, k in keys if len(k) >= LIST_MIN_CHARS and (k.startswith(want) or want.startswith(k))]
+    if pref:
+        return pref
+    close = difflib.get_close_matches(want, [k for _l, k in keys], n=3, cutoff=0.75)
+    if close:
+        return [l for l, k in keys if k in close]
+    return [l for l in lists if any(_list_key(s) == want for s in l.get("stores") or [])]
+
+
+def _list_for(name):
+    """The one named list the user means, or None when none or more
+    than one fits."""
+    m = _list_matches(name)
+    return m[0] if len(m) == 1 else None
+
+
+def _which_list(name):
+    """The question to ask when a list name fits more than one list,
+    or None. Nothing is added or removed until the user says which."""
+    m = _list_matches(name)
+    if len(m) > 1:
+        return _t("which_list", "More than one list fits {list}: {names}. Which one?",
+                  list=name, names=" or ".join(l["name"] for l in m))
+    return None
+
+
+def _on_list_rows(target=None):
+    """Unticked rows on the lists (or on one named list): (item_id, name)."""
+    from api import state
+    d = state.derived()
+    nm = state.names()
+    out = []
+    for i in d["smart_list"]["items"]:
+        if i.get("checked") or not i.get("on_list"):
+            continue
+        if target and target["id"] != i.get("list") and target["id"] not in (i.get("also") or []):
+            continue
+        out.append((i["item_id"], i.get("name") or nm.get(i["item_id"], i["item_id"])))
+    return out
+
+
+def _remove(a, target):
+    """Take an item off a list by the name the user said. Only a row
+    that is on the list is touched; nothing else is guessed."""
+    from api.eyes.service import match_item
+    from api.routes.lists import _remove_item
+    rows = _on_list_rows(target)
+    iid = match_item(a.get("item") or "", {i: [n] for i, n in rows})
+    where = target["name"] if target else None
+    if not iid:
+        if where:
+            return None, _t("not_on_named", "{item} is not on {list}.", item=a.get("item"), list=where)
+        return None, _t("not_on_list", "{item} is not on your lists.", item=a.get("item"))
+    name = dict(rows)[iid]
+    _remove_item(iid, target["id"] if target else None)
+    if where:
+        return _t("removed_from", "Removed {name} from {list}.", name=name, list=where), None
+    return _t("removed", "Removed {name} from your list.", name=name), None
 
 
 def apply_actions(actions, added=None):
@@ -250,9 +388,24 @@ def apply_actions(actions, added=None):
     applied, skipped = [], []
     today = date.today().isoformat()
     for a in actions or []:
+        if a.get("type") == "remove_from_list":
+            target = _list_for(a.get("list")) if a.get("list") else None
+            if a.get("list") and target is None:
+                skipped.append(_which_list(a["list"])
+                               or _t("no_list_remove", "You have no list called {list}.", list=a["list"]))
+                continue
+            ok, why = _remove(a, target)
+            (applied if ok else skipped).append(ok or why)
+            continue
         item_id = _resolve(a.get("item"))
         target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
         if a.get("type") == "add_to_list" and a.get("list") and target is None:
+            ask = _which_list(a["list"])
+            if ask:
+                # Ask first; adding to Everything else and then asking
+                # leaves a stray row (Tester, #384).
+                skipped.append(ask)
+                continue
             skipped.append(_t("no_list", "You have no list called {list}, so {item} went to Everything else.",
                               list=a["list"], item=a.get("item")))
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
@@ -424,7 +577,7 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
         here = next((l for l in state.named_lists() if l["id"] == ctx.get("list_id")), None)
         if here:
             for a in actions:
-                if a.get("type") == "add_to_list" and not a.get("list"):
+                if a.get("type") in ("add_to_list", "remove_from_list") and not a.get("list"):
                     a["list"] = here["name"]
     proposed, now = [], actions
     if surface:

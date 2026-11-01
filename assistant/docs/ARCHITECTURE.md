@@ -301,8 +301,13 @@ Each agent has a narrow job and a named limit.
   items stay off the list.
 - **Curator.** See §4. Proposes identity changes; never applies them.
 - **Ask Arya.** Chat over a household snapshot. Actions (add to list,
-  ran out, mark expired, never suggest, snooze) are validated
-  server-side. Numbers come from the data, never from the model. On the
+  remove from list, ran out, mark expired, never suggest, snooze) are
+  validated server-side; a list is found by a near name ("Costco" finds
+  "Costcozy"), and only a row already on a list can be removed. The
+  snapshot carries receipt facts (count, last, biggest, trips per
+  store), spend per store per month, pack dates as words, and the
+  cheapest store per item. Numbers come from the data, never from the
+  model. On the
   Ask tab actions apply at once; from a list or a hunt, adds apply with
   Undo and the riskier actions (out, expired, never, snooze) wait for a
   yes (`/api/chat/apply`). Demo sessions can chat; it is a live door
