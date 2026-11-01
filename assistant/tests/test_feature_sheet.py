@@ -74,6 +74,9 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Help tab: tap Help", f("where is the help tab"))
         self.assertIn("tap Edit on Today", f("can I move the cards around"))
         self.assertIn("Receipts: open the Lists tab", f("where do I add a receipt"))
+        # install steps have their own topic (Ask gap 6)
+        for q in ("How do I install Arya on my phone?", "how do I add it to my home screen", "is there an app store app"):
+            self.assertIn("Get the app: Arya has no App Store", f(q), q)
         # no topic words but a general ask: everything
         self.assertIn("Use soon:", f("what can you do?"))
         self.assertIn("Receipts: open the Lists tab", f("what can you do?"))
