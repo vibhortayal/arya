@@ -18,7 +18,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 ## Demo
 
-"[Receipt] I snap this week's receipt. **Muse Wonder** reads it, and Arya checks that every line adds up to the total. If it doesn't add up, nothing posts silently. The doubtful lines wait for me to check. On our 98-line test set, Wonder made zero price errors.
+"[Receipt] I snap this week's receipt. **Muse Spark** reads it, and Arya checks that every line adds up to the total. If the check fails, or Spark is unsure, **Muse Wonder** reads it again. On our 98-line test set, Wonder made zero price errors. Nothing posts silently: the doubtful lines wait for me to check.
 
 [Today] Here's Today. Arya says the milk and the sourdough are running low, and why: about every seven days, last bought ten days ago. A **Muse Spark** judge decides what may be suggested, and **Muse Spark Open** double-checks it from the item names alone.
 
@@ -30,7 +30,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 ## Meta fit
 
-"Meta's models do the reading and the talking: Wonder for receipt photos, Spark for lists, labels and chat, Spark Open as a second judge, Voice Transcribe for dictation, SAM 3.1 for shelves and privacy, and Muse Image for the characters and share cards. The math is plain code. The model never calculates."
+"Meta's models do the reading and the talking: Spark for receipts, lists, labels and chat, Wonder as the careful second reader for receipts, Spark Open as a second judge, Voice Transcribe for dictation, SAM 3.1 for shelves and privacy, and Muse Image for the characters and share cards. The math is plain code. The model never calculates."
 
 ## Future + close
 
@@ -42,6 +42,6 @@ We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at
 
 ## Delivery notes
 
-- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a live Wonder read takes up to a minute, and the app says so while it works.
+- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a Spark read takes about 10 seconds, and a Wonder re-read up to a minute; the app says so while it works.
 - No store ships pre-mapped, so the quest plays a labelled typical layout. Show Find it for me on a real shelf or a shelf photo.
-- Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder, Gate 0 public set) against Spark's 93.88%.
+- Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%; the Spark-first reader with Wonder as backup is not yet measured.

@@ -42,10 +42,17 @@ model that holds its score is still the default, spend goes through the ledger,
 and large batches get a capped trial first. The in-code caps (daily and demo
 budgets) are unchanged.
 
-## Hackathon amendment (2026-10-27, per WONDER-EVAL.md; extended 2026-11-01)
-Through Nov 9 (the owner extended it on 2026-11-01 to cover judging,
-Nov 5-8), judge-facing PHOTO DECODE runs muse-wonder-1.0, with a
-timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
+## Hackathon amendment (2026-10-27, per WONDER-EVAL.md; changed 2026-11-01)
+**Owner decision 2026-11-01:** receipt photos are read by the **auto
+reader** (Ops "Photo reader" = "Spark first, Wonder as backup"): Spark
+reads first, and Wonder re-reads only when Spark fails or the checks
+below flag the read (arithmetic, low confidence on too many lines). Wonder
+stays allowed as that second reader through Nov 9, which covers judging
+(Nov 5-8). The text below is the original amendment (Wonder first, Spark
+fallback), kept for the eval record.
+
+Original (2026-10-27): through Nov 4, judge-facing PHOTO DECODE runs
+muse-wonder-1.0, with a timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
 98 lines, hand-adjudicated): Wonder 98.98% identity+price vs Spark
 93.88%; price errors 0 vs 4; silent (unflagged) errors 0 vs 4 — Wonder
 read the pub-05 price rotation correctly, the error class arithmetic
@@ -58,8 +65,8 @@ Ask Arya STAY on Spark Standard (judge spot check 20/20 vs 20/20, no Wonder adva
 cannot carry Wonder's latency). This amendment expires Nov 9; the
 production policy above is unchanged.
 
-**Auto reader (built 2026-11-01, NOT the default, NOT yet measured on
-photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
+**Auto reader (built 2026-11-01; the owner's pick for judging on
+2026-11-01; NOT yet measured on photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
 reads with Spark first and runs the checks in `api/decode/checks.py`
 (lines add up to the subtotal, subtotal plus tax equals the total, the
 footer item count, impossible prices, too many unsure lines, a price far

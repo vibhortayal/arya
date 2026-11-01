@@ -28,8 +28,9 @@ list, add items, and file receipts it has read. Muse Spark is the
 showcased client.
 
 The brain keeps the household's model. Receipts enter as PDF or photo.
-Muse Wonder reads each receipt photo (Muse Spark reads PDFs and is
-the photo fallback); code checks the lines against the
+Muse Spark reads each receipt photo and PDF first; code checks the read,
+and Muse Wonder re-reads a photo when Spark fails or the checks flag it;
+code then checks the lines against the
 printed total by arithmetic and builds a ledger of kept purchases —
 returns netted, bought-for-others tracked but never suggested.
 Deterministic engines learn each item's cadence and price by store and
@@ -57,12 +58,15 @@ so next week's list writes itself.
 ## How Meta models are used
 
 - Muse Spark 1.3 (Standard) reads receipt PDFs and list photos
-  (vision); is the fallback reader for receipt photos;
+  (vision); is the first reader for receipt photos;
   labels store shelves; and powers the Ask Arya agent and the staple
   judge.
-- Muse Wonder 1.0 reads receipt photos — the primary photo reader
-  (98.98% of lines correct on the Gate 0 public set, against Spark's
-  93.88%; price errors 0 against 4). Muse Spark Open (open weights, on Baseten) is the staple
+- Muse Wonder 1.0 is the second reader for receipt photos: it re-reads a
+  photo when Spark fails, or when the checks flag the Spark read (the
+  lines don't add up, impossible prices, a big price jump, or low
+  confidence on too many lines). Read alone on the Gate 0 public set,
+  Wonder got 98.98% of lines right against Spark's 93.88%, with 0 price
+  errors against 4. Muse Spark Open (open weights, on Baseten) is the staple
   judge's second seat: it re-judges from item names alone and never sees
   personal data.
 - Muse Image painted the 20 collect-celebration characters once, during
@@ -76,8 +80,9 @@ so next week's list writes itself.
   frame is kept.
 - Spark runs on Meta's discounted Contributor tier (owner decision
   2026-11-01), so content sent to Spark may be used to train future Meta
-  models; Wonder (receipt photos) runs on Standard, which is not used for
-  training. A switch (`ARYA_SPARK_TIER=standard`) puts Spark back on
+  models. Receipt photos are read by Spark first, so they can be used
+  for training too; Wonder (the second reader) runs on Standard, which is
+  not used for training. A switch (`ARYA_SPARK_TIER=standard`) puts Spark back on
   Standard. A client-side gate keeps Spark under Contributor's 150
   requests a minute.
 - All math — ledger, returns netting, cadence, spend — is deterministic
@@ -88,7 +93,7 @@ so next week's list writes itself.
 
 ## Responsible AI
 
-Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web. Arya says plainly (privacy page, How Arya uses AI) that content sent to Muse Spark, such as lists, list and date photos, fridge photos and questions, may be used by Meta to train future models; receipt photos go to Muse Wonder, which Meta does not train on.
+Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web. Arya says plainly (privacy page, How Arya uses AI) that content sent to Muse Spark, such as lists, list and date photos, fridge photos and questions, may be used by Meta to train future models. Receipt photos are read by Muse Spark first too; when Muse Wonder re-reads one, that copy is not used for training.
 
 ## Evidence
 
@@ -102,19 +107,18 @@ Arya uses Meta models to read receipts, photos and voice, and to answer question
   Public fixtures never entered the owner's ledger.
 - Wonder, production proof: the same Gate 0 public set through the
   live production path scored 97 of 98 lines (identity + price) after
-  hand adjudication, with 0 price errors and 7/7 arithmetic. Wonder
-  reads receipt photos in the app through judging, until Nov 9
-  (MODEL-POLICY amendment, extended by the owner on 2026-11-01); Spark is
-  the automatic fallback on any failure.
+  hand adjudication, with 0 price errors and 7/7 arithmetic.
 - Design choice, tested before it was built: Wonder read the Gate 0
   photos best (97 of 98 lines, no price errors, about $0.12 and 34 s a
   receipt) and Spark read them cheaper and faster (about $0.013 and 9 s)
-  with 4 price errors that its own confidence did not flag. We kept
-  Wonder first because a wrong price is worse than a slow answer. We then
-  built an "auto" reader that reads with Spark, checks the arithmetic, and
-  calls Wonder only when a check fails. It is available as an owner
-  switch; it is not the default and we have not yet measured it on the
-  photos, so no accuracy claim is made for it.
+  with 4 price errors that its own confidence did not flag. So the app
+  reads with Spark first, checks the read with code (arithmetic,
+  impossible prices, price history, too many unsure lines), and calls
+  Wonder only when Spark fails or a check fails. This keeps most receipts
+  cheap and fast and spends Wonder where it is needed. We have not yet
+  measured this combined reader on the Gate 0 photos, so we make no
+  accuracy claim for it; every line Arya is unsure about still goes to
+  the review queue. Each receipt records which model read it.
 - Staple judge: precision 0.79 against a purchase-cadence proxy on
   the owner's 114 receipts. The eval method and the disagreement
   lists are in the research repo.

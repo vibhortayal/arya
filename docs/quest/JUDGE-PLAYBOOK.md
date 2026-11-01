@@ -75,11 +75,12 @@ becomes an action that the server validates before it applies.
 ### 6. Finish with a receipt
 When the list is done, tap **Head to checkout**, then **Add your
 receipt**. **Snap the receipt** with a photo, or tap **Use a sample
-receipt**. **Muse Wonder 1.0** reads each line, and code checks that the lines add up to the printed
-total. If Wonder takes more than 90 seconds, Arya falls back to Muse
-Spark and records which model read the receipt. On the Gate 0 public set,
-Wonder got 97 of 98 lines right after hand adjudication, with zero price
-errors.
+receipt**. **Muse Spark** reads each line, and code checks that the lines add up
+to the printed total. If Spark fails, or the checks flag the read (the
+lines don't add up, or too many lines are unsure), **Muse Wonder 1.0**
+reads the receipt again. Arya records which model read the receipt. On
+the Gate 0 public set, Wonder alone got 97 of 98 lines right after hand
+adjudication, with zero price errors.
 
 ---
 
@@ -117,7 +118,7 @@ errors.
   and judge runs.
 - Friends are single-account. Community prices, Deals and Arya shoppers
   are not live.
-- Live calls can be slow (receipts take up to 90 seconds). A daily budget
+- Live calls can be slow (a receipt that needs the Wonder re-read can take up to 90 seconds). A daily budget
   and a per-IP limit protect the account.
 
 ## When you are done
@@ -130,6 +131,6 @@ the code.
 | Symptom | What to do |
 | --- | --- |
 | "demo rate limit" | Wait a minute and retry. |
-| Receipt spinner over 90 s | Wait for the Spark fallback, or Skip. |
+| Receipt spinner over 90 s | Wait, or Skip. |
 | Voice gives nothing | Check microphone permission, or type. |
 | Page looks stale | Reload twice, or clear site data. |
