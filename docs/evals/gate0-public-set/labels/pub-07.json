@@ -1,0 +1,16 @@
+{
+  "store": "Publix",
+  "date": null,
+  "lines": [
+    {
+      "product_as_printed": "NONNIS BISCOT ALMD",
+      "price_paid": 3.59
+    },
+    {
+      "product_as_printed": "ARIZONA RASPBERRY",
+      "price_paid": 0.99
+    }
+  ],
+  "total": 4.65,
+  "items_sold": null
+}

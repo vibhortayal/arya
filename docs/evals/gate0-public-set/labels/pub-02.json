@@ -1,0 +1,48 @@
+{
+  "store": "Publix",
+  "date": null,
+  "lines": [
+    {
+      "product_as_printed": "Bh Fs Vt Yellow Cheddar",
+      "price_paid": 6.0
+    },
+    {
+      "product_as_printed": "8Oz Organic Pecan Halves",
+      "price_paid": 7.99
+    },
+    {
+      "product_as_printed": "Italian Five Grain Bread",
+      "price_paid": 5.19
+    },
+    {
+      "product_as_printed": "Mt Olv Mjstc Dill Spears",
+      "price_paid": 5.49
+    },
+    {
+      "product_as_printed": "Starbucks Wb Pike Plc Rst",
+      "price_paid": 15.29
+    },
+    {
+      "product_as_printed": "Pork Loin Bnls Chops Thin",
+      "price_paid": 10.11
+    },
+    {
+      "product_as_printed": "Panera Tomato Soup 16Oz",
+      "price_paid": 6.99
+    },
+    {
+      "product_as_printed": "Limes Persian",
+      "price_paid": 2.0
+    },
+    {
+      "product_as_printed": "Sumo Citrus",
+      "price_paid": 2.71
+    },
+    {
+      "product_as_printed": "Orbit S/F Spearmint",
+      "price_paid": 1.5
+    }
+  ],
+  "total": 66.58,
+  "items_sold": null
+}

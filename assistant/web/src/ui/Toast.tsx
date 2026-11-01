@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "../i18n";
 import { ApiError } from "../lib/api";
+import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 
 /* The one toast (pwa/app.js toast()): a dark pill under the header.
  * Errors go here, never into content labels. */
@@ -47,6 +48,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
    * friendlyError); anything else is a plain "Couldn't load this" and
    * the raw text goes to the console, never to the person. */
   const showErr = useCallback((e: unknown) => {
+    // A daily-limit answer offers the shopper's own Meta key (owner, 2026-11-01).
+    if (e instanceof ApiError && isOwnKeyOffer(e.offer)) {
+      toast(e.message, { action: t(e.offer === "own-key-fix" ? "ownKey.fixAction" : "ownKey.useAction"), onAction: requestOwnKey });
+      return;
+    }
     if (e instanceof ApiError || (e instanceof TypeError && /connection/i.test(e.message))) { toast(e.message); return; }
     console.warn("Arya:", e);
     toast(t("common.couldNotLoad"));

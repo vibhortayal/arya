@@ -1,0 +1,226 @@
+{
+  "http_status": 200,
+  "file": "pub-08",
+  "usage": {
+    "completion_tokens": 5582,
+    "prompt_tokens": 1794,
+    "total_tokens": 7376,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4315
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "FOOD LION",
+    "date": "",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "PALM ORIGINAL CHEESE",
+        "brand": null,
+        "detail": null,
+        "list_price": 5.29,
+        "price": 5.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "HIL CRM CHS",
+        "brand": null,
+        "detail": "BR",
+        "list_price": 3.48,
+        "price": 3.48,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "PHIL CRM CHS BR",
+          "PHILADELPHIA CREAM CHEESE BRICK"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "ME PULP FREE",
+        "brand": null,
+        "detail": "O",
+        "list_price": 3.29,
+        "price": 3.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.55,
+        "needs_user_check": true,
+        "alternatives": [
+          "PULP FREE ORANGE JUICE",
+          "LIME PULP FREE OJ"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "HUNTERS BAR",
+        "brand": null,
+        "detail": null,
+        "list_price": 2.99,
+        "price": 2.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "DELI HUNTERS BAR"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "IMPRTD BTR SALTD",
+        "brand": "FIN",
+        "detail": null,
+        "list_price": 3.99,
+        "price": 3.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.8,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "WHOLE MILK GALLON",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "BUTTER SLIDERS",
+        "brand": "PF",
+        "detail": null,
+        "list_price": 3.49,
+        "price": 3.49,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "PEPPERIDGE FARM BUTTER SLIDERS"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "CD RNBW MM CKS",
+        "brand": "KB",
+        "detail": null,
+        "list_price": 4.49,
+        "price": 4.49,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.65,
+        "needs_user_check": true,
+        "alternatives": [
+          "KEEBLER RAINBOW M&M COOKIES"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "WHT CRNBRRY STRWB",
+        "brand": "OS",
+        "detail": null,
+        "list_price": 3.68,
+        "price": 3.68,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "OCEAN SPRAY WHITE CRANBERRY STRAWBERRY"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "TUNA",
+        "brand": "STARKIST",
+        "detail": "CH LT",
+        "list_price": 1.59,
+        "price": 1.59,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "TC HRB GARLIC",
+        "brand": "STRKST",
+        "detail": "HRB GARLIC",
+        "list_price": 1.59,
+        "price": 1.59,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "TC LEMON PPR",
+        "brand": null,
+        "detail": "LEMON PPR",
+        "list_price": 1.59,
+        "price": 1.59,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "STRKST TC LEMON PPR",
+          "STARKIST TUNA CREATIONS LEMON PEPPER"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "ONITAS PORK ROAST",
+        "brand": null,
+        "detail": null,
+        "list_price": 8.99,
+        "price": 8.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "CARNITAS PORK ROAST"
+        ]
+      }
+    ],
+    "subtotal": 46.45,
+    "tax": 0,
+    "total": 46.45,
+    "items_sold": 13
+  }
+}

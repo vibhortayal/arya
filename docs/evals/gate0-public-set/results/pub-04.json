@@ -1,0 +1,424 @@
+{
+  "http_status": 200,
+  "file": "pub-04",
+  "usage": {
+    "completion_tokens": 8559,
+    "prompt_tokens": 1903,
+    "total_tokens": 10462,
+    "completion_tokens_details": {
+      "reasoning_tokens": 6103
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "ALEXANDER'S HANOVER ST. THE \"SUPER\" MARKET",
+    "date": "11/18 12:21PM",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "GROCERY",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.6,
+        "price": 0.6,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "HOODSIE CUP",
+        "brand": "HOOD",
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "HOODSIE CUP",
+        "brand": "HOOD",
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "ORANGE JC",
+        "brand": "HF",
+        "detail": "64Z",
+        "list_price": 1.29,
+        "price": 1.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "WHITE CAKE",
+        "brand": "Betty Crocker",
+        "detail": "18",
+        "list_price": 0.73,
+        "price": 0.73,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "WHITE CAKE",
+        "brand": "Betty Crocker",
+        "detail": "18",
+        "list_price": 0.73,
+        "price": 0.73,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "D/MAN OR",
+        "brand": "SLICE",
+        "detail": "2L",
+        "list_price": 0.89,
+        "price": 0.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "DIET MANDARIN ORANGE 2L",
+          "SLICE D/MAN OR 2L"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "NAPKINS",
+        "brand": "S/K",
+        "detail": "140",
+        "list_price": 0.63,
+        "price": 0.63,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "S/K NAPKINS 140CT"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "CHR COLA",
+        "brand": "SLICE",
+        "detail": "2L",
+        "list_price": 1.39,
+        "price": 1.39,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.8,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "LOOSE BULKY RLS",
+        "brand": null,
+        "detail": "6 @ 6/.89",
+        "list_price": 0.89,
+        "price": 0.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "LOOSE BULKY ROLLS"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "TUNA SALAD SAND",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "WHITE MT. BREAD",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.99,
+        "price": 0.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "FLEX STRAWS",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.89,
+        "price": 0.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "PLATES",
+        "brand": "Sweetheart",
+        "detail": "7\" 48",
+        "list_price": 1.63,
+        "price": 1.63,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "SWTHR PLATES 7\" 48"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "FRT WRNKLS LEMON",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.79,
+        "price": 1.79,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "FRUIT WRINKLES LEMON"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "BEEF PATTIES",
+        "brand": null,
+        "detail": "75%",
+        "list_price": 2.21,
+        "price": 2.21,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "SNK FRT/S CHRY8",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.89,
+        "price": 1.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.65,
+        "needs_user_check": true,
+        "alternatives": [
+          "SNACK FRUIT CHERRY"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "CARTWHEELS",
+        "brand": null,
+        "detail": ".30 LB @ 1/.59",
+        "list_price": 0.18,
+        "price": 0.18,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "BALOONS",
+        "brand": null,
+        "detail": "14CT",
+        "list_price": 1.25,
+        "price": 1.25,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "LGE BRWN SPK",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.65,
+        "price": 0.65,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "LARGE BROWN BAG",
+          "LARGE BROWN SPK"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "POCKET",
+        "brand": "KLEENEX",
+        "detail": null,
+        "list_price": 1.29,
+        "price": 1.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "15%FREE 18&4",
+        "brand": "M&M",
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "CONFECT.",
+        "brand": "DOMINO",
+        "detail": "1 @ 2/1.00",
+        "list_price": 0.5,
+        "price": 0.5,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "CONFECT.",
+        "brand": "DOMINO",
+        "detail": "1 @ 2/1.00",
+        "list_price": 0.5,
+        "price": 0.5,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "T/HOUSE",
+        "brand": "Keebler",
+        "detail": "168N",
+        "list_price": 1.69,
+        "price": 1.69,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "KBLR. T/HOUSE 16BN",
+          "KEEBLER TOWN HOUSE"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "BAKERY",
+        "brand": null,
+        "detail": null,
+        "list_price": 4.99,
+        "price": 4.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "962PP499",
+        "brand": "CHEER",
+        "detail": null,
+        "list_price": 4.29,
+        "price": 4.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "CHEER DETERGENT"
+        ]
+      }
+    ],
+    "subtotal": 39.85,
+    "tax": 0.14,
+    "total": 39.99,
+    "items_sold": 27
+  }
+}

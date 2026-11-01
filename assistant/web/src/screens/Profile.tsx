@@ -16,6 +16,7 @@ import { pickerProps } from "../ui/picker";
 import { useTour } from "../ui/Tour";
 import { openGuide } from "../ui/Guide";
 import { useTourSteps } from "../onboarding/demoTour";
+import { OwnKeyRow } from "../ui/OwnKey";
 
 /* Port of pwa/index.html #view-profile and app.js renderProfile, the
  * avatar editor (app.js loadAvatar...), Reminders (push.js), the
@@ -183,6 +184,7 @@ export function Profile() {
         {admin.owner && <RegistrationRow />}
         {admin.waitlist && <WaitlistRow />}
         <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
+        <OwnKeyRow />
         <button className="navrow" id="btn-del-account" type="button" onClick={() => (delOpen ? cancelDelete() : setDelOpen(true))}>
           <span className="grow"><span className="dangertext">{t("settings.deleteMyAccount")}</span><span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
         <div id="del-account-box" className="pad delbox" hidden={!delOpen}>

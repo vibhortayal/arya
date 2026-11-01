@@ -1,0 +1,63 @@
+{
+  "store": "Costco",
+  "date": null,
+  "lines": [
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "product_as_printed": "SAUERKRAUT",
+      "price_paid": 7.99
+    },
+    {
+      "product_as_printed": "CRNCHMASTER",
+      "price_paid": 7.99
+    },
+    {
+      "product_as_printed": "GREEK YOGURT",
+      "price_paid": 5.89
+    },
+    {
+      "product_as_printed": "SHARP SHRED",
+      "price_paid": 10.79
+    },
+    {
+      "product_as_printed": "ORG SPINACH",
+      "price_paid": 3.99
+    },
+    {
+      "product_as_printed": "KS ORG EGGS",
+      "price_paid": 6.39
+    },
+    {
+      "product_as_printed": "KS ORG EGGS",
+      "price_paid": 6.39
+    },
+    {
+      "product_as_printed": "PISTACHIO",
+      "price_paid": 13.99
+    },
+    {
+      "product_as_printed": "ORG SHIITAKI",
+      "price_paid": 7.99
+    },
+    {
+      "product_as_printed": "ORGANIC GALA",
+      "price_paid": 9.99
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    }
+  ],
+  "total": null,
+  "items_sold": null
+}

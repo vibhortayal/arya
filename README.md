@@ -95,9 +95,11 @@ answer questions, and every call goes through one module
 or Supabase Postgres. Details, feature flags and the VM runbook:
 [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
 
-Spark runs on Meta's Contributor tier by default (owner decision
-2026-11-01), so content sent to Spark may be used to train future Meta models;
-`ARYA_SPARK_TIER=standard` switches it back. Wonder stays on Standard. The
+Spark and Wonder run in Meta's Standard mode, which Meta does not use to train
+its models (set on the Ops screen; `ARYA_SPARK_TIER` is the environment switch).
+A community (Contributor) tier, where users opt in to letting Meta train in
+exchange for lower cost, is an option for supporting more users later; it is not
+built. The
 open-weights client refuses personal data. Cost rules are in
 [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
@@ -149,8 +151,18 @@ Tests, from the repo root:
 - **Owner corpus.** 114 receipts, 1,226 lines, 114 of 114 passing the
   arithmetic check.
 
-The Gate 0 and judge evaluation records are in the companion research repo,
-`vibhortayal/meta-hackathon-research`.
+The scored reports and the Gate 0 labels and results are in
+[`docs/evals/`](docs/evals/). The companion research repo,
+`vibhortayal/meta-hackathon-research`, holds the earlier spikes.
+
+## Known limits
+
+- **Testing data.** Arya was tested on one household's receipts (114 Costco
+  receipts) and a small public receipt set. Data was limited, so the results
+  in "Measured results" come from small samples.
+- **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
+  phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
+  390x568, not on those phones.
 
 ## Where things are
 

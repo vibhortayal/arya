@@ -1,0 +1,210 @@
+{
+  "http_status": 200,
+  "file": "pub-01",
+  "usage": {
+    "completion_tokens": 4429,
+    "prompt_tokens": 4474,
+    "total_tokens": 8903,
+    "completion_tokens_details": {
+      "reasoning_tokens": 3239
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "Walmart",
+    "date": "06/01/20",
+    "lines": [
+      {
+        "item_no": "088491200681",
+        "product": "HBO ALM 23",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.98,
+        "price": 3.98,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "ALMONDS",
+          "ALMOND"
+        ]
+      },
+      {
+        "item_no": "003663203765",
+        "product": "LNF YOGURT",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.36,
+        "price": 3.36,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "067828699959",
+        "product": "MUSHROOMS",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.88,
+        "price": 1.88,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "007874237105",
+        "product": "OATMEAL",
+        "brand": "Great Value",
+        "detail": null,
+        "list_price": 2.33,
+        "price": 2.33,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "020098960100",
+        "product": "FRENCH BREAD",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.0,
+        "price": 1.0,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.98,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "004132100661",
+        "product": "RANCH DRSNG",
+        "brand": null,
+        "detail": null,
+        "list_price": 2.64,
+        "price": 2.64,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.96,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "003338365162",
+        "product": "ROMAINE HRTS",
+        "brand": null,
+        "detail": null,
+        "list_price": 2.78,
+        "price": 2.78,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.96,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "000000004958KF",
+        "product": "BULK LEMONS",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.88,
+        "price": 0.88,
+        "discount": 0,
+        "qty": 2,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "000000004068KF",
+        "product": "GREEN ONIONS",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.78,
+        "price": 0.78,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "000000004065KF",
+        "product": "BELL PEPPER",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.76,
+        "price": 0.76,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "000000004680KF",
+        "product": "RED BELL",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.38,
+        "price": 1.38,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "007874234447",
+        "product": "LEMON 75",
+        "brand": "Great Value",
+        "detail": null,
+        "list_price": 3.12,
+        "price": 3.12,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.94,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "000000004029KF",
+        "product": "PINEAPPLE",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.98,
+        "price": 1.98,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 26.87,
+    "tax": 1.61,
+    "total": 28.48,
+    "items_sold": 14
+  }
+}

@@ -54,7 +54,7 @@ read-only demo household with fictional data.
 
 ## Constraints
 
-- Meta models only for model work; Spark runs on the Contributor tier (content may train Meta models; owner decision 2026-11-01), Wonder on Standard.
+- Meta models only for model work; Spark and Wonder run in Meta's Standard mode (not used for training; owner decision 2026-11-01).
 - Deterministic code for math, patterns, and list logic ($0).
 - Submission deadline: Nov 4, 2026, 9:00 PM ET (Meta Global AI Developer
   Hackathon, Team Nightshift, Indie track).
