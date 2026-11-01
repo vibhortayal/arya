@@ -16,6 +16,11 @@ import json
 PROTOCOL_VERSIONS = ("2024-11-05", "2025-03-26", "2025-06-18")
 DEFAULT_PROTOCOL_VERSION = "2025-03-26"
 SERVER_INFO = {"name": "arya", "version": "1.0.0"}
+INSTRUCTIONS = ("Arya is this person's grocery list and receipt history. Use get_list for what is on "
+                "their list (only what they added; Arya's suggestions are not included), add_items to add "
+                "by name, check_item to tick one off, get_snapshot for spending and what runs low, "
+                "get_receipts for recent receipts, and file_receipt to file a receipt you have read "
+                "(merchant, purchased_at, and lines with decoded_name and line_total).")
 
 
 def result(rid, value):
