@@ -43,6 +43,15 @@ export function Profile() {
   const [profile, setProfile] = useState<QProfile | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [delPw, setDelPw] = useState("");
+  // Accounts made by email code or Google have no password: they confirm
+  // with a 6-digit code emailed to them (owner, 2026-11-01). null = not known yet.
+  const [hasPw, setHasPw] = useState<boolean | null>(null);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeErr, setCodeErr] = useState(false);
+  const [mailFailed, setMailFailed] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
+  const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     const p = await get<QProfile>("/api/quest/profile").catch(() => null);
@@ -86,12 +95,46 @@ export function Profile() {
     await post("/auth/account/delete", { password: delPw });
     await leave();
   });
+  // Which confirm the box shows: asked when it first opens.
+  useEffect(() => {
+    if (!delOpen || hasPw !== null) return;
+    get<{ has_password?: boolean }>("/auth/me")
+      .then(me => setHasPw(!!me.has_password)).catch(() => setHasPw(true));
+  }, [delOpen, hasPw]);
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn(n => n - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendIn]);
+  const sendCode = async () => {
+    if (sending) return;
+    setSending(true);
+    try {
+      await post("/auth/account/delete/code", {});
+      setCodeSent(true); setMailFailed(false); setCodeErr(false); setCode(""); setResendIn(60);
+      setTimeout(() => (document.getElementById("del-account-code") as HTMLInputElement | null)?.focus(), 0);
+    } catch (e) {
+      const m = errMsg(e);
+      // A send less than a minute ago: the code already on its way still works.
+      if (/wait a minute/i.test(m)) { setCodeSent(true); setResendIn(60); toast(m); }
+      else { setCodeSent(false); setMailFailed(true); }
+    } finally { setSending(false); }
+  };
+  const eraseByCode = async () => {
+    if (code.length !== 6) { setCodeErr(true); return; }
+    try {
+      await post("/auth/account/delete", { code });
+      await leave();
+    } catch { setCodeErr(true); }
+  };
+  const cancelDelete = () => { setDelOpen(false); setCodeSent(false); setCode(""); setCodeErr(false); setMailFailed(false); };
+  const support = "support@teamnightshift.org";
   const signOut = async () => {
     await fetch("/auth/logout", { method: "POST" }).catch(() => {});
     await leave();
   };
   // The box focuses its password field when it opens (app.js).
-  useEffect(() => { if (delOpen) (document.getElementById("del-account-pw") as HTMLInputElement | null)?.focus(); }, [delOpen]);
+  useEffect(() => { if (delOpen && hasPw) (document.getElementById("del-account-pw") as HTMLInputElement | null)?.focus(); }, [delOpen, hasPw]);
 
   const go = (view: Parameters<typeof nav.show>[0]) => () => nav.show(view);
   const NavRow = ({ id, view, title, sub, subId }: { id?: string; view: Parameters<typeof nav.show>[0]; title: string; sub: string; subId?: string }) => (
@@ -140,13 +183,40 @@ export function Profile() {
         {admin.owner && <RegistrationRow />}
         {admin.waitlist && <WaitlistRow />}
         <a className="navrow" href="/api/account/export" onClick={() => toast(t("settings.exportStarted"))}><span className="grow">{t("settings.exportMyData")}<span className="sub">{t("settings.everythingAryaHoldsForYou")}</span></span><span className="chev">›</span></a>
-        <button className="navrow" id="btn-del-account" type="button" onClick={() => setDelOpen(o => !o)}>
-          <span className="grow">{t("settings.deleteMyAccount")}<span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
-        <div id="del-account-box" className="pad" hidden={!delOpen}>
-          <p className="muted">{t("settings.thisErasesYourReceiptsLists")}</p>
-          <input type="password" id="del-account-pw" autoComplete="current-password" placeholder={t("settings.yourPassword")} value={delPw}
-            onChange={e => setDelPw(e.target.value)} />
-          <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>{t("settings.eraseEverything")}</button></p>
+        <button className="navrow" id="btn-del-account" type="button" onClick={() => (delOpen ? cancelDelete() : setDelOpen(true))}>
+          <span className="grow"><span className="dangertext">{t("settings.deleteMyAccount")}</span><span className="sub">{t("settings.eraseYourAccountAndAll")}</span></span><span className="chev">›</span></button>
+        <div id="del-account-box" className="pad delbox" hidden={!delOpen}>
+          <div className="delwarn" role="note"><span className="delwarn-ic" aria-hidden="true">⚠️</span>
+            <span><b>{t("settings.cantBeUndone")}</b>{t("settings.cantBeUndoneBody")}</span></div>
+          {hasPw === true && <>
+            <p className="muted">{t("settings.enterPassword")}</p>
+            <input type="password" id="del-account-pw" autoComplete="current-password" placeholder={t("settings.yourPassword")} value={delPw}
+              onChange={e => setDelPw(e.target.value)} />
+            <p style={{ marginTop: 10 }}><button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseAccount}>{t("settings.eraseEverything")}</button></p>
+          </>}
+          {hasPw === false && !codeSent && !mailFailed && <>
+            <p>{t("settings.delCodeIntro")} <b>{user}</b>.</p>
+            <button className="btn danger" id="btn-del-send-code" type="button" disabled={sending} onClick={sendCode}>{t("settings.emailMeACode")}</button>
+          </>}
+          {hasPw === false && mailFailed && !codeSent && <>
+            <p className="warn" id="del-mail-failed">{t("settings.delMailFailed")}</p>
+            <p className="muted">{t("settings.delMailFailedBody")} <a href={`mailto:${support}`}>{support}</a> {t("settings.delMailFailedTail")}</p>
+            <button className="btn danger" id="btn-del-send-code" type="button" disabled={sending} onClick={sendCode}>{t("settings.tryAgain")}</button>
+          </>}
+          {hasPw === false && codeSent && <>
+            <p>{t("settings.delCodeSentTo")} <b>{user}</b>. {t("settings.delCodeWorksFor")}</p>
+            <input id="del-account-code" className={"delcode" + (codeErr ? " bad" : "")} inputMode="numeric" autoComplete="one-time-code"
+              maxLength={6} pattern="[0-9]*" aria-label={t("settings.delCodeLabel")} aria-invalid={codeErr} value={code}
+              onChange={e => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setCodeErr(false); }}
+              onKeyDown={e => { if (e.key === "Enter") eraseByCode(); }} />
+            {codeErr && <p className="warn" id="del-code-err" role="alert">{t("settings.delCodeWrong")}</p>}
+            <button className="btn danger" id="btn-del-account-go" type="button" onClick={eraseByCode}>{t("settings.eraseEverything")}</button>
+            <div className="delrow">
+              <button className="linkbtn" id="btn-del-resend" type="button" disabled={resendIn > 0 || sending} onClick={sendCode}>
+                {resendIn > 0 ? t("settings.sendNewCodeIn", { time: `0:${String(resendIn).padStart(2, "0")}` }) : t("settings.sendNewCode")}</button>
+              <button className="linkbtn" id="btn-del-cancel" type="button" onClick={cancelDelete}>{t("common.cancel")}</button>
+            </div>
+          </>}
         </div>
       </div>
       <h3 className="sect">{t("settings.arya")}</h3>

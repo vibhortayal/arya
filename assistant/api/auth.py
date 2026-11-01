@@ -159,7 +159,68 @@ def delete_user(username):
     dest = os.path.join(_root(), "users", username)
     if os.path.isdir(dest):
         shutil.rmtree(dest)
+    # In dual or pg mode the account's documents also live in Postgres;
+    # erasing only the files left that copy behind (security review
+    # 2026-11-01, M1). Best effort in dual mode: the files are the truth.
+    from api import pgstore
+    if pgstore.mode() != "json":
+        try:
+            pgstore.delete_owner(username)
+        except Exception:
+            if pgstore.mode() == "pg":
+                raise
+            pgstore.log.exception("could not drop Postgres rows for a deleted account")
+    _delete_codes.pop(username, None)
     return True
+
+
+def has_password(username):
+    """True for an account that signs in with a password. Accounts made
+    by email code or Google have none."""
+    u = users().get((username or "").strip().lower()) or {}
+    return bool(u.get("hash"))
+
+
+# --- account-deletion codes (owner, 2026-11-01) ---
+# An account with no password confirms "delete my account" with a
+# 6-digit code emailed to it. Codes live in memory (one worker), last
+# DELETE_CODE_TTL seconds, and allow DELETE_CODE_TRIES wrong guesses.
+DELETE_CODE_TTL = 10 * 60
+DELETE_CODE_TRIES = 5
+DELETE_CODE_GAP = 60          # seconds between two sends for one account
+_delete_codes = {}            # user -> {"hash", "expires", "tries", "sent"}
+_delete_lock = threading.Lock()
+
+
+def new_delete_code(username):
+    """A fresh code for this account, replacing any earlier one. Raises
+    PermissionError when one was sent less than DELETE_CODE_GAP ago."""
+    now = time.time()
+    with _delete_lock:
+        cur = _delete_codes.get(username)
+        if cur and now - cur["sent"] < DELETE_CODE_GAP:
+            raise PermissionError("a code was just sent; wait a minute before asking again")
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        _delete_codes[username] = {"hash": hashlib.sha256(code.encode()).hexdigest(),
+                                   "expires": now + DELETE_CODE_TTL, "tries": 0, "sent": now}
+    return code
+
+
+def check_delete_code(username, code):
+    """True once for the right, unexpired code; then it is used up. Too
+    many wrong guesses also use it up."""
+    code = re.sub(r"\D", "", str(code or ""))
+    with _delete_lock:
+        cur = _delete_codes.get(username)
+        if not cur or cur["expires"] < time.time() or len(code) != 6:
+            return False
+        if hmac.compare_digest(cur["hash"], hashlib.sha256(code.encode()).hexdigest()):
+            _delete_codes.pop(username, None)
+            return True
+        cur["tries"] += 1
+        if cur["tries"] >= DELETE_CODE_TRIES:
+            _delete_codes.pop(username, None)
+        return False
 
 
 def resolve_login_name(name):
