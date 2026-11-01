@@ -5,7 +5,7 @@ import os
 import shutil
 import time
 
-from api import deps, feedback, site_flags, state, waitlist
+from api import deps, feedback, meta_client, settings, site_flags, state, waitlist
 from api.auth import users as _users
 from api.cost_ledger import CostLedger
 
@@ -37,6 +37,23 @@ def backup_age_hours():
     return None if newest is None else (time.time() - newest) / 3600
 
 
+def recent_changes(n=30):
+    """The newest changes made from Ops, newest first (ops-changes.jsonl)."""
+    import json
+    try:
+        with open(os.path.join(state.base_dir(), "ops-changes.jsonl")) as fh:
+            lines = fh.read().splitlines()[-n:]
+    except OSError:
+        return []
+    out = []
+    for ln in reversed(lines):
+        try:
+            out.append(json.loads(ln))
+        except ValueError:
+            pass
+    return out
+
+
 def summary(hours=24):
     led = CostLedger(deps._LEDGER)
     h = led.health(hours)
@@ -44,8 +61,8 @@ def summary(hours=24):
     needs = []
 
     spend = {}
-    for b, env, dflt in (("app", "ARYA_DAILY_BUDGET_USD", 10), ("demo", "ARYA_DEMO_DAILY_BUDGET_USD", 20)):
-        cap, spent = _num(env, dflt), led.spent_today(b)
+    for b, key in (("app", "daily_budget_usd"), ("demo", "demo_daily_budget_usd")):
+        cap, spent = settings.get(key), led.spent_today(b)
         spend[b] = {"spent": round(spent, 2), "cap": cap}
         if cap and spent / cap >= BUDGET_WARN:
             needs.append({"title": "Spend is high" if b == "app" else "Demo spend is high",
@@ -106,7 +123,13 @@ def summary(hours=24):
                         "photo_reader": site_flags.photo_reader()
                         or ("spark" if os.environ.get("ARYA_PHOTO_READER", "wonder").lower() in ("spark", "standard")
                             else "wonder")},
+                     "spark_tier": meta_client.spark_tier(),
+                     "open_model": site_flags.open_model(), "reasoning_effort": site_flags.reasoning_effort(),
                      "registration_open": deps._registration_open()},
+        "settings": settings.snapshot(),
+        "overrides": (site_flags.raw().get("overrides") or {}),
+        "meta_says": site_flags.raw().get("meta_says"),
+        "changes": recent_changes(),
         "people": {"accounts": len(_users()), "top": h["top_users"], "waitlist": waiting,
                    "feedback_new": len(notes)},
     }

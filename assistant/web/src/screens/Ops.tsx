@@ -20,6 +20,8 @@ type OpsData = {
   spend: { app: { spent: number; cap: number }; demo: { spent: number; cap: number }; credit: { left: number; total: number } };
   calls: Call[];
   controls: { ai_paused: boolean; demo_live: boolean; photo_reader: "spark" | "wonder" | "auto"; registration_open: boolean };
+  meta_says: { usd: number; at: number } | null;
+  changes: { ts: string; user: string; set: Record<string, unknown> }[];
   people: { accounts: number; top: [string, number][]; waitlist: number; feedback_new: number };
 };
 
@@ -32,6 +34,21 @@ function Bar({ pct, bad }: { pct: number; bad?: boolean }) {
 }
 
 const usd = (n: number) => n.toFixed(2);
+
+function MetaSays({ says, ledger, busy, onSave }: { says: { usd: number; at: number } | null; ledger: number; busy: boolean; onSave: (v: number | null) => void }) {
+  const { t } = useTranslation();
+  const [v, setV] = useState(says ? String(says.usd) : "");
+  const gap = says ? says.usd - ledger : 0;
+  return (
+    <div className="row prefrow inline"><div className="grow"><span className="name">{t("opsSettings.metaSays")}</span>
+      <span className="sub">{says ? t("opsSettings.metaGap", { ledger: ledger.toFixed(2), says: says.usd.toFixed(2), gap: Math.abs(gap).toFixed(2), dir: gap >= 0 ? t("opsSettings.more") : t("opsSettings.less") }) : t("opsSettings.metaSub", { ledger: ledger.toFixed(2) })}</span></div>
+      <div className="prefpicks">
+        <input id="ops-meta" className="curpick" style={{ width: 92, textAlign: "right" }} inputMode="decimal" placeholder="0.00" aria-label={t("opsSettings.metaSays")} value={v} disabled={busy}
+          onChange={ev => setV(ev.target.value)}
+          onBlur={() => { const n = Number(v); if (v.trim() === "") { if (says) onSave(null); } else if (!says || n !== says.usd) onSave(n); }} />
+      </div></div>
+  );
+}
 
 export function Ops() {
   const { t } = useTranslation();
@@ -100,6 +117,10 @@ export function Ops() {
             <Row name={t("ops.credit")} sub={<>{t("ops.spendOf", { spent: Math.round(d.spend.credit.left), cap: Math.round(d.spend.credit.total) })}<Bar pct={d.spend.credit.total ? (d.spend.credit.left / d.spend.credit.total) * 100 : 0} bad={d.spend.credit.left < d.spend.credit.total * 0.1} /></>} />
           </Group>
 
+          <Group>
+            <MetaSays says={d.meta_says} ledger={d.spend.credit.total - d.spend.credit.left} busy={busy} onSave={v => setControl({ meta_says: v })} />
+          </Group>
+
           <Section title={t("ops.calls")} />
           {d.calls.length === 0
             ? <p className="muted small" style={{ margin: "0 4px" }}>{t("ops.noCalls")}</p>
@@ -152,6 +173,20 @@ export function Ops() {
                 onClick={() => save(() => post("/auth/registration", { open: !d.controls.registration_open }))}><i></i></button>
             </div>
           </Group>
+
+          <Section title={t("opsSettings.settings")} />
+          <Group>
+            {(["models", "limits", "caps"] as const).map(pg => (
+              <button key={pg} className="navrow" id={"ops-set-" + pg} type="button" onClick={() => nav.show("ops-settings", { page: pg })}>
+                <span className="grow">{t("opsSettings.title_" + pg)}<span className="sub">{t("opsSettings.sub_" + pg)}</span></span><span className="chev">›</span></button>
+            ))}
+          </Group>
+
+          <Section title={t("opsSettings.changeLog")} />
+          {(d.changes ?? []).length === 0
+            ? <p className="muted small" style={{ margin: "0 4px" }}>{t("opsSettings.noChanges")}</p>
+            : <Group>{(d.changes ?? []).slice(0, 8).map((c, i) => (
+                <Row key={i} name={Object.keys(c.set).join(", ")} sub={`${c.user.split("@")[0]} · ${c.ts.replace("T", " ").slice(0, 16)}`} />))}</Group>}
 
           <Section title={t("ops.people")} />
           <Group>

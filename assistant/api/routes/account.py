@@ -391,7 +391,7 @@ def usage_route():
     user = state._owner()
     led = CostLedger(deps._LEDGER)
     mine = led.usage("" if user == state.DEMO_USER else user)
-    heavy = user_limits()[0]
+    heavy = user_limits(state._owner())[0]
     limited = bool(user) and not _is_owner(user) and user != state.DEMO_USER
     month = mine["month_usd"]
     whole = led.whole()

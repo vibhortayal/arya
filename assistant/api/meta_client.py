@@ -34,7 +34,8 @@ def spark_tier():
     """Which tier the app's Spark ("standard") calls run on: "contributor"
     (default, owner decision 2026-11-01) or "standard"
     (ARYA_SPARK_TIER=standard)."""
-    v = os.environ.get("ARYA_SPARK_TIER", "contributor").strip().lower()
+    from api import site_flags   # the Ops choice wins over the environment
+    v = site_flags.spark_tier() or os.environ.get("ARYA_SPARK_TIER", "contributor").strip().lower()
     return "standard" if v == "standard" else "contributor"
 
 
@@ -313,7 +314,8 @@ class MetaClient:
         body = {"model": MODELS[mode], "messages": messages,
                 "temperature": temperature}
         if reasoning_effort is not None:
-            body["reasoning_effort"] = reasoning_effort
+            from api import site_flags   # Ops can raise or lower every Spark call's effort
+            body["reasoning_effort"] = site_flags.reasoning_effort() or reasoning_effort
         if cache_key:
             body["prompt_cache_key"] = cache_key
         if schema:

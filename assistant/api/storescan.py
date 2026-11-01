@@ -128,10 +128,8 @@ def norm_boxes(boxes, W, H, cap=12):
 
 
 def daily_cap():
-    try:
-        return max(0, int(os.environ.get("ARYA_SCAN_DAILY_FRAMES", DAILY_FRAMES)))
-    except ValueError:
-        return DAILY_FRAMES
+    from api import settings   # Ops value, then ARYA_SCAN_DAILY_FRAMES
+    return settings.get("scan_daily_frames")
 
 
 def frames_left(today=None):

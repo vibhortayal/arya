@@ -11,7 +11,7 @@ import time
 
 from fastapi import HTTPException
 
-from api import state
+from api import settings, state
 from api.cost_ledger import CostLedger
 from api.meta_client import MetaClient
 from api import auth
@@ -81,18 +81,18 @@ def _budget_guard(demo=False):
     _reads_gate(demo)
     if demo or state.in_sandbox():
         box = state._overlay.get()
-        share = float(os.environ.get("ARYA_DEMO_SESSION_BUDGET_USD", "0.40"))
+        share = settings.get("demo_session_budget_usd")
         if box is not None and box.get(_DEMO_SPENT_KEY, 0.0) >= share:
             raise HTTPException(503, "You've used this demo visit's live reads. "
                                 "Everything else still works; sign in with a real "
                                 "account for more.")
-        cap = float(os.environ.get("ARYA_DEMO_DAILY_BUDGET_USD", "2"))
+        cap = settings.get("demo_daily_budget_usd")
         spent = CostLedger(_LEDGER).spent_today("demo")
         if spent >= cap:
             raise HTTPException(503, "The demo's live reads are paused for today. "
                                 "Everything else still works.")
     else:
-        cap = float(os.environ.get("ARYA_DAILY_BUDGET_USD", "10"))
+        cap = settings.get("daily_budget_usd")
         spent = CostLedger(_LEDGER).spent_today("app")
         user = state._owner()
         if user and not _is_owner(user):
@@ -103,24 +103,17 @@ def _budget_guard(demo=False):
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
 
 
-def user_limits():
+def user_limits(user=None):
     """(heavy, ceiling) in dollars a month for one real account.
     Heavy only shows a heads-up on the usage screen; the ceiling pauses
     paid reads until the 1st. Both are far above a typical user (about
-    15 cents) and 0 turns one off. The owner is never limited."""
-    def env(name, default):
-        try:
-            return max(0.0, float(os.environ.get(name, default)))
-        except ValueError:
-            return float(default)
-    return env("ARYA_USER_HEAVY_MONTHLY_USD", "3"), env("ARYA_USER_MONTHLY_CEILING_USD", "5")
+    15 cents) and 0 turns one off (in the environment). The owner is
+    never limited. Ops values and per-account overrides: api.settings."""
+    return settings.get("heavy_monthly_usd", user), settings.get("monthly_ceiling_usd", user)
 
 
-def _hourly_limit():
-    try:
-        return max(0.0, float(os.environ.get("ARYA_USER_HOURLY_FREEZE_USD", "1")))
-    except ValueError:
-        return 1.0
+def _hourly_limit(user=None):
+    return settings.get("hourly_freeze_usd", user)
 
 
 def _freeze_path():
@@ -145,10 +138,7 @@ def frozen_until(user):
 def freeze(user, usd_hour):
     """Switch an account's paid reads off for ARYA_USER_FREEZE_HOURS
     (default 24). Only paid reads: sign-in, lists and Today stay up."""
-    try:
-        hours = max(1.0, float(os.environ.get("ARYA_USER_FREEZE_HOURS", "24")))
-    except ValueError:
-        hours = 24.0
+    hours = max(1.0, float(settings.get("freeze_hours", user)))
     doc = _freezes()
     doc[user] = {"at": int(time.time()), "until": int(time.time() + hours * 3600),
                  "usd_hour": round(usd_hour, 2)}
@@ -170,10 +160,10 @@ def reading_off(user, act=True):
         return ("Arya's reading is switched off for this account after unusual use. "
                 "It comes back on its own, or write to support@teamnightshift.org.")
     use = CostLedger(_LEDGER).usage(user)
-    ceiling = user_limits()[1]
+    ceiling = user_limits(user)[1]
     if ceiling and use["month_usd"] >= ceiling:
         return "Arya's reading is paused for you until the 1st. Lists, Today and typing still work."
-    hourly = _hourly_limit()
+    hourly = _hourly_limit(user)
     if hourly and use["hour_usd"] >= hourly:
         if act:
             freeze(user, use["hour_usd"])
