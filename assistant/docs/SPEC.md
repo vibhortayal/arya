@@ -72,7 +72,7 @@ Rule 1. Each claim has a confidence value and a repair path.
 Rule 2. A confident claim is asserted. An unsure claim is asked. A contradicted claim is demoted and asked.
 Rule 3. No line, item, or state is silently guessed.
 Rule 4. A state with no evidence is "unknown." The system shows "unknown." The system asks for evidence.
-Rule 5. Superseded 2026-11-01 by the owner: Spark and Wonder run in Standard mode. Section 7.3 states what that means.
+Rule 5. Spark and Wonder both run in Meta's Standard mode. Section 7.3 states the details.
 Rule 6. Arithmetic is computed by code. A model narrates. A model does not do arithmetic.
 Rule 7. Corrections from the user are final. A correction takes effect at once.
 Rule 8. A discount line is structure, not identity. The system attaches it to its parent item. The system never asks the user about it.
@@ -265,7 +265,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 | Interaction | Budget | Note |
 |---|---|---|
 | Receipt decode, PDF to draft | 20 s or less | Progress is visible |
-| Receipt decode, photo to draft | 30 s or less (Wonder, under the amendment: 90 s bound, then Spark) | Progress is visible |
+| Receipt decode, photo to draft | 30 s or less (Spark; a flagged read adds a Wonder re-read, 90 s bound) | Progress is visible |
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
 | Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
@@ -287,8 +287,7 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
-Update 2026-11-01 (owner decision): Spark and Wonder run in Standard mode. Meta's docs: "In Standard mode, your content is not used to train Meta models." Receipt photos are read by Spark first (auto, the default); a Wonder re-read of a flagged receipt also runs on Standard. A community (Contributor) tier, where users opt in to letting Meta train in exchange for lower cost, is a possible later option; it is not built. An earlier 2026-11-01 setting used the Contributor tier; it was reversed the same day.
-The app and its privacy page state that the models run in Standard mode and no more than that.
+Update 2026-11-01: Spark runs in Meta's Standard mode (the code default, and confirmed live). Receipt photos are read by Spark first (auto, the default); a Wonder re-read of a flagged receipt also runs on Standard. A cheaper Contributor tier exists as an operator setting (ARYA_SPARK_TIER=contributor or the Ops switch) and is off. A user opt-in for it is only a possible future option and is not built.
 The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
 
 ### 7.4 Connectivity and degradation
@@ -435,7 +434,7 @@ Groceries are the first domain. Groceries are not the final domain.
 - Retailer planogram data and retailer integrations.
 - Live guidance on glasses. Glasses record video only.
 - Always-listening voice. Turn-by-turn indoor positioning.
-- Muse Wonder is in the pipeline as built: it reads receipt photos (Spark is the fallback). Its photo-decode role runs under the MODEL-POLICY hackathon amendment, which expires Nov 4, 2026; decode returns to Spark then unless the owner extends it.
+- Muse Wonder is in the pipeline as built: it re-reads a receipt photo when Spark's read fails the arithmetic checks (`ARYA_PHOTO_READER=auto`, the default). MODEL-POLICY.md keeps the history of the reader choice.
 - The mapper network and consensus maps. Section 11 covers these items as vision.
 
 Design flags live in IMPLEMENTATION.md Section 8.

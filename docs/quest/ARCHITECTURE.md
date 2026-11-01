@@ -41,7 +41,7 @@ a fresh shelf photo only after SAM finds every person and pixelates
 them; if that step fails, nothing is kept.
 
 ### 5. Settle (account)
-`receipt photo → Muse Wonder (Spark fallback) → arithmetic check → ledger, patterns`
+`receipt photo → Muse Spark → arithmetic check (flagged: Muse Wonder re-reads) → ledger, patterns`
 
 Totals must reconcile or lines queue for review. Returns net against
 purchases. The receipt banks the hunt's points; the original image is
@@ -49,7 +49,7 @@ kept in the account.
 
 ## Cost rules
 - Math, routing, planning and patterns are code, $0.
-- Spark (Standard mode; not used for training) for volume judgment.
+- Spark (Standard mode) for volume judgment.
 - Engine spend caps: $10/day for the app, $2/day for the demo bucket.
 - Find it for me scans one item: one item's SAM and Spark calls.
 

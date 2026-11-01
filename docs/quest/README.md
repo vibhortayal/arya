@@ -27,7 +27,8 @@ camera scan maps it for every shopper after you.
    Muse Spark verifies.
 3. **Grab.** +10 a grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.
-4. **Receipt.** Muse Wonder reads it, code checks the arithmetic; it
+4. **Receipt.** Muse Spark reads it, code checks the arithmetic, and
+   Muse Wonder re-reads only a receipt the checks flag; it
    feeds patterns, spend and returns.
 
 ## Documents

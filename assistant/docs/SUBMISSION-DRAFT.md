@@ -57,7 +57,7 @@ so next week's list writes itself.
 
 ## How Meta models are used
 
-- Muse Spark 1.3 (Standard) reads receipt PDFs and list photos
+- Muse Spark 1.3 (Standard mode) reads receipt PDFs and list photos
   (vision); is the first reader for receipt photos;
   labels store shelves; and powers the Ask Arya agent and the staple
   judge.
@@ -78,11 +78,9 @@ so next week's list writes itself.
 - SAM 3.1 finds shelves and signs in the guided store scan, boxes items
   for Find it for me, and finds people so they are blurred before any
   frame is kept.
-- Spark and Wonder run in Meta's Standard mode, which Meta does not use to
-  train its models. Receipt photos are read by Spark first; Wonder (the second
-  reader) re-reads only a receipt the checks flag. A community (Contributor)
-  tier with user opt-in is an option for supporting more users later; it is not
-  built.
+- Spark and Wonder both run in Meta's Standard mode. Receipt photos are
+  read by Spark first; Wonder, the second reader, re-reads only a receipt
+  the checks flag.
 - All math — ledger, returns netting, cadence, spend — is deterministic
   code. The model reads and speaks; it never calculates.
 - Cost: every model call is written to a cost ledger, and a daily budget
@@ -91,7 +89,7 @@ so next week's list writes itself.
 
 ## Responsible AI
 
-Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web. Arya says plainly (privacy page, How Arya uses AI) which models read what: Muse Spark and Muse Wonder, both in Meta's Standard mode, which Meta does not use for training.
+Arya uses Meta models to read receipts, photos and voice, and to answer questions. AI can be wrong, so Arya never saves a photo or receipt read until you confirm it, marks lines it is unsure about for you to check, and tells you plainly where AI is used (Settings, About Arya, How Arya uses AI). Expiry dates carry a clear warning to check the pack yourself, because food safety is the one place a wrong read could hurt someone. Photos of people are blurred before a store photo is kept, and prices come only from you and other Arya shoppers, never scraped from the web. Arya says plainly (privacy page, How Arya uses AI) that content sent to Muse Spark, such as lists, list and date photos, fridge photos and questions, may be used by Meta to train future models. Receipt photos are read by Muse Spark first too; when Muse Wonder re-reads one, that copy is not used for training.
 
 ## Evidence
 

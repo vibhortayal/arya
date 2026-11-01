@@ -216,6 +216,15 @@ class FlipClient:
 
 
 class TestPhotoDecodeWonderFlip(unittest.TestCase):
+    """ARYA_PHOTO_READER=wonder: Wonder first, Spark on any failure.
+    (The default is auto since 2026-11-01; test_photo_checks covers it.)"""
+
+    def setUp(self):
+        from unittest import mock
+        p = mock.patch.dict(os.environ, {"ARYA_PHOTO_READER": "wonder"})
+        p.start()
+        self.addCleanup(p.stop)
+
     def test_wonder_is_the_photo_reader(self):
         from api.decode.service import decode_photo, PHOTO_WONDER_TIMEOUT_S
         client = FlipClient()
