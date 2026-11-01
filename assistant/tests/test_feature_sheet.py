@@ -29,15 +29,34 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Remind me", on)
         self.assertNotIn("[if", on)
 
-    def test_tabs_named_in_sheet_exist_in_app(self):
+    def test_bar_named_in_sheet_matches_app(self):
+        # The shopper's bar (owner, 2026-11-01): the sheet's default bar,
+        # Ask's place names and the app's bar must agree.
         from tests import frontend
-        tabs = frontend.src("App.tsx").split("const TAB_LABEL", 1)[1].split("};", 1)[0]
-        labels = re.findall(r':\s*"([^"]+)"', tabs)
+        bar = frontend.src("lib/bar.ts")
+        items = re.findall(r'"([^"]+)"', re.search(r"BAR_ITEMS = \[([^\]]*)\]", bar).group(1))
+        self.assertEqual(sorted(items), sorted(chat_service.BAR_NAMES))
+        default = re.findall(r'"([^"]+)"', re.search(r"DEFAULT_BAR: BarItem\[\] = \[([^\]]*)\]", bar).group(1))
+        self.assertEqual(default, chat_service.DEFAULT_BAR)
+        labels = frontend.src("ui/Bar.tsx").split("BAR_LABEL", 1)[1].split("};", 1)[0]
+        got = dict(re.findall(r'"?([\w-]+)"?:\s*"(\w+)"', labels))
+        self.assertEqual(got, chat_service.BAR_NAMES)
         first = raw().splitlines()[0]
-        for t in re.findall(r"\b(Today|Lists|Ask|Quest|Help|Settings)\b", first):
-            self.assertIn(t, labels)
-        self.assertEqual(len(labels), 6)
+        self.assertIn("Default bar: " + ", ".join(chat_service.BAR_NAMES[k] for k in default) + ", More.", first)
         self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
+
+    def test_your_bar_goes_with_each_question(self):
+        self.assertEqual(chat_service.bar_line(["list", "receipts", "stores-mine", "list", "nope"]),
+                         "YOUR BAR: Lists, Receipts, Stores, More. In More: Today, Spending, Ask, Quest, Help, Settings.")
+        seen = {}
+
+        class C:
+            def chat(self, messages, **kw):
+                seen["sheet"] = next(m["content"] for m in messages if m["content"].startswith("ABOUT ARYA:"))
+                return '{"reply":"ok","actions":[]}', 0, 0
+        chat_service.chat([{"role": "user", "content": "how do I change the bar?"}], C(), bar=["list", "help"])
+        self.assertIn("YOUR BAR: Lists, Help, More. In More: Today, Receipts, Stores, Spending, Ask, Quest, Settings.", seen["sheet"])
+        self.assertIn("Change the bar:", seen["sheet"])
 
     def test_sizes(self):
         flags = {k: True for k in KNOWN_FLAGS}

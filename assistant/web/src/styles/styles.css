@@ -220,6 +220,17 @@ input[type="file"] { width: 100%; font: inherit; font-size: 15px; margin-top: 6p
 }
 #tabs button svg { width: 25px; height: 25px; }
 #tabs button.active { color: var(--accent-text); }
+/* The shopper's bar (lib/bar.ts): touch and hold opens Customize bar,
+   so no text selection or callout on a long press. More's sheet lists
+   the rest; the editor shows the bar as it will look. */
+#tabs { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.more-rows { margin: 0 0 14px; }
+.sheet .more-row { gap: 12px; }
+.more-ic { flex: none; width: 28px; display: grid; place-items: center; color: var(--accent-text); }
+.more-ic svg { width: 24px; height: 24px; }
+.bar-preview { display: flex; justify-content: space-around; background: var(--panel); border: 1px solid var(--sep); border-radius: 16px; padding: 6px 4px; margin: 4px 0 14px; }
+.bar-preview > span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: var(--fs-tab); font-weight: 600; color: var(--secondary); flex: 1; min-width: 0; }
+.bar-preview svg { width: 25px; height: 25px; }
 
 .bar { height: 6px; background: var(--accent); border-radius: 3px; min-width: 2px; }
 .month-row { display: grid; grid-template-columns: 78px 1fr 70px; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--sep); }

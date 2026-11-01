@@ -2774,7 +2774,35 @@
     "ask": "Ask",
     "quest": "Quest",
     "settings": "Settings",
-    "help": "Help"
+    "help": "Help",
+    "receipts": "Receipts",
+    "stores": "Stores",
+    "spending": "Spending",
+    "more": "More"
+  },
+  "bar": {
+    "customize": "Customize bar",
+    "title": "Customize bar",
+    "hint": "The bar holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
+    "offTitle": "In More",
+    "full": "The bar holds four. Remove one first.",
+    "removed": "{{name}} moved to More",
+    "added": "{{name}} added to the bar",
+    "reset": "Reset to default",
+    "resetDone": "The bar is back to the default",
+    "moreTitle": "More",
+    "moreHint": "Everything not on your bar. Touch and hold the bar to change it.",
+    "sub": {
+      "home": "Your day at a glance",
+      "list": "One list per store",
+      "receipts": "Add and look back at receipts",
+      "stores-mine": "Your stores and favorites",
+      "analysis": "By month, store and item",
+      "chat": "Ask Arya anything",
+      "community": "Play, build, map stores",
+      "help": "How to use Arya",
+      "profile": "Account, display, data"
+    }
   },
   "town": {
     "sim": "Simulated",
@@ -2867,7 +2895,7 @@
     "tour": {
       "today": {
         "title": "Today",
-        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are on the Lists tab."
+        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are on Lists."
       },
       "lists": {
         "title": "Lists",
@@ -2888,6 +2916,28 @@
       "settings": {
         "title": "Settings",
         "line": "Your group, currency and language, display and account."
+      },
+      "receipts": {
+        "title": "Receipts",
+        "line": "Add receipts after a trip, many at once, and look back at what you bought."
+      },
+      "stores": {
+        "title": "Stores",
+        "line": "Your stores and favorites. Each list belongs to one store."
+      },
+      "spending": {
+        "title": "Spending",
+        "line": "What you spent by month, store and item, from your receipts."
+      },
+      "more": {
+        "title": "More",
+        "line": "Help, Settings and everything not on your bar live here. More is always on the bar."
+      },
+      "bar": {
+        "title": "Make the bar yours",
+        "line": "Touch and hold the bar to pick what goes on it, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
+        "screen": "The bar",
+        "customize": "Customize now"
       },
       "guideLink": "Want the full guide?"
     }
@@ -3088,11 +3138,19 @@
         "s3": "Tap the green plus to add a card from the library.",
         "s4": "Lists, Ask and Quest have an Edit button too."
       },
+      "bar": {
+        "kicker": "Your bar",
+        "title": "Make the bar yours",
+        "body": "Put the places you use on the bar at the bottom. Everything else stays in More, which is always there.",
+        "s1": "Touch and hold the bar, or tap More, then Customize bar.",
+        "s2": "Tap the green plus to put a place on the bar, such as Receipts or Stores. The bar holds four.",
+        "s3": "Tap the red minus to move a place to More. Drag to reorder."
+      },
       "powers": {
         "kicker": "Powers",
         "title": "See everything Arya does",
         "body": "Powers lists what Arya does for you now. It also shows what you can turn on.",
-        "s1": "Open Settings, then About Arya, then Arya's powers. Or tap the Help tab.",
+        "s1": "Open Settings (in More), then About Arya, then Arya's powers. Or open Help.",
         "s2": "Tap i on a power to learn how it works.",
         "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
       },
@@ -3100,7 +3158,7 @@
         "kicker": "Your settings",
         "title": "Settings, your way",
         "body": "Change how Arya looks and speaks. Your data stays yours.",
-        "s1": "Open Settings. Tap Display for text size and spacing.",
+        "s1": "Tap More, then Settings. Tap Display for text size and spacing.",
         "s2": "Under Preferences, choose your currency and language.",
         "s3": "Under Account, tap Export my data to get a copy of everything.",
         "s4": "Open About Arya, then \"Use Arya in another AI app\", to add to your list from it."
@@ -3458,7 +3516,7 @@
     "stuck": "Still stuck? Ask Arya",
     "stuckQ": "Help me with: {{topic}}",
     "guide": "Read the full guide",
-    "guideSub": "Fifteen cards that show each part of Arya",
+    "guideSub": "Sixteen cards that show each part of Arya",
     "powers": "Arya's powers",
     "powersSub": "Everything Arya does, and what you can turn on",
     "tour": "Take the tour again",
@@ -3615,6 +3673,17 @@
         "n1": "Next trip is the first card. It has Start shopping, Add items and Scan a receipt. Lists, Ask and Quest have an Edit button too.",
         "n2": "Settings, then Preferences, then Display, changes text size and spacing.",
         "cta": "Open Today"
+      },
+      "bar": {
+        "title": "Change the bar",
+        "sub": "Pick the four places at the bottom",
+        "body": "The bar at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
+        "s1": "Touch and hold the bar, or tap More, then Customize bar.",
+        "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
+        "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
+        "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
+        "n2": "The bar starts as Today, Lists, Quest, Ask and More. Reset to default brings it back.",
+        "cta": "Customize bar"
       }
     }
   }

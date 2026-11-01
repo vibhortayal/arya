@@ -3,7 +3,8 @@ import en from "../i18n/en.json";
 import { NavProvider, useNav } from "../app/nav";
 import { GuideProvider, openGuide, useGuide } from "../ui/Guide";
 import { TourProvider, useTour } from "../ui/Tour";
-import { FIRST_RUN_TOUR } from "../onboarding/firstRunTour";
+import { firstRunTour } from "../onboarding/firstRunTour";
+const FIRST_RUN_TOUR = firstRunTour();
 import { GUIDE_CARDS, GUIDE_FOR_POWER, GUIDE_IDS, guideIndex, type GuideId } from "./cards";
 
 /* The Arya guide (#154): card data, the overlay's swipe / keys / Back
@@ -20,9 +21,9 @@ function hasKey(key: string) {
 }
 
 describe("cards", () => {
-  test("the owner's fifteen sections, in a new user's order, each an en.json key", () => {
+  test("the owner's sixteen sections, in a new user's order, each an en.json key", () => {
     expect(GUIDE_CARDS.map(c => c.id)).toEqual([...GUIDE_IDS]);
-    expect(GUIDE_IDS).toEqual(["lists", "share", "running", "news", "shopping", "quest", "maps", "friends", "receipts", "usesoon", "prices", "ask", "today", "powers", "settings"]);
+    expect(GUIDE_IDS).toEqual(["lists", "share", "running", "news", "shopping", "quest", "maps", "friends", "receipts", "usesoon", "prices", "ask", "today", "bar", "powers", "settings"]);
     const keys = GUIDE_CARDS.flatMap(c => [c.kickerKey, c.titleKey, c.bodyKey, ...c.stepKeys]);
     expect(keys.filter(k => !hasKey(k))).toEqual([]);
   });
@@ -58,12 +59,12 @@ describe("guide overlay", () => {
     mount();
     open();
     expect(screen.getByRole("dialog").getAttribute("aria-modal")).toBe("true");
-    expect(count()).toBe("Arya guide · 1 of 15");
+    expect(count()).toBe("Arya guide · 1 of 16");
     expect(document.activeElement!.id).toBe("gd-next");
     expect(document.getElementById("gd-back")).toBeNull();
     expect(document.querySelectorAll(".gd-dots i.on").length).toBe(1);
     act(() => { fireEvent.click(document.getElementById("gd-next")!); });
-    expect(count()).toBe("Arya guide · 2 of 15");
+    expect(count()).toBe("Arya guide · 2 of 16");
     expect(screen.getByText("Shared lists to shop in sync")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-back")!); });
     expect(card()).toBe("lists");
@@ -107,7 +108,7 @@ describe("guide overlay", () => {
   test("opens at a card id (the Powers links), and from code (openGuide)", () => {
     mount();
     open("prices");
-    expect(count()).toBe("Arya guide · 11 of 15");
+    expect(count()).toBe("Arya guide · 11 of 16");
     expect(screen.getByText("Know where it's cheaper")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-close")!); });
     expect(document.querySelector(".gd")).toBeNull();
@@ -141,16 +142,16 @@ function TourStarter() {
 const onDone = vi.fn();
 
 describe("first-run tour", () => {
-  test("the last step offers the guide; the link ends the tour as Done, then opens it", () => {
-    expect(FIRST_RUN_TOUR[FIRST_RUN_TOUR.length - 1].more?.labelKey).toBe("firstRun.tour.guideLink");
+  test("the last step is Make the bar yours; Customize now ends the tour without the caller's Done", () => {
+    expect(FIRST_RUN_TOUR[FIRST_RUN_TOUR.length - 1].more?.labelKey).toBe("firstRun.tour.bar.customize");
     expect(FIRST_RUN_TOUR.slice(0, -1).every(s => !s.more)).toBe(true);
     render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><TourStarter /></GuideProvider></TourProvider></NavProvider>);
     act(() => { fireEvent.click(screen.getByText("Go")); });
-    expect(screen.getByText("Want the full guide?")).toBeTruthy();
+    expect(screen.getByText("Make the bar yours")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("fr-tour-more")!); });
     expect(document.querySelector(".fr-tour")).toBeNull();
-    expect(onDone).toHaveBeenCalledTimes(1);
-    expect(card()).toBe("lists");
+    expect(onDone).not.toHaveBeenCalled();
+    expect(card()).toBeFalsy();
   });
   test("Replay the tour is the last card's closing action only; it closes the guide and starts the tour", () => {
     render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><Probe /></GuideProvider></TourProvider></NavProvider>);

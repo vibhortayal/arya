@@ -47,18 +47,19 @@ def seed_receipt(c, merchant, date, lines, rid):
 
 
 class TestShellContract(unittest.TestCase):
-    def test_six_tabs_no_add_no_dashboard(self):
+    def test_bar_no_add_no_dashboard(self):
         # The Add tab is gone (owner, 2026-10-28): adding lives on
-        # the List page. List first, Quest second (owner, 2026-10-29):
-        # Crew folded into the Quest tab; its view id stays
-        # community. Settings tab (owner, 2026-10-29) opens Profile.
+        # the List page. Crew folded into the Quest tab; its view id
+        # stays community. The bar is the shopper's own (owner,
+        # 2026-11-01): default Today, Lists, Quest, Ask, then More.
         views = frontend.src("app/views.ts")
-        tabs = re.search(r"TABS: ViewId\[\] = \[([^\]]*)\]", views).group(1)
-        self.assertEqual(re.findall(r'"([^"]+)"', tabs), ["home", "list", "chat", "community", "help", "profile"])
-        app = frontend.src("App.tsx")
-        labels = re.search(r"TAB_LABEL[^{]*\{([^}]*)\}", app).group(1)
-        self.assertEqual(re.findall(r':\s*"([^"]+)"', labels), ["Today", "Lists", "Ask", "Quest", "Help", "Settings"])
-        self.assertIn('data-view={"view-" + v}', app)
+        bar = frontend.src("lib/bar.ts")
+        default = re.search(r"DEFAULT_BAR: BarItem\[\] = \[([^\]]*)\]", bar).group(1)
+        self.assertEqual(re.findall(r'"([^"]+)"', default), ["home", "list", "community", "chat"])
+        ui = frontend.src("ui/Bar.tsx")
+        self.assertIn('data-view={"view-" + v}', ui)
+        self.assertIn('id="tab-more"', ui)
+        self.assertIn("<BottomBar />", frontend.src("App.tsx"))
         self.assertNotIn('"scan"', views)
 
     def test_new_views_exist_dashboard_gone(self):

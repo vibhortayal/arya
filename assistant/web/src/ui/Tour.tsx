@@ -21,8 +21,9 @@ import { motionOff } from "../lib/motion";
  *              chip ("TODAY · 2 OF 5"), a bar for the whole Tour, and
  *              "Skip Today", which jumps to the next screen's first step
  *   more       optional link under the line, { labelKey, onClick }: it
- *              ends the tour as Done does, then runs onClick (the
- *              first-run tour's "Want the full guide?")
+ *              ends the tour and runs onClick in place of the caller's
+ *              onDone (the Tour's "Customize now" opens the bar editor,
+ *              not the demo's guide as well)
  *
  * Each step draws a dark scrim with a rounded hole around the target
  * (one element with a huge box-shadow) and a bubble with title, line,
@@ -56,15 +57,15 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, []);
   const stopTour = useCallback(() => setRun(null), []);
   const v = useMemo(() => ({ active: !!run, startTour, stopTour }), [run, startTour, stopTour]);
-  const end = (how: "done" | "skip") => {
+  const end = (how: "done" | "skip" | "more") => {
     const o = run?.opts;
     setRun(null);
-    (how === "done" ? o?.onDone : o?.onSkip)?.();
+    if (how !== "more") (how === "done" ? o?.onDone : o?.onSkip)?.();
   };
   return (
     <Ctx.Provider value={v}>
       {children}
-      {run && <TourOverlay key={run.n} steps={run.steps} onDone={() => end("done")} onSkip={() => end("skip")} />}
+      {run && <TourOverlay key={run.n} steps={run.steps} onDone={() => end("done")} onSkip={() => end("skip")} onMore={() => end("more")} />}
     </Ctx.Provider>
   );
 }
@@ -106,7 +107,7 @@ const resolve = (t: TourStep["target"]) => (typeof t === "function" ? t() : docu
 const FOCUSABLE = "button:not([disabled])";
 const reduced = motionOff;
 
-function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () => void; onSkip: () => void }) {
+function TourOverlay({ steps, onDone, onSkip, onMore }: { steps: TourStep[]; onDone: () => void; onSkip: () => void; onMore: () => void }) {
   const { t } = useTranslation();
   const [i, setI] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
@@ -191,7 +192,7 @@ function TourOverlay({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () 
         <p id="fr-tip-line">{t(step.bodyKey)}</p>
         {step.more && (
           <button className="linkbtn fr-more" id="fr-tour-more" type="button"
-            onClick={() => { const go = step.more!.onClick; onDone(); go(); }}>{t(step.more.labelKey)}</button>
+            onClick={() => { const go = step.more!.onClick; onMore(); go(); }}>{t(step.more.labelKey)}</button>
         )}
         <div className="fr-row">
           {scr

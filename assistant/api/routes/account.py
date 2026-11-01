@@ -88,7 +88,7 @@ DISPLAY_DEFAULT = {"text": 1, "spacing": "comfortable", "bold": False, "pictures
 # Edit mode on other screens (card library, 2026-10-30): per screen,
 # lists of ids or texts. "lists": {"order", "hidden", "flags"},
 # "ask": {"chips"}, "spending": {"on"}. Whole screen values replace.
-LAYOUT_SCREENS = ("lists", "ask", "spending", "quest")
+LAYOUT_SCREENS = ("lists", "ask", "spending", "quest", "bar")
 LAYOUT_MAX_ITEMS = 60
 LAYOUT_MAX_TEXT = 120
 
@@ -180,7 +180,7 @@ async def settings_set(req: Request):
     layouts = body.get("layouts")
     if layouts is not None and (not isinstance(layouts, dict) or any(
             k not in LAYOUT_SCREENS or not _layout_ok(v) for k, v in layouts.items())):
-        raise HTTPException(400, "layouts maps lists, ask or spending to lists of ids")
+        raise HTTPException(400, "layouts maps lists, ask, spending, quest or bar to lists of ids")
     if sizes is not None and (not isinstance(sizes, dict) or any(
             k not in TODAY_CARDS or v not in TODAY_SIZES for k, v in sizes.items())):
         raise HTTPException(400, "today_sizes maps a card to s, m or l")
