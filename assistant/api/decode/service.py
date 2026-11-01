@@ -376,7 +376,7 @@ def _refund_totals(lines, subtotal, tax, total):
 def decode_photo(image_bytes, client, media_type="image/jpeg", page=False):
     """Receipt photo -> DecodedReceipt via meta_client vision.
     Reader: photo_reader() (Spark first, Wonder on a flagged read, by
-    default). Spark runs on the tier set by ARYA_SPARK_TIER (Contributor
+    default). Spark runs on the tier set by ARYA_SPARK_TIER (Standard
     by default); MODEL-POLICY.md has the policy and its history.
     Prompt: prompts/decode_photo_v1.md (spike-2 verified, Gate 0 passed).
     Photo semantics: price is the PAID amount (discounts already folded by

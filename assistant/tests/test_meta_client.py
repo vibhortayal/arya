@@ -21,19 +21,19 @@ class TestMetaClient(unittest.TestCase):
         text, usage, cost = c.chat([{"role": "user", "content": "hi"}], mode="standard", personal=True)
         self.assertTrue(cap["url"].endswith("/v1/chat/completions"))
         self.assertEqual(cap["headers"]["Authorization"], "Bearer test-key")
-        # Owner decision 2026-11-01: Spark runs on the Contributor tier.
-        self.assertEqual(cap["body"]["model"], "muse-spark-1.3-contributor")
+        # Spark runs on Standard by default (live confirmed 2026-11-01).
+        self.assertEqual(cap["body"]["model"], "muse-spark-1.3")
         self.assertEqual(cap["body"]["reasoning_effort"], "low")
         self.assertEqual(usage["cached_tokens"], 400)
-        self.assertAlmostEqual(cost, estimate_cost("contributor", 1000, 400, 200), places=9)
+        self.assertAlmostEqual(cost, estimate_cost("standard", 1000, 400, 200), places=9)
 
-    def test_spark_tier_standard_switch(self):
+    def test_spark_tier_contributor_switch(self):
         cap = {}
-        with mock.patch.dict(os.environ, {"ARYA_SPARK_TIER": "standard"}):
+        with mock.patch.dict(os.environ, {"ARYA_SPARK_TIER": "contributor"}):
             c = MetaClient(api_key="k", transport=fake_transport(cap))
             _t, _u, cost = c.chat([{"role": "user", "content": "hi"}], mode="standard", personal=True)
-        self.assertEqual(cap["body"]["model"], "muse-spark-1.3")
-        self.assertAlmostEqual(cost, estimate_cost("standard", 1000, 400, 200), places=9)
+        self.assertEqual(cap["body"]["model"], "muse-spark-1.3-contributor")
+        self.assertAlmostEqual(cost, estimate_cost("contributor", 1000, 400, 200), places=9)
 
     def test_wonder_ignores_spark_tier(self):
         cap = {}

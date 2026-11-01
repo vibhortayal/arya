@@ -6,13 +6,12 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
 - Endpoint note: §2.2 lists POST /v1/responses; spikes 1-2 verified
   POST /v1/chat/completions end-to-end on this team's key. This client uses
   the verified endpoint. Revisit if the responses endpoint is adopted.
-- Spark tier (owner decision, 2026-11-01): the "standard" mode that every
-  caller asks for means "Muse Spark". It runs as muse-spark-1.3-contributor
-  by default, which Meta may use to train future models (Meta docs: "In
-  Contributor mode, your content may be used to train future Meta models, in
-  exchange for a lower price."). Set ARYA_SPARK_TIER=standard to go back to
-  muse-spark-1.3 Standard ("your content is not used to train Meta models")
-  with no code change. Explicitly asking for mode="contributor" with
+- Spark tier: the "standard" mode that every caller asks for means "Muse
+  Spark". It runs as muse-spark-1.3 Standard by default ("your content is not
+  used to train Meta models"); live runs Standard (confirmed 2026-11-01).
+  ARYA_SPARK_TIER=contributor (or the Ops switch) selects the cheaper
+  Contributor tier, which Meta may train on; it is an operator option only,
+  off by default, and no user opt-in exists. Explicitly asking for mode="contributor" with
   personal=True is still refused. Wonder is always Standard.
 - Contributor is limited to 150 requests a minute (Standard: 3,000), so
   Spark calls on the Contributor tier pass a client-side gate.
@@ -31,12 +30,12 @@ MODELS = {
 }
 
 def spark_tier():
-    """Which tier the app's Spark ("standard") calls run on: "contributor"
-    (default, owner decision 2026-11-01) or "standard"
-    (ARYA_SPARK_TIER=standard)."""
+    """Which tier the app's Spark ("standard") calls run on: "standard"
+    (default) or "contributor" (ARYA_SPARK_TIER=contributor or the Ops
+    switch)."""
     from api import site_flags   # the Ops choice wins over the environment
-    v = site_flags.spark_tier() or os.environ.get("ARYA_SPARK_TIER", "contributor").strip().lower()
-    return "standard" if v == "standard" else "contributor"
+    v = site_flags.spark_tier() or os.environ.get("ARYA_SPARK_TIER", "standard").strip().lower()
+    return "contributor" if v == "contributor" else "standard"
 
 
 def resolve_mode(mode):

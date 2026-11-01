@@ -95,7 +95,7 @@ enforced there. `open_client.py` is the only other model client.
 
 | Job | Model | Notes |
 |---|---|---|
-| Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3-contributor` (Spark tier; `ARYA_SPARK_TIER=standard` for `muse-spark-1.3`) | cached prefixes, low effort; content may train Meta models |
+| Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard; `ARYA_SPARK_TIER=contributor` is an operator option, off) | cached prefixes, low effort |
 | Receipt photo reader (default, `auto`) | Spark first; `muse-wonder-1.0` (90 s bound) re-reads only a receipt the arithmetic checks flag | `decoded_by` records which read was kept; `ARYA_PHOTO_READER=spark` or `wonder`, or the Ops "Photo reader" switch, changes it with no code change |
 | Avatar and look images | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
@@ -363,9 +363,10 @@ Each agent has a narrow job and a named limit.
 ## 10. Cost control
 
 - MODEL-POLICY.md is normative: deterministic work in code at $0;
-  Spark 1.3 Contributor (owner decision 2026-11-01), low effort, cached
-  prefixes for volume reasoning, behind a client-side 140 requests/min
-  gate (Contributor limit: 150); Wonder is banned from volume paths.
+  Spark 1.3 Standard, low effort, cached prefixes for volume reasoning
+  (if the Contributor operator option is on, a client-side 140
+  requests/min gate applies; its limit is 150); Wonder is banned from
+  volume paths.
 - Every model call is written to a cost ledger. The app's daily
   ceiling (`ARYA_DAILY_BUDGET_USD`, $10) stops app model spend; the
   demo household spends from a separate bucket

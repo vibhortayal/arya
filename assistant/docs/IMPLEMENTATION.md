@@ -37,9 +37,10 @@ disagreement goes to the review queue.
 ### Budgets and modes
 - Meta API dollars: the $150 credit, metered from the first call.
   Engine caps: $10/day for the app, $2/day for the demo bucket.
-- Contributor mode (owner, 2026-11-01): now the Spark tier for the app,
-  so Spark content can train Meta models. `ARYA_SPARK_TIER=standard` reverts.
-- Standard mode: Wonder, gates and eval scoring.
+- Standard mode: Spark (the default, confirmed live 2026-11-01), Wonder,
+  gates and eval scoring. Contributor is an operator setting only
+  (`ARYA_SPARK_TIER=contributor` or the Ops switch), off; a user opt-in
+  is a possible future option, not built.
 - Muse Code: Contributor OFF before code work.
 
 ## 2. Foundations
@@ -222,10 +223,10 @@ network fails; the Hatch service if Oracle fails; pre-shot video if a
 live beat fails.
 
 ## 8. Design flags
-- **F1 Contributor mode:** Spark runs on it since 2026-11-01 (owner
-  decision); real content sent to Spark can train Meta models. Receipt
-  photos are read by Spark first too; a Wonder re-read of a flagged
-  receipt runs on Standard.
+- **F1 Spark tier:** Spark runs in Standard mode (default, confirmed
+  live 2026-11-01). Receipt photos are read by Spark first; a Wonder
+  re-read of a flagged receipt is Standard too. Contributor is an
+  operator setting only, off.
 - **F2 SAM on video:** hosted SAM caps a request at 15,000 frames;
   SAM runs on stills ($0.0025 an image).
 - **F3 Spark latency:** low effort, short prompts, cached prefixes,
