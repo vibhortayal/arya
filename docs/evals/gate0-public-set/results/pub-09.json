@@ -1,0 +1,245 @@
+{
+  "http_status": 200,
+  "file": "pub-09",
+  "usage": {
+    "completion_tokens": 6239,
+    "prompt_tokens": 1720,
+    "total_tokens": 7959,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4909
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 369
+    }
+  },
+  "decoded": {
+    "store": "COSTCO WHOLESALE",
+    "date": "",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "NKFISH",
+        "brand": null,
+        "detail": null,
+        "list_price": 15.76,
+        "price": 15.76,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "MONKFISH"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "GOLD KIWI",
+        "brand": null,
+        "detail": "ORG",
+        "list_price": 7.99,
+        "price": 7.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "GOLD KIW"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "SAUERKRAUT",
+        "brand": null,
+        "detail": null,
+        "list_price": 7.99,
+        "price": 7.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": []
+      },
+      {
+        "item_no": "582053",
+        "product": "CRNCHMASTER",
+        "brand": null,
+        "detail": null,
+        "list_price": 7.99,
+        "price": 5.99,
+        "discount": 2.0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "1048072",
+        "product": "GREEK YOGURT",
+        "brand": null,
+        "detail": null,
+        "list_price": 5.89,
+        "price": 5.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "1127213",
+        "product": "SHARP SHRED",
+        "brand": null,
+        "detail": null,
+        "list_price": 10.79,
+        "price": 10.79,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.85,
+        "needs_user_check": true,
+        "alternatives": [
+          "SHARP SHREDDED CHEESE"
+        ]
+      },
+      {
+        "item_no": "96716",
+        "product": "SPINACH",
+        "brand": null,
+        "detail": "ORG",
+        "list_price": 3.99,
+        "price": 3.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "427381",
+        "product": "EGGS",
+        "brand": "Kirkland Signature",
+        "detail": "ORG",
+        "list_price": 6.39,
+        "price": 6.39,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "427381",
+        "product": "EGGS",
+        "brand": "Kirkland Signature",
+        "detail": "ORG",
+        "list_price": 6.39,
+        "price": 6.39,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "1076903",
+        "product": "PISTACHIO",
+        "brand": null,
+        "detail": null,
+        "list_price": 13.99,
+        "price": 13.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "57931",
+        "product": "SHIITAKI",
+        "brand": null,
+        "detail": "ORG",
+        "list_price": 7.99,
+        "price": 7.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": [
+          "SHIITAKE"
+        ]
+      },
+      {
+        "item_no": "969425",
+        "product": "GALA",
+        "brand": null,
+        "detail": "ORGANIC",
+        "list_price": 9.99,
+        "price": 9.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "MANGOS",
+        "brand": null,
+        "detail": "ORG",
+        "list_price": 6.99,
+        "price": 6.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "WHITE PEACH",
+        "brand": null,
+        "detail": null,
+        "list_price": 9.99,
+        "price": 9.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "TE PEACH"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "NECTARINE",
+        "brand": null,
+        "detail": null,
+        "list_price": 9.99,
+        "price": 9.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 130.12,
+    "tax": 0,
+    "total": 130.12,
+    "items_sold": 15
+  }
+}

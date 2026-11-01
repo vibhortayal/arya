@@ -1,0 +1,53 @@
+{
+  "http_status": 200,
+  "file": "pub-07",
+  "usage": {
+    "completion_tokens": 2537,
+    "prompt_tokens": 1720,
+    "total_tokens": 4257,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2309
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "Publix",
+    "date": "",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "NONNIS BISCOT ALMD",
+        "brand": "NONNIS",
+        "detail": null,
+        "list_price": 3.59,
+        "price": 3.59,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "ARIZONA RASPBERRY",
+        "brand": "ARIZONA",
+        "detail": null,
+        "list_price": 0.99,
+        "price": 0.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 4.58,
+    "tax": 0.07,
+    "total": 4.65,
+    "items_sold": 2
+  }
+}

@@ -149,8 +149,9 @@ Tests, from the repo root:
 - **Owner corpus.** 114 receipts, 1,226 lines, 114 of 114 passing the
   arithmetic check.
 
-The Gate 0 and judge evaluation records are in the companion research repo,
-`vibhortayal/meta-hackathon-research`.
+The scored reports and the Gate 0 labels and results are in
+[`docs/evals/`](docs/evals/). The companion research repo,
+`vibhortayal/meta-hackathon-research`, holds the earlier spikes.
 
 ## Where things are
 

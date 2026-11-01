@@ -1,0 +1,56 @@
+{
+  "store": "H-E-B",
+  "date": null,
+  "lines": [
+    {
+      "product_as_printed": "PACKAGED GRN BELL PEPPERS",
+      "price_paid": 1.98
+    },
+    {
+      "product_as_printed": "HEB SI SUNRISE PEPPERS",
+      "price_paid": 3.68
+    },
+    {
+      "product_as_printed": "WHT ONIONS JBO TXR 40LB",
+      "price_paid": 1.7
+    },
+    {
+      "product_as_printed": "HEB POWER SLAW",
+      "price_paid": 2.98
+    },
+    {
+      "product_as_printed": "ROMAINE HEARTS",
+      "price_paid": 3.15
+    },
+    {
+      "product_as_printed": "SEEDLESS CUCUMBERS",
+      "price_paid": 0.95
+    },
+    {
+      "product_as_printed": "ROMA TOMATOES",
+      "price_paid": 0.81
+    },
+    {
+      "product_as_printed": "GREEN ONIONS",
+      "price_paid": 0.65
+    },
+    {
+      "product_as_printed": "HEB GREEK YOGURT PLAIN",
+      "price_paid": 4.88
+    },
+    {
+      "product_as_printed": "HEB NAT LEAN GROUND TURKE",
+      "price_paid": 5.49
+    },
+    {
+      "product_as_printed": "GROUND CHICKEN BREAST",
+      "price_paid": 3.66
+    },
+    {
+      "product_as_printed": "HEB NATURAL BREAST BNLS S",
+      "price_paid": 6.99
+    }
+  ],
+  "total": 36.92,
+  "items_sold": 12
+}

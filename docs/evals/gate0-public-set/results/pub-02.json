@@ -1,0 +1,168 @@
+{
+  "http_status": 200,
+  "file": "pub-02",
+  "usage": {
+    "completion_tokens": 5628,
+    "prompt_tokens": 4433,
+    "total_tokens": 10061,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4701
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "Publix",
+    "date": "",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "Yellow Cheddar",
+        "brand": "Boar's Head",
+        "detail": "Fs Vt",
+        "list_price": 6.0,
+        "price": 6.0,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.65,
+        "needs_user_check": true,
+        "alternatives": [
+          "Bh Fs Vt Yellow Cheddar",
+          "Boar's Head Vermont Yellow Cheddar"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "Organic Pecan Halves",
+        "brand": null,
+        "detail": "8Oz",
+        "list_price": 7.99,
+        "price": 7.99,
+        "discount": 0.5,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Italian Five Grain Bread",
+        "brand": null,
+        "detail": null,
+        "list_price": 5.19,
+        "price": 5.19,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Dill Spears",
+        "brand": "Mt. Olive",
+        "detail": "Mjstc",
+        "list_price": 5.49,
+        "price": 5.49,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.82,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Pike Place Roast",
+        "brand": "Starbucks",
+        "detail": "Wb",
+        "list_price": 15.29,
+        "price": 15.29,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Pork Loin Chops",
+        "brand": null,
+        "detail": "Bnls Thin",
+        "list_price": 10.11,
+        "price": 10.11,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Tomato Soup",
+        "brand": "Panera",
+        "detail": "16Oz",
+        "list_price": 6.99,
+        "price": 6.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Limes",
+        "brand": null,
+        "detail": "Persian",
+        "list_price": 2.0,
+        "price": 2.0,
+        "discount": 0,
+        "qty": 4,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Sumo Citrus",
+        "brand": null,
+        "detail": "$3.99/lb x 0.68lb",
+        "list_price": 2.71,
+        "price": 2.71,
+        "discount": 0.68,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "Spearmint",
+        "brand": "Orbit",
+        "detail": "S/F",
+        "list_price": 1.5,
+        "price": 1.5,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 63.27,
+    "tax": 3.31,
+    "total": 66.58,
+    "items_sold": 10
+  }
+}

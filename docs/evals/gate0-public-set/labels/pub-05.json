@@ -1,0 +1,60 @@
+{
+  "store": "Westside Market",
+  "date": "2013-03-23",
+  "lines": [
+    {
+      "product_as_printed": "HONEY NUT O'S",
+      "price_paid": 4.99
+    },
+    {
+      "product_as_printed": "TROPICAL ALOHA MIX",
+      "price_paid": 4.63
+    },
+    {
+      "product_as_printed": "ORGANIC BANANAS",
+      "price_paid": 1.88
+    },
+    {
+      "product_as_printed": "HARVEST BLUEBERRIES",
+      "price_paid": 5.0
+    },
+    {
+      "product_as_printed": "ORANGE JUICE",
+      "price_paid": 8.99
+    },
+    {
+      "product_as_printed": "ORIGINAL LACTOSE FREE",
+      "price_paid": 4.99
+    },
+    {
+      "product_as_printed": "BOUNTY ONE SHEET",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "FRESH BREAD",
+      "price_paid": 1.89
+    },
+    {
+      "product_as_printed": "ROYAL GALA",
+      "price_paid": 5.99
+    },
+    {
+      "product_as_printed": "NAPOLITANER",
+      "price_paid": 2.99
+    },
+    {
+      "product_as_printed": "PIZZA POCKETS WITH TOM",
+      "price_paid": 4.05
+    },
+    {
+      "product_as_printed": "WHITE CHEDDAR PUFFS",
+      "price_paid": 3.99
+    },
+    {
+      "product_as_printed": "BANANA NUT",
+      "price_paid": 3.99
+    }
+  ],
+  "total": 55.55,
+  "items_sold": null
+}

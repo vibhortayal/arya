@@ -89,6 +89,7 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
       <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("addReceiptSheet.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
       <p id="ar-status" className="muted nomargin">{status}</p>
       <p className="muted nomargin">{t("addReceiptSheet.theHuntStaysClosedAttaching")}</p>
+      <p className="muted nomargin">{t("addReceiptSheet.photoNote")}</p>
     </Sheet>
   );
 }
