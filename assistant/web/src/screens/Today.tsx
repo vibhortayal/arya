@@ -47,6 +47,8 @@ type TodayData = {
   quest_receipts: any; review: any; curator: any; profile: any;
 };
 let todayMem: TodayData | null = null;
+/* How long boot.js's early /api/today stays usable (re-audit N5). */
+const BOOT_FRESH_MS = 10000;
 const eyesOf = (d: TodayData) => ((d.review?.lines || []).length + (d.review?.unresolved || []).length + (d.curator?.proposals || []).length);
 clearOnSignOut(() => { todayMem = null; });
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -287,8 +289,10 @@ export function Today() {
    * null and keeps what the screen had. */
   const load = useCallback(async () => {
     let d: TodayData;
-    // boot.js may have started this read before the app loaded.
-    const early = window.__bootData?.today as Promise<TodayData> | undefined;
+    // boot.js may have started this read before the app loaded. Only
+    // in the first 10 s: a Today opened later reads afresh (re-audit N5;
+    // any write also drops it, lib/api.ts).
+    const early = performance.now() < BOOT_FRESH_MS ? window.__bootData?.today as Promise<TodayData> | undefined : undefined;
     if (window.__bootData) window.__bootData.today = undefined;
     try { d = await (early ? early.then(v => { keepBootRead("/api/today", v); return v; }, () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
     catch (e) { if (live.current && !todayMem) setLoadFailed(true); showErr(e); return; }

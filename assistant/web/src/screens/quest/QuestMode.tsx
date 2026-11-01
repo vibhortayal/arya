@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNav } from "../../app/nav";
 import { get } from "../../lib/api";
-import { useSession } from "../../app/session";
+import { clearOnSignOut, useSession } from "../../app/session";
 import { useAvatar } from "../../app/avatar";
 import { loadGameDoc, serverProfileStore, type GameDoc } from "./serverProfile";
 import { AppSource } from "./appSource";
@@ -22,6 +22,9 @@ import { arrange } from "../../lib/layout";
  * - Older trips, Shop-Off, friends and the leaderboard live on the
  *   Trips page ("trips"), linked from the game's home. */
 const QuestGame = lazy(() => import("../../game"));
+/* The game's profile from the last visit, for this account. */
+let docMem: { user: string | null; doc: GameDoc } | null = null;
+clearOnSignOut(() => { docMem = null; });
 
 const FULL = new Set(["play", "finish", "loading"]);
 
@@ -32,8 +35,19 @@ export function QuestMode() {
   const s = useSession();
   const source = useMemo(() => new AppSource(), []);
   // One level, streak and album: the game's profile lives on the server.
-  const [doc, setDoc] = useState<GameDoc | null | undefined>(undefined);
-  useEffect(() => { void loadGameDoc().then(setDoc); }, [s.user]);
+  // A return visit draws at once from the last copy (re-audit N4, as
+  // Today keeps todayMem); the fresh read refreshes the copy behind.
+  const [doc, setDoc] = useState<GameDoc | null | undefined>(() => (docMem && docMem.user === s.user ? docMem.doc : undefined));
+  useEffect(() => {
+    const user = s.user;
+    void loadGameDoc().then(d => {
+      const kept = docMem && docMem.user === user ? docMem.doc : null;
+      // Refresh the kept copy in place: this visit's store saves into it.
+      if (kept) { if (d) Object.assign(kept, d); return; }
+      if (d) docMem = { user, doc: d };
+      setDoc(d);
+    });
+  }, [s.user]);
   const store = useMemo(() => doc === undefined ? null : serverProfileStore(`arya-quest:${s.user || "guest"}`, doc), [s.user, doc]);
   const listId = typeof nav.params.listId === "string" ? nav.params.listId : undefined;
   // nav.params.practice starts the Practice Market.

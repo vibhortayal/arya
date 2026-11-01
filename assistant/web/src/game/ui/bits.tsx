@@ -87,7 +87,10 @@ export function GhostHand({ target, delay = 3000 }: { target: string | null; del
       const t = document.querySelector(target) as HTMLElement | null, root = el.offsetParent as HTMLElement | null;
       if (!t || !root) { el.classList.remove("on"); return; }
       const r = t.getBoundingClientRect(), R = root.getBoundingClientRect();
-      el.style.left = `${r.left - R.left + r.width / 2}px`; el.style.top = `${r.top - R.top + r.height / 2}px`;
+      // A wide button is pointed at near its left end: its middle holds
+      // the label and the points chip, which the dot hid (re-audit N10).
+      const x = r.width > 200 ? r.left + Math.min(56, r.width * 0.15) : r.left + r.width / 2;
+      el.style.left = `${x - R.left}px`; el.style.top = `${r.top - R.top + r.height / 2}px`;
       el.classList.add("on");
     };
     const arm = () => { el.classList.remove("on"); clearTimeout(timer); timer = window.setTimeout(place, delay); };

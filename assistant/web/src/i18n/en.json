@@ -135,6 +135,8 @@
     },
     "sceneFailed": "The store view did not load.",
     "demoBar": "Demo household",
+    "sessionEndedDemo": "Arya was updated. Start the demo again.",
+    "sessionEnded": "You were signed out. Sign in again to keep going.",
     "backPlain": "Back",
     "notHereShort": "Not here",
     "addedToList": "Added to your list.",
