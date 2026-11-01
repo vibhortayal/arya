@@ -10,6 +10,16 @@ export type InfoEntry = { t: string; s: string; rows: [string, string][] };
 /* What each (i) says: how the number is worked out, and its limits.
  * The texts are en.json keys; infoEntry() returns them translated. */
 export const INFO: Record<string, InfoEntry> = {
+  /* Spending card (owner, 2026-11-01): one sheet for every heading, so
+   * Groceries, Other purchases and All-time read side by side. */
+  spend: { t: "info.spend.title", s: "info.spend.sub", rows: [
+    ["info.spend.month", "info.spend.monthText"],
+    ["info.spend.all", "info.spend.allText"],
+    ["info.spend.groceries", "info.spend.groceriesText"],
+    ["info.spend.other", "info.spend.otherText"],
+    ["info.spend.returns", "info.spend.returnsText"],
+    ["info.spend.saved", "info.spend.savedText"],
+    ["info.spend.others", "info.spend.othersText"]] },
   trend: { t: "info.trend.title", s: "info.trend.sub", rows: [
     ["info.trend.row1", "info.trend.row1Text"],
     ["info.trend.row2", "info.trend.row2Text"],
