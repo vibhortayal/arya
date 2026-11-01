@@ -32,7 +32,8 @@ class OpenClient:
         self.api_key = api_key if api_key is not None else os.environ.get(
             "BASETEN_API_KEY", "")
         # An env var set-but-empty (compose ${VAR:-}) means unset.
-        self.model = model or os.environ.get("ARYA_OPEN_MODEL") \
+        from api import site_flags   # the Ops name wins over the environment
+        self.model = model or site_flags.open_model() or os.environ.get("ARYA_OPEN_MODEL") \
             or DEFAULT_MODEL
         self.transport = transport  # tests: fn(url, body, headers) -> dict
 

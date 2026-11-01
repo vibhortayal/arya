@@ -58,10 +58,8 @@ def is_kroger_family(name):
 
 
 def _daily_cap():
-    try:
-        return int(os.environ.get("ARYA_KROGER_DAILY_CALLS") or 800)
-    except ValueError:
-        return 800
+    from api import settings   # Ops value, then ARYA_KROGER_DAILY_CALLS
+    return settings.get("kroger_daily_calls")
 
 
 def _spend_call():

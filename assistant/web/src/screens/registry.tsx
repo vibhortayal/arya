@@ -60,6 +60,7 @@ const Reveal = screen(() => import("./haul/Reveal"), "Reveal");
 const WaitlistAdmin = screen(() => import("./WaitlistAdmin"), "WaitlistAdmin");
 const Usage = screen(() => import("./Usage"), "Usage");
 const Ops = screen(() => import("./Ops"), "Ops");
+const OpsSettings = screen(() => import("./OpsSettings"), "OpsSettings");
 const AiNotice = screen(() => import("./AiNotice"), "AiNotice");
 
 /* One entry per screen: the type makes every view in app/views.ts
@@ -73,6 +74,7 @@ export const SCREENS: Record<ViewId, ComponentType> = {
   waitlist: WaitlistAdmin,
   usage: Usage,
   ops: Ops,
+  "ops-settings": OpsSettings,
   ai: AiNotice,
   "group-join": GroupJoin,
   newlist: NewList,

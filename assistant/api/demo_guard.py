@@ -58,7 +58,8 @@ def _retry_after(bucket, key):
 
 def _demo_rate(bucket, key, limit_env, default):
     import time as _t
-    limit = int(os.environ.get(limit_env, str(default)))
+    from api import settings   # Ops value, then the env var, then the default
+    limit = int(settings.by_env(limit_env, default))
     now = _t.time()
     _prune(bucket, 3600)
     hits = [t for t in bucket.get(key, []) if now - t < 3600]

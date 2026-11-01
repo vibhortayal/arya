@@ -4,6 +4,7 @@ confirmation. Sign-in codes are not sent here: Supabase sends those.
 Off until RESEND_API_KEY is set, so a missing key changes nothing. Sending
 is best effort: a failure is logged and never blocks the person joining."""
 import html
+from api import settings as _settings
 import json
 import logging
 import os
@@ -97,7 +98,7 @@ def waitlist_owner_notice(email, app_url, now=None):
         if not to or not configured():
             return False
         now = time.time() if now is None else now
-        cap = max(1, int(os.environ.get("ARYA_WAITLIST_NOTIFY_PER_HOUR", "10")))
+        cap = max(1, int(_settings.get("waitlist_notify_per_hour")))
         global _notify_capped_at
         with _notify_lock:
             _notify_sent[:] = [t for t in _notify_sent if now - t < 3600]
@@ -145,7 +146,7 @@ def feedback_note(note):
     day = time.strftime("%Y-%m-%d", time.gmtime())
     if _mail_day["day"] != day:
         _mail_day.update(day=day, n=0)
-    if _mail_day["n"] >= int(os.environ.get("ARYA_FEEDBACK_MAIL_CAP", "20")):
+    if _mail_day["n"] >= int(_settings.get("feedback_mail_cap")):
         return False
     _mail_day["n"] += 1
     kind, who, when, text = _fmt_note(note)
