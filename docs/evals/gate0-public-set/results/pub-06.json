@@ -1,0 +1,69 @@
+{
+  "http_status": 200,
+  "file": "pub-06",
+  "usage": {
+    "completion_tokens": 2092,
+    "prompt_tokens": 1794,
+    "total_tokens": 3886,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1781
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 369
+    }
+  },
+  "decoded": {
+    "store": "Kroger",
+    "date": "09/07/21",
+    "lines": [
+      {
+        "item_no": null,
+        "product": "Gelatin Mix",
+        "brand": "Jello",
+        "detail": null,
+        "list_price": 1.59,
+        "price": 1.59,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": null,
+        "product": "SAS Granulated",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.69,
+        "price": 1.69,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "SAS Granulated Sugar"
+        ]
+      },
+      {
+        "item_no": null,
+        "product": "Flour",
+        "brand": "Gold Medal",
+        "detail": null,
+        "list_price": 4.79,
+        "price": 4.79,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 8.07,
+    "tax": 0.0,
+    "total": 8.07,
+    "items_sold": 3
+  }
+}

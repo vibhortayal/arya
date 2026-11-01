@@ -5,8 +5,8 @@ Escalation is by evidence (a scored eval), never by default.
 
 ## Prices (per 1M tokens, Meta Model API, verified 2026-10-27)
 - muse-spark-1.3 Standard:    $1.25 in / $0.15 cached / $4.25 out
-- muse-spark-1.3 Contributor: $0.10 in / $0.002 cached / $0.20 out (may train on inputs).
-  Limit 150 requests/min (Standard 3,000). THE APP'S SPARK TIER since 2026-11-01.
+- muse-spark-1.3 Contributor: $0.10 in / $0.002 cached / $0.20 out (Meta may train
+  on inputs). Limit 150 requests/min. Not the app's tier; see "Spark tier" below.
 - muse-wonder-1.0:            $4.00 in / $0.20 cached / $20.00 out — the expensive
   frontier model, NOT a budget tier. Banned from volume paths.
 - muse-image-1.0: $0.01/image. muse-voice-transcribe-1.0: $0.18/audio-hour.
@@ -17,8 +17,8 @@ Escalation is by evidence (a scored eval), never by default.
    math, reconciliation, and list generation are deterministic code: $0.
 2. Volume intelligence (receipt decode fallback, list and date photos,
    command parsing, Ask Arya, judge): Spark, reasoning_effort=low, stable
-   prefixes cached. Spark runs as muse-spark-1.3-contributor (see the
-   2026-11-01 amendment below).
+   prefixes cached. Spark runs as muse-spark-1.3 Standard (see "Spark tier"
+   below).
 3. Eval loops (golden sets, prompt variants): Contributor mode. Gate
    scores still count on Standard. (Superseded for app traffic by the
    2026-11-01 amendment.)
@@ -102,29 +102,25 @@ is the amendment path. Receipts record `decoded_by`, so the switch is
 visible in the data. Spark-only photo decode scored 93.88% in the Gate 0
 eval, with the review queue as the mitigation.
 
-## Spark on Contributor (owner decision, 2026-11-01)
-The owner chose to run the app's Spark calls on `muse-spark-1.3-contributor`
-after being advised against it. What Meta's models page says (dev.meta.ai/docs/models):
-"In Contributor mode, your content may be used to train future Meta models,
-in exchange for a lower price." and "In Standard mode, your content is not
-used to train Meta models." The page lists no personal-data restriction for
-the contributor variants. The older note "Meta terms bar personal data on
-Contributor mode" was not found there and is withdrawn until someone can cite it.
+## Spark tier (owner decision, 2026-11-01)
+Spark and Wonder run in Standard mode. Meta's models page (dev.meta.ai/docs/models):
+"In Standard mode, your content is not used to train Meta models." Earlier on
+2026-11-01 the owner had moved the app's Spark calls to
+`muse-spark-1.3-contributor` for the lower price; the same day the owner moved
+them back to Standard, so nothing the app sends is used for training.
 
 - Code: `meta_client.resolve_mode()` maps the app's "standard" (Spark) mode to
-  the tier in `ARYA_SPARK_TIER` (default `contributor`; `standard` reverts,
-  then `docker compose up -d`). Wonder is always Standard. An explicit
-  `mode="contributor"` with `personal=True` is still refused.
-- Rate limit: Contributor allows 150 requests/min per team. `meta_client`
-  has a sliding-window gate at 140/min; a call that would wait over 20 s fails
-  with "Arya's AI is busy right now" (HTTP 502) instead of hanging; 429s keep
-  the existing retry with Retry-After.
-- What now trains: the staple judge (item names), Ask Arya chat, list text
-  and list photos, receipt PDF and pasted-text decode, order-text decode,
-  Costco name expansion, expiry-date photos, fridge (Eyes) photos, shelf-scan crops, Quest list matching and
-  Curator suggestions, and the Spark fallback for receipt photos and PDFs.
-- What does not: receipt photos while the photo reader is wonder (default
-  through Nov 9; the Wonder call is Standard). With the reader on spark or
-  auto, Spark (Contributor) reads the receipt photo first, so it can train;
-  auto then sends the photo to Wonder again only if the checks fail. SAM, Muse Voice and the
-  open-weights client are unchanged.
+  the tier set on the Ops screen or in `ARYA_SPARK_TIER`; the Ops screen
+  setting wins. Wonder is always Standard. An explicit `mode="contributor"` with
+  `personal=True` is still refused.
+- Option, not built: a community (Contributor) tier, where users opt in to
+  letting Meta train in exchange for lower cost, could support more users. It
+  needs an opt-in screen, a per-user routing rule and updated privacy text
+  first, and the owner's word.
+- Rate limits: Standard allows 3,000 requests/min per team. The Contributor tier
+  allows 150/min, so `meta_client` keeps a sliding-window gate at 140/min for that
+  case; a call that would wait over 20 s fails with "Arya's AI is busy right now"
+  (HTTP 502) instead of hanging.
+- Receipt photos: with the reader on auto (the default) Spark reads first and
+  Wonder re-reads only a flagged receipt. SAM, Muse Voice and the open-weights
+  client are unchanged.

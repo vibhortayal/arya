@@ -136,6 +136,12 @@ Open sign-ups; prices and store news shared by Arya shoppers; whole-store
 maps; and the same shelf-reading on Meta glasses, hands free. None of
 these is built yet beyond what is listed above.
 
+## Known limits
+
+Testing data is limited to one household, and limited data was available.
+Real-device testing was done only on an iPhone 17 Pro. Other phone sizes were
+checked in a browser at 360x640, 390x844, 430x932 and 390x568.
+
 ## Try it
 
 - Live: https://arya.teamnightshift.org. Tap "Try it now" for a fictional

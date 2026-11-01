@@ -1,0 +1,55 @@
+{
+  "store": "Food Lion",
+  "date": null,
+  "lines": [
+    {
+      "product_as_printed": "PALM ORIGINAL CHEESE",
+      "price_paid": 5.29
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "product_as_printed": "FIN IMPRTD BTR SALTD",
+      "price_paid": 3.99
+    },
+    {
+      "product_as_printed": "WHOLE MILK GALLON",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "PF BUTTER SLIDERS",
+      "price_paid": 3.49
+    },
+    {
+      "product_as_printed": "KB CD RNBW MM CKS",
+      "price_paid": 4.49
+    },
+    {
+      "product_as_printed": "OS WHT CRNBRRY STRWB",
+      "price_paid": 3.68
+    },
+    {
+      "product_as_printed": "STARKIST TUNA CH LT",
+      "price_paid": 1.59
+    },
+    {
+      "product_as_printed": "STRKST TC HRB GARLIC",
+      "price_paid": 1.59
+    },
+    {
+      "unreadable": true
+    },
+    {
+      "unreadable": true
+    }
+  ],
+  "total": null,
+  "items_sold": null
+}

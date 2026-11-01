@@ -1,0 +1,20 @@
+{
+  "store": "Kroger",
+  "date": "2021-09-07",
+  "lines": [
+    {
+      "product_as_printed": "JELLO GELATIN MIX",
+      "price_paid": 1.59
+    },
+    {
+      "product_as_printed": "SAS GRANULATED",
+      "price_paid": 1.69
+    },
+    {
+      "product_as_printed": "GOLD MEDAL FLOUR",
+      "price_paid": 4.79
+    }
+  ],
+  "total": 8.07,
+  "items_sold": 3
+}

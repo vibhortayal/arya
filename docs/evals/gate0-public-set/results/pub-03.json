@@ -1,0 +1,193 @@
+{
+  "http_status": 200,
+  "file": "pub-03",
+  "usage": {
+    "completion_tokens": 3363,
+    "prompt_tokens": 4498,
+    "total_tokens": 7861,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2245
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "H-E-B",
+    "date": "",
+    "lines": [
+      {
+        "item_no": "1",
+        "product": "PACKAGED GRN BELL PEPPERS",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.98,
+        "price": 1.98,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "2",
+        "product": "SI SUNRISE PEPPERS",
+        "brand": "HEB",
+        "detail": null,
+        "list_price": 3.68,
+        "price": 3.68,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "3",
+        "product": "WHT ONIONS JBO TXR 40LB",
+        "brand": null,
+        "detail": "1.15 Lbs @ 1.48",
+        "list_price": 1.7,
+        "price": 1.7,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "4",
+        "product": "POWER SLAW",
+        "brand": "HEB",
+        "detail": null,
+        "list_price": 2.98,
+        "price": 2.98,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "5",
+        "product": "ROMAINE HEARTS",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.15,
+        "price": 3.15,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "6",
+        "product": "SEEDLESS CUCUMBERS",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.95,
+        "price": 0.95,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "7",
+        "product": "ROMA TOMATOES",
+        "brand": null,
+        "detail": "0.91 Lbs @ 0.89",
+        "list_price": 0.81,
+        "price": 0.81,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "8",
+        "product": "GREEN ONIONS",
+        "brand": null,
+        "detail": null,
+        "list_price": 0.65,
+        "price": 0.65,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "9",
+        "product": "GREEK YOGURT PLAIN",
+        "brand": "HEB",
+        "detail": null,
+        "list_price": 4.88,
+        "price": 4.88,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "10",
+        "product": "NAT LEAN GROUND TURKE",
+        "brand": "HEB",
+        "detail": null,
+        "list_price": 5.49,
+        "price": 5.49,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.93,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "11",
+        "product": "GROUND CHICKEN BREAST",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.66,
+        "price": 3.66,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.97,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "12",
+        "product": "NATURAL BREAST BNLS S",
+        "brand": "HEB",
+        "detail": "Special Today- 25.00% Off orig 9.32 Ea.",
+        "list_price": 9.32,
+        "price": 6.99,
+        "discount": 2.33,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 36.92,
+    "tax": 0,
+    "total": 36.92,
+    "items_sold": 12
+  }
+}

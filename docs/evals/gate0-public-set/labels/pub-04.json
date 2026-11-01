@@ -1,0 +1,116 @@
+{
+  "store": "Alexander's Supermarket",
+  "date": null,
+  "lines": [
+    {
+      "product_as_printed": "GROCERY",
+      "price_paid": 0.6
+    },
+    {
+      "product_as_printed": "HOOD HOODSIE CUP",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "HOOD HOODSIE CUP",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "HF ORANGE JC 64Z",
+      "price_paid": 1.29
+    },
+    {
+      "product_as_printed": "BC WHITE CAKE 18",
+      "price_paid": 0.73
+    },
+    {
+      "product_as_printed": "BC WHITE CAKE 18",
+      "price_paid": 0.73
+    },
+    {
+      "product_as_printed": "SLICE D/MAN OR2L",
+      "price_paid": 0.89
+    },
+    {
+      "product_as_printed": "S/K NAPKINS 140",
+      "price_paid": 0.63
+    },
+    {
+      "product_as_printed": "SLICE CHR COLA2L",
+      "price_paid": 1.39
+    },
+    {
+      "product_as_printed": "LOOSE BULKY RLS",
+      "price_paid": 0.89
+    },
+    {
+      "product_as_printed": "TUNA SALAD SAND",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "WHITE MT. BREAD",
+      "price_paid": 0.99
+    },
+    {
+      "product_as_printed": "FLEX STRAWS",
+      "price_paid": 0.89
+    },
+    {
+      "product_as_printed": "SWTHR PLATES7\"48",
+      "price_paid": 1.63
+    },
+    {
+      "product_as_printed": "FRT WRNKLS LEMON",
+      "price_paid": 1.79
+    },
+    {
+      "product_as_printed": "BEEF PATTIES 75%",
+      "price_paid": 2.21
+    },
+    {
+      "product_as_printed": "SNK FRT/S CHRY48",
+      "price_paid": 1.89
+    },
+    {
+      "product_as_printed": "CARTWHEELS",
+      "price_paid": 0.18
+    },
+    {
+      "product_as_printed": "BALOONS 14CT",
+      "price_paid": 1.25
+    },
+    {
+      "product_as_printed": "LGE BRWN 8PK",
+      "price_paid": 0.65
+    },
+    {
+      "product_as_printed": "KLEENEX POCKET",
+      "price_paid": 1.29
+    },
+    {
+      "product_as_printed": "M&M 15%FREE 1884",
+      "price_paid": 1.99
+    },
+    {
+      "product_as_printed": "DOMINO CONFECT.",
+      "price_paid": 0.5
+    },
+    {
+      "product_as_printed": "DOMINO CONFECT.",
+      "price_paid": 0.5
+    },
+    {
+      "product_as_printed": "KBLR. T/HOUSE16BN",
+      "price_paid": 1.69
+    },
+    {
+      "product_as_printed": "BAKERY",
+      "price_paid": 4.99
+    },
+    {
+      "product_as_printed": "CHEER 96ZPP499",
+      "price_paid": 4.29
+    }
+  ],
+  "total": 39.99,
+  "items_sold": null
+}

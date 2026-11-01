@@ -1,0 +1,60 @@
+{
+  "store": "Walmart",
+  "date": "2020-06-01",
+  "lines": [
+    {
+      "product_as_printed": "HBO ALM 23",
+      "price_paid": 3.98
+    },
+    {
+      "product_as_printed": "LNF YOGURT",
+      "price_paid": 3.36
+    },
+    {
+      "product_as_printed": "MUSHROOMS",
+      "price_paid": 1.88
+    },
+    {
+      "product_as_printed": "GV OATMEAL",
+      "price_paid": 2.33
+    },
+    {
+      "product_as_printed": "FRENCH BREAD",
+      "price_paid": 1.0
+    },
+    {
+      "product_as_printed": "RANCH DRSNG",
+      "price_paid": 2.64
+    },
+    {
+      "product_as_printed": "ROMAINE HRTS",
+      "price_paid": 2.78
+    },
+    {
+      "product_as_printed": "BULK LEMONS",
+      "price_paid": 0.88
+    },
+    {
+      "product_as_printed": "GREEN ONIONS",
+      "price_paid": 0.78
+    },
+    {
+      "product_as_printed": "BELL PEPPER",
+      "price_paid": 0.76
+    },
+    {
+      "product_as_printed": "RED BELL",
+      "price_paid": 1.38
+    },
+    {
+      "product_as_printed": "GV LEMON 75",
+      "price_paid": 3.12
+    },
+    {
+      "product_as_printed": "PINEAPPLE",
+      "price_paid": 1.98
+    }
+  ],
+  "total": 28.48,
+  "items_sold": 14
+}

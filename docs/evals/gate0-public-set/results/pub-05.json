@@ -1,0 +1,213 @@
+{
+  "http_status": 200,
+  "file": "pub-05",
+  "usage": {
+    "completion_tokens": 10536,
+    "prompt_tokens": 1043,
+    "total_tokens": 11579,
+    "completion_tokens_details": {
+      "reasoning_tokens": 9311
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "decoded": {
+    "store": "Westside Supermarket",
+    "date": "03/23/2013",
+    "lines": [
+      {
+        "item_no": "02190827475",
+        "product": "HONEY NUT O'S",
+        "brand": null,
+        "detail": null,
+        "list_price": 4.99,
+        "price": 4.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "62083",
+        "product": "TROPICAL ALOHA MIX",
+        "brand": null,
+        "detail": null,
+        "list_price": 4.63,
+        "price": 4.63,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "94011",
+        "product": "ORGANIC BANANAS",
+        "brand": null,
+        "detail": "1.900 lb @ $0.99/lb",
+        "list_price": 1.88,
+        "price": 1.88,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "03338322228",
+        "product": "HARVEST BLUEBERRIES",
+        "brand": null,
+        "detail": "2 @ $2.50",
+        "list_price": 5.0,
+        "price": 5.0,
+        "discount": 0,
+        "qty": 2,
+        "is_return": false,
+        "confidence": 0.95,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "63979211002",
+        "product": "ORANGE JUICE",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.99,
+        "price": 3.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "04157005617",
+        "product": "ORIGINAL LACTOSE FREE",
+        "brand": null,
+        "detail": null,
+        "list_price": 4.99,
+        "price": 4.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "03700081599",
+        "product": "BOUNTY ONE SHEET",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.99,
+        "price": 1.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "1018",
+        "product": "FRESH BREAD",
+        "brand": null,
+        "detail": null,
+        "list_price": 1.89,
+        "price": 1.89,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "03338300741",
+        "product": "ROYAL GALA",
+        "brand": null,
+        "detail": null,
+        "list_price": 5.99,
+        "price": 5.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.75,
+        "needs_user_check": true,
+        "alternatives": [
+          "ROYAL GALA APPLES"
+        ]
+      },
+      {
+        "item_no": "07858000721",
+        "product": "NAPOLITANER",
+        "brand": null,
+        "detail": null,
+        "list_price": 4.05,
+        "price": 4.05,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.7,
+        "needs_user_check": true,
+        "alternatives": [
+          "NAPOLITANER WAFERS"
+        ]
+      },
+      {
+        "item_no": "12029",
+        "product": "PIZZA POCKETS WITH TOM",
+        "brand": null,
+        "detail": null,
+        "list_price": 7.99,
+        "price": 7.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.6,
+        "needs_user_check": true,
+        "alternatives": [
+          "PIZZA POCKETS WITH TOMATO"
+        ]
+      },
+      {
+        "item_no": "02840007185",
+        "product": "WHITE CHEDDAR PUFFS",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.99,
+        "price": 3.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      },
+      {
+        "item_no": "04069771205",
+        "product": "BANANA NUT",
+        "brand": null,
+        "detail": null,
+        "list_price": 3.99,
+        "price": 3.99,
+        "discount": 0,
+        "qty": 1,
+        "is_return": false,
+        "confidence": 0.9,
+        "needs_user_check": false,
+        "alternatives": []
+      }
+    ],
+    "subtotal": 55.37,
+    "tax": 0.18,
+    "total": 55.55,
+    "items_sold": 14
+  }
+}
