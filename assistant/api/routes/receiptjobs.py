@@ -32,7 +32,8 @@ async def receipt_job_file(job_id: str, n: int, req: Request):
     media = (req.headers.get("content-type") or "").split(";")[0].strip()
     if not (media.startswith("image/") or media in _MEDIA):
         raise HTTPException(415, "send a receipt photo (image) or a PDF")
-    name = req.headers.get("x-file-name") or ""
+    from urllib.parse import unquote
+    name = unquote(req.headers.get("x-file-name") or "")
     body = await req.body()
     try:
         return await run_in_threadpool(receiptjobs.put_file, job_id, n, body, media, name)

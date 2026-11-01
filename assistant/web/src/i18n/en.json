@@ -2006,6 +2006,22 @@
       "sample": "a sample"
     }
   },
+  "receiptJob": {
+    "sending": "Sending {{sent}} of {{total}} receipts",
+    "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
+    "reading": "Reading your receipts in the background",
+    "progress": "{{done}} of {{total}} read.",
+    "someFailed_one": "{{count}} could not be read.",
+    "someFailed_other": "{{count}} could not be read.",
+    "canLeave": "You can leave Arya. It will keep reading.",
+    "paused": "Reading paused at {{done}} of {{total}}",
+    "resume": "Resume reading",
+    "done_one": "{{count}} receipt read",
+    "done_other": "{{count}} receipts read",
+    "summary": "{{filed}} filed · {{dup}} already here · {{failed}} could not be read.",
+    "check": "Check what needs a look",
+    "unsent": "{{count}} could not be sent: {{reason}}"
+  },
   "receipts": {
     "correctName": "Correct name",
     "needsYourEye": "To check",
