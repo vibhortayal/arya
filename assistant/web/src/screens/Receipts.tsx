@@ -8,6 +8,8 @@ import { get, post } from "../lib/api";
 import { fmtDate, fmtShort, fmtWeekday, lineSavings, money } from "../lib/format";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
+import { ReceiptJobCard } from "../ui/ReceiptJobCard";
+import { sendBatch } from "../lib/receiptJobs";
 
 /* Port of pwa/index.html #view-receipts and app.js renderReceipts,
  * renderScan (review queue), renderCurator, fileReceiptPhoto and the
@@ -38,7 +40,7 @@ type Archive = { receipts: Rec[]; unsettled?: Unsettled[] };
 export function Receipts() {
   const { t } = useTranslation();
   const nav = useNav();
-  const { currency } = useSession();
+  const { currency, demo } = useSession();
   const { toast, showErr } = useToast();
   const [queue, setQueue] = useState<{ lines: Line[]; unresolved: Unresolved[] }>({ lines: [], unresolved: [] });
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -51,6 +53,9 @@ export function Receipts() {
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
   // Files a bulk add could not read, each with the reason, kept on screen
   // (a toast alone vanished before the owner could read it).
+  // A batch being sent to the server (it reads it in the background).
+  const [sending, setSending] = useState<{ sent: number; total: number } | null>(null);
+  const [jobTick, setJobTick] = useState(0);
   const [failures, setFailures] = useState<{ name: string; reason: string }[]>([]);
 
   const loadScan = useCallback(async () => {
@@ -137,6 +142,24 @@ export function Receipts() {
     ev.target.value = "";
     if (!files.length) return;
     if (files.length === 1) { await fileOne(files[0], undefined, true, false); return; }
+    // Several files: send them to the server first, which reads them while
+    // the app is closed. If a batch cannot be opened (the demo, no
+    // connection), read them here one by one as before.
+    if (!demo) {
+      setFailures([]);
+      let opened = false;
+      try {
+        setSending({ sent: 0, total: files.length });
+        const out = await sendBatch(files, n => { opened = true; setSending({ sent: n, total: files.length }); });
+        setSending(null);
+        if (out.unsent.length) { setFailures(out.unsent); toast(t("receiptJob.unsent", { count: out.unsent.length, reason: out.unsent[0].reason })); }
+        setJobTick(x => x + 1);
+        return;
+      } catch (e) {
+        setSending(null);
+        if (opened) { toast(errMsg(e)); setJobTick(x => x + 1); return; }
+      }
+    }
     let filed = 0, dup = 0, skipped = 0;
     const bad: { name: string; reason: string }[] = [];
     setFailures([]);
@@ -169,6 +192,9 @@ export function Receipts() {
             <span className="grow">{t("receipts.needsYourEye")}<span className="sub">{t("toCheck.rowSub", { items: toCheck.items, lines: toCheck.lines })}</span></span>
             <span className="opschip bad">{toCheck.items}</span><span className="chev">›</span></button>
         </div>)}
+      <ReceiptJobCard sending={sending} tick={jobTick}
+        onChange={() => { loadScan().catch(() => {}); loadArchive().catch(() => {}); }}
+        onCheck={() => nav.show("tocheck")} />
       <div className="group pad">
         <label className="btn primary wide receiptbtn" htmlFor="rc-photo" {...pickerProps("rc-photo")}>{t("receipts.addReceipts")}</label>
         <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>

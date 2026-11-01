@@ -2012,6 +2012,22 @@
     "rowSub": "{{items}} to check · {{lines}} receipt lines",
     "allClear": "All clear. Nothing needs your eye."
   },
+  "receiptJob": {
+    "sending": "Sending {{sent}} of {{total}} receipts",
+    "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
+    "reading": "Reading your receipts in the background",
+    "progress": "{{done}} of {{total}} read.",
+    "someFailed_one": "{{count}} could not be read.",
+    "someFailed_other": "{{count}} could not be read.",
+    "canLeave": "You can leave Arya. It will keep reading.",
+    "paused": "Reading paused at {{done}} of {{total}}",
+    "resume": "Resume reading",
+    "done_one": "{{count}} receipt read",
+    "done_other": "{{count}} receipts read",
+    "summary": "{{filed}} filed · {{dup}} already here · {{failed}} could not be read.",
+    "check": "Check what needs a look",
+    "unsent": "{{count}} could not be sent: {{reason}}"
+  },
   "receipts": {
     "more": "More",
     "correctName": "Correct name",
@@ -3329,7 +3345,7 @@
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
         "s1": "Open Lists, then Receipts.",
-        "s2": "Tap Add receipts. Take a photo or pick several PDFs at once.",
+        "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",

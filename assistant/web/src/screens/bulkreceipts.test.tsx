@@ -18,6 +18,7 @@ beforeEach(() => {
   decodeCalls = 0;
   vi.stubGlobal("fetch", vi.fn(async (u: string) => {
     const s = String(u);
+    if (s.includes("/api/receipts/jobs")) return json({ detail: "not here" }, 403); // no background batch: read in the browser
     if (s.includes("/decode/")) return decodeReply(++decodeCalls);
     return json(s.includes("/api/review") ? { lines: [], unresolved: [] } : s.includes("/api/quest/receipts") ? { receipts: [] } : {});
   }));
