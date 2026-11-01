@@ -11,7 +11,9 @@ router = APIRouter()
 def home():
     d = state.derived()
     nm = state.names()
-    from api.eyes.service import prior_days
+    from api.eyes.service import MAX_CHECKS, short_name, should_check
+    from api import shelflife
+    _shelf = shelflife.known()
     seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
              "date": p["seen"]["date"], "kind": p["seen"].get("kind")}
             for p in d["patterns"] if p.get("seen")]
@@ -19,18 +21,30 @@ def home():
     _fl = state.flags()
     _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for p in d["patterns"]:
-        prior = prior_days(nm.get(p["item_id"], ""))
+        # Spark's shelf life for this item when it has answered, else
+        # the keyword table (api/shelflife.py).
+        prior = shelflife.shelf_days(p["item_id"], nm.get(p["item_id"], ""), _shelf)
         if prior and p.get("last_bought") and not p["due"]:
+            f = _fl.get(p["item_id"], {})
+            said = f.get("out") or f.get("expired")
+            if said and said >= p["last_bought"]:
+                continue  # the user already said it is gone
             if _fl.get(p["item_id"], {}).get("check_ok") == state.cycle():
                 continue  # the user already answered this cycle
             if _fl.get(p["item_id"], {}).get("use_by"):
                 continue  # a real printed date beats the usual-shelf-life guess
             from datetime import date as _d
             age = (_d.fromisoformat(state.today_ref()) - _d.fromisoformat(p["last_bought"])).days
-            if age >= prior:
+            # The receipt's own purchase date, not the upload day: an old
+            # receipt filed today is still months old.
+            if should_check(age, prior):
                 _lb = p["last_bought"]
-                checks.append({"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
-                               "text": f"{nm.get(p['item_id'], p['item_id'])} from {_MON[int(_lb[5:7]) - 1]} {int(_lb[8:10])} usually turns about now — still good?"})
+                _nm = short_name(nm.get(p["item_id"], p["item_id"]))
+                checks.append({"item_id": p["item_id"], "name": _nm, "_age": age,
+                               "text": f"{_nm} from {_MON[int(_lb[5:7]) - 1]} {int(_lb[8:10])} usually turns about now — still good?"})
+    # The freshest few first: a long list of questions reads as nagging.
+    checks.sort(key=lambda c: c["_age"])
+    checks = [{k: v for k, v in c.items() if k != "_age"} for c in checks[:MAX_CHECKS]]
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
             "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else

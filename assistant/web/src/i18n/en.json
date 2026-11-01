@@ -3577,7 +3577,7 @@
         "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
-        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago.",
         "cta": "Open Arya's powers"
       },
       "customize": {

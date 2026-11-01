@@ -51,8 +51,9 @@ read the pub-05 price rotation correctly, the error class arithmetic
 cannot catch. Latency is the cost: 34s mean / 60s p95 vs Spark's
 8.6s / 11.9s — accepted because decode lands in the review queue, not
 an interactive path. Cost $0.118/receipt vs $0.013 — immaterial against
-the hackathon credit. The staple judge and Ask Arya STAY on Spark
-Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
+the hackathon credit. The staple judge, the shelf-life estimate for
+"Still good?" (api/shelflife.py, item names only, cached per item) and
+Ask Arya STAY on Spark Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
 cannot carry Wonder's latency). This amendment expires Nov 4; the
 production policy above is unchanged.
 

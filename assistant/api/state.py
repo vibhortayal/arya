@@ -928,6 +928,10 @@ def judge_pending(client, limit=60):
             fresh = judgments()
             fresh.update(judged)
             _save("judged.json", fresh)
+    # Shelf life for "Still good?" rides the same moment (a receipt
+    # landed): Spark names it once per recently bought item.
+    from api import shelflife
+    shelflife.pending(client)
     return done
 
 
