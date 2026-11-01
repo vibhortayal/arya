@@ -22,6 +22,13 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Recent changes**: the last changes from `ops-changes.jsonl`.
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
 
+## Own Meta keys (BYOK, 2026-11-01)
+- **Before the deploy that ships it:** set `ARYA_KEY_VAULT_SECRET` in `deploy/.env` (generate with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), then `docker compose up -d`. Without it the feature stays off and nothing is stored. Losing or changing the secret means every saved key must be entered again (the account sees "needs attention"). The image needs the `cryptography` wheel (in `api/requirements.txt`); check the ARM build before deploy day.
+- **Two kinds of account:** "shared" (invited, Arya's key; may add its own key in Settings) and "own" (signed up with its own key; `key_mode: "own"` in `users.json`). An own account never reads on Arya's key: with no working key its reads answer 402 and the rest of the app works.
+- **The sign-up door:** `POST /auth/own-key/door {"open": false}` (owner only) closes it at once; `ARYA_OWN_KEY_SIGNUP` is only the bootstrap default. It also closes itself when `own_key_signups_per_day` is used up. Limits: 3 key checks per IP an hour, 3 per email a day, 10 accounts per IP a day, one key on at most 3 accounts.
+- **Caps for own-key reading:** the daily budget and monthly ceiling do not apply; the pause switch, scan frames, upload sizes and per-IP limits do, plus `own_key_hourly_usd` (default $5 an hour, a load guard). Own accounts get no open-weights second seat and `places_daily_lookups` Google store lookups a day.
+- **Files:** `data/users/<user>/own_key.json` (encrypted key, last 4, a keyed hash, status), `data/pending_own_key/` (keys held 15 minutes while the email code is checked; swept on expiry), `data/own_key_signups.json` (today's count). Ledger rows for own-key calls have `bucket: "own_key"`.
+
 ## Accounts and data tools (Ops)
 - **Accounts**: switch an account off or on, unfreeze, change the owner, and open the waitlist.
 - **Data tools**: erase one account's receipts or learned names (owner types the account name; a copy is first saved to `ops-deleted/` in the data folder, restore by copying it back), and run the Supabase mirror **Backfill** (copies every file into the database) or **Verify** (compares every file to the database) as a background job. Both need `DATABASE_URL`.

@@ -18,9 +18,14 @@ router = APIRouter()
 
 @router.get("/auth/status")
 def auth_status():
+    from api import own_key
     return {"has_users": len(auth.users()) > 0,
             "registration_open": _registration_open(),
-            "email_signin": supabase_auth.configured()}
+            "email_signin": supabase_auth.configured(),
+            # The "I have my own Meta key" door (BYOK review 2): needs
+            # email codes, the vault secret, the Ops switch and room in
+            # today's sign-up cap.
+            "own_key_signup": supabase_auth.configured() and own_key.door_open()}
 
 
 def _session_user(req: Request):
@@ -57,6 +62,113 @@ async def registration_set(req: Request):
     if not isinstance(body.get("open"), bool):
         raise HTTPException(400, "open must be true or false")
     return {"registration_open": _set_registration_open(body["open"])}
+
+
+# ---- Sign up with your own Meta key (owner 2026-11-01; BYOK review 2).
+# Two steps, so no account is ever made from a key alone: the key is
+# checked with Meta and held (encrypted, 15 minutes) while the email code
+# goes out; the account is created only when the code is verified. It is
+# an own-key account: it never reads on Arya's key or budget.
+
+@router.post("/auth/own-key/start")
+async def own_key_start(req: Request):
+    from api import own_key
+    _need_supabase()
+    if not own_key.door_open():
+        raise HTTPException(503, "Signing up with your own key is closed right now. Join the waitlist instead.")
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    if "@" not in email or len(email) > 254 or not auth.valid_name(email):
+        raise HTTPException(400, "Enter a valid email.")
+    key = own_key.clean(body.get("key"))
+    if key is None:
+        raise HTTPException(400, "That isn't a Meta Model API key. It starts with LLM_.")
+    if body.get("accept") is not True:
+        raise HTTPException(400, "Please accept the terms to continue.")
+    if not own_key.allow_start(_client_ip(req), email):
+        raise HTTPException(429, "Too many tries. Wait an hour and try again.")
+    if email in auth.users():
+        raise HTTPException(409, "That email already has an account. Sign in, then add your key in Settings.")
+    if own_key.accounts_using(own_key.key_hash(key)) >= own_key.MAX_ACCOUNTS_PER_KEY:
+        raise HTTPException(409, "This key is already used by 3 Arya accounts. Use a different key.")
+    try:
+        ok = await run_in_threadpool(own_key.check, key)
+    except RuntimeError:
+        raise HTTPException(503, "Meta couldn't check the key right now. Try again in a minute.")
+    if not ok:
+        raise HTTPException(422, "Meta didn't accept this key. Check it at dev.meta.ai and try again.")
+    # Only someone holding a working Meta key gets this far, so only they
+    # can make Arya send a code email.
+    own_key.hold(email, key)
+    try:
+        await run_in_threadpool(supabase_auth.send_code, email)
+    except supabase_auth.AuthError as e:
+        own_key.take(email)
+        raise HTTPException(502, str(e))
+    return {"sent": True, "ends": own_key.ends(key)}
+
+
+@router.post("/auth/own-key/verify")
+async def own_key_verify(req: Request):
+    from api import own_key, waitlist
+    _need_supabase()
+    _email_guard(req, _verify_hits, 10)
+    body = await _json_obj(req)
+    email = (body.get("email") or "").strip().lower()
+    code = str(body.get("code") or "").strip()
+    if not own_key.has_pending(email):
+        raise HTTPException(410, "This sign-up expired. Start again.")
+    try:
+        verified = await run_in_threadpool(supabase_auth.verify_code, email, code)
+    except supabase_auth.AuthError:
+        raise HTTPException(401, "That code didn't work. Check it or ask for a new one.")
+    if verified != email:
+        raise HTTPException(401, "That code didn't work. Check it or ask for a new one.")
+    key = own_key.take(email)
+    if key is None:
+        raise HTTPException(410, "This sign-up expired. Start again.")
+    if email in auth.users():
+        raise HTTPException(409, "That email already has an account. Sign in, then add your key in Settings.")
+    if not own_key.door_open():
+        raise HTTPException(503, "Signing up with your own key is closed right now. Join the waitlist instead.")
+    if not own_key.allow_create(_client_ip(req)):
+        raise HTTPException(429, "Too many tries. Wait an hour and try again.")
+    try:
+        name, created = auth.ensure_federated_user(email)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    auth.set_key_mode(name, "own")
+    own_key.save(name, key)
+    own_key.count_signup()
+    waitlist.remove(name)
+    return _set_session_cookie(JSONResponse({"user": name, "created": created}),
+                               auth.new_session(name))
+
+
+@router.get("/auth/own-key/door")
+def own_key_door_state(req: Request):
+    from api import own_key
+    info = _session_user(req)
+    if not info:
+        raise HTTPException(401, "login required")
+    return {"open": own_key.door_switch(), "showing": own_key.door_open(),
+            "today": own_key.signups_today(), "can_manage": _is_owner(info["user"])}
+
+
+@router.post("/auth/own-key/door")
+async def own_key_door_set(req: Request):
+    """The Ops switch for the own-key sign-up door (review 2, change 4):
+    shuts it at once with no redeploy, like registration."""
+    from api import own_key
+    info = _session_user(req)
+    if not info:
+        raise HTTPException(401, "login required")
+    if not _is_owner(info["user"]):
+        raise HTTPException(403, "owner only")
+    body = await _json_obj(req)
+    if not isinstance(body.get("open"), bool):
+        raise HTTPException(400, "open must be true or false")
+    return {"open": own_key.set_door(body["open"])}
 
 
 @router.post("/auth/setup")

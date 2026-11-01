@@ -18,7 +18,8 @@ def _feature_flags():
     from api import reminders, supabase_auth
     from api.deps import _registration_open
     from api import own_key
-    return {"own_key": own_key.enabled(), "not_own_key": not own_key.enabled(),
+    on = own_key.available()   # the same answer the Settings row and Help topic use
+    return {"own_key": on, "byok": on, "not_own_key": not on,
             "push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
             "registration_open": _registration_open()}

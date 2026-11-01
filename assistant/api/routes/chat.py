@@ -38,8 +38,7 @@ def _chat_image(raw):
 
 @router.post("/api/chat")
 async def chat_route(req: Request):
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     body = await _json_obj(req)
     from api.chat_service import chat as run_chat

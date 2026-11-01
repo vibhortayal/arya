@@ -33,8 +33,7 @@ async def quest_avatar_generate(req: Request):
     player's next tap."""
     from api import avatar
     body = await _json_obj(req)
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     try:
         await run_in_threadpool(avatar.make_from_prompt, body.get("prompt", ""),
@@ -59,8 +58,7 @@ async def quest_avatar_photo(req: Request):
         raise HTTPException(400, "empty upload")
     if len(photo) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     try:
         await run_in_threadpool(avatar.make_from_photo, photo, media,
@@ -83,8 +81,7 @@ async def quest_share_look(req: Request, look: str = ""):
         raise HTTPException(400, "unknown look")
     if not art or len(art) > sharelook.MAX_BYTES:
         raise HTTPException(413, "card art must be under 4 MB")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     try:
         img, _ = await run_in_threadpool(sharelook.make, look, art,

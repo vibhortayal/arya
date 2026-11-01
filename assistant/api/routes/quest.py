@@ -313,8 +313,7 @@ async def quest_haul_photo(req: Request, session: str = ""):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     from api import quest
     if quest.get_session(session) is None:
         raise HTTPException(404, "no such session")

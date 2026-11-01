@@ -126,8 +126,7 @@ async def storemap_capture(req: Request):
         storemap.score_image(body)
     except Exception:
         raise HTTPException(400, "that file is not a readable photo")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
@@ -191,8 +190,7 @@ async def storemap_teach(req: Request):
         storemap.score_image(body)
     except Exception:
         raise HTTPException(400, "that file is not a readable photo")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
@@ -261,8 +259,7 @@ async def storemap_scan(req: Request):
         storemap.score_image(body)
     except Exception:
         raise HTTPException(400, "that file is not a readable photo")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     if storescan.frames_left() <= 0:
         raise HTTPException(429, "You've mapped a lot today. Thank you! "
                                  "Scanning opens again tomorrow.")
@@ -327,6 +324,8 @@ async def storemap_job_create(req: Request):
     from api import scanjobs
     body = await _json_obj(req)
     name = _map_store(body.get("store"))
+    if not own_key.model_ready() and own_key.required():
+        raise own_key.needs_key_error()
     if not own_key.model_ready():
         raise HTTPException(503, "Shelf reading isn't on right now. Your walk "
                                  "stays on your phone; Arya sends it later.")

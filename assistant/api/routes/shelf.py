@@ -42,8 +42,7 @@ async def scan_shelf_route(req: Request):
         remaining = [n for n in remaining if n == target]
     if not remaining:
         return {"pops": [], "not_found": [target] if target else []}
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()

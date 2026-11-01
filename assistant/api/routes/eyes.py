@@ -24,8 +24,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     from api.eyes.service import detect, match_item
     from datetime import date as _d

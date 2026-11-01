@@ -32,7 +32,7 @@ KEEP_JOBS = 10
 STALE_UPLOAD_DAYS = 3
 MAX_PHOTO = 12_000_000
 MAX_PDF = 10_000_000
-SYSTEMIC = (401, 429, 503)
+SYSTEMIC = (401, 402, 429, 503)  # 402: an own-key account with no usable key
 
 _queue = queue.Queue()
 _worker = None
@@ -239,8 +239,7 @@ def file_one(body, media):
     from api import stores
     from api.decode.service import decode_photo, decode_scanned_pdf, decode_text, extract_pdf_text
     from api.deps import _budget_guard, new_client
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     pdf = media == "application/pdf"

@@ -102,7 +102,7 @@ class CostLedger:
         month = time.strftime("%Y-%m")
         hour_ago = time.time() - 3600
         out = {"lifetime_usd": 0.0, "month_usd": 0.0, "hour_usd": 0.0, "since": "",
-               "own_key_month_usd": 0.0,
+               "own_key_month_usd": 0.0, "own_key_hour_usd": 0.0,
                "kinds": {k: {"n": 0, "usd": 0.0} for k in KINDS}}
         for r in self.rows():
             if not user or r.get("user") != user or r.get("ok") is False:
@@ -110,6 +110,8 @@ class CostLedger:
             if r.get("bucket") == "own_key":
                 if str(r.get("ts", "")).startswith(month):
                     out["own_key_month_usd"] += r["cost_usd"]
+                if _epoch(r.get("ts")) >= hour_ago:
+                    out["own_key_hour_usd"] += r["cost_usd"]
                 continue
             c = r["cost_usd"]
             out["lifetime_usd"] += c
@@ -125,6 +127,7 @@ class CostLedger:
         out["month_usd"] = round(out["month_usd"], 4)
         out["hour_usd"] = round(out["hour_usd"], 4)
         out["own_key_month_usd"] = round(out["own_key_month_usd"], 4)
+        out["own_key_hour_usd"] = round(out["own_key_hour_usd"], 4)
         for v in out["kinds"].values():
             v["usd"] = round(v["usd"], 4)
         return out

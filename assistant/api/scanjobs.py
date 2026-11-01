@@ -274,6 +274,9 @@ def _run(job_id):
         result = job.get("result") or _empty_result()
         res_lock = threading.Lock()
         frames = list(job.get("received") or [])
+        if not own_key.model_ready() and own_key.required():
+            _finish(job_id, error=own_key.NEEDS_KEY_MSG)
+            return
         if not own_key.model_ready():
             _finish(job_id, error="Shelf reading isn't on right now, so "
                                   "this walk could not be read.")

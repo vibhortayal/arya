@@ -51,7 +51,9 @@ def judge_second_seat():
         return {"checked": 0, "agreed": 0, "disagreements": []}
     _budget_guard()
     client = OpenClient()
-    if not client.api_key:
+    if not client.api_key or own_key.required():
+        # An own-key account pays only for Meta reads on its own key;
+        # the open-weights seat is the app's (BYOK review 2, change 7).
         # Not provisioned on this host yet: a quiet no-op, the same
         # contract judge/run keeps when no Meta key is set.
         return {"checked": 0, "agreed": 0, "disagreements": [],
@@ -290,8 +292,7 @@ def _list_from_text(body):
     names = [n for n, _q, _u in typed]
     source = "split"
     if not names:
-        if not own_key.model_ready():
-            raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+        own_key.need_model()
         _budget_guard()
         client = new_client()
         names = extract_items_model(text, client)
@@ -515,8 +516,7 @@ async def list_from_photo(req: Request):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.list.intake import read_list_photo

@@ -8,7 +8,12 @@ stays as it is: the owner's "paid reads paused" switch, the demo, the
 scan frame cap, per-IP limits and every non-Meta service.
 
 Rules (each one is a numbered change in the review):
-- Off unless ARYA_BYOK=1 AND ARYA_KEY_VAULT_SECRET is set (fail closed, 5).
+- Always on (owner, 2026-11-01: a generic feature), but only with
+  ARYA_KEY_VAULT_SECRET set; without it nothing is stored (fail closed, 5).
+- Two kinds of account (review 2, change 5): "shared" (invited, Arya's
+  key, may add its own) and "own" (signed up with its own key). An "own"
+  account NEVER uses Arya's key or budget: with no usable key every AI
+  read answers 402 and the rest of the app keeps working.
 - The key is encrypted (Fernet) in data/users/<user>/own_key.json, its own
   per-user file: never in settings, exports or group docs, and removed
   with the account directory (1).
@@ -67,8 +72,8 @@ async def offer_middleware(request, call_next):
 # ---- switches
 
 def enabled():
-    """BYOK is on: the flag, and a vault secret to encrypt with."""
-    return os.environ.get("ARYA_BYOK", "0") == "1" and bool(_secret())
+    """BYOK works: a vault secret to encrypt with."""
+    return bool(_secret())
 
 
 def _secret():
@@ -136,9 +141,53 @@ def status(user=None):
     return {"set": True, "ends": rec.get("ends"), "status": rec.get("status", OK)}
 
 
+def key_hash(key):
+    """A keyed hash of the key (the vault secret salts it), so a key can
+    be matched across accounts without being readable."""
+    import hmac
+    return hmac.new(_secret().encode(), key.encode(), hashlib.sha256).hexdigest()
+
+
+MAX_ACCOUNTS_PER_KEY = 3
+
+
+def accounts_using(kh, but=None):
+    """How many accounts hold a key with this hash (review 2, change 3)."""
+    root = os.path.join(state.base_dir(), "users")
+    n = 0
+    try:
+        names = os.listdir(root)
+    except OSError:
+        return 0
+    for name in names:
+        if name == but:
+            continue
+        try:
+            rec = _read(name)
+        except ValueError:
+            continue
+        if rec and rec.get("kh") == kh:
+            n += 1
+    return n
+
+
 def save(user, key):
     _write(user, {"ct": _fernet().encrypt(key.encode()).decode(), "ends": ends(key),
-                  "status": OK, "saved_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+                  "kh": key_hash(key), "status": OK,
+                  "saved_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+    _resume_paused_jobs(user)
+
+
+def _resume_paused_jobs(user):
+    """Receipt jobs paused for want of a key carry on (review 2, 5)."""
+    try:
+        from api import receiptjobs
+        with state.as_user(user):
+            for j in (receiptjobs._load().get("jobs") or []):
+                if j.get("status") == "paused":
+                    receiptjobs.resume_job(j["id"])
+    except Exception:   # best effort: the person can still tap Retry
+        pass
 
 
 def remove(user):
@@ -175,10 +224,56 @@ def for_current_user():
         return None
 
 
+def key_mode(user=None):
+    """"own" for an account that signed up with its own key, else
+    "shared". Kept in users.json, so removing the key keeps it."""
+    from api import auth
+    user = user if user is not None else state._owner()
+    if not user or state.in_sandbox():
+        return "shared"
+    # The account registry lives in the data root; inside a request
+    # data_dir() is the account's own folder, so read it with no user.
+    tok = state._current_user.set(None)
+    try:
+        rec = auth.users().get(user) or {}
+    finally:
+        state._current_user.reset(tok)
+    return rec.get("key_mode") or "shared"
+
+
+def required(user=None):
+    return key_mode(user) == "own"
+
+
+NEEDS_KEY_MSG = "Add a valid Meta key in Settings to keep reading."
+
+
+def needs_key_error():
+    from fastapi import HTTPException
+    return HTTPException(402, NEEDS_KEY_MSG, headers={OFFER_HEADER: "own-key-fix"})
+
+
 def model_ready():
-    """A Meta call can be made for this request: the app's key, or the
-    person's own. Replaces the bare MODEL_API_KEY checks."""
-    return bool(os.environ.get("MODEL_API_KEY")) or for_current_user() is not None
+    """A Meta call can be made for this request: the person's own key,
+    or (for a shared account) the app's. Replaces the bare MODEL_API_KEY
+    checks; quiet callers use it as a yes/no."""
+    if for_current_user() is not None:
+        return True
+    if required():
+        return False
+    return bool(os.environ.get("MODEL_API_KEY"))
+
+
+def need_model():
+    """For routes: raise the right error when no Meta call can be made.
+    An own-key account with no usable key gets 402 with the Settings
+    offer; otherwise the old 503."""
+    if model_ready():
+        return
+    if required():
+        raise needs_key_error()
+    from fastapi import HTTPException
+    raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
 
 
 # ---- failures
@@ -238,3 +333,153 @@ def check(key, transport=None):
     if key_failure(status, payload, MODELS["standard"]):
         return False
     raise RuntimeError(f"Meta could not check the key right now (HTTP {status})")
+
+
+# ---- the sign-up door (review 2, changes 1 to 4)
+
+DOOR_KEY = "own_key_signup_open"
+PENDING_MINUTES = 15
+
+
+def _site_doc():
+    from api.deps import _site_path
+    try:
+        with open(_site_path()) as fh:
+            doc = json.load(fh)
+        return doc if isinstance(doc, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def door_switch():
+    """The Ops door switch: site.json first, then ARYA_OWN_KEY_SIGNUP
+    (default on). Shuts the door in seconds with no redeploy."""
+    v = _site_doc().get(DOOR_KEY)
+    if isinstance(v, bool):
+        return v
+    return os.environ.get("ARYA_OWN_KEY_SIGNUP", "1") != "0"
+
+
+def set_door(open_):
+    from api.deps import _site_path
+    doc = _site_doc()
+    doc[DOOR_KEY] = bool(open_)
+    state.write_json_atomic(_site_path(), doc)
+    return doc[DOOR_KEY]
+
+
+def _count_path():
+    return os.path.join(state.base_dir(), "own_key_signups.json")
+
+
+def signups_today():
+    try:
+        with open(_count_path()) as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return 0
+    return int(doc.get(time.strftime("%Y-%m-%d"), 0)) if isinstance(doc, dict) else 0
+
+
+def count_signup():
+    state.write_json_atomic(_count_path(), {time.strftime("%Y-%m-%d"): signups_today() + 1})
+
+
+def door_open():
+    """Whether the "I have my own Meta key" sign-up shows: the vault,
+    the Ops switch and today's sign-up cap."""
+    from api import settings
+    return enabled() and door_switch() and signups_today() < settings.get("own_key_signups_per_day")
+
+
+def _pending_dir():
+    return os.path.join(state.base_dir(), "pending_own_key")
+
+
+def _pending_path(email):
+    return os.path.join(_pending_dir(), hashlib.sha256(email.encode()).hexdigest() + ".json")
+
+
+def sweep_pending(now=None):
+    """Delete held keys past their time: a stale encrypted key outside
+    any account is a liability (review 2, note)."""
+    now = time.time() if now is None else now
+    try:
+        names = os.listdir(_pending_dir())
+    except OSError:
+        return
+    for n in names:
+        p = os.path.join(_pending_dir(), n)
+        try:
+            with open(p) as fh:
+                if json.load(fh).get("exp", 0) < now:
+                    os.remove(p)
+        except (OSError, ValueError):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+
+
+def hold(email, key):
+    """Keep a checked key until the email code is verified."""
+    sweep_pending()
+    os.makedirs(_pending_dir(), exist_ok=True)
+    state.write_json_atomic(_pending_path(email), {
+        "ct": _fernet().encrypt(key.encode()).decode(),
+        "exp": time.time() + PENDING_MINUTES * 60})
+
+
+def take(email):
+    """The held key for this email (and forget it), or None when there
+    is none or it expired."""
+    p = _pending_path(email)
+    try:
+        with open(p) as fh:
+            rec = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    try:
+        os.remove(p)
+    except OSError:
+        pass
+    if rec.get("exp", 0) < time.time():
+        return None
+    try:
+        return _fernet().decrypt(rec["ct"].encode()).decode()
+    except Exception:
+        return None
+
+
+def has_pending(email):
+    sweep_pending()
+    return os.path.exists(_pending_path(email))
+
+
+START_PER_IP_HOUR = 3
+START_PER_EMAIL_DAY = 3
+CREATE_PER_IP_DAY = 10
+_start_ip, _start_email, _create_ip = {}, {}, {}
+
+
+def _hit(bucket, k, window, limit, now):
+    hits = [t for t in bucket.get(k, []) if now - t < window]
+    if len(hits) >= limit:
+        bucket[k] = hits
+        return False
+    bucket[k] = hits + [now]
+    if len(bucket) > 10000:
+        for kk in [kk for kk, v in bucket.items() if not v or now - v[-1] >= window]:
+            bucket.pop(kk, None)
+    return True
+
+
+def allow_start(ip, email, now=None):
+    now = time.time() if now is None else now
+    return (_hit(_start_ip, ip, 3600, START_PER_IP_HOUR, now)
+            and _hit(_start_email, email, 86400, START_PER_EMAIL_DAY, now))
+
+
+def allow_create(ip, now=None):
+    now = time.time() if now is None else now
+    return _hit(_create_ip, ip, 86400, CREATE_PER_IP_DAY, now)

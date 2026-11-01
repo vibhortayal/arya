@@ -66,8 +66,7 @@ async def import_bulk(req: Request):
 @router.post("/decode/text")
 async def decode_text_route(req: Request):
     body = await _json_obj(req)
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
@@ -94,8 +93,7 @@ async def intake_order_text(req: Request):
     text = body.get("text", "")
     if len(text.strip()) < 20:
         raise HTTPException(422, "paste the order confirmation text")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     dec = await run_in_threadpool(decode_order_text, text, client)
@@ -166,8 +164,7 @@ async def intake_structured(req: Request):
 
 @router.post("/api/curator/run")
 def curator_run():
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     from api.curator import run_curator
     n = run_curator(new_client())
@@ -204,8 +201,7 @@ async def decode_pdf(req: Request):
         text = await run_in_threadpool(extract_pdf_text, body)
     except Exception:
         raise HTTPException(422, "could not read this PDF")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     try:
@@ -249,8 +245,7 @@ async def decode_photo_route(req: Request):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
@@ -302,8 +297,7 @@ async def transcribe_route(req: Request):
         raise HTTPException(400, "empty recording")
     if len(body) > 10_000_000:
         raise HTTPException(413, "recording too large — keep it under a few minutes")
-    if not own_key.model_ready():
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio

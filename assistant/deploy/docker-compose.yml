@@ -47,11 +47,16 @@ services:
       # default, so an unset value behaves exactly as before.
       ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-auto}
       ARYA_SPARK_TIER: ${ARYA_SPARK_TIER:-standard}
-      # Use my own Meta key (api/own_key.py): off unless ARYA_BYOK=1 and a
-      # vault secret is set. Losing the secret means every saved key must
-      # be entered again.
-      ARYA_BYOK: ${ARYA_BYOK:-0}
+      # Use my own Meta key (api/own_key.py): always on once a vault
+      # secret is set; without one nothing is stored. Losing the secret
+      # means every saved key must be entered again. ARYA_OWN_KEY_SIGNUP
+      # is the bootstrap default of the sign-up door; the Ops switch
+      # overrides it with no redeploy.
       ARYA_KEY_VAULT_SECRET: ${ARYA_KEY_VAULT_SECRET:-}
+      ARYA_OWN_KEY_SIGNUP: ${ARYA_OWN_KEY_SIGNUP:-1}
+      ARYA_OWN_KEY_HOURLY_USD: ${ARYA_OWN_KEY_HOURLY_USD:-5}
+      ARYA_OWN_KEY_SIGNUPS_PER_DAY: ${ARYA_OWN_KEY_SIGNUPS_PER_DAY:-25}
+      ARYA_PLACES_DAILY_LOOKUPS: ${ARYA_PLACES_DAILY_LOOKUPS:-50}
       ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
       ARYA_OWNER_USERNAME: ${ARYA_OWNER_USERNAME:-}
       ARYA_WAITLIST_ADMINS: ${ARYA_WAITLIST_ADMINS:-}

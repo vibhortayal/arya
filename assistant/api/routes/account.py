@@ -427,8 +427,8 @@ async def unfreeze_route(req: Request):
 def own_key_get():
     from api import own_key
     if not own_key.available():
-        return {"available": False, "set": False, "ends": None, "status": None}
-    return {"available": True, **own_key.status()}
+        return {"available": False, "set": False, "ends": None, "status": None, "required": False}
+    return {"available": True, **own_key.status(), "required": own_key.required()}
 
 
 @router.put("/api/account/own-key")
@@ -449,6 +449,8 @@ async def own_key_put(req: Request):
         raise HTTPException(503, "Meta couldn't check the key right now. Try again in a minute.")
     if not ok:
         raise HTTPException(422, "Meta didn't accept this key. Check it at dev.meta.ai and try again.")
+    if own_key.accounts_using(own_key.key_hash(key), but=user) >= own_key.MAX_ACCOUNTS_PER_KEY:
+        raise HTTPException(409, "This key is already used by 3 Arya accounts. Use a different key.")
     own_key.save(user, key)
     return {"saved": True, "ends": own_key.ends(key)}
 
