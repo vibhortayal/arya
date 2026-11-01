@@ -2282,3 +2282,28 @@ body.hunting #offlinebar { display: none !important; }
 .delcode.bad { border-color: var(--danger); }
 .delrow { display: flex; justify-content: space-between; align-items: center; }
 .delrow .linkbtn:disabled { opacity: .55; cursor: default; }
+
+/* Your own Meta key (ui/OwnKey.tsx, owner-approved mockup 2026-11-01) */
+.ok-badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.ok-badge.on{background:#E6F4EA;color:#1E6B34}
+.ok-badge.warn{background:#FDECEA;color:#9B1C10}
+.ok-alert{background:#FDECEA;color:#7a1d12;border-radius:12px;padding:12px;margin:0 0 12px;font-size:15px;line-height:1.35}
+.ok-alert b{display:block;color:#5c140b;margin-bottom:2px}
+.ok-card{background:var(--fill);border-radius:12px;padding:12px 14px;margin:0 0 12px}
+.ok-card .sub{display:block;color:var(--secondary);font-size:14px;margin-top:2px}
+.ok-mono{font-family:ui-monospace,Menlo,monospace}
+.ok-p{margin:0 0 12px}
+.ok-h{display:block;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--secondary);margin:14px 0 6px}
+.ok-ul{margin:0 0 4px 18px;padding:0;font-size:15px;line-height:1.4}
+.ok-ul li{margin:4px 0}
+.ok-input{width:100%;box-sizing:border-box;font:17px ui-monospace,Menlo,monospace;padding:12px;border-radius:10px;border:1px solid var(--sep);background:var(--panel);color:var(--label);margin-bottom:10px}
+.ok-input.bad{border:1.5px solid var(--danger)}
+.ok-err{color:var(--danger);font-weight:600;font-size:15px;margin:0 0 10px}
+.ok-small{font-size:13px;color:var(--secondary);margin:10px 0 0;line-height:1.35}
+.ok-danger{margin-top:10px;color:var(--danger)}
+.ok-confirm{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.ok-confirm p{margin:0}
+.ok-capcard{padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
+.ok-capcard b{font-size:17px}
+.ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
+@media (prefers-color-scheme: dark){.ok-badge.on{background:#1f3a27;color:#9fe0b0}.ok-badge.warn,.ok-alert{background:#3a1f1c;color:#ffb4a8}.ok-alert b{color:#ffd2ca}}

@@ -21,7 +21,10 @@ export function friendlyError(d: unknown): string {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number) { super(message); }
+  /* offer: what the server suggests next (X-Arya-Offer), e.g.
+   * "own-key" on a daily-limit answer, "own-key-fix" when the shopper's
+   * own Meta key failed (ui/OwnKey.tsx). */
+  constructor(message: string, public status: number, public offer?: string) { super(message); }
 }
 
 /* One id per open tab (app.js CLIENT_ID): group live sync
@@ -61,7 +64,7 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // The server no longer knows this tab's session (a deploy drops
     // every demo session, re-audit N1): app/session.tsx ends it.
     if (r.status === 401 && detail === "login required" && path.startsWith("/api/")) sessionEnded();
-    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status);
+    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status, r.headers?.get?.("X-Arya-Offer") || undefined);
   }
   return r.json();
 }
