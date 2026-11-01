@@ -122,3 +122,15 @@ class TestNumberedNamesGetFixed(unittest.TestCase):
         self.assertEqual(state.names()["costco-555"], "Paper Plates")
         state.teach_name("791185", "Toilet Paper")
         self.assertEqual(state.names()["costco-791185"], "Toilet Paper")
+
+
+class TestHeadWordReadsCleanNames(unittest.TestCase):
+    """#358 names read "Product - Detail, Brand, Size"; similar items
+    must group by the product, not the brand or size word."""
+
+    def test_product_part_names_the_kind(self):
+        self.assertEqual(prices.head_word("Blackberries - Organic, Kirkland, 18 oz"),
+                         prices.head_word("Blackberries"))
+        self.assertEqual(prices.head_word("Greek Yogurt - Plain, Chobani, 32 oz"), "yogurt")
+        self.assertEqual(prices.head_word("Kirkland Signature Organic Milk, 0.5 gal"), "milk")
+        self.assertEqual(prices.head_word("Whole Milk 1 gal"), "milk")

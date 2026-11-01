@@ -276,9 +276,13 @@ def size_of(name):
 
 
 def head_word(name):
-    """The kind of thing a name is: its last real word ("Whole Milk
-    1 gal" -> "milk", "Pasture Eggs 12 ct" -> "eggs")."""
-    words = [w for w in re.findall(r"[a-z]+", (name or "").lower()) if w not in _NOT_HEAD and len(w) > 2]
+    """The kind of thing a name is: the last real word of its product
+    part ("Whole Milk 1 gal" -> "milk", "Pasture Eggs 12 ct" -> "eggs").
+    Clean names (#358) read "Product - Detail, Brand, Size": only the
+    part before " - " or the first comma names the product, so
+    "Blackberries - Organic, Kirkland, 18 oz" is blackberries, not oz."""
+    product = re.split(r"\s+-\s+|,", name or "", maxsplit=1)[0]
+    words = [w for w in re.findall(r"[a-z]+", product.lower()) if w not in _NOT_HEAD and len(w) > 2]
     if not words:
         return None
     w = words[-1]
