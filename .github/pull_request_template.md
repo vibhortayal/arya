@@ -2,7 +2,7 @@
 
 
 ## Risky?
-<!-- Yes for UI or money paths (the Tester runs a phone-size sandbox test), otherwise no. -->
+<!-- Yes for a new screen or changed navigation, or anything in auth, account deletion, ledger, budget or payments (the Tester runs a phone-size sandbox test), otherwise no. -->
 
 
 ## Gates
