@@ -1,5 +1,5 @@
-"""Plain email through Resend (owner, 2026-10-30), used for the waitlist
-confirmation. Sign-in codes are not sent here: Supabase sends those.
+"""Plain email through Resend (owner, 2026-10-30): the waitlist
+confirmation and the code that confirms deleting an account. Sign-in codes are not sent here: Supabase sends those.
 
 Off until RESEND_API_KEY is set, so a missing key changes nothing. Sending
 is best effort: a failure is logged and never blocks the person joining."""
@@ -82,24 +82,23 @@ def account_delete_code(email, code, minutes):
     email is how they prove it is really them. True if Resend took it."""
     subject = f"{code} is your code to delete your Arya account"
     text = (
-        f"Your code is {code}\n\n"
-        "Type it in Arya to erase your account. This deletes your lists, receipts "
-        "and photos for good.\n\n"
-        f"The code works for {minutes} minutes.\n\n"
-        "Didn't ask to delete your account? Ignore this email and nothing happens. "
-        "Someone may have your phone or your Arya session open: sign out on devices "
-        f"you don't use, and write to {reply_to()} if anything looks wrong.\n")
-    c = html.escape(code)
+        f"Someone asked to delete the Arya account for {email}.\n\n"
+        f"Your code: {code}\n\n"
+        "Type it in Settings to erase your lists, receipts, photos and sign-in for good. "
+        f"It works for {int(minutes)} minutes.\n\n"
+        "Didn't ask for this? Ignore this email. Your account stays as it is.\n\n"
+        f"This address is not monitored. For help, write to {reply_to()}.\n")
+    e, c = html.escape(email), html.escape(code)
     body = (
         '<div style="font:15px/1.55 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1b1b1e;max-width:520px;margin:0 auto;padding:22px">'
         '<div style="font-weight:800;font-size:22px;letter-spacing:-.02em;margin-bottom:12px">Arya</div>'
-        '<h1 style="font-size:20px;margin:0 0 8px">Your code to delete your account</h1>'
-        f'<p style="font-size:30px;font-weight:800;letter-spacing:.18em;margin:14px 0">{c}</p>'
-        "<p>Type it in Arya to erase your account. This deletes your lists, receipts and photos for good.</p>"
-        f"<p>The code works for {int(minutes)} minutes.</p>"
-        '<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">'
-        "Didn't ask to delete your account? Ignore this email and nothing happens. "
-        f"If anything looks wrong, write to {html.escape(reply_to())}.</p>"
+        f"<p>Someone asked to delete the Arya account for <b>{e}</b>.</p>"
+        "<p>Your code:</p>"
+        f'<p style="font-size:30px;font-weight:800;letter-spacing:.18em;text-align:center;background:#f3f3f5;border-radius:12px;padding:14px 0;margin:8px 0 14px">{c}</p>'
+        "<p>Type it in Settings to erase your lists, receipts, photos and sign-in for good. "
+        f"It works for {int(minutes)} minutes.</p>"
+        '<p style="color:#6b6b73">Didn\'t ask for this? Ignore this email. Your account stays as it is.</p>'
+        f'<p style="font-size:12.5px;color:#6b6b73;border-top:1px solid #ececf0;padding-top:12px">This address is not monitored. For help, write to {html.escape(reply_to())}.</p>'
         "</div>")
     return send(email, subject, text, body)
 

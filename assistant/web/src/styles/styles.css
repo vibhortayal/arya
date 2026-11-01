@@ -2264,3 +2264,16 @@ body.hunting #offlinebar { display: none !important; }
 .tc-use{padding:8px 14px;font-size:15px;min-height:0}
 .tc-ed{display:flex;gap:8px;flex-wrap:wrap}.tc-ed input{flex:1 1 100%}.tc-ed select{flex:1;min-height:36px}
 .tc-bulk{padding:14px 16px;margin-bottom:12px}.tc-bulk b{display:block;font-size:17px}.tc-bulk p{margin:4px 0 10px;color:var(--secondary);font-size:15px}
+/* Delete my account (owner, 2026-11-01): the warning, then a password
+   or a 6-digit code emailed to the account. */
+.delbox > * + * { margin-top: 12px; }
+.delbox .btn.danger { width: 100%; }
+.delwarn { display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--danger) 10%, #fff); color: #7f1d1d; font-size: 15px; line-height: 1.35; }
+.delwarn b { display: block; margin-bottom: 2px; }
+.delwarn-ic { font-size: 22px; line-height: 1; }
+.delcode { width: 100%; text-align: center; font-size: 28px; letter-spacing: .4em; padding: 12px 0 12px .4em;
+  font-variant-numeric: tabular-nums; border: 1px solid var(--separator, #c7c7cc); border-radius: 4px; background: #fff; }
+.delcode.bad { border-color: var(--danger); }
+.delrow { display: flex; justify-content: space-between; align-items: center; }
+.delrow .linkbtn:disabled { opacity: .55; cursor: default; }
