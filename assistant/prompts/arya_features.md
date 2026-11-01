@@ -12,6 +12,7 @@ Lists tab: one list for each store, such as Costco. Tap New list and choose a st
 Open a list. Type an item in the box "Add item here...". Tap the microphone to say it. Tap the camera to read a paper list or photograph one item. Arya always shows what it understood: for one item it asks "Add Peach?", and when it cannot tell it says why and offers Try again or Type it instead. A silent or blocked microphone is handled the same way.
 Tap the circle to tick an item off as you shop. Tap an item to edit it: change its name, amount (such as 6) and unit (such as ct, lb or oz), add a note, move it to another list or delete it. The three dots on a row also move it, put it on a second list or remove it. Swipe a row left for Move and Remove. Tap the buying history row in the edit sheet to see past buys. Tap Select to act on several items. Tap the pencil to rename a list.
 Under "Suggested for ..." Arya shows due items. Tap one to see why, then Add.
+An item showing as a number (like costco-791185): tap it on the list, Edit item, type its real name, Save. Arya learns that name for the item everywhere. Arya also uses the name on your receipts when it has one.
 Three dots at the top of a list: Share, export or import, Tidy up with Arya.
 ## running low | running low due suggest suggestion pattern often about to run out why
 Running low: Today tab, card "Running low", and the suggestions under each list. Arya uses how often the household buys an item and the last date, and suggests mostly staples (things you use up and rebuy).

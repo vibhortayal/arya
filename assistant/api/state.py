@@ -486,7 +486,53 @@ def dictionary():
 
 
 def names():
-    return {e["item_id"]: e["canonical_name"] for e in dictionary()["entries"]}
+    """item_id -> the name to show. The dictionary's name, unless it is
+    only an item number; then, and for items the dictionary does not
+    have, a name from the receipts: a decoded or renamed line beats the
+    printed text, the latest receipt wins. An item with no readable name
+    anywhere keeps the dictionary's (callers fall back to the id)."""
+    return _memoized("names", _names)
+
+
+def _names():
+    nm = {e["item_id"]: e["canonical_name"] for e in dictionary()["entries"]}
+    found = {}  # item_id -> (decoded?, name); later receipts overwrite
+    for r in sorted(receipts(), key=lambda r: str(r.get("purchased_at") or "")):
+        for ln in r.get("lines") or []:
+            if ln.get("line_type") == "discount" or not ln.get("sku"):
+                continue
+            iid = ln.get("item_id") or f"costco-{ln['sku']}"
+            for n, decoded in ((ln.get("decoded_name"), True), (ln.get("raw"), False)):
+                if n and not _unreadable(n, iid):
+                    if decoded or not found.get(iid, (False,))[0]:
+                        found[iid] = (decoded, n)
+                    break
+    for iid, (_d, n) in found.items():
+        if _unreadable(nm.get(iid), iid):
+            nm[iid] = n
+    return nm
+
+
+def learn_item_name(item_id, name, sku=None):
+    """The household named an item that had only an item number: the
+    dictionary learns it, so the list, Today, Ask and prices all show it.
+    Adds an entry when the dictionary has none for this item."""
+    if not item_id or not name:
+        return
+    with file_lock("dictionary.json"):
+        d = dictionary()
+        for e in d["entries"]:
+            if e["item_id"] == item_id or (sku and e.get("sku") == sku):
+                e["canonical_name"] = name
+                e.setdefault("resolution", {})["status"] = "manual"
+                break
+        else:
+            m = _RAW_ID.match(item_id)
+            d["entries"].append({
+                "item_id": item_id, "sku": sku or (item_id.split("-", 1)[1] if m else None),
+                "canonical_name": name, "kind": "product", "aliases": [],
+                "resolution": {"status": "manual", "confidence": None, "candidates": []}})
+        _save("dictionary.json", d)
 
 
 _RAW_ID = re.compile(r"^costco-\d+$", re.I)
@@ -510,16 +556,8 @@ def readable_names():
 
 
 def names_with_receipts():
-    """Dictionary names, plus a readable name for any receipt line whose
-    item is not in the dictionary yet (decoded name, else the receipt text)."""
-    nm = names()
-    for r in receipts():
-        for ln in r["lines"]:
-            if ln.get("line_type") == "discount" or not ln.get("sku"):
-                continue
-            iid = ln.get("item_id") or f"costco-{ln['sku']}"
-            nm.setdefault(iid, ln.get("decoded_name") or ln.get("raw") or iid)
-    return nm
+    """Kept for callers: names() now carries the receipt names too."""
+    return names()
 
 
 def fee_skus():
@@ -795,7 +833,7 @@ def _derived():
     verdicts = grocery_verdicts()
     for item in smart["items"]:
         f = fl.get(item["item_id"], {})
-        item["name"] = f.get("name") or readable.get(item["item_id"]) or names().get(item["item_id"], item["item_id"])
+        item["name"] = f.get("name") or readable.get(item["item_id"]) or item["item_id"]
         # Deterministic and cached only, never a model call here: the
         # list shows "Not a grocery item? Added anyway" for these.
         # The household's own pick wins over the keyword map.
@@ -1252,18 +1290,12 @@ def set_receipt_store_info(receipt_id, info, meta=None):
     return False
 
 
-def teach_name(sku, name):
-    """A user-confirmed line name teaches the dictionary entry for its SKU."""
+def teach_name(sku, name, item_id=None):
+    """A user-confirmed line name teaches the dictionary entry for its
+    SKU, adding one when the item had none (it showed as costco-NNN)."""
     if not sku:
         return
-    with file_lock("dictionary.json"):
-        d = dictionary()
-        for e in d["entries"]:
-            if e.get("sku") == sku:
-                e["canonical_name"] = name
-                e.setdefault("resolution", {})["status"] = "manual"
-                _save("dictionary.json", d)
-                return
+    learn_item_name(item_id or f"costco-{sku}", name, sku=sku)
 
 
 def suggest_resolution(item_id, candidates):

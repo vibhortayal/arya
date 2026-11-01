@@ -623,7 +623,16 @@ async def list_edit(req: Request):
         await run_in_threadpool(_set_qty, item_id, body)
     if fields:
         await run_in_threadpool(_merge_flag, item_id, fields)
+    if fields.get("name"):
+        await run_in_threadpool(_teach_if_numbered, item_id, fields["name"])
     return {"ok": True}
+
+
+def _teach_if_numbered(item_id, name):
+    """Renaming an item that only had an item number ("costco-791185")
+    teaches that name everywhere, not just on this list row."""
+    if state._unreadable(state.names().get(item_id), item_id):
+        state.learn_item_name(item_id, name)
 
 
 # ---- Named lists (owner, 2026-10-29): Costco, Trader Joe's, Indian

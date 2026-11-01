@@ -59,7 +59,7 @@ async def review_line(req: Request):
         line = state.update_receipt_line(receipt_id, idx,
                                          {"status": "auto", "decoded_name": name})
         if line:
-            state.teach_name(line.get("sku"), name)
+            state.teach_name(line.get("sku"), name, item_id=line.get("item_id"))
             others = state.apply_line_fix_to_same_item(receipt_id, idx, line, name=name)
     else:
         raise HTTPException(400, "action must be confirm or rename")
