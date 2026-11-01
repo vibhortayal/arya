@@ -22,6 +22,6 @@ test("Show more and the count line carry real numbers", async () => {
   render(<ToastProvider><NavProvider initial="tocheck"><ToCheck /></NavProvider></ToastProvider>);
   await waitFor(() => expect(document.querySelector("#tc-more")).not.toBeNull());
   expect(document.querySelector("#tc-more")!.textContent).toBe("Show 4 more");
-  expect(document.querySelector("#tc-count")!.textContent).toContain("14");
+  expect(document.querySelector("#tc-count")!.textContent).toBe("14 items need a look");
   expect(document.body.textContent).not.toContain("{{");
 });

@@ -2008,8 +2008,9 @@
   },
   "toCheck": {
     "showMore": "Show {{count}} more",
-    "count": "{{items}} to check · {{lines}} receipt lines",
-    "rowSub": "{{items}} to check · {{lines}} receipt lines",
+    "count": "{{items}} items need a look. The same item on several receipts is asked about once, so they cover {{lines}} receipt lines.",
+    "rowSub_one": "{{count}} item needs a look",
+    "rowSub_other": "{{count}} items need a look",
     "allClear": "All clear. Nothing needs your eye."
   },
   "receiptJob": {
