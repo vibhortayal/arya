@@ -4,7 +4,7 @@ import { listsEmpty } from "./Lists";
 import type { HomeData } from "./lists/model";
 import { showWelcome } from "../ui/FirstRun";
 import { TourProvider, tourLayout, useTour, type TourStep } from "../ui/Tour";
-import { firstRunTour } from "../onboarding/firstRunTour";
+import { firstRunTour, todayLine } from "../onboarding/firstRunTour";
 
 /* First run (#153, #163): who sees the welcome, the Get started card's
  * states, the Lists first-list card, and the tour. */
@@ -97,6 +97,19 @@ describe("tour layout", () => {
     expect(firstRunTour().map(s => s.id)).toEqual(["today", "lists", "quest", "ask", "more", "bar"]);
     expect(firstRunTour(["list", "receipts", "stores-mine"]).map(s => s.id)).toEqual(["lists", "receipts", "stores", "more", "bar"]);
   });
+  test("Today's line says Receipts and Spending are in More only when they are not on the bar (owner, 2026-11-01)", () => {
+    expect(todayLine(["home", "list", "community", "chat"])).toBe("firstRun.tour.today.lineBoth");
+    expect(todayLine(["home", "receipts", "community", "chat"])).toBe("firstRun.tour.today.lineSpending");
+    expect(todayLine(["home", "analysis"])).toBe("firstRun.tour.today.lineReceipts");
+    expect(todayLine(["home", "receipts", "analysis"])).toBe("firstRun.tour.today.line");
+    expect(firstRunTour(["home", "receipts"])[0].bodyKey).toBe("firstRun.tour.today.lineSpending");
+  });
+  test("More and Make the bar yours open the More sheet, point into it, and close it on leaving", () => {
+    const [more, bar] = firstRunTour().slice(-2);
+    expect(more.target).toBe("#more-sheet .sheet");
+    expect(bar.target).toBe("#bar-customize");
+    for (const s of [more, bar]) { expect(s.onEnter).toBeTypeOf("function"); expect(s.onLeave).toBeTypeOf("function"); }
+  });
 });
 
 function Starter({ steps, onDone, onSkip }: { steps: TourStep[]; onDone: () => void; onSkip: () => void }) {
@@ -124,6 +137,35 @@ describe("tour", () => {
     act(() => { fireEvent.click(screen.getByText("Done")); });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(onDone).toHaveBeenCalled();
+  });
+  test("Back returns to the step before (not on the first step); leaving a step runs its onLeave", async () => {
+    const left: string[] = [];
+    const st: TourStep[] = steps.map(x => ({ ...x, onLeave: () => left.push(x.id) }));
+    render(<TourProvider><div id="ta" /><div id="tb" /><Starter steps={st} onDone={vi.fn()} onSkip={vi.fn()} /></TourProvider>);
+    act(() => { fireEvent.click(screen.getByText("Go")); });
+    expect(screen.queryByText("Back")).toBeNull();
+    act(() => { fireEvent.click(screen.getByText("Next")); });
+    expect(left).toEqual(["a"]);
+    act(() => { fireEvent.click(screen.getByText("Back")); });
+    expect(screen.getByRole("dialog").getAttribute("data-tour-step")).toBe("a");
+    expect(left).toEqual(["a", "b"]);
+    act(() => { fireEvent.click(screen.getByText("Skip")); });
+    expect(left).toEqual(["a", "b", "a"]);
+  });
+  test("the per-screen Tour: Back, Skip Today, and an × that skips the tour", () => {
+    const onSkip = vi.fn();
+    const st: TourStep[] = [
+      { ...steps[0], screen: "tabs.today" }, { ...steps[1], id: "a2", screen: "tabs.today" }, { ...steps[1], id: "c", screen: "tabs.lists" },
+    ];
+    render(<TourProvider><div id="ta" /><div id="tb" /><Starter steps={st} onDone={vi.fn()} onSkip={onSkip} /></TourProvider>);
+    act(() => { fireEvent.click(screen.getByText("Go")); });
+    expect(document.getElementById("fr-tour-back")).toBeNull();
+    act(() => { fireEvent.click(screen.getByText("Skip Today")); });
+    expect(screen.getByRole("dialog").getAttribute("data-tour-step")).toBe("c");
+    act(() => { fireEvent.click(document.getElementById("fr-tour-back")!); });
+    expect(screen.getByRole("dialog").getAttribute("data-tour-step")).toBe("a2");
+    act(() => { fireEvent.click(screen.getByLabelText("Skip tour")); });
+    expect(onSkip).toHaveBeenCalledTimes(1);
   });
   test("Esc and Skip close it", () => {
     const { onSkip } = mount();

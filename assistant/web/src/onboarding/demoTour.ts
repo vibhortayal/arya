@@ -34,7 +34,7 @@ export function demoTour(go: (view: ViewId) => void, bar: BarItem[] = DEFAULT_BA
       s("today", "home", "tab", tabButton("home"), "above"),
       s("today", "home", "low", '#today-low', "below"),
       s("today", "home", "lists", '#today-lists', "below"),
-      s("today", "home", "soon", '#today-expiry', "above"),
+      s("today", "home", "soon", '#today-expiry', "below"),
       s("today", "home", "edit", '#today-editbtn', "below"),
     ],
     list: [

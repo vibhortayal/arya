@@ -208,6 +208,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   5-step tour, a Get started card on Today and one first-list card on Lists.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
+- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Make the bar yours" points at Customize bar; Today's line follows the bar; a full bar greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
