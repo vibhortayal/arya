@@ -2306,3 +2306,18 @@ body.hunting #offlinebar { display: none !important; }
 .ok-capcard{padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
 .ok-capcard b{font-size:17px}
 .ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
+
+/* The Listening card (owner, 2026-11-01): one Stop and send, plus Cancel. */
+.listencard { background: var(--panel); border: 2px solid var(--acc); border-radius: 16px; padding: 14px; margin: 10px 0; }
+.listencard .lc-head { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.listencard .lc-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 6px color-mix(in srgb, var(--danger) 18%, transparent); animation: lcpulse 1.4s ease-in-out infinite; }
+.listencard.reading .lc-dot { background: var(--acc); animation: none; box-shadow: none; }
+.listencard .lc-time { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--secondary); font-weight: 600; }
+.listencard .lc-bars { display: flex; gap: 4px; align-items: center; height: 36px; margin: 10px 0 6px; }
+.listencard .lc-bars i { display: block; width: 6px; border-radius: 3px; background: var(--acc); transition: height 90ms linear; }
+.listencard .lc-hint { margin: 0 0 10px; color: var(--secondary); font-size: 15px; line-height: 1.4; }
+.listencard .lc-acts { display: flex; gap: 10px; }
+.listencard .lc-acts .btn { flex: 1; white-space: nowrap; }
+.listencard .lc-acts .btn.primary { flex: 1.6; }
+@keyframes lcpulse { 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--danger) 8%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .listencard .lc-dot { animation: none; } .listencard .lc-bars i { transition: none; } }

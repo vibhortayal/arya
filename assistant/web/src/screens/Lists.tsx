@@ -13,6 +13,7 @@ import { get, post } from "../lib/api";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
 import {
@@ -240,6 +241,7 @@ export function Lists() {
   const [adding, setAdding] = useState(false);
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const capture = useRef<Capture | null>(null);
   /* What Arya understood from a photo or voice, or why it could not tell:
    * a card under the add box, never a silent miss. The photo thumbnail stays
@@ -743,16 +745,18 @@ export function Lists() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus(t("common.voice.transcribing"));
+      setReading(true);
+      setStatus("");
       try {
         const spoken = await transcribeBlob(wav);
+        setReading(false);
         setStatus("");
         if (!spoken) failCard(t("lists.input.heardNothing"), t("lists.input.heardNothingBody"), "mic");
         if (spoken) {
           const ok = await ask.run(spoken, here ? { list: here.name, list_id: here.id } : {});
           if (!ok) { const cur = textRef.current.trim(); changeText(cur ? `${cur}, ${spoken}` : spoken); }
         }
-      } catch (e) { setStatus(""); failCard(t("lists.input.voiceFailed"), t("lists.input.voiceFailedBody"), "mic"); }
+      } catch (e) { setReading(false); setStatus(""); failCard(t("lists.input.voiceFailed"), t("lists.input.voiceFailedBody"), "mic"); }
       return;
     }
     if (!voiceSupported()) { failCard(t("lists.input.noVoice"), t("common.voice.unsupported"), "mic"); return; }
@@ -760,9 +764,11 @@ export function Lists() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus(t("common.voice.listening"));
+      setStatus("");
     } catch { failCard(t("lists.input.micBlocked"), t("lists.input.micBlockedBody"), "mic"); }
   };
+  /* Cancel on the Listening card: the recording is dropped. */
+  const cancelMic = () => { capture.current?.cancel(); capture.current = null; setListening(false); setStatus(""); };
 
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
@@ -1116,9 +1122,9 @@ export function Lists() {
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
                 aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
-              {!typed || listening ? (
+              {!typed && !listening && !reading ? (
                 <span className="inicons">
-                  <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}
+                  <button className="iconbtn" id="add-mic" type="button" onClick={mic}
                     aria-label={t("lists.talkToAdd")} title={t("lists.talkToAdd")}><IconMic /></button>
                   <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.photoToAdd")} title={t("lists.photoToAdd")} {...pickerProps("add-photo")}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
@@ -1147,6 +1153,7 @@ export function Lists() {
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
+            {(listening || reading) && <ListeningCard id="add-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
             <p className="muted nomargin" id="add-status">{status}</p>
             {inCard ? (
               <div className="group pad answercard" id="add-input-card" role="status" style={{ marginTop: 10 }}>

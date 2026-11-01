@@ -4,6 +4,7 @@ import { clearOnSignOut, useSession } from "../app/session";
 import { ApiError, get, post } from "../lib/api";
 import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { useToast } from "../ui/Toast";
 import { useNav } from "../app/nav";
 import { IconMic } from "../ui/icons";
@@ -115,6 +116,7 @@ export function Chat() {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   // An answer is on its way: Send waits, so a second tap never asks twice (#4).
   const [busy, setBusy] = useState(false);
@@ -290,7 +292,8 @@ export function Chat() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setNote(t("common.voice.transcribing"));
+      setReading(true);
+      setNote(null);
       try {
         const said = await transcribeBlob(wav);
         if (said) { setNote(null); send(said); }
@@ -298,6 +301,7 @@ export function Chat() {
       } catch (e) {
         setNote(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
+      setReading(false);
       return;
     }
     if (!voiceSupported()) {
@@ -307,10 +311,18 @@ export function Chat() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setNote(t("ask.listening"));
+      setNote(null);
     } catch {
       setNote(t("common.voice.refused"));
     }
+  };
+
+  /* Cancel on the Listening card: the recording is dropped, nothing is sent. */
+  const cancelMic = () => {
+    capture.current?.cancel();
+    capture.current = null;
+    setListening(false);
+    setNote(null);
   };
 
   /* The quick questions: Arya's own (askChips) until the person edits
@@ -428,6 +440,7 @@ export function Chat() {
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
       <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); if (!busy) send(text); }}>
+        {(listening || reading) && <ListeningCard id="ask-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
         {pending ? (
           <div className="spchip" id="ask-photo-strip">
             <img src={pending.url} alt="" />
@@ -439,7 +452,8 @@ export function Chat() {
           value={text} onChange={e => setText(e.target.value)} />
         <button type="submit" className="btn primary" id="chat-send" disabled={busy || (!text.trim() && !pending)}>{t("common.send")}</button>
         <div className="caprow">
-          <button id="btn-mic" type="button" className={"chip" + (listening ? " listening" : "")} aria-label={listening ? t("ask.stopTalking") : t("ask.speakYourMessage")} onClick={mic}><IconMic />{listening ? t("ask.stop") : t("ask.talk")}</button>
+          {/* While listening, the card holds the one Stop and send (owner, 2026-11-01). */}
+          {!listening && !reading && <button id="btn-mic" type="button" className="chip" aria-label={t("ask.speakYourMessage")} onClick={mic}><IconMic />{t("ask.talk")}</button>}
           <label className="chip" htmlFor="ask-photo" {...pickerProps("ask-photo")}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
             {t("ask.photoWord")}
