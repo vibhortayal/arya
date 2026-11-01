@@ -2306,3 +2306,6 @@ body.hunting #offlinebar { display: none !important; }
 .ok-capcard{padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
 .ok-capcard b{font-size:17px}
 .ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
+
+/* Reminders switched off on the server: the row stays, greyed (owner, 2026-11-01). */
+#pf-reminders.rem-off .row { opacity: 0.55; }

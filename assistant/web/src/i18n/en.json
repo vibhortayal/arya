@@ -1811,6 +1811,7 @@
     "remTestFailed": "Could not send the test.",
     "remOn": "On. You get a reminder when something is due",
     "remOff": "A reminder when something is about to run out",
+    "remNotYet": "Reminders aren't switched on yet. They're coming soon.",
     "daysBefore_one": "{{count}} day before it runs out",
     "daysBefore_other": "{{count}} days before it runs out",
     "joined": "Joined {{date}}",
@@ -3763,7 +3764,7 @@
         "s2": "Under Preferences, switch on Remind me and allow notifications.",
         "s3": "Pick how many days ahead you want to hear. Tap Send me a test reminder to check.",
         "n1": "On iPhone, add Arya to your Home Screen first (iOS 16.4 or newer), then open it from there.",
-        "n2": "If you do not see Remind me, reminders are not switched on yet.",
+        "n2": "If Remind me is greyed and says Reminders aren't switched on yet, they are not on for Arya yet. Nothing to do on your phone.",
         "cta": "Open Settings"
       },
       "ownkey": {

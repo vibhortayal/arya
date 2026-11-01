@@ -407,7 +407,7 @@ function RegistrationRow() {
   );
 }
 
-function Reminders() {
+export function Reminders() {
   const { t } = useTranslation();
   const [cfg, setCfg] = useState<PushCfg>({ enabled: false, notice_days: 2, subscribed: false });
   const [note, setNote] = useState(() => t("settings.remNote"));
@@ -475,8 +475,17 @@ function Reminders() {
   };
 
   const on = cfg.subscribed;
+  /* Reminders switched off on the server: a greyed row, not a hidden one,
+   * so people can find where reminders live (owner, 2026-11-01). */
+  if (!cfg.enabled) return (
+    <div id="pf-reminders" className="rem-off" aria-disabled="true">
+      <div className="row"><span className="grow"><span className="name" style={{ fontWeight: 550 }}>{t("settings.remindMe")}</span>
+        <span className="sub" id="rem-sub">{t("settings.remNotYet")}</span></span>
+        <button className="sw" id="rem-switch" type="button" role="switch" aria-checked={false} aria-label={t("settings.remindMe")} disabled><i></i></button></div>
+    </div>
+  );
   return (
-    <div id="pf-reminders" hidden={!cfg.enabled}>
+    <div id="pf-reminders">
         <div className="row"><span className="grow"><span className="name" style={{ fontWeight: 550 }}>{t("settings.remindMe")}</span>
           <span className="sub" id="rem-sub">{on ? t("settings.remOn") : t("settings.remOff")}</span></span>
           <button className="sw" id="rem-switch" type="button" role="switch" aria-checked={on} aria-label={t("settings.remindMe")} disabled={busy || noSwitch} onClick={toggle}><i></i></button></div>

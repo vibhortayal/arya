@@ -148,6 +148,8 @@ class TestPush(unittest.TestCase):
         self.assertIn('addEventListener("push"', sw)
         self.assertIn('addEventListener("notificationclick"', sw)
         prof = src("screens/Profile.tsx")
-        self.assertIn('<div id="pf-reminders" hidden={!cfg.enabled}>', prof)
+        # Off on the server: a greyed row, not a hidden one (owner, 2026-11-01).
+        self.assertIn('<div id="pf-reminders" className="rem-off" aria-disabled="true">', prof)
+        self.assertIn('<div id="pf-reminders">', prof)
         self.assertIn("await navigator.serviceWorker.ready", prof)
         self.assertIn('pushPost("/api/push/subscribe"', prof)
