@@ -8,25 +8,26 @@
 
 | Criterion | Weight | Our evidence |
 |---|---|---|
-| Impact | 30% | The weekly shop, made play: parents and kids first; a contribution flywheel that maps the world's stores from shoppers' phones |
+| Impact | 30% | Every household that shops each week: a list that writes itself from verified receipts, with returns netted and patterns learned by store; Quest, the optional game, makes the trip fun and lets shoppers map their stores for each other |
 | Use of Meta AI Tooling | 25% | SAM 3.1 finds shelves and signs in the guided store scan, boxes items for Find it for me, and blurs people, Muse Wonder reads the receipt photos, Muse Spark reads the lists and labels, Muse Image paints the celebration characters, Muse Voice Transcribe takes dictation, Spark 1.3 judges — every intelligent step is a Meta model (see META-PRODUCTS.md) |
-| Demo | 25% | A quest in a real store, filmed end to end: note photo → list → quest → Find it for me → receipt |
+| Demo | 25% | A 3-minute video, list first: receipt in → the list writes itself → add by voice and photo → Ask Arya → an optional quest → close. Judges can play the same loop live in the demo household |
 | Technical Depth | 20% | Crowdsourced store maps from guided camera scans (people scrubbed first, coverage earned); verified receipt pipeline (arithmetic-checked, returns netted); a pattern engine with an LLM judge (precision 0.79 against a purchase-cadence proxy on the owner's 114 receipts — eval method and disagreement lists in the research repo); per-account vs platform data planes |
 
-## Demo video beats
+## Demo video beats (3 minutes, list first)
 
-1. A handwritten fridge note: photo, and the list appears.
-2. Open the Trader Joe's list and tap Start shopping. The list is already
-   sorted for the store (milk and bread usually here, eggs usually from
-   Costco).
-3. The store opens as a labelled layout; a guided scan maps an aisle
-   live. Grab, +10, a character and a fun fact. No clock.
-4. **Find it for me:** the camera finds the sourdough on the shelf;
-   tap to grab. SAM 3.1 boxes it, Spark confirms it, and any shopper in
-   the frame is blurred before anything is kept.
-5. Checkout: receipt photo, verified total, the haul counts up, the
-   level bar fills.
-6. Close: next week's list writes itself.
+The demo household (fictional, no personal data) carries the video; one
+real receipt is read on camera. Keep one receipt already read as the
+fallback if the live read is slow.
+
+| Time | Beat | Meta model on screen |
+|---|---|---|
+| 0:00-0:15 | Hook: "Your list app starts blank every week. Arya starts from your receipts." Today. | |
+| 0:15-0:50 | Snap a receipt: the lines are read, "Total checks out", a return is netted. | Muse Wonder 1.0 |
+| 0:50-1:20 | The list writes itself: Running low with reasons, one list per store, the "why" sheet. | Muse Spark staple judge, Muse Spark Open second seat |
+| 1:20-1:45 | Add any way: say it, or snap a handwritten note. | Muse Voice Transcribe, Muse Spark vision |
+| 1:45-2:05 | Ask Arya: "We finished the Greek yogurt", then "What did we spend on coffee?" | Muse Spark |
+| 2:05-2:40 | Optional fun: Start shopping opens a quest at the list's store, Got it +10, Find it for me on a shelf, people blurred. | SAM 3.1, Muse Spark, Muse Image |
+| 2:40-3:00 | Close: the math is code, the model only reads and speaks; privacy; the live link and "Try it now". | |
 
 ## Package checklist
 

@@ -20,7 +20,7 @@ ffmpeg, Postgres) does plumbing only.
 - Model output is a proposal: receipts must reconcile, low-confidence
   lines queue for review, identity changes need the user's approval.
 - Cheapest model that holds the score. Wonder on receipt decode is the
-  one exception, time-boxed to the hackathon amendment (expires Nov 4).
+  one exception, time-boxed to the hackathon amendment (expires Nov 9, after judging).
 - No pictures of people kept: SAM blurs them first, or the frame is
   dropped.
 

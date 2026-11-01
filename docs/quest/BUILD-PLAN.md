@@ -14,9 +14,11 @@ is true on `main`; this page keeps only the plan and what is left.
 ## Left
 
 - Deploy what is merged (owner steps in `STATUS.md`).
-- Nov 4, early: switch the receipt photo reader to Spark
-  (`ARYA_PHOTO_READER=spark`, then `docker compose up -d`), because the
-  Wonder amendment ends that day.
+- By Nov 4: set the Ops "Photo reader" switch to Wonder for judging
+  (owner, 2026-11-01: the Wonder amendment now runs through Nov 9), and
+  keep the demo daily budget at $20.
+- After Nov 9: switch the receipt photo reader back to Spark (Ops switch,
+  or `ARYA_PHOTO_READER=spark`, then `docker compose up -d`).
 - Demo video and the final submission package, on the owner's go-ahead.
 
 ## Out of scope for the hackathon

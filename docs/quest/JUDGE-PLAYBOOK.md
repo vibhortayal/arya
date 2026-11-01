@@ -22,14 +22,20 @@ microphone and chat call the Meta API live.
 ## Demo (25%)
 
 ### 1. Front door
-Tap **Try it now**. You land on **Today** with a bar that says the
-household is a demo. Today lists what is running low and why, store
-alerts, and what to use soon.
+Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every
+screen · 2 min** or **Skip for now**. You land on **Today**, with a bar at
+the top that says the household is a demo. Today shows your next trip,
+store news from the simulated town (marked Simulated), what is running
+low and why, and your lists.
+
+The bar at the bottom is **Today, Lists, Quest, Ask, More**. **More**
+holds Receipts, Stores, Spending, Help and Settings.
 
 ### 2. Lists
-Open **Lists**. The demo has a Costco list and a Trader Joe's list.
-Due staples show as suggestions under the list of the store where they
-are usually bought, with a reason and a "why" sheet. A **Muse Spark 1.3**
+Open **Lists**. The demo has a Costcozy list and a Trader Jill's list
+(the town's stores have fictional names). Due staples show under
+**Suggested for** the store where they are usually bought; tap one to
+see why. A **Muse Spark 1.3**
 staple judge decides which items may be suggested (precision 0.79
 against a purchase-cadence proxy on the owner's receipts).
 
@@ -38,23 +44,26 @@ against a purchase-cadence proxy on the owner's receipts).
 ## Meta tooling (25%)
 
 ### 3. Add items by voice and photo
-In a list, use the add row: the mic (**Muse Voice Transcribe**) takes
+In a list, use the add row: type an item, or use the mic (**Muse Voice Transcribe**) takes
 "two gallons of milk, eggs, and blueberries"; the camera (**Muse Spark**
 vision) reads a photo of a handwritten note. Adds apply at once, with
 Undo.
 
 ### 4. Start a quest
-Open a list and tap **Start shopping**. The quest opens at that list's
-store. **How to play** shows once.
+On Today, tap **Start shopping** on the next trip, then **Let's go**.
+(From a list, **Start shopping** asks how you want to shop; pick
+**Start a Quest**.) The quest opens at that list's store.
 
-- An unmapped store plays as a labelled typical layout.
-- Tap **Grab**: +10 points and a character painted with **Muse Image**.
-  There is no clock and no way to lose.
-- **Find it for me** opens the camera aimed at the next item. **SAM 3.1**
-  boxes candidates and **Muse Spark** checks each crop. Point it at any
-  shelf photo on a second screen if you are not in a store.
-- **Not here?** files a shortage report for the next shopper.
-- **Map this store** (on the Quest home) opens the guided scan: pan along
+- An unmapped store plays as a labelled typical layout ("A guess, not a
+  pin").
+- Tap **Got it**: +10 points (the Golden item is worth double). The
+  celebration characters were painted with **Muse Image**. There is no
+  clock and no way to lose.
+- **Can't find it** offers **Find it for me**: the camera aims at the
+  item, **SAM 3.1** boxes candidates and **Muse Spark** checks each crop.
+  Point it at any shelf photo on a second screen if you are not in a
+  store. From the same place you can tell other Arya shoppers it is gone.
+- **Map my store** (on the Quest tab) opens the guided scan: pan along
   the shelves, SAM 3.1 blurs every person, and Muse Spark reads sections,
   aisle signs and prices.
 
@@ -64,8 +73,9 @@ Greek yogurt." The answer comes from the household data. The stated fact
 becomes an action that the server validates before it applies.
 
 ### 6. Finish with a receipt
-Tap **I'm done shopping**, then **Snap the receipt**. **Muse Wonder 1.0**
-reads each line, and code checks that the lines add up to the printed
+When the list is done, tap **Head to checkout**, then **Add your
+receipt**. **Snap the receipt** with a photo, or tap **Use a sample
+receipt**. **Muse Wonder 1.0** reads each line, and code checks that the lines add up to the printed
 total. If Wonder takes more than 90 seconds, Arya falls back to Muse
 Spark and records which model read the receipt. On the Gate 0 public set,
 Wonder got 97 of 98 lines right after hand adjudication, with zero price
@@ -109,6 +119,11 @@ errors.
   are not live.
 - Live calls can be slow (receipts take up to 90 seconds). A daily budget
   and a per-IP limit protect the account.
+
+## When you are done
+
+Tap **Finish demo** (top right) to leave feedback, replay the tour or see
+the code.
 
 ## If something fails
 

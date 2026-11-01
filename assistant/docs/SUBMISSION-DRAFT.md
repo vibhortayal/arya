@@ -11,10 +11,10 @@ Arya
 
 ## Tagline
 
-Waze for grocery shopping. Arya reads and verifies every receipt, nets out
-returns and learns your patterns, so your list writes itself. Quest, its
-optional game, turns the weekly shop into a hunt through a model of your
-own store.
+A grocery list that learns from your receipts. Arya reads every receipt,
+checks each line against the printed total, nets out returns and learns
+what your household buys, how often and where, so your list mostly writes
+itself. Quest, an optional game, makes the trip itself more fun.
 
 ## What it is
 
@@ -65,7 +65,10 @@ so next week's list writes itself.
   93.88%; price errors 0 against 4). Muse Spark Open (open weights, on Baseten) is the staple
   judge's second seat: it re-judges from item names alone and never sees
   personal data.
-- Muse Image paints the collect-celebration characters (Quest mode).
+- Muse Image painted the 20 collect-celebration characters once, during
+  the build (they ship as assets), and paints live in the app: a player's
+  avatar from a description or their own photo, and the optional paint
+  pass on the haul share card.
 - Muse Voice Transcribe takes voice intake in the app: dictation for
   list adds and voice in Ask Arya.
 - SAM 3.1 finds shelves and signs in the guided store scan, boxes items
@@ -100,8 +103,9 @@ Arya uses Meta models to read receipts, photos and voice, and to answer question
 - Wonder, production proof: the same Gate 0 public set through the
   live production path scored 97 of 98 lines (identity + price) after
   hand adjudication, with 0 price errors and 7/7 arithmetic. Wonder
-  reads receipt photos in the app until Nov 4 (MODEL-POLICY amendment);
-  Spark is the automatic fallback on any failure.
+  reads receipt photos in the app through judging, until Nov 9
+  (MODEL-POLICY amendment, extended by the owner on 2026-11-01); Spark is
+  the automatic fallback on any failure.
 - Design choice, tested before it was built: Wonder read the Gate 0
   photos best (97 of 98 lines, no price errors, about $0.12 and 34 s a
   receipt) and Spark read them cheaper and faster (about $0.013 and 9 s)
@@ -117,12 +121,15 @@ Arya uses Meta models to read receipts, photos and voice, and to answer question
 - PDF corpus: 114 real receipts, 1,226 lines, 114/114 arithmetic match.
 - Store maps: earned from shoppers' guided scans. A section counts as
   mapped only with a usable, fresh picture; no store ships mapped.
-- Test suite: 1,235 Python tests, green on `main` at #198.
+- Test suite: more than 1,200 Python unit tests plus the web app's
+  tests (`cd assistant && python -m unittest discover -s tests`). A small
+  number of known failures on `main` are tracked in GitHub issues.
 - Live at https://arya.teamnightshift.org — "Try it now" opens a
   fictional household with no account. Judges can play the whole
   loop: list in by typing, photo or voice; a quest from a list; the
   receipt finish; and Ask Arya. Each
-  visitor's changes live in a sandbox for that visit only.
+  visitor's changes live in a sandbox for that visit only. The step-by-step
+  path is `docs/quest/JUDGE-PLAYBOOK.md`.
 
 ## Team
 
