@@ -29,6 +29,7 @@ Arya is not a food-safety check: look at the date on the pack, and if food looks
 Receipts: open Today, scroll to the bottom and tap Receipts, or tap Add receipt after a trip. You can take a photo, pick a PDF, paste order text or say it.
 Arya reads the receipt and checks the total. It keeps every receipt for a return or recall refund.
 A return is taken off the spending. Only you and your group see your receipts.
+Costco names like "BL 3PC KING" are short codes. Arya tries to read them, using known Costco abbreviations, and never looks anything up on store sites. If it is not sure, the line goes to Review with its best guesses; rename it once and Arya remembers that item.
 ## spending | spending spend analysis month store budget money pay paid
 Spending: open Today, scroll to the bottom and tap Spending, or tap Details on the Spending card. It shows spending by month, by store and by item.
 Ask "What did I spend in October?" for one month. Arya adds up the receipts with code, not by guessing.

@@ -56,9 +56,17 @@ RECEIPT_SCHEMA = ("DecodedReceipt", {
     "required": ["lines"]})
 
 
+HINTS_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts", "costco_abbreviations.md")
+
+
+def load_hints():
+    """Costco abbreviation hints, appended to every receipt prompt."""
+    return open(HINTS_PATH).read().split("\n", 1)[1].strip()
+
+
 def load_prompt():
     text = open(PROMPT_PATH).read()
-    return text.split("SYSTEM:", 1)[1].strip()
+    return text.split("SYSTEM:", 1)[1].strip() + "\n\n" + load_hints()
 
 
 def _attach_discounts(lines):
@@ -164,6 +172,66 @@ def normalize_costco_json(obj):
             "totals_reconcile": reconcile, "image_ref": None}
 
 
+EXPAND_PROMPT = (
+    "You expand abbreviated Costco receipt item names. Input: one line per item, "
+    "'[n] PRINTED NAME'. Return ONLY JSON: {\"names\": [{\"n\": int, \"name\": str, "
+    "\"confidence\": number 0..1, \"alternatives\": [str]}]}. Expand only when "
+    "confident; otherwise keep the printed words, set confidence below 0.8 and give "
+    "up to 2 alternatives. Never invent a brand or size not implied by the text.\n\n"
+    "Hints:\n")
+EXPAND_BATCH = 40
+EXPAND_MAX_NAMES = 120
+_VOWELS = re.compile(r"[AEIOU]", re.I)
+
+
+def looks_abbreviated(raw):
+    """True for printed names worth a model look: ALL CAPS with a short
+    token, a digit-glued token (3PC, 12PK) or a token with no vowels."""
+    raw = (raw or "").strip()
+    if not raw or raw.startswith("/") or raw.upper() != raw:
+        return False
+    toks = re.findall(r"[A-Z0-9]+", raw)
+    return any(len(t) <= 3 or re.search(r"\d", t) and re.search(r"[A-Z]", t)
+               or (len(t) > 3 and not _VOWELS.search(t)) for t in toks)
+
+
+def expand_costco_names(dec, client, skip_skus=()):
+    """Model pass over the abbreviated item lines of a JSON-export receipt
+    (they arrive at confidence 1.0 with the printed text as the name).
+    Fills decoded_name, confidence, alternatives; below AUTO_THRESHOLD the
+    line goes to review. Any failure leaves the receipt exactly as it was.
+    Returns the number of lines changed."""
+    todo = [ln for ln in dec["lines"]
+            if ln["line_type"] == "item" and ln.get("sku") not in skip_skus
+            and looks_abbreviated(ln.get("raw"))]
+    uniq = list(dict.fromkeys(ln["raw"] for ln in todo))[:EXPAND_MAX_NAMES]
+    found = {}
+    for i in range(0, len(uniq), EXPAND_BATCH):
+        chunk = uniq[i:i + EXPAND_BATCH]
+        listing = "\n".join(f"[{n}] {raw}" for n, raw in enumerate(chunk))
+        try:
+            out, _u, _c = client.chat(
+                [{"role": "system", "content": EXPAND_PROMPT + load_hints()},
+                 {"role": "user", "content": listing}],
+                mode="standard", personal=True, temperature=0.0)
+            for v in parse_json(out).get("names", []):
+                raw = chunk[int(v["n"])]
+                found[raw] = (str(v["name"]).strip(), float(v.get("confidence") or 0),
+                              [str(a) for a in (v.get("alternatives") or [])][:2])
+        except Exception:
+            continue
+    changed = 0
+    for ln in todo:
+        hit = found.get(ln["raw"])
+        if not hit or not hit[0]:
+            continue
+        name, conf, alts = hit
+        ln["decoded_name"], ln["confidence"], ln["alternatives"] = name, min(conf, 0.99), alts
+        ln["status"] = "auto" if conf >= AUTO_THRESHOLD else "unverified"
+        changed += 1
+    return changed
+
+
 def decode_text(text, client):
     """PDF-extracted receipt text -> DecodedReceipt via meta_client.
     Personal data: Standard mode only (enforced in meta_client)."""
@@ -247,7 +315,7 @@ PHOTO_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "prompts
 
 def load_photo_prompt():
     text = open(PHOTO_PROMPT_PATH).read()
-    return text.split("SYSTEM:", 1)[1].strip()
+    return text.split("SYSTEM:", 1)[1].strip() + "\n\n" + load_hints()
 
 
 # Photo decode reads with Wonder first, per the MODEL-POLICY hackathon

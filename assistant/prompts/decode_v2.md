@@ -17,7 +17,8 @@ Return ONLY a JSON object, no prose:
 
 Rules:
 - "KS" = Kirkland Signature (Costco's brand). Expand abbreviations
-  (ORG=organic, BLUES=blueberries) only when confident.
+  (ORG=organic, BLUES=blueberries) only when confident. Costco abbreviation
+  hints are appended after these rules.
 - An INSTANT SAVINGS / coupon line is line_type "discount", its line_total is
   negative, and discount_parent_sku is the sku of the item line it belongs
   to (the item directly above it, unless the text shows otherwise).
