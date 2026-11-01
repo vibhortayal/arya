@@ -323,6 +323,23 @@ def insights(d, flags, names, today=None):
             "waste": food_waste(flags, d, names, today)}
 
 
+def cheapest_store(stores):
+    """Of the last price at each store, the lowest, among prices no more
+    than a year older than the newest one; None with fewer than two
+    stores. Worked out here so Ask never compares numbers itself
+    (Tester run 1, 2026-11-01: a milk answer corrected itself
+    mid-sentence, and an eggs answer skipped a third store)."""
+    if len(stores) < 2:
+        return None
+    newest = max(date.fromisoformat(v["date"]) for v in stores.values())
+    fresh = {s: v for s, v in stores.items()
+             if (newest - date.fromisoformat(v["date"])).days <= CHEAPER_MAX_AGE_DAYS}
+    if len(fresh) < 2:
+        return None
+    s, v = min(fresh.items(), key=lambda kv: (kv[1]["price"], kv[0]))
+    return {"store": s, "price": v["price"], "date": v["date"], "of_stores": len(fresh)}
+
+
 def ask_facts(d, names, cap=40, first=()):
     """Price facts for Ask Arya: per item, the latest price at each
     store, the cheaper store and the trend, already worked out, so the
@@ -340,7 +357,8 @@ def ask_facts(d, names, cap=40, first=()):
     seen = lead + [i for i in seen if i not in lead]
     for iid in seen[:cap]:
         p = item_prices(iid, d)
+        stores = {s: {"price": v["last"], "date": v["last_date"]} for s, v in p["stores"].items()}
         out[_label(names, iid)] = {
-            "stores": {s: {"price": v["last"], "date": v["last_date"]} for s, v in p["stores"].items()},
+            "stores": stores, "cheapest": cheapest_store(stores),
             "cheaper": p["cheaper"], "trend": p["trend"]}
     return out

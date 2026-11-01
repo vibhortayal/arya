@@ -57,7 +57,7 @@ so next week's list writes itself.
 
 ## How Meta models are used
 
-- Muse Spark 1.3 (Standard) reads receipt PDFs and list photos
+- Muse Spark 1.3 (Standard mode) reads receipt PDFs and list photos
   (vision); is the first reader for receipt photos;
   labels store shelves; and powers the Ask Arya agent and the staple
   judge.
@@ -78,13 +78,9 @@ so next week's list writes itself.
 - SAM 3.1 finds shelves and signs in the guided store scan, boxes items
   for Find it for me, and finds people so they are blurred before any
   frame is kept.
-- Spark runs on Meta's discounted Contributor tier (owner decision
-  2026-11-01), so content sent to Spark may be used to train future Meta
-  models. Receipt photos are read by Spark first, so they can be used
-  for training too; Wonder (the second reader) runs on Standard, which is
-  not used for training. A switch (`ARYA_SPARK_TIER=standard`) puts Spark back on
-  Standard. A client-side gate keeps Spark under Contributor's 150
-  requests a minute.
+- Spark and Wonder both run in Meta's Standard mode. Receipt photos are
+  read by Spark first; Wonder, the second reader, re-reads only a receipt
+  the checks flag.
 - All math — ledger, returns netting, cadence, spend — is deterministic
   code. The model reads and speaks; it never calculates.
 - Cost: every model call is written to a cost ledger, and a daily budget

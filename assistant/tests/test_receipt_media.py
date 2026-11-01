@@ -10,6 +10,7 @@ without an upload have no original and the endpoint 404s
 honestly; the demo files nothing.
 """
 import io, json, os, tempfile, unittest
+from unittest import mock
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
 os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
@@ -58,6 +59,11 @@ class TestReceiptMedia(unittest.TestCase):
     def setUp(self):
         self.base = tempfile.mkdtemp()
         os.environ["ARYA_DATA_DIR"] = self.base
+        # Other test files clear MODEL_API_KEY when they are imported, so set
+        # it here: this class files receipts and needs the key to be present.
+        patcher = mock.patch.dict(os.environ, {"MODEL_API_KEY": "test-key"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         from api import main
         from api import deps
         deps.MetaClient = FakeClient
