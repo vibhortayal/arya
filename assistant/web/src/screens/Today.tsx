@@ -375,11 +375,19 @@ export function Today() {
   const tip = facts && !firstRun ? <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} /> : null;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
   const checkLabel = checkNames.length ? checkNames.slice(0, 2).join(", ") + (checkNames.length > 2 ? t("today.andMore", { n: checkNames.length - 2 }) : "") : "";
-  async function check(kind: "ok" | "expired", id: string) {
+  async function check(kind: "ok" | "expired" | "finished", id: string, name = "") {
     try {
       if (kind === "ok") {
         await post("/api/list/check-ok", { item_id: id });
         toast(t("today.stillGoodToast"));
+      } else if (kind === "finished") {
+        // "I finished it" (owner, 2026-11-01): used up, not waste. It is
+        // Arya's "I'm out": the item leaves the checks and goes back on
+        // the list for next time; Undo clears it.
+        await post(`/api/items/${encodeURIComponent(id)}/flag`, { out: isoToday() });
+        toast(t("today.finishedToast", { name }), { action: t("common.undo"), onAction: async () => {
+          try { await post(`/api/items/${encodeURIComponent(id)}/flag`, { out: null }); load(); } catch (e) { showErr(e); }
+        } });
       } else {
         await post(`/api/items/${encodeURIComponent(id)}/expired`);
         toast(t("today.markedExpiredToast"));
@@ -507,9 +515,10 @@ export function Today() {
                 <div className="checkrows" hidden={!checksOpen && !big("checks")}>
                   {checks.map(c => (
                     <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                      <span className="chipset">
+                      <span className="chipset checkchips">
                         <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
-                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
+                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button>
+                        <button className="chip" data-check-finished={c.item_id} type="button" onClick={() => check("finished", c.item_id, c.name)}>{t("today.iFinishedIt")}</button></span></div></div>
                   ))}
                   {seen.map((s, k) => (
                     <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>

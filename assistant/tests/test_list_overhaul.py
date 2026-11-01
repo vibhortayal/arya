@@ -80,6 +80,21 @@ class TestOnListInTheDemo(unittest.TestCase):
         self.assertFalse(spinach["on_list"])
         self.assertIn("expired_on", spinach)
 
+    def test_i_finished_it_leaves_the_checks_and_is_not_waste(self):
+        # "I finished it" on Still good? (owner, 2026-11-01) sends {out: today}.
+        home = self.c.get("/api/home").json()
+        checks = home.get("checks") or []
+        if not checks:
+            self.skipTest("no Still good? question in the demo data today")
+        item = checks[0]["item_id"]
+        today = home["as_of"]
+        self.c.post(f"/api/items/{item}/flag", json={"out": today})
+        after = self.c.get("/api/home").json()
+        self.assertNotIn(item, [c["item_id"] for c in after.get("checks") or []])
+        self.assertFalse((self.c.get(f"/api/items/{item}").json().get("flags") or {}).get("expired"))
+        # Undo clears it.
+        self.c.post(f"/api/items/{item}/flag", json={"out": None})
+
     def test_not_now_hides_a_suggestion_for_this_cycle(self):
         self.c.post("/api/list/remove", json={"item_id": "demo-milk"})
         self.assertNotIn("Whole Milk 1 gal", self.items())

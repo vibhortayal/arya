@@ -53,6 +53,17 @@ class TestTodayIsTheShoppingDashboard(unittest.TestCase):
         # The List overhaul removed the List's notes block altogether.
         self.assertNotIn("data-check-ok", src("screens/Lists.tsx"))
 
+    def test_still_good_has_i_finished_it(self):
+        # Owner, 2026-11-01: a third answer, "I finished it": used up,
+        # not waste. It is Arya's "I'm out" flag (back on the list) with
+        # Undo, and the three answers share one row (.checkchips).
+        js = today()
+        self.assertIn("data-check-finished", js)
+        self.assertIn("{ out: isoToday() }", js)
+        self.assertIn("{ out: null }", js)
+        self.assertIn("checkchips", js)
+        self.assertNotIn('check("finished", c.item_id)}>{t("today.itExpired")', js)
+
     def test_patterns_back_returns_to_today(self):
         self.assertIn('nav.show("analysis", { from: "home" })', today())
         # Back is the nav stack: it pops to whoever opened Patterns.
