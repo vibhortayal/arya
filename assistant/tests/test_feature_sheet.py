@@ -23,10 +23,11 @@ class FeatureSheet(unittest.TestCase):
 
     def test_gated_lines_hidden_when_off(self):
         off = chat_service.feature_sheet({k: False for k in KNOWN_FLAGS})
-        self.assertNotIn("Remind me", off)
+        self.assertNotIn("days-before stepper", off)
+        self.assertIn("not switched on yet", off)
         self.assertNotIn("[if", off)
         on = chat_service.feature_sheet({k: True for k in KNOWN_FLAGS})
-        self.assertIn("Remind me", on)
+        self.assertIn("days-before stepper", on)
         self.assertNotIn("[if", on)
 
     def test_bar_named_in_sheet_matches_app(self):
@@ -77,6 +78,8 @@ class FeatureSheet(unittest.TestCase):
         # install steps have their own topic (Ask gap 6)
         for q in ("How do I install Arya on my phone?", "how do I add it to my home screen", "is there an app store app"):
             self.assertIn("Get the app: Arya has no App Store", f(q), q)
+        # where reminders live (Settings, Preferences, Remind me)
+        self.assertIn("Preferences, the Remind me switch", f("where do I turn on reminders"))
         # no topic words but a general ask: everything
         self.assertIn("Use soon:", f("what can you do?"))
         self.assertIn("Receipts: open the Lists tab", f("what can you do?"))
