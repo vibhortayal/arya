@@ -25,10 +25,10 @@ test("More details opens price, store, date and item number in place", async () 
   expect($("#review .sub")!.textContent).toContain("Costco Newark");
   expect($("#review .sub")!.textContent).toContain("$18.99");
   expect($(".detail")).toBeNull();
-  fireEvent.click($("[data-more]")!);
+  fireEvent.click($("[data-group-more]")!);
   const d = $(".detail")!.textContent!;
   for (const s of ["$18.99", "Costco Newark", "Oct 28, 2026", "BL 3PC KING", "1730412", "Low (60%)"]) expect(d).toContain(s);
-  fireEvent.click($("[data-more]")!);
+  fireEvent.click($("[data-group-more]")!);
   expect($(".detail")).toBeNull();
   await new Promise(r => setTimeout(r, 50)); // let the focus frame run while CSS is stubbed
 });

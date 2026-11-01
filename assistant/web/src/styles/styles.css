@@ -2249,3 +2249,12 @@ body.hunting #offlinebar { display: none !important; }
 .tripcard .lc-items { display: block; font-size: 15px; margin-top: 8px; line-height: 1.4; color: var(--secondary); overflow-wrap: anywhere; }
 .tripcard .tc-empty { margin: 0 0 14px; color: var(--secondary); font-size: 15px; }
 .tripcard .tc-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+
+/* To check: Arya's guess cards (smart suggestions) */
+.tc-kick{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-text);margin-bottom:2px}
+.tc-kick.unsure{color:#8a3b12}
+.eyegroup .name.tc-raw{font-family:ui-monospace,Menlo,monospace;font-size:15px}
+.tc-sect{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--fill);color:var(--secondary)}
+.tc-use{padding:8px 14px;font-size:15px;min-height:0}
+.tc-ed{display:flex;gap:8px;flex-wrap:wrap}.tc-ed input{flex:1 1 100%}.tc-ed select{flex:1;min-height:36px}
+.tc-bulk{padding:14px 16px;margin-bottom:12px}.tc-bulk b{display:block;font-size:17px}.tc-bulk p{margin:4px 0 10px;color:var(--secondary);font-size:15px}

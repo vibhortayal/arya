@@ -64,11 +64,15 @@ test("lines of one product on several receipts become one row, fixed with one ta
   }));
   render(<ToastProvider><NavProvider initial="tocheck"><ToCheck /></NavProvider></ToastProvider>);
   await waitFor(() => expect($("[data-group-confirm]")).not.toBeNull());
-  expect(document.querySelectorAll("[data-group-confirm]")).toHaveLength(1);
-  expect($("[data-group-confirm]")!.textContent).toBe("Looks right, all 3");
-  expect(document.querySelectorAll("[data-confirm]")).toHaveLength(1);
-  await act(async () => { fireEvent.click($("[data-group-confirm]")!); });
+  // One card for the three Costco lines, one for the other product.
+  expect(document.querySelectorAll("[data-card]")).toHaveLength(2);
+  expect($("[data-card]")!.textContent).toContain("×3");
+  fireEvent.click($("[data-group-fix]")!);
+  fireEvent.change($("[data-editor] input")!, { target: { value: "Rotisserie chicken" } });
+  expect($("[data-save-group]")!.textContent).toBe("Save, all 3");
+  await act(async () => { fireEvent.click($("[data-save-group]")!); });
   await waitFor(() => expect(posts.some(p => p[0].includes("/api/review/line"))).toBe(true));
+  expect(posts.find(p => p[0].includes("/api/review/line"))![1]).toEqual({ receipt_id: "a", idx: 0, action: "rename", name: "Rotisserie chicken" });
   expect($("#toast")!.textContent).toContain("Also fixed 2 other receipt lines.");
   await act(async () => { fireEvent.click($("#toast .toastact")!); });
   await waitFor(() => expect(posts.some(p => p[0].includes("/api/review/undo"))).toBe(true));

@@ -40,6 +40,20 @@ def review_route():
     return state.review_queue()
 
 
+def _rename(receipt_id, idx, name, section=None):
+    """Rename one line, teach the name, keep a section, and fix every
+    other line of the same item. Returns (line, others changed)."""
+    line = state.update_receipt_line(receipt_id, idx, {"status": "auto", "decoded_name": name})
+    if not line:
+        return None, []
+    state.teach_name(line.get("sku"), name, item_id=line.get("item_id"))
+    if section:
+        from api.dictionary import clean
+        clean.save_section(line.get("sku"), line.get("item_id") or f"costco-{line.get('sku')}",
+                           str(section).lower())
+    return line, state.apply_line_fix_to_same_item(receipt_id, idx, line, name=name)
+
+
 @router.post("/api/review/line")
 async def review_line(req: Request):
     body = await _json_obj(req)
@@ -59,20 +73,41 @@ async def review_line(req: Request):
         name = (body.get("name") or "").strip()
         if not name:
             raise HTTPException(400, "name is required to rename")
-        line = state.update_receipt_line(receipt_id, idx,
-                                         {"status": "auto", "decoded_name": name})
-        if line:
-            state.teach_name(line.get("sku"), name, item_id=line.get("item_id"))
-            if body.get("section"):
-                from api.dictionary import clean
-                clean.save_section(line.get("sku"), line.get("item_id") or f"costco-{line.get('sku')}",
-                                   str(body["section"]).lower())
-            others = state.apply_line_fix_to_same_item(receipt_id, idx, line, name=name)
+        line, others = _rename(receipt_id, idx, name, body.get("section"))
     else:
         raise HTTPException(400, "action must be confirm or rename")
     if line is None:
         raise HTTPException(404, "no such line")
     return {"ok": True, "also": len(others), "undo": others}
+
+
+ACCEPT_MAX = 200
+
+
+@router.post("/api/review/accept")
+async def review_accept(req: Request):
+    """To check's "Use the sure guesses" (owner, 2026-11-01): rename many
+    items in one call. Returns how many were set and one undo list that
+    puts every changed line back, the tapped lines included."""
+    body = await _json_obj(req)
+    items = body.get("items")
+    if not isinstance(items, list) or not items or len(items) > ACCEPT_MAX or not all(
+            isinstance(i, dict) and isinstance(i.get("receipt_id"), str) and isinstance(i.get("idx"), int)
+            and isinstance(i.get("name"), str) and i["name"].strip() for i in items):
+        raise HTTPException(400, f"items must be 1 to {ACCEPT_MAX} lines, each with receipt_id, idx and name")
+    done, undo = 0, []
+    for i in items:
+        before = state.receipt_line(i["receipt_id"], i["idx"])
+        if not before or before.get("status") != "unverified":
+            continue
+        line, others = _rename(i["receipt_id"], i["idx"], i["name"].strip(), i.get("section"))
+        if not line:
+            continue
+        done += 1
+        undo.append({"receipt_id": i["receipt_id"], "idx": i["idx"],
+                     "decoded_name": before.get("decoded_name"), "status": before.get("status")})
+        undo.extend(others)
+    return {"ok": True, "done": done, "undo": undo}
 
 
 @router.post("/api/review/smart-pass")

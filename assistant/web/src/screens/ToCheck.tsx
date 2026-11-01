@@ -10,18 +10,41 @@ import { useTranslation } from "../i18n";
 /* To check (owner, 2026-11-01, option A): everything Arya is unsure about
  * on receipts, on its own screen so a big batch no longer pushes the
  * receipt list off Receipts. Lines of one product on several receipts are
- * one row; ten rows show at a time. Moved here from Receipts.tsx. */
+ * one card; ten cards show at a time. Moved here from Receipts.tsx.
+ *
+ * Smart suggestions (owner, 2026-11-01; mockup 4RWY3Q5tjLScQkJdNUdrpm):
+ * each card leads with Arya's guess (api clean.suggest_review, PR #366)
+ * over the printed text, with Use this name, Fix and Keep printed. Sure
+ * guesses (confidence 0.85 or more, owner) can all be used with one tap
+ * and one Undo. Opening the screen asks for guesses still missing. */
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const PAGE = 10;
+/* "Sure" (owner, 2026-11-01): a guess at this confidence or more joins
+ * the one-tap batch; below it the card says "not sure". */
+export const SURE = 0.85;
+/* The store sections a guess can carry (api/dictionary/enrich.py SECTIONS). */
+export const SECTIONS = ["produce", "dairy & eggs", "meat & seafood", "bakery", "frozen", "pantry", "beverages",
+  "snacks", "household", "personal care", "other"] as const;
 
-type Line = { receipt_id: string; idx: number; decoded_name?: string; raw: string; date?: string;
+export type Line = { receipt_id: string; idx: number; decoded_name?: string; raw: string; date?: string;
   merchant?: string; sku?: string; qty?: number; line_total?: number | null; confidence?: number;
-  suggested?: { name: string; source?: string }; alternatives?: string[] };
+  suggested?: { name: string; source?: string; section?: string; confidence?: number; by?: string } | null;
+  suggest_tried?: boolean; alternatives?: string[]; status?: string };
 type Unresolved = { item_id: string; name: string; candidates?: string[]; sources?: Record<string, string> };
 type Proposal = { id: string; kind: string; into_name?: string; names: string[]; reason: string };
 /* Lines of one product (same item number, else same printed text)
  * across receipts are asked about once. */
-const lineKey = (l: Line) => l.sku ? "sku:" + l.sku : "raw:" + String(l.raw || "").toLowerCase().split(/\s+/).filter(Boolean).join(" ");
+export const lineKey = (l: Line) => l.sku ? "sku:" + l.sku : "raw:" + String(l.raw || "").toLowerCase().split(/\s+/).filter(Boolean).join(" ");
+
+/* Sure guesses first, then not-sure ones, then lines with no guess;
+ * inside each, the item on the most receipts first. */
+export const isSure = (g: Line[]) => (g[0].suggested?.confidence ?? 0) >= SURE && !!g[0].suggested?.name;
+const rank = (g: Line[]) => (isSure(g) ? 0 : g[0].suggested?.name ? 1 : 2);
+export function orderCards(lines: Line[]): Line[][] {
+  const byKey = new Map<string, Line[]>();
+  for (const l of lines) byKey.set(lineKey(l), [...(byKey.get(lineKey(l)) || []), l]);
+  return [...byKey.values()].sort((a, b) => rank(a) - rank(b) || b.length - a.length);
+}
 
 export function ToCheck() {
   const { t } = useTranslation();
@@ -34,6 +57,9 @@ export function ToCheck() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [shown, setShown] = useState(PAGE);
   const [loaded, setLoaded] = useState(false);
+  const [sect, setSect] = useState<Record<string, string>>({});
+  // While Arya is guessing names still missing, those cards say so.
+  const [reading, setReading] = useState(false);
 
   const loadScan = useCallback(async () => {
     const q = await get("/api/review");
@@ -45,6 +71,14 @@ export function ToCheck() {
   }, []);
   useEffect(() => {
     Promise.all([loadScan().catch(() => {}), loadCurator()]).then(() => setLoaded(true)).catch(showErr);
+    // Ask Arya for the guesses still missing (PR #366), then show them.
+    let live = true;
+    get<{ lines?: Line[] }>("/api/review").then(q => {
+      if (!(q.lines || []).some(l => !l.suggested && !l.suggest_tried)) return;
+      setReading(true);
+      return post("/api/review/smart-pass", {}).then(() => { if (live) return loadScan(); });
+    }).catch(() => {}).finally(() => { if (live) setReading(false); });
+    return () => { live = false; };
   }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const attempt = async (f: () => Promise<void>) => { try { await f(); } catch (e) { toast(errMsg(e)); } };
@@ -72,88 +106,107 @@ export function ToCheck() {
       document.querySelector<HTMLInputElement>(`[data-editor="${CSS.escape(key)}"] input`)?.focus());
   };
 
-  const byKey = new Map<string, Line[]>();
-  for (const l of queue.lines) byKey.set(lineKey(l), [...(byKey.get(lineKey(l)) || []), l]);
-  const groups = [...byKey.values()].filter(g => g.length > 1);
-  const singles = queue.lines.filter(l => (byKey.get(lineKey(l)) || []).length === 1);
+  const cards = orderCards(queue.lines);
   const hasReview = queue.lines.length > 0 || queue.unresolved.length > 0;
   const hasCur = proposals.length > 0;
-  const vGroups = groups.slice(0, shown);
-  const vSingles = singles.slice(0, Math.max(0, shown - groups.length));
-  const hidden = groups.length + singles.length - vGroups.length - vSingles.length;
-  const editor = (key: string, onSave: (name: string) => void, saveAttr: string, saveVal: string) => (
-    <div className="editor" data-editor={key} hidden={!open[key]}>
+  const vCards = cards.slice(0, shown);
+  const hidden = cards.length - vCards.length;
+  const sure = cards.filter(isSure);
+  const guessed = cards.filter(g => !!g[0].suggested?.name).length;
+  const editor = (key: string, onSave: (name: string) => void, saveAttr: string, saveVal: string, label?: string, section?: boolean) => (
+    <div className={"editor" + (section ? " tc-ed" : "")} data-editor={key} hidden={!open[key]}>
       <input type="text" placeholder={t("receipts.correctName")} aria-label={t("receipts.correctName")} value={draft[key] || ""}
         onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))} />
+      {section && (
+        <select aria-label={t("toCheck.section")} value={sect[key] || ""} onChange={e => setSect(x => ({ ...x, [key]: e.target.value }))}>
+          <option value="">{t("toCheck.section")}</option>
+          {SECTIONS.map(v => <option key={v} value={v}>{t(`toCheck.sections.${v}`)}</option>)}
+        </select>)}
       <button className="chip" {...{ [saveAttr]: saveVal }} type="button"
-        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast(t("receipts.typeNameFirst")); return; } onSave(n); }}>{t("common.save")}</button>
+        onClick={() => { const n = (draft[key] || "").trim(); if (!n) { toast(t("receipts.typeNameFirst")); return; } onSave(n); }}>{label || t("common.save")}</button>
     </div>
   );
+  // Fix opens with Arya's guess and its section already filled in.
+  const openFix = (key: string, g: Line[]) => {
+    const s0 = g[0].suggested;
+    if (!open[key]) {
+      setDraft(d => ({ ...d, [key]: d[key] || s0?.name || "" }));
+      setSect(x => ({ ...x, [key]: x[key] || s0?.section || "" }));
+    }
+    toggle(key);
+  };
+  const useSure = () => attempt(async () => {
+    const items = sure.map(g => ({ receipt_id: g[0].receipt_id, idx: g[0].idx, name: g[0].suggested!.name, section: g[0].suggested!.section }));
+    const out = await post<{ done: number; undo: unknown[] }>("/api/review/accept", { items });
+    const names = sure.slice(0, 2).map(g => g[0].suggested!.name.split(" - ")[0]);
+    const list = out.done > 2 ? t("toCheck.bulkMore", { names: names.join(", "), count: out.done - 2 }) : names.slice(0, out.done).join(", ");
+    toast(t("toCheck.bulkDone", { count: out.done, names: list }), { action: t("receipts.undo"), onAction: () => {
+      post("/api/review/undo", { changes: out.undo }).then(() => loadScan()).catch(showErr);
+    } });
+    loadScan().catch(() => {});
+  });
 
   const lines = queue.lines.length;
-  const items = groups.length + singles.length + queue.unresolved.length + proposals.length;
+  const items = cards.length + queue.unresolved.length + proposals.length;
   return (
     <>
       <p><a href="#" id="tc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("receipts"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("receipts.needsYourEye")}</h1>
       <p className="subtitle" id="tc-count">{items ? (lines > items ? t("toCheck.count", { items, lines }) : t("toCheck.rowSub", { count: items })) : ""}</p>
       {loaded && !hasReview && !hasCur && <p className="muted" id="tc-empty">{t("toCheck.allClear")}</p>}
+      {sure.length > 0 && (
+        <div className="group tc-bulk" id="tc-bulk">
+          <b>{t("toCheck.bulkTitle", { count: guessed })}</b>
+          <p>{t("toCheck.bulkLine", { count: sure.length })}</p>
+          <button className="btn primary wide" id="tc-use-sure" type="button" onClick={useSure}>{t("toCheck.bulkUse", { count: sure.length })}</button>
+        </div>)}
       <div id="review" className="group eyegroup" hidden={!hasReview}>
-        {vGroups.map(g => {
+        {vCards.map(g => {
           const first = g[0];
           const key = "g:" + lineKey(first);
-          const nm = first.decoded_name || first.raw;
+          const sg = first.suggested?.name ? first.suggested : null;
+          const printed = first.decoded_name || first.raw;
+          const kick = sg ? t(isSure(g) ? "toCheck.guess" : "toCheck.guessUnsure")
+            : reading && !first.suggest_tried ? t("toCheck.reading") : first.suggest_tried ? t("toCheck.unreadable") : "";
+          const meta = [sg && t("toCheck.printed", { raw: first.raw }), first.sku && t("receipts.itemNo", { sku: first.sku }),
+            first.line_total != null && (g.length > 1 ? t("receipts.eachPrice", { amount: money(first.line_total, currency) }) : money(first.line_total, currency)),
+            g.length > 1 ? t("receipts.onReceipts", { count: g.length }) : [first.merchant, first.date && fmtShort(first.date)].filter(Boolean).join(" · ")].filter(Boolean).join(" · ");
+          const rename = (name: string, section?: string) => reviewLine(first.receipt_id, first.idx, { action: "rename", name, ...(section ? { section } : {}) }, t("receipts.setTo", { name }));
           return (
-            <div key={key} style={{ display: "contents" }}>
-              <div className="row"><div className="grow"><span className="name">{nm} <span className="sub" style={{ display: "inline" }}>×{g.length}</span></span>
-                <span className="sub">{[first.sku && t("receipts.itemNo", { sku: first.sku }), first.line_total != null && t("receipts.eachPrice", { amount: money(first.line_total, currency) }), t("receipts.onReceipts", { count: g.length })].filter(Boolean).join(" · ")}</span></div></div>
-              {open["d:" + key] && g.map(l => (
+            <div key={key} style={{ display: "contents" }} data-card={key} data-sure={isSure(g) ? "1" : undefined}>
+              <div className="row"><div className="grow">
+                {kick && <span className={"tc-kick" + (sg && isSure(g) ? "" : " unsure")}>{kick}</span>}
+                <span className={"name" + (sg ? "" : " tc-raw")}>{sg ? sg.name : printed}{!sg && g.length > 1 && <span className="sub" style={{ display: "inline" }}> ×{g.length}</span>}</span>
+                <span className="sub">{meta}</span>
+                {sg?.section && <span className="tc-sect">{t(`toCheck.sections.${sg.section}`)}</span>}
+                {sg?.source && <a className="sub" href={sg.source} target="_blank" rel="noopener">{t("receipts.source")}</a>}
+              </div></div>
+              {open["d:" + key] && (g.length > 1 ? g.map(l => (
                 <div className="detail" key={`${l.receipt_id}:${l.idx}`}>
                   <Row name={[l.merchant, l.date && fmtShort(l.date)].filter(Boolean).join(" · ")} right={l.line_total != null ? money(l.line_total, currency) : ""} />
+                </div>)) : (
+                <div className="detail" id={"detail-" + key}>
+                  {first.line_total != null && <Row name={t("receipts.paid")} right={`${money(first.line_total, currency)}${first.qty && first.qty !== 1 ? ` (${qtyFmt(first.qty)} × ${money(first.line_total / first.qty, currency)})` : ""}`} />}
+                  {first.merchant && <Row name={t("receipts.where")} right={first.merchant} />}
+                  {first.date && <Row name={t("receipts.when")} right={fmtDate(first.date)} />}
+                  <Row name={t("receipts.printedAs")} right={first.raw} />
+                  {first.sku && <Row name={t("receipts.itemNumber")} right={first.sku} />}
+                  {first.confidence != null && <Row name={t("receipts.confidence")} right={`${t(first.confidence >= 0.8 ? "receipts.confHigh" : first.confidence >= 0.65 ? "receipts.confMedium" : "receipts.confLow")} (${Math.round(first.confidence * 100)}%)`} />}
                 </div>))}
               <div className="actions">
-                <button className="chip" data-group-confirm={key} onClick={() => reviewLine(first.receipt_id, first.idx, { action: "confirm" }, t("receipts.confirmed"))}>{t("receipts.looksRightAll", { count: g.length })}</button>
-                <button className="chip" data-group-menu={key} aria-expanded={!!open["m:" + key]} onClick={() => toggle("m:" + key)}>{t("receipts.more")}</button>
-              </div>
-              {open["m:" + key] && (
-                <div className="actions">
-                  <button className="chip" data-group-fix={key} onClick={() => toggle(key)}>{t("receipts.renameAll")}</button>
-                  <button className="chip" data-group-more={key} aria-expanded={!!open["d:" + key]} onClick={() => toggle("d:" + key)}>{t(open["d:" + key] ? "receipts.hideThem" : "receipts.seeThem", { count: g.length })}</button>
-                </div>)}
-              {editor(key, name => reviewLine(first.receipt_id, first.idx, { action: "rename", name }, t("receipts.setTo", { name })), "data-save-group", key)}
-            </div>
-          );
-        })}
-        {vSingles.map(l => {
-          const key = `${l.receipt_id}:${l.idx}`;
-          return (
-            <div key={key} style={{ display: "contents" }}>
-              <div className="row"><div className="grow"><span className="name">{l.decoded_name || l.raw}</span>
-                <span className="sub">{[l.merchant, l.date && fmtShort(l.date), l.line_total != null && money(l.line_total, currency)].filter(Boolean).join(" · ") || t("receipts.unverifiedFrom", { date: fmtDate(l.date), raw: l.raw })}</span></div></div>
-              {open["d:" + key] && (
-                <div className="detail" id={"detail-" + key}>
-                  {l.line_total != null && <Row name={t("receipts.paid")} right={`${money(l.line_total, currency)}${l.qty && l.qty !== 1 ? ` (${qtyFmt(l.qty)} × ${money(l.line_total / l.qty, currency)})` : ""}`} />}
-                  {l.merchant && <Row name={t("receipts.where")} right={l.merchant} />}
-                  {l.date && <Row name={t("receipts.when")} right={fmtDate(l.date)} />}
-                  <Row name={t("receipts.printedAs")} right={l.raw} />
-                  {l.sku && <Row name={t("receipts.itemNumber")} right={l.sku} />}
-                  {l.confidence != null && <Row name={t("receipts.confidence")} right={`${t(l.confidence >= 0.8 ? "receipts.confHigh" : l.confidence >= 0.65 ? "receipts.confMedium" : "receipts.confLow")} (${Math.round(l.confidence * 100)}%)`} />}
-                </div>)}
-              <div className="actions">
-                <button className="chip" data-confirm={key} onClick={() => reviewLine(l.receipt_id, l.idx, { action: "confirm" }, t("receipts.confirmed"))}>{t("common.looksRight")}</button>
-                {l.suggested && <>
-                  <button className="chip" data-alt={key} data-name={l.suggested.name}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: l.suggested!.name }, t("receipts.setTo", { name: l.suggested!.name }))}>{t("receipts.researched", { name: l.suggested.name })}</button>
-                  {l.suggested.source && <a className="sub" href={l.suggested.source} target="_blank" rel="noopener">{t("receipts.source")}</a>}
+                {sg ? <>
+                  <button className="btn primary tc-use" data-use={key} type="button" onClick={() => rename(sg.name, sg.section)}>{t("toCheck.use")}</button>
+                  <button className="chip" data-group-fix={key} type="button" onClick={() => openFix(key, g)}>{t("toCheck.fix")}</button>
+                  <button className="chip" data-group-confirm={key} type="button" onClick={() => reviewLine(first.receipt_id, first.idx, { action: "confirm" }, t("toCheck.kept"))}>{t("toCheck.keep")}</button>
+                </> : <>
+                  <button className="chip" data-group-fix={key} type="button" onClick={() => openFix(key, g)}>{t("toCheck.typeName")}</button>
+                  <button className="chip" data-group-confirm={key} type="button" onClick={() => reviewLine(first.receipt_id, first.idx, { action: "confirm" }, t("toCheck.kept"))}>{t("toCheck.keep")}</button>
+                  {(first.alternatives || []).map(a => (
+                    <button key={a} className="chip" data-alt={key} data-name={a} type="button" onClick={() => rename(a)}>{t("receipts.itIs", { a })}</button>))}
                 </>}
-                {(l.alternatives || []).map(a => (
-                  <button key={a} className="chip" data-alt={key} data-name={a}
-                    onClick={() => reviewLine(l.receipt_id, l.idx, { action: "rename", name: a }, t("receipts.setTo", { name: a }))}>{t("receipts.itIs", { a })}</button>
-                ))}
-                <button className="chip" data-fix={key} onClick={() => toggle(key)}>{t("receipts.fixTheName")}</button>
-                <button className="chip" data-more={key} aria-expanded={!!open["d:" + key]} onClick={() => toggle("d:" + key)}>{t(open["d:" + key] ? "receipts.fewerDetails" : "receipts.moreDetails")}</button>
+                <button className="linkbtn tc-details" data-group-more={key} type="button" aria-expanded={!!open["d:" + key]} onClick={() => toggle("d:" + key)}>{t(open["d:" + key] ? "toCheck.hideDetails" : "toCheck.details")}</button>
               </div>
-              {editor(key, name => reviewLine(l.receipt_id, l.idx, { action: "rename", name }, t("receipts.setTo", { name })), "data-save-line", key)}
+              {editor(key, name => rename(name, sect[key] || undefined), "data-save-group", key, g.length > 1 ? t("toCheck.saveAll", { count: g.length }) : undefined, true)}
             </div>
           );
         })}
