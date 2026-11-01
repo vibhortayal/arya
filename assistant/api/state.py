@@ -4,7 +4,7 @@ cart.json, flags.json. Derived state (ledger/patterns/list) is recomputed
 on read — at household scale that is milliseconds, and it can never drift
 from the stored receipts. Postgres replaces the files when volume demands.
 """
-import copy, hashlib, json, os, tempfile, threading
+import copy, hashlib, json, os, pickle, tempfile, threading
 from datetime import date, timedelta
 
 from api.ledger.build import build_ledger, receipt_savings
@@ -304,7 +304,18 @@ def _memoized(name, build):
     if key not in m:
         m[key] = build()
     # Callers may change what they get: each one gets its own copy.
-    return copy.deepcopy(m[key])
+    return _clone(m[key])
+
+
+def _clone(v):
+    """A deep copy, about 4x faster than copy.deepcopy for this JSON-like
+    data (re-audit N6: a big household paid ~150 ms a Today load in
+    copies). pickle keeps shared references as deepcopy does; anything
+    it cannot pickle falls back to deepcopy."""
+    try:
+        return pickle.loads(pickle.dumps(v, pickle.HIGHEST_PROTOCOL))
+    except Exception:
+        return copy.deepcopy(v)
 
 
 def receipts():
