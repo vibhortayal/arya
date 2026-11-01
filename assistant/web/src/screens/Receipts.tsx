@@ -189,7 +189,7 @@ export function Receipts() {
       {toCheck.items > 0 && (
         <div className="group" id="eye-group">
           <button className="navrow" id="btn-tocheck" type="button" onClick={() => nav.show("tocheck")}>
-            <span className="grow">{t("receipts.needsYourEye")}<span className="sub">{t("toCheck.rowSub", { items: toCheck.items, lines: toCheck.lines })}</span></span>
+            <span className="grow">{t("receipts.needsYourEye")}<span className="sub">{t("toCheck.rowSub", { count: toCheck.items })}</span></span>
             <span className="opschip bad">{toCheck.items}</span><span className="chev">›</span></button>
         </div>)}
       <ReceiptJobCard sending={sending} tick={jobTick}
