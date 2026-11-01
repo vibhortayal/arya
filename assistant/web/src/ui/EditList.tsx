@@ -58,9 +58,12 @@ type Props<T extends string> = {
   id?: string;
   /* Items that always stay: no red minus (they still move). */
   locked?: (id: T) => boolean;
+  /* Set when nothing more can be added (the bar holds four): the plus
+   * buttons are greyed out and this line says why (owner, 2026-11-01). */
+  full?: string;
 };
 
-export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, emptyMore, more, badge, onTap, below, onReset, resetLabel, id, locked }: Props<T>) {
+export function EditList<T extends string>({ on, off, name, sub, desc, onChange, hint, moreTitle, emptyMore, more, badge, onTap, below, onReset, resetLabel, id, locked, full }: Props<T>) {
   const { t } = useTranslation();
   // The order while a finger drags; saved when it lifts.
   const [order, setOrder] = useState(on);
@@ -121,10 +124,12 @@ export function EditList<T extends string>({ on, off, name, sub, desc, onChange,
       {more ?? (
         <>
           <h3 className="sect">{moreTitle ?? t("edit.more")}</h3>
+          {off.length > 0 && full && <p className="muted small edithint" id={id ? id + "-full" : undefined}>{full}</p>}
           {off.length ? (
-            <div className="etiles">
+            <div className={"etiles" + (full ? " efull" : "")}>
               {off.map(it => (
                 <button key={it} type="button" data-add={it} className="etile eadd" aria-label={t("edit.add", { name: name(it) })}
+                  disabled={!!full} aria-describedby={full && id ? id + "-full" : undefined}
                   onClick={() => onChange([it, ...on], t("edit.added", { name: name(it) }))}>
                   <span className="ebadge eplus" aria-hidden="true">+</span>
                   <span className="grow"><b>{name(it)}</b><span className="sub">{desc(it)}</span></span>

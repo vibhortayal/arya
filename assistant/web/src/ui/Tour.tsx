@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
   type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "../i18n";
-import { motionOff } from "../lib/motion";
 
 /* Coach-mark tours (first run #153; reused by other tours).
  *
@@ -27,7 +26,8 @@ import { motionOff } from "../lib/motion";
  *
  * Each step draws a dark scrim with a rounded hole around the target
  * (one element with a huge box-shadow) and a bubble with title, line,
- * progress pips, Skip and Next (Done on the last step). The target is
+ * progress pips, Skip, Back (from the second step) and Next (Done on
+ * the last step). The target is
  * scrolled into view, and the layout follows resize and scroll. Esc
  * and Skip call onSkip, Done calls onDone. role="dialog", focus on
  * Next, focus goes back on close. TourProvider sits inside
@@ -43,6 +43,11 @@ export type TourStep = {
   placement?: "above" | "below" | "auto";
   screen?: string;
   more?: { labelKey: string; onClick: () => void };
+  /* Runs when the Tour moves off this step (Next, Back, Skip or Done),
+   * e.g. to close the More sheet the step opened. */
+  onLeave?: () => void;
+  /* Values for the line, e.g. which places are in More. */
+  bodyVars?: Record<string, string | number>;
 };
 export type TourOptions = { onDone?: () => void; onSkip?: () => void };
 type Tour = { active: boolean; startTour: (steps: TourStep[], opts?: TourOptions) => void; stopTour: () => void };
@@ -105,7 +110,6 @@ export function tourLayout(r: Box, vw: number, vh: number, placement: TourStep["
 
 const resolve = (t: TourStep["target"]) => (typeof t === "function" ? t() : document.querySelector(t));
 const FOCUSABLE = "button:not([disabled])";
-const reduced = motionOff;
 
 function TourOverlay({ steps, onDone, onSkip, onMore }: { steps: TourStep[]; onDone: () => void; onSkip: () => void; onMore: () => void }) {
   const { t } = useTranslation();
@@ -135,24 +139,38 @@ function TourOverlay({ steps, onDone, onSkip, onMore }: { steps: TourStep[]; onD
       setBox(r && (r.width > 0 || r.height > 0) ? { left: r.left, top: r.top, width: r.width, height: r.height } : null);
       setVp({ w: innerWidth, h: innerHeight });
     };
+    // Bring the target where it and the bubble both fit: a "below"
+    // step's target near the top, any other one clear of the bubble.
+    const place = () => {
+      if (!el || !alive) return;
+      const r = el.getBoundingClientRect();
+      const tip = tipEl.current?.offsetHeight || 220;
+      const below = step.placement === "below";
+      const fits = below ? r.top >= 60 && r.bottom + GAP + tip <= innerHeight - 12
+        : r.top >= 60 && r.bottom <= innerHeight - 90 && (step.placement !== "above" || r.top - GAP - tip >= 12);
+      if (fits || getComputedStyle(el).position === "fixed" || el.closest("#tabs, .sheetwrap")) return;
+      const y = below ? r.top - 72 : r.bottom - (innerHeight - 100);
+      window.scrollTo({ top: Math.max(0, scrollY + y), behavior: "auto" });
+    };
     const find = () => {
       if (!alive) return;
       el = resolve(step.target);
       if (!el && tries++ < 60) { raf = requestAnimationFrame(find); return; }
-      if (el) {
-        const r = el.getBoundingClientRect();
-        if (r.top < 0 || r.bottom > innerHeight) el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
-      }
+      place();
       measure();
     };
     step.onEnter?.();
-    find();
+    // onEnter may navigate, and a new screen scrolls to its top after it
+    // renders: look for the target two frames later, then again once
+    // late cards have loaded, so the scroll is not undone.
+    raf = requestAnimationFrame(() => { raf = requestAnimationFrame(find); });
+    const again = [350, 900].map(ms => window.setTimeout(() => { if (alive && el) { place(); measure(); } }, ms));
     // Scroll and resize fire many times a frame: measure once per frame (#20).
     let queued = 0;
     const onMove = () => { if (!queued) queued = requestAnimationFrame(() => { queued = 0; measure(); }); };
     addEventListener("resize", onMove);
     addEventListener("scroll", onMove, true);
-    return () => { alive = false; cancelAnimationFrame(raf); cancelAnimationFrame(queued); removeEventListener("resize", onMove); removeEventListener("scroll", onMove, true); };
+    return () => { alive = false; again.forEach(clearTimeout); step.onLeave?.(); cancelAnimationFrame(raf); cancelAnimationFrame(queued); removeEventListener("resize", onMove); removeEventListener("scroll", onMove, true); };
   }, [step]);
 
   // The bubble's real height decides which side fits and how far it may move (short phones).
@@ -185,22 +203,26 @@ function TourOverlay({ steps, onDone, onSkip, onMore }: { steps: TourStep[]; onD
           <div className="fr-chiprow">
             <span className="fr-chip">{t("tour.chip", { screen: screenName, n: mates.indexOf(step) + 1, of: mates.length })}</span>
             <span className="fr-total">{t("tour.stepOf", { n: i + 1, total: steps.length })}</span>
+            <button className="fr-x" id="fr-tour-skip" type="button" aria-label={t("tour.skipTour")} title={t("tour.skipTour")} onClick={onSkip}>×</button>
             <div className="fr-bar" aria-hidden="true"><i style={{ width: Math.round(((i + 1) / steps.length) * 100) + "%" }} /></div>
           </div>
         )}
         <h4 id="fr-tip-title">{t(step.titleKey)}</h4>
-        <p id="fr-tip-line">{t(step.bodyKey)}</p>
+        <p id="fr-tip-line">{t(step.bodyKey, step.bodyVars)}</p>
         {step.more && (
           <button className="linkbtn fr-more" id="fr-tour-more" type="button"
-            onClick={() => { const go = step.more!.onClick; onMore(); go(); }}>{t(step.more.labelKey)}</button>
+            onClick={() => { const go = step.more!.onClick; onMore(); window.setTimeout(go, 0); }}>{t(step.more.labelKey)}</button>
         )}
         <div className="fr-row">
           {scr
-            ? <span className="fr-pips" />
+            ? null
             : <span className="fr-pips" role="img" aria-label={t("tour.stepOf", { n: i + 1, total: steps.length })}>
                 {steps.map((s, k) => <i key={s.id} className={k === i ? "on" : undefined} />)}
               </span>}
-          <button className="fr-skipbtn" id="fr-tour-skip" type="button" onClick={onSkip}>{scr ? t("tour.skipTour") : t("tour.skip")}</button>
+          {scr && i > 0 && <button className="fr-skipbtn fr-back" id="fr-tour-back" type="button" onClick={() => setI(i - 1)}><span aria-hidden="true">‹ </span>{t("tour.back")}</button>}
+          {scr && <span className="fr-gap" />}
+          {!scr && <button className="fr-skipbtn" id="fr-tour-skip" type="button" onClick={onSkip}>{t("tour.skip")}</button>}
+          {!scr && i > 0 && <button className="fr-skipbtn" id="fr-tour-back" type="button" onClick={() => setI(i - 1)}>{t("tour.back")}</button>}
           {nextScreen > 0 && (
             <button className="fr-skipbtn" id="fr-tour-skipscreen" type="button" onClick={() => setI(nextScreen)}>{t("tour.skipScreen", { screen: screenName })}</button>
           )}

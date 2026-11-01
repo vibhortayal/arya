@@ -24,8 +24,12 @@ export const BAR_LABEL: Record<BarItem, string> = {
 };
 
 /* The Tour's "Customize now" and Help open the editor from anywhere. */
-let opener: (() => void) | null = null;
-export function openBarEditor() { opener?.(); }
+let opener: ((s: "more" | "edit" | null) => void) | null = null;
+export function openBarEditor() { opener?.("edit"); }
+/* The Tour's More and "Make the bar yours" steps open the More sheet
+ * and close it when they move on. */
+export function openMoreSheet() { opener?.("more"); }
+export function closeBarSheets() { opener?.(null); }
 
 export function useBar(): BarItem[] {
   const bar = barOf(useSavedBar());
@@ -43,7 +47,7 @@ export function BottomBar() {
   const hold = useRef<number | null>(null);
   const held = useRef(false);
   useEffect(() => {
-    opener = () => setSheet("edit");
+    opener = s => setSheet(s);
     return () => { opener = null; };
   }, []);
   // Without Today on the bar, the app opens on the first place instead.
@@ -63,7 +67,7 @@ export function BottomBar() {
         onContextMenu={e => e.preventDefault()}>
         {bar.map(v => {
           const Icon = BAR_ICON[v];
-          const on = lit === v;
+          const on = lit === v && sheet !== "more";
           return (
             <button key={v} type="button" data-view={"view-" + v} className={on ? "active" : undefined} aria-current={on ? "page" : undefined}
               onClick={tap(() => nav.tab(v))}>
@@ -71,7 +75,7 @@ export function BottomBar() {
             </button>
           );
         })}
-        <button type="button" data-view="more" id="tab-more" className={lit === "more" ? "active" : undefined} aria-haspopup="dialog"
+        <button type="button" data-view="more" id="tab-more" className={lit === "more" || sheet === "more" ? "active" : undefined} aria-haspopup="dialog"
           aria-current={lit === "more" ? "page" : undefined} onClick={tap(() => setSheet("more"))}>
           <IconMore /><span>{t("tabs.more")}</span>
         </button>
@@ -133,6 +137,7 @@ function BarEditor() {
       <EditList<BarItem> id="bar-edit" on={bar} off={moreOf(bar)} name={name} sub={sub} desc={sub} onChange={change}
         hint={t("bar.hint")} moreTitle={t("bar.offTitle")}
         locked={() => bar.length <= 1}
+        full={bar.length >= BAR_MAX ? t("bar.full") : undefined}
         onReset={bar.join() === DEFAULT_BAR.join() ? undefined : () => { save(DEFAULT_BAR); toast(t("bar.resetDone")); }}
         resetLabel={t("bar.reset")} />
     </>

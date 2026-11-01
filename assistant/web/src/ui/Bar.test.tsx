@@ -51,9 +51,13 @@ describe("BottomBar", () => {
     expect(saves.pop()).toEqual(["list", "receipts", "stores-mine"]);
     act(() => { fireEvent.click(document.querySelector('#bar-edit [data-add="home"]')!); });
     expect(saves.pop()).toEqual(["list", "receipts", "stores-mine", "home"]);
+    // A full bar greys out every plus and says why.
+    const plus = Array.from(document.querySelectorAll<HTMLButtonElement>("#bar-edit [data-add]"));
+    expect(plus.length).toBeGreaterThan(0);
+    expect(plus.every(b => b.disabled)).toBe(true);
+    expect(document.getElementById("bar-edit-full")!.textContent).toBe("The bar holds four. Remove one first.");
     act(() => { fireEvent.click(document.querySelector('#bar-edit [data-add="chat"]')!); });
     expect(saves.length).toBe(0);
-    expect(document.body.textContent).toContain("The bar holds four. Remove one first.");
     act(() => { fireEvent.click(document.querySelector('#bar-edit .eminus')!); });
     expect(saves.pop()).toEqual(["receipts", "stores-mine", "home"]);
   });

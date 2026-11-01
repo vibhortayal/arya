@@ -2828,7 +2828,7 @@
     "reset": "Reset to default",
     "resetDone": "The bar is back to the default",
     "moreTitle": "More",
-    "moreHint": "Everything not on your bar. Touch and hold the bar to change it.",
+    "moreHint": "Everything not on your bar. Tap Customize bar to change it.",
     "sub": {
       "home": "Your day at a glance",
       "list": "One list per store",
@@ -2932,7 +2932,10 @@
     "tour": {
       "today": {
         "title": "Today",
-        "line": "What needs you today: running low, use soon, and tips. Receipts and Spending are on Lists."
+        "line": "What needs you today: running low, use soon, and tips.",
+        "lineBoth": "What needs you today: running low, use soon, and tips. Receipts and Spending are in More.",
+        "lineReceipts": "What needs you today: running low, use soon, and tips. Receipts is in More.",
+        "lineSpending": "What needs you today: running low, use soon, and tips. Spending is in More."
       },
       "lists": {
         "title": "Lists",
@@ -2972,7 +2975,7 @@
       },
       "bar": {
         "title": "Make the bar yours",
-        "line": "Touch and hold the bar to pick what goes on it, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
+        "line": "Tap Customize bar, here in More, to pick the four places on your bar, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
         "screen": "The bar",
         "customize": "Customize now"
       },
@@ -3053,6 +3056,7 @@
     "skip": "Skip",
     "next": "Next",
     "skipTour": "Skip tour",
+    "back": "Back",
     "skipScreen": "Skip {{screen}}",
     "chip": "{{screen}} · {{n}} of {{of}}",
     "stepOf": "Step {{n}} of {{total}}",
@@ -3179,7 +3183,7 @@
         "kicker": "Your bar",
         "title": "Make the bar yours",
         "body": "Put the places you use on the bar at the bottom. Everything else stays in More, which is always there.",
-        "s1": "Touch and hold the bar, or tap More, then Customize bar.",
+        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
         "s2": "Tap the green plus to put a place on the bar, such as Receipts or Stores. The bar holds four.",
         "s3": "Tap the red minus to move a place to More. Drag to reorder."
       },
@@ -3715,7 +3719,7 @@
         "title": "Change the bar",
         "sub": "Pick the four places at the bottom",
         "body": "The bar at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
-        "s1": "Touch and hold the bar, or tap More, then Customize bar.",
+        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
         "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
         "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
         "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
