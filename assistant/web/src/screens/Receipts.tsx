@@ -16,6 +16,9 @@ import { pickerProps } from "../ui/picker";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+/* Lines of one product (same item number, else same printed text)
+ * across receipts are asked about once. */
+const lineKey = (l: Line) => l.sku ? "sku:" + l.sku : "raw:" + String(l.raw || "").toLowerCase().split(/\s+/).filter(Boolean).join(" ");
 type FileResult = { ok: boolean; duplicate?: boolean; reason?: string; stop?: boolean };
 /* The server refuses every read the same way: 401 signed out, 429 an
  * account limit, 503 reading paused / budget / no key. Trying the next
@@ -74,8 +77,12 @@ export function Receipts() {
 
   /* ---- Needs your eye: review queue ---- */
   const reviewLine = (r: string, idx: number, body: object, msg: string) => attempt(async () => {
-    await post("/api/review/line", { receipt_id: r, idx, ...body });
-    toast(msg);
+    const out = await post<{ also?: number; undo?: unknown[] }>("/api/review/line", { receipt_id: r, idx, ...body });
+    if (out?.also) {
+      toast(msg + " " + t("receipts.alsoFixed", { count: out.also }), { action: t("receipts.undo"), onAction: () => {
+        post("/api/review/undo", { changes: out.undo }).then(() => loadScan()).catch(showErr);
+      } });
+    } else toast(msg);
     loadScan().catch(() => {});
   });
   const resolve = (item_id: string, name: string) => attempt(async () => {
@@ -91,6 +98,10 @@ export function Receipts() {
       document.querySelector<HTMLInputElement>(`[data-editor="${CSS.escape(key)}"] input`)?.focus());
   };
 
+  const byKey = new Map<string, Line[]>();
+  for (const l of queue.lines) byKey.set(lineKey(l), [...(byKey.get(lineKey(l)) || []), l]);
+  const groups = [...byKey.values()].filter(g => g.length > 1);
+  const singles = queue.lines.filter(l => (byKey.get(lineKey(l)) || []).length === 1);
   const hasReview = queue.lines.length > 0 || queue.unresolved.length > 0;
   const hasCur = proposals.length > 0;
 
@@ -187,7 +198,28 @@ export function Receipts() {
       <p id="rc-count" className="subtitle">{count}</p>
       <h3 className="sect" id="eye-head" hidden={!hasReview && !hasCur}>{t("receipts.needsYourEye")}</h3>
       <div id="review" className="group eyegroup" hidden={!hasReview}>
-        {queue.lines.map(l => {
+        {groups.map(g => {
+          const first = g[0];
+          const key = "g:" + lineKey(first);
+          const nm = first.decoded_name || first.raw;
+          return (
+            <div key={key} style={{ display: "contents" }}>
+              <div className="row"><div className="grow"><span className="name">{nm} <span className="sub" style={{ display: "inline" }}>×{g.length}</span></span>
+                <span className="sub">{[first.sku && t("receipts.itemNo", { sku: first.sku }), first.line_total != null && t("receipts.eachPrice", { amount: money(first.line_total, currency) }), t("receipts.onReceipts", { count: g.length })].filter(Boolean).join(" · ")}</span></div></div>
+              {open["d:" + key] && g.map(l => (
+                <div className="detail" key={`${l.receipt_id}:${l.idx}`}>
+                  <Row name={[l.merchant, l.date && fmtShort(l.date)].filter(Boolean).join(" · ")} right={l.line_total != null ? money(l.line_total, currency) : ""} />
+                </div>))}
+              <div className="actions">
+                <button className="chip" data-group-confirm={key} onClick={() => reviewLine(first.receipt_id, first.idx, { action: "confirm" }, t("receipts.confirmed"))}>{t("receipts.looksRightAll", { count: g.length })}</button>
+                <button className="chip" data-group-fix={key} onClick={() => toggle(key)}>{t("receipts.renameAll")}</button>
+                <button className="chip" data-group-more={key} aria-expanded={!!open["d:" + key]} onClick={() => toggle("d:" + key)}>{t(open["d:" + key] ? "receipts.hideThem" : "receipts.seeThem", { count: g.length })}</button>
+              </div>
+              {editor(key, name => reviewLine(first.receipt_id, first.idx, { action: "rename", name }, t("receipts.setTo", { name })), "data-save-group", key)}
+            </div>
+          );
+        })}
+        {singles.map(l => {
           const key = `${l.receipt_id}:${l.idx}`;
           return (
             <div key={key} style={{ display: "contents" }}>

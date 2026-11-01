@@ -115,6 +115,61 @@ class TestReviewActions(unittest.TestCase):
                          [(l["receipt_id"], l["idx"]) for l in q["lines"]])
 
 
+class TestFixAppliesEverywhere(unittest.TestCase):
+    """A bulk add is fixed once: the same item number on other filed
+    receipts takes the new name too, and the answer says how many."""
+
+    def setUp(self):
+        os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
+        from api import state
+        from api.decode.service import normalize_costco_json
+        golden = os.path.join(os.path.dirname(__file__), "..", "golden", "synthetic-costco-receipt.json")
+        rec = normalize_costco_json(json.load(open(golden)))
+        rec["lines"][0]["status"] = "unverified"
+        other = {"receipt_id": "dec-other", "merchant": "Costco", "purchased_at": "2024-05-01",
+                 "source_type": "grocery", "subtotal": 5.0, "total": 5.0, "tax": 0,
+                 "lines": [{"raw": "KS BLU", "decoded_name": "KS BLU", "sku": "96716", "qty": 1,
+                            "unit_price": 5.0, "line_total": 5.0, "line_type": "item",
+                            "status": "unverified", "confidence": 0.4}]}
+        state.set_current_user(None)
+        mk = lambda rid: {"receipt_id": rid, "merchant": "Costco", "purchased_at": "2024-05-02",
+                          "source_type": "grocery", "subtotal": 3.0, "total": 3.0, "tax": 0,
+                          "lines": [{"raw": "KS  Blu Muffin", "decoded_name": "KS Blu Muffin", "sku": "",
+                                     "qty": 1, "unit_price": 3.0, "line_total": 3.0, "line_type": "item",
+                                     "status": "unverified", "confidence": 0.4}]}
+        state.add_receipts([rec, other, mk("n1"), mk("n2")])
+        from api.main import app
+        self.c = TestClient(app)
+        self.c.post("/auth/setup", json={"username": "owner", "password": "pw"})
+
+    def test_rename_reaches_the_other_receipt(self):
+        r = self.c.post("/api/review/line", json={"receipt_id": "SYNTHETIC-0001", "idx": 0,
+                                                  "action": "rename", "name": "Fixed Name"}).json()
+        self.assertEqual(r["also"], 1)
+        left = [(l["receipt_id"], l["idx"]) for l in self.c.get("/api/review").json()["lines"]]
+        self.assertNotIn(("dec-other", 0), left)
+        # Undo puts the other receipt's line back as it was
+        u = self.c.post("/api/review/undo", json={"changes": r["undo"]}).json()
+        self.assertEqual(u["restored"], 1)
+        left = [(l["receipt_id"], l["idx"]) for l in self.c.get("/api/review").json()["lines"]]
+        self.assertIn(("dec-other", 0), left)
+
+    def test_lines_without_an_item_number_match_on_their_printed_text(self):
+        r = self.c.post("/api/review/line", json={"receipt_id": "n1", "idx": 0, "action": "confirm"}).json()
+        self.assertEqual(r["also"], 1)
+
+    def test_undo_rejects_garbage(self):
+        self.assertEqual(self.c.post("/api/review/undo", json={"changes": "x"}).status_code, 400)
+
+    def test_confirm_reaches_matching_unverified_lines_only(self):
+        r = self.c.post("/api/review/line", json={"receipt_id": "dec-other", "idx": 0,
+                                                  "action": "confirm"}).json()
+        # the golden line 0 reads differently ("KS EGG..."): not confirmed by this
+        self.assertEqual(r["also"], 0)
+        left = [(l["receipt_id"], l["idx"]) for l in self.c.get("/api/review").json()["lines"]]
+        self.assertIn(("SYNTHETIC-0001", 0), left)
+
+
 if __name__ == "__main__":
     unittest.main()
 

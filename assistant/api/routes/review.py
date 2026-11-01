@@ -45,8 +45,13 @@ async def review_line(req: Request):
     if not receipt_id:
         raise HTTPException(400, "receipt_id is required")
     idx = _int_field(body, "idx")
+    others = []
     if action == "confirm":
+        before = state.receipt_line(receipt_id, idx)
         line = state.update_receipt_line(receipt_id, idx, {"status": "auto"})
+        if line:
+            others = state.apply_line_fix_to_same_item(
+                receipt_id, idx, line, decoded_name=(before or {}).get("decoded_name"))
     elif action == "rename":
         name = (body.get("name") or "").strip()
         if not name:
@@ -55,11 +60,24 @@ async def review_line(req: Request):
                                          {"status": "auto", "decoded_name": name})
         if line:
             state.teach_name(line.get("sku"), name)
+            others = state.apply_line_fix_to_same_item(receipt_id, idx, line, name=name)
     else:
         raise HTTPException(400, "action must be confirm or rename")
     if line is None:
         raise HTTPException(404, "no such line")
-    return {"ok": True}
+    return {"ok": True, "also": len(others), "undo": others}
+
+
+@router.post("/api/review/undo")
+async def review_undo(req: Request):
+    """Take back a group fix: the lines it changed go back as they were."""
+    body = await _json_obj(req)
+    changes = body.get("changes")
+    if not isinstance(changes, list) or not all(
+            isinstance(c, dict) and isinstance(c.get("receipt_id"), str)
+            and isinstance(c.get("idx"), int) for c in changes):
+        raise HTTPException(400, "changes must be a list of lines")
+    return {"ok": True, "restored": state.undo_line_fixes(changes)}
 
 
 @router.post("/api/review/resolve")

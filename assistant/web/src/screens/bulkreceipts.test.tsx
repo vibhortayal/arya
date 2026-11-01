@@ -49,3 +49,25 @@ test("a file that cannot be read does not stop the rest, and each reason is list
   expect($("#rc-photo-failures")!.textContent).toContain("r1.png: could not read the date");
   expect($("#toast")!.textContent).toContain("Added 2 receipts");
 });
+
+test("lines of one product on several receipts become one row, fixed with one tap", async () => {
+  const mk = (rid: string) => ({ receipt_id: rid, idx: 0, decoded_name: "KS LBC", raw: "KS LBC", sku: "1736931", merchant: "Costco", date: "2025-05-01", line_total: 13.99 });
+  const posts: [string, any][] = [];
+  vi.stubGlobal("fetch", vi.fn(async (u: string, init?: RequestInit) => {
+    const s = String(u);
+    if (init?.method === "POST") { posts.push([s, JSON.parse(String(init.body || "{}"))]); return json({ ok: true, also: 2, undo: [{ receipt_id: "b", idx: 0 }] }); }
+    if (s.includes("/api/review")) return json({ lines: [mk("a"), mk("b"), mk("c"), { ...mk("d"), sku: "5", decoded_name: "Other", raw: "OTHER" }], unresolved: [] });
+    if (s.includes("/api/quest/receipts")) return json({ receipts: [] });
+    return json({});
+  }));
+  render(<ToastProvider><NavProvider initial="receipts"><Receipts /></NavProvider></ToastProvider>);
+  await waitFor(() => expect($("[data-group-confirm]")).not.toBeNull());
+  expect(document.querySelectorAll("[data-group-confirm]")).toHaveLength(1);
+  expect($("[data-group-confirm]")!.textContent).toBe("Looks right, all 3");
+  expect(document.querySelectorAll("[data-confirm]")).toHaveLength(1);
+  await act(async () => { fireEvent.click($("[data-group-confirm]")!); });
+  await waitFor(() => expect(posts.some(p => p[0].includes("/api/review/line"))).toBe(true));
+  expect($("#toast")!.textContent).toContain("Also fixed 2 other receipt lines.");
+  await act(async () => { fireEvent.click($("#toast .toastact")!); });
+  await waitFor(() => expect(posts.some(p => p[0].includes("/api/review/undo"))).toBe(true));
+});
