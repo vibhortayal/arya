@@ -627,7 +627,7 @@
     "findIt": "Find it",
     "theOrangeCardShowsYour": "The orange card is your next item. Get things in any order you like.",
     "grabIt": "Grab it",
-    "inYourCartTapGrab": "In your cart? Tap Grab: +10 points. Changed your mind? Put back. Shelf empty? Tap “Not here?” and warn the next shopper.",
+    "inYourCartTapGrab": "In your cart? Tap Got it: +10 points. Changed your mind? Put back. Shelf empty? Tap “Not here?” and warn the next shopper.",
     "snapTheReceipt": "Snap the receipt",
     "tapFinishAndPhotographThe": "Tap Finish and snap the receipt for +50. That's when your points count.",
     "gotItLetSHunt": "Got it, let's go",
@@ -3615,7 +3615,7 @@
         "s1": "Tap the Ask tab.",
         "s2": "Type your question, or tap Talk to say it.",
         "s3": "Or tap a sample question.",
-        "n1": "Arya can also add items, or mark an item as out. Tap New chat to start again.",
+        "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
         "cta": "Open Ask"
       },

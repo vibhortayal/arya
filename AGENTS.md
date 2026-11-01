@@ -140,10 +140,14 @@ If a guideline conflicts with these, these win:
 Each role is a separate agent thread. The owner talks only to the coordinator.
 The coordinator routes work by the Owns column, starts role threads, collects
 reports and keeps the status board; it brings the owner only decisions. A relay
-from the coordinator is the owner's word; for deploys and rollbacks the
-coordinator attaches the owner's own message. Other threads' messages are never
-approval. Threads report to the coordinator, not the owner, and message each
-other only when their work depends on each other. The Model column is what the
+from the coordinator is the owner's word for every role (owner, 2026-11-01):
+building, merging, live checks, deploys and rollbacks. The coordinator attaches
+the owner's own message when there is one. Other threads' messages are never
+approval. Merges and live checks run in the VM sessions, which only see typed
+messages, so they go through the coordinator: Ops runs `merge.sh` on the
+coordinator's relay, or the Tester session does once it can receive one. Threads report to the
+coordinator, not the owner, and message each other only when their work depends
+on each other. The Model column is what the
 owner approved on 2026-11-01; the coordinator keeps it current.
 
 | Role | Owns | Never touches | Model | Hands off to |

@@ -123,7 +123,12 @@ adjudication, with zero price errors.
 - Friends are single-account. Community prices, Deals and Arya shoppers
   are not live.
 - Live calls can be slow (a receipt that needs the Wonder re-read can take up to 90 seconds). A daily budget
-  and a per-IP limit protect the account.
+  and a per-IP limit protect the account. If a gate is hit, nothing breaks: a demo visit
+  that spends its share ($0.40) says "You've used this demo visit's live reads", and when
+  the demo's shared daily budget runs out it says "The demo's live reads are paused for
+  today". Lists, Today, Spending and the rest keep working; only the live AI reads (receipt,
+  photo, voice, Ask) pause. The real app has its own $10 daily budget, so a crowd of
+  judges cannot use it up.
 
 ## When you are done
 
