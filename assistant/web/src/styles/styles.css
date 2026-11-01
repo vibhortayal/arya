@@ -603,6 +603,21 @@ body.hunting { touch-action: pan-y; overscroll-behavior: none; min-height: 100dv
 body.hunting .questmode-host { bottom: 0; z-index: 20; }
 .questmode-host .qg { min-height: 0; height: 100%; }
 .qm-loading { display: grid; place-items: center; height: 100%; color: var(--secondary); font-weight: 600; background: #F6F2EA; }
+/* Quest's first visit: the home's shape in grey (re-audit N4). Sizes follow game.css .qg-home. */
+.qm-skel { height: 100%; overflow: hidden; background: #F6F2EA; padding: 12px 16px 40px; }
+.qm-skel > * { display: block; max-width: 648px; margin-left: auto; margin-right: auto; }
+.qm-skel h1 { display: flex; align-items: center; min-height: 44px; margin-top: 4px; margin-bottom: 12px; font-size: 28px; font-weight: 800; letter-spacing: -.02em; color: #1D1D1F; }
+.qms-sk { background: #ECE6DA; border-radius: 18px; }
+.qm-skel .qms-seg { height: 52px; border-radius: 14px; margin-bottom: 12px; }
+.qm-skel .qms-hero { height: 170px; border-radius: 22px; }
+.qm-skel .qms-card { background: #fff; border-radius: 22px; padding: 18px; margin-top: 14px; box-shadow: 0 2px 0 #ECECEF; }
+.qm-skel .qms-row { padding: 16px; margin-top: 12px; }
+.qms-line { display: block; height: 12px; border-radius: 6px; background: #E6DFD2; margin: 10px 0; }
+.qms-line.qms-big { height: 20px; }
+.qms-line.qms-sm { height: 10px; }
+.qms-row .qms-line:first-child { margin-top: 0; }
+.qms-row .qms-line:last-child { margin-bottom: 0; }
+.qm-skel .qms-btn { display: block; height: 56px; margin-top: 16px; }
 .qm-links { padding: 8px 0 0; }
 .qm-links + .qm-links { padding-top: 0; }
 .qm-links .qg-store { justify-content: space-between; }
