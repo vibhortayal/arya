@@ -48,7 +48,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 ## Demo (25%)
 
-- The same loop as the video plays live: Today, Lists, Ask Arya ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
+- The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
 - Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
 
