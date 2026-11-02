@@ -115,7 +115,7 @@ adjudication, with zero price errors.
 ## Known limits
 
 - No store ships pre-mapped; maps come from shoppers' scans.
-- Open weights are used in one place: Muse Spark Open (on Baseten) is the
+- Open weights are used in one place: Muse Spark Open (hosted on Baseten) is the
   second seat of the staple judge. It sees item names only, never
   personal data. Glimmer is not used.
 - Closed in the demo: bulk imports, PDF and text decode, Curator runs

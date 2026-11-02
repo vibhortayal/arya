@@ -1,4 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { addOnList, askDelete, askList, deleteNeed } from "../lib/listPick";
+import { pieces } from "../lib/listQueue";
 import { useBackHandler, useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
@@ -436,12 +438,22 @@ export function Lists() {
     await reload();
   };
   const deleteList = (l: { id: string; name: string }) => guard(async () => {
-    const out = await post<{ deleted: unknown; index: number }>("/api/lists/delete", { id: l.id });
+    type Out = { deleted: unknown; index: number; items?: unknown };
+    let out: Out;
+    try { out = await post<Out>("/api/lists/delete", { id: l.id }); }
+    catch (e) {
+      // Every item on a list: a list with items asks where they go first.
+      const need = deleteNeed(e);
+      if (!need) throw e;
+      const how = await askDelete(l.name, need);
+      if (!how) return;
+      out = await post<Out>("/api/lists/delete", { id: l.id, ...how });
+    }
     setSheet(null);
     setLens("home");
     await reload();
     toast(t("lists.deleted", { name: l.name }), { action: t("common.undo"), onAction: () => guard(async () => {
-      await post("/api/lists/restore", { list: out.deleted, index: out.index });
+      await post("/api/lists/restore", { list: out.deleted, index: out.index, ...(out.items ? { items: out.items } : {}) });
       setLens(l.id);
       await reload();
     }) });
@@ -450,9 +462,12 @@ export function Lists() {
     const d = dataRef.current!;
     const it = d.list.items.find(i => i.item_id === id);
     const target = it ? suggestHome(d, it) : "else";
-    await post("/api/list/add", target === "else" ? { item_id: id } : { item_id: id, list_id: target });
+    const out = await addOnList(lid => post("/api/list/add", { item_id: id, ...(target !== "else" ? { list_id: target } : lid ? { list_id: lid } : {}) }),
+      { names: [it ? it.name : ""], itemId: id });
+    if (!out) return;
+    const where = target !== "else" ? target : out.list ? out.list.id : target;
     const fresh = await reload();
-    toast(t("lists.addedTo", { name: it ? it.name : t("lists.it"), list: lensName(fresh, target) }), { action: t("common.undo"), onAction: () => guard(async () => {
+    toast(t("lists.addedTo", { name: it ? it.name : t("lists.it"), list: lensName(fresh, where) }), { action: t("common.undo"), onAction: () => guard(async () => {
       // Back to a suggestion: not on the list, and not dismissed either.
       await post(`/api/items/${encodeURIComponent(id)}/flag`, { manual: false, list: it ? it.list || null : null });
       reloadQuiet();
@@ -502,7 +517,7 @@ export function Lists() {
     if (selRef.current) setSel(null);
     toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
       unhide();
-      try { for (const id of ids) await write(id, () => post("/api/list/add", { item_id: id })); }
+      try { for (const id of ids) await write(id, () => post("/api/list/add", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) })); }
       catch (e) { toast(errMsg(e)); }
     } });
     try {
@@ -679,6 +694,13 @@ export function Lists() {
     } catch { /* unknown stays groceries */ }
   };
 
+  /* A typed add: on this list, or (on the Lists page) the list Arya
+   * asks for when it needs one. null: the person cancelled. */
+  const addTyped = async (text: string) => {
+    if (here) return { r: await post<AddResult>("/api/list/from-text", { text, list_id: here.id }), where: here.name };
+    const out = await addOnList(lid => post<AddResult>("/api/list/from-text", lid ? { text, list_id: lid } : { text }), { names: pieces(text) });
+    return out ? { r: out.result, where: out.list ? out.list.name : t("lists.yourList") } : null;
+  };
   const submit = async () => {
     const txt = textRef.current.trim();
     if (!txt) { toast(t("lists.typeFirst")); return; }
@@ -695,12 +717,14 @@ export function Lists() {
         setAdding(false);
         return;
       }
-      const r = await post<AddResult>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
+      const got = await addTyped(txt);
+      if (!got) { setAdding(false); return; }        // cancelled: the text stays
+      const { r, where } = got;
       // Text typed while the request ran stays; only the sent text clears.
       if (textRef.current.trim() === txt && (r.added || !(r.skipped || []).length)) changeText("");
       setStatus("");
       const one = (r.also || []).length === 1 && here ? r.also![0] : null;
-      toast(addToast(r, here ? here.name : t("lists.yourList")), one ? { action: t("lists.moveHere"), onAction: () => guard(async () => {
+      toast(addToast(r, where), one ? { action: t("lists.moveHere"), onAction: () => guard(async () => {
         await post("/api/list/move", { item_id: one.item_id, list_id: here!.id });
         await reload();
       }) } : undefined);
@@ -782,7 +806,17 @@ export function Lists() {
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
       setStatus("");
-      if (out.kind === "receipt") setReceiptFile(f);
+      if (out.kind === "list" && out.needs_list) {
+        // Every item on a list: the photo's names come back unadded with
+        // the question; add them by text once a list is picked.
+        const pick = await askList({ ...out.needs_list, names: out.names || [] });
+        if (pick) {
+          const r = await post<AddResult>("/api/list/from-text", { text: (out.names || []).join("\n"), list_id: pick.id });
+          toast(t("lists.addedNTo", { count: r.added || 0, where: pick.name }));
+          reloadQuiet();
+        }
+      }
+      else if (out.kind === "receipt") setReceiptFile(f);
       else if (out.kind === "item") setInCard({ kind: "item", name: out.item, sure: !!out.confident, url: URL.createObjectURL(f) });
       else if (out.kind === "unclear" || !out.added) failCard(t("lists.input.cantTell"), out.reason || t("lists.input.cantTellBody"), "photo", f);
       else {
@@ -798,8 +832,10 @@ export function Lists() {
   const cardAdd = async (name: string) => {
     closeCard();
     try {
-      const r = await post<AddResult>("/api/list/from-text", here ? { text: name, list_id: here.id } : { text: name });
-      toast(addToast(r, here ? here.name : t("lists.yourList")));
+      const got = await addTyped(name);
+      if (!got) return;
+      const { r, where } = got;
+      toast(addToast(r, where));
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});
     } catch (e) { toast(errMsg(e)); }
   };

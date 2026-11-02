@@ -21,7 +21,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
-- Muse Spark Open (open weights, on Baseten) is a second seat on the staple judge; it never sees personal data. `assistant/api/open_client.py`
+- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it never sees personal data. `assistant/api/open_client.py`
 - SAM 3.1 boxes shelf items and blurs every person before any frame is kept. `assistant/api/shelfscan.py`
 - Not used, said plainly: Muse Glimmer and Muse Code.
 
@@ -49,7 +49,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 | SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, blurs people | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
 | Muse Image 1.0 | `muse-image-1.0` | The 20 grab-celebration characters, generated once | n/a |
-| Muse Spark Open | `meta-models/muse-spark-open-1026` (Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |
+| Muse Spark Open | `meta-models/muse-spark-open-1026` (hosted on Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |
 | Meta Model API | one client | Every server call, with a daily spend ceiling | n/a |
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train its models. The live receipt reader is `auto` (the code default): Spark first, Wonder on a flagged read. Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).

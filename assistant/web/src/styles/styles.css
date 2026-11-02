@@ -2370,3 +2370,9 @@ body.hunting #offlinebar { display: none !important; }
 .muse-once { color: #8A4B00; font-weight: 600; }
 #muse-other summary { font-weight: 600; cursor: pointer; }
 #muse-other, #muse-help { margin-top: 14px; }
+/* "Which list?" sheet (ui/ListPick.tsx). */
+#listpick .navrow .accent { color: var(--accent-text); }
+#listpick .listpick-name { display: block; margin: 12px 0; }
+#listpick .listpick-name input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px 12px; border: 1px solid var(--separator, #d8d4cf); border-radius: 10px; font: inherit; background: var(--card, #fff); color: inherit; }
+#listpick .btn.wide, #listdelete .btn.wide { margin-top: 12px; }
+#listpick .bad { color: var(--danger); }
