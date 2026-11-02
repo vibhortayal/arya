@@ -857,6 +857,12 @@
   "lists": {
     "queue": {
       "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
+    "tag": "⏳ Waiting to sync",
+    "offline": "You're offline. You can still add, tick, edit and remove items. Arya syncs when you're back.",
+    "waiting_one": "{{count}} change waiting to sync. Arya sends it when you're back online.",
+    "waiting_other": "{{count}} changes waiting to sync. Arya sends them when you're back online.",
+    "syncing_one": "Syncing {{count}} change…",
+    "syncing_other": "Syncing {{count}} changes…",
       "synced_one": "Synced {{count}} list change.",
       "synced_other": "Synced {{count}} list changes.",
       "skipped_one": "{{names}}: someone changed it after you were offline, so their change stays.",
@@ -3742,7 +3748,7 @@
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
         "n1": "Tap Select to move or remove several items.",
         "n2": "The three dots on a list open Share, export or import.",
-        "n3": "No signal? Keep adding, ticking, editing and removing items. Changes save on this phone and sync when you're back online.",
+        "n3": "No signal? Keep adding, ticking, editing and removing items. A yellow note counts the changes waiting, and each one shows Waiting to sync until you're back online.",
         "n4": "A store you choose for a list also joins Stores, and so does a store a receipt comes from. A store you take out of Stores stays out until you add it again.",
         "cta": "Open Lists"
       },

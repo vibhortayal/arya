@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { syncLists } from "../lib/api";
-import { CHANGE, SYNCED, pendingCount, type Synced } from "../lib/listQueue";
+import { CHANGE, SYNCED, pendingCount, pendingIds, type Synced } from "../lib/listQueue";
 import { useSession } from "./session";
 import { useToast } from "../ui/Toast";
 import { t } from "../i18n";
@@ -45,8 +45,29 @@ const sub = (fn: () => void) => {
   for (const e of [CHANGE, "online", "offline"]) addEventListener(e, fn);
   return () => { for (const e of [CHANGE, "online", "offline"]) removeEventListener(e, fn); };
 };
-export function useListQueue(): { pending: number; syncing: boolean } {
+export function useListQueue(): { pending: number; syncing: boolean; online: boolean } {
   const pending = useSyncExternalStore(sub, pendingCount);
   const online = useSyncExternalStore(sub, () => navigator.onLine !== false);
-  return { pending, syncing: pending > 0 && online };
+  return { pending, syncing: pending > 0 && online, online };
+}
+/* The ids behind the "Waiting to sync" tag; a new set only when the queue changes. */
+let idsKey = "", idsSet = new Set<string>();
+export function useWaitingIds(): Set<string> {
+  return useSyncExternalStore(sub, () => {
+    const s = pendingIds(); const k = [...s].sort().join("|");
+    if (k !== idsKey) { idsKey = k; idsSet = s; }
+    return idsSet;
+  });
+}
+
+/* The yellow note on Lists (owner, 2026-11-02): offline, or changes
+ * still waiting. Nothing shows when online with nothing waiting, or in
+ * the demo (it never queues). */
+export function QueueNote({ id }: { id?: string }) {
+  const { pending, syncing, online } = useListQueue();
+  const s = useSession();
+  if (s.demo || (online && !pending)) return null;
+  const text = syncing ? t("lists.queue.syncing", { count: pending })
+    : pending ? t("lists.queue.waiting", { count: pending }) : t("lists.queue.offline");
+  return <p id={id} className="queuenote" role="status"><span aria-hidden="true">{syncing ? "↻" : "⏳"}</span> {text}</p>;
 }

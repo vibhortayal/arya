@@ -2359,6 +2359,10 @@ body.hunting #offlinebar { display: none !important; }
 #line-fix .lf-err { color: var(--danger); font-size: 14px; margin: 6px 0 0; }
 /* Join a group: Join and Not now right under who invited you (owner, 2026-11-02). */
 .gj-actions { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 6px; }
+/* Offline lists (owner, 2026-11-02): a yellow note while offline or
+ * while changes wait, and a tag on each waiting row. */
+.queuenote { background: #FFF6D6; color: #5A4500; border-radius: 12px; padding: 10px 12px; margin: 6px 0 12px; font-size: 15px; line-height: 1.4; }
+.listrow .sub.waittag { color: #8A6A00; font-weight: 600; }
 
 /* "Which list?" sheet (ui/ListPick.tsx). */
 #listpick .navrow .accent { color: var(--accent-text); }
