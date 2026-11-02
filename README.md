@@ -309,8 +309,12 @@ license; full notices are in [`NOTICE.md`](NOTICE.md).
 | API | psycopg | LGPL-3.0 |
 | Serving | Caddy, and the Docker base images (Node, Python) | Apache-2.0, and each image's own terms |
 | Models | Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image, through the Meta Model API | Meta's API terms (hosted; no weights are in this repo) |
-| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Meta's license for the model; see its model card (not copied into this repo) |
+| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Muse Model License (Oct 15, 2026) with its Usage Policy: [`LICENSE.md`](https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B/blob/main/LICENSE.md). Not copied into this repo |
 | Services | Baseten, Supabase (optional), Resend (email) | Their service terms |
+
+**Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
+on Baseten) as a second seat on the staple judge and for dictionary labels, and
+its outputs appear in the app. It sees item names only, never personal data.
 
 The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store
 and Google Play badges in `assistant/pwa/assets/badges/` are those companies'
