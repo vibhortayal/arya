@@ -51,7 +51,7 @@ stays allowed as that second reader through Nov 9, which is meant to cover
 judging after submission. The original 2026-10-27 amendment (Wonder first, Spark
 fallback) is summarized below.
 
-Original (2026-10-27): through Nov 4, judge-facing photo decode ran Wonder first with a Spark fallback, because Wonder scored 97 of 98 lines (Wonder after hand adjudication; Spark on the automatic scorer, which gives Wonder 86 of 98; the 90 vs 92 difference is explained once in [For judges](../../JUDGES.md#which-model-does-which-job)) against Spark's 92 of 98. The numbers, latency, cost and the staple-judge check are in [WONDER-EVAL.md](../../docs/evals/WONDER-EVAL.md).
+Original (2026-10-27): through Nov 4, judge-facing photo decode ran Wonder first with a Spark fallback, because Wonder scored 97 of 98 lines (Wonder after hand adjudication; Spark on the automatic scorer, which gives Wonder 86 of 98) against Spark's 92 of 98. The numbers, latency, cost and the staple-judge check are in [WONDER-EVAL.md](../../docs/evals/WONDER-EVAL.md).
 
 **Auto reader (built 2026-11-01; my pick for judging on
 2026-11-01; NOT yet measured on photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
