@@ -14,13 +14,10 @@ const IMG = /\.(png|jpe?g|webp|svg|gif)$/i;
 
 // [source path in repo, route inside the docs site, sidebar label]
 const QUEST_INTERNAL = new Set(['BUILD-PLAN.md', 'DISCUSSION.md']);
-const questPages = (internal) => fs.readdirSync(path.join(ROOT, 'docs/quest'))
-  .filter((f) => f.endsWith('.md') && (internal || !QUEST_INTERNAL.has(f)))
+const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
+  .filter((f) => f.endsWith('.md') && !QUEST_INTERNAL.has(f))
   .map((f) => [`docs/quest/${f}`, `quest/${f === 'README.md' ? 'overview' : f.replace(/\.md$/, '').toLowerCase()}`,
     f.replace(/\.md$/, '').replace(/-/g, ' ')]);
-
-// DOCS_INTERNAL=1 adds the internal pages. Off until the owner approves them.
-const INTERNAL = process.env.DOCS_INTERNAL === '1';
 
 // [source path in repo, route inside the docs site, sidebar label]
 const SECTIONS = {
@@ -45,7 +42,7 @@ const SECTIONS = {
     ['PRODUCT.md', 'product', 'Product'],
     ['docs/ROADMAP.md', 'roadmap', 'Roadmap'],
     ['docs/DECISIONS.md', 'decisions', 'Decisions'],
-    ...questPages(INTERNAL).filter(([s]) => !/ARCHITECTURE|META-PRODUCTS/.test(s)),
+    ...questPages().filter(([s]) => !/ARCHITECTURE|META-PRODUCTS/.test(s)),
   ],
   'How it is built': [
     ['assistant/docs/ARCHITECTURE.md', 'architecture/overview', 'Architecture'],
@@ -64,15 +61,56 @@ const SECTIONS = {
   ],
   'API': [['docs/API.md', 'api/lists-api', 'Lists API v1']],
 };
-if (INTERNAL) {
-  SECTIONS['Internal'] = [
-    ['STATUS.md', 'internal/status', 'Status'],
-    ['assistant/docs/OPS.md', 'internal/ops', 'Operations'],
-    ['assistant/docs/SCALE-SIM.md', 'internal/scale-sim', 'Scale simulation'],
-    ['assistant/docs/SUBMISSION-DRAFT.md', 'internal/submission-draft', 'Submission draft'],
-    ['AGENTS.md', 'internal/agents', 'Agent rules'],
-  ];
+const ENG = 'Engineering process: how we built Arya';
+SECTIONS[ENG] = [
+  ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'Overview'],
+  ['AGENTS.md', 'internal/agents', 'Agent rules'],
+  ['STATUS.md', 'internal/status', 'Status'],
+  ['assistant/docs/OPS.md', 'internal/ops', 'Operations'],
+  ['assistant/docs/SCALE-SIM.md', 'internal/scale-sim', 'Scale simulation'],
+  ['assistant/docs/SUBMISSION-DRAFT.md', 'internal/submission-draft', 'Submission draft'],
+  ['docs/quest/BUILD-PLAN.md', 'quest/build-plan', 'Quest build plan'],
+  ['docs/quest/DISCUSSION.md', 'quest/discussion', 'Quest design discussion'],
+];
+const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
+  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md']);
+
+// Whole sections that are operator-only and stay off the public site.
+const DROP_SECTIONS = {
+  'assistant/docs/OPS.md': ['One-time setup on the VM', 'Recover the owner', 'When something breaks', 'Own Meta keys'],
+  'AGENTS.md': ['Ops notes'],
+};
+const NOTE = '_Operator-only steps are kept off the public site. See the repository._\n\n';
+const REDACT = [
+  [/`?(?:assistant\/)?deploy\/[\w-]+\.sh`?/g, 'a server script'],
+  [/\/home\/[\w./-]+/g, '[server path]'],
+  [/\/mnt\/[\w./-]+/g, '[internal file]'],
+  [/\/var\/log\/[\w./-]+/g, '[log file]'],
+  [/\b[\w-]+\.sh\b/g, '[script]'],
+  [/\b[A-Z][A-Z0-9_]*(?:API_KEY|SECRET|TOKEN|PASSWORD|VAULT)[A-Z0-9_]*\b/g, '[key name]'],
+  [/`?(?:assistant\/)?deploy\/\.env`?/g, 'the server settings file'],
+  [/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[address]'],
+];
+const counts = {};
+function scrub(src, text) {
+  for (const title of DROP_SECTIONS[src] || []) {
+    const lines = text.split('\n');
+    const i = lines.findIndex((l) => /^#{2,4}\s/.test(l) && l.replace(/^#+\s*/, '').startsWith(title));
+    if (i < 0) continue;
+    const level = lines[i].match(/^#+/)[0].length;
+    let j = i + 1;
+    while (j < lines.length && !(/^#+\s/.test(lines[j]) && lines[j].match(/^#+/)[0].length <= level)) j++;
+    lines.splice(i + 1, j - i - 1, '', NOTE);
+    counts[`${src}: section "${title}"`] = 1;
+    text = lines.join('\n');
+  }
+  for (const [re, to] of REDACT) {
+    text = text.replace(re, () => { counts[`${src}: ${to}`] = (counts[`${src}: ${to}`] || 0) + 1; return to; });
+  }
+  return text;
 }
+// Guard: nothing like these may survive in a published internal page.
+const LEAK = /(\/home\/|\/mnt\/|ssh |\bpasswd\b|accounts\.json|tester-[abc]\b|BEGIN [A-Z ]*KEY|\b\d{1,3}(\.\d{1,3}){3}\b)/;
 
 const routeBySrc = new Map();
 for (const items of Object.values(SECTIONS)) {
@@ -115,6 +153,10 @@ let order = 0;
 for (const [section, items] of Object.entries(SECTIONS)) {
   for (const [src, route, label] of items) {
     let text = fs.readFileSync(path.join(ROOT, src), 'utf8');
+    if (SCRUBBED.has(src)) {
+      text = scrub(src, text);
+      if (LEAK.test(text)) throw new Error(`sensitive text left in ${src}: ${text.match(LEAK)[0]}`);
+    }
     text = text.replace(/(\]\()([^)\s]+)(\))/g, (_, a, t, c) => a + rewrite(t, src, !IMG.test(t.split('#')[0]) ) + c);
     text = text.replace(/\b(src|href)="([^"]+)"/g, (_, k, t) => `${k}="${rewrite(t, src)}"`);
     const fm = `---\nsidebar_label: ${JSON.stringify(label)}\nsidebar_position: ${++order}\n` +
@@ -126,4 +168,5 @@ for (const [section, items] of Object.entries(SECTIONS)) {
 }
 fs.writeFileSync(path.join(OUT, 'sections.json'), JSON.stringify(
   Object.fromEntries(Object.entries(SECTIONS).map(([k, v]) => [k, v.map((i) => `${i[1]}`)]))));
+fs.writeFileSync(path.join(OUT, 'scrub-report.txt'), Object.entries(counts).map(([k, v]) => `${k} x${v}`).join('\n') + '\n');
 console.log(`synced ${routeBySrc.size} docs, ${copied.size} images`);
