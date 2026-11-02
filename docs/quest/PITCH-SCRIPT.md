@@ -36,6 +36,8 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 "Next: open sign-ups, prices shared by Arya shoppers, and whole-store maps.
 
+Arya isn't finished. Rome wasn't built in a day. It gets better with every shopper who uses it, and it gives back to them.
+
 We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at arya.teamnightshift.org."
 
 ---
