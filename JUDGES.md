@@ -14,7 +14,7 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) to try in step 6
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
-- **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model, and what was built during the hackathon: [`README.md`](README.md#why-i-built-it-this-way)
+- **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model: [`README.md`](README.md#why-i-built-it-this-way)
 - **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), and a dated [decision log](docs/DECISIONS.md).
 
 ## How this maps to the Indie track
