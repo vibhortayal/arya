@@ -49,7 +49,7 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 | Event | Reward |
 | --- | --- |
 | Grab | +10, the chip bumps, a fun fact |
-| Combo | Each grab of the suggested stop adds 1. It never resets and put back never lowers it. |
+| Combo count | Combo: each grab of the suggested stop adds 1. It never resets and put back never lowers it. |
 | Boss | +40, only when the boss item was grabbed; a boss is an item you reported missing here on 2 earlier trips. |
 | Halfway, full haul | milestone; full haul +25 and confetti |
 | Receipt snapped | +50; the trip's points bank |
