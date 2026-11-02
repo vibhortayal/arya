@@ -18,8 +18,9 @@ microphone and chat call the Meta API live, within a small per-visit allowance. 
 was available. Real-device testing was done only on an iPhone 17 Pro; other
 phone sizes were checked in a browser (360x640, 390x844, 430x932, 390x568).
 
-**What you need.** A grocery receipt photo for step 6. Without one, tap
-**Use a sample receipt** or **Skip**.
+**What you need.** A grocery receipt photo for step 6. Without one, use
+[the sample receipt photo](../images/sample-receipt.jpg) (a real receipt of
+mine), tap **Use a sample receipt**, or **Skip**.
 
 ---
 
@@ -86,6 +87,16 @@ reads the receipt again. Arya records which model read the receipt. On
 the Gate 0 public set, Wonder alone got 97 of 98 lines right after hand
 adjudication, with zero price errors.
 A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a sample receipt if you would rather not send one.
+
+**Try the sample receipt.** Download [the sample receipt photo](../images/sample-receipt.jpg)
+(India Bazaar, Nov 1, 2026; it is my own receipt). On a laptop, pick the file
+after tapping **Snap the receipt**; on a phone, save it to Photos first. A
+read takes about 10 seconds, or about 45 when Muse Wonder re-reads it. Expect
+13 lines, a subtotal of $56.63, tax $0.57 and a total of $57.20, with **Total
+checks out** and the model that read it shown. The names come back shortened.
+In three live runs on Nov 2 every price matched the printed receipt; one run
+was re-read by Muse Wonder. The receipt shows the last four digits of my card,
+which I left in. The demo reads the receipt but keeps nothing.
 
 ---
 

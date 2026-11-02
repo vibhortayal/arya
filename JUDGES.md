@@ -6,7 +6,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the Nov 3 freeze and linked here then. The live demo and the path below work without it.
-- **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)
+- **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) to try in step 6
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 
