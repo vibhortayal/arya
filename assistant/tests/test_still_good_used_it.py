@@ -19,12 +19,12 @@ class StillGoodUsedIt(unittest.TestCase):
         s = src("web/src/screens/Today.tsx")
         self.assertIn("data-check-used", s)
         self.assertIn('check("used", c.item_id)', s)
-        self.assertIn("await flag(new Date().toISOString().slice(0, 10))", s)
-        # back on the list like Use soon's Used it (#96): usual list, or
-        # the "Which list?" picker (addItem) when Arya can't tell
+        self.assertIn("{ out: new Date().toISOString().slice(0, 10) }", s)
+        # asks "Add it to your list?" like Use soon's Used it (#96); Add
+        # uses addItem: usual list, or the "Which list?" picker
         self.assertIn("const added = await addItem(id, name)", s)
         en = src("web/src/i18n/en.json")
-        for k in ('"usedItToast"', '"usedOnList"', '"usedOnYourList"'):
+        for k in ('"usedItToast"', '"usedOnList"', '"usedAddAsk"'):
             self.assertIn(k, en)
 
     def test_out_is_a_flag_and_ends_the_check(self):
