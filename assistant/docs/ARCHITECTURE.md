@@ -357,13 +357,13 @@ Each agent has a narrow job and a named limit.
 
 1. Create an account. A new account opens on Today; there is no
    Connect an AI agent step on first run.
-2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
-   token there (shown once).
-3. Add the Arya connector in Muse; paste the token into the secure
-   form. Never into a chat message.
-4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
-   copyable fallback setup prompt for assistant apps that do not load
-   the connector doc automatically.
+2. Connecting Muse is optional, from Settings > About Arya > Use Arya in
+   another AI app: Make my code (shown once).
+3. Ask the Muse agent to connect to Arya at the MCP address; paste the code
+   into the secure credentials step it opens. Never into a chat message.
+4. Talk to Muse. Settings > About Arya > Use Arya in another AI app carries
+   these steps and a copyable fallback setup prompt for assistant apps that
+   do not load the connector doc automatically.
 
 ## 10. Cost control
 
