@@ -27,7 +27,7 @@ ask Arya questions, and, if you like, turn the trip into a game.
 
 ## Build for Your World
 
-- **What Arya is.** Arya learns how you shop from your receipts and helps shoppers help each other.
+- **What is Arya.** Arya learns how you shop from your receipts and helps shoppers help each other.
 - **Why I built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
   mental space. Arya is free to use and made for shoppers to help each other;

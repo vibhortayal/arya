@@ -23,7 +23,7 @@ const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
 const quest = (name) => questPages().find(([s]) => s === `docs/quest/${name}.md`);
 const SECTIONS = {
   'Start here': [
-    ['site/content/start.md', 'intro', 'What Arya is'],
+    ['README.md#what-is-arya', 'intro', 'What is Arya'],
     ['JUDGES.md', 'judges', 'For judges'],
     ['docs/quest/JUDGE-PLAYBOOK.md', 'quest/judge-playbook', '8-minute demo path'],
     ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'Built in the hackathon window'],
@@ -152,13 +152,24 @@ function rewrite(target, fromSrc, withBase = true) {
 let order = 0;
 for (const [section, items] of Object.entries(SECTIONS)) {
   for (const [src, route, label] of items) {
-    let text = fs.readFileSync(path.join(ROOT, src), 'utf8');
+    // 'FILE#heading-slug' takes one level-2 section of FILE (one owner for the text).
+    const [file, secSlug] = src.split('#');
+    let text = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    if (secSlug) {
+      const lines = text.split('\n');
+      const slug = (l) => l.replace(/^#+\s*/, '').toLowerCase().replace(/[^a-z0-9 -]/g, '').trim().replace(/\s+/g, '-');
+      const i = lines.findIndex((l) => /^##\s/.test(l) && slug(l) === secSlug);
+      if (i < 0) throw new Error(`section ${secSlug} not found in ${file}`);
+      let j = i + 1;
+      while (j < lines.length && !/^##\s/.test(lines[j])) j++;
+      text = lines.slice(i, j).map((l) => (/^#{2,3}\s/.test(l) ? l.slice(1) : l)).join('\n') + '\n';
+    }
     if (SCRUBBED.has(src)) {
       text = scrub(src, text);
       if (LEAK.test(text)) throw new Error(`sensitive text left in ${src}: ${text.match(LEAK)[0]}`);
     }
-    text = text.replace(/(\]\()([^)\s]+)(\))/g, (_, a, t, c) => a + rewrite(t, src, !IMG.test(t.split('#')[0]) ) + c);
-    text = text.replace(/\b(src|href)="([^"]+)"/g, (_, k, t) => `${k}="${rewrite(t, src)}"`);
+    text = text.replace(/(\]\()([^)\s]+)(\))/g, (_, a, t, c) => a + rewrite(t, file, !IMG.test(t.split('#')[0]) ) + c);
+    text = text.replace(/\b(src|href)="([^"]+)"/g, (_, k, t) => `${k}="${rewrite(t, file)}"`);
     const fm = `---\nsidebar_label: ${JSON.stringify(label)}\nsidebar_position: ${++order}\n` +
       `custom_edit_url: ${GH.replace('blob', 'edit')}${src}\n---\n\n`;
     const dst = path.join(OUT, 'docs', `${route}.md`);
