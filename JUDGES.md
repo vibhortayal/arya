@@ -7,7 +7,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 
 Theme fit: a tool for everyday life that depends on Meta's models for reading receipts, labels, voice and shelves. The model map below shows which model does which job.
 
-- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#what-arya-is), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
+- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#what-is-arya), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the Nov 3 freeze and linked here then. The live demo and the path below work without it.
@@ -25,7 +25,7 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 
 ## Impact (30%)
 
-**What is the real-world potential?** Everyone who shops for a household does the same weekly work: remembering the list, not rebuying what is in the cupboard, and wondering where the money went. A receipt holds all of that and nobody reads it. Arya reads it, checks every line against the printed total, and turns it into a list with reasons ([the loop](README.md#what-arya-is)). On my own 114 receipts (1,226 lines) every one passed the arithmetic check, and the staple judge's precision was 0.79 against a purchase-cadence proxy ([measured results](README.md#measured-results)).
+**What is the real-world potential?** Everyone who shops for a household does the same weekly work: remembering the list, not rebuying what is in the cupboard, and wondering where the money went. A receipt holds all of that and nobody reads it. Arya reads it, checks every line against the printed total, and turns it into a list with reasons ([how it works](README.md#what-is-arya)). On my own 114 receipts (1,226 lines) every one passed the arithmetic check, and the staple judge's precision was 0.79 against a purchase-cadence proxy ([measured results](README.md#measured-results)).
 
 **Who benefits, and how much does it matter?** People who keep a household or a group fed, and share a list ([who it is for](docs/PRINCIPLES.md)). It matters as a weekly chore and a household budget, not as a rare event. I have not measured time or money saved, and I tested on one household, so I do not claim a number ([Known limits](README.md#known-limits)).
 

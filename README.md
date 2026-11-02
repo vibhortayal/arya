@@ -1,9 +1,5 @@
 <h1 align="center">Arya</h1>
 <p align="center"><strong>She remembers the list.</strong></p>
-<p align="center">
-  Arya learns how you shop from your receipts and helps shoppers help each other.<br>
-  Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).
-</p>
 
 <p align="center">
   <a href="https://vibhortayal.github.io/arya/"><strong>Read the docs site</strong></a>
@@ -15,16 +11,19 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
-## What Arya is
+## What is Arya
 
-Every week your list app starts blank. It doesn't know what you buy, what you returned, or where you buy it. Your receipts know all of that, and nobody reads them. So the list lives half in your head: you forget the milk, you buy the yogurt you still have, and the trip takes longer than it should. Same thing, every week.
+Groceries are a big part of life, one of the largest expenses in the budget, and think about what it takes today. You have a “Trader Jill” list in your notes, your partner sends you items over text, and they have a list for the “Costcozy” store — and both lists don't talk to each other. So both of you bought yogurt, and neither bought the toilet paper that ran out. At the store, the milk your kids need is out of stock, and you walk every aisle to find the rest. The receipt goes in the trash, so you never see where the money went, or that the same item was cheaper at another store. Then the spinach goes bad before anyone uses it. You hold all of it in your head, and it's still never quite right. Arya puts the whole chore in one place — shared lists, a guided route so you get out of the store quicker, visibility into your spend and usage patterns, and out-of-stock warnings from other shoppers so your trip isn't wasted. I built Arya for this hackathon to make the whole grocery routine easier, so I don't have to manage it mentally.
 
-### The loop
+Arya learns from my receipts, and it remembers what I share with it so I don't start from zero every week. The list is already made from what we buy. I add by typing, by voice — Muse Voice Transcribe — or a photo of a paper list — Muse Spark converts it into a list. At the store, if I can't find something, I point the camera at a shelf: SAM 3.1 finds the item, Spark checks it. This shelf is empty, so I tap Not here, and the next shopper knows. At checkout I snap the receipt. Spark reads it, Arya checks the math, and if anything is off, Muse Wonder takes a second look. Next week's list is already learning.
 
-1. **Snap a receipt.** Muse Spark reads it, and Arya checks every line against the printed total in plain code. If the check fails or Spark is unsure, Muse Wonder reads it again. Doubtful lines wait in a review queue for you to check.
-2. **Arya learns.** It learns what your household buys, how often, and at which store. Today shows what is running low and what to use soon, each with a reason ("about every 7 days, last bought 10 days ago"). Arya suggests; you decide what goes on the list.
-3. **Shop.** Add items by typing, by voice or with a photo of a note. Tell Ask Arya "we finished the Greek yogurt" and it is on the list. Start shopping turns the list into an optional hunt through the store, and Muse Spark and SAM 3.1 find an item on the shelf for you. SAM pixelates the people it detects first.
-4. **Together.** Groups share lists and receipts, and your own receipts go with you if you leave. Shoppers' store maps merge, so each trip helps the next.
+Back home, the spinach is about to go bad, so Arya tells me to use it first. I finish the yogurt, I tell Arya we're out, and it's on the list.
+
+Arya is live — the demo is open to everyone, no sign-up; accounts are by invite from the waitlist for now for beta testers. Honestly, it's early: a week is not enough to build all of this, and it gets better as more of us use it. The potential is bigger. The eyes that read a shelf today could run on Meta glasses tomorrow. Stores could partner too — only where it makes the community better. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integration. AI agents like Meta Muse can already integrate over MCP and talk to Arya.
+
+The AI does the remembering. We do the shopping, and we help each other. This is Arya.
+
+Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).
 
 <p align="center">
   <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
@@ -39,24 +38,7 @@ Every week your list app starts blank. It doesn't know what you buy, what you re
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
-Limits, including the one-server size: [Known limits](#known-limits).
-
-### Which Meta model does what
-
-- **Muse Spark** reads receipts first, judges which staples to suggest, and answers Ask Arya.
-- **Muse Wonder** re-reads a receipt the checks flag.
-- **SAM 3.1** finds shelves and items in a store scan and pixelates people.
-- **Muse Voice Transcribe** takes dictation.
-- **Muse Spark Open** is a second opinion on staples, from item names alone.
-- **Muse Image** drew the Quest characters.
-
-### Where next
-
-[Try the demo](https://arya.teamnightshift.org) (no sign-up). Judging this? Start with [For judges](JUDGES.md). Why it is built this way: [Principles](docs/PRINCIPLES.md). Everything else: [All the docs](#documentation-map).
-
----
-
-The rest of this page is the full story.
+Size and other limits: [Known limits](README.md#known-limits).
 
 ## Why I built it this way
 
@@ -99,6 +81,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
 | Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md), and a feature-by-feature tour: [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
+| Why it exists and what it stands for | [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
 **Code layout.**
@@ -159,6 +142,7 @@ The full feature list, with why each matters, is the [dated build page](docs/WHA
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
 - **Lists you name.** Every item belongs to a list.
+- **You decide.** Arya suggests; you decide what goes on the list.
 
 **Kroger aisle lookup.** At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored, and it falls back to the crowd map if Kroger does not answer. It needs your own Kroger developer keys if you run your own copy. The demo stores are invented, so you will not see it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
 

@@ -4,7 +4,7 @@ Arya is my answer to "Build for Your World": Meta's models in a world I know fir
 
 ## The problem
 
-Keeping track of groceries is a small job that never ends. You remember the list, then forget it at the store. You buy what you already have. You cannot say where the money went. I had this problem, so I built Arya for myself first. How the app solves it, step by step, is in [the README, What Arya is](../README.md#what-arya-is).
+Keeping track of groceries is a small job that never ends. You remember the list, then forget it at the store. You buy what you already have. You cannot say where the money went. I had this problem, so I built Arya for myself first. How the app solves it, step by step, is in [the README, What is Arya](../README.md#what-is-arya).
 
 ## Who it is for
 
