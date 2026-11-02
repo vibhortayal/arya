@@ -1,0 +1,63 @@
+# Run Arya on your own computer (for judges and anyone trying it out).
+#
+#   cp .env.local.example .env      # then put your Meta key in .env
+#   docker compose up --build
+#   open http://localhost:8080 and tap "Try it now"
+#
+# This file is for a laptop only. The live site uses
+# assistant/deploy/docker-compose.yml (Caddy, TLS, the VM's folders),
+# which this file does not touch. Here one container serves the app on
+# plain http://localhost:8080; data stays in the arya-local-data volume
+# (JSON files). The first start writes the demo household into that
+# volume; later starts keep what is there. `docker compose down -v`
+# wipes it and the next start writes it again.
+services:
+  arya:
+    build:
+      context: assistant
+      dockerfile: deploy/Dockerfile.api
+      args:
+        GIT_COMMIT: local
+    command:
+      - sh
+      - -c
+      - >-
+        test -f /app/data/users/demo/receipts.json
+        || python -m harness.make_demo_household /app/data;
+        exec uvicorn api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "${ARYA_LOCAL_PORT:-8080}:8000"
+    environment:
+      ARYA_DATA_DIR: /app/data
+      # Your own key from dev.meta.ai. Without one the app and the demo
+      # household still open, but anything that reads a photo, answers
+      # in Ask or listens to your voice says it cannot reach Meta.
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      ARYA_STORE: ${ARYA_STORE:-json}
+      ARYA_PHOTO_READER: ${ARYA_PHOTO_READER:-auto}
+      ARYA_SPARK_TIER: ${ARYA_SPARK_TIER:-standard}
+      # Plain http on localhost: the sign-in cookie must not be
+      # https-only, or Safari would drop it and sign-in would fail.
+      ARYA_INSECURE_COOKIE: "1"
+      # Optional. Muse Spark Open (open weights on Baseten) is the
+      # staple judge's second seat; without it that check is skipped.
+      BASETEN_API_KEY: ${BASETEN_API_KEY:-}
+      ARYA_OPEN_MODEL: ${ARYA_OPEN_MODEL:-}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-2}
+      ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
+      ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-0}
+      ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
+      # A laptop disk is often fuller than the VM's; don't fail /health
+      # over it.
+      ARYA_HEALTH_MIN_FREE_MB: ${ARYA_HEALTH_MIN_FREE_MB:-50}
+    volumes:
+      - arya-local-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+volumes:
+  arya-local-data:

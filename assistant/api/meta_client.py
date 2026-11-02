@@ -10,7 +10,8 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
   Spark". It runs as muse-spark-1.3 Standard by default ("your content is not
   used to train Meta models"); live runs Standard (confirmed 2026-11-01).
   ARYA_SPARK_TIER=contributor (or the Ops switch) selects the cheaper
-  Contributor tier, which Meta may train on; it is an operator option only,
+  Contributor tier, which has different data terms from Meta (see
+  docs/MODEL-POLICY.md); it is an operator option only,
   off by default, and no user opt-in exists. Explicitly asking for mode="contributor" with
   personal=True is still refused. Wonder is always Standard.
 - Contributor is limited to 150 requests a minute (Standard: 3,000), so
