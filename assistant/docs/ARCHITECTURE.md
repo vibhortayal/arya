@@ -381,8 +381,9 @@ Each agent has a narrow job and a named limit.
   drain the app. Every live door, batch judge run and hunt creation
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,
-  never a 500 (`meta_client.parse_json`). There is no per-user spend cap;
-  I decided on 2026-10-29 to go without one for now.
+  never a 500 (`meta_client.parse_json`). Each account has its own limits:
+  a heads-up at $3 a month, a pause on paid reads at $5, and an hourly freeze at $1
+  (see the flag table), on top of the daily ceiling for the whole app.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -437,8 +438,8 @@ memory. The store directory (`stores.json`) is platform-level.
 
 ## 13. Not built / held
 
-- Per-user spend caps (§10). Not built; I decided to go without
-  one for now.
+- A fixed per-account spend allowance that resets by itself. Not built; per-account
+  limits do exist (§10: $3 heads-up, $5 pause, $1 hourly freeze).
 - Public registration is closed by default (`ARYA_REGISTRATION_OPEN`). The
   owner can open it in Settings. Every door runs on Meta models: Muse in
   chat, Spark on the Meta API in the app.

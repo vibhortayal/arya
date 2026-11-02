@@ -22,9 +22,9 @@ Escalation is by evidence (a scored eval), never by default.
 3. Eval loops (golden sets, prompt variants): Contributor mode. Gate
    scores still count on Standard. (Superseded for app traffic by the
    2026-11-01 amendment.)
-4. Wonder: zero jobs at baseline. A job earns Wonder only by failing its
+4. Wonder: zero jobs at baseline (history; the live reader is `auto`, see below). A job earns Wonder only by failing its
    golden set on Spark at two effort levels, with the eval logged.
-5. Voice: transcribe on demand only; speech out is device TTS (no API cost).
+5. Voice: transcribe on demand only; Ask has no voice out (replies are text).
 6. Dinner render (optional): muse-image-1.0 at $0.01 — the one place a flat
    per-unit price beats token metering.
 
