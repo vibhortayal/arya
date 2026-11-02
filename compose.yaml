@@ -9,7 +9,8 @@
 # which this file does not touch. Here one container serves the app on
 # plain http://localhost:8080; data stays in the arya-local-data volume
 # (JSON files). The first start writes the demo household into that
-# volume; later starts keep what is there. `docker compose down -v`
+# volume; later starts keep what is there. After editing .env, run
+# `docker compose up -d` (a plain restart does not read .env again). `docker compose down -v`
 # wipes it and the next start writes it again.
 services:
   arya:

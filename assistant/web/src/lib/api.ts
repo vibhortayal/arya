@@ -12,7 +12,7 @@ const FRIENDLY: Record<string, string> = {
   "this needs a real account": "Create an account to do this. The demo keeps nothing.",
   // Only a copy run without a Meta key says this (the live site has one):
   // tell whoever runs it what to do (local Docker, 2026-11-02).
-  "model_api_key not provisioned on this runtime": "This copy of Arya has no Meta key, so AI features are off. Add MODEL_API_KEY to .env and restart it.",
+  "model_api_key not provisioned on this runtime": "This copy of Arya has no Meta key, so AI features are off. Put your key from dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d",
 };
 
 export function friendlyError(d: unknown): string {
