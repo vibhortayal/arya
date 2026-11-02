@@ -346,7 +346,7 @@ Each agent has a narrow job and a named limit.
   hashes; sign-in is throttled; sessions are cookies, and session
   tokens are stored as SHA-256 hashes.
 - Email code and Google sign-in (Supabase Auth) are built behind
-  `ARYA_SUPABASE_AUTH=1`, off by default. Supabase only proves the
+  `ARYA_SUPABASE_AUTH=1`, off by default and on in the live site. Supabase only proves the
   email; Arya keeps its own account (named by the email, no password)
   and its own cookie (`api/supabase_auth.py`).
 - A connector token is `arya_` plus a random secret. **Only its SHA-256

@@ -364,6 +364,6 @@ an **Add to Home Screen** row while installing is possible.
 | Ask Arya (list, aisle) | Shipped, needs a model |
 | Push reminders | Shipped, live (flag `ARYA_PUSH_REMINDERS` on since Nov 2); you opt in, and on iPhone add the app to the Home Screen first |
 | Add to Home Screen | Shipped |
-| Supabase sign-in | Shipped, flag `ARYA_SUPABASE_AUTH` (off) |
+| Supabase sign-in (email code, Google) | Shipped, live (flag `ARYA_SUPABASE_AUTH` on). New sign-up is closed by an Ops flag, so only existing and approved accounts get in |
 | Community prices, Deals, Arya Shoppers | Planned (opt-in choice saved, nothing built) |
 | React app (`web/`) at `/` | Shipped (`/next/...` answers 302 to `/...`) |
