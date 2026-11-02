@@ -39,9 +39,9 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
   if (sending) {
     return (
       <div className="group pad" id="rc-job">
-        <p className="nomargin"><strong>{t("receiptJob.sending", { sent: sending.sent, total: sending.total })}</strong></p>
+        <p className="nomargin"><strong>{sending.total === 1 ? t("receiptJob.sendingOne") : t("receiptJob.sending", { sent: sending.sent, total: sending.total })}</strong></p>
         <Bar pct={(sending.sent / sending.total) * 100} />
-        <p className="muted small nomargin">{t("receiptJob.keepOpen")}</p>
+        <p className="muted small nomargin">{sending.total === 1 ? t("receiptJob.keepOpenOne") : t("receiptJob.keepOpen")}</p>
       </div>);
   }
   if (!job) return null;
@@ -49,7 +49,7 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
   if (ACTIVE.includes(job.status)) {
     return (
       <div className="group pad" id="rc-job">
-        <p className="nomargin"><strong>{t("receiptJob.reading")}</strong></p>
+        <p className="nomargin"><strong>{job.total === 1 ? t("receiptJob.readingOne") : t("receiptJob.reading")}</strong></p>
         <Bar pct={job.total ? (job.done / job.total) * 100 : 0} />
         <p className="muted small nomargin">{t("receiptJob.progress", { done: job.done, total: job.total })}{job.failed ? " " + t("receiptJob.someFailed", { count: job.failed }) : ""} {t("receiptJob.canLeave")}</p>
       </div>);

@@ -569,7 +569,7 @@ export function Today() {
                 <span className="lc-items">{trip.items.slice(0, 4).map(i => i.name).join(", ") + (trip.count > 4 ? "…" : "")}
                   {tripOut.length > 0 && <> · {tripOut.length === 1 ? t("today.trip.outOne", { item: tripOut[0] }) : t("today.trip.outMany", { count: tripOut.length })} <SimPill /></>}</span>
               </button>
-              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => nav.show("community", { listId: trip.id === "else" ? "all" : trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
+              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => trip.id === "else" ? nav.show("list", { lens: "else" }) : nav.show("community", { listId: trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
             </>
           ) : (
             <>
