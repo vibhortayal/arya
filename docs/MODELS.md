@@ -6,7 +6,7 @@ today, and what it could use later. Used models are described in detail in
 [`docs/quest/META-PRODUCTS.md`](quest/META-PRODUCTS.md); this page adds the
 models we did **not** use. The model list comes from Meta's models page
 (dev.meta.ai/docs/models) as read on 2026-11-02, and the code from
-`assistant/api/meta_client.py`. Where I could not confirm something, it says
+`assistant/api/meta_client.py`. Where we could not confirm something, it says
 "unconfirmed". Everything under "Future" is an idea, not built and not promised.
 
 ## Used today
