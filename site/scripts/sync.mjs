@@ -39,7 +39,9 @@ const SECTIONS = {
     ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
   ],
   'How it is built': [
+    ['docs/TECHNICAL-DEPTH.md', 'architecture/design-decisions', 'Design decisions and what is next'],
     ['assistant/docs/ARCHITECTURE.md', 'architecture/overview', 'Architecture'],
+    ['docs/SCALABILITY-DESIGN.md', 'architecture/scalability', 'Scalability design'],
     ['assistant/docs/MODEL-POLICY.md', 'architecture/model-policy', 'Model policy'],
     ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'How we built it'],
   ],
