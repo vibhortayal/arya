@@ -3,7 +3,7 @@
 Arya is a grocery list that learns from your receipts. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
-- **Why this is built for our world:** a shopper's problem the owner had personally, built for the community and not for money. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
+- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** VIDEO_LINK_PLACEHOLDER
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)

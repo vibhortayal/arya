@@ -2,13 +2,13 @@
 
 Status: DRAFT, checked 2026-11-01 against main 0d0b0f2, the live site and
 the video claim check (`/mnt/project-files/demo-video/03-CLAIM-CHECK.md`).
-Nothing is submitted until the owner approves the complete package. Portal
+Nothing is submitted until I approve the complete package. Portal
 fields sit behind participant sign-in, so the blocks below follow common
 portal fields; paste each into the field that matches. The judging map and
 the package checklist live in `docs/quest/SUBMISSION.md`.
 
 Wording rules for this file: list first, Quest optional; nothing unbuilt
-is described as built; no lines about model training (owner, 2026-11-01).
+is described as built; no lines about model training (me, 2026-11-01).
 
 ## Project name
 
@@ -29,10 +29,12 @@ ask Arya questions, and, if you like, turn the trip into a game.
 
 - **What Arya is.** A grocery list that learns from your receipts, then mostly
   writes itself.
-- **Why we built it.** The owner had this problem: carrying the list in their
+- **Why we built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
-  mental space. It is for shoppers, not for money: households and groups share
-  lists and help each other. See `docs/PRINCIPLES.md`.
+  mental space. Arya is free to use and made for shoppers to help each other;
+  households and groups share lists. It costs money to keep running (the AI
+  reading), and you can see what you use in Settings, About Arya, Keeping
+  Arya running. See `docs/PRINCIPLES.md`.
 - **What it uses.** Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
   Transcribe, Muse Image and Muse Spark Open, each with one job.
 
@@ -119,7 +121,7 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 
 ## Accomplishments and evidence
 
-- 114 of the owner's own Costco receipts (three years, 1,226 lines) came
+- 114 of my own Costco receipts (three years, 1,226 lines) came
   in as the Costco app's export; code parsed them and 114 of 114 add up to
   the printed total. Muse Spark expanded the abbreviated names.
 - Staple judge: precision 0.79 against a purchase-cadence proxy on those
@@ -127,7 +129,7 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
   names for category and section.
 - Receipt photo test (9 public receipts, 98 lines): Wonder 97/98, 0 price
   errors; Spark 92/98, 4 price errors. Public test receipts never entered
-  the owner's data.
+  my data.
 - More than 1,200 Python unit tests plus the web app's tests. A small
   number of known failures on `main` are tracked in GitHub issues.
 
@@ -162,7 +164,7 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
   that visit only. Sign-up is invite only during judging.
 - Judge path (about 8 minutes): `docs/quest/JUDGE-PLAYBOOK.md`.
 - Repo: https://github.com/vibhortayal/arya
-- Video: (owner adds the link)
+- Video: (I add the link)
 
 ## Track and team
 

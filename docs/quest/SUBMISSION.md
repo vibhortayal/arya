@@ -2,7 +2,7 @@
 
 **Event:** Meta Global AI Developer Hackathon · Team Nightshift · Indie track (≤4, representative: Vibhor Tayal)
 **Deadline:** Nov 4, 2026, 9:00 PM ET, via the Cerebral Valley portal.
-**Rule held:** nothing is submitted without the owner's explicit go-ahead on the complete package.
+**Rule held:** nothing is submitted without my explicit go-ahead on the complete package.
 
 ## Judging weights → where we win them
 
@@ -30,7 +30,7 @@ fallback if the live read is slow.
 - [ ] Demo video (beats above)
 - [ ] This repository (vibhortayal/arya — one repo, Discussion 25): pitch, architecture, Meta products, game design, build plan, and the live engine, tests green
 - [ ] Portal form fields completed from the drafts here
-- [ ] Owner review of the complete package → explicit go-ahead → submit
+- [ ] My review of the complete package → explicit go-ahead → submit
 
 ## IP note
 

@@ -15,7 +15,7 @@ The Quest hunt is optional.
 | Tag | Meaning |
 |---|---|
 | Shipped | On `main` and in the demo. |
-| Shipped, flag | On `main`, but a setting keeps it off until the owner turns it on. |
+| Shipped, flag | On `main`, but a setting keeps it off until I turn it on. |
 | Needs a model | Works only when `MODEL_API_KEY` is set. The demo uses the key on the VM. |
 | Planned | Not built. Listed so nobody thinks it is there. |
 
@@ -313,7 +313,7 @@ on screen and what is left, so "this" and "it" work.
 
 ### 7b. Push reminder
 
-**Status.** Shipped, **flag**. It is off until the owner sets
+**Status.** Shipped, **flag**. It is off until I set
 `ARYA_PUSH_REMINDERS=1`, makes VAPID keys and adds a daily cron line
 (see `assistant/docs/PUSH-REMINDERS.md`). Demo accounts never see it.
 

@@ -61,6 +61,6 @@ people-blurring rule, and a takedown route. See
 [`docs/ROADMAP.md`](ROADMAP.md) ("Store data and community").
 
 ## Consistency notes
-Spark and Wonder run in Standard mode (owner decision, 2026-11-01). Nothing
+Spark and Wonder run in Standard mode (my decision, 2026-11-01). Nothing
 here changes that. The JUDGES.md line "Not used, said plainly: Muse Glimmer
 and Muse Code" stays true.

@@ -98,6 +98,6 @@ Everything here is built and in the code. Ideas that are not built are on the
 ## In the code but switched off
 - **Use your own Meta key (unfinished, not used).** A Settings row, a Help topic,
   an Ask answer and a sign-up door, where an account with its own key never falls
-  back to Arya's keys. The owner decided not to use it, so it is switched off
+  back to Arya's keys. I decided not to use it, so it is switched off
   and not part of the demo.
   [After the hackathon](ROADMAP.md)

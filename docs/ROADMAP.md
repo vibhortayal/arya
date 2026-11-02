@@ -1,7 +1,7 @@
 # After the hackathon
 
-These are ideas the owner is thinking about for where Arya could go. They are
-not commitments, and he needs more time to figure out and understand them.
+These are ideas I am thinking about for where Arya could go. They are
+not commitments, and I need more time to figure out and understand them.
 
 **What ships now is a limited-scope MVP:** a list that learns from receipts,
 Ask, groups, Quest and the connector, as described in the README and
@@ -15,7 +15,7 @@ information (lists, receipts, prices, stores) and connect to other tools
 through import and export.
 
 ## Devices
-- **Ray-Ban Meta glasses.** Idea, raised by the owner for the store scan.
+- **Ray-Ban Meta glasses.** Idea, raised by me for the store scan.
   Spark's check during the hackathon found no public live-camera API for
   third-party apps; the flow that works today is to capture on the glasses,
   sync to the phone and ingest the video there. The demo uses the phone camera
@@ -132,7 +132,7 @@ personal token. Everything below is future work and not built:
 - **Import lists from other list apps** (a file or a link). Not built.
 
 ## More ideas for growing the app and its community
-All ideas. None is designed or built, and each would need the owner's word
+All ideas. None is designed or built, and each would need my word
 and, where it touches personal data, a privacy review first.
 
 **Everyday use**
@@ -190,13 +190,11 @@ and, where it touches personal data, a privacy review first.
 - A public status page and an uptime history.
 - A staging address, and automated CI instead of manual runs.
 - A published API with webhooks and OAuth (`docs/API.md`, "Later").
-- A real licence choice, once the owner decides.
+- A real licence choice, once I decide.
 - Store permission programme for mapping, and a takedown route for stores.
 
-**No money plan.** The owner decided (2026-11-02) that there is no plan to make money for now; the goal is that people use Arya and help each other.
-
 ## Use your own Meta key: unfinished, switched off, not used
-The owner decided not to use this (2026-11-02). The code exists in the repo
+I decided not to use this (2026-11-02). The code exists in the repo
 (PRs #391 and #393): a Settings row, a Help topic, an Ask answer, and an "I have
 my own Meta key" sign-up door. It is unfinished, it is switched off in the live
 app and in the demo, and it is not part of what judges see. With no key vault
