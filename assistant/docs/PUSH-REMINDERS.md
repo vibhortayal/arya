@@ -13,7 +13,7 @@ a new receipt for the item starts a new cycle.
    `ARYA_PUSH_REMINDERS=1`.
 3. Rebuild the api container (pywebpush is a new requirement).
 4. Add one daily cron line on the VM, for example 9:00 local:
-   `0 9 * * * cd /home/ubuntu/arya/assistant/deploy && docker compose exec -T api python -m api.reminders`
+   `0 9 * * * cd /path/to/arya/assistant/deploy && docker compose exec -T api python -m api.reminders`
 
 Without the flag and both keys, `/api/push/*` answers 404 (config says
 `enabled: false`) and the Profile section stays hidden. To turn off,
