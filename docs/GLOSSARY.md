@@ -6,7 +6,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 - **Today**: the first tab. What is running low, store alerts and what to use soon. You can change what it shows with Customize your "Today" screen.
 - **Navigation tab**: the row of tabs at the bottom of the phone: Today, Spending, Quest, Ask Arya and More. "Customize navigation tab" changes which ones sit there.
-- **Lists**: one card per store list, with suggestions underneath. Every item belongs to a list.
+- **Lists**: under More, one card per store list, with suggestions underneath. Every item belongs to a list.
 - **Suggestions**: items Arya thinks you may need, each with a reason. Arya never adds to a list by itself; you tap Add.
 - **Running low**: staples that are due again, worked out from how often you buy them.
 - **Use soon**: food you bought that should be eaten soon. "Used it" moves an item back to Suggestions.
@@ -15,7 +15,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 - **Arya guide**: the swipeable cards that explain each feature.
 - **Tour**: the first-run walk-through, shown as bubbles over a dark screen.
 - **Quest**: the optional game. It turns a shopping trip into a hunt through a model of your store and ends on a photo of your receipt. It has no clock and no way to lose.
-- **Use Arya in Muse**: the More-tab row that connects the Muse assistant to your Arya account through the MCP connector.
+- **Use Arya in Muse**: the Settings, About Arya row that connects the Muse assistant to your Arya account through the MCP connector.
 - **Demo Town**: the simulated neighborhood of invented stores the demo household shops in. It is labelled as simulated.
 
 ## How it works

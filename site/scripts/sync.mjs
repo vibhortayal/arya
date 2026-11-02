@@ -13,7 +13,7 @@ const GH = 'https://github.com/vibhortayal/arya/blob/main/';
 const IMG = /\.(png|jpe?g|webp|svg|gif)$/i;
 
 // [source path in repo, route inside the docs site, sidebar label]
-const QUEST_INTERNAL = new Set(['BUILD-PLAN.md', 'DISCUSSION.md']);
+const QUEST_INTERNAL = new Set(['BUILD-PLAN.md', 'DISCUSSION.md', 'SUBMISSION.md']);
 const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
   .filter((f) => f.endsWith('.md') && !QUEST_INTERNAL.has(f))
   .map((f) => [`docs/quest/${f}`, `quest/${f === 'README.md' ? 'overview' : f.replace(/\.md$/, '').toLowerCase()}`,
@@ -71,28 +71,38 @@ SECTIONS[ENG] = [
   ['assistant/docs/SUBMISSION-DRAFT.md', 'internal/submission-draft', 'Submission draft'],
   ['docs/quest/BUILD-PLAN.md', 'quest/build-plan', 'Quest build plan'],
   ['docs/quest/DISCUSSION.md', 'quest/discussion', 'Quest design discussion'],
+  ['docs/quest/SUBMISSION.md', 'quest/submission', 'Submission checklist'],
 ];
 const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
-  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md']);
+  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md']);
 
 // Whole sections that are operator-only and stay off the public site.
 const DROP_SECTIONS = {
-  'assistant/docs/OPS.md': ['One-time setup on the VM', 'Recover the owner', 'When something breaks', 'Own Meta keys'],
+  'assistant/docs/OPS.md': ['One-time setup on the VM', 'Recover the owner', 'When something breaks'],
   'AGENTS.md': ['Ops notes'],
 };
 const NOTE = '_Operator-only steps are kept off the public site. See the repository._\n\n';
 const REDACT = [
-  [/`?(?:assistant\/)?deploy\/[\w-]+\.sh`?/g, 'a server script'],
   [/\/home\/[\w./-]+/g, '[server path]'],
   [/\/mnt\/[\w./-]+/g, '[internal file]'],
   [/\/var\/log\/[\w./-]+/g, '[log file]'],
-  [/\b[\w-]+\.sh\b/g, '[script]'],
-  [/\b[A-Z][A-Z0-9_]*(?:API_KEY|SECRET|TOKEN|PASSWORD|VAULT)[A-Z0-9_]*\b/g, '[key name]'],
   [/`?(?:assistant\/)?deploy\/\.env`?/g, 'the server settings file'],
   [/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[address]'],
 ];
+const WHOLE = { 'assistant/docs/OPS.md': ['Own Meta keys'] };   // heading and body both go
 const counts = {};
 function scrub(src, text) {
+  for (const title of WHOLE[src] || []) {
+    const lines = text.split('\n');
+    const i = lines.findIndex((l) => /^#{2,4}\s/.test(l) && l.replace(/^#+\s*/, '').startsWith(title));
+    if (i < 0) continue;
+    const level = lines[i].match(/^#+/)[0].length;
+    let j = i + 1;
+    while (j < lines.length && !(/^#+\s/.test(lines[j]) && lines[j].match(/^#+/)[0].length <= level)) j++;
+    lines.splice(i, j - i);
+    counts[`${src}: section "${title}" (whole)`] = 1;
+    text = lines.join('\n');
+  }
   for (const title of DROP_SECTIONS[src] || []) {
     const lines = text.split('\n');
     const i = lines.findIndex((l) => /^#{2,4}\s/.test(l) && l.replace(/^#+\s*/, '').startsWith(title));

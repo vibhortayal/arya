@@ -16,10 +16,10 @@ The order for a change is: idea, name the role, approval, mockup (UI only), pull
 
 ## Where to read more
 
-- [Agent rules](/docs/internal/agents): the contract every agent follows (hard rules, roles, workflow).
-- [Decisions](/docs/decisions): every choice the owner made, with the date.
-- [Status](/docs/internal/status): what was live and what was not, batch by batch.
-- [Operations](/docs/internal/ops): how the app is watched.
-- [Scale simulation](/docs/internal/scale-sim): the load test.
-- [Submission draft](/docs/internal/submission-draft): the Devpost write-up.
-- [Quest build plan](/docs/quest/build-plan) and [design discussion](/docs/quest/discussion): how the game was planned and argued out.
+- [Agent rules](../AGENTS.md): the contract every agent follows (hard rules, roles, workflow).
+- [Decisions](DECISIONS.md): every choice the owner made, with the date.
+- [Status](../STATUS.md): what was live and what was not, batch by batch.
+- [Operations](../assistant/docs/OPS.md): how the app is watched.
+- [Scale simulation](../assistant/docs/SCALE-SIM.md): the load test.
+- [Submission draft](../assistant/docs/SUBMISSION-DRAFT.md): the portal write-up.
+- [Quest build plan](quest/BUILD-PLAN.md) and [design discussion](quest/DISCUSSION.md): how the game was planned and argued out.

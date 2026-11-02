@@ -5,7 +5,7 @@ import Link from '@docusaurus/Link';
 const cards = [
   ['What Arya is', '/docs/intro', 'The idea, the screens and how it uses Meta models.'],
   ['For judges', '/docs/judges', 'Where to look first, and what to try.'],
-  ['Try the features', '/docs/try-the-features', 'A short tour of what to tap in the demo.'],
+  ['Try the features', '/docs/try-the-features', 'Every feature, step by step, on your own copy.'],
   ['User journeys', '/docs/guide/user-journeys', 'Walkthroughs with screenshots.'],
   ['Lists API', '/docs/api/lists-api', 'Read and write your lists from a script.'],
   ['API reference', '/api-reference', 'Interactive OpenAPI reference.'],
