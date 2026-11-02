@@ -116,10 +116,10 @@ which I left in. The demo reads the receipt but keeps nothing.
 
 | Claim | Where to verify |
 | --- | --- |
-| One module calls the Meta API | `assistant/api/meta_client.py` |
-| Receipts verified by arithmetic | `assistant/tests/test_receipt_math.py` |
-| Demo writes never reach disk | `state.set_overlay` in `assistant/api/state.py`; sandbox tests |
-| People are blurred before a frame is kept | `shelfscan.scrub_people` in `assistant/api/shelfscan.py` (fails closed) |
+| One module calls the Meta API | [`meta_client.py`](../../assistant/api/meta_client.py) |
+| Receipts verified by arithmetic | [`test_receipt_math.py`](../../assistant/tests/test_receipt_math.py) |
+| Demo writes never reach disk | `state.set_overlay` in [`state.py`](../../assistant/api/state.py); sandbox tests |
+| People are pixelated before a frame is kept | `shelfscan.scrub_people` in [`shelfscan.py`](../../assistant/api/shelfscan.py) (fails closed) |
 | Cost policy | `assistant/docs/MODEL-POLICY.md` |
 | Measured results | `README.md`, "Measured results" |
 | Tests | `cd assistant && python -m unittest discover -s tests` |
