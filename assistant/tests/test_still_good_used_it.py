@@ -55,6 +55,15 @@ class UsedIt(unittest.TestCase):
         self.assertIn('if r["item_id"] not in listed]', home)
         self.assertIn("state.on_list_ids(d)", src("api/chat_service.py"))
 
+    def test_guide_help_and_buttons_match_397(self):
+        # Parity with the closed #397: the guide card names the answers,
+        # Help says which one is food waste, three equal buttons in a row.
+        en = src("web/src/i18n/en.json")
+        self.assertIn("tap Still good, Used it or It expired", en)
+        self.assertIn("It expired (counts as food waste)", en)
+        self.assertIn('className="chipset checkchips"', src("web/src/screens/Today.tsx"))
+        self.assertIn(".checkchips .chip { flex: 1 1 0", src("web/src/styles/styles.css"))
+
     def test_docs_name_used_it(self):
         self.assertIn("Used it (you finished it", src("prompts/arya_features.md"))
         self.assertIn("moves to Suggestions", src("prompts/arya_features.md"))
