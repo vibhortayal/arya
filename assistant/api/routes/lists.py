@@ -131,6 +131,83 @@ def _add_name_to_list(name, qty=1, list_id=None, unit="", mode="both"):
     return {"item_id": item_id, "name": name}
 
 
+# --- Every item on a list (owner, 2026-11-02) --------------------------------
+# "It should ask you to which list it should add it to. If you don't have
+# any list, it should ask you to create a list before you add any items."
+# An add names its list, or the item is already on one, or the household
+# has exactly one list (owner: one list means no question). Otherwise
+# nothing is written and the answer is 409 with what the app needs to ask:
+# {"code": "pick_list", "lists", "suggested", "names"} or
+# {"code": "no_lists", "names"}. "suggested" is the list for the store the
+# item is usually bought at, pre-picked in the question.
+
+PICK_LIST_MSG = "Which list should this go on? Open a list and add it there."
+NO_LISTS_MSG = "Make a list first, then add items to it."
+
+
+def need_list(names=(), item_id=None):
+    """The 409 detail when an add has no list to go on."""
+    rows = state.named_lists()
+    names = [str(n) for n in names if n][:20]
+    if not rows:
+        return {"code": "no_lists", "message": NO_LISTS_MSG, "names": names}
+    sug = None
+    if not item_id and names:
+        from api.list.intake import existing_item_id
+        item_id = existing_item_id(names[0], state.dictionary()["entries"], state.flags())
+    if item_id:
+        sug = state.usual_list(item_id)
+    return {"code": "pick_list", "message": PICK_LIST_MSG,
+            "lists": [{"id": l["id"], "name": l["name"]} for l in rows],
+            "suggested": sug, "names": names}
+
+
+def pick_list(list_id=None, item_id=None, names=()):
+    """The list an add goes on, or HTTPException 409 (see above)."""
+    rows = state.named_lists()
+    ids = {l["id"] for l in rows}
+    if list_id:
+        if list_id not in ids:
+            raise HTTPException(404, "no such list")
+        return list_id
+    if item_id:
+        f = state.flags().get(item_id, {})
+        if f.get("list") in ids and f.get("manual") and not f.get("dismissed_on"):
+            return f["list"]     # already on a list: an add keeps it there
+    elif names and len(rows) > 1:
+        # Typed names that are all on a list already stay where they are
+        # (None: _add_name_to_list keeps each one's list).
+        from api.list.intake import existing_item_id
+        entries, fl = state.dictionary()["entries"], state.flags()
+        known = [existing_item_id(str(n), entries, fl) for n in names]
+        if all(k and fl.get(k, {}).get("list") in ids and fl[k].get("manual")
+               and not fl[k].get("dismissed_on") for k in known):
+            return None
+    if len(rows) == 1:
+        return rows[0]["id"]
+    raise HTTPException(409, need_list(names, item_id))
+
+
+def file_unlisted():
+    """Rows on the list from before every item had a list (no list, or a
+    deleted one) go to the usual store's list, or to the only list.
+    Rows neither can place stay as they are; the app asks for them.
+    Returns how many were filed. $0, no model."""
+    rows = state.named_lists()
+    if not rows:
+        return 0
+    ids = {l["id"] for l in rows}
+    moved = 0
+    for i in state.derived()["smart_list"]["items"]:
+        if not i.get("on_list") or i.get("list") in ids:
+            continue
+        home = rows[0]["id"] if len(rows) == 1 else state.usual_list(i["item_id"])
+        if home:
+            _merge_flag(i["item_id"], {"list": home})
+            moved += 1
+    return moved
+
+
 def _list_add_fields(body):
     """Validate the Pack extras of an add BEFORE anything is written.
     Returns the flag fields to set; raises 400 on a bad quantity."""
@@ -209,16 +286,17 @@ def _list_add(body):
         typed = split_list_items_units(str(body["name"]))
         name, qty, unit = typed[0] if len(typed) == 1 else (body["name"], 1, "")
         unit = clean_unit(body["unit"]) if "unit" in body else unit
-        item_id = _add_name_to_list(name, qty, unit=unit)["item_id"]
+        lid = pick_list(fields.get("list"), names=[name])
+        if lid:
+            fields["list"] = lid
+        item_id = _add_name_to_list(name, qty, lid, unit=unit)["item_id"]
         _list_add_extras(item_id, body, fields)
         groups.note("added", item_id)
         return {"item_id": item_id}
+    # Running low's Add and the like: its list, the only list, or ask.
+    fields["list"] = pick_list(fields.get("list"), item_id,
+                               [state.names().get(item_id, item_id)])
     _merge_flag(item_id, {"manual": True, "dismissed_on": None})
-    if "list" not in fields and not state.flags().get(item_id, {}).get("list"):
-        # Running low's Add and the like: the item's usual store's list (retest #5).
-        home = state.usual_list(item_id)
-        if home:
-            fields["list"] = home
     _list_add_extras(item_id, body, fields)
     groups.note("added", item_id)
     return {"item_id": item_id}
@@ -276,11 +354,11 @@ def _list_from_text(body):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(400, "text is required")
-    list_id = (body.get("list_id") or None)
-    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
-        raise HTTPException(404, "no such list")
     from api.list.intake import (split_list_items_units, extract_items_model,
                                  skipped_pieces, has_non_latin)
+    # Which list, before any model call (every item on a list).
+    list_id = pick_list(body.get("list_id") or None,
+                        names=[n for n, _q, _u in split_list_items_units(text)] or [text[:60]])
     from api.chat_service import _language_setting
     # The splitter is English-shaped ("add", "and", "some"). Non-Latin
     # script, or a fixed non-English language, goes to the one Spark
@@ -348,12 +426,11 @@ async def list_import(req: Request):
 
 
 def _list_import(body):
-    list_id = body.get("list_id") or None
-    if list_id and not any(l["id"] == list_id for l in state.named_lists()):
-        raise HTTPException(404, "no such list")
     rows = body.get("items")
     if not isinstance(rows, list) or not rows:
         raise HTTPException(400, "items is required")
+    list_id = pick_list(body.get("list_id") or None,
+                        names=[r.get("name") for r in rows if isinstance(r, dict)])
     from api import aisles
     from api.list.importer import MAX_ITEMS, _item
     before = {i["item_id"] for i in state.derived()["smart_list"]["items"] if i.get("on_list")}
@@ -537,6 +614,16 @@ async def list_from_photo(req: Request):
         log.info("input failure: photo unclear (%s)", read.get("reason", ""))
         return {"kind": "unclear", "reason": read.get("reason", ""),
                 "names": [], "added": 0}
+    # Every item on a list: with no list to go on, the names come back
+    # unadded with the question, and the app adds them through
+    # /api/list/from-text once a list is picked (no second photo read).
+    try:
+        list_id = pick_list(list_id, names=read["items"])
+    except HTTPException as e:
+        if e.status_code != 409:
+            raise
+        return {"kind": "list", "names": read["items"], "added": 0,
+                "needs_list": e.detail, "demo": demo}
     # The demo adds too: its writes land in the visitor's sandbox.
     added = [_add_name_to_list(n, list_id=list_id) for n in read["items"]]
     return {"kind": "list", "names": [a["name"] for a in added],
@@ -730,11 +817,33 @@ async def lists_delete(req: Request):
     row = next((l for l in rows if l["id"] == body.get("id")), None)
     if row is None:
         raise HTTPException(404, "no such list")
+    # Every item on a list (owner, 2026-11-02): a list that still has
+    # items says where they go first: move_to another list, or
+    # remove_items takes them off the shopping list. Undo (restore with
+    # "items") puts them back as they were.
+    on = [i for i in state.derived()["smart_list"]["items"]
+          if i.get("on_list") and (i.get("list") == row["id"] or row["id"] in (i.get("also") or []))]
+    move_to = body.get("move_to") or None
+    if move_to and (move_to == row["id"] or not any(l["id"] == move_to for l in rows)):
+        raise HTTPException(404, "no such list to move to")
+    mains = [i for i in on if i.get("list") == row["id"] and not (i.get("also") or [])]
+    if mains and not move_to and not body.get("remove_items"):
+        raise HTTPException(409, {
+            "code": "list_has_items", "count": len(mains),
+            "message": f"{row['name']} still has {len(mains)} item{'s' if len(mains) != 1 else ''}. Move them to another list or remove them first.",
+            "lists": [{"id": l["id"], "name": l["name"]} for l in rows if l is not row]})
+    fl = state.flags()
+    undo = {i["item_id"]: {k: fl.get(i["item_id"], {}).get(k) for k in ("list", "also", "manual", "dismissed_on")}
+            for i in on}
+    for i in on:
+        if i.get("list") != row["id"] or (i.get("also") or []):
+            _remove_item(i["item_id"], row["id"])      # stays on its other lists
+        elif move_to:
+            _move_item(i["item_id"], move_to)
+        else:
+            _remove_item(i["item_id"])
     state.save_named_lists([l for l in rows if l is not row])
-    # Items keep their (now dangling) list id, so restoring the same
-    # record brings them straight back; until then they read as
-    # "Everything else".
-    return {"deleted": row, "index": rows.index(row)}
+    return {"deleted": row, "index": rows.index(row), "items": undo}
 
 
 @router.post("/api/lists/restore")
@@ -755,6 +864,12 @@ async def lists_restore(req: Request):
     idx = idx if isinstance(idx, int) and 0 <= idx <= len(rows) else len(rows)
     rows.insert(idx, row)
     state.save_named_lists(rows)
+    # The items the delete moved or removed go back as they were.
+    items = body.get("items")
+    if isinstance(items, dict):
+        for item_id, was in list(items.items())[:500]:
+            if isinstance(item_id, str) and isinstance(was, dict):
+                _merge_flag(item_id, {k: was.get(k) for k in ("list", "also", "manual", "dismissed_on")})
     return {"list": row}
 
 

@@ -1,3 +1,4 @@
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -10,6 +11,7 @@ class TypedItemPageTest(unittest.TestCase):
         from api.main import app
         self.c = TestClient(app)
         self.c.post("/auth/setup", json={"username": "typist", "password": "correct horse"})
+        one_list(self.c)
 
     def test_typed_item_has_a_page_not_a_404(self):
         self.c.post("/api/list/from-text", json={"text": "eggs x 2"})

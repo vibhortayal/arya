@@ -61,7 +61,9 @@ class TestChatPhoto(unittest.TestCase):
                               and "eyes_photos" in root and "fakejpeg" in open(os.path.join(root, f), "rb").read().decode("latin1")])
 
     def test_text_only_still_applies_actions(self):
-        r = self.c.post("/api/chat", json={"messages": [{"role": "user", "content": "add basil"}]})
+        r = self.c.post("/api/chat", json={"messages": [{"role": "user", "content": "add basil"}],
+                                           # asked from a list: the add goes there (two lists)
+                                           "context": {"list": "Trader Joe's", "list_id": "l-demo-tj"}})
         self.assertIn("Fresh Basil", " ".join(r.json()["applied"]))
 
     def test_bad_images_are_refused(self):

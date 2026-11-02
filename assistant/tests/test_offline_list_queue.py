@@ -5,6 +5,7 @@ import os, time, unittest
 
 from tests.test_groups import GroupsBase
 from tests.test_lists_qa_oct30 import fresh, rows
+from tests.conftest import one_list
 
 
 def hdr(op, made_ago_s=0.0, clock_off_s=0.0):
@@ -58,6 +59,7 @@ class TestReplayOnce(unittest.TestCase):
         auth.create_user("other", "pw-other-long")
         o = TestClient(main.app)
         o.post("/auth/login", json={"username": "other", "password": "pw-other-long"})
+        one_list(o)
         r = o.post("/api/list/from-text", json={"text": "rice"}, headers=hdr("shared-id", 5))
         self.assertFalse(r.json().get("duplicate"))
         self.assertIn("rice", rows(o))
@@ -68,6 +70,7 @@ class TestLastChangeWins(GroupsBase):
         super().setUp()
         b = self.c["bob"]
         b.post("/api/group/join", json={"code": self.make_group()})
+        one_list(self.c["alice"])  # lists are shared, so Bob's adds file here too
         self.iid = self.c["alice"].post("/api/list/add", json={"name": "milk"}).json()["item_id"]
 
     def test_older_queued_tick_loses_to_newer_live_untick(self):

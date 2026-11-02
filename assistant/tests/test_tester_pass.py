@@ -1,5 +1,6 @@
 """Live tester pass (2026-10-28) regressions: what a brand-new
 account sees. No model calls."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -17,6 +18,7 @@ class TestNewAccount(unittest.TestCase):
         r = self.c.post("/auth/setup", json={"username": "new@example.com",
                                              "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
 
     def test_ask_context_names_typed_items_not_ids(self):
         # tester-a's Ask answer read "manual-milk, manual-eggs": the

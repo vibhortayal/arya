@@ -1,5 +1,6 @@
 """Free-text units next to a quantity, and the per-account currency
 (owner, 2026-10-29). No conversion and no exchange rates."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -39,6 +40,7 @@ class TestRoutes(unittest.TestCase):
         deps._login_fails.clear()
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
+        one_list(self.c)
 
     def items(self):
         return {i["name"]: i for i in self.c.get("/api/home").json()["list"]["items"]}

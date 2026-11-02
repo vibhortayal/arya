@@ -136,7 +136,9 @@ class TestAmbiguousListNames(AskCase):
             self.assertEqual(chat_service._list_matches("c"), [])
             self.assertEqual(chat_service._list_matches("co"), [])
         out = self.ask("add eggs to c", [{"type": "add_to_list", "item": "eggs", "list": "c"}])
-        self.assertEqual(out["skipped"], ["You have no list called c, so eggs went to Everything else."])
+        # Every item on a list (owner, 2026-11-02): nothing added, Arya asks.
+        self.assertTrue(out["skipped"][0].startswith("You have no list called c. Which list should eggs go on:"), out)
+        self.assertEqual(out["applied"], [])
 
 
 class TestReceiptFacts(AskCase):

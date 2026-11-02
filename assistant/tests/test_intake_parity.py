@@ -1,6 +1,7 @@
 """Intake parity (owner ruling 2026-10-27): the in-app Photo and
 Voice doors call the Meta API — including in the demo household,
 where they work live and persist nothing."""
+from tests.conftest import one_list
 import io, json, os, tempfile, unittest, wave
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -145,6 +146,7 @@ class TestDemoDoors(unittest.TestCase):
 
     def test_demo_list_photo_adds_to_the_sandbox_only(self):
         before = self._disk()
+        one_list(self.c)        # every item on a list: the demo visitor makes one
         r = self.c.post("/api/list/from-photo", content=b"\xff\xd8\xff fake",
                         headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 200, r.text)
@@ -165,6 +167,7 @@ class TestDemoDoors(unittest.TestCase):
         self.assertEqual(self.c.post("/eyes/photo", content=b"\xff\xd8",
                                      headers={"Content-Type": "image/jpeg"}).status_code, 403)
         # typing and the cart work in the sandbox
+        one_list(self.c)
         self.assertEqual(self.c.post("/api/list/add", json={"name": "milk"}).status_code, 200)
         self.assertEqual(self.c.post("/api/list/from-text",
                                      json={"text": "milk, eggs"}).status_code, 200)

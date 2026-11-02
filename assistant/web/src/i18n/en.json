@@ -3688,6 +3688,7 @@
         "s4": "Tap the microphone to say it, or the camera to read a paper list.",
         "n1": "Tap the circle to tick an item off as you shop.",
         "n2": "Tap an item to change its name, amount or unit, add a note, move it or delete it.",
+        "n3": "Every item lives on a list. With one list, adds go straight to it; with more, Arya asks which list. No list yet? Make one first.",
         "cta": "Open Lists"
       },
       "ask": {

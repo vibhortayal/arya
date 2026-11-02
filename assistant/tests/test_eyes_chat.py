@@ -143,7 +143,8 @@ class TestChat(unittest.TestCase):
         self.c.post("/auth/setup", json={"username": "owner", "password": "pw"})
 
     def test_chat_answers_and_applies(self):
-        r = self.c.post("/api/chat", json={"messages": [{"role": "user", "content": "we finished the yogurt"}]})
+        r = self.c.post("/api/chat", json={"messages": [{"role": "user", "content": "we finished the yogurt"}],
+                                           "context": {"list": "Trader Joe's", "list_id": "l-demo-tj"}})
         self.assertEqual(r.status_code, 200)
         d = r.json()
         self.assertIn("Greek Yogurt 32 oz", " ".join(d["applied"]))
