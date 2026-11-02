@@ -1,4 +1,4 @@
-# Multilingual Ask Arya (spec, owner request 2026-10-29)
+# Multilingual Ask Arya (spec, my request 2026-10-29)
 
 Ask Arya answers in the language the user writes in, and acts on
 facts stated in any language. The answering layer is already a
@@ -27,7 +27,7 @@ The mechanism is language-general; these three are what we verify.
 Backend and Ask logic are built (this spec's §1, §2, §3 server side).
 All front-end work (Profile Language row, the one-time "Reply in
 Español?" offer, speech-output language, strings) is handed to the
-React port ("Improve Arya look and feel" thread), by the owner's rule.
+React port ("Improve Arya look and feel" thread), by my rule.
 Found while building: item ids and the dedupe key were ASCII-only, so
 every Hindi item shared the id `manual-` (and Ask could not add one);
 `item_slug` in `api/list/intake.py` fixes both. §3 is done server side

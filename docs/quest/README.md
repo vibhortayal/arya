@@ -45,6 +45,6 @@ camera scan maps it for every shopper after you.
 | [PITCH.md](PITCH.md), [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | Pitch and spoken script |
 | [BUSINESS.md](BUSINESS.md) | Who it is for and who else is out there |
 | [BUILD-PLAN.md](BUILD-PLAN.md), [SUBMISSION.md](SUBMISSION.md) | Road to Nov 4, checklist |
-| [DISCUSSION.md](DISCUSSION.md) | The owner's steering, in order |
+| [DISCUSSION.md](DISCUSSION.md) | My steering, in order |
 
 Current state: `STATUS.md` at the repo root.

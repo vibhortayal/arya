@@ -41,7 +41,7 @@ Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's l
 **Suggested for** the store where they are usually bought; tap one to
 see why. A **Muse Spark 1.3**
 staple judge decides which items may be suggested (precision 0.79
-against a purchase-cadence proxy on the owner's receipts).
+against a purchase-cadence proxy on my receipts).
 
 ---
 

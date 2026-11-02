@@ -8,7 +8,7 @@ Shoppers: the people who keep a household or a group fed and remember what is ru
 
 ## The problem, and why it is ours
 
-Keeping track of groceries is a small job that never ends. You remember the list, then forget it at the store; you buy what you already have; you cannot say where the money went. The owner of this project had this problem personally, so Arya was built to fix it for ourselves first and then for everyone who shops the same way.
+Keeping track of groceries is a small job that never ends. You remember the list, then forget it at the store; you buy what you already have; you cannot say where the money went. I had this problem personally, so I built Arya to fix it for myself first and then for everyone who shops the same way.
 
 ## What it does about it
 

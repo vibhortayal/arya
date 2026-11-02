@@ -1,12 +1,12 @@
 # Who it is for, and who else is out there
 
-Companion to PITCH.md (the story) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md) (why Arya exists). Originally written 2026-10-27; reworked 2026-11-02, when the owner decided there is no plan to make money for now. The goal is that people use Arya and help each other.
+Companion to PITCH.md (the story) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md) (why Arya exists). Originally written 2026-10-27; reworked 2026-11-02, when I decided there is no plan to make money for now. The goal is that people use Arya and help each other.
 
 ## Who it is for
 
 Shoppers: the people who keep a household or a group fed. First parents and households, who feel the problem most; then anyone who shares a list. Built and tested with US receipts, dollars and stores first; other markets not tested.
 
-## The four pillars (the owner's words, 2026-10-27)
+## The four pillars (my words, 2026-10-27)
 
 1. **Gamification**: it makes a chore fun.
 2. **Google Maps, but for a grocery store**: the indoor map layer.

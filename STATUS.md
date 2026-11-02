@@ -6,9 +6,9 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
-- **Live commit:** not listed here (owner, 2026-11-01). `/health` shows the running commit (#359); deploy and rollback steps are in `assistant/docs/OPS.md`.
+- **Live commit:** not listed here (me, 2026-11-01). `/health` shows the running commit (#359); deploy and rollback steps are in `assistant/docs/OPS.md`.
 - **Own Meta key (#388):** screens merged, unfinished and switched off (`ARYA_BYOK` off); not used and not part of the demo. See `docs/DECISIONS.md`, 2026-11-02. `assistant/loops/2026-11-01-own-key-ui.md`.
-- **Judge review round (#380 to #387, merged):** eval evidence in `docs/evals/`, Known limits (one household, iPhone 17 Pro only) in README, judge playbook and submission draft; Spark and Wonder both in Standard mode (#380, #382); receipt photo reader default is Auto, Spark first with Wonder re-reading a flagged receipt (#382); Ask acts on lists, reads receipts, keeps follow-ups and cooks (#384); install questions find the Home Screen steps (#383); a coordinator relay counts as the owner's word for every role (#385); demo beats match video script v4 and the judge playbook says what happens at a budget gate (#386); portal copy for the submission (#387).
+- **Judge review round (#380 to #387, merged):** eval evidence in `docs/evals/`, Known limits (one household, iPhone 17 Pro only) in README, judge playbook and submission draft; Spark and Wonder both in Standard mode (#380, #382); receipt photo reader default is Auto, Spark first with Wonder re-reading a flagged receipt (#382); Ask acts on lists, reads receipts, keeps follow-ups and cooks (#384); install questions find the Home Screen steps (#383); a coordinator relay counts as my word for every role (#385); demo beats match video script v4 and the judge playbook says what happens at a budget gate (#386); portal copy for the submission (#387).
 - **Landing: Add Arya to your Home Screen (#378, merged):** the "apps coming soon" line is replaced by an install card (Install on Android when the browser offers it, steps for iPhone and Android); also in Settings, About Arya.
 - **Delete my account by emailed code (#377, merged):** a 6-digit code by email (10 minutes) confirms deletion for email and Google accounts; password accounts type the password; the Supabase copy is dropped too.
 - **Shopper's bottom bar (#367, merged):** see the bar entry below. `assistant/loops/2026-11-01-custom-bar.md`.
@@ -19,14 +19,14 @@ on `main`. A merge is not a deploy: the live site changes only after
 - **Names and suggestions (#353 to #357, #360, merged):** one readable store name per store; items shown as costco-NNN get real names; suggestions only for staples with a clear rhythm; Still good? asks only about fresh food that could still be at home; Today has a Next trip card (#350).
 - **Ask sees food dates (2026-11-01, merged):** Ask Arya now gets the saved pack dates, the Still good questions and the list's own prices first, so "What goes bad this week?" answers from data. `assistant/loops/2026-11-01-ask-food-dates.md`.
 - **Receipts search, Date and Sort (2026-11-01, merged):** search by store, person or amount; Date menu with presets and a custom range; Sort menu with Store A to Z; count, total and Clear on one line; pure filter code, no model calls. `assistant/loops/2026-11-01-receipts-filter.md`.
-- **Clean receipt names (2026-11-01, merged):** printed text such as "ORG BLACKBRY" becomes "Blackberries - Organic" in the name book, learned per item number; receipts and totals are not changed; unsure names go to To check; off until the owner runs `python -m harness.clean_names <account>` (dry run) then `--apply`; `--undo` puts every name back. `assistant/loops/2026-11-01-clean-names.md`.
+- **Clean receipt names (2026-11-01, merged):** printed text such as "ORG BLACKBRY" becomes "Blackberries - Organic" in the name book, learned per item number; receipts and totals are not changed; unsure names go to To check; off until I run `python -m harness.clean_names <account>` (dry run) then `--apply`; `--undo` puts every name back. `assistant/loops/2026-11-01-clean-names.md`.
 - **Quest first-visit skeleton (2026-11-01, merged):** the Quest tab draws grey cards in the home's shape while it loads, not a blank page. `assistant/loops/2026-11-01-quest-skeleton.md`.
 - **Re-audit server fixes (2026-11-01, merged):** per-request memo copies about 4x faster; list add, paste, import and new list run off the event loop (paste no longer holds every request during its model call). `assistant/loops/2026-11-01-reaudit-server.md`.
 - **Re-audit loading fixes (2026-11-01, merged):** one three.js (the build's); the worker precaches about 1.85 MB less; `/assets/` pictures answer from the cache and refresh behind; icons about half the size. `assistant/loops/2026-11-01-reaudit-loading.md`.
 - **Re-audit correctness fixes (2026-11-01, merged):** a lost session (a deploy drops demo sessions) returns to the start page with "Arya was updated. Start the demo again."; Quest keeps its 680 px column on a laptop; practice strollers stop under sheets; boot Today snapshot expires; group keeps clear on live events; the app checks for updates every 10 min. `assistant/loops/2026-11-01-reaudit-correctness.md`.
 - **Disk checks hermetic in tests (2026-10-31, merged):** the /health disk floor and the ops report's disk warning read the test host's free space, so 4 tests failed on any machine with a small temp filesystem; the tests now pin the floor or stub `disk_usage`, with no production change and the firing paths still covered. Full suite green (1546). `assistant/loops/2026-10-31-test-disk-hermetic.md`.
 - **Ops screen (2026-10-31, merged):** owner-only Settings row and screen: needs a look, disk and backup age, spend against caps, model calls with failures and slow calls, and switches (pause all paid reads, photo reader, demo live reads, registration, Unfreeze) kept in `site.json`. `assistant/loops/2026-10-31-ops-screen.md`, `assistant/docs/OPS.md`.
-- **Ops monitoring (2026-10-31, merged):** failed and slow model calls are now booked in the cost ledger (`ok:false`, `err`, `ms`); `/health` answers 503 on a full disk or unwritable data folder so an outside uptime check can alert; `python -m harness.ops report --email` is the owner's daily digest. VM setup and break-glass steps: `assistant/docs/OPS.md`. `assistant/loops/2026-10-31-ops-monitoring.md`.
+- **Ops monitoring (2026-10-31, merged):** failed and slow model calls are now booked in the cost ledger (`ok:false`, `err`, `ms`); `/health` answers 503 on a full disk or unwritable data folder so an outside uptime check can alert; `python -m harness.ops report --email` is my daily digest. VM setup and break-glass steps: `assistant/docs/OPS.md`. `assistant/loops/2026-10-31-ops-monitoring.md`.
 - **Speed and feel audit (2026-10-31, merged):** list taps are optimistic with Undo; the Quest 3D world draws only while something moves; Today is one `/api/today` read with a cache; Ask shows typing dots; an error boundary and a cache-first service worker for hashed files. `assistant/loops/2026-10-31-speed-feel-audit.md`.
 - **Receipts and Spending moved to Lists (2026-11-01, merged):** one group with Stores; Today keeps its Spending card. `assistant/loops/2026-11-01-receipts-to-lists.md`.
 - **Trips row on Today; Sign out up (2026-10-31, merged):** trips with no receipt are one Today row that opens Receipts, not cards in Settings; Sign out sits above Export and Delete. `assistant/loops/2026-10-31-settings-trips.md`.
@@ -60,15 +60,15 @@ on `main`. A merge is not a deploy: the live site changes only after
 - **Get the app (2026-10-29, PR #206):** landing header pill before Sign in on phones that can install Arya (iPhone steps sheet "Get the Arya app" or the Android prompt), jiggles every 8 s until tapped (glow with reduced motion); Today's add-to-Home-Screen card now shows from the first visit. `assistant/loops/2026-10-29-get-the-app.md`.
 - **First trip + Use soon (2026-10-30, #207):** Get started is now the first trip in four steps (list, store, start shopping, receipt; only the next one lit, "No rush" while waiting for the trip). After a receipt, Use soon names what can expire or go bad (rules only, $0) and opens one sheet to snap, pick or skip each date; Not now waits for the next receipt, two Not nows stop it. The empty "Add a use-by date" card is gone; by hand: Settings › Arya's powers › Use soon › Add a date.
 - **Relevant cards (2026-10-30):** a card shows only when it says something true now. Today: empty lists fold into one row; the Quest nudge waits for a list with items; the tip line is a real price finding (or a power one step from on, else nothing); Still good? skips what the receipt card asks; Cheaper elsewhere only for items on a list; Running low drops rows already on a list; the receipts date only when a week old. Ask chips come from the data (Map my store stays); no repeated demo note. Settings: no zero scores, receipts say who sees them. Spending empty page has Add a receipt. Quest rows went to the Quest thread.
-- **Guide in the owner's sections (2026-10-30):** "See how it works" is eight cards: a list for every store, share lists with your household (shop together or apart, in sync), store maps, store news, receipts (returns and recall refunds), prices (own plus Arya shoppers), reduce food waste, Ask Arya. The "Groceries, sorted." and Quest cards are gone, and Quest is no longer called "optional" (first-run tour, Today nudge). `web/src/guide/cards.ts`.
+- **Guide in my sections (2026-10-30):** "See how it works" is eight cards: a list for every store, share lists with your household (shop together or apart, in sync), store maps, store news, receipts (returns and recall refunds), prices (own plus Arya shoppers), reduce food waste, Ask Arya. The "Groceries, sorted." and Quest cards are gone, and Quest is no longer called "optional" (first-run tour, Today nudge). `web/src/guide/cards.ts`.
 - **Guide steps, no links out (2026-10-30):** "See how it works" is eight cards (the Quick how-tos card is gone); each has a short line and 2 to 4 numbered steps that use the app's own button names. No Try it, no Practice Market link, no Start my group: the guide keeps you on the cards. "Replay the tour" is the last card's closing action. `web/src/guide/cards.ts`.
 - **UI/UX pass, part 1 (2026-10-30):** accent is now #C2410C (passes 4.5:1); photo pickers are keyboard reachable; tab bar fits at 200% zoom; one 44pt `.linkbtn` rule and a 44pt check hit area; Lists shows skeleton rows and a Retry on failure, Ask has a Try again chip; pushed pages keep their parent tab lit (`PARENT_TAB`, `aria-current`); Receipts has an Add receipt pill, dates read like Tue, Oct 27, and a return-only row reads "Return · −$12.30"; Settings has one Preferences row, Export in ink and Delete in danger red; titles are `h1`; character art is 512px (1.8 MB to 0.2 MB). Today order, ticked rows and New list stores wait on mockups. Caddy already gzips (the review ran without it).
-- **Landing cards (2026-10-30, owner option A):** the logged-out landing shows eight flip cards in the guide's order: a list for every store (with learns your habits), share with your household, map your store, store news, see where money goes, know where it's cheaper, reduce food waste (expires or goes bad), just ask Arya. The page is a little taller than a 664 px phone: the buttons are one scroll away. `web/src/screens/Login.tsx`.
+- **Landing cards (2026-10-30, my option A):** the logged-out landing shows eight flip cards in the guide's order: a list for every store (with learns your habits), share with your household, map your store, store news, see where money goes, know where it's cheaper, reduce food waste (expires or goes bad), just ask Arya. The page is a little taller than a 664 px phone: the buttons are one scroll away. `web/src/screens/Login.tsx`.
 - **Lists fixes (2026-10-30):** new accounts can tick items; a known item typed inside a list lands on that list, a ticked one comes back, and the toast names what happened; quest grabs tick the list; the phone's Back stays in the app; long press picks one row; "3 avocados" and "1.5 lb salmon" parse; a photo add files to the open list; a list named after a store links it. `assistant/loops/2026-10-30-lists-qa-fixes.md`.
-- **Expiry wording (2026-10-30):** owner: "goes off" doesn't land; every expiry string now says "what to use before it expires or goes bad".
+- **Expiry wording (2026-10-30):** me: "goes off" doesn't land; every expiry string now says "what to use before it expires or goes bad".
 
 ## Owner registration toggle (2026-10-29, merged)
-- Registration is a flag the owner flips live in Profile (Account
+- Registration is a flag I flip live in Profile (Account
   group, owner only): GET/POST `/auth/registration`; the choice is
   stored in `site.json` in the data root and overrides the
   ARYA_REGISTRATION_OPEN env default once set. The owner account is
@@ -213,7 +213,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
 - **Landing: Add Arya to your Home Screen (2026-11-01):** the "apps coming soon" line and store badges are replaced by a card with Install or Show me how; the steps sheet switches between iPhone and Android; Help topic "Put Arya on your Home Screen". `assistant/loops/2026-11-01-add-to-home.md`.
-- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Customize navigation tab" (the owner's 2026-11-02 name, was "Make the bar yours") points at its button; Today's line follows the navigation tab; a full one greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
+- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Customize navigation tab" (my 2026-11-02 name, was "Make the bar yours") points at its button; Today's line follows the navigation tab; a full one greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
@@ -242,20 +242,20 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   steps; the Try-it sheets were removed 2026-10-30). It opens from
   Help tab > Guide, Powers > See how it works, and the last first-run
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
-- **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
+- **Guide edits (2026-11-02, me):** card order is now lists, share, running low,
   news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
   navigation tab, powers, settings. "tick" became "check off" (card and the Start shopping
   link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
-  reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, the owner's words for the bottom bar). On 2026-11-02 the owner renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
+  reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, my words for the bottom bar). On 2026-11-02 I renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
 
-- **Kroger aisle hints (documented 2026-11-02, owner):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
+- **Kroger aisle hints (documented 2026-11-02, me):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
 
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
   `2026-10-29-supabase-signin.md`. Not tried against the live project.
   Sign-in by code or Google works for: an existing account, an address the
-  owner approved from the waitlist, or anyone while the owner's Registration
+  I approved from the waitlist, or anyone while my Registration
   switch is open (and `ARYA_SUPABASE_SIGNUP` is not 0). Approving is for the
   accounts listed in `ARYA_WAITLIST_ADMINS` (separate from the owner setting;
   unset means nobody): `GET /auth/waitlist/list`, `POST /auth/waitlist/approve`
@@ -265,7 +265,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Push reminders:** `ARYA_PUSH_REMINDERS=1` plus VAPID keys and a daily
   cron line; steps in `assistant/docs/PUSH-REMINDERS.md`.
 - **Groups** (share lists and receipts with your home): ON by default in
-  compose since 2026-10-29 (owner); `ARYA_GROUPS=0` in `deploy/.env` turns it off.
+  compose since 2026-10-29 (me); `ARYA_GROUPS=0` in `deploy/.env` turns it off.
   Profile > Group: start, invite by a 6-letter code (48 h), join, leave.
   Lists and product knowledge live in the group; receipts stay with whoever
   filed them and every member sees them. Leaving copies the lists.
@@ -280,7 +280,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `assistant/deploy/docker-compose.yml` (PR #106). Set them in
   `deploy/.env` and rebuild.
 
-## Owner steps to ship what is merged
+## My steps to ship what is merged
 1. On the VM: `git pull`, then `docker compose up -d --build` in
    `assistant/deploy`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
@@ -296,7 +296,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
    reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
-- Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), owner
+- Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), my subset
   32/32, combined 93.85%, arithmetic 7/7. One silent price rotation
   recorded; the review queue is the mitigation.
 - Photo decode reads with Muse Wonder 1.0 (90 s bound, Spark
@@ -304,12 +304,12 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   2026**. Proof run 97/98 after adjudication, $1.12.
 
 ## Remaining for submission
-- Demo video and the final submission package (owner go-ahead).
-- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; owner turns it on and reruns the demo household.
-- Demo end sheet and feedback door (PR #205): "Finish demo" in the demo bar opens a thank-you + feedback (email required) sheet; notes land in the owner's Feature request inbox. The demo tour (next) opens it at its last step.
-- Deploy what is merged (owner steps above), including the Demo Town switch
+- Demo video and the final submission package (my go-ahead).
+- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; I turn it on and reruns the demo household.
+- Demo end sheet and feedback door (PR #205): "Finish demo" in the demo bar opens a thank-you + feedback (email required) sheet; notes land in my Feature request inbox. The demo tour (next) opens it at its last step.
+- Deploy what is merged (my steps above), including the Demo Town switch
   if wanted.
-- Owner phone pass on the list-first build after deploy.
+- My phone pass on the list-first build after deploy.
 
 ## Known gaps
 - Store news and the Friends/Store/Global boards read this account
@@ -324,14 +324,14 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   (routes live in `api/routes/`).
 - The demo bar is still tall on small phones (design pass follow-up).
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
-  (Actions tab, Run workflow), by the owner's choice.
-- Photo opt-in and privacy policy: after the hackathon (owner).
+  (Actions tab, Run workflow), by my choice.
+- Photo opt-in and privacy policy: after the hackathon (me).
 - Use your own Meta key (#391, #393) is unfinished and switched off on purpose.
-  The owner decided not to use it (2026-11-02). The code is in the repo but it is
+  I decided not to use it (2026-11-02). The code is in the repo but it is
   not part of the demo: with `ARYA_KEY_VAULT_SECRET` unset the Settings row, Help
   topic, Ask answer and sign-up door stay hidden. `docs/ROADMAP.md`.
 
-## Owner data (not in this repo)
+## My data (not in this repo)
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged
 in the Hatch workspace `meta-hackathon-2026/imports/costco-json/`.
 Raw files stay out of git.

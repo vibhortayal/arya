@@ -16,7 +16,7 @@
 ## Build for Your World
 
 - **What Arya is.** A grocery list that learns from your receipts, then mostly writes itself.
-- **Why we built it.** The owner had this problem: carrying the list in their head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. [Principles and goals](docs/PRINCIPLES.md)
+- **Why we built it.** I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. [Principles and goals](docs/PRINCIPLES.md)
 - **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
 
 <p align="center">
@@ -142,7 +142,7 @@ sample buttons still work.
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 
 Every live call goes through `assistant/api/meta_client.py` and is booked
-in a cost ledger with model, tokens and cost; the owner's Ops screen shows
+in a cost ledger with model, tokens and cost; the Ops screen shows
 the day's spend. Spark and Wonder both run in Meta's Standard mode. No store
 ships pre-mapped and the demo never reaches disk.
 
@@ -271,7 +271,7 @@ Tests, from the repo root:
   87 of 98. Muse Spark on the same set: 92 of 98. Record:
   `assistant/loops/2026-10-27-wonder-decode.md`.
 - **Gate 0, before Wonder (Muse Spark).** Public set 90 of 98 lines
-  (91.84%), owner subset 32 of 32, combined 122 of 130 (93.85%). One silent
+  (91.84%), my subset 32 of 32, combined 122 of 130 (93.85%). One silent
   price rotation got through. It is recorded, and the review queue is the
   mitigation.
 - **Open weights.** Muse Spark Open (hosted on Baseten) and hosted Spark labeled the same 32
@@ -281,8 +281,8 @@ Tests, from the repo root:
   is why names advise and purchase facts decide.
   `assistant/loops/2026-10-28-open-weights.md`.
 - **Staple judge.** Precision 0.79 against a purchase-cadence proxy on the
-  owner's 114 receipts.
-- **Owner corpus.** 114 receipts, 1,226 lines, 114 of 114 passing the
+  my 114 receipts.
+- **My corpus.** 114 receipts, 1,226 lines, 114 of 114 passing the
   arithmetic check.
 
 The scored reports and the Gate 0 labels and results are in
@@ -301,11 +301,11 @@ The scored reports and the Gate 0 labels and results are in
 
 ## After the hackathon
 
-What ships now is a limited-scope MVP. These are ideas the owner is thinking
-about for where Arya could go; they are not commitments, and he needs more time
+What ships now is a limited-scope MVP. These are ideas I am thinking
+about for where Arya could go; they are not commitments, and I need more time
 to figure them out. Nothing in this list is built, except one thing that is
 built but switched off on purpose: **Use your own Meta key**. The code is in
-this repo and tested, but it is unfinished, the owner decided not to use it,
+this repo and tested, but it is unfinished, I decided not to use it,
 and it is not part of the demo. The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
 
 - **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
@@ -339,7 +339,7 @@ Everything here was built in the hackathon window, which opened on Oct 27,
 ledger, patterns, the first PWA) was written by Muse Wonder in a separate
 spike session and committed here in stages over about 30 minutes, which is
 why the early commits arrive so fast. The session logs in `assistant/loops/`
-record the rest. The owner's 114 receipts (back to 2023) are the owner's
+record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.
 
 ## Characters

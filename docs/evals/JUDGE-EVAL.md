@@ -1,5 +1,5 @@
-> Staple-judge evaluation, 2026-10-27, on the owner's own 114 Costco receipts
-> (shared with the owner's approval). The raw receipts and state files are not in this repo.
+> Staple-judge evaluation, 2026-10-27, on my own 114 Costco receipts
+> (shared with my approval). The raw receipts and state files are not in this repo.
 
 # Staple-judge accuracy — one defensible number
 
@@ -17,7 +17,7 @@ dominated by slow-cycle consumables bought 3 times, and only one admit
 
 ## Method (stated before the numbers)
 
-- **Data.** The owner's live state, copied read-only from the Oracle VM
+- **Data.** My live state, copied read-only from the Oracle VM
   (Docker volume `arya-data`, per-user dir): 114 real Costco receipts,
   2023-10-25 → 2026-10-26; the dictionary (458 entries); and `judged.json`,
   the judge's cached verdicts. No model calls were made; spend $0.
@@ -96,11 +96,11 @@ pistachios, pine nuts, pumpkin seeds) are the arguable cases: a human
 might call them staples; the judge calls a 150–250-day median gap
 "occasional," and under its own prompt that is a defensible call.
 
-## Second signal: owner behavior
+## Second signal: my behavior
 
-- **Flags:** the owner's state has no `flags.json` — he has recorded no
+- **Flags:** my state has no `flags.json` — I have recorded no
   list edits (no "never suggest", no dismissals, no manual adds) against
-  the judge's output. There is therefore no owner-vs-judge settlement
+  the judge's output. There is therefore no me-vs-judge settlement
   signal to report; absence of overrides is noted, not scored.
 - **The live list:** the cart prepared from the current smart list holds
   5 items. The 4 pattern-surfaced items — Organic Raspberry, Mandarins,
@@ -108,8 +108,8 @@ might call them staples; the judge calls a 150–250-day median gap
   the first judge sweep) — are **all corroborated proxy staples at the
   primary setting (4/4)**. The fifth, Power Up Mega Omega Trail Mix, is
   judge-admitted (STAPLE, 3 buys at a 23-day median gap) and sits in the
-  proxy-miss group above by one month of spread — owner behavior (it is
-  on his active list, qty 2) sides with the judge.
+  proxy-miss group above by one month of spread — my behavior (it is
+  on my active list, qty 2) sides with the judge.
 
 ## Sensitivity and how to read the headline
 
@@ -136,4 +136,4 @@ attached, never bare.
   scores the judge's `list_ok`, which is the judge's own decision, not
   the seasonal gate's.
 
-*Analysis: analysis script and state copies are kept out of the repo (owner data).*
+*Analysis: analysis script and state copies are kept out of the repo (my data).*
