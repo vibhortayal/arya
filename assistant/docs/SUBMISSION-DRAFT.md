@@ -29,7 +29,7 @@ ask Arya questions, and, if you like, turn the trip into a game.
 
 - **What Arya is.** A grocery list that learns from your receipts, then mostly
   writes itself.
-- **Why we built it.** I had this problem: carrying the list in my
+- **Why I built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
   mental space. Arya is free to use and made for shoppers to help each other;
   households and groups share lists. It costs money to keep running (the AI
