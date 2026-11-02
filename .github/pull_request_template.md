@@ -25,7 +25,7 @@
 
 ## Docs for readers
 <!-- Only for new or rewritten README, SUBMISSION, PITCH-SCRIPT, JUDGE-PLAYBOOK, DEMO, USER-JOURNEYS or the privacy page. The Editor ticks these. Otherwise "n/a". -->
-- [ ] Privacy wording rule (AGENTS.md rule 1): nothing says Meta may use or train on what users send
+- [ ] Privacy wording rule (AGENTS.md rule 1): only the Standard-mode line about Meta's models; nothing more about what a provider does with content
 - [ ] Names as decided in docs/DECISIONS.md, latest entry wins
 - [ ] Nothing advertises a feature that is not live (own key, community prices, replay mode, anything "Planned")
 - [ ] Every outside claim is linked; unchecked ones say so

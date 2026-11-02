@@ -412,7 +412,7 @@ Each agent has a narrow job and a named limit.
   the `arya` Postgres schema when `ARYA_BACKUP_DATABASE_URL` is set in
   `deploy/.env`) into `~/arya-backups`, keeping the newest 7 of each.
   Install once on the VM with `crontab -e`:
-  `17 3 * * * /home/ubuntu/arya/assistant/deploy/backup.sh >> /home/ubuntu/arya-backup.log 2>&1`
+  `17 3 * * * /path/to/arya/assistant/deploy/backup.sh >> /path/to/arya-backup.log 2>&1`
   Check it with `ls -l ~/arya-backups` the next morning.
 - **Off-VM copy.** A backup on the same disk dies with the VM. Install
   rclone (`sudo apt install rclone`), run `rclone config` once to add a
