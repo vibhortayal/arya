@@ -70,8 +70,6 @@ The rest of this page is the full story.
 
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed; the dated timeline is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md).
-
 **Rome wasn't built in a day.** A community can't be built inside one hackathon. What I finished is the foundation: the more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. The more people use it, the more it gives back to them.
 
 ## Live demo
@@ -88,7 +86,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
 | If you want to know... | Read |
 |---|---|
-| Built in the hackathon window: what was made and when, then every feature with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
+| What was made and when, then every feature with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
 | What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
@@ -156,7 +154,7 @@ loop on a phone. The window should be about 390 px wide.
 
 ## What is in it
 
-The full feature list, with why each matters, is [Built in the hackathon window](docs/WHAT-WE-BUILT.md). Two things a judge cannot get elsewhere:
+The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). Two things a judge cannot get elsewhere:
 
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
@@ -307,13 +305,12 @@ and it is not part of the demo. The ideas, grouped in [`docs/ROADMAP.md`](docs/R
 
 ## How this was built
 
-Everything here was built in the hackathon window, which opened on Oct 27,
-2026. The idea search took about two days; its commits in a separate research
-repo start on Oct 26. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
-older. The engine (decode, dictionary, ledger, patterns, the first phone app)
+The first commit here is Oct 27, 15:13 ET, nothing in this repo is older, and
+1000+ commits followed. The idea search took about two days; its commits in a
+separate research repo start on Oct 26. The engine (decode, dictionary, ledger, patterns, the first phone app)
 landed in four commits between 15:31 and 15:38. Muse Code, running Muse Wonder, wrote that
 engine with me (my account); git lists the commits under the author name "Spark". The dated table
-is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
+is on the [build page](docs/WHAT-WE-BUILT.md). The session logs
 in `assistant/loops/` record the rest.
 
 

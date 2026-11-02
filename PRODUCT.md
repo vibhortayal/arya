@@ -1,6 +1,6 @@
 # PRODUCT — Arya
 
-> **Early product description (2026-10-27).** The navigation tab and some details have changed since; for what is built today read [Built in the hackathon window](docs/WHAT-WE-BUILT.md) and [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
+> **Early product description (2026-10-27).** The navigation tab and some details have changed since; for what is built today read the [dated build page](docs/WHAT-WE-BUILT.md) and [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
 Derived from my approved brief (assistant/docs/SPEC.md and
 VISION.md), 2026-10-27. Where this file and the spec disagree, the spec wins.
