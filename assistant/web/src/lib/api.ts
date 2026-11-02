@@ -40,6 +40,8 @@ function deadline(ms: number): AbortSignal | undefined {
   return typeof T === "function" ? T.call(AbortSignal, ms) : undefined;
 }
 
+export const OFFLINE_WRITE = "You're offline. You can look at your lists as last saved, but changes need a connection. Try again when you're back online.";
+
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const write = !!opts?.method && opts.method !== "GET";
   if (write) {
@@ -47,6 +49,9 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // boot.js's early Today is from before this change (re-audit N5).
     if (typeof window !== "undefined" && window.__bootData) window.__bootData.today = undefined;
   }
+  // Offline stays read-only (owner's group test, 2026-11-01): a change
+  // made with no signal says so plainly, at once, instead of waiting.
+  if (write && typeof navigator !== "undefined" && navigator.onLine === false) throw new TypeError(OFFLINE_WRITE);
   let r: Response;
   const headers = new Headers(opts?.headers || {});
   headers.set("X-Arya-Client", CLIENT_ID);
@@ -57,7 +62,7 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // offline outbox keys on it) but reads as what it is.
     if ((e as Error)?.name === "TimeoutError") throw new TypeError("The connection is too slow right now — try again in a moment.");
     if ((e as Error)?.name === "AbortError") throw e;
-    throw new TypeError("No connection right now — try again when you're back online.");
+    throw new TypeError(write ? OFFLINE_WRITE : "No connection right now. Try again when you're back online.");
   }
   if (!r.ok) {
     const detail = (await r.json().catch(() => ({}))).detail;

@@ -3,6 +3,7 @@ import json
 import logging
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -216,7 +217,7 @@ async def decode_pdf(req: Request):
     except ValueError as e:
         raise HTTPException(422, str(e))
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     _need_receipt_date(receipt)
     dup = state.find_duplicate(receipt)
     if dup is not None:
@@ -258,7 +259,7 @@ async def decode_photo_route(req: Request):
                                           media_type=media)
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt photo model error (%s)", str(e)[:120])
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     try:
         _need_receipt_date(receipt)
     except HTTPException:
@@ -317,6 +318,6 @@ async def transcribe_route(req: Request):
         raise HTTPException(422, str(e))
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: voice model error (%s)", str(e)[:120])
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     return {"text": out["text"], "duration_s": out["duration_s"],
             "model": "muse-voice-transcribe-1.0", "demo": demo}

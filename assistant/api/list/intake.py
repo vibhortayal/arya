@@ -109,6 +109,13 @@ def _lead(s):
             break
     if s.lower().startswith("some "):
         s = s[5:]
+    # Spoken numbers ("two lemons" from the mic or Ask): the digit, so the
+    # count parsers below read it like a typed "2 lemons".
+    m = _NUM_WORD_HEAD.match(s)
+    if m:
+        digit = str(_NUM_WORDS[m.group(1).lower()]) + " " + s[m.end():]
+        if _COUNT_HEAD.match(digit):   # "one percent milk" stays a name
+            s = digit
     return s
 
 
@@ -130,6 +137,9 @@ _QTY_HEAD = re.compile(r"^(\d+)\s*[x×]\s+")
 # with a number ("2 percent milk", "7 up", "12 grain bread").
 _COUNT_HEAD = re.compile(r"^(\d{1,2})\s+(?!(?:percent|pct|up|grain|bean|spice|layer|minute|inch)\b)(?=[^\W\d_])", re.I)
 UNIT_MAX = 16
+_NUM_WORDS = {w: i + 1 for i, w in enumerate(
+    "one two three four five six seven eight nine ten eleven twelve".split())}
+_NUM_WORD_HEAD = re.compile(r"^(" + "|".join(_NUM_WORDS) + r")\s+(?=[^\W\d_])", re.I)
 
 
 def clean_unit(unit):
