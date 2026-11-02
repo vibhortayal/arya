@@ -305,7 +305,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Remaining for submission
 - Demo video and the final submission package (my go-ahead).
-- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; I turn it on and reruns the demo household.
+- Demo Town (`ARYA_DEMO_TOWN`, see `assistant/docs/DEMO-TOWN.md`): built, off by default; I turn it on and rerun the demo household.
 - Demo end sheet and feedback door (PR #205): "Finish demo" in the demo bar opens a thank-you + feedback (email required) sheet; notes land in my Feature request inbox. The demo tour (next) opens it at its last step.
 - Deploy what is merged (my steps above), including the Demo Town switch
   if wanted.
