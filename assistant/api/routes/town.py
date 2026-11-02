@@ -16,6 +16,12 @@ def _need_town():
 
 @router.get("/api/town/hints")
 def town_hints():
+    # The demo asks once per visit; with the flag off it gets a plain
+    # "no town" (null) instead of a 404 in the console (performance
+    # report 2026-11-02, finding 7). A real account still gets 404.
+    from api import state
+    if not town.active() and state._current_user.get() == state.DEMO_USER:
+        return None
     _need_town()
     return town.hints()
 

@@ -1351,7 +1351,7 @@ export function Lists() {
           openLens(id);
         })} /> : null}
         <div className="group shopmodes">
-          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => pick("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("lists.startAQuest")}<span className="sub">{t("lists.shopQuestSub")}</span></span><span className="chev">›</span></button>
+          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => pick("quest")}><img className="rowface" src="/assets/scenes/storefront-thumb.webp" alt="" /><span className="hr-label">{t("lists.startAQuest")}<span className="sub">{t("lists.shopQuestSub")}</span></span><span className="chev">›</span></button>
           <button className="hubrow" type="button" data-shop="list" onClick={() => pick("list")}><span className="hr-label">{t("lists.shopJustList")}<span className="sub">{t("lists.shopJustListSub")}</span></span><span className="chev">›</span></button>
         </div>
         {shopMode === null ? <>

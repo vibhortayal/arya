@@ -5,7 +5,8 @@ import { useSession } from "../app/session";
 /* Demo Town (api/town.py): the demo household's simulated
  * neighbourhood. One payload with the stores, the list items' stock
  * and the "Near you today" lines. Off (null) for a real account and
- * when the server flag is off: the server answers 404 and we stop
+ * when the server flag is off: the server answers null (404 for a real
+ * account) and we stop
  * asking. Everything it carries is simulated and labelled so. */
 
 export type TownStore = {
@@ -35,8 +36,9 @@ const set = (t: Town | null) => { town = t; listeners.forEach(f => f()); };
 export function refreshTown(): Promise<void> {
   if (off) return Promise.resolve();
   if (pending) return pending;
-  pending = get<Town>("/api/town/hints")
-    .then(set, () => { off = true; set(null); })
+  pending = get<Town | null>("/api/town/hints")
+    // null: the town is off on this server; stop asking, as for an error.
+    .then(t => { if (!t) off = true; set(t || null); }, () => { off = true; set(null); })
     .finally(() => { pending = null; });
   return pending;
 }
