@@ -112,7 +112,7 @@ If a guideline conflicts with these, these win:
 - No commits to `main`. Every change goes through a PR based on `main`; commit messages are descriptive.
 - While iterating, run the tests for the area you touched. The Tester runs the
   full suite before merge — `cd assistant && ../.venv/bin/python -m unittest discover -s tests` —
-  and it must show no new failures versus `main` (about 12 to 24 tests already fail on `main`). Add tests with new logic. Create the venv once:
+  and it must show no new failures versus `main` (a full run on 2026-11-02 passed, 1 skipped). Add tests with new logic. Create the venv once:
   `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`.
   On the VM no setup is needed: the deploy container already has the
   dependencies (`docker exec deploy-api-1 …`).
