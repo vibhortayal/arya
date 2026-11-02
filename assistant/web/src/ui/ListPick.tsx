@@ -125,7 +125,7 @@ function ListPickSheet({ ask, finish }: { ask: Ask | null; finish: (p: Picked) =
         </div>
         {typing && <NameRow draft={draft} setDraft={setDraft} label={t("listPick.newListName")} />}
         {typing && <button className="btn primary wide" id="listpick-make" type="button" disabled={busy || !draft.trim()} onClick={() => make(draft, false)}>
-          {t("listPick.makeAndAdd", { name: draft.trim() || t("listPick.theList") })}</button>}
+          {draft.trim() ? t("listPick.makeAndAdd", { name: draft.trim() }) : t("listPick.makeListAndAdd")}</button>}
       </> : <>
         <p id="listpick-why">{t("listPick.firstWhy", { what })}</p>
         {stores === null ? <p className="muted">{t("common.loading")}</p> : <div className="group">
@@ -141,7 +141,7 @@ function ListPickSheet({ ask, finish }: { ask: Ask | null; finish: (p: Picked) =
         </div>}
         {typing && <NameRow draft={draft} setDraft={setDraft} label={t("listPick.storeName")} />}
         <button className="btn primary wide" id="listpick-make" type="button" disabled={busy || !chosen.trim()} onClick={() => make(chosen, true)}>
-          {t("listPick.makeAndAdd", { name: chosen.trim() || t("listPick.theList") })}</button>
+          {chosen.trim() ? t("listPick.makeAndAdd", { name: chosen.trim() }) : t("listPick.makeListAndAdd")}</button>
       </>}
       {offline && <p className="sub" id="listpick-offline">{t("listPick.offlineNote")}</p>}
       {err && <p className="sub bad" role="alert">{err}</p>}

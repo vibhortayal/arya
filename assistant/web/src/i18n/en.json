@@ -831,7 +831,7 @@
     "usual": "Usual for {{what}}",
     "newList": "+ New list",
     "newListName": "New list name",
-    "theList": "the list",
+    "makeListAndAdd": "Make the list and add it",
     "makeAndAdd": "Make the {{name}} list and add it",
     "firstTitle": "Make a list first",
     "firstWhy": "Every item goes on a store's list. Pick the store for {{what}}.",

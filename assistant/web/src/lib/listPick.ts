@@ -29,7 +29,13 @@ export function setListAsker(a: Asker | null) { asker = a; }
 export const askList = (need: NeedList): Promise<Picked> => asker ? asker(need) : Promise.resolve(null);
 
 type Home = { list?: { items?: { item_id: string; on_list?: boolean; list?: string | null }[] }; lists?: ListRef[] };
-const savedHome = () => savedRead<Home>("/api/home")?.data || null;
+/* The lists last saved on this phone: the Lists page's read, or the
+ * Today read (its "home" part), which is there right after sign-in. */
+const savedHome = (): Home | null => {
+  const h = savedRead<Home>("/api/home")?.data;
+  if (h?.lists) return h;
+  return savedRead<{ home?: Home | null }>("/api/today")?.data?.home || h || null;
+};
 
 /* The list an add will go on without asking, from what this phone
  * knows: the item's own list, or the only list. undefined: ask. */
