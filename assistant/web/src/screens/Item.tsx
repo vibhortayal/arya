@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { addItem } from "../lib/listPick";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
@@ -95,7 +96,10 @@ export function Item() {
             {d.on_list
               ? <button className="btn secondary" id="btn-add" type="button" disabled>{t("item.onYourList")}</button>
               : <button className="btn secondary" id="btn-add" type="button"
-                onClick={() => act(() => post("/api/list/add", { item_id: id }), t("common.addedToList"))}>{t("item.addToList")}</button>}
+                onClick={async () => {
+                  try { const out = await addItem(id, e ? e.canonical_name : id); if (out) setResult(out.list ? t("listPick.addedTo", { what: e ? e.canonical_name : id, list: out.list.name }) : t("common.addedToList")); }
+                  catch (er) { toast(er instanceof Error ? er.message : String(er)); }
+                }}>{t("item.addToList")}</button>}
             <button className="btn secondary" id="btn-never" type="button"
               onClick={() => act(() => post(`/api/items/${eid}/flag`, { never: true }), t("item.neverToast"))}>{t("item.neverSuggest")}</button>
             <button className="btn secondary" id="btn-expired" type="button"

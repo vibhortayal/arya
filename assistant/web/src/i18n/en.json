@@ -825,6 +825,35 @@
       "new": "Not enough buys yet for a pattern"
     }
   },
+  "listPick": {
+    "title": "Add {{what}} to…",
+    "why": "Tap a list. Every item lives on a list.",
+    "usual": "Usual for {{what}}",
+    "newList": "+ New list",
+    "newListName": "New list name",
+    "theList": "the list",
+    "makeAndAdd": "Make the {{name}} list and add it",
+    "firstTitle": "Make a list first",
+    "firstWhy": "Every item goes on a store's list. Pick the store for {{what}}.",
+    "shopMost": "You shop here most",
+    "another": "Another store…",
+    "storeName": "Store name",
+    "nameFirst": "Type a name first.",
+    "offlineMake": "Making a list needs a connection. Try again when you're back online.",
+    "offlineNote": "You're offline. The add waits on this phone and syncs when you're back online.",
+    "nItems_one": "{{count}} item",
+    "nItems_other": "{{count}} items",
+    "this": "this",
+    "addedTo": "Added {{what}} to {{list}}.",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteHas_one": "It has {{count}} item. Where should it go?",
+    "deleteHas_other": "It has {{count}} items. Where should they go?",
+    "moveTo": "Move them to {{name}}",
+    "deleteToo": "Delete them too",
+    "deleteList": "Delete list",
+    "whichFor": "Which list should {{what}} go on?",
+    "makeAList": "Make a list"
+  },
   "lists": {
     "queue": {
       "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
@@ -1158,8 +1187,8 @@
     },
     "changeStores": "Change stores",
     "storesUse": "Arya uses these for suggestions and quests",
-    "deleteMoves_one": "Its {{count}} item moves to Everything else",
-    "deleteMoves_other": "Its {{count}} items move to Everything else",
+    "deleteMoves_one": "It has {{count}} item; Arya asks where it goes",
+    "deleteMoves_other": "It has {{count}} items; Arya asks where they go",
     "hasNoItems": "It has no items",
     "itsHereNow": "It's here now",
     "theyreHereNow": "They're here now",
@@ -3688,7 +3717,7 @@
         "s4": "Tap the microphone to say it, or the camera to read a paper list.",
         "n1": "Tap the circle to tick an item off as you shop.",
         "n2": "Tap an item to change its name, amount or unit, add a note, move it or delete it.",
-        "n3": "Every item lives on a list. With one list, adds go straight to it; with more, Arya asks which list. No list yet? Make one first.",
+        "n3": "Every item lives on a list. With one list, adds go straight to it; with more, Arya asks which list. No list yet? Arya helps you make one first. Deleting a list that has items asks whether to move them to another list or delete them too.",
         "cta": "Open Lists"
       },
       "ask": {
