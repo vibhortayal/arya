@@ -97,6 +97,11 @@ through import and export.
 - Off-site backups with rclone (`ARYA_BACKUP_REMOTE` exists; no bucket is set
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
+- **Scale out as the community grows.** Today Arya is one server process on
+  one VM (see [Known limits](../README.md#known-limits)). The plan, not a
+  promise: make Postgres the master copy, move demo and session state out of
+  memory, run several processes, and move to a cloud provider in step with
+  the number of shoppers. Rome wasn't built in a day.
 
 ## Developer platform and integrations
 Starting point today: the Lists API and the developer portal at `/developers`
