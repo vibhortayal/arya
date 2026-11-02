@@ -41,4 +41,16 @@ describe("Quest home", () => {
     expect(container.querySelector(".qg-lvchip")).toBeNull();
     expect(container.querySelector("#qg-editbtn")).not.toBeNull();
   });
+
+  it("with no lists at all it asks for a list first, and only real lists get chips", () => {
+    const p = { ...emptyProfile(), weeks: ["2026-W40"] };
+    const { unmount } = render(<Home profile={p} newbie={false} list={null} lists={[]} onPractice={noop} onQuest={noop} onAlbum={noop} onAddItems={noop} />);
+    expect(screen.getByText("Create a list to start a quest")).toBeTruthy();
+    expect(screen.getByText("Create a list")).toBeTruthy();
+    expect(screen.queryByText(/Everything/)).toBeNull();
+    unmount();
+    const lists = [{ id: "a", name: "Costco", items: [{ name: "Milk" }] }, { id: "b", name: "Indian Store", items: [{ name: "Dal" }] }, { id: "c", name: "Empty", items: [] }];
+    render(<Home profile={p} newbie={false} list={lists[0]} lists={lists} onList={noop} onPractice={noop} onQuest={noop} onAlbum={noop} />);
+    expect(screen.getAllByRole("radio").map(b => b.textContent)).toEqual(["Costco · 1", "Indian Store · 1"]);
+  });
 });
