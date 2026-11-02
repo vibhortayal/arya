@@ -17,7 +17,7 @@
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
 </p>
-<p align="center"><em>Today and Lists in the demo household.</em></p>
+<p align="center"><em>Today and Lists in the demo household (a simulated neighborhood, labelled as such).</em></p>
 
 ## What it is
 
@@ -84,12 +84,12 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 ## Try it in one minute
 
 1. Open the demo. **Today** shows what is running low and why.
-2. Open **Lists**. Add an item by typing, with the mic, or with a photo of a handwritten note.
+2. Tap **More**, then **Lists**. Add an item by typing, with the mic, or with a photo of a handwritten note.
 3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 
-The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
+The bar at the bottom starts as Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
 
 ## What is in it
 
