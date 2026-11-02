@@ -4,6 +4,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import state
 from api.deps import _budget_guard, _int_field, _json_obj, new_client
 
@@ -116,7 +117,7 @@ async def review_smart_pass():
     (one Spark text call per 25 items; items already tried are skipped).
     The screen calls this when it opens, then reads /api/review again."""
     from api.dictionary import clean
-    if not os.environ.get("MODEL_API_KEY"):
+    if not own_key.model_ready():
         return {"suggested": await run_in_threadpool(clean.suggest_review, None)}
     _budget_guard()
     return {"suggested": await run_in_threadpool(clean.suggest_review, new_client())}

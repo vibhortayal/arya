@@ -6,6 +6,7 @@ from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import state
 from api.cart.build import approve
 from api.deps import _budget_guard, _json_obj, new_client
@@ -38,8 +39,7 @@ def _chat_image(raw):
 
 @router.post("/api/chat")
 async def chat_route(req: Request):
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     body = await _json_obj(req)
     from api.chat_service import chat as run_chat
