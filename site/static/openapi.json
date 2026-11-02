@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Arya Lists API",
-    "description": "Read and write your own Arya lists. Authenticate with your personal API token: Authorization: Bearer YOUR_CODE. New here? Start with the [quickstart](/developers). Make your code in Arya under Settings, Use Arya in another AI app. 600 calls an hour per account. Errors are {\"error\": {\"code\", \"message\"}}.",
+    "description": "Read and write your own Arya lists. Authenticate with your personal API token: Authorization: Bearer YOUR_CODE. New here? Start with the [quickstart](https://arya.teamnightshift.org/developers). Make your code in Arya under Settings, About Arya, Use Arya in Muse. 600 calls an hour per account. Errors are {\"error\": {\"code\", \"message\"}}.",
     "version": "1.0.0"
   },
   "servers": [

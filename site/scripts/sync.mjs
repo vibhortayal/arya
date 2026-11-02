@@ -171,8 +171,10 @@ for (const [section, items] of Object.entries(SECTIONS)) {
     }
     text = text.replace(/(\]\()([^)\s]+)(\))/g, (_, a, t, c) => a + rewrite(t, src, !IMG.test(t.split('#')[0]) ) + c);
     text = text.replace(/\b(src|href)="([^"]+)"/g, (_, k, t) => `${k}="${rewrite(t, src)}"`);
-    const fm = `---\nsidebar_label: ${JSON.stringify(label)}\nsidebar_position: ${++order}\n` +
-      `custom_edit_url: ${GH.replace('blob', 'edit')}${src}\n---\n\n`;
+    // Tab title = sidebar label; pages that open with an HTML <h1> keep it and hide the generated one.
+    const hide = /^\s*<h1/m.test(text.slice(0, 400)) ? 'hide_title: true\n' : '';
+    const fm = `---\ntitle: ${JSON.stringify(label)}\n${hide}sidebar_label: ${JSON.stringify(label)}\nsidebar_position: ${++order}\n` +
+      `custom_edit_url: ${GH}${src}\n---\n\n`;
     const dst = path.join(OUT, 'docs', `${route}.md`);
     fs.mkdirSync(path.dirname(dst), {recursive: true});
     fs.writeFileSync(dst, fm + text);
