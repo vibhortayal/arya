@@ -83,7 +83,7 @@ nobody has designed it yet. Sources are named so you can check them.
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
 - **Scale out as the community grows.** Today Arya is one server process on
-  one VM (see [Known limits](../README.md#known-limits)). The plan, not a
+  one VM (see [Known limits](../README.md#what-are-the-known-limits)). The plan, not a
   promise: make Postgres the master copy, move demo and session state out of
   memory, run several processes, and move to a cloud provider in step with
   the number of shoppers. Rome wasn't built in a day. The design, phase by

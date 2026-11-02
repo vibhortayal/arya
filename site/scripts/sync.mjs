@@ -150,6 +150,49 @@ function rewrite(target, fromSrc, withBase = true) {
 }
 
 let order = 0;
+// One line per page for llms.txt, written by hand so a tool reading the index gets a clear summary.
+const DESC = {
+  intro: 'What Arya is, how it works end to end, and which Meta model does which job.',
+  judges: 'One page for judges: how Arya fits the problem statement and the Indie track, impact, Meta model use, technical depth, the demo, and limits.',
+  'quest/judge-playbook': 'An eight-minute walk through the live demo, step by step, with what you see and which model is working.',
+  'what-we-built': 'What existed before the hackathon window, what was built in it and when, from git history.',
+  principles: 'Why Arya exists, who it is for, and the five principles behind it.',
+  'guide/user-journeys': 'Seven user journeys, from the first receipt to a shared household, with screens and sample data.',
+  'quest/overview': 'Quest, the optional game layer that turns a store trip into a hunt for list items.',
+  'quest/game-design': 'The design of the Quest hunt: rules, rewards, sound, and offline behaviour.',
+  'quest/map-my-store': 'How shoppers map a store aisle by aisle, and how maps merge across shoppers.',
+  'guide/agent-connector': 'How to use Arya from Muse and other AI agents over MCP, with a secure vault for access.',
+  'guide/multilingual-ask': 'How Ask Arya answers in the language you write in and acts on facts in any language.',
+  glossary: 'Plain-language definitions of the words Arya uses.',
+  'architecture/design-decisions': 'What is built, what is known to be weak, and the plan to grow past one server.',
+  'architecture/overview': 'How the app runs: the one-page map, storage, models, sync, security, and the design record.',
+  'architecture/scalability': 'A nine-phase plan for growing beyond one process, with rollback and a measure for each phase.',
+  'architecture/model-policy': 'Which model runs each job, how the cheapest model that passes its test is chosen, and the spend limits.',
+  'internal/index': 'How Arya was built by one person working with a team of AI agents, each with one job.',
+  'evals/index': 'Index of the measured results, with the files behind each number.',
+  'evals/gate-0': 'The first test of Muse Spark reading receipt photos, with settings and results.',
+  'evals/wonder-eval': 'How well Muse Wonder read the public receipt photos, line by line.',
+  'evals/judge-eval': 'How well the staple judge picks items to suggest, against a purchase-cadence check.',
+  'run-it-yourself': 'How to run Arya on your own computer with Docker and your own Meta API key.',
+  'try-the-features': 'A guided tour of the features on your own copy.',
+  'api/lists-api': 'Read and write your own Arya lists from another app or a script (Lists API v1).',
+  roadmap: 'Ideas for where Arya could go after the hackathon; not commitments.',
+};
+const llms = [];
+const full = [];
+// One plain sentence per page for llms.txt: the first prose paragraph, cleaned.
+function blurb(text) {
+  for (const para of text.split(/\n\s*\n/)) {
+    const t = para.trim();
+    if (!t || /^(#|<|!\[|\||[-*>]|\d+\.|_|\*|```)/.test(t)) continue;
+    const plain = t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '').replace(/\s+/g, ' ');
+    if (plain.length <= 160) return plain;
+    const cut = plain.slice(0, 160);
+    const stop = cut.lastIndexOf('. ');
+    return stop > 60 ? cut.slice(0, stop + 1) : cut.replace(/\s+\S*$/, '') + '...';
+  }
+  return '';
+}
 for (const [section, items] of Object.entries(SECTIONS)) {
   for (const [src, route, label] of items) {
     // 'FILE#heading-slug' takes one level-2 section of FILE (one owner for the text).
@@ -170,14 +213,42 @@ for (const [section, items] of Object.entries(SECTIONS)) {
     }
     text = text.replace(/(\]\()([^)\s]+)(\))/g, (_, a, t, c) => a + rewrite(t, file, !IMG.test(t.split('#')[0]) ) + c);
     text = text.replace(/\b(src|href)="([^"]+)"/g, (_, k, t) => `${k}="${rewrite(t, file)}"`);
-    const fm = `---\nsidebar_label: ${JSON.stringify(label)}\nsidebar_position: ${++order}\n` +
+    const pageDesc = DESC[route] || blurb(text.replace(/^---[\s\S]*?---\n/, '').replace(/^#\s.*\n/, ''));
+    const fm = `---\nsidebar_label: ${JSON.stringify(label)}\ndescription: ${JSON.stringify(pageDesc)}\nsidebar_position: ${++order}\n` +
       `custom_edit_url: ${GH.replace('blob', 'edit')}${src}\n---\n\n`;
     const dst = path.join(OUT, 'docs', `${route}.md`);
     fs.mkdirSync(path.dirname(dst), {recursive: true});
     fs.writeFileSync(dst, fm + text);
+    full.push([label, route, text]);
+    llms.push([section, label, route, pageDesc]);
   }
 }
 fs.writeFileSync(path.join(OUT, 'sections.json'), JSON.stringify(
   Object.fromEntries(Object.entries(SECTIONS).map(([k, v]) => [k, v.map((i) => `${i[1]}`)]))));
 fs.writeFileSync(path.join(OUT, 'scrub-report.txt'), Object.entries(counts).map(([k, v]) => `${k} x${v}`).join('\n') + '\n');
+// llms.txt: a short index of the site for tools that read docs, built from the same list as the sidebar.
+const siteUrl = (process.env.DOCS_URL || '').replace(/\/$/, '') + BASE;
+const llmsOut = ['# Arya', '',
+  '> Arya learns how you shop from your receipts and helps shoppers help each other. Meta models read the receipts, plain code checks the arithmetic, and shoppers share lists and store maps. Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).', ''];
+let lastSection = '';
+for (const [section, label, route, desc] of llms) {
+  if (section !== lastSection) { if (lastSection) llmsOut.push(''); llmsOut.push(`## ${section}`, ''); lastSection = section; }
+  llmsOut.push(`- [${label}](${siteUrl}docs/${route})${desc ? `: ${desc}` : ''}`);
+}
+fs.writeFileSync(path.join(OUT, 'static', 'llms.txt'), llmsOut.join('\n') + '\n');
+
+// llms-full.txt: every page in one file, after the same scrub; the leak guard runs on all of it.
+const routes = new Set(llms.map((l) => l[2]));
+const fullOut = ['# Arya: full documentation', ''];
+const broken = [];
+for (const [label, route, body] of full) {
+  if (LEAK.test(body)) throw new Error(`sensitive text in published page ${route}: ${body.match(LEAK)[0]}`);
+  for (const m of body.matchAll(/\]\(([^)\s]+)\)/g)) {
+    const t = m[1].split('#')[0];
+    if (t.startsWith(`${BASE}docs/`) && !routes.has(t.slice(`${BASE}docs/`.length))) broken.push(`${route} -> ${m[1]}`);
+  }
+  fullOut.push(`<!-- ${siteUrl}docs/${route} -->`, '', body.replace(/^---[\s\S]*?---\n/, '').trim(), '', '---', '');
+}
+if (broken.length) throw new Error(`links that do not resolve to a page:\n${broken.join('\n')}`);
+fs.writeFileSync(path.join(OUT, 'static', 'llms-full.txt'), fullOut.join('\n'));
 console.log(`synced ${routeBySrc.size} docs, ${copied.size} images`);

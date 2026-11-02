@@ -3,16 +3,16 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 
 const cards = [
-  ['What is Arya', '/docs/intro', 'The idea, the screens and how it uses Meta models.'],
-  ['For judges', '/docs/judges', 'Where to look first, and what to try.'],
-  ['Try the features', '/docs/try-the-features', 'Every feature, step by step, on your own copy.'],
-  ['User journeys', '/docs/guide/user-journeys', 'Walkthroughs with screenshots.'],
-  ['Lists API', '/docs/api/lists-api', 'Read and write your lists from a script.'],
-  ['API reference', '/api-reference', 'Interactive OpenAPI reference.'],
+  ['What is Arya?', '/docs/intro', 'The idea, the screens and how it uses Meta models.'],
+  ['What should a judge look at?', '/docs/judges', 'Where to look first, and what to try.'],
+  ['How do I try every feature?', '/docs/try-the-features', 'Every feature, step by step, on your own copy.'],
+  ['What can I do with it?', '/docs/guide/user-journeys', 'User journeys: walkthroughs with screenshots.'],
+  ['How do I use the Lists API?', '/docs/api/lists-api', 'Read and write your lists from a script.'],
+  ['Where is the API reference?', '/api-reference', 'Interactive OpenAPI reference.'],
 ];
 export default function Home() {
   return (
-    <Layout title="Arya docs" description="Documentation for Arya">
+    <Layout title="Arya docs" description="Documentation for Arya: a grocery app that learns from your receipts, shares lists, and uses Meta models. What it is, how to try it, how it is built, and the evidence.">
       <main style={{padding: '4rem 1rem', maxWidth: 960, margin: '0 auto'}}>
         <h1 style={{fontSize: '2.6rem'}}>Arya docs</h1>
         <p style={{fontSize: '1.2rem'}}>Build for Your World, in three parts.</p>

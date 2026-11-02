@@ -24,7 +24,7 @@ mine), tap **Use a sample receipt**, or **Skip**.
 
 ---
 
-## Demo (25%)
+## How do I walk through the demo? (Demo, 25%)
 
 ### 1. Front door
 Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every
@@ -46,7 +46,7 @@ against a purchase-cadence proxy on my receipts).
 
 ---
 
-## Meta tooling (25%)
+## Which Meta models can I see working? (Meta tooling, 25%)
 
 ### 3. Add items by voice and photo
 In a list, use the add row: type an item, or tap the mic (**Muse Voice Transcribe**) and say
@@ -100,11 +100,11 @@ which I left in. The demo reads the receipt but keeps nothing.
 
 ---
 
-## Impact (30%)
+## Does it matter to real people? (Impact, 30%)
 
-The four rubric questions are answered on [the judges page, Impact](../../JUDGES.md#impact-30).
+The four rubric questions are answered on [the judges page, Impact](../../JUDGES.md#does-it-matter-to-real-people-impact-30).
 
-## Technical depth (20%)
+## How is it built? (Technical depth, 20%)
 
 | Claim | Where to verify |
 | --- | --- |
@@ -116,7 +116,7 @@ The four rubric questions are answered on [the judges page, Impact](../../JUDGES
 | Measured results | `README.md`, "Measured results" |
 | Tests | `cd assistant && python -m unittest discover -s tests` |
 
-## Known limits
+## What does it not do yet?
 
 - **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - No store ships pre-mapped; maps come from shoppers' scans.
@@ -135,12 +135,12 @@ The four rubric questions are answered on [the judges page, Impact](../../JUDGES
   photo, voice, Ask) pause. The real app has its own $10 daily budget, so a crowd of
   judges cannot use it up.
 
-## When you are done
+## What do I do when I am done?
 
 Tap **Finish demo** (top right) to leave feedback, replay the tour or see
 the code.
 
-## If something fails
+## What if something fails?
 
 | Symptom | What to do |
 | --- | --- |

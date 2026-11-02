@@ -2,7 +2,7 @@
 
 I built Arya as one well-defended single-server app on purpose: the window was for the product, not a fleet. This page splits it into what is built and holds up for a few dozen people at once, what I know is weak, and the plan for growing past that. The dated choices are in the [decision log](DECISIONS.md), what was made and when is on the [build page](WHAT-WE-BUILT.md), and the unbuilt ideas are in the [roadmap](ROADMAP.md). What runs today is in [Architecture](../assistant/docs/ARCHITECTURE.md).
 
-## Built
+## What is built?
 
 - **Code does money, timing and lists at no model cost.** The ledger, patterns and derived list are deterministic and recomputed from the receipts, so they cannot drift. Every model call goes through one module that enforces the personal-data rule. (Architecture 0.3, 0.4)
 - **Safe writes on one box.** Atomic JSON writes, a per-file lock, a per-request memo, and a full Postgres copy of every account document on the live site. (Architecture 0.5)
@@ -13,7 +13,7 @@ I built Arya as one well-defended single-server app on purpose: the window was f
 - **Security basics.** Hashed session and token secrets, a strict script CSP, upload caps at the proxy, throttled sign-in, and people pixelated out of shelf photos before anything is stored.
 - **Measured.** A [scale simulator](../assistant/docs/SCALE-SIM.md) and a read-only performance pass on 2026-11-02: the Today screen takes about 65 ms alone, about 1.1 s with 10 people at once and about 4 s with 30, on a development machine, not the live server.
 
-## What I know is weak
+## What do I know is weak?
 
 From my own architecture audit of 2026-11-01, the findings that still hold, each tied to a phase of the [scalability design](SCALABILITY-DESIGN.md).
 
@@ -34,6 +34,6 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 
 Two audit items are closed: `/health` now reports the running commit, and the photo reader is Spark first with Wonder only on a flagged read, which took the cost pressure off receipt batches.
 
-## The plan
+## What is the plan to grow it?
 
 [Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure: baseline metrics and a live load test; a short-lived cache and the mirror off the request path; Postgres as the master copy with versioned updates; shared state for sessions and demo visits; several processes; a job queue; a model gateway with concurrency caps and spend reservation; object storage for photos; then a cloud provider. Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise.
