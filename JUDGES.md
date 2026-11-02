@@ -73,4 +73,4 @@ Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 
 
 ## Honest limits
 
-Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).
+Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#known-limits)); scaling it out is a plan for after judging, not built. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).

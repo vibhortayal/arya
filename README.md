@@ -316,6 +316,17 @@ The scored reports and the Gate 0 labels and results are in
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
 - **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
+- **One server, a few dozen people at once.** Arya runs as one server process
+  on one VM. A few dozen people at the same time is about what it handles;
+  beyond that it gets slower. On a development machine with a
+  117-receipt account (not yet on the live server), opening Today took about
+  1.1 s with 10 people at once and about 4 s with 30. Demo sessions live in
+  that process's memory and the data files have one writer, so it cannot yet
+  run as several processes. Saves are copied to Supabase inside the request,
+  so a slow Supabase can slow a save. My plan after judging is to make
+  Postgres the master copy, move session state out of memory, run several
+  processes, and move Arya to a cloud provider as the community grows. It is
+  a plan, not a promise. Rome wasn't built in a day.
 
 ## After the hackathon
 

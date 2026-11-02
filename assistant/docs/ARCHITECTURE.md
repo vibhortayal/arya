@@ -403,6 +403,13 @@ Each agent has a narrow job and a named limit.
   JSON files, mirrored to Supabase on the live site (`ARYA_STORE=dual`); after judging Postgres can become the master copy (`pg`). Public name:
   arya.teamnightshift.org (Cloudflare A record, DNS only). The old
   arya-pilot.duckdns.org name is a permanent Caddy redirect to it.
+- Known limit: one uvicorn process on one VM. Demo sandboxes live in that
+  process's memory and the JSON files have one writer, so it cannot run as
+  several processes yet; dual-mode saves mirror to Supabase inside the
+  request, so a slow Supabase can slow a save. Roughly a few dozen people at
+  once is the ceiling (README, Known limits). After judging: Postgres as
+  master copy, session state out of memory, several processes, a cloud
+  provider (see `docs/ROADMAP.md`).
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
 - Settings come from `deploy/.env` (VM only). Compose passes only the
