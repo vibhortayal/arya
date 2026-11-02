@@ -37,7 +37,7 @@ Shelf Scan and Find it for me
 send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one
 item): SAM 3.1 proposes boxes, Spark verifies each crop. Verified pops
 are stored as sightings (item, store, shelf, time). A frame is kept as
-a fresh shelf photo only after SAM finds every person and pixelates
+a fresh shelf photo only after SAM finds the people it detects and pixelates
 them; if that step fails, nothing is kept.
 
 ### 5. Settle (account)

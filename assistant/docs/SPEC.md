@@ -212,7 +212,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   verifies each crop. Only a verified item highlights. A miss never
   says the item is absent.
 - FR-8.7 No pictures of people are kept. A frame is kept only after
-  SAM finds every person and the frame is pixelated there. If the
+  SAM finds the people it detects and the frame is pixelated there. If the
   scrub fails, the frame is not kept.
 - FR-8.8 "Not here?" files a report and edits nothing. Time resolves
   it: a later grab means a stockout; a confirmed new spot means a move.
