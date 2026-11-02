@@ -7,8 +7,7 @@ data`), so you can open the live demo and see the same thing.
 
 Store names: these journeys use real store names from my own shopping. The hosted demo (Demo Town) uses invented ones, such as Costcozy and Trader Jill's.
 
-Product line: Arya is "Waze for grocery shopping". The list comes first.
-The Quest hunt is optional.
+The list comes first. The Quest hunt is optional.
 
 ## How to read this page
 

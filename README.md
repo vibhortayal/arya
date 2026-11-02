@@ -41,7 +41,7 @@ Every week your list app starts blank. It doesn't know what you buy, what you re
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
-Built and tested with US receipts, dollars and stores first; other markets are not tested. Arya runs as one server, so a few dozen people at once is about its limit.
+Limits, including the one-server size: [Known limits](#known-limits).
 
 ### Which Meta model does what
 
@@ -54,38 +54,13 @@ Built and tested with US receipts, dollars and stores first; other markets are n
 
 ### Where next
 
-[Try the demo](https://arya.teamnightshift.org) (no sign-up). Judging this? Start with [For judges](JUDGES.md). Everything else: [All the docs](#documentation-map).
+[Try the demo](https://arya.teamnightshift.org) (no sign-up). Judging this? Start with [For judges](JUDGES.md). Why it is built this way: [Principles](docs/PRINCIPLES.md). Everything else: [All the docs](#documentation-map).
 
 ---
 
 The rest of this page is the full story.
 
-## Build for Your World
-
-- **What Arya is.** Arya learns how you shop from your receipts and helps shoppers help each other.
-- **Why I built it.** I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. Arya is free to use and made for shoppers to help each other; households and groups share lists. It costs money to keep running (the AI reading), and you can see what you use in Settings, About Arya, Keeping Arya running. [Principles and goals](docs/PRINCIPLES.md)
-- **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
-
-## What stands out
-
-1. **It works for real.** Open the live app in one tap ("Try it now"), add it to your home screen, and with no signal a signed-in account can read its last lists and keep adding items (changes sync later; receipts and Ask need a connection).
-2. **A closed loop.** A receipt photo becomes your list and your Running low nudges, every line checked against the printed total.
-3. **Built on your own data.** Prices come from your own receipts, never from store sites, flyers or the web. The one outside shopping lookup is Kroger's aisle location.
-4. **Real community.** Groups share lists and receipts, and your own receipts go with you if you leave.
-5. **Honest and checkable.** The box below says what is real and what is simulated, and Settings, About Arya, Keeping Arya running shows what the AI costs.
-6. **Depth you can check.** About 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
-
-Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
-
-All of it, with where to read more: [Built in the hackathon window](docs/WHAT-WE-BUILT.md).
-
-| What is real | What is simulated | What is not connected |
-|---|---|---|
-| The live app. Receipts read by Meta models and checked in code. The Lists API and MCP connector. Kroger's aisle lookup at real Kroger-family stores (not visible in the demo). | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
-
 ## Why I built it this way
-
-**The idea.** I kept losing track of what was running low and where the money went. A list that learns from my own receipts fixes both, and the receipts already exist. Quest came from wanting the store trip to feel less like a chore; it stays optional.
 
 **A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, keeps your lists usable with no signal and can send reminders, and a judge can open it in one tap.
 
@@ -97,28 +72,11 @@ All of it, with where to read more: [Built in the hackathon window](docs/WHAT-WE
 
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates the people it detects before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and sees item names only (no prices, dates, stores or account details). Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
-- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
-- Oct 28: accounts, the judge front door, and Supabase, Resend and Baseten set up for Arya.
-- Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
-- Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
+**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed; the timeline is under [How this was built](#how-this-was-built).
 
-**Rome wasn't built in a day.** Arya is built around a community, and a community can't be built inside one hackathon. What I could finish in this window is the foundation: a household list, receipts you can trust, groups that share lists, and store maps that merge across shoppers. The rest depends on people using it. The more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. That is why this platform, Meta and the hackathon matter to me: they help people find Arya, and the more people use it, the more it can give back to them.
+**Rome wasn't built in a day.** A community can't be built inside one hackathon. What I finished is the foundation: the more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. The more people use it, the more it gives back to them.
 
-
-## What it is
-
-Arya reads your receipts, checks every line against the printed total, and
-learns what your household buys, how often, and at which store. From that it
-suggests what is running low, what to use soon, and where you usually buy
-it, each with a reason.
-
-It is for people who shop for a household, and for groups who share a list. It
-is a phone-first app (a PWA), and it also has an optional game, **Quest**, that
-turns the shopping trip into a hunt through a model of your store and ends on a
-photo of your receipt.
-
-Built and tested with US receipts, dollars and stores first; other markets not tested.
+## Live demo
 
 **Live demo:** https://arya.teamnightshift.org. The demo opens a fictional
 household with no account. Your changes live in a sandbox for your visit only;
@@ -127,25 +85,6 @@ make the window about 390 px wide. Open Lists API and docs for developers:
 https://arya.teamnightshift.org/developers.
 
 Submission deadline: Nov 4, 2026, 9:00 PM ET.
-
-## Principles and goals
-
-Free to use, for shoppers, and built up with them. The model proposes and code checks; your data is yours; US first, other markets not tested. Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
-
-## More that is different
-
-- **Bring your own assistant.** Add items by typing, voice, a photo of a
-  handwritten note, or any AI agent through the MCP connector.
-- **Quest has no clock and no way to lose.** Optional, and it never gets in the
-  way of the list.
-
-## What judges should read first
-
-1. [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links on one page.
-2. [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md): a guided path through the live app.
-3. [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md) and [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md): how it fits together and why each model.
-4. [`docs/evals/`](docs/evals/): the measured results behind the numbers.
-5. [`STATUS.md`](STATUS.md): what is true on `main` today.
 
 ## Documentation map
 
@@ -161,13 +100,26 @@ Free to use, for shoppers, and built up with them. The model proposes and code c
 | Stack, hosting, deploy, backups | [Tech stack and deployment](#tech-stack-and-deployment), [`assistant/docs/OPS.md`](assistant/docs/OPS.md) |
 | The Quest game | [`docs/quest/README.md`](docs/quest/README.md), [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md) |
 | Using your own AI assistant | [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md) |
-| The demo household | [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md) |
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
-| How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
 | Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md), and a feature-by-feature tour: [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
-| What is done and what is not | [`STATUS.md`](STATUS.md) |
+
+**Code layout.**
+
+| Path | What |
+|---|---|
+| `assistant/api/` | FastAPI app, one router per area in `routes/`, engines |
+| `assistant/web/` | React app (screens, Quest game, service worker) |
+| `assistant/pwa/` | Static files: images, three.js, manifest, icons |
+| `assistant/deploy/` | Docker Compose, Caddyfile, backup and restore scripts |
+| `assistant/docs/` | Spec, architecture, model policy, runbooks |
+| `docs/quest/` | Quest design and the hackathon doc pack |
+| `assistant/loops/` | One log per work session |
+| `STATUS.md` | What is true on `main` today |
+
+Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
+(`assistant/docs/SPEC.md`) wins when it disagrees with the code.
 
 ## Try it in one minute
 
@@ -181,12 +133,7 @@ The navigation tab (the row of buttons at the bottom) starts as Today, Spending,
 
 ## Verify it without signing in
 
-Everything below runs in the demo household, no account needed. Each row
-says what to tap, what you see, which Meta model runs, and where the code
-is. "Live" means the demo calls the Meta Model API when you tap; each visit
-has a small allowance (about $0.40) and the demo as a whole has a daily cap,
-so a busy judging day can run out. When that happens the app says so and the
-sample buttons still work.
+Everything below runs in the demo household, no account needed. "Live" means the demo calls the Meta Model API when you tap; the allowance is in [Known limits](#known-limits).
 
 | Feature | Tap | You see | Meta model | Code |
 |---|---|---|---|---|
@@ -211,41 +158,13 @@ loop on a phone. The window should be about 390 px wide.
 
 ## What is in it
 
-- **Receipts.** A photo or PDF goes in. Muse Spark reads photos first and Muse
-  Wonder re-reads any the checks flag; code checks every line against the printed total before
-  anything posts. Returns net out against purchases. Items bought for
+The full feature list, with why each matters, is [Built in the hackathon window](docs/WHAT-WE-BUILT.md). Two things a judge cannot get elsewhere:
+
+- **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
-- **Lists.** Type, talk, photograph a note, or use your own assistant through
-  the MCP connector (`assistant/docs/AGENT-CONNECTOR.md`). Items you add stay
-  on the list. Staples that are due show as suggestions, each with a reason.
-- **Patterns and the staple judge.** Deterministic code learns how often you
-  buy each item and what you pay at each store. A Muse Spark judge decides
-  which items count as staples. Muse Spark Open (open weights, hosted on Baseten)
-  judges again from item names alone; disagreements are kept for review.
-  The Curator proposes product merges and splits, and you apply them.
-- **Prices from your own receipts.** Cheaper store, price trend, food-waste
-  cost. Nothing is fetched from store sites, flyers, APIs or the web.
-- **Ask Arya.** A chat over a snapshot of your household's data. It can
-  also act on statements such as "we finished the yogurt".
-- **Groups.** Share lists with the people you live with. Receipts stay with
-  whoever filed them.
-- **Quest.** Pick a store and Arya sorts your list for it. Grab items to earn
-  points; there is no clock and no way to lose. **Find it for me** points the
-  camera at a shelf: SAM 3.1 boxes candidates and Muse Spark checks each one.
-  **Map my store** is a guided camera scan: you pan along the shelves, SAM
-  3.1 pixelates the people it detects before anything is kept (if that fails, the frame is discarded; detection is not perfect and has not been scored), and Muse Spark reads
-  sections, aisle signs and prices. A store counts as mapped only where it
-  has a usable, fresh photo. No store ships pre-mapped; an unmapped store
-  plays as a labelled typical layout. Points bank when the receipt settles.
-  At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King
-  Soopers, QFC and others) Arya also asks Kroger's own Products API where an
-  item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. It is a live lookup on the
-  demo site, nothing from Kroger is stored, and it falls back to the crowd map
-  if Kroger does not answer. Optional if you run your own copy: it needs your
-  own Kroger developer keys. The demo stores are invented, so you will not see
-  it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
-- **Demo Town** (`ARYA_DEMO_TOWN=1`; on in the live demo and the local Docker setup): the demo household shops
-  at invented stores in a simulated neighborhood, labelled as simulated.
+- **Lists you name.** Every item belongs to a list.
+
+**Kroger aisle lookup.** At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored, and it falls back to the crowd map if Kroger does not answer. It needs your own Kroger developer keys if you run your own copy. The demo stores are invented, so you will not see it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
 
 ## Names for the help parts
 
@@ -387,22 +306,6 @@ and it is not part of the demo. The ideas, grouped in [`docs/ROADMAP.md`](docs/R
 - **Trust and privacy:** photo opt-in, privacy policy, deferred security items.
 - **Running it yourself:** a laptop-ready Docker setup, off-site backups, staging.
 
-## Where things are
-
-| Path | What |
-|---|---|
-| `assistant/api/` | FastAPI app, one router per area in `routes/`, engines |
-| `assistant/web/` | React app (screens, Quest game, service worker) |
-| `assistant/pwa/` | Static files: images, three.js, manifest, icons |
-| `assistant/deploy/` | Docker Compose, Caddyfile, backup and restore scripts |
-| `assistant/docs/` | Spec, architecture, model policy, runbooks |
-| `docs/quest/` | Quest design and the hackathon doc pack |
-| `assistant/loops/` | One log per work session |
-| `STATUS.md` | What is true on `main` today |
-
-Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
-(`assistant/docs/SPEC.md`) wins when it disagrees with the code.
-
 ## How this was built
 
 Everything here was built in the hackathon window, which opened on Oct 27,
@@ -414,6 +317,11 @@ spike with me; git lists the commits under the author name "Spark". The dated ta
 is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
 in `assistant/loops/` record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.
+
+- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
+- Oct 28: accounts, the judge front door, and Supabase, Resend and Baseten set up for Arya.
+- Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
+- Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
 
 **Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app.
 

@@ -18,7 +18,7 @@ export default function Home() {
         <p style={{fontSize: '1.2rem'}}>Build for Your World, in three parts.</p>
         <ul style={{fontSize: '1.05rem'}}>
           <li><strong>What Arya is.</strong> Arya learns how you shop from your receipts and helps shoppers help each other.</li>
-          <li><strong>Why I built it.</strong> I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. <Link to="/docs/principles">Principles and goals</Link></li>
+          <li><strong>Why I built it.</strong> I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. <Link to="/docs/principles">Principles</Link></li>
           <li><strong>What it uses.</strong> Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image and Muse Spark Open, each with one job. <Link to="/docs/judges">Model map</Link></li>
         </ul>
         <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', marginTop: '2rem'}}>

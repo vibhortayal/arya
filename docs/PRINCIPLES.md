@@ -1,6 +1,6 @@
 # Why Arya exists, and what it stands for
 
-Arya is our answer to "Build for Your World": bring Meta's models into a world we know firsthand, free up time and mental space, and make something possible that wasn't before.
+Arya is my answer to "Build for Your World": Meta's models in a world I know firsthand.
 
 ## Who it is for
 
@@ -8,16 +8,7 @@ Shoppers: the people who keep a household or a group fed and remember what is ru
 
 ## The problem, and why it is ours
 
-Keeping track of groceries is a small job that never ends. You remember the list, then forget it at the store; you buy what you already have; you cannot say where the money went. I had this problem personally, so I built Arya to fix it for myself first and then for everyone who shops the same way.
-
-## What it does about it
-
-- It reads your receipts, checks every line against the printed total, and learns what you buy, how often and at which store.
-- Because of that, Arya can suggest. Running low shows what is due again, and Use soon shows what to eat before it goes off, each with a reason.
-- You add items by typing, voice, a photo of a note, or any AI assistant through the connector, so nothing has to be remembered or retyped.
-- A shared list, for a household or a group, keeps everyone looking at the same thing.
-
-The time it gives back is the weekly work of remembering, retyping and double-checking. The mental space is not having to hold the list in your head.
+I had this problem, so I built it for myself first. The loop is in [the README, What Arya is](../README.md#what-arya-is).
 
 ## Principles
 
@@ -26,12 +17,6 @@ The time it gives back is the weekly work of remembering, retyping and double-ch
 3. **The model proposes, code checks.** A model reads the receipt; plain code checks every line before anything posts. You can trust the numbers because the arithmetic is checked, not guessed.
 4. **Yours by default.** Your receipts and lists are yours. A group sees its members' lists and receipts; leave, and your receipts go with you. Arya uses no prices from store sites, flyers or the web.
 5. **Honest about its limits.** Built and tested with US receipts, dollars and stores first; other markets not tested. What is not live is said plainly (see the glossary).
-
-## Goals
-
-- Help shoppers spend less time and worry on groceries.
-- Get people using it, so that households and groups help each other: shared lists today, and store maps made by the people who shop there.
-- Stay free to use and keep people's data theirs.
 
 ## Where to read more
 

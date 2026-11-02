@@ -24,7 +24,7 @@ const SECTIONS = {
   'Start here': [
     ['site/content/start.md', 'intro', 'What Arya is'],
     ['README.md', 'full-readme', 'Full README'],
-    ['docs/PRINCIPLES.md', 'principles', 'Principles and goals'],
+    ['docs/PRINCIPLES.md', 'principles', 'Principles'],
     ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
     ['docs/RUN-IT-YOURSELF.md', 'run-it-yourself', 'Run it yourself'],
   ],
