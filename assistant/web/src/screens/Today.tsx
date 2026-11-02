@@ -1200,6 +1200,16 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
     }
   }
 
+  /* × removes an item from this card at once and for good (owner,
+   * 2026-11-02): it is remembered on the item ("use_by_skip", the trip
+   * date), so it never comes back even if the sheet closes without Done.
+   * Undo on the row brings it back. */
+  async function skip(id: string, on: boolean) {
+    set(id, on ? { skip: true } : {});
+    try { await post(`/api/items/${encodeURIComponent(id)}/flag`, { use_by_skip: on ? perish.date : null }); }
+    catch (e) { set(id, on ? {} : { skip: true }); toast(e instanceof Error ? e.message : String(e)); }
+  }
+
   async function done() {
     setBusy(true);
     let saved = 0;
@@ -1209,7 +1219,10 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
       try { await post("/api/expiry/save", { item_id: it.item_id, date: r.date, kind: r.kind || "unknown" }); saved++; }
       catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     }
-    try { await post("/api/expiry/nudge", { action: "done", date: perish.date }); } catch { /* asked again next time */ }
+    // The card stays while anything is left (owner, 2026-11-02): no date
+    // yet and not removed. Done closes the receipt only when it is empty.
+    const left = perish.items.filter(it => !rows[it.item_id]?.skip && !rows[it.item_id]?.date).length;
+    if (!left) { try { await post("/api/expiry/nudge", { action: "done", date: perish.date }); } catch { /* asked again next time */ } }
     setBusy(false);
     onClose();
     if (saved) toast(t("today.perish.saved", { count: saved }));
@@ -1225,7 +1238,7 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
   );
 
   return (
-    <Sheet open={open} onClose={onClose} id="perish-sheet" labelledBy="pz-title">
+    <Sheet open={open} onClose={() => { onClose(); reload(); }} id="perish-sheet" labelledBy="pz-title">
       <span className="sheetgrip" />
       <div className="sheethead"><h3 className="hm-title" id="pz-title">{t("today.perish.sheetTitle")}</h3>
         <button className="linkbtn" type="button" id="pz-done" data-first disabled={busy} onClick={done}>{t("today.perish.done")}</button></div>
@@ -1240,7 +1253,7 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
               <Face name={it.name} />
               <span className="grow"><b>{it.name}</b>{r.skip ? <small>{t("today.perish.skipped")}</small> : r.reading ? <small role="status">{t("today.perish.reading")}</small> : null}</span>
               {r.skip
-                ? <button className="pz-undo" type="button" onClick={() => set(it.item_id, {})}>{t("today.perish.undo")}</button>
+                ? <button className="pz-undo" type="button" onClick={() => skip(it.item_id, false)}>{t("today.perish.undo")}</button>
                 : r.date
                   ? picker(it.item_id, it.name, r.date, <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>)
                   : <>
@@ -1251,7 +1264,7 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
                         <input type="file" id={fid} accept="image/*" capture="environment" hidden
                           onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>}
                     {picker(it.item_id, it.name, "", <span className="pz-b">{t("today.perish.pick")}</span>)}
-                    <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => set(it.item_id, { skip: true })}>×</button>
+                    <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => skip(it.item_id, true)}>×</button>
                   </>}
             </li>
           );

@@ -62,6 +62,21 @@ class TestReceiptNudge(unittest.TestCase):
         flags = {"i-whole": {"use_by": "2026-10-20", "use_by_set": "2026-10-10"}}
         self.assertIn("i-whole", [i["item_id"] for i in self.nudge([rec("r", day, names)], flags)["items"]])
 
+    def test_card_stays_until_nothing_is_left(self):
+        # Owner 2026-11-02: × removes an item for good; the card stays,
+        # even with one item, until every item is dated or removed.
+        day = TODAY - timedelta(days=2)
+        r = [rec("r", day, ["Whole Milk", "Bananas", "Kale"])]
+        ids = [i["item_id"] for i in self.nudge(r)["items"]]
+        flags = {ids[0]: {"use_by_skip": day.isoformat()},
+                 ids[1]: {"use_by": "2026-12-01", "use_by_set": TODAY.isoformat()}}
+        n = self.nudge(r, flags)
+        self.assertEqual([i["item_id"] for i in n["items"]], [ids[2]])
+        flags[ids[2]] = {"use_by_skip": day.isoformat()}
+        self.assertIsNone(self.nudge(r, flags))
+        # A removal from an older trip does not hide it on a newer one.
+        self.assertIn(ids[0], [i["item_id"] for i in self.nudge(r, {ids[0]: {"use_by_skip": "2026-01-01"}})["items"]])
+
     def test_returns_and_non_grocery_are_skipped(self):
         r = rec("r", TODAY - timedelta(days=1), ["Whole Milk", "Bananas"])
         r["lines"][0]["line_type"] = "return"
@@ -116,6 +131,15 @@ class TestRoutes(unittest.TestCase):
             rs.append(rec("c", date.fromisoformat(self.days[2]), ["Kale", "Butter"]))
             state._save("receipts.json", rs)
         self.assertEqual(self.home()["receipt_id"], "c")
+
+    def test_remove_sticks_through_the_flag_route(self):
+        items = self.home()["items"]
+        r = self.c.post(f"/api/items/{items[0]['item_id']}/flag", json={"use_by_skip": self.days[1]})
+        self.assertEqual(r.status_code, 200)
+        left = self.home()
+        self.assertEqual([i["item_id"] for i in left["items"]], [items[1]["item_id"]])
+        self.c.post(f"/api/items/{items[1]['item_id']}/flag", json={"use_by_skip": self.days[1]})
+        self.assertNotEqual((self.home() or {}).get("receipt_id"), "b")
 
     def test_bad_bodies(self):
         self.assertEqual(self.c.post("/api/expiry/nudge", json={"action": "later", "date": self.days[1]}).status_code, 400)

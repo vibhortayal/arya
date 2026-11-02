@@ -40,7 +40,7 @@ def item_expired(item_id: str):
 # probe POST once left a junk record behind).
 _FLAG_KEYS = {"manual", "never", "out", "used", "expired", "snoozed_until",
               "dismissed_on", "checked_on", "check_ok", "qty_override",
-              "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze", "unit"}
+              "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze", "use_by_skip", "unit"}
 
 
 @router.post("/api/items/{item_id}/flag")
