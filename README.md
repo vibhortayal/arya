@@ -117,11 +117,11 @@ sample buttons still work.
 
 | Feature | Tap | You see | Meta model | Code |
 |---|---|---|---|---|
-| Receipt read and arithmetic check | Lists, Receipts, Add receipt, Snap (or "Use a sample receipt") | Lines, "Total checks out", which model read it | Muse Spark 1.3 reads first; Muse Wonder 1.0 re-reads a flagged read (live); the sample is code-built, no model | `assistant/api/decode/service.py`, `decode/checks.py` |
+| Receipt read and arithmetic check | More, Receipts, Add receipt, Snap (or "Use a sample receipt") | Lines, "Total checks out", which model read it | Muse Spark 1.3 reads first; Muse Wonder 1.0 re-reads a flagged read (live); the sample is code-built, no model | `assistant/api/decode/service.py`, `decode/checks.py` |
 | Add by voice | A list, the mic | Items added, with Undo | Muse Voice Transcribe (live) | `assistant/api/voice/service.py` |
 | Add from a photo of a note | A list, the camera | The items Arya read, "Add N items?" | Muse Spark vision (live) | `assistant/api/list/intake.py` |
 | Running low and the staple judge | Today, Running low; a suggestion's "why" | Cadence, last buy, the judge's verdict | Judged before the demo was built: Muse Spark judge, Muse Spark Open second seat (no live call) | `assistant/api/judge.py`, `assistant/api/patterns/` |
-| Ask Arya | Ask, type a question or tap a chip | An answer from the household data; a stated fact becomes an action you confirm | Muse Spark (live) | `assistant/api/chat_service.py` |
+| Ask Arya | Ask Arya, type a question or tap a chip | An answer from the household data; a stated fact becomes an action you confirm | Muse Spark (live) | `assistant/api/chat_service.py` |
 | Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
 | Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
 | Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
@@ -230,21 +230,8 @@ committed. Do not put a key in a file that is tracked. Open
 http://localhost:8080. On the first visit, create your account (a username
 and password) to read your own receipts, or close the sheet and tap "Try it now"
 for the demo household. Without a key the app and the demo open, but anything that calls a
-Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
+Meta model says it cannot reach Meta. Making a key, settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
-
-### Run it with your own Meta key
-
-To run the live model calls from your own checkout, make a Meta Model API
-key just for this (dev.meta.ai, API keys, Create API key) and put it in a
-local `.env` or in the command above as `MODEL_API_KEY`. Copy
-`assistant/deploy/.env.example` to `.env` for the Docker setup; its
-`MODEL_API_KEY=` line is blank on purpose. Never commit a filled `.env`.
-The key is sent only to `api.meta.ai`. Meta keys have no spending cap of
-their own, so set a usage limit on your Meta billing page, and delete the
-key at Meta when you are done. Photo receipts are read with Spark first;
-`ARYA_PHOTO_READER` (`auto` by default, or `spark`, or `wonder`) changes
-that.
 
 Tests, from the repo root:
 
