@@ -10,6 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
+import { SYNCED } from "../lib/listQueue";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
@@ -37,7 +38,7 @@ import { fitPhoto } from "../lib/photo";
  * <section id="view-list">.
  *
  * Start shopping opens the Quest game on this list:
- * nav.show("community", { listId }) ("all" for Everything else).
+ * nav.show("community", { listId }) ("else" for Everything else).
  *
  * Local helpers kept here: the swipe / long-press wiring, the split
  * preview, the group line and the Eyes block. */
@@ -317,7 +318,9 @@ export function Lists() {
   useEffect(() => {
     const onLive = (ev: Event) => { ev.preventDefault(); reconcile(); };
     window.addEventListener("arya-live", onLive);
-    return () => window.removeEventListener("arya-live", onLive);
+    // List changes kept on this phone went out (lib/listQueue.ts).
+    window.addEventListener(SYNCED, reconcile);
+    return () => { window.removeEventListener("arya-live", onLive); window.removeEventListener(SYNCED, reconcile); };
   }, [reconcile]);
 
   const ask = useAsk(reloadQuiet);
@@ -835,7 +838,10 @@ export function Lists() {
   // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
-    nav.show("community", { listId: here ? here.id : "all" });
+    // Quest plays named lists only (owner, 2026-11-02), so Everything
+    // else is shopped by ticking it off here.
+    if (!here) { startList(); return; }
+    nav.show("community", { listId: here.id });
   };
   // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
   const snapAisle = async (name: string) => {

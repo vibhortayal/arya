@@ -1,6 +1,6 @@
 {
   "offline": {
-    "bar": "You're offline. You can still look through your lists and screens as they were last saved. Changes, Ask Arya, photos, voice, sharing and sync need a connection."
+    "bar": "You're offline. You can still add, tick, edit and remove list items: changes save on this phone and sync when you're back. Ask Arya, receipts, photos, voice and sharing need a connection."
   },
   "common": {
     "back": "Back",
@@ -97,7 +97,7 @@
     },
     "receiptFile": {
       "empty": "That file arrived empty. If it is still downloading, wait for it to finish, then try again.",
-      "reading": "Reading the receipt — this can take up to a minute.",
+      "reading": "Reading the receipt… Usually 10 to 30 seconds, up to a minute. Stay on this screen.",
       "demo": "Read just now. Kept until you leave the demo.",
       "duplicate": "You already added this {{merchant}} receipt from {{date}}.",
       "thatReceipt": "that receipt",
@@ -826,6 +826,15 @@
     }
   },
   "lists": {
+    "queue": {
+      "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
+      "synced_one": "Synced {{count}} list change.",
+      "synced_other": "Synced {{count}} list changes.",
+      "skipped_one": "{{names}}: someone changed it after you were offline, so their change stays.",
+      "skipped_other": "{{count}} changes weren't applied ({{names}}): someone changed those items after you were offline, so their changes stay.",
+      "failed_one": "{{names}} couldn't be saved. Try it again.",
+      "failed_other": "{{count}} changes couldn't be saved ({{names}}). Try them again."
+    },
     "editTitle": "Edit Lists",
     "editHint": "Drag to reorder. Hiding a list keeps it and its items; it just leaves Lists and Today.",
     "hiddenLists": "Hidden lists",
@@ -2089,10 +2098,26 @@
       "other": "Other"
     }
   },
+  "receiptRead": {
+    "readingOne": "Reading the receipt…",
+    "readingOneSub": "Usually 10 to 30 seconds, up to a minute.",
+    "readingN": "Reading receipt {{i}} of {{n}}",
+    "readingNSub": "{{name}} · {{filed}} filed so far.",
+    "stay": "Stay on this screen.",
+    "demoNote": "Demo receipts aren't saved, so stay on this screen while Arya reads. In your own account, Arya reads receipts in the background, so you can leave.",
+    "button": "Reading…",
+    "doneHead": "Read {{read}} of {{total}} receipts",
+    "failedLine_one": "{{count}} could not be read",
+    "failedLine_other": "{{count}} could not be read",
+    "tryAgain": "Try again"
+  },
   "receiptJob": {
     "sending": "Sending {{sent}} of {{total}} receipts",
+    "sendingOne": "Sending your receipt",
     "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
+    "keepOpenOne": "Keep Arya open until this finishes. Then you can leave, and Arya reads it in the background.",
     "reading": "Reading your receipts in the background",
+    "readingOne": "Reading your receipt in the background",
     "progress": "{{done}} of {{total}} read.",
     "someFailed_one": "{{count}} could not be read.",
     "someFailed_other": "{{count}} could not be read.",
@@ -3129,7 +3154,7 @@
       "lists": {
         "kicker": "Lists",
         "title": "A list for every store",
-        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list.",
+        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list. No signal in the store? Keep adding and ticking; Arya syncs when you're back.",
         "s1": "Tap More, then Lists, then tap New list.",
         "s2": "Choose the name of the store from the dropdown.",
         "s3": "Type in items using the add box, use voice to add items or upload pictures of your paper list."
@@ -3627,7 +3652,7 @@
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
         "s1": "Open Spending, then Receipts.",
-        "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
+        "s2": "Tap Add receipts and pick one or several. Once sent, Arya reads them in the background, so you can leave.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
@@ -3669,6 +3694,7 @@
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
         "n1": "Tap Select to move or remove several items.",
         "n2": "The three dots on a list open Share, export or import.",
+        "n3": "No signal? Keep adding, ticking, editing and removing items. Changes save on this phone and sync when you're back online.",
         "cta": "Open Lists"
       },
       "receipts": {

@@ -73,7 +73,9 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
   useEffect(() => {
     void source.lists().then(l => {
       setLists(l);
-      setList(l.find(x => x.id === listId) || l.find(x => x.items.length) || l[0] || null);
+      // The list asked for, else the one played last, else the first with items.
+      const last = lastList();
+      setList(l.find(x => x.id === listId) || l.find(x => x.id === last && x.items.length) || l.find(x => x.items.length) || l[0] || null);
     });
   }, [source, listId]);
 
@@ -153,7 +155,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     <div className="qg" data-screen={screen.s}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={key} className="qg-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={setList} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} panels={homePanels} order={homeOrder} hidden={homeHidden} onEdit={onEditHome} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
+          {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={l => { setList(l); rememberList(l.id); }} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} panels={homePanels} order={homeOrder} hidden={homeHidden} onEdit={onEditHome} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
           {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} first={list?.store} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
@@ -177,3 +179,8 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     </MotionConfig>
   );
 }
+
+/* The list the player picked last, on this device, so Quest opens on it. */
+const LAST_LIST = "arya.quest.lastList";
+function lastList(): string | null { try { return localStorage.getItem(LAST_LIST); } catch { return null; } }
+function rememberList(id: string) { try { localStorage.setItem(LAST_LIST, id); } catch { /* storage blocked */ } }

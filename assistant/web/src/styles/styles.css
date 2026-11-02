@@ -2321,6 +2321,18 @@ body.hunting #offlinebar { display: none !important; }
 .listencard .lc-acts .btn.primary { flex: 1.6; }
 @keyframes lcpulse { 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--danger) 8%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .listencard .lc-dot { animation: none; } .listencard .lc-bars i { transition: none; } }
+/* Reading receipts on this screen (owner, 2026-11-01): a bar, what is
+ * being read, and in the demo why to stay. */
+#rc-reading { margin-top: 10px; }
+#rc-reading .pbar { position: relative; overflow: hidden; height: 8px; border-radius: 4px; background: var(--fill2); margin: 8px 0; }
+#rc-reading .pbar > i { display: block; height: 8px; border-radius: 4px; background: var(--acc); transition: width .3s; }
+#rc-reading .pbar.ind > i { position: absolute; width: 40%; animation: rcslide 1.3s ease-in-out infinite; }
+@keyframes rcslide { 0% { left: -40%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { #rc-reading .pbar.ind > i { animation: none; left: 0; width: 100%; opacity: .5; } }
+.rcread-demo { margin: 10px 0 0; background: var(--acc-soft); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; line-height: 1.4; }
+.receiptbtn.dis { opacity: .55; pointer-events: none; }
+.rcread-acts { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+#rc-photo-failures { margin-top: 12px; }
 /* Fix this line on a filed receipt (owner, 2026-11-01). */
 #rc-lines .lf-row { cursor: pointer; }
 #rc-lines .lf-row .money { display: flex; align-items: center; gap: 6px; }

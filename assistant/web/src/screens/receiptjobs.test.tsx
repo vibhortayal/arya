@@ -64,3 +64,12 @@ test("a finished batch says what was filed and why files failed, and Dismiss mar
   await waitFor(() => expect($("#rc-job")).toBeNull());
   expect(calls.some(c => c[1].endsWith("/seen"))).toBe(true);
 });
+
+test("one file is also sent to the server and read in the background (owner, 2026-11-01)", async () => {
+  await mount();
+  const files = [new File(["x"], "one.png", { type: "image/png" })];
+  await act(async () => { fireEvent.change($("#rc-photo")!, { target: { files } }); });
+  await waitFor(() => expect(calls.some(c => c[1].endsWith("/commit"))).toBe(true));
+  expect(calls.filter(c => c[1].includes("/files/") && c[0] === "PUT")).toHaveLength(1);
+  expect(calls.some(c => c[1].includes("/decode/"))).toBe(false);
+});
