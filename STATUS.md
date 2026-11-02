@@ -240,8 +240,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
 - **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
   news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
-  bottom menu, powers, settings. "tick" became "check off" (card and the Start shopping
-  link, Help topic, Ask knowledge). The Today, bottom menu and powers cards were
+  navigation tab, powers, settings. "tick" became "check off" (card and the Start shopping
+  link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
   reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, the owner's words for the bottom bar); "bar" is gone from the guide text (the Customize bar button
   and the tour still say it).
 
