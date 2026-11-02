@@ -10,6 +10,15 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 
+## What stands out
+
+- **Works for real:** a live app in one tap, installable, works offline.
+- **A closed loop:** a receipt photo becomes your list and Running low nudges, every line checked against the printed total.
+- **Your own data:** prices come only from your own receipts; the one outside shopping lookup is Kroger's aisle location.
+- **Real community:** groups share lists and receipts; your receipts go with you if you leave.
+- **Checkable:** a box on what is real and what is simulated ([`README.md`](README.md#what-stands-out)), and Settings, About Arya, Keeping Arya running shows what the AI costs.
+- **Depth:** 1,842 Python tests, 533 web tests, a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
+
 ## Impact (30%)
 
 - A list that writes itself: running low, use soon, and where you usually buy it, each with a reason. [`README.md`](README.md#what-is-in-it)
