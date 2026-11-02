@@ -22,13 +22,16 @@ const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
 // [source path in repo, route inside the docs site, sidebar label]
 const SECTIONS = {
   'Start here': [
-    ['README.md', 'intro', 'What Arya is'],
-    ['JUDGES.md', 'judges', 'For judges'],
+    ['site/content/start.md', 'intro', 'What Arya is'],
+    ['README.md', 'full-readme', 'Full README'],
     ['docs/PRINCIPLES.md', 'principles', 'Principles and goals'],
     ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
+    ['docs/RUN-IT-YOURSELF.md', 'run-it-yourself', 'Run it yourself'],
+  ],
+  'For judges': [
+    ['JUDGES.md', 'judges', 'For judges'],
     ['docs/TRY-THE-FEATURES.md', 'try-the-features', 'Try the features'],
     ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'What we built'],
-    ['docs/RUN-IT-YOURSELF.md', 'run-it-yourself', 'Run it yourself'],
   ],
   'User guide': [
     ['assistant/docs/USER-JOURNEYS.md', 'guide/user-journeys', 'User journeys'],
@@ -62,18 +65,11 @@ const SECTIONS = {
   'API': [['docs/API.md', 'api/lists-api', 'Lists API v1']],
 };
 const ENG = 'Engineering process: how we built Arya';
+// Working notes (agent rules, status, ops, submission drafts, build plan, design
+// discussion, early pitch) stay in the repository only; the overview links to them.
 SECTIONS[ENG] = [
   ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'Overview'],
-  ['AGENTS.md', 'internal/agents', 'Agent rules'],
-  ['STATUS.md', 'internal/status', 'Status'],
-  ['assistant/docs/OPS.md', 'internal/ops', 'Operations'],
-  ['assistant/docs/SCALE-SIM.md', 'internal/scale-sim', 'Scale simulation'],
-  ['assistant/docs/SUBMISSION-DRAFT.md', 'internal/submission-draft', 'Submission draft'],
-  ['docs/quest/BUILD-PLAN.md', 'quest/build-plan', 'Quest build plan'],
-  ['docs/quest/DISCUSSION.md', 'quest/discussion', 'Quest design discussion'],
-  ['docs/quest/SUBMISSION.md', 'quest/submission', 'Submission checklist'],
   ['docs/DECISIONS.md', 'internal/decisions', 'Decisions'],
-  ['docs/quest/PITCH.md', 'internal/pitch', 'Early pitch'],
 ];
 const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
   'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md', 'docs/DECISIONS.md', 'docs/quest/PITCH.md']);
