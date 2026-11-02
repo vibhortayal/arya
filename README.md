@@ -181,8 +181,9 @@ cp .env.local.example .env       # put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
 
-Open http://localhost:8080 and tap "Try it now". The demo household loads on
-first start. Without a key the app and the demo open, but anything that calls a
+Open http://localhost:8080. On the first visit, create your account (a username
+and password) to read your own receipts, or close the sheet and tap "Try it now"
+for the demo household. Without a key the app and the demo open, but anything that calls a
 Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
 

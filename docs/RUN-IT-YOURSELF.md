@@ -22,9 +22,14 @@ cp .env.local.example .env       # then put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
 
-Open http://localhost:8080 and tap **Try it now**. The first build takes a few
-minutes. The first start writes the demo household into a Docker volume; later
-starts keep what is there.
+Open http://localhost:8080. The first build takes a few minutes. On the first
+visit a "Create your account" sheet opens. That makes the one real account on
+this copy: a username (letters, digits and `. _ - + @`) and a password. Use it
+to snap or upload your own receipts and see them read and saved, which is
+Arya's core feature. Or close the sheet and tap **Try it now** for the demo
+household. The demo keeps nothing, so it cannot add receipts; Ask, photos of a
+list and voice work there with your key. The first start also writes the demo
+household into a Docker volume; later starts keep what is there.
 
 ## Settings (`.env`)
 Only one is required.
@@ -49,6 +54,8 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
 [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md).
 
 ## Stop, reset, change the port
+- After editing `.env`, run `docker compose up -d`. `docker compose restart` does
+  not re-read `.env`.
 - Stop: press Ctrl+C, or `docker compose down`. Your data stays.
 - Start over (wipes the volume; the next start writes the demo household again):
   `docker compose down -v`.
@@ -57,8 +64,8 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
 ## What is different from the live site
 - One container, plain `http://localhost`, no Caddy and no certificate. The
   session cookie is set to work over plain http (`ARYA_INSECURE_COOKIE=1`).
-- JSON files in a volume instead of Supabase. No email, so no email sign-in;
-  use the demo.
+- JSON files in a volume instead of Supabase. No email, so you sign in with the
+  username and password you made on the first visit.
 - Demo Town (the simulated neighborhood) is off, so the demo household shops at
   its own stores. Registration is closed. The `compose.yaml` here does not
   touch the live deploy, which uses `assistant/deploy/docker-compose.yml`.
@@ -85,9 +92,10 @@ Current counts and known failures: [`STATUS.md`](../STATUS.md). CI is
 manual-only (`.github/workflows/tests.yml`).
 
 ## If something goes wrong
-- **"This copy of Arya has no Meta key, so AI features are off."** `MODEL_API_KEY`
-  is empty or the container was not restarted. Edit `.env`, then
-  `docker compose up -d`.
+- **"This copy of Arya has no Meta key, so AI features are off. Put your key from
+  dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d"**
+  `MODEL_API_KEY` is empty, or the container was not recreated after you
+  edited `.env`. Fix `.env`, then `docker compose up -d`.
 - **Port already in use.** Set `ARYA_LOCAL_PORT` to a free port.
 - **A model error with a key set.** The key was rejected or has no credit;
   check it at dev.meta.ai.
