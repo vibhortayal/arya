@@ -183,7 +183,7 @@ handle the nightly backup. CI is manual only
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
 | `ARYA_USER_HEAVY_MONTHLY_USD` | `3` | one account's month of AI spend that shows a heads-up on its usage screen |
 | `ARYA_USER_MONTHLY_CEILING_USD` | `5` | one account's month of AI spend that pauses its paid reads until the 1st |
-| `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); the owner can lift it with `POST /api/usage/unfreeze` |
+| `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); I can lift it with `POST /api/usage/unfreeze` |
 | `ARYA_COST_PUBLIC_MIN` | `50` | accounts with spend before the whole-Arya totals show on the usage screen |
 | `ARYA_COST_PAID_BY` | `Hackathon credits` | who the usage screen says pays for the AI reading |
 | `ARYA_DEMO_DAILY_BUDGET_USD` | `20` (code default `2`) | demo household's day bucket |
@@ -381,7 +381,7 @@ Each agent has a narrow job and a named limit.
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,
   never a 500 (`meta_client.parse_json`). There is no per-user spend cap;
-  the owner decided on 2026-10-29 to go without one for now.
+  I decided on 2026-10-29 to go without one for now.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -400,7 +400,7 @@ Each agent has a narrow job and a named limit.
   missing. `.env.example` names them.
 - The full test suite runs before a PR merges. A GitHub Actions workflow
   (`.github/workflows/tests.yml`) runs it on demand only, not on
-  every PR (owner's choice). Nothing is committed to `main` directly;
+  every PR (my choice). Nothing is committed to `main` directly;
   a session log goes to `loops/` and `STATUS.md` is updated.
 
 ### 11.1 Logs and backups (VM runbook)
@@ -436,7 +436,7 @@ memory. The store directory (`stores.json`) is platform-level.
 
 ## 13. Not built / held
 
-- Per-user spend caps (§10). Not built; the owner decided to go without
+- Per-user spend caps (§10). Not built; I decided to go without
   one for now.
 - Public registration is closed by default (`ARYA_REGISTRATION_OPEN`). The
   owner can open it in Settings. Every door runs on Meta models: Muse in

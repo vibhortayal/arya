@@ -6,7 +6,7 @@
 list, the dungeon is the real store, the treasures are the items on
 their real shelves. Mobile first; the keyboard is for the demo only.
 
-## Owner rules (2026-10-28)
+## My rules (2026-10-28)
 
 - No lives, no game over, no clock, no way to lose. Points only go up.
 - Dopamine during the hunt and after it, never stress or pressure.

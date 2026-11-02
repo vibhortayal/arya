@@ -14,7 +14,7 @@ source of truth.
 
 ## Connect
 
-Tested by the owner on his own Muse (2026-11-02): no terminal and no settings
+Tested by me on my own Muse (2026-11-02): no terminal and no settings
 file. He asked the Muse agent to connect to Arya. It asked for the code, opened
 a secure connector-credentials vault for him to paste it into, and the
 connection worked. The code never goes in chat.

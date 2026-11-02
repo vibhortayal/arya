@@ -2,7 +2,7 @@
 
 Written from the built interface (Stage 6 UX pass, 2026-10-27), per the
 Impeccable flow: DESIGN.md records the world that shipped, it does not
-prescribe a world that did not. Direction source: the owner's brief —
+prescribe a world that did not. Direction source: my brief —
 the Apple UI design system (impeccable.style skill vendored at
 `.claude/skills/impeccable/`; apple-ui-design-system tokens).
 
@@ -31,7 +31,7 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
 - Accent: one orange (--acc #C2410C, soft #FDEEE8). It marks the active
   tab, primary pills, links and the game. The only other saturated color
   is danger (#c81e1e) for returns and recording state.
-- Quest sub-palette (game/game.css, owner approved 2026-10-30): each
+- Quest sub-palette (game/game.css, I approved 2026-10-30): each
   color has one job. Green #237A40 (pressed edge #17562C) = grabbed or
   mapped: Got it, Found it here, Mapped, done ticks. Gold #FFC83D = the
   golden item. Orange = the app accent above (main buttons, Map it).
