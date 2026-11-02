@@ -38,6 +38,9 @@ through import and export.
 - **Quest community layer.** Leaderboards, badges the data makes funny, team
   Shop-Offs settled by receipt time and Clue Hunts. Designed, not built.
   Source: `docs/quest/GAME-DESIGN.md`.
+- **A store-data partnership.** Online store videos are off limits (copyright,
+  platform terms); a licensed source of in-store video and photos could power
+  better maps. See [`docs/MODELS.md`](MODELS.md).
 - **Density first.** Win one metro's stores completely before expanding; a thin
   layer over many stores is worth little. Source: `docs/quest/BUSINESS.md`.
 - **Shared price data from receipts.** Today every price comes from your own
@@ -71,6 +74,8 @@ through import and export.
 - **A hosted open-weights option.** Today one open model (Muse Spark Open) is
   hosted on Baseten for two small jobs. A fuller option for people who want
   their reads on open weights is an idea only.
+- **Models we did not use** (Spark Contributor for a community tier, Muse
+  Glimmer self-hosted): see [`docs/MODELS.md`](MODELS.md).
 - A non-English Ask currently sends the whole feature guide (about 19 KB) on
   each question; trimming that is planned.
 
