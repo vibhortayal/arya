@@ -394,7 +394,12 @@ def receipt_detail(receipt_id):
                            "unit_price": signed(ln, "unit_price"),
                            "line_total": signed(ln, "line_total"),
                            "line_type": ln.get("line_type", "item"),
-                           "status": ln.get("status")}
+                           "status": ln.get("status"),
+                           # What the store printed, for the Fix sheet's
+                           # "Printed: ..." line; "edited" marks a line a
+                           # person changed (receipt line edit, #407).
+                           "raw": ln.get("raw"),
+                           **({"edited": True} if state.line_edited(ln) else {})}
                           for ln in r.get("lines", [])]})
             return out
     return None
