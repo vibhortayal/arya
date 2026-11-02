@@ -41,7 +41,7 @@ disagreement goes to the review queue.
   gates and eval scoring. Contributor is an operator setting only
   (`ARYA_SPARK_TIER=contributor` or the Ops switch), off; a user opt-in
   is a possible future option, not built.
-- Muse Code: Contributor OFF before code work.
+- Muse Code: Contributor OFF before code work (early, no longer used).
 
 ## 2. Foundations
 

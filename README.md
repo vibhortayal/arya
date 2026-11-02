@@ -338,7 +338,7 @@ why the early commits arrive so fast. The session logs in `assistant/loops/`
 record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.
 
-**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app. The early engine spike is the one exception, as described above.
+**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app. The one part not built with Claude is the engine spike written by Muse Wonder, described above.
 
 ## Characters
 

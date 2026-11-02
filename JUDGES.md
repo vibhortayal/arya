@@ -34,7 +34,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
 - Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it never sees personal data. `assistant/api/open_client.py`
 - SAM 3.1 boxes shelf items and blurs every person before any frame is kept. `assistant/api/shelfscan.py`
-- Not used, said plainly: Muse Glimmer, and Muse Code in the shipped app. I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. The early engine spike was written by Muse Wonder (README, "How this was built").
+- Not used in the shipped app: Muse Glimmer and Muse Code. How I built it, including the two days spent with Muse Code: README, "How this was built".
 
 ## Technical depth and execution (20%)
 
