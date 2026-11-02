@@ -529,7 +529,7 @@ PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer 
 # fallback.
 BAR_NAMES = {"home": "Today", "list": "Lists", "receipts": "Receipts", "stores-mine": "Stores",
              "analysis": "Spending", "chat": "Ask", "community": "Quest", "help": "Help", "profile": "Settings"}
-DEFAULT_BAR = ["home", "list", "community", "chat"]
+DEFAULT_BAR = ["home", "analysis", "community", "chat"]  # owner, 2026-11-02
 BAR_MAX = 4
 
 
