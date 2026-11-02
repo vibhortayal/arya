@@ -31,7 +31,7 @@ const SECTIONS = {
   'For judges': [
     ['JUDGES.md', 'judges', 'For judges'],
     ['docs/TRY-THE-FEATURES.md', 'try-the-features', 'Try the features'],
-    ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'What we built'],
+    ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'Built in the hackathon window'],
   ],
   'User guide': [
     ['assistant/docs/USER-JOURNEYS.md', 'guide/user-journeys', 'User journeys'],

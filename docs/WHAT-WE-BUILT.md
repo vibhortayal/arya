@@ -1,6 +1,61 @@
-# What we built
+# Built in the hackathon window
 
-The 3-minute video cannot show everything. This page lists the standout parts
+The hackathon window opened on Oct 27, 2026. This page says what existed
+before it, what I made in it and when, taken from git. Times are US Eastern.
+Anything git cannot confirm is marked **[TO CONFIRM]**.
+
+## What existed before the window
+
+- **Oct 26, 13:20 to 16:51: the idea search.** 28 commits in a separate research
+  repo (`vibhortayal/meta-hackathon-research`): candidate ideas and a plan for
+  spikes, with no spike results. This is before Oct 27, and I say so plainly.
+- **My 114 Costco receipts** (back to 2023) are my own purchase history, imported
+  as data. They are not in this repo.
+- **The server.** The Oracle VM already existed for my other hobby projects;
+  setting up Arya on it began on Oct 27.
+- **Nothing in the Arya repo is older than Oct 27, 15:13 ET.** Its first commit
+  already holds the design documents (`SPEC.md` and `IMPLEMENTATION.md`, about
+  900 lines), which I wrote before committing them.
+
+## What I made, and when
+
+| When (ET) | What | Evidence |
+|---|---|---|
+| Oct 27, morning | Grocery Navigator brainstorm notes, stamped 11:37 and 11:46 | research repo, `IDEAS-owner-brainstorm.md` |
+| Oct 27, 13:50 | Spike 1: receipt decode on 7 real Costco PDFs with Muse Spark, arithmetic matched 7 of 7, $0.20 | research repo, `89ff3ab` |
+| Oct 27, 14:26 | Spike 2: photo receipts with Spark, 32 of 32 lines on 4 receipts | research repo, `218f332` |
+| Oct 27, 14:29 | Spike B: the Costco pull test hit a bot wall, so I chose receipt uploads | research repo, `a2ef346` |
+| Oct 27, 15:03 to 15:06 | My Costco receipts staged: 63, then 114 | research repo, `25cba97`, `f1cbdd0` |
+| Oct 27, 15:13 | **First Arya commit** | `ca9d3ee` |
+| Oct 27, 15:31 to 15:38 | Decode, item dictionary, ledger and patterns, and the first phone app land in four commits | `e134814` to `b210863` |
+| Oct 27, 15:43 to 15:52 | Public HTTPS, then the DuckDNS address | `e326e348`, `c2430d6d` |
+| Oct 27, 16:02 to 16:03 | Photo decode path and Gate 0 verdict, PASS (9 public photos, hand labels) | `cb907e3d`, `e7ebb235`; research repo `39d6433` |
+| Oct 27, 21:00 | Muse Wonder commissioned to author the store-frame localizer | `881b115` |
+| Oct 27, 21:12 | Model policy amendment: Wonder reads photos through Nov 4 (superseded Nov 2: Spark first, Wonder on flagged receipts, through Nov 9) | `c01c007a` |
+| Oct 27, 22:19 | Wonder's first localizer spike vendored as `api/localizer.py` (removed Oct 29, `51cab53`) | `47b2471` |
+| Oct 27, 22:59 | Photo decode switched to Wonder | `7f32f2f` |
+| Oct 27, 23:02 | Wonder-vs-Spark eval committed in the research repo | `b39a961` |
+| Oct 28 | Accounts, the judge front door; Supabase, Resend and Baseten set up | see the README timeline |
+| Oct 30 | teamnightshift.org registered at Cloudflare; live site moved to arya.teamnightshift.org with invite-only sign-in | |
+| Oct 31 to Nov 2 | Hardening, the navigation tab, lists, the Kroger aisle lookup, docs, "Run it yourself" | |
+
+The Wonder eval is the one the model policy cites: on the 9 Gate 0 photos (98
+hand-labeled lines) Wonder scored 97/98 and Spark 92/98, with price errors 0 vs
+4, for $4.47 of model spend. It shows "92 of 98" for Spark. The earlier Gate 0
+run, at 16:02, recorded the same Spark at 90/98; that is run-to-run variance on
+one small set, so quote the gap between the models, not either number alone.
+
+## What git cannot confirm
+
+- **[TO CONFIRM] Who wrote the first engine commits.** The early commits are
+  authored "Spark", which is only a name in git. Git does not record which model
+  or tool wrote the decode, dictionary, ledger, patterns and first phone app.
+- **[TO CONFIRM] The Muse Wonder spike sessions.** No start or end time is
+  recorded for them, and the spike folders the docs mention are in neither repo.
+
+## What exists today
+
+The 3-minute video cannot show everything. This list is the standout parts
 of Arya that exist today, each with why it matters and where the detail lives.
 Everything here is built and in the code. Ideas that are not built are on the
 [After the hackathon](ROADMAP.md) page. For the product in full, see

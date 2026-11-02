@@ -366,14 +366,16 @@ Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
 ## How this was built
 
 Everything here was built in the hackathon window, which opened on Oct 27,
-2026. The first commit is Oct 27, 15:13 ET. The engine (decode, dictionary,
-ledger, patterns, the first PWA) was written by Muse Wonder in a separate
-spike session and committed here in stages over about 30 minutes, which is
-why the early commits arrive so fast. The session logs in `assistant/loops/`
-record the rest. My 114 receipts (back to 2023) are my
+2026. The idea search began a day earlier, on Oct 26, in a separate research
+repo. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
+older. The engine (decode, dictionary, ledger, patterns, the first phone app)
+landed in four commits between 15:31 and 15:38. Git records them under the
+author name "Spark" and does not record which tool wrote them. The dated table
+is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
+in `assistant/loops/` record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.
 
-**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app. The one part not built with Claude is the engine spike written by Muse Wonder, described above.
+**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app.
 
 ## Characters
 

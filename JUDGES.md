@@ -4,6 +4,7 @@ Arya learns how you shop from your receipts and helps shoppers help each other. 
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
 - **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
+- **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the Nov 3 freeze and linked here then. The live demo and the path below work without it.
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)
