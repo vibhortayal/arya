@@ -318,7 +318,7 @@ The scored reports and the Gate 0 labels and results are in
 - **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **One server, a few dozen people at once.** Arya runs as one server process
   on one VM. A few dozen people at the same time is about what it handles;
-  beyond that it gets slower, not broken. On a development machine with a
+  beyond that it gets slower. On a development machine with a
   117-receipt account (not yet on the live server), opening Today took about
   1.1 s with 10 people at once and about 4 s with 30. Demo sessions live in
   that process's memory and the data files have one writer, so it cannot yet
