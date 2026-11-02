@@ -25,6 +25,17 @@ total, and learns what your household buys, how often and where. Your list
 then mostly writes itself. Add items by typing, voice or a photo of a note,
 ask Arya questions, and, if you like, turn the trip into a game.
 
+## Build for Your World
+
+- **What Arya is.** A grocery list that learns from your receipts, then mostly
+  writes itself.
+- **Why we built it.** The owner had this problem: carrying the list in their
+  head and not knowing where the money went. Arya frees up that time and
+  mental space. It is for shoppers, not for money: households and groups share
+  lists and help each other. See `docs/PRINCIPLES.md`.
+- **What it uses.** Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
+  Transcribe, Muse Image and Muse Spark Open, each with one job.
+
 ## Problem
 
 Groceries are one of a household's biggest weekly costs in money and

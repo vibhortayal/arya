@@ -25,7 +25,7 @@ Arya Quest is a collection game played in the player's own store, mapped by the 
 
 1. **Parents first.** The pain is sharpest and most memorable: a child who begs to find the next item is a child following the list.
 2. **Households second.** The brain underneath (patterns, spend, returns) serves the person who plans the shopping.
-3. **Mappers.** Early adopters who scan their store get first-mapper credit on it — status is the wage the game pays for labor.
+3. **Mappers.** Early adopters who scan their store get first-mapper credit on it — status is the reward the game gives for the work.
 
 ## The flywheel
 
