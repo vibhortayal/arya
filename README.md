@@ -1,5 +1,6 @@
-<h1 align="center">Arya</h1>
-<p align="center"><strong>She remembers the list.</strong></p>
+<p align="center">
+  <img src="assets/readme-header.svg" alt="Arya: she remembers the list" width="100%">
+</p>
 
 <p align="center">
   <a href="https://vibhortayal.github.io/arya/"><strong>Read the docs site</strong></a>
