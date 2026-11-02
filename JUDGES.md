@@ -60,7 +60,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 |---|---|---|---|
 | Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 in the earlier Gate 0 run); staple judge precision 0.79 (41 of 52) against a cadence-based proxy on one household's receipts; it moves with the proxy definition |
 | Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, zero price errors when read alone (not the live path) |
-| SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, blurs people | Used in the guided store scan |
+| SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, pixelates the people it detects | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
 | Muse Image 1.0 | `muse-image-1.0` | The 23 grab-celebration characters (generated once) and share looks (live, per tap) | n/a |
 | Muse Spark Open | `meta-models/muse-spark-open-1026` (hosted on Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |

@@ -32,7 +32,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 - **Muse Spark**: reads receipt photos first, and also runs the staple judge, the Curator, Ask Arya and photo reading. Arya uses the Standard tier.
 - **Muse Wonder**: re-reads a receipt only when the arithmetic checks flag it, or when Spark fails.
-- **SAM 3.1**: finds shelves and signs in a store scan, boxes items for Find it for me and blurs people.
+- **SAM 3.1**: finds shelves and signs in a store scan, boxes items for Find it for me and pixelates the people it detects.
 - **Muse Voice Transcribe**: turns speech into text for the list mic and Ask Arya.
 - **Muse Image**: made the grab-celebration characters in Quest, once.
 - **Muse Spark Open**: the open-weights model, hosted on Baseten. It is the second seat of the staple judge and sees item names only (no prices, dates, stores or account details).
