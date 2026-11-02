@@ -1,7 +1,7 @@
 # OPS — watching Arya and what to do when it breaks
 
 Written 2026-10-31 from the ops review. Everything here runs on the VM,
-from `assistant/deploy`. The owner is the only operator.
+from `assistant/deploy`. I am the only operator.
 
 ## What watches the app
 | Thing | Where | Alerts you when |
@@ -23,7 +23,7 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
 
 ## Own Meta keys (BYOK, 2026-11-01)
-**Status: unfinished, switched off on purpose, not used.** The owner decided not to use it (2026-11-02). No `ARYA_KEY_VAULT_SECRET` is set, so the Settings row, the Help topic, the Ask answer and the sign-up door stay hidden and nothing is stored. Do not set the secret. The notes below only apply if the decision is ever reversed (`docs/ROADMAP.md`).
+**Status: unfinished, switched off on purpose, not used.** I decided not to use it (2026-11-02). No `ARYA_KEY_VAULT_SECRET` is set, so the Settings row, the Help topic, the Ask answer and the sign-up door stay hidden and nothing is stored. Do not set the secret. The notes below only apply if the decision is ever reversed (`docs/ROADMAP.md`).
 - **Before the deploy that ships it:** set `ARYA_KEY_VAULT_SECRET` in `deploy/.env` (generate with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), then `docker compose up -d`. Without it the feature stays off and nothing is stored. Losing or changing the secret means every saved key must be entered again (the account sees "needs attention"). The image needs the `cryptography` wheel (in `api/requirements.txt`); check the ARM build before deploy day.
 - **Two kinds of account:** "shared" (invited, Arya's key; may add its own key in Settings) and "own" (signed up with its own key; `key_mode: "own"` in `users.json`). An own account never reads on Arya's key: with no working key its reads answer 402 and the rest of the app works.
 - **The sign-up door:** `POST /auth/own-key/door {"open": false}` (owner only) closes it at once; `ARYA_OWN_KEY_SIGNUP` is only the bootstrap default. It also closes itself when `own_key_signups_per_day` is used up. Limits: 3 key checks per IP an hour, 3 per email a day, 10 accounts per IP a day, one key on at most 3 accounts.

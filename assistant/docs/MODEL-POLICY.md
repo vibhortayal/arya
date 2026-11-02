@@ -1,4 +1,4 @@
-# Model policy — cost efficiency (owner directive, 2026-10-27)
+# Model policy — cost efficiency (my directive, 2026-10-27)
 
 Rule: every job runs on the cheapest model that holds its golden-set score.
 Escalation is by evidence (a scored eval), never by default.
@@ -34,7 +34,7 @@ Escalation is by evidence (a scored eval), never by default.
 - Policy targets: a full trip decode at or under 1–2 cents; total hackathon
   API spend well under the $150 credit (plan §8 estimated $57–61 at defaults).
 
-## Credits (owner, 2026-10-29)
+## Credits (me, 2026-10-29)
 There is no $0 rule. Hackathon credits (Meta Model API, plus Baseten and Modal)
 are available, so spending on Meta models (Muse Image, Spark, Wonder, SAM) is
 allowed when it improves the product or demo. Stay budget-aware: the cheapest
@@ -43,7 +43,7 @@ and large batches get a capped trial first. The in-code caps (daily and demo
 budgets) are unchanged.
 
 ## Hackathon amendment (2026-10-27, per WONDER-EVAL.md; changed 2026-11-01)
-**Owner decision 2026-11-01:** receipt photos are read by the **auto
+**My decision 2026-11-01:** receipt photos are read by the **auto
 reader** (Ops "Photo reader" = "Spark first, Wonder as backup"): Spark
 reads first, and Wonder re-reads only when Spark fails or the checks
 below flag the read (arithmetic, low confidence on too many lines). Wonder
@@ -65,7 +65,7 @@ Ask Arya STAY on Spark Standard (judge spot check 20/20 vs 20/20, no Wonder adva
 cannot carry Wonder's latency). This amendment expires Nov 9; the
 production policy above is unchanged.
 
-**Auto reader (built 2026-11-01; the owner's pick for judging on
+**Auto reader (built 2026-11-01; my pick for judging on
 2026-11-01; NOT yet measured on photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)
 reads with Spark first and runs the checks in `api/decode/checks.py`
 (lines add up to the subtotal, subtotal plus tax equals the total, the
@@ -84,7 +84,7 @@ default changes, run `python3 -m harness.photo_reader_eval --photos DIR`
 on the Gate 0 photos and require that every price where Spark and Wonder
 differ is on a flagged receipt. After Nov 9 the amendment above ends;
 auto is the way to keep Wonder's accuracy only where the checks say it
-is needed, if the owner extends it, and Spark-only otherwise.
+is needed, if I extend it, and Spark-only otherwise.
 
 **Demo budget.** Each demo visit may spend `ARYA_DEMO_SESSION_BUDGET_USD`
 (default $0.40) on live reads, held in that visitor's in-memory sandbox;
@@ -102,11 +102,11 @@ is the amendment path. Receipts record `decoded_by`, so the switch is
 visible in the data. Spark-only photo decode scored 93.88% in the Gate 0
 eval, with the review queue as the mitigation.
 
-## Spark tier (owner decision, 2026-11-01)
+## Spark tier (my decision, 2026-11-01)
 Spark and Wonder run in Standard mode. Meta's models page (dev.meta.ai/docs/models):
 "In Standard mode, your content is not used to train Meta models." Earlier on
-2026-11-01 the owner had moved the app's Spark calls to
-`muse-spark-1.3-contributor` for the lower price; the same day the owner moved
+2026-11-01 I had moved the app's Spark calls to
+`muse-spark-1.3-contributor` for the lower price; the same day I moved
 them back to Standard, so nothing the app sends is used for training.
 
 - Code: `meta_client.resolve_mode()` maps the app's "standard" (Spark) mode to
@@ -115,7 +115,7 @@ them back to Standard, so nothing the app sends is used for training.
   `personal=True` is still refused.
 - Option, not built: a community (Contributor) tier with user opt-in could
   support more users at lower cost. It needs an opt-in screen, a per-user
-  routing rule and updated privacy text first, and the owner's word.
+  routing rule and updated privacy text first, and my word.
 - Rate limits: Standard allows 3,000 requests/min per team. The Contributor tier
   allows 150/min, so `meta_client` keeps a sliding-window gate at 140/min for that
   case; a call that would wait over 20 s fails with "Arya's AI is busy right now"

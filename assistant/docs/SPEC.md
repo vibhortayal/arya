@@ -2,7 +2,7 @@
 
 Team Nightshift. Indie track. Meta Global AI Developer Hackathon.
 Submission deadline: November 4, 2026, 9:00 PM ET.
-The owner reviews the final package. No person submits without the approval of the owner.
+I review the final package. No person submits without my approval.
 This document uses ASD-STE100 style. Sentences are short. Each sentence has one idea.
 
 Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
@@ -40,7 +40,7 @@ Food gets the deep functions because food expires and food is visible in the hom
 ### 2.3 The MVP
 
 The MVP has one user and one household.
-The MVP uses the real data of the owner.
+The MVP uses my real data.
 The MVP closes the core loop of Section 3 with no store map.
 Quest (Section 6.8) is the play layer. It feeds the core and is not on its critical path.
 
@@ -81,7 +81,7 @@ Rule 10. A reasoning agent proposes changes to identity. It never applies them. 
 
 ## 5. Users and user stories
 
-The primary user is the owner. The data is the data of the owner.
+The primary user is me. The data is my data.
 
 | # | Story |
 |---|---|
@@ -288,7 +288,7 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
 Update 2026-11-01: Spark runs in Meta's Standard mode (the code default, and confirmed live). Receipt photos are read by Spark first (auto, the default); a Wonder re-read of a flagged receipt also runs on Standard. A cheaper Contributor tier exists as an operator setting (ARYA_SPARK_TIER=contributor or the Ops switch) and is off. A user opt-in for it is only a possible future option and is not built.
-The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
+The demo household is synthetic (the "Sharma family"). Its data is invented. My data lives on my own account only. No data of a third party is in the demo.
 
 ### 7.4 Connectivity and degradation
 
@@ -332,13 +332,13 @@ Targets in the store are 64 pixels or more. No text input is required in the sto
 ### Gate 0 — photo-receipt gate (before the build commits)
 
 Set as planned: 20 real paper receipts, stores and light mixed.
-As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus the owner subset (32 lines), reported separately, as below.
+As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus my subset (32 lines), reported separately, as below.
 Data isolation is a hard rule. Public receipts are test fixtures only.
-A public receipt never enters the ledger of the owner.
-A public receipt never enters the dictionary of the owner.
-A public receipt never enters the patterns of the owner.
+A public receipt never enters my ledger.
+A public receipt never enters my dictionary.
+A public receipt never enters my patterns.
 Gate data lives in a separate store. The gate store is discarded or archived after scoring.
-The two subsets report separately. The pass mark applies to the combined set and to the owner subset.
+The two subsets report separately. The pass mark applies to the combined set and to my subset.
 Pass mark: 90 percent or more of lines correct.
 A correct line has the right product, the right quantity, and the right price.
 The build commits only after this gate passes.
@@ -347,7 +347,7 @@ Fallback after a failure: PDF receipts and e-receipts only. Photo intake leaves 
 Status of the evidence:
 
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
-- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). Owner subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
+- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
 
 ### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
 

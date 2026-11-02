@@ -9,13 +9,13 @@ ffmpeg, Postgres) does plumbing only.
 | **Muse Spark 1.3 Standard** | Staple judge, Curator, Ask Arya, list photos, expiry-date photos, grocery check for unknown names, order-text fallback, shelf labels, Shelf Scan crop verification, receipt fallback | Server (Meta Model API) |
 | **Muse Spark Open** (open weights, hosted on Baseten) | Second seat of the staple judge (names only, advisory; agreed 3 of 4 on the demo account) and dictionary category labels (32/32 agreement with hosted Spark). Never sees personal data | Batch jobs (`api/open_client.py`) |
 | **Muse Spark** (user's own Muse + connector) | Edge perception: lists, receipts from chat | The user's Muse session |
-| **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (owner, 2026-11-01). Read alone: 97/98 lines after adjudication vs Spark 92/98, zero price errors. | Server |
+| **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (me, 2026-11-01). Read alone: 97/98 lines after adjudication vs Spark 92/98, zero price errors. | Server |
 | **Muse Image 1.0** | The 20 grab-celebration characters | Generated once, shipped as assets |
 | **Muse Voice Transcribe** | The list mic and Ask Arya's mic | Server |
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
 
 ## Rules
-- Spark and Wonder run in Standard mode (owner, 2026-11-01): content is not used to train Meta models. Contributor
+- Spark and Wonder run in Standard mode (me, 2026-11-01): content is not used to train Meta models. Contributor
   is used for eval and synthetic data only; a community Contributor tier with user opt-in is a possible later option, not built.
 - Model output is a proposal: receipts must reconcile, low-confidence
   lines queue for review, identity changes need the user's approval.

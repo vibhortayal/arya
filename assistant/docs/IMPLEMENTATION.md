@@ -32,7 +32,7 @@ disagreement goes to the review queue.
 | The iteration cap is hit (12 prompt, 3 candidate, 4 builder rounds) | Stop. Escalate with the score path. |
 | Under 1 point of gain in 3 attempts | Stop. Propose a new approach. |
 | Stage spend over allocation by 50% | Stop. Escalate before more spend. |
-| A loop finds a spec error | Stop. The owner decides. |
+| A loop finds a spec error | Stop. I decide. |
 
 ### Budgets and modes
 - Meta API dollars: the $150 credit, metered from the first call.
@@ -75,7 +75,7 @@ and a variable tail. Prefix text does not change between calls.
 ### 2.3 Hosting
 Development runs in the Hatch workspace. The runtime is the Oracle VM,
 deployed by `git pull` only (never an rsync --delete: `deploy/.env` is
-VM-only). The owner provisions the key on the VM.
+VM-only). I provision the key on the VM.
 
 | Layer | Choice | Reason |
 |---|---|---|
@@ -183,7 +183,7 @@ RoutePlan { route_id, store_id, index_version,
 | 7 Groups | Merged (#121, live sync #127, on by default #128). |
 | 8 Price intelligence | Merged (#120): own-receipt prices, Arya's powers, daily card. Community prices, Deals, Arya Shoppers: after Nov 4. |
 
-Merged is not deployed. The owner deploys with `git pull` and
+Merged is not deployed. I deploy with `git pull` and
 `docker compose up -d --build`. STATUS.md lists the open steps.
 
 Switched-off flags: `ARYA_PUSH_REMINDERS`, `ARYA_SUPABASE_AUTH`. All app
@@ -192,7 +192,7 @@ settings pass through `deploy/docker-compose.yml`. Quest work after Stage 6 foll
 ## 5. Daily workflow
 1. Pick the next unpassed check.
 2. Work on a branch based on `main`. Do not stack PRs.
-3. Run the suite by hand before a commit. CI is manual only (`.github/workflows/tests.yml`, owner's choice).
+3. Run the suite by hand before a commit. CI is manual only (`.github/workflows/tests.yml`, my choice).
 4. Prompt work runs in the eval runner; each attempt writes a loop file.
 5. Every session appends a loop entry and updates STATUS.md.
 
@@ -204,7 +204,7 @@ prompt or contract change re-runs the affected sets.
 | Set | Contents | Used by |
 |---|---|---|
 | golden/photos-20 | 20 real paper receipts, mixed stores and light, with hand-checked lines | Stage 0.5 Spike A gate |
-| golden/receipts-real | The receipts of the owner as PDFs, with hand-verified decodes; Standard mode only | Stage 1 gate |
+| golden/receipts-real | My receipts as PDFs, with hand-verified decodes; Standard mode only | Stage 1 gate |
 | golden/receipts-synthetic | Fabricated receipts: return lines, a duplicate, discount lines, a gift-card line, a for-others candidate, a blurry photo | Stage 1 loops |
 | golden/ledger | The Stage 1 output as frozen data, with hand-computed pattern values | Stage 2 gate |
 | golden/trips | Scripted reconciliation trips: one clean trip, one mismatch, one return, one for-others line | Stage 2 gate |
@@ -214,7 +214,7 @@ prompt or contract change re-runs the affected sets.
 ## 7. Demo
 The judge path is `docs/quest/JUDGE-PLAYBOOK.md`. The video beats are
 in `docs/quest/SUBMISSION.md`. Day minus 1 (Nov 3): final dry
-run, restore test of the nightly sync. Owner-only steps: the API key on
+run, restore test of the nightly sync. Steps only I can do: the API key on
 the VM, the hostname, the final submission (explicit approval).
 Submission target 6:00 PM ET; the deadline is 9:00 PM ET.
 
