@@ -408,6 +408,7 @@
     }
   },
   "ask": {
+    "photoTooLarge": "That photo is too large to send. Try a screenshot of it, or a photo from closer.",
     "newChat": "New chat",
     "editTitle": "Edit questions",
     "editHint": "Your quick questions on Ask. Drag to reorder, remove what you never tap.",

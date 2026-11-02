@@ -1,6 +1,7 @@
 """Expiry dates: read one off a package, save it, and act on it."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -52,7 +53,7 @@ async def expiry_read(req: Request, sample: int = 0):
             read = await run_in_threadpool(expiry.read_expiry_photo, body, client,
                                            media_type=media, today=today)
         except RuntimeError as e:
-            raise HTTPException(502, str(e)[:200])
+            raise HTTPException(502, safe_detail(e))
     item_id = expiry.match_item(read["name"], state.dictionary()["entries"], state.flags())
     read["match"] = ({"item_id": item_id, "name": _known_item_name(item_id)}
                      if item_id else None)
