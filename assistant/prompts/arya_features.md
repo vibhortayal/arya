@@ -113,3 +113,5 @@ Arya opens with no signal. A bar says "You're offline". You can look through lis
 
 Photo reading: Arya checks a receipt photo's numbers and re-reads it with a more careful model if they do not add up.
 Store names: Arya shows one readable name per store, like Costco Sunnyvale, built from the address and store number printed on the receipt. A receipt that prints only the chain shows "location unknown".
+## my stores | my stores missing removed
+My stores: a store joins when you pick it for a list or a receipt comes from it. A store you remove stays out unless you add it again.

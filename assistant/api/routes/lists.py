@@ -773,6 +773,14 @@ def lists_get():
     return {"lists": state.named_lists()}
 
 
+def _follow_stores(fields):
+    """A store linked to a list joins the linker's My stores, unless
+    they removed it (owner, 2026-11-02; api/stores.follow)."""
+    if fields.get("store_ids"):
+        from api import stores as stores_mod
+        stores_mod.follow(fields["store_ids"])
+
+
 def _create_list(fields):
     import uuid
     rows = state.named_lists()
@@ -781,6 +789,7 @@ def _create_list(fields):
     _check_list_name_free(rows, fields["name"])
     row = {"id": "l-" + uuid.uuid4().hex[:8], **fields}
     state.save_named_lists(rows + [row])
+    _follow_stores(fields)
     return row
 
 
@@ -807,6 +816,7 @@ async def lists_update(req: Request):
         _check_list_name_free(rows, fields["name"], own_id=row["id"])
     row.update(fields)
     state.save_named_lists(rows)
+    _follow_stores(fields)
     return row
 
 

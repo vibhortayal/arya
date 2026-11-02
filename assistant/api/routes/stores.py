@@ -19,6 +19,7 @@ def stores_search(q: str = "", quests: int = 0):
 @router.get("/api/stores/mine")
 def stores_mine():
     from api import stores as stores_mod
+    stores_mod.backfill_mine()  # once per account (owner, 2026-11-02)
     return {"stores": stores_mod.mine()}
 
 
