@@ -1,42 +1,95 @@
-# Arya
+<h1 align="center">Arya</h1>
+<p align="center"><strong>She remembers the list.</strong></p>
+<p align="center">
+  A grocery list that learns from your receipts, then mostly writes itself.<br>
+  Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).
+</p>
 
-**She remembers the list.**
-
-Arya is a grocery list that learns. It reads your receipts, checks every
-line against the printed total, and learns what your household buys, how
-often, and at which store. The list then mostly writes itself: what is
-running low, what to use soon, and where you usually buy it.
-
-Start shopping - Go on a Quest to make the chore feel like a game. It turns
-your list into a hunt through a model of your store and ends on a photo of
-your receipt.
-
-Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift,
-Indie track). Submission deadline: Nov 4, 2026, 9:00 PM ET.
-
-**Judging this?** Start at [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links in one page.
-
-**For developers:** open Lists API and docs at https://arya.teamnightshift.org/developers.
-
-**Live demo:** https://arya.teamnightshift.org. Tap "Try it now". It opens a
-fictional household with no account. Your changes live in a sandbox for your
-visit only; nothing reaches disk or another visitor.
+<p align="center">
+  <a href="https://arya.teamnightshift.org"><strong>Open the live demo</strong></a>
+  (tap "Try it now", no sign-up) &nbsp;|&nbsp;
+  <a href="JUDGES.md"><strong>Judging this? Start here</strong></a>
+  &nbsp;|&nbsp;
+  <a href="#documentation-map"><strong>All the docs</strong></a>
+</p>
 
 <p align="center">
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
 </p>
-<p align="center"><em>Today and Lists in the demo household.</em></p>
+<p align="center"><em>Today and Lists in the demo household (a simulated neighborhood, labelled as such).</em></p>
+
+## What it is
+
+Arya reads your receipts, checks every line against the printed total, and
+learns what your household buys, how often, and at which store. The list then
+mostly writes itself: what is running low, what to use soon, and where you
+usually buy it, each with a reason.
+
+It is for people who shop for a household, and for groups who share a list. It
+is a phone-first app (a PWA), and it also has an optional game, **Quest**, that
+turns the shopping trip into a hunt through a model of your store and ends on a
+photo of your receipt.
+
+**Live demo:** https://arya.teamnightshift.org. The demo opens a fictional
+household with no account. Your changes live in a sandbox for your visit only;
+nothing reaches disk or another visitor. It is best on a phone; on a laptop,
+make the window about 390 px wide. Open Lists API and docs for developers:
+https://arya.teamnightshift.org/developers.
+
+Submission deadline: Nov 4, 2026, 9:00 PM ET.
+
+## Why it is different
+
+- **The model proposes, code checks.** A model reads the receipt photo; plain
+  code then checks every line against the printed total before anything posts.
+  Money, timing and list logic are deterministic and cost nothing per call.
+- **Every Meta model has a job.** Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
+  Transcribe, Muse Image and Muse Spark Open (open weights, hosted on Baseten)
+  each do one thing, through one module. See the [model map](JUDGES.md#meta-model-map).
+- **Prices come from your own receipts.** Nothing is fetched from store sites,
+  flyers, APIs or the web.
+- **Bring your own assistant.** Add items by typing, voice, a photo of a
+  handwritten note, or any AI agent through the MCP connector.
+- **Quest has no clock and no way to lose.** Optional, and it never gets in the
+  way of the list.
+
+## What judges should read first
+
+1. [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links on one page.
+2. [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md): a guided path through the live app.
+3. [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md) and [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md): how it fits together and why each model.
+4. [`docs/evals/`](docs/evals/): the measured results behind the numbers.
+5. [`STATUS.md`](STATUS.md): what is true on `main` today.
+
+## Documentation map
+
+| If you want to know... | Read |
+|---|---|
+| The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
+| What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
+| Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
+| How it fits together | [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md) |
+| Which model does what, and what it costs | [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md) |
+| Stack, hosting, deploy, backups | [Tech stack and deployment](#tech-stack-and-deployment), [`assistant/docs/OPS.md`](assistant/docs/OPS.md) |
+| The Quest game | [`docs/quest/README.md`](docs/quest/README.md), [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md) |
+| Using your own AI assistant | [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md) |
+| The demo household | [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md) |
+| Measured results | [`docs/evals/`](docs/evals/) |
+| Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
+| How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
+| What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
+| What is done and what is not | [`STATUS.md`](STATUS.md) |
 
 ## Try it in one minute
 
 1. Open the demo. **Today** shows what is running low and why.
-2. Open **Lists**. Add an item by typing, with the mic, or with a photo of a handwritten note.
+2. Tap **More**, then **Lists**, and open a list. Add an item by typing, with the mic, or with a photo of a handwritten note.
 3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 
-The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
+The bar at the bottom starts as Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
 
 ## What is in it
 
