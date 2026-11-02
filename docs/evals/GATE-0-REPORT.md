@@ -46,7 +46,7 @@ Mix targets: long receipts (15+ lines) — target 4, got 1 (Alexander's, 27 line
 | pub-08 | Food Lion (Rutherfordton, NC) | 8 (+5 unreadable) | 8 | not in frame | dark, thumb-occluded, PARTIAL |
 | pub-09 | Costco (Tigard, OR) | 10 (+5 unreadable) | 10 | not in frame | hand-held, thumb-occluded, PARTIAL |
 
-Chains represented: Walmart, Publix (×2), H-E-B, Kroger, Costco, Food Lion, Alexander's, Westside Market (independent) — 8 chains plus 1 independent, all beyond the my set's Safeway.
+Chains represented: Walmart, Publix (×2), H-E-B, Kroger, Costco, Food Lion, Alexander's, Westside Market (independent) — 8 chains plus 1 independent, all beyond my set's Safeway.
 
 ## Errors, ranked
 
