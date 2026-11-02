@@ -181,7 +181,9 @@ cp .env.local.example .env       # put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
 
-Open http://localhost:8080. On the first visit, create your account (a username
+Your key stays on your computer: `.env` is git-ignored, so it is never
+committed. Do not put a key in a file that is tracked. Open
+http://localhost:8080. On the first visit, create your account (a username
 and password) to read your own receipts, or close the sheet and tap "Try it now"
 for the demo household. Without a key the app and the demo open, but anything that calls a
 Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
@@ -287,7 +289,40 @@ Quest's collect animations use characters painted with Muse Image.
   <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
 </p>
 
+## Built with
+
+Open-source code, models and services Arya builds on. Each keeps its own
+license; full notices are in [`NOTICE.md`](NOTICE.md).
+
+| Part | What | License |
+|---|---|---|
+| App | React, React DOM, three.js, `@react-three/fiber`, i18next, react-i18next, motion, Vite, vite-plugin-pwa, Vitest | MIT |
+| App | canvas-confetti | ISC |
+| App | TypeScript | Apache-2.0 |
+| App | Scalar API Reference (the `/developers/reference` page) | MIT |
+| API | FastAPI | MIT |
+| API | uvicorn, httpx, pypdf | BSD-3-Clause |
+| API | NumPy | BSD-3-Clause (with other permissive terms) |
+| API | Pillow | MIT-CMU |
+| API | OpenCV (headless), cryptography, pypdfium2 | Apache-2.0 (cryptography: Apache-2.0 or BSD-3-Clause; pypdfium2: BSD-3-Clause or Apache-2.0) |
+| API | pywebpush | MPL-2.0 |
+| API | psycopg | LGPL-3.0 |
+| Serving | Caddy, and the Docker base images (Node, Python) | Apache-2.0, and each image's own terms |
+| Models | Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image, through the Meta Model API | Meta's API terms (hosted; no weights are in this repo) |
+| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Muse Model License (Oct 15, 2026) with its Usage Policy: [`LICENSE.md`](https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B/blob/main/LICENSE.md). Not copied into this repo |
+| Services | Baseten, Supabase (optional), Resend (email) | Their service terms |
+
+**Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
+on Baseten) as a second seat on the staple judge and for dictionary labels, and
+its outputs appear in the app. It sees item names only, never personal data.
+
+The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store
+and Google Play badges in `assistant/pwa/assets/badges/` are those companies'
+trademarks, used only to point at an install.
+
 ## License
 
-All rights reserved; see `LICENSE`. Third-party code and asset notes are in
-`NOTICE.md`.
+Arya's own code and documents are all rights reserved; see `LICENSE`. The
+repository is public so judges can read, run and test it; no license to reuse
+it is granted yet, and the choice is still open. Third-party code and asset
+notes are in `NOTICE.md`.
