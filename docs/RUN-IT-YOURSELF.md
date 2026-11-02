@@ -31,6 +31,16 @@ household. The demo keeps nothing: it reads a receipt live on the screen but doe
 save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
 household into a Docker volume; later starts keep what is there.
 
+## Your Meta API key
+To run the live model calls from your own checkout, make a Meta Model API key
+just for this (dev.meta.ai, API keys, Create API key). Put it on the
+`MODEL_API_KEY` line of your local `.env`. Never commit a filled `.env`: the
+`MODEL_API_KEY=` line in `assistant/deploy/.env.example` is blank on purpose.
+The key is sent only to `api.meta.ai`. Meta keys have no spending cap of their
+own, so set a usage limit on your Meta billing page, and delete the key at Meta
+when you are done. Photo receipts are read with Spark first; `ARYA_PHOTO_READER`
+(`auto` by default, or `spark`, or `wonder`) changes that.
+
 ## Settings (`.env`)
 Only one is required.
 
