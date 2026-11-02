@@ -31,6 +31,8 @@ is a phone-first app (a PWA), and it also has an optional game, **Quest**, that
 turns the shopping trip into a hunt through a model of your store and ends on a
 photo of your receipt.
 
+Built and tested with US receipts, dollars and stores first; other markets not tested.
+
 **Live demo:** https://arya.teamnightshift.org. The demo opens a fictional
 household with no account. Your changes live in a sandbox for your visit only;
 nothing reaches disk or another visitor. It is best on a phone; on a laptop,

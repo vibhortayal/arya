@@ -6,6 +6,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** VIDEO_LINK_PLACEHOLDER
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)
+- **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 
 ## Impact (30%)
