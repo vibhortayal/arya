@@ -4,6 +4,11 @@ What is not finished, said plainly. **Nothing on this page is built unless it
 says so**, and nothing is promised for the submission. "Idea" means nobody has
 designed it yet. Sources are named so you can check them.
 
+**Positioning.** Arya does not try to out-do apps that do one thing better. It
+aims to be the core platform where a community can use shared grocery
+information (lists, receipts, prices, stores) and connect to other tools
+through import and export.
+
 ## Devices
 - **Ray-Ban Meta glasses.** Idea, raised by the owner for the store scan.
   Spark's check during the hackathon found no public live-camera API for
@@ -81,6 +86,15 @@ designed it yet. Sources are named so you can check them.
 - Off-site backups with rclone (`ARYA_BACKUP_REMOTE` exists; no bucket is set
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
+
+## Spending, import and export
+- **Richer spend tracking and analysis,** with filters (by store, category,
+  person, period, price per unit). The Spending screen exists today; deeper
+  analysis and filters are not built.
+- **Export to other budgeting apps** (spend and receipts as CSV or a direct
+  connection). Today the API lists your own data (`docs/API.md`); a budgeting
+  export is not built.
+- **Import lists from other list apps** (a file or a link). Not built.
 
 ## More ideas for growing the app and its community
 All ideas. None is designed or built, and each would need the owner's word
