@@ -387,13 +387,21 @@ export function Today() {
         await post("/api/list/check-ok", { item_id: id });
         toast(t("today.stillGoodToast"));
       } else if (kind === "used") {
-        // Used it (owner, 2026-11-02): off the check, and used up today, so
-        // Running low learns when it runs out (Ask's "we finished the milk").
+        // Used it (owner, 2026-11-02): off the check, used up today so
+        // Running low learns, and back on the list (as Use soon's Used it,
+        // #96): the usual list, or "Which list?" when Arya can't tell.
+        // Cancel on the picker keeps it used up, off the list.
         const name = checks.find(c => c.item_id === id)?.name || "";
-        await post(`/api/items/${encodeURIComponent(id)}/flag`, { out: new Date().toISOString().slice(0, 10) });
-        toast(t("today.usedItToast", { name }), { action: t("common.undo"), onAction: async () => {
-          try { await post(`/api/items/${encodeURIComponent(id)}/flag`, { out: null }); load(); } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
-        } });
+        const flag = (out: string | null) => post(`/api/items/${encodeURIComponent(id)}/flag`, { out });
+        await flag(new Date().toISOString().slice(0, 10));
+        load();
+        const added = await addItem(id, name);
+        const undo = async () => {
+          try { if (added) await post("/api/list/remove", { item_id: id }); await flag(null); load(); }
+          catch (e) { toast(e instanceof Error ? e.message : String(e)); }
+        };
+        toast(added ? (added.list ? t("today.usedOnList", { name, list: added.list.name }) : t("today.usedOnYourList", { name })) : t("today.usedItToast", { name }),
+          { action: t("common.undo"), onAction: undo });
       } else {
         await post(`/api/items/${encodeURIComponent(id)}/expired`);
         toast(t("today.markedExpiredToast"));
