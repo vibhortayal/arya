@@ -18,7 +18,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Real community:** groups share lists and receipts; your receipts go with you if you leave.
 - **Checkable:** a box on what is real and what is simulated ([`README.md`](README.md#what-stands-out)), and Settings, About Arya, Keeping Arya running shows what the AI costs.
 - **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
-- **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model, and what was built during the hackathon: [`README.md`](README.md#why-we-built-it-this-way)
+- **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model, and what was built during the hackathon: [`README.md`](README.md#why-i-built-it-this-way)
 
 ## Impact (30%)
 
