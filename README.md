@@ -276,6 +276,7 @@ The scored reports and the Gate 0 labels and results are in
 - **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
+- **Demo allowance.** Each demo visit can spend about $0.40 on live Meta calls, and the demo has a daily cap, so a busy judging day can run out. When that happens the app says so and the sample buttons still work.
 - **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **One server, a few dozen people at once.** Arya runs as one server process
   on one VM. A few dozen people at the same time is about what it handles;
