@@ -58,7 +58,7 @@ def data_dir():
 # photos) stays personal. api/groups.py owns joining and leaving.
 GROUP_DOCS = {"lists.json", "flags.json", "cart.json", "dictionary.json",
               "judged.json", "grocery_verdicts.json", "curator.json",
-              "second_seat.json"}
+              "second_seat.json", "list_changes.json"}
 _current_group = contextvars.ContextVar("arya_group", default=None)
 
 

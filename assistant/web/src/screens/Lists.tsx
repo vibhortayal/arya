@@ -10,6 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
+import { SYNCED } from "../lib/listQueue";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
@@ -319,7 +320,9 @@ export function Lists() {
   useEffect(() => {
     const onLive = (ev: Event) => { ev.preventDefault(); reconcile(); };
     window.addEventListener("arya-live", onLive);
-    return () => window.removeEventListener("arya-live", onLive);
+    // List changes kept on this phone went out (lib/listQueue.ts).
+    window.addEventListener(SYNCED, reconcile);
+    return () => { window.removeEventListener("arya-live", onLive); window.removeEventListener(SYNCED, reconcile); };
   }, [reconcile]);
 
   const ask = useAsk(reloadQuiet);

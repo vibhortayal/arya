@@ -1,4 +1,5 @@
 import { keepRead, savedRead, clearSaved, markServedSaved, markLive } from "./offline";
+import { applyQueued, canQueue, enqueue, flush, isLocalId, newOpId, pendingCount, queueable } from "./listQueue";
 
 /* One door to the backend: same paths, same cookies, same error
  * wording as the plain-JS app (pwa/app.js api/post/put). */
@@ -111,11 +112,37 @@ export const get = <T = any>(path: string): Promise<T> => {
       p.catch(() => { if (fresh.get(path) === mine) fresh.delete(path); });
     }
   }
-  return p.then(v => (v !== null && typeof v === "object" ? structuredClone(v) : v));
+  return p.then(v => {
+    const c = v !== null && typeof v === "object" ? structuredClone(v) : v;
+    // Changes still waiting on this phone show as made (lib/listQueue.ts).
+    return path === "/api/home" ? applyQueued(c) : c;
+  });
 };
 /* A read the page made itself (boot.js) keeps its copy too. */
 export const keepBootRead = keepRead;
-export const post = <T = any>(path: string, body?: unknown) => api<T>(path, json("POST", body));
+export const post = <T = any>(path: string, body?: unknown): Promise<T> =>
+  queueable(path) && canQueue() ? postList<T>(path, (body || {}) as Record<string, unknown>) : api<T>(path, json("POST", body));
+
+/* A list change (lib/listQueue.ts): sent with an op id so a retry is
+ * applied once; kept on the phone instead when there is no connection,
+ * or while older changes are still waiting, so they go out in order. */
+async function postList<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const id = newOpId();
+  const target = path.startsWith("/api/items/") ? decodeURIComponent(path.split("/")[3]) : body.item_id;
+  const keep = () => { const r = enqueue(path, body, id); syncLists(); return r as T; };
+  if ((typeof navigator !== "undefined" && navigator.onLine === false) || pendingCount() > 0 || isLocalId(target)) return keep();
+  try {
+    return await api<T>(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Arya-Op": id }, body: JSON.stringify(body) });
+  } catch (e) {
+    if (e instanceof TypeError) return keep();
+    throw e;
+  }
+}
+/* Send the list changes waiting on this phone, if there is signal. */
+export const syncLists = () => {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve(null);
+  return flush((p, b, headers) => api(p, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(b) }));
+};
 export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json("PUT", body));
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
 /* Multipart upload (receipt photos, audio, shelf shots). */
