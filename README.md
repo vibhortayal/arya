@@ -14,6 +14,8 @@ your receipt.
 Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift,
 Indie track). Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
+**Judging this?** Start at [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links in one page.
+
 **For developers:** open Lists API and docs at https://arya.teamnightshift.org/developers.
 
 **Live demo:** https://arya.teamnightshift.org. Tap "Try it now". It opens a
@@ -124,7 +126,7 @@ Caddy) is in `assistant/deploy/`; settings are listed in
 Tests, from the repo root:
 
 ```
-(cd assistant && ../.venv/bin/python -m unittest discover -s tests)   # 1,235 tests
+(cd assistant && ../.venv/bin/python -m unittest discover -s tests)   # counts: STATUS.md
 (cd assistant/web && npm test)                                        # vitest
 ```
 

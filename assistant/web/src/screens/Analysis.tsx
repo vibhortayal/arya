@@ -7,6 +7,7 @@ import { Empty, Row, Section } from "../ui/kit";
 import { InfoBtn, InfoSheet } from "../ui/Info";
 import { useToast } from "../ui/Toast";
 import { EditList, EditTitle } from "../ui/EditList";
+import { useBar } from "../ui/Bar";
 import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-analysis, app.js renderAnalysis and the
@@ -39,6 +40,7 @@ const names = (n: string[]) => (n.length <= 2 ? n.join(t("lists.and")) : t("anal
 export function Analysis() {
   const { t } = useTranslation();
   const nav = useNav();
+  const onBar = useBar().includes("analysis");
   const { currency, layouts = {}, saveLayout } = useSession();
   const { toast, showErr } = useToast();
   const [editing, setEditing] = useState(false);
@@ -49,6 +51,13 @@ export function Analysis() {
   const [info, setInfo] = useState<string | null>(null);
   /* One (i) per Spending heading; all open the same "What these mean" sheet. */
   const i = <InfoBtn k="spend" onOpen={setInfo} />;
+  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
+  const [groupName, setGroupName] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    get<{ group: { name: string } | null }>("/api/group").then(g => { if (live) setGroupName(g?.group?.name || null); }, () => {});
+    return () => { live = false; };
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -175,7 +184,8 @@ export function Analysis() {
 
   return (
     <>
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      {/* On the bar, Spending is a tab: no Back at the bottom of the stack. */}
+      {!(onBar && nav.depth <= 2) && <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>}
       <EditTitle id="an-editbtn" small title={t("common.analysis")} editTitle={t("analysis.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
         <EditList id="an-edit" on={on} off={offS} name={id => t(`analysis.sections.${id}`)} sub={() => ""} desc={() => ""}
@@ -187,6 +197,14 @@ export function Analysis() {
           }}
           onReset={() => { saveLayout("spending", {}).catch(showErr); }} />
       ) : <>
+        {/* Receipts and Stores live on Spending (owner, 2026-11-02: Spending
+          * took Lists' place on the bar; Lists keeps only the lists). */}
+        <div className="group" id="an-places">
+          <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>
+            <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
+          <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
+            <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
+        </div>
         <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
           <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
         <div id="an-data" hidden={!show}>

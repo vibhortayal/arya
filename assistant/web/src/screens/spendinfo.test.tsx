@@ -8,6 +8,7 @@ import { Analysis } from "./Analysis";
  * and an (i) on each heading that opens one "What these mean" sheet. */
 vi.mock("../app/session", () => ({
   useSession: () => ({ currency: { code: "USD", symbol: "$" }, layouts: {}, saveLayout: async () => {} }),
+  useSavedBar: () => null,
 }));
 vi.mock("../lib/api", async orig => ({
   ...(await orig<typeof import("../lib/api")>()),

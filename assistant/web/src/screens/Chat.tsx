@@ -13,6 +13,7 @@ import { languageToast, offerFor, offerRefused, refuseOffer } from "../lib/langu
 import "../ui/language.css";
 import { t, useTranslation } from "../i18n";
 import { EditList, EditTitle } from "../ui/EditList";
+import { fitPhoto } from "../lib/photo";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -27,7 +28,7 @@ import { EditList, EditTitle } from "../ui/EditList";
 type Chip = { label: string; run: () => void };
 type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string; offer?: string;
   url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; applied?: string[] };
 const lines: Line[] = [];
 const history: Msg[] = [];
 let offered = false;
@@ -91,17 +92,20 @@ export async function shrinkPhoto(f: File, max = 1600): Promise<{ media_type: st
     c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
     const blob = await new Promise<Blob | null>(ok => c.toBlob(ok, "image/jpeg", 0.85));
     if (blob) return { media_type: "image/jpeg", data: await b64(blob) };
-  } catch { /* fall through to the original */ }
-  if (f.size > 5_000_000) throw new Error("photo too large");
-  return { media_type: f.type || "image/jpeg", data: await b64(f) };
+  } catch { /* fall through: compress the way receipts are */ }
+  const small = await fitPhoto(f);
+  if (small.size > 5_000_000) throw new Error(t("ask.photoTooLarge"));
+  return { media_type: small.type || "image/jpeg", data: await b64(small) };
 }
 type ExpiryRead = { readable: boolean; name?: string | null; date?: string | null; kind?: string; match?: { item_id: string; name: string } | null };
 const readJson = async (r: Response) => {
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
   return r.json();
 };
-const post_photo = (url: string, f: File) =>
-  fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
+const post_photo = async (url: string, original: File) => {
+  const f = await fitPhoto(original);
+  return fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
+};
 
 export function Chat() {
   const { t } = useTranslation();
@@ -266,7 +270,7 @@ export function Chat() {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
-      history.push({ role: "assistant", content: res.reply });
+      history.push({ role: "assistant", content: res.reply, ...(res.applied?.length ? { applied: res.applied } : {}) });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
       if (offer) offered = true;
       // The ✓ lines confirm the actions; an empty reply adds no bubble of its own (retest #9).

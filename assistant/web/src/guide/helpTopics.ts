@@ -16,11 +16,11 @@ export type HelpTopic = {
 };
 
 export const HELP_TOPICS: HelpTopic[] = [
-  { id: "receipt", group: "start", steps: 3, notes: 3, opens: "receipts" },
+  { id: "receipt", group: "start", steps: 3, notes: 4, opens: "receipts" },
   { id: "additem", group: "start", steps: 4, notes: 2, opens: "list" },
   { id: "ask", group: "start", steps: 3, notes: 2, opens: "chat" },
   { id: "lists", group: "how", steps: 4, notes: 2, opens: "list" },
-  { id: "receipts", group: "how", steps: 3, notes: 3, opens: "analysis" },
+  { id: "receipts", group: "how", steps: 3, notes: 4, opens: "analysis" },
   { id: "prices", group: "how", steps: 3, notes: 2, opens: "powers" },
   { id: "shopping", group: "how", steps: 3, notes: 2, opens: "community" },
   { id: "map", group: "how", steps: 4, notes: 2, opens: "mapper" },
@@ -31,5 +31,6 @@ export const HELP_TOPICS: HelpTopic[] = [
   { id: "customize", group: "how", steps: 3, notes: 2, opens: "home" },
   { id: "bar", group: "how", steps: 3, notes: 2, opens: "bar-editor" },
   { id: "install", group: "how", steps: 3, notes: 2, opens: "about" },
+  { id: "reminders", group: "how", steps: 3, notes: 2, opens: "profile" },
   { id: "ownkey", group: "how", steps: 3, notes: 3, opens: "profile" },
 ];
