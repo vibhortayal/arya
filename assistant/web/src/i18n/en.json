@@ -3805,7 +3805,7 @@
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
-        "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored.",
+        "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service and is not affiliated with or endorsed by Kroger.",
         "cta": "Open Quest"
       },
       "map": {

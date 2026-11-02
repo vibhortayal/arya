@@ -60,7 +60,7 @@ Or tap "Or just check items off as I shop" and check items off with no game. Tha
 Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: point the camera at a shelf and Arya finds the next item. People in frames are blurred before anything is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
-At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if Kroger does not answer, Arya uses the crowd map. Arya uses no prices from store sites, flyers or the web.
+At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if Kroger does not answer, Arya uses the crowd map. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service . Arya is not affiliated with or endorsed by Kroger. Arya uses no prices from store sites, flyers or the web.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
 ## map my store | map my store scan aisle layout walk video photos mapped build dream
 Map my store: open the Quest tab and tap Map my store, or tap the Map my store chip on Ask.

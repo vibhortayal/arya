@@ -171,7 +171,7 @@ loop on a phone. The window should be about 390 px wide.
   demo site, nothing from Kroger is stored, and it falls back to the crowd map
   if Kroger does not answer. Optional if you run your own copy: it needs your
   own Kroger developer keys. The demo stores are invented, so you will not see
-  it in the demo.
+  it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
 - **Demo Town** (`ARYA_DEMO_TOWN=1`; on in the live demo and the local Docker setup): the demo household shops
   at invented stores in a simulated neighborhood, labelled as simulated.
 
