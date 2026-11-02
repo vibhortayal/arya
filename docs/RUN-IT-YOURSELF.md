@@ -112,5 +112,5 @@ manual-only (`.github/workflows/tests.yml`).
 - **Status check.** `http://localhost:8080/health` answers when the app is up.
 
 This is not the feature "Use your own Meta key" in the live app's Settings,
-which is built and switched off (see [After the hackathon](ROADMAP.md)). Here
+which is unfinished, switched off and not used (see [After the hackathon](ROADMAP.md)). Here
 the key is the server's key, set in `.env`.

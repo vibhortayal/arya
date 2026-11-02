@@ -84,6 +84,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
 | How it fits together | [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md) |
 | Which model does what, and what it costs | [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md) |
+| Every Meta model available, used, and future ideas | [`docs/MODELS.md`](docs/MODELS.md) |
 | Stack, hosting, deploy, backups | [Tech stack and deployment](#tech-stack-and-deployment), [`assistant/docs/OPS.md`](assistant/docs/OPS.md) |
 | The Quest game | [`docs/quest/README.md`](docs/quest/README.md), [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md) |
 | Using your own AI assistant | [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md) |
@@ -103,7 +104,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 
-The bar at the bottom starts as Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help, Settings and every place not on the bar. Each shopper can change the bar: touch and hold it, or tap More, then Customize bar.
+The navigation tab (the row of buttons at the bottom) starts as Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help, Settings and every place not on the navigation tab. Each shopper can change it: touch and hold it, or tap More, then Customize navigation tab.
 
 ## What is in it
 
@@ -142,7 +143,7 @@ Three parts help a new person. Use these words in the app, the docs, and code re
 
 | Name | What it is | Where in the code |
 |---|---|---|
-| **Tour** | Bubbles over a dimmed screen that point at things. Real accounts get one stop per place on their bar, then More, then "Make the bar yours". The demo gets a stop for each screen and each main card on it, in the shopper's bar order, with "Skip Today" to jump to the next screen. | `web/src/ui/Tour.tsx`, `onboarding/firstRunTour.ts`, `onboarding/demoTour.ts` |
+| **Tour** | Bubbles over a dimmed screen that point at things. Real accounts get one stop per place on their navigation tab, then More, then "Customize navigation tab". The demo gets a stop for each screen and each main card on it, in the shopper's navigation tab order, with "Skip Today" to jump to the next screen. | `web/src/ui/Tour.tsx`, `onboarding/firstRunTour.ts`, `onboarding/demoTour.ts` |
 | **Arya guide** | The swipeable cards (sixteen), each with a short line and numbered steps. Opens from Help tab, Arya's powers, or the end of the Tour. | `web/src/ui/Guide.tsx`, `guide/cards.ts` |
 | **Help tab** | Everything else: the ask box, first steps, a how-to topic for each feature, plus links to the Arya guide, Arya's powers, the Tour and Send feedback. | `web/src/screens/Help.tsx`, `guide/helpTopics.ts` |
 
@@ -252,15 +253,14 @@ The scored reports and the Gate 0 labels and results are in
 What ships now is a limited-scope MVP. These are ideas the owner is thinking
 about for where Arya could go; they are not commitments, and he needs more time
 to figure them out. Nothing in this list is built, except one thing that is
-built and switched off: **Use your own Meta key** is built and tested, and off
-in the live app only because the key vault secret is not set. There was not
-enough time to polish the rollout, and the owner is still deciding when to turn
-it on. The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
+built but switched off on purpose: **Use your own Meta key**. The code is in
+this repo and tested, but it is unfinished, the owner decided not to use it,
+and it is not part of the demo. The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
 
 - **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
 - **Store data and community:** capture more store data, Arya shoppers and
   community prices, Quest leaderboards, item and store profiles.
-- **AI and open weights:** bring your own key finished, replay mode, wider use
+- **AI and open weights:** replay mode, wider use
   of open weights.
 - **Trust and privacy:** photo opt-in, privacy policy, deferred security items.
 - **Running it yourself:** a laptop-ready Docker setup, off-site backups, staging.

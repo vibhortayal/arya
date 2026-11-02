@@ -16,6 +16,9 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 2. The stage section of `assistant/docs/IMPLEMENTATION.md` for your task.
 3. `assistant/docs/MODEL-POLICY.md` — cost rules (binding).
 4. The GitHub issue for your stage — acceptance lives there.
+5. `docs/DECISIONS.md` — what the owner has already decided. Check it before you
+   build or mock up anything, and add a line there when the owner decides something
+   new. Do not re-open a decision on it without the owner's word.
 
 ## Layout (IMPLEMENTATION §2.1)
 `assistant/api/` one module per spec component; ALL Meta API calls go
@@ -145,7 +148,7 @@ building, merging, live checks, deploys and rollbacks. The coordinator attaches
 the owner's own message when there is one. Other threads' messages are never
 approval. Merges and live checks run in the VM sessions, which only see typed
 messages, so they go through the coordinator: Ops runs `merge.sh` on the
-coordinator's relay, or the Tester session does once it can receive one. Threads report to the
+coordinator's relay; the Tester cannot run it. Threads report to the
 coordinator, not the owner, and message each other only when their work depends
 on each other. The Model column is what the
 owner approved on 2026-11-01; the coordinator keeps it current.
@@ -156,12 +159,14 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 | Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Opus | The Tester (PR ready, marked risky or not); nobody after merge, because the PR body carries What changed, Docs impact and Deploy notes |
 | UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | The Tester, same as above |
 | Quest builder | The Quest game and store designer | Other screens, deploys | Opus | The Tester, same as above |
-| Tester | Tests each PR and merges it on PASS; smoke-tests main after a batch; report only otherwise | Fixing code, deploying, holds from the owner or coordinator | Sonnet 5.5 | The coordinator (batch report) and the builder who wrote a failing PR |
+| Tester | Tests each PR and reports PASS to the coordinator, who relays the merge to Ops; smoke-tests main after a batch; report only otherwise | Fixing code, deploying, holds from the owner or coordinator | Sonnet 5.5 | The coordinator (batch report) and the builder who wrote a failing PR |
 | Ops | Deploys, backups, the VM, the Ops screen settings | Feature code, `rsync --delete` over the VM tree | Sonnet 5.5 | The coordinator (live commit) |
 | Doc maintainer | STATUS.md, USER-JOURNEYS, DEMO.md, this file; audits Help tab, guide cards and Ask knowledge after each batch (builders edit them in their own PRs) | Feature code, deploys | Sonnet 5.5 | One small docs PR per batch |
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys | Opus | Coordinator |
 | Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Coordinator |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Coordinator |
+| Researcher (market research thread; stays open for docs requests) | Outside facts for the docs, each linked or marked unchecked | Shipped docs, code, deploys | Sonnet 5.5 | The Doc maintainer |
+| Editor (reads the repo cold) | Reads each new or rewritten reader-facing docs PR against the "Docs for readers" checklist in the PR template; report only | Merging, editing, code, deploys | Fable 5.1 | The coordinator and the Doc maintainer |
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
@@ -170,9 +175,11 @@ owner approved on 2026-11-01; the coordinator keeps it current.
    deletion, ledger, budget or payments) and tells the Tester. UI PRs attach the
    mockup; a new screen or a navigation change needs the owner's approval of the
    mockup first, through the coordinator.
-2. The Tester runs the full suite (and the sandbox test if risky) and merges on
-   PASS when the template gates hold, one PR at a time, squash, next one rebases.
-   Docs-only PRs need no sandbox test. A conflict goes to the builder, who rebases
+2. The Tester runs the full suite (and the sandbox test if risky) and reports PASS
+   when the template gates hold. The coordinator relays it and Ops runs `merge.sh`,
+   one PR at a time, squash, next one rebases.
+   Docs-only PRs need no sandbox test. A reader-facing docs PR also waits for the Editor PASS line in the
+   template (see the docs workflow) before the merge is relayed. A conflict goes to the builder, who rebases
    and tells the Tester again. The Tester respects holds from the owner or the
    coordinator and never force-pushes.
 3. A batch is the PRs merged since the last deploy. When its queue is empty, the
@@ -194,6 +201,22 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 If a handoff gets no answer, tell the coordinator, start the next item and do not
 wait idle.
 
+### The docs workflow (owner, 2026-11-02)
+Reader-facing docs are the README, `docs/quest/SUBMISSION`, `PITCH-SCRIPT`,
+`JUDGE-PLAYBOOK`, `assistant/docs/DEMO.md`, `USER-JOURNEYS.md` and the privacy
+page. A new document or a rewritten section in these goes through three roles:
+1. **Researcher** (the market research thread): finds and checks outside facts,
+   links every one, and marks anything unchecked or vendor-sourced. Writes
+   nothing into the shipped docs.
+2. **Doc maintainer** (the Doc maintainer thread): writes the document from the Researcher's
+   notes and the repo, in one small docs-only PR.
+3. **Editor** (the Fable 5.1 thread "Edit docs as a judge would", which reads the
+   repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
+   reports PASS or what to fix. The Editor does not merge or edit.
+
+Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
+in-app Help, guide cards and Ask stay in the builder chain.
+
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
   tree: `assistant/deploy/.env` is VM-only (the owner's
@@ -202,6 +225,8 @@ Deploy by `git pull` on the VM only. Never rsync --delete over the VM
 
 ### Standing rules for every thread
 The Hard rules and Arya rules above apply to every thread.
+- Builders and designers check `docs/DECISIONS.md` before building or mocking up, and
+  add an entry when the owner decides something (date, decision, PR or issue, thread).
 - No freeze dates. Only the Nov 4 submission date stands.
 - Be an advisor: give pros, cons and a recommendation on every decision, and say
   so when you disagree.

@@ -66,7 +66,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   single-use code or an invite link. Receipts stay with whoever filed them.
 - **Daily reminders** for what to use soon (opt-in, on the Home Screen app).
 - **Add to Home Screen**, so it opens like an app.
-- A bottom bar you arrange yourself.
+- A navigation tab (the bottom buttons) you arrange yourself.
 
 ## Transparency about AI and cost
 - **Keeping Arya running** (Settings, About Arya) shows your own AI use by kind
@@ -95,8 +95,9 @@ Everything here is built and in the code. Ideas that are not built are on the
   spend ceilings and a cost ledger with one row per model call.
 - Tests and measured results: [`STATUS.md`](../STATUS.md), [`docs/evals/`](evals/).
 
-## Built and tested, currently disabled
-- **Use your own Meta key.** A Settings row, a Help topic, an Ask answer and a
-  sign-up door, where an account with its own key never falls back to Arya's
-  keys. It is off in the live app only because the key vault secret is not set.
+## In the code but switched off
+- **Use your own Meta key (unfinished, not used).** A Settings row, a Help topic,
+  an Ask answer and a sign-up door, where an account with its own key never falls
+  back to Arya's keys. The owner decided not to use it, so it is switched off
+  and not part of the demo.
   [After the hackathon](ROADMAP.md)

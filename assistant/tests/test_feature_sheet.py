@@ -43,7 +43,7 @@ class FeatureSheet(unittest.TestCase):
         got = dict(re.findall(r'"?([\w-]+)"?:\s*"(\w+)"', labels))
         self.assertEqual(got, chat_service.BAR_NAMES)
         first = raw().splitlines()[0]
-        self.assertIn("Default bar: " + ", ".join(chat_service.BAR_NAMES[k] for k in default) + ", More.", first)
+        self.assertIn("Default navigation tab: " + ", ".join(chat_service.BAR_NAMES[k] for k in default) + ", More.", first)
         self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
 
     def test_your_bar_goes_with_each_question(self):
@@ -57,7 +57,7 @@ class FeatureSheet(unittest.TestCase):
                 return '{"reply":"ok","actions":[]}', 0, 0
         chat_service.chat([{"role": "user", "content": "how do I change the bar?"}], C(), bar=["list", "help"])
         self.assertIn("YOUR BAR: Lists, Help, More. In More: Today, Receipts, Stores, Spending, Ask, Quest, Settings.", seen["sheet"])
-        self.assertIn("Change the bar:", seen["sheet"])
+        self.assertIn("Customize navigation tab:", seen["sheet"])
 
     def test_sizes(self):
         flags = {k: True for k in KNOWN_FLAGS}

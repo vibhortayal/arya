@@ -270,8 +270,10 @@ def _food_dates(d, nm):
     from api.routes.home import still_good_checks
     fl = state.flags()
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
-    dated = expiry.use_soon(fl, nm, last_bought, _d_today(),
-                            ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+    listed = state.on_list_ids(d)   # on a list = ran out
+    dated = [r for r in expiry.use_soon(fl, nm, last_bought, _d_today(),
+                                        ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+             if r["item_id"] not in listed]
     pack = [{"name": r["name"], "date": r["date"],
              "label": KIND_WORDS.get(r["kind"], KIND_WORDS["unknown"]),
              "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]
@@ -482,6 +484,7 @@ def apply_actions(actions, added=None):
                 if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                     added.append({"item_id": tid, "name": name})
                 fl.update({"manual": True, "dismissed_on": None})
+                _untick(fl, target)
                 if qty != 1:
                     fl["qty_override"] = qty
                 if unit:
@@ -506,6 +509,8 @@ def apply_actions(actions, added=None):
         t = a.get("type")
         if t == "ran_out" and target and fl.get("list") != target["id"]:
             fl["list"] = target["id"]
+        if t in ("add_to_list", "ran_out", "mark_expired"):
+            _untick(fl, target)
         if t == "add_to_list":
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
@@ -534,6 +539,17 @@ def apply_actions(actions, added=None):
             continue
         state.set_flag(item_id, fl)
     return applied, skipped
+
+
+def _untick(fl, target):
+    """Asked for again means wanted again: a tick from this trip comes
+    off, so the item lands in the unchecked part of the list, as a
+    typed add does (owner bug 2026-11-02: Ask adds showed under
+    Checked off)."""
+    fl["checked_on"] = None
+    ticks = fl.get("checked_in") or {}
+    if target and target["id"] in ticks:
+        fl["checked_in"] = {k: v for k, v in ticks.items() if k != target["id"]}
 
 
 _PACK = re.compile(r"\b(\d{1,3})\s*-?\s*(?:ct|count|pk|pack|pcs?|eggs)\b|\b(dozen|doz)\b", re.I)

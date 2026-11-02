@@ -38,6 +38,9 @@ through import and export.
 - **Quest community layer.** Leaderboards, badges the data makes funny, team
   Shop-Offs settled by receipt time and Clue Hunts. Designed, not built.
   Source: `docs/quest/GAME-DESIGN.md`.
+- **A store-data partnership.** Online store videos are off limits (copyright,
+  platform terms); a licensed source of in-store video and photos could power
+  better maps. See [`docs/MODELS.md`](MODELS.md).
 - **Density first.** Win one metro's stores completely before expanding; a thin
   layer over many stores is worth little. Source: `docs/quest/BUSINESS.md`.
 - **Shared price data from receipts.** Today every price comes from your own
@@ -58,8 +61,8 @@ through import and export.
   public page for a store's map status.
 
 ## AI and open weights
-- **Bring your own Meta key: turn it on.** Built and tested, switched off in the
-  live app for now (see "Use your own Meta key" below).
+- **Bring your own Meta key.** Decided against for now. The code is in the repo,
+  unfinished and switched off (see "Use your own Meta key" below).
 - **Replay mode** (recorded answers, so the AI parts work without a key).
   Planned, not built.
 - **More use of open weights.** Muse Spark Open is a second seat on the staple
@@ -71,6 +74,8 @@ through import and export.
 - **A hosted open-weights option.** Today one open model (Muse Spark Open) is
   hosted on Baseten for two small jobs. A fuller option for people who want
   their reads on open weights is an idea only.
+- **Models we did not use** (Spark Contributor for a community tier, Muse
+  Glimmer self-hosted): see [`docs/MODELS.md`](MODELS.md).
 - A non-English Ask currently sends the whole feature guide (about 19 KB) on
   each question; trimming that is planned.
 
@@ -194,15 +199,12 @@ and, where it touches personal data, a privacy review first.
 - The mapping and game engine for other indoor places (hardware, pharmacy,
   warehouses, campuses).
 
-## Use your own Meta key: built and tested, switched off
-Built and tested (PRs #391 and #393). It is generic: a Settings row, a Help
-topic, an Ask answer, and an "I have my own Meta key" sign-up door that the
-owner opens or closes from Ops only. An account that signs up with its own key
-never falls back to Arya's keys. It is off in the live app only because the key
-vault secret (`ARYA_KEY_VAULT_SECRET`) is not set; with no secret nothing is
-stored and none of it shows. There was not enough time during the hackathon to
-polish the rollout, and the owner is still deciding when to turn it on. To
-turn it on: set the secret and redeploy (operator notes: `assistant/docs/OPS.md`,
-section "Own Meta keys (BYOK, 2026-11-01)"), then add the guide card. For
-someone running Arya themselves, the key that matters today is `MODEL_API_KEY`,
-a server key, not this feature.
+## Use your own Meta key: unfinished, switched off, not used
+The owner decided not to use this (2026-11-02). The code exists in the repo
+(PRs #391 and #393): a Settings row, a Help topic, an Ask answer, and an "I have
+my own Meta key" sign-up door. It is unfinished, it is switched off in the live
+app and in the demo, and it is not part of what judges see. With no key vault
+secret (`ARYA_KEY_VAULT_SECRET`) nothing is stored and none of it shows. If it is
+ever revisited, the operator notes are in `assistant/docs/OPS.md`, section "Own
+Meta keys (BYOK)". For someone running Arya themselves, the key that matters
+today is `MODEL_API_KEY`, a server key, not this feature.

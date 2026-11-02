@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { addItem } from "../lib/listPick";
+import { addToUsual } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -359,7 +359,7 @@ export function Today() {
     setBusy(b => new Set(b).add(id));
     try {
       const it = low.find(i => i.item_id === id);
-      const out = await addItem(id, it?.name || "");
+      const out = await addToUsual(id, it?.name || "");
       if (out) {
         setAdded(a => new Set(a).add(id));
         toast(out.list ? t("listPick.addedTo", { what: it?.name || "", list: out.list.name }) : t("common.addedToList"));
@@ -381,11 +381,14 @@ export function Today() {
   const tip = facts && !firstRun ? <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} /> : null;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
   const checkLabel = checkNames.length ? checkNames.slice(0, 2).join(", ") + (checkNames.length > 2 ? t("today.andMore", { n: checkNames.length - 2 }) : "") : "";
-  async function check(kind: "ok" | "expired", id: string) {
+  async function check(kind: "ok" | "used" | "expired", id: string) {
     try {
       if (kind === "ok") {
         await post("/api/list/check-ok", { item_id: id });
         toast(t("today.stillGoodToast"));
+      } else if (kind === "used") {
+        await usedUp({ id, name: checks.find(c => c.item_id === id)?.name || "", t, toast, reload: load });
+        return;
       } else {
         await post(`/api/items/${encodeURIComponent(id)}/expired`);
         toast(t("today.markedExpiredToast"));
@@ -513,8 +516,9 @@ export function Today() {
                 <div className="checkrows" hidden={!checksOpen && !big("checks")}>
                   {checks.map(c => (
                     <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                      <span className="chipset">
+                      <span className="chipset checkchips">
                         <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
+                        <button className="chip" data-check-used={c.item_id} type="button" onClick={() => check("used", c.item_id)}>{t("today.usedIt")}</button>
                         <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
                   ))}
                   {seen.map((s, k) => (
@@ -659,7 +663,7 @@ export function Today() {
     try {
       const done: string[] = [];
       for (const id of ids) {
-        const out = await addItem(id, low.find(i => i.item_id === id)?.name || "");
+        const out = await addToUsual(id, low.find(i => i.item_id === id)?.name || "");
         if (!out) break;                       // cancelled: stop asking
         done.push(id);
       }
@@ -780,20 +784,37 @@ export function Today() {
   );
 
 
-  /* Used up: offer, never assume, to put it back on the shopping list
-   * (expiry.js done). */
-  async function doneWith(s: Soon) {
-    try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); }
-    catch (e) { toast(e instanceof Error ? e.message : String(e)); return; }
-    load();
-    toast(t("today.doneWith", { name: s.name }), {
-      action: t("common.add"),
-      onAction: async () => {
-        try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); load(); } }
-        catch (e) { toast(e instanceof Error ? e.message : String(e)); }
-      },
-    });
+  function doneWith(s: Soon) {
+    return usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload: load });
   }
+}
+
+/* Used it (owner, 2026-11-02), on Use soon and on Still good?: off
+ * the use-by section and into Suggestions ("used" flag: Running low
+ * learns, and the item is suggested for its list). Arya never adds to
+ * a list itself; Add on the suggestion does, asking "Which list?" when
+ * it can't tell. Undo takes it out of Suggestions and puts it back in
+ * the use-by section. */
+async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string, v?: Record<string, unknown>) => string;
+  toast: (m: string, a?: { action: string; onAction: () => void }) => void; reload: () => void }) {
+  const { id, name, soon, t, toast, reload } = o;
+  const enc = encodeURIComponent(id);
+  const day = new Date().toISOString().slice(0, 10);
+  const say = (e: unknown) => toast(e instanceof Error ? e.message : String(e));
+  try {
+    if (soon) await post(`/api/expiry/${enc}/done`);
+    await post(`/api/items/${enc}/flag`, { used: day });
+  } catch (e) { say(e); return; }
+  reload();
+  toast(t("today.usedToSuggest", { name }), {
+    action: t("common.undo"),
+    onAction: async () => {
+      try {
+        await post(`/api/items/${enc}/flag`, { used: null, ...(soon ? { use_by: soon.date, use_by_set: day } : {}) });
+        reload();
+      } catch (e) { say(e); }
+    },
+  });
 }
 
 /* ---------------- Did you know? (powers.js todaysTip) ---------------- */
@@ -1043,15 +1064,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
         <div className="exhead"><Face name={s.name} /><div><h3 className="hm-title" id="ex-title">{s.name}</h3><p className="muted nomargin">{fmtLong(s.date)} · {when(s.days)}</p></div></div>
         <button className="btn primary wide" id="ex-done" type="button" data-first onClick={async () => {
           close();
-          try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); } catch (e) { toast(errMsg(e)); return; }
-          reload();
-          toast(t("today.doneWith", { name: s.name }), {
-            action: t("common.add"),
-            onAction: async () => {
-              try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); reload(); } }
-              catch (e) { toast(errMsg(e)); }
-            },
-          });
+          await usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload });
         }}>{t("today.usedIt")}</button>
         <button className="btn wide" id="ex-snooze" type="button" onClick={async () => {
           close();

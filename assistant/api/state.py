@@ -749,7 +749,8 @@ def _derived():
         f = fl.get(p["item_id"], {})
         if _reported_out(p, f):
             p["due"] = True
-            p["user_report"] = ("expired " + f["expired"]) if f.get("expired") else "you said you're out"
+            p["user_report"] = (("expired " + f["expired"]) if f.get("expired")
+                                else "you said you're out" if f.get("out") else "you used it up")
     unresolved_ids = {e["item_id"] for e in dictionary()["entries"]
                       if e.get("resolution", {}).get("status") == "unresolved"}
     judged = judgments()
@@ -851,6 +852,13 @@ def _derived():
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
 
 
+def on_list_ids(d):
+    """Items on one of the household's lists now. Putting an item on a
+    list says it ran out (owner, 2026-11-02), so the use-by questions
+    (Use soon, Still good?) leave it alone."""
+    return {i["item_id"] for i in d["smart_list"]["items"] if i.get("on_list")}
+
+
 def grocery_verdicts():
     return _load("grocery_verdicts.json", {})
 
@@ -945,7 +953,10 @@ def _reported_out(p, f):
     answers it: the flag stays in the store but stops counting, so a
     restocked item does not stay on the list as "last bought 0 days
     ago"."""
-    day = f.get("expired") or f.get("out")
+    # "used" (Used it on Today, owner 2026-11-02) counts like "out" for
+    # Running low, but the item becomes a suggestion, not a list row:
+    # Arya suggests, the household adds.
+    day = f.get("expired") or f.get("out") or f.get("used")
     if not day:
         return False
     return not (p.get("last_bought") and p["last_bought"] >= day)
