@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState, type ChangeEvent, type PointerEvent as RPointerEvent, type ReactNode } from "react";
+import { addOnList } from "../lib/listPick";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
@@ -871,7 +872,7 @@ export function NewList() {
     force();
     toast(t("newList.offList", { name: li.name }), { action: t("common.undo"), onAction: async () => {
       try {
-        await post("/api/list/add", { item_id: itemId });
+        await post("/api/list/add", { item_id: itemId, ...(li.list ? { list_id: li.list } : {}) });
         D.plan!.list.push(li);
         force();
       } catch (e) { toast(errMsg(e)); }
@@ -912,18 +913,28 @@ export function NewList() {
     try {
       D.raw = raw;
       // Typed and starter rows join the Arya list with their count.
-      const lid = D.fromList ? { list_id: D.fromList.id } : {};
+      let lid: { list_id?: string } = D.fromList ? { list_id: D.fromList.id } : {};
+      const bodies: Record<string, unknown>[] = [];
       for (const r of pickedRows()) {
         if (r.extra && r.joinList) {
           const body: Record<string, unknown> = r.itemId ? { item_id: r.itemId } : { name: r.name };
           if (r.qty > 1) body.qty = r.qty;
           if (r.by) body.by = r.by;
           if (r.approved) body.approved = true;
-          post("/api/list/add", { ...body, ...lid }).catch(() => {});
+          bodies.push(body);
         } else if (r.src === "added" && r.itemId) {
-          post("/api/list/add", { item_id: r.itemId, approved: true, ...lid }).catch(() => {});
+          bodies.push({ item_id: r.itemId, approved: true });
         }
       }
+      // Every item on a list: with no list in hand the first add may ask
+      // which list; the rest follow it there.
+      if (bodies.length && !lid.list_id) {
+        const first = bodies.shift()!;
+        const out = await addOnList(l => post("/api/list/add", { ...first, ...(l ? { list_id: l } : {}) }),
+          { names: [String(first.name || "")], itemId: first.item_id as string | undefined }).catch(() => null);
+        if (out?.list) lid = { list_id: out.list.id };
+      }
+      for (const body of bodies) post("/api/list/add", { ...body, ...lid }).catch(() => {});
       await optimize(false);
     } catch (e) { toast(errMsg(e)); }
     finally { D.creating = false; setCreating(false); }

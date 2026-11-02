@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { askList, type NeedList } from "../lib/listPick";
+import { orderLists } from "../ui/ListPick";
 import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
 import { ApiError, get, post } from "../lib/api";
@@ -187,8 +189,24 @@ export function Chat() {
     const done = (...l: Line[]) => { if (!live()) return; drop(w); add(...l); };
     try {
       if (kind === "list") {
-        const out = await post_photo("/api/list/from-photo", f) as { kind: string; names: string[]; added: number };
-        if (out.kind === "receipt") {
+        const out = await post_photo("/api/list/from-photo", f) as { kind: string; names: string[]; added: number; needs_list?: NeedList };
+        if (out.needs_list) {
+          // Every item on a list: one chip per list (the usual one first),
+          // or the sheet to make a list first.
+          const names = out.names || [];
+          const fileOn = async (l: { id: string; name: string }) => {
+            try {
+              await post("/api/list/from-text", { text: names.join("\n"), list_id: l.id });
+              add({ kind: "arya", text: t("listPick.addedTo", { what: names.join(", "), list: l.name }) });
+            } catch (e) { add({ kind: "arya", text: e instanceof Error ? e.message : String(e) }); }
+          };
+          const lists = orderLists(out.needs_list.lists || [], out.needs_list.suggested);
+          if (!lists.length) {
+            done({ kind: "arya", text: t("listPick.firstTitle"), chips: [{ label: t("listPick.makeAList"), run: async () => { const p = await askList({ ...out.needs_list!, names }); if (p) await fileOn(p); } }] });
+          } else {
+            done({ kind: "arya", text: t("listPick.whichFor", { what: names.join(", ") }), chips: lists.slice(0, 6).map(l => ({ label: l.name, run: () => fileOn(l) })) });
+          }
+        } else if (out.kind === "receipt") {
           done({ kind: "arya", text: t("ask.looksLikeReceipt"), chips: [{ label: t("ask.opt.receipt"), run: () => run({ kind: "choose", text: "", file: f }, "receipt") }] });
         } else if (!out.added) {
           done({ kind: "arya", text: t("ask.noListFound"), sub: t("ask.nothingChanged") });

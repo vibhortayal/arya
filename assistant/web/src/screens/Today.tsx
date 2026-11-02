@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { addItem } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -356,9 +357,12 @@ export function Today() {
   async function addLow(id: string) {
     setBusy(b => new Set(b).add(id));
     try {
-      await post("/api/list/add", { item_id: id });
-      setAdded(a => new Set(a).add(id));
-      toast(t("common.addedToList"));
+      const it = low.find(i => i.item_id === id);
+      const out = await addItem(id, it?.name || "");
+      if (out) {
+        setAdded(a => new Set(a).add(id));
+        toast(out.list ? t("listPick.addedTo", { what: it?.name || "", list: out.list.name }) : t("common.addedToList"));
+      }
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     setBusy(b => { const n = new Set(b); n.delete(id); return n; });
   }
@@ -652,9 +656,14 @@ export function Today() {
   async function addAllLow() {
     const ids = low.filter(i => !onList.has(i.item_id) && !added.has(i.item_id)).map(i => i.item_id);
     try {
-      for (const id of ids) await post("/api/list/add", { item_id: id });
-      setAdded(a => new Set([...a, ...ids]));
-      toast(t("today.small.addedAll"));
+      const done: string[] = [];
+      for (const id of ids) {
+        const out = await addItem(id, low.find(i => i.item_id === id)?.name || "");
+        if (!out) break;                       // cancelled: stop asking
+        done.push(id);
+      }
+      setAdded(a => new Set([...a, ...done]));
+      if (done.length) toast(t("today.small.addedAll"));
     } catch (e) { showErr(e); }
   }
   const small = (id: CardId) => (
@@ -778,7 +787,7 @@ export function Today() {
     toast(t("today.doneWith", { name: s.name }), {
       action: t("common.add"),
       onAction: async () => {
-        try { await post("/api/list/add", { item_id: s.item_id }); toast(t("today.isOnYourList", { name: s.name })); load(); }
+        try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); load(); } }
         catch (e) { toast(e instanceof Error ? e.message : String(e)); }
       },
     });
@@ -1037,7 +1046,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
           toast(t("today.doneWith", { name: s.name }), {
             action: t("common.add"),
             onAction: async () => {
-              try { await post("/api/list/add", { item_id: s.item_id }); toast(t("today.isOnYourList", { name: s.name })); reload(); }
+              try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); reload(); } }
               catch (e) { toast(errMsg(e)); }
             },
           });
