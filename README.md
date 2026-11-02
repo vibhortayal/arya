@@ -78,6 +78,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
 | How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What is done and what is not | [`STATUS.md`](STATUS.md) |
 
@@ -173,21 +174,18 @@ Details and the VM runbook are in
 
 ## Run it yourself
 
-You need Python 3.12 and Node 22. Without a `MODEL_API_KEY`, the app and the
-demo household run, but anything that calls a Meta model fails with a
-plain error.
+With Docker and your own Meta key (optional, it turns the AI on):
 
 ```
-python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt
-cd assistant/web && npm ci && npm run build && cd ..
-../.venv/bin/python -m harness.make_demo_household data   # builds the demo household
-MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
+cp .env.local.example .env       # put your key on the MODEL_API_KEY line
+docker compose up --build
 ```
 
-Open http://localhost:8000 and tap "Try it now". For front-end work,
-`npm run dev` in `assistant/web` starts Vite. The full Docker setup (API and
-Caddy) is in `assistant/deploy/`; settings are listed in
-[`assistant/deploy/.env.example`](assistant/deploy/.env.example).
+Open http://localhost:8080. On the first visit, create your account (a username
+and password) to read your own receipts, or close the sheet and tap "Try it now"
+for the demo household. Without a key the app and the demo open, but anything that calls a
+Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
+and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
 
 Tests, from the repo root:
 

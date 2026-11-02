@@ -86,8 +86,8 @@ through import and export.
   (`LICENSE`).
 
 ## Running it yourself
-- A Docker setup that runs on a laptop with a short env file and your own Meta
-  key. Today the Compose file is the production one; see the README.
+- More for self-hosters: a one-command setup for a small server with TLS (the
+  laptop setup is in `docs/RUN-IT-YOURSELF.md`).
 - Off-site backups with rclone (`ARYA_BACKUP_REMOTE` exists; no bucket is set
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
