@@ -3,6 +3,7 @@ import datetime
 import logging
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -524,7 +525,7 @@ async def list_from_photo(req: Request):
         read = await run_in_threadpool(read_list_photo, body, client,
                                        media_type=media)
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     if read["kind"] == "receipt":
         return {"kind": "receipt", "names": [], "added": 0}
     if read["kind"] == "item":
