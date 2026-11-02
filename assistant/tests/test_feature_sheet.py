@@ -78,7 +78,7 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Map my store: open the Quest tab", f("how do I map my store?"))
         self.assertIn("Start a group", f("how do I share my list with my wife"))
         self.assertIn("Help tab: tap Help", f("where is the help tab"))
-        self.assertIn("tap Edit on Today", f("can I move the cards around"))
+        self.assertIn("tap Customize on Today", f("can I move the cards around"))
         self.assertIn("Receipts: open Spending", f("where do I add a receipt"))
         # install steps have their own topic (Ask gap 6)
         for q in ("How do I install Arya on my phone?", "how do I add it to my home screen", "is there an app store app"):

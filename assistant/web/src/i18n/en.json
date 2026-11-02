@@ -2441,7 +2441,7 @@
     },
     "edit": {
       "edit": "Edit",
-      "title": "Edit Today",
+      "title": "Customize your \"Today\" screen",
       "hint": "Drag to reorder. A card with nothing to say stays hidden until it does.",
       "more": "More cards",
       "reset": "Reset Today",
@@ -2452,11 +2452,11 @@
       "add": "Add {{name}}",
       "move": "Move {{name}}. Use the up and down arrow keys.",
       "allOn": "Every card is on Today.",
-      "editToday": "Edit Today"
+      "editToday": "Customize"
     },
     "menu": {
       "label": "Card options",
-      "edit": "Edit Today",
+      "edit": "Customize your \"Today\" screen",
       "up": "Move up",
       "down": "Move down",
       "remove": "Remove from Today"
@@ -3131,7 +3131,7 @@
   "demoTour": {
     "today_tab": {
       "title": "Today",
-      "line": "What needs you now: what is running low, what to use soon, and your lists. Edit Today changes what shows."
+      "line": "What needs you now: what is running low, what to use soon, and your lists. Customize your \"Today\" screen changes what shows."
     },
     "today_low": {
       "title": "Running low",
@@ -3146,7 +3146,7 @@
       "line": "Food from your receipts that can go bad. Add a date and Arya reminds you."
     },
     "today_edit": {
-      "title": "Edit Today",
+      "title": "Customize your \"Today\" screen",
       "line": "Hide, reorder or add cards. Make this screen yours."
     },
     "spending_tab": {
@@ -3328,7 +3328,7 @@
         "kicker": "Today",
         "title": "Customize your \"Today\" screen",
         "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
-        "s1": "On Today, tap Edit, or touch and hold any card.",
+        "s1": "On Today, tap Customize, or touch and hold any card.",
         "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card.",
         "s4": "Lists, Ask and Quest have an Edit button too."
@@ -3870,7 +3870,7 @@
         "title": "Customize your \"Today\" screen",
         "sub": "Move, hide and add cards",
         "body": "Make Today show what you care about.",
-        "s1": "Tap Edit on Today, or touch and hold a card.",
+        "s1": "Tap Customize on Today, or touch and hold a card.",
         "s2": "Drag a card to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card from the library.",
         "n1": "Next trip is the first card. It has Start shopping, Add items and Scan a receipt. Lists, Ask and Quest have an Edit button too.",
