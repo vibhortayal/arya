@@ -25,7 +25,7 @@ Escalation is by evidence (a scored eval), never by default.
 4. Wonder: zero jobs at baseline (history; the live reader is `auto`, see below). A job earns Wonder only by failing its
    golden set on Spark at two effort levels, with the eval logged.
 5. Voice: transcribe on demand only; Ask has no voice out (replies are text).
-6. Dinner render (optional): muse-image-1.0 at $0.01 — the one place a flat
+6. Dinner render (planned, not built; Muse Image paints the celebration characters and share looks): muse-image-1.0 at $0.01 — the one place a flat
    per-unit price beats token metering.
 
 ## Measured anchors (default reasoning effort, spike runs)
