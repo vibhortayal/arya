@@ -89,6 +89,14 @@ and, where it touches personal data, a privacy review first.
 **Everyday use**
 - Meal planning from what is running low and what to use soon, with a
   shopping list that writes itself from the plan.
+- **Recipe to shopping list, then to stores.** Build a list from a recipe
+  (link, photo or typed), then use the household's own receipt and store
+  history to suggest which store to buy each item at and which product or
+  brand you usually buy, with the price you paid there last. Arya already
+  learns store and price per item from receipts and groups a list by store;
+  turning a recipe into list items and routing them is not built. Possible
+  extras: spot what you already have at home, suggest a cheaper store for the
+  whole recipe, and scale the recipe to the household's size.
 - Recipe import from a link or a photo, turning a recipe into list items.
 - Budget goals per store or per month on the Spending screen, with a gentle
   heads-up and never a lock.
