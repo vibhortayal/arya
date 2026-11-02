@@ -20,7 +20,7 @@ ffmpeg, Postgres) does plumbing only.
 - Model output is a proposal: receipts must reconcile, low-confidence
   lines queue for review, identity changes need the user's approval.
 - Cheapest model that holds the score. Wonder as the backup receipt reader is
-  the one exception, time-boxed to the hackathon amendment (expires Nov 9, after judging).
+  the one exception, time-boxed to the hackathon amendment (expires Nov 9).
 - No pictures of people kept: SAM pixelates the people it detects first, or the frame is
   dropped.
 
