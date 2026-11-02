@@ -309,7 +309,7 @@ license; full notices are in [`NOTICE.md`](NOTICE.md).
 | API | psycopg | LGPL-3.0 |
 | Serving | Caddy, and the Docker base images (Node, Python) | Apache-2.0, and each image's own terms |
 | Models | Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image, through the Meta Model API | Meta's API terms (hosted; no weights are in this repo) |
-| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | The model's own license from Meta; not copied into this repo |
+| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Meta's license for the model; see its model card (not copied into this repo) |
 | Services | Baseten, Supabase (optional), Resend (email) | Their service terms |
 
 The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store

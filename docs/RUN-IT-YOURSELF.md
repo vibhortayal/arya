@@ -71,6 +71,8 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
   touch the live deploy, which uses `assistant/deploy/docker-compose.yml`.
 
 ## Without Docker
+This route has not been tested by the Tester yet; the Docker route above has.
+
 You need Python 3.12 and Node 22. From the repository root:
 
 ```
