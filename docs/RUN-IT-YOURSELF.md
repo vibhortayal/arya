@@ -27,8 +27,8 @@ visit a "Create your account" sheet opens. That makes the one real account on
 this copy: a username (lowercase letters, digits and `_ % + @ -`, and `.` after the first character) and a password. Use it
 to snap or upload your own receipts and see them read and saved, which is
 Arya's core feature. Or close the sheet and tap **Try it now** for the demo
-household. The demo keeps nothing, so it cannot add receipts; Ask, photos of a
-list and voice work there with your key. The first start also writes the demo
+household. The demo keeps nothing: it reads a receipt live on the screen but does not
+save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
 household into a Docker volume; later starts keep what is there.
 
 ## Settings (`.env`)

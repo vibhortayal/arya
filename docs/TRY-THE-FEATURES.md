@@ -9,7 +9,7 @@ Arya is a phone app. For the closest view, use your browser's phone mode (for ex
 1. Copy the settings file and add your key: `cp .env.local.example .env`, then put your key from dev.meta.ai after `MODEL_API_KEY=`.
 2. Run `docker compose up --build`, then open http://localhost:8080.
 3. A **Create your account** sheet opens. You can either:
-   - **Make your account now** (any username, plus a password). Use it for section 9, your own receipts.
+   - Fill in a username and a password, then tap **Create account**. Use it for section 9, your own receipts.
    - **Tap Close, then Try it now** to open the demo household (sections 1 to 8).
 
 Sign-in here is a plain username and password. There is no waitlist, no Google and no email code. To make more accounts, use **Start my own list** at the bottom of the landing page.
@@ -59,7 +59,7 @@ The household shops in **Demo Town**, a simulated neighbourhood of 800 household
 
 ## 6. Ask Arya (needs your key)
 
-Tap **Ask**, then try:
+Tap **Ask Arya**, then try:
 
 - "We finished the Greek yogurt": the list updates.
 - "Where is milk cheaper?": it answers from the receipts.
@@ -82,7 +82,7 @@ On **Today**, tap **Use soon** and add dates. Arya reminds you before things go 
    - Wonder re-reads it only if the checks flag it.
    - Items land in your data, and a store you choose for a list joins **My stores**.
 
-The demo household can't add receipts, because it keeps nothing.
+The demo household reads a receipt live on the screen, but it does not keep it. Stay on the Receipts screen while Arya reads.
 
 ## 10. Share with your household (groups)
 
