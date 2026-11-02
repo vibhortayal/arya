@@ -3147,7 +3147,7 @@
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
         "s1": "Lists › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
-        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. In Receipts, search, pick a date range and sort to find one fast."
+        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. Tap a line on a receipt to fix its name, quantity or price. In Receipts, search, pick a date range and sort to find one fast."
       },
       "prices": {
         "kicker": "Prices",
@@ -3616,7 +3616,7 @@
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
         "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check with Arya's guess, the printed text and a section: tap Use this name, Fix or Keep printed, or Use the sure guesses to set every guess Arya is sure of at once (Undo puts them back).",
-        "n4": "Spot a mistake on a filed receipt? Open it and tap the line to fix its name, quantity or price. The printed total stays as printed, and the receipt says so if the lines stop adding up.",
+        "n4": "Spot a mistake on a filed receipt? Open it and tap the line to fix its name, quantity or price. Fixed lines show an \"edited\" tag. The printed total stays as printed, and the receipt says so if the lines stop adding up. Undo puts the old values back.",
         "cta": "Open Receipts"
       },
       "additem": {
@@ -3663,6 +3663,7 @@
         "s3": "Open Lists, then Spending, to see it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
+        "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
         "cta": "Open Spending"
       },
       "prices": {
