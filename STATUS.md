@@ -253,7 +253,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
-  `2026-10-29-supabase-signin.md`. Not tried against the live project.
+  `2026-10-29-supabase-signin.md`. Live: on (checked with Ops, Nov 2); new sign-up is closed by the Ops flag, which wins over the env.
   Sign-in by code or Google works for: an existing account, an address the
   I approved from the waitlist, or anyone while my Registration
   switch is open (and `ARYA_SUPABASE_SIGNUP` is not 0). Approving is for the

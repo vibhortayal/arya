@@ -1,6 +1,6 @@
 # Sign-in and the waitlist
 
-Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup I approved
+Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. On the live site new sign-up is closed by an Ops flag, which wins over the env, and email code and Google sign-in are on for existing and approved accounts. Mockup I approved
 (2026-10-30): https://claude.ai/artifact/PbmjdCuX1TVqkcFGZPJR9E
 
 Heads-up mail to me on each new join: see "Waitlist join emails" in OPS.md.
