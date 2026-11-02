@@ -27,8 +27,8 @@ visit a "Create your account" sheet opens. That makes the one real account on
 this copy: a username (lowercase letters, digits and `_ % + @ -`, and `.` after the first character) and a password. Use it
 to snap or upload your own receipts and see them read and saved, which is
 Arya's core feature. Or close the sheet and tap **Try it now** for the demo
-household. The demo keeps nothing, so it cannot add receipts; Ask, photos of a
-list and voice work there with your key. The first start also writes the demo
+household. The demo keeps nothing: it reads a receipt live on the screen but does not
+save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
 household into a Docker volume; later starts keep what is there.
 
 ## Settings (`.env`)
@@ -66,9 +66,15 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
   session cookie is set to work over plain http (`ARYA_INSECURE_COOKIE=1`).
 - JSON files in a volume instead of Supabase. No email, so you sign in with the
   username and password you made on the first visit.
-- Demo Town (the simulated neighborhood) is off, so the demo household shops at
-  its own stores. Registration is closed. The `compose.yaml` here does not
-  touch the live deploy, which uses `assistant/deploy/docker-compose.yml`.
+- Demo Town (the simulated neighborhood, labelled simulated) is on, as on the
+  live demo, and registration is open, so **Start my own list** on the landing
+  page makes any number of accounts. Groups are on, so two local accounts can
+  share a list. There is no waitlist, no Google and no email code. The
+  `compose.yaml` here does not touch the live deploy, which uses
+  `assistant/deploy/docker-compose.yml`.
+
+Next, a step-by-step tour of every feature on your copy:
+[`docs/TRY-THE-FEATURES.md`](TRY-THE-FEATURES.md).
 
 ## Without Docker
 This route has not been tested by the Tester yet; the Docker route above has.
