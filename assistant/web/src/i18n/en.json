@@ -91,7 +91,7 @@
     },
     "receiptFile": {
       "empty": "That file arrived empty. If it is still downloading, wait for it to finish, then try again.",
-      "reading": "Reading the receipt — this can take up to a minute.",
+      "reading": "Reading the receipt… Usually 10 to 30 seconds, up to a minute. Stay on this screen.",
       "demo": "Read just now. Kept until you leave the demo.",
       "duplicate": "You already added this {{merchant}} receipt from {{date}}.",
       "thatReceipt": "that receipt",
@@ -2092,10 +2092,26 @@
       "other": "Other"
     }
   },
+  "receiptRead": {
+    "readingOne": "Reading the receipt…",
+    "readingOneSub": "Usually 10 to 30 seconds, up to a minute.",
+    "readingN": "Reading receipt {{i}} of {{n}}",
+    "readingNSub": "{{name}} · {{filed}} filed so far.",
+    "stay": "Stay on this screen.",
+    "demoNote": "Demo receipts aren't saved, so stay on this screen while Arya reads. In your own account, Arya reads receipts in the background, so you can leave.",
+    "button": "Reading…",
+    "doneHead": "Read {{read}} of {{total}} receipts",
+    "failedLine_one": "{{count}} could not be read",
+    "failedLine_other": "{{count}} could not be read",
+    "tryAgain": "Try again"
+  },
   "receiptJob": {
     "sending": "Sending {{sent}} of {{total}} receipts",
+    "sendingOne": "Sending your receipt",
     "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
+    "keepOpenOne": "Keep Arya open until this finishes. Then you can leave, and Arya reads it in the background.",
     "reading": "Reading your receipts in the background",
+    "readingOne": "Reading your receipt in the background",
     "progress": "{{done}} of {{total}} read.",
     "someFailed_one": "{{count}} could not be read.",
     "someFailed_other": "{{count}} could not be read.",
@@ -3630,7 +3646,7 @@
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
         "s1": "Open Spending, then Receipts.",
-        "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
+        "s2": "Tap Add receipts and pick one or several. Once sent, Arya reads them in the background, so you can leave.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",

@@ -77,3 +77,14 @@ test("lines of one product on several receipts become one row, fixed with one ta
   await act(async () => { fireEvent.click($("#toast .toastact")!); });
   await waitFor(() => expect(posts.some(p => p[0].includes("/api/review/undo"))).toBe(true));
 });
+
+test("read on this screen: Read 3 of 5, and Try again reads only the 2 that failed", async () => {
+  decodeReply = n => (n === 2 || n === 4 ? json({ detail: "the photo is too blurry to read" }, 422) : json({ receipt: { merchant: "Safeday", lines: [] } }));
+  await pick(5);
+  await waitFor(() => expect($("#rc-photo-failures")).not.toBeNull());
+  expect($("#rc-photo-failures")!.textContent).toContain("Read 3 of 5 receipts");
+  expect($("#rc-photo-failures")!.textContent).toContain("2 could not be read");
+  expect($("#rc-retry")).not.toBeNull();
+  await act(async () => { fireEvent.click($("#rc-retry")!); });
+  await waitFor(() => expect(decodeCalls).toBe(7));
+});
