@@ -1,6 +1,7 @@
 """Shelf photos in the aisle: scan a shelf, fetch a stored shelf photo, and work out where the shopper is."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -50,7 +51,7 @@ async def scan_shelf_route(req: Request):
         out = await run_in_threadpool(shelfscan.scan, body, remaining,
                                       client, media_type=media)
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     # What was seen where feeds the store map. A frame that popped
     # an item is kept as a fresh shelf photo, but only once SAM 3.1
     # has found and pixelated every person in it (owner, 2026-10-28:

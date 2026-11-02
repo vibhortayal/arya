@@ -17,6 +17,7 @@ import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
 import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
 import { EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
+import { fitPhoto } from "../lib/photo";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -567,7 +568,7 @@ export function Today() {
                 <span className="lc-items">{trip.items.slice(0, 4).map(i => i.name).join(", ") + (trip.count > 4 ? "…" : "")}
                   {tripOut.length > 0 && <> · {tripOut.length === 1 ? t("today.trip.outOne", { item: tripOut[0] }) : t("today.trip.outMany", { count: tripOut.length })} <SimPill /></>}</span>
               </button>
-              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => nav.show("community", { listId: trip.id === "else" ? "all" : trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
+              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => trip.id === "else" ? nav.show("list", { lens: "else" }) : nav.show("community", { listId: trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
             </>
           ) : (
             <>
@@ -971,7 +972,8 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
   async function readPhoto(file: File) {
     setEx({ k: "reading" });
     try {
-      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+      const small = await fitPhoto(file);
+      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
       await handleRead(await r.json());
     } catch (e) { setEx({ k: "cant", why: errMsg(e) }); }
@@ -1161,7 +1163,8 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
       if (demo) read = await post("/api/expiry/read?sample=1");
       else {
         if (!file) throw new Error("no photo");
-        const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+        const small = await fitPhoto(file);
+      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
         if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
         read = await r.json();
       }

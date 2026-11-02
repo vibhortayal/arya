@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from api import album_routes, haul_routes, hunt_routes, pack, state
+from api import album_routes, haul_routes, hunt_routes, listops, pack, state
 from api.demo_guard import require_login
 from api.deps import _PWA
 from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
@@ -22,6 +22,9 @@ from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, grou
 # ones included, to anyone (audit M2, 2026-10-30). The public Lists
 # API keeps its own schema at /api/v1/openapi.json.
 app = FastAPI(title="Arya API", docs_url=None, redoc_url=None, openapi_url=None)
+# Offline list changes (api/listops.py) run inside the sign-in check:
+# the middleware added last runs first.
+app.middleware("http")(listops.middleware)
 app.middleware("http")(require_login)
 from api import own_key as _own_key  # noqa: E402
 app.middleware("http")(_own_key.offer_middleware)

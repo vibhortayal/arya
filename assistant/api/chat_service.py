@@ -414,6 +414,9 @@ def apply_actions(actions, added=None):
                 qty = int(q)
             a = dict(a, item=said)
             item_id = existing_item_id(said or "", state.dictionary()["entries"], state.flags())
+            # Quantity counts packages: "a dozen eggs" on a 12-count carton
+            # is one carton, not 12 cartons (live Ask run, 2026-11-01).
+            qty = _packs(qty, state.names().get(item_id) if item_id else said)
             if item_id and item_id.startswith("manual-"):
                 item_id = None   # a typed row: handled below, same as a new name
         else:
@@ -505,6 +508,27 @@ def apply_actions(actions, added=None):
     return applied, skipped
 
 
+_PACK = re.compile(r"\b(\d{1,3})\s*-?\s*(?:ct|count|pk|pack|pcs?|eggs)\b|\b(dozen|doz)\b", re.I)
+
+
+def pack_size(name):
+    """How many units one package of a named item holds ("Pasture Eggs
+    12 ct" -> 12, "Eggs dozen" -> 12), else 1."""
+    m = _PACK.search(str(name or ""))
+    if not m:
+        return 1
+    return 12 if m.group(2) else max(1, int(m.group(1)))
+
+
+def _packs(qty, name):
+    """A count that is the pack's own size (or a whole number of packs)
+    means packages: 12 of a 12-count carton is 1 carton, 24 is 2."""
+    n = pack_size(name)
+    if n > 1 and qty >= n and qty % n == 0:
+        return qty // n
+    return qty
+
+
 RISKY = {"ran_out", "mark_expired", "never_suggest", "snooze"}
 
 
@@ -532,7 +556,7 @@ PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer 
 # fallback.
 BAR_NAMES = {"home": "Today", "list": "Lists", "receipts": "Receipts", "stores-mine": "Stores",
              "analysis": "Spending", "chat": "Ask", "community": "Quest", "help": "Help", "profile": "Settings"}
-DEFAULT_BAR = ["home", "list", "community", "chat"]
+DEFAULT_BAR = ["home", "analysis", "community", "chat"]  # owner, 2026-11-02
 BAR_MAX = 4
 
 

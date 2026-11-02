@@ -281,9 +281,10 @@ class TestStoreShell(unittest.TestCase):
                           ("screens/StoresMine.tsx", ("sm-list",))):
             for fid in fids:
                 self.assertIn(f'id="{fid}"', self.src(rel), fid)
-        # The Lists tab carries the Stores row (moved from Settings, 2026-10-31)
-        self.assertIn('id="lists-stores"', self.src("screens/Lists.tsx"))
-        self.assertIn('nav.show("stores-mine")', self.src("screens/Lists.tsx"))
+        # Spending carries the Stores row (from Settings 2026-10-31, to
+        # Lists, then to Spending's top 2026-11-02)
+        self.assertIn('id="lists-stores"', self.src("screens/Analysis.tsx"))
+        self.assertIn('nav.show("stores-mine")', self.src("screens/Analysis.tsx"))
 
 
 if __name__ == "__main__":

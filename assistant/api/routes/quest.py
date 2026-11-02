@@ -1,6 +1,7 @@
 """Hunt sessions: plan, create, items, check-off, state, receipt, optimize, Shop-Off, missing-item reports and the haul photo."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -324,7 +325,7 @@ async def quest_haul_photo(req: Request, session: str = ""):
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     out = quest.haul_check(session, sightings)
     if out is None:
         raise HTTPException(404, "no such session")

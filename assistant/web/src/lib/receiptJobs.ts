@@ -1,4 +1,5 @@
 import { api, post } from "./api";
+import { fitPhoto } from "./photo";
 
 /* Background receipt reading (api/receiptjobs.py): the phone sends the
  * pictures and PDFs up first, the server reads them while the app is
@@ -21,7 +22,7 @@ export async function sendBatch(files: File[], onProgress: (sent: number) => voi
   const unsent: { name: string; reason: string }[] = [];
   let sent = 0;
   for (let i = 0; i < files.length; i++) {
-    const f = files[i];
+    const f = await fitPhoto(files[i]);
     const put = () => api(`/api/receipts/jobs/${job.id}/files/${i}`, {
       method: "PUT", headers: { "Content-Type": mediaOf(f), "X-File-Name": encodeURIComponent(f.name || "").slice(0, 200) }, body: f });
     try {

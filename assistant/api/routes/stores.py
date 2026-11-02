@@ -1,4 +1,5 @@
 """Stores: the platform directory and My Stores."""
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 
 from api import state
@@ -105,7 +106,7 @@ async def stores_places_pick(req: Request):
         row = await run_in_threadpool(
             places.pick_store, place_id, name, state._current_user.get())
     except places.PlacesError as e:
-        raise HTTPException(502, str(e))
+        raise HTTPException(502, safe_detail(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return row

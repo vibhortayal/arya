@@ -10,6 +10,7 @@ import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, post } from "../lib/api";
+import { SYNCED } from "../lib/listQueue";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
@@ -26,6 +27,7 @@ import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 import { EditList, EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
+import { fitPhoto } from "../lib/photo";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -35,7 +37,7 @@ import { arrange } from "../lib/layout";
  * <section id="view-list">.
  *
  * Start shopping opens the Quest game on this list:
- * nav.show("community", { listId }) ("all" for Everything else).
+ * nav.show("community", { listId }) ("else" for Everything else).
  *
  * Local helpers kept here: the swipe / long-press wiring, the split
  * preview, the group line and the Eyes block. */
@@ -184,11 +186,6 @@ export function Lists() {
 
   const [data, setData] = useState<HomeData | null>(cache.data);
   const [loadFailed, setLoadFailed] = useState(false);
-  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
-  const [groupName, setGroupName] = useState<string | null>(null);
-  useEffect(() => {
-    get<{ group: { name: string } | null }>("/api/group").then(g => { if (alive.current) setGroupName(g?.group?.name || null); }, () => {});
-  }, []);
   const dataRef = useRef<HomeData | null>(cache.data);
   // Today's list cards open one list (app.js: listLens = card's id).
   const [lens, setLensState] = useState(() => {
@@ -319,7 +316,9 @@ export function Lists() {
   useEffect(() => {
     const onLive = (ev: Event) => { ev.preventDefault(); reconcile(); };
     window.addEventListener("arya-live", onLive);
-    return () => window.removeEventListener("arya-live", onLive);
+    // List changes kept on this phone went out (lib/listQueue.ts).
+    window.addEventListener(SYNCED, reconcile);
+    return () => { window.removeEventListener("arya-live", onLive); window.removeEventListener(SYNCED, reconcile); };
   }, [reconcile]);
 
   const ask = useAsk(reloadQuiet);
@@ -772,7 +771,8 @@ export function Lists() {
     closeCard();
     setStatus(t("lists.readingPhoto"));
     try {
-      const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
+      const small = await fitPhoto(f);
+      const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
       setStatus("");
@@ -832,7 +832,10 @@ export function Lists() {
   // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
-    nav.show("community", { listId: here ? here.id : "all" });
+    // Quest plays named lists only (owner, 2026-11-02), so Everything
+    // else is shopped by ticking it off here.
+    if (!here) { startList(); return; }
+    nav.show("community", { listId: here.id });
   };
   // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
   const snapAisle = async (name: string) => {
@@ -1062,15 +1065,6 @@ export function Lists() {
           </div>
           )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
-          {/* Stores, Receipts and Spending live here (owner, 2026-11-01: they left Today). */}
-          <div className="group listsstores">
-            <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
-              <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts")}>
-              <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-analysis" type="button" onClick={() => nav.show("analysis")}>
-              <span className="grow">{t("common.analysis")}<span className="sub">{t("lists.spendingRowSub")}</span></span><span className="chev">›</span></button>
-          </div>
           </>}
         </div>
       )}

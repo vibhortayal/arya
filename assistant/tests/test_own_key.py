@@ -216,8 +216,11 @@ class TestFailures(OwnKeyCase):
             c, _ = self.client(500, lambda h: {"error": "echo " + h["Authorization"]})
             with self.assertRaises(RuntimeError) as e:
                 c.chat([{"role": "user", "content": "hi"}])
+        # Main's plain errors (#403) keep the raw answer only on .raw and
+        # in the server log; the key must be scrubbed from both.
         self.assertNotIn(KEY, str(e.exception))
-        self.assertIn("[key]", str(e.exception))
+        self.assertNotIn(KEY, getattr(e.exception, "raw", ""))
+        self.assertIn("[key]", getattr(e.exception, "raw", ""))
 
     def test_a_failed_read_carries_the_fix_offer(self):
         self.save()

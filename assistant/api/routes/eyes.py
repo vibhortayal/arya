@@ -2,6 +2,7 @@
 import hashlib
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -33,7 +34,7 @@ async def eyes_photo(req: Request, kind: str = "fridge"):
         sightings = await run_in_threadpool(detect, body, client,
                                             media_type=media)
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     rec_id = "eye-" + hashlib.sha1(body).hexdigest()[:10]
     ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}.get(media, ".jpg")
     photo_dir = os.path.join(state.data_dir(), "eyes_photos")

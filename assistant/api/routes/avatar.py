@@ -1,6 +1,7 @@
 """The shopper's look: avatar, generated looks, shared looks, news and profile."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
@@ -41,7 +42,7 @@ async def quest_avatar_generate(req: Request):
     except ValueError as e:
         raise HTTPException(400, str(e))
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     return avatar.get()
 
 
@@ -64,7 +65,7 @@ async def quest_avatar_photo(req: Request):
         await run_in_threadpool(avatar.make_from_photo, photo, media,
                                 new_client())
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     return avatar.get()
 
 
@@ -89,7 +90,7 @@ async def quest_share_look(req: Request, look: str = ""):
     except ValueError as e:
         raise HTTPException(400, str(e))
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     return Response(img, media_type="image/webp",
                     headers={"Cache-Control": "no-store"})
 
