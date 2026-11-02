@@ -1,8 +1,13 @@
-# After the hackathon: roadmap
+# After the hackathon
 
-What is not finished, said plainly. **Nothing on this page is built unless it
-says so**, and nothing is promised for the submission. "Idea" means nobody has
-designed it yet. Sources are named so you can check them.
+These are ideas the owner is thinking about for where Arya could go. They are
+not commitments, and he needs more time to figure out and understand them.
+
+**What ships now is a limited-scope MVP:** a list that learns from receipts,
+Ask, groups, Quest and the connector, as described in the README and
+`STATUS.md`. **This page is what could come later.** Nothing on it is built
+unless it says so, and nothing is promised for the submission. "Idea" means
+nobody has designed it yet. Sources are named so you can check them.
 
 **Positioning.** Arya does not try to out-do apps that do one thing better. It
 aims to be the core platform where a community can use shared grocery
