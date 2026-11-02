@@ -5,8 +5,8 @@
 #   open http://localhost:8080
 #
 # On the first visit a "Create your account" sheet opens: that makes the
-# one real account on this copy (any username, a password of 8 or more
-# characters), which can read and keep your own receipts. Or close it
+# one real account on this copy (a username of letters and digits, and
+# a password), which can read and keep your own receipts. Or close it
 # and tap "Try it now" for the demo household (it keeps nothing, so it
 # cannot add receipts).
 #
