@@ -24,6 +24,7 @@ const SECTIONS = {
   'Start here': [
     ['README.md', 'intro', 'What Arya is'],
     ['JUDGES.md', 'judges', 'For judges'],
+    ['docs/PRINCIPLES.md', 'principles', 'Principles and goals'],
     ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
     ['docs/TRY-THE-FEATURES.md', 'try-the-features', 'Try the features'],
     ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'What we built'],
