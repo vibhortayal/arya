@@ -96,9 +96,8 @@ manual-only (`.github/workflows/tests.yml`).
   dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d"**
   `MODEL_API_KEY` is empty, or the container was not recreated after you
   edited `.env`. Fix `.env`, then `docker compose up -d`.
-- **Receipts says "Reading paused" with raw server text, and there is no key.** The
-  same cause as above: add the key and run `docker compose up -d`. (A cleaner
-  message is being fixed.)
+- **Receipts says "Reading paused" and there is no key.** The same cause as
+  above: add the key and run `docker compose up -d`.
 - **Port already in use.** Set `ARYA_LOCAL_PORT` to a free port.
 - **A model error with a key set.** The key was rejected or has no credit;
   check it at dev.meta.ai.
