@@ -593,7 +593,8 @@
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
     "join": "Join",
-    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it."
+    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it.",
+    "removedFrom": "You were removed from {{name}}. You kept a copy of its lists and your own receipts."
   },
   "hunt": {
     "thatHuntIsGoneThe": "This quest ended when the demo reset. Start it again from Today.",
@@ -1769,20 +1770,20 @@
     "someoneSentYouAnInvite": "Someone sent you an invite",
     "you": "· you",
     "inviteSomeone": "Invite someone",
-    "aCodeThatWorksFor": "A code that works for 48 hours",
+    "aCodeThatWorksFor": "A code for one person, works for 48 hours",
     "leaveGroup": "Leave group",
     "youKeepACopyOf": "You keep a copy of the lists and your own receipts",
     "groupName": "Group name",
     "yourListsBecomeTheGroup": "Your lists become the group's lists. Next you can invite people with a code.",
     "startGroup": "Start group",
     "renameGroup": "Rename group",
-    "sendThisCodeItWorks": "Send this code. It works for {{hours}} hours.",
+    "sendThisCodeItWorks": "Send this code to one person. It works once, for {{hours}} hours.",
     "copyCode": "Copy code",
     "shareLink": "Share link",
-    "anyoneWithTheCodeCan": "Anyone with the code can join and see the group's lists and receipts. Make a new code any time and the old one stops working. Up to {{max_members}} people.",
+    "anyoneWithTheCodeCan": "The first person to use the code joins and sees the group's lists and receipts; then the code stops working. Invite the next person with a new code. Make a new code any time and the old one stops working. Up to {{max_members}} people.",
     "makeANewCode": "Make a new code",
     "theyKeepACopyOf": "They keep a copy of the lists and take their own receipts with them. The group's lists stay as they are.",
-    "keep": "Keep",
+    "keep": "No, keep",
     "runningLowPatternsAndSpend": "Running low and spending go back to just your receipts",
     "youAreTheLastOne": "You are the last one",
     "theGroupClosesYourLists": "The group closes. Your lists and receipts stay yours.",
@@ -1826,7 +1827,7 @@
     "inviteCodeAria": "Invite code {{code}}",
     "orOpen": "or open {{link}}",
     "codeCopied": "Code copied.",
-    "joinText": "Join {{name}} on Arya: code {{code}}",
+    "joinText": "Join {{name}} on Arya: tap the link, or open Arya, go to Settings, Join with a code, and enter {{code}}. It works once.",
     "linkCopied": "Link copied.",
     "removeHandle": "Remove @{{handle}}?",
     "handleOut": "@{{handle}} is out of the group.",
@@ -1989,6 +1990,26 @@
     "receiptAt": " · receipt {{time}}",
     "winner": "Winner: @{{handle}} — by receipt time.",
     "deadHeat": "Dead heat — identical receipt times."
+  },
+  "lineFix": {
+    "title": "Fix this line",
+    "printed": "Printed: {{raw}}",
+    "name": "Name",
+    "qty": "Quantity",
+    "price": "Price paid",
+    "amount": "Amount",
+    "badQty": "Quantity must be more than 0.",
+    "nameNote": "A new name also fixes this item on your other receipts, and Arya remembers it next time.",
+    "warnMore": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} more than the total, so the receipt will say its lines don't match.",
+    "warnLess": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} less than the total, so the receipt will say its lines don't match.",
+    "nowMatches": "Now the lines add up to the printed total again.",
+    "saveAnyway": "Save anyway",
+    "saved": "Saved.",
+    "savedAlso_one": "Saved. Also fixed on {{count}} other receipt.",
+    "savedAlso_other": "Saved. Also fixed on {{count}} other receipts.",
+    "tapHint": "Tap a line to fix its name, quantity or price.",
+    "edited": "edited",
+    "linesDontMatch": "You changed some lines, and they no longer add up to the printed total of {{total}}."
   },
   "receipt": {
     "returned": "Returned",
@@ -3111,7 +3132,7 @@
         "title": "Shared lists to shop in sync",
       "body": "Create shared lists with your household members. Anyone can add, edit or check off an item and Arya keeps the lists synced on every phone. Finish your grocery runs quicker together or split up and each take a store.",
       "s1": "Open Settings, tap Start a group and give it a name.",
-        "s2": "Tap Invite someone and send them the code.",
+        "s2": "Tap Invite someone and send the code to one person. Each code works once.",
         "s3": "When they join, your lists are shared. Anyone can add, change or check off an item, and every phone stays in sync."
       },
       "maps": {
@@ -3135,7 +3156,7 @@
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
         "s1": "Lists › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
-        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. In Receipts, search, pick a date range and sort to find one fast."
+        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. Tap a line on a receipt to fix its name, quantity or price. In Receipts, search, pick a date range and sort to find one fast."
       },
       "prices": {
         "kicker": "Prices",
@@ -3604,6 +3625,7 @@
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
         "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check with Arya's guess, the printed text and a section: tap Use this name, Fix or Keep printed, or Use the sure guesses to set every guess Arya is sure of at once (Undo puts them back).",
+        "n4": "Spot a mistake on a filed receipt? Open it and tap the line to fix its name, quantity or price. Fixed lines show an \"edited\" tag. The printed total stays as printed, and the receipt says so if the lines stop adding up. Undo puts the old values back.",
         "cta": "Open Receipts"
       },
       "additem": {
@@ -3650,6 +3672,7 @@
         "s3": "Spending, on the bar, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
+        "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
         "cta": "Open Spending"
       },
       "prices": {
@@ -3702,7 +3725,7 @@
         "sub": "Groups, invite code, friends",
         "body": "A group shares lists and receipts. Everyone sees every member's receipts, past ones and receipt photos too. Every phone stays in sync. Groups need an account, so the demo has no Start a group row.",
         "s1": "Open Settings and tap Start a group. Give it a name.",
-        "s2": "Tap Invite someone and send them the code.",
+        "s2": "Tap Invite someone and send the code to one person. Each code works once.",
         "s3": "When they join, you share the same lists.",
         "n1": "Friends: Quest tab, then Your trips and receipts, then Friends.",
         "n2": "To send one list, tap the three dots on it, then Share, export or import.",
