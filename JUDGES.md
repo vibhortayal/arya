@@ -5,6 +5,8 @@
 Arya learns how you shop from your receipts and helps shoppers help each other. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
+Theme fit: a tool for everyday life that depends on Meta's models for reading receipts, labels, voice and shelves. The model map below shows which model does which job.
+
 - **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#what-arya-is), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
@@ -14,6 +16,12 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 - **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model, and what was built during the hackathon: [`README.md`](README.md#why-i-built-it-this-way)
 - **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), and a dated [decision log](docs/DECISIONS.md).
+
+## How this maps to the Indie track
+
+- **Creative:** Arya reads your receipts to run your list, and Quest turns the shop into a game.
+- **Technically ambitious:** six Meta models with one job each, receipt arithmetic checked in plain code, and an MCP connector so an agent can edit your lists.
+- **Does it work:** it is live at arya.teamnightshift.org, the demo needs no account, and the tested numbers and their limits are in [Known limits](README.md#known-limits).
 
 ## Impact (30%)
 

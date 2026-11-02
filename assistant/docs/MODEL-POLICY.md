@@ -47,8 +47,8 @@ budgets) are unchanged.
 reader** (Ops "Photo reader" = "Spark first, Wonder as backup"): Spark
 reads first, and Wonder re-reads only when Spark fails or the checks
 below flag the read (arithmetic, low confidence on too many lines). Wonder
-stays allowed as that second reader through Nov 9, which covers judging
-(Nov 5-8). The text below is the original amendment (Wonder first, Spark
+stays allowed as that second reader through Nov 9, which is meant to cover
+judging after submission. The text below is the original amendment (Wonder first, Spark
 fallback), kept for the eval record.
 
 Original (2026-10-27): through Nov 4, judge-facing PHOTO DECODE runs
