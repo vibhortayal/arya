@@ -152,7 +152,11 @@ class TestTownOff(TownCase):
     flag = "0"
 
     def test_flag_off_means_no_routes_and_real_style_names(self):
-        self.assertEqual(self.c.get("/api/town/hints").status_code, 404)
+        # The demo's one hints read answers null, not a 404 (performance
+        # report 2026-11-02); the other town routes stay 404.
+        r = self.c.get("/api/town/hints")
+        self.assertEqual((r.status_code, r.json()), (200, None))
+        self.assertEqual(self.c.post("/api/town/director", json={"scenario": "closes"}).status_code, 404)
         rs = json.load(open(os.path.join(self.base, "users", "demo", "receipts.json")))
         self.assertIn("Costco", {r["merchant"] for r in rs})
 
