@@ -61,9 +61,9 @@
     "itemCount_other": "{{count}} items",
     "sharing": {
       "youGive": "You give",
-      "youGiveText": "Item, store and price, by the week. Never your name, your list, your receipt photo or what else you bought.",
+      "youGiveText": "Nothing yet: sharing prices is not switched on, so this only records your choice. When it is, you give item, store and price by the week. Never your name, your list, your receipt photo or what else you bought.",
       "youGet": "You get",
-      "youGetText": "Prices at other stores from Arya shoppers near you, once 5 households share.",
+      "youGetText": "Later: prices at other stores from Arya shoppers near you, once sharing is switched on and 5 households share.",
       "reportsMatter": "Reports matter too",
       "reportsMatterText": "\"Not here?\" tells the next shopper before they walk the aisle.",
       "stop": "Stop sharing",
@@ -173,7 +173,7 @@
     "maps": "Store maps",
     "mapsSub": "Guesses a layout from your walk. People are blurred",
     "prices": "Prices",
-    "pricesSub": "Come from you and other Arya shoppers, not the web",
+    "pricesSub": "Come from your own receipts, not the web",
     "food": "Food safety",
     "foodBody": "Arya is not a food-safety check. Look at the date on the pack. If food looks or smells off, do not eat it.",
     "models": "Models",
@@ -537,7 +537,7 @@
     "nothingToFinishGoBack": "Nothing to finish. Go back to Today.",
     "backToTheHunt": "Back to the quest",
     "addYourReceipt": "Add your receipt",
-    "aryaReadsItemsAndThe": "Arya reads items and the total. Your photo stays private to you. Nothing here is shared.",
+    "aryaReadsItemsAndThe": "Arya reads items and the total. Your receipt photo stays with your account. If you are in a group, group members can see your receipts.",
     "receiptPhoto": "Receipt photo",
     "snapTheReceipt": "Snap the receipt",
     "eReceiptPdfOrScreenshot": "E-receipt, PDF or screenshot",
@@ -1341,8 +1341,8 @@
       },
       "prices": {
         "title": "Know where it's cheaper",
-        "sub": "Your receipts plus Arya shoppers",
-        "back": "Is your olive oil cheaper at Trader Joe's or Safeway? Arya tells you, from your receipts and Arya shoppers."
+        "sub": "From your receipts",
+        "back": "Is your olive oil cheaper at Trader Joe's or Safeway? Arya tells you, from your receipts. Shared prices are coming later."
       },
       "usesoon": {
         "title": "Reduce food waste",
@@ -1401,7 +1401,7 @@
     "addAnAisle": "Add an aisle",
     "aisle4FrozenDairyWall": "Aisle 4, Frozen, Dairy wall",
     "addThisAisle": "Add this aisle",
-    "weBlurEveryPersonBefore": "We blur every person before we save a photo. We keep pictures of products only.",
+    "weBlurEveryPersonBefore": "Arya blurs the people it can find before it saves a photo, and keeps none if that step fails. We keep pictures of products only.",
     "status": {
       "unmapped": "Not mapped",
       "mapped": "Mapped",
@@ -1636,17 +1636,17 @@
   },
   "powers": {
     "shopSmarterTogether": "Shop smarter together",
-    "everyReceiptAndReportMakes": "Every receipt and report makes prices better for you and for other Arya shoppers.",
+    "everyReceiptAndReportMakes": "Every receipt makes prices better for you, and every report helps other Arya shoppers.",
     "optionalYouCanTurnIt": "Optional. You can turn it off here any time.",
     "whatAryaAlreadyDoesFor": "What Arya already does for you, and what turns on next.",
     "p": {
       "community": {
         "name": "Community prices",
-        "sub": "See what other Arya shoppers paid at other stores.",
+        "sub": "What other Arya shoppers paid. Coming later.",
         "need": "Turn on",
-        "what": "See what other Arya shoppers paid for the same item at other stores, once 5 households share.",
-        "unlock": "Turn on Share anonymous prices. You give item, store and price by the week, never your name, list or receipt photo.",
-        "when": "You need to opt in first. A price then shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified."
+        "what": "What other Arya shoppers paid for the same item at other stores. Not switched on yet: turning it on only records your choice.",
+        "unlock": "Turn on Share anonymous prices. For now this only records your choice; nothing is sent. Later you would give item, store and price by the week, never your name, list or receipt photo.",
+        "when": "You need to opt in first. Once it is switched on, a price shows only when 5 or more opted-in households agree on it in the last 30 days. Older prices are left out because shelf prices move, and 5 households keeps any one of them from being identified."
       },
       "deals": {
         "name": "Deals for you",
@@ -2488,7 +2488,7 @@
     "makeYourNextRunA": "Make your next trip a quest",
     "didYouKnow": "Did you know?",
     "shopSmarterTogether": "Shop smarter together",
-    "everyReceiptAndReportMakes": "Every receipt and report makes prices better for you and for other Arya shoppers.",
+    "everyReceiptAndReportMakes": "Every receipt makes prices better for you, and every report helps other Arya shoppers.",
     "optionalYouCanTurnIt": "Optional. You can turn it off here any time.",
     "snapADate": "Add a date",
     "usedIt": "Used it",
@@ -2531,7 +2531,7 @@
     "doneWith": "Done with {{name}}. Add it to your list?",
     "isOnYourList": "{{name}} is on your list.",
     "tip": {
-      "community": "Arya can show what other Arya shoppers paid",
+      "community": "Prices other Arya shoppers paid are coming later",
       "deals": "Arya can find deals on what you buy",
       "shoppers": "Arya can tell you how busy a store is",
       "compare": "Arya can tell you which of your stores is cheaper for an item.",
@@ -3267,10 +3267,10 @@
       "prices": {
         "kicker": "Prices",
         "title": "Know where it's cheaper",
-        "body": "From your own receipts and from Arya shoppers who share prices, Arya tells you whether your organic olive oil is cheaper at Trader Jill's or at Safeday.",
+        "body": "From your own receipts, Arya tells you whether your organic olive oil is cheaper at Trader Jill's or at Safeday.",
         "s1": "Add receipts from two stores.",
         "s2": "Open Settings › About Arya › Arya's powers › Compare your stores.",
-        "s3": "Arya shows which store is cheaper per item, and adds prices from Arya shoppers who share them."
+        "s3": "Arya shows which store is cheaper per item."
       },
       "usesoon": {
         "kicker": "Use soon",
@@ -3348,7 +3348,7 @@
         "body": "Powers is one list of everything Arya does for you. It also shows features you can switch on.",
         "s1": "Tap More, then Settings, then About Arya, then Arya's powers. Or open Help.",
         "s2": "Tap the i next to a power to learn how it works.",
-        "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
+        "s3": "Under \"You choose to turn on\", see what you can switch on yourself."
       },
       "settings": {
         "kicker": "Your settings",
@@ -3789,11 +3789,11 @@
       "prices": {
         "title": "Prices",
         "sub": "Which store is cheaper, what went up",
-        "body": "Prices come from your own receipts, and from Arya shoppers who choose to share.",
+        "body": "Prices come from your own receipts. Sharing prices with other shoppers is not switched on yet; turning it on only records your choice.",
         "s1": "Add receipts from two stores.",
         "s2": "Look at the cards \"Cheaper elsewhere\" and \"Price watch\" on Today.",
         "s3": "Open Settings, then About Arya, then Arya's powers, for Compare your stores and Price trends.",
-        "n1": "Community prices are off until you turn them on: Settings, About Arya, Arya's powers, Community prices.",
+        "n1": "Community prices are not live yet. Turning them on (Settings, About Arya, Arya's powers, Community prices) only records your choice.",
         "n2": "Arya never uses store sites, flyers or web prices.",
         "cta": "Open Arya's powers"
       },

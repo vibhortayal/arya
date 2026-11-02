@@ -116,7 +116,7 @@ class TestReceiptStep(unittest.TestCase):
 
     def test_honest_copy(self):
         fin = finish_section()
-        self.assertIn("Arya reads items and the total. Your photo stays private to you. Nothing here is shared.", fin)
+        self.assertIn("Arya reads items and the total. Your receipt photo stays with your account. If you are in a group, group members can see your receipts.", fin)
         self.assertIn("Your +50 bonus waits. It never expires.", fin)
         self.assertIn("A blurry or partial photo is fine. Arya keeps what it can read.", fin)
         self.assertNotIn("loyalty", fin.lower())
