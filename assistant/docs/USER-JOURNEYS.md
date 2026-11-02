@@ -5,6 +5,8 @@ has a person, a goal, the screens in order, and sample data. The numbers
 come from the demo household (`python -m harness.make_demo_household
 data`), so you can open the live demo and see the same thing.
 
+Store names: these journeys use real store names from the owner's own shopping. The hosted demo (Demo Town) uses invented ones, such as Costcozy and Trader Jill's.
+
 Product line: Arya is "Waze for grocery shopping". The list comes first.
 The Quest hunt is optional.
 
@@ -195,7 +197,7 @@ at" line, because there is no better store in the data.
 |---|---|
 | Your basket | "Your basket costs 1.5% more than in June. Same 14 items you buy often. About $4.04 more a month." Movers: Sourdough Loaf +6.6%, Pasture Eggs +5.9%, Greek Yogurt +5.3%. |
 | Split smarter | "Save about $2.61 a month. Buy Whole Milk 1 gal and Bananas at Safeway." Milk $1.48, bananas $1.13. |
-| Spend | Oct 2026 total $165.39. By store: Trader Joe's $453.55, Safeway $396.21, Costco $265.66. Top item: Chicken Breast, $152.21. |
+| Spend | Oct 2026 total $165.39. By store (all time, not just October): Trader Joe's $453.55, Safeway $396.21, Costco $265.66. Top item: Chicken Breast, $152.21. |
 
 ![Analysis](img/j-analysis.png)
 
@@ -313,9 +315,9 @@ on screen and what is left, so "this" and "it" work.
 
 ### 7b. Push reminder
 
-**Status.** Shipped, **flag**. It is off until I set
-`ARYA_PUSH_REMINDERS=1`, makes VAPID keys and adds a daily cron line
-(see `assistant/docs/PUSH-REMINDERS.md`). Demo accounts never see it.
+**Status.** Shipped, live on the hosted app (flag `ARYA_PUSH_REMINDERS=1`,
+VAPID keys, daily cron at 13:00 UTC; enabled Nov 2). Setup is in
+`assistant/docs/PUSH-REMINDERS.md`. Demo accounts never see it.
 
 1. Settings, Preferences, **Remind me**. Priya turns it on and picks the notice
    window (1 to 7 days, default 2).
@@ -360,7 +362,7 @@ an **Add to Home Screen** row while installing is possible.
 | Groups with live sync and Leave | Shipped, on by default |
 | Expiry dates, Use soon, Still good? | Shipped |
 | Ask Arya (list, aisle) | Shipped, needs a model |
-| Push reminders | Shipped, flag `ARYA_PUSH_REMINDERS` (off) |
+| Push reminders | Shipped, live (flag `ARYA_PUSH_REMINDERS` on since Nov 2); you opt in, and on iPhone add the app to the Home Screen first |
 | Add to Home Screen | Shipped |
 | Supabase sign-in | Shipped, flag `ARYA_SUPABASE_AUTH` (off) |
 | Community prices, Deals, Arya Shoppers | Planned (opt-in choice saved, nothing built) |

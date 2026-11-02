@@ -10,7 +10,7 @@ ffmpeg, Postgres) does plumbing only.
 | **Muse Spark Open** (open weights, hosted on Baseten) | Second seat of the staple judge (names only, advisory; agreed 3 of 4 on the demo account) and dictionary category labels (32/32 agreement with hosted Spark). Never sees personal data | Batch jobs (`api/open_client.py`) |
 | **Muse Spark** (user's own Muse + connector) | Edge perception: lists, receipts from chat | The user's Muse session |
 | **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (me, 2026-11-01). Read alone: 97/98 lines after adjudication vs Spark 92/98, zero price errors. | Server |
-| **Muse Image 1.0** | The 20 grab-celebration characters | Generated once, shipped as assets |
+| **Muse Image 1.0** | The 23 grab-celebration characters | Generated once, shipped as assets |
 | **Muse Voice Transcribe** | The list mic and Ask Arya's mic | Server |
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
 

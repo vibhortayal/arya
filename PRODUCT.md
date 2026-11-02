@@ -1,5 +1,7 @@
 # PRODUCT — Arya
 
+> **Early product description (2026-10-27).** The navigation tab and some details have changed since; for what is built today read [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) and [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
+
 Derived from my approved brief (assistant/docs/SPEC.md and
 VISION.md), 2026-10-27. Where this file and the spec disagree, the spec wins.
 
@@ -46,11 +48,11 @@ or near a store. Speed and trust matter more than features.
 
 ## Surface
 
-A phone-first PWA with a navigation tab with five entries: Today, Spending, Quest, Ask Arya and More (Lists, Receipts, Stores, Help and Settings sit under More). Mode: Operate. The user is completing a task, not
+A phone-first PWA with a navigation tab with five entries: Today, Spending, Quest, Ask and More (Lists, Receipts, Stores, Help and Settings sit under More). Mode: Operate. The user is completing a task, not
 reading marketing. The visual language follows the Apple UI design system for
 type and layout: system typography, grouped lists, 44 pt targets. Color is
-greyscale structure with one orange accent, light mode only (`DESIGN.md`). One account, mine; judges of the hackathon use a
-read-only demo household with fictional data.
+greyscale structure with one orange accent, light mode only (`DESIGN.md`). Each person has their own account, and a group can share lists. Judges of the
+hackathon use a read-only demo household with fictional data.
 
 ## Constraints
 

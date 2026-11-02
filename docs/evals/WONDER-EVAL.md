@@ -1,3 +1,5 @@
+> **Superseded 2026-11-02.** This report recommends switching receipt reading to Wonder through Nov 4. The rule now in force is in [`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md): Spark reads first, Wonder re-reads flagged receipts, through Nov 9. The measurements below still stand.
+
 # Spark vs Wonder on receipt decode — accuracy and latency
 
 **Headline: on the Gate 0 public set, Wonder reads receipts more

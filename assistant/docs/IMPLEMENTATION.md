@@ -36,7 +36,7 @@ disagreement goes to the review queue.
 
 ### Budgets and modes
 - Meta API dollars: the $150 credit, metered from the first call.
-  Engine caps: $10/day for the app, $2/day for the demo bucket.
+  Engine caps: $10/day for the app. The demo bucket defaults to $2/day in code and is set to $20/day on the live server (see MODEL-POLICY.md).
 - Standard mode: Spark (the default, confirmed live 2026-11-01), Wonder,
   gates and eval scoring. Contributor is an operator setting only
   (`ARYA_SPARK_TIER=contributor` or the Ops switch), off; a user opt-in
@@ -58,8 +58,8 @@ rules. Base URL https://api.meta.ai/v1; the key comes from env
 | Shelf grounding, add-on | sam-3.1 | POST /v1/responses; masks via meta-sam-parser |
 | Voice in, live | muse-voice-transcribe-1.0 | wss://api.meta.ai/v1/asr/realtime |
 | Voice in, batch | muse-voice-transcribe-1.0 | POST /v1/asr/transcribe |
-| Dinner render, optional | muse-image-1.0 | POST /v1/images/generations |
-| Pre-filter, add-on, flag only | Glimmer via Fireworks | Fireworks chat endpoint |
+| Celebration characters, generated once (a dinner render was planned, not built) | muse-image-1.0 | POST /v1/images/generations |
+| Pre-filter (planned, not used) | Glimmer via Fireworks | Fireworks chat endpoint |
 
 Client rules:
 
@@ -233,6 +233,7 @@ live beat fails.
   non-blocking calls in the store. Shelf Scan takes 4–8 s a frame.
 - **F4 Voice Transcribe:** no confidence values; confidence lives in
   the parse layer.
+- **F5:** retired (never built); the number is kept so F6 and F7 keep theirs.
 - **F6 PWA limits:** HTTPS and a user gesture for the camera on iOS;
   no background camera.
 - **F7 Glimmer:** flag-isolated, not used.

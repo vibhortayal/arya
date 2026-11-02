@@ -19,7 +19,7 @@ file. He asked the Muse agent to connect to Arya. It asked for the code, opened
 a secure connector-credentials vault for him to paste it into, and the
 connection worked. The code never goes in chat.
 
-1. In Arya, open Settings → About Arya → Use Arya in Muse and tap "Make my
+1. In Arya, open More → Settings → About Arya → Use Arya in Muse and tap "Make my
    code". Copy it. It is shown once and starts with `arya_`. A new code
    replaces the old one. (The token works with any MCP client, not just Muse.)
 2. In your AI app, ask it to connect to Arya at

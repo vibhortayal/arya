@@ -36,11 +36,12 @@ on a Docker volume, in Supabase Postgres, or both.
   (`app/groupLive.ts`), push reminders, powers and the install prompt
   are ported one to one from the old plain-JS files. The store view is
   `scene.js` (three.js), loaded as a classic script.
-- Six tabs: **Today**, **Lists**, **Ask**, **Quest**, **Help**, **Settings**.
-  Settings opens the Profile page (Group, Preferences with Reminders,
-  Account, About Arya, Sign out last). About Arya is the `about` view:
-  Arya's powers, Use Arya in Muse, Add to Home Screen, Keeping
-  Arya running. Stores, Receipts and Spending are on Lists.
+- The navigation tab is **Today**, **Spending**, **Quest**, **Ask** and **More**
+  (the default; it can be customized). More holds Lists, Receipts, Stores, Help
+  and Settings. Settings opens the Profile page (Group, Preferences with
+  Reminders, Account, About Arya, Sign out last). About Arya is the `about`
+  view: Arya's powers, Use Arya in Muse, Add to Home Screen, Keeping Arya
+  running. (Updated 2026-11-02, #416; this replaced the earlier six-tab layout.)
 - Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
   injectManifest). It precaches the built shell and the runtime files of
   the static folder. It is network first. It sends `/api/`, `/auth/`,
@@ -97,7 +98,7 @@ enforced there. `open_client.py` is the only other model client.
 |---|---|---|
 | Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard; `ARYA_SPARK_TIER=contributor` is an operator option, off) | cached prefixes, low effort |
 | Receipt photo reader (default, `auto`) | Spark first; `muse-wonder-1.0` (90 s bound) re-reads only a receipt the arithmetic checks flag | `decoded_by` records which read was kept; `ARYA_PHOTO_READER=spark` or `wonder`, or the Ops "Photo reader" switch, changes it with no code change |
-| Avatar and look images | `muse-image-1.0` | |
+| Celebration characters, generated once | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
 | Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
 | Second judge seat, dictionary enrichment | Spark Open, hosted on Baseten | platform data only; the client refuses personal data |
