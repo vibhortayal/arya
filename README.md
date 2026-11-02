@@ -13,7 +13,11 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
-<p align="center"><strong>Built for our world.</strong> Arya is for shoppers who keep a household fed and are tired of holding the list in their head. It reads your receipts, learns what you buy, and writes the list for you, so it gives back time and mental space. The owner built it to fix a problem they had themselves. It is for the community of shoppers and not for money: the goal is that people use it and help each other. <a href="docs/PRINCIPLES.md">Principles and goals</a></p>
+## Build for Your World
+
+- **What Arya is.** A grocery list that learns from your receipts, then mostly writes itself.
+- **Why we built it.** The owner had this problem: carrying the list in their head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. [Principles and goals](docs/PRINCIPLES.md)
+- **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
 
 <p align="center">
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
@@ -45,11 +49,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
 ## Principles and goals
 
-- **For shoppers, meant to be built by them.** Store maps come from shoppers' own scans, and households and groups share lists.
-- **Not for money.** No plan to make money for now: no ads, nothing for sale, we do not sell your data. The goal is that people use it and help each other.
-- **Trust and limits.** The model proposes and code checks; your data is yours; US first, other markets not tested.
-
-Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
+For shoppers, not for money, and built up with them. The model proposes and code checks; your data is yours; US first, other markets not tested. Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
 ## Why it is different
 
@@ -113,7 +113,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 1. Open the demo. **Today** shows what is running low and why.
 2. Tap **More**, then **Lists**, and open a list. Add an item by typing, with the mic, or with a photo of a handwritten note.
-3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
+3. Open **Ask Arya** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 
@@ -172,7 +172,7 @@ loop on a phone. The window should be about 390 px wide.
 - **Quest.** Pick a store and Arya sorts your list for it. Grab items to earn
   points; there is no clock and no way to lose. **Find it for me** points the
   camera at a shelf: SAM 3.1 boxes candidates and Muse Spark checks each one.
-  **Map this store** is a guided camera scan: you pan along the shelves, SAM
+  **Map my store** is a guided camera scan: you pan along the shelves, SAM
   3.1 blurs every person before anything is kept, and Muse Spark reads
   sections, aisle signs and prices. A store counts as mapped only where it
   has a usable, fresh photo. No store ships pre-mapped; an unmapped store

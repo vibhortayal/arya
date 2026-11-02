@@ -21,7 +21,7 @@ The time it gives back is the weekly work of remembering, retyping and double-ch
 
 ## Principles
 
-1. **For shoppers, and meant to be built by them.** The store maps come from shoppers' own scans, and lists are shared by the households and groups who use them. Shoppers helping each other is the point.
+1. **For shoppers, and built up with them.** The store maps come from shoppers' own scans, and lists are shared by the households and groups who use them. Shoppers helping each other is the point.
 2. **Not for money.** For now Arya has no plan to make money. Nothing is for sale, there are no ads, and we do not sell your data. The goal is that people use it and help each other.
 3. **The model proposes, code checks.** A model reads the receipt; plain code checks every line before anything posts. You can trust the numbers because the arithmetic is checked, not guessed.
 4. **Yours by default.** Your receipts and lists are yours. A group sees its members' lists and receipts; leave, and your receipts go with you. Arya uses no prices from store sites, flyers or the web.
