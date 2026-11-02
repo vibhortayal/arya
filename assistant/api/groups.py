@@ -245,6 +245,66 @@ def _find_by_code(reg, code):
     return None, None
 
 
+WRONG_CODE = ("That code is wrong, already used or expired. Each code works for one person; "
+              "ask for a new one.")
+
+
+USED_CODE = "That code was already used. Each code works for one person; ask for a new one."
+EXPIRED_CODE = "That code has expired. Codes work for 48 hours; ask for a new one."
+
+
+class CodeGone(LookupError):
+    """A real code that no longer works: used, or past its 48 hours."""
+
+
+def code_status(code, reg=None):
+    """("ok" | "used" | "expired", group) for a real code, else (None, None)."""
+    if len(normalize_code(code)) != CODE_LEN:
+        return None, None
+    reg = reg or _registry()
+    h, now = _hash(code), time.time()
+    for g in reg["groups"].values():
+        inv = g.get("invite")
+        if inv and secrets.compare_digest(inv["hash"], h):
+            return ("ok" if inv["expires"] > now else "expired"), g
+        if any(u.get("hash") and secrets.compare_digest(u["hash"], h) for u in g.get("used") or []):
+            return "used", g
+    return None, None
+
+
+def public_preview(code):
+    """The invite page before sign-in: the group's name, who invited,
+    how many people, and whether the code still works. Nothing else."""
+    st, g = code_status(code)
+    if not g:
+        return None
+    by = (g.get("invite") or {}).get("by") if st != "used" else None
+    return {"group_name": g["name"], "inviter_handle": handle(by) if by else None,
+            "member_count": len(g["members"]), "status": st}
+
+
+def already_in_msg(reg, user):
+    g = reg["groups"].get(reg["member_of"].get(user)) or {}
+    return (f"You're already in {g.get('name') or 'a group'}. Arya has one group per person: "
+            "leave it first (Settings, Group, Leave group), then use the code.")
+
+
+def already_in(user):
+    """The 'leave your group first' message, or None when not in one."""
+    reg = _registry()
+    return already_in_msg(reg, user) if reg["member_of"].get(user) else None
+
+
+def removed_notice(user):
+    """After an owner removed this person (owner's group test): the
+    group's name and when, for a week or until they join a group. The
+    app shows it once (it remembers `at`)."""
+    r = (_registry().get("removed") or {}).get(user)
+    if not r or r.get("at", 0) < time.time() - 7 * 86400:
+        return None
+    return {"name": r.get("name"), "at": r.get("at")}
+
+
 def preview(code):
     """What a code leads to, shown before joining: the group's name,
     who sent the code, how many people and lists. None for a wrong or
@@ -264,10 +324,13 @@ def join(user, code):
     with _root_lock():
         reg = _registry()
         if reg["member_of"].get(user):
-            raise ValueError("you are already in a group; leave it first")
+            raise ValueError(already_in_msg(reg, user))
         gid, g = _find_by_code(reg, code)
         if not g:
-            raise LookupError("that code is wrong or has expired")
+            st, _g = code_status(code, reg)
+            if st in ("used", "expired"):
+                raise CodeGone(USED_CODE if st == "used" else EXPIRED_CODE)
+            raise LookupError(WRONG_CODE)
         if len(g["members"]) >= MAX_MEMBERS:
             raise ValueError(f"that group is full ({MAX_MEMBERS} people)")
         with state.file_lock_at(state.group_dir(gid), "lists.json"), \
@@ -275,6 +338,12 @@ def join(user, code):
             _merge_into_group(user, gid)
         g["members"].append({"user": user, "joined": int(time.time())})
         reg["member_of"][user] = gid
+        # One code, one person (owner's group test, 2026-11-01): the code
+        # stops working once claimed; the next person gets a new one.
+        inv = g.get("invite") or {}
+        g["used"] = (g.get("used") or [])[-9:] + [{"hash": inv.get("hash"), "at": int(time.time())}]
+        g["invite"] = None
+        reg.get("removed", {}).pop(user, None)
         _save_registry(reg)
     _signal(gid, user)
     return gid
@@ -346,6 +415,10 @@ def remove(owner, member_handle):
     if target == owner:
         raise ValueError("use Leave group to leave")
     leave(target)
+    with _root_lock():
+        reg = _registry()
+        reg.setdefault("removed", {})[target] = {"name": g["name"], "at": int(time.time())}
+        _save_registry(reg)
     return handle(target)
 
 

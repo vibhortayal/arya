@@ -10,6 +10,7 @@ import { get, post } from "../lib/api";
 import { qtyFmt, qtyTag } from "../lib/format";
 import { itemHasData, storePhotos, useStoreData } from "../lib/stores";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import {
   Q, qModeLabel, qCheck, qFlushOutbox, qIsReportedByMe, qLoadSessions, qLoadStoreReports, qNextIndex, qProgress,
   qSetState, qStops, type Item, type Session,
@@ -439,6 +440,7 @@ function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose
   const [busy, setBusy] = useState(false);
   const cap = useRef<Capture | null>(null);
   const [rec, setRec] = useState(false);
+  const [reading, setReading] = useState(false);
 
   // Closing the sheet (or the screen) lets the microphone go; a capture
   // or transcript that lands after that is dropped.
@@ -479,16 +481,16 @@ function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose
     const gone = () => dead.current || my !== seq.current;
     if (rec && cap.current) {
       const c = cap.current; cap.current = null; setRec(false);
-      setStatus(t("express.transcribing"));
-      try { const said = await transcribeBlob(c.stop()); if (gone()) return; setStatus(""); await send(said); }
-      catch (e) { if (!gone()) setStatus(errText(e)); }
+      setReading(true); setStatus("");
+      try { const said = await transcribeBlob(c.stop()); setReading(false); if (gone()) return; setStatus(""); await send(said); }
+      catch (e) { setReading(false); if (!gone()) setStatus(errText(e)); }
       return;
     }
     if (!voiceSupported()) { setStatus(t("express.voiceUnavailable")); return; }
     try {
       const c = await startCapture();
       if (gone()) { c.cancel(); return; }
-      cap.current = c; setRec(true); setStatus(t("express.listening"));
+      cap.current = c; setRec(true); setStatus("");
     }
     catch { if (!gone()) setStatus(t("express.micUnavailable")); }
   };
@@ -503,9 +505,10 @@ function AskSheet({ open, onClose, context, onChange }: { open: boolean; onClose
       <div className="addline">
         <input type="text" id="ask-text" placeholder={t("common.askAnything")} autoComplete="off" enterKeyHint="send" value={text} data-first
           onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); send(text); } }} />
-        <button id="ask-mic" className="iconbtn" type="button" aria-label={t("express.askByVoice")} aria-pressed={rec} onClick={mic}><IconMic /></button>
+        {!rec && !reading && <button id="ask-mic" className="iconbtn" type="button" aria-label={t("express.askByVoice")} onClick={mic}><IconMic /></button>}
         <button id="ask-go" className="btn primary" type="button" onClick={() => send(text)}>{t("common.ask")}</button>
       </div>
+      {(rec || reading) && <ListeningCard id="ask-sheet-listen" capture={cap.current} reading={reading} onStop={mic} onCancel={() => { cancelMic(); setStatus(""); }} />}
       <p id="ask-status" className="muted nomargin">{status}</p>
       <div id="ask-answer">
         {card && (

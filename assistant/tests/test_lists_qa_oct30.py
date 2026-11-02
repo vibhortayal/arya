@@ -2,6 +2,7 @@
 ticks on an account with no receipts, adds into a list for items Arya
 already knows, re-adding a ticked item, the toast's names, typed
 amounts, quest grabs ticking the list, and the list's own photo add."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -16,6 +17,7 @@ def fresh(case):
     case.c = TestClient(main.app)
     r = case.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
+    one_list(case.c)
     return case.c
 
 
@@ -46,7 +48,9 @@ class TestNoReceiptsYet(unittest.TestCase):
 class TestAddIntoAList(unittest.TestCase):
     def setUp(self):
         self.c = fresh(self)
-        self.tj = self.c.post("/api/lists", json={"name": "Trader Joe's", "stores": []}).json()
+        # The account's one list (fresh() makes it) is Trader Joe's here.
+        self.tj = self.c.get("/api/lists").json()["lists"][0]
+        self.c.post("/api/lists/update", json={"id": self.tj["id"], "name": "Trader Joe's"})
 
     def add(self, text, list_id=None):
         body = {"text": text}
@@ -56,13 +60,15 @@ class TestAddIntoAList(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         return r.json()
 
-    def test_known_item_moves_to_the_list_it_was_typed_on(self):
+    def test_known_item_goes_to_the_list_it_was_typed_on(self):
         # H1: "bananas" typed on Trader Joe's went to Everything else.
-        self.add("bananas")
-        self.assertNotIn("list", rows(self.c)["bananas"])
+        # Every item is on a list now (owner, 2026-11-02): a known item
+        # that left the list comes back on the list it is typed on.
+        costco = self.c.post("/api/lists", json={"name": "Costco", "stores": []}).json()
+        iid = self.add("bananas", costco["id"])["all_item_ids"][0]
+        self.c.post("/api/list/remove", json={"item_id": iid})
         r = self.add("bananas", self.tj["id"])
         self.assertEqual(rows(self.c)["bananas"]["list"], self.tj["id"])
-        self.assertEqual(r["moved"], [{"name": "bananas", "from": ""}])
         self.assertEqual(r["already"], 0)
 
     def test_second_list_names_the_list_it_is_also_on(self):
@@ -85,7 +91,7 @@ class TestAddIntoAList(unittest.TestCase):
 
     def test_already_on_it_names_where(self):
         self.add("milk", self.tj["id"])
-        r = self.add("milk")  # from Everything else: stays on Trader Joe's
+        r = self.add("milk")  # no list named: stays on Trader Joe's
         self.assertEqual(r["already"], 1)
         self.assertEqual(r["already_names"], [{"name": "milk", "list": "Trader Joe's"}])
         self.assertEqual(rows(self.c)["milk"]["list"], self.tj["id"])

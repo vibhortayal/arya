@@ -3,9 +3,11 @@ import json
 import logging
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import state, stores
 from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, expand_costco_names,
                                 extract_pdf_text, normalize_costco_json)
@@ -23,7 +25,7 @@ async def _find_stores(*receipts):
 async def _expand_names(decs):
     """Read abbreviated names on JSON-export lines (best effort, skipped
     without a key or over budget). Lines the household already named stay."""
-    if not os.environ.get("MODEL_API_KEY"):
+    if not own_key.model_ready():
         return
     try:
         _budget_guard()
@@ -65,8 +67,7 @@ async def import_bulk(req: Request):
 @router.post("/decode/text")
 async def decode_text_route(req: Request):
     body = await _json_obj(req)
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     dec = await run_in_threadpool(decode_text, body.get("text", ""), client)
@@ -93,8 +94,7 @@ async def intake_order_text(req: Request):
     text = body.get("text", "")
     if len(text.strip()) < 20:
         raise HTTPException(422, "paste the order confirmation text")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     dec = await run_in_threadpool(decode_order_text, text, client)
@@ -165,8 +165,7 @@ async def intake_structured(req: Request):
 
 @router.post("/api/curator/run")
 def curator_run():
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     from api.curator import run_curator
     n = run_curator(new_client())
@@ -203,8 +202,7 @@ async def decode_pdf(req: Request):
         text = await run_in_threadpool(extract_pdf_text, body)
     except Exception:
         raise HTTPException(422, "could not read this PDF")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     _budget_guard()
     client = new_client()
     try:
@@ -216,7 +214,7 @@ async def decode_pdf(req: Request):
     except ValueError as e:
         raise HTTPException(422, str(e))
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     _need_receipt_date(receipt)
     dup = state.find_duplicate(receipt)
     if dup is not None:
@@ -248,8 +246,7 @@ async def decode_photo_route(req: Request):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
@@ -258,7 +255,7 @@ async def decode_photo_route(req: Request):
                                           media_type=media)
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt photo model error (%s)", str(e)[:120])
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     try:
         _need_receipt_date(receipt)
     except HTTPException:
@@ -301,8 +298,7 @@ async def transcribe_route(req: Request):
         raise HTTPException(400, "empty recording")
     if len(body) > 10_000_000:
         raise HTTPException(413, "recording too large — keep it under a few minutes")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.voice.service import transcribe_audio
@@ -317,6 +313,6 @@ async def transcribe_route(req: Request):
         raise HTTPException(422, str(e))
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: voice model error (%s)", str(e)[:120])
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     return {"text": out["text"], "duration_s": out["duration_s"],
             "model": "muse-voice-transcribe-1.0", "demo": demo}

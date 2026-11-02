@@ -5,6 +5,7 @@ the List lens reads store affinity from /api/items/{id}
 price_by_store, Analysis reads /api/dashboard + the receipt
 archive, Today's needs-eye count reads /api/review + /api/curator.
 """
+from tests.conftest import one_list
 import json, os, re, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -31,6 +32,7 @@ def fresh_client():
     c = TestClient(main.app)
     r = c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
+    one_list(c)
     return c
 
 
@@ -51,11 +53,11 @@ class TestShellContract(unittest.TestCase):
         # The Add tab is gone (owner, 2026-10-28): adding lives on
         # the List page. Crew folded into the Quest tab; its view id
         # stays community. The bar is the shopper's own (owner,
-        # 2026-11-01): default Today, Lists, Quest, Ask, then More.
+        # 2026-11-01); default Today, Spending, Quest, Ask, then More (2026-11-02).
         views = frontend.src("app/views.ts")
         bar = frontend.src("lib/bar.ts")
         default = re.search(r"DEFAULT_BAR: BarItem\[\] = \[([^\]]*)\]", bar).group(1)
-        self.assertEqual(re.findall(r'"([^"]+)"', default), ["home", "list", "community", "chat"])
+        self.assertEqual(re.findall(r'"([^"]+)"', default), ["home", "analysis", "community", "chat"])
         ui = frontend.src("ui/Bar.tsx")
         self.assertIn('data-view={"view-" + v}', ui)
         self.assertIn('id="tab-more"', ui)

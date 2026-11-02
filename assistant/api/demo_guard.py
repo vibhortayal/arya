@@ -40,6 +40,8 @@ _TOKEN_BLOCKED = (
     ("/api/push/", None), ("/api/settings", ("POST",)),
     ("/api/powers/share", None), ("/api/account/export", None),
     ("/api/quest/receipts/", ("POST",)),
+    # bulk receipt photo reads and the owner's unfreeze (MCP review finding 5)
+    ("/api/receipts/jobs", None), ("/api/usage/unfreeze", None),
 )
 
 
@@ -88,7 +90,10 @@ _DEMO_LIVE_DOORS = ("/decode/photo", "/api/transcribe",
                     "/api/quest/scan-shelf",
                     "/api/quest/share-look",
                     "/api/chat", "/api/quest/sessions", "/api/quest/shopoff",
-                    "/api/storemap", "/api/quest/zones", "/api/quest/build")
+                    "/api/storemap", "/api/quest/zones", "/api/quest/build",
+                    # the agent connector: a demo visit's tool calls share the
+                    # per-IP cap (MCP review finding 6)
+                    "/api/mcp")
 # The haul writes (fix, hide, post, second receipt) sit under the
 # sessions prefix but never call a model, so they spend no door budget.
 _DEMO_FREE_DOORS = ("/api/quest/sessions/",)
@@ -146,7 +151,9 @@ async def require_login(request, call_next):
         if not info:
             info = auth.session_info(cookie)
         if not info:
-            return JSONResponse({"detail": "login required"}, status_code=401)
+            # MCP clients learn the auth scheme from this header (finding 4).
+            return JSONResponse({"detail": "login required"}, status_code=401,
+                                headers={"WWW-Authenticate": "Bearer"} if path.startswith("/api/mcp") else None)
         if via_token and not path.startswith(("/api/mcp", "/api/v1")):
             # /api/mcp and /api/v1 count their own calls. Every other
             # route a token reaches shares the same hourly allowance.

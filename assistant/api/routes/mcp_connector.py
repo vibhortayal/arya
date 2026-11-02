@@ -1,7 +1,9 @@
 """Agent connector (MCP): any MCP-capable assistant, one token."""
 import datetime
 import json
+import logging
 import math
+import time
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
@@ -9,14 +11,16 @@ from fastapi.responses import Response
 
 from api import state, stores
 from api.demo_guard import _demo_rate, _is_demo, _token_hits as _mcp_hits
-from api.deps import _json_body, new_client
+from api.deps import _budget_guard, _json_body, new_client
 from api.routes.items import _merge_flag
 from api.routes.lists import _add_name_to_list
 
 router = APIRouter()
+log = logging.getLogger("arya.mcp")
 
 MCP_MAX_BODY = 256 * 1024     # bytes; a receipt with 200 lines is ~40 KB
 MCP_MAX_RECEIPT_LINES = 200
+MCP_DEMO_MAX_LIST = 200       # items on a demo visit's list (in-memory overlay)
 
 
 # --- Agent connector (MCP): any MCP-capable assistant, one token ---
@@ -36,17 +40,60 @@ def _mcp_get_snapshot(args):
             "top_items": s["top_items"]}
 
 
+def _on_list():
+    """What the household put on the list, as the app shows it: Arya's
+    "running low" suggestions (on_list false) stay out until added
+    (MCP review finding 2)."""
+    return [i for i in state.derived()["smart_list"]["items"] if i.get("on_list")]
+
+
 def _mcp_get_list(args):
-    d = state.derived()
     nm = state.names()
-    return {"as_of": state.as_of(), "items": [
-        {"name": i.get("name") or nm.get(i["item_id"], i["item_id"]),
-         "item_id": i["item_id"], "checked": bool(i.get("checked"))}
-        for i in d["smart_list"]["items"]]}
+    lists = {l["id"]: l["name"] for l in state.named_lists()}
+    out = []
+    for i in _on_list():
+        row = {"name": i.get("name") or nm.get(i["item_id"], i["item_id"]),
+               "item_id": i["item_id"], "checked": bool(i.get("checked"))}
+        if i.get("qty") not in (None, ""):
+            row["qty"] = i["qty"]
+        if i.get("unit"):
+            row["unit"] = i["unit"]
+        if i.get("list") in lists:
+            row["list"] = lists[i["list"]]
+        out.append(row)
+    return {"as_of": state.as_of(), "items": out}
 
 
 def _mcp_str(v):
     return v.strip() if isinstance(v, str) else ""
+
+
+def _mcp_list(want, names):
+    """Every item on a list (owner, 2026-11-02): the list named by name or
+    id, the item's list, or the only list; otherwise a plain error the
+    agent can turn into a question for the user."""
+    from fastapi import HTTPException
+    from api.routes.lists import pick_list
+    rows = state.named_lists()
+    want = _mcp_str(want)
+    if want:
+        hit = next((l for l in rows if l["id"] == want or l["name"].lower() == want.lower()), None)
+        if hit is None:
+            known = ", ".join(l["name"] for l in rows) or "none yet"
+            raise ValueError(f"no list called {want}; their lists are: {known}")
+        return hit["id"]
+    from api.list.intake import existing_item_id
+    one = existing_item_id(names[0], state.dictionary()["entries"], state.flags()) if len(names) == 1 else None
+    try:
+        return pick_list(None, one, names)
+    except HTTPException as e:
+        d = e.detail if isinstance(e.detail, dict) else {}
+        if d.get("code") == "no_lists":
+            raise ValueError("the user has no lists yet; ask them to make one in Arya (Lists, New list), then add")
+        if d.get("code") == "pick_list":
+            raise ValueError("ask the user which list, then call again with list: "
+                             + ", ".join(l["name"] for l in d.get("lists") or []))
+        raise
 
 
 def _mcp_add_items(args):
@@ -55,8 +102,11 @@ def _mcp_add_items(args):
         raise ValueError("items must be a non-empty array of names")
     if len(items) > 50:
         raise ValueError("add at most 50 items per call")
-    added = [_add_name_to_list(_mcp_str(n)[:120]) for n in items
-             if _mcp_str(n)]
+    if state.in_sandbox() and len(_on_list()) + len(items) > MCP_DEMO_MAX_LIST:
+        raise ValueError(f"the demo list holds at most {MCP_DEMO_MAX_LIST} items")
+    names = [_mcp_str(n)[:120] for n in items if _mcp_str(n)]
+    list_id = _mcp_list(args.get("list"), names)
+    added = [_add_name_to_list(n, list_id=list_id) for n in names]
     if not added:
         raise ValueError("items must be a non-empty array of names")
     return {"added": added}
@@ -66,13 +116,12 @@ def _mcp_check_item(args):
     name = _mcp_str(args.get("name"))
     if not name:
         raise ValueError("name is required")
-    d = state.derived()
     nm = state.names()
     checked = args.get("checked", True)
     if not isinstance(checked, bool):
         raise ValueError("checked must be true or false")
     want = name.lower()
-    for i in d["smart_list"]["items"]:
+    for i in _on_list():
         iname = i.get("name") or nm.get(i["item_id"], i["item_id"])
         if iname.lower() == want:
             _merge_flag(i["item_id"],
@@ -115,6 +164,10 @@ def _mcp_file_receipt(args):
             "sku": ln.get("sku"), "discount_parent_sku": ln.get("discount_parent_sku"),
             "confidence": ln.get("confidence") if isinstance(ln.get("confidence"), (int, float)) else 0.5,
             "alternatives": []})
+    for k in ("subtotal", "tax", "total"):
+        v = args.get(k)
+        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)):
+            raise ValueError(f"{k} must be a number")
     lines, reconcile = _finish(lines, args.get("subtotal"))
     rid = args.get("receipt_id")
     if not isinstance(rid, str) or not rid:
@@ -127,9 +180,18 @@ def _mcp_file_receipt(args):
            "totals_reconcile": reconcile, "image_ref": None}
     stores.resolve_merchants([merchant])
     added = state.add_receipts([dec])
-    state.judge_pending(new_client())
-    return {"receipt_id": rid, "merchant": merchant, "added": added,
-            "lines": len(lines), "totals_reconcile": reconcile}
+    out = {"receipt_id": rid, "merchant": merchant, "added": added,
+           "lines": len(lines), "totals_reconcile": reconcile}
+    # The receipt is filed either way; the model work that sorts its items
+    # obeys the same spend limits as the app (MCP review finding 1).
+    try:
+        _budget_guard()
+        client = new_client()
+    except HTTPException as e:
+        out["note"] = ("Filed. Arya will sort these items later: " + str(e.detail))
+        return out
+    state.judge_pending(client)
+    return out
 
 
 def _mcp_get_receipts(args):
@@ -180,7 +242,8 @@ def _mcp_dispatch(msg, demo=False):
             "protocolVersion": want if want in mcp.PROTOCOL_VERSIONS
                                else mcp.DEFAULT_PROTOCOL_VERSION,
             "capabilities": {"tools": {}},
-            "serverInfo": mcp.SERVER_INFO})
+            "serverInfo": mcp.SERVER_INFO,
+            "instructions": mcp.INSTRUCTIONS})
     if method == "ping":
         return mcp.result(rid, {})
     if method == "tools/list":
@@ -203,10 +266,22 @@ def _mcp_dispatch(msg, demo=False):
         args = params.get("arguments") or {}
         if not isinstance(args, dict):
             return mcp.result(rid, mcp.tool_error("arguments must be an object"))
+        t0 = time.monotonic()
+        user = state._current_user.get() or "-"
         try:
             data = handler(args)
         except ValueError as e:
+            log.info("mcp tool=%s user=%s ok=0 ms=%d", name, user, (time.monotonic() - t0) * 1000)
             return mcp.result(rid, mcp.tool_error(str(e)))
+        except HTTPException as e:
+            # A refusal from a shared path (a pause, a limit): a tool error,
+            # never a bare HTTP failure (MCP review finding 3).
+            log.info("mcp tool=%s user=%s ok=0 http=%s", name, user, e.status_code)
+            return mcp.result(rid, mcp.tool_error(str(e.detail)))
+        except Exception:
+            log.exception("mcp tool=%s user=%s failed", name, user)
+            return mcp.result(rid, mcp.tool_error("something went wrong in Arya; try again in a minute"))
+        log.info("mcp tool=%s user=%s ok=1 ms=%d", name, user, (time.monotonic() - t0) * 1000)
         return mcp.result(rid, mcp.tool_result(data))
     return mcp.error(rid, -32601, f"method not found: {method}")
 

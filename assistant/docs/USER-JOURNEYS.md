@@ -52,7 +52,8 @@ her head and forgets milk.
 | 3 | Waits a few seconds. | Muse Spark reads the lines. Code adds them up. The receipt shows a check mark and its total only if the lines match the printed total. |
 | 4 | Files the same PDF again by mistake. | "Already filed." Arya compares a fingerprint (store, date, lines, total) and does not count the trip twice. |
 | 5 | Wants one old receipt. In **Receipts**, types the store in the search box, opens **Date** and picks a range, and picks **Store A to Z** or **Highest total** in **Sort**. | A line shows how many receipts match and their total. **Clear** removes the filters. |
-| 5 | Opens **Today**. | **Running low** lists items that are due. |
+| 6 | Spots a misread line on a filed receipt. Opens it, taps the line, and changes the name, quantity or price in **Fix this line**. | The line shows an "edited" tag. A new name also fixes the item on her other receipts. The printed total never changes; if the lines stop adding up, the receipt says so and no longer counts as checked. **Undo** puts the old values back. In a group, any member can fix a line, but only the person who filed the receipt can delete it. |
+| 7 | Opens **Today**. | **Running low** lists items that are due. |
 
 **Sample data: the Costco receipt, Oct 17**
 

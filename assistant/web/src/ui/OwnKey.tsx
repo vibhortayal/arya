@@ -3,7 +3,7 @@ import { useNav } from "../app/nav";
 import { useIsDemo } from "../app/session";
 import { useTranslation } from "../i18n";
 import { ApiError } from "../lib/api";
-import { OPEN_OWN_KEY, getOwnKey, looksLikeMetaKey, removeOwnKey, saveOwnKey, takeOwnKeyRequest, type OwnKey } from "../lib/ownKey";
+import { OPEN_OWN_KEY, getOwnKey, requestOwnKey, looksLikeMetaKey, removeOwnKey, saveOwnKey, takeOwnKeyRequest, type OwnKey } from "../lib/ownKey";
 import { Sheet } from "./Sheet";
 import { useToast } from "./Toast";
 
@@ -49,7 +49,7 @@ export function OwnKeyRow() {
     try {
       const r = await saveOwnKey(v);
       setDraft("");
-      setK({ available: true, set: true, ends: r.ends, status: "ok" });
+      setK({ ...k!, available: true, set: true, ends: r.ends, status: "ok" });
       setMode("manage");
       toast(t("ownKey.saved", { ends: r.ends }));
     } catch (e) {
@@ -58,33 +58,34 @@ export function OwnKeyRow() {
   };
   const remove = async () => {
     setBusy(true);
-    try { await removeOwnKey(); setK({ available: true, set: false, ends: null, status: null }); close(); toast(t("ownKey.removed")); }
+    try { await removeOwnKey(); setK({ ...k!, set: false, ends: null, status: null }); close(); toast(t(k?.required ? "ownKey.removedAccount" : "ownKey.removed")); }
     catch (e) { setErr(e instanceof ApiError ? e.message : t("ownKey.couldNotSave")); }
     finally { setBusy(false); }
   };
 
   const attention = k.set && k.status === "needs_attention";
+  const req = !!k.required;
   const ends = k.ends || "";
   return (
     <>
       <button className="navrow" id="own-key-row" type="button" onClick={start}>
         <span className="grow">{t("ownKey.title")}
           {k.set && <span className={"ok-badge " + (attention ? "warn" : "on")}>{t(attention ? "ownKey.badgeAttention" : "ownKey.badgeOn")}</span>}
-          <span className="sub">{!k.set ? t("ownKey.subOff") : attention ? t("ownKey.subAttention") : t("ownKey.subOn", { ends })}</span></span>
+          <span className="sub">{!k.set ? t(req ? "ownKey.subNeeded" : "ownKey.subOff") : attention ? t("ownKey.subAttention") : t(req ? "ownKey.subOnAccount" : "ownKey.subOn", { ends })}</span></span>
         <span className="chev">›</span></button>
       <Sheet open={open && !safe} onClose={close} id="own-key-sheet" title={t("ownKey.sheetTitle")}>
         {mode === "manage" && k.set ? (
           <>
             {attention ? (
-              <div className="ok-alert" role="alert"><b>{t("ownKey.attentionTitle", { ends })}</b>{t("ownKey.attentionBody")}</div>
+              <div className="ok-alert" role="alert"><b>{t("ownKey.attentionTitle", { ends })}</b>{t(req ? "ownKey.attentionBodyAccount" : "ownKey.attentionBody")}</div>
             ) : (
               <div className="ok-card"><b>{t("ownKey.keyEnding")} <span className="ok-mono">…{ends}</span></b><span className="sub">{t("ownKey.working")}</span></div>
             )}
-            {!attention && <p className="muted ok-p">{t("ownKey.onBody")} <a href="https://dev.meta.ai/usage" target="_blank" rel="noopener">{"dev.meta.ai/usage"}</a></p>}
+            {!attention && <p className="muted ok-p">{t(req ? "ownKey.onBodyAccount" : "ownKey.onBody")} <a href="https://dev.meta.ai/usage" target="_blank" rel="noopener">{"dev.meta.ai/usage"}</a></p>}
             <button className={"btn wide" + (attention ? " primary" : "")} id="own-key-replace" type="button" onClick={() => { setMode("add"); setErr(""); }}>{t("ownKey.replace")}</button>
             {confirm ? (
               <div className="ok-confirm">
-                <p>{t("ownKey.removeConfirm")}</p>
+                <p>{t(req ? "ownKey.removeConfirmAccount" : "ownKey.removeConfirm")}</p>
                 <button className="btn danger wide" id="own-key-remove-yes" type="button" disabled={busy} onClick={remove}>{t("ownKey.removeYes")}</button>
                 <button className="linkbtn" type="button" onClick={() => setConfirm(false)}>{t("common.cancel")}</button>
               </div>
@@ -92,11 +93,11 @@ export function OwnKeyRow() {
               <button className="btn wide ok-danger" id="own-key-remove" type="button" onClick={() => setConfirm(true)}>{t("ownKey.remove")}</button>
             )}
             {err && <p className="ok-err" role="alert">{err}</p>}
-            <p className="ok-small">{t(attention ? "ownKey.attentionHint" : "ownKey.removeHint")}</p>
+            <p className="ok-small">{t(attention ? "ownKey.attentionHint" : req ? "ownKey.removeHintAccount" : "ownKey.removeHint")}</p>
           </>
         ) : (
           <>
-            <p className="muted ok-p">{t("ownKey.intro")}</p>
+            <p className="muted ok-p">{t(req ? "ownKey.introAccount" : "ownKey.intro")}</p>
             <p className="ok-h">{t("ownKey.beforeTitle")}</p>
             <ul className="ok-ul"><li>{t("ownKey.before1")}</li><li>{t("ownKey.before2")}</li><li>{t("ownKey.before3")}</li></ul>
             <label className="ok-h" htmlFor="own-key-input">{k.set ? t("ownKey.newKey") : t("ownKey.yourKey")}</label>
@@ -113,11 +114,39 @@ export function OwnKeyRow() {
         )}
       </Sheet>
       <Sheet open={open && safe} onClose={() => setSafe(false)} id="own-key-safe-sheet" title={t("ownKey.safeTitle")} closeLabel={t("common.back")}>
-        <p className="ok-h">{t("ownKey.doesTitle")}</p>
-        <ul className="ok-ul"><li>{t("ownKey.does1")}</li><li>{t("ownKey.does2")}</li><li>{t("ownKey.does3")}</li><li>{t("ownKey.does4")}</li><li>{t("ownKey.does5")}</li></ul>
-        <p className="ok-h">{t("ownKey.wrongTitle")}</p>
-        <ul className="ok-ul"><li>{t("ownKey.wrong1")}</li><li>{t("ownKey.wrong2")}</li><li>{t("ownKey.wrong3")}</li></ul>
+        <OwnKeySafeBody keyAccount={req} />
       </Sheet>
+    </>
+  );
+}
+
+/* Today, for an account that signed up with its own key: when the key
+ * is missing or Meta turned it down, the AI parts pause (no fallback to
+ * Arya's keys, owner 2026-11-01), so say so at the top with one button. */
+export function OwnKeyAlert() {
+  const { t } = useTranslation();
+  const demo = useIsDemo();
+  const [k, setK] = useState<OwnKey | null>(null);
+  useEffect(() => { if (!demo) getOwnKey().then(setK).catch(() => setK(null)); }, [demo]);
+  if (demo || !k?.available || !k.required || (k.set && k.status !== "needs_attention")) return null;
+  return (
+    <div className="ok-alert ok-today" id="today-own-key" role="alert">
+      <b>{t(k.set ? "ownKey.todayTitle" : "ownKey.todayTitleNone")}</b>
+      {k.set ? t("ownKey.todayBody", { ends: k.ends || "" }) : t("ownKey.todayBodyNone")}
+      <button className="btn primary wide" type="button" id="today-own-key-fix" onClick={requestOwnKey}>{t("ownKey.fixAction")}</button>
+    </div>
+  );
+}
+
+/* "How Arya keeps your key safe": Settings and sign-up share it. */
+export function OwnKeySafeBody({ keyAccount = false }: { keyAccount?: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <p className="ok-h">{t("ownKey.doesTitle")}</p>
+      <ul className="ok-ul"><li>{t("ownKey.does1")}</li><li>{t("ownKey.does2")}</li><li>{t("ownKey.does3")}</li><li>{t("ownKey.does4")}</li><li>{t("ownKey.does5")}</li></ul>
+      <p className="ok-h">{t("ownKey.wrongTitle")}</p>
+      <ul className="ok-ul"><li>{t(keyAccount ? "ownKey.wrong1Account" : "ownKey.wrong1")}</li><li>{t("ownKey.wrong2")}</li><li>{t("ownKey.wrong3")}</li></ul>
     </>
   );
 }

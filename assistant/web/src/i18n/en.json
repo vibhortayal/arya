@@ -1,6 +1,6 @@
 {
   "offline": {
-    "bar": "You're offline. You can still look through your lists and screens as they were last saved. Changes, Ask Arya, photos, voice, sharing and sync need a connection."
+    "bar": "You're offline. You can still add, tick, edit and remove list items: changes save on this phone and sync when you're back. Ask Arya, receipts, photos, voice and sharing need a connection."
   },
   "common": {
     "back": "Back",
@@ -87,11 +87,17 @@
       "listening": "Listening…",
       "refused": "Microphone access was refused. You can type instead.",
       "stopTranscribe": "Stop and turn into text",
-      "record": "Record"
+      "record": "Record",
+      "card": {
+        "hint": "Speak now. Arya writes it down when you tap Stop and send.",
+        "stopAndSend": "Stop and send",
+        "reading": "Got it, reading…",
+        "time": "Recording time {{time}}"
+      }
     },
     "receiptFile": {
       "empty": "That file arrived empty. If it is still downloading, wait for it to finish, then try again.",
-      "reading": "Reading the receipt — this can take up to a minute.",
+      "reading": "Reading the receipt… Usually 10 to 30 seconds, up to a minute. Stay on this screen.",
       "demo": "Read just now. Kept until you leave the demo.",
       "duplicate": "You already added this {{merchant}} receipt from {{date}}.",
       "thatReceipt": "that receipt",
@@ -408,6 +414,7 @@
     }
   },
   "ask": {
+    "photoTooLarge": "That photo is too large to send. Try a screenshot of it, or a photo from closer.",
     "newChat": "New chat",
     "editTitle": "Edit questions",
     "editHint": "Your quick questions on Ask. Drag to reorder, remove what you never tap.",
@@ -592,7 +599,9 @@
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
     "join": "Join",
-    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it."
+    "notNow": "Not now",
+    "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it.",
+    "removedFrom": "You were removed from {{name}}. You kept a copy of its lists and your own receipts."
   },
   "hunt": {
     "thatHuntIsGoneThe": "This quest ended when the demo reset. Start it again from Today.",
@@ -816,7 +825,51 @@
       "new": "Not enough buys yet for a pattern"
     }
   },
+  "listPick": {
+    "title": "Add {{what}} to…",
+    "why": "Tap a list. Every item lives on a list.",
+    "usual": "Usual for {{what}}",
+    "newList": "+ New list",
+    "newListName": "New list name",
+    "makeListAndAdd": "Make the list and add it",
+    "makeAndAdd": "Make the {{name}} list and add it",
+    "firstTitle": "Make a list first",
+    "firstWhy": "Every item goes on a store's list. Pick the store for {{what}}.",
+    "shopMost": "You shop here most",
+    "another": "Another store…",
+    "storeName": "Store name",
+    "nameFirst": "Type a name first.",
+    "offlineMake": "Making a list needs a connection. Try again when you're back online.",
+    "offlineNote": "You're offline. The add waits on this phone and syncs when you're back online.",
+    "nItems_one": "{{count}} item",
+    "nItems_other": "{{count}} items",
+    "this": "this",
+    "addedTo": "Added {{what}} to {{list}}.",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteHas_one": "It has {{count}} item. Where should it go?",
+    "deleteHas_other": "It has {{count}} items. Where should they go?",
+    "moveTo": "Move them to {{name}}",
+    "deleteToo": "Delete them too",
+    "deleteList": "Delete list",
+    "whichFor": "Which list should {{what}} go on?",
+    "makeAList": "Make a list"
+  },
   "lists": {
+    "queue": {
+      "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
+    "tag": "⏳ Waiting to sync",
+    "offline": "You're offline. You can still add, tick, edit and remove items. Arya syncs when you're back.",
+    "waiting_one": "{{count}} change waiting to sync. Arya sends it when you're back online.",
+    "waiting_other": "{{count}} changes waiting to sync. Arya sends them when you're back online.",
+    "syncing_one": "Syncing {{count}} change…",
+    "syncing_other": "Syncing {{count}} changes…",
+      "synced_one": "Synced {{count}} list change.",
+      "synced_other": "Synced {{count}} list changes.",
+      "skipped_one": "{{names}}: someone changed it after you were offline, so their change stays.",
+      "skipped_other": "{{count}} changes weren't applied ({{names}}): someone changed those items after you were offline, so their changes stay.",
+      "failed_one": "{{names}} couldn't be saved. Try it again.",
+      "failed_other": "{{count}} changes couldn't be saved ({{names}}). Try them again."
+    },
     "editTitle": "Edit Lists",
     "editHint": "Drag to reorder. Hiding a list keeps it and its items; it just leaves Lists and Today.",
     "hiddenLists": "Hidden lists",
@@ -992,7 +1045,7 @@
     "shopHow": "How do you want to shop?",
     "shopQuestSub": "Arya walks you through the store, finds each item and earns you points.",
     "shopJustList": "Just my list",
-    "tickAsIShop": "Or just tick items as I shop",
+    "tickAsIShop": "Or just check items off as I shop",
     "tickSaved": "Start shopping now opens Just my list. Change it in Settings, Preferences.",
     "shopJustListSub": "In a rush? Check items off as you go. No game.",
     "shopAskEvery": "Ask me every time",
@@ -1140,8 +1193,8 @@
     },
     "changeStores": "Change stores",
     "storesUse": "Arya uses these for suggestions and quests",
-    "deleteMoves_one": "Its {{count}} item moves to Everything else",
-    "deleteMoves_other": "Its {{count}} items move to Everything else",
+    "deleteMoves_one": "It has {{count}} item; Arya asks where it goes",
+    "deleteMoves_other": "It has {{count}} items; Arya asks where they go",
     "hasNoItems": "It has no items",
     "itsHereNow": "It's here now",
     "theyreHereNow": "They're here now",
@@ -1407,23 +1460,44 @@
     "readyAt": "{{mode}} at {{store}}. Ready when you are."
   },
   "muse": {
-    "connectAnAiAgent": "Use Arya in another AI app",
-    "useAryaFromAnAi": "Use Arya from an AI app you already talk to. It can add to your list, tell you what is running low and add receipts it reads. Make a code, then paste it into your AI app. The code shows once; a new code replaces it. (Works with any app that supports MCP connectors.)",
-    "developerPage": "See the developer page for the details.",
-    "sameCodeListsApi": "The same code also works for the Arya Lists API, so a script or another app can read and write your lists.",
-    "copy": "Copy the code",
-    "copyItNowItIs": "Copy it now; it is not shown again. Paste it into your AI app's connector settings.",
-    "revoke": "Turn off this code",
+    "title": "Use Arya in Muse",
+    "intro": "Muse is Meta's AI agent. Connect it to Arya and talk to your lists from Muse: it can read your list, add items, say what is running low and file receipts it reads.",
+    "step1": "Make your code",
+    "step2": "Tell Muse to connect",
+    "step3": "Paste your code when Muse asks",
+    "step4": "Try it",
+    "makeCode": "Make my code",
+    "newCode": "Make a new code",
+    "noCode": "No code yet.",
+    "active": "Your code is on.",
+    "shownOnce": "Shown once. A new code turns the old one off.",
+    "copyItNow": "Copy it now. Arya shows it only once.",
+    "copyShort": "Copy",
+    "copyThis": "Copy {{what}}",
+    "copied": "Copied.",
+    "inMuseSay": "In Muse, say:",
+    "connectLine": "Connect to Arya at {{url}}",
+    "addressOnly": "Server address only:",
+    "pasteBody": "Muse opens a secure box for the connector's key. Paste your code there, not in the chat. That's it.",
+    "askMuse": "Ask Muse:",
+    "try1": "What is on my Arya list?",
+    "try2": "Add oat milk to my Arya list",
+    "try3": "What am I running low on in Arya?",
+    "otherApps": "Other AI apps",
+    "otherBody": "Arya works with any app that takes MCP connectors. Add a remote server (streamable HTTP) with the address above. When it asks how to sign in, use a header:",
+    "header": "Header",
+    "yourCode": "your-code",
     "copySetupPrompt": "Copy setup prompt",
-    "pasteItIntoYourAssistant": "Paste it into your AI app so it knows how to use Arya.",
+    "promptWhy": "Some apps need this first so they know when to use Arya.",
+    "notWorking": "Not working?",
+    "notWorkingBody": "A 401 or \"login\" message means the code was not sent. Paste it again when asked, or make a new code. Done testing? Turn off this code.",
+    "revoke": "Turn off this code",
     "tokenCopied": "Code copied.",
     "revoked": "Code turned off.",
-    "active": "Your code is on.",
-    "noCode": "No code yet.",
-    "newCode": "Make a new code",
-    "makeCode": "Make my code",
+    "promptCopied": "Setup prompt copied.",
     "demoNoCode": "Codes need an account, so the demo has no Make my code button. Here is how it works once you have one.",
-    "promptCopied": "Setup prompt copied."
+    "sameCodeListsApi": "The same code works for the Arya Lists API.",
+    "developerPage": "Developer page"
   },
   "newList": {
     "edit": "Edit",
@@ -1704,8 +1778,8 @@
     "howPricesShowAryaDoes": "Shows prices in this currency. It doesn't convert them.",
     "language": "Ask replies in",
     "whatAryaAnswersInAuto": "Auto matches the language you type",
-    "connectAnAiAgent": "Use Arya in another AI app",
-    "useAryaFromYourOwn": "Add to your list from the AI app you already use",
+    "connectAnAiAgent": "Use Arya in Muse",
+    "useAryaFromYourOwn": "Meta's AI agent. Other AI apps work too",
     "preferences": "Preferences",
     "currencyAndLanguage": "Currency and language",
     "currencyAndLanguageSub": "Prices, and the language Ask replies in",
@@ -1714,7 +1788,7 @@
     "aboutArya": "About Arya",
     "helpTourSub": "Replay the Tour: a stop on every screen",
     "helpGuideSub": "Swipe through cards on each part of Arya",
-    "aboutAryaSub": "Powers, other AI apps, running costs, install",
+    "aboutAryaSub": "Powers, Muse and other AI apps, running costs, install",
     "shopMode": "When I start shopping",
     "shopModeSub": "What Start shopping opens.",
     "shopModeQuest": "Start a Quest",
@@ -1768,20 +1842,20 @@
     "someoneSentYouAnInvite": "Someone sent you an invite",
     "you": "· you",
     "inviteSomeone": "Invite someone",
-    "aCodeThatWorksFor": "A code that works for 48 hours",
+    "aCodeThatWorksFor": "A code for one person, works for 48 hours",
     "leaveGroup": "Leave group",
     "youKeepACopyOf": "You keep a copy of the lists and your own receipts",
     "groupName": "Group name",
     "yourListsBecomeTheGroup": "Your lists become the group's lists. Next you can invite people with a code.",
     "startGroup": "Start group",
     "renameGroup": "Rename group",
-    "sendThisCodeItWorks": "Send this code. It works for {{hours}} hours.",
+    "sendThisCodeItWorks": "Send this code to one person. It works once, for {{hours}} hours.",
     "copyCode": "Copy code",
     "shareLink": "Share link",
-    "anyoneWithTheCodeCan": "Anyone with the code can join and see the group's lists and receipts. Make a new code any time and the old one stops working. Up to {{max_members}} people.",
+    "anyoneWithTheCodeCan": "The first person to use the code joins and sees the group's lists and receipts; then the code stops working. Invite the next person with a new code. Make a new code any time and the old one stops working. Up to {{max_members}} people.",
     "makeANewCode": "Make a new code",
     "theyKeepACopyOf": "They keep a copy of the lists and take their own receipts with them. The group's lists stay as they are.",
-    "keep": "Keep",
+    "keep": "No, keep",
     "runningLowPatternsAndSpend": "Running low and spending go back to just your receipts",
     "youAreTheLastOne": "You are the last one",
     "theGroupClosesYourLists": "The group closes. Your lists and receipts stay yours.",
@@ -1825,7 +1899,7 @@
     "inviteCodeAria": "Invite code {{code}}",
     "orOpen": "or open {{link}}",
     "codeCopied": "Code copied.",
-    "joinText": "Join {{name}} on Arya: code {{code}}",
+    "joinText": "Join {{name}} on Arya: tap the link, or open Arya, go to Settings, Join with a code, and enter {{code}}. It works once.",
     "linkCopied": "Link copied.",
     "removeHandle": "Remove @{{handle}}?",
     "handleOut": "@{{handle}} is out of the group.",
@@ -1989,6 +2063,26 @@
     "winner": "Winner: @{{handle}} — by receipt time.",
     "deadHeat": "Dead heat — identical receipt times."
   },
+  "lineFix": {
+    "title": "Fix this line",
+    "printed": "Printed: {{raw}}",
+    "name": "Name",
+    "qty": "Quantity",
+    "price": "Price paid",
+    "amount": "Amount",
+    "badQty": "Quantity must be more than 0.",
+    "nameNote": "A new name also fixes this item on your other receipts, and Arya remembers it next time.",
+    "warnMore": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} more than the total, so the receipt will say its lines don't match.",
+    "warnLess": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} less than the total, so the receipt will say its lines don't match.",
+    "nowMatches": "Now the lines add up to the printed total again.",
+    "saveAnyway": "Save anyway",
+    "saved": "Saved.",
+    "savedAlso_one": "Saved. Also fixed on {{count}} other receipt.",
+    "savedAlso_other": "Saved. Also fixed on {{count}} other receipts.",
+    "tapHint": "Tap a line to fix its name, quantity or price.",
+    "edited": "edited",
+    "linesDontMatch": "You changed some lines, and they no longer add up to the printed total of {{total}}."
+  },
   "receipt": {
     "returned": "Returned",
     "savingsOnTheItemAbove": "Discount on the item above",
@@ -2060,10 +2154,26 @@
       "other": "Other"
     }
   },
+  "receiptRead": {
+    "readingOne": "Reading the receipt…",
+    "readingOneSub": "Usually 10 to 30 seconds, up to a minute.",
+    "readingN": "Reading receipt {{i}} of {{n}}",
+    "readingNSub": "{{name}} · {{filed}} filed so far.",
+    "stay": "Stay on this screen.",
+    "demoNote": "Demo receipts aren't saved, so stay on this screen while Arya reads. In your own account, Arya reads receipts in the background, so you can leave.",
+    "button": "Reading…",
+    "doneHead": "Read {{read}} of {{total}} receipts",
+    "failedLine_one": "{{count}} could not be read",
+    "failedLine_other": "{{count}} could not be read",
+    "tryAgain": "Try again"
+  },
   "receiptJob": {
     "sending": "Sending {{sent}} of {{total}} receipts",
+    "sendingOne": "Sending your receipt",
     "keepOpen": "Keep Arya open until this finishes. Then you can leave, and Arya reads them in the background.",
+    "keepOpenOne": "Keep Arya open until this finishes. Then you can leave, and Arya reads it in the background.",
     "reading": "Reading your receipts in the background",
+    "readingOne": "Reading your receipt in the background",
     "progress": "{{done}} of {{total}} read.",
     "someFailed_one": "{{count}} could not be read.",
     "someFailed_other": "{{count}} could not be read.",
@@ -2411,6 +2521,7 @@
     "alertUsuallyPay": "{{price}} there, {{usual}} at {{store}}",
     "andMore": " and {{n}} more",
     "stillGoodToast": "Still good. Arya will ask again in a few days.",
+    "usedToSuggest": "Used up. {{name}} is in your suggestions.",
     "markedExpiredToast": "Marked expired. Arya suggests it on your list.",
     "yourList": "Your list",
     "onYourList": "On your list",
@@ -2763,6 +2874,22 @@
     "forTarget": "{{label}} · {{state}}"
   },
   "info": {
+    "spend": {
+      "month": "Month total",
+      "monthText": "What your receipts from this month add up to, after returns.",
+      "all": "All-time spending",
+      "allText": "Every receipt you have added, after returns. It is Groceries plus Other purchases, minus Returns.",
+      "groceries": "Groceries",
+      "groceriesText": "Food and household things: produce, dairy, pantry, cleaning, paper goods.",
+      "other": "Other purchases",
+      "otherText": "Things on the same receipts that are not groceries: pharmacy, clothing, electronics, hobbies, gift cards.",
+      "returns": "Returns",
+      "returnsText": "Money back for things you returned. Already taken off the month total and All-time spending.",
+      "saved": "You saved",
+      "savedText": "Coupons, deals and discounts printed on your receipts. Already taken off what you paid.",
+      "others": "Bought for others",
+      "othersText": "Gifts and things you bought for other people. Still counted in your spending."
+    },
     "trend": {
       "title": "Price trend",
       "sub": "How Arya works out a price move.",
@@ -2836,17 +2963,17 @@
     "more": "More"
   },
   "bar": {
-    "customize": "Customize bar",
-    "title": "Customize bar",
-    "hint": "The bar holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
+    "customize": "Customize navigation tab",
+    "title": "Customize navigation tab",
+    "hint": "The navigation tab holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
     "offTitle": "In More",
-    "full": "The bar holds four. Remove one first.",
+    "full": "The navigation tab holds four. Remove one first.",
     "removed": "{{name}} moved to More",
-    "added": "{{name}} added to the bar",
+    "added": "{{name}} added to the navigation tab",
     "reset": "Reset to default",
-    "resetDone": "The bar is back to the default",
+    "resetDone": "The navigation tab is back to the default",
     "moreTitle": "More",
-    "moreHint": "Everything not on your bar. Tap Customize bar to change it.",
+    "moreHint": "Everything not on your navigation tab. Tap Customize navigation tab to change it.",
     "sub": {
       "home": "Your day at a glance",
       "list": "One list per store",
@@ -2953,11 +3080,12 @@
         "line": "What needs you today: running low, use soon, and tips.",
         "lineBoth": "What needs you today: running low, use soon, and tips. Receipts and Spending are in More.",
         "lineReceipts": "What needs you today: running low, use soon, and tips. Receipts is in More.",
-        "lineSpending": "What needs you today: running low, use soon, and tips. Spending is in More."
+        "lineSpending": "What needs you today: running low, use soon, and tips. Spending is in More.",
+        "lineLists": "What needs you today: your next trip's list, running low, use soon, and tips. All your lists are in More."
       },
       "lists": {
         "title": "Lists",
-        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list. Your stores are at the bottom."
+        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list."
       },
       "ask": {
         "title": "Ask",
@@ -2985,16 +3113,16 @@
       },
       "spending": {
         "title": "Spending",
-        "line": "What you spent by month, store and item, from your receipts."
+        "line": "What you spent by month, store and item, from your receipts. Receipts is at the top."
       },
       "more": {
         "title": "More",
-        "line": "Help, Settings and everything not on your bar live here. More is always on the bar."
+        "line": "Help, Settings and everything not on your navigation tab live here. More is always on it."
       },
       "bar": {
-        "title": "Make the bar yours",
-        "line": "Tap Customize bar, here in More, to pick the four places on your bar, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
-        "screen": "The bar",
+        "title": "Customize navigation tab",
+        "line": "Tap Customize navigation tab, here in More, to pick the four places on your navigation tab, such as Lists, Receipts and Stores. Anything you leave off stays in More.",
+        "screen": "The navigation tab",
         "customize": "Customize now"
       },
       "guideLink": "Want the full guide?"
@@ -3011,7 +3139,7 @@
     },
     "today_lists": {
       "title": "Your lists",
-      "line": "One card for each store. Tap a card to open that list."
+      "line": "One card for each store. Tap a card to open that list. All your lists are also in More."
     },
     "today_soon": {
       "title": "Use soon",
@@ -3020,6 +3148,14 @@
     "today_edit": {
       "title": "Edit Today",
       "line": "Hide, reorder or add cards. Make this screen yours."
+    },
+    "spending_tab": {
+      "title": "Spending",
+      "line": "What you spent by month, store and item, from your receipts."
+    },
+    "spending_places": {
+      "title": "Receipts",
+      "line": "Add receipts and look back at them here. Your stores are in More, then Stores."
     },
     "lists_tab": {
       "title": "Lists",
@@ -3091,8 +3227,8 @@
       "lists": {
         "kicker": "Lists",
         "title": "A list for every store",
-        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list.",
-        "s1": "Tap the Lists tab, then tap New list.",
+        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list. No signal in the store? Keep adding and ticking; Arya syncs when you're back.",
+        "s1": "Tap More, then Lists, then tap New list.",
         "s2": "Choose the name of the store from the dropdown.",
         "s3": "Type in items using the add box, use voice to add items or upload pictures of your paper list."
       },
@@ -3101,7 +3237,7 @@
         "title": "Shared lists to shop in sync",
       "body": "Create shared lists with your household members. Anyone can add, edit or check off an item and Arya keeps the lists synced on every phone. Finish your grocery runs quicker together or split up and each take a store.",
       "s1": "Open Settings, tap Start a group and give it a name.",
-        "s2": "Tap Invite someone and send them the code.",
+        "s2": "Tap Invite someone and send the code to one person. Each code works once.",
         "s3": "When they join, your lists are shared. Anyone can add, change or check off an item, and every phone stays in sync."
       },
       "maps": {
@@ -3125,7 +3261,7 @@
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
         "s1": "Lists › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
-        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. In Receipts, search, pick a date range and sort to find one fast."
+        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. Tap a line on a receipt to fix its name, quantity or price. In Receipts, search, pick a date range and sort to find one fast."
       },
       "prices": {
         "kicker": "Prices",
@@ -3142,12 +3278,12 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you what to use before it expires or goes bad."
+        "s4": "Arya reminds you what to use before it expires. When Today asks Still good?, tap Still good, Used it or It expired. Switch on Remind me in Settings, Preferences."
       },
       "ask": {
         "kicker": "Ask Arya",
         "title": "Just ask",
-        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
+        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\" Arya answers from your own lists and receipts.",
         "s1": "Tap the Ask tab.",
         "s2": "Type or say your question, or tap a suggestion.",
         "s3": "Arya answers from your own lists and receipts.",
@@ -3156,10 +3292,10 @@
       "shopping": {
         "kicker": "In the store",
         "title": "Start shopping",
-        "body": "Pick a list and shop it. Play a Quest, or just tick items off.",
-        "s1": "Open the Lists tab. Open a list.",
+        "body": "Pick a list and shop it. Play a Quest, or just check items off.",
+        "s1": "On Today, tap your next trip. Or tap More, then Lists, and open a list.",
         "s2": "Tap Start shopping.",
-        "s3": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s3": "Or tap \"Or just check items off as I shop\" for no game.",
         "s4": "Choose what Start shopping opens in Settings, under \"When I start shopping\"."
       },
       "running": {
@@ -3190,27 +3326,27 @@
       },
       "today": {
         "kicker": "Today",
-        "title": "Make Today yours",
-        "body": "Show the cards you use. Hide the rest. Next trip, at the top, starts your shopping.",
-        "s1": "Tap Edit on Today, or touch and hold a card.",
-        "s2": "Drag a card to move it. Tap the red minus to hide it.",
-        "s3": "Tap the green plus to add a card from the library.",
+        "title": "Customize your \"Today\" screen",
+        "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
+        "s1": "On Today, tap Edit, or touch and hold any card.",
+        "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card.",
         "s4": "Lists, Ask and Quest have an Edit button too."
       },
       "bar": {
-        "kicker": "Your bar",
-        "title": "Make the bar yours",
-        "body": "Put the places you use on the bar at the bottom. Everything else stays in More, which is always there.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar, such as Receipts or Stores. The bar holds four.",
-        "s3": "Tap the red minus to move a place to More. Drag to reorder."
+        "kicker": "Navigation tab",
+        "title": "Customize navigation tab",
+        "body": "The navigation tab is the row of buttons along the bottom of the screen. It takes you around Arya. Put the four places you use most on it. Everything else is in More, the last button, which is always there.",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
+        "s2": "Tap the green plus to add a place, such as Receipts or Stores. There is room for four.",
+        "s3": "Tap the red minus to move a place into More. Drag a place to change the order."
       },
       "powers": {
         "kicker": "Powers",
-        "title": "See everything Arya does",
-        "body": "Powers lists what Arya does for you now. It also shows what you can turn on.",
-        "s1": "Open Settings (in More), then About Arya, then Arya's powers. Or open Help.",
-        "s2": "Tap i on a power to learn how it works.",
+        "title": "See what Arya can do",
+        "body": "Powers is one list of everything Arya does for you. It also shows features you can switch on.",
+        "s1": "Tap More, then Settings, then About Arya, then Arya's powers. Or open Help.",
+        "s2": "Tap the i next to a power to learn how it works.",
         "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
       },
       "settings": {
@@ -3218,9 +3354,9 @@
         "title": "Settings, your way",
         "body": "Change how Arya looks and speaks. Your data stays yours.",
         "s1": "Tap More, then Settings. Tap Display for text size and spacing.",
-        "s2": "Under Preferences, choose your currency and language.",
+        "s2": "Under Preferences, choose your currency and language, and switch on Remind me.",
         "s3": "Under Account, tap Export my data to get a copy of everything. Delete my account erases it all; we email you a code to confirm, or ask for your password if you have one.",
-        "s4": "Open About Arya, then \"Use Arya in another AI app\", to add to your list from it."
+        "s4": "Open About Arya, then \"Use Arya in Muse\", to talk to your list from Muse or another AI app."
       }
     },
     "replayTour": "Replay the tour"
@@ -3259,7 +3395,7 @@
     "sub": "Read and write your own lists and receipts from a script or another app. Export anytime.",
     "getCode": "Get your code",
     "step1": "Get your code",
-    "step1Body": "In Arya, open Settings, then About Arya, then Use Arya in another AI app, then Make my code. It shows once. A new code replaces the old one.",
+    "step1Body": "In Arya, open Settings, then About Arya, then Use Arya in Muse, then Make my code. It shows once. A new code replaces the old one.",
     "sameCode": "The same code works for the Lists API and the agent connector.",
     "step2": "Make your first call",
     "answersJson": "Replies with your lists",
@@ -3435,12 +3571,12 @@
     "readerSub": "Who reads receipt photos. Wonder is about $0.04 a photo, Spark about $0.01.",
     "readerSparkOnly": "Spark only",
     "readerAuto": "Spark first, Wonder as backup",
-    "readerWarn": "Spark reads send receipt photos to Spark. On the Contributor plan Meta may train on them.",
+    "readerWarn": "Spark reads send receipt photos to Spark. Keep the Spark plan on Standard, which Arya runs.",
     "tier": "Spark plan",
     "tierSub": "Which plan Spark calls run on.",
     "tierStandard": "Standard (not used for training)",
     "tierContributor": "Contributor (cheaper)",
-    "tierWarn": "Contributor lets Meta train on content sent to Spark, including receipt photos when the reader is Spark or Auto. Cheaper, but that data leaves your control.",
+    "tierWarn": "Arya runs Spark on Standard. Contributor is cheaper but comes with different data terms from Meta, covering everything sent to Spark, receipt photos included when the reader is Spark or Auto. Read them before you switch.",
     "reasoning": "Reasoning effort",
     "effort": "Spark reasoning effort",
     "effortSub": "Higher is slower and costs more per call. Wonder and the store scan keep their own setting.",
@@ -3588,24 +3724,26 @@
         "title": "Add your first receipt",
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
-        "s1": "Open Lists, then Receipts.",
-        "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
+        "s1": "Open Spending, then Receipts.",
+        "s2": "Tap Add receipts and pick one or several. Once sent, Arya reads them in the background, so you can leave.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
         "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check with Arya's guess, the printed text and a section: tap Use this name, Fix or Keep printed, or Use the sure guesses to set every guess Arya is sure of at once (Undo puts them back).",
+        "n4": "Spot a mistake on a filed receipt? Open it and tap the line to fix its name, quantity or price. Fixed lines show an \"edited\" tag. The printed total stays as printed, and the receipt says so if the lines stop adding up. Undo puts the old values back.",
         "cta": "Open Receipts"
       },
       "additem": {
         "title": "Add an item to a list",
         "sub": "Type it, say it, or snap a paper list",
         "body": "Every list is one store. Add items in the box at the top of a list.",
-        "s1": "Open the Lists tab.",
+        "s1": "Tap More, then Lists. Next trip on Today has Add items too.",
         "s2": "Open a list, or tap New list and choose a store.",
         "s3": "Type an item in the box \"Add item here...\".",
         "s4": "Tap the microphone to say it, or the camera to read a paper list.",
         "n1": "Tap the circle to tick an item off as you shop.",
         "n2": "Tap an item to change its name, amount or unit, add a note, move it or delete it.",
+        "n3": "Every item lives on a list. With one list, adds go straight to it; with more, Arya asks which list. No list yet? Arya helps you make one first. Deleting a list that has items asks whether to move them to another list or delete them too.",
         "cta": "Open Lists"
       },
       "ask": {
@@ -3617,29 +3755,34 @@
         "s3": "Or tap a sample question.",
         "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
+        "n3": "After you tap Talk, a Listening card shows a moving bar and a timer. Tap Stop and send when you are done, or Cancel.",
         "cta": "Open Ask"
       },
       "lists": {
         "title": "Lists",
         "sub": "One list for each store",
         "body": "Arya keeps a separate list for each store and suggests what is due.",
-        "s1": "Open the Lists tab and tap New list.",
+        "s1": "Tap More, then Lists, and tap New list.",
         "s2": "Choose the store.",
         "s3": "Add items in the box at the top of the list.",
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
         "n1": "Tap Select to move or remove several items.",
         "n2": "The three dots on a list open Share, export or import.",
+        "n3": "No signal? Keep adding, ticking, editing and removing items. A yellow note counts the changes waiting, and each one shows Waiting to sync until you're back online.",
+        "n4": "A store you choose for a list also joins Stores, and so does a store a receipt comes from. A store you take out of Stores stays out until you add it again.",
         "cta": "Open Lists"
       },
       "receipts": {
         "title": "Receipts and spending",
         "sub": "Add a receipt, see where money goes",
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
-        "s1": "Open Lists, then Receipts, and tap Add receipts.",
+        "s1": "Open Spending, then Receipts, and tap Add receipts.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Open Lists, then Spending, to see it by month, store and item.",
+        "s3": "Spending, on the navigation tab, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
+        "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
+        "n4": "On Spending, tap (i) next to a heading to see what that heading counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
         "cta": "Open Spending"
       },
       "prices": {
@@ -3655,10 +3798,10 @@
       },
       "shopping": {
         "title": "Shopping and Quest",
-        "sub": "Start shopping, tick items, play",
-        "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
+        "sub": "Start shopping, check items off, play",
+        "body": "Start shopping when you are at the store. Choose to play a Quest or just check items off.",
         "s1": "Tap Start shopping on Today, or open a list and tap it there.",
-        "s2": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s2": "Or tap \"Or just check items off as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
@@ -3692,7 +3835,7 @@
         "sub": "Groups, invite code, friends",
         "body": "A group shares lists and receipts. Everyone sees every member's receipts, past ones and receipt photos too. Every phone stays in sync. Groups need an account, so the demo has no Start a group row.",
         "s1": "Open Settings and tap Start a group. Give it a name.",
-        "s2": "Tap Invite someone and send them the code.",
+        "s2": "Tap Invite someone and send the code to one person. Each code works once.",
         "s3": "When they join, you share the same lists.",
         "n1": "Friends: Quest tab, then Your trips and receipts, then Friends.",
         "n2": "To send one list, tap the three dots on it, then Share, export or import.",
@@ -3718,12 +3861,12 @@
         "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
-        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, Used it (you finished it, so it is not food waste: it moves to your suggestions, and Undo puts it back) or It expired (counts as food waste). Anything already on one of your lists is not asked about.",
         "n2": "Ask Arya knows these dates too: ask \"What goes bad this week?\"",
         "cta": "Open Arya's powers"
       },
       "customize": {
-        "title": "Change Today",
+        "title": "Customize your \"Today\" screen",
         "sub": "Move, hide and add cards",
         "body": "Make Today show what you care about.",
         "s1": "Tap Edit on Today, or touch and hold a card.",
@@ -3734,15 +3877,15 @@
         "cta": "Open Today"
       },
       "bar": {
-        "title": "Change the bar",
+        "title": "Customize navigation tab",
         "sub": "Pick the four places at the bottom",
-        "body": "The bar at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
+        "body": "The navigation tab at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
+        "s2": "Tap the green plus to put a place on the navigation tab. It holds four.",
         "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
-        "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
-        "n2": "The bar starts as Today, Lists, Quest, Ask and More. Reset to default brings it back.",
-        "cta": "Customize bar"
+        "n1": "More is always on the navigation tab. Help, Settings and every place not on it are in More.",
+        "n2": "The navigation tab starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
+        "cta": "Customize navigation tab"
       },
       "install": {
         "title": "Put Arya on your Home Screen",
@@ -3754,6 +3897,29 @@
         "n1": "On the sign-in page, Add Arya to your Home Screen shows the steps. In the app it is in Settings, About Arya.",
         "n2": "Once Arya runs from your Home Screen, these steps no longer show.",
         "cta": "Open About Arya"
+      },
+      "reminders": {
+        "title": "Get reminders",
+        "sub": "A nudge when something is about to run out",
+        "body": "Arya can send one reminder a day, at most, when a staple is about to run out or food needs using. You turn it on once, in Settings.",
+        "s1": "Tap More, then Settings.",
+        "s2": "Under Preferences, switch on Remind me and allow notifications.",
+        "s3": "Pick how many days ahead you want to hear. Tap Send me a test reminder to check.",
+        "n1": "On iPhone, add Arya to your Home Screen first (iOS 16.4 or newer), then open it from there.",
+        "n2": "If you do not see Remind me, reminders are not switched on yet.",
+        "cta": "Open Settings"
+      },
+      "muse": {
+        "title": "Use Arya in Muse",
+        "sub": "Talk to your lists from Meta's AI agent",
+        "body": "Connect Muse, Meta's AI agent, to Arya. Then Muse can read your list, add items and say what is running low.",
+        "s1": "Open Settings, then About Arya, then Use Arya in Muse. Tap Make my code and copy it.",
+        "s2": "In Muse, say \"Connect to Arya at https://arya.teamnightshift.org/api/mcp\".",
+        "s3": "When Muse asks, paste your code into its secure box, not in the chat.",
+        "s4": "Ask Muse \"What is on my Arya list?\"",
+        "n1": "The code is shown once. A new code turns the old one off, and Turn off this code stops it any time.",
+        "n2": "Other AI apps that take MCP connectors work too: open Other AI apps on the same screen.",
+        "cta": "Open Use Arya in Muse"
       },
       "ownkey": {
         "title": "Use your own Meta key",
@@ -3813,13 +3979,50 @@
     "does5": "Store lookup, aisle data and email still run on Arya's own accounts.",
     "wrongTitle": "If something goes wrong",
     "wrong1": "If Meta rejects the key or it runs out of credit, Arya stops using it and tells you here. Reads count against Arya's daily limit again.",
+    "wrong1Account": "If Meta rejects the key or it runs out of credit, Arya tells you. Ask, receipt reading and scans pause until you fix it. Your lists keep working.",
     "wrong2": "Suspect misuse? Delete the key at dev.meta.ai first, then remove it here.",
     "wrong3": "Stopped using Arya? Delete the key at Meta.",
     "useAction": "Use my own Meta key",
     "fixAction": "Fix my Meta key",
     "capBody": "You can keep going today on your own Meta key.",
+    "subNeeded": "Add a key to use Ask, receipt reading and scans",
+    "subOnAccount": "Your account runs on it · ends …{{ends}}",
+    "introAccount": "You signed up with your own Meta key, so Ask, receipt reading, scans and pictures run on it. Arya never uses its own keys for your account.",
+    "onBodyAccount": "You signed up with your own key, so all of Arya's AI runs on it. See the real bill at",
+    "attentionBodyAccount": "It was turned down or is out of credit. Ask, receipt reading and scans are paused until you replace it. Your lists still work.",
+    "removeConfirmAccount": "Remove this key? Ask, receipt reading and scans stop until you add a key again.",
+    "removeHintAccount": "If you remove it, your lists, receipts and data stay. Removing it here does not delete it at Meta.",
+    "removedAccount": "Removed. Add a key to use Ask, receipt reading and scans again.",
+    "todayTitle": "Your Meta key stopped working",
+    "todayBody": "Meta rejected key …{{ends}} or it is out of credit. Ask, receipt reading and scans are paused. Your lists still work.",
+    "todayTitleNone": "Add your Meta key",
+    "todayBodyNone": "Your account runs on your own Meta key. Ask, receipt reading and scans are paused until you add one. Your lists still work.",
     "capButton": "Add your own Meta key in Settings",
     "capFixBody": "Check your credit at dev.meta.ai, or add a new key.",
     "capFixButton": "Fix my Meta key in Settings"
+  },
+  "keySignup": {
+    "getAccount": "Get your own account",
+    "noAccount": "No account yet?",
+    "noAccountSub": "Join the waitlist, or sign up now with your own Meta key.",
+    "waysTitle": "Get your own account",
+    "waysIntro": "Two ways in. Your lists and data work the same either way.",
+    "waitlistTitle": "Join the waitlist",
+    "waitlistBody": "Arya covers the AI. We email you an invite when a spot opens for your household.",
+    "waitlistTag": "Free · wait for an invite",
+    "keyTitle": "I have my own Meta key",
+    "keyBody": "Sign up now. Ask, receipt reading, scans and pictures run on your Meta account and bill to it.",
+    "keyTag": "Start today · you pay Meta",
+    "waysNote": "Only a Meta Model API key works (it starts with LLM_). Get one at dev.meta.ai.",
+    "formTitle": "Sign up with your Meta key",
+    "formIntro": "Your account runs on your own Meta key. Arya never uses its own keys for it.",
+    "keyLabel": "Your Meta key",
+    "accept": "I am responsible for this key and its use under Meta's terms.",
+    "go": "Check key and email me a code",
+    "formNote": "Arya makes one tiny test call to Meta, keeps the key encrypted on our server, and only ever shows its last 4 characters.",
+    "checked": "Meta accepted key …{{ends}}",
+    "codeSent": "We sent a code to <b>{{email}}</b>. Enter it to finish.",
+    "create": "Create my account",
+    "codeNote": "Nothing is saved until you enter the code. The code works for 15 minutes."
   }
 }

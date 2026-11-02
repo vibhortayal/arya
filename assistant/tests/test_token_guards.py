@@ -58,6 +58,7 @@ class TestTokenGuards(unittest.TestCase):
     def test_everyday_agent_routes_still_work(self):
         assert self.tok.get("/api/lists", headers=self.h).status_code == 200
         assert self.tok.get("/api/settings", headers=self.h).status_code == 200
+        self.c.post("/api/lists", json={"name": "Groceries", "stores": []})
         r = self.tok.post("/api/list/add", headers=self.h, json={"name": "oat milk"})
         assert r.status_code == 200, r.text
         r = self.tok.post("/api/mcp", headers=self.h, json={

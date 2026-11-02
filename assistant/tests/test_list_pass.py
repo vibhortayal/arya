@@ -5,6 +5,7 @@ view paints with no per-item requests; the All lens carries no
 per-store tags; the store filter is one scrolling row; Ask and
 Eyes have real empty states instead of blanks.
 """
+from tests.conftest import one_list
 import json, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -45,6 +46,7 @@ class TestHomePriceByStore(unittest.TestCase):
         r = self.c.post("/auth/setup", json={
             "username": "t@x.y", "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
         for d in ("2026-09-05", "2026-09-26", "2026-10-17"):
             seed_receipt(self.c, "Costco", d,
                          [("KS Almonds", "1001", 12.99),

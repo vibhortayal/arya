@@ -12,6 +12,7 @@ import type { useNav } from "../../app/nav";
 import { Q, type Session } from "../hunt/model";
 import { norm, type FeedPost, type Private } from "./core";
 import { motionOff } from "../../lib/motion";
+import { fitPhoto } from "../../lib/photo";
 
 export type Nav = ReturnType<typeof useNav>;
 
@@ -168,8 +169,9 @@ export async function shareReady(sess: Session, toast: (m: string) => void): Pro
 
 /* The e-receipt path (haul.js decodeAny): a PDF goes to /decode/pdf,
  * a picture to the photo decoder. */
-export async function decodeAny(file: File): Promise<string> {
-  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+export async function decodeAny(original: File): Promise<string> {
+  const isPdf = original.type === "application/pdf" || /\.pdf$/i.test(original.name || "");
+  const file = isPdf ? original : await fitPhoto(original);
   const r = await fetch(isPdf ? "/decode/pdf" : "/decode/photo", {
     method: "POST", headers: { "Content-Type": isPdf ? "application/pdf" : (file.type || "image/jpeg") }, body: file });
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);

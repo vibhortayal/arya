@@ -134,9 +134,12 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = src("sw.js")
-        for f in ("/assets/scenes/hero.webp", "/assets/scenes/score-party.webp",
-                  "/assets/scenes/storefront.webp"):
-            self.assertIn(f, sw)
+        # Scene art is cached when first used, by the service worker's
+        # /assets/ picture rule (re-audit #24: a small precache); the
+        # files must ship.
+        for f in ("hero.webp", "score-party.webp", "storefront.webp"):
+            self.assertTrue(os.path.exists(os.path.join(frontend.STATIC, "assets", "scenes", f)), f)
+        self.assertIn('url.pathname.startsWith("/assets/") && IMAGE.test(url.pathname)', sw)
         for c in ("compass", "basket", "binoculars"):
             self.assertIn(f'"{c}"', sw)
 
@@ -167,7 +170,7 @@ class TestPlanComposer(unittest.TestCase):
         # photo items are ticked into this quest, not just the list
         self.assertIn("D.pick[key] = { name: n, qty: (D.pick[key] || {}).qty || 1, on: true };", q)
         # a receipt photo is never filed mid-plan
-        self.assertIn("That looks like a receipt. Add it from Today › Receipts.", q)
+        self.assertIn("That looks like a receipt. Add it from Lists › Receipts.", q)
 
 
 class TestQuietMilestones(unittest.TestCase):
@@ -212,7 +215,8 @@ class TestArtScene(unittest.TestCase):
 
     def test_art_asset_ships_and_precaches(self):
         self.assertTrue(os.path.exists(os.path.join(frontend.STATIC, "assets", "scenes", "aisle-art.webp")))
-        self.assertIn("/assets/scenes/aisle-art.webp", src("sw.js"))
+        # cached on first use by the /assets/ picture rule, not precached
+        self.assertIn('url.pathname.startsWith("/assets/") && IMAGE.test(url.pathname)', src("sw.js"))
 
     def test_resolution_and_caption_carry_the_nudge(self):
         q = src("screens/Hunt.tsx")

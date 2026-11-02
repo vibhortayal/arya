@@ -107,7 +107,7 @@ class TestPlanAHunt(unittest.TestCase):
         rm = nl.split("const removeFromList = async")[1].split("\n  };")[0]
         self.assertIn('post("/api/list/remove", { item_id: itemId })', rm)
         self.assertIn('action: "Undo"', rm)
-        self.assertIn('post("/api/list/add", { item_id: itemId })', rm)
+        self.assertIn('post("/api/list/add", { item_id: itemId, ...(li.list ? { list_id: li.list } : {}) })', rm)
         self.assertIn("data-planrm={key}", nl)
         start = nl.split("const start = async () => {")[1].split("\n  };")[0]
         self.assertIn('post("/api/list/add", { ...body, ...lid })', start)

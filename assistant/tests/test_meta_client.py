@@ -131,7 +131,10 @@ class TestMetaClient(unittest.TestCase):
         c = MetaClient(api_key="k", transport=t)
         with self.assertRaises(RuntimeError) as cm:
             c.chat([{"role": "user", "content": "hi"}])
-        self.assertIn("502", str(cm.exception))
+        # The code survives on the error (and in the log), not in the
+        # words the shopper reads (owner, 2026-11-01).
+        self.assertEqual(cm.exception.status, 502)
+        self.assertNotIn("html", str(cm.exception).lower())
 
     def test_transport_timeout_is_runtime_error(self):
         import urllib.error
@@ -168,7 +171,7 @@ class TestMetaClient(unittest.TestCase):
         with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
             with self.assertRaises(RuntimeError) as cm:
                 c.chat([{"role": "user", "content": "hi"}])
-        self.assertIn("504", str(cm.exception))
+        self.assertEqual(cm.exception.status, 504)
 
     def test_urlopen_timeout_is_runtime_error(self):
         import urllib.error, urllib.request

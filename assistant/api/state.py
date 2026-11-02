@@ -58,7 +58,7 @@ def data_dir():
 # photos) stays personal. api/groups.py owns joining and leaving.
 GROUP_DOCS = {"lists.json", "flags.json", "cart.json", "dictionary.json",
               "judged.json", "grocery_verdicts.json", "curator.json",
-              "second_seat.json"}
+              "second_seat.json", "list_changes.json"}
 _current_group = contextvars.ContextVar("arya_group", default=None)
 
 
@@ -749,7 +749,8 @@ def _derived():
         f = fl.get(p["item_id"], {})
         if _reported_out(p, f):
             p["due"] = True
-            p["user_report"] = ("expired " + f["expired"]) if f.get("expired") else "you said you're out"
+            p["user_report"] = (("expired " + f["expired"]) if f.get("expired")
+                                else "you said you're out" if f.get("out") else "you used it up")
     unresolved_ids = {e["item_id"] for e in dictionary()["entries"]
                       if e.get("resolution", {}).get("status") == "unresolved"}
     judged = judgments()
@@ -851,6 +852,13 @@ def _derived():
     return {"entries": entries, "patterns": patterns, "smart_list": smart}
 
 
+def on_list_ids(d):
+    """Items on one of the household's lists now. Putting an item on a
+    list says it ran out (owner, 2026-11-02), so the use-by questions
+    (Use soon, Still good?) leave it alone."""
+    return {i["item_id"] for i in d["smart_list"]["items"] if i.get("on_list")}
+
+
 def grocery_verdicts():
     return _load("grocery_verdicts.json", {})
 
@@ -945,7 +953,10 @@ def _reported_out(p, f):
     answers it: the flag stays in the store but stops counting, so a
     restocked item does not stay on the list as "last bought 0 days
     ago"."""
-    day = f.get("expired") or f.get("out")
+    # "used" (Used it on Today, owner 2026-11-02) counts like "out" for
+    # Running low, but the item becomes a suggestion, not a list row:
+    # Arya suggests, the household adds.
+    day = f.get("expired") or f.get("out") or f.get("used")
     if not day:
         return False
     return not (p.get("last_bought") and p["last_bought"] >= day)
@@ -1213,6 +1224,71 @@ def update_receipt_line(receipt_id, idx, fields):
                 _save("receipts.json", rs)
                 return r["lines"][idx]
     return None
+
+
+def line_edited(ln):
+    """A line whose amount or price differs from what Arya read. A name
+    fix alone does not count, and a line changed back (Undo, the old
+    price typed again) is no longer edited."""
+    f = ln.get("edited_from")
+    if not f:
+        return False
+
+    def diff(a, b):
+        try:
+            return abs(float(a or 0) - float(b or 0)) > 0.005
+        except (TypeError, ValueError):
+            return a != b
+    return diff(f.get("qty"), ln.get("qty")) or diff(f.get("line_total"), ln.get("line_total"))
+
+
+def lines_add_up(r):
+    """Do this receipt's lines still add up to its printed subtotal (or
+    total less tax)? The printed numbers are never changed by an edit."""
+    target = r.get("subtotal")
+    if target is None and r.get("total") is not None:
+        target = float(r["total"]) - float(r.get("tax") or 0)
+    if target is None:
+        return None
+    s = round(sum(float(l.get("line_total") or 0) for l in r.get("lines", [])), 2)
+    return abs(s - float(target)) <= 0.05
+
+
+def edit_receipt_line(receipt_id, idx, qty=None, line_total=None, name=None):
+    """The full line edit (owner, 2026-11-01): price and quantity on a
+    filed line; the printed total stays as printed. The first edit keeps
+    the line's read values in `edited_from`. Returns (line, summary) or
+    (None, None); summary says whether the lines still add up."""
+    with _as_receipt_owner(receipt_id), file_lock("receipts.json"):
+        rs = own_receipts()
+        for r in rs:
+            if r["receipt_id"] != receipt_id or not 0 <= idx < len(r["lines"]):
+                continue
+            ln = r["lines"][idx]
+            ln.setdefault("edited_from", {"qty": ln.get("qty"), "line_total": ln.get("line_total"),
+                                          "unit_price": ln.get("unit_price")})
+            if qty is not None:
+                ln["qty"] = qty
+            if line_total is not None:
+                ln["line_total"] = round(float(line_total), 2)
+            if name:
+                ln["decoded_name"] = name
+            q = ln.get("qty")
+            if isinstance(q, (int, float)) and q and ln.get("line_total") is not None:
+                ln["unit_price"] = round(float(ln["line_total"]) / q, 2)
+            ln["status"] = "manual"
+            if "reader_reconcile" not in r:
+                r["reader_reconcile"] = bool(r.get("totals_reconcile"))
+            ok = lines_add_up(r)
+            # A receipt whose edited lines no longer match its printed total
+            # stops counting as checked (and is not shared as a price source).
+            r["totals_reconcile"] = bool(ok)
+            r["lines_edited"] = any(line_edited(l) for l in r["lines"])
+            _save("receipts.json", rs)
+            lines_sum = round(sum(float(l.get("line_total") or 0) for l in r["lines"]), 2)
+            return ln, {"lines_sum": lines_sum, "subtotal": r.get("subtotal"), "tax": r.get("tax"),
+                        "total": r.get("total"), "adds_up": ok, "lines_edited": r["lines_edited"]}
+    return None, None
 
 
 def _same_item_key(ln):

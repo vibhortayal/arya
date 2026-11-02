@@ -32,11 +32,11 @@ the top that says the household is a demo. Today shows your next trip,
 store news from the simulated town (marked Simulated), what is running
 low and why, and your lists.
 
-The bar at the bottom is **Today, Lists, Quest, Ask, More**. **More**
-holds Receipts, Stores, Spending, Help and Settings.
+The bar at the bottom is **Today, Spending, Quest, Ask, More**. **More**
+holds Lists, Receipts, Stores, Help and Settings.
 
 ### 2. Lists
-Open **Lists**. The demo has a Costcozy list and a Trader Jill's list
+Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list
 (the town's stores have fictional names). Due staples show under
 **Suggested for** the store where they are usually bought; tap one to
 see why. A **Muse Spark 1.3**
@@ -116,7 +116,7 @@ A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a samp
 ## Known limits
 
 - No store ships pre-mapped; maps come from shoppers' scans.
-- Open weights are used in one place: Muse Spark Open (on Baseten) is the
+- Open weights are used in one place: Muse Spark Open (hosted on Baseten) is the
   second seat of the staple judge. It sees item names only, never
   personal data. Glimmer is not used.
 - Closed in the demo: bulk imports, PDF and text decode, Curator runs

@@ -10,7 +10,8 @@ Contract: IMPLEMENTATION §2.2 + docs/MODEL-POLICY.md.
   Spark". It runs as muse-spark-1.3 Standard by default ("your content is not
   used to train Meta models"); live runs Standard (confirmed 2026-11-01).
   ARYA_SPARK_TIER=contributor (or the Ops switch) selects the cheaper
-  Contributor tier, which Meta may train on; it is an operator option only,
+  Contributor tier, which has different data terms from Meta (see
+  docs/MODEL-POLICY.md); it is an operator option only,
   off by default, and no user opt-in exists. Explicitly asking for mode="contributor" with
   personal=True is still refused. Wonder is always Standard.
 - Contributor is limited to 150 requests a minute (Standard: 3,000), so
@@ -109,6 +110,45 @@ class _RateGate:
 CONTRIBUTOR_GATE = _RateGate()
 
 
+# --- What a shopper sees when a Meta call fails ---------------------------
+# Raw API text ("Meta API HTTP 400 ... content_policy_violation") never
+# reaches the app (owner, 2026-11-01): the raw status and payload go to the
+# server log; the error carries a plain sentence. `status` and `raw` stay
+# on the exception for code that needs them.
+import logging as _logging
+_log = _logging.getLogger("arya.meta")
+
+
+class ModelError(RuntimeError):
+    def __init__(self, message, status=None, raw=""):
+        super().__init__(message)
+        self.status, self.raw = status, raw
+
+
+def _policy(payload):
+    t = str(payload).lower()
+    return any(w in t for w in ("content_policy", "content policy", "safety", "moderation", "not allowed", "violat"))
+
+
+def model_error(status, payload, what="text"):
+    """A plain-words error for a failed call; logs the raw answer."""
+    raw = str(payload)[:500]
+    _log.warning("meta call failed what=%s status=%s raw=%s", what, status, raw)
+    if status in (400, 403, 422) and _policy(payload):
+        msg = ("Meta's image model couldn't draw that. Try describing the picture without a show, "
+               "film, game or brand name." if what == "image"
+               else "Meta's model declined that one. Try asking or describing it another way.")
+    elif status == 429:
+        msg = "Meta's model is busy right now. Try again in a minute."
+    elif status is None:
+        msg = "Arya couldn't reach Meta's model just now. Try again in a minute."
+    elif isinstance(status, int) and status >= 500:
+        msg = "Meta's model is having trouble right now. Try again in a minute."
+    else:
+        msg = "Arya couldn't get an answer from Meta's model this time. Try again in a minute."
+    return ModelError(msg, status, raw)
+
+
 # Transient statuses worth another try (Meta error-handling docs: retry
 # 429/500/503 with 0.5-1 s doubling backoff and jitter, honor Retry-After,
 # never retry other 4xx). A read timeout is not retried: the call may
@@ -127,6 +167,14 @@ _started = contextvars.ContextVar("arya_call_started", default=None)
 def _err_kind(e):
     """A short, safe name for why a model call failed (no payload text)."""
     m = str(e)
+    st = getattr(e, "status", None)
+    if isinstance(st, int):
+        return f"http_{st}"
+    raw = getattr(e, "raw", "") or ""
+    if "timed out" in raw or "timeout" in raw.lower():
+        return "timeout"
+    if getattr(e, "raw", None) is not None and st is None and raw:
+        return "unreachable"
     if "HTTP " in m:
         return "http_" + m.split("HTTP ", 1)[1][:3]
     if "timed out" in m:
@@ -187,10 +235,29 @@ def estimate_cost(mode, input_tokens, cached_tokens=0, output_tokens=0):
 
 
 class MetaClient:
-    def __init__(self, api_key=None, transport=None, ledger=None):
+    def __init__(self, api_key=None, transport=None, ledger=None, own_user=None):
         self.api_key = api_key if api_key is not None else os.environ.get("MODEL_API_KEY", "")
         self.transport = transport  # injectable for tests: fn(method, url, headers, body) -> (status, payload)
         self.ledger = ledger        # optional cost_ledger.CostLedger
+        # The account whose own Meta key this is (api/own_key.py), or
+        # None for the app's key. An own-key client scrubs the key out of
+        # every answer and turns a key failure into OwnKeyFailed.
+        self.own_user = own_user
+
+    def _own_check(self, status, payload, model=""):
+        """For an own-key client: no copy of the key survives in the
+        payload (it ends up in error text, logs and 502 details), and a
+        refused or empty key marks the account's key and fails this read.
+        Nothing is retried on the app's key (BYOK review 7, 17, 18)."""
+        if not self.own_user:
+            return status, payload
+        from api import own_key
+        if self.api_key and self.api_key in json.dumps(payload, default=str):
+            payload = json.loads(own_key.scrub(json.dumps(payload, default=str), self.api_key))
+        if own_key.key_failure(status, payload, model):
+            own_key.mark_needs_attention(self.own_user)
+            raise own_key.OwnKeyFailed()
+        return status, payload
 
     @staticmethod
     def _ms():
@@ -209,7 +276,7 @@ class MetaClient:
         try:
             return self.transport(method, url, headers, body)
         except (urllib.error.URLError, TimeoutError, OSError) as e:
-            raise RuntimeError(f"Meta API unreachable: {e}") from e
+            raise model_error(None, e, "network") from e
 
     @staticmethod
     def _parse_body(raw, status):
@@ -221,7 +288,7 @@ class MetaClient:
             return json.loads(raw or "{}")
         except json.JSONDecodeError:
             if status == 200:
-                raise RuntimeError("Meta API returned a non-JSON response")
+                raise model_error(status, "non-JSON response", "text")
             return {"error": (raw or "")[:300]}
 
     def _send(self, path, body, timeout=None):
@@ -263,6 +330,10 @@ class MetaClient:
         time.sleep(delay)
 
     def _send_once(self, path, body, timeout=None):
+        status, payload = self._post_json(path, body, timeout)
+        return self._own_check(status, payload, (body or {}).get("model", ""))
+
+    def _post_json(self, path, body, timeout=None):
         url = BASE + path
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {self.api_key}"}
@@ -286,7 +357,7 @@ class MetaClient:
                     pass
             return e.code, payload
         except (urllib.error.URLError, TimeoutError, OSError) as e:
-            raise RuntimeError(f"Meta API unreachable: {e}") from e
+            raise model_error(None, e, "network") from e
         return status, self._parse_body(raw, status)
 
     @_watched(lambda a, k: k.get("mode", a[1] if len(a) > 1 else "standard"))
@@ -325,12 +396,11 @@ class MetaClient:
             body.pop("response_format")
             status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status != 200:
-            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+            raise model_error(status, payload, "text")
         try:
             text = payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError):
-            raise RuntimeError(
-                f"Meta API: unexpected response shape: {str(payload)[:300]}")
+            raise model_error(status, payload, "text")
         u = payload.get("usage", {})
         cached = (u.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
         usage = {"input_tokens": u.get("prompt_tokens", u.get("input_tokens", 0)),
@@ -360,9 +430,9 @@ class MetaClient:
                 "metadata": {"include_confidence": "true"}}
         status, payload = self._send("/responses", body)
         if not isinstance(payload, dict):
-            raise RuntimeError(f"SAM: unexpected response: {str(payload)[:300]}")
+            raise model_error(status, payload, "sam")
         if status != 200 or payload.get("status") != "completed":
-            raise RuntimeError(f"SAM HTTP {status}: {str(payload)[:300]}")
+            raise model_error(status, payload, "sam")
         images = (payload.get("usage") or {}).get("images_processed", 1)
         cost = images * SAM_USD_PER_IMAGE
         self._book(mode="sam", model=MODELS["sam"], cost_usd=cost)
@@ -403,10 +473,10 @@ class MetaClient:
         body = {"model": MODELS["image"], "prompt": prompt}
         status, payload = self._send("/images/generations", body)
         if status != 200 or not isinstance(payload, dict):
-            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+            raise model_error(status, payload, "image")
         data = payload.get("data") or []
         if not data or not data[0].get("b64_json"):
-            raise RuntimeError(f"Muse Image: no image in response: {str(payload)[:300]}")
+            raise model_error(200, payload, "image")
         image_bytes = base64.b64decode(data[0]["b64_json"])
         usage = payload.get("usage") or {}
         cost = IMAGE_USD_PER_IMAGE
@@ -426,16 +496,20 @@ class MetaClient:
              "response_format": "b64_json"},
             ("image", "photo", media_type, image_bytes))
         if status != 200 or not isinstance(payload, dict):
-            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+            raise model_error(status, payload, "image")
         data = payload.get("data") or []
         if not data or not data[0].get("b64_json"):
-            raise RuntimeError(f"Muse Image: no image in response: {str(payload)[:300]}")
+            raise model_error(200, payload, "image")
         out = base64.b64decode(data[0]["b64_json"])
         cost = IMAGE_USD_PER_IMAGE
         self._book(mode="image", model=MODELS["image"], cost_usd=cost)
         return out, payload.get("usage") or {}, cost
 
     def _send_multipart(self, path, fields, file_part, json_fields=None):
+        status, payload = self._post_multipart(path, fields, file_part, json_fields)
+        return self._own_check(status, payload, (fields or {}).get("model", ""))
+
+    def _post_multipart(self, path, fields, file_part, json_fields=None):
         """POST multipart/form-data. file_part = (field, filename,
         content_type, bytes). json_fields are emitted as parts with
         Content-Type: application/json (the ASR endpoint's 'request'
@@ -471,7 +545,7 @@ class MetaClient:
             raw = e.read().decode(errors="replace") if e.fp else ""
             return e.code, self._parse_body(raw, e.code)
         except (urllib.error.URLError, TimeoutError, OSError) as e:
-            raise RuntimeError(f"Meta API unreachable: {e}") from e
+            raise model_error(None, e, "network") from e
         return status, self._parse_body(raw, status)
 
     @_watched(lambda a, k: "voice")
@@ -494,7 +568,7 @@ class MetaClient:
             ("audio", filename, "audio/wav", wav_bytes),
             json_fields={"request": req})
         if status != 200 or not isinstance(payload, dict):
-            raise RuntimeError(f"Meta API HTTP {status}: {str(payload)[:300]}")
+            raise model_error(status, payload, "voice")
         cost = transcribe_cost(duration_s)
         self._book(mode="voice", model=MODELS["voice"], cost_usd=cost)
         return payload, cost

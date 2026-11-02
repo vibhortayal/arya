@@ -69,7 +69,8 @@ class TestDemoHousehold(unittest.TestCase):
     def test_demo_writes_land_in_a_sandbox_not_on_disk(self):
         before = self._disk()
         self.assertEqual(self.c.post("/api/cart/approve").status_code, 200)
-        r = self.c.post("/api/list/add", json={"name": "Tahini"})
+        lid = self.c.get("/api/lists").json()["lists"][0]["id"]     # the demo's lists
+        r = self.c.post("/api/list/add", json={"name": "Tahini", "list_id": lid})
         self.assertEqual(r.status_code, 200)
         names = [i["name"] for i in self.c.get("/api/home").json()["list"]["items"]]
         self.assertIn("Tahini", names)

@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from "react";
+import { addOnList } from "../../lib/listPick";
 import { useToast } from "../../ui/Toast";
 import { post } from "../../lib/api";
 import { asset } from "../../lib/format";
@@ -46,9 +47,12 @@ export function HaulPhoto({ sess, plain, attached, onShare }:
     }
   };
   const addExtras = async () => {
-    await post("/api/list/from-text", { text: (res?.extras || []).join("\n") }).catch(() => {});
+    const text = (res?.extras || []).join("\n");
+    // Every item on a list: with two or more lists, Arya asks which.
+    const out = await addOnList(l => post("/api/list/from-text", l ? { text, list_id: l } : { text }), { names: res?.extras || [] }).catch(() => null);
+    if (!out) return;
     setAdded(true);
-    toast(t("common.addedToList"));
+    toast(out.list ? t("listPick.addedTo", { what: (res?.extras || []).join(", "), list: out.list.name }) : t("common.addedToList"));
   };
   const face = (n: string) => plain ? null : <img key={n} className="rowface" src={asset("assets/characters/" + faceFor(n))} alt="" />;
 

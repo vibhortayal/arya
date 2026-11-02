@@ -1,9 +1,11 @@
 """Shelf photos in the aisle: scan a shelf, fetch a stored shelf photo, and work out where the shopper is."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, new_client
 
@@ -41,8 +43,7 @@ async def scan_shelf_route(req: Request):
         remaining = [n for n in remaining if n == target]
     if not remaining:
         return {"pops": [], "not_found": [target] if target else []}
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
@@ -50,7 +51,7 @@ async def scan_shelf_route(req: Request):
         out = await run_in_threadpool(shelfscan.scan, body, remaining,
                                       client, media_type=media)
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     # What was seen where feeds the store map. A frame that popped
     # an item is kept as a fresh shelf photo, but only once SAM 3.1
     # has found and pixelated every person in it (owner, 2026-10-28:
