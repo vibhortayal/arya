@@ -294,9 +294,9 @@ before milk runs out.
 ### 7a. Ask Arya
 
 **Status.** Shipped. **Needs a model.** Without `MODEL_API_KEY` the
-Ask Arya tab says it could not answer.
+Ask tab says it could not answer.
 
-In the Ask Arya tab Priya can type, or tap **Talk** to speak. Arya answers in text only:
+In the Ask tab Priya can type, or tap **Talk** to speak. Arya answers in text only:
 
 | She says | Arya does |
 |---|---|

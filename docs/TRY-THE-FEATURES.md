@@ -59,7 +59,7 @@ The household shops in **Demo Town**, a simulated neighbourhood of 800 household
 
 ## 6. Ask Arya (needs your key)
 
-Tap **Ask Arya**, then try:
+Tap **Ask**, then try:
 
 - "We finished the Greek yogurt": the list updates.
 - "Where is milk cheaper?": it answers from the receipts.
