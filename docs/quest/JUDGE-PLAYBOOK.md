@@ -125,7 +125,7 @@ The four rubric questions are answered on [the judges page, Impact](../../JUDGES
   personal data. Glimmer is not used.
 - Closed in the demo: bulk imports, PDF and text decode, Curator runs
   and judge runs.
-- Friends are single-account. Community prices, Deals and Arya shoppers
+- Friends and shopper reports stay inside one account. You can add a friend by handle, but the Friends, Store and Global boards and the "Not here" reports show only your own account's data (plus labelled samples), and the demo is a single account. Community prices, Deals and Arya shoppers
   are not live.
 - Live calls can be slow (a receipt that needs the Wonder re-read can take up to 90 seconds). A daily budget
   and a per-IP limit protect the account. If a gate is hit, nothing breaks: a demo visit
