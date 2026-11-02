@@ -2,10 +2,10 @@ import { BAR_ITEMS, DEFAULT_BAR, barOf, litTab, moreOf, startView } from "./bar"
 
 /* The shopper's bottom bar (owner, 2026-11-01). */
 describe("bar", () => {
-  test("the default is Today, Lists, Quest, Ask; More holds the rest", () => {
-    expect(DEFAULT_BAR).toEqual(["home", "list", "community", "chat"]);
+  test("the default is Today, Spending, Quest, Ask; More holds the rest", () => {
+    expect(DEFAULT_BAR).toEqual(["home", "analysis", "community", "chat"]);
     expect(barOf(null)).toEqual(DEFAULT_BAR);
-    expect(moreOf(DEFAULT_BAR)).toEqual(["receipts", "stores-mine", "analysis", "help", "profile"]);
+    expect(moreOf(DEFAULT_BAR)).toEqual(["list", "receipts", "stores-mine", "help", "profile"]);
   });
   test("a saved bar is cleaned: unknown ids and repeats drop, four at most, never empty", () => {
     expect(barOf(["list", "receipts", "list", "nope", "stores-mine"])).toEqual(["list", "receipts", "stores-mine"]);
@@ -17,14 +17,15 @@ describe("bar", () => {
     const bar = barOf(["list", "receipts", "stores-mine"]);
     expect([...bar, ...moreOf(bar)].sort()).toEqual([...BAR_ITEMS].sort());
   });
-  test("Receipts and Spending light Lists, or themselves when pinned (they used to light Today)", () => {
-    expect(litTab("receipts", DEFAULT_BAR)).toBe("list");
-    expect(litTab("receipt", DEFAULT_BAR)).toBe("list");
-    expect(litTab("analysis", DEFAULT_BAR)).toBe("list");
-    expect(litTab("stores-find", DEFAULT_BAR)).toBe("list");
+  test("Receipts and Stores light Spending (they sit at its top), or themselves when pinned", () => {
+    expect(litTab("receipts", DEFAULT_BAR)).toBe("analysis");
+    expect(litTab("receipt", DEFAULT_BAR)).toBe("analysis");
+    expect(litTab("analysis", DEFAULT_BAR)).toBe("analysis");
+    expect(litTab("stores-find", DEFAULT_BAR)).toBe("analysis");
+    expect(litTab("list", DEFAULT_BAR)).toBe("more");
     const mine = barOf(["list", "receipts", "stores-mine"]);
     expect(litTab("receipt", mine)).toBe("receipts");
-    expect(litTab("tocheck", DEFAULT_BAR)).toBe("list");
+    expect(litTab("tocheck", DEFAULT_BAR)).toBe("analysis");
     expect(litTab("tocheck", mine)).toBe("receipts");
     expect(litTab("stores-find", mine)).toBe("stores-mine");
   });

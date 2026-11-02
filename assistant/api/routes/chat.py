@@ -2,6 +2,7 @@
 import base64
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
@@ -50,7 +51,7 @@ async def chat_route(req: Request):
                                        surface=surface, context=body.get("context"), image=image,
                                        bar=body.get("bar"))
     except RuntimeError as e:
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
 
 
 @router.post("/api/chat/apply")

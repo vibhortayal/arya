@@ -20,8 +20,11 @@ export const tabButton = (view: ViewId) => () =>
   document.querySelector(`#tabs button[data-view="view-${view}"]`) || document.querySelector("#tab-more");
 
 /* Today's line says where Receipts and Spending are, only when they
- * are not on the shopper's bar (owner, 2026-11-01). */
+ * are not on the shopper's bar (owner, 2026-11-01). With Spending on
+ * the bar, Receipts is at its top; then the line says where the lists
+ * are when Lists is not on the bar (owner, 2026-11-02). */
 export const todayLine = (bar: BarItem[]) => {
+  if (bar.includes("analysis")) return `firstRun.tour.today.${bar.includes("list") ? "line" : "lineLists"}`;
   const r = !bar.includes("receipts"), s = !bar.includes("analysis");
   return `firstRun.tour.today.${r && s ? "lineBoth" : r ? "lineReceipts" : s ? "lineSpending" : "line"}`;
 };

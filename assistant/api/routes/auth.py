@@ -3,6 +3,7 @@ import os
 import secrets
 from urllib.parse import quote
 
+from api.errors import safe_detail
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -285,7 +286,7 @@ async def auth_email_start(req: Request):
     try:
         await run_in_threadpool(supabase_auth.send_code, email)
     except supabase_auth.AuthError as e:
-        raise HTTPException(502, str(e))
+        raise HTTPException(502, safe_detail(e))
     return {"ok": True}
 
 
