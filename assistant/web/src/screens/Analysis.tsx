@@ -49,8 +49,8 @@ export function Analysis() {
   const [receipts, setReceipts] = useState(0);
   const [ins, setIns] = useState<Insights>(null);
   const [info, setInfo] = useState<string | null>(null);
-  /* One (i) per Spending heading; all open the same "What these mean" sheet. */
-  const i = <InfoBtn k="spend" onOpen={setInfo} />;
+  /* One (i) per Spending heading, each explaining only its own row. */
+  const i = (row: string) => <InfoBtn k={"spend." + row} onOpen={setInfo} />;
   /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
   const [groupName, setGroupName] = useState<string | null>(null);
   useEffect(() => {
@@ -136,15 +136,15 @@ export function Analysis() {
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
           {d && latest && <>
-            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}{i}</p>
+            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}{i("month")}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
             <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}</p>
-            <Row name={<>{t("analysis.allTimeSpend")}{i}</>} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
-            {!!d.spend_other && <Row name={<>{t("analysis.groceries")}{i}</>} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
-            {!!d.spend_other && <Row name={<>{t("analysis.otherPurchases")}{i}</>} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
-            {!!d.returns_total && <Row name={<>{t("analysis.returnsRow")}{i}</>} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
-            {!!d.savings_total && <Row name={<>{t("analysis.youSaved")}{i}</>} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
-            {!!d.for_others_total && <Row name={<>{t("analysis.boughtForOthers")}{i}</>} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
+            <Row name={<>{t("analysis.allTimeSpend")}{i("all")}</>} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
+            {!!d.spend_other && <Row name={<>{t("analysis.groceries")}{i("groceries")}</>} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
+            {!!d.spend_other && <Row name={<>{t("analysis.otherPurchases")}{i("other")}</>} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
+            {!!d.returns_total && <Row name={<>{t("analysis.returnsRow")}{i("returns")}</>} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
+            {!!d.savings_total && <Row name={<>{t("analysis.youSaved")}{i("saved")}</>} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
+            {!!d.for_others_total && <Row name={<>{t("analysis.boughtForOthers")}{i("others")}</>} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
           </>}
         </div>
       </>
@@ -197,13 +197,12 @@ export function Analysis() {
           }}
           onReset={() => { saveLayout("spending", {}).catch(showErr); }} />
       ) : <>
-        {/* Receipts and Stores live on Spending (owner, 2026-11-02: Spending
-          * took Lists' place on the bar; Lists keeps only the lists). */}
+        {/* Receipts lives on Spending (owner, 2026-11-02: Spending took
+          * Lists' place on the bar). Stores is in More (owner, 2026-11-02:
+          * "We don't need stores in the spending section"). */}
         <div className="group" id="an-places">
           <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>
             <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
-          <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
-            <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
         </div>
         <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
           <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>

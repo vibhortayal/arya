@@ -281,10 +281,10 @@ class TestStoreShell(unittest.TestCase):
                           ("screens/StoresMine.tsx", ("sm-list",))):
             for fid in fids:
                 self.assertIn(f'id="{fid}"', self.src(rel), fid)
-        # Spending carries the Stores row (from Settings 2026-10-31, to
-        # Lists, then to Spending's top 2026-11-02)
-        self.assertIn('id="lists-stores"', self.src("screens/Analysis.tsx"))
-        self.assertIn('nav.show("stores-mine")', self.src("screens/Analysis.tsx"))
+        # Stores left Spending (owner, 2026-11-02): it opens from More,
+        # which lists every place not on the bar (lib/bar.ts moreOf).
+        self.assertNotIn('id="lists-stores"', self.src("screens/Analysis.tsx"))
+        self.assertIn('"stores-mine"', self.src("lib/bar.ts"))
 
 
 if __name__ == "__main__":

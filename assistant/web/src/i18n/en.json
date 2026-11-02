@@ -2874,8 +2874,6 @@
   },
   "info": {
     "spend": {
-      "title": "What these mean",
-      "sub": "All from your receipts. Tap any (i) to open this again.",
       "month": "Month total",
       "monthText": "What your receipts from this month add up to, after returns.",
       "all": "All-time spending",
@@ -2885,7 +2883,7 @@
       "other": "Other purchases",
       "otherText": "Things on the same receipts that are not groceries: pharmacy, clothing, electronics, hobbies, gift cards.",
       "returns": "Returns",
-      "returnsText": "Money back for things you returned. Already taken off the totals above.",
+      "returnsText": "Money back for things you returned. Already taken off the month total and All-time spending.",
       "saved": "You saved",
       "savedText": "Coupons, deals and discounts printed on your receipts. Already taken off what you paid.",
       "others": "Bought for others",
@@ -3114,7 +3112,7 @@
       },
       "spending": {
         "title": "Spending",
-        "line": "What you spent by month, store and item, from your receipts. Receipts and Stores are at the top."
+        "line": "What you spent by month, store and item, from your receipts. Receipts is at the top."
       },
       "more": {
         "title": "More",
@@ -3155,8 +3153,8 @@
       "line": "What you spent by month, store and item, from your receipts."
     },
     "spending_places": {
-      "title": "Receipts and Stores",
-      "line": "Add receipts and look back at them here. Stores holds your stores and favorites."
+      "title": "Receipts",
+      "line": "Add receipts and look back at them here. Your stores are in More, then Stores."
     },
     "lists_tab": {
       "title": "Lists",
@@ -3783,7 +3781,7 @@
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
-        "n4": "On Spending, tap (i) next to a heading to see what it counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
+        "n4": "On Spending, tap (i) next to a heading to see what that heading counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
         "cta": "Open Spending"
       },
       "prices": {

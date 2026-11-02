@@ -29,12 +29,12 @@ export function barOf(saved: unknown): BarItem[] {
 /* Places in More: everything not on the bar, in BAR_ITEMS order. */
 export const moreOf = (bar: BarItem[]): BarItem[] => BAR_ITEMS.filter(i => !bar.includes(i));
 
-/* A pushed page's own place when that place can be pinned: Receipts and
- * Stores live on Spending (owner, 2026-11-02). */
+/* A pushed page's own place when that place can be pinned: Receipts
+ * lives on Spending (owner, 2026-11-02); Stores is in More. */
 const OWN: Partial<Record<ViewId, BarItem>> = {
   receipt: "receipts", tocheck: "receipts", "stores-find": "stores-mine",
 };
-const HOME_OF: Partial<Record<BarItem, BarItem>> = { receipts: "analysis", "stores-mine": "analysis" };
+const HOME_OF: Partial<Record<BarItem, BarItem>> = { receipts: "analysis" };
 
 /* Which bar button lights for a screen: the screen itself, or its place,
  * or the tab it lives under; "more" when none of those is on the bar. */
