@@ -66,9 +66,15 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
   session cookie is set to work over plain http (`ARYA_INSECURE_COOKIE=1`).
 - JSON files in a volume instead of Supabase. No email, so you sign in with the
   username and password you made on the first visit.
-- Demo Town (the simulated neighborhood) is off, so the demo household shops at
-  its own stores. Registration is closed. The `compose.yaml` here does not
-  touch the live deploy, which uses `assistant/deploy/docker-compose.yml`.
+- Demo Town (the simulated neighborhood, labelled simulated) is on, as on the
+  live demo, and registration is open, so **Start my own list** on the landing
+  page makes any number of accounts. Groups are on, so two local accounts can
+  share a list. There is no waitlist, no Google and no email code. The
+  `compose.yaml` here does not touch the live deploy, which uses
+  `assistant/deploy/docker-compose.yml`.
+
+Next, a step-by-step tour of every feature on your copy:
+[`docs/TRY-THE-FEATURES.md`](TRY-THE-FEATURES.md).
 
 ## Without Docker
 This route has not been tested by the Tester yet; the Docker route above has.
