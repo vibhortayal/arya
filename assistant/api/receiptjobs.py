@@ -18,6 +18,7 @@ ARYA_RECEIPT_JOBS_INLINE=1 reads a job inside the commit call (tests).
 import contextvars, json, logging, os, queue, shutil, threading, uuid
 from datetime import datetime
 
+from api.errors import safe_detail
 from fastapi import HTTPException
 
 from api import state
@@ -257,7 +258,7 @@ def file_one(body, media):
         raise HTTPException(422, str(e))
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt job model error (%s)", str(e)[:120])
-        raise HTTPException(502, str(e)[:200])
+        raise HTTPException(502, safe_detail(e))
     if not receipt.get("purchased_at"):
         raise HTTPException(422, "could not read the date on this receipt")
     if state.find_duplicate(receipt) is not None:
