@@ -302,7 +302,7 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask and More; Lists, Receipts, Stores, Help and Settings sit under More. The six-tab line below is the earlier layout.
+Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask and More; Lists, Receipts, Stores, Help and Settings sit under More.
 Superseded 2026-11-02 (#416): the earlier six-tab layout (Today, Lists, Ask, Quest, Help, Settings) is gone. The app is list first. The navigation tab is Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help and Settings. Settings has Group, Preferences (currency and language, When I start shopping, Display, Reminders), Account (Export my data, Delete my account), About Arya and, last, Sign out. About Arya has Arya's powers, Use Arya in Muse, Add to Home Screen and Keeping Arya running. Help has the guide, the tour and feedback. Item and category detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.

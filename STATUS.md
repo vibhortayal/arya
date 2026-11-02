@@ -89,7 +89,7 @@ headline: "Your grocery run, smarter." The app is the React app (`assistant/web/
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
-bumped by hand. Tests: last full counts were about 1,800 Python tests collected (2026-11-02; 1,842 at last count), with about 12 known failures on main (2026-11-01 note in `loops/2026-11-01-to-check-smart-pass.md`); re-run before quoting numbers. All
+bumped by hand. Tests: last full counts were about 1,800 Python tests collected (2026-11-02), with about 12 known failures on main (2026-11-01 note in `loops/2026-11-01-to-check-smart-pass.md`); re-run before quoting numbers. All
 UI text lives in `web/src/i18n/en.json` (i18next; English only for now).
 Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
 section 0. `assistant/loops/2026-10-29-react-at-root.md`.

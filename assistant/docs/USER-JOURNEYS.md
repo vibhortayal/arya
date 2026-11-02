@@ -315,9 +315,9 @@ on screen and what is left, so "this" and "it" work.
 
 ### 7b. Push reminder
 
-**Status.** Shipped, **flag**. It is off until I set
-`ARYA_PUSH_REMINDERS=1`, makes VAPID keys and adds a daily cron line
-(see `assistant/docs/PUSH-REMINDERS.md`). Demo accounts never see it.
+**Status.** Shipped, live on the hosted app (flag `ARYA_PUSH_REMINDERS=1`,
+VAPID keys, daily cron at 13:00 UTC; enabled Nov 2). Setup is in
+`assistant/docs/PUSH-REMINDERS.md`. Demo accounts never see it.
 
 1. Settings, Preferences, **Remind me**. Priya turns it on and picks the notice
    window (1 to 7 days, default 2).
