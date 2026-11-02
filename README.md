@@ -99,10 +99,7 @@ or Supabase Postgres. Details, feature flags and the VM runbook:
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train
 its models (set on the Ops screen; `ARYA_SPARK_TIER` is the environment switch).
-A community (Contributor) tier, where users opt in to letting Meta train in
-exchange for lower cost, is an option for supporting more users later; it is not
-built. The
-open-weights client refuses personal data. Cost rules are in
+The open-weights client refuses personal data. Cost rules are in
 [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 ## Tech stack and deployment

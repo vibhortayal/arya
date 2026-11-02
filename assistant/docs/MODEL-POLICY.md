@@ -5,8 +5,8 @@ Escalation is by evidence (a scored eval), never by default.
 
 ## Prices (per 1M tokens, Meta Model API, verified 2026-10-27)
 - muse-spark-1.3 Standard:    $1.25 in / $0.15 cached / $4.25 out
-- muse-spark-1.3 Contributor: $0.10 in / $0.002 cached / $0.20 out (Meta may train
-  on inputs). Limit 150 requests/min. Not the app's tier; see "Spark tier" below.
+- muse-spark-1.3 Contributor: $0.10 in / $0.002 cached / $0.20 out (different data
+  terms; not used). Limit 150 requests/min. Not the app's tier; see "Spark tier" below.
 - muse-wonder-1.0:            $4.00 in / $0.20 cached / $20.00 out — the expensive
   frontier model, NOT a budget tier. Banned from volume paths.
 - muse-image-1.0: $0.01/image. muse-voice-transcribe-1.0: $0.18/audio-hour.
@@ -113,10 +113,9 @@ them back to Standard, so nothing the app sends is used for training.
   the tier set on the Ops screen or in `ARYA_SPARK_TIER`; the Ops screen
   setting wins. Wonder is always Standard. An explicit `mode="contributor"` with
   `personal=True` is still refused.
-- Option, not built: a community (Contributor) tier, where users opt in to
-  letting Meta train in exchange for lower cost, could support more users. It
-  needs an opt-in screen, a per-user routing rule and updated privacy text
-  first, and the owner's word.
+- Option, not built: a community (Contributor) tier with user opt-in could
+  support more users at lower cost. It needs an opt-in screen, a per-user
+  routing rule and updated privacy text first, and the owner's word.
 - Rate limits: Standard allows 3,000 requests/min per team. The Contributor tier
   allows 150/min, so `meta_client` keeps a sliding-window gate at 140/min for that
   case; a call that would wait over 20 s fails with "Arya's AI is busy right now"
