@@ -152,7 +152,8 @@ path (`pg`), with these additions that `pgstore.py` does not have yet:
 - **Rows for the things that are not documents.** Sessions, the cost ledger,
   job state and the pending lists become ordinary tables, so "spent today" is
   one indexed `sum`, not a whole-file scan. Stockout reports, friends and
-  store maps can follow later (the Supabase migration plan, stage 2); they
+  store maps can follow later (stage 2 in
+  `assistant/loops/2026-10-28-supabase-seam.md`); they
   can stay as documents for a long time.
 - **Group live sync** keeps `LISTEN/NOTIFY`; with N processes each holds one
   listener, which is already how `live.py` is written.
@@ -161,7 +162,7 @@ Migration from JSON, in order, each step reversible:
 
 1. Keep `dual`. Add `version` with a default of 0 and the versioned update
    path behind a flag; files remain the truth. Nothing observable changes.
-2. Re-run `tools/migrate_json_to_pg.py`, compare every document (it reports
+2. Re-run `assistant/tools/migrate_json_to_pg.py`, compare every document (it reports
    mismatches), and fix any drift. Back up both sides (`backup.sh` already
    dumps the schema when `ARYA_BACKUP_DATABASE_URL` is set).
 3. Flip `ARYA_STORE=pg` on one process while the others stay on `dual`
