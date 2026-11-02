@@ -593,6 +593,7 @@
     "profileStays": "Profile, avatar, badges and reminders stay yours",
     "joinName": "Join {{name}}",
     "join": "Join",
+    "notNow": "Not now",
     "alreadyIn": "You are already in {{name}}. If this link is for a different household, leave this one first to join it.",
     "removedFrom": "You were removed from {{name}}. You kept a copy of its lists and your own receipts."
   },

@@ -3,6 +3,7 @@ import { useNav } from "../app/nav";
 import { get, post } from "../lib/api";
 import { useToast } from "../ui/Toast";
 import { useTranslation } from "../i18n";
+import { forgetJoinCode } from "../lib/paths";
 
 /* Port of pwa/index.html #view-group-join + group.js (openJoin,
  * preview, joinNow). The invite code comes from nav.params.code; an
@@ -63,6 +64,17 @@ export function GroupJoin() {
     } catch (e: any) { toast(e.message); warned.current = ""; }
   };
 
+  /* Join comes right after who invited you, with Not now under it
+   * (owner, 2026-11-02): above the fold on a small phone; "What
+   * changes" follows the buttons. */
+  const actions = (
+    <div className="gj-actions">
+      <button className="btn primary wide" id="gj-go" type="button" disabled={!pv || !!pv.full} onClick={join}>{pv ? t("groupJoin.joinName", { name: pv.name }) : t("groupJoin.join")}</button>
+      {pv && <button className="btn wide" id="gj-not-now" type="button" onClick={() => { forgetJoinCode(); nav.back("home"); }}>{t("groupJoin.notNow")}</button>}
+      <p className="muted small" style={{ textAlign: "center", margin: 0 }}>{t("groupJoin.youCanLeaveAnyTime")}</p>
+    </div>
+  );
+
   const bul = (icon: string, title: string, sub: string) => (
     <div className="gbul"><span className="gico" aria-hidden="true">{icon}</span>
       <span className="grow"><b>{title}</b>{sub ? <span className="sub">{sub}</span> : null}</span></div>
@@ -86,6 +98,7 @@ export function GroupJoin() {
               <span className="grow"><span className="name gname">{pv.name}</span>
                 <span className="sub">{t("groupJoin.invitedYou", { by: pv.invited_by, count: pv.people })}{" "}{t("groupJoin.list", { count: pv.lists })}</span></span>
             </div></div>
+            {actions}
             <h3 className="sect">{t("groupJoin.whatChanges")}</h3>
             <div className="group pad">
               {bul("📋", pv.my_lists ? t("groupJoin.listsJoin", { count: pv.my_lists }) : t("groupJoin.shareLists"), t("groupJoin.listsMerge"))}
@@ -96,8 +109,7 @@ export function GroupJoin() {
           </>
         )}
       </div>
-      <p style={{ marginTop: 16 }}><button className="btn primary wide" id="gj-go" type="button" disabled={!pv || !!pv.full} onClick={join}>{pv ? t("groupJoin.joinName", { name: pv.name }) : t("groupJoin.join")}</button></p>
-      <p className="muted small" style={{ textAlign: "center" }}>{t("groupJoin.youCanLeaveAnyTime")}</p>
+      {!pv && actions}
     </>
   );
 }
