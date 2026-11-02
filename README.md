@@ -54,6 +54,18 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 - **Quest has no clock and no way to lose.** Optional, and it never gets in the
   way of the list.
 
+## Highlights
+
+- **Receipts you can trust:** a model reads, plain code checks every line against the printed total.
+- **A list that learns:** running low and use soon, each with a reason, from your own receipts.
+- **Prices from your own receipts only:** nothing fetched from the web.
+- **Ask Arya** answers over your data, acts on what you tell it, and speaks your language.
+- **Quest:** an optional store game with no clock, camera finds, and people blurred before anything is kept.
+- **Open:** a Lists API, a developer portal, and a connector for your own AI agent.
+- **Transparent:** "Keeping Arya running" shows what your AI use costs.
+
+All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
+
 ## What judges should read first
 
 1. [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links on one page.
@@ -66,6 +78,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
 | If you want to know... | Read |
 |---|---|
+| Everything we built, with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
 | What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
