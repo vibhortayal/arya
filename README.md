@@ -1,5 +1,6 @@
-<h1 align="center">Arya</h1>
-<p align="center"><strong>She remembers the list.</strong></p>
+<p align="center">
+  <img src="assets/readme-header.svg" alt="Arya: she remembers the list" width="100%">
+</p>
 <!-- Badge numbers: the Doc maintainer updates "python tests" from the STATUS.md Python test count and "receipt arithmetic" from the "My corpus" line under Measured results whenever either changes; "people in scans" follows the Map my store row. -->
 <p align="center">
   <img src="https://img.shields.io/badge/python%20tests-1%2C842%20passing-1a7f37" alt="Python tests: 1,842 passing">
