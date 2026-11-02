@@ -82,6 +82,65 @@ designed it yet. Sources are named so you can check them.
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
 
+## More ideas for growing the app and its community
+All ideas. None is designed or built, and each would need the owner's word
+and, where it touches personal data, a privacy review first.
+
+**Everyday use**
+- Meal planning from what is running low and what to use soon, with a
+  shopping list that writes itself from the plan.
+- Recipe import from a link or a photo, turning a recipe into list items.
+- Budget goals per store or per month on the Spending screen, with a gentle
+  heads-up and never a lock.
+- Barcode scan to add an item or check a price against your own history.
+- Pantry and fridge check-in by photo (outside the current spec).
+- Home Screen widgets and watch glances for the list and for use-soon items.
+- Calendar-aware reminders, such as "you host on Saturday".
+- Voice assistants (Siri, Google Assistant, Alexa) adding to the list, and
+  more connectors beyond the Muse agent and MCP.
+- Receipt import from email or a store account, so no photo is needed.
+- Warranty and return reminders read from receipts (Return Regret already
+  shows returns are tracked).
+- Waste tracking and a monthly "what we threw away" view.
+- Gift and event lists with a shared link and no account needed to view.
+- Accessibility pass: larger text mode, screen-reader review, a calmer Quest
+  mode.
+
+**Community**
+- Invite links that drop a new person into the same group.
+- Neighborhood and store pages with shared tips, labelled as opt-in.
+- Verified store news from shoppers, expiring when nobody confirms it.
+- Seasonal Quest events, themed skins (escape room) and household leaderboards
+  that stay private by default.
+- A mapper reputation and thanks for people who map stores, with no pay
+  attached.
+- Clubs and teams (families, roommates, offices, school pantries, food banks).
+- A public gallery of store maps that are fresh and photo-backed.
+- Shared price alerts when a household opts in to share a figure.
+
+**AI and open weights**
+- A hosted open-weights reader for receipts, for people who want that choice.
+- A smaller on-device model for offline add and quick matches.
+- Better product merge and split suggestions in the Curator, and learned
+  substitutions (the usual brand when one is out of stock).
+- Ask Arya acting on more things, with a confirm step for anything that
+  changes data.
+- A public set of evals so others can check the reader scores.
+
+**Trust, privacy and operating it**
+- A data export and a clear delete-everything flow in one place.
+- A public status page and an uptime history.
+- A staging address, and automated CI instead of manual runs.
+- A published API with webhooks and OAuth (`docs/API.md`, "Later").
+- A real licence choice, once the owner decides.
+- Store permission programme for mapping, and a takedown route for stores.
+
+**Partners (only after trust is earned; see `docs/quest/BUSINESS.md`)**
+- Anonymous, aggregated shelf and stockout data for one chain in one region.
+- Labelled brand offers at the shelf, shown outside the hunt, never as a stop.
+- The mapping and game engine for other indoor places (hardware, pharmacy,
+  warehouses, campuses).
+
 ## Use your own Meta key: built, switched off
 The code is on `main`: a Settings row, a Help topic, an Ask answer and an
 "I have my own Meta key" sign-up door. All of it stays hidden because it needs
