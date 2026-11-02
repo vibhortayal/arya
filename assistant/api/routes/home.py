@@ -45,6 +45,11 @@ def still_good_checks(d, nm, _fl):
 
 @router.get("/api/home")
 def home():
+    # Rows from before every item had a list go to their usual store's
+    # list, or the only list (owner, 2026-11-02). Only writes when one moves.
+    from api.routes.lists import file_unlisted
+    if not state.in_sandbox():
+        file_unlisted()
     d = state.derived()
     nm = state.names()
     seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),

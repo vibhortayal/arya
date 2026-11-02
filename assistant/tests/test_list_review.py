@@ -36,13 +36,14 @@ class TestListEditing(unittest.TestCase):
         self.assertNotIn("Whole Milk 1 gal", items)
         # the waiting cart follows the list
         self.assertNotIn("Whole Milk 1 gal", [i["name"] for i in home["cart"]["items"]])
-        self.c.post("/api/list/add", json={"item_id": "demo-milk"})
+        self.c.post("/api/list/add", json={"item_id": "demo-milk", "list_id": "l-demo-tj"})
         items, _ = self.list_names()
         self.assertIn("Whole Milk 1 gal", items)
 
     def test_add_tracked_and_free_text(self):
-        self.c.post("/api/list/add", json={"item_id": "demo-yogurt"})
-        self.c.post("/api/list/add", json={"name": "Oat Milk"})
+        # The demo has two lists, so an add says which (every item on a list).
+        self.c.post("/api/list/add", json={"item_id": "demo-yogurt", "list_id": "l-demo-tj"})
+        self.c.post("/api/list/add", json={"name": "Oat Milk", "list_id": "l-demo-tj"})
         items, _ = self.list_names()
         self.assertIn("Greek Yogurt 32 oz", items)
         self.assertIn("Oat Milk", items)

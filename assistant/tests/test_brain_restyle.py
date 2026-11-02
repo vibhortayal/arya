@@ -5,6 +5,7 @@ the List lens reads store affinity from /api/items/{id}
 price_by_store, Analysis reads /api/dashboard + the receipt
 archive, Today's needs-eye count reads /api/review + /api/curator.
 """
+from tests.conftest import one_list
 import json, os, re, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -31,6 +32,7 @@ def fresh_client():
     c = TestClient(main.app)
     r = c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
+    one_list(c)
     return c
 
 

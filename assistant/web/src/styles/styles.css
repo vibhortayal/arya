@@ -1612,6 +1612,9 @@ body.selecting #tabs { display: none; }
 .infoinline { display: inline-block; vertical-align: -4px; color: var(--tertiary); }
 .infobtn::after { content: ""; position: absolute; inset: -9px; }  /* 44 pt target */
 .whyrow .infobtn { margin-top: 2px; }
+/* Spending headings: the (i) sits right after the words (owner, 2026-11-01). */
+#an-spend .name > .infobtn, #an-spend .an-cap > .infobtn { display: inline-grid; vertical-align: middle; width: 24px; height: 24px; margin: -4px 0 -4px 4px; }
+#an-spend .an-cap > .infobtn { text-transform: none; }
 .whyrow > div { flex: 1; min-width: 0; }
 .powrow { min-height: 48px; gap: 12px; align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
 .powrow .grow .sub { display: block; font-size: 15px; color: var(--secondary); font-weight: 400; line-height: 1.35; margin-top: 2px; }
@@ -2307,6 +2310,30 @@ body.hunting #offlinebar { display: none !important; }
 .ok-capcard b{font-size:17px}
 .ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
 
+/* Sign up with your own Meta key (ui/KeySignup.tsx, owner-approved mockup 2026-11-01) */
+.ks-way{display:block;width:100%;text-align:left;border:1px solid var(--sep);background:var(--panel);border-radius:14px;padding:14px;margin:12px 0 0;font:inherit;color:var(--label);cursor:pointer}
+.ks-way b{display:block;font-size:17px}
+.ks-way span{display:block;color:var(--secondary);font-size:15px;margin-top:3px;line-height:1.35}
+.ks-way em{display:inline-block;font-style:normal;font-size:12px;font-weight:700;background:var(--fill);border-radius:999px;padding:2px 8px;margin-top:8px}
+.ks-check{display:flex;gap:10px;align-items:flex-start;font-size:15px;margin:12px 0 0;line-height:1.35}
+.ks-check input{width:20px;height:20px;margin-top:1px;flex:none}
+.ks-ok{background:#E6F4EA;color:#1E6B34;border-radius:10px;padding:8px 12px;font-size:15px;font-weight:600;margin:0 0 12px}
+.ks-sub{font-size:13px}
+.ok-today{margin:8px 0 12px}.ok-today .btn{margin-top:10px}
+/* The Listening card (owner, 2026-11-01): one Stop and send, plus Cancel. */
+.listencard { background: var(--panel); border: 2px solid var(--acc); border-radius: 16px; padding: 14px; margin: 10px 0; }
+.listencard .lc-head { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.listencard .lc-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 6px color-mix(in srgb, var(--danger) 18%, transparent); animation: lcpulse 1.4s ease-in-out infinite; }
+.listencard.reading .lc-dot { background: var(--acc); animation: none; box-shadow: none; }
+.listencard .lc-time { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--secondary); font-weight: 600; }
+.listencard .lc-bars { display: flex; gap: 4px; align-items: center; height: 36px; margin: 10px 0 6px; }
+.listencard .lc-bars i { display: block; width: 6px; border-radius: 3px; background: var(--acc); transition: height 90ms linear; }
+.listencard .lc-hint { margin: 0 0 10px; color: var(--secondary); font-size: 15px; line-height: 1.4; }
+.listencard .lc-acts { display: flex; gap: 10px; }
+.listencard .lc-acts .btn { flex: 1; white-space: nowrap; }
+.listencard .lc-acts .btn.primary { flex: 1.6; }
+@keyframes lcpulse { 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--danger) 8%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .listencard .lc-dot { animation: none; } .listencard .lc-bars i { transition: none; } }
 /* Reading receipts on this screen (owner, 2026-11-01): a bar, what is
  * being read, and in the demo why to stay. */
 #rc-reading { margin-top: 10px; }
@@ -2336,3 +2363,10 @@ body.hunting #offlinebar { display: none !important; }
  * while changes wait, and a tag on each waiting row. */
 .queuenote { background: #FFF6D6; color: #5A4500; border-radius: 12px; padding: 10px 12px; margin: 6px 0 12px; font-size: 15px; line-height: 1.4; }
 .listrow .sub.waittag { color: #8A6A00; font-weight: 600; }
+
+/* "Which list?" sheet (ui/ListPick.tsx). */
+#listpick .navrow .accent { color: var(--accent-text); }
+#listpick .listpick-name { display: block; margin: 12px 0; }
+#listpick .listpick-name input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px 12px; border: 1px solid var(--separator, #d8d4cf); border-radius: 10px; font: inherit; background: var(--card, #fff); color: inherit; }
+#listpick .btn.wide, #listdelete .btn.wide { margin-top: 12px; }
+#listpick .bad { color: var(--danger); }

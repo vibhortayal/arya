@@ -17,7 +17,10 @@ FEATURES_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "arya_f
 def _feature_flags():
     from api import reminders, supabase_auth
     from api.deps import _registration_open
-    return {"push_reminders": reminders.flag_on(),
+    from api import own_key
+    on = own_key.available()   # the same answer the Settings row and Help topic use
+    return {"own_key": on, "byok": on, "not_own_key": not on,
+            "push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
             "registration_open": _registration_open()}
 
@@ -86,7 +89,9 @@ LANGUAGES = {"en": "English", "es": "Spanish", "hi": "Hindi"}
 
 _T = {
     "es": {
-        "no_list": "No tienes una lista llamada {list}, así que {item} fue a Everything else.",
+        "no_list": "No tienes una lista llamada {list}.",
+        "pick_list": "¿En qué lista va {item}: {names}?",
+        "make_list_first": "Primero crea una lista (Listas, luego Nueva lista) y después añado {item}.",
         "not_tracked": "Todavía no sigo {item}: aparecerá después de su primer recibo.",
         "added": "Añadí {name}{dest}.",
         "dest_list": " a tu lista",
@@ -101,7 +106,9 @@ _T = {
         "q_snooze": "¿Posponer {name} {days} días?",
     },
     "hi": {
-        "no_list": "आपकी {list} नाम की कोई सूची नहीं है, इसलिए {item} Everything else में गया।",
+        "no_list": "आपकी {list} नाम की कोई सूची नहीं है।",
+        "pick_list": "{item} किस सूची में जाए: {names}?",
+        "make_list_first": "पहले एक सूची बनाइए (Lists, फिर New list), फिर मैं {item} उसमें जोड़ दूँगा।",
         "not_tracked": "मैं अभी {item} को ट्रैक नहीं करता: पहली रसीद के बाद यह दिखेगा।",
         "added": "{name} {dest} जोड़ दिया।",
         "dest_list": "आपकी सूची में",
@@ -336,6 +343,24 @@ def _list_for(name):
     return m[0] if len(m) == 1 else None
 
 
+def _ask_list(item, item_id=None):
+    """Every item on a list (owner, 2026-11-02): the question when an
+    add names no list and the household has more than one, or the ask to
+    make a list first when it has none. Nothing is added until then."""
+    from api import state
+    have = state.named_lists()
+    if not have:
+        return _t("make_list_first", "Make a list first (Lists, then New list), then I'll add {item} to it.",
+                  item=item)
+    sug = state.usual_list(item_id) if item_id else None
+    names = [l["name"] for l in have]
+    if sug:
+        first = next(l["name"] for l in have if l["id"] == sug)
+        names = [first] + [n for n in names if n != first]
+    shown = ", ".join(names[:6]) + (" or another list" if len(names) > 6 else "")
+    return _t("pick_list", "Which list should {item} go on: {names}?", item=item, names=shown)
+
+
 def _which_list(name):
     """The question to ask when a list name fits more than one list,
     or None. Nothing is added or removed until the user says which."""
@@ -418,16 +443,28 @@ def apply_actions(actions, added=None):
                 item_id = None   # a typed row: handled below, same as a new name
         else:
             item_id = _resolve(a.get("item"))
-        target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
-        if a.get("type") == "add_to_list" and a.get("list") and target is None:
+        target = _list_for(a.get("list")) if a.get("type") in ("add_to_list", "ran_out") else None
+        if a.get("type") in ("add_to_list", "ran_out") and a.get("list") and target is None:
             ask = _which_list(a["list"])
             if ask:
-                # Ask first; adding to Everything else and then asking
+                # Ask first; adding to no list and then asking
                 # leaves a stray row (Tester, #384).
                 skipped.append(ask)
                 continue
-            skipped.append(_t("no_list", "You have no list called {list}, so {item} went to Everything else.",
-                              list=a["list"], item=a.get("item")))
+            # Every item on a list (owner, 2026-11-02): no stray row; ask.
+            skipped.append(_t("no_list", "You have no list called {list}.", list=a["list"])
+                           + " " + _ask_list(a.get("item"), item_id))
+            continue
+        if a.get("type") in ("add_to_list", "ran_out") and target is None:
+            # No list named: the list it is already on, the only list, or ask.
+            have = state.named_lists()
+            cur = state.flags().get(item_id, {}).get("list") if item_id else None
+            target = next((l for l in have if l["id"] == cur), None)
+            if target is None and len(have) == 1:
+                target = have[0]
+            if target is None:
+                skipped.append(_ask_list(a.get("item"), item_id))
+                continue
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
                 else _t("dest_list", " to your list"))
         if not item_id and a.get("type") in ("add_to_list", "ran_out"):
@@ -467,14 +504,8 @@ def apply_actions(actions, added=None):
         nm = state.names().get(item_id, item_id)
         fl = dict(state.flags().get(item_id, {}))
         t = a.get("type")
-        if t in ("add_to_list", "ran_out") and not target and not fl.get("list"):
-            # No list named: the list for the store it is usually bought at (retest #5).
-            home = state.usual_list(item_id)
-            if home:
-                fl["list"] = home
-                lst = next((x for x in state.named_lists() if x["id"] == home), None)
-                if lst:
-                    dest = _t("dest_named", " to {list}", list=lst["name"])
+        if t == "ran_out" and target and fl.get("list") != target["id"]:
+            fl["list"] = target["id"]
         if t == "add_to_list":
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
@@ -660,13 +691,12 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
                               cache_key="arya-ask-v1")
     dec = parse_json(out)
     actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)] if not image else []
-    if surface:
-        # Viewing a named list: an add that names no list goes there.
-        here = next((l for l in state.named_lists() if l["id"] == ctx.get("list_id")), None)
-        if here:
-            for a in actions:
-                if a.get("type") in ("add_to_list", "remove_from_list") and not a.get("list"):
-                    a["list"] = here["name"]
+    # Viewing a named list: an add that names no list goes there.
+    here = next((l for l in state.named_lists() if l["id"] == (ctx or {}).get("list_id")), None)
+    if here:
+        for a in actions:
+            if a.get("type") in ("add_to_list", "ran_out", "remove_from_list") and not a.get("list"):
+                a["list"] = here["name"]
     proposed, now = [], actions
     if surface:
         # "We ran out of X" for an X Arya has never seen is just an add (retest #4).

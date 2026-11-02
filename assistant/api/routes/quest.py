@@ -5,6 +5,7 @@ from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import pack as pack_api, state
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _json_obj, new_client
@@ -313,8 +314,7 @@ async def quest_haul_photo(req: Request, session: str = ""):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     from api import quest
     if quest.get_session(session) is None:
         raise HTTPException(404, "no such session")

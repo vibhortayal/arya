@@ -46,6 +46,7 @@ class TestFirstRun(unittest.TestCase):
         self.assertTrue(c2.get("/api/settings").json()["onboarded"])
 
     def test_existing_account_with_data_counts_as_onboarded(self):
+        self.c.post("/api/lists", json={"name": "Groceries", "stores": []})
         self.c.post("/api/list/add", json={"name": "milk"})
         self.assertTrue(self.s()["onboarded"])
         # Answering the welcome from an account with data gives no card.

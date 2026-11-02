@@ -19,6 +19,7 @@ import { forgetJoinCode, isDevelopersPath, joinCodeFromUrl, stashJoinCode } from
 stashJoinCode();
 import { BottomBar } from "./ui/Bar";
 import { OwnKeyRoute } from "./ui/OwnKey";
+import { ListPickHost } from "./ui/ListPick";
 import { Login } from "./screens/Login";
 // The public developer page and Join a group load only when opened (#17).
 const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
@@ -172,6 +173,7 @@ function Shell() {
       </main>
       {nav.chrome && <BottomBar />}
       <OwnKeyRoute />
+      <ListPickHost />
       {showWelcome(s.user, s.demo, s.onboarded, demoWelcomePending()) && (
         <WelcomeSheet onTour={() => { answerWelcome(); tour.startTour(tourSteps, s.demo ? { onDone: () => openGuide(), onSkip: () => toast(t("tour.closedToast"), { action: t("tour.replay"), onAction: () => tour.startTour(tourSteps) }) } : undefined); }} onSkip={answerWelcome} demo={s.demo} />
       )}

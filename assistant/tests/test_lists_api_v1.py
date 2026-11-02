@@ -166,8 +166,17 @@ class TestReadAndAdd(V1Case):
         assert [i["name"] for i in out["items"]] == ["eggs"] and out["added"] == 1
 
     def test_add_to_unfiled(self):
+        # Every item on a list (owner, 2026-11-02): no lists, nothing added.
+        r = self.post("/lists/unfiled/items", json={"items": ["salt"]})
+        assert r.status_code == 400 and "make a list" in r.text
+        # With one list, an unfiled add files there.
+        lid = self.make_list()
         self.add("unfiled", "salt")
-        assert [i["name"] for i in self.get("/lists/unfiled").json()["items"]] == ["salt"]
+        assert [i["name"] for i in self.get(f"/lists/{lid}").json()["items"]] == ["salt"]
+        # With two, the caller must say which.
+        self.make_list("Trader Joe's")
+        r = self.post("/lists/unfiled/items", json={"items": ["pepper"]})
+        assert r.status_code == 400 and "Costco" in r.text
 
     def test_add_needs_items_or_text_not_both(self):
         lid = self.make_list()

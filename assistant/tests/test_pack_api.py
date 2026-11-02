@@ -2,6 +2,7 @@
 carry-over (C3, C4, C14), list/add with qty and by, and variants.
 Deterministic, no model call: the FakeClient seam covers the one
 route that builds a session."""
+from tests.conftest import one_list
 import datetime, json, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -70,6 +71,7 @@ class PackBase(unittest.TestCase):
             seed_history()  # seeded at the root; the first account adopts it
         r = self.c.post("/auth/setup", json={"username": USER, "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
 
     def as_user(self):
         """Direct store access as the logged-in account. Not set

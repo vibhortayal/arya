@@ -19,6 +19,7 @@ def stores_search(q: str = "", quests: int = 0):
 @router.get("/api/stores/mine")
 def stores_mine():
     from api import stores as stores_mod
+    stores_mod.backfill_mine()  # once per account (owner, 2026-11-02)
     return {"stores": stores_mod.mine()}
 
 
@@ -49,6 +50,21 @@ async def stores_create(req: Request):
     return stores_mod.add_to_mine(store["id"])
 
 
+def _places_allowed():
+    """Per own-key account, a daily count of Google lookups."""
+    from api import own_key, settings
+    if not own_key.required():
+        return True
+    import time as _t
+    today = _t.strftime("%Y-%m-%d")
+    doc = state._load("places_count.json", {})
+    n = doc.get(today, 0) if isinstance(doc, dict) else 0
+    if n >= settings.get("places_daily_lookups"):
+        return False
+    state._save("places_count.json", {today: n + 1})
+    return True
+
+
 @router.get("/api/stores/places")
 def stores_places(q: str = "", session: str = "",
                   lat: float = None, lng: float = None):
@@ -60,6 +76,11 @@ def stores_places(q: str = "", session: str = "",
     nearby = not q.strip() and lat is not None and lng is not None
     if not places.provisioned() or (len(q.strip()) < 3 and not nearby):
         return {"provisioned": places.provisioned(), "suggestions": []}
+    if not _places_allowed():
+        # Google bills the app per lookup; an own-key account gets a
+        # daily allowance (BYOK review 2, change 7). The picker still
+        # takes a typed store.
+        return {"provisioned": True, "suggestions": [], "capped": True}
     try:
         if nearby:
             # "Near me": grocery stores around the phone, no typing.

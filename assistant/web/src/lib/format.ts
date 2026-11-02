@@ -25,8 +25,13 @@ export function fmtWeekday(iso: string): string {
 export type Currency = { code: string; symbol: string };
 export const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", INR: "₹", CAD: "C$", AUD: "A$" };
 
+/* Grouping per currency (owner, 2026-11-01: "$13,243.58"). Rupees group
+ * the Indian way (₹1,23,456.00); the rest group in thousands. The dot
+ * stays the decimal mark everywhere, to match the English screens. */
+const GROUPING: Record<string, string> = { INR: "en-IN" };
 export function money(n: number, cur: Currency = { code: "USD", symbol: "$" }): string {
-  return cur.symbol + Math.abs(n).toFixed(2);
+  const abs = Math.abs(Number(n) || 0);
+  return cur.symbol + abs.toLocaleString(GROUPING[cur.code] || "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function qtyFmt(q: unknown): string {

@@ -24,7 +24,7 @@ class PackSize(unittest.TestCase):
 
 class AskDozen(AskCase):
     def test_dozen_eggs_is_one_carton(self):
-        out = self.ask("add a dozen eggs", [{"type": "add_to_list", "item": "Pasture Eggs 12 ct", "qty": 12}])
+        out = self.ask("add a dozen eggs", [{"type": "add_to_list", "item": "Pasture Eggs 12 ct", "qty": 12, "list": "Costco"}])
         self.assertTrue(out["applied"][0].startswith("Added Pasture Eggs 12 ct"), out)
         self.assertNotIn("\u00d7", out["applied"][0])
         out = self.ask("add two dozen eggs", [{"type": "add_to_list", "item": "eggs", "qty": 24}])

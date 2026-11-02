@@ -58,6 +58,18 @@ describe("offline copy", () => {
   });
 });
 
+describe("a structured refusal", () => {
+  afterEach(() => vi.restoreAllMocks());
+  test("reads as its message and keeps the rest for the screen", async () => {
+    const detail = { code: "pick_list", message: "Which list should this go on? Open a list and add it there.", lists: [{ id: "l-1", name: "Costco" }] };
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ detail }), { status: 409 })));
+    const e = await post("/api/lists/delete", { id: "l-1" }).catch(x => x);
+    expect(e.message).toBe(detail.message);
+    expect(e.status).toBe(409);
+    expect(e.detail).toEqual(detail);
+  });
+});
+
 describe("a lost session (re-audit N1)", () => {
   afterEach(() => vi.restoreAllMocks());
   const r401 = (detail: string) => () => Promise.resolve(new Response(JSON.stringify({ detail }), { status: 401 }));

@@ -129,18 +129,26 @@ def resolve_merchants(merchants):
     directory store matches it yet. The first Places suggestion is
     taken only if its chain matches and Google's city appears in the
     merchant text, and, when the account's own stores show a state,
-    the state matches. The store lands in the directory, not in My
-    Stores. Never raises; a miss leaves the receipt on text cleanup."""
+    the state matches. The store lands in the directory and, unless
+    the shopper removed it, in My stores (follow(); owner 2026-11-02).
+    Never raises; a miss leaves the receipt on text cleanup."""
     from api import places, storename
     if not places.provisioned():
+        # No Places lookups, but stores already in the directory still
+        # join My stores.
+        known = [storename._match(storename._parse(m)[0], directory()) for m in merchants if m]
+        follow([k["id"] for k in known if k])
         return []
     mine_states = [s.get("state") for s in mine() if s.get("state")]
     hint = max(set(mine_states), key=mine_states.count) if mine_states else None
     out = []
     for merchant in dict.fromkeys(m for m in merchants if m):
         words, _num = storename._parse(merchant)
-        if merchant in _MISSED or len(words) < 2 \
-                or storename._match(words, directory()):
+        if merchant in _MISSED or len(words) < 2:
+            continue
+        known = storename._match(words, directory())
+        if known:
+            follow([known["id"]])  # already placed: still joins My stores
             continue
         place = " ".join(words[1:]).lower()
         try:
@@ -155,6 +163,7 @@ def resolve_merchants(merchants):
             out.append(upsert_google_store(row["place_id"], row["name"], det, "receipt"))
         except Exception:
             _MISSED.add(merchant)
+    follow([r["id"] for r in out])
     return out
 
 
@@ -279,8 +288,18 @@ def _mine_entries():
     return entries["entries"]
 
 
-def _save_mine(entries):
-    state._save("my_stores.json", {"entries": entries})
+def _mine_doc():
+    _mine_entries()  # first access seeds the file
+    return state._load("my_stores.json", {"entries": []})
+
+
+def _save_mine(entries, **extra):
+    """Save the entries, keeping the file's other keys (removed,
+    backfilled) unless new values are given."""
+    doc = _mine_doc()
+    doc.update(extra)
+    doc["entries"] = entries
+    state._save("my_stores.json", doc)
 
 
 def mine_ids():
@@ -326,23 +345,85 @@ def add_to_mine(store_id):
     if store is None:
         return None
     entries = _mine_entries()
-    if store_id not in {e["store_id"] for e in entries}:
-        entries.append({"store_id": store_id, "favorite": False,
-                        "added_at": _now()})
-        _save_mine(entries)
+    removed = _mine_doc().get("removed", [])
+    if store_id not in {e["store_id"] for e in entries} or store_id in removed:
+        if store_id not in {e["store_id"] for e in entries}:
+            entries.append({"store_id": store_id, "favorite": False,
+                            "added_at": _now()})
+        # Added by hand: lists and receipts may keep it again.
+        _save_mine(entries, removed=[r for r in removed if r != store_id])
     return view(store, entries)
 
 
 def remove_from_mine(store_id):
     """Take a store out of the account's stores (Tranche 1). The
     directory row is platform data and stays; only the account's
-    entry goes. Returns True when an entry was removed."""
+    entry goes. The store is remembered as removed, so a list or a
+    receipt never puts it back (follow()). Returns True when an entry
+    was removed."""
     entries = _mine_entries()
     kept = [e for e in entries if e["store_id"] != store_id]
     if len(kept) == len(entries):
         return False
-    _save_mine(kept)
+    removed = [r for r in _mine_doc().get("removed", []) if r != store_id] + [store_id]
+    _save_mine(kept, removed=removed[-500:])
     return True
+
+
+# --- My stores follows where you shop (owner, 2026-11-02) ----------------
+# A store linked to a list, or a receipt's store once it is placed in
+# the directory, joins My stores on its own. A store the shopper took
+# out of My stores is never put back this way; only adding it again by
+# hand (add_to_mine) brings it back.
+
+def follow(store_ids):
+    """Add these directory stores to My stores unless the shopper
+    removed them. Never raises; returns the ids added."""
+    try:
+        if state.in_sandbox():
+            return []
+        doc = _mine_doc()
+        entries, removed = doc.get("entries", []), set(doc.get("removed", []))
+        have = {e["store_id"] for e in entries}
+        added = []
+        for sid in dict.fromkeys(i for i in store_ids if i):
+            if sid in have or sid in removed or get_store(sid) is None:
+                continue
+            entries.append({"store_id": sid, "favorite": False, "added_at": _now()})
+            have.add(sid)
+            added.append(sid)
+        if added:
+            _save_mine(entries)
+        return added
+    except Exception:
+        return []
+
+
+def _receipt_store_ids(receipts):
+    from api import storename
+    rows = directory()
+    out = []
+    for m in dict.fromkeys(r.get("merchant") for r in receipts if r.get("merchant")):
+        hit = storename._match(storename._parse(m)[0], rows)
+        if hit:
+            out.append(hit["id"])
+    return out
+
+
+def backfill_mine():
+    """Once per account: the stores its lists link and its receipts
+    name join My stores (stores taken out stay out). Runs on the first
+    GET /api/stores/mine after this shipped."""
+    if state.in_sandbox() or _mine_doc().get("backfilled"):
+        return []
+    try:
+        ids = [sid for l in state.named_lists() for sid in (l.get("store_ids") or [])]
+        ids += _receipt_store_ids(state.own_receipts())
+        added = follow(ids)
+    except Exception:
+        added = []
+    _save_mine(_mine_entries(), backfilled=True)
+    return added
 
 
 def set_favorite(store_id, favorite):

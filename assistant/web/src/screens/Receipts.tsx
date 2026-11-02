@@ -54,7 +54,7 @@ function dateRange(key: DateKey, from: string, to: string, now = new Date()): [s
   return ["0000", "9999"];
 }
 export function filterReceipts(list: Rec[], f: { query: string; date: DateKey; from: string; to: string; sort: SortKey }, now = new Date()): Rec[] {
-  const q = f.query.trim().toLowerCase().replace(/^\$/, "");
+  const q = f.query.trim().toLowerCase().replace(/^\$/, "").replace(/,/g, "");
   const [lo, hi] = dateRange(f.date, f.from, f.to, now);
   const out = list.filter(r => {
     const d = day(r);

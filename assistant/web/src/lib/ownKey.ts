@@ -3,7 +3,9 @@ import { del, get, put } from "./api";
 /* "Use my own Meta key" (owner, 2026-11-01; mockup
  * claude.ai/artifact/H8Fn48EmPqYeEwyNeq9M62). The server keeps the key
  * encrypted and only ever answers with its last 4 characters. */
-export type OwnKey = { available: boolean; set: boolean; ends?: string | null; status?: "ok" | "needs_attention" | null };
+export type OwnKey = { available: boolean; set: boolean; ends?: string | null; status?: "ok" | "needs_attention" | null;
+  /* The account signed up with its own key: it never runs on Arya's keys. */
+  required?: boolean };
 
 export const getOwnKey = () => get<OwnKey>("/api/account/own-key");
 export const saveOwnKey = (key: string) => put<{ saved: boolean; ends: string }>("/api/account/own-key", { key });

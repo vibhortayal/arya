@@ -1,9 +1,11 @@
 import { useEffect, useReducer, useRef, useState, type ChangeEvent, type PointerEvent as RPointerEvent, type ReactNode } from "react";
+import { addOnList } from "../lib/listPick";
 import { useNav } from "../app/nav";
 import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { clearOnSignOut, useSession } from "../app/session";
 import { asset, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
@@ -468,6 +470,7 @@ export function NewList() {
   textRef.current = text;
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const capture = useRef<Capture | null>(null);
   const [creating, setCreating] = useState(false);
   const [leave, setLeave] = useState<{ card: Card; dir: "r" | "l"; go: boolean } | null>(null);
@@ -816,9 +819,11 @@ export function NewList() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus(t("common.voice.transcribing"));
+      setReading(true);
+      setStatus("");
       try {
         const said = await transcribeBlob(wav);
+        setReading(false);
         setStatus(said ? "" : t("common.voice.empty"));
         if (said) {
           const cur = textRef.current;
@@ -827,6 +832,7 @@ export function NewList() {
           nlAdd(merged);
         }
       } catch (e) {
+        setReading(false);
         setStatus("");
         toast(t("common.voice.failed", { error: errMsg(e) }));
       }
@@ -839,11 +845,13 @@ export function NewList() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus(t("common.voice.listening"));
+      setStatus("");
     } catch {
       setStatus(t("common.voice.refused"));
     }
   };
+  /* Cancel on the Listening card: the recording is dropped. */
+  const cancelMic = () => { capture.current?.cancel(); capture.current = null; setListening(false); setStatus(""); };
 
   /* ---- plan rows: tick and remove from the Arya list ---- */
   const toggle = (key: string) => {
@@ -864,7 +872,7 @@ export function NewList() {
     force();
     toast(t("newList.offList", { name: li.name }), { action: t("common.undo"), onAction: async () => {
       try {
-        await post("/api/list/add", { item_id: itemId });
+        await post("/api/list/add", { item_id: itemId, ...(li.list ? { list_id: li.list } : {}) });
         D.plan!.list.push(li);
         force();
       } catch (e) { toast(errMsg(e)); }
@@ -905,18 +913,28 @@ export function NewList() {
     try {
       D.raw = raw;
       // Typed and starter rows join the Arya list with their count.
-      const lid = D.fromList ? { list_id: D.fromList.id } : {};
+      let lid: { list_id?: string } = D.fromList ? { list_id: D.fromList.id } : {};
+      const bodies: Record<string, unknown>[] = [];
       for (const r of pickedRows()) {
         if (r.extra && r.joinList) {
           const body: Record<string, unknown> = r.itemId ? { item_id: r.itemId } : { name: r.name };
           if (r.qty > 1) body.qty = r.qty;
           if (r.by) body.by = r.by;
           if (r.approved) body.approved = true;
-          post("/api/list/add", { ...body, ...lid }).catch(() => {});
+          bodies.push(body);
         } else if (r.src === "added" && r.itemId) {
-          post("/api/list/add", { item_id: r.itemId, approved: true, ...lid }).catch(() => {});
+          bodies.push({ item_id: r.itemId, approved: true });
         }
       }
+      // Every item on a list: with no list in hand the first add may ask
+      // which list; the rest follow it there.
+      if (bodies.length && !lid.list_id) {
+        const first = bodies.shift()!;
+        const out = await addOnList(l => post("/api/list/add", { ...first, ...(l ? { list_id: l } : {}) }),
+          { names: [String(first.name || "")], itemId: first.item_id as string | undefined }).catch(() => null);
+        if (out?.list) lid = { list_id: out.list.id };
+      }
+      for (const body of bodies) post("/api/list/add", { ...body, ...lid }).catch(() => {});
       await optimize(false);
     } catch (e) { toast(errMsg(e)); }
     finally { D.creating = false; setCreating(false); }
@@ -1166,11 +1184,12 @@ export function NewList() {
           onChange={e => setText(e.target.value)}
           onKeyDown={ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); nlAdd(); } }} />
         <p className="packaddrow">
-          <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? t("common.voice.stopTranscribe") : t("common.voice.record")}</button>
+          {!listening && !reading && <button className="btn grow" id="nl-mic" type="button" onClick={mic}>{t("common.voice.record")}</button>}
           <label className="btn grow" htmlFor="nl-photo" {...pickerProps("nl-photo")} style={{ textAlign: "center" }}>{t("newList.photo")}</label>
           <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>{t("common.add")}</button>
           <input type="file" id="nl-photo" accept="image/*" hidden onChange={photo} />
         </p>
+        {(listening || reading) && <ListeningCard id="nl-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
         <p className="muted nomargin" id="nl-status">{status}</p>
         <div id="nl-helper"></div>
       </div>
