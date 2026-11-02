@@ -45,14 +45,14 @@ describe("offline copy", () => {
     await expect(get("/api/home")).rejects.toThrow();
   });
 
-  test("the demo keeps no copy, and signing out deletes them", async () => {
+  test("the demo keeps a copy for the visit, and signing out deletes them", async () => {
     localStorage.setItem("arya.lastUser", JSON.stringify({ user: "demo", demo: true }));
     vi.spyOn(globalThis, "fetch").mockImplementation(reply({ a: 1 }));
     await get("/api/today");
-    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
     localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
     await get("/api/settings");
-    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(2);
     forgetReads();
     expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
   });

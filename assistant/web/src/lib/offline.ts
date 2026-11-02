@@ -6,7 +6,9 @@
  * What is kept: the JSON body of a few GET reads (lists, Today,
  * settings, groups, stores, powers, receipts, Quest profile). Never a
  * cookie or token (the sign-in is an HttpOnly cookie the page cannot
- * read), never the demo (it keeps nothing), never a body over 400 KB.
+ * read), never a body over 400 KB. The demo keeps its copies for the
+ * visit only (owner phone test 2026-11-02: offline lists in the demo):
+ * entering or leaving the demo deletes them.
  * Copies are filed under the signed-in account and are all deleted at
  * sign-in and sign-out (forgetReads in lib/api.ts). */
 
@@ -21,7 +23,7 @@ export const SAVED_PATHS = new Set([
 export function account(): string | null {
   try {
     const v = JSON.parse(localStorage.getItem("arya.lastUser") || "null");
-    return v && typeof v.user === "string" && !v.demo ? v.user : null;
+    return v && typeof v.user === "string" ? v.user : null;
   } catch { return null; }
 }
 const keyFor = (path: string) => { const u = account(); return u && SAVED_PATHS.has(path) ? `${PREFIX}${u}:${path}` : null; };
