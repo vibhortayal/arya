@@ -72,6 +72,16 @@ def _reads_gate(demo=False):
                             "Everything else still works.")
 
 
+def _own_key_signup_offer():
+    from api import own_key, supabase_auth
+    try:
+        if supabase_auth.configured() and own_key.door_open():
+            return {own_key.OFFER_HEADER: "own-key-signup"}
+    except Exception:
+        pass
+    return None
+
+
 def _budget_guard(demo=False):
     """Stage 6 hardening: a daily ceiling on model spend (default $10),
     far above real household use, bounding any single bad day. The
@@ -82,23 +92,46 @@ def _budget_guard(demo=False):
     if demo or state.in_sandbox():
         box = state._overlay.get()
         share = settings.get("demo_session_budget_usd")
+        # The demo's cap may link to the own-key sign-up door (owner,
+        # 2026-11-01; the Settings field is never offered in the demo).
+        signup = _own_key_signup_offer()
         if box is not None and box.get(_DEMO_SPENT_KEY, 0.0) >= share:
-            raise HTTPException(503, "You've used this demo visit's live reads. "
+            raise HTTPException(503, headers=signup, detail="You've used this demo visit's live reads. "
                                 "Everything else still works; sign in with a real "
                                 "account for more.")
         cap = settings.get("demo_daily_budget_usd")
         spent = CostLedger(_LEDGER).spent_today("demo")
         if spent >= cap:
             raise HTTPException(503, "The demo's live reads are paused for today. "
-                                "Everything else still works.")
+                                "Everything else still works.", headers=signup)
     else:
+        from api import own_key
+        if own_key.for_current_user():
+            # The person's own Meta key pays: the app's daily budget and
+            # monthly ceiling do not apply. The pause switch above, the
+            # non-dollar caps (scan frames, per-IP limits) and an hourly
+            # load guard still do (BYOK review 1, 13; review 2, 6).
+            user = state._owner()
+            hourly = settings.get("own_key_hourly_usd", user)
+            if hourly and CostLedger(_LEDGER).usage(user)["own_key_hour_usd"] >= hourly:
+                raise HTTPException(429, "Arya's reading is paused for an hour after very heavy use. "
+                                    "Lists, Today and typing still work.")
+            return
+        if own_key.required():
+            # An own-key account never reads on Arya's key (review 2, 5).
+            raise own_key.needs_key_error()
+        offer = {own_key.OFFER_HEADER: "own-key"} if own_key.available() else None
         cap = settings.get("daily_budget_usd")
         spent = CostLedger(_LEDGER).spent_today("app")
         user = state._owner()
         if user and not _is_owner(user):
             reason = reading_off(user)
             if reason:
-                raise HTTPException(429, reason)
+                raise HTTPException(429, reason, headers=offer)
+        if spent >= cap:
+            raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow",
+                                headers=offer)
+        return
     if spent >= cap:
         raise HTTPException(503, "daily model budget reached — Arya pauses paid reads until tomorrow")
 
@@ -299,8 +332,20 @@ def _is_waitlist_admin(user):
 
 
 def new_client():
-    """A Meta client that books its spend on this request's ledger."""
+    """A Meta client that books its spend on this request's ledger. A
+    real account with its own Meta key gets a client on that key, booked
+    to the "own_key" bucket (api/own_key.py). The key is looked up for
+    the context user on every call; no client is kept."""
     _reads_gate()
+    from api import own_key
+    key = own_key.for_current_user()
+    if key:
+        return MetaClient(api_key=key, own_user=state._owner(),
+                          ledger=CostLedger(_LEDGER, bucket="own_key", user=state._owner()))
+    if own_key.required():
+        # The one place a client is built, so the one place "an own-key
+        # account never falls back to Arya's key" is enforced.
+        raise own_key.needs_key_error()
     return MetaClient(ledger=_ledger())
 
 

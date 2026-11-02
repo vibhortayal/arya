@@ -1,5 +1,6 @@
 """Live sync for groups (owner, 2026-10-29): a change by one member
 wakes the other members' open apps through /api/group/live."""
+from tests.conftest import one_list
 import asyncio, contextvars, json, os, tempfile, threading, unittest
 from unittest import mock
 
@@ -108,6 +109,7 @@ class TestLiveRoute(unittest.TestCase):
         deps._login_fails.clear()
         self.c = TestClient(main.app)
         assert self.c.post("/auth/setup", json={"username": "alice", "password": "pw-alice"}).status_code == 200
+        one_list(self.c)
 
     def tearDown(self):
         os.environ.pop("ARYA_GROUPS", None)

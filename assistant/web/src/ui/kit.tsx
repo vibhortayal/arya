@@ -22,7 +22,8 @@ export function Chip({ pressed, className, type = "button", ...rest }: ButtonHTM
 export function Row({ name, sub, right, className, onClick, children }:
   { name: ReactNode; sub?: ReactNode; right?: ReactNode; className?: string; onClick?: () => void; children?: ReactNode }) {
   return (
-    <div className={"row" + (className ? " " + className : "")} onClick={onClick}>
+    <div className={"row" + (className ? " " + className : "")} onClick={onClick}
+      {...(onClick ? { role: "button", tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } } : {})}>
       {children}
       <div className="grow"><span className="name">{name}</span>{sub ? <span className="sub">{sub}</span> : null}</div>
       <div className="money">{right || ""}</div>

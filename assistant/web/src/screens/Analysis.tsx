@@ -7,6 +7,7 @@ import { Empty, Row, Section } from "../ui/kit";
 import { InfoBtn, InfoSheet } from "../ui/Info";
 import { useToast } from "../ui/Toast";
 import { EditList, EditTitle } from "../ui/EditList";
+import { useBar } from "../ui/Bar";
 import { t, useTranslation } from "../i18n";
 
 /* Port of pwa/index.html #view-analysis, app.js renderAnalysis and the
@@ -39,6 +40,7 @@ const names = (n: string[]) => (n.length <= 2 ? n.join(t("lists.and")) : t("anal
 export function Analysis() {
   const { t } = useTranslation();
   const nav = useNav();
+  const onBar = useBar().includes("analysis");
   const { currency, layouts = {}, saveLayout } = useSession();
   const { toast, showErr } = useToast();
   const [editing, setEditing] = useState(false);
@@ -47,6 +49,15 @@ export function Analysis() {
   const [receipts, setReceipts] = useState(0);
   const [ins, setIns] = useState<Insights>(null);
   const [info, setInfo] = useState<string | null>(null);
+  /* One (i) per Spending heading, each explaining only its own row. */
+  const i = (row: string) => <InfoBtn k={"spend." + row} onOpen={setInfo} />;
+  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
+  const [groupName, setGroupName] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    get<{ group: { name: string } | null }>("/api/group").then(g => { if (live) setGroupName(g?.group?.name || null); }, () => {});
+    return () => { live = false; };
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -125,15 +136,15 @@ export function Analysis() {
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
           {d && latest && <>
-            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}</p>
+            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}{i("month")}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
             <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}</p>
-            <Row name={t("analysis.allTimeSpend")} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
-            {!!d.spend_other && <Row name={t("analysis.groceries")} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
-            {!!d.spend_other && <Row name={t("analysis.otherPurchases")} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
-            {!!d.returns_total && <Row name={t("analysis.returnsRow")} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
-            {!!d.savings_total && <Row name={t("analysis.youSaved")} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
-            {!!d.for_others_total && <Row name={t("analysis.boughtForOthers")} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
+            <Row name={<>{t("analysis.allTimeSpend")}{i("all")}</>} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
+            {!!d.spend_other && <Row name={<>{t("analysis.groceries")}{i("groceries")}</>} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
+            {!!d.spend_other && <Row name={<>{t("analysis.otherPurchases")}{i("other")}</>} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
+            {!!d.returns_total && <Row name={<>{t("analysis.returnsRow")}{i("returns")}</>} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
+            {!!d.savings_total && <Row name={<>{t("analysis.youSaved")}{i("saved")}</>} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
+            {!!d.for_others_total && <Row name={<>{t("analysis.boughtForOthers")}{i("others")}</>} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
           </>}
         </div>
       </>
@@ -173,7 +184,8 @@ export function Analysis() {
 
   return (
     <>
-      <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
+      {/* On the bar, Spending is a tab: no Back at the bottom of the stack. */}
+      {!(onBar && nav.depth <= 2) && <p><a href="#" id="an-back" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>}
       <EditTitle id="an-editbtn" small title={t("common.analysis")} editTitle={t("analysis.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
         <EditList id="an-edit" on={on} off={offS} name={id => t(`analysis.sections.${id}`)} sub={() => ""} desc={() => ""}
@@ -185,6 +197,13 @@ export function Analysis() {
           }}
           onReset={() => { saveLayout("spending", {}).catch(showErr); }} />
       ) : <>
+        {/* Receipts lives on Spending (owner, 2026-11-02: Spending took
+          * Lists' place on the bar). Stores is in More (owner, 2026-11-02:
+          * "We don't need stores in the spending section"). */}
+        <div className="group" id="an-places">
+          <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>
+            <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
+        </div>
         <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
           <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
         <div id="an-data" hidden={!show}>

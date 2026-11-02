@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useBackHandler, useNav } from "../app/nav";
 import { HELP_TOPICS, type HelpTopic } from "../guide/helpTopics";
 import { useTranslation } from "../i18n";
@@ -8,6 +8,7 @@ import { useTour } from "../ui/Tour";
 import { useIsDemo } from "../app/session";
 import { useTourSteps } from "../onboarding/demoTour";
 import { Chip, Group, Section } from "../ui/kit";
+import { getOwnKey } from "../lib/ownKey";
 import "./help.css";
 
 /* The Help tab (owner pick A, 2026-10-31; mockup PmHxJbYVus8evkxaYP8KEN):
@@ -25,6 +26,10 @@ export function Help() {
   const demo = useIsDemo();
   const [open, setOpen] = useState<HelpTopic | null>(null);
   const [q, setQ] = useState("");
+  // "Use your own Meta key" shows only when the server offers it (owner: gate it, 2026-11-01).
+  const [ownKey, setOwnKey] = useState(false);
+  useEffect(() => { if (!demo) getOwnKey().then(k => setOwnKey(!!k?.available)).catch(() => setOwnKey(false)); }, [demo]);
+  const shown = (tp: HelpTopic) => tp.id !== "ownkey" || ownKey;
 
   // Back closes a topic first, then leaves Help as every tab does.
   useBackHandler(() => { if (!open) return false; setOpen(null); return true; }, !!open);
@@ -80,8 +85,8 @@ export function Help() {
       <div className="help-chips">
         {samples.map(s => <Chip key={s} onClick={() => ask(s)}>{s}</Chip>)}
       </div>
-      <Section title={t("help.startHere")}><Group>{HELP_TOPICS.filter(x => x.group === "start").map(row)}</Group></Section>
-      <Section title={t("help.howTo")}><Group>{HELP_TOPICS.filter(x => x.group === "how").map(row)}</Group></Section>
+      <Section title={t("help.startHere")}><Group>{HELP_TOPICS.filter(x => x.group === "start" && shown(x)).map(row)}</Group></Section>
+      <Section title={t("help.howTo")}><Group>{HELP_TOPICS.filter(x => x.group === "how" && shown(x)).map(row)}</Group></Section>
       <Section title={t("help.more")}>
         <Group>
           <button className="navrow" id="help-guide" type="button" onClick={() => guide.open()}>

@@ -39,7 +39,7 @@ on a Docker volume, in Supabase Postgres, or both.
 - Six tabs: **Today**, **Lists**, **Ask**, **Quest**, **Help**, **Settings**.
   Settings opens the Profile page (Group, Preferences with Reminders,
   Account, About Arya, Sign out last). About Arya is the `about` view:
-  Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping
+  Arya's powers, Use Arya in Muse, Add to Home Screen, Keeping
   Arya running. Stores, Receipts and Spending are on Lists.
 - Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
   injectManifest). It precaches the built shell and the runtime files of
@@ -100,7 +100,7 @@ enforced there. `open_client.py` is the only other model client.
 | Avatar and look images | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
 | Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
-| Second judge seat, dictionary enrichment | Spark Open on Baseten | platform data only; the client refuses personal data |
+| Second judge seat, dictionary enrichment | Spark Open, hosted on Baseten | platform data only; the client refuses personal data |
 
 ### 0.5 Storage
 
@@ -357,13 +357,13 @@ Each agent has a narrow job and a named limit.
 
 1. Create an account. A new account opens on Today; there is no
    Connect an AI agent step on first run.
-2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
-   token there (shown once).
-3. Add the Arya connector in Muse; paste the token into the secure
-   form. Never into a chat message.
-4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
-   copyable fallback setup prompt for assistant apps that do not load
-   the connector doc automatically.
+2. Connecting Muse is optional, from Settings > About Arya > Use Arya in Muse:
+   make the code there (shown once).
+3. Tell the Muse agent to connect to Arya; it asks for the code and opens a
+   secure credentials vault. Paste the code there, never into a chat message.
+4. Talk to Muse. The screen carries these steps and a copyable fallback setup
+   prompt for assistant apps that do not load the connector doc automatically.
+   The Muse Code settings-file route is the backup (`AGENT-CONNECTOR.md`).
 
 ## 10. Cost control
 

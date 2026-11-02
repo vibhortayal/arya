@@ -305,7 +305,7 @@ The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
 Settings. Settings has Group, Preferences (currency and language, When I
 start shopping, Display, Reminders), Account (Export my data, Delete my
 account), About Arya and, last, Sign out. About Arya has Arya's powers,
-Use Arya in another AI app, Add to Home Screen and Keeping Arya running.
+Use Arya in Muse, Add to Home Screen and Keeping Arya running.
 Stores, Receipts and Spending are on Lists, in one group at the bottom. Help has the guide, the tour and feedback. Item and category
 detail opens from any list.
 

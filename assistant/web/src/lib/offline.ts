@@ -18,7 +18,7 @@ export const SAVED_PATHS = new Set([
   "/api/powers", "/api/quest/profile", "/api/quest/receipts", "/api/prices/insights",
 ]);
 
-function account(): string | null {
+export function account(): string | null {
   try {
     const v = JSON.parse(localStorage.getItem("arya.lastUser") || "null");
     return v && typeof v.user === "string" && !v.demo ? v.user : null;

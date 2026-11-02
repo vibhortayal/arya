@@ -1,3 +1,4 @@
+import { friendlyError } from "./api";
 /* The shared voice recorder (pwa/app.js startCapture / encodeWav /
  * transcribeBlob): microphone capture to mono 16-bit PCM WAV at
  * 16 kHz, the Meta ASR batch endpoint's input contract, then
@@ -8,6 +9,8 @@ export type Capture = {
   stop: () => Blob;
   /* Stop without a recording (the screen went away mid-capture). */
   cancel: () => void;
+  /* How loud the last moment was, 0 to 1, for the Listening card's bars. */
+  level: () => number;
 };
 
 export const voiceSupported = () =>
@@ -20,7 +23,14 @@ export async function startCapture(): Promise<Capture> {
   const src = ctx.createMediaStreamSource(stream);
   const proc = ctx.createScriptProcessor(4096, 1, 1);
   const chunks: Float32Array[] = [];
-  proc.onaudioprocess = (ev: AudioProcessingEvent) => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+  let loud = 0;
+  proc.onaudioprocess = (ev: AudioProcessingEvent) => {
+    const d = new Float32Array(ev.inputBuffer.getChannelData(0));
+    chunks.push(d);
+    let sum = 0;
+    for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+    loud = Math.min(1, Math.sqrt(sum / (d.length || 1)) * 6);
+  };
   src.connect(proc);
   proc.connect(ctx.destination);
   const end = () => {
@@ -38,6 +48,7 @@ export async function startCapture(): Promise<Capture> {
     cancel() {
       try { end(); ctx.close(); } catch { /* already closed */ }
     },
+    level: () => loud,
   };
 }
 
@@ -74,6 +85,9 @@ export function encodeWav(chunks: Float32Array[], srcRate: number): Blob {
 
 export async function transcribeBlob(wav: Blob): Promise<string> {
   const r = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
+  if (!r.ok) {
+    const d = ((await r.json().catch(() => ({}))) as { detail?: unknown }).detail;
+    throw new Error(d ? friendlyError(d) : `HTTP ${r.status}`);
+  }
   return ((await r.json()) as { text?: string }).text || "";
 }

@@ -1,5 +1,6 @@
 """Speed and feel audit (2026-10-31): Today's one aggregate read, the
 per-request ledger memo, and the in-memory session check."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -17,6 +18,7 @@ class TestSpeedAudit(unittest.TestCase):
         deps._login_fails.clear()
         self.c = TestClient(main.app)
         assert self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"}).status_code == 200
+        one_list(self.c)
 
     def test_today_answers_every_part_in_one_read(self):
         r = self.c.get("/api/today")

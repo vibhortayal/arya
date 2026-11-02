@@ -2,6 +2,7 @@
 Any MCP-capable assistant connects with the account's API token (the
 same token the REST connector uses); Muse Spark is the showcased
 client, not a special case (owner, 2026-10-28)."""
+from tests.conftest import one_list
 import json, os, tempfile, unittest
 from unittest import mock
 
@@ -44,6 +45,7 @@ class TestMcp(unittest.TestCase):
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
                                              "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
         tok = self.c.post("/auth/token")
         assert tok.status_code == 200, tok.text
         self.token = tok.json()["token"]
@@ -155,7 +157,8 @@ class TestMcp(unittest.TestCase):
             "merchant": "m", "purchased_at": "2026-10-28",
             "lines": [{"decoded_name": "x", "line_total": 1}]})
         assert res["isError"] and "real account" in res["content"][0]["text"]
-        res = call(demo, None, "add_items", {"items": ["sandbox milk"]})
+        demo.post("/api/lists", json={"name": "Costco", "stores": []})   # every item on a list
+        res = call(demo, None, "add_items", {"items": ["sandbox milk"], "list": "Costco"})
         assert not res["isError"]
 
     def test_account_isolation(self):
@@ -206,3 +209,82 @@ class TestMcp(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestMcpReviewFixes(TestMcp):
+    """MCP code review (2026-11-01, /mnt/project-files/mcp-review/MCP-REVIEW.md)."""
+
+    def _receipt(self, **kw):
+        args = {"merchant": "Trader Joe's", "purchased_at": "2026-10-28",
+                "lines": [{"decoded_name": "Eggs", "line_total": 3.00}], "total": 3.00}
+        args.update(kw)
+        return call(self.c, self.token, "file_receipt", args)
+
+    def test_file_receipt_obeys_spend_limits_but_still_files(self):
+        from fastapi import HTTPException
+        from api import state
+        with mock.patch("api.routes.mcp_connector._budget_guard",
+                        side_effect=HTTPException(503, "daily model budget reached")), \
+                mock.patch.object(state, "judge_pending") as judge:
+            out = self._receipt()
+        self.assertFalse(out.get("isError"), out)
+        data = json.loads(out["content"][0]["text"])
+        self.assertIn("daily model budget reached", data["note"])
+        judge.assert_not_called()
+        got = json.loads(call(self.c, self.token, "get_receipts")["content"][0]["text"])
+        self.assertEqual(len(got["receipts"]), 1)
+
+    def test_file_receipt_judges_when_allowed(self):
+        from api import state
+        with mock.patch.object(state, "judge_pending") as judge:
+            self._receipt()
+        judge.assert_called_once()
+
+    def test_get_list_leaves_out_suggestions_and_gives_qty(self):
+        from api import state
+        fake = {"smart_list": {"items": [
+            {"item_id": "milk", "name": "Milk", "on_list": True, "qty": 2, "unit": "gal"},
+            {"item_id": "bananas", "name": "Bananas", "on_list": False}]}}
+        with mock.patch.object(state, "derived", return_value=fake):
+            data = json.loads(call(self.c, self.token, "get_list")["content"][0]["text"])
+            names = [i["name"] for i in data["items"]]
+            self.assertEqual(names, ["Milk"])
+            self.assertEqual((data["items"][0]["qty"], data["items"][0]["unit"]), (2, "gal"))
+            out = call(self.c, self.token, "check_item", {"name": "Bananas"})
+            self.assertTrue(out.get("isError"), out)
+
+    def test_bad_number_is_a_tool_error_not_500(self):
+        out = self._receipt(subtotal=[1, 2])
+        self.assertTrue(out.get("isError"), out)
+
+    def test_http_refusal_and_crash_become_tool_errors(self):
+        from fastapi import HTTPException
+        from api.routes import mcp_connector
+        with mock.patch.dict(mcp_connector._MCP_HANDLERS,
+                             {"get_snapshot": mock.Mock(side_effect=HTTPException(503, "paused"))}):
+            out = call(self.c, self.token, "get_snapshot")
+            self.assertTrue(out["isError"])
+            self.assertIn("paused", out["content"][0]["text"])
+        with mock.patch.dict(mcp_connector._MCP_HANDLERS,
+                             {"get_snapshot": mock.Mock(side_effect=KeyError("x"))}):
+            out = call(self.c, self.token, "get_snapshot")
+            self.assertTrue(out["isError"])
+            self.assertIn("something went wrong", out["content"][0]["text"])
+
+    def test_401_says_bearer_and_initialize_has_instructions(self):
+        anon = TestClient(self.c.app)
+        r = rpc(anon, {"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+        self.assertEqual(r.status_code, 401)
+        self.assertEqual(r.headers.get("www-authenticate"), "Bearer")
+        r = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}, self.token)
+        self.assertIn("get_list", r.json()["result"]["instructions"])
+
+    def test_token_cannot_start_bulk_reads_or_unfreeze(self):
+        h = {"Authorization": f"Bearer {self.token}"}
+        anon = TestClient(self.c.app)
+        self.assertEqual(anon.post("/api/receipts/jobs", headers=h, json={}).status_code, 403)
+        self.assertEqual(anon.post("/api/usage/unfreeze", headers=h, json={}).status_code, 403)
+
+    def test_demo_mcp_shares_the_per_ip_door_cap(self):
+        from api import demo_guard
+        self.assertTrue(demo_guard._demo_live_door("/api/mcp"))

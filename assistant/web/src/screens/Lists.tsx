@@ -1,4 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { addOnList, askDelete, askList, deleteNeed } from "../lib/listPick";
+import { pieces } from "../lib/listQueue";
 import { useBackHandler, useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useAvatar } from "../app/avatar";
@@ -9,10 +11,12 @@ import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
-import { get, post } from "../lib/api";
+import { get, noKeyMessage, post } from "../lib/api";
+import { SYNCED } from "../lib/listQueue";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { ListSheet, type SheetState, type StoreLink } from "./lists/ListSheets";
 import { looksLikeAsk, parseAddToList, useAsk } from "./lists/AskCard";
 import {
@@ -26,6 +30,8 @@ import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 import { EditList, EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
+import { fitPhoto } from "../lib/photo";
+import { QueueNote, useWaitingIds } from "../app/listSync";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -35,7 +41,7 @@ import { arrange } from "../lib/layout";
  * <section id="view-list">.
  *
  * Start shopping opens the Quest game on this list:
- * nav.show("community", { listId }) ("all" for Everything else).
+ * nav.show("community", { listId }) ("else" for Everything else).
  *
  * Local helpers kept here: the swipe / long-press wiring, the split
  * preview, the group line and the Eyes block. */
@@ -121,12 +127,12 @@ const sightingLine = (sg: Sighting) => (SIGHTING_STATES.includes(sg.state) ? t(`
 /* Typing in the composer re-renders the screen; a row whose item and
  * state did not change is skipped (speed audit #15). The callbacks it
  * gets are stable, and Demo Town's chip always redraws. */
-const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked
+const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked && a.waiting === b.waiting
   && (a.also || []).join("|") === (b.also || []).join("|") && !a.chip && !b.chip
  );
 
-function ListRowView({ i, picking, picked, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
-  chip?: ReactNode }) {
+function ListRowView({ i, picking, picked, chip, also, waiting }: { i: Item; picking: boolean; picked: boolean; also?: string[];
+  chip?: ReactNode; waiting?: boolean }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
   // Name and size are separate: "6 ct" or "x2" under a clean name (owner, 2026-10-31).
@@ -142,6 +148,7 @@ function ListRowView({ i, picking, picked, chip, also }: { i: Item; picking: boo
           {size ? <span className="sub size">{size}</span> : null}
           {i.note ? <span className="sub note">{i.note}</span> : null}
           {sub ? <span className="sub">{sub}</span> : null}
+          {waiting ? <span className="sub waittag">{t("lists.queue.tag")}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
@@ -174,6 +181,8 @@ type InCard =
 export function Lists() {
   const { t } = useTranslation();
   const nav = useNav();
+  /* Items with a change still on this phone (offline lists, owner 2026-11-02). */
+  const waitingIds = useWaitingIds();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
   const { user, demo, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
@@ -184,11 +193,6 @@ export function Lists() {
 
   const [data, setData] = useState<HomeData | null>(cache.data);
   const [loadFailed, setLoadFailed] = useState(false);
-  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
-  const [groupName, setGroupName] = useState<string | null>(null);
-  useEffect(() => {
-    get<{ group: { name: string } | null }>("/api/group").then(g => { if (alive.current) setGroupName(g?.group?.name || null); }, () => {});
-  }, []);
   const dataRef = useRef<HomeData | null>(cache.data);
   // Today's list cards open one list (app.js: listLens = card's id).
   const [lens, setLensState] = useState(() => {
@@ -240,6 +244,7 @@ export function Lists() {
   const [adding, setAdding] = useState(false);
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const capture = useRef<Capture | null>(null);
   /* What Arya understood from a photo or voice, or why it could not tell:
    * a card under the add box, never a silent miss. The photo thumbnail stays
@@ -319,7 +324,9 @@ export function Lists() {
   useEffect(() => {
     const onLive = (ev: Event) => { ev.preventDefault(); reconcile(); };
     window.addEventListener("arya-live", onLive);
-    return () => window.removeEventListener("arya-live", onLive);
+    // List changes kept on this phone went out (lib/listQueue.ts).
+    window.addEventListener(SYNCED, reconcile);
+    return () => { window.removeEventListener("arya-live", onLive); window.removeEventListener(SYNCED, reconcile); };
   }, [reconcile]);
 
   const ask = useAsk(reloadQuiet);
@@ -435,12 +442,22 @@ export function Lists() {
     await reload();
   };
   const deleteList = (l: { id: string; name: string }) => guard(async () => {
-    const out = await post<{ deleted: unknown; index: number }>("/api/lists/delete", { id: l.id });
+    type Out = { deleted: unknown; index: number; items?: unknown };
+    let out: Out;
+    try { out = await post<Out>("/api/lists/delete", { id: l.id }); }
+    catch (e) {
+      // Every item on a list: a list with items asks where they go first.
+      const need = deleteNeed(e);
+      if (!need) throw e;
+      const how = await askDelete(l.name, need);
+      if (!how) return;
+      out = await post<Out>("/api/lists/delete", { id: l.id, ...how });
+    }
     setSheet(null);
     setLens("home");
     await reload();
     toast(t("lists.deleted", { name: l.name }), { action: t("common.undo"), onAction: () => guard(async () => {
-      await post("/api/lists/restore", { list: out.deleted, index: out.index });
+      await post("/api/lists/restore", { list: out.deleted, index: out.index, ...(out.items ? { items: out.items } : {}) });
       setLens(l.id);
       await reload();
     }) });
@@ -449,9 +466,12 @@ export function Lists() {
     const d = dataRef.current!;
     const it = d.list.items.find(i => i.item_id === id);
     const target = it ? suggestHome(d, it) : "else";
-    await post("/api/list/add", target === "else" ? { item_id: id } : { item_id: id, list_id: target });
+    const out = await addOnList(lid => post("/api/list/add", { item_id: id, ...(target !== "else" ? { list_id: target } : lid ? { list_id: lid } : {}) }),
+      { names: [it ? it.name : ""], itemId: id });
+    if (!out) return;
+    const where = target !== "else" ? target : out.list ? out.list.id : target;
     const fresh = await reload();
-    toast(t("lists.addedTo", { name: it ? it.name : t("lists.it"), list: lensName(fresh, target) }), { action: t("common.undo"), onAction: () => guard(async () => {
+    toast(t("lists.addedTo", { name: it ? it.name : t("lists.it"), list: lensName(fresh, where) }), { action: t("common.undo"), onAction: () => guard(async () => {
       // Back to a suggestion: not on the list, and not dismissed either.
       await post(`/api/items/${encodeURIComponent(id)}/flag`, { manual: false, list: it ? it.list || null : null });
       reloadQuiet();
@@ -501,7 +521,7 @@ export function Lists() {
     if (selRef.current) setSel(null);
     toast(ids.length === 1 ? t("lists.removedOne", { name: names[0] }) : t("lists.removedMany", { count: ids.length }), { action: t("common.undo"), onAction: async () => {
       unhide();
-      try { for (const id of ids) await write(id, () => post("/api/list/add", { item_id: id })); }
+      try { for (const id of ids) await write(id, () => post("/api/list/add", { item_id: id, ...(lid !== "else" ? { list_id: lid } : {}) })); }
       catch (e) { toast(errMsg(e)); }
     } });
     try {
@@ -678,6 +698,13 @@ export function Lists() {
     } catch { /* unknown stays groceries */ }
   };
 
+  /* A typed add: on this list, or (on the Lists page) the list Arya
+   * asks for when it needs one. null: the person cancelled. */
+  const addTyped = async (text: string) => {
+    if (here) return { r: await post<AddResult>("/api/list/from-text", { text, list_id: here.id }), where: here.name };
+    const out = await addOnList(lid => post<AddResult>("/api/list/from-text", lid ? { text, list_id: lid } : { text }), { names: pieces(text) });
+    return out ? { r: out.result, where: out.list ? out.list.name : t("lists.yourList") } : null;
+  };
   const submit = async () => {
     const txt = textRef.current.trim();
     if (!txt) { toast(t("lists.typeFirst")); return; }
@@ -694,12 +721,14 @@ export function Lists() {
         setAdding(false);
         return;
       }
-      const r = await post<AddResult>("/api/list/from-text", here ? { text: txt, list_id: here.id } : { text: txt });
+      const got = await addTyped(txt);
+      if (!got) { setAdding(false); return; }        // cancelled: the text stays
+      const { r, where } = got;
       // Text typed while the request ran stays; only the sent text clears.
       if (textRef.current.trim() === txt && (r.added || !(r.skipped || []).length)) changeText("");
       setStatus("");
       const one = (r.also || []).length === 1 && here ? r.also![0] : null;
-      toast(addToast(r, here ? here.name : t("lists.yourList")), one ? { action: t("lists.moveHere"), onAction: () => guard(async () => {
+      toast(addToast(r, where), one ? { action: t("lists.moveHere"), onAction: () => guard(async () => {
         await post("/api/list/move", { item_id: one.item_id, list_id: here!.id });
         await reload();
       }) } : undefined);
@@ -743,16 +772,18 @@ export function Lists() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus(t("common.voice.transcribing"));
+      setReading(true);
+      setStatus("");
       try {
         const spoken = await transcribeBlob(wav);
+        setReading(false);
         setStatus("");
         if (!spoken) failCard(t("lists.input.heardNothing"), t("lists.input.heardNothingBody"), "mic");
         if (spoken) {
           const ok = await ask.run(spoken, here ? { list: here.name, list_id: here.id } : {});
           if (!ok) { const cur = textRef.current.trim(); changeText(cur ? `${cur}, ${spoken}` : spoken); }
         }
-      } catch (e) { setStatus(""); failCard(t("lists.input.voiceFailed"), t("lists.input.voiceFailedBody"), "mic"); }
+      } catch (e) { setReading(false); setStatus(""); failCard(t("lists.input.voiceFailed"), noKeyMessage(e) || t("lists.input.voiceFailedBody"), "mic"); }
       return;
     }
     if (!voiceSupported()) { failCard(t("lists.input.noVoice"), t("common.voice.unsupported"), "mic"); return; }
@@ -760,9 +791,11 @@ export function Lists() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus(t("common.voice.listening"));
+      setStatus("");
     } catch { failCard(t("lists.input.micBlocked"), t("lists.input.micBlockedBody"), "mic"); }
   };
+  /* Cancel on the Listening card: the recording is dropped. */
+  const cancelMic = () => { capture.current?.cancel(); capture.current = null; setListening(false); setStatus(""); };
 
   const onPhoto = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
@@ -772,11 +805,22 @@ export function Lists() {
     closeCard();
     setStatus(t("lists.readingPhoto"));
     try {
-      const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f });
+      const small = await fitPhoto(f);
+      const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
       setStatus("");
-      if (out.kind === "receipt") setReceiptFile(f);
+      if (out.kind === "list" && out.needs_list) {
+        // Every item on a list: the photo's names come back unadded with
+        // the question; add them by text once a list is picked.
+        const pick = await askList({ ...out.needs_list, names: out.names || [] });
+        if (pick) {
+          const r = await post<AddResult>("/api/list/from-text", { text: (out.names || []).join("\n"), list_id: pick.id });
+          toast(t("lists.addedNTo", { count: r.added || 0, where: pick.name }));
+          reloadQuiet();
+        }
+      }
+      else if (out.kind === "receipt") setReceiptFile(f);
       else if (out.kind === "item") setInCard({ kind: "item", name: out.item, sure: !!out.confident, url: URL.createObjectURL(f) });
       else if (out.kind === "unclear" || !out.added) failCard(t("lists.input.cantTell"), out.reason || t("lists.input.cantTellBody"), "photo", f);
       else {
@@ -792,8 +836,10 @@ export function Lists() {
   const cardAdd = async (name: string) => {
     closeCard();
     try {
-      const r = await post<AddResult>("/api/list/from-text", here ? { text: name, list_id: here.id } : { text: name });
-      toast(addToast(r, here ? here.name : t("lists.yourList")));
+      const got = await addTyped(name);
+      if (!got) return;
+      const { r, where } = got;
+      toast(addToast(r, where));
       reload().then(() => flashNewRows(r.names || [])).catch(() => {});
     } catch (e) { toast(errMsg(e)); }
   };
@@ -832,7 +878,10 @@ export function Lists() {
   // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
-    nav.show("community", { listId: here ? here.id : "all" });
+    // Quest plays named lists only (owner, 2026-11-02), so Everything
+    // else is shopped by ticking it off here.
+    if (!here) { startList(); return; }
+    nav.show("community", { listId: here.id });
   };
   // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
   const snapAisle = async (name: string) => {
@@ -890,6 +939,7 @@ export function Lists() {
   /* ---- paint ---- */
   const listStores = here ? here.stores || [] : [];
   const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id),
+    waiting: waitingIds.has(i.item_id),
     chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
   /* Demo Town: send items to the list of another store, making it when there is none. */
   const toStoreList = async (ids: string[], store: string) => {
@@ -990,6 +1040,7 @@ export function Lists() {
           {data && lists.length > 0
             ? <EditTitle id="lists-editbtn" title={t("lists.lists")} editTitle={t("lists.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
             : <h1 className="largetitle">{t("lists.lists")}</h1>}
+          <QueueNote id="lists-queue" />
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
@@ -1062,15 +1113,6 @@ export function Lists() {
           </div>
           )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
-          {/* Stores, Receipts and Spending live here (owner, 2026-11-01: they left Today). */}
-          <div className="group listsstores">
-            <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
-              <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts")}>
-              <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-analysis" type="button" onClick={() => nav.show("analysis")}>
-              <span className="grow">{t("common.analysis")}<span className="sub">{t("lists.spendingRowSub")}</span></span><span className="chev">›</span></button>
-          </div>
           </>}
         </div>
       )}
@@ -1078,6 +1120,7 @@ export function Lists() {
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" + (tickLink ? " hastick" : "") : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
+          <QueueNote id="list-queue" />
           {shoppingHere ? <p className="shopinglabel" id="list-shopping">{t("lists.shoppingLabel")}</p> : null}
           <div className="lhead">
             <h1 className="largetitle" id="lp-title">
@@ -1116,9 +1159,9 @@ export function Lists() {
                 role="combobox" aria-expanded={sugShown.length > 0} aria-controls="add-suggest" aria-autocomplete="list"
                 aria-activedescendant={sugIdx >= 0 && sugShown[sugIdx] ? "add-sug-" + sugIdx : undefined} />
               <input type="file" id="add-photo" accept="image/*" hidden onChange={onPhoto} />
-              {!typed || listening ? (
+              {!typed && !listening && !reading ? (
                 <span className="inicons">
-                  <button className={"iconbtn" + (listening ? " listening" : "")} id="add-mic" type="button" onClick={mic}
+                  <button className="iconbtn" id="add-mic" type="button" onClick={mic}
                     aria-label={t("lists.talkToAdd")} title={t("lists.talkToAdd")}><IconMic /></button>
                   <label className="iconbtn" htmlFor="add-photo" aria-label={t("lists.photoToAdd")} title={t("lists.photoToAdd")} {...pickerProps("add-photo")}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
@@ -1147,6 +1190,7 @@ export function Lists() {
             <div id="add-split" className="splitpreview" hidden={items.length < 2 || asking}>
               {items.map((n, i) => <span className="spchip" key={i}>{n}<button type="button" data-spx={i} aria-label={t("lists.removeName", { name: n })} onClick={() => dropChip(i)}>×</button></span>)}
             </div>
+            {(listening || reading) && <ListeningCard id="add-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
             <p className="muted nomargin" id="add-status">{status}</p>
             {inCard ? (
               <div className="group pad answercard" id="add-input-card" role="status" style={{ marginTop: 10 }}>

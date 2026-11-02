@@ -6,6 +6,7 @@ import { asset } from "../lib/format";
 import { Trans, useTranslation } from "../i18n";
 import { A2hsLandCard, A2hsSteps, CopyLink, installed, isIOS, useA2hs } from "../ui/A2hs";
 import { motionOff } from "../lib/motion";
+import { KeySignupSheet, WaysSheet } from "../ui/KeySignup";
 
 /* The logged-out landing (B1 cards, owner 2026-10-29; one screen with the
  * buttons first, owner 2026-10-30) and
@@ -135,6 +136,12 @@ export function Login() {
   const [seen, setSeen] = useState<string[]>(loadSeen);
   const [wl, setWl] = useState<{ open: boolean; email: string; done: Done }>({ open: false, email: "", done: "" });
   const openWaitlist = (email = "", done: Done = "") => { setSignin(false); setPass(""); setStep("email"); setWl({ open: true, email, done }); };
+  // Two ways in (owner, 2026-11-01): the waitlist, or sign up now with
+  // your own Meta key, when the server offers it (ui/KeySignup.tsx).
+  const keyWay = !!status.own_key_signup && !status.registration_open;
+  const [ways, setWays] = useState(false);
+  const [keySignup, setKeySignup] = useState(false);
+  const openWays = () => { setSignin(false); setStep("email"); setWays(true); };
   const [zoom, setZoom] = useState<{ id: string; from: string } | null>(null);
   const tap = (id: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -184,6 +191,8 @@ export function Login() {
           <p className="landnote">{status.registration_open ? t("landing.demoNote") : `${t("landing.demoNote")} ${t("landing.invitationNote")}`}
             {status.registration_open ? (
               <button id="register-open" className="linkbtn" type="button" onClick={() => openSignin("register")}>{t("landing.startOwnList")}</button>
+            ) : keyWay ? (
+              <button id="ways-open" className="linkbtn wl" type="button" onClick={openWays}>{t("keySignup.getAccount")} ›</button>
             ) : (
               <button id="waitlist-open" className="linkbtn wl" type="button" onClick={() => openWaitlist()}>{t("landing.joinWaitlist")}</button>
             )}
@@ -196,6 +205,11 @@ export function Login() {
       <Waitlist open={wl.open} email0={wl.email} done0={wl.done} google={!!status.email_signin} onSignin={() => openSignin("login")}
         onClose={() => setWl(w => ({ ...w, open: false }))} />
 
+      <WaysSheet open={ways} onClose={() => setWays(false)} onWaitlist={() => { setWays(false); openWaitlist(); }}
+        onKey={() => { setWays(false); setKeySignup(true); }} />
+      <KeySignupSheet open={keySignup} onClose={() => setKeySignup(false)} onDone={u => { setKeySignup(false); enter(u, false); }}
+        onSignin={() => openSignin("login")} />
+
       {zoom && <CardZoom id={zoom.id} from={zoom.from} onClose={() => setZoom(null)} />}
 
       <Sheet open={signin} onClose={() => { setSignin(false); setPass(""); setStep("email"); }} id="signin-sheet" className="signin"
@@ -207,7 +221,7 @@ export function Login() {
           <NotInvited email={guest} onJoin={e => joinFromGoogle(e, openWaitlist)} onOther={() => setGuest("")} />
         ) : (
           <EmailSignin step={step} setStep={setStep} onDone={u => enter(u, false)}
-            onJoin={status.registration_open ? undefined : e => openWaitlist(e)} />
+            onJoin={status.registration_open || keyWay ? undefined : e => openWaitlist(e)} />
         ))}
         {!team && status.email_signin && showPassword && <p className="muted">{t("login.orUseAPassword")}</p>}
         {showPassword && (
@@ -227,6 +241,11 @@ export function Login() {
           <p className="nomargin"><button type="button" id="login-toggle" className="linkbtn"
             onClick={() => { setMode(mode === "login" ? "register" : "login"); setErr(""); }}>
             {create ? t("login.haveAccount") : t("login.newHere")}</button></p>
+        )}
+        {!team && keyWay && !(notInvited && guest) && (
+          <p className="muted center nomargin" id="signin-ways">{t("keySignup.noAccount")}{" "}
+            <button type="button" className="linkbtn" id="signin-ways-open" onClick={openWays}>{t("keySignup.getAccount")}</button>
+            <br /><span className="ks-sub">{t("keySignup.noAccountSub")}</span></p>
         )}
         {showPassword && !team && mode !== "setup" && !status.registration_open && !status.email_signin && (
           <p className="nomargin"><button type="button" id="signin-waitlist" className="linkbtn"

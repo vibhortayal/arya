@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { get, post } from "../lib/api";
+import { get, noKeyMessage, post } from "../lib/api";
 import { useTranslation } from "../i18n";
 import type { ReceiptJob } from "../lib/receiptJobs";
 
@@ -39,9 +39,9 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
   if (sending) {
     return (
       <div className="group pad" id="rc-job">
-        <p className="nomargin"><strong>{t("receiptJob.sending", { sent: sending.sent, total: sending.total })}</strong></p>
+        <p className="nomargin"><strong>{sending.total === 1 ? t("receiptJob.sendingOne") : t("receiptJob.sending", { sent: sending.sent, total: sending.total })}</strong></p>
         <Bar pct={(sending.sent / sending.total) * 100} />
-        <p className="muted small nomargin">{t("receiptJob.keepOpen")}</p>
+        <p className="muted small nomargin">{sending.total === 1 ? t("receiptJob.keepOpenOne") : t("receiptJob.keepOpen")}</p>
       </div>);
   }
   if (!job) return null;
@@ -49,7 +49,7 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
   if (ACTIVE.includes(job.status)) {
     return (
       <div className="group pad" id="rc-job">
-        <p className="nomargin"><strong>{t("receiptJob.reading")}</strong></p>
+        <p className="nomargin"><strong>{job.total === 1 ? t("receiptJob.readingOne") : t("receiptJob.reading")}</strong></p>
         <Bar pct={job.total ? (job.done / job.total) * 100 : 0} />
         <p className="muted small nomargin">{t("receiptJob.progress", { done: job.done, total: job.total })}{job.failed ? " " + t("receiptJob.someFailed", { count: job.failed }) : ""} {t("receiptJob.canLeave")}</p>
       </div>);
@@ -58,7 +58,7 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
     return (
       <div className="group pad" id="rc-job" role="alert">
         <p className="nomargin"><strong>{t("receiptJob.paused", { done: job.done, total: job.total })}</strong></p>
-        <p className="muted small nomargin">{job.reason}</p>
+        <p className="muted small nomargin">{noKeyMessage(job.reason) || job.reason}</p>
         <p className="nomargin" style={{ marginTop: 8 }}><button type="button" className="chip" id="rc-job-resume"
           onClick={() => post<ReceiptJob>(`/api/receipts/jobs/${job.id}/resume`).then(setJob).catch(() => {})}>{t("receiptJob.resume")}</button></p>
       </div>);
@@ -67,7 +67,7 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
     <div className="group pad" id="rc-job">
       <p className="nomargin"><strong>{t("receiptJob.done", { count: job.done })}</strong></p>
       <p className="muted small nomargin">{t("receiptJob.summary", { filed: job.filed, dup: job.duplicate, failed: job.failed })}</p>
-      {job.failures.slice(0, 5).map(f => <p key={f.name} className="muted small nomargin">{f.name}: {f.reason}</p>)}
+      {job.failures.slice(0, 5).map(f => <p key={f.name} className="muted small nomargin">{f.name}: {noKeyMessage(f.reason) || f.reason}</p>)}
       {job.failed > 5 && <p className="muted small nomargin">{t("receipts.failedMore", { n: job.failed - 5 })}</p>}
       <p className="nomargin" style={{ marginTop: 8 }}>
         {job.filed > 0 && <button type="button" className="chip" id="rc-job-check" onClick={() => { onCheck(); seen(); }}>{t("receiptJob.check")}</button>}{" "}

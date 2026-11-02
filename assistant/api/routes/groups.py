@@ -43,8 +43,13 @@ def group_get(req: Request):
     if not groups.enabled() or _is_demo(req):
         return {"enabled": False, "group": None}
     user = state._current_user.get()
-    return {"enabled": True, "group": groups.view(user),
-            "recent": groups.recent(user)}
+    view = groups.view(user)
+    out = {"enabled": True, "group": view, "recent": groups.recent(user)}
+    if view is None:
+        gone = groups.removed_notice(user)
+        if gone:
+            out["removed_from"] = gone
+    return out
 
 
 @router.post("/api/group")
@@ -88,13 +93,32 @@ async def group_invite(req: Request):
 
 @router.get("/api/group/preview")
 def group_preview(req: Request, code: str = ""):
-    _me(req)
+    user = _me(req)
     _rate(req)
+    busy = groups.already_in(user)
+    if busy:
+        raise HTTPException(409, busy)
     p = groups.preview(code)
     if p is None:
-        raise HTTPException(404, "that code is wrong or has expired")
+        st, _g = groups.code_status(code)
+        if st in ("used", "expired"):
+            raise HTTPException(410, groups.USED_CODE if st == "used" else groups.EXPIRED_CODE)
+        raise HTTPException(404, groups.WRONG_CODE)
     mine = state.named_lists()
     return {**p, "my_lists": len(mine)}
+
+
+@router.get("/auth/group-invite/{code}")
+def group_invite_public(req: Request, code: str):
+    """Public (no sign-in): what an invite link leads to, so the page can
+    name the group before sign-in. Rate-limited like code guesses."""
+    if not groups.enabled():
+        raise HTTPException(404, groups.WRONG_CODE)
+    _rate(req)
+    p = groups.public_preview(code)
+    if p is None:
+        raise HTTPException(404, groups.WRONG_CODE)
+    return p
 
 
 @router.post("/api/group/join")
@@ -104,10 +128,12 @@ async def group_join(req: Request):
     body = await _json_obj(req)
     try:
         groups.join(user, body.get("code", ""))
+    except groups.CodeGone as e:
+        raise HTTPException(410, str(e))
     except LookupError as e:
         raise HTTPException(404, str(e))
     except ValueError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(409 if "already in" in str(e) else 400, str(e))
     return {"enabled": True, "group": groups.view(user)}
 
 

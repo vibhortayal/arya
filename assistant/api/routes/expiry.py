@@ -1,9 +1,11 @@
 """Expiry dates: read one off a package, save it, and act on it."""
 import os
 
+from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import state
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _d_today, _json_obj, new_client
@@ -44,15 +46,14 @@ async def expiry_read(req: Request, sample: int = 0):
             raise HTTPException(400, "empty upload")
         if len(body) > 12_000_000:
             raise HTTPException(413, "photo too large (12 MB max)")
-        if not os.environ.get("MODEL_API_KEY"):
-            raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+        own_key.need_model()
         _budget_guard(demo=demo)
         client = new_client()
         try:
             read = await run_in_threadpool(expiry.read_expiry_photo, body, client,
                                            media_type=media, today=today)
         except RuntimeError as e:
-            raise HTTPException(502, str(e)[:200])
+            raise HTTPException(502, safe_detail(e))
     item_id = expiry.match_item(read["name"], state.dictionary()["entries"], state.flags())
     read["match"] = ({"item_id": item_id, "name": _known_item_name(item_id)}
                      if item_id else None)

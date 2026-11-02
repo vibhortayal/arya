@@ -159,7 +159,9 @@ class TestStartShopping(unittest.TestCase):
         self.assertNotIn('data-shop="express"', js)
         self.assertNotIn('id="shop-sugg"', js)
         self.assertIn('id="list-suggest"', js)
-        self.assertIn('nav.show("community", { listId: here ? here.id : "all" });', js)
+        # Quest plays named lists only; Everything else ticks off here.
+        self.assertIn('if (!here) { startList(); return; }', js)
+        self.assertIn('nav.show("community", { listId: here.id });', js)
         self.assertIn("if (D.fastMode && !D.fastDone) {", src("screens/NewList.tsx"))
         # The fast trip skips the bag and the mode screen, and a Quest
         # opens already playing.

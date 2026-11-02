@@ -45,6 +45,11 @@ class TestAskSurfaces(unittest.TestCase):
         StubChat.actions = []
         self.c = TestClient(main.app)
         assert self.c.post("/auth/setup", json={"username": "owner", "password": "pw"}).status_code == 200
+        # A one-list household: an add that names no list goes there
+        # (every item on a list, owner 2026-11-02). Tests that need more
+        # lists make them and say which list they mean.
+        r = self.c.post("/api/lists/delete", json={"id": "l-demo-tj", "move_to": "l-demo-costco"})
+        assert r.status_code == 200, r.text
 
     def ask(self, actions, **extra):
         StubChat.actions = actions

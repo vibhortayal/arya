@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { askList, type NeedList } from "../lib/listPick";
+import { orderLists } from "../ui/ListPick";
 import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
-import { ApiError, get, post } from "../lib/api";
+import { ApiError, get, noKeyMessage, post } from "../lib/api";
 import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { useToast } from "../ui/Toast";
 import { useNav } from "../app/nav";
 import { IconMic } from "../ui/icons";
@@ -13,6 +16,7 @@ import { languageToast, offerFor, offerRefused, refuseOffer } from "../lib/langu
 import "../ui/language.css";
 import { t, useTranslation } from "../i18n";
 import { EditList, EditTitle } from "../ui/EditList";
+import { fitPhoto } from "../lib/photo";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -27,7 +31,7 @@ import { EditList, EditTitle } from "../ui/EditList";
 type Chip = { label: string; run: () => void };
 type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string; offer?: string;
   url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; applied?: string[] };
 const lines: Line[] = [];
 const history: Msg[] = [];
 let offered = false;
@@ -91,17 +95,20 @@ export async function shrinkPhoto(f: File, max = 1600): Promise<{ media_type: st
     c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
     const blob = await new Promise<Blob | null>(ok => c.toBlob(ok, "image/jpeg", 0.85));
     if (blob) return { media_type: "image/jpeg", data: await b64(blob) };
-  } catch { /* fall through to the original */ }
-  if (f.size > 5_000_000) throw new Error("photo too large");
-  return { media_type: f.type || "image/jpeg", data: await b64(f) };
+  } catch { /* fall through: compress the way receipts are */ }
+  const small = await fitPhoto(f);
+  if (small.size > 5_000_000) throw new Error(t("ask.photoTooLarge"));
+  return { media_type: small.type || "image/jpeg", data: await b64(small) };
 }
 type ExpiryRead = { readable: boolean; name?: string | null; date?: string | null; kind?: string; match?: { item_id: string; name: string } | null };
 const readJson = async (r: Response) => {
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
   return r.json();
 };
-const post_photo = (url: string, f: File) =>
-  fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
+const post_photo = async (url: string, original: File) => {
+  const f = await fitPhoto(original);
+  return fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
+};
 
 export function Chat() {
   const { t } = useTranslation();
@@ -115,6 +122,7 @@ export function Chat() {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   // An answer is on its way: Send waits, so a second tap never asks twice (#4).
   const [busy, setBusy] = useState(false);
@@ -181,8 +189,24 @@ export function Chat() {
     const done = (...l: Line[]) => { if (!live()) return; drop(w); add(...l); };
     try {
       if (kind === "list") {
-        const out = await post_photo("/api/list/from-photo", f) as { kind: string; names: string[]; added: number };
-        if (out.kind === "receipt") {
+        const out = await post_photo("/api/list/from-photo", f) as { kind: string; names: string[]; added: number; needs_list?: NeedList };
+        if (out.needs_list) {
+          // Every item on a list: one chip per list (the usual one first),
+          // or the sheet to make a list first.
+          const names = out.names || [];
+          const fileOn = async (l: { id: string; name: string }) => {
+            try {
+              await post("/api/list/from-text", { text: names.join("\n"), list_id: l.id });
+              add({ kind: "arya", text: t("listPick.addedTo", { what: names.join(", "), list: l.name }) });
+            } catch (e) { add({ kind: "arya", text: e instanceof Error ? e.message : String(e) }); }
+          };
+          const lists = orderLists(out.needs_list.lists || [], out.needs_list.suggested);
+          if (!lists.length) {
+            done({ kind: "arya", text: t("listPick.firstTitle"), chips: [{ label: t("listPick.makeAList"), run: async () => { const p = await askList({ ...out.needs_list!, names }); if (p) await fileOn(p); } }] });
+          } else {
+            done({ kind: "arya", text: t("listPick.whichFor", { what: names.join(", ") }), chips: lists.slice(0, 6).map(l => ({ label: l.name, run: () => fileOn(l) })) });
+          }
+        } else if (out.kind === "receipt") {
           done({ kind: "arya", text: t("ask.looksLikeReceipt"), chips: [{ label: t("ask.opt.receipt"), run: () => run({ kind: "choose", text: "", file: f }, "receipt") }] });
         } else if (!out.added) {
           done({ kind: "arya", text: t("ask.noListFound"), sub: t("ask.nothingChanged") });
@@ -266,7 +290,7 @@ export function Chat() {
       const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
-      history.push({ role: "assistant", content: res.reply });
+      history.push({ role: "assistant", content: res.reply, ...(res.applied?.length ? { applied: res.applied } : {}) });
       const offer = !offered && !offerRefused() ? offerFor(language, q, languages) : null;
       if (offer) offered = true;
       // The ✓ lines confirm the actions; an empty reply adds no bubble of its own (retest #9).
@@ -280,7 +304,7 @@ export function Chat() {
       history.pop();
       // Arya's daily limit (or a failed own key): a card that offers the shopper's own Meta key.
       if (e instanceof ApiError && isOwnKeyOffer(e.offer)) { add({ kind: "err", text: e.message, code: q, offer: e.offer }); return; }
-      add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
+      add({ kind: "err", text: noKeyMessage(e) || t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
   };
 
@@ -290,14 +314,16 @@ export function Chat() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setNote(t("common.voice.transcribing"));
+      setReading(true);
+      setNote(null);
       try {
         const said = await transcribeBlob(wav);
         if (said) { setNote(null); send(said); }
         else setNote(t("ask.voiceEmpty"));
       } catch (e) {
-        setNote(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
+        setNote(noKeyMessage(e) || t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
+      setReading(false);
       return;
     }
     if (!voiceSupported()) {
@@ -307,10 +333,18 @@ export function Chat() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setNote(t("ask.listening"));
+      setNote(null);
     } catch {
       setNote(t("common.voice.refused"));
     }
+  };
+
+  /* Cancel on the Listening card: the recording is dropped, nothing is sent. */
+  const cancelMic = () => {
+    capture.current?.cancel();
+    capture.current = null;
+    setListening(false);
+    setNote(null);
   };
 
   /* The quick questions: Arya's own (askChips) until the person edits
@@ -428,6 +462,7 @@ export function Chat() {
         ) : <div key={i} className={"bubble " + l.kind}>{l.text}</div>)}
       </div>
       <form id="chat-form" onSubmit={(ev: FormEvent) => { ev.preventDefault(); if (!busy) send(text); }}>
+        {(listening || reading) && <ListeningCard id="ask-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
         {pending ? (
           <div className="spchip" id="ask-photo-strip">
             <img src={pending.url} alt="" />
@@ -439,7 +474,8 @@ export function Chat() {
           value={text} onChange={e => setText(e.target.value)} />
         <button type="submit" className="btn primary" id="chat-send" disabled={busy || (!text.trim() && !pending)}>{t("common.send")}</button>
         <div className="caprow">
-          <button id="btn-mic" type="button" className={"chip" + (listening ? " listening" : "")} aria-label={listening ? t("ask.stopTalking") : t("ask.speakYourMessage")} onClick={mic}><IconMic />{listening ? t("ask.stop") : t("ask.talk")}</button>
+          {/* While listening, the card holds the one Stop and send (owner, 2026-11-01). */}
+          {!listening && !reading && <button id="btn-mic" type="button" className="chip" aria-label={t("ask.speakYourMessage")} onClick={mic}><IconMic />{t("ask.talk")}</button>}
           <label className="chip" htmlFor="ask-photo" {...pickerProps("ask-photo")}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
             {t("ask.photoWord")}

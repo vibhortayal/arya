@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { get, post, forgetReads, forgetKept, SESSION_ENDED } from "./api";
+import { get, post, forgetReads, forgetKept, SESSION_ENDED, friendlyError, noKeyMessage } from "./api";
 
 const reply = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 
@@ -58,6 +58,18 @@ describe("offline copy", () => {
   });
 });
 
+describe("a structured refusal", () => {
+  afterEach(() => vi.restoreAllMocks());
+  test("reads as its message and keeps the rest for the screen", async () => {
+    const detail = { code: "pick_list", message: "Which list should this go on? Open a list and add it there.", lists: [{ id: "l-1", name: "Costco" }] };
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ detail }), { status: 409 })));
+    const e = await post("/api/lists/delete", { id: "l-1" }).catch(x => x);
+    expect(e.message).toBe(detail.message);
+    expect(e.status).toBe(409);
+    expect(e.detail).toEqual(detail);
+  });
+});
+
 describe("a lost session (re-audit N1)", () => {
   afterEach(() => vi.restoreAllMocks());
   const r401 = (detail: string) => () => Promise.resolve(new Response(JSON.stringify({ detail }), { status: 401 }));
@@ -92,5 +104,16 @@ describe("kept reads", () => {
     forgetKept();
     await get("/api/town/hints");
     expect(f).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("a copy of Arya with no Meta key (local Docker, #432)", () => {
+  test("the no-key error is shown as it is, saying where the key goes", () => {
+    const msg = friendlyError("MODEL_API_KEY not provisioned on this runtime");
+    expect(msg).toContain("MODEL_API_KEY=");
+    expect(msg).toContain("docker compose up -d");
+    expect(noKeyMessage(new Error(msg))).toBe(msg);
+    expect(noKeyMessage(new Error("MODEL_API_KEY not provisioned on this runtime"))).toBe(msg);
+    expect(noKeyMessage(new Error("Meta's model is busy right now."))).toBeNull();
   });
 });
