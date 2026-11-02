@@ -30,6 +30,16 @@ designed it yet. Sources are named so you can check them.
   Source: `docs/quest/GAME-DESIGN.md`.
 - **Density first.** Win one metro's stores completely before expanding; a thin
   layer over many stores is worth little. Source: `docs/quest/BUSINESS.md`.
+- **Shared price data from receipts.** Today every price comes from your own
+  receipts only. A shared figure across households is not built (see Arya
+  shoppers above).
+- **User-contributed store maps.** Shoppers already map a store with the guided
+  scan, and no store ships pre-mapped. What is not built: sharing one
+  shopper's map with others at scale, and consensus between several maps.
+  Source: `SPEC.md` "Not in scope".
+- **Shared household lists.** Groups already share lists between the people you
+  live with. Not built: split lists inside a group and sharing a list with
+  another account through the API (`docs/API.md`, "Later").
 - Item and store profile pages; split the list (kids or a partner); friend run
   notifications (designed, not built); reimbursement tracking for items bought
   for others.
@@ -45,6 +55,12 @@ designed it yet. Sources are named so you can check them.
 - **More use of open weights.** Muse Spark Open is a second seat on the staple
   judge and labels dictionary names today. Wider use would need the personal
   data rule kept (names only).
+- **More languages.** Ask answers in the language you write; Spanish and Hindi
+  were the ones verified, and the app's buttons and labels are English only
+  (`MULTILINGUAL-ASK.md`). Translating the app itself is a separate project.
+- **A hosted open-weights option.** Today one open model (Muse Spark Open) is
+  hosted on Baseten for two small jobs. A fuller option for people who want
+  their reads on open weights is an idea only.
 - A non-English Ask currently sends the whole feature guide (about 19 KB) on
   each question; trimming that is planned.
 
