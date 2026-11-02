@@ -2359,3 +2359,14 @@ body.hunting #offlinebar { display: none !important; }
 #line-fix .lf-err { color: var(--danger); font-size: 14px; margin: 6px 0 0; }
 /* Join a group: Join and Not now right under who invited you (owner, 2026-11-02). */
 .gj-actions { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 6px; }
+
+/* Use Arya in Muse (screens/Muse.tsx): numbered steps and copy lines. */
+.muse-step { display: flex; align-items: center; gap: 8px; }
+.muse-step .num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; letter-spacing: 0; }
+.muse-line { margin-top: 8px; }
+.muse-line .row, .muse-try { gap: 8px; align-items: center; }
+.muse-line code { min-width: 0; overflow-wrap: anywhere; background: var(--fill); border-radius: 8px; padding: 8px 10px; font: 13px ui-monospace, Menlo, monospace; }
+.muse-try { margin-top: 8px; }
+.muse-once { color: #8A4B00; font-weight: 600; }
+#muse-other summary { font-weight: 600; cursor: pointer; }
+#muse-other, #muse-help { margin-top: 14px; }

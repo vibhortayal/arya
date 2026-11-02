@@ -5,8 +5,11 @@ import { useToast } from "../ui/Toast";
 import { api, post } from "../lib/api";
 import { useTranslation } from "../i18n";
 
-/* Port of pwa/index.html #view-muse ("Connect an AI agent") plus
- * app.js paintTokenRow / mintInto / SETUP_PROMPT. Back lands on Profile.
+/* "Use Arya in Muse" (owner, 2026-11-02; mockup
+ * claude.ai/artifact/GzhrLQrGXDqcymtvsb4zsJ): make a code, tell Muse
+ * to connect, paste the code into the secure box Muse opens, try it.
+ * Other AI apps sit in a fold. Code minting is unchanged (app.js
+ * paintTokenRow / mintInto). Back lands on Profile.
  * The Shell already renders <section id="view-muse">; no second one. */
 
 const SETUP_PROMPT = `You are connected to my Arya — my grocery assistant at https://arya.teamnightshift.org. Arya keeps a living model of my purchases, inventory and shopping list.
@@ -21,6 +24,14 @@ Rules: never guess a product name you cannot read — flag it and let Arya queue
 My connector token lives in your secure credential store — the one I pasted when we set this up. Send it as a Bearer token and never print it.`;
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+export const MCP_URL = "https://arya.teamnightshift.org/api/mcp";
+
+/* Copy, or leave the text selected to copy by hand. */
+function copyText(text: string) {
+  try { if (navigator.clipboard) return navigator.clipboard.writeText(text).then(() => true, () => false); } catch { /* not allowed */ }
+  return Promise.resolve(false);
+}
 
 export function Muse() {
   const { t } = useTranslation();
@@ -45,43 +56,87 @@ export function Muse() {
   };
   const copy = () => {
     inputRef.current?.select();
-    if (navigator.clipboard) navigator.clipboard.writeText(inputRef.current?.value ?? "").catch(() => { /* selected; copy by hand */ });
+    copyText(inputRef.current?.value ?? "");
     toast(t("muse.tokenCopied"));
   };
   const revoke = async () => {
     try { await api("/auth/token", { method: "DELETE" }); toast(t("muse.revoked")); paint(); }
     catch (e) { toast(errMsg(e)); }
   };
+  const copyLine = (text: string) => { copyText(text); toast(t("muse.copied")); };
+
+  const step = (n: number, title: string, id: string) => (
+    <h3 className="sect muse-step" id={id}><span className="num" aria-hidden="true">{n}</span>{title}</h3>
+  );
+  const line = (text: string, id: string, label?: string) => (
+    <div className="muse-line">
+      {label && <span className="sub">{label}</span>}
+      <div className="row"><code className="grow">{text}</code>
+        <button className="btn" type="button" data-copy-line={id} aria-label={t("muse.copyThis", { what: text })} onClick={() => copyLine(text)}>{t("muse.copyShort")}</button></div>
+    </div>
+  );
+  const connect = t("muse.connectLine", { url: MCP_URL });
+  const tries = [t("muse.try1"), t("muse.try2"), t("muse.try3")];
 
   return (
     <>
       <p><a href="#" id="pfm-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
-      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("muse.connectAnAiAgent")}</h1>
+      <h1 className="largetitle" style={{ fontSize: 28 }}>{t("muse.title")}</h1>
+      <p className="muted" id="muse-intro">{t("muse.intro")}</p>
+
+      {step(1, t("muse.step1"), "muse-s1")}
       <div className="group pad">
-        <p className="muted nomargin">{t("muse.useAryaFromAnAi")}</p>
-        <p className="muted nomargin" style={{ marginTop: 6 }}>{t("muse.sameCodeListsApi")} <a href="/developers">{t("muse.developerPage")}</a></p>
-        <div className="row" id="profile-token-row" style={{ marginTop: 10 }}>
+        <div className="row" id="profile-token-row">
           {token !== null ? (
             <>
               <input className="grow" data-token-value readOnly value={token} ref={inputRef} />
-              <button className="btn" data-copy="1" onClick={copy}>{t("muse.copy")}</button>
-              <span className="sub">{t("muse.copyItNowItIs")}</span>
+              <button className="btn primary" data-copy="1" type="button" onClick={copy}>{t("muse.copyShort")}</button>
             </>
           ) : has === null ? (demo ? <span className="sub grow" id="muse-demo">{t("muse.demoNoCode")}</span> : null) : (
             <>
               <span className="sub grow">{has ? t("muse.active") : t("muse.noCode")}</span>
-              <button className="btn" data-mint="1" onClick={mint}>{has ? t("muse.newCode") : t("muse.makeCode")}</button>
-              {has && <button className="btn danger" data-revoke="1" onClick={revoke}>{t("muse.revoke")}</button>}
+              <button className="btn primary" data-mint="1" type="button" onClick={mint}>{has ? t("muse.newCode") : t("muse.makeCode")}</button>
             </>
           )}
         </div>
-        <p style={{ marginTop: 10 }}>
-          <button className="btn" data-copy-prompt="1" type="button" onClick={() => {
-            if (navigator.clipboard) navigator.clipboard.writeText(SETUP_PROMPT).catch(() => { /* not allowed here */ });
-            toast(t("muse.promptCopied"));
-          }}>{t("muse.copySetupPrompt")}</button> <span className="sub">{t("muse.pasteItIntoYourAssistant")}</span>
-        </p>
+        <p className={"sub nomargin" + (token !== null ? " muse-once" : "")} style={{ marginTop: 8 }}>{token !== null ? t("muse.copyItNow") : t("muse.shownOnce")}</p>
       </div>
+
+      {step(2, t("muse.step2"), "muse-s2")}
+      <div className="group pad">
+        <p className="nomargin">{t("muse.inMuseSay")}</p>
+        {line(connect, "connect")}
+        {line(MCP_URL, "url", t("muse.addressOnly"))}
+      </div>
+
+      {step(3, t("muse.step3"), "muse-s3")}
+      <div className="group pad"><p className="nomargin">{t("muse.pasteBody")}</p></div>
+
+      {step(4, t("muse.step4"), "muse-s4")}
+      <div className="group pad">
+        <p className="nomargin">{t("muse.askMuse")}</p>
+        {tries.map((q, k) => (
+          <div className="row muse-try" key={k}><span className="grow">“{q}”</span>
+            <button className="btn" type="button" data-copy-try={k} aria-label={t("muse.copyThis", { what: q })} onClick={() => copyLine(q)}>{t("muse.copyShort")}</button></div>
+        ))}
+      </div>
+
+      <details className="group pad" id="muse-other">
+        <summary>{t("muse.otherApps")}</summary>
+        <p className="sub">{t("muse.otherBody")}</p>
+        {line("Authorization: Bearer " + t("muse.yourCode"), "header", t("muse.header"))}
+        <p style={{ marginTop: 10 }}>
+          <button className="btn" data-copy-prompt="1" type="button" onClick={() => { copyText(SETUP_PROMPT); toast(t("muse.promptCopied")); }}>{t("muse.copySetupPrompt")}</button>
+        </p>
+        <p className="sub nomargin">{t("muse.promptWhy")}</p>
+      </details>
+
+      <div className="group pad" id="muse-help">
+        <b>{t("muse.notWorking")}</b>
+        <p className="sub nomargin">{t("muse.notWorkingBody")}</p>
+        {has && token === null && <button className="btn danger" data-revoke="1" type="button" style={{ marginTop: 10 }} onClick={revoke}>{t("muse.revoke")}</button>}
+      </div>
+      <p className="sub" style={{ textAlign: "center" }}>{t("muse.sameCodeListsApi")} <a href="/developers">{t("muse.developerPage")}</a></p>
     </>
   );
 }
