@@ -57,11 +57,25 @@ describe("store map labels", () => {
 });
 
 describe("AppSource", () => {
-  it("offers Everything and each named list with open items", async () => {
-    replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Bread", list: null }] };
-    replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }, { id: "l2", name: "Empty" }] };
+  it("offers each named list with open items, never a made-up Everything list", async () => {
+    replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Eggs", list: "l2" }] };
+    replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }, { id: "l2", name: "Indian Store" }, { id: "l3", name: "Empty" }] };
     const ls = await new AppSource().lists();
-    expect(ls.map(l => [l.id, l.items.length])).toEqual([["all", 2], ["l1", 1]]);
+    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["l2", "Indian Store", 1]]);
+  });
+
+  it("items on no named list come as Everything else, as on Lists", async () => {
+    replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Bread", list: null }] };
+    replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }] };
+    const ls = await new AppSource().lists();
+    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["else", "Everything else", 1]]);
+  });
+
+  it("with no named lists it is one list, Your list", async () => {
+    replies["/api/quest/plan"] = { list: [{ name: "Milk", list: null }, { name: "Bread", list: null }] };
+    replies["/api/lists"] = { lists: [] };
+    const ls = await new AppSource().lists();
+    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["else", "Your list", 2]]);
   });
 
   it("a real trip is a hunt session: grabs check, misses report, finish closes", async () => {
@@ -72,7 +86,7 @@ describe("AppSource", () => {
     const src = new AppSource();
     const [st] = await src.nearbyStores();
     expect(st.kind).toBe("partial");
-    const { layout, items } = await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Milk" }, { name: "Chips" }] });
+    const { layout, items } = await src.open("s1", { id: "l1", name: "Costco", items: [{ name: "Milk" }, { name: "Chips" }] });
     expect(layout.kind).toBe("partial");
     expect(items.find(i => i.name === "Milk")?.spot?.hint).toBe("Near the Milk shelf");
     expect(items.find(i => i.name === "Chips")?.spot).toBeUndefined(); // fogged section: no hint passed as fact
@@ -97,7 +111,7 @@ describe("AppSource per-location maps", () => {
     const src = new AppSource();
     await src.nearbyStores();
     expect(calls.find(c => c.url.startsWith("/api/storemap"))?.url).toBe("/api/storemap?store=Safeway%7Cs1");
-    await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Milk" }] });
+    await src.open("s1", { id: "l1", name: "Costco", items: [{ name: "Milk" }] });
     await src.report({ kind: "found", item: "Milk", section: "dairy" } as any);
     expect(calls.find(c => c.url === "/api/storemap/segments")?.body).toMatchObject({ store: "Safeway|s1", label: "Dairy" });
   });
@@ -109,7 +123,7 @@ describe("AppSource per-location maps", () => {
     const src = new AppSource();
     const [st] = await src.nearbyStores();
     expect(st).toMatchObject({ kind: "simulated", seen: "Typical Trader Joe's layout · not mapped here yet" });
-    const { layout, items } = await src.open("tj2", { id: "all", name: "Everything", items: [{ name: "Milk" }, { name: "Chips" }] });
+    const { layout, items } = await src.open("tj2", { id: "l1", name: "Costco", items: [{ name: "Milk" }, { name: "Chips" }] });
     expect(layout).toMatchObject({ kind: "simulated", mapped: [], typicalOf: "Trader Joe's" });
     expect(items[0].spot?.hint).toBe("Usually near the Butter & Cheese shelf at Trader Joe's");
     expect(items[1].spot).toBeUndefined();
@@ -129,7 +143,7 @@ describe("AppSource zones", () => {
     replies["/api/quest/sessions"] = { id: "q2", store: "Safeway", state: "not_started", mode: "quest", items: [] };
     const src = new AppSource();
     await src.nearbyStores();
-    const { items } = await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Milk" }, { name: "Dish brush" }] });
+    const { items } = await src.open("s1", { id: "l1", name: "Costco", items: [{ name: "Milk" }, { name: "Dish brush" }] });
     const ask = calls.find(c => c.url === "/api/quest/zones");
     expect(ask?.body.items).toEqual(["Dish brush"]);
     expect(ask?.body.graph).toBe("template");
@@ -155,7 +169,7 @@ describe("AppSource Build", () => {
     const [st] = await src.nearbyStores();
     expect(st.seen).toBe("Your map");
     expect(calls.some(c => c.url.startsWith("/api/storemap"))).toBe(false);
-    const { layout, items } = await src.open("s1", { id: "all", name: "Everything", items: [{ name: "Brie" }, { name: "Chips" }] });
+    const { layout, items } = await src.open("s1", { id: "l1", name: "Costco", items: [{ name: "Brie" }, { name: "Chips" }] });
     expect(layout.area).toBe("Your map");
     expect(layout.sections.map(s => s.id).sort()).toEqual(["cheese", "snacks"]);
     expect(items.map(i => i.section)).toEqual(["cheese", "snacks"]);

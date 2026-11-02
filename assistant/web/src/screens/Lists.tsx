@@ -36,7 +36,7 @@ import { fitPhoto } from "../lib/photo";
  * <section id="view-list">.
  *
  * Start shopping opens the Quest game on this list:
- * nav.show("community", { listId }) ("all" for Everything else).
+ * nav.show("community", { listId }) ("else" for Everything else).
  *
  * Local helpers kept here: the swipe / long-press wiring, the split
  * preview, the group line and the Eyes block. */
@@ -834,7 +834,7 @@ export function Lists() {
   // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
-    nav.show("community", { listId: here ? here.id : "all" });
+    nav.show("community", { listId: here ? here.id : "else" });
   };
   // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
   const snapAisle = async (name: string) => {
