@@ -63,7 +63,7 @@ hold the truth about what you buy, but nobody reads them.
 - **Quest (optional).** Start shopping turns the list into a walk through
   your store. Find it for me points the camera at a shelf and lights up
   the item. Not here? warns the next shopper. A guided scan lets shoppers
-  map their store, with every person blurred first.
+  map their store, with the people it detects pixelated first.
 - **Open to other apps.** A developer portal (/developers) with an open
   Lists API, per-account tokens and a standard MCP connector, so an
   MCP-capable assistant can read the list and add to it.

@@ -106,5 +106,5 @@ private; their reward is a smarter list and a hunt that plans itself.
 
 - No random spawns or sponsored placements in routes.
 - No purchases, external links or chat in the hunt.
-- No pictures of people kept: frames are kept only after SAM blurs
-  every person in them.
+- No pictures of people kept: frames are kept only after SAM pixelates
+  the people it detects.

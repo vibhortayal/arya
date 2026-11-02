@@ -51,7 +51,7 @@ Every metric is receipt-verified, so the social layer needs no trust: leaderboar
 
 ## Rollout story
 
-- Shipped for the hackathon: no store ships pre-mapped. Every store starts as a labelled typical layout and is mapped by its shoppers with the guided camera scan (pan, no taps; SAM blurs people first). Status is earned: only sections with a real, fresh picture count.
+- Shipped for the hackathon: no store ships pre-mapped. Every store starts as a labelled typical layout and is mapped by its shoppers with the guided camera scan (pan, no taps; SAM pixelates the people it detects first). Status is earned: only sections with a real, fresh picture count.
 - Mapping is crowdsourced from day one by design: a store is added by the first player who wants to hunt in it.
 - Depth path (post-hackathon): camera placement in the aisle, more game skins (escape room), household analytics, mapper events and store leaderboards.
 

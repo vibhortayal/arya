@@ -146,7 +146,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `2026-10-29-map-my-store-up-front.md`.
   Map my store's walk is a guided scan: pan, never tap; Arya reads
   sections, aisle signs, items and (opt-in) shelf prices every ~4 s,
-  outlines what it found, and blurs people before anything is kept
+  outlines what it found, and pixelates the people it detects before anything is kept
   (SAM 3.1 + Spark, daily cap). `2026-10-29-guided-store-scan.md`.
   The Profile page is titled Settings. `2026-10-29-no-map-stores.md`.
   Find or add a store right where one is needed (Teach Arya your store,
