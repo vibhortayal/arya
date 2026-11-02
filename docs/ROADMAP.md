@@ -193,11 +193,7 @@ and, where it touches personal data, a privacy review first.
 - A real licence choice, once the owner decides.
 - Store permission programme for mapping, and a takedown route for stores.
 
-**Partners (only after trust is earned; see `docs/quest/BUSINESS.md`)**
-- Anonymous, aggregated shelf and stockout data for one chain in one region.
-- Labelled brand offers at the shelf, shown outside the hunt, never as a stop.
-- The mapping and game engine for other indoor places (hardware, pharmacy,
-  warehouses, campuses).
+**No money plan.** The owner decided (2026-11-02) that there is no plan to make money for now; the goal is that people use Arya and help each other.
 
 ## Use your own Meta key: unfinished, switched off, not used
 The owner decided not to use this (2026-11-02). The code exists in the repo

@@ -3,6 +3,7 @@
 Arya is a grocery list that learns from your receipts. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
+- **Why this is built for our world:** Arya is for shoppers who keep a household fed and carry the list in their head. It reads receipts, learns what you buy and writes the list, which frees time and mental space. The owner had this problem personally. It is built for the community of shoppers, not for money: the goal is that people use it and help each other. [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** VIDEO_LINK_PLACEHOLDER
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)
@@ -15,7 +16,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - Receipts are read, then every line is checked against the printed total in plain code; returns net out. [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md)
 - Add by typing, voice, a photo of a note, or your own AI assistant through the MCP connector. [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)
 - Quest, an optional game, turns the trip into a hunt with no clock and no way to lose. [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)
-- Who it is for and why: [`docs/quest/BUSINESS.md`](docs/quest/BUSINESS.md)
+- Who it is for, the principles and the landscape: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md), [`docs/quest/BUSINESS.md`](docs/quest/BUSINESS.md)
 
 ## Use of Meta AI tooling (25%)
 

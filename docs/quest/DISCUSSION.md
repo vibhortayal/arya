@@ -1,5 +1,8 @@
 # Discussion log — how Arya Quest got its shape
 
+> Historical record of the early design conversation. Anything in it about charging, revenue or a business model is not current: since 2026-11-02 there is no plan to make money, and the goal is that people use Arya and help each other. See `docs/DECISIONS.md`.
+
+
 The owner's steering, in order, 2026-10-27. Each entry ends with what it changed.
 
 1. **A 3D store, for fun.** "Build a 3D model of the grocery store from pictures and videos I take — walk through it, it shows you we are here, go next, go next." → The store layer stopped being a camera-overlay afterthought and became a place you walk. (Stage 5 reframed.)

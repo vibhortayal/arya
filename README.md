@@ -13,6 +13,8 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
+<p align="center"><strong>Built for our world.</strong> Arya is for shoppers who keep a household fed and are tired of holding the list in their head. It reads your receipts, learns what you buy, and writes the list for you, so it gives back time and mental space. The owner built it to fix a problem they had themselves. It is for the community of shoppers and not for money: the goal is that people use it and help each other. <a href="docs/PRINCIPLES.md">Principles and goals</a></p>
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
@@ -40,6 +42,14 @@ make the window about 390 px wide. Open Lists API and docs for developers:
 https://arya.teamnightshift.org/developers.
 
 Submission deadline: Nov 4, 2026, 9:00 PM ET.
+
+## Principles and goals
+
+- **For shoppers, meant to be built by them.** Store maps come from shoppers' own scans, and households and groups share lists.
+- **Not for money.** No plan to make money for now: no ads, nothing for sale, we do not sell your data. The goal is that people use it and help each other.
+- **Trust and limits.** The model proposes and code checks; your data is yours; US first, other markets not tested.
+
+Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
 ## Why it is different
 

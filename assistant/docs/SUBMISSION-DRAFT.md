@@ -25,6 +25,14 @@ total, and learns what your household buys, how often and where. Your list
 then mostly writes itself. Add items by typing, voice or a photo of a note,
 ask Arya questions, and, if you like, turn the trip into a game.
 
+## Built for our world
+
+Arya is for shoppers who keep a household fed and carry the list in their
+head. It reads receipts, learns what you buy and writes the list, which
+frees time and mental space. The owner had this problem personally. It is
+built for the community of shoppers, not for money: the goal is that people
+use it and help each other. Principles and goals: `docs/PRINCIPLES.md`.
+
 ## Problem
 
 Groceries are one of a household's biggest weekly costs in money and
