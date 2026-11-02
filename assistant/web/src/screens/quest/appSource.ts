@@ -3,9 +3,9 @@
  *
  * - Lists come from the plan (GET /api/quest/plan + /api/lists): the
  *   unchecked list, one entry per named list. No made-up "Everything"
- *   list (owner, 2026-11-02): items on no named list come as
- *   "Everything else", the Lists tab's own name, and only when there
- *   are some; with no named lists at all it is just "Your list".
+ *   or "Everything else" list (owner, 2026-11-02): items on no named
+ *   list stay out of Quest until they are put on one. Only with no
+ *   named lists at all is the whole list one entry, "Your list".
  * - A store's look comes from its shared map (GET /api/storemap),
  *   one map per location ("name|store id"): only sections Arya has
  *   located there count (coverageOf below); the rest are fog or a
@@ -142,9 +142,6 @@ export class AppSource implements QuestSource {
       const its = rows.filter(r => r.list === l.id || (r.also || []).includes(l.id));
       if (its.length) out.push({ id: l.id, name: l.name, items: its.map(item), ...(l.stores?.[0] ? { store: l.stores[0] } : {}) });
     }
-    const known = new Set(lists.map(l => l.id));
-    const rest = rows.filter(r => !r.list || !known.has(r.list));
-    if (rest.length) out.push({ id: "else", name: "Everything else", items: rest.map(item) });
     return out;
   }
 

@@ -64,11 +64,11 @@ describe("AppSource", () => {
     expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["l2", "Indian Store", 1]]);
   });
 
-  it("items on no named list come as Everything else, as on Lists", async () => {
+  it("items on no named list stay out of Quest, no default Everything else", async () => {
     replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Bread", list: null }] };
     replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }] };
     const ls = await new AppSource().lists();
-    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["else", "Everything else", 1]]);
+    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1]]);
   });
 
   it("with no named lists it is one list, Your list", async () => {
