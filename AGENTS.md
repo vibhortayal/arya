@@ -165,8 +165,8 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys | Opus | Coordinator |
 | Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Coordinator |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Coordinator |
-| Researcher (market research thread) | Outside facts for the docs, each linked or marked unchecked | Shipped docs, code, deploys | Sonnet 5.5 | The Doc maintainer |
-| Editor (Fable 5.1, reads the repo cold) | Reads each new or rewritten reader-facing docs PR against the "Docs for readers" checklist in the PR template; report only | Merging, editing, code, deploys | Fable 5.1 | The coordinator and the Doc maintainer |
+| Researcher (market research thread; stays open for docs requests) | Outside facts for the docs, each linked or marked unchecked | Shipped docs, code, deploys | Sonnet 5.5 | The Doc maintainer |
+| Editor (reads the repo cold) | Reads each new or rewritten reader-facing docs PR against the "Docs for readers" checklist in the PR template; report only | Merging, editing, code, deploys | Fable 5.1 | The coordinator and the Doc maintainer |
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
@@ -208,7 +208,7 @@ page. A new document or a rewritten section in these goes through three roles:
 1. **Researcher** (the market research thread): finds and checks outside facts,
    links every one, and marks anything unchecked or vendor-sourced. Writes
    nothing into the shipped docs.
-2. **Doc maintainer** (this role): writes the document from the Researcher's
+2. **Doc maintainer** (the Doc maintainer thread): writes the document from the Researcher's
    notes and the repo, in one small docs-only PR.
 3. **Editor** (the Fable 5.1 thread "Edit docs as a judge would", which reads the
    repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
