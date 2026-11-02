@@ -1612,6 +1612,9 @@ body.selecting #tabs { display: none; }
 .infoinline { display: inline-block; vertical-align: -4px; color: var(--tertiary); }
 .infobtn::after { content: ""; position: absolute; inset: -9px; }  /* 44 pt target */
 .whyrow .infobtn { margin-top: 2px; }
+/* Spending headings: the (i) sits right after the words (owner, 2026-11-01). */
+#an-spend .name > .infobtn, #an-spend .an-cap > .infobtn { display: inline-grid; vertical-align: middle; width: 24px; height: 24px; margin: -4px 0 -4px 4px; }
+#an-spend .an-cap > .infobtn { text-transform: none; }
 .whyrow > div { flex: 1; min-width: 0; }
 .powrow { min-height: 48px; gap: 12px; align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
 .powrow .grow .sub { display: block; font-size: 15px; color: var(--secondary); font-weight: 400; line-height: 1.35; margin-top: 2px; }
