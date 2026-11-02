@@ -51,8 +51,8 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and blurs people before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and never sees personal data. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 **Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
-- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS and the first Quest stages.
-- Oct 28: accounts, the judge front door, five ways to add items, and Supabase, Resend and Baseten set up for Arya.
+- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
+- Oct 28: accounts, the judge front door, and Supabase, Resend and Baseten set up for Arya.
 - Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
 - Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
 
