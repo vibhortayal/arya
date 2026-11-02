@@ -78,6 +78,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
 | How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What is done and what is not | [`STATUS.md`](STATUS.md) |
 
