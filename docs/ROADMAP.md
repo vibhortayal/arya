@@ -18,8 +18,8 @@ through import and export.
 - **Meta Ray-Ban Display glasses.** Idea. Not researched yet; what is possible
   depends on what Meta offers developers for that device.
 - Both would reuse the shelf reading that exists today (SAM 3.1 plus Muse
-  Spark). Live guidance on glasses is outside the spec for now (`SPEC.md`,
-  "Not in scope").
+  Spark). Live guidance on glasses is outside the spec for now (`assistant/docs/SPEC.md`,
+  section "Not in scope").
 
 ## Store data and community
 - **Capture more store data.** Item-level locations from scan captures,
@@ -29,7 +29,7 @@ through import and export.
 - **Arya shoppers and community prices.** Opt-in prices, deals and live
   presence (Quiet, Busy, Packed). Today the opt-in records a choice only. A
   community figure would need 5 or more households over 30 days, a median and
-  no names. Source: `SPEC.md` FR-11.7, `SCALE-SIM.md`.
+  no names. Source: `assistant/docs/SPEC.md` (FR-11.7), `assistant/docs/SCALE-SIM.md`.
 - **Quest community layer.** Leaderboards, badges the data makes funny, team
   Shop-Offs settled by receipt time and Clue Hunts. Designed, not built.
   Source: `docs/quest/GAME-DESIGN.md`.
@@ -41,7 +41,7 @@ through import and export.
 - **User-contributed store maps.** Shoppers already map a store with the guided
   scan, and no store ships pre-mapped. What is not built: sharing one
   shopper's map with others at scale, and consensus between several maps.
-  Source: `SPEC.md` "Not in scope".
+  Source: `assistant/docs/SPEC.md`, section "Not in scope".
 - **Shared household lists.** Groups already share lists between the people you
   live with. Not built: split lists inside a group and sharing a list with
   another account through the API (`docs/API.md`, "Later").
@@ -53,8 +53,8 @@ through import and export.
   store's map status. None designed.
 
 ## AI and open weights
-- **Bring your own Meta key, finished.** Built but switched off in the live app
-  (see the next section).
+- **Bring your own Meta key: turn it on.** Built and tested, switched off in the
+  live app for now (see "Use your own Meta key" below).
 - **Replay mode** (recorded answers, so the AI parts work without a key).
   Planned, not built.
 - **More use of open weights.** Muse Spark Open is a second seat on the staple
@@ -62,7 +62,7 @@ through import and export.
   data rule kept (names only).
 - **More languages.** Ask answers in the language you write; Spanish and Hindi
   were the ones verified, and the app's buttons and labels are English only
-  (`MULTILINGUAL-ASK.md`). Translating the app itself is a separate project.
+  (`assistant/docs/MULTILINGUAL-ASK.md`). Translating the app itself is a separate project.
 - **A hosted open-weights option.** Today one open model (Muse Spark Open) is
   hosted on Baseten for two small jobs. A fuller option for people who want
   their reads on open weights is an idea only.
@@ -76,7 +76,7 @@ through import and export.
 - A community tier with user opt-in is an idea only
   (`assistant/docs/MODEL-POLICY.md`).
 - Forgot-password flow and per-user spend caps are held, by choice
-  (`ARCHITECTURE.md` section 13).
+  (`assistant/docs/ARCHITECTURE.md`, section 13, "Not built / held").
 - The licence is undecided; the repository is all rights reserved for now
   (`LICENSE`).
 
@@ -125,11 +125,10 @@ and, where it touches personal data, a privacy review first.
   shows returns are tracked).
 - Waste tracking and a monthly "what we threw away" view.
 - Gift and event lists with a shared link and no account needed to view.
-- Accessibility pass: larger text mode, screen-reader review, a calmer Quest
-  mode.
+- Accessibility: a screen-reader review and a calmer Quest mode. (Text size
+  and spacing already exist in Settings, under Display.)
 
 **Community**
-- Invite links that drop a new person into the same group.
 - Neighborhood and store pages with shared tips, labelled as opt-in.
 - Verified store news from shoppers, expiring when nobody confirms it.
 - Seasonal Quest events, themed skins (escape room) and household leaderboards
@@ -150,7 +149,9 @@ and, where it touches personal data, a privacy review first.
 - A public set of evals so others can check the reader scores.
 
 **Trust, privacy and operating it**
-- A data export and a clear delete-everything flow in one place.
+- One place for privacy controls. Export my data and Delete my account already
+  exist in Settings, under Account; the idea is to gather them with the other
+  privacy choices.
 - A public status page and an uptime history.
 - A staging address, and automated CI instead of manual runs.
 - A published API with webhooks and OAuth (`docs/API.md`, "Later").
@@ -163,14 +164,15 @@ and, where it touches personal data, a privacy review first.
 - The mapping and game engine for other indoor places (hardware, pharmacy,
   warehouses, campuses).
 
-## Use your own Meta key: built, switched off
-The code is on `main`: a Settings row, a Help topic, an Ask answer and an
-"I have my own Meta key" sign-up door. All of it stays hidden because it needs
-a key vault secret (`ARYA_KEY_VAULT_SECRET`) that the live app does not have.
-With no secret nothing is stored. It is off because there was not enough time
-to finish and test it and the owner is still deciding how it should work.
-To do: choose the account model (shared account with an optional key, or
-key-only accounts), finish the Tester's pass, set the secret, add the guide
-card. Operator notes: `assistant/docs/OPS.md`, "Own Meta keys". For someone
-running Arya themselves, the key that matters today is `MODEL_API_KEY`, a
-server key, not this feature.
+## Use your own Meta key: built and tested, switched off
+Built and tested (PRs #391 and #393). It is generic: a Settings row, a Help
+topic, an Ask answer, and an "I have my own Meta key" sign-up door that the
+owner opens or closes from Ops only. An account that signs up with its own key
+never falls back to Arya's keys. It is off in the live app only because the key
+vault secret (`ARYA_KEY_VAULT_SECRET`) is not set; with no secret nothing is
+stored and none of it shows. There was not enough time during the hackathon to
+polish the rollout, and the owner is still deciding when to turn it on. To
+turn it on: set the secret and redeploy (operator notes: `assistant/docs/OPS.md`,
+section "Own Meta keys (BYOK, 2026-11-01)"), then add the guide card. For
+someone running Arya themselves, the key that matters today is `MODEL_API_KEY`,
+a server key, not this feature.

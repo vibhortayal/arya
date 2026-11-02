@@ -181,10 +181,11 @@ The scored reports and the Gate 0 labels and results are in
 
 ## After the hackathon
 
-Nothing here is built. **Use your own Meta key** exists but is switched off in
-the live app (no key vault secret is set), because there was not enough time to
-finish and test it and the owner is still deciding how it should work. Ideas,
-grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
+Nothing in this list is built, except one thing that is built and switched
+off: **Use your own Meta key** is built and tested, and off in the live app
+only because the key vault secret is not set. There was not enough time to
+polish the rollout, and the owner is still deciding when to turn it on. The
+ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
 
 - **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
 - **Store data and community:** capture more store data, Arya shoppers and
