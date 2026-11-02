@@ -94,7 +94,7 @@ about 50 full visits a day). Set `ARYA_DEMO_DAILY_BUDGET_USD=2` in the
 VM env file to go back, then run `docker compose up -d` in
 `assistant/deploy` (a plain `restart` does not re-read the env file).
 
-**Switch at expiry.** The photo reader is an env setting:
+**Switch after Nov 9, not before.** The photo reader is an env setting:
 `ARYA_PHOTO_READER=spark` in the VM env file, then `docker compose up -d`
 in `assistant/deploy` (NOT `restart`, which keeps the old environment),
 puts photo decode on Spark Standard with no deploy; unset or `wonder`

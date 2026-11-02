@@ -93,7 +93,8 @@ review queue like any unverified read.
 
 ## Expiry
 
-The amendment expires **Nov 4, 2026**. After that date photo
+The amendment was first set to expire **Nov 4, 2026** and now expires Nov 9
+(see MODEL-POLICY.md). After that date photo
 decode must return to Spark Standard unless the owner extends
 the amendment in MODEL-POLICY.md. `decoded_by` stays either way —
 it is how the record shows which reader a receipt had.

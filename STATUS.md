@@ -286,15 +286,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
    The first load after the deploy installs the new service worker; it
    deletes the old `arya-v*` cache and takes over the open page.
-3. **Photo reader (no change on Nov 4):** keep `ARYA_PHOTO_READER=auto`.
-   Spark reads a photo first and Muse Wonder stays the backup for receipts
-   the checks flag, through Nov 9, which covers judging (Nov 5 to 8). Do
-   NOT set it to `spark` before Nov 9. After Nov 9, set `spark` in
-   `deploy/.env` and run `docker compose up -d` in `assistant/deploy`
-   (not `restart`: restart keeps the old environment). Any recreate
-   drops in-memory demo sessions, so do it once, check one receipt photo,
-   then deploy only in quiet hours.
-4. Caddyfile changes need a reload: `docker compose exec caddy caddy
+3. Caddyfile changes need a reload: `docker compose exec caddy caddy
    reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
