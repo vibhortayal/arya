@@ -181,12 +181,18 @@ The scored reports and the Gate 0 labels and results are in
 
 ## After the hackathon
 
-Not finished, said plainly. **Use your own Meta key** is built but switched
-off in the live app (hidden: no key vault secret is set), because there was not
-enough time to finish and test it and the owner is still deciding how it should
-work. Also planned: item and store profiles, off-site backups, a staging
-address, and the deferred security items. The full list is in
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
+Nothing here is built. **Use your own Meta key** exists but is switched off in
+the live app (no key vault secret is set), because there was not enough time to
+finish and test it and the owner is still deciding how it should work. Ideas,
+grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
+
+- **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
+- **Store data and community:** capture more store data, Arya shoppers and
+  community prices, Quest leaderboards, item and store profiles.
+- **AI and open weights:** bring your own key finished, replay mode, wider use
+  of open weights.
+- **Trust and privacy:** photo opt-in, privacy policy, deferred security items.
+- **Running it yourself:** a laptop-ready Docker setup, off-site backups, staging.
 
 ## Where things are
 
