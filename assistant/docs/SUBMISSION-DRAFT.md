@@ -142,6 +142,8 @@ Testing data is limited to one household, and limited data was available.
 Real-device testing was done only on an iPhone 17 Pro. Other phone sizes were
 checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
+**Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
+
 ## Try it
 
 - Live: https://arya.teamnightshift.org. Tap "Try it now" for a fictional

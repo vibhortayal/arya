@@ -31,6 +31,8 @@ is a phone-first app (a PWA), and it also has an optional game, **Quest**, that
 turns the shopping trip into a hunt through a model of your store and ends on a
 photo of your receipt.
 
+Built and tested with US receipts, dollars and stores first; other markets not tested.
+
 **Live demo:** https://arya.teamnightshift.org. The demo opens a fictional
 household with no account. Your changes live in a sandbox for your visit only;
 nothing reaches disk or another visitor. It is best on a phone; on a laptop,
@@ -285,6 +287,7 @@ The scored reports and the Gate 0 labels and results are in
 - **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
+- **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 
 ## After the hackathon
 
