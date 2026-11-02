@@ -209,8 +209,9 @@ STATUS.md bookkeeping) goes through three roles:
 2. **Doc writer** (the Doc maintainer thread): writes or edits the document from
    the Researcher's notes and the repo, in one small docs-only PR, and tells the
    coordinator the PR number.
-3. **Editor** (a Fable 5.1 thread that reads the repo cold, the way a judge
-   would): reads the PR before Ops merges it and reports PASS or what to fix to
+3. **Editor** (planned: a Fable 5.1 thread that reads the repo cold, the way a
+   judge would; not started yet, so until it exists the coordinator or the
+   Doc writer runs the checklist below): reads the PR before Ops merges it and reports PASS or what to fix to
    the coordinator and the Doc writer. The Editor does not merge or edit.
 
 What the Editor checks:

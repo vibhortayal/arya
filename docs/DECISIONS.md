@@ -16,7 +16,7 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
-| 2026-11-02 | Docs workflow with three roles: Researcher (market research thread), Doc writer (Doc maintainer), Editor (a Fable 5.1 thread that reads the repo cold). The Editor checks each new or rewritten docs PR before Ops merges it. Written in AGENTS.md. | this PR | Coordinator |
+| 2026-11-02 | Docs workflow with three roles: Researcher (market research thread), Doc writer (Doc maintainer), Editor (planned: a Fable 5.1 thread that reads the repo cold, not started yet). The Editor checks each new or rewritten docs PR before Ops merges it. Written in AGENTS.md. | this PR | Coordinator |
 | 2026-11-02 | The bottom bar is called the "navigation tab", and its editor is "Customize navigation tab" (was "Customize bar" and "Make the bar yours"). The Today editing card is "Customize your \"Today\" screen". Applied in the app text, Tour, guide, Help, Ask knowledge and docs. (12:15Z) | #446 | Doc maintainer |
 | 2026-11-02 | Own Meta key (BYOK) is not used. The code stays in the repo, unfinished and switched off, and is not part of the demo. Do not set `ARYA_KEY_VAULT_SECRET`. Supersedes the "built and tested, currently disabled" line below. (12:17Z) | #447, #391, #393 | Doc maintainer |
 | 2026-11-02 | "Used it" on a use-soon item moves the item to Suggestions. Arya never adds an item to a list by itself, and an item already on a list gets no use-by question. Supersedes the 2026-10-29 "Used it" line. (05:50Z) | #444 | Builder |
