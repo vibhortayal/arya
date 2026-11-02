@@ -31,9 +31,12 @@ The items below are not covered by that grant, or need attribution.
   Muse Image): hosted by Meta under Meta's API terms. No weights are in this
   repository.
 - **Muse Spark Open** (`meta-models/muse-spark-open-1026`): open weights from
-  Meta, hosted on Baseten; used under Meta's license for the model (see its
-  model card). No weights are
-  in this repository.
+  Meta, hosted on Baseten; used under the Muse Model License (Oct 15, 2026)
+  and its Exhibit A Usage Policy
+  (https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B/blob/main/LICENSE.md).
+  No weights are in this repository.
+
+  **Built with Muse Spark Open.**
 - **Baseten, Supabase (optional), Resend**: hosted services under their own
   terms.
 
