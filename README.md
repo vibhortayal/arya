@@ -91,7 +91,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
 | How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
-| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md), and a feature-by-feature tour: [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What is done and what is not | [`STATUS.md`](STATUS.md) |
 
@@ -133,7 +133,7 @@ The bar at the bottom starts as Today, Spending, Quest, Ask and More. More holds
   sections, aisle signs and prices. A store counts as mapped only where it
   has a usable, fresh photo. No store ships pre-mapped; an unmapped store
   plays as a labelled typical layout. Points bank when the receipt settles.
-- **Demo Town** (off by default, `ARYA_DEMO_TOWN=1`): the demo household shops
+- **Demo Town** (`ARYA_DEMO_TOWN=1`; on in the live demo and the local Docker setup): the demo household shops
   at invented stores in a simulated neighborhood, labelled as simulated.
 
 ## Names for the help parts
@@ -201,6 +201,8 @@ and password) to read your own receipts, or close the sheet and tap "Try it now"
 for the demo household. Without a key the app and the demo open, but anything that calls a
 Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
+To try every feature step by step on your copy, follow
+[`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md).
 
 Tests, from the repo root:
 
