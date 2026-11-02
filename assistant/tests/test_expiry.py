@@ -234,9 +234,12 @@ class TestClientWiring(unittest.TestCase):
         js = frontend.src("screens/Today.tsx")  # expiry.js was ported into Today
         for phrase in ("things from your receipt can expire or go bad", "Use-by dates", "Add a date",
                        "Nothing is saved until you tap", "Past the date. Check it before you use it.",
-                       "Add it to your list?", "Try a sample date"):
+                       "Try a sample date"):
             self.assertIn(phrase, js)
         self.assertNotIn("danger", js)   # a date is information, never an alarm
+        # Used it (owner, 2026-11-02) no longer asks "Add it to your list?":
+        # it goes straight on the suggested list (Which list? if none).
+        self.assertIn("addToUsual(id, name)", js)
 
 
 if __name__ == "__main__":

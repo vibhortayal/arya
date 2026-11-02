@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { NavProvider } from "../app/nav";
 import { ToastProvider } from "./Toast";
 import { ListPickHost } from "./ListPick";
-import { addItem, addOnList, askDelete } from "../lib/listPick";
+import { addItem, addOnList, addToUsual, askDelete } from "../lib/listPick";
 import { post } from "../lib/api";
 
 /* "Which list?" (owner-approved mockup 2026-11-02): an add with no list
@@ -122,4 +122,20 @@ test("the make button reads plainly before a name is typed", async () => {
   expect($("#listpick-make")!.textContent).toBe("Make the list and add it");
   fireEvent.change($("#listpick-input")!, { target: { value: "Aldo's" } });
   expect($("#listpick-make")!.textContent).toBe("Make the Aldo's list and add it");
+});
+
+test("Used it: straight to the suggested list; asks only when there is none", async () => {
+  answer = (_p, b) => b.list_id ? res({ item_id: "milk" }) : res({ detail: { code: "pick_list", lists: LISTS, suggested: "b", names: ["Milk"] } }, 409);
+  serve(); host();
+  const out = await addToUsual("milk", "Milk");
+  expect(out?.list).toEqual({ id: "b", name: "Costcozy" });
+  expect($("#listpick")).toBeNull();
+  expect(calls.map(c => c[1])).toEqual([{ item_id: "milk" }, { item_id: "milk", list_id: "b" }]);
+
+  calls = [];
+  answer = (_p, b) => b.list_id ? res({ item_id: "kale" }) : res({ detail: { code: "pick_list", lists: LISTS, suggested: null, names: ["Kale"] } }, 409);
+  const p = addToUsual("kale", "Kale");
+  await waitFor(() => expect($("#listpick")).not.toBeNull());
+  fireEvent.click($('#listpick [data-pick="a"]')!);
+  expect((await p)?.list?.id).toBe("a");
 });

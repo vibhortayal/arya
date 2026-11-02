@@ -19,12 +19,13 @@ class StillGoodUsedIt(unittest.TestCase):
         s = src("web/src/screens/Today.tsx")
         self.assertIn("data-check-used", s)
         self.assertIn('check("used", c.item_id)', s)
-        self.assertIn("{ out: new Date().toISOString().slice(0, 10) }", s)
+        self.assertIn("{ out: day }", s)
+        self.assertIn("await usedUp({ id: s.item_id, name: s.name, soon: s", s)  # Use soon too
         # asks "Add it to your list?" like Use soon's Used it (#96); Add
         # uses addItem: usual list, or the "Which list?" picker
-        self.assertIn("const added = await addItem(id, name)", s)
+        self.assertIn("added = await addToUsual(id, name)", s)
         en = src("web/src/i18n/en.json")
-        for k in ('"usedItToast"', '"usedOnList"', '"usedAddAsk"'):
+        for k in ('"usedItToast"', '"usedOnList"', '"usedOnYourList"'):
             self.assertIn(k, en)
 
     def test_out_is_a_flag_and_ends_the_check(self):

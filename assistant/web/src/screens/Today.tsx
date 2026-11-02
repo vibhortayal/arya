@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { addItem } from "../lib/listPick";
+import { addItem, addToUsual } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -387,18 +387,8 @@ export function Today() {
         await post("/api/list/check-ok", { item_id: id });
         toast(t("today.stillGoodToast"));
       } else if (kind === "used") {
-        // Used it (owner, 2026-11-02): off the check and used up today, so
-        // Running low learns. Then ask, as Use soon's Used it does (#96):
-        // "Add it to your list?" Add puts it on the usual list, or asks
-        // "Which list?" when Arya can't tell.
-        const name = checks.find(c => c.item_id === id)?.name || "";
-        await post(`/api/items/${encodeURIComponent(id)}/flag`, { out: new Date().toISOString().slice(0, 10) });
-        toast(t("today.usedAddAsk", { name }), { action: t("common.add"), onAction: async () => {
-          try {
-            const added = await addItem(id, name);
-            if (added) { toast(added.list ? t("today.usedOnList", { name, list: added.list.name }) : t("today.isOnYourList", { name })); load(); }
-          } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
-        } });
+        await usedUp({ id, name: checks.find(c => c.item_id === id)?.name || "", t, toast, reload: load });
+        return;
       } else {
         await post(`/api/items/${encodeURIComponent(id)}/expired`);
         toast(t("today.markedExpiredToast"));
@@ -794,20 +784,40 @@ export function Today() {
   );
 
 
-  /* Used up: offer, never assume, to put it back on the shopping list
-   * (expiry.js done). */
-  async function doneWith(s: Soon) {
-    try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); }
-    catch (e) { toast(e instanceof Error ? e.message : String(e)); return; }
-    load();
-    toast(t("today.doneWith", { name: s.name }), {
-      action: t("common.add"),
-      onAction: async () => {
-        try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); load(); } }
-        catch (e) { toast(e instanceof Error ? e.message : String(e)); }
-      },
-    });
+  function doneWith(s: Soon) {
+    return usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload: load });
   }
+}
+
+/* Used it (owner, 2026-11-02), on Use soon and on Still good?: off
+ * the use-by section, used up today (Running low learns, as with Ask's
+ * "we finished the milk"), and straight onto the list Arya suggests;
+ * "Which list?" only when it has none. Undo takes it off that list and
+ * puts it back in the use-by section. */
+async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string, v?: Record<string, unknown>) => string;
+  toast: (m: string, a?: { action: string; onAction: () => void }) => void; reload: () => void }) {
+  const { id, name, soon, t, toast, reload } = o;
+  const enc = encodeURIComponent(id);
+  const day = new Date().toISOString().slice(0, 10);
+  const say = (e: unknown) => toast(e instanceof Error ? e.message : String(e));
+  try {
+    if (soon) await post(`/api/expiry/${enc}/done`);
+    await post(`/api/items/${enc}/flag`, { out: day });
+  } catch (e) { say(e); return; }
+  reload();
+  let added: Awaited<ReturnType<typeof addToUsual>> = null;
+  try { added = await addToUsual(id, name); } catch (e) { say(e); }
+  reload();
+  toast(added ? (added.list ? t("today.usedOnList", { name, list: added.list.name }) : t("today.usedOnYourList", { name })) : t("today.usedItToast", { name }), {
+    action: t("common.undo"),
+    onAction: async () => {
+      try {
+        await post(`/api/items/${enc}/flag`, { out: null, ...(added ? { manual: false } : {}),
+          ...(soon ? { use_by: soon.date, use_by_set: day } : {}) });
+        reload();
+      } catch (e) { say(e); }
+    },
+  });
 }
 
 /* ---------------- Did you know? (powers.js todaysTip) ---------------- */
@@ -1057,15 +1067,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
         <div className="exhead"><Face name={s.name} /><div><h3 className="hm-title" id="ex-title">{s.name}</h3><p className="muted nomargin">{fmtLong(s.date)} · {when(s.days)}</p></div></div>
         <button className="btn primary wide" id="ex-done" type="button" data-first onClick={async () => {
           close();
-          try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); } catch (e) { toast(errMsg(e)); return; }
-          reload();
-          toast(t("today.doneWith", { name: s.name }), {
-            action: t("common.add"),
-            onAction: async () => {
-              try { if (await addItem(s.item_id, s.name)) { toast(t("today.isOnYourList", { name: s.name })); reload(); } }
-              catch (e) { toast(errMsg(e)); }
-            },
-          });
+          await usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload });
         }}>{t("today.usedIt")}</button>
         <button className="btn wide" id="ex-snooze" type="button" onClick={async () => {
           close();

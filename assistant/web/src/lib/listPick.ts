@@ -53,7 +53,7 @@ function knownList(home: Home | null, itemId?: string): string | null | undefine
 /* Send an add; if it needs a list, ask which and send it again.
  * `send(listId)` makes the call (listId undefined: no list named).
  * Answers {result, list} or null when the person cancelled. */
-export async function addOnList<T>(send: (listId?: string) => Promise<T>, opts: { names?: string[]; itemId?: string } = {}): Promise<{ result: T; list: Picked } | null> {
+export async function addOnList<T>(send: (listId?: string) => Promise<T>, opts: { names?: string[]; itemId?: string; usual?: boolean } = {}): Promise<{ result: T; list: Picked } | null> {
   if (isOffline() || pendingCount() > 0) {
     const home = savedHome();
     const k = knownList(home, opts.itemId);
@@ -68,6 +68,10 @@ export async function addOnList<T>(send: (listId?: string) => Promise<T>, opts: 
   } catch (e) {
     const need = needList(e);
     if (!need) throw e;
+    // usual: go straight to the list Arya suggests (the usual store's);
+    // ask only when there is none (owner, 2026-11-02, Used it).
+    const usual = opts.usual && need.suggested ? (need.lists || []).find(l => l.id === need.suggested) : undefined;
+    if (usual) return { result: await send(usual.id), list: usual };
     const pick = await askList({ ...need, names: need.names?.length ? need.names : opts.names || [] });
     return pick ? { result: await send(pick.id), list: pick } : null;
   }
@@ -77,6 +81,11 @@ export async function addOnList<T>(send: (listId?: string) => Promise<T>, opts: 
  * Used it then Add, an item page's Add to list). null: cancelled. */
 export const addItem = (itemId: string, name: string, extra: Record<string, unknown> = {}) =>
   addOnList(lid => post("/api/list/add", { item_id: itemId, ...extra, ...(lid ? { list_id: lid } : {}) }), { names: [name], itemId });
+
+/* Used it (owner, 2026-11-02): straight onto the suggested list; the
+ * "Which list?" question only when Arya has no suggestion. */
+export const addToUsual = (itemId: string, name: string) =>
+  addOnList(lid => post("/api/list/add", { item_id: itemId, ...(lid ? { list_id: lid } : {}) }), { names: [name], itemId, usual: true });
 
 /* Deleting a list that still has items (409 list_has_items): move them
  * to another list (the default) or take them off the shopping list. */
