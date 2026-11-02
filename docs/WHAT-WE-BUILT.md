@@ -37,7 +37,7 @@ What git cannot show is listed under "What git cannot confirm".
 | Oct 27, 22:19 | Wonder's first localizer spike vendored as `api/localizer.py` (removed Oct 29, `51cab53`) | `47b2471` |
 | Oct 27, 22:59 | Photo decode switched to Wonder | `7f32f2f` |
 | Oct 27, 23:02 | Wonder-vs-Spark eval committed in the research repo | `b39a961` |
-| Oct 28 | Accounts, the judge front door; Supabase, Resend and Baseten set up | see the README timeline |
+| Oct 28 | Accounts, the judge front door; Supabase, Resend and Baseten set up | |
 | Oct 30 | teamnightshift.org registered at Cloudflare; live site moved to arya.teamnightshift.org with invite-only sign-in | |
 | Oct 31 to Nov 2 | Hardening, the navigation tab, lists, the Kroger aisle lookup, docs, "Run it yourself" | |
 

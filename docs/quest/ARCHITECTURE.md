@@ -13,7 +13,7 @@ phone. Two data planes never mix:
 ### 1. Store mapping (platform)
 `guided camera scan → SAM 3.1 people scrub → Spark reads the section, signs, prices → SAM shelf and sign boxes → store map sections`
 
-The shopper pans; a frame goes up every few seconds. People are blurred
+The shopper pans; a frame goes up every few seconds. People are pixelated
 first and the frame is dropped if that fails. No store ships pre-mapped
 (the old Trader Joe's walkthrough model was removed 2026-10-29); a
 section counts as mapped only with a usable, fresh picture.

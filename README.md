@@ -143,7 +143,7 @@ Everything below runs in the demo household, no account needed. "Live" means the
 | Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
 | Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
 | Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
-| Map my store | Quest tab, Map my store | A guided scan; people detected and blurred before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
+| Map my store | Quest tab, Map my store | A guided scan; people detected and pixelated before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 
 Every live call goes through `assistant/api/meta_client.py` and is booked
