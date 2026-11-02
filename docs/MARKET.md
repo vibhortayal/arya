@@ -101,12 +101,15 @@ of why export matters.
   ([docs](https://docs.instacart.com/developer_platform_api/)). Access needs an
   API key; the docs do not describe approval.
 - **Pricing trust.** A Dec 2025 study by Groundwork Collaborative, Consumer
-  Reports and More Perfect Union had 437 shoppers add identical items at the
-  same stores. It found 74% of items shown at more than one price, with a
-  roughly 7% average basket difference. Instacart called them "price tests"
-  with about 10 retail partners ([ConsumerAffairs](https://www.consumeraffairs.com/news/study-found-instacart-showed-different-prices-to-different-shoppers-121025.html))
-  and reportedly ended item price tests on 23 Dec 2025 ([APH Networks](https://aphnetworks.com/news/31190-instacart-ends-ai-pricing-tests-showing-different-prices-same-items)).
-  Why it matters here: a record of what you actually paid has value.
+  Reports and More Perfect Union had shoppers add identical items at the same
+  stores and reported that the same item was shown at different prices.
+  Instacart called the differences "price tests" with a small group of retail
+  partners and reportedly ended item price tests on 23 Dec 2025 ([APH Networks](https://aphnetworks.com/news/31190-instacart-ends-ai-pricing-tests-showing-different-prices-same-items)).
+  The headline numbers (share of items with several prices, basket difference)
+  are left out here because we could not confirm them in a source the reviewer
+  could open; see the study coverage at [ConsumerAffairs](https://www.consumeraffairs.com/news/study-found-instacart-showed-different-prices-to-different-shoppers-121025.html)
+  *(could not be opened by the reviewer)*. Why it matters here: a record of
+  what you actually paid has value.
 - **Samsung** announced a multi-year Instacart partnership in Jan 2025 for
   fridges that watch contents and reorder; the AI recognises up to 37 food
   items and cannot see door bins or the freezer ([Retail Dive](https://www.retaildive.com/news/instacart-samsung-shoppable-smart-fridge-tech/736630)).
@@ -115,7 +118,7 @@ of why export matters.
 
 | Problem | Evidence | Does Arya touch it? |
 |---|---|---|
-| Food is forgotten and wasted | UK survey of 2,000 adults (OnePoll for GS1 UK, Sept 2025, published Mar 2026): 33% forget food they bought is in the fridge, 49% throw food away because it goes off, 43% call it a waste of money ([GS1 UK](https://www.gs1uk.org/insights/news/As-grocery-prices-rise-again-UK-households-are-throwing-away-hundreds-of-pounds-on-forgotten-food)). UK data, not US. | Partly built: "Use soon" and a food-waste cost figure from your own receipts. Not tested for effect on waste. |
+| Food is forgotten and wasted | UK survey of 2,000 adults (OnePoll for GS1 UK, Sept 2025, published Mar 2026): 33% forget food they bought is in the fridge, 49% throw food away because it goes off, 43% call it a waste of money ([GS1 UK](https://www.gs1uk.org/insights/news/As-grocery-prices-rise-again-UK-households-are-throwing-away-hundreds-of-pounds-on-forgotten-food)). UK data, not US. *(GS1 UK page could not be opened by the reviewer.)* | Partly built: "Use soon" and a food-waste cost figure from your own receipts. Not tested for effect on waste. |
 | Prices are hard to judge, and may differ by session | Instacart study above. | Partly built: cheaper store and price trend, from your own receipts only. No outside prices are fetched. |
 | Spend is one number, items are lost | Monarch needs a browser extension or receipt photo to split items. | Built: receipts are read, every line is checked against the printed total, returns net out. Small test set (see README "Known limits"). |
 | The list does not know the household | Reviews above describe lists as typed or recipe-driven. | Built: staples due show as suggestions with a reason. |
