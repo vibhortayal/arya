@@ -16,7 +16,7 @@ export type HelpTopic = {
 };
 
 export const HELP_TOPICS: HelpTopic[] = [
-  { id: "receipt", group: "start", steps: 3, notes: 3, opens: "receipts" },
+  { id: "receipt", group: "start", steps: 3, notes: 4, opens: "receipts" },
   { id: "additem", group: "start", steps: 4, notes: 2, opens: "list" },
   { id: "ask", group: "start", steps: 3, notes: 2, opens: "chat" },
   { id: "lists", group: "how", steps: 4, notes: 2, opens: "list" },
