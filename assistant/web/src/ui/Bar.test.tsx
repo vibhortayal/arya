@@ -22,9 +22,9 @@ beforeAll(() => { window.scrollTo = (() => {}) as typeof window.scrollTo; });
 beforeEach(() => { saved = null; saves.length = 0; });
 
 describe("BottomBar", () => {
-  test("the default bar is Today, Lists, Quest, Ask, then More", () => {
+  test("the default bar is Today, Spending, Quest, Ask, then More", () => {
     mount();
-    expect(labels()).toEqual(["Today", "Lists", "Quest", "Ask", "More"]);
+    expect(labels()).toEqual(["Today", "Spending", "Quest", "Ask", "More"]);
     expect(document.querySelector('#tabs button[data-view="view-home"]')!.className).toBe("active");
   });
   test("a saved bar shows; Receipts opened from it lights Receipts", () => {
@@ -38,7 +38,7 @@ describe("BottomBar", () => {
     mount();
     act(() => { fireEvent.click(document.getElementById("tab-more")!); });
     const rows = Array.from(document.querySelectorAll("#more-sheet [data-more]")).map(r => r.getAttribute("data-more"));
-    expect(rows).toEqual(["receipts", "stores-mine", "analysis", "help", "profile"]);
+    expect(rows).toEqual(["list", "receipts", "stores-mine", "help", "profile"]);
     act(() => { fireEvent.click(document.querySelector('#more-sheet [data-more="help"]')!); });
     expect(nav.view).toBe("help");
     expect(document.getElementById("tab-more")!.className).toBe("active");
@@ -65,7 +65,7 @@ describe("BottomBar", () => {
     vi.useFakeTimers();
     try {
       mount();
-      const lists = document.querySelector('#tabs button[data-view="view-list"]')!;
+      const lists = document.querySelector('#tabs button[data-view="view-analysis"]')!;
       act(() => { fireEvent.pointerDown(lists); vi.advanceTimersByTime(700); });
       act(() => { fireEvent.pointerUp(lists); fireEvent.click(lists); });
       expect(document.getElementById("bar-editor")).toBeTruthy();

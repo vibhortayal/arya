@@ -23,10 +23,11 @@ class FeatureSheet(unittest.TestCase):
 
     def test_gated_lines_hidden_when_off(self):
         off = chat_service.feature_sheet({k: False for k in KNOWN_FLAGS})
-        self.assertNotIn("Remind me", off)
+        self.assertNotIn("days-before stepper", off)
+        self.assertIn("not switched on yet", off)
         self.assertNotIn("[if", off)
         on = chat_service.feature_sheet({k: True for k in KNOWN_FLAGS})
-        self.assertIn("Remind me", on)
+        self.assertIn("days-before stepper", on)
         self.assertNotIn("[if", on)
 
     def test_bar_named_in_sheet_matches_app(self):
@@ -60,7 +61,12 @@ class FeatureSheet(unittest.TestCase):
 
     def test_sizes(self):
         flags = {k: True for k in KNOWN_FLAGS}
-        self.assertLess(len(chat_service.feature_sheet(flags)), 9500)
+        # The whole document (no question) has grown past 9.5 KB, but Ask
+        # never sends it whole: a question gets the overview plus the
+        # sections it matches. So guard both: the whole file against
+        # runaway growth, and what one question sends (the real cost).
+        self.assertLess(len(chat_service.feature_sheet(flags)), 24000)
+        self.assertLess(len(chat_service.feature_sheet(flags, question="how do I add a receipt?")), 8000)
         # A data question gets the overview only; a topic gets its section.
         base = chat_service.feature_sheet(flags, question="how much was milk at Costco?")
         self.assertLess(len(base), 900)
@@ -73,13 +79,15 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Start a group", f("how do I share my list with my wife"))
         self.assertIn("Help tab: tap Help", f("where is the help tab"))
         self.assertIn("tap Edit on Today", f("can I move the cards around"))
-        self.assertIn("Receipts: open the Lists tab", f("where do I add a receipt"))
+        self.assertIn("Receipts: open Spending", f("where do I add a receipt"))
         # install steps have their own topic (Ask gap 6)
         for q in ("How do I install Arya on my phone?", "how do I add it to my home screen", "is there an app store app"):
             self.assertIn("Get the app: Arya has no App Store", f(q), q)
+        # where reminders live (Settings, Preferences, Remind me)
+        self.assertIn("Preferences, the Remind me switch", f("where do I turn on reminders"))
         # no topic words but a general ask: everything
         self.assertIn("Use soon:", f("what can you do?"))
-        self.assertIn("Receipts: open the Lists tab", f("what can you do?"))
+        self.assertIn("Receipts: open Spending", f("what can you do?"))
 
     def test_other_languages_get_every_topic(self):
         seen = {}
@@ -90,7 +98,7 @@ class FeatureSheet(unittest.TestCase):
                 return '{"reply":"ok","actions":[]}', 0, 0
         chat_service.chat([{"role": "user", "content": "¿Cómo comparto mi lista?"}], C())
         self.assertIn("Start a group", seen["sheet"])
-        self.assertIn("Receipts: open the Lists tab", seen["sheet"])
+        self.assertIn("Receipts: open Spending", seen["sheet"])
         chat_service.chat([{"role": "user", "content": "how much was milk?"}], C())
         self.assertNotIn("Start a group", seen["sheet"])
 

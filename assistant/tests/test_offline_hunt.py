@@ -17,7 +17,7 @@ class TestOfflineShell(unittest.TestCase):
         self.assertIn('window.addEventListener("online", () => { qFlushOutbox(); });', model)
         self.assertIn("if (!(e instanceof TypeError) || !it) throw e;", model)
         # api() keeps network failures a TypeError, the outbox's key.
-        self.assertIn('throw new TypeError("No connection right now', frontend.src("lib/api.ts"))
+        self.assertIn('throw new TypeError(write ? OFFLINE_WRITE : "No connection right now', frontend.src("lib/api.ts"))
 
 
 class TestOfflineUnderVitest(unittest.TestCase):

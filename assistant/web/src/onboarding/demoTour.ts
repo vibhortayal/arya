@@ -42,6 +42,10 @@ export function demoTour(go: (view: ViewId) => void, bar: BarItem[] = DEFAULT_BA
       s("lists", "list", "cards", '#list-cards', "below"),
       s("lists", "list", "new", '#list-new', "above"),
     ],
+    analysis: [
+      s("spending", "analysis", "tab", tabButton("analysis"), "above"),
+      s("spending", "analysis", "places", '#an-places', "below"),
+    ],
     chat: [
       s("ask", "chat", "tab", tabButton("chat"), "above"),
       s("ask", "chat", "box", '#chat-form', "above"),
