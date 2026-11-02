@@ -77,7 +77,7 @@ The rest of this page is the full story.
 
 Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
 
-All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
+All of it, with where to read more: [Built in the hackathon window](docs/WHAT-WE-BUILT.md).
 
 | What is real | What is simulated | What is not connected |
 |---|---|---|
@@ -151,7 +151,7 @@ Free to use, for shoppers, and built up with them. The model proposes and code c
 
 | If you want to know... | Read |
 |---|---|
-| Everything we built, with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
+| Built in the hackathon window: what was made and when, then every feature with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
 | What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
@@ -406,14 +406,16 @@ Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
 ## How this was built
 
 Everything here was built in the hackathon window, which opened on Oct 27,
-2026. The first commit is Oct 27, 15:13 ET. The engine (decode, dictionary,
-ledger, patterns, the first PWA) was written by Muse Wonder in a separate
-spike session and committed here in stages over about 30 minutes, which is
-why the early commits arrive so fast. The session logs in `assistant/loops/`
-record the rest. My 114 receipts (back to 2023) are my
+2026. The idea search took about two days; its commits in a separate research
+repo start on Oct 26. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
+older. The engine (decode, dictionary, ledger, patterns, the first phone app)
+landed in four commits between 15:31 and 15:38. Muse Wonder wrote that engine
+spike with me; git lists the commits under the author name "Spark". The dated table
+is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
+in `assistant/loops/` record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.
 
-**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app. The one part not built with Claude is the engine spike written by Muse Wonder, described above.
+**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app.
 
 ## Characters
 
