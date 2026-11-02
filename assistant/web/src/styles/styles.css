@@ -2319,3 +2319,16 @@ body.hunting #offlinebar { display: none !important; }
 .receiptbtn.dis { opacity: .55; pointer-events: none; }
 .rcread-acts { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
 #rc-photo-failures { margin-top: 12px; }
+/* Fix this line on a filed receipt (owner, 2026-11-01). */
+#rc-lines .lf-row { cursor: pointer; }
+#rc-lines .lf-row .money { display: flex; align-items: center; gap: 6px; }
+#rc-lines .lf-row .chev { color: var(--tertiary); }
+.lf-tag { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--secondary); background: var(--fill2); border-radius: 999px; padding: 1px 7px; vertical-align: 2px; }
+#line-fix .lf-raw { font: 13px ui-monospace, Menlo, monospace; color: var(--secondary); background: var(--fill2); border-radius: 8px; padding: 6px 10px; display: inline-block; margin: 0 0 8px; }
+#line-fix input[type="text"] { width: 100%; box-sizing: border-box; }
+#line-fix .lf-two { display: flex; gap: 10px; }
+#line-fix .lf-two > div { flex: 1; min-width: 0; }
+#line-fix .lf-warn { background: #FFF4EC; border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 14.5px; line-height: 1.4; }
+#line-fix .lf-err { color: var(--danger); font-size: 14px; margin: 6px 0 0; }
+/* Join a group: Join and Not now right under who invited you (owner, 2026-11-02). */
+.gj-actions { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 6px; }
