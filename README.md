@@ -105,6 +105,22 @@ built. The
 open-weights client refuses personal data. Cost rules are in
 [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
+## Tech stack and deployment
+
+| Layer | What it uses |
+|---|---|
+| App | React 19 and TypeScript, built by Vite into a phone-first PWA with a service worker; three.js for the Quest world |
+| API | Python 3.12, FastAPI on uvicorn; one process serves the API and the built app |
+| Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees names only |
+| Storage | JSON documents on a Docker volume, or Supabase Postgres (`ARYA_STORE`); optional Supabase Auth for email code and Google sign-in |
+| Email | Resend (waitlist, account codes, reports) |
+| Serving | Caddy for TLS and security headers, in front of the API |
+| Hosting | One Oracle Cloud VM (Always Free, ARM), Docker Compose with two services (`api`, `caddy`); live at https://arya.teamnightshift.org |
+| Deploy | `git pull` on the VM, then a compose rebuild; nightly backups; health check at `/health` |
+
+Details and the VM runbook are in
+[`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
+
 ## Run it yourself
 
 You need Python 3.12 and Node 22. Without a `MODEL_API_KEY`, the app and the
