@@ -142,12 +142,12 @@ function TourStarter() {
 const onDone = vi.fn();
 
 describe("first-run tour", () => {
-  test("the last step is Make the bar yours; Customize now ends the tour without the caller's Done", () => {
+  test("the last step is Customize navigation tab; Customize now ends the tour without the caller's Done", () => {
     expect(FIRST_RUN_TOUR[FIRST_RUN_TOUR.length - 1].more?.labelKey).toBe("firstRun.tour.bar.customize");
     expect(FIRST_RUN_TOUR.slice(0, -1).every(s => !s.more)).toBe(true);
     render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><TourStarter /></GuideProvider></TourProvider></NavProvider>);
     act(() => { fireEvent.click(screen.getByText("Go")); });
-    expect(screen.getByText("Make the bar yours")).toBeTruthy();
+    expect(screen.getByText("Customize navigation tab")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("fr-tour-more")!); });
     expect(document.querySelector(".fr-tour")).toBeNull();
     expect(onDone).not.toHaveBeenCalled();

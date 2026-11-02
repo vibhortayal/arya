@@ -2963,17 +2963,17 @@
     "more": "More"
   },
   "bar": {
-    "customize": "Customize bar",
-    "title": "Customize bar",
-    "hint": "The bar holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
+    "customize": "Customize navigation tab",
+    "title": "Customize navigation tab",
+    "hint": "The navigation tab holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
     "offTitle": "In More",
-    "full": "The bar holds four. Remove one first.",
+    "full": "The navigation tab holds four. Remove one first.",
     "removed": "{{name}} moved to More",
-    "added": "{{name}} added to the bar",
+    "added": "{{name}} added to the navigation tab",
     "reset": "Reset to default",
-    "resetDone": "The bar is back to the default",
+    "resetDone": "The navigation tab is back to the default",
     "moreTitle": "More",
-    "moreHint": "Everything not on your bar. Tap Customize bar to change it.",
+    "moreHint": "Everything not on your navigation tab. Tap Customize navigation tab to change it.",
     "sub": {
       "home": "Your day at a glance",
       "list": "One list per store",
@@ -3117,12 +3117,12 @@
       },
       "more": {
         "title": "More",
-        "line": "Help, Settings and everything not on your bar live here. More is always on the bar."
+        "line": "Help, Settings and everything not on your navigation tab live here. More is always on it."
       },
       "bar": {
-        "title": "Make the bar yours",
-        "line": "Tap Customize bar, here in More, to pick the four places on your bar, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
-        "screen": "The bar",
+        "title": "Customize navigation tab",
+        "line": "Tap Customize navigation tab, here in More, to pick the four places on your navigation tab, such as Lists, Receipts and Stores. Anything you leave off stays in More.",
+        "screen": "The navigation tab",
         "customize": "Customize now"
       },
       "guideLink": "Want the full guide?"
@@ -3337,7 +3337,7 @@
         "kicker": "Navigation tab",
         "title": "Customize navigation tab",
         "body": "The navigation tab is the row of buttons along the bottom of the screen. It takes you around Arya. Put the four places you use most on it. Everything else is in More, the last button, which is always there.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the navigation tab works too.)",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
         "s2": "Tap the green plus to add a place, such as Receipts or Stores. There is room for four.",
         "s3": "Tap the red minus to move a place into More. Drag a place to change the order."
       },
@@ -3778,7 +3778,7 @@
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
         "s1": "Open Spending, then Receipts, and tap Add receipts.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Spending, on the bar, shows it by month, store and item.",
+        "s3": "Spending, on the navigation tab, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
@@ -3866,7 +3866,7 @@
         "cta": "Open Arya's powers"
       },
       "customize": {
-        "title": "Change Today",
+        "title": "Customize your \"Today\" screen",
         "sub": "Move, hide and add cards",
         "body": "Make Today show what you care about.",
         "s1": "Tap Edit on Today, or touch and hold a card.",
@@ -3877,15 +3877,15 @@
         "cta": "Open Today"
       },
       "bar": {
-        "title": "Change the bar",
+        "title": "Customize navigation tab",
         "sub": "Pick the four places at the bottom",
-        "body": "The bar at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
+        "body": "The navigation tab at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
+        "s2": "Tap the green plus to put a place on the navigation tab. It holds four.",
         "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
-        "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
-        "n2": "The bar starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
-        "cta": "Customize bar"
+        "n1": "More is always on the navigation tab. Help, Settings and every place not on it are in More.",
+        "n2": "The navigation tab starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
+        "cta": "Customize navigation tab"
       },
       "install": {
         "title": "Put Arya on your Home Screen",

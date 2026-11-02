@@ -66,7 +66,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   single-use code or an invite link. Receipts stay with whoever filed them.
 - **Daily reminders** for what to use soon (opt-in, on the Home Screen app).
 - **Add to Home Screen**, so it opens like an app.
-- A bottom bar you arrange yourself.
+- A navigation tab (the bottom buttons) you arrange yourself.
 
 ## Transparency about AI and cost
 - **Keeping Arya running** (Settings, About Arya) shows your own AI use by kind
