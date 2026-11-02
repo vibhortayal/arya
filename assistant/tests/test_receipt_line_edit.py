@@ -41,10 +41,23 @@ class LineEdit(unittest.TestCase):
         lines = self.detail()["lines"]
         self.assertEqual(lines[0]["raw"], "MILK")
         self.assertNotIn("edited", lines[0])
+        # A name fix alone is not "edited" (like To check renames).
         self.edit(0, name="Oat Milk")
         lines = self.detail()["lines"]
-        self.assertEqual((lines[0]["name"], lines[0]["raw"], lines[0].get("edited")), ("Oat Milk", "MILK", True))
-        self.assertNotIn("edited", lines[1])
+        self.assertEqual((lines[0]["name"], lines[0]["raw"]), ("Oat Milk", "MILK"))
+        self.assertNotIn("edited", lines[0])
+        r = self.edit(0, line_total=5.0).json()
+        self.assertTrue(r["lines_edited"])
+        self.assertTrue(self.detail()["lines"][0].get("edited"))
+        self.assertNotIn("edited", self.detail()["lines"][1])
+
+    def test_changing_back_clears_the_edited_mark(self):
+        self.edit(1, qty=3, line_total=10.5)
+        self.assertTrue(self.detail()["lines"][1].get("edited"))
+        r = self.edit(1, qty=2, line_total=7.0).json()
+        self.assertFalse(r["lines_edited"])
+        self.assertTrue(r["totals_reconcile"])
+        self.assertNotIn("edited", self.detail()["lines"][1])
 
     def test_price_edit_that_breaks_the_total_is_flagged(self):
         r = self.edit(0, line_total=5.0)

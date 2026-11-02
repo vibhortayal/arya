@@ -399,7 +399,7 @@ def receipt_detail(receipt_id):
                            # "Printed: ..." line; "edited" marks a line a
                            # person changed (receipt line edit, #407).
                            "raw": ln.get("raw"),
-                           **({"edited": True} if ln.get("edited_from") else {})}
+                           **({"edited": True} if state.line_edited(ln) else {})}
                           for ln in r.get("lines", [])]})
             return out
     return None

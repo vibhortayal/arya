@@ -1215,6 +1215,22 @@ def update_receipt_line(receipt_id, idx, fields):
     return None
 
 
+def line_edited(ln):
+    """A line whose amount or price differs from what Arya read. A name
+    fix alone does not count, and a line changed back (Undo, the old
+    price typed again) is no longer edited."""
+    f = ln.get("edited_from")
+    if not f:
+        return False
+
+    def diff(a, b):
+        try:
+            return abs(float(a or 0) - float(b or 0)) > 0.005
+        except (TypeError, ValueError):
+            return a != b
+    return diff(f.get("qty"), ln.get("qty")) or diff(f.get("line_total"), ln.get("line_total"))
+
+
 def lines_add_up(r):
     """Do this receipt's lines still add up to its printed subtotal (or
     total less tax)? The printed numbers are never changed by an edit."""
@@ -1256,11 +1272,11 @@ def edit_receipt_line(receipt_id, idx, qty=None, line_total=None, name=None):
             # A receipt whose edited lines no longer match its printed total
             # stops counting as checked (and is not shared as a price source).
             r["totals_reconcile"] = bool(ok)
-            r["lines_edited"] = True
+            r["lines_edited"] = any(line_edited(l) for l in r["lines"])
             _save("receipts.json", rs)
             lines_sum = round(sum(float(l.get("line_total") or 0) for l in r["lines"]), 2)
             return ln, {"lines_sum": lines_sum, "subtotal": r.get("subtotal"), "tax": r.get("tax"),
-                        "total": r.get("total"), "adds_up": ok, "lines_edited": True}
+                        "total": r.get("total"), "adds_up": ok, "lines_edited": r["lines_edited"]}
     return None, None
 
 
