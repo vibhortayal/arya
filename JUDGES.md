@@ -21,7 +21,7 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 
 - **Creative:** Arya reads your receipts to run your list, and Quest turns the shop into a game.
 - **Technically ambitious:** six Meta models with one job each, receipt arithmetic checked in plain code, and an MCP connector so an agent can edit your lists.
-- **Does it work:** it is live at [arya.teamnightshift.org](https://arya.teamnightshift.org) and the demo needs no account. Every feature in the demo is live; only the data (the household, stores and other shoppers) is mocked up. I have not opened sign-up yet because I am still hardening the cost guard rails; [how to try it](#how-do-i-try-it-demo-25) lists the ways in. The measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#what-are-the-known-limits).
+- **Does it work:** it is live at [arya.teamnightshift.org](https://arya.teamnightshift.org) and the demo needs no account. Nearly every feature works live in the demo (the staple-judge verdicts were computed beforehand, and nothing you add is kept past your visit); only the data (the household, stores and other shoppers) is simulated. I have not opened sign-up yet because I am still hardening the cost guard rails; [how to try it](#how-do-i-try-it-demo-25) lists the ways in. The measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#what-are-the-known-limits).
 
 ## Does it matter to real people? (Impact, 30%)
 
