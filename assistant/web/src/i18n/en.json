@@ -1990,6 +1990,26 @@
     "winner": "Winner: @{{handle}} — by receipt time.",
     "deadHeat": "Dead heat — identical receipt times."
   },
+  "lineFix": {
+    "title": "Fix this line",
+    "printed": "Printed: {{raw}}",
+    "name": "Name",
+    "qty": "Quantity",
+    "price": "Price paid",
+    "amount": "Amount",
+    "badQty": "Quantity must be more than 0.",
+    "nameNote": "A new name also fixes this item on your other receipts, and Arya remembers it next time.",
+    "warnMore": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} more than the total, so the receipt will say its lines don't match.",
+    "warnLess": "The receipt total stays what the store printed. After this change the lines add up to {{amount}} less than the total, so the receipt will say its lines don't match.",
+    "nowMatches": "Now the lines add up to the printed total again.",
+    "saveAnyway": "Save anyway",
+    "saved": "Saved.",
+    "savedAlso_one": "Saved. Also fixed on {{count}} other receipt.",
+    "savedAlso_other": "Saved. Also fixed on {{count}} other receipts.",
+    "tapHint": "Tap a line to fix its name, quantity or price.",
+    "edited": "edited",
+    "linesDontMatch": "You changed some lines, and they no longer add up to the printed total of {{total}}."
+  },
   "receipt": {
     "returned": "Returned",
     "savingsOnTheItemAbove": "Discount on the item above",
@@ -3595,6 +3615,7 @@
         "n1": "Only you and your group see your receipts.",
         "n2": "A return is taken off your spending.",
         "n3": "Arya turns short printed names into clear names, like Blackberries - Organic, and remembers them by item number. Names it is not sure of wait in To check with Arya's guess, the printed text and a section: tap Use this name, Fix or Keep printed, or Use the sure guesses to set every guess Arya is sure of at once (Undo puts them back).",
+        "n4": "Spot a mistake on a filed receipt? Open it and tap the line to fix its name, quantity or price. The printed total stays as printed, and the receipt says so if the lines stop adding up.",
         "cta": "Open Receipts"
       },
       "additem": {
