@@ -48,8 +48,8 @@ explained once, under the model map in [For judges](../JUDGES.md#meta-model-map)
 
 ## What git cannot confirm
 
-- **Who wrote the first engine commits.** Muse Wonder wrote the engine spike
-  with me. Git lists those commits under the author name "Spark", at 15:31 to
+- **Who wrote the first engine commits.** Muse Code, running Muse Wonder, wrote
+  the first version of the engine with me. Git lists those commits under the author name "Spark", at 15:31 to
   15:38 on Oct 27, and records no model or tool, so the author name alone does
   not show it. That is my account of it.
 - **When the Muse Wonder spike sessions ran.** No start or end time is recorded

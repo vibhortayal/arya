@@ -24,8 +24,9 @@ ffmpeg, Postgres) does plumbing only.
 - No pictures of people kept: SAM pixelates the people it detects first, or the frame is
   dropped.
 
+**Used to build, not shipped.** Muse Code (Meta's coding agent), running Muse Wonder, wrote the first version of the engine (my account). It is not part of the shipped app; see the README, How this was built.
+
 ## Considered, not used
-- **Muse Code** (Meta's coding agent): not used in the shipped app; see the README, How this was built.
 - **Glimmer** (open weights): not run.
 - **Gaussian splatting and VGGT 3D models:** tried on a Trader Joe's
   walkthrough during the hackathon, then removed (2026-10-29): the
