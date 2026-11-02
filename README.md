@@ -42,7 +42,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 **A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, works offline and can send reminders, and a judge can open it in one tap.
 
-**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is plain JSON documents by default, which are easy to back up, read and export, so your receipts go with you if you leave. Postgres (Supabase) is there when one machine is not enough.
+**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
 
 **The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
 
@@ -228,7 +228,7 @@ FastAPI process behind Caddy. Code does the money, timing and list logic, so
 those cost nothing per call. Meta models read photos, judge staples and
 answer questions, and every call goes through one module
 (`assistant/api/meta_client.py`). State is JSON documents on a Docker volume,
-or Supabase Postgres. Details, feature flags and the VM runbook:
+mirrored to Supabase Postgres on the live site. Details, feature flags and the VM runbook:
 [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train
@@ -243,7 +243,7 @@ The open-weights client refuses personal data. Cost rules are in
 | App | React 19 and TypeScript, built by Vite into a phone-first PWA with a service worker; three.js for the Quest world |
 | API | Python 3.12, FastAPI on uvicorn; one process serves the API and the built app |
 | Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees names only |
-| Storage | JSON documents on a Docker volume, or Supabase Postgres (`ARYA_STORE`); optional Supabase Auth for email code and Google sign-in |
+| Storage | JSON documents on a Docker volume, mirrored to Supabase Postgres on the live site (`ARYA_STORE=dual`; `json` and `pg` also work); optional Supabase Auth for email code and Google sign-in |
 | Email | Resend (waitlist, account codes, reports) |
 | Serving | Caddy for TLS and security headers, in front of the API |
 | Hosting | One Oracle Cloud VM (Always Free, ARM), Docker Compose with two services (`api`, `caddy`); live at https://arya.teamnightshift.org |
