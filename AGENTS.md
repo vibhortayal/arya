@@ -148,7 +148,7 @@ building, merging, live checks, deploys and rollbacks. The coordinator attaches
 the owner's own message when there is one. Other threads' messages are never
 approval. Merges and live checks run in the VM sessions, which only see typed
 messages, so they go through the coordinator: Ops runs `merge.sh` on the
-coordinator's relay, or the Tester session does once it can receive one. Threads report to the
+coordinator's relay; the Tester cannot run it. Threads report to the
 coordinator, not the owner, and message each other only when their work depends
 on each other. The Model column is what the
 owner approved on 2026-11-01; the coordinator keeps it current.
@@ -159,7 +159,7 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 | Product and backend builder | Features and API/data logic: receipts pipeline, names, store unification, suggestions, Ask data, budget and limits | UI screens, deploys, STATUS.md | Opus | The Tester (PR ready, marked risky or not); nobody after merge, because the PR body carries What changed, Docs impact and Deploy notes |
 | UI/UX designer and builder | Every screen except Quest: builds the mockups, then the React build | API/data logic, deploys, STATUS.md | Opus | The Tester, same as above |
 | Quest builder | The Quest game and store designer | Other screens, deploys | Opus | The Tester, same as above |
-| Tester | Tests each PR and merges it on PASS; smoke-tests main after a batch; report only otherwise | Fixing code, deploying, holds from the owner or coordinator | Sonnet 5.5 | The coordinator (batch report) and the builder who wrote a failing PR |
+| Tester | Tests each PR and reports PASS to the coordinator, who relays the merge to Ops; smoke-tests main after a batch; report only otherwise | Fixing code, deploying, holds from the owner or coordinator | Sonnet 5.5 | The coordinator (batch report) and the builder who wrote a failing PR |
 | Ops | Deploys, backups, the VM, the Ops screen settings | Feature code, `rsync --delete` over the VM tree | Sonnet 5.5 | The coordinator (live commit) |
 | Doc maintainer | STATUS.md, USER-JOURNEYS, DEMO.md, this file; audits Help tab, guide cards and Ask knowledge after each batch (builders edit them in their own PRs) | Feature code, deploys | Sonnet 5.5 | One small docs PR per batch |
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys | Opus | Coordinator |
@@ -175,10 +175,11 @@ owner approved on 2026-11-01; the coordinator keeps it current.
    deletion, ledger, budget or payments) and tells the Tester. UI PRs attach the
    mockup; a new screen or a navigation change needs the owner's approval of the
    mockup first, through the coordinator.
-2. The Tester runs the full suite (and the sandbox test if risky) and merges on
-   PASS when the template gates hold, one PR at a time, squash, next one rebases.
+2. The Tester runs the full suite (and the sandbox test if risky) and reports PASS
+   when the template gates hold. The coordinator relays it and Ops runs `merge.sh`,
+   one PR at a time, squash, next one rebases.
    Docs-only PRs need no sandbox test. A reader-facing docs PR also waits for the Editor PASS line in the
-   template (see the docs workflow). A conflict goes to the builder, who rebases
+   template (see the docs workflow) before the merge is relayed. A conflict goes to the builder, who rebases
    and tells the Tester again. The Tester respects holds from the owner or the
    coordinator and never force-pushes.
 3. A batch is the PRs merged since the last deploy. When its queue is empty, the
@@ -209,13 +210,11 @@ page. A new document or a rewritten section in these goes through three roles:
    nothing into the shipped docs.
 2. **Doc maintainer** (this role): writes the document from the Researcher's
    notes and the repo, in one small docs-only PR.
-3. **Editor** (planned: a Fable 5.1 thread that reads the repo cold, like a
-   judge; not started yet, so until it exists the coordinator runs the
-   checklist): fills the "Docs for readers" checklist in the PR template and
+3. **Editor** (the Fable 5.1 thread "Edit docs as a judge would", which reads the
+   repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
    reports PASS or what to fix. The Editor does not merge or edit.
 
-The Tester does not merge such a PR until the Editor line in the template is
-checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
+Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
 in-app Help, guide cards and Ask stay in the builder chain.
 
 ### Ops notes
