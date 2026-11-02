@@ -16,9 +16,12 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-02 | The bottom bar is called the "navigation tab", and its editor is "Customize navigation tab" (was "Customize bar" and "Make the bar yours"). The Today editing card is "Customize your \"Today\" screen". Applied in the app text, Tour, guide, Help, Ask knowledge and docs. (12:15Z) | #446 | Doc maintainer |
+| 2026-11-02 | Own Meta key (BYOK) is not used. The code stays in the repo, unfinished and switched off, and is not part of the demo. Do not set `ARYA_KEY_VAULT_SECRET`. Supersedes the "built and tested, currently disabled" line below. (12:17Z) | #447, #391, #393 | Doc maintainer |
+| 2026-11-02 | "Used it" on a use-soon item moves the item to Suggestions. Arya never adds an item to a list by itself, and an item already on a list gets no use-by question. Supersedes the 2026-10-29 "Used it" line. (05:50Z) | #444 | Builder |
 | 2026-11-02 | Local judge setup: a judge runs Arya with `docker compose up --build` and their own Meta key. Demo Town on, registration open (no waitlist), groups on, no Google. | #432, #441 | Builder |
 | 2026-11-02 | Everything in "After the hackathon" is ideas the owner is thinking about, not commitments. What ships now is a limited-scope MVP. | #430 | Doc maintainer |
-| 2026-11-02 | Own Meta key (bring your own key) stays in the docs as built and tested, currently disabled: not enough time to polish the rollout, and the owner is still deciding when to turn it on. | #430, #391, #393 | Doc maintainer |
+| 2026-11-02 | Own Meta key (bring your own key) stays in the docs as built and tested, currently disabled: not enough time to polish the rollout, and the owner is still deciding when to turn it on. Superseded by 2026-11-02 12:17Z (not used). | #430, #391, #393 | Doc maintainer |
 | 2026-11-02 | Stores moved off the Spending screen; each (i) explains only its own row. | #440 | UI/UX designer and builder |
 | 2026-11-02 | Muse is first on the "Use Arya from your own AI app" setup screen, with other apps folded away. | #426 | UI/UX designer and builder |
 | 2026-11-02 | Bottom bar is Today, Spending, Quest, Ask Arya, More. Lists lives under More. | #416 | UI/UX designer and builder |
@@ -39,4 +42,4 @@ line and mark the old one "superseded by" the new date.
 | ~2026-10-31 | No freeze dates. Only the Nov 4 submission date stands (the deploy freeze above is the one exception). | none | Coordinator |
 | ~2026-10-31 | Demo is a fresh private sandbox for every visitor; no deploy during judging. | none | Demo and submission readiness |
 | ~2026-10-29 | List and Quest are both core. PWA only, React screens only, no per-user spend cap. | none | Coordinator |
-| 2026-10-29 | "Used it" on a use-soon item adds it back to a list: the usage-chosen list, else the "Which list?" picker. | #96 | Expiry thread |
+| 2026-10-29 | "Used it" on a use-soon item adds it back to a list: the usage-chosen list, else the "Which list?" picker. Superseded by 2026-11-02 05:50Z (goes to Suggestions). | #96 | Expiry thread |
