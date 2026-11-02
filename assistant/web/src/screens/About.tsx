@@ -4,7 +4,7 @@ import { A2hsRow } from "../ui/A2hs";
 import { useTranslation } from "../i18n";
 
 /* About Arya (owner, 2026-10-31): the home of what used to be five
- * Settings rows. Powers, Use Arya in another AI app, Add to Home Screen,
+ * Settings rows. Powers, Use Arya in Muse, Add to Home Screen,
  * Keeping Arya running and the credits. Back lands on Settings.
  * The Shell already renders <section id="view-about">; no second one. */
 export function About() {

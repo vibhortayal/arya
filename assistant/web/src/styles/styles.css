@@ -2364,6 +2364,16 @@ body.hunting #offlinebar { display: none !important; }
 .queuenote { background: #FFF6D6; color: #5A4500; border-radius: 12px; padding: 10px 12px; margin: 6px 0 12px; font-size: 15px; line-height: 1.4; }
 .listrow .sub.waittag { color: #8A6A00; font-weight: 600; }
 
+/* Use Arya in Muse (screens/Muse.tsx): numbered steps and copy lines. */
+.muse-step { display: flex; align-items: center; gap: 8px; }
+.muse-step .num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; letter-spacing: 0; }
+.muse-line { margin-top: 8px; }
+.muse-line .row, .muse-try { gap: 8px; align-items: center; }
+.muse-line code { min-width: 0; overflow-wrap: anywhere; background: var(--fill); border-radius: 8px; padding: 8px 10px; font: 13px ui-monospace, Menlo, monospace; }
+.muse-try { margin-top: 8px; }
+.muse-once { color: #8A4B00; font-weight: 600; }
+#muse-other summary { font-weight: 600; cursor: pointer; }
+#muse-other, #muse-help { margin-top: 14px; }
 /* "Which list?" sheet (ui/ListPick.tsx). */
 #listpick .navrow .accent { color: var(--accent-text); }
 #listpick .listpick-name { display: block; margin: 12px 0; }
