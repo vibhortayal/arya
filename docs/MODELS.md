@@ -17,7 +17,7 @@ models we did **not** use. The model list comes from Meta's models page
 | Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails |
 | SAM 3.1 | `sam-3.1` | Shelves, signs, Find it for me boxes, blurring people |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | List mic and Ask Arya mic |
-| Muse Image 1.0 | `muse-image-1.0` | The 20 celebration characters, generated once |
+| Muse Image 1.0 | `muse-image-1.0` | The 23 celebration characters, generated once |
 | Muse Spark Open (open weights) | hosted on Baseten | Second seat of the staple judge, dictionary labels; never sees personal data |
 
 ## Available but not used

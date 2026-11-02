@@ -42,6 +42,6 @@ We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at
 
 ## Delivery notes
 
-- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a Spark read takes about 10 seconds, and a Wonder re-read up to a minute; the app says so while it works.
+- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a Spark read takes about 10 seconds, and a Wonder re-read up to 90 seconds; the app says so while it works.
 - No store ships pre-mapped, so the quest plays a labelled typical layout. Show Find it for me on a real shelf or a shelf photo.
 - Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%; the Spark-first reader with Wonder as backup is not yet measured.

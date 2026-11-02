@@ -1,6 +1,6 @@
 # Push reminders (flag, off by default)
 
-A phone can opt in from Profile > Reminders. Arya then sends one push a
+A phone can opt in from More > Settings > Preferences > Reminders. Arya then sends one push a
 day, at most, when a staple will run out inside the notice window
 (1 to 7 days, default 2). The same staples as Today's running-low list
 qualify, plus the ones due inside the window. A cycle is announced once;

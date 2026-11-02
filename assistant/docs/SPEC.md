@@ -157,6 +157,7 @@ Allocation (a field on each ledger line):
 - FR-5.1 The system suggests due items from the patterns. An item is due when the time since the last purchase is equal to or more than the median interval of the item. A list shows only what the household added. A due staple appears as a suggestion under the list of its usual store, with a reason and a "why" sheet.
 - FR-5.2 The suggested quantity comes from the typical quantity of the item.
 - FR-5.3 The model ranks and narrates the draft. The model adds no item outside the computed due set and the additions of the user.
+- FR-5.4 Removed (the number is kept so later requirements keep theirs).
 - FR-5.5 The prepared cart was removed (PR #105). It copied the whole list into one Costco cart and added no value. The named lists of Section 6.9 replace it.
 - FR-5.6 The system sends no order and makes no payment. Arya works in any store and holds no retailer data.
 - FR-5.7 Typing a name links it to a tracked item. "milk" finds "Whole Milk". A near miss such as "mlik" is fixed. An add applies at once with Undo. A riskier change (out, never, snooze) asks first.
@@ -302,13 +303,7 @@ Manual check-off always works.
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
 Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask and More; Lists, Receipts, Stores, Help and Settings sit under More. The six-tab line below is the earlier layout.
-The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
-Settings. Settings has Group, Preferences (currency and language, When I
-start shopping, Display, Reminders), Account (Export my data, Delete my
-account), About Arya and, last, Sign out. About Arya has Arya's powers,
-Use Arya in Muse, Add to Home Screen and Keeping Arya running.
-Stores, Receipts and Spending are on Lists, in one group at the bottom. Help has the guide, the tour and feedback. Item and category
-detail opens from any list.
+Superseded 2026-11-02 (#416): the earlier six-tab layout (Today, Lists, Ask, Quest, Help, Settings) is gone. The app is list first. The navigation tab is Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help and Settings. Settings has Group, Preferences (currency and language, When I start shopping, Display, Reminders), Account (Export my data, Delete my account), About Arya and, last, Sign out. About Arya has Arya's powers, Use Arya in Muse, Add to Home Screen and Keeping Arya running. Help has the guide, the tour and feedback. Item and category detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
 2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own. Ask takes typed or spoken questions through labelled Talk and Photo buttons under the field. A photo opens a chooser (add to my list, file a receipt, check my fridge, read the date, or ask about this photo); asking about a photo sends it once with the question, keeps nothing, and never judges a price from the picture. Replies are text only, never spoken.

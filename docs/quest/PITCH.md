@@ -1,3 +1,5 @@
+> **Early pitch, written Oct 27 when the game came first.** The product is now list first and Quest is optional. For the current story read [`PITCH-SCRIPT.md`](PITCH-SCRIPT.md) and [`../PRINCIPLES.md`](../PRINCIPLES.md).
+
 # Pitch
 
 ## Problem
