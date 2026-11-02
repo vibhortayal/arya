@@ -28,6 +28,7 @@ import { pickerProps } from "../ui/picker";
 import { EditList, EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
 import { fitPhoto } from "../lib/photo";
+import { QueueNote, useWaitingIds } from "../app/listSync";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
  * (renderList, paintListsHome, paintListPage, the Start shopping sheet,
@@ -123,12 +124,12 @@ const sightingLine = (sg: Sighting) => (SIGHTING_STATES.includes(sg.state) ? t(`
 /* Typing in the composer re-renders the screen; a row whose item and
  * state did not change is skipped (speed audit #15). The callbacks it
  * gets are stable, and Demo Town's chip always redraws. */
-const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked
+const ListRow = memo(ListRowView, (a, b) => a.i === b.i && a.picking === b.picking && a.picked === b.picked && a.waiting === b.waiting
   && (a.also || []).join("|") === (b.also || []).join("|") && !a.chip && !b.chip
  );
 
-function ListRowView({ i, picking, picked, chip, also }: { i: Item; picking: boolean; picked: boolean; also?: string[];
-  chip?: ReactNode }) {
+function ListRowView({ i, picking, picked, chip, also, waiting }: { i: Item; picking: boolean; picked: boolean; also?: string[];
+  chip?: ReactNode; waiting?: boolean }) {
   const { t } = useTranslation();
   const sub = i.added_by ? t("lists.addedBy", { name: i.added_by }) : "";
   // Name and size are separate: "6 ct" or "x2" under a clean name (owner, 2026-10-31).
@@ -144,6 +145,7 @@ function ListRowView({ i, picking, picked, chip, also }: { i: Item; picking: boo
           {size ? <span className="sub size">{size}</span> : null}
           {i.note ? <span className="sub note">{i.note}</span> : null}
           {sub ? <span className="sub">{sub}</span> : null}
+          {waiting ? <span className="sub waittag">{t("lists.queue.tag")}</span> : null}
           {also && also.length ? <span className="sub alsoon">{t("lists.alsoOn", { lists: also.join(", ") })}</span> : null}
           {chip ? <span className="sub">{chip}</span> : null}
           {askLaterHas(i.name) ? <span className="sub asklater">{t("lists.toAskKeptAsTyped")}</span> : null}
@@ -176,6 +178,8 @@ type InCard =
 export function Lists() {
   const { t } = useTranslation();
   const nav = useNav();
+  /* Items with a change still on this phone (offline lists, owner 2026-11-02). */
+  const waitingIds = useWaitingIds();
   const { toast, showErr } = useToast();
   const avatar = useAvatar().src;
   const { user, demo, shopMode, saveShopMode, patchShop, layouts = {}, saveLayout } = useSession();
@@ -893,6 +897,7 @@ export function Lists() {
   /* ---- paint ---- */
   const listStores = here ? here.stores || [] : [];
   const rowProps = (i: Item) => ({ i, also: data ? alsoNames(data, i) : [], picking: !!selEff, picked: !!selEff && selEff.has(i.item_id),
+    waiting: waitingIds.has(i.item_id),
     chip: town && !selEff ? <TownChip town={town} itemId={i.item_id} listStores={listStores} onOpen={() => setTownItem(i.item_id)} /> : null });
   /* Demo Town: send items to the list of another store, making it when there is none. */
   const toStoreList = async (ids: string[], store: string) => {
@@ -993,6 +998,7 @@ export function Lists() {
           {data && lists.length > 0
             ? <EditTitle id="lists-editbtn" title={t("lists.lists")} editTitle={t("lists.editTitle")} editing={editing} onToggle={() => setEditing(e => !e)} />
             : <h1 className="largetitle">{t("lists.lists")}</h1>}
+          <QueueNote id="lists-queue" />
           {grp && others.length ? (
             <p id="list-shared" className="gstack">
               {grp.members.slice(0, 4).map(face)}
@@ -1072,6 +1078,7 @@ export function Lists() {
       {onPage && data && (
         <div id="list-page" className={startBar ? "hasstart" + (tickLink ? " hastick" : "") : undefined}>
           <button id="list-back" className="backlink linkbtn" type="button" onClick={() => openLens("home")}><span aria-hidden="true">‹ </span>{t("lists.backToLists")}</button>
+          <QueueNote id="list-queue" />
           {shoppingHere ? <p className="shopinglabel" id="list-shopping">{t("lists.shoppingLabel")}</p> : null}
           <div className="lhead">
             <h1 className="largetitle" id="lp-title">

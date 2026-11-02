@@ -822,6 +822,12 @@
   "lists": {
     "queue": {
       "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
+    "tag": "⏳ Waiting to sync",
+    "offline": "You're offline. You can still add, tick, edit and remove items. Arya syncs when you're back.",
+    "waiting_one": "{{count}} change waiting to sync. Arya sends it when you're back online.",
+    "waiting_other": "{{count}} changes waiting to sync. Arya sends them when you're back online.",
+    "syncing_one": "Syncing {{count}} change…",
+    "syncing_other": "Syncing {{count}} changes…",
       "synced_one": "Synced {{count}} list change.",
       "synced_other": "Synced {{count}} list changes.",
       "skipped_one": "{{names}}: someone changed it after you were offline, so their change stays.",

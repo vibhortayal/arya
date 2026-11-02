@@ -57,6 +57,19 @@ function save(ops: QOp[]) {
   try { dispatchEvent(new Event(CHANGE)); } catch { /* no window */ }
 }
 export const pendingCount = () => queued().length;
+/* Items with a change still waiting on this phone, for the "Waiting to
+ * sync" tag (owner, 2026-11-02): local adds and every item a waiting
+ * change names. */
+export function pendingIds(): Set<string> {
+  const out = new Set<string>();
+  for (const op of queued()) {
+    const b = op.body || {};
+    if (typeof b.item_id === "string") out.add(b.item_id);
+    if (Array.isArray(b.item_ids)) for (const x of b.item_ids) if (typeof x === "string") out.add(x);
+    if (op.path === TEXT) for (const x of localIds(op)) out.add(x);
+  }
+  return out;
+}
 
 /* The pieces a typed add will become: the server's split is the real
  * one (lines, semicolons, commas); this only draws the rows meanwhile. */
