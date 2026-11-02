@@ -80,7 +80,7 @@ hold the truth about what you buy, but nobody reads them.
   Wonder re-reads only a receipt that fails a check, or one Spark could
   not read. Each receipt records which model read it.
 - **Muse Spark Open** (open weights, hosted on Baseten): the staple judge's second
-  seat. It judges again from item names alone and never sees personal data.
+  seat. It judges again from item names alone (no prices, dates, stores or account details).
 - **SAM 3.1**: finds shelves and signs in the guided store scan, boxes
   candidates for Find it for me (Spark then checks each crop), and finds
   people so they are blurred before any frame is kept.

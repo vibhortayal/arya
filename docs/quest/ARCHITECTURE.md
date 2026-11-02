@@ -31,7 +31,7 @@ be two real products. Deterministic first; Spark only where code
 cannot settle. A clean list skips the screen.
 
 ### 4. The hunt (client PWA)
-Installable, works offline (grabs queue and sync). One store view per
+Installable. Signed-in accounts keep a cached copy and queue grabs offline, which sync later; receipts and Ask need a connection. One store view per
 store: photos or shelf cards. Any stop can be grabbed in any order.
 Shelf Scan and Find it for me
 send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one

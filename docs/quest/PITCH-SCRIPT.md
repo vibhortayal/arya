@@ -26,7 +26,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 [Ask] I tell Ask Arya, 'We finished the Greek yogurt.' It goes on the list. 'What did we spend on coffee?' The answer comes from my receipts, not from a guess.
 
-[Quest] And if you want the trip itself to be fun, tap Start shopping. Quest turns the list into a hunt through your store. If you can't find something, **SAM 3.1** and **Spark** find it on the shelf for you. Shoppers can map their store with a guided scan, and SAM blurs every person first. At the checkout, the receipt photo finishes the trip and teaches Arya for next week."
+[Quest] And if you want the trip itself to be fun, tap Start shopping. Quest turns the list into a hunt through your store. If you can't find something, **SAM 3.1** and **Spark** find it on the shelf for you. Shoppers can map their store with a guided scan, and SAM pixelates the people it detects first. At the checkout, the receipt photo finishes the trip and teaches Arya for next week."
 
 ## Meta fit
 

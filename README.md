@@ -48,7 +48,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 **The coding model.** I first tried Muse Code to explore how to build this. I lost about two days settling on the idea, so to save time I built the app with Claude, which I know well.
 
-**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and blurs people before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and never sees personal data. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates the people it detects before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and sees item names only (no prices, dates, stores or account details). Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 **Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
 - Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
@@ -282,7 +282,7 @@ Tests, from the repo root:
 
 - **Receipt photos, Muse Wonder 1.0 alone (now the backup reader).**
   On the Gate 0 public set (9 receipts, 98 lines): 97 of 98 lines have the
-  right product and price after hand adjudication, with zero price errors when read alone
+  right product and price after hand adjudication, with zero price errors
   and arithmetic matching on 7 of 7 receipts. The automatic scorer gives
   86 of 98 (87.8%), lower than Muse Spark on the same set: 92 of 98. Record:
   `assistant/loops/2026-10-27-wonder-decode.md`.
@@ -398,7 +398,7 @@ license; full notices are in [`NOTICE.md`](NOTICE.md).
 
 **Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
 on Baseten) as a second seat on the staple judge and for dictionary labels, and
-its outputs appear in the app. It sees item names only: no prices, dates, stores or account details. The names come from the household's purchases and go to Baseten, our inference host.
+its outputs appear in the app. It sees item names only: no prices, dates, stores or account details. The names come from the household's purchases and go to Baseten, the host I use.
 
 The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store
 and Google Play badges in `assistant/pwa/assets/badges/` are those companies'

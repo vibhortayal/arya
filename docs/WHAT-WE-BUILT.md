@@ -33,7 +33,7 @@ Everything here is built and in the code. Ideas that are not built are on the
 - **Named lists, and every item has a home:** adds go to the list you name, the
   only list, or Arya asks "Which list?".
 - **Works offline (signed-in accounts):** lists and other screens show as last saved, and list edits
-  queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. The demo opens offline but has no data.
+  queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy; the demo saves offline list changes for that visit only.
 
 ## Prices from your own receipts
 - Cheaper store, price trend, similar items per ounce, which store to buy each

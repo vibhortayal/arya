@@ -35,7 +35,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 - **SAM 3.1**: finds shelves and signs in a store scan, boxes items for Find it for me and blurs people.
 - **Muse Voice Transcribe**: turns speech into text for the list mic and Ask Arya.
 - **Muse Image**: made the grab-celebration characters in Quest, once.
-- **Muse Spark Open**: the open-weights model, hosted on Baseten. It is the second seat of the staple judge and never sees personal data.
+- **Muse Spark Open**: the open-weights model, hosted on Baseten. It is the second seat of the staple judge and sees item names only (no prices, dates, stores or account details).
 - **Meta Model API**: the one client every server call goes through, with a daily spend ceiling.
 
 ## Not live

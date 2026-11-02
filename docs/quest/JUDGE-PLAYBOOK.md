@@ -68,7 +68,7 @@ On Today, tap **Start shopping** on the next trip, then **Let's go**.
   Point it at any shelf photo on a second screen if you are not in a
   store. From the same place you can tell other Arya shoppers it is gone.
 - **Map my store** (on the Quest tab) opens the guided scan: pan along
-  the shelves, SAM 3.1 blurs every person, and Muse Spark reads sections,
+  the shelves, SAM 3.1 pixelates the people it detects, and Muse Spark reads sections,
   aisle signs and prices.
 
 ### 5. Ask Arya
