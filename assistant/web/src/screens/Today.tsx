@@ -516,7 +516,7 @@ export function Today() {
                 <div className="checkrows" hidden={!checksOpen && !big("checks")}>
                   {checks.map(c => (
                     <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                      <span className="chipset">
+                      <span className="chipset checkchips">
                         <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
                         <button className="chip" data-check-used={c.item_id} type="button" onClick={() => check("used", c.item_id)}>{t("today.usedIt")}</button>
                         <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>

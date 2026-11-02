@@ -3278,7 +3278,7 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you what to use before it expires. Switch on Remind me in Settings, Preferences."
+        "s4": "Arya reminds you what to use before it expires. When Today asks Still good?, tap Still good, Used it or It expired. Switch on Remind me in Settings, Preferences."
       },
       "ask": {
         "kicker": "Ask Arya",
@@ -3861,7 +3861,7 @@
         "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
-        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, Used it (you finished it: it moves to your suggestions, and Undo puts it back) or It expired. Anything already on one of your lists is not asked about.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, Used it (you finished it, so it is not food waste: it moves to your suggestions, and Undo puts it back) or It expired (counts as food waste). Anything already on one of your lists is not asked about.",
         "n2": "Ask Arya knows these dates too: ask \"What goes bad this week?\"",
         "cta": "Open Arya's powers"
       },
