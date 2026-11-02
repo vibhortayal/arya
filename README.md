@@ -179,6 +179,24 @@ The scored reports and the Gate 0 labels and results are in
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
 
+## After the hackathon
+
+What ships now is a limited-scope MVP. These are ideas the owner is thinking
+about for where Arya could go; they are not commitments, and he needs more time
+to figure them out. Nothing in this list is built, except one thing that is
+built and switched off: **Use your own Meta key** is built and tested, and off
+in the live app only because the key vault secret is not set. There was not
+enough time to polish the rollout, and the owner is still deciding when to turn
+it on. The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
+
+- **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
+- **Store data and community:** capture more store data, Arya shoppers and
+  community prices, Quest leaderboards, item and store profiles.
+- **AI and open weights:** bring your own key finished, replay mode, wider use
+  of open weights.
+- **Trust and privacy:** photo opt-in, privacy policy, deferred security items.
+- **Running it yourself:** a laptop-ready Docker setup, off-site backups, staging.
+
 ## Where things are
 
 | Path | What |

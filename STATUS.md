@@ -314,6 +314,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
   (Actions tab, Run workflow), by the owner's choice.
 - Photo opt-in and privacy policy: after the hackathon (owner).
+- Use your own Meta key is built and tested (#391, #393) and switched off in
+  the live app only because `ARYA_KEY_VAULT_SECRET` is not set (Settings row,
+  Help topic, Ask answer and sign-up door stay hidden). Not enough time to
+  polish the rollout; the owner is still deciding when to turn it on.
+  `docs/ROADMAP.md`.
 
 ## Owner data (not in this repo)
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged
