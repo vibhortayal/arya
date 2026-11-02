@@ -64,6 +64,7 @@ Everything here is built and in the code. Ideas that are not built are on the
 ## Groups and everyday use
 - **Groups** share lists between the people you live with, joined by a
   single-use code or an invite link. Receipts stay with whoever filed them.
+- **Daily reminders** for what is running low. Live on the hosted app; you opt in, and on iPhone the app must be added to the Home Screen first.
 - **Add to Home Screen**, so it opens like an app.
 - A navigation tab (the bottom buttons) you arrange yourself.
 
@@ -95,7 +96,6 @@ Everything here is built and in the code. Ideas that are not built are on the
 - Tests and measured results: [`STATUS.md`](../STATUS.md), [`docs/evals/`](evals/).
 
 ## In the code but switched off
-- **Daily reminders** for what is running low (opt-in, on the Home Screen app). Off by default (`ARYA_PUSH_REMINDERS=0`); it only works where the server turns it on.
 - **Use your own Meta key (unfinished, not used).** A Settings row, a Help topic,
   an Ask answer and a sign-up door, where an account with its own key never falls
   back to Arya's keys. I decided not to use it, so it is switched off

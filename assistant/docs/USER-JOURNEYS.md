@@ -362,7 +362,7 @@ an **Add to Home Screen** row while installing is possible.
 | Groups with live sync and Leave | Shipped, on by default |
 | Expiry dates, Use soon, Still good? | Shipped |
 | Ask Arya (list, aisle) | Shipped, needs a model |
-| Push reminders | Shipped, flag `ARYA_PUSH_REMINDERS` (off) |
+| Push reminders | Shipped, live (flag `ARYA_PUSH_REMINDERS` on since Nov 2); you opt in, and on iPhone add the app to the Home Screen first |
 | Add to Home Screen | Shipped |
 | Supabase sign-in | Shipped, flag `ARYA_SUPABASE_AUTH` (off) |
 | Community prices, Deals, Arya Shoppers | Planned (opt-in choice saved, nothing built) |
