@@ -414,6 +414,7 @@
     }
   },
   "ask": {
+    "pickOne": "Pick one, or type your own answer",
     "photoTooLarge": "That photo is too large to send. Try a screenshot of it, or a photo from closer.",
     "newChat": "New chat",
     "editTitle": "Edit questions",
@@ -3753,7 +3754,7 @@
         "s1": "Tap the Ask tab.",
         "s2": "Type your question, or tap Talk to say it.",
         "s3": "Or tap a sample question.",
-        "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. Tap New chat to start again.",
+        "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. When she asks which list, tap a list under her question. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
         "n3": "After you tap Talk, a Listening card shows a moving bar and a timer. Tap Stop and send when you are done, or Cancel.",
         "cta": "Open Ask"
