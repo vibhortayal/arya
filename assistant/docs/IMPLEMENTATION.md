@@ -132,7 +132,7 @@ SmartList (SPEC 6.5) — suggestions
 
 NamedList (SPEC 5.10, 6.9) — `lists` store, one row per list
 { list_id, name, store (optional), items: [ { item_id, qty, checked } ] }
-"Everything else" holds items with no list. A due staple is a suggestion
+"Everything else" holds items with no list. (Update 2026-11-02, #419: it is no longer automatic; it exists only if the user makes one.) A due staple is a suggestion
 under the list of its usual store; it is not an item until the user adds it.
 The prepared cart (PR #105) is gone from the app. Legacy `cart.json` and
 `/api/cart/approve` are not used by any screen. Arya places no order.

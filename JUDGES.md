@@ -38,8 +38,8 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 ## Demo (25%)
 
-- The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
-- Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map this store, receipt snap.
+- The same loop as the video plays live: Today, Lists, Ask Arya ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
+- Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
 
 ## Meta model map
@@ -50,7 +50,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 | Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, zero price errors, read alone |
 | SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, blurs people | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
-| Muse Image 1.0 | `muse-image-1.0` | The 20 grab-celebration characters, generated once | n/a |
+| Muse Image 1.0 | `muse-image-1.0` | The 23 grab-celebration characters, generated once | n/a |
 | Muse Spark Open | `meta-models/muse-spark-open-1026` (hosted on Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |
 | Meta Model API | one client | Every server call, with a daily spend ceiling | n/a |
 

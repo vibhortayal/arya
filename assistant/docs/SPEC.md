@@ -226,7 +226,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
 ### 6.9 Named lists and Today (C5)
 
-- FR-5.10 Lists are named. The Lists tab has one card per list plus "Everything else." The user creates, renames (pencil), deletes, and restores a list.
+- FR-5.10 Lists are named. The Lists tab has one card per list plus "Everything else." (Update 2026-11-02, #419: "Everything else" is no longer automatic; it exists only if the user makes one.) The user creates, renames (pencil), deletes, and restores a list.
 - FR-5.11 Swipe moves or removes an item. Select moves many items.
 - FR-5.12 A new list can name a store. The store drives the aisle sort and the suggestions.
 - FR-5.13 Today is the dashboard: running low, store alerts, use soon, still-good checks, the user's lists, patterns, and one quiet Quest row. A new account shows no sample alerts.
@@ -301,6 +301,7 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
+Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask Arya and More; Lists, Receipts, Stores, Help and Settings sit under More. The six-tab line below is the earlier layout.
 The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
 Settings. Settings has Group, Preferences (currency and language, When I
 start shopping, Display, Reminders), Account (Export my data, Delete my
