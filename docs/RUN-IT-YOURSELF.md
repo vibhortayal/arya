@@ -14,7 +14,7 @@ now".
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
   and microphone steps need a phone.
 
-## Four steps
+## Start it
 From the repository root:
 
 ```
@@ -24,7 +24,7 @@ docker compose up --build
 
 Open http://localhost:8080. The first build takes a few minutes. On the first
 visit a "Create your account" sheet opens. That makes the one real account on
-this copy: a username (letters, digits and `. _ - + @`) and a password. Use it
+this copy: a username (lowercase letters, digits and `_ % + @ -`, and `.` after the first character) and a password. Use it
 to snap or upload your own receipts and see them read and saved, which is
 Arya's core feature. Or close the sheet and tap **Try it now** for the demo
 household. The demo keeps nothing, so it cannot add receipts; Ask, photos of a
@@ -96,6 +96,9 @@ manual-only (`.github/workflows/tests.yml`).
   dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d"**
   `MODEL_API_KEY` is empty, or the container was not recreated after you
   edited `.env`. Fix `.env`, then `docker compose up -d`.
+- **Receipts says "Reading paused" with raw server text, and there is no key.** The
+  same cause as above: add the key and run `docker compose up -d`. (A cleaner
+  message is being fixed.)
 - **Port already in use.** Set `ARYA_LOCAL_PORT` to a free port.
 - **A model error with a key set.** The key was rejected or has no credit;
   check it at dev.meta.ai.
