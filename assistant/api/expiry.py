@@ -201,7 +201,10 @@ def perishable(name):
 def receipt_nudge(receipts, flags, seen, today):
     """The newest receipt from the last NUDGE_DAYS, bought after `seen`
     (an ISO date: the receipt last answered), that holds at least
-    NUDGE_MIN_ITEMS perishables without a date set since that trip.
+    NUDGE_MIN_ITEMS perishables. Returns the ones still left: no date set
+    since that trip and not removed (× on the row, flag "use_by_skip" on
+    or after the trip). The card stays until none are left (owner,
+    2026-11-02: "it should go away if there are no more items left").
     Returns {receipt_id, store, date, items: [{item_id, name}]} or None."""
     seen_d = parse_iso(seen) if seen else None
     rows = []
@@ -216,22 +219,27 @@ def receipt_nudge(receipts, flags, seen, today):
         rows.append((d, r))
     rows.sort(key=lambda x: x[0], reverse=True)
     for d, r in rows:
-        items, ids = [], set()
+        items, ids, found = [], set(), 0
         for ln in r.get("lines") or []:
             if ln.get("line_type") not in (None, "item"):
                 continue
             iid, name = ln.get("item_id"), ln.get("decoded_name") or ln.get("raw")
             if not iid or not name or iid in ids or not perishable(name):
                 continue
+            ids.add(iid)
+            found += 1
             f = flags.get(iid) or {}
             set_on = parse_iso(f.get("use_by_set"))
             if tracked(f) and set_on and set_on >= d:
                 continue  # already dated since this trip
-            ids.add(iid)
-            items.append({"item_id": iid, "name": f.get("name") or name})
-            if len(items) >= NUDGE_MAX_ITEMS:
-                break
-        if len(items) >= NUDGE_MIN_ITEMS:
+            skip = parse_iso(f.get("use_by_skip"))
+            if skip and skip >= d:
+                continue  # removed from this card
+            if len(items) < NUDGE_MAX_ITEMS:
+                items.append({"item_id": iid, "name": f.get("name") or name})
+        if found >= NUDGE_MIN_ITEMS and items:
             return {"receipt_id": r.get("receipt_id"), "store": r.get("merchant") or "",
                     "date": d.isoformat(), "items": items}
+        if found >= NUDGE_MIN_ITEMS:
+            return None  # this receipt is answered: every item dated or removed
     return None
