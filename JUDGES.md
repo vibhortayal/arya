@@ -45,6 +45,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 ## Technical depth and execution (20%)
 
+- Design decisions, what I could finish in the window and what is pending, and where it stops scaling: [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md)
 - Model proposes, code checks: arithmetic reconciliation, returns, cadence and prices are deterministic. [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md)
 - Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
