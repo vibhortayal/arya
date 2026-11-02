@@ -8,6 +8,8 @@ export type Capture = {
   stop: () => Blob;
   /* Stop without a recording (the screen went away mid-capture). */
   cancel: () => void;
+  /* How loud the last moment was, 0 to 1, for the Listening card's bars. */
+  level: () => number;
 };
 
 export const voiceSupported = () =>
@@ -20,7 +22,14 @@ export async function startCapture(): Promise<Capture> {
   const src = ctx.createMediaStreamSource(stream);
   const proc = ctx.createScriptProcessor(4096, 1, 1);
   const chunks: Float32Array[] = [];
-  proc.onaudioprocess = (ev: AudioProcessingEvent) => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+  let loud = 0;
+  proc.onaudioprocess = (ev: AudioProcessingEvent) => {
+    const d = new Float32Array(ev.inputBuffer.getChannelData(0));
+    chunks.push(d);
+    let sum = 0;
+    for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+    loud = Math.min(1, Math.sqrt(sum / (d.length || 1)) * 6);
+  };
   src.connect(proc);
   proc.connect(ctx.destination);
   const end = () => {
@@ -38,6 +47,7 @@ export async function startCapture(): Promise<Capture> {
     cancel() {
       try { end(); ctx.close(); } catch { /* already closed */ }
     },
+    level: () => loud,
   };
 }
 

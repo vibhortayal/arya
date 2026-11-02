@@ -87,7 +87,13 @@
       "listening": "Listening…",
       "refused": "Microphone access was refused. You can type instead.",
       "stopTranscribe": "Stop and turn into text",
-      "record": "Record"
+      "record": "Record",
+      "card": {
+        "hint": "Speak now. Arya writes it down when you tap Stop and send.",
+        "stopAndSend": "Stop and send",
+        "reading": "Got it, reading…",
+        "time": "Recording time {{time}}"
+      }
     },
     "receiptFile": {
       "empty": "That file arrived empty. If it is still downloading, wait for it to finish, then try again.",
@@ -3675,6 +3681,7 @@
         "s3": "Or tap a sample question.",
         "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
+        "n3": "After you tap Talk, a Listening card shows a moving bar and a timer. Tap Stop and send when you are done, or Cancel.",
         "cta": "Open Ask"
       },
       "lists": {
