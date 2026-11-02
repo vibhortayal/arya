@@ -10,7 +10,7 @@ The video follows Path A beats; the narration is Path B safe.
    shared memory. Say: "I built Arya during this hackathon. I downloaded 114
    receipts from the Costco app, three years of my own shopping."
 2. **Proof** (my real account: Spending, Receipts, Item). Arya checked all
-   114 lines against the printed totals, in plain code. Show egg whites in 35 of
+   114 receipts (1,226 lines) against the printed totals, in plain code. Show egg whites in 35 of
    114 trips, and almond flour at $13.59 in one Costco and $16.99 in another.
    Say: "Patterns are math, not prompts." No model read those 114 as photos;
    Spark only expands the receipt abbreviations.

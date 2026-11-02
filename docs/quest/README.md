@@ -25,7 +25,7 @@ camera scan maps it for every shopper after you.
 2. **Find.** Shoppers' photos where a store section is mapped (people
    blurred by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
    Muse Spark verifies.
-3. **Grab.** +10 a grab, milestones, a full-haul bonus. Shortage
+3. **Grab.** +10 per grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.
 4. **Receipt.** Muse Spark reads it, code checks the arithmetic, and
    Muse Wonder re-reads only a receipt the checks flag; it

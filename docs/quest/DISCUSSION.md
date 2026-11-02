@@ -125,7 +125,7 @@ pass 2.
     stores the demo can actually play — a photo walk or a model; typed
     names still work, they are just not advertised. Suite 468.
 
-## 55. Teach is a walk, not a form (owner, 2026-10-28)
+## 55b. Teach is a walk, not a form (owner, 2026-10-28)
 
 Owner: the Teach flow "is very data entry heavy — no user is going to
 enter data." Ruled: teaching a store is capture-and-confirm, never
