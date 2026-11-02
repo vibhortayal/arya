@@ -19,18 +19,17 @@ module.exports = {
     hashed: true, indexBlog: false, docsRouteBasePath: '/docs', docsDir: 'generated/docs',
   }]],
   themeConfig: {
-    colorMode: {respectPrefersColorScheme: true},
+    colorMode: {defaultMode: 'light', disableSwitch: true, respectPrefersColorScheme: false},
     navbar: {
       title: 'Arya',
       items: [
         {to: '/docs/intro', label: 'Docs', position: 'left'},
-        {to: '/docs/guides/user-journeys', label: 'Guides', position: 'left'},
-        {to: '/docs/architecture/overview', label: 'Architecture', position: 'left'},
+        {to: '/docs/guide/user-journeys', label: 'User guide', position: 'left'},
         {to: '/api-reference', label: 'API reference', position: 'left'},
         {href: 'https://github.com/vibhortayal/arya', label: 'GitHub', position: 'right'},
         {href: 'https://arya.teamnightshift.org', label: 'Open Arya', position: 'right'},
       ],
     },
-    footer: {style: 'dark', copyright: 'Built for the Meta AI Developer Hackathon. Docs are generated from the repository Markdown.'},
+    footer: {style: 'light', copyright: 'Built for the Meta AI Developer Hackathon. Docs are generated from the repository Markdown.'},
   },
 };

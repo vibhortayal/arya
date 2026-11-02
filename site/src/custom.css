@@ -1,2 +1,45 @@
-:root { --ifm-color-primary: #0a7d5a; --ifm-color-primary-dark: #097152; --ifm-color-primary-light: #0b8962; }
-[data-theme='dark'] { --ifm-color-primary: #3ccf9c; }
+/* Arya's own tokens, copied from assistant/web/src/styles/styles.css (:root).
+   Light mode only. If the app's tokens change, update these values. */
+:root {
+  --acc: #C2410C; --acc-soft: #FDEEE8; --ink: #1B1B1E; --ink2: #55555C;
+  --ink3: #8B8B93; --line: #D9D9DE; --line2: #ECECEF; --bg: #EFEFF1;
+  --panel: #FFFFFF; --fill: #F4F4F6; --fill2: #E7E7EB;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --ifm-font-family-monospace: ui-monospace, Menlo, monospace;
+  --ifm-font-size-base: 100%;
+  --ifm-line-height-base: 1.45;
+  --ifm-font-color-base: var(--ink);
+  --ifm-font-color-secondary: var(--ink2);
+  --ifm-background-color: var(--bg);
+  --ifm-background-surface-color: var(--panel);
+  --ifm-color-primary: var(--acc);
+  --ifm-color-primary-dark: #af3a0b;
+  --ifm-color-primary-darker: #a43709;
+  --ifm-color-primary-darkest: #872d08;
+  --ifm-color-primary-light: #d34a10;
+  --ifm-color-primary-lighter: #dc5115;
+  --ifm-color-primary-lightest: #ee6a2f;
+  --ifm-link-color: var(--acc);
+  --ifm-global-radius: 14px;
+  --ifm-navbar-background-color: var(--panel);
+  --ifm-navbar-shadow: 0 1px 0 var(--line);
+  --ifm-footer-background-color: var(--panel);
+  --ifm-footer-color: var(--ink2);
+  --ifm-toc-border-color: var(--line);
+  --ifm-table-border-color: var(--line);
+  --ifm-hr-border-color: var(--line);
+  --ifm-code-background: var(--fill);
+  --ifm-heading-font-weight: 700;
+  --ifm-menu-color: var(--ink2);
+  --ifm-menu-color-active: var(--acc);
+  --ifm-menu-color-background-active: var(--acc-soft);
+  --ifm-menu-color-background-hover: var(--fill);
+  --docusaurus-highlighted-code-line-bg: var(--acc-soft);
+  --ifm-color-emphasis-200: var(--line2);
+  --ifm-color-emphasis-300: var(--line);
+}
+html { color-scheme: light; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.card:hover { border-color: var(--acc); }
+.footer { border-top: 1px solid var(--line); }
+::selection { background: rgba(194, 65, 12, 0.28); }
