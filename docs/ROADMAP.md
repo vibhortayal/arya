@@ -87,6 +87,31 @@ through import and export.
   up) and a staging address to check a deploy before the live one.
 - Cost proposals from the cost watcher, tracked as GitHub issues.
 
+## Developer platform and integrations
+Starting point today: the Lists API and the developer portal at `/developers`
+(with a quickstart and an interactive reference; `docs/API.md`), and the MCP
+connector that lets an AI agent read and edit your lists
+(`assistant/docs/AGENT-CONNECTOR.md`). The API is for your own data, with a
+personal token. Everything below is future work and not built:
+- **A bigger developer portal,** so other platforms can integrate with Arya
+  with Arya's household data as the shared source: more endpoints (receipts,
+  spend, what is running low), webhooks, OAuth sign-in instead of a personal
+  token, SDKs and sample apps.
+- **Smart fridges and kitchen devices** that know what is inside, to add what
+  is empty or expiring to the list and to tell Arya what was used.
+- **Smart cooking devices** that understand what a household cooks, to feed
+  recipes and quantities back to the list.
+- **Humanoid and home robots** that shop, restock or check the pantry from the
+  household's list and habits.
+- **Online grocery delivery services and apps,** to send a list for ordering
+  and to bring back the real receipt and prices. (There is no cart or payment in
+  Arya today; see `assistant/docs/SPEC.md`, "Not in scope".)
+- **Any app that understands a household's food and purchase habits** (meal
+  planners, nutrition and budgeting apps), connected through the same API and
+  the import and export below.
+- Every integration would be opt-in, per household, with scoped permissions
+  and a clear way to revoke it.
+
 ## Spending, import and export
 - **Richer spend tracking and analysis,** with filters (by store, category,
   person, period, price per unit). The Spending screen exists today; deeper
