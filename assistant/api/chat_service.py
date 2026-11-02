@@ -335,7 +335,30 @@ def _list_matches(name):
     close = difflib.get_close_matches(want, [k for _l, k in keys], n=3, cutoff=0.75)
     if close:
         return [l for l, k in keys if k in close]
-    return [l for l in lists if any(_list_key(s) == want for s in l.get("stores") or [])]
+    by_store = [l for l in lists if any(_list_key(s) == want for s in l.get("stores") or [])]
+    if by_store:
+        return by_store
+    # Heard, not typed (owner, 2026-11-02: voice gave "Costcosi" for
+    # Costcozy): compare how the names sound, the user's own lists only.
+    # Two that sound alike come back together and Ask asks which.
+    said = _sound_key(want)
+    if len(said) < LIST_MIN_CHARS:
+        return []
+    def score(l):
+        ks = [_sound_key(_list_key(n)) for n in [l["name"]] + list(l.get("stores") or [])]
+        return max((difflib.SequenceMatcher(None, said, k).ratio() for k in ks if len(k) >= LIST_MIN_CHARS), default=0)
+    scored = [(score(l), l) for l in lists]
+    best = max((sc for sc, _l in scored), default=0)
+    return [l for sc, l in scored if sc >= 0.8 and sc >= best - 0.1]
+
+
+def _sound_key(name):
+    """A rough sound-alike key: no spaces or apostrophes, c/k, s/z and
+    the ee/ie/y/i endings made the same ("costco see" ~ "costcozy")."""
+    w = re.sub(r"[^a-z0-9]", "", str(name or "").lower())
+    w = w.replace("ph", "f").replace("ck", "k").replace("q", "k").replace("c", "k").replace("z", "s")
+    w = re.sub(r"(ee|ie|ey|ea|y)", "i", w)
+    return re.sub(r"(.)\1+", r"\1", w)
 
 
 def _list_for(name):
@@ -407,19 +430,42 @@ def _remove(a, target):
     return _t("removed", "Removed {name} from your list.", name=name), None
 
 
-def apply_actions(actions, added=None):
+def _list_choices(lists, verb, item, qty=1):
+    """Tap-to-answer options for a which-list question (owner,
+    2026-11-02): each chip's `send` is the words a tap sends, as if typed."""
+    shown = f"{qty} {item}" if qty and qty != 1 else str(item or "")
+    if verb == "remove":
+        return [{"label": l["name"], "send": _t("choice_remove", "Remove {item} from {list}", item=shown, list=l["name"])}
+                for l in lists[:6]]
+    return [{"label": l["name"], "send": _t("choice_add", "Add {item} to {list}", item=shown, list=l["name"])}
+            for l in lists[:6]]
+
+
+def _lists_to_offer(item_id=None):
+    """Every list, the item's usual list first."""
+    from api import state
+    have = state.named_lists()
+    sug = state.usual_list(item_id) if item_id else None
+    return sorted(have, key=lambda l: l["id"] != sug)
+
+
+def apply_actions(actions, added=None, choices=None):
     """Apply validated actions. `added`, when given, collects
     {item_id, name} for each item that newly joined the list, so a
-    caller can offer Undo."""
+    caller can offer Undo. `choices`, when given, collects the options
+    for a which-list question, so the app can show them as chips."""
     from api import state
     applied, skipped = [], []
+    offer = (lambda opts: choices.extend(opts)) if choices is not None else (lambda opts: None)
     today = date.today().isoformat()
     for a in actions or []:
         if a.get("type") == "remove_from_list":
             target = _list_for(a.get("list")) if a.get("list") else None
             if a.get("list") and target is None:
+                fits = _list_matches(a["list"])
                 skipped.append(_which_list(a["list"])
                                or _t("no_list_remove", "You have no list called {list}.", list=a["list"]))
+                offer(_list_choices(fits if len(fits) > 1 else state.named_lists(), "remove", a.get("item")))
                 continue
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
@@ -452,10 +498,12 @@ def apply_actions(actions, added=None):
                 # Ask first; adding to no list and then asking
                 # leaves a stray row (Tester, #384).
                 skipped.append(ask)
+                offer(_list_choices(_list_matches(a["list"]), "add", a.get("item"), qty))
                 continue
             # Every item on a list (owner, 2026-11-02): no stray row; ask.
             skipped.append(_t("no_list", "You have no list called {list}.", list=a["list"])
                            + " " + _ask_list(a.get("item"), item_id))
+            offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
             continue
         if a.get("type") in ("add_to_list", "ran_out") and target is None:
             # No list named: the list it is already on, the only list, or ask.
@@ -466,6 +514,7 @@ def apply_actions(actions, added=None):
                 target = have[0]
             if target is None:
                 skipped.append(_ask_list(a.get("item"), item_id))
+                offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
                 continue
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
                 else _t("dest_list", " to your list"))
@@ -723,15 +772,18 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
                 iid = _resolve(a.get("item"))
                 if iid:
                     proposed.append({"action": a, "text": _risky_text(a, state.names().get(iid, a.get("item")))})
-    added = []
-    applied, skipped = apply_actions(now, added)
+    added, choices = [], []
+    applied, skipped = apply_actions(now, added, choices)
     if surface:
         for a in actions:
             if a.get("type") in RISKY and a.get("type") != "ran_out" and not _resolve(a.get("item")):
                 skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
                                   item=a.get("item")))
+    # One question's chips at a time: two questions in one answer would
+    # mix their options, so then the user types (the typed path stays).
+    asks = sum(1 for k in skipped if k.endswith("?"))
     return {"reply": _scrub_labels(dec.get("reply", "")), "applied": applied, "skipped": skipped,
-            "added": added, "proposed": proposed}
+            "added": added, "proposed": proposed, "choices": choices if asks == 1 else []}
 
 
 def apply_confirmed(actions):

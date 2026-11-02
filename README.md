@@ -36,6 +36,26 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and MCP connector. Kroger's aisle lookup at real Kroger-family stores (not visible in the demo). | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
+## Why I built it this way
+
+**The idea.** I kept losing track of what was running low and where the money went. A list that learns from my own receipts fixes both, and the receipts already exist. Quest came from wanting the store trip to feel less like a chore; it stays optional.
+
+**A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, works offline and can send reminders, and a judge can open it in one tap.
+
+**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
+
+**The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
+
+**The coding model.** I first tried Muse Code to explore how to build this. I lost about two days settling on the idea, so to save time I built the app with Claude, which I know well.
+
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and blurs people before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and never sees personal data. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+
+**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
+- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
+- Oct 28: accounts, the judge front door, and Supabase, Resend and Baseten set up for Arya.
+- Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
+- Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
@@ -208,7 +228,7 @@ FastAPI process behind Caddy. Code does the money, timing and list logic, so
 those cost nothing per call. Meta models read photos, judge staples and
 answer questions, and every call goes through one module
 (`assistant/api/meta_client.py`). State is JSON documents on a Docker volume,
-or Supabase Postgres. Details, feature flags and the VM runbook:
+mirrored to Supabase Postgres on the live site. Details, feature flags and the VM runbook:
 [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train
@@ -223,7 +243,7 @@ The open-weights client refuses personal data. Cost rules are in
 | App | React 19 and TypeScript, built by Vite into a phone-first PWA with a service worker; three.js for the Quest world |
 | API | Python 3.12, FastAPI on uvicorn; one process serves the API and the built app |
 | Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees names only |
-| Storage | JSON documents on a Docker volume, or Supabase Postgres (`ARYA_STORE`); optional Supabase Auth for email code and Google sign-in |
+| Storage | JSON documents on a Docker volume, mirrored to Supabase Postgres on the live site (`ARYA_STORE=dual`; `json` and `pg` also work); optional Supabase Auth for email code and Google sign-in |
 | Email | Resend (waitlist, account codes, reports) |
 | Serving | Caddy for TLS and security headers, in front of the API |
 | Hosting | One Oracle Cloud VM (Always Free, ARM), Docker Compose with two services (`api`, `caddy`); live at https://arya.teamnightshift.org |
