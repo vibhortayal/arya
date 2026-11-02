@@ -406,11 +406,11 @@ Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
 ## How this was built
 
 Everything here was built in the hackathon window, which opened on Oct 27,
-2026. The idea search began a day earlier, on Oct 26, in a separate research
-repo. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
+2026. The idea search took about two days; its commits in a separate research
+repo start on Oct 26. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
 older. The engine (decode, dictionary, ledger, patterns, the first phone app)
-landed in four commits between 15:31 and 15:38. Git records them under the
-author name "Spark" and does not record which tool wrote them. The dated table
+landed in four commits between 15:31 and 15:38. Muse Wonder wrote that engine
+spike with me; git lists the commits under the author name "Spark". The dated table
 is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
 in `assistant/loops/` record the rest. My 114 receipts (back to 2023) are my
 purchase history, imported as data. They are not in this repository.

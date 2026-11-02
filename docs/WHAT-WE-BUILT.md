@@ -2,13 +2,15 @@
 
 The hackathon window opened on Oct 27, 2026. This page says what existed
 before it, what I made in it and when, taken from git. Times are US Eastern.
-Anything git cannot confirm is marked **[TO CONFIRM]**.
+What git cannot show is listed under "What git cannot confirm".
 
 ## What existed before the window
 
-- **Oct 26, 12:37 to 16:51: the idea search.** 28 commits in a separate research
-  repo (`vibhortayal/meta-hackathon-research`): candidate ideas and a plan for
-  spikes, with no spike results. This is before Oct 27, and I say so plainly.
+- **The idea search.** By my own account it took about two days. The commits for
+  it in a separate research repo (`vibhortayal/meta-hackathon-research`) start
+  on Oct 26 at 12:37; the 28 commits that day, to 16:51, hold candidate ideas
+  and a plan for spikes, with no spike results. This is before Oct 27, and I
+  say so plainly.
 - **My 114 Costco receipts** (back to 2023) are my own purchase history, imported
   as data. They are not in this repo.
 - **The server.** The Oracle VM already existed for my other hobby projects;
@@ -47,11 +49,13 @@ one small set, so quote the gap between the models, not either number alone.
 
 ## What git cannot confirm
 
-- **[TO CONFIRM] Who wrote the first engine commits.** The early commits are
-  authored "Spark", which is only a name in git. Git does not record which model
-  or tool wrote the decode, dictionary, ledger, patterns and first phone app.
-- **[TO CONFIRM] The Muse Wonder spike sessions.** No start or end time is
-  recorded for them, and the spike folders the docs mention are in neither repo.
+- **Who wrote the first engine commits.** Muse Wonder wrote the engine spike
+  with me. Git lists those commits under the author name "Spark", at 15:31 to
+  15:38 on Oct 27, and records no model or tool, so the author name alone does
+  not show it. That is my account of it.
+- **When the Muse Wonder spike sessions ran.** No start or end time is recorded
+  for them, and the spike folders the docs mention are in neither repo. I give
+  no date for them.
 
 ## What exists today
 
