@@ -17,23 +17,23 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 - **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model: [`README.md`](README.md#why-i-built-it-this-way)
 - **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), and a dated [decision log](docs/DECISIONS.md).
 
-## How this maps to the Indie track
+## How does this fit the Indie track?
 
 - **Creative:** Arya reads your receipts to run your list, and Quest turns the shop into a game.
 - **Technically ambitious:** six Meta models with one job each, receipt arithmetic checked in plain code, and an MCP connector so an agent can edit your lists.
-- **Does it work:** it is live at arya.teamnightshift.org, the demo needs no account, and the measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#known-limits).
+- **Does it work:** it is live at arya.teamnightshift.org, the demo needs no account, and the measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#what-are-the-known-limits).
 
-## Impact (30%)
+## Does it matter to real people? (Impact, 30%)
 
 **What is the real-world potential?** Everyone who shops for a household does the same weekly work: remembering the list, not rebuying what is in the cupboard, and wondering where the money went. A receipt holds all of that and nobody reads it. Arya reads it, checks every line against the printed total, and turns it into a list with reasons ([how it works](README.md#what-is-arya)). On my own 114 receipts (1,226 lines) every one passed the arithmetic check, and the staple judge's precision was 0.79 against a purchase-cadence proxy ([measured results](README.md#measured-results)).
 
-**Who benefits, and how much does it matter?** People who keep a household or a group fed, and share a list ([who it is for](docs/PRINCIPLES.md)). It matters as a weekly chore and a household budget, not as a rare event. I have not measured time or money saved, and I tested on one household, so I do not claim a number ([Known limits](README.md#known-limits)).
+**Who benefits, and how much does it matter?** People who keep a household or a group fed, and share a list ([who it is for](docs/PRINCIPLES.md)). It matters as a weekly chore and a household budget, not as a rare event. I have not measured time or money saved, and I tested on one household, so I do not claim a number ([Known limits](README.md#what-are-the-known-limits)).
 
 **Could it become something people use?** It already runs: live at arya.teamnightshift.org, installable, free to use, with a no-account demo, shared lists for groups, a Lists API and an MCP connector so an agent can edit your lists ([agent connector](assistant/docs/AGENT-CONNECTOR.md)). Store maps already merge across shoppers, so each trip helps the next; shared prices are planned and not switched on. It runs as one server today, and the plan to scale it is in the [roadmap](docs/ROADMAP.md). Rome wasn't built in a day: I built the foundation, and the more people use Arya the better it gets for them.
 
 **Does it fit a problem statement?** Yes: Build for Your World. It is a shopper's problem I had personally, built for shoppers to help each other ([why](docs/PRINCIPLES.md)).
 
-## Use of Meta AI tooling (25%)
+## Which Meta models does it use, and for what? (Meta AI tooling, 25%)
 
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
@@ -43,24 +43,24 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Available but not used: Muse Glimmer (open weights, self-hosted) and the Spark Contributor tier (cheaper, different data terms). Reasons: [`docs/MODELS.md`](docs/MODELS.md).
 - Built with Muse Code: Muse Code, running Muse Wonder, wrote the first version of the engine on Oct 27; I then built the rest of the app with Claude. Muse Code is not part of the shipped app. How: README, "How this was built".
 
-## Technical depth and execution (20%)
+## How is it built, and how well? (Technical depth, 20%)
 
 - Design decisions, what I could finish in the window and what is pending, and where it stops scaling: [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md)
 - Model proposes, code checks: arithmetic reconciliation, returns, cadence and prices are deterministic. [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md)
 - Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
-- Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
+- Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#what-are-the-known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
 - Tests: commands in the [README](README.md#run-it-yourself); known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
 - How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
 
-## Demo (25%)
+## How do I try it? (Demo, 25%)
 
 - The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
 - Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
 
-## Meta model map
+## Which model does which job?
 
 | Meta product | Id | Job | Measured |
 |---|---|---|---|
@@ -77,6 +77,6 @@ Spark and Wonder run in Meta's Standard mode, which Meta does not use to train i
 
 Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. The same Spark scored 90 of 98 in the earlier Gate 0 run and 92 of 98 in the Wonder comparison: that is run-to-run variance on one small set, so quote the gap between the models, not either number alone. See [`docs/evals/`](docs/evals/).
 
-## Limits
+## What does it not do yet?
 
-Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#known-limits)); scaling it out is a plan for after judging, not built. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).
+Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#what-are-the-known-limits)); scaling it out is a plan for after judging, not built. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).

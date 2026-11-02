@@ -30,6 +30,7 @@ module.exports = {
         {href: 'https://arya.teamnightshift.org', label: 'Open Arya', position: 'right'},
       ],
     },
-    footer: {style: 'light', copyright: 'Built for the Meta AI Developer Hackathon. Docs are generated from the repository Markdown.'},
+    footer: {style: 'light', copyright: 'Built for the Meta AI Developer Hackathon. Docs are generated from the repository Markdown.',
+      links: [{title: 'Read these docs as plain text', items: [{html: `<a class="footer__link-item" href="${baseUrl}llms.txt">Short index (llms.txt)</a>`}, {html: `<a class="footer__link-item" href="${baseUrl}llms-full.txt">Everything in one file (llms-full.txt)</a>`}]}]},
   },
 };

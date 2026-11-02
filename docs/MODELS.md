@@ -9,11 +9,11 @@ models we did **not** use. The model list comes from Meta's models page
 `assistant/api/meta_client.py`. Where we could not confirm something, it says
 "unconfirmed". Everything under "Future" is an idea, not built and not promised.
 
-## Used today
+## Which Meta models does Arya use today?
 
-The models in use, with ids and jobs: [For judges, Meta model map](../JUDGES.md#meta-model-map).
+The models in use, with ids and jobs: [For judges, Meta model map](../JUDGES.md#which-model-does-which-job).
 
-## Available but not used
+## Which Meta models are available but not used?
 
 | Model | What it is | Fit for Arya | Cost and effort |
 |---|---|---|---|
@@ -29,7 +29,7 @@ Files API with background responses (a possible fit for very long scan videos).
 Image generation is only used offline for the characters; a live "dinner
 render" idea sits in MODEL-POLICY and is not built.
 
-## Challenge: store video and photos we cannot use
+## Why can we not use store video and photos?
 
 The best raw material for better store maps and shelf help already exists
 online: walkthrough videos and in-store photos on YouTube, TikTok and similar

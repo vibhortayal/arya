@@ -7,9 +7,9 @@ ffmpeg, Postgres) does plumbing only.
 | --- | --- | --- |
 | **SAM 3.1** | Shelf segmentation for the store map; Shelf Scan and Find it for me boxes; finding people so they are pixelated before any frame is kept | Mapping pipeline; server |
 | **Muse Spark 1.3 Standard** | Staple judge, Curator, Ask Arya, list photos, expiry-date photos, grocery check for unknown names, order-text fallback, shelf labels, Shelf Scan crop verification, receipt fallback | Server (Meta Model API) |
-| **Muse Spark Open** (open weights, hosted on Baseten) | Second seat of the staple judge (names only, advisory) and dictionary category labels. It sees item names only (no prices, dates, stores or account details). Numbers: [JUDGES.md](../../JUDGES.md#meta-model-map) | Batch jobs (`api/open_client.py`) |
+| **Muse Spark Open** (open weights, hosted on Baseten) | Second seat of the staple judge (names only, advisory) and dictionary category labels. It sees item names only (no prices, dates, stores or account details). Numbers: [JUDGES.md](../../JUDGES.md#which-model-does-which-job) | Batch jobs (`api/open_client.py`) |
 | **Muse Spark** (user's own Muse + connector) | Edge perception: lists, receipts from chat | The user's Muse session |
-| **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (me, 2026-11-01). Numbers: [JUDGES.md](../../JUDGES.md#meta-model-map). | Server |
+| **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (me, 2026-11-01). Numbers: [JUDGES.md](../../JUDGES.md#which-model-does-which-job). | Server |
 | **Muse Image 1.0** | The 23 grab-celebration characters; share looks | Characters generated once and shipped as assets; share looks are generated live per tap |
 | **Muse Voice Transcribe** | The list mic and Ask Arya's mic | Server |
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |

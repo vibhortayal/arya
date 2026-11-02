@@ -4,7 +4,7 @@ These steps were written by the builder and checked on a local copy (`docker com
 
 Arya is a phone app. For the closest view, use your browser's phone mode (for example 390 × 844), or open the address from a phone on the same network.
 
-## 0. Start
+## 0. How do I start it?
 
 1. Copy the settings file and add your key: `cp .env.local.example .env`, then put your key from dev.meta.ai after `MODEL_API_KEY=`.
 2. Run `docker compose up --build`, then open http://localhost:8080.
@@ -14,7 +14,7 @@ Arya is a phone app. For the closest view, use your browser's phone mode (for ex
 
 Sign-in on your own copy is a plain username and password (see [Run it yourself](RUN-IT-YOURSELF.md)). To make more accounts, use **Start my own list** at the bottom of the landing page.
 
-## 1. The demo household and its neighbourhood
+## 1. What is the demo household?
 
 Tap **Try it now**, then **Skip for now** (or **Show me every screen** for the 2-minute tour).
 
@@ -31,20 +31,20 @@ The household shops in **Demo Town**, a simulated neighbourhood of 800 household
 - **Spending**: October total.
 - **Price watch**: Sourdough Loaf is 6.6% more than in July.
 
-## 2. Pick a store and see its news and stock
+## 2. How do I see a store's news and stock?
 
 1. Tap **More**, then **Stores**. **My stores** lists Costcozy and Trader Jill's (starred), plus Aldo's and Safeday. Each is marked Demo Town (simulated).
 2. Tap **Find stores** to search all stores by name, ZIP or address.
 3. Tap **More**, then **Lists**, then **Trader Jill's**. The list opens with a heads-up: "Hummus 10 oz is out. Safeday has it…". Hummus is marked **Out here · 3 neighbors**.
 4. Under **Suggested for Trader Jill's**, tap an item to see why Arya suggests it, then **+ Add**.
 
-## 3. Make things happen in the town (Director)
+## 3. How do I make things happen in the town (Director)?
 
 1. Open http://localhost:8080/?director=1 and go into the demo.
 2. Tap **More**, then **Settings**. A **Director · Stage a moment for the demo** panel appears.
 3. Tap **Eggs run out**, **Store closes**, **Saturday rush** or **Incident**, then go back to **Today** and the lists to see the new reports. **Reset** clears them.
 
-## 4. Lists and adding items
+## 4. How do lists and adding items work?
 
 - Type into the box at the top of a list. You can type amounts too, like "3 avocados" or "1.5 lb salmon".
 - Tap the circle to tick an item. Tap an item to edit its name, amount or note, or to move it to another list.
@@ -52,12 +52,12 @@ The household shops in **Demo Town**, a simulated neighbourhood of 800 household
 - **Needs your key:** the microphone (talk your list), or a photo of a paper list.
 - Turn off your network (browser devtools, Offline), then add, tick and remove items. They save on the phone. Turn the network back on and they sync with a "Synced" note.
 
-## 5. Shopping trip (Quest)
+## 5. How do I take a shopping trip (Quest)?
 
 1. On the **Trader Jill's** list, tap **Start shopping**. The quest walks you item to item. Tap **Got it** on each.
 2. **Needs your key and a camera:** **Find it for me** (SAM 3.1 finds the shelf, and Spark checks it) and **Map my store** on the Quest tab.
 
-## 6. Ask Arya (needs your key)
+## 6. How do I ask Arya something? (needs your key)
 
 Tap **Ask**, then try:
 
@@ -65,16 +65,16 @@ Tap **Ask**, then try:
 - "Where is milk cheaper?": it answers from the receipts.
 - "What's running low?"
 
-## 7. Spending and prices
+## 7. How do I see my spending and prices?
 
 - **Spending**: by month, by store and by item. Tap an item to see its price by store.
 - **More, Receipts**: the household's 39 receipts. Search by store or amount.
 
-## 8. Use soon
+## 8. What should I use soon?
 
 On **Today**, tap **Use soon** and add dates. Arya reminds you before things go off. You can try the date-reading sample without a camera.
 
-## 9. Your own account: receipts end to end (needs your key)
+## 9. How do I read my own receipts end to end? (needs your key)
 
 1. Sign in with the account from step 0, or make one with **Start my own list**.
 2. Go to **More**, then **Receipts**, then **Add receipt**, and snap or upload a receipt photo or PDF.
@@ -84,17 +84,17 @@ On **Today**, tap **Use soon** and add dates. Arya reminds you before things go 
 
 The demo household reads a receipt live on the screen, but it does not keep it. Stay on the Receipts screen while Arya reads.
 
-## 10. Share with your household (groups)
+## 10. How do I share with my household (groups)?
 
 1. Make a second account: open a private window and use **Start my own list**.
 2. In the first account, go to **Settings** and tap **Start a group**. Give it a name, then tap **Invite someone** for a code (it works for 48 hours).
 3. In the second account, join with the code.
 4. Add an item in one window. It appears in the other.
 
-## 11. Use Arya from your own AI app
+## 11. How do I use Arya from my own AI app?
 
 Go to **Settings**, then **About Arya**, then **Use Arya in Muse**, and tap **Make my code**. Paste it into Muse or any app that supports MCP connectors.
 
-## Reset
+## How do I reset?
 
 Run `docker compose down -v`, then `docker compose up`. You get a fresh copy with the demo household written again.

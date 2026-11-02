@@ -3,7 +3,7 @@
 Status: a plan, not shipped. Nothing on this page is built unless it says
 "today". Written 2026-11-02 against `main` after #489. It extends the
 one-line plan in [`ROADMAP.md`](ROADMAP.md) ("Scale out as the community
-grows") and the Known limits entry in the [README](../README.md#known-limits);
+grows") and the Known limits entry in the [README](../README.md#what-are-the-known-limits);
 where this page says more, it does not contradict them. No provider, dates
 or costs are named: each phase is chosen when the number of shoppers asks
 for it. Rome wasn't built in a day.
@@ -330,7 +330,7 @@ hundreds of neighbours as it does alone today.
 ## 6. Related pages
 
 - [`ROADMAP.md`](ROADMAP.md): the one-line plan this page expands.
-- [`../README.md#known-limits`](../README.md#known-limits): the limit as
+- [`../README.md#what-are-the-known-limits`](../README.md#what-are-the-known-limits): the limit as
   judges read it.
 - [`../assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md):
   what runs today, section by section.

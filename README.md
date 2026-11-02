@@ -32,13 +32,13 @@ Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie tr
 
 *Today and Lists in the demo household (a simulated neighborhood, labelled as such).*
 
-### What is real, and what is not
+### What is real, and what is not?
 
 | Real | Simulated | Not connected |
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
-Size and other limits: [Known limits](README.md#known-limits).
+Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 ## Why I built it this way
 
@@ -112,7 +112,7 @@ The navigation tab (the row of buttons at the bottom) starts as Today, Spending,
 
 ## Verify it without signing in
 
-Everything below runs in the demo household, no account needed. "Live" means the demo calls the Meta Model API when you tap; the allowance is in [Known limits](#known-limits).
+Everything below runs in the demo household, no account needed. "Live" means the demo calls the Meta Model API when you tap; the allowance is in [Known limits](#what-are-the-known-limits).
 
 | Feature | Tap | You see | Meta model | Code |
 |---|---|---|---|---|
@@ -199,7 +199,7 @@ Details and the VM runbook are in
 
 With Docker and your own Meta key (optional, it turns the AI on):
 
-```
+```bash
 cp .env.local.example .env       # put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
@@ -216,7 +216,7 @@ To try every feature step by step on your copy, follow
 
 Tests, from the repo root:
 
-```
+```bash
 (cd assistant && ../.venv/bin/python -m unittest discover -s tests)   # counts: STATUS.md
 (cd assistant/web && npm test)                                        # vitest
 ```
@@ -248,7 +248,9 @@ The scored reports and the Gate 0 labels and results are in
 [`docs/evals/`](docs/evals/). The companion research repo,
 `vibhortayal/meta-hackathon-research`, holds the earlier spikes.
 
-## Known limits
+## What are the known limits?
+
+Short answer: one server for a few dozen people at once, tested on 114 receipts from one household and one iPhone.
 
 - **Testing data.** Arya was tested on one household's receipts (114 Costco
   receipts) and a small public receipt set. Data was limited, so the results

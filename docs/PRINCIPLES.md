@@ -16,7 +16,7 @@ Shoppers: the people who keep a household or a group fed and remember what is ru
 2. **Free to use.** It costs money to keep running (the AI reading), and you can see what you use in Settings, About Arya, Keeping Arya running. Nothing in it is for sale, there are no ads, and I do not sell your data.
 3. **The model proposes, code checks.** A model reads the receipt; plain code checks every line before anything posts. You can trust the numbers because the arithmetic is checked, not guessed.
 4. **Yours by default.** Your receipts and lists are yours. A group sees its members' lists and receipts; leave, and your receipts go with you. Arya uses no prices from store sites, flyers or the web.
-5. **Limits stated.** Built and tested with US receipts, dollars and stores first; other markets not tested. What is not live is marked as such, and the full list is under [Known limits](../README.md#known-limits).
+5. **Limits stated.** Built and tested with US receipts, dollars and stores first; other markets not tested. What is not live is marked as such, and the full list is under [Known limits](../README.md#what-are-the-known-limits).
 
 ## Where to read more
 
