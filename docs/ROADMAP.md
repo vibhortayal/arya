@@ -101,7 +101,9 @@ through import and export.
   one VM (see [Known limits](../README.md#known-limits)). The plan, not a
   promise: make Postgres the master copy, move demo and session state out of
   memory, run several processes, and move to a cloud provider in step with
-  the number of shoppers. Rome wasn't built in a day.
+  the number of shoppers. Rome wasn't built in a day. The design, phase by
+  phase, is in [`SCALABILITY-DESIGN.md`](SCALABILITY-DESIGN.md) (a plan,
+  not built).
 
 ## Developer platform and integrations
 Starting point today: the Lists API and the developer portal at `/developers`

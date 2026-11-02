@@ -409,7 +409,8 @@ Each agent has a narrow job and a named limit.
   request, so a slow Supabase can slow a save. Roughly a few dozen people at
   once is the ceiling (README, Known limits). After judging: Postgres as
   master copy, session state out of memory, several processes, a cloud
-  provider (see `docs/ROADMAP.md`).
+  provider (see `docs/ROADMAP.md`; the phased design is
+  `docs/SCALABILITY-DESIGN.md`, a plan, not built).
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
 - Settings come from `deploy/.env` (VM only). Compose passes only the
