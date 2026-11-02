@@ -61,7 +61,7 @@ describe("AppSource", () => {
     replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Eggs", list: "l2" }] };
     replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }, { id: "l2", name: "Indian Store" }, { id: "l3", name: "Empty" }] };
     const ls = await new AppSource().lists();
-    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["l2", "Indian Store", 1]]);
+    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1], ["l2", "Indian Store", 1], ["l3", "Empty", 0]]);
   });
 
   it("items on no named list stay out of Quest, no default Everything else", async () => {
@@ -71,11 +71,11 @@ describe("AppSource", () => {
     expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["l1", "Costco", 1]]);
   });
 
-  it("with no named lists it is one list, Your list", async () => {
+  it("with no named lists there is nothing to play: create a list first", async () => {
     replies["/api/quest/plan"] = { list: [{ name: "Milk", list: null }, { name: "Bread", list: null }] };
     replies["/api/lists"] = { lists: [] };
     const ls = await new AppSource().lists();
-    expect(ls.map(l => [l.id, l.name, l.items.length])).toEqual([["else", "Your list", 2]]);
+    expect(ls).toEqual([]);
   });
 
   it("a real trip is a hunt session: grabs check, misses report, finish closes", async () => {

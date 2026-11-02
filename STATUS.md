@@ -221,7 +221,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   question. Receipts and Spending now light Lists, not Today. Today's
   icon is a calendar. `assistant/loops/2026-11-01-custom-bar.md`.
 - **Quest offers only your own lists (2026-11-02):** no "Everything" chip
-  and no default "Everything else"; items on no list stay out of Quest.
+  and no default "Everything else"; items on no list stay out of Quest,
+  and someone with no lists is asked to create one first.
   Quest opens on the list picked last. `assistant/loops/2026-11-02-quest-own-lists.md`.
 - **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
   Preferences (currency and language, When I start shopping, Display,

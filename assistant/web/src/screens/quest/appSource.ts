@@ -2,10 +2,10 @@
  * their stores, the crowd-built store map and the hunt session.
  *
  * - Lists come from the plan (GET /api/quest/plan + /api/lists): the
- *   unchecked list, one entry per named list. No made-up "Everything"
- *   or "Everything else" list (owner, 2026-11-02): items on no named
- *   list stay out of Quest until they are put on one. Only with no
- *   named lists at all is the whole list one entry, "Your list".
+ *   unchecked list, one entry per named list (empty ones too, so the
+ *   game can tell "no lists yet" from "nothing to buy"). No made-up
+ *   "Everything" or "Everything else" list (owner, 2026-11-02): every
+ *   item belongs to a list, and items on none stay out of Quest.
  * - A store's look comes from its shared map (GET /api/storemap),
  *   one map per location ("name|store id"): only sections Arya has
  *   located there count (coverageOf below); the rest are fog or a
@@ -135,12 +135,10 @@ export class AppSource implements QuestSource {
     const item = (r: PlanRow) => ({ name: r.name, art: charFor(r.name) || artFor(r.name) });
     // Only what is on a list (suggestions are not shopping), and an item on two lists counts on both, as on Lists.
     const rows = (plan.list || []).filter(r => r.name && r.on_list !== false);
-    const lists = named.lists || [];
-    if (!lists.length) return [{ id: "else", name: "Your list", items: rows.map(item) }];
     const out: ShoppingList[] = [];
-    for (const l of lists) {
+    for (const l of named.lists || []) {
       const its = rows.filter(r => r.list === l.id || (r.also || []).includes(l.id));
-      if (its.length) out.push({ id: l.id, name: l.name, items: its.map(item), ...(l.stores?.[0] ? { store: l.stores[0] } : {}) });
+      out.push({ id: l.id, name: l.name, items: its.map(item), ...(l.stores?.[0] ? { store: l.stores[0] } : {}) });
     }
     return out;
   }
