@@ -179,6 +179,15 @@ The scored reports and the Gate 0 labels and results are in
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
 
+## After the hackathon
+
+Not finished, said plainly. **Use your own Meta key** is built but switched
+off in the live app (hidden: no key vault secret is set), because there was not
+enough time to finish and test it and the owner is still deciding how it should
+work. Also planned: item and store profiles, off-site backups, a staging
+address, and the deferred security items. The full list is in
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Where things are
 
 | Path | What |
