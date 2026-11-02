@@ -2,6 +2,7 @@
 Any MCP-capable assistant connects with the account's API token (the
 same token the REST connector uses); Muse Spark is the showcased
 client, not a special case (owner, 2026-10-28)."""
+from tests.conftest import one_list
 import json, os, tempfile, unittest
 from unittest import mock
 
@@ -44,6 +45,7 @@ class TestMcp(unittest.TestCase):
         r = self.c.post("/auth/setup", json={"username": "owner@example.com",
                                              "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
         tok = self.c.post("/auth/token")
         assert tok.status_code == 200, tok.text
         self.token = tok.json()["token"]
@@ -155,7 +157,8 @@ class TestMcp(unittest.TestCase):
             "merchant": "m", "purchased_at": "2026-10-28",
             "lines": [{"decoded_name": "x", "line_total": 1}]})
         assert res["isError"] and "real account" in res["content"][0]["text"]
-        res = call(demo, None, "add_items", {"items": ["sandbox milk"]})
+        demo.post("/api/lists", json={"name": "Costco", "stores": []})   # every item on a list
+        res = call(demo, None, "add_items", {"items": ["sandbox milk"], "list": "Costco"})
         assert not res["isError"]
 
     def test_account_isolation(self):

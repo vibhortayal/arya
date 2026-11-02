@@ -68,6 +68,34 @@ def _mcp_str(v):
     return v.strip() if isinstance(v, str) else ""
 
 
+def _mcp_list(want, names):
+    """Every item on a list (owner, 2026-11-02): the list named by name or
+    id, the item's list, or the only list; otherwise a plain error the
+    agent can turn into a question for the user."""
+    from fastapi import HTTPException
+    from api.routes.lists import pick_list
+    rows = state.named_lists()
+    want = _mcp_str(want)
+    if want:
+        hit = next((l for l in rows if l["id"] == want or l["name"].lower() == want.lower()), None)
+        if hit is None:
+            known = ", ".join(l["name"] for l in rows) or "none yet"
+            raise ValueError(f"no list called {want}; their lists are: {known}")
+        return hit["id"]
+    from api.list.intake import existing_item_id
+    one = existing_item_id(names[0], state.dictionary()["entries"], state.flags()) if len(names) == 1 else None
+    try:
+        return pick_list(None, one, names)
+    except HTTPException as e:
+        d = e.detail if isinstance(e.detail, dict) else {}
+        if d.get("code") == "no_lists":
+            raise ValueError("the user has no lists yet; ask them to make one in Arya (Lists, New list), then add")
+        if d.get("code") == "pick_list":
+            raise ValueError("ask the user which list, then call again with list: "
+                             + ", ".join(l["name"] for l in d.get("lists") or []))
+        raise
+
+
 def _mcp_add_items(args):
     items = args.get("items")
     if not isinstance(items, list) or not items:
@@ -76,8 +104,9 @@ def _mcp_add_items(args):
         raise ValueError("add at most 50 items per call")
     if state.in_sandbox() and len(_on_list()) + len(items) > MCP_DEMO_MAX_LIST:
         raise ValueError(f"the demo list holds at most {MCP_DEMO_MAX_LIST} items")
-    added = [_add_name_to_list(_mcp_str(n)[:120]) for n in items
-             if _mcp_str(n)]
+    names = [_mcp_str(n)[:120] for n in items if _mcp_str(n)]
+    list_id = _mcp_list(args.get("list"), names)
+    added = [_add_name_to_list(n, list_id=list_id) for n in names]
     if not added:
         raise ValueError("items must be a non-empty array of names")
     return {"added": added}

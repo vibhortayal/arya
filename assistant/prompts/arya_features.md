@@ -15,6 +15,9 @@ Under "Suggested for ..." Arya shows due items. Tap one to see why, then Add.
 As you type in the Add field, Arya suggests names from your own lists and receipts first, then common grocery names from a built-in word list. These are instant and need no connection to Arya's AI.
 An item showing as a number (like costco-791185): tap it on the list, Edit item, type its real name, Save. Arya learns that name for the item everywhere. Arya also uses the name on your receipts when it has one.
 Three dots at the top of a list: Share, export or import, Tidy up with Arya.
+## which list | which pick choose unfiled everything else delete deleting
+Every item lives on a list. With one list, adds go straight to it. With two or more, Arya asks which list when an add doesn't say (Lists page, Running low, Ask or a connected AI agent), with your usual store's list picked first. With no lists yet, Arya asks you to make one first. Deleting a list that still has items asks whether to move them to another list or take them off your shopping list; Undo brings back the list and its items.
+
 ## running low | running low due suggest suggestion pattern often about to run out why
 Running low: Today tab, card "Running low", and the suggestions under each list. Arya uses how often the household buys an item and the last date, and suggests mostly staples (things you use up and rebuy).
 Weekly to every-two-months items need 3 buys. Items bought less often than every two months need 4 or more buys at a steady rhythm, and a last buy not long past the usual gap. Items not bought for a long while, and items with no readable name yet (only an item number), are not suggested.

@@ -69,13 +69,19 @@ TOOL_DEFS = [
         "annotations": ADDITIVE,
         "description": "Add items to the shopping list by name, the "
                        "way a person would say them ('oat milk', "
-                       "'eggs'). Each name joins the list as a manual "
-                       "item. Returns the items added.",
+                       "'eggs'). Each name joins a named list as a "
+                       "manual item. Pass `list` (a list's name or id) "
+                       "when the user has more than one list; if you "
+                       "leave it out and Arya cannot tell which list, "
+                       "nothing is added and the error names the lists "
+                       "to ask the user about. Returns the items added.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "items": {"type": "array", "items": {"type": "string"},
-                          "description": "Item names to add."}},
+                          "description": "Item names to add."},
+                "list": {"type": "string",
+                         "description": "The list to add to, by name or id (e.g. 'Costco')."}},
             "required": ["items"]},
     },
     {

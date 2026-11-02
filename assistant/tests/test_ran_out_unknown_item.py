@@ -18,9 +18,15 @@ class TestRanOutUnknown(unittest.TestCase):
 
     def test_unknown_name_joins_the_list(self):
         from api import chat_service
+        # No lists yet: Arya asks for one first (owner, 2026-11-02).
         applied, skipped = chat_service.apply_actions(
             [{"type": "ran_out", "item": "tahini"}])
-        self.assertEqual(applied, ["Added tahini to your list."])
+        self.assertEqual(applied, [])
+        self.assertIn("Make a list first", skipped[0])
+        self.state.save_named_lists([{"id": "l-groceries", "name": "Groceries", "stores": []}])
+        applied, skipped = chat_service.apply_actions(
+            [{"type": "ran_out", "item": "tahini"}])
+        self.assertEqual(applied, ["Added tahini to Groceries."])
         self.assertEqual(skipped, [])
         fl = self.state.flags()["manual-tahini"]
         self.assertTrue(fl["manual"])

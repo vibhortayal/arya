@@ -14,7 +14,10 @@ const FRIENDLY: Record<string, string> = {
 };
 
 export function friendlyError(d: unknown): string {
-  const s = typeof d === "string" ? d : "Something went wrong.";
+  // A structured answer (every item on a list: {code, message, ...})
+  // reads as its message; the code and the rest ride on ApiError.detail.
+  const m = d && typeof d === "object" ? (d as { message?: unknown }).message : undefined;
+  const s = typeof d === "string" ? d : typeof m === "string" ? m : "Something went wrong.";
   const key = s.toLowerCase().replace(/[.\s]+$/, "");
   if (FRIENDLY[key]) return FRIENDLY[key];
   if (key.startsWith("this needs a real account")) return FRIENDLY["this needs a real account"];
@@ -25,7 +28,10 @@ export class ApiError extends Error {
   /* offer: what the server suggests next (X-Arya-Offer), e.g.
    * "own-key" on a daily-limit answer, "own-key-fix" when the shopper's
    * own Meta key failed (ui/OwnKey.tsx). */
-  constructor(message: string, public status: number, public offer?: string) { super(message); }
+  /* detail: the server's structured answer when it sent one, e.g.
+   * {code: "pick_list", lists, suggested, names} or {code: "no_lists"}
+   * for an add with no list to go on (every item on a list). */
+  constructor(message: string, public status: number, public offer?: string, public detail?: unknown) { super(message); }
 }
 
 /* One id per open tab (app.js CLIENT_ID): group live sync
@@ -70,7 +76,8 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // The server no longer knows this tab's session (a deploy drops
     // every demo session, re-audit N1): app/session.tsx ends it.
     if (r.status === 401 && detail === "login required" && path.startsWith("/api/")) sessionEnded();
-    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status, r.headers?.get?.("X-Arya-Offer") || undefined);
+    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status, r.headers?.get?.("X-Arya-Offer") || undefined,
+      detail && typeof detail === "object" ? detail : undefined);
   }
   return r.json();
 }

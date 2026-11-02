@@ -1,3 +1,4 @@
+from tests.conftest import one_list
 import json
 import os
 import tempfile
@@ -145,6 +146,7 @@ class RouteTest(unittest.TestCase):
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y",
                                          "password": "long-password"})
+        one_list(self.c)
 
     def items(self):
         return {i["name"]: i for i in

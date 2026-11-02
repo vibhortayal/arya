@@ -2,6 +2,7 @@
 docs/MULTILINGUAL-ASK.md): the REPLY LANGUAGE line, the language
 setting, localized code lines, non-Latin item ids, and the server-side
 add-box gate."""
+from tests.conftest import one_list
 import json, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -47,6 +48,7 @@ class TestMultilingual(unittest.TestCase):
         self.c = TestClient(main.app)
         r = self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
         assert r.status_code == 200, r.text
+        one_list(self.c)
 
     def ask(self, text="hi"):
         Spy.calls = []
