@@ -89,7 +89,7 @@ headline: "Your grocery run, smarter." The app is the React app (`assistant/web/
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
-bumped by hand. Tests: last full counts were about 1,800 Python tests collected (2026-11-02), with about 12 known failures on main (2026-11-01 note in `loops/2026-11-01-to-check-smart-pass.md`); re-run before quoting numbers. All
+bumped by hand. Tests: the last full run (2026-11-02) collected 1,842 Python tests, all passing, 1 skipped; re-run before quoting numbers. All
 UI text lives in `web/src/i18n/en.json` (i18next; English only for now).
 Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
 section 0. `assistant/loops/2026-10-29-react-at-root.md`.
@@ -286,22 +286,17 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 2. `python -m harness.make_demo_household data` (demo gains its lists).
    The first load after the deploy installs the new service worker; it
    deletes the old `arya-v*` cache and takes over the open page.
-3. **Nov 4:** the Wonder amendment ends. Early on Nov 4, before judges
-   arrive, set `ARYA_PHOTO_READER=spark` in `deploy/.env` and run
-   `docker compose up -d` in `assistant/deploy`. NOT `docker compose
-   restart`: restart keeps the old environment, so the site would keep
-   calling Wonder. Any recreate drops in-memory demo sessions, so do it
-   once, check one receipt photo, then deploy only in quiet hours.
-4. Caddyfile changes need a reload: `docker compose exec caddy caddy
+3. Caddyfile changes need a reload: `docker compose exec caddy caddy
    reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
 - Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), my subset
   32/32, combined 93.85%, arithmetic 7/7. One silent price rotation
   recorded; the review queue is the mitigation.
-- Photo decode reads with Muse Wonder 1.0 (90 s bound, Spark
-  fallback) under the hackathon amendment, which **expires Nov 4,
-  2026**. Proof run 97/98 after adjudication, $1.12.
+- Photo decode is `auto`: Spark reads first, and Wonder (90 s bound)
+  re-reads only receipts the checks flag, allowed through Nov 9 under the
+  hackathon amendment. The live auto path is not yet scored on photos.
+  Wonder read alone: proof run 97/98 after adjudication, $1.12.
 
 ## Remaining for submission
 - Demo video and the final submission package (my go-ahead).
@@ -317,8 +312,6 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   reports are single-account.
 - Split the list (kids or partner) is not built. Friend run
   notifications: designed (Discussion 24), not built.
-- An email sign-in account (no password) cannot delete itself yet: the
-  Profile delete asks for a password.
 - `scene.js` (three.js store view, about 930 lines) is still a classic
   script in the static folder, not a module. `api/main.py` is split
   (routes live in `api/routes/`).
