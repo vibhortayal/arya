@@ -20,7 +20,7 @@
 - **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
 
 <p align="center">
-  <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
+  <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
 </p>
 <p align="center"><em>Today and Lists in the demo household (a simulated neighborhood, labelled as such).</em></p>
