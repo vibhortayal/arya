@@ -3,7 +3,7 @@
 These are ideas I am thinking about for where Arya could go. They are
 not commitments, and I need more time to figure out and understand them.
 
-**What ships now is a limited-scope MVP:** a list that learns from receipts,
+**What ships now is a limited-scope MVP:** Arya learns from receipts,
 Ask, groups, Quest and the connector, as described in the README and
 `STATUS.md`. **This page is what could come later.** Nothing on it is built
 unless it says so, and nothing is promised for the submission. "Idea" means
@@ -145,7 +145,7 @@ and, where it touches personal data, a privacy review first.
 
 **Everyday use**
 - Meal planning from what is running low and what to use soon, with a
-  shopping list that writes itself from the plan.
+  shopping list built from the plan.
 - **Recipe to shopping list, then to stores.** Build a list from a recipe
   (link, photo or typed), then use the household's own receipt and store
   history to suggest which store to buy each item at and which product or

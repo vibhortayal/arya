@@ -1,6 +1,6 @@
 # For judges
 
-Arya is a grocery list that learns from your receipts. Built for the Meta Global AI
+Arya learns how you shop from your receipts and helps shoppers help each other. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
 - **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
@@ -22,7 +22,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 
 ## Impact (30%)
 
-- A list that writes itself: running low, use soon, and where you usually buy it, each with a reason. [`README.md`](README.md#what-is-in-it)
+- Suggestions with reasons: running low, use soon, and where you usually buy it, each with a reason. [`README.md`](README.md#what-is-in-it)
 - Receipts are read, then every line is checked against the printed total in plain code; returns net out. [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md)
 - Add by typing, voice, a photo of a note, or your own AI assistant through the MCP connector. [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)
 - Quest, an optional game, turns the trip into a hunt with no clock and no way to lose. [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)

@@ -2,7 +2,7 @@
 
 **Project: Arya** — a grocery assistant that keeps a living model of one
 household's purchases (receipts, returns, patterns) so the shopping list
-writes itself. Meta Global AI Developer Hackathon 2026, Team Nightshift,
+can suggest what is due. Meta Global AI Developer Hackathon 2026, Team Nightshift,
 Indie track. **Submission deadline: Nov 4, 2026, 9:00 PM ET.**
 
 ## Source of truth

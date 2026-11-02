@@ -91,8 +91,8 @@ A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a samp
 
 ## Impact (30%)
 
-- **Who:** households that shop every week. Families get a list that
-  writes itself, and a quest that kids can play.
+- **Who:** households that shop every week. Families get suggestions
+  with reasons, and a quest that kids can play.
 - **Problem:** receipts hold the truth about what a household buys, and
   nobody reads them.
 - **What Arya does:** it reads each receipt, checks every line, nets out
