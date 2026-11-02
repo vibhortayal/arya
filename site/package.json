@@ -1,0 +1,23 @@
+{
+  "name": "arya-docs-site",
+  "private": true,
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "spec": "python3 scripts/export_openapi.py",
+    "start": "npm run sync && docusaurus start",
+    "build": "npm run sync && docusaurus build",
+    "serve": "docusaurus serve"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.9.2",
+    "@docusaurus/preset-classic": "3.9.2",
+    "@easyops-cn/docusaurus-search-local": "0.52.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "redoc": "2.5.1",
+    "styled-components": "^6.1.0"
+  },
+  "overrides": {
+    "webpack": "5.98.0"
+  }
+}
