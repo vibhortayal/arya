@@ -26,6 +26,8 @@ app = FastAPI(title="Arya API", docs_url=None, redoc_url=None, openapi_url=None)
 # the middleware added last runs first.
 app.middleware("http")(listops.middleware)
 app.middleware("http")(require_login)
+from api import own_key as _own_key  # noqa: E402
+app.middleware("http")(_own_key.offer_middleware)
 _log = logging.getLogger("arya.api")
 
 

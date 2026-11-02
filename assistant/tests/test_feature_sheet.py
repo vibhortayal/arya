@@ -7,7 +7,7 @@ import unittest
 from api import chat_service
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open"}
+KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open", "own_key", "byok", "not_own_key"}
 
 
 def raw():

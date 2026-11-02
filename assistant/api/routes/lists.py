@@ -7,6 +7,7 @@ from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api import groups, state
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _int_field, _json_obj, new_client
@@ -51,7 +52,9 @@ def judge_second_seat():
         return {"checked": 0, "agreed": 0, "disagreements": []}
     _budget_guard()
     client = OpenClient()
-    if not client.api_key:
+    if not client.api_key or own_key.required():
+        # An own-key account pays only for Meta reads on its own key;
+        # the open-weights seat is the app's (BYOK review 2, change 7).
         # Not provisioned on this host yet: a quiet no-op, the same
         # contract judge/run keeps when no Meta key is set.
         return {"checked": 0, "agreed": 0, "disagreements": [],
@@ -283,15 +286,14 @@ def _list_from_text(body):
     # script, or a fixed non-English language, goes to the one Spark
     # call instead so "agrega leche" files "leche"; English on auto
     # keeps the $0 split (assistant/docs/MULTILINGUAL-ASK.md §3).
-    by_model = bool(os.environ.get("MODEL_API_KEY")) and (
+    by_model = bool(own_key.model_ready()) and (
         has_non_latin(text) or _language_setting() in ("es", "hi"))
     typed = [] if by_model else split_list_items_units(text)
     skipped = skipped_pieces(text) if typed else []
     names = [n for n, _q, _u in typed]
     source = "split"
     if not names:
-        if not os.environ.get("MODEL_API_KEY"):
-            raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+        own_key.need_model()
         _budget_guard()
         client = new_client()
         names = extract_items_model(text, client)
@@ -318,7 +320,7 @@ def _list_import_preview(body):
     from api.list.importer import parse_paste
 
     def by_model(t):
-        if not os.environ.get("MODEL_API_KEY"):
+        if not own_key.model_ready():
             return []
         _budget_guard()
         from api.list.intake import extract_items_model
@@ -462,7 +464,7 @@ async def list_judge(req: Request):
         if grocery.classify(i["name"], verdicts)["kind"] == "unknown" \
                 and not verdicts.get(_key_of(i["name"])):
             unknown.append(i["name"])
-    if not unknown or not os.environ.get("MODEL_API_KEY"):
+    if not unknown or not own_key.model_ready():
         return {"judged": 0, "flagged": []}
     demo = _is_demo(req)
     _budget_guard(demo=demo)
@@ -515,8 +517,7 @@ async def list_from_photo(req: Request):
         raise HTTPException(400, "empty upload")
     if len(body) > 12_000_000:
         raise HTTPException(413, "photo too large (12 MB max)")
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     from api.list.intake import read_list_photo

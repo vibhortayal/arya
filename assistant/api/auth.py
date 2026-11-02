@@ -136,6 +136,17 @@ def ensure_federated_user(email):
     return name, True
 
 
+def set_key_mode(username, mode):
+    """"own" for an account that signed up with its own Meta key, or
+    "shared" (Arya's key). Only the owner moves own to shared (BYOK
+    review 2, change 8)."""
+    with _file_lock("users.json"):
+        all_users = users()
+        if username in all_users:
+            all_users[username]["key_mode"] = mode
+            _save("users.json", all_users)
+
+
 def delete_user(username):
     """Erase an account (Tranche 1, register #2): the user record,
     every session, the connector tokens, and the whole per-user

@@ -5,6 +5,7 @@ from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import own_key
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, new_client
 
@@ -42,8 +43,7 @@ async def scan_shelf_route(req: Request):
         remaining = [n for n in remaining if n == target]
     if not remaining:
         return {"pops": [], "not_found": [target] if target else []}
-    if not os.environ.get("MODEL_API_KEY"):
-        raise HTTPException(503, "MODEL_API_KEY not provisioned on this runtime")
+    own_key.need_model()
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
