@@ -2,8 +2,10 @@ import { act, render } from "@testing-library/react";
 import { enqueue, pendingIds } from "../lib/listQueue";
 import { QueueNote, useWaitingIds } from "./listSync";
 
-/* Offline lists UI (owner, 2026-11-02): a yellow note while offline or
- * while changes wait, and "Waiting to sync" on each waiting item. */
+/* Offline lists UI (owner, 2026-11-02): "Waiting to sync" on each
+ * waiting item. Offline, the app-wide bar says so and counts what waits
+ * (one notice, not two); the yellow note shows only once back online,
+ * while the changes sync. */
 let demo = false;
 vi.mock("./session", () => ({ useSession: () => ({ demo, user: "a@test.arya" }) }));
 const setOnline = (v: boolean) => { Object.defineProperty(navigator, "onLine", { configurable: true, get: () => v }); dispatchEvent(new Event(v ? "online" : "offline")); };
@@ -23,13 +25,13 @@ test("pendingIds names every waiting item, local adds included", () => {
   for (const id of r.item_ids) expect(ids.has(id)).toBe(true);
 });
 
-test("the note: nothing online with nothing waiting; offline; waiting; syncing; never in the demo", () => {
+test("the note: nothing online with nothing waiting; nothing offline (the app bar says it); syncing once back", () => {
   render(<QueueNote id="qn" />);
   expect(document.getElementById("qn")).toBeNull();
   act(() => setOnline(false));
-  expect(document.getElementById("qn")!.textContent).toContain("You're offline");
+  expect(document.getElementById("qn")).toBeNull();
   act(() => { enqueue("/api/list/check", { item_id: "milk" }); enqueue("/api/list/check", { item_id: "eggs" }); });
-  expect(document.getElementById("qn")!.textContent).toContain("2 changes waiting to sync");
+  expect(document.getElementById("qn")).toBeNull();
   act(() => setOnline(true));
   expect(document.getElementById("qn")!.textContent).toContain("Syncing 2 changes");
 });
