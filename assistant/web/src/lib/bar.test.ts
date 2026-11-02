@@ -17,11 +17,12 @@ describe("bar", () => {
     const bar = barOf(["list", "receipts", "stores-mine"]);
     expect([...bar, ...moreOf(bar)].sort()).toEqual([...BAR_ITEMS].sort());
   });
-  test("Receipts and Stores light Spending (they sit at its top), or themselves when pinned", () => {
+  test("Receipts lights Spending (it sits at its top); Stores lights More; either lights itself when pinned", () => {
     expect(litTab("receipts", DEFAULT_BAR)).toBe("analysis");
     expect(litTab("receipt", DEFAULT_BAR)).toBe("analysis");
     expect(litTab("analysis", DEFAULT_BAR)).toBe("analysis");
-    expect(litTab("stores-find", DEFAULT_BAR)).toBe("analysis");
+    expect(litTab("stores-find", DEFAULT_BAR)).toBe("more");
+    expect(litTab("stores-mine", DEFAULT_BAR)).toBe("more");
     expect(litTab("list", DEFAULT_BAR)).toBe("more");
     const mine = barOf(["list", "receipts", "stores-mine"]);
     expect(litTab("receipt", mine)).toBe("receipts");

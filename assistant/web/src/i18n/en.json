@@ -3114,7 +3114,7 @@
       },
       "spending": {
         "title": "Spending",
-        "line": "What you spent by month, store and item, from your receipts. Receipts and Stores are at the top."
+        "line": "What you spent by month, store and item, from your receipts. Receipts is at the top."
       },
       "more": {
         "title": "More",
@@ -3155,8 +3155,8 @@
       "line": "What you spent by month, store and item, from your receipts."
     },
     "spending_places": {
-      "title": "Receipts and Stores",
-      "line": "Add receipts and look back at them here. Stores holds your stores and favorites."
+      "title": "Receipts",
+      "line": "Add receipts and look back at them here. Your stores are in More, then Stores."
     },
     "lists_tab": {
       "title": "Lists",

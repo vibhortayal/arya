@@ -197,13 +197,12 @@ export function Analysis() {
           }}
           onReset={() => { saveLayout("spending", {}).catch(showErr); }} />
       ) : <>
-        {/* Receipts and Stores live on Spending (owner, 2026-11-02: Spending
-          * took Lists' place on the bar; Lists keeps only the lists). */}
+        {/* Receipts lives on Spending (owner, 2026-11-02: Spending took
+          * Lists' place on the bar). Stores is in More (owner, 2026-11-02:
+          * "We don't need stores in the spending section"). */}
         <div className="group" id="an-places">
           <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>
             <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
-          <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
-            <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
         </div>
         <div id="an-none" hidden={show}><p className="muted">{t("analysis.fileAReceiptAndYour")}</p>
           <button className="btn primary wide" id="an-add" type="button" onClick={() => nav.show("receipts", { from: "analysis" })}>{t("analysis.addAReceipt")}</button></div>
