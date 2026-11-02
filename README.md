@@ -26,7 +26,7 @@
 3. **Built on your own data.** Prices come from your own receipts, never from store sites, flyers or the web. The one outside shopping lookup is Kroger's aisle location.
 4. **Real community.** Groups share lists and receipts, and your own receipts go with you if you leave.
 5. **Honest and checkable.** The box below says what is real and what is simulated, and Settings, About Arya, Keeping Arya running shows what the AI costs.
-6. **Depth you can check.** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
+6. **Depth you can check.** About 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
 
 Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
 
@@ -109,7 +109,7 @@ Free to use, for shoppers, and built up with them. The model proposes and code c
 
 1. Open the demo. **Today** shows what is running low and why.
 2. Tap **More**, then **Lists**, and open a list. Add an item by typing, with the mic, or with a photo of a handwritten note.
-3. Open **Ask Arya** and type "We finished the Greek yogurt", then "What am I running low on?".
+3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
 5. For a longer path through the app, see [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md).
 

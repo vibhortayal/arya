@@ -31,7 +31,7 @@ line and mark the old one "superseded by" the new date.
 | 2026-11-02 | Own Meta key (bring your own key) stays in the docs as built and tested, currently disabled: not enough time to polish the rollout, and I am still deciding when to turn it on. Superseded by 2026-11-02 12:17Z (not used). | #430, #391, #393 | Doc maintainer |
 | 2026-11-02 | Stores moved off the Spending screen; each (i) explains only its own row. | #440 | UI/UX designer and builder |
 | 2026-11-02 | Muse is first on the "Use Arya from your own AI app" setup screen, with other apps folded away. | #426 | UI/UX designer and builder |
-| 2026-11-02 | Bottom bar is Today, Spending, Quest, Ask Arya, More. Lists lives under More. | #416 | UI/UX designer and builder |
+| 2026-11-02 | The navigation tab is Today, Spending, Quest, Ask, More. The tab reads "Ask"; Ask Arya is the feature name. Lists lives under More. | #416 | UI/UX designer and builder |
 | 2026-11-02 | No automatic "Everything else" list; it exists only if the user makes one. | #419 | Product and backend builder |
 | 2026-11-02 | Every item belongs to a list. An add uses the list you name, else the only list (auto-filed), else asks "Which list?". With no lists, create one first. | #427 | Product and backend builder, UI/UX |
 | 2026-11-02 | Receipt line edit: any group member may edit a line (name, quantity, price); only the person who filed the receipt may delete it. The printed total never changes. | #414 | Product and backend builder |

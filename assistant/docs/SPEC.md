@@ -301,7 +301,7 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask Arya and More; Lists, Receipts, Stores, Help and Settings sit under More. The six-tab line below is the earlier layout.
+Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask and More; Lists, Receipts, Stores, Help and Settings sit under More. The six-tab line below is the earlier layout.
 The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
 Settings. Settings has Group, Preferences (currency and language, When I
 start shopping, Display, Reminders), Account (Export my data, Delete my

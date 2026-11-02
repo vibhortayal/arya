@@ -32,7 +32,7 @@ the top that says the household is a demo. Today shows your next trip,
 store news from the simulated town (marked Simulated), what is running
 low and why, and your lists.
 
-The navigation tab at the bottom is **Today, Spending, Quest, Ask Arya, More**. **More**
+The navigation tab at the bottom is **Today, Spending, Quest, Ask, More**. **More**
 holds Lists, Receipts, Stores, Help and Settings.
 
 ### 2. Lists
@@ -72,7 +72,7 @@ On Today, tap **Start shopping** on the next trip, then **Let's go**.
   aisle signs and prices.
 
 ### 5. Ask Arya
-Open **Ask Arya**. Type "What am I running low on?", then "We finished the
+Open **Ask**. Type "What am I running low on?", then "We finished the
 Greek yogurt." The answer comes from the household data. The stated fact
 becomes an action that the server validates before it applies.
 

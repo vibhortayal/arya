@@ -5,12 +5,12 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 ## In the app
 
 - **Today**: the first tab. What is running low, store alerts and what to use soon. You can change what it shows with Customize your "Today" screen.
-- **Navigation tab**: the row of tabs at the bottom of the phone: Today, Spending, Quest, Ask Arya and More. "Customize navigation tab" changes which ones sit there.
+- **Navigation tab**: the row of tabs at the bottom of the phone: Today, Spending, Quest, Ask and More. "Customize navigation tab" changes which ones sit there.
 - **Lists**: under More, one card per store list, with suggestions underneath. Every item belongs to a list.
 - **Suggestions**: items Arya thinks you may need, each with a reason. Arya never adds to a list by itself; you tap Add.
 - **Running low**: staples that are due again, worked out from how often you buy them.
 - **Use soon**: food you bought that should be eaten soon. "Used it" moves an item back to Suggestions.
-- **Ask Arya**: the chat tab. Ask how to do something in Arya, or about your lists and spending.
+- **Ask Arya**: the chat, on the tab named "Ask". Ask how to do something in Arya, or about your lists and spending.
 - **Help tab**: the ask box, first steps, a how-to topic for each feature, and links to the Arya guide, Arya's powers, the Tour and Send feedback.
 - **Arya guide**: the swipeable cards that explain each feature.
 - **Tour**: the first-run walk-through, shown as bubbles over a dark screen.
