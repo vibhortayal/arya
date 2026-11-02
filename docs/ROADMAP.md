@@ -9,11 +9,6 @@ Ask, groups, Quest and the connector, as described in the README and
 unless it says so, and nothing is promised for the submission. "Idea" means
 nobody has designed it yet. Sources are named so you can check them.
 
-**Positioning.** Arya does not try to out-do apps that do one thing better. It
-aims to be the core platform where a community can use shared grocery
-information (lists, receipts, prices, stores) and connect to other tools
-through import and export.
-
 ## Devices
 - **Ray-Ban Meta glasses.** Idea, raised by me for the store scan.
   Spark's check during the hackathon found no public live-camera API for
@@ -22,9 +17,6 @@ through import and export.
   throughout. Source: `docs/quest/DISCUSSION.md` (item 38).
 - **Meta Ray-Ban Display glasses.** Idea. Not researched yet; what is possible
   depends on what Meta offers developers for that device.
-- Both would reuse the shelf reading that exists today (SAM 3.1 plus Muse
-  Spark). Live guidance on glasses is outside the spec for now (`assistant/docs/SPEC.md`,
-  section "Not in scope").
 
 ## Store data and community
 - **Capture more store data.** Item-level locations from scan captures,
@@ -43,17 +35,10 @@ through import and export.
   better maps. See [`docs/MODELS.md`](MODELS.md).
 - **Density first.** Win one metro's stores completely before expanding; a thin
   layer over many stores is worth little. Source: `docs/quest/BUSINESS.md`.
-- **Shared price data from receipts.** Today every price comes from your own
-  receipts only. A shared figure across households is not built (see Arya
-  shoppers above).
-- **User-contributed store maps.** Shoppers already map a store with the guided
-  scan, and no store ships pre-mapped. Maps already merge across shoppers
-  into one shared map per store. What is not built: resolving conflicts between
-  maps, and running it at scale.
-  Source: `assistant/docs/SPEC.md`, section "Not in scope".
-- **Shared household lists.** Groups already share lists between the people you
-  live with. Not built: split lists inside a group and sharing a list with
-  another account through the API (`docs/API.md`, "Later").
+- **Store maps at scale.** Maps already merge across shoppers. Not built:
+  resolving conflicts between maps. Source: `assistant/docs/SPEC.md`, "Not in scope".
+- **Shared lists, further.** Not built: split lists inside a group, and sharing a
+  list with another account through the API (`docs/API.md`, "Later").
 - Item and store profile pages; split the list (kids or a partner); friend run
   notifications (designed, not built); reimbursement tracking for items bought
   for others.
@@ -115,12 +100,8 @@ personal token. Everything below is future work and not built:
   with Arya's household data as the shared source: more endpoints (receipts,
   spend, what is running low), webhooks, OAuth sign-in instead of a personal
   token, SDKs and sample apps.
-- **Smart fridges and kitchen devices** that know what is inside, to add what
-  is empty or expiring to the list and to tell Arya what was used.
-- **Smart cooking devices** that understand what a household cooks, to feed
-  recipes and quantities back to the list.
-- **Humanoid and home robots** that shop, restock or check the pantry from the
-  household's list and habits.
+- **Smart fridges, cooking devices and home robots** that add what is empty
+  or expiring to the list and feed back what was used.
 - **Online grocery delivery services and apps,** to send a list for ordering
   and to bring back the real receipt and prices. (There is no cart or payment in
   Arya today; see `assistant/docs/SPEC.md`, "Not in scope".)
@@ -146,15 +127,9 @@ and, where it touches personal data, a privacy review first.
 **Everyday use**
 - Meal planning from what is running low and what to use soon, with a
   shopping list built from the plan.
-- **Recipe to shopping list, then to stores.** Build a list from a recipe
-  (link, photo or typed), then use the household's own receipt and store
-  history to suggest which store to buy each item at and which product or
-  brand you usually buy, with the price you paid there last. Arya already
-  learns store and price per item from receipts and groups a list by store;
-  turning a recipe into list items and routing them is not built. Possible
-  extras: spot what you already have at home, suggest a cheaper store for the
-  whole recipe, and scale the recipe to the household's size.
-- Recipe import from a link or a photo, turning a recipe into list items.
+- **Recipe to shopping list, then to stores.** Turn a recipe (link, photo or
+  typed) into list items, then use the household's receipt history to suggest
+  where and which brand to buy. Not built.
 - Budget goals per store or per month on the Spending screen, with a gentle
   heads-up and never a lock.
 - Barcode scan to add an item or check a price against your own history.
@@ -202,11 +177,6 @@ and, where it touches personal data, a privacy review first.
 - Store permission programme for mapping, and a takedown route for stores.
 
 ## Use your own Meta key: unfinished, switched off, not used
-I decided not to use this (2026-11-02). The code exists in the repo
-(PRs #391 and #393): a Settings row, a Help topic, an Ask answer, and an "I have
-my own Meta key" sign-up door. It is unfinished, it is switched off in the live
-app and in the demo, and it is not part of what judges see. With no key vault
-secret (`ARYA_KEY_VAULT_SECRET`) nothing is stored and none of it shows. If it is
-ever revisited, the operator notes are in `assistant/docs/OPS.md`, section "Own
-Meta keys (BYOK)". For someone running Arya themselves, the key that matters
-today is `MODEL_API_KEY`, a server key, not this feature.
+The code exists (PRs #391 and #393), it is unfinished, and it is switched off
+in the live app and the demo. I decided on 2026-11-02 not to use it. Operator
+notes: `assistant/docs/OPS.md`, "Own Meta keys (BYOK)".

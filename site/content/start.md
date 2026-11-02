@@ -22,7 +22,7 @@ Every week your list app starts blank. It doesn't know what you buy, what you re
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
-Built and tested with US receipts, dollars and stores first; other markets are not tested. Arya runs as one server, so a few dozen people at once is about its limit.
+Built and tested with US receipts, dollars and stores first. Size and other limits: [Known limits](../../README.md#known-limits).
 
 ## Which Meta model does what
 

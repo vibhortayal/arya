@@ -3,30 +3,19 @@
 Arya learns how you shop from your receipts and helps shoppers help each other. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
-- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#build-for-your-world), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
+- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#what-arya-is), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the Nov 3 freeze and linked here then. The live demo and the path below work without it.
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) to try in step 6
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
-
-## What stands out
-
-- **Works for real:** a live app in one tap, installable, and signed-in accounts can read their last lists and keep adding items with no signal (changes sync later; receipts and Ask need a connection).
-- **A closed loop:** a receipt photo becomes your list and Running low nudges, every line checked against the printed total.
-- **Your own data:** prices come only from your own receipts; the one outside shopping lookup is Kroger's aisle location.
-- **Real community:** groups share lists and receipts; your receipts go with you if you leave.
-- **Checkable:** a box on what is real and what is simulated ([`README.md`](README.md#what-stands-out)), and Settings, About Arya, Keeping Arya running shows what the AI costs.
-- **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
 - **Why these choices:** the idea, PWA, stack, hosting, coding model and each Meta model, and what was built during the hackathon: [`README.md`](README.md#why-i-built-it-this-way)
+- **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), and a dated [decision log](docs/DECISIONS.md).
 
 ## Impact (30%)
 
-- Suggestions with reasons: running low, use soon, and where you usually buy it, each with a reason. [`README.md`](README.md#what-is-in-it)
-- Receipts are read, then every line is checked against the printed total in plain code; returns net out. [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md)
-- Add by typing, voice, a photo of a note, or your own AI assistant through the MCP connector. [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)
-- Quest, an optional game, turns the trip into a hunt with no clock and no way to lose. [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)
+- The loop, with what is real and what is simulated: [`README.md`](README.md#what-arya-is). Your own AI assistant can add items through the MCP connector ([`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)); Quest is optional ([`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)).
 - Who it is for, the principles and the landscape: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md), [`docs/quest/BUSINESS.md`](docs/quest/BUSINESS.md)
 - **Built to grow with its community:** the foundation was built in the hackathon window; store maps already merge across shoppers, and the more people use Arya the better it gets (shared prices are planned, not on). See README, "Why I built it this way".
 
@@ -35,7 +24,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
-- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details), sent to Baseten, the host I use. `assistant/api/open_client.py`
+- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details). `assistant/api/open_client.py`
 - SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. `assistant/api/shelfscan.py`
 - Not used in the shipped app: Muse Glimmer and Muse Code. How I built it, including the two days spent with Muse Code: README, "How this was built".
 
@@ -59,19 +48,19 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 | Meta product | Id | Job | Measured |
 |---|---|---|---|
-| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 in the earlier Gate 0 run); staple judge precision 0.79 (41 of 52) against a cadence-based proxy on one household's receipts; it moves with the proxy definition |
-| Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, zero price errors when read alone (not the live path) |
+| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 at Gate 0); staple precision 0.79. [Details](README.md#measured-results) |
+| Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, read alone. [Details](README.md#measured-results) |
 | SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, pixelates the people it detects | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
 | Muse Image 1.0 | `muse-image-1.0` | The 23 grab-celebration characters (generated once) and share looks (live, per tap) | n/a |
 | Muse Spark Open | `meta-models/muse-spark-open-1026` (hosted on Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |
-| Auto reader (the live path) | `ARYA_PHOTO_READER=auto` (the default) | Spark first; Wonder re-reads a flagged receipt | Not yet measured on photos; checks catch most errors but a swapped pair of prices keeps the sum, so the review queue stays |
+| Auto reader (the live path) | `ARYA_PHOTO_READER=auto` (the default) | Spark first; Wonder re-reads a flagged receipt | Not yet measured on photos. A swapped pair of prices keeps the sum, so the review queue stays |
 | Meta Model API | one client | Every server call, with a daily spend ceiling | n/a |
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train its models. The live receipt reader is `auto` (the code default): Spark first, Wonder on a flagged read. Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. See [`docs/evals/`](docs/evals/).
 
-## Honest limits
+## Limits
 
 Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#known-limits)); scaling it out is a plan for after judging, not built. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).
