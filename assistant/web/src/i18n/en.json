@@ -2975,11 +2975,12 @@
         "line": "What needs you today: running low, use soon, and tips.",
         "lineBoth": "What needs you today: running low, use soon, and tips. Receipts and Spending are in More.",
         "lineReceipts": "What needs you today: running low, use soon, and tips. Receipts is in More.",
-        "lineSpending": "What needs you today: running low, use soon, and tips. Spending is in More."
+        "lineSpending": "What needs you today: running low, use soon, and tips. Spending is in More.",
+        "lineLists": "What needs you today: your next trip's list, running low, use soon, and tips. All your lists are in More."
       },
       "lists": {
         "title": "Lists",
-        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list. Your stores are at the bottom."
+        "line": "Make one list per store. Add items by typing, talking, or snapping a photo of a paper list."
       },
       "ask": {
         "title": "Ask",
@@ -3007,7 +3008,7 @@
       },
       "spending": {
         "title": "Spending",
-        "line": "What you spent by month, store and item, from your receipts."
+        "line": "What you spent by month, store and item, from your receipts. Receipts and Stores are at the top."
       },
       "more": {
         "title": "More",
@@ -3033,7 +3034,7 @@
     },
     "today_lists": {
       "title": "Your lists",
-      "line": "One card for each store. Tap a card to open that list."
+      "line": "One card for each store. Tap a card to open that list. All your lists are also in More."
     },
     "today_soon": {
       "title": "Use soon",
@@ -3042,6 +3043,14 @@
     "today_edit": {
       "title": "Edit Today",
       "line": "Hide, reorder or add cards. Make this screen yours."
+    },
+    "spending_tab": {
+      "title": "Spending",
+      "line": "What you spent by month, store and item, from your receipts."
+    },
+    "spending_places": {
+      "title": "Receipts and Stores",
+      "line": "Add receipts and look back at them here. Stores holds your stores and favorites."
     },
     "lists_tab": {
       "title": "Lists",
@@ -3114,7 +3123,7 @@
         "kicker": "Lists",
         "title": "A list for every store",
         "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list.",
-        "s1": "Tap the Lists tab, then tap New list.",
+        "s1": "Tap More, then Lists, then tap New list.",
         "s2": "Choose the name of the store from the dropdown.",
         "s3": "Type in items using the add box, use voice to add items or upload pictures of your paper list."
       },
@@ -3179,7 +3188,7 @@
         "kicker": "In the store",
         "title": "Start shopping",
         "body": "Pick a list and shop it. Play a Quest, or just tick items off.",
-        "s1": "Open the Lists tab. Open a list.",
+        "s1": "On Today, tap your next trip. Or tap More, then Lists, and open a list.",
         "s2": "Tap Start shopping.",
         "s3": "Or tap \"Or just tick items as I shop\" for no game.",
         "s4": "Choose what Start shopping opens in Settings, under \"When I start shopping\"."
@@ -3610,7 +3619,7 @@
         "title": "Add your first receipt",
         "sub": "Arya learns what you buy and how often",
         "body": "A receipt is how Arya learns. After one, Today shows what is running low and what to use soon.",
-        "s1": "Open Lists, then Receipts.",
+        "s1": "Open Spending, then Receipts.",
         "s2": "Tap Add receipts and pick several. Arya reads them in the background once they are sent.",
         "s3": "Arya adds it and checks the total.",
         "n1": "Only you and your group see your receipts.",
@@ -3623,7 +3632,7 @@
         "title": "Add an item to a list",
         "sub": "Type it, say it, or snap a paper list",
         "body": "Every list is one store. Add items in the box at the top of a list.",
-        "s1": "Open the Lists tab.",
+        "s1": "Tap More, then Lists. Next trip on Today has Add items too.",
         "s2": "Open a list, or tap New list and choose a store.",
         "s3": "Type an item in the box \"Add item here...\".",
         "s4": "Tap the microphone to say it, or the camera to read a paper list.",
@@ -3646,7 +3655,7 @@
         "title": "Lists",
         "sub": "One list for each store",
         "body": "Arya keeps a separate list for each store and suggests what is due.",
-        "s1": "Open the Lists tab and tap New list.",
+        "s1": "Tap More, then Lists, and tap New list.",
         "s2": "Choose the store.",
         "s3": "Add items in the box at the top of the list.",
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
@@ -3658,9 +3667,9 @@
         "title": "Receipts and spending",
         "sub": "Add a receipt, see where money goes",
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
-        "s1": "Open Lists, then Receipts, and tap Add receipts.",
+        "s1": "Open Spending, then Receipts, and tap Add receipts.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Open Lists, then Spending, to see it by month, store and item.",
+        "s3": "Spending, on the bar, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
@@ -3765,7 +3774,7 @@
         "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
         "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
         "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
-        "n2": "The bar starts as Today, Lists, Quest, Ask and More. Reset to default brings it back.",
+        "n2": "The bar starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
         "cta": "Customize bar"
       },
       "install": {
