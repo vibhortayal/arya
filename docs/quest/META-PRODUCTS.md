@@ -25,6 +25,7 @@ ffmpeg, Postgres) does plumbing only.
   dropped.
 
 ## Considered, not used
+- **Muse Code** (Meta's coding agent): tried while I was exploring how to build. I lost about two days settling on the idea, so to save time I built the app with Claude. It is not part of the shipped app.
 - **Glimmer** (open weights): not run.
 - **Gaussian splatting and VGGT 3D models:** tried on a Trader Joe's
   walkthrough during the hackathon, then removed (2026-10-29): the
