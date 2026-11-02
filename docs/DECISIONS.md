@@ -16,6 +16,7 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-02 | Document the Kroger aisle hint (judge review finding 11): README Quest bullet, Help and Ask lines, and "No prices are fetched from..." in the README. It is on live, optional for a self-run copy (own Kroger keys), nothing stored. | #454 | Doc maintainer |
 | 2026-11-02 | Docs workflow with three roles: Researcher (market research thread), Doc maintainer, Editor (the Fable 5.1 thread "Edit docs as a judge would", which reads the repo cold). The Editor checks each new or rewritten reader-facing docs PR before it merges. Written in AGENTS.md. | #452 | Coordinator |
 | 2026-11-02 | The bottom bar is called the "navigation tab", and its editor is "Customize navigation tab" (was "Customize bar" and "Make the bar yours"). The Today editing card is "Customize your \"Today\" screen". Applied in the app text, Tour, guide, Help, Ask knowledge and docs. (12:15Z) | #446 | Doc maintainer |
 | 2026-11-02 | Own Meta key (BYOK) is not used. The code stays in the repo, unfinished and switched off, and is not part of the demo. Do not set `ARYA_KEY_VAULT_SECRET`. Supersedes the "built and tested, currently disabled" line below. (12:17Z) | #447, #391, #393 | Doc maintainer |

@@ -248,6 +248,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
   reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, the owner's words for the bottom bar). On 2026-11-02 the owner renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
 
+- **Kroger aisle hints (documented 2026-11-02, owner):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
+
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
