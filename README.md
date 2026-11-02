@@ -47,8 +47,9 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 - **Every Meta model has a job.** Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
   Transcribe, Muse Image and Muse Spark Open (open weights, hosted on Baseten)
   each do one thing, through one module. See the [model map](JUDGES.md#meta-model-map).
-- **Prices come from your own receipts.** No prices are fetched from store
-  sites, flyers, APIs or the web.
+- **Prices come from your own receipts.** Arya uses no prices from store sites,
+  flyers, APIs or the web; its one outside lookup, Kroger's aisle location, keeps
+  nothing else from the reply.
 - **Bring your own assistant.** Add items by typing, voice, a photo of a
   handwritten note, or any AI agent through the MCP connector.
 - **Quest has no clock and no way to lose.** Optional, and it never gets in the
@@ -166,7 +167,7 @@ loop on a phone. The window should be about 390 px wide.
   plays as a labelled typical layout. Points bank when the receipt settles.
   At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King
   Soopers, QFC and others) Arya also asks Kroger's own Products API where an
-  item sits and shows "Kroger: aisle N" in a quest. It is a live lookup on the
+  item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. It is a live lookup on the
   demo site, nothing from Kroger is stored, and it falls back to the crowd map
   if Kroger does not answer. Optional if you run your own copy: it needs your
   own Kroger developer keys. The demo stores are invented, so you will not see
