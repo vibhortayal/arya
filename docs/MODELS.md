@@ -52,7 +52,7 @@ walking their own store with the guided scan.
 provider or a platform that can legally supply in-store video and photos
 (aisle walkthroughs, shelf signs, layout) would let Arya:
 - start each store with a first map instead of an empty one;
-- train and test the shelf-reading step (SAM plus Spark) on many layouts, not
+- test and tune the shelf-reading step (SAM plus Spark) on many layouts, not
   one household's;
 - give community shoppers better "where is it" help from day one.
 
