@@ -38,7 +38,7 @@ def item_expired(item_id: str):
 # flag route writes only these; anything else in a POST body is a
 # caller bug and never lands in the store (review M6: an empty
 # probe POST once left a junk record behind).
-_FLAG_KEYS = {"manual", "never", "out", "expired", "snoozed_until",
+_FLAG_KEYS = {"manual", "never", "out", "used", "expired", "snoozed_until",
               "dismissed_on", "checked_on", "check_ok", "qty_override",
               "name", "list", "use_by", "use_by_kind", "use_by_set", "use_by_snooze", "unit"}
 

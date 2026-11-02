@@ -1,20 +1,28 @@
-# 2026-11-02 Used it: off use-by, onto the suggested list
+# 2026-11-02 Used it: off use-by, into Suggestions
 
-Ask (owner): the Still good? check only offered Still good or It expired;
-add "Used it". Then (05:36Z): "Clicking on used it should remove it from
-use by section, and it should put it in the suggested list option. If you
-do undo, then it should remove it from the suggested list option and add it
-back into the use by section." and "Only if it can't find a suggested list,
-it should ask which list it should add it on."
-Mockup: claude.ai/artifact/6XuF8PTfaAZAQWap8g2uss (v2).
+Owner asks (UI/UX thread, 2026-11-02):
+- Still good? only offered Still good / It expired; add "Used it".
+- 05:50Z: "I meant in the suggestions section ... Aria should not add
+  anything to the list themselves, right? They always give suggestions."
+- 05:50Z: suggestions must work out which list, and ask only when they
+  can't (list deleted, etc.).
+- 05:52Z: if an item is already on a list, it has run out: stop showing it
+  in the go-bad section.
 
-Miss to learn from: the Oct 29 expiry mockup (Use soon) already had Used it
-with add-back (#96). The Still good? mockup v1 copied that check's own
-pattern instead of the existing Used it. Grep a button's existing handler
-before mocking it somewhere new.
+Built:
+- Today usedUp(), shared by Use soon (chip and item sheet) and Still good?:
+  untracks the date (Use soon), sets the new "used" flag. state._reported_out
+  counts "used" like "out" (Running low learns, item is due and admitted)
+  but only "out" puts a row on the list, so the item is a suggestion
+  ("you used it up"). Undo clears "used" and restores the date.
+- Running low Add on Today uses addToUsual: the 409's suggested list (the
+  usual store's) straight away; "Which list?" only when there is none or
+  it was deleted.
+- state.on_list_ids(d): Use soon, Still good? and Ask's food dates skip
+  items on a list.
+- Help n1, Ask knowledge, tests (tests/test_still_good_used_it.py, listpick).
 
-Built: Today.usedUp(), shared by Use soon (card chip and item sheet) and
-Still good?. Untracks the date (Use soon), sets "out" today (Running low
-learns), then lib/listPick addToUsual: the 409's "suggested" list straight
-away, "Which list?" only when there is none. Undo: manual false, out null,
-and the use-by date back. Help n1, Ask knowledge, tests updated.
+Misses to learn from: v1 copied the check's own pattern instead of the
+existing Used it (#96); then "suggested list option" was read as "the
+suggested list", not the Suggestions section. Arya suggests, the household
+adds.

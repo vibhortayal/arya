@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { addItem, addToUsual } from "../lib/listPick";
+import { addToUsual } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
 import { clearOnSignOut, useSession } from "../app/session";
@@ -359,7 +359,7 @@ export function Today() {
     setBusy(b => new Set(b).add(id));
     try {
       const it = low.find(i => i.item_id === id);
-      const out = await addItem(id, it?.name || "");
+      const out = await addToUsual(id, it?.name || "");
       if (out) {
         setAdded(a => new Set(a).add(id));
         toast(out.list ? t("listPick.addedTo", { what: it?.name || "", list: out.list.name }) : t("common.addedToList"));
@@ -663,7 +663,7 @@ export function Today() {
     try {
       const done: string[] = [];
       for (const id of ids) {
-        const out = await addItem(id, low.find(i => i.item_id === id)?.name || "");
+        const out = await addToUsual(id, low.find(i => i.item_id === id)?.name || "");
         if (!out) break;                       // cancelled: stop asking
         done.push(id);
       }
@@ -790,10 +790,11 @@ export function Today() {
 }
 
 /* Used it (owner, 2026-11-02), on Use soon and on Still good?: off
- * the use-by section, used up today (Running low learns, as with Ask's
- * "we finished the milk"), and straight onto the list Arya suggests;
- * "Which list?" only when it has none. Undo takes it off that list and
- * puts it back in the use-by section. */
+ * the use-by section and into Suggestions ("used" flag: Running low
+ * learns, and the item is suggested for its list). Arya never adds to
+ * a list itself; Add on the suggestion does, asking "Which list?" when
+ * it can't tell. Undo takes it out of Suggestions and puts it back in
+ * the use-by section. */
 async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string, v?: Record<string, unknown>) => string;
   toast: (m: string, a?: { action: string; onAction: () => void }) => void; reload: () => void }) {
   const { id, name, soon, t, toast, reload } = o;
@@ -802,18 +803,14 @@ async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string,
   const say = (e: unknown) => toast(e instanceof Error ? e.message : String(e));
   try {
     if (soon) await post(`/api/expiry/${enc}/done`);
-    await post(`/api/items/${enc}/flag`, { out: day });
+    await post(`/api/items/${enc}/flag`, { used: day });
   } catch (e) { say(e); return; }
   reload();
-  let added: Awaited<ReturnType<typeof addToUsual>> = null;
-  try { added = await addToUsual(id, name); } catch (e) { say(e); }
-  reload();
-  toast(added ? (added.list ? t("today.usedOnList", { name, list: added.list.name }) : t("today.usedOnYourList", { name })) : t("today.usedItToast", { name }), {
+  toast(t("today.usedToSuggest", { name }), {
     action: t("common.undo"),
     onAction: async () => {
       try {
-        await post(`/api/items/${enc}/flag`, { out: null, ...(added ? { manual: false } : {}),
-          ...(soon ? { use_by: soon.date, use_by_set: day } : {}) });
+        await post(`/api/items/${enc}/flag`, { used: null, ...(soon ? { use_by: soon.date, use_by_set: day } : {}) });
         reload();
       } catch (e) { say(e); }
     },

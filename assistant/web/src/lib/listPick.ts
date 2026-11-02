@@ -82,8 +82,9 @@ export async function addOnList<T>(send: (listId?: string) => Promise<T>, opts: 
 export const addItem = (itemId: string, name: string, extra: Record<string, unknown> = {}) =>
   addOnList(lid => post("/api/list/add", { item_id: itemId, ...extra, ...(lid ? { list_id: lid } : {}) }), { names: [name], itemId });
 
-/* Used it (owner, 2026-11-02): straight onto the suggested list; the
- * "Which list?" question only when Arya has no suggestion. */
+/* Adding a suggestion (owner, 2026-11-02): it goes on the list Arya
+ * suggests for it (the usual store's list); "Which list?" only when it
+ * can't tell, e.g. no usual store or that list was deleted. */
 export const addToUsual = (itemId: string, name: string) =>
   addOnList(lid => post("/api/list/add", { item_id: itemId, ...(lid ? { list_id: lid } : {}) }), { names: [name], itemId, usual: true });
 

@@ -238,8 +238,8 @@ class TestClientWiring(unittest.TestCase):
             self.assertIn(phrase, js)
         self.assertNotIn("danger", js)   # a date is information, never an alarm
         # Used it (owner, 2026-11-02) no longer asks "Add it to your list?":
-        # it goes straight on the suggested list (Which list? if none).
-        self.assertIn("addToUsual(id, name)", js)
+        # the item moves to Suggestions; Arya never adds to a list itself.
+        self.assertIn("{ used: day }", js)
 
 
 if __name__ == "__main__":
