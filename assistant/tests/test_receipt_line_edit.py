@@ -37,6 +37,15 @@ class LineEdit(unittest.TestCase):
     def detail(self):
         return self.c.get("/api/quest/receipts/R-1").json()
 
+    def test_detail_shows_printed_text_and_edited_mark(self):
+        lines = self.detail()["lines"]
+        self.assertEqual(lines[0]["raw"], "MILK")
+        self.assertNotIn("edited", lines[0])
+        self.edit(0, name="Oat Milk")
+        lines = self.detail()["lines"]
+        self.assertEqual((lines[0]["name"], lines[0]["raw"], lines[0].get("edited")), ("Oat Milk", "MILK", True))
+        self.assertNotIn("edited", lines[1])
+
     def test_price_edit_that_breaks_the_total_is_flagged(self):
         r = self.edit(0, line_total=5.0)
         self.assertEqual(r.status_code, 200, r.text)
