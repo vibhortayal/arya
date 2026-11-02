@@ -47,8 +47,9 @@ through import and export.
   receipts only. A shared figure across households is not built (see Arya
   shoppers above).
 - **User-contributed store maps.** Shoppers already map a store with the guided
-  scan, and no store ships pre-mapped. What is not built: sharing one
-  shopper's map with others at scale, and consensus between several maps.
+  scan, and no store ships pre-mapped. Maps already merge across shoppers
+  into one shared map per store. What is not built: resolving conflicts between
+  maps, and running it at scale.
   Source: `assistant/docs/SPEC.md`, section "Not in scope".
 - **Shared household lists.** Groups already share lists between the people you
   live with. Not built: split lists inside a group and sharing a list with
@@ -85,7 +86,7 @@ through import and export.
 - Security review items that were deferred, tracked as GitHub issues.
 - A community tier with user opt-in is an idea only
   (`assistant/docs/MODEL-POLICY.md`).
-- Forgot-password flow and per-user spend caps are held, by choice
+- The forgot-password flow is held, by choice
   (`assistant/docs/ARCHITECTURE.md`, section 13, "Not built / held").
 - The licence is undecided; the repository is all rights reserved for now
   (`LICENSE`).

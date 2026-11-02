@@ -66,7 +66,7 @@ for the PWA. Routes live in `api/routes/`, one router per area:
 
 | Router | What it serves |
 |---|---|
-| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
+| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`; the Ops flag overrides the env, and sign-up is closed on the live site), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
 | `intake`, `review` | receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue |
 | `lists`, `items`, `expiry` | named lists, add by text or photo, check, move, judge runs, item pages and flags, expiry dates |
 | `home`, `chat` | the Today payload, Ask Arya and its apply step |
@@ -169,6 +169,14 @@ handle the nightly backup. CI is manual only
 (`.github/workflows/tests.yml`).
 
 ### 0.11 Feature flags and settings
+
+The table gives the default in compose. The live site (checked with Ops on
+Nov 2) differs in these places: `ARYA_STORE=dual`; push reminders on (daily
+cron at 13:00 UTC); Supabase Auth and email sign-in on; Demo Town on; the
+Kroger aisle lookup on; own-key sign-up off; photo reader `auto`; Spark tier
+`standard`; new sign-up closed (the Ops flag wins over the env). Budgets: $10 a
+day for the app, $20 a day for the demo (code default $2), $0.40 per demo visit.
+Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
 
 | Variable | Default in compose | Effect |
 |---|---|---|
@@ -381,8 +389,10 @@ Each agent has a narrow job and a named limit.
   drain the app. Every live door, batch judge run and hunt creation
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,
-  never a 500 (`meta_client.parse_json`). There is no per-user spend cap;
-  I decided on 2026-10-29 to go without one for now.
+  never a 500 (`meta_client.parse_json`). Each account has its own limits:
+  a monthly heads-up, a monthly pause on paid reads, and an hourly freeze (defaults
+  $3, $5 and $1, see the flag table; the live site uses $3, $20 and $10, and the owner
+  account is exempt), on top of the daily ceiling for the whole app.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -437,9 +447,9 @@ memory. The store directory (`stores.json`) is platform-level.
 
 ## 13. Not built / held
 
-- Per-user spend caps (§10). Not built; I decided to go without
-  one for now.
-- Public registration is closed by default (`ARYA_REGISTRATION_OPEN`). The
+- A fixed per-account spend allowance that resets by itself. Not built; per-account
+  limits do exist (§10: defaults $3 heads-up, $5 pause, $1 hourly freeze; live $3, $20, $10).
+- Public registration is closed by default (`ARYA_REGISTRATION_OPEN`; the Ops flag overrides the env and is closed on the live site). The
   owner can open it in Settings. Every door runs on Meta models: Muse in
   chat, Spark on the Meta API in the app.
 - Forgot-password — not built. Once switched on, email code sign-in

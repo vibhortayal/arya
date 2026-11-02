@@ -48,5 +48,5 @@ line and mark the old one "superseded by" the new date.
 | 2026-11-01 | Hide the Contributor-tier warning in app copy: Ops strings no longer carry the data-use warning. | #432 | Product and backend builder |
 | ~2026-10-31 | No freeze dates. Only the Nov 4 submission date stands (the deploy freeze above is the one exception). | none | Coordinator |
 | ~2026-10-31 | Demo is a fresh private sandbox for every visitor; no deploy during judging. | none | Demo and submission readiness |
-| ~2026-10-29 | List and Quest are both core. PWA only, React screens only, no per-user spend cap. | none | Coordinator |
+| ~2026-10-29 | List and Quest are both core. PWA only, React screens only, no per-user spend cap (later: per-account limits were added, see ARCHITECTURE §10). | none | Coordinator |
 | 2026-10-29 | "Used it" on a use-soon item adds it back to a list: the usage-chosen list, else the "Which list?" picker. Superseded by 2026-11-02 05:50Z (goes to Suggestions). | #96 | Expiry thread |
