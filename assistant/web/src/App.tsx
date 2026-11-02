@@ -13,7 +13,10 @@ import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { isOffline, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
-import { isDevelopersPath, joinCodeFromUrl } from "./lib/paths";
+import { forgetJoinCode, isDevelopersPath, joinCodeFromUrl, stashJoinCode } from "./lib/paths";
+
+// Keep an invite code from the address before sign-in can drop it.
+stashJoinCode();
 import { BottomBar } from "./ui/Bar";
 import { OwnKeyRoute } from "./ui/OwnKey";
 import { Login } from "./screens/Login";
@@ -65,6 +68,7 @@ function useInviteLink() {
       let g: { enabled?: boolean; group?: { name: string } | null };
       try { g = await get("/api/group"); } catch { g = { enabled: false, group: null }; }
       try { history.replaceState(null, "", location.pathname); } catch { /* stays in the bar */ }
+      forgetJoinCode();
       if (!g.enabled) return;
       if (g.group) { toast(t("groupJoin.alreadyIn", { name: g.group.name })); return; }
       nav.show("group-join", { code });

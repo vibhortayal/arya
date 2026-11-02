@@ -19,7 +19,7 @@ describe("demoTour", () => {
     }
   });
   test("the default bar's screens in bar order, then More, Help, Settings and the bar step", () => {
-    expect(screens(steps)).toEqual(["tabs.today", "tabs.lists", "tabs.quest", "tabs.ask", "tabs.more", "tabs.help", "tabs.settings", "firstRun.tour.bar.screen"]);
+    expect(screens(steps)).toEqual(["tabs.today", "tabs.spending", "tabs.quest", "tabs.ask", "tabs.more", "tabs.help", "tabs.settings", "firstRun.tour.bar.screen"]);
     expect(steps[steps.length - 1].id).toBe("bar");
   });
   test("a screen's stops are one run; a step opens its screen; only the last step has a link", () => {

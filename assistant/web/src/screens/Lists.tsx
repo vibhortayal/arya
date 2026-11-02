@@ -186,11 +186,6 @@ export function Lists() {
 
   const [data, setData] = useState<HomeData | null>(cache.data);
   const [loadFailed, setLoadFailed] = useState(false);
-  /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
-  const [groupName, setGroupName] = useState<string | null>(null);
-  useEffect(() => {
-    get<{ group: { name: string } | null }>("/api/group").then(g => { if (alive.current) setGroupName(g?.group?.name || null); }, () => {});
-  }, []);
   const dataRef = useRef<HomeData | null>(cache.data);
   // Today's list cards open one list (app.js: listLens = card's id).
   const [lens, setLensState] = useState(() => {
@@ -1067,15 +1062,6 @@ export function Lists() {
           </div>
           )}
           <button id="list-new" className="newlist" type="button" onClick={() => setSheet({ kind: "new", moving: null })}><b aria-hidden="true">+</b>{t("lists.newList")}</button>
-          {/* Stores, Receipts and Spending live here (owner, 2026-11-01: they left Today). */}
-          <div className="group listsstores">
-            <button className="navrow" id="lists-stores" type="button" onClick={() => nav.show("stores-mine")}>
-              <span className="grow">{t("lists.storesRow")}<span className="sub">{t("lists.storesRowSub")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-receipts" type="button" onClick={() => nav.show("receipts")}>
-              <span className="grow">{t("common.receipts")}<span className="sub">{t("lists.receiptsRowSub")} · {groupName ? t("lists.seenBy.group", { group: groupName }) : t("lists.seenBy.you")}</span></span><span className="chev">›</span></button>
-            <button className="navrow" id="btn-analysis" type="button" onClick={() => nav.show("analysis")}>
-              <span className="grow">{t("common.analysis")}<span className="sub">{t("lists.spendingRowSub")}</span></span><span className="chev">›</span></button>
-          </div>
           </>}
         </div>
       )}
