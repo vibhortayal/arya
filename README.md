@@ -26,9 +26,11 @@
 3. **Built on your own data.** Prices come from your own receipts, never from store sites, flyers or the web. The one outside shopping lookup is Kroger's aisle location.
 4. **Real community.** Groups share lists and receipts, and your own receipts go with you if you leave.
 5. **Honest and checkable.** The box below says what is real and what is simulated, and Settings, About Arya, Keeping Arya running shows what the AI costs.
-6. **Depth you can check.** 1,842 Python tests and 533 web tests, a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
+6. **Depth you can check.** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
 
 Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
+
+All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
 
 | What is real | What is simulated | What is not connected |
 |---|---|---|
@@ -68,25 +70,10 @@ Free to use, for shoppers, and built up with them. The model proposes and code c
 
 ## More that is different
 
-- **Every Meta model has a job.** Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
-  Transcribe, Muse Image and Muse Spark Open (open weights, hosted on Baseten)
-  each do one thing, through one module. See the [model map](JUDGES.md#meta-model-map).
 - **Bring your own assistant.** Add items by typing, voice, a photo of a
   handwritten note, or any AI agent through the MCP connector.
 - **Quest has no clock and no way to lose.** Optional, and it never gets in the
   way of the list.
-
-## Highlights
-
-- **Receipts you can trust:** a model reads, plain code checks every line against the printed total.
-- **A list that learns:** running low and use soon, each with a reason, from your own receipts.
-- **Prices from your own receipts only:** nothing fetched from the web.
-- **Ask Arya** answers over your data, acts on what you tell it, and speaks your language.
-- **Quest:** an optional store game with no clock, camera finds, and people blurred before anything is kept.
-- **Open:** a Lists API, a developer portal, and a connector for your own AI agent.
-- **Transparent:** "Keeping Arya running" shows what your AI use costs.
-
-All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
 
 ## What judges should read first
 

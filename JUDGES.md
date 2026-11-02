@@ -17,7 +17,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Your own data:** prices come only from your own receipts; the one outside shopping lookup is Kroger's aisle location.
 - **Real community:** groups share lists and receipts; your receipts go with you if you leave.
 - **Checkable:** a box on what is real and what is simulated ([`README.md`](README.md#what-stands-out)), and Settings, About Arya, Keeping Arya running shows what the AI costs.
-- **Depth:** 1,842 Python tests, 533 web tests, a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
+- **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
 
 ## Impact (30%)
 
@@ -42,7 +42,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
-- Tests: commands in the [README](README.md#run-it-yourself); current counts and known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
+- Tests: commands in the [README](README.md#run-it-yourself); known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
 - How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
 
