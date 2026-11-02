@@ -40,4 +40,4 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 ## Not live
 
-Community prices, Deals and Arya shoppers (seeing other shoppers nearby) are not live. Muse Glimmer is not used, and Muse Code is not part of the shipped app.
+Community prices, Deals and Arya shoppers (seeing other shoppers nearby) are not live. Muse Glimmer is not used. Muse Code, running Muse Wonder, wrote the first version of the engine; it is not part of the shipped app.

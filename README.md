@@ -66,7 +66,7 @@ The rest of this page is the full story.
 
 **The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
 
-**The coding model.** I built the app with Claude, which I know well. Why, and the two days with Muse Code, are under [How this was built](#how-this-was-built).
+**The coding model.** Muse Code, running Muse Wonder, wrote the first version of the engine on Oct 27; I then built the rest of the app with Claude. Muse Code is not part of the shipped app. More under [How this was built](#how-this-was-built).
 
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
@@ -311,13 +311,13 @@ Everything here was built in the hackathon window, which opened on Oct 27,
 2026. The idea search took about two days; its commits in a separate research
 repo start on Oct 26. The first commit here is Oct 27, 15:13 ET, and nothing in this repo is
 older. The engine (decode, dictionary, ledger, patterns, the first phone app)
-landed in four commits between 15:31 and 15:38. Muse Wonder wrote that engine
-spike with me; git lists the commits under the author name "Spark". The dated table
+landed in four commits between 15:31 and 15:38. Muse Code, running Muse Wonder, wrote that
+engine with me (my account); git lists the commits under the author name "Spark". The dated table
 is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
 in `assistant/loops/` record the rest.
 
 
-**Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app.
+**Build tools.** I used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, running Muse Wonder, to write the first version of the engine on Oct 27. I then built the rest of the app with Claude, which I know well. Muse Code is not part of the shipped app.
 
 ## Characters
 

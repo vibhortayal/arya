@@ -21,7 +21,6 @@ The models in use, with ids and jobs: [For judges, Meta model map](../JUDGES.md#
 | **Muse Glimmer** (open weights) | 30B dense, text and image in, text out, Apache 2.0, distilled from Spark; runs on your own hardware via vLLM, SGLang, llama.cpp, Ollama | **Future idea:** a self-hosted "household stays at home" reader, or a cheap pre-filter before Spark for name cleanup and labels. Text and image only, so no audio or PDF. Accuracy on receipts is **not measured** by us | No per-token price from Meta; we would pay for a GPU or a host. Whether Baseten serves it is unconfirmed. Needs its own eval against the 98-line receipt set before any job moves |
 | **Muse Spark 1.2 / 1.1** | Older Spark versions. Meta recommends 1.2 for audio input | Not needed: we send audio to Voice Transcribe | None |
 | **Muse Wonder Full** | Higher Wonder variant | Muse Code plans only, not on the Model API, so unavailable to the app | n/a |
-| **Muse Code** | Meta's coding agent (CLI) | Not used in the shipped app; see the README, How this was built | n/a |
 
 Smaller API features we have not used: web-search grounding ($2.50 per 1,000
 searches; could ground "is this a good price" but would send queries out,
