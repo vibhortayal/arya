@@ -94,14 +94,16 @@ describe("tour layout", () => {
     expect((mid.tip as { top: number }).top + 240).toBeLessThanOrEqual(640 - 12);
   });
   test("the first-run tour follows the bar, then More, then Make the bar yours", () => {
-    expect(firstRunTour().map(s => s.id)).toEqual(["today", "lists", "quest", "ask", "more", "bar"]);
+    expect(firstRunTour().map(s => s.id)).toEqual(["today", "spending", "quest", "ask", "more", "bar"]);
     expect(firstRunTour(["list", "receipts", "stores-mine"]).map(s => s.id)).toEqual(["lists", "receipts", "stores", "more", "bar"]);
   });
   test("Today's line says Receipts and Spending are in More only when they are not on the bar (owner, 2026-11-01)", () => {
     expect(todayLine(["home", "list", "community", "chat"])).toBe("firstRun.tour.today.lineBoth");
     expect(todayLine(["home", "receipts", "community", "chat"])).toBe("firstRun.tour.today.lineSpending");
-    expect(todayLine(["home", "analysis"])).toBe("firstRun.tour.today.lineReceipts");
-    expect(todayLine(["home", "receipts", "analysis"])).toBe("firstRun.tour.today.line");
+    // With Spending on the bar, Receipts is at its top; the line says where the lists are (2026-11-02).
+    expect(todayLine(["home", "analysis", "community", "chat"])).toBe("firstRun.tour.today.lineLists");
+    expect(todayLine(["home", "list", "analysis"])).toBe("firstRun.tour.today.line");
+    expect(firstRunTour()[0].bodyKey).toBe("firstRun.tour.today.lineLists");
     expect(firstRunTour(["home", "receipts"])[0].bodyKey).toBe("firstRun.tour.today.lineSpending");
   });
   test("More and Make the bar yours open the More sheet, point into it, and close it on leaving", () => {

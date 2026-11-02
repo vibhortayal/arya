@@ -11,8 +11,9 @@ import { PARENT_TAB, type ViewId } from "../app/views";
 export const BAR_ITEMS = ["home", "list", "receipts", "stores-mine", "analysis", "chat", "community", "help", "profile"] as const satisfies readonly ViewId[];
 export type BarItem = (typeof BAR_ITEMS)[number];
 
-/* The default (owner pick, 2026-11-01): Today, Lists, Quest, Ask, More. */
-export const DEFAULT_BAR: BarItem[] = ["home", "list", "community", "chat"];
+/* The default (owner pick, 2026-11-02): Today, Spending, Quest, Ask, More.
+ * Lists, Receipts, Stores, Help and Settings sit in More. */
+export const DEFAULT_BAR: BarItem[] = ["home", "analysis", "community", "chat"];
 export const BAR_MAX = 4;
 
 export const isBarItem = (x: unknown): x is BarItem => (BAR_ITEMS as readonly string[]).includes(x as string);
@@ -29,11 +30,11 @@ export function barOf(saved: unknown): BarItem[] {
 export const moreOf = (bar: BarItem[]): BarItem[] => BAR_ITEMS.filter(i => !bar.includes(i));
 
 /* A pushed page's own place when that place can be pinned: Receipts and
- * Spending live on Lists (PR #340), Stores is Lists' Stores row. */
+ * Stores live on Spending (owner, 2026-11-02). */
 const OWN: Partial<Record<ViewId, BarItem>> = {
   receipt: "receipts", tocheck: "receipts", "stores-find": "stores-mine",
 };
-const HOME_OF: Partial<Record<BarItem, BarItem>> = { receipts: "list", analysis: "list", "stores-mine": "list" };
+const HOME_OF: Partial<Record<BarItem, BarItem>> = { receipts: "analysis", "stores-mine": "analysis" };
 
 /* Which bar button lights for a screen: the screen itself, or its place,
  * or the tab it lives under; "more" when none of those is on the bar. */

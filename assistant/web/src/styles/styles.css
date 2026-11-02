@@ -2318,3 +2318,5 @@ body.hunting #offlinebar { display: none !important; }
 #line-fix .lf-two > div { flex: 1; min-width: 0; }
 #line-fix .lf-warn { background: #FFF4EC; border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 14.5px; line-height: 1.4; }
 #line-fix .lf-err { color: var(--danger); font-size: 14px; margin: 6px 0 0; }
+/* Join a group: Join and Not now right under who invited you (owner, 2026-11-02). */
+.gj-actions { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 6px; }
