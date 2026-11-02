@@ -41,10 +41,10 @@ line and mark the old one "superseded by" the new date.
 | 2026-11-02 | OAuth sign-in and API webhooks are skipped before Nov 4. | none | Coordinator |
 | 2026-11-02 | A coordinator relay counts as the owner's word for every role. | #385 | Doc maintainer |
 | 2026-11-01 | Muse Spark Open is "hosted on Baseten" in every doc; the README gains a tech stack and deployment table. | #425 | Doc maintainer |
-| 2026-11-01 | Privacy wording: never write "Meta may train" in the app or docs. Spark and Wonder run in Meta's Standard mode (content not used to train Meta models), and nothing more is claimed. A community tier is only an idea. | #380, #428 | Doc maintainer, Security review |
+| 2026-11-01 | Privacy wording: never say in the app or docs what a model provider does with receipt photos or other content, beyond the Standard-mode line below. Spark and Wonder run in Meta's Standard mode (content not used to train Meta models), and nothing more is claimed. A community tier is only an idea. | #380, #428 | Doc maintainer, Security review |
 | 2026-11-01 | Spark runs on the Standard tier (not Contributor). The live setting is `ARYA_SPARK_TIER=standard` on `muse-spark-1.3`. | none | Coordinator |
 | 2026-11-01 | Deploy freeze from Nov 4, 6PM ET until the owner lifts it. Ops may deploy `main` after the Tester's smoke test and a green `/health`, and rolls back on failure. | none | Ops |
-| 2026-11-01 | Hide the Contributor-tier warning in app copy: Ops strings no longer say "may train". | #432 | Product and backend builder |
+| 2026-11-01 | Hide the Contributor-tier warning in app copy: Ops strings no longer carry the data-use warning. | #432 | Product and backend builder |
 | ~2026-10-31 | No freeze dates. Only the Nov 4 submission date stands (the deploy freeze above is the one exception). | none | Coordinator |
 | ~2026-10-31 | Demo is a fresh private sandbox for every visitor; no deploy during judging. | none | Demo and submission readiness |
 | ~2026-10-29 | List and Quest are both core. PWA only, React screens only, no per-user spend cap. | none | Coordinator |
