@@ -31,8 +31,8 @@ ask Arya questions, and, if you like, turn the trip into a game.
   writes itself.
 - **Why we built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
-  mental space. It is for shoppers, not for money: households and groups share
-  lists and help each other. See `docs/PRINCIPLES.md`.
+  mental space. Arya is free to use, made for shoppers to help each other, and
+  nothing in it is for sale: households and groups share lists. See `docs/PRINCIPLES.md`.
 - **What it uses.** Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
   Transcribe, Muse Image and Muse Spark Open, each with one job.
 
