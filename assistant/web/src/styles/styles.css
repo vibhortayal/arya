@@ -2384,3 +2384,12 @@ body.hunting #offlinebar { display: none !important; }
 /* Still good? answers (owner, 2026-11-01): three equal buttons in one row, even at 360 px. */
 .checkchips { flex-wrap: nowrap; }
 .checkchips .chip { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; white-space: nowrap; justify-content: center; text-align: center; }
+
+/* Ask: "Which list?" choices under Arya's question (owner 2026-11-02,
+ * mockup G6Q6JqZmx5u9zBck82PZYx). White with an orange outline so they
+ * read as buttons next to her grey bubble; the photo-flow chips inside a
+ * bubble match. A tap fills orange. */
+.replychips { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; max-width: 92%; margin: -2px 0 2px; }
+.replychips .chip, .bubble.arya .chip.tall { background: var(--panel); color: var(--accent-text); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.replychips .chip:active, .bubble.arya .chip.tall:active { background: var(--accent); color: #fff; }
+.replychips .chip:disabled { opacity: .5; }
