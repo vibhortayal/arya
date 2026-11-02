@@ -37,6 +37,9 @@ The items below are not covered by that grant, or need attribution.
   No weights are in this repository.
 
   **Built with Muse Spark Open.**
+  Arya uses Muse Spark Open (open weights, hosted on Baseten) as a second seat
+  on the staple judge and for dictionary labels, and its outputs appear in the
+  app. It sees item names only, never personal data.
 - **Baseten, Supabase (optional), Resend**: hosted services under their own
   terms.
 
