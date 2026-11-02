@@ -56,7 +56,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   receipt. [`docs/quest/GAME-DESIGN.md`](quest/GAME-DESIGN.md)
 - **Find it for me:** point the camera at a shelf; SAM 3.1 boxes candidates and
   Muse Spark checks each one.
-- **Map this store:** a guided camera scan where SAM 3.1 blurs every person
+- **Map my store:** a guided camera scan where SAM 3.1 blurs every person
   before anything is kept. A store counts as mapped only where it has a usable,
   fresh photo, so status is earned. [`docs/quest/MAP-MY-STORE.md`](quest/MAP-MY-STORE.md)
 - **Build a store** from three questions, practice in it, and save it.
