@@ -41,7 +41,7 @@ function deadline(ms: number): AbortSignal | undefined {
   return typeof T === "function" ? T.call(AbortSignal, ms) : undefined;
 }
 
-export const OFFLINE_WRITE = "You're offline. You can look at your lists as last saved, but changes need a connection. Try again when you're back online.";
+export const OFFLINE_WRITE = "You're offline. List changes save on this phone and sync later, but this one needs a connection. Try again when you're back online.";
 
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const write = !!opts?.method && opts.method !== "GET";
@@ -50,8 +50,8 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // boot.js's early Today is from before this change (re-audit N5).
     if (typeof window !== "undefined" && window.__bootData) window.__bootData.today = undefined;
   }
-  // Offline stays read-only (owner's group test, 2026-11-01): a change
-  // made with no signal says so plainly, at once, instead of waiting.
+  // Offline, a change that cannot wait on the phone (anything but a list
+  // change, lib/listQueue.ts) says so plainly, at once, instead of waiting.
   if (write && typeof navigator !== "undefined" && navigator.onLine === false) throw new TypeError(OFFLINE_WRITE);
   let r: Response;
   const headers = new Headers(opts?.headers || {});
