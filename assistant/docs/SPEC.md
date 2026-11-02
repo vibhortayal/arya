@@ -198,7 +198,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   each item is usually bought, counted from the ledger. Unticked items
   stay on the list. Removing an item removes it from the list.
 - FR-8.3 The game has no lives, no game over and no clock. Points
-  only go up: +10 a grab, +25 a full haul, +50 the receipt. Points
+  only go up: +10 per grab, +25 a full haul, +50 the receipt. Points
   bank when the receipt lands.
 - FR-8.4 Any stop can be grabbed in any order. A grab can be put back.
   Nothing finishes by itself.

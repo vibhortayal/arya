@@ -77,7 +77,7 @@ reason is plausible on its face:
   Kirkland Signature Organic Whole Milk, Mini Cukes — a genuine
   every-~2-weeks rhythm in Nov–Dec 2023 that does not reappear under the
   same SKUs later in the corpus (bought elsewhere, or re-SKU'd).
-- **The one clear error (1):** Reynlds Foil — 2 buys, 703 days apart,
+- **The one clear error (1):** Reynolds Foil (printed "Reynlds Foil" on the receipt) — 2 buys, 703 days apart,
   judged STAPLE ("long-life foil rebought"). It is also the only
   uncorroborated admit under the looser K=3, M=2 proxy.
 

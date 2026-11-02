@@ -48,7 +48,7 @@ against a purchase-cadence proxy on my receipts).
 ## Meta tooling (25%)
 
 ### 3. Add items by voice and photo
-In a list, use the add row: type an item, or use the mic (**Muse Voice Transcribe**) takes
+In a list, use the add row: type an item, or tap the mic (**Muse Voice Transcribe**) and say
 "two gallons of milk, eggs, and blueberries"; the camera (**Muse Spark**
 vision) reads a photo of a handwritten note. Adds apply at once, with
 Undo. On a laptop with no camera, type the items instead; the photo read is shown on a phone.

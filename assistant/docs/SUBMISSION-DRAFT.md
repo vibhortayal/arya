@@ -164,7 +164,7 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
   that visit only. Sign-up is invite only during judging.
 - Judge path (about 8 minutes): `docs/quest/JUDGE-PLAYBOOK.md`.
 - Repo: https://github.com/vibhortayal/arya
-- Video: (I add the link)
+- Video: (linked once recorded)
 
 ## Track and team
 
