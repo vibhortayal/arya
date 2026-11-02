@@ -38,8 +38,7 @@ just for this (dev.meta.ai, API keys, Create API key). Put it on the
 `MODEL_API_KEY=` line in `assistant/deploy/.env.example` is blank on purpose.
 The key is sent only to `api.meta.ai`. Meta keys have no spending cap of their
 own, so set a usage limit on your Meta billing page, and delete the key at Meta
-when you are done. Photo receipts are read with Spark first; `ARYA_PHOTO_READER`
-(`auto` by default, or `spark`, or `wonder`) changes that.
+when you are done. Photo receipts: see `ARYA_PHOTO_READER` below.
 
 ## Settings (`.env`)
 Only one is required.
