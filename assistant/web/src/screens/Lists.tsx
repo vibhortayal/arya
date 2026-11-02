@@ -829,7 +829,10 @@ export function Lists() {
   // is closed or has an incident (its store notice). Arya's suggestions stay on the list itself (#list-suggest).
   const startHunt = () => {
     setShopOpen(false);
-    nav.show("community", { listId: here ? here.id : "else" });
+    // Quest plays named lists only (owner, 2026-11-02), so Everything
+    // else is shopped by ticking it off here.
+    if (!here) { startList(); return; }
+    nav.show("community", { listId: here.id });
   };
   // Where? (8): a person helps map the aisle for everyone, as in the Quest help row.
   const snapAisle = async (name: string) => {
