@@ -49,7 +49,7 @@ The bar at the bottom starts as Today, Lists, Quest, Ask and More. More holds He
   on the list. Staples that are due show as suggestions, each with a reason.
 - **Patterns and the staple judge.** Deterministic code learns how often you
   buy each item and what you pay at each store. A Muse Spark judge decides
-  which items count as staples. Muse Spark Open (open weights, on Baseten)
+  which items count as staples. Muse Spark Open (open weights, hosted on Baseten)
   judges again from item names alone; disagreements are kept for review.
   The Curator proposes product merges and splits, and you apply them.
 - **Prices from your own receipts.** Cheaper store, price trend, food-waste
@@ -142,7 +142,7 @@ Tests, from the repo root:
   (91.84%), owner subset 32 of 32, combined 122 of 130 (93.85%). One silent
   price rotation got through. It is recorded, and the review queue is the
   mitigation.
-- **Open weights.** Muse Spark Open and hosted Spark labeled the same 32
+- **Open weights.** Muse Spark Open (hosted on Baseten) and hosted Spark labeled the same 32
   grocery names: category and section agreement were both 100%. On the demo
   account's judged staples the second seat agreed on 3 of 4. The one
   disagreement (Greek Yogurt: staple by name, occasional by purchase facts)
@@ -204,14 +204,6 @@ Quest's collect animations use characters painted with Muse Image.
   <img src="assistant/pwa/assets/characters/egg.webp" alt="Egg" width="96">
   <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
 </p>
-
-## Thanks
-
-- [Baseten](https://www.baseten.co) provided the credits that pay for the
-  open-weights API, which runs Muse Spark Open as the staple judge's second
-  seat and for dictionary labels.
-- The Meta AI Developer Hackathon provided Meta Model API credits for the
-  Muse models, SAM and Muse Image.
 
 ## License
 
