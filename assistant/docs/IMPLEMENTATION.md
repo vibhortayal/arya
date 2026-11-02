@@ -186,7 +186,7 @@ RoutePlan { route_id, store_id, index_version,
 Merged is not deployed. I deploy with `git pull` and
 `docker compose up -d --build`. STATUS.md lists the open steps.
 
-Flags that default to off: `ARYA_PUSH_REMINDERS` and `ARYA_SUPABASE_AUTH` (both are on in the live site since Nov 2). All app
+Flags that default to off: `ARYA_PUSH_REMINDERS` and `ARYA_SUPABASE_AUTH` (both are on in the live site). All app
 settings pass through `deploy/docker-compose.yml`. Quest work after Stage 6 follows the Discussion log and the wireframes.
 
 ## 5. Daily workflow
