@@ -13,6 +13,12 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
+## Build for Your World
+
+- **What Arya is.** A grocery list that learns from your receipts, then mostly writes itself.
+- **Why we built it.** The owner had this problem: carrying the list in their head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. [Principles and goals](docs/PRINCIPLES.md)
+- **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: what is running low, store alerts, what to use soon" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
@@ -40,6 +46,10 @@ make the window about 390 px wide. Open Lists API and docs for developers:
 https://arya.teamnightshift.org/developers.
 
 Submission deadline: Nov 4, 2026, 9:00 PM ET.
+
+## Principles and goals
+
+For shoppers, not for money, and built up with them. The model proposes and code checks; your data is yours; US first, other markets not tested. Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
 ## Why it is different
 

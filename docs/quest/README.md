@@ -43,7 +43,7 @@ camera scan maps it for every shopper after you.
 | [META-PRODUCTS.md](META-PRODUCTS.md) | Each Meta product and its job |
 | [JUDGE-PLAYBOOK.md](JUDGE-PLAYBOOK.md) | An 8-minute path through the live demo |
 | [PITCH.md](PITCH.md), [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | Pitch and spoken script |
-| [BUSINESS.md](BUSINESS.md) | Market and model |
+| [BUSINESS.md](BUSINESS.md) | Who it is for and who else is out there |
 | [BUILD-PLAN.md](BUILD-PLAN.md), [SUBMISSION.md](SUBMISSION.md) | Road to Nov 4, checklist |
 | [DISCUSSION.md](DISCUSSION.md) | The owner's steering, in order |
 
