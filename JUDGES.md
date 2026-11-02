@@ -32,6 +32,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
 - Tests: commands in the [README](README.md#run-it-yourself); current counts and known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
+- How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
 
 ## Demo (25%)
