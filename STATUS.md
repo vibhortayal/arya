@@ -80,7 +80,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 - Community prices, Deals and Arya Shoppers are opt-in and not live yet
   (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
-Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Lists, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
+Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Spending, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
 headline: "Your grocery run, smarter." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
@@ -213,7 +213,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
-  rest). Default Today, Lists, Quest, Ask, More. Pinnable: Today, Lists,
+  rest). Default Today, Spending, Quest, Ask, More (Lists lives under More,
+  #416). Pinnable: Today, Lists,
   Receipts, Stores, Spending, Ask, Quest, Help, Settings. Touch and hold
   the bar, or More, Customize bar. Saved as `layouts.bar.on`. The Tour
   follows the bar and ends with "Make the bar yours"; the guide has a
@@ -227,7 +228,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
   Preferences (currency and language, When I start shopping, Display,
   Reminders), Account (Export, Delete), About Arya, and Sign out last.
-  About Arya holds Arya's powers, Use Arya in another AI app, Add to Home
+  About Arya holds Arya's powers, Use Arya in Muse, Add to Home
   Screen, Keeping Arya running and the credits. Stores moved to Lists;
   Receipts and Spending to a card at the bottom of Today. Help and Send
   feedback left Settings (the Help tab has both). Guide, tour, Ask's
@@ -237,6 +238,12 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   steps; the Try-it sheets were removed 2026-10-30). It opens from
   Help tab > Guide, Powers > See how it works, and the last first-run
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
+- **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
+  news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
+  bottom menu, powers, settings. "tick" became "check off" (card and the Start shopping
+  link, Help topic, Ask knowledge). The Today, bottom menu and powers cards were
+  reworded in plain words; "bar" is gone from the guide text (the Customize bar button
+  and the tour still say it).
 
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
@@ -314,11 +321,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
   (Actions tab, Run workflow), by the owner's choice.
 - Photo opt-in and privacy policy: after the hackathon (owner).
-- Use your own Meta key is built and tested (#391, #393) and switched off in
-  the live app only because `ARYA_KEY_VAULT_SECRET` is not set (Settings row,
-  Help topic, Ask answer and sign-up door stay hidden). Not enough time to
-  polish the rollout; the owner is still deciding when to turn it on.
-  `docs/ROADMAP.md`.
+- Use your own Meta key (#391, #393) is unfinished and switched off on purpose.
+  The owner decided not to use it (2026-11-02). The code is in the repo but it is
+  not part of the demo: with `ARYA_KEY_VAULT_SECRET` unset the Settings row, Help
+  topic, Ask answer and sign-up door stay hidden. `docs/ROADMAP.md`.
 
 ## Owner data (not in this repo)
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged

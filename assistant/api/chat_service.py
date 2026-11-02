@@ -270,8 +270,10 @@ def _food_dates(d, nm):
     from api.routes.home import still_good_checks
     fl = state.flags()
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
-    dated = expiry.use_soon(fl, nm, last_bought, _d_today(),
-                            ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+    listed = state.on_list_ids(d)   # on a list = ran out
+    dated = [r for r in expiry.use_soon(fl, nm, last_bought, _d_today(),
+                                        ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+             if r["item_id"] not in listed]
     pack = [{"name": r["name"], "date": r["date"],
              "label": KIND_WORDS.get(r["kind"], KIND_WORDS["unknown"]),
              "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]

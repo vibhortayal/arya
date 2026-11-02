@@ -1,3 +1,4 @@
+import { friendlyError } from "./api";
 /* The shared voice recorder (pwa/app.js startCapture / encodeWav /
  * transcribeBlob): microphone capture to mono 16-bit PCM WAV at
  * 16 kHz, the Meta ASR batch endpoint's input contract, then
@@ -84,6 +85,9 @@ export function encodeWav(chunks: Float32Array[], srcRate: number): Blob {
 
 export async function transcribeBlob(wav: Blob): Promise<string> {
   const r = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
+  if (!r.ok) {
+    const d = ((await r.json().catch(() => ({}))) as { detail?: unknown }).detail;
+    throw new Error(d ? friendlyError(d) : `HTTP ${r.status}`);
+  }
   return ((await r.json()) as { text?: string }).text || "";
 }
