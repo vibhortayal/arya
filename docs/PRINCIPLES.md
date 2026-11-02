@@ -13,7 +13,7 @@ Keeping track of groceries is a small job that never ends. You remember the list
 ## What it does about it
 
 - It reads your receipts, checks every line against the printed total, and learns what you buy, how often and at which store.
-- Because of that, the list mostly writes itself. Running low shows what is due again, and Use soon shows what to eat before it goes off, each with a reason.
+- Because of that, Arya can suggest. Running low shows what is due again, and Use soon shows what to eat before it goes off, each with a reason.
 - You add items by typing, voice, a photo of a note, or any AI assistant through the connector, so nothing has to be remembered or retyped.
 - A shared list, for a household or a group, keeps everyone looking at the same thing.
 

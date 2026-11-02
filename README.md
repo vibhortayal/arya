@@ -1,7 +1,7 @@
 <h1 align="center">Arya</h1>
 <p align="center"><strong>She remembers the list.</strong></p>
 <p align="center">
-  A grocery list that learns from your receipts, then mostly writes itself.<br>
+  Arya learns how you shop from your receipts and helps shoppers help each other.<br>
   Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).
 </p>
 
@@ -15,7 +15,7 @@
 
 ## Build for Your World
 
-- **What Arya is.** A grocery list that learns from your receipts, then mostly writes itself.
+- **What Arya is.** Arya learns how you shop from your receipts and helps shoppers help each other.
 - **Why I built it.** I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. Arya is free to use and made for shoppers to help each other; households and groups share lists. It costs money to keep running (the AI reading), and you can see what you use in Settings, About Arya, Keeping Arya running. [Principles and goals](docs/PRINCIPLES.md)
 - **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
 
@@ -67,9 +67,9 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 ## What it is
 
 Arya reads your receipts, checks every line against the printed total, and
-learns what your household buys, how often, and at which store. The list then
-mostly writes itself: what is running low, what to use soon, and where you
-usually buy it, each with a reason.
+learns what your household buys, how often, and at which store. From that it
+suggests what is running low, what to use soon, and where you usually buy
+it, each with a reason.
 
 It is for people who shop for a household, and for groups who share a list. It
 is a phone-first app (a PWA), and it also has an optional game, **Quest**, that

@@ -1,5 +1,5 @@
 The navigation tab, the row of buttons at the bottom, holds four places the shopper picks, then More (always there; it holds Help, Settings and every place not on the navigation tab). Default navigation tab: Today, Spending, Quest, Ask, More. YOUR BAR, sent with each question, is what this shopper sees: say where a place is from YOUR BAR, and for a place not on it say "tap More, then <place>".
-Arya is a grocery list that learns what the household buys, so the list writes itself. Lists and Quest are both core.
+Arya learns how the household shops from its receipts and helps shoppers help each other. Lists and Quest are both core.
 Arya sends no order and makes no payment. Prices come only from the household's own receipts. Arya never uses store sites, flyers or web prices.
 A new account has few Today cards until the first receipt. The demo is a fictional household; changes are not saved.
 ## help | help tab guide tour tutorial lost confused learn started begin

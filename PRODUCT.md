@@ -10,7 +10,7 @@ VISION.md), 2026-10-27. Where this file and the spec disagree, the spec wins.
 Arya is a grocery list that learns: Waze for grocery shopping. The list is
 the product. Arya keeps a living model of one household's purchases: every
 receipt is read and checked, every return is netted, and buying patterns are
-learned. The shopping list writes itself from that model: what is running
+learned. The shopping list suggests from that model: what is running
 low, what to use soon, and where it is usually bought.
 
 Quest is the second layer, and it is optional. It is its own tab, for when

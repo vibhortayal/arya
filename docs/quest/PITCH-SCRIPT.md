@@ -14,7 +14,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 ## Solution
 
-"Arya is a grocery list that learns from your receipts. It reads every receipt, checks each line against the printed total, nets out returns, and learns what your household buys, how often, and at which store. Then the list mostly writes itself."
+"Arya learns how you shop from your receipts and helps shoppers help each other. It reads every receipt, checks each line against the printed total, nets out returns, and learns what your household buys, how often, and at which store. Then it suggests what is running low and what to use soon."
 
 ## Demo
 

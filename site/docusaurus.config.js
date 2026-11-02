@@ -2,7 +2,7 @@
 const baseUrl = process.env.DOCS_BASE_URL || '/';
 module.exports = {
   title: 'Arya docs',
-  tagline: 'A grocery list that learns what you buy',
+  tagline: 'Arya learns how you shop from your receipts and helps shoppers help each other',
   url: process.env.DOCS_URL || 'http://localhost:3000',
   baseUrl,
   onBrokenLinks: 'warn',

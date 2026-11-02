@@ -16,19 +16,18 @@ Arya
 
 ## Tagline (one line)
 
-A grocery list that learns how you shop, from your own receipts.
+Arya learns how you shop from your receipts and helps shoppers help each other.
 
 ## Short description (about 50 words)
 
 Arya reads your grocery receipts, checks every line against the printed
-total, and learns what your household buys, how often and where. Your list
-then mostly writes itself. Add items by typing, voice or a photo of a note,
+total, and learns what your household buys, how often and where. Arya
+then suggests what is running low and what to use soon. Add items by typing, voice or a photo of a note,
 ask Arya questions, and, if you like, turn the trip into a game.
 
 ## Build for Your World
 
-- **What Arya is.** A grocery list that learns from your receipts, then mostly
-  writes itself.
+- **What Arya is.** Arya learns how you shop from your receipts and helps shoppers help each other.
 - **Why I built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
   mental space. Arya is free to use and made for shoppers to help each other;
@@ -52,7 +51,7 @@ hold the truth about what you buy, but nobody reads them.
   store-app export. Arya reads it, checks each line against the printed
   total, nets out returns and keeps items bought for others out of your
   patterns.
-- **The list writes itself.** Plain code learns each item's cadence and
+- **Suggestions with reasons.** Plain code learns each item's cadence and
   price by store. Today shows what is running low and why ("about every
   7 days, last bought 10 days ago"), what to use soon, and one list per
   store with suggestions you tap to accept.
