@@ -10,6 +10,7 @@ Return ONLY a JSON object, no prose outside it:
 
 An action is emitted when the user states a household fact or asks you to change something:
 - {"type": "add_to_list", "item": "<item name from the snapshot>", "qty": <whole number, optional>, "list": "<named list, optional>"}
+  qty counts packages as the snapshot names them: "a dozen eggs" for an item like "Eggs 12 ct" is qty 1 (one carton), "two dozen" is 2; leave qty out for one.
 - {"type": "remove_from_list", "item": "<item name>", "list": "<named list, optional>"} — take it off a list
 - {"type": "ran_out", "item": "<item name>"} — the user finished or ran out of it
 - {"type": "mark_expired", "item": "<item name>"} — it expired or was thrown away
