@@ -15,6 +15,51 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
+## What Arya is
+
+Arya learns how you shop from your receipts and helps shoppers help each other.
+
+Every week your list app starts blank. It doesn't know what you buy, what you returned, or where you buy it. Your receipts know all of that, and nobody reads them. So the list lives half in your head: you forget the milk, you buy the yogurt you still have, and the trip takes longer than it should. Same thing, every week.
+
+### The loop
+
+1. **Snap a receipt.** Muse Spark reads it, and Arya checks every line against the printed total in plain code. If the check fails or Spark is unsure, Muse Wonder reads it again. Doubtful lines wait in a review queue for you to check.
+2. **Arya learns.** It learns what your household buys, how often, and at which store. Today shows what is running low and what to use soon, each with a reason ("about every 7 days, last bought 10 days ago"). Arya suggests; you decide what goes on the list.
+3. **Shop.** Add items by typing, by voice or with a photo of a note. Tell Ask Arya "we finished the Greek yogurt" and it is on the list. Start shopping turns the list into an optional hunt through the store, and Muse Spark and SAM 3.1 find an item on the shelf for you. SAM pixelates the people it detects first.
+4. **Together.** Groups share lists and receipts, and your own receipts go with you if you leave. Shoppers' store maps merge, so each trip helps the next.
+
+<p align="center">
+  <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
+  <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
+</p>
+
+*Today and Lists in the demo household (a simulated neighborhood, labelled as such).*
+
+### What is real, and what is not
+
+| Real | Simulated | Not connected |
+|---|---|---|
+| The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
+
+Built and tested with US receipts, dollars and stores first; other markets are not tested. Arya runs as one server, so a few dozen people at once is about its limit.
+
+### Which Meta model does what
+
+- **Muse Spark** reads receipts first, judges which staples to suggest, and answers Ask Arya.
+- **Muse Wonder** re-reads a receipt the checks flag.
+- **SAM 3.1** finds shelves and items in a store scan and pixelates people.
+- **Muse Voice Transcribe** takes dictation.
+- **Muse Spark Open** is a second opinion on staples, from item names alone.
+- **Muse Image** drew the Quest characters.
+
+### Where next
+
+[Try the demo](https://arya.teamnightshift.org) (no sign-up). Judging this? Start with [For judges](JUDGES.md). Everything else: [All the docs](#documentation-map).
+
+---
+
+The rest of this page is the full story.
+
 ## Build for Your World
 
 - **What Arya is.** Arya learns how you shop from your receipts and helps shoppers help each other.
@@ -60,11 +105,6 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 **Rome wasn't built in a day.** Arya is built around a community, and a community can't be built inside one hackathon. What I could finish in this window is the foundation: a household list, receipts you can trust, groups that share lists, and store maps that merge across shoppers. The rest depends on people using it. The more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. That is why this platform, Meta and the hackathon matter to me: they help people find Arya, and the more people use it, the more it can give back to them.
 
-<p align="center">
-  <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
-  <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
-</p>
-<p align="center"><em>Today and Lists in the demo household (a simulated neighborhood, labelled as such).</em></p>
 
 ## What it is
 
