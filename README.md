@@ -56,6 +56,8 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 - Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
 - Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
 
+**Rome wasn't built in a day.** Arya is built around a community, and a community can't be built inside one hackathon. What I could finish in this window is the foundation: a household list, receipts you can trust, groups that share lists, and store maps that merge across shoppers. The rest depends on people using it. The more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. That is why this platform, Meta and the hackathon matter to me: they help people find Arya, and the more people use it, the more it can give back to them.
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">

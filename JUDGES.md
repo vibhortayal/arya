@@ -27,6 +27,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - Add by typing, voice, a photo of a note, or your own AI assistant through the MCP connector. [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)
 - Quest, an optional game, turns the trip into a hunt with no clock and no way to lose. [`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)
 - Who it is for, the principles and the landscape: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md), [`docs/quest/BUSINESS.md`](docs/quest/BUSINESS.md)
+- **Built to grow with its community:** the foundation was built in the hackathon window; store maps already merge across shoppers, and the more people use Arya the better it gets (shared prices are planned, not on). See README, "Why I built it this way".
 
 ## Use of Meta AI tooling (25%)
 
