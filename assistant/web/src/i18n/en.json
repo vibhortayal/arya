@@ -1,6 +1,6 @@
 {
   "offline": {
-    "bar": "You're offline. You can still look through your lists and screens as they were last saved. Changes, Ask Arya, photos, voice, sharing and sync need a connection."
+    "bar": "You're offline. You can still add, tick, edit and remove list items: changes save on this phone and sync when you're back. Ask Arya, receipts, photos, voice and sharing need a connection."
   },
   "common": {
     "back": "Back",
@@ -820,6 +820,15 @@
     }
   },
   "lists": {
+    "queue": {
+      "saved": "Saved on this phone. Arya syncs your list changes when you're back online.",
+      "synced_one": "Synced {{count}} list change.",
+      "synced_other": "Synced {{count}} list changes.",
+      "skipped_one": "{{names}}: someone changed it after you were offline, so their change stays.",
+      "skipped_other": "{{count}} changes weren't applied ({{names}}): someone changed those items after you were offline, so their changes stay.",
+      "failed_one": "{{names}} couldn't be saved. Try it again.",
+      "failed_other": "{{count}} changes couldn't be saved ({{names}}). Try them again."
+    },
     "editTitle": "Edit Lists",
     "editHint": "Drag to reorder. Hiding a list keeps it and its items; it just leaves Lists and Today.",
     "hiddenLists": "Hidden lists",
@@ -3123,7 +3132,7 @@
       "lists": {
         "kicker": "Lists",
         "title": "A list for every store",
-        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list.",
+        "body": "Milk from Trader Jill's, Eggs from Costcozy and Blueberries from Whole Meadows? Arya makes it easy to keep a separate, tidy list for each store. Type, say it or click a picture of your paper list. No signal in the store? Keep adding and ticking; Arya syncs when you're back.",
         "s1": "Tap More, then Lists, then tap New list.",
         "s2": "Choose the name of the store from the dropdown.",
         "s3": "Type in items using the add box, use voice to add items or upload pictures of your paper list."
@@ -3662,6 +3671,7 @@
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
         "n1": "Tap Select to move or remove several items.",
         "n2": "The three dots on a list open Share, export or import.",
+        "n3": "No signal? Keep adding, ticking, editing and removing items. Changes save on this phone and sync when you're back online.",
         "cta": "Open Lists"
       },
       "receipts": {
