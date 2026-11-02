@@ -16,6 +16,9 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 2. The stage section of `assistant/docs/IMPLEMENTATION.md` for your task.
 3. `assistant/docs/MODEL-POLICY.md` — cost rules (binding).
 4. The GitHub issue for your stage — acceptance lives there.
+5. `docs/DECISIONS.md` — what the owner has already decided. Check it before you
+   build or mock up anything, and add a line there when the owner decides something
+   new. Do not re-open a decision on it without the owner's word.
 
 ## Layout (IMPLEMENTATION §2.1)
 `assistant/api/` one module per spec component; ALL Meta API calls go
@@ -202,6 +205,8 @@ Deploy by `git pull` on the VM only. Never rsync --delete over the VM
 
 ### Standing rules for every thread
 The Hard rules and Arya rules above apply to every thread.
+- Builders and designers check `docs/DECISIONS.md` before building or mocking up, and
+  add an entry when the owner decides something (date, decision, PR or issue, thread).
 - No freeze dates. Only the Nov 4 submission date stands.
 - Be an advisor: give pros, cons and a recommendation on every decision, and say
   so when you disagree.
