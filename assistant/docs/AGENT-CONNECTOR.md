@@ -14,16 +14,44 @@ source of truth.
 
 ## Connect
 
-1. In Arya, open Settings → About Arya → Use Arya in another AI app (the screen is headed "Connect an AI agent") and create your connector
-   token. It is shown once. (The screen is named for the showcased
-   client; the token works with any MCP client.)
-2. Add Arya as a remote MCP server in your assistant:
+Tested by the owner on Muse, 2026-11-02: ask the Muse agent to connect, and
+paste the code into its secure credentials step. No terminal and no settings
+file.
 
-   - URL: `https://arya.teamnightshift.org/api/mcp`
-   - Transport: streamable HTTP (stateless; one POST per message)
-   - Header: `Authorization: Bearer <your token>`
+1. In Arya, open Settings → About Arya → Use Arya in another AI app and tap
+   **Make my code**. Copy it; it is shown once and starts with `arya_`. A new
+   code replaces the old one. (The code works with any MCP client, not only
+   Muse.)
+2. In your AI app, ask it to connect to Arya at
+   `https://arya.teamnightshift.org/api/mcp`. When it asks for your code,
+   paste it into the app's secure credentials step, never into the chat.
+   Apps that take a server list instead use transport streamable HTTP
+   (stateless; one POST per message) and the header
+   `Authorization: Bearer <your code>`.
+3. Ask it "What is on my Arya list?" Then try "Add oat milk to my Arya list"
+   and "What am I running low on in Arya?" The list answer shows only what is
+   on your list, and oat milk also appears on the Lists screen in Arya.
 
-3. The token acts as your account: it is accepted on the MCP door and on
+If the app says it cannot connect, make a new code (the old one stops
+working) and paste it again. Tap **Turn off this code** in Arya to switch it
+off.
+
+Backup path, for Muse Code when the agent flow is not available: it reads
+remote MCP servers from `~/.config/muse/settings.json`. Keep the code in an
+environment variable (`read -rs ARYA_TOKEN; export ARYA_TOKEN`), keep
+`"schema_version": 1` in the file, and add:
+
+```
+"mcp_servers": { "arya": { "transport": "streamable_http",
+  "url": "https://arya.teamnightshift.org/api/mcp",
+  "headers": { "Authorization": "Bearer ${ARYA_TOKEN}" } } }
+```
+
+Run `muse` from the same terminal window and type `/mcp` to see the six
+tools. This path follows dev.meta.ai/docs/muse-code/extending and has not
+been run by us.
+
+What the code can and cannot reach: it acts as your account: it is accepted on the MCP door and on
    the app's routes under `/api`, but never on `/auth` (it cannot mint tokens
    or delete the account). A short list of routes is closed to tokens and
    answers 403: calls that spend model credits in bulk (chat, photo and

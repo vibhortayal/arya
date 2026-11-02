@@ -96,7 +96,7 @@ Settings holds: Group, Preferences (currency and language, When I start shopping
 The Guide (Help tab, Guide): sixteen cards that show how each part works. The last card replays the tour. Arya's powers lists what Arya does now and what you can turn on; tap i for how a power works.
 Keeping Arya running shows what the AI reading costs.
 Sign-in is by invitation for now; on the landing page tap Join the waitlist. Waitlist admins see a Waitlist row in Settings with three sections: Waiting, Approved and Rejected. Tick people in one section, then Approve, Reject, Back to waiting or Delete. A rejected person sees nothing different. Someone who was already approved and joins again is told they are approved and offered Sign in or Google. Try it now opens the demo; Finish demo leaves it. When Arya is updated, an open demo ends: Arya goes back to the start page and says "Arya was updated. Start the demo again." Tap Try it now. If a real account's sign-in ends, Arya goes back to the start page and asks you to sign in again; your data is kept.
-Use Arya in another AI app lets you add to your list from an AI app you use.
+Use Arya in another AI app (Settings, About Arya) lets you add to your list from an AI app you use, such as Muse. Tap Make my code and copy it (shown once; a new code replaces the old one). In your AI app, say "Connect to Arya at https://arya.teamnightshift.org/api/mcp", and paste the code where the app keeps secrets when it asks, never in the chat. Then ask "What is on my Arya list?". Tap Turn off this code any time.
 [if supabase_auth] Sign in with email is available.
 [if registration_open] New accounts can be created.
 ## own key | own key byok api meta llm limit cap paused budget daily pay credit dev.meta.ai
