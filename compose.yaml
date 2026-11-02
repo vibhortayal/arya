@@ -4,10 +4,15 @@
 #   docker compose up --build
 #   open http://localhost:8080
 #
-# On the first visit a "Create your account" sheet opens: that makes the
-# one real account on this copy (a username of letters and digits, and
-# a password), which can read and keep your own receipts. Or close it
-# and tap "Try it now" for the demo household (it keeps nothing, so it
+# Sign-in here is a plain username and password: no waitlist, no Google,
+# no email codes (those need the live site's Supabase and Resend keys,
+# which a local copy never has). On the first visit a "Create your
+# account" sheet opens; that account can read and keep your own
+# receipts. Make more accounts with "Start your own list" (for example a
+# second one to try a shared group). Or close the sheet and tap "Try it
+# now" for the demo household: it shops in Demo Town, a simulated
+# neighbourhood of 800 households and 8 stores with out-of-stock reports,
+# store news, busy hours and community prices (it keeps nothing, so it
 # cannot add receipts).
 #
 # This file is for a laptop only. The live site uses
@@ -53,8 +58,18 @@ services:
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
       ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-2}
       ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
-      ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-0}
-      ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-0}
+      # Demo Town on, as on the live demo. It must be on before the first
+      # start: the demo household is written with the town's store names.
+      ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-1}
+      # Open sign-up replaces the waitlist with "Start your own list".
+      ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-1}
+      # Shared groups (live has them on): two local accounts can share
+      # a list and see each other's changes live.
+      ARYA_GROUPS: ${ARYA_GROUPS:-1}
+      # Never on locally: Supabase sign-in (Google, email codes) and the
+      # own-key sign-up door. Set here so a stray shell variable can't
+      # turn them on.
+      ARYA_SUPABASE_AUTH: "0"
       # A laptop disk is often fuller than the VM's; don't fail /health
       # over it.
       ARYA_HEALTH_MIN_FREE_MB: ${ARYA_HEALTH_MIN_FREE_MB:-50}
