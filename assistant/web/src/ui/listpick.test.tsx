@@ -23,7 +23,7 @@ const host = () => render(<ToastProvider><NavProvider initial="home"><ListPickHo
 const LISTS = [{ id: "a", name: "Trader Jill's" }, { id: "b", name: "Costcozy" }];
 
 beforeEach(() => { calls = []; vi.stubGlobal("scrollTo", () => {}); });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 test("pick_list: the usual list comes first and ticked; tapping a list sends the add again there", async () => {
   answer = (_p, b) => b.list_id ? res({ ok: true }) : res({ detail: { code: "pick_list", message: "Which list?", lists: LISTS, suggested: "b", names: ["Whole Milk"] } }, 409);
@@ -98,4 +98,28 @@ test("delete a list with items: move to another list by default, or delete them 
   fireEvent.click($("#listdelete-drop")!);
   fireEvent.click($("#listdelete-go")!);
   expect(await p).toEqual({ remove_items: true });
+});
+
+test("offline right after sign-in: the lists come from the saved Today read", async () => {
+  vi.stubGlobal("navigator", { ...navigator, onLine: false });
+  const offline = await import("../lib/offline");
+  vi.spyOn(offline, "savedRead").mockImplementation(((path: string) =>
+    path === "/api/today" ? { at: 1, data: { home: { lists: LISTS, list: { items: [] } } } } : null) as any);
+  host();
+  const p = addOnList(async l => l, { names: ["Basil"] });
+  await waitFor(() => expect($("#listpick [data-pick]")).not.toBeNull());
+  expect($("#listpick h3")!.textContent).not.toBe("Make a list first");
+  fireEvent.click($('#listpick [data-pick="a"]')!);
+  expect((await p)?.result).toBe("a");
+});
+
+test("the make button reads plainly before a name is typed", async () => {
+  answer = () => res({ detail: { code: "pick_list", lists: LISTS, suggested: null, names: ["Eggs"] } }, 409);
+  serve(); host();
+  void addItem("eggs", "Eggs");
+  await waitFor(() => expect($("#listpick-new")).not.toBeNull());
+  fireEvent.click($("#listpick-new")!);
+  expect($("#listpick-make")!.textContent).toBe("Make the list and add it");
+  fireEvent.change($("#listpick-input")!, { target: { value: "Aldo's" } });
+  expect($("#listpick-make")!.textContent).toBe("Make the Aldo's list and add it");
 });
