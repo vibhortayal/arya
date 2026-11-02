@@ -19,6 +19,23 @@
 - **Why we built it.** I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. Arya is free to use and made for shoppers to help each other; households and groups share lists. It costs money to keep running (the AI reading), and you can see what you use in Settings, About Arya, Keeping Arya running. [Principles and goals](docs/PRINCIPLES.md)
 - **What it uses.** Meta's models: Muse Spark reads receipts and answers questions, Muse Wonder re-reads the hard ones, SAM 3.1 finds shelves in a store scan, Muse Voice Transcribe takes dictation, Muse Image drew the Quest characters and Muse Spark Open helps judge staples. [Model map](JUDGES.md#meta-model-map)
 
+## What stands out
+
+1. **It works for real.** Open the live app in one tap ("Try it now"), add it to your home screen, and it keeps working offline.
+2. **A closed loop.** A receipt photo becomes your list and your Running low nudges, every line checked against the printed total.
+3. **Built on your own data.** Prices come from your own receipts, never from store sites, flyers or the web. The one outside shopping lookup is Kroger's aisle location.
+4. **Real community.** Groups share lists and receipts, and your own receipts go with you if you leave.
+5. **Honest and checkable.** The box below says what is real and what is simulated, and Settings, About Arya, Keeping Arya running shows what the AI costs.
+6. **Depth you can check.** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and Quest, an optional store game.
+
+Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
+
+All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
+
+| What is real | What is simulated | What is not connected |
+|---|---|---|
+| The live app. Receipts read by Meta models and checked in code. The Lists API and MCP connector. Kroger's aisle lookup at real Kroger-family stores (not visible in the demo). | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
@@ -51,33 +68,12 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
 Free to use, for shoppers, and built up with them. The model proposes and code checks; your data is yours; US first, other markets not tested. Full version: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
-## Why it is different
+## More that is different
 
-- **The model proposes, code checks.** A model reads the receipt photo; plain
-  code then checks every line against the printed total before anything posts.
-  Money, timing and list logic are deterministic and cost nothing per call.
-- **Every Meta model has a job.** Muse Spark, Muse Wonder, SAM 3.1, Muse Voice
-  Transcribe, Muse Image and Muse Spark Open (open weights, hosted on Baseten)
-  each do one thing, through one module. See the [model map](JUDGES.md#meta-model-map).
-- **Prices come from your own receipts.** Arya uses no prices from store sites,
-  flyers, APIs or the web; its one outside lookup, Kroger's aisle location, keeps
-  nothing else from the reply.
 - **Bring your own assistant.** Add items by typing, voice, a photo of a
   handwritten note, or any AI agent through the MCP connector.
 - **Quest has no clock and no way to lose.** Optional, and it never gets in the
   way of the list.
-
-## Highlights
-
-- **Receipts you can trust:** a model reads, plain code checks every line against the printed total.
-- **A list that learns:** running low and use soon, each with a reason, from your own receipts.
-- **Prices from your own receipts only:** nothing fetched from the web.
-- **Ask Arya** answers over your data, acts on what you tell it, and speaks your language.
-- **Quest:** an optional store game with no clock, camera finds, and people blurred before anything is kept.
-- **Open:** a Lists API, a developer portal, and a connector for your own AI agent.
-- **Transparent:** "Keeping Arya running" shows what your AI use costs.
-
-All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
 
 ## What judges should read first
 

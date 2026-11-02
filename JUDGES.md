@@ -10,6 +10,15 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 
+## What stands out
+
+- **Works for real:** a live app in one tap, installable, works offline.
+- **A closed loop:** a receipt photo becomes your list and Running low nudges, every line checked against the printed total.
+- **Your own data:** prices come only from your own receipts; the one outside shopping lookup is Kroger's aisle location.
+- **Real community:** groups share lists and receipts; your receipts go with you if you leave.
+- **Checkable:** a box on what is real and what is simulated ([`README.md`](README.md#what-stands-out)), and Settings, About Arya, Keeping Arya running shows what the AI costs.
+- **Depth:** about 1,800 Python and 500 web tests (as of Nov 2), a dated [decision log](docs/DECISIONS.md), and the optional Quest game.
+
 ## Impact (30%)
 
 - A list that writes itself: running low, use soon, and where you usually buy it, each with a reason. [`README.md`](README.md#what-is-in-it)
@@ -33,7 +42,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
-- Tests: commands in the [README](README.md#run-it-yourself); current counts and known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
+- Tests: commands in the [README](README.md#run-it-yourself); known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
 - How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
 
