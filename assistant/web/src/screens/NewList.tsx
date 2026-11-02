@@ -4,6 +4,7 @@ import { useToast } from "../ui/Toast";
 import { Sheet } from "../ui/Sheet";
 import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
+import { ListeningCard } from "../ui/Listening";
 import { clearOnSignOut, useSession } from "../app/session";
 import { asset, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
@@ -468,6 +469,7 @@ export function NewList() {
   textRef.current = text;
   const [status, setStatus] = useState("");
   const [listening, setListening] = useState(false);
+  const [reading, setReading] = useState(false);
   const capture = useRef<Capture | null>(null);
   const [creating, setCreating] = useState(false);
   const [leave, setLeave] = useState<{ card: Card; dir: "r" | "l"; go: boolean } | null>(null);
@@ -816,9 +818,11 @@ export function NewList() {
       const wav = capture.current.stop();
       capture.current = null;
       setListening(false);
-      setStatus(t("common.voice.transcribing"));
+      setReading(true);
+      setStatus("");
       try {
         const said = await transcribeBlob(wav);
+        setReading(false);
         setStatus(said ? "" : t("common.voice.empty"));
         if (said) {
           const cur = textRef.current;
@@ -827,6 +831,7 @@ export function NewList() {
           nlAdd(merged);
         }
       } catch (e) {
+        setReading(false);
         setStatus("");
         toast(t("common.voice.failed", { error: errMsg(e) }));
       }
@@ -839,11 +844,13 @@ export function NewList() {
     try {
       capture.current = await startCapture();
       setListening(true);
-      setStatus(t("common.voice.listening"));
+      setStatus("");
     } catch {
       setStatus(t("common.voice.refused"));
     }
   };
+  /* Cancel on the Listening card: the recording is dropped. */
+  const cancelMic = () => { capture.current?.cancel(); capture.current = null; setListening(false); setStatus(""); };
 
   /* ---- plan rows: tick and remove from the Arya list ---- */
   const toggle = (key: string) => {
@@ -1166,11 +1173,12 @@ export function NewList() {
           onChange={e => setText(e.target.value)}
           onKeyDown={ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); nlAdd(); } }} />
         <p className="packaddrow">
-          <button className={"btn grow" + (listening ? " listening" : "")} id="nl-mic" type="button" onClick={mic}>{listening ? t("common.voice.stopTranscribe") : t("common.voice.record")}</button>
+          {!listening && !reading && <button className="btn grow" id="nl-mic" type="button" onClick={mic}>{t("common.voice.record")}</button>}
           <label className="btn grow" htmlFor="nl-photo" {...pickerProps("nl-photo")} style={{ textAlign: "center" }}>{t("newList.photo")}</label>
           <button className="btn grow" id="nl-add" type="button" onClick={() => nlAdd()}>{t("common.add")}</button>
           <input type="file" id="nl-photo" accept="image/*" hidden onChange={photo} />
         </p>
+        {(listening || reading) && <ListeningCard id="nl-listen" capture={capture.current} reading={reading} onStop={mic} onCancel={cancelMic} />}
         <p className="muted nomargin" id="nl-status">{status}</p>
         <div id="nl-helper"></div>
       </div>
