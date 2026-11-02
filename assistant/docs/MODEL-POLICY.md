@@ -25,7 +25,7 @@ Escalation is by evidence (a scored eval), never by default.
 4. Wonder: zero jobs at baseline (history; the live reader is `auto`, see below). A job earns Wonder only by failing its
    golden set on Spark at two effort levels, with the eval logged.
 5. Voice: transcribe on demand only; Ask has no voice out (replies are text).
-6. Dinner render (planned, not built; Muse Image paints the celebration characters and share looks): muse-image-1.0 at $0.01 — the one place a flat
+6. Muse Image: painted the 23 characters once and paints share looks (live); a dinner render is planned, not built. muse-image-1.0 at $0.01 — the one place a flat
    per-unit price beats token metering.
 
 ## Measured anchors (default reasoning effort, spike runs)
@@ -48,22 +48,10 @@ reader** (Ops "Photo reader" = "Spark first, Wonder as backup"): Spark
 reads first, and Wonder re-reads only when Spark fails or the checks
 below flag the read (arithmetic, low confidence on too many lines). Wonder
 stays allowed as that second reader through Nov 9, which is meant to cover
-judging after submission. The text below is the original amendment (Wonder first, Spark
-fallback), kept for the eval record.
+judging after submission. The original 2026-10-27 amendment (Wonder first, Spark
+fallback) is summarized below.
 
-Original (2026-10-27): through Nov 4, judge-facing PHOTO DECODE runs
-muse-wonder-1.0, with a timeout and a Spark fallback. Evidence (Gate 0 public set, 9 photos,
-98 lines, hand-adjudicated): Wonder 98.98% identity+price vs Spark
-93.88%; price errors 0 vs 4; silent (unflagged) errors 0 vs 4 — Wonder
-read the pub-05 price rotation correctly, the error class arithmetic
-cannot catch. Latency is the cost: 34s mean / 60s p95 vs Spark's
-8.6s / 11.9s — accepted because decode lands in the review queue, not
-an interactive path. Cost $0.118/receipt vs $0.013 — immaterial against
-the hackathon credit. The staple judge, the shelf-life estimate for
-"Still good?" (api/shelflife.py, item names only, cached per item) and
-Ask Arya STAY on Spark Standard (judge spot check 20/20 vs 20/20, no Wonder advantage; chat
-cannot carry Wonder's latency). This amendment expires Nov 9; the
-production policy above is unchanged.
+Original (2026-10-27): through Nov 4, judge-facing photo decode ran Wonder first with a Spark fallback, because Wonder scored 97 of 98 lines (Wonder after hand adjudication; Spark on the automatic scorer, which gives Wonder 86 of 98; the 90 vs 92 difference is explained once in [For judges](../../JUDGES.md#which-model-does-which-job)) against Spark's 92 of 98. The numbers, latency, cost and the staple-judge check are in [WONDER-EVAL.md](../../docs/evals/WONDER-EVAL.md).
 
 **Auto reader (built 2026-11-01; my pick for judging on
 2026-11-01; NOT yet measured on photos).** `ARYA_PHOTO_READER=auto` (or the Ops "Photo reader" switch)

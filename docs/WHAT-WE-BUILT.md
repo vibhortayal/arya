@@ -42,7 +42,7 @@ What git cannot show is listed under "What git cannot confirm".
 | Oct 31 to Nov 2 | Hardening, the navigation tab, lists, the Kroger aisle lookup, docs, "Run it yourself" | |
 
 The Wonder eval is the one the model policy cites: on the 9 Gate 0 photos (98
-hand-labeled lines) Wonder scored 97/98 and Spark 92/98, with price errors 0 vs
+hand-labeled lines) Wonder scored 97/98 (Wonder after hand adjudication; Spark on the automatic scorer, which gives Wonder 86 of 98) and Spark 92/98, with price errors 0 vs
 4, for $4.47 of model spend. Why Spark shows 92 here and 90 at Gate 0 is
 explained once, under the model map in [For judges](../JUDGES.md#which-model-does-which-job).
 
