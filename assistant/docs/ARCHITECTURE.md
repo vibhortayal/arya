@@ -100,7 +100,7 @@ enforced there. `open_client.py` is the only other model client.
 | Avatar and look images | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
 | Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
-| Second judge seat, dictionary enrichment | Spark Open on Baseten | platform data only; the client refuses personal data |
+| Second judge seat, dictionary enrichment | Spark Open, hosted on Baseten | platform data only; the client refuses personal data |
 
 ### 0.5 Storage
 
