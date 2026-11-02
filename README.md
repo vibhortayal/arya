@@ -36,6 +36,26 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 |---|---|---|
 | The live app. Receipts read by Meta models and checked in code. The Lists API and MCP connector. Kroger's aisle lookup at real Kroger-family stores (not visible in the demo). | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
 
+## Why we built it this way
+
+**The idea.** I kept losing track of what was running low and where the money went. A list that learns from my own receipts fixes both, and the receipts already exist. Quest came from wanting the store trip to feel less like a chore; it stays optional.
+
+**A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, works offline and can send reminders, and a judge can open it in one tap.
+
+**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is plain JSON documents by default, which are easy to back up, read and export, so your receipts go with you if you leave. Postgres (Supabase) is there when one machine is not enough.
+
+**The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
+
+**The coding model.** I first tried Muse Code to explore how to build this. I lost about two days settling on the idea, so to save time I built the app with Claude, which I know well.
+
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and blurs people before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and never sees personal data. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+
+**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
+- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, accounts and the first Quest stages.
+- Oct 28: the judge front door, five ways to add items, and Supabase, Resend and Baseten set up for Arya.
+- Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
+- Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
+
 <p align="center">
   <img src="docs/images/today.png" alt="Today: next trip, what is running low, your lists" width="230">
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
