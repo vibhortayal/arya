@@ -93,6 +93,9 @@ If a guideline conflicts with these, these win:
 - **Prices** come only from the user's own receipts and lists — no scraping,
   no retailer APIs, no web search (SPEC FR-11.1). Community price comparison
   is opt-in and not live (SPEC FR-11.7).
+- **README badges:** the README opens with three badges. The Doc maintainer
+  updates the test count from the STATUS.md Python count and the receipt
+  lines from `docs/evals/WONDER-EVAL.md` whenever either changes.
 - **Help upkeep:** when a change adds or removes a feature, changes
   navigation, or moves things around in the app's UI, update the Help and
   Ask Arya's knowledge in the same PR. Help is the Help tab

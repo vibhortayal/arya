@@ -1,5 +1,11 @@
 <h1 align="center">Arya</h1>
 <p align="center"><strong>She remembers the list.</strong></p>
+<!-- Badge numbers: the Doc maintainer updates "tests" from the STATUS.md Python test count and "receipt lines" from docs/evals/WONDER-EVAL.md whenever either changes. -->
+<p align="center">
+  <img src="https://img.shields.io/badge/python%20tests-1%2C842%20passing-1a7f37" alt="Python tests: 1,842 passing">
+  <img src="https://img.shields.io/badge/receipt%20lines%20(Wonder%2C%20hand--adjudicated)-97%2F98%20right-2a78d6" alt="Receipt lines right: 97 of 98 (Wonder, hand-adjudicated, 9 public receipts)">
+  <img src="https://img.shields.io/badge/faces%20shipped-0-cf222e" alt="Faces shipped: 0">
+</p>
 
 <p align="center">
   <a href="https://vibhortayal.github.io/arya/"><strong>Read the docs site</strong></a>
