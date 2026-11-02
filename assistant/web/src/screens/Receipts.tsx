@@ -99,6 +99,10 @@ export function Receipts() {
   const [sending, setSending] = useState<{ sent: number; total: number } | null>(null);
   const [jobTick, setJobTick] = useState(0);
   const [failures, setFailures] = useState<{ name: string; reason: string }[]>([]);
+  /* Reading on this screen (the demo, or when a batch cannot be opened):
+   * which file, and the outcome with the files to try again. */
+  const [reading, setReading] = useState<{ i: number; n: number; name: string; filed: number } | null>(null);
+  const [outcome, setOutcome] = useState<{ read: number; total: number; retry: File[] } | null>(null);
 
   const loadScan = useCallback(async () => {
     const q = await get("/api/review");
@@ -158,7 +162,7 @@ export function Receipts() {
       if (!quiet) toast(t("common.receiptFile.empty"));
       return { ok: false, reason: t("common.receiptFile.empty") } as FileResult;
     }
-    setStatus(label || t("common.receiptFile.reading"));
+    if (label) setStatus(label);
     if (withPreview) setPreview(null);
     try {
       const out = await decode(file);
@@ -188,10 +192,15 @@ export function Receipts() {
     const files = [...(ev.target.files || [])];
     ev.target.value = "";
     if (!files.length) return;
-    if (files.length === 1) { await fileOne(files[0], undefined, true, false); return; }
-    // Several files: send them to the server first, which reads them while
-    // the app is closed. If a batch cannot be opened (the demo, no
-    // connection), read them here one by one as before.
+    await readFiles(files);
+  };
+
+  const readFiles = async (files: File[]) => {
+    setOutcome(null);
+    setPreview(null);
+    // Signed in, one file or many: send them to the server first, which
+    // reads them while the app is closed (owner, 2026-11-01). If a batch
+    // cannot be opened (the demo, no connection), read them here.
     if (!demo) {
       setFailures([]);
       let opened = false;
@@ -207,18 +216,28 @@ export function Receipts() {
         if (opened) { toast(errMsg(e)); setJobTick(x => x + 1); return; }
       }
     }
+    if (files.length === 1) {
+      setFailures([]);
+      setReading({ i: 1, n: 1, name: files[0].name, filed: 0 });
+      try { await fileOne(files[0], undefined, true, false); } finally { setReading(null); }
+      return;
+    }
     let filed = 0, dup = 0, skipped = 0;
     const bad: { name: string; reason: string }[] = [];
+    const retry: File[] = [];
     setFailures([]);
     for (let i = 0; i < files.length; i++) {
-      const res = await fileOne(files[i], t("receipts.readingN", { i: i + 1, n: files.length, name: files[i].name }), false, true);
-      if (res.duplicate) dup++; else if (res.ok) filed++; else bad.push({ name: files[i].name, reason: res.reason || "" });
+      setReading({ i: i + 1, n: files.length, name: files[i].name, filed });
+      const res = await fileOne(files[i], undefined, false, true);
+      if (res.duplicate) dup++; else if (res.ok) filed++; else { bad.push({ name: files[i].name, reason: res.reason || "" }); retry.push(files[i]); }
       // A paused reader, a spent budget or a missing key fails every file
       // the same way: stop, say why, and do not burn through the rest.
-      if (res.stop) { skipped = files.length - i - 1; break; }
+      if (res.stop) { skipped = files.length - i - 1; retry.push(...files.slice(i + 1)); break; }
     }
+    setReading(null);
     setStatus("");
     setFailures(bad);
+    setOutcome({ read: filed + dup, total: files.length, retry });
     const why = bad.length ? t("receipts.bulkWhy", { reason: bad[0].reason }) : "";
     toast(t("receipts.bulkDone", { count: filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "",
       failed: bad.length ? t("receipts.bulkFailed", { n: bad.length }) + why : "",
@@ -243,16 +262,27 @@ export function Receipts() {
         onChange={() => { loadScan().catch(() => {}); loadArchive().catch(() => {}); }}
         onCheck={() => nav.show("tocheck")} />
       <div className="group pad">
-        <label className="btn primary wide receiptbtn" htmlFor="rc-photo" {...pickerProps("rc-photo")}>{t("receipts.addReceipts")}</label>
+        <label className={"btn primary wide receiptbtn" + (reading ? " dis" : "")} htmlFor="rc-photo" aria-disabled={!!reading || undefined} {...pickerProps("rc-photo")}>{reading ? t("receiptRead.button") : t("receipts.addReceipts")}</label>
         <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>
-        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden onChange={onFiles} />
-        <p className="muted nomargin" id="rc-photo-status">{status}</p>
+        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden disabled={!!reading} onChange={onFiles} />
+        {reading ? (
+          <div id="rc-reading" role="status" aria-live="polite">
+            <p className="nomargin rcread-head"><strong>{reading.n === 1 ? t("receiptRead.readingOne") : t("receiptRead.readingN", { i: reading.i, n: reading.n })}</strong></p>
+            <div className={"pbar" + (reading.n === 1 ? " ind" : "")} role="progressbar" aria-valuemin={0} aria-valuemax={reading.n}
+              aria-valuenow={reading.n === 1 ? undefined : reading.i - 1}><i style={reading.n === 1 ? undefined : { width: `${Math.max(4, ((reading.i - 1) / reading.n) * 100)}%` }} /></div>
+            <p className="muted small nomargin">{reading.n === 1 ? t("receiptRead.readingOneSub") : t("receiptRead.readingNSub", { name: reading.name, filed: reading.filed })} {t("receiptRead.stay")}</p>
+            {demo && <p className="rcread-demo" id="rc-demo-note">{t("receiptRead.demoNote")}</p>}
+          </div>
+        ) : <p className="muted nomargin" id="rc-photo-status">{status}</p>}
         {failures.length > 0 && (
           <div id="rc-photo-failures" role="alert">
-            <p className="muted nomargin"><strong>{t("receipts.failedHead", { count: failures.length })}</strong></p>
+            {outcome && <p className="nomargin"><strong>{t("receiptRead.doneHead", { read: outcome.read, total: outcome.total })}</strong></p>}
+            <p className="muted nomargin"><strong>{outcome ? t("receiptRead.failedLine", { count: failures.length }) : t("receipts.failedHead", { count: failures.length })}</strong></p>
             {failures.slice(0, 5).map(f => <p key={f.name} className="muted small nomargin">{f.name}: {f.reason}</p>)}
             {failures.length > 5 && <p className="muted small nomargin">{t("receipts.failedMore", { n: failures.length - 5 })}</p>}
-            <p className="nomargin"><button type="button" className="chip" onClick={() => setFailures([])}>{t("common.dismiss")}</button></p>
+            <p className="nomargin rcread-acts">
+              {outcome && outcome.retry.length > 0 && <button type="button" className="chip" id="rc-retry" onClick={() => { const f = outcome.retry; setFailures([]); readFiles(f); }}>{t("receiptRead.tryAgain")}</button>}
+              <button type="button" className="chip" onClick={() => { setFailures([]); setOutcome(null); }}>{t("common.dismiss")}</button></p>
           </div>
         )}
         <div id="rc-photo-preview">

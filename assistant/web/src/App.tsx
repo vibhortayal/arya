@@ -6,6 +6,7 @@ import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
 import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
+import { useListSync } from "./app/listSync";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { useTranslation } from "./i18n";
 import { get } from "./lib/api";
@@ -150,6 +151,7 @@ function Shell() {
   });
   useListFromHash();
   useGroupLive();
+  useListSync();
   useScanQueue();
   useEffect(() => {
     // After first paint and a quiet moment, fetch the other tabs' code.
