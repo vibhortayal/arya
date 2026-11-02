@@ -80,7 +80,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 - Community prices, Deals and Arya Shoppers are opt-in and not live yet
   (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
-Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Lists, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
+Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Spending, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
 headline: "Your grocery run, smarter." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
@@ -213,7 +213,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
-  rest). Default Today, Lists, Quest, Ask, More. Pinnable: Today, Lists,
+  rest). Default Today, Spending, Quest, Ask, More (Lists lives under More,
+  #416). Pinnable: Today, Lists,
   Receipts, Stores, Spending, Ask, Quest, Help, Settings. Touch and hold
   the bar, or More, Customize bar. Saved as `layouts.bar.on`. The Tour
   follows the bar and ends with "Make the bar yours"; the guide has a

@@ -54,6 +54,18 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 - **Quest has no clock and no way to lose.** Optional, and it never gets in the
   way of the list.
 
+## Highlights
+
+- **Receipts you can trust:** a model reads, plain code checks every line against the printed total.
+- **A list that learns:** running low and use soon, each with a reason, from your own receipts.
+- **Prices from your own receipts only:** nothing fetched from the web.
+- **Ask Arya** answers over your data, acts on what you tell it, and speaks your language.
+- **Quest:** an optional store game with no clock, camera finds, and people blurred before anything is kept.
+- **Open:** a Lists API, a developer portal, and a connector for your own AI agent.
+- **Transparent:** "Keeping Arya running" shows what your AI use costs.
+
+All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
+
 ## What judges should read first
 
 1. [`JUDGES.md`](JUDGES.md): the rubric, the Meta model map and proof links on one page.
@@ -66,6 +78,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 
 | If you want to know... | Read |
 |---|---|
+| Everything we built, with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
 | What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
@@ -78,6 +91,7 @@ Submission deadline: Nov 4, 2026, 9:00 PM ET.
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
 | How the project is run by agents | [`AGENTS.md`](AGENTS.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What is done and what is not | [`STATUS.md`](STATUS.md) |
 
@@ -173,21 +187,20 @@ Details and the VM runbook are in
 
 ## Run it yourself
 
-You need Python 3.12 and Node 22. Without a `MODEL_API_KEY`, the app and the
-demo household run, but anything that calls a Meta model fails with a
-plain error.
+With Docker and your own Meta key (optional, it turns the AI on):
 
 ```
-python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt
-cd assistant/web && npm ci && npm run build && cd ..
-../.venv/bin/python -m harness.make_demo_household data   # builds the demo household
-MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
+cp .env.local.example .env       # put your key on the MODEL_API_KEY line
+docker compose up --build
 ```
 
-Open http://localhost:8000 and tap "Try it now". For front-end work,
-`npm run dev` in `assistant/web` starts Vite. The full Docker setup (API and
-Caddy) is in `assistant/deploy/`; settings are listed in
-[`assistant/deploy/.env.example`](assistant/deploy/.env.example).
+Your key stays on your computer: `.env` is git-ignored, so it is never
+committed. Do not put a key in a file that is tracked. Open
+http://localhost:8080. On the first visit, create your account (a username
+and password) to read your own receipts, or close the sheet and tap "Try it now"
+for the demo household. Without a key the app and the demo open, but anything that calls a
+Meta model says it cannot reach Meta. Settings, resetting, the no-Docker route
+and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
 
 Tests, from the repo root:
 
@@ -289,7 +302,40 @@ Quest's collect animations use characters painted with Muse Image.
   <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
 </p>
 
+## Built with
+
+Open-source code, models and services Arya builds on. Each keeps its own
+license; full notices are in [`NOTICE.md`](NOTICE.md).
+
+| Part | What | License |
+|---|---|---|
+| App | React, React DOM, three.js, `@react-three/fiber`, i18next, react-i18next, motion, Vite, vite-plugin-pwa, Vitest | MIT |
+| App | canvas-confetti | ISC |
+| App | TypeScript | Apache-2.0 |
+| App | Scalar API Reference (the `/developers/reference` page) | MIT |
+| API | FastAPI | MIT |
+| API | uvicorn, httpx, pypdf | BSD-3-Clause |
+| API | NumPy | BSD-3-Clause (with other permissive terms) |
+| API | Pillow | MIT-CMU |
+| API | OpenCV (headless), cryptography, pypdfium2 | Apache-2.0 (cryptography: Apache-2.0 or BSD-3-Clause; pypdfium2: BSD-3-Clause or Apache-2.0) |
+| API | pywebpush | MPL-2.0 |
+| API | psycopg | LGPL-3.0 |
+| Serving | Caddy, and the Docker base images (Node, Python) | Apache-2.0, and each image's own terms |
+| Models | Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image, through the Meta Model API | Meta's API terms (hosted; no weights are in this repo) |
+| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Muse Model License (Oct 15, 2026) with its Usage Policy: [`LICENSE.md`](https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B/blob/main/LICENSE.md). Not copied into this repo |
+| Services | Baseten, Supabase (optional), Resend (email) | Their service terms |
+
+**Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
+on Baseten) as a second seat on the staple judge and for dictionary labels, and
+its outputs appear in the app. It sees item names only, never personal data.
+
+The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store
+and Google Play badges in `assistant/pwa/assets/badges/` are those companies'
+trademarks, used only to point at an install.
+
 ## License
 
-All rights reserved; see `LICENSE`. Third-party code and asset notes are in
-`NOTICE.md`.
+Arya's own code and documents are all rights reserved; see `LICENSE`. The
+repository is public so judges can read, run and test it; no license to reuse
+it is granted yet, and the choice is still open. Third-party code and asset
+notes are in `NOTICE.md`.
