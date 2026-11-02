@@ -102,7 +102,15 @@ which I left in. The demo reads the receipt but keeps nothing.
 
 ## Impact (30%)
 
-The four rubric questions are answered on [the judges page, Impact](../../JUDGES.md#impact-30).
+- **Who:** households that shop every week. Families get suggestions
+  with reasons, and a quest that kids can play.
+- **Problem:** receipts hold the truth about what a household buys, and
+  nobody reads them.
+- **What Arya does:** it reads each receipt, checks every line, nets out
+  returns, and builds the list from purchase patterns plus a Spark judge.
+- **Store maps:** every quest checks shelves (grabs, sightings, shortage
+  reports), and one shopper's guided scan maps a store for the next.
+- **Limit:** no store ships mapped yet. Maps depend on shoppers scanning.
 
 ## Technical depth (20%)
 

@@ -25,13 +25,9 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 
 ## Impact (30%)
 
-**What is the real-world potential?** Everyone who shops for a household does the same weekly work: remembering the list, not rebuying what is in the cupboard, and wondering where the money went. A receipt holds all of that and nobody reads it. Arya reads it, checks every line against the printed total, and turns it into a list with reasons ([the loop](README.md#what-arya-is)). On my own 114 receipts (1,226 lines) every one passed the arithmetic check, and the staple judge's precision was 0.79 against a purchase-cadence proxy ([measured results](README.md#measured-results)).
-
-**Who benefits, and how much does it matter?** People who keep a household or a group fed, and share a list ([who it is for](docs/PRINCIPLES.md)). It matters as a weekly chore and a household budget, not as a rare event. I have not measured time or money saved, and I tested on one household, so I do not claim a number ([Known limits](README.md#known-limits)).
-
-**Could it become something people use?** It already runs: live at arya.teamnightshift.org, installable, free to use, with a no-account demo, shared lists for groups, a Lists API and an MCP connector so an agent can edit your lists ([agent connector](assistant/docs/AGENT-CONNECTOR.md)). Store maps already merge across shoppers, so each trip helps the next; shared prices are planned and not switched on. It runs as one server today, and the plan to scale it is in the [roadmap](docs/ROADMAP.md). Rome wasn't built in a day: I built the foundation, and the more people use Arya the better it gets for them.
-
-**Does it fit a problem statement?** Yes: Build for Your World. It is a shopper's problem I had personally, built for shoppers to help each other ([why](docs/PRINCIPLES.md)).
+- The loop, with what is real and what is simulated: [`README.md`](README.md#what-arya-is). Your own AI assistant can add items through the MCP connector ([`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md)); Quest is optional ([`docs/quest/GAME-DESIGN.md`](docs/quest/GAME-DESIGN.md)).
+- Who it is for, the principles and the landscape: [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md), [`docs/quest/BUSINESS.md`](docs/quest/BUSINESS.md)
+- **Built to grow with its community:** the foundation was built in the hackathon window; store maps already merge across shoppers, and the more people use Arya the better it gets (shared prices are planned, not on). See README, "Why I built it this way".
 
 ## Use of Meta AI tooling (25%)
 
