@@ -209,16 +209,16 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
 - **Landing: Add Arya to your Home Screen (2026-11-01):** the "apps coming soon" line and store badges are replaced by a card with Install or Show me how; the steps sheet switches between iPhone and Android; Help topic "Put Arya on your Home Screen". `assistant/loops/2026-11-01-add-to-home.md`.
-- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Make the bar yours" points at Customize bar; Today's line follows the bar; a full bar greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
+- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Customize navigation tab" (the owner's 2026-11-02 name, was "Make the bar yours") points at its button; Today's line follows the navigation tab; a full one greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
   rest). Default Today, Spending, Quest, Ask, More (Lists lives under More,
   #416). Pinnable: Today, Lists,
   Receipts, Stores, Spending, Ask, Quest, Help, Settings. Touch and hold
-  the bar, or More, Customize bar. Saved as `layouts.bar.on`. The Tour
-  follows the bar and ends with "Make the bar yours"; the guide has a
-  Your bar card; Help has Change the bar; Ask gets YOUR BAR with every
+  the navigation tab, or More, Customize navigation tab. Saved as `layouts.bar.on`. The Tour
+  follows the navigation tab and ends with "Customize navigation tab"; the guide has a
+  Customize navigation tab card; Help has the same topic; Ask gets YOUR BAR with every
   question. Receipts and Spending now light Lists, not Today. Today's
   icon is a calendar. `assistant/loops/2026-11-01-custom-bar.md`.
 - **Quest offers only your own lists (2026-11-02):** no "Everything" chip
@@ -240,10 +240,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
 - **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
   news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
-  bottom menu, powers, settings. "tick" became "check off" (card and the Start shopping
-  link, Help topic, Ask knowledge). The Today, bottom menu and powers cards were
-  reworded in plain words; "bar" is gone from the guide text (the Customize bar button
-  and the tour still say it).
+  navigation tab, powers, settings. "tick" became "check off" (card and the Start shopping
+  link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
+  reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, the owner's words for the bottom bar). On 2026-11-02 the owner renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
 
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
