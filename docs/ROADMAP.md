@@ -193,8 +193,6 @@ and, where it touches personal data, a privacy review first.
 - A real licence choice, once I decide.
 - Store permission programme for mapping, and a takedown route for stores.
 
-**No money plan.** I decided (2026-11-02) that there is no plan to make money for now; the goal is that people use Arya and help each other.
-
 ## Use your own Meta key: unfinished, switched off, not used
 I decided not to use this (2026-11-02). The code exists in the repo
 (PRs #391 and #393): a Settings row, a Help topic, an Ask answer, and an "I have

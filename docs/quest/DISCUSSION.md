@@ -1,6 +1,6 @@
 # Discussion log — how Arya Quest got its shape
 
-> Historical record of the early design conversation. Anything in it about charging, revenue or a business model is not current: since 2026-11-02 there is no plan to make money, and the goal is that people use Arya and help each other. See `docs/DECISIONS.md`.
+> Historical record of the early design conversation. Anything in it about charging, revenue or a business model is not current: since 2026-11-02 the goal is that people use Arya and help each other. See `docs/DECISIONS.md`.
 
 
 The owner's steering, in order, 2026-10-27. Each entry ends with what it changed.
