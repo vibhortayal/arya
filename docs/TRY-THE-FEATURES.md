@@ -12,7 +12,7 @@ Arya is a phone app. For the closest view, use your browser's phone mode (for ex
    - Fill in a username and a password, then tap **Create account**. Use it for section 9, your own receipts.
    - **Tap Close, then Try it now** to open the demo household (sections 1 to 8).
 
-Sign-in here is a plain username and password. There is no waitlist, no Google and no email code. To make more accounts, use **Start my own list** at the bottom of the landing page.
+Sign-in on your own copy is a plain username and password (see [Run it yourself](RUN-IT-YOURSELF.md)). To make more accounts, use **Start my own list** at the bottom of the landing page.
 
 ## 1. The demo household and its neighbourhood
 

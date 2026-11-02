@@ -17,8 +17,6 @@
 
 ## What Arya is
 
-Arya learns how you shop from your receipts and helps shoppers help each other.
-
 Every week your list app starts blank. It doesn't know what you buy, what you returned, or where you buy it. Your receipts know all of that, and nobody reads them. So the list lives half in your head: you forget the milk, you buy the yogurt you still have, and the trip takes longer than it should. Same thing, every week.
 
 ### The loop
@@ -68,11 +66,11 @@ The rest of this page is the full story.
 
 **The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
 
-**The coding model.** I first tried Muse Code to explore how to build this. I lost about two days settling on the idea, so to save time I built the app with Claude, which I know well.
+**The coding model.** I built the app with Claude, which I know well. Why, and the two days with Muse Code, are under [How this was built](#how-this-was-built).
 
-**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates the people it detects before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and sees item names only (no prices, dates, stores or account details). Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed; the timeline is under [How this was built](#how-this-was-built).
+**Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed; the dated timeline is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md).
 
 **Rome wasn't built in a day.** A community can't be built inside one hackathon. What I finished is the foundation: the more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. The more people use it, the more it gives back to them.
 
@@ -145,12 +143,12 @@ Everything below runs in the demo household, no account needed. "Live" means the
 | Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
 | Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
 | Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
-| Map my store | Quest tab, Map my store | A guided scan; people detected and blurred before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
+| Map my store | Quest tab, Map my store | A guided scan; people detected and pixelated before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 
 Every live call goes through `assistant/api/meta_client.py` and is booked
 in a cost ledger with model, tokens and cost; the Ops screen shows
-the day's spend. Spark and Wonder both run in Meta's Standard mode. No store
+the day's spend. No store
 ships pre-mapped and the demo never reaches disk.
 
 No camera or microphone on a laptop: use the sample buttons, or run the full
@@ -205,7 +203,7 @@ The open-weights client refuses personal data. Cost rules are in
 |---|---|
 | App | React 19 and TypeScript, built by Vite into a phone-first PWA with a service worker; three.js for the Quest world |
 | API | Python 3.12, FastAPI on uvicorn; one process serves the API and the built app |
-| Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees item names only: no prices, dates, stores or account details |
+| Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten |
 | Storage | JSON documents on a Docker volume, mirrored to Supabase Postgres on the live site (`ARYA_STORE=dual`; `json` and `pg` also work); optional Supabase Auth for email code and Google sign-in |
 | Email | Resend (waitlist, account codes, reports) |
 | Serving | Caddy for TLS and security headers, in front of the API |
@@ -259,8 +257,8 @@ Tests, from the repo root:
   disagreement (Greek Yogurt: staple by name, occasional by purchase facts)
   is why names advise and purchase facts decide.
   `assistant/loops/2026-10-28-open-weights.md`.
-- **Staple judge.** Precision 0.79 against a purchase-cadence proxy on the
-  my 114 receipts.
+- **Staple judge.** Precision 0.79 against a purchase-cadence proxy on my
+  114 receipts.
 - **My corpus.** 114 receipts, 1,226 lines, 114 of 114 passing the
   arithmetic check.
 
@@ -288,7 +286,7 @@ The scored reports and the Gate 0 labels and results are in
   so a slow Supabase can slow a save. My plan after judging is to make
   Postgres the master copy, move session state out of memory, run several
   processes, and move Arya to a cloud provider as the community grows. It is
-  a plan, not a promise. Rome wasn't built in a day.
+  a plan, not a promise.
 
 ## After the hackathon
 
@@ -316,19 +314,12 @@ older. The engine (decode, dictionary, ledger, patterns, the first phone app)
 landed in four commits between 15:31 and 15:38. Muse Wonder wrote that engine
 spike with me; git lists the commits under the author name "Spark". The dated table
 is in [Built in the hackathon window](docs/WHAT-WE-BUILT.md). The session logs
-in `assistant/loops/` record the rest. My 114 receipts (back to 2023) are my
-purchase history, imported as data. They are not in this repository.
+in `assistant/loops/` record the rest.
 
-- Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
-- Oct 28: accounts, the judge front door, and Supabase, Resend and Baseten set up for Arya.
-- Oct 30: I registered teamnightshift.org at Cloudflare and moved the live site to arya.teamnightshift.org, with invite-only email sign-in.
-- Oct 31 to Nov 2: hardening, the navigation tab, lists, the Kroger aisle lookup, docs and "Run it yourself".
 
 **Build tools.** I first used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, to explore how I might build this. I lost about two days settling on the idea, so to save time I built the app with Claude. Muse Code is not part of the shipped app.
 
 ## Characters
-
-Quest's collect animations use characters painted with Muse Image.
 
 <p align="center">
   <img src="assistant/pwa/assets/characters/raspberry.webp" alt="Raspberry" width="96">

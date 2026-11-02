@@ -16,5 +16,4 @@ each one.
 
 The scripts and reports were written in a separate workspace, so paths such as
 `~/workspace/meta-hackathon-2026/` in them point there, not into this repo.
-The reports are dated records; the app has changed since (for example the
-receipt reader is now Spark first, with Wonder as backup).
+The reports are dated records; the app has changed since.

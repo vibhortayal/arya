@@ -11,14 +11,7 @@ models we did **not** use. The model list comes from Meta's models page
 
 ## Used today
 
-| Model | Id | Where in Arya |
-|---|---|---|
-| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Receipt photos first, staple judge, Curator, Ask Arya, list and date photos, shelf labels |
-| Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails |
-| SAM 3.1 | `sam-3.1` | Shelves, signs, Find it for me boxes, blurring people |
-| Muse Voice Transcribe | `muse-voice-transcribe-1.0` | List mic and Ask Arya mic |
-| Muse Image 1.0 | `muse-image-1.0` | The 23 celebration characters, generated once |
-| Muse Spark Open (open weights) | hosted on Baseten | Second seat of the staple judge, dictionary labels; sees item names only (no prices, dates, stores or account details) |
+The models in use, with ids and jobs: [For judges, Meta model map](../JUDGES.md#meta-model-map).
 
 ## Available but not used
 
@@ -28,7 +21,7 @@ models we did **not** use. The model list comes from Meta's models page
 | **Muse Glimmer** (open weights) | 30B dense, text and image in, text out, Apache 2.0, distilled from Spark; runs on your own hardware via vLLM, SGLang, llama.cpp, Ollama | **Future idea:** a self-hosted "household stays at home" reader, or a cheap pre-filter before Spark for name cleanup and labels. Text and image only, so no audio or PDF. Accuracy on receipts is **not measured** by us | No per-token price from Meta; we would pay for a GPU or a host. Whether Baseten serves it is unconfirmed. Needs its own eval against the 98-line receipt set before any job moves |
 | **Muse Spark 1.2 / 1.1** | Older Spark versions. Meta recommends 1.2 for audio input | Not needed: we send audio to Voice Transcribe | None |
 | **Muse Wonder Full** | Higher Wonder variant | Muse Code plans only, not on the Model API, so unavailable to the app | n/a |
-| **Muse Code** | Meta's coding agent (CLI) | Not a runtime part of Arya. I tried it early while exploring, then built the app with Claude to save time. Not used in the shipped app | n/a |
+| **Muse Code** | Meta's coding agent (CLI) | Not used in the shipped app; see the README, How this was built | n/a |
 
 Smaller API features we have not used: web-search grounding ($2.50 per 1,000
 searches; could ground "is this a good price" but would send queries out,
@@ -57,9 +50,5 @@ provider or a platform that can legally supply in-store video and photos
 - give community shoppers better "where is it" help from day one.
 
 Any partnership would need written permission, store consent, the existing
-people-blurring rule, and a takedown route. See
+people-pixelating rule, and a takedown route. See
 [`docs/ROADMAP.md`](ROADMAP.md) ("Store data and community").
-
-## Consistency notes
-Spark and Wonder run in Standard mode (my decision, 2026-11-01). Nothing
-here changes that. The JUDGES.md line "Available but not used: Muse Glimmer ... and Muse Code" stays true.
