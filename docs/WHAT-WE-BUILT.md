@@ -95,8 +95,9 @@ Everything here is built and in the code. Ideas that are not built are on the
   spend ceilings and a cost ledger with one row per model call.
 - Tests and measured results: [`STATUS.md`](../STATUS.md), [`docs/evals/`](evals/).
 
-## Built and tested, currently disabled
-- **Use your own Meta key.** A Settings row, a Help topic, an Ask answer and a
-  sign-up door, where an account with its own key never falls back to Arya's
-  keys. It is off in the live app only because the key vault secret is not set.
+## In the code but switched off
+- **Use your own Meta key (unfinished, not used).** A Settings row, a Help topic,
+  an Ask answer and a sign-up door, where an account with its own key never falls
+  back to Arya's keys. The owner decided not to use it, so it is switched off
+  and not part of the demo.
   [After the hackathon](ROADMAP.md)
