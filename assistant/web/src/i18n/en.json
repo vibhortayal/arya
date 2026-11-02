@@ -3325,8 +3325,8 @@
         "s3": "After a trip, share a photo of your haul."
       },
       "today": {
-        "kicker": "Today",
-        "title": "Choose what Today shows",
+        "kicker": "Customize: Today screen",
+        "title": "Customize Arya",
         "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
         "s1": "On Today, tap Edit, or touch and hold any card.",
         "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
@@ -3334,8 +3334,8 @@
         "s4": "Lists, Ask and Quest have an Edit button too."
       },
       "bar": {
-        "kicker": "Bottom menu",
-        "title": "Choose your bottom menu",
+        "kicker": "Customize: bottom menu",
+        "title": "Customize Arya",
         "body": "The buttons along the bottom of the screen take you around Arya. Put the four places you use most there. Everything else is in More, the last button, which is always there.",
         "s1": "Tap More, then Customize bar. (Touching and holding the bottom buttons works too.)",
         "s2": "Tap the green plus to add a place, such as Receipts or Stores. There is room for four.",
