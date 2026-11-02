@@ -1,6 +1,6 @@
 # Design decisions, and what comes next
 
-I built Arya as one well-defended single-server app on purpose: the window was for the product, not a fleet. This page is the technical split for judges: what is built and holds up for a few dozen people at once, what I know is weak, and the plan for growing past that. The dated choices are in the [decision log](DECISIONS.md), what was made and when is on the [build page](WHAT-WE-BUILT.md), and the unbuilt ideas are in the [roadmap](ROADMAP.md). What runs today is in [Architecture](../assistant/docs/ARCHITECTURE.md).
+I built Arya as one well-defended single-server app on purpose: the window was for the product, not a fleet. This page splits it into what is built and holds up for a few dozen people at once, what I know is weak, and the plan for growing past that. The dated choices are in the [decision log](DECISIONS.md), what was made and when is on the [build page](WHAT-WE-BUILT.md), and the unbuilt ideas are in the [roadmap](ROADMAP.md). What runs today is in [Architecture](../assistant/docs/ARCHITECTURE.md).
 
 ## Built
 
@@ -20,11 +20,11 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 | What | Why it matters | Fixed in |
 |---|---|---|
 | One process, one interpreter lock, no cap on model reads in the request thread pool | A burst of photo reads can slow pages that never call a model | Phases 4 and 6 |
-| The spend guard reads the whole ledger file on each paid call; sign-in hashes on the event loop | Both grow with use and block other requests | Phases 1 and 2 |
+| The spend guard reads the whole ledger file on each paid call; password sign-in hashes on the event loop | Both block other requests while they run, and the ledger grows with use | Phase 2 for the ledger; the hashing is not in the plan yet |
 | Spend checks are "check, then spend", with no reservation | Parallel reads can overshoot a limit | Phase 6 |
 | The ledger is an estimate from a price table, never reconciled with the provider's console | What Arya thinks it spent and what was billed can differ | Not in the plan yet; a manual weekly check |
 | Postgres mode stores documents whole, with no version column or pool | Two processes could lose an update silently | Phase 2, before any second process |
-| Sessions, demo visits, rate buckets and the receipt queue live in memory or files | A deploy drops every demo visit | Phase 3 |
+| Sessions, demo visits, rate buckets and the receipt queue live in memory or files | A deploy drops every demo visit | Phases 3 and 5 |
 | One worker reads every account's receipt batch in order; no cap on batches parked on disk | One big import makes the next person wait | Phase 5 |
 | Store-map photos are base64 in one JSON file rewritten per photo | The first wall the simulator found | Phase 7 |
 | Saves mirror the whole document to Postgres inside the request | A slow database slows a list tick | Phase 1 |
@@ -36,4 +36,4 @@ Two audit items are closed: `/health` now reports the running commit, and the ph
 
 ## The plan
 
-[Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure: baseline metrics and a live load test; a short-lived cache and the mirror off the request path; Postgres as the master copy with versioned updates; shared state for sessions and demo visits; several processes; a job queue; a model gateway with concurrency caps and spend reservation; object storage for photos; then a cloud provider. Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise. Rome wasn't built in a day.
+[Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure: baseline metrics and a live load test; a short-lived cache and the mirror off the request path; Postgres as the master copy with versioned updates; shared state for sessions and demo visits; several processes; a job queue; a model gateway with concurrency caps and spend reservation; object storage for photos; then a cloud provider. Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise.
