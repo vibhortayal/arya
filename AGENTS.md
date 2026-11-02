@@ -165,6 +165,8 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 | Demo and submission | Demo video, demo household, submission package | Feature code, deploys | Opus | Coordinator |
 | Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Coordinator |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Coordinator |
+| Researcher (market research thread) | Outside facts for the docs, each linked or marked unchecked | Shipped docs, code, deploys | Sonnet 5.5 | The Doc writer |
+| Editor (Fable 5.1, reads the repo cold) | Reads each new or rewritten docs PR against the Editor checks below; report only | Merging, editing, code, deploys | Fable 5.1 | The coordinator and the Doc writer |
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
@@ -196,6 +198,36 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 
 If a handoff gets no answer, tell the coordinator, start the next item and do not
 wait idle.
+
+### The docs workflow (owner, 2026-11-02)
+Any new or rewritten document the judges or users will read (not code, not
+STATUS.md bookkeeping) goes through three roles:
+1. **Researcher** (the market research thread, "Research competitors and
+   partners"): finds and checks outside facts, links every outside claim, and
+   marks anything unchecked or vendor-sourced as such. Writes nothing into the
+   shipped docs.
+2. **Doc writer** (the Doc maintainer thread): writes or edits the document from
+   the Researcher's notes and the repo, in one small docs-only PR, and tells the
+   coordinator the PR number.
+3. **Editor** (a Fable 5.1 thread that reads the repo cold, the way a judge
+   would): reads the PR before Ops merges it and reports PASS or what to fix to
+   the coordinator and the Doc writer. The Editor does not merge or edit.
+
+What the Editor checks:
+- The privacy wording rule (rule 1): no text that says Meta may use or train on
+  what users send; Spark runs on the Standard tier.
+- Current names: "navigation tab" (not "bar" or "bottom menu"), "Customize
+  navigation tab", Customize your "Today" screen, "Use Arya in Muse".
+- The own-key feature (BYOK) is not advertised anywhere users or judges read it;
+  it is unfinished and off (see `docs/DECISIONS.md`).
+- No claim about a feature that is not live (community prices, Arya shoppers
+  presence, replay mode, anything marked "Planned" or "Not built").
+- Every outside claim is linked, and unchecked claims say so.
+- Every link and file path resolves, and screenshots match the live app.
+- Numbers match the code (model ids, prices, test counts) or are dated.
+
+A docs-only PR skips the sandbox test but not the Editor. Docs that only record a
+merged change (a STATUS.md line, a DECISIONS.md row) do not need the Editor.
 
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
