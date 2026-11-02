@@ -13,7 +13,7 @@ const GH = 'https://github.com/vibhortayal/arya/blob/main/';
 const IMG = /\.(png|jpe?g|webp|svg|gif)$/i;
 
 // [source path in repo, route inside the docs site, sidebar label]
-const QUEST_INTERNAL = new Set(['BUILD-PLAN.md', 'DISCUSSION.md', 'SUBMISSION.md']);
+const QUEST_INTERNAL = new Set(['BUILD-PLAN.md', 'DISCUSSION.md', 'SUBMISSION.md', 'PITCH.md']);
 const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
   .filter((f) => f.endsWith('.md') && !QUEST_INTERNAL.has(f))
   .map((f) => [`docs/quest/${f}`, `quest/${f === 'README.md' ? 'overview' : f.replace(/\.md$/, '').toLowerCase()}`,
@@ -42,7 +42,6 @@ const SECTIONS = {
   'Product': [
     ['PRODUCT.md', 'product', 'Product'],
     ['docs/ROADMAP.md', 'roadmap', 'Roadmap'],
-    ['docs/DECISIONS.md', 'decisions', 'Decisions'],
     ...questPages().filter(([s]) => !/ARCHITECTURE|META-PRODUCTS/.test(s)),
   ],
   'How it is built': [
@@ -73,9 +72,11 @@ SECTIONS[ENG] = [
   ['docs/quest/BUILD-PLAN.md', 'quest/build-plan', 'Quest build plan'],
   ['docs/quest/DISCUSSION.md', 'quest/discussion', 'Quest design discussion'],
   ['docs/quest/SUBMISSION.md', 'quest/submission', 'Submission checklist'],
+  ['docs/DECISIONS.md', 'internal/decisions', 'Decisions'],
+  ['docs/quest/PITCH.md', 'internal/pitch', 'Early pitch'],
 ];
 const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
-  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md']);
+  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md', 'docs/DECISIONS.md', 'docs/quest/PITCH.md']);
 
 // Whole sections that are operator-only and stay off the public site.
 const DROP_SECTIONS = {
