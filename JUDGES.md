@@ -21,7 +21,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
-- Muse Spark Open (open weights, on Baseten) is a second seat on the staple judge; it never sees personal data. `assistant/api/open_client.py`
+- Muse Spark Open (open weights, on Baseten) is a second seat on the staple judge; it never sees personal data. Baseten provided the credits for this open-weights API. `assistant/api/open_client.py`
 - SAM 3.1 boxes shelf items and blurs every person before any frame is kept. `assistant/api/shelfscan.py`
 - Not used, said plainly: Muse Glimmer and Muse Code.
 

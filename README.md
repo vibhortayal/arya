@@ -205,6 +205,14 @@ Quest's collect animations use characters painted with Muse Image.
   <img src="assistant/pwa/assets/characters/bread.webp" alt="Bread" width="96">
 </p>
 
+## Thanks
+
+- [Baseten](https://www.baseten.co) provided the credits that pay for the
+  open-weights API, which runs Muse Spark Open as the staple judge's second
+  seat and for dictionary labels.
+- The Meta AI Developer Hackathon provided Meta Model API credits for the
+  Muse models, SAM and Muse Image.
+
 ## License
 
 All rights reserved; see `LICENSE`. Third-party code and asset notes are in
