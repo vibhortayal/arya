@@ -18,7 +18,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 ## Demo
 
-"[Receipt] I snap this week's receipt. **Muse Spark** reads it, and Arya checks that every line adds up to the total. If the check fails, or Spark is unsure, **Muse Wonder** reads it again. On our 98-line test set, Wonder made zero price errors. Nothing posts silently: the doubtful lines wait for me to check.
+"[Receipt] I snap this week's receipt. **Muse Spark** reads it, and Arya checks that every line adds up to the total. If the check fails, or Spark is unsure, **Muse Wonder** reads it again. The checks catch most errors, not all: a swapped pair of prices keeps the sum, so the review queue stays and doubtful lines wait for me to check. On our 98-line test set Wonder alone made no price errors; the Spark-first path has not been scored yet.
 
 [Today] Here's Today. Arya says the milk and the sourdough are running low, and why: about every seven days, last bought ten days ago. A **Muse Spark** judge decides what may be suggested, and **Muse Spark Open** double-checks it from the item names alone.
 
@@ -26,7 +26,7 @@ video follows the same order (beats in `SUBMISSION.md`).
 
 [Ask] I tell Ask Arya, 'We finished the Greek yogurt.' It goes on the list. 'What did we spend on coffee?' The answer comes from my receipts, not from a guess.
 
-[Quest] And if you want the trip itself to be fun, tap Start shopping. Quest turns the list into a hunt through your store. If you can't find something, **SAM 3.1** and **Spark** find it on the shelf for you. Shoppers can map their store with a guided scan, and SAM blurs every person first. At the checkout, the receipt photo finishes the trip and teaches Arya for next week."
+[Quest] And if you want the trip itself to be fun, tap Start shopping. Quest turns the list into a hunt through your store. If you can't find something, **SAM 3.1** and **Spark** find it on the shelf for you. Shoppers can map their store with a guided scan, and SAM pixelates the people it detects first. At the checkout, the receipt photo finishes the trip and teaches Arya for next week."
 
 ## Meta fit
 
@@ -44,4 +44,4 @@ We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at
 
 - Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a Spark read takes about 10 seconds, and a Wonder re-read up to 90 seconds; the app says so while it works.
 - No store ships pre-mapped, so the quest plays a labelled typical layout. Show Find it for me on a real shelf or a shelf photo.
-- Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 against purchase cadence on those 114 receipts; receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%; the Spark-first reader with Wonder as backup is not yet measured.
+- Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 (41 of 52) against a purchase-cadence proxy on those 114 receipts, and it moves with the proxy; receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%; the Spark-first reader with Wonder as backup is not yet measured.

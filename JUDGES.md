@@ -12,7 +12,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 
 ## What stands out
 
-- **Works for real:** a live app in one tap, installable, works offline.
+- **Works for real:** a live app in one tap, installable, and signed-in accounts can read their last lists and keep adding items with no signal (changes sync later; receipts and Ask need a connection).
 - **A closed loop:** a receipt photo becomes your list and Running low nudges, every line checked against the printed total.
 - **Your own data:** prices come only from your own receipts; the one outside shopping lookup is Kroger's aisle location.
 - **Real community:** groups share lists and receipts; your receipts go with you if you leave.
@@ -33,8 +33,8 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
-- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it never sees personal data. `assistant/api/open_client.py`
-- SAM 3.1 boxes shelf items and blurs every person before any frame is kept. `assistant/api/shelfscan.py`
+- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details), sent to Baseten, the host I use. `assistant/api/open_client.py`
+- SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. `assistant/api/shelfscan.py`
 - Not used in the shipped app: Muse Glimmer and Muse Code. How I built it, including the two days spent with Muse Code: README, "How this was built".
 
 ## Technical depth and execution (20%)
@@ -57,17 +57,18 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 | Meta product | Id | Job | Measured |
 |---|---|---|---|
-| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 in the earlier Gate 0 run); staple judge precision 0.79 |
-| Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, zero price errors, read alone |
+| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 in the earlier Gate 0 run); staple judge precision 0.79 (41 of 52) against a cadence-based proxy on one household's receipts; it moves with the proxy definition |
+| Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, zero price errors when read alone (not the live path) |
 | SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, blurs people | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
-| Muse Image 1.0 | `muse-image-1.0` | The 23 grab-celebration characters, generated once | n/a |
+| Muse Image 1.0 | `muse-image-1.0` | The 23 grab-celebration characters (generated once) and share looks (live, per tap) | n/a |
 | Muse Spark Open | `meta-models/muse-spark-open-1026` (hosted on Baseten) | Second seat of the staple judge; dictionary labels | 32 of 32 labels agree with hosted Spark; 3 of 4 staple verdicts |
+| Auto reader (the live path) | `ARYA_PHOTO_READER=auto` (the default) | Spark first; Wonder re-reads a flagged receipt | Not yet measured on photos; checks catch most errors but a swapped pair of prices keeps the sum, so the review queue stays |
 | Meta Model API | one client | Every server call, with a daily spend ceiling | n/a |
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train its models. The live receipt reader is `auto` (the code default): Spark first, Wonder on a flagged read. Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-Eval numbers: the automatic scorer gives Wonder 87 of 98 and Spark 92 of 98; after hand adjudication Wonder is 97 of 98. See [`docs/evals/`](docs/evals/).
+Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. See [`docs/evals/`](docs/evals/).
 
 ## Honest limits
 

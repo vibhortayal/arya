@@ -18,7 +18,7 @@ models we did **not** use. The model list comes from Meta's models page
 | SAM 3.1 | `sam-3.1` | Shelves, signs, Find it for me boxes, blurring people |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | List mic and Ask Arya mic |
 | Muse Image 1.0 | `muse-image-1.0` | The 23 celebration characters, generated once |
-| Muse Spark Open (open weights) | hosted on Baseten | Second seat of the staple judge, dictionary labels; never sees personal data |
+| Muse Spark Open (open weights) | hosted on Baseten | Second seat of the staple judge, dictionary labels; sees item names only (no prices, dates, stores or account details) |
 
 ## Available but not used
 

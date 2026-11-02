@@ -100,7 +100,7 @@ enforced there. `open_client.py` is the only other model client.
 | Receipt photo reader (default, `auto`) | Spark first; `muse-wonder-1.0` (90 s bound) re-reads only a receipt the arithmetic checks flag | `decoded_by` records which read was kept; `ARYA_PHOTO_READER=spark` or `wonder`, or the Ops "Photo reader" switch, changes it with no code change |
 | Celebration characters, generated once | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
-| Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
+| Shelf and people segmentation | `sam-3.1` | people SAM detects are pixelated first, and the frame is discarded if that fails (detection is not perfect and has not been scored) |
 | Second judge seat, dictionary enrichment | Spark Open, hosted on Baseten | platform data only; the client refuses personal data |
 
 ### 0.5 Storage

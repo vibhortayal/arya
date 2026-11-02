@@ -32,8 +32,8 @@ Everything here is built and in the code. Ideas that are not built are on the
   changes until you apply it.
 - **Named lists, and every item has a home:** adds go to the list you name, the
   only list, or Arya asks "Which list?".
-- **Works offline:** lists and other screens show as last saved, and list edits
-  queue until you are back online.
+- **Works offline (signed-in accounts):** lists and other screens show as last saved, and list edits
+  queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy; the demo saves offline list changes for that visit only.
 
 ## Prices from your own receipts
 - Cheaper store, price trend, similar items per ounce, which store to buy each
@@ -56,8 +56,8 @@ Everything here is built and in the code. Ideas that are not built are on the
   receipt. [`docs/quest/GAME-DESIGN.md`](quest/GAME-DESIGN.md)
 - **Find it for me:** point the camera at a shelf; SAM 3.1 boxes candidates and
   Muse Spark checks each one.
-- **Map my store:** a guided camera scan where SAM 3.1 blurs every person
-  before anything is kept. A store counts as mapped only where it has a usable,
+- **Map my store:** a guided camera scan where SAM 3.1 pixelates the people it
+  detects before anything is kept (if that fails, the frame is discarded; detection is not perfect and not scored). A store counts as mapped only where it has a usable,
   fresh photo, so status is earned. [`docs/quest/MAP-MY-STORE.md`](quest/MAP-MY-STORE.md)
 - **Build a store** from three questions, practice in it, and save it.
 

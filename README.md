@@ -21,7 +21,7 @@
 
 ## What stands out
 
-1. **It works for real.** Open the live app in one tap ("Try it now"), add it to your home screen, and it keeps working offline.
+1. **It works for real.** Open the live app in one tap ("Try it now"), add it to your home screen, and with no signal a signed-in account can read its last lists and keep adding items (changes sync later; receipts and Ask need a connection).
 2. **A closed loop.** A receipt photo becomes your list and your Running low nudges, every line checked against the printed total.
 3. **Built on your own data.** Prices come from your own receipts, never from store sites, flyers or the web. The one outside shopping lookup is Kroger's aisle location.
 4. **Real community.** Groups share lists and receipts, and your own receipts go with you if you leave.
@@ -40,7 +40,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 **The idea.** I kept losing track of what was running low and where the money went. A list that learns from my own receipts fixes both, and the receipts already exist. Quest came from wanting the store trip to feel less like a chore; it stays optional.
 
-**A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, works offline and can send reminders, and a judge can open it in one tap.
+**A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, keeps your lists usable with no signal and can send reminders, and a judge can open it in one tap.
 
 **The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
 
@@ -48,7 +48,7 @@ All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT
 
 **The coding model.** I first tried Muse Code to explore how to build this. I lost about two days settling on the idea, so to save time I built the app with Claude, which I know well.
 
-**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and blurs people before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and never sees personal data. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates the people it detects before anything is kept. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge and sees item names only (no prices, dates, stores or account details). Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 **Built during the hackathon.** The app, from the first commit to the deploy, was built in the hackathon window. The first commit is Oct 27 at 15:13 ET, and 1000+ commits followed.
 - Oct 27: the repo, the app running on the VM with a health check, a free DuckDNS address with HTTPS, five ways to add items and the first Quest stages.
@@ -154,7 +154,7 @@ sample buttons still work.
 | Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
 | Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
 | Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
-| Map my store | Quest tab, Map my store | A guided scan; people blurred before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
+| Map my store | Quest tab, Map my store | A guided scan; people detected and blurred before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 
 Every live call goes through `assistant/api/meta_client.py` and is booked
@@ -189,7 +189,7 @@ loop on a phone. The window should be about 390 px wide.
   points; there is no clock and no way to lose. **Find it for me** points the
   camera at a shelf: SAM 3.1 boxes candidates and Muse Spark checks each one.
   **Map my store** is a guided camera scan: you pan along the shelves, SAM
-  3.1 blurs every person before anything is kept, and Muse Spark reads
+  3.1 pixelates the people it detects before anything is kept (if that fails, the frame is discarded; detection is not perfect and has not been scored), and Muse Spark reads
   sections, aisle signs and prices. A store counts as mapped only where it
   has a usable, fresh photo. No store ships pre-mapped; an unmapped store
   plays as a labelled typical layout. Points bank when the receipt settles.
@@ -242,7 +242,7 @@ The open-weights client refuses personal data. Cost rules are in
 |---|---|
 | App | React 19 and TypeScript, built by Vite into a phone-first PWA with a service worker; three.js for the Quest world |
 | API | Python 3.12, FastAPI on uvicorn; one process serves the API and the built app |
-| Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees names only |
+| Models | Meta Model API (`api.meta.ai`): Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image. Muse Spark Open (open weights) is hosted on Baseten and sees item names only: no prices, dates, stores or account details |
 | Storage | JSON documents on a Docker volume, mirrored to Supabase Postgres on the live site (`ARYA_STORE=dual`; `json` and `pg` also work); optional Supabase Auth for email code and Google sign-in |
 | Email | Resend (waitlist, account codes, reports) |
 | Serving | Caddy for TLS and security headers, in front of the API |
@@ -284,7 +284,7 @@ Tests, from the repo root:
   On the Gate 0 public set (9 receipts, 98 lines): 97 of 98 lines have the
   right product and price after hand adjudication, with zero price errors
   and arithmetic matching on 7 of 7 receipts. The automatic scorer gives
-  87 of 98. Muse Spark on the same set: 92 of 98. Record:
+  86 of 98 (87.8%), lower than Muse Spark on the same set: 92 of 98. Record:
   `assistant/loops/2026-10-27-wonder-decode.md`.
 - **Gate 0, before Wonder (Muse Spark).** Public set 90 of 98 lines
   (91.84%), my subset 32 of 32, combined 122 of 130 (93.85%). One silent
@@ -398,7 +398,7 @@ license; full notices are in [`NOTICE.md`](NOTICE.md).
 
 **Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
 on Baseten) as a second seat on the staple judge and for dictionary labels, and
-its outputs appear in the app. It sees item names only, never personal data.
+its outputs appear in the app. It sees item names only: no prices, dates, stores or account details. The names come from the household's purchases and go to Baseten, the host I use.
 
 The art in `assistant/pwa/assets/` was generated with Muse Image. The App Store
 and Google Play badges in `assistant/pwa/assets/badges/` are those companies'
