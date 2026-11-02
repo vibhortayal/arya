@@ -6,7 +6,7 @@ Anything git cannot confirm is marked **[TO CONFIRM]**.
 
 ## What existed before the window
 
-- **Oct 26, 13:20 to 16:51: the idea search.** 28 commits in a separate research
+- **Oct 26, 12:37 to 16:51: the idea search.** 28 commits in a separate research
   repo (`vibhortayal/meta-hackathon-research`): candidate ideas and a plan for
   spikes, with no spike results. This is before Oct 27, and I say so plainly.
 - **My 114 Costco receipts** (back to 2023) are my own purchase history, imported
@@ -23,7 +23,7 @@ Anything git cannot confirm is marked **[TO CONFIRM]**.
 |---|---|---|
 | Oct 27, morning | Grocery Navigator brainstorm notes, stamped 11:37 and 11:46 | research repo, `IDEAS-owner-brainstorm.md` |
 | Oct 27, 13:50 | Spike 1: receipt decode on 7 real Costco PDFs with Muse Spark, arithmetic matched 7 of 7, $0.20 | research repo, `89ff3ab` |
-| Oct 27, 14:26 | Spike 2: photo receipts with Spark, 32 of 32 lines on 4 receipts | research repo, `218f332` |
+| Oct 27, 14:26 | Spike 2: photo receipts with Spark, 32 of 32 lines on 4 receipts (5 photos) | research repo, `218f332`, `6ca6d7f` |
 | Oct 27, 14:29 | Spike B: the Costco pull test hit a bot wall, so I chose receipt uploads | research repo, `a2ef346` |
 | Oct 27, 15:03 to 15:06 | My Costco receipts staged: 63, then 114 | research repo, `25cba97`, `f1cbdd0` |
 | Oct 27, 15:13 | **First Arya commit** | `ca9d3ee` |

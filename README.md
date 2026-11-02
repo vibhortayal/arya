@@ -77,7 +77,7 @@ The rest of this page is the full story.
 
 Check any of it yourself in [Verify it without signing in](#verify-it-without-signing-in).
 
-All of it, with where to read more: [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
+All of it, with where to read more: [Built in the hackathon window](docs/WHAT-WE-BUILT.md).
 
 | What is real | What is simulated | What is not connected |
 |---|---|---|
@@ -151,7 +151,7 @@ Free to use, for shoppers, and built up with them. The model proposes and code c
 
 | If you want to know... | Read |
 |---|---|
-| Everything we built, with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
+| Built in the hackathon window: what was made and when, then every feature with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
 | What the product is, in full | [`assistant/docs/SPEC.md`](assistant/docs/SPEC.md) |
 | Screen-by-screen journeys | [`assistant/docs/USER-JOURNEYS.md`](assistant/docs/USER-JOURNEYS.md) |
