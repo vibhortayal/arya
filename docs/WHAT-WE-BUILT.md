@@ -43,9 +43,8 @@ What git cannot show is listed under "What git cannot confirm".
 
 The Wonder eval is the one the model policy cites: on the 9 Gate 0 photos (98
 hand-labeled lines) Wonder scored 97/98 and Spark 92/98, with price errors 0 vs
-4, for $4.47 of model spend. It shows "92 of 98" for Spark. The earlier Gate 0
-run, at 16:02, recorded the same Spark at 90/98; that is run-to-run variance on
-one small set, so quote the gap between the models, not either number alone.
+4, for $4.47 of model spend. Why Spark shows 92 here and 90 at Gate 0 is
+explained once, under the model map in [For judges](../JUDGES.md#meta-model-map).
 
 ## What git cannot confirm
 

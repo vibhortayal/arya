@@ -24,7 +24,7 @@ module.exports = {
       title: 'Arya',
       items: [
         {to: '/docs/intro', label: 'Docs', position: 'left'},
-        {to: '/docs/guide/user-journeys', label: 'User guide', position: 'left'},
+        {to: '/docs/guide/user-journeys', label: 'Using Arya', position: 'left'},
         {to: '/api-reference', label: 'API reference', position: 'left'},
         {href: 'https://github.com/vibhortayal/arya', label: 'GitHub', position: 'right'},
         {href: 'https://arya.teamnightshift.org', label: 'Open Arya', position: 'right'},

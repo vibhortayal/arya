@@ -1,5 +1,7 @@
 # For judges
 
+**Problem statement: Build for Your World.**
+
 Arya learns how you shop from your receipts and helps shoppers help each other. Built for the Meta Global AI
 Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
 
@@ -26,7 +28,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
 - Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details). `assistant/api/open_client.py`
 - SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. `assistant/api/shelfscan.py`
-- Not used in the shipped app: Muse Glimmer and Muse Code. How I built it, including the two days spent with Muse Code: README, "How this was built".
+- Available but not used: Muse Glimmer (open weights, self-hosted), the Spark Contributor tier (cheaper, different data terms) and Muse Code. Reasons: [`docs/MODELS.md`](docs/MODELS.md). How I built it, including the two days spent with Muse Code: README, "How this was built".
 
 ## Technical depth and execution (20%)
 
@@ -48,7 +50,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 | Meta product | Id | Job | Measured |
 |---|---|---|---|
-| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set (90 of 98 at Gate 0); staple precision 0.79. [Details](README.md#measured-results) |
+| Muse Spark 1.3 (Standard) | `muse-spark-1.3` | Reads receipt photos first; staple judge, Curator, Ask Arya, list and date photos, shelf labels, crop checks | 92 of 98 lines on the Wonder comparison set; staple precision 0.79. [Details](README.md#measured-results) |
 | Muse Wonder 1.0 | `muse-wonder-1.0` | Re-reads a receipt the checks flag, or when Spark fails | 97 of 98 lines after hand adjudication, read alone. [Details](README.md#measured-results) |
 | SAM 3.1 | via Meta Model API | Finds shelves and signs, boxes items for Find it for me, pixelates the people it detects | Used in the guided store scan |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Dictation for the list mic and Ask Arya | n/a |
@@ -59,7 +61,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 Spark and Wonder run in Meta's Standard mode, which Meta does not use to train its models. The live receipt reader is `auto` (the code default): Spark first, Wonder on a flagged read. Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. See [`docs/evals/`](docs/evals/).
+Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. The same Spark scored 90 of 98 in the earlier Gate 0 run and 92 of 98 in the Wonder comparison: that is run-to-run variance on one small set, so quote the gap between the models, not either number alone. See [`docs/evals/`](docs/evals/).
 
 ## Limits
 

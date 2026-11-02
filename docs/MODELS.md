@@ -62,4 +62,4 @@ people-blurring rule, and a takedown route. See
 
 ## Consistency notes
 Spark and Wonder run in Standard mode (my decision, 2026-11-01). Nothing
-here changes that. The JUDGES.md line "Not used in the shipped app: Muse Glimmer and Muse Code" stays true.
+here changes that. The JUDGES.md line "Available but not used: Muse Glimmer ... and Muse Code" stays true.
