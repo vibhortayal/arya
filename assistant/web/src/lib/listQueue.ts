@@ -143,7 +143,7 @@ let running: Promise<Synced> | null = null;
  * keeps the rest for next time. */
 export function flush(send: Send): Promise<Synced> {
   if (running) return running;
-  running = (async () => {
+  const run = (async () => {
     const out: Synced = { done: 0, skipped: 0, failed: 0, skipped_names: [], failed_names: [] };
     const ids = new Map<string, string>();      // local id -> real id
     const dropped = new Set<string>();          // local ids whose add failed
@@ -195,11 +195,17 @@ export function flush(send: Send): Promise<Synced> {
         else out.done++;
         save(queued().filter(o => o.id !== op.id));
       }
-    } finally { running = null; }
+    } catch { /* storage trouble: try again next time */ }
     if (out.done || out.skipped || out.failed) {
       try { dispatchEvent(new CustomEvent(SYNCED, { detail: out })); } catch { /* no window */ }
     }
     return out;
   })();
-  return running;
+  // Cleared after the run settles. An empty queue finishes inside the
+  // call above, so a reset there would come before this assignment and
+  // leave a settled run in place for good (Tester on #412: going back
+  // online sent nothing until a reload).
+  running = run;
+  run.finally(() => { if (running === run) running = null; });
+  return run;
 }

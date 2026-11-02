@@ -84,6 +84,17 @@ describe("list changes made offline (owner, 2026-11-01)", () => {
     expect(pendingCount()).toBe(0);
   });
 
+  test("a sync with nothing waiting does not block the next one (Tester, #412)", async () => {
+    await syncLists();                              // the app opens: nothing waiting
+    offline(true);
+    await post("/api/list/check", { item_id: "milk", checked: true });
+    offline(false);
+    const f = vi.spyOn(globalThis, "fetch").mockImplementation(() => ok({ ok: true }));
+    await syncLists();                              // back online
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(pendingCount()).toBe(0);
+  });
+
   test("a lost connection or a lost sign-in keeps the changes for later", async () => {
     offline(true);
     await post("/api/list/check", { item_id: "milk", checked: true });
