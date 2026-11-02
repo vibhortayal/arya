@@ -53,9 +53,9 @@ through import and export.
 - Item and store profile pages; split the list (kids or a partner); friend run
   notifications (designed, not built); reimbursement tracking for items bought
   for others.
-- Ideas for growth as a community product: invite links that land a new person
-  in the same group, shared recipe or meal lists, and a public page for a
-  store's map status. None designed.
+- Invite links work today (`/?join=CODE` opens Join a group). Ideas for growth
+  as a community product, none designed: shared recipe or meal lists, and a
+  public page for a store's map status.
 
 ## AI and open weights
 - **Bring your own Meta key: turn it on.** Built and tested, switched off in the
