@@ -4,7 +4,7 @@ import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
 import { AddReceiptSheet, decode, isPdfFile, type ReceiptTarget } from "../ui/AddReceiptSheet";
 import { Empty, Row } from "../ui/kit";
-import { get, post } from "../lib/api";
+import { get, noKeyMessage, post } from "../lib/api";
 import { fmtDate, fmtShort, fmtWeekday, lineSavings, money } from "../lib/format";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
@@ -208,7 +208,7 @@ export function Receipts() {
         setSending({ sent: 0, total: files.length });
         const out = await sendBatch(files, n => { opened = true; setSending({ sent: n, total: files.length }); });
         setSending(null);
-        if (out.unsent.length) { setFailures(out.unsent); toast(t("receiptJob.unsent", { count: out.unsent.length, reason: out.unsent[0].reason })); }
+        if (out.unsent.length) { setFailures(out.unsent); toast(t("receiptJob.unsent", { count: out.unsent.length, reason: noKeyMessage(out.unsent[0].reason) || out.unsent[0].reason })); }
         setJobTick(x => x + 1);
         return;
       } catch (e) {
@@ -238,7 +238,7 @@ export function Receipts() {
     setStatus("");
     setFailures(bad);
     setOutcome({ read: filed + dup, total: files.length, retry });
-    const why = bad.length ? t("receipts.bulkWhy", { reason: bad[0].reason }) : "";
+    const why = bad.length ? t("receipts.bulkWhy", { reason: noKeyMessage(bad[0].reason) || bad[0].reason }) : "";
     toast(t("receipts.bulkDone", { count: filed, dup: dup ? t("receipts.bulkDup", { n: dup }) : "",
       failed: bad.length ? t("receipts.bulkFailed", { n: bad.length }) + why : "",
       skipped: skipped ? t("receipts.bulkSkipped", { n: skipped }) : "" }));

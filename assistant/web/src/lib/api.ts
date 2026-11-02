@@ -10,8 +10,20 @@ const FRIENDLY: Record<string, string> = {
   "no such session": "This quest ended when the demo reset. Start it again from Today.",
   "no account with that handle": "No one has that username. Check the spelling and try again.",
   "this needs a real account": "Create an account to do this. The demo keeps nothing.",
-  "model_api_key not provisioned on this runtime": "Arya's AI isn't available right now. Try again in a little while.",
+  // Only a copy run without a Meta key says this (the live site has one):
+  // tell whoever runs it what to do (local Docker, 2026-11-02).
+  "model_api_key not provisioned on this runtime": "This copy of Arya has no Meta key, so AI features are off. Put your key from dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d",
 };
+
+/** The no-key sentence when this error is a copy of Arya running with
+ * no MODEL_API_KEY (local Docker), else null. Screens that wrap errors
+ * in their own sentence show this one as it is, so a judge sees what
+ * to add (Tester on #432). */
+export function noKeyMessage(e: unknown): string | null {
+  const m = e instanceof Error ? e.message : String(e ?? "");
+  const t = FRIENDLY["model_api_key not provisioned on this runtime"];
+  return m === t || m.toLowerCase().startsWith("model_api_key not provisioned") ? t : null;
+}
 
 export function friendlyError(d: unknown): string {
   // A structured answer (every item on a list: {code, message, ...})

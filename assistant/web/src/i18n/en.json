@@ -177,7 +177,7 @@
     "food": "Food safety",
     "foodBody": "Arya is not a food-safety check. Look at the date on the pack. If food looks or smells off, do not eat it.",
     "models": "Models",
-    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them. Most of it goes to Muse Spark. Receipt photos go to Muse Spark first too. Muse Wonder re-reads only a receipt the checks flag.",
+    "modelsBody": "Arya is built on Meta models. Photos and questions you send are read by them. Most of it goes to Muse Spark. Receipt photos go to Muse Spark first too. Muse Wonder re-reads only a receipt the checks flag. In the demo, each visit has a small allowance of live reads and the demo has a daily cap. When one runs out, Arya says so and everything else keeps working.",
     "askLine": "Arya uses AI and can be wrong. Check anything important.",
     "once": "Arya reads photos and voice with AI. It can misread, so you check before anything is saved.",
     "dateBold": "Arya can misread a date.",
@@ -1045,7 +1045,7 @@
     "shopHow": "How do you want to shop?",
     "shopQuestSub": "Arya walks you through the store, finds each item and earns you points.",
     "shopJustList": "Just my list",
-    "tickAsIShop": "Or just tick items as I shop",
+    "tickAsIShop": "Or just check items off as I shop",
     "tickSaved": "Start shopping now opens Just my list. Change it in Settings, Preferences.",
     "shopJustListSub": "In a rush? Check items off as you go. No game.",
     "shopAskEvery": "Ask me every time",
@@ -2521,6 +2521,7 @@
     "alertUsuallyPay": "{{price}} there, {{usual}} at {{store}}",
     "andMore": " and {{n}} more",
     "stillGoodToast": "Still good. Arya will ask again in a few days.",
+    "usedToSuggest": "Used up. {{name}} is in your suggestions.",
     "markedExpiredToast": "Marked expired. Arya suggests it on your list.",
     "yourList": "Your list",
     "onYourList": "On your list",
@@ -2874,8 +2875,6 @@
   },
   "info": {
     "spend": {
-      "title": "What these mean",
-      "sub": "All from your receipts. Tap any (i) to open this again.",
       "month": "Month total",
       "monthText": "What your receipts from this month add up to, after returns.",
       "all": "All-time spending",
@@ -2885,7 +2884,7 @@
       "other": "Other purchases",
       "otherText": "Things on the same receipts that are not groceries: pharmacy, clothing, electronics, hobbies, gift cards.",
       "returns": "Returns",
-      "returnsText": "Money back for things you returned. Already taken off the totals above.",
+      "returnsText": "Money back for things you returned. Already taken off the month total and All-time spending.",
       "saved": "You saved",
       "savedText": "Coupons, deals and discounts printed on your receipts. Already taken off what you paid.",
       "others": "Bought for others",
@@ -2964,17 +2963,17 @@
     "more": "More"
   },
   "bar": {
-    "customize": "Customize bar",
-    "title": "Customize bar",
-    "hint": "The bar holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
+    "customize": "Customize navigation tab",
+    "title": "Customize navigation tab",
+    "hint": "The navigation tab holds four places, then More. Drag to reorder. Everything else stays one tap away in More.",
     "offTitle": "In More",
-    "full": "The bar holds four. Remove one first.",
+    "full": "The navigation tab holds four. Remove one first.",
     "removed": "{{name}} moved to More",
-    "added": "{{name}} added to the bar",
+    "added": "{{name}} added to the navigation tab",
     "reset": "Reset to default",
-    "resetDone": "The bar is back to the default",
+    "resetDone": "The navigation tab is back to the default",
     "moreTitle": "More",
-    "moreHint": "Everything not on your bar. Tap Customize bar to change it.",
+    "moreHint": "Everything not on your navigation tab. Tap Customize navigation tab to change it.",
     "sub": {
       "home": "Your day at a glance",
       "list": "One list per store",
@@ -3114,16 +3113,16 @@
       },
       "spending": {
         "title": "Spending",
-        "line": "What you spent by month, store and item, from your receipts. Receipts and Stores are at the top."
+        "line": "What you spent by month, store and item, from your receipts. Receipts is at the top."
       },
       "more": {
         "title": "More",
-        "line": "Help, Settings and everything not on your bar live here. More is always on the bar."
+        "line": "Help, Settings and everything not on your navigation tab live here. More is always on it."
       },
       "bar": {
-        "title": "Make the bar yours",
-        "line": "Tap Customize bar, here in More, to pick the four places on your bar, such as Lists, Receipts and Stores. Anything off the bar stays in More.",
-        "screen": "The bar",
+        "title": "Customize navigation tab",
+        "line": "Tap Customize navigation tab, here in More, to pick the four places on your navigation tab, such as Lists, Receipts and Stores. Anything you leave off stays in More.",
+        "screen": "The navigation tab",
         "customize": "Customize now"
       },
       "guideLink": "Want the full guide?"
@@ -3155,8 +3154,8 @@
       "line": "What you spent by month, store and item, from your receipts."
     },
     "spending_places": {
-      "title": "Receipts and Stores",
-      "line": "Add receipts and look back at them here. Stores holds your stores and favorites."
+      "title": "Receipts",
+      "line": "Add receipts and look back at them here. Your stores are in More, then Stores."
     },
     "lists_tab": {
       "title": "Lists",
@@ -3279,12 +3278,12 @@
         "s1": "After a receipt, Today asks for you. Any time: Settings › About Arya › Arya's powers › Use soon › Add a date.",
         "s2": "Tap Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
-        "s4": "Arya reminds you what to use before it expires. Switch on Remind me in Settings, Preferences."
+        "s4": "Arya reminds you what to use before it expires. When Today asks Still good?, tap Still good, Used it or It expired. Switch on Remind me in Settings, Preferences."
       },
       "ask": {
         "kicker": "Ask Arya",
         "title": "Just ask",
-        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
+        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\" Arya answers from your own lists and receipts.",
         "s1": "Tap the Ask tab.",
         "s2": "Type or say your question, or tap a suggestion.",
         "s3": "Arya answers from your own lists and receipts.",
@@ -3293,10 +3292,10 @@
       "shopping": {
         "kicker": "In the store",
         "title": "Start shopping",
-        "body": "Pick a list and shop it. Play a Quest, or just tick items off.",
+        "body": "Pick a list and shop it. Play a Quest, or just check items off.",
         "s1": "On Today, tap your next trip. Or tap More, then Lists, and open a list.",
         "s2": "Tap Start shopping.",
-        "s3": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s3": "Or tap \"Or just check items off as I shop\" for no game.",
         "s4": "Choose what Start shopping opens in Settings, under \"When I start shopping\"."
       },
       "running": {
@@ -3327,27 +3326,27 @@
       },
       "today": {
         "kicker": "Today",
-        "title": "Make Today yours",
-        "body": "Show the cards you use. Hide the rest. Next trip, at the top, starts your shopping.",
-        "s1": "Tap Edit on Today, or touch and hold a card.",
-        "s2": "Drag a card to move it. Tap the red minus to hide it.",
-        "s3": "Tap the green plus to add a card from the library.",
+        "title": "Customize your \"Today\" screen",
+        "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
+        "s1": "On Today, tap Edit, or touch and hold any card.",
+        "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card.",
         "s4": "Lists, Ask and Quest have an Edit button too."
       },
       "bar": {
-        "kicker": "Your bar",
-        "title": "Make the bar yours",
-        "body": "Put the places you use on the bar at the bottom. Everything else stays in More, which is always there.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar, such as Receipts or Stores. The bar holds four.",
-        "s3": "Tap the red minus to move a place to More. Drag to reorder."
+        "kicker": "Navigation tab",
+        "title": "Customize navigation tab",
+        "body": "The navigation tab is the row of buttons along the bottom of the screen. It takes you around Arya. Put the four places you use most on it. Everything else is in More, the last button, which is always there.",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
+        "s2": "Tap the green plus to add a place, such as Receipts or Stores. There is room for four.",
+        "s3": "Tap the red minus to move a place into More. Drag a place to change the order."
       },
       "powers": {
         "kicker": "Powers",
-        "title": "See everything Arya does",
-        "body": "Powers lists what Arya does for you now. It also shows what you can turn on.",
-        "s1": "Open Settings (in More), then About Arya, then Arya's powers. Or open Help.",
-        "s2": "Tap i on a power to learn how it works.",
+        "title": "See what Arya can do",
+        "body": "Powers is one list of everything Arya does for you. It also shows features you can switch on.",
+        "s1": "Tap More, then Settings, then About Arya, then Arya's powers. Or open Help.",
+        "s2": "Tap the i next to a power to learn how it works.",
         "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
       },
       "settings": {
@@ -3572,12 +3571,12 @@
     "readerSub": "Who reads receipt photos. Wonder is about $0.04 a photo, Spark about $0.01.",
     "readerSparkOnly": "Spark only",
     "readerAuto": "Spark first, Wonder as backup",
-    "readerWarn": "Spark reads send receipt photos to Spark. On the Contributor plan Meta may train on them.",
+    "readerWarn": "Spark reads send receipt photos to Spark. Keep the Spark plan on Standard, which Arya runs.",
     "tier": "Spark plan",
     "tierSub": "Which plan Spark calls run on.",
     "tierStandard": "Standard (not used for training)",
     "tierContributor": "Contributor (cheaper)",
-    "tierWarn": "Contributor lets Meta train on content sent to Spark, including receipt photos when the reader is Spark or Auto. Cheaper, but that data leaves your control.",
+    "tierWarn": "Arya runs Spark on Standard. Contributor is cheaper but comes with different data terms from Meta, covering everything sent to Spark, receipt photos included when the reader is Spark or Auto. Read them before you switch.",
     "reasoning": "Reasoning effort",
     "effort": "Spark reasoning effort",
     "effortSub": "Higher is slower and costs more per call. Wonder and the store scan keep their own setting.",
@@ -3779,11 +3778,11 @@
         "body": "Arya reads a receipt, checks the total and keeps it for returns and recalls.",
         "s1": "Open Spending, then Receipts, and tap Add receipts.",
         "s2": "Take a photo, pick a PDF, or paste order text.",
-        "s3": "Spending, on the bar, shows it by month, store and item.",
+        "s3": "Spending, on the navigation tab, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
-        "n4": "On Spending, tap (i) next to a heading to see what it counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
+        "n4": "On Spending, tap (i) next to a heading to see what that heading counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
         "cta": "Open Spending"
       },
       "prices": {
@@ -3799,13 +3798,14 @@
       },
       "shopping": {
         "title": "Shopping and Quest",
-        "sub": "Start shopping, tick items, play",
-        "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
+        "sub": "Start shopping, check items off, play",
+        "body": "Start shopping when you are at the store. Choose to play a Quest or just check items off.",
         "s1": "Tap Start shopping on Today, or open a list and tap it there.",
-        "s2": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s2": "Or tap \"Or just check items off as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
+        "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Kroger's aisle data is used under Kroger's developer terms; Arya is not affiliated with Kroger.",
         "cta": "Open Quest"
       },
       "map": {
@@ -3862,12 +3862,12 @@
         "s2": "Any time: Settings, About Arya, Arya's powers, Use soon, Add a date.",
         "s3": "Tap Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
-        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago.",
+        "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, Used it (you finished it, so it is not food waste: it moves to your suggestions, and Undo puts it back) or It expired (counts as food waste). Anything already on one of your lists is not asked about.",
         "n2": "Ask Arya knows these dates too: ask \"What goes bad this week?\"",
         "cta": "Open Arya's powers"
       },
       "customize": {
-        "title": "Change Today",
+        "title": "Customize your \"Today\" screen",
         "sub": "Move, hide and add cards",
         "body": "Make Today show what you care about.",
         "s1": "Tap Edit on Today, or touch and hold a card.",
@@ -3878,15 +3878,15 @@
         "cta": "Open Today"
       },
       "bar": {
-        "title": "Change the bar",
+        "title": "Customize navigation tab",
         "sub": "Pick the four places at the bottom",
-        "body": "The bar at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar. The bar holds four.",
+        "body": "The navigation tab at the bottom holds four places, then More. Put the ones you use there, such as Lists, Receipts and Stores.",
+        "s1": "Tap More, then Customize navigation tab. (Touching and holding the navigation tab works too.)",
+        "s2": "Tap the green plus to put a place on the navigation tab. It holds four.",
         "s3": "Tap the red minus to move a place to More. Drag a place to reorder.",
-        "n1": "More is always on the bar. Help, Settings and every place not on your bar are in it.",
-        "n2": "The bar starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
-        "cta": "Customize bar"
+        "n1": "More is always on the navigation tab. Help, Settings and every place not on it are in More.",
+        "n2": "The navigation tab starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
+        "cta": "Customize navigation tab"
       },
       "install": {
         "title": "Put Arya on your Home Screen",

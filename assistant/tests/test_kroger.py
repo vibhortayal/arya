@@ -193,6 +193,28 @@ class TestKrogerRoute(unittest.TestCase):
         r = self.c.post("/api/stores/kroger-trip", json={"store_id": "nope", "items": []})
         self.assertEqual(r.status_code, 404)
 
+    def test_api_token_cannot_reach_kroger_routes(self):
+        # Kroger's terms (5.e.2): no Kroger content to third parties, so
+        # an API token (MCP or REST connector) gets 403; the signed-in
+        # app still gets its answer.
+        sid = self.stores.directory()[0]["id"]
+        tok = self.c.post("/auth/token")
+        self.assertEqual(tok.status_code, 200, tok.text)
+        from fastapi.testclient import TestClient
+        bot = TestClient(self.c.app)  # no session cookie, token only
+        h = {"Authorization": f"Bearer {tok.json()['token']}"}
+        r = bot.get("/api/stores/kroger-aisle", params={"store_id": sid, "item": "milk"}, headers=h)
+        self.assertEqual(r.status_code, 403, r.text)
+        r = bot.post("/api/stores/kroger-trip", json={"store_id": sid, "items": ["milk"]}, headers=h)
+        self.assertEqual(r.status_code, 403, r.text)
+        # The same token still reads other store routes.
+        self.assertEqual(bot.get("/api/stores/mine", headers=h).status_code, 200)
+        # The app, signed in with its cookie, is unaffected.
+        r = self.c.get("/api/stores/kroger-aisle", params={"store_id": sid, "item": "milk"})
+        self.assertEqual(r.status_code, 200, r.text)
+        r = self.c.post("/api/stores/kroger-trip", json={"store_id": sid, "items": ["milk"]})
+        self.assertEqual(r.status_code, 200, r.text)
+
     def test_unknown_store_404(self):
         r = self.c.get("/api/stores/kroger-aisle", params={"store_id": "nope", "item": "milk"})
         self.assertEqual(r.status_code, 404)

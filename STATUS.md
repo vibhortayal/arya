@@ -6,7 +6,11 @@ live in `docs/quest/DISCUSSION.md`. This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
-- **Live commit 904aaa5 (2026-11-01):** includes #362 to #367. Deploy and rollback steps are in `assistant/docs/OPS.md`; `/health` shows the running commit (#359).
+- **Live commit:** not listed here (owner, 2026-11-01). `/health` shows the running commit (#359); deploy and rollback steps are in `assistant/docs/OPS.md`.
+- **Own Meta key (#388):** screens merged, unfinished and switched off (`ARYA_BYOK` off); not used and not part of the demo. See `docs/DECISIONS.md`, 2026-11-02. `assistant/loops/2026-11-01-own-key-ui.md`.
+- **Judge review round (#380 to #387, merged):** eval evidence in `docs/evals/`, Known limits (one household, iPhone 17 Pro only) in README, judge playbook and submission draft; Spark and Wonder both in Standard mode (#380, #382); receipt photo reader default is Auto, Spark first with Wonder re-reading a flagged receipt (#382); Ask acts on lists, reads receipts, keeps follow-ups and cooks (#384); install questions find the Home Screen steps (#383); a coordinator relay counts as the owner's word for every role (#385); demo beats match video script v4 and the judge playbook says what happens at a budget gate (#386); portal copy for the submission (#387).
+- **Landing: Add Arya to your Home Screen (#378, merged):** the "apps coming soon" line is replaced by an install card (Install on Android when the browser offers it, steps for iPhone and Android); also in Settings, About Arya.
+- **Delete my account by emailed code (#377, merged):** a 6-digit code by email (10 minutes) confirms deletion for email and Google accounts; password accounts type the password; the Supabase copy is dropped too.
 - **Shopper's bottom bar (#367, merged):** see the bar entry below. `assistant/loops/2026-11-01-custom-bar.md`.
 - **To check smart pass (#366, merged, backend):** before To check asks, Arya proposes a clean name and store section per item number (reused if already taught, otherwise Spark in batches of 25); lines stay unverified until the shopper answers. `POST /api/review/smart-pass`; backfill with `python -m harness.clean_names <account> --suggest`. The screen for it is still being designed. `assistant/loops/2026-11-01-to-check-smart-pass.md`.
 - **Add-field suggestions (#364, merged):** suggestions come from a built-in grocery word list, not live model guesses (guesses are off by default). Similar items group by the product part of clean names (#363).
@@ -80,7 +84,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 - Community prices, Deals and Arya Shoppers are opt-in and not live yet
   (choice is recorded only). No store sites, flyers, APIs or web prices.
 ## The product on main
-Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Lists, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
+Arya is list first, Quest second ("Waze for grocery shopping"). The bottom bar is the shopper's own: four places they pick (default Today, Spending, Quest, Ask) then More, which holds Help, Settings and the rest (see "The shopper's bottom bar" below). Landing
 headline: "Your grocery run, smarter." The app is the React app (`assistant/web/`),
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
@@ -209,15 +213,16 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   Accounts with data, and the demo, never see them.
   `assistant/loops/2026-10-29-first-run.md`.
 - **Landing: Add Arya to your Home Screen (2026-11-01):** the "apps coming soon" line and store badges are replaced by a card with Install or Show me how; the steps sheet switches between iPhone and Android; Help topic "Put Arya on your Home Screen". `assistant/loops/2026-11-01-add-to-home.md`.
-- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Make the bar yours" points at Customize bar; Today's line follows the bar; a full bar greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
+- **Tour fixes (2026-11-01):** Today's steps scroll to and highlight their card; Back on every step (Skip tour is the × in the per-screen Tour); More opens the More sheet; "Customize navigation tab" (the owner's 2026-11-02 name, was "Make the bar yours") points at its button; Today's line follows the navigation tab; a full one greys out the plus buttons. `assistant/loops/2026-11-01-tour-fixes.md`.
 - **To check: Arya's guesses (2026-11-01):** each To check card leads with Arya's guess, the printed text and a section, with Use this name, Fix (guess and section filled in) and Keep printed. "Use the N sure guesses" (confidence 0.85 or more) sets them all in one call (`POST /api/review/accept`) with one Undo. Lines not yet guessed are read on open ("Arya is reading this name…"); ones Arya cannot read say so. `assistant/loops/2026-11-01-to-check-guesses.md`.
 - **The shopper's bottom bar (2026-11-01):** the bar holds four places the
   shopper picks, then More (always there; it holds Help, Settings and the
-  rest). Default Today, Lists, Quest, Ask, More. Pinnable: Today, Lists,
+  rest). Default Today, Spending, Quest, Ask, More (Lists lives under More,
+  #416). Pinnable: Today, Lists,
   Receipts, Stores, Spending, Ask, Quest, Help, Settings. Touch and hold
-  the bar, or More, Customize bar. Saved as `layouts.bar.on`. The Tour
-  follows the bar and ends with "Make the bar yours"; the guide has a
-  Your bar card; Help has Change the bar; Ask gets YOUR BAR with every
+  the navigation tab, or More, Customize navigation tab. Saved as `layouts.bar.on`. The Tour
+  follows the navigation tab and ends with "Customize navigation tab"; the guide has a
+  Customize navigation tab card; Help has the same topic; Ask gets YOUR BAR with every
   question. Receipts and Spending now light Lists, not Today. Today's
   icon is a calendar. `assistant/loops/2026-11-01-custom-bar.md`.
 - **Quest offers only your own lists (2026-11-02):** no "Everything" chip
@@ -227,7 +232,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
   Preferences (currency and language, When I start shopping, Display,
   Reminders), Account (Export, Delete), About Arya, and Sign out last.
-  About Arya holds Arya's powers, Use Arya in another AI app, Add to Home
+  About Arya holds Arya's powers, Use Arya in Muse, Add to Home
   Screen, Keeping Arya running and the credits. Stores moved to Lists;
   Receipts and Spending to a card at the bottom of Today. Help and Send
   feedback left Settings (the Help tab has both). Guide, tour, Ask's
@@ -237,6 +242,13 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   steps; the Try-it sheets were removed 2026-10-30). It opens from
   Help tab > Guide, Powers > See how it works, and the last first-run
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
+- **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
+  news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
+  navigation tab, powers, settings. "tick" became "check off" (card and the Start shopping
+  link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
+  reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, the owner's words for the bottom bar). On 2026-11-02 the owner renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
+
+- **Kroger aisle hints (documented 2026-11-02, owner):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
 
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
@@ -314,6 +326,10 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - Tests run by hand: `.github/workflows/tests.yml` is manual only
   (Actions tab, Run workflow), by the owner's choice.
 - Photo opt-in and privacy policy: after the hackathon (owner).
+- Use your own Meta key (#391, #393) is unfinished and switched off on purpose.
+  The owner decided not to use it (2026-11-02). The code is in the repo but it is
+  not part of the demo: with `ARYA_KEY_VAULT_SECRET` unset the Settings row, Help
+  topic, Ask answer and sign-up door stay hidden. `docs/ROADMAP.md`.
 
 ## Owner data (not in this repo)
 114 Costco receipts (2023-10-25 → 2026-10-26, 1,226 lines) are staged

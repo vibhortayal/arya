@@ -55,7 +55,7 @@ describe("BottomBar", () => {
     const plus = Array.from(document.querySelectorAll<HTMLButtonElement>("#bar-edit [data-add]"));
     expect(plus.length).toBeGreaterThan(0);
     expect(plus.every(b => b.disabled)).toBe(true);
-    expect(document.getElementById("bar-edit-full")!.textContent).toBe("The bar holds four. Remove one first.");
+    expect(document.getElementById("bar-edit-full")!.textContent).toBe("The navigation tab holds four. Remove one first.");
     act(() => { fireEvent.click(document.querySelector('#bar-edit [data-add="chat"]')!); });
     expect(saves.length).toBe(0);
     act(() => { fireEvent.click(document.querySelector('#bar-edit .eminus')!); });

@@ -2380,3 +2380,7 @@ body.hunting #offlinebar { display: none !important; }
 #listpick .listpick-name input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px 12px; border: 1px solid var(--separator, #d8d4cf); border-radius: 10px; font: inherit; background: var(--card, #fff); color: inherit; }
 #listpick .btn.wide, #listdelete .btn.wide { margin-top: 12px; }
 #listpick .bad { color: var(--danger); }
+
+/* Still good? answers (owner, 2026-11-01): three equal buttons in one row, even at 360 px. */
+.checkchips { flex-wrap: nowrap; }
+.checkchips .chip { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; white-space: nowrap; justify-content: center; text-align: center; }

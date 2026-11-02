@@ -39,7 +39,7 @@ on a Docker volume, in Supabase Postgres, or both.
 - Six tabs: **Today**, **Lists**, **Ask**, **Quest**, **Help**, **Settings**.
   Settings opens the Profile page (Group, Preferences with Reminders,
   Account, About Arya, Sign out last). About Arya is the `about` view:
-  Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping
+  Arya's powers, Use Arya in Muse, Add to Home Screen, Keeping
   Arya running. Stores, Receipts and Spending are on Lists.
 - Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
   injectManifest). It precaches the built shell and the runtime files of
@@ -190,7 +190,7 @@ handle the nightly backup. CI is manual only
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
-| `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export); `off` lifts the list |
+| `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); `off` lifts the list |
 | `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
 | `ARYA_OWNER_USERNAME` | empty | the account that can flip registration in Settings |
 | `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |
@@ -357,13 +357,13 @@ Each agent has a narrow job and a named limit.
 
 1. Create an account. A new account opens on Today; there is no
    Connect an AI agent step on first run.
-2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
-   token there (shown once).
-3. Add the Arya connector in Muse; paste the token into the secure
-   form. Never into a chat message.
-4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
-   copyable fallback setup prompt for assistant apps that do not load
-   the connector doc automatically.
+2. Connecting Muse is optional, from Settings > About Arya > Use Arya in Muse:
+   make the code there (shown once).
+3. Tell the Muse agent to connect to Arya; it asks for the code and opens a
+   secure credentials vault. Paste the code there, never into a chat message.
+4. Talk to Muse. The screen carries these steps and a copyable fallback setup
+   prompt for assistant apps that do not load the connector doc automatically.
+   The Muse Code settings-file route is the backup (`AGENT-CONNECTOR.md`).
 
 ## 10. Cost control
 

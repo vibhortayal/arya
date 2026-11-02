@@ -23,7 +23,7 @@ function hasKey(key: string) {
 describe("cards", () => {
   test("the owner's sixteen sections, in a new user's order, each an en.json key", () => {
     expect(GUIDE_CARDS.map(c => c.id)).toEqual([...GUIDE_IDS]);
-    expect(GUIDE_IDS).toEqual(["lists", "share", "running", "news", "shopping", "quest", "maps", "friends", "receipts", "usesoon", "prices", "ask", "today", "bar", "powers", "settings"]);
+    expect(GUIDE_IDS).toEqual(["lists", "share", "running", "news", "shopping", "maps", "quest", "friends", "receipts", "prices", "usesoon", "ask", "today", "bar", "powers", "settings"]);
     const keys = GUIDE_CARDS.flatMap(c => [c.kickerKey, c.titleKey, c.bodyKey, ...c.stepKeys]);
     expect(keys.filter(k => !hasKey(k))).toEqual([]);
   });
@@ -31,7 +31,7 @@ describe("cards", () => {
     for (const c of GUIDE_CARDS) { expect(c.stepKeys.length).toBeGreaterThanOrEqual(2); expect(c.stepKeys.length).toBeLessThanOrEqual(4); }
   });
   test("open at a card id; an unknown id opens card 1; powers point at real cards", () => {
-    expect(guideIndex("prices")).toBe(10);
+    expect(guideIndex("prices")).toBe(9);
     expect(guideIndex("nope")).toBe(0);
     expect(guideIndex(undefined)).toBe(0);
     for (const id of Object.values(GUIDE_FOR_POWER)) expect(GUIDE_IDS).toContain(id);
@@ -108,7 +108,7 @@ describe("guide overlay", () => {
   test("opens at a card id (the Powers links), and from code (openGuide)", () => {
     mount();
     open("prices");
-    expect(count()).toBe("Arya guide · 11 of 16");
+    expect(count()).toBe("Arya guide · 10 of 16");
     expect(screen.getByText("Know where it's cheaper")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("gd-close")!); });
     expect(document.querySelector(".gd")).toBeNull();
@@ -142,12 +142,12 @@ function TourStarter() {
 const onDone = vi.fn();
 
 describe("first-run tour", () => {
-  test("the last step is Make the bar yours; Customize now ends the tour without the caller's Done", () => {
+  test("the last step is Customize navigation tab; Customize now ends the tour without the caller's Done", () => {
     expect(FIRST_RUN_TOUR[FIRST_RUN_TOUR.length - 1].more?.labelKey).toBe("firstRun.tour.bar.customize");
     expect(FIRST_RUN_TOUR.slice(0, -1).every(s => !s.more)).toBe(true);
     render(<NavProvider><TourProvider><GuideProvider><div id="tabs" /><TourStarter /></GuideProvider></TourProvider></NavProvider>);
     act(() => { fireEvent.click(screen.getByText("Go")); });
-    expect(screen.getByText("Make the bar yours")).toBeTruthy();
+    expect(screen.getByText("Customize navigation tab")).toBeTruthy();
     act(() => { fireEvent.click(document.getElementById("fr-tour-more")!); });
     expect(document.querySelector(".fr-tour")).toBeNull();
     expect(onDone).not.toHaveBeenCalled();

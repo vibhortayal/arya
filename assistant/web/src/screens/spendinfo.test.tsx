@@ -33,16 +33,19 @@ test("money groups thousands, the Indian way for rupees", () => {
   expect(money(123456, { code: "INR", symbol: "₹" })).toBe("₹1,23,456.00");
 });
 
-test("each Spending heading has an (i) that opens What these mean", async () => {
+test("each Spending heading's (i) explains only that heading", async () => {
   render(<ToastProvider><NavProvider initial="analysis"><Analysis /></NavProvider></ToastProvider>);
   await act(async () => { await new Promise(r => setTimeout(r, 0)); });
   const card = document.getElementById("an-spend")!;
   expect(card.textContent).toContain("$13,243.58");
   expect(card.textContent).toContain("−$2,293.37");
-  const btns = card.querySelectorAll('[data-info="spend"]');
+  const btns = [...card.querySelectorAll<HTMLElement>('[data-info^="spend."]')];
   expect(btns.length).toBe(6);
-  act(() => { fireEvent.click(btns[2]); });
+  expect(new Set(btns.map(b => b.dataset.info)).size).toBe(6);
+  act(() => { fireEvent.click(card.querySelector('[data-info="spend.all"]')!); });
   const sheet = document.getElementById("info-sheet")!;
-  expect(sheet.textContent).toContain("What these mean");
+  expect(sheet.querySelector("h3")!.textContent).toBe("All-time spending");
   expect(sheet.textContent).toContain("Groceries plus Other purchases, minus Returns");
+  expect(sheet.textContent).not.toContain("Food and household things");
+  expect(sheet.textContent).not.toContain("What these mean");
 });

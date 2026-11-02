@@ -6,6 +6,7 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** VIDEO_LINK_PLACEHOLDER
 - **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md)
+- **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 
 ## Impact (30%)
@@ -32,6 +33,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
 - Tests: commands in the [README](README.md#run-it-yourself); current counts and known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
+- How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
 
 ## Demo (25%)
