@@ -115,6 +115,7 @@ A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a samp
 
 ## Known limits
 
+- **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - No store ships pre-mapped; maps come from shoppers' scans.
 - Open weights are used in one place: Muse Spark Open (hosted on Baseten) is the
   second seat of the staple judge. It sees item names only, never

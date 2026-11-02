@@ -287,6 +287,7 @@ The scored reports and the Gate 0 labels and results are in
 - **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
+- **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 
 ## After the hackathon
 
