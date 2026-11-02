@@ -1045,7 +1045,7 @@
     "shopHow": "How do you want to shop?",
     "shopQuestSub": "Arya walks you through the store, finds each item and earns you points.",
     "shopJustList": "Just my list",
-    "tickAsIShop": "Or just tick items as I shop",
+    "tickAsIShop": "Or just check items off as I shop",
     "tickSaved": "Start shopping now opens Just my list. Change it in Settings, Preferences.",
     "shopJustListSub": "In a rush? Check items off as you go. No game.",
     "shopAskEvery": "Ask me every time",
@@ -3282,7 +3282,7 @@
       "ask": {
         "kicker": "Ask Arya",
         "title": "Just ask",
-        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\", \"What should I cook before the spinach goes bad?\" Arya answers from your own lists and receipts.",
+        "body": "Everything above, in a conversation. Type or talk: \"What did I spend at Costcozy?\", \"Where is olive oil cheaper?\" Arya answers from your own lists and receipts.",
         "s1": "Tap the Ask tab.",
         "s2": "Type or say your question, or tap a suggestion.",
         "s3": "Arya answers from your own lists and receipts.",
@@ -3291,10 +3291,10 @@
       "shopping": {
         "kicker": "In the store",
         "title": "Start shopping",
-        "body": "Pick a list and shop it. Play a Quest, or just tick items off.",
+        "body": "Pick a list and shop it. Play a Quest, or just check items off.",
         "s1": "On Today, tap your next trip. Or tap More, then Lists, and open a list.",
         "s2": "Tap Start shopping.",
-        "s3": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s3": "Or tap \"Or just check items off as I shop\" for no game.",
         "s4": "Choose what Start shopping opens in Settings, under \"When I start shopping\"."
       },
       "running": {
@@ -3325,27 +3325,27 @@
       },
       "today": {
         "kicker": "Today",
-        "title": "Make Today yours",
-        "body": "Show the cards you use. Hide the rest. Next trip, at the top, starts your shopping.",
-        "s1": "Tap Edit on Today, or touch and hold a card.",
-        "s2": "Drag a card to move it. Tap the red minus to hide it.",
-        "s3": "Tap the green plus to add a card from the library.",
+        "title": "Choose what Today shows",
+        "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
+        "s1": "On Today, tap Edit, or touch and hold any card.",
+        "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
+        "s3": "Tap the green plus to add a card.",
         "s4": "Lists, Ask and Quest have an Edit button too."
       },
       "bar": {
-        "kicker": "Your bar",
-        "title": "Make the bar yours",
-        "body": "Put the places you use on the bar at the bottom. Everything else stays in More, which is always there.",
-        "s1": "Tap More, then Customize bar. (Touching and holding the bar works too.)",
-        "s2": "Tap the green plus to put a place on the bar, such as Receipts or Stores. The bar holds four.",
-        "s3": "Tap the red minus to move a place to More. Drag to reorder."
+        "kicker": "Bottom menu",
+        "title": "Choose your bottom menu",
+        "body": "The buttons along the bottom of the screen take you around Arya. Put the four places you use most there. Everything else is in More, the last button, which is always there.",
+        "s1": "Tap More, then Customize bar. (Touching and holding the bottom buttons works too.)",
+        "s2": "Tap the green plus to add a place, such as Receipts or Stores. There is room for four.",
+        "s3": "Tap the red minus to move a place into More. Drag a place to change the order."
       },
       "powers": {
         "kicker": "Powers",
-        "title": "See everything Arya does",
-        "body": "Powers lists what Arya does for you now. It also shows what you can turn on.",
-        "s1": "Open Settings (in More), then About Arya, then Arya's powers. Or open Help.",
-        "s2": "Tap i on a power to learn how it works.",
+        "title": "See what Arya can do",
+        "body": "Powers is one list of everything Arya does for you. It also shows features you can switch on.",
+        "s1": "Tap More, then Settings, then About Arya, then Arya's powers. Or open Help.",
+        "s2": "Tap the i next to a power to learn how it works.",
         "s3": "Under \"You choose to turn on\", tap Turn on for Community prices."
       },
       "settings": {
@@ -3797,10 +3797,10 @@
       },
       "shopping": {
         "title": "Shopping and Quest",
-        "sub": "Start shopping, tick items, play",
-        "body": "Start shopping when you are at the store. Choose to play a Quest or just tick items.",
+        "sub": "Start shopping, check items off, play",
+        "body": "Start shopping when you are at the store. Choose to play a Quest or just check items off.",
         "s1": "Tap Start shopping on Today, or open a list and tap it there.",
-        "s2": "Or tap \"Or just tick items as I shop\" for no game.",
+        "s2": "Or tap \"Or just check items off as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",

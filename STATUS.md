@@ -238,6 +238,12 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   steps; the Try-it sheets were removed 2026-10-30). It opens from
   Help tab > Guide, Powers > See how it works, and the last first-run
   tour step, and is never shown by itself. `assistant/loops/2026-10-29-arya-guide.md`.
+- **Guide edits (2026-11-02, owner):** card order is now lists, share, running low,
+  news, shopping, store maps, Quest, friends, receipts, prices, use soon, Ask, Today,
+  bottom menu, powers, settings. "tick" became "check off" (card and the Start shopping
+  link, Help topic, Ask knowledge). The Today, bottom menu and powers cards were
+  reworded in plain words; "bar" is gone from the guide text (the Customize bar button
+  and the tour still say it).
 
 ## Feature flags
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
