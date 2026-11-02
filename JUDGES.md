@@ -21,7 +21,7 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 
 - **Creative:** Arya reads your receipts to run your list, and Quest turns the shop into a game.
 - **Technically ambitious:** six Meta models with one job each, receipt arithmetic checked in plain code, and an MCP connector so an agent can edit your lists.
-- **Does it work:** it is live at arya.teamnightshift.org, the demo needs no account, and the measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#what-are-the-known-limits).
+- **Does it work:** it is live at [arya.teamnightshift.org](https://arya.teamnightshift.org) and the demo needs no account. Nearly every feature works live in the demo (the staple-judge verdicts were computed beforehand, and nothing you add is kept past your visit); only the data (the household, stores and other shoppers) is simulated. I have not opened sign-up yet because I am still hardening the cost guard rails; [how to try it](#how-do-i-try-it-demo-25) lists the ways in. The measured numbers and their limits are in [Measured results](README.md#measured-results) and [Known limits](README.md#what-are-the-known-limits).
 
 ## Does it matter to real people? (Impact, 30%)
 
@@ -59,6 +59,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
 - Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
+- To go past the demo, run it locally with your own key ([Run it yourself](docs/RUN-IT-YOURSELF.md), or the [setup in the README](README.md#run-it-yourself)), or tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and reach out to me to get approved: [support@teamnightshift.org](mailto:support@teamnightshift.org), or [LinkedIn](https://www.linkedin.com/in/vibhortayal).
 
 ## Which model does which job?
 
@@ -79,4 +80,4 @@ Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 
 
 ## What does it not do yet?
 
-Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#what-are-the-known-limits)); scaling it out is a plan for after judging, not built. Registration is closed; the demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).
+Tested on one household's 114 receipts and a 9-receipt public set. Real-device testing was on one iPhone. Arya runs as one server process on one VM, so a few dozen people at once is about the limit (details in [Known limits](README.md#what-are-the-known-limits)); scaling it out is a plan for after judging, not built. Sign-up is invite only, for a few beta testers, and access can be given to hackathon judges: reach out ([how to try it](#how-do-i-try-it-demo-25)). The demo needs no account. The licence is all rights reserved; see [`LICENSE`](LICENSE).
