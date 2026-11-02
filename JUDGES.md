@@ -25,9 +25,9 @@ Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026
 
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
-- Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: `assistant/api/decode/service.py`, `checks.py`.
-- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details). `assistant/api/open_client.py`
-- SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. `assistant/api/shelfscan.py`
+- Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: [`decode/service.py`](assistant/api/decode/service.py), [`checks.py`](assistant/api/decode/checks.py).
+- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details). [`open_client.py`](assistant/api/open_client.py)
+- SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. [`shelfscan.py`](assistant/api/shelfscan.py)
 - Available but not used: Muse Glimmer (open weights, self-hosted), the Spark Contributor tier (cheaper, different data terms) and Muse Code. Reasons: [`docs/MODELS.md`](docs/MODELS.md). How I built it, including the two days spent with Muse Code: README, "How this was built".
 
 ## Technical depth and execution (20%)

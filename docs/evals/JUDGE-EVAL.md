@@ -3,6 +3,11 @@
 
 # Staple-judge accuracy — one defensible number
 
+**In three lines.**
+1. Of the 52 items the staple judge admitted to the list on my 114 receipts, 41 (79%) are staples by purchase cadence alone; no human labels, no model calls, $0.
+2. The 11 others are mostly slow-cycle items bought 3 times; one is a clear error.
+3. The figure moves with the proxy's definition (0.98 with a looser bar, 0.63 with a stricter one), so quote it with the definition, for one household.
+
 **Headline: precision 0.79 (41 of 52).**
 One-sentence definition the submission may quote: *"Of the 52 items Arya's
 staple judge admitted to the self-writing list, 41 (79%) were independently
