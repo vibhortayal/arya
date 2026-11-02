@@ -1,10 +1,10 @@
 <h1 align="center">Arya</h1>
 <p align="center"><strong>She remembers the list.</strong></p>
-<!-- Badge numbers: the Doc maintainer updates "tests" from the STATUS.md Python test count and "receipt lines" from docs/evals/WONDER-EVAL.md whenever either changes. -->
+<!-- Badge numbers: the Doc maintainer updates "python tests" from the STATUS.md Python test count and "receipt arithmetic" from the "My corpus" line under Measured results whenever either changes; "people in scans" follows the Map my store row. -->
 <p align="center">
   <img src="https://img.shields.io/badge/python%20tests-1%2C842%20passing-1a7f37" alt="Python tests: 1,842 passing">
-  <img src="https://img.shields.io/badge/receipt%20lines%20(Wonder%2C%20hand--adjudicated)-97%2F98%20right-2a78d6" alt="Receipt lines right: 97 of 98 (Wonder, hand-adjudicated, 9 public receipts)">
-  <img src="https://img.shields.io/badge/faces%20shipped-0-cf222e" alt="Faces shipped: 0">
+  <img src="https://img.shields.io/badge/receipt%20arithmetic-114%2F114%20passing-2a78d6" alt="Receipt arithmetic check: 114 of 114 receipts passing">
+  <img src="https://img.shields.io/badge/people%20in%20scans-pixelated%20before%20saving-8250df" alt="People in store scans are pixelated before anything is saved">
 </p>
 
 <p align="center">
