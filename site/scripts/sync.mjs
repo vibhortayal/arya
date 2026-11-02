@@ -20,57 +20,47 @@ const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
     f.replace(/\.md$/, '').replace(/-/g, ' ')]);
 
 // [source path in repo, route inside the docs site, sidebar label]
+const quest = (name) => questPages().find(([s]) => s === `docs/quest/${name}.md`);
 const SECTIONS = {
   'Start here': [
     ['site/content/start.md', 'intro', 'What Arya is'],
-    ['README.md', 'full-readme', 'Full README'],
-    ['docs/PRINCIPLES.md', 'principles', 'Principles'],
-    ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
-    ['docs/RUN-IT-YOURSELF.md', 'run-it-yourself', 'Run it yourself'],
-  ],
-  'For judges': [
     ['JUDGES.md', 'judges', 'For judges'],
-    ['docs/TRY-THE-FEATURES.md', 'try-the-features', 'Try the features'],
+    ['docs/quest/JUDGE-PLAYBOOK.md', 'quest/judge-playbook', '8-minute demo path'],
     ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'Built in the hackathon window'],
+    ['docs/PRINCIPLES.md', 'principles', 'Why Arya exists'],
   ],
-  'User guide': [
+  'Using Arya': [
     ['assistant/docs/USER-JOURNEYS.md', 'guide/user-journeys', 'User journeys'],
+    [...quest('README').slice(0, 2), 'Quest overview'],
+    [...quest('GAME-DESIGN').slice(0, 2), 'Quest game design'],
+    [...quest('MAP-MY-STORE').slice(0, 2), 'Map my store'],
     ['assistant/docs/AGENT-CONNECTOR.md', 'guide/agent-connector', 'Use Arya in Muse'],
     ['assistant/docs/MULTILINGUAL-ASK.md', 'guide/multilingual-ask', 'Ask in your language'],
-    ['assistant/docs/PUSH-REMINDERS.md', 'guide/push-reminders', 'Reminders'],
-    ['assistant/docs/SIGNIN.md', 'guide/signin', 'Sign-in'],
-    ['assistant/docs/DEMO.md', 'guide/demo', 'The demo'],
-    ['assistant/docs/DEMO-TOWN.md', 'guide/demo-town', 'Demo Town'],
-  ],
-  'Product': [
-    ['PRODUCT.md', 'product', 'Product'],
-    ['docs/ROADMAP.md', 'roadmap', 'Roadmap'],
-    ...questPages().filter(([s]) => !/ARCHITECTURE|META-PRODUCTS/.test(s)),
+    ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
   ],
   'How it is built': [
     ['assistant/docs/ARCHITECTURE.md', 'architecture/overview', 'Architecture'],
-    ['assistant/docs/SPEC.md', 'architecture/spec', 'Spec'],
-    ['assistant/docs/IMPLEMENTATION.md', 'architecture/implementation', 'Implementation'],
     ['assistant/docs/MODEL-POLICY.md', 'architecture/model-policy', 'Model policy'],
-    ['docs/MODELS.md', 'architecture/models', 'Models'],
-    ['docs/quest/ARCHITECTURE.md', 'architecture/quest', 'Quest architecture'],
-    ['docs/quest/META-PRODUCTS.md', 'architecture/meta-products', 'Meta products'],
+    ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'How we built it'],
   ],
-  'Evals': [
+  'Evidence': [
     ['docs/evals/README.md', 'evals/index', 'Overview'],
-    ['docs/evals/JUDGE-EVAL.md', 'evals/judge-eval', 'Staple judge eval'],
-    ['docs/evals/WONDER-EVAL.md', 'evals/wonder-eval', 'Wonder eval'],
     ['docs/evals/GATE-0-REPORT.md', 'evals/gate-0', 'Gate 0 report'],
+    ['docs/evals/WONDER-EVAL.md', 'evals/wonder-eval', 'Wonder eval'],
+    ['docs/evals/JUDGE-EVAL.md', 'evals/judge-eval', 'Staple judge eval'],
   ],
-  'API': [['docs/API.md', 'api/lists-api', 'Lists API v1']],
+  'Developers': [
+    ['docs/RUN-IT-YOURSELF.md', 'run-it-yourself', 'Run it yourself'],
+    ['docs/TRY-THE-FEATURES.md', 'try-the-features', 'Tour of your own copy'],
+    ['docs/API.md', 'api/lists-api', 'Lists API v1'],
+  ],
+  'After the hackathon': [
+    ['docs/ROADMAP.md', 'roadmap', 'Roadmap'],
+  ],
 };
-const ENG = 'Engineering process: how we built Arya';
-// Working notes (agent rules, status, ops, submission drafts, build plan, design
-// discussion, early pitch) stay in the repository only; the overview links to them.
-SECTIONS[ENG] = [
-  ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'Overview'],
-  ['docs/DECISIONS.md', 'internal/decisions', 'Decisions'],
-];
+// Everything else (README, spec, ops, status, agent rules, submission drafts, the
+// decision log and the other design notes) stays in the repository only; pages on
+// the site link to those files on GitHub.
 const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
   'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md', 'docs/DECISIONS.md', 'docs/quest/PITCH.md']);
 
