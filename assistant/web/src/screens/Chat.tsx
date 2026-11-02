@@ -3,7 +3,7 @@ import { askList, type NeedList } from "../lib/listPick";
 import { orderLists } from "../ui/ListPick";
 import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
-import { ApiError, get, post } from "../lib/api";
+import { ApiError, get, noKeyMessage, post } from "../lib/api";
 import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListeningCard } from "../ui/Listening";
@@ -304,7 +304,7 @@ export function Chat() {
       history.pop();
       // Arya's daily limit (or a failed own key): a card that offers the shopper's own Meta key.
       if (e instanceof ApiError && isOwnKeyOffer(e.offer)) { add({ kind: "err", text: e.message, code: q, offer: e.offer }); return; }
-      add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
+      add({ kind: "err", text: noKeyMessage(e) || t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
   };
 
@@ -321,7 +321,7 @@ export function Chat() {
         if (said) { setNote(null); send(said); }
         else setNote(t("ask.voiceEmpty"));
       } catch (e) {
-        setNote(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
+        setNote(noKeyMessage(e) || t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
       setReading(false);
       return;

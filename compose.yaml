@@ -2,7 +2,13 @@
 #
 #   cp .env.local.example .env      # then put your Meta key in .env
 #   docker compose up --build
-#   open http://localhost:8080 and tap "Try it now"
+#   open http://localhost:8080
+#
+# On the first visit a "Create your account" sheet opens: that makes the
+# one real account on this copy (any username, a password of 8 or more
+# characters), which can read and keep your own receipts. Or close it
+# and tap "Try it now" for the demo household (it keeps nothing, so it
+# cannot add receipts).
 #
 # This file is for a laptop only. The live site uses
 # assistant/deploy/docker-compose.yml (Caddy, TLS, the VM's folders),

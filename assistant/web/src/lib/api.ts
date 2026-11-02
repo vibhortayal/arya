@@ -15,6 +15,16 @@ const FRIENDLY: Record<string, string> = {
   "model_api_key not provisioned on this runtime": "This copy of Arya has no Meta key, so AI features are off. Put your key from dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d",
 };
 
+/** The no-key sentence when this error is a copy of Arya running with
+ * no MODEL_API_KEY (local Docker), else null. Screens that wrap errors
+ * in their own sentence show this one as it is, so a judge sees what
+ * to add (Tester on #432). */
+export function noKeyMessage(e: unknown): string | null {
+  const m = e instanceof Error ? e.message : String(e ?? "");
+  const t = FRIENDLY["model_api_key not provisioned on this runtime"];
+  return m === t || m.toLowerCase().startsWith("model_api_key not provisioned") ? t : null;
+}
+
 export function friendlyError(d: unknown): string {
   // A structured answer (every item on a list: {code, message, ...})
   // reads as its message; the code and the rest ride on ApiError.detail.
