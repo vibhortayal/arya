@@ -228,7 +228,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Settings trimmed and grouped (2026-10-31):** Settings is now Group,
   Preferences (currency and language, When I start shopping, Display,
   Reminders), Account (Export, Delete), About Arya, and Sign out last.
-  About Arya holds Arya's powers, Use Arya in another AI app, Add to Home
+  About Arya holds Arya's powers, Use Arya in Muse, Add to Home
   Screen, Keeping Arya running and the credits. Stores moved to Lists;
   Receipts and Spending to a card at the bottom of Today. Help and Send
   feedback left Settings (the Help tab has both). Guide, tour, Ask's
