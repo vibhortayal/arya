@@ -1092,7 +1092,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
 /* The confirm sheet (after a read) and the type sheet (typed or fixed)
  * share the item picker, the date and the save (expiry.js confirmSheet,
  * typeSheet, save). */
-function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "confirm" | "type" }>; onSaved: (msg: string) => void; onError: (m: string) => void }) {
+export function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "confirm" | "type" }>; onSaved: (msg: string) => void; onError: (m: string) => void }) {
   const { t } = useTranslation();
   const read = ex.k === "confirm" ? ex.read : null;
   const fix = ex.k === "type" ? ex.item : undefined;
@@ -1127,7 +1127,8 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
     </>
   );
   const dateRow = (
-    <div className="exkv"><span className="exk">{t("today.date")}</span><span className="exv"><input type="date" id="ex-date" value={date} aria-label={t("today.date")} onChange={ev => setDate(ev.target.value)} /></span></div>
+    <div className="exkv"><span className="exk">{t("today.date")}</span><span className="exv"><input type="date" id="ex-date" min={isoToday()} value={date} aria-label={t("today.date")}
+      onChange={ev => { const v = ev.target.value; if (v && v < isoToday()) { onError(t("today.datePast")); return; } setDate(v); }} /></span></div>
   );
 
   if (read) {
@@ -1170,7 +1171,7 @@ const CameraSvg = () => (
     <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
 );
 
-function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: boolean; perish: Perish; demo: boolean;
+export function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: boolean; perish: Perish; demo: boolean;
   onClose: () => void; onMore: () => void; reload: () => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -1230,12 +1231,15 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
   }
 
   // A native date input laid over the button, so a tap opens the
-  // phone's own calendar on every browser.
-  const picker = (id: string, name: string, value: string, face: ReactNode) => (
-    <span className="pz-pick">{face}
-      <input type="date" min={minDate} value={value} aria-label={t("today.perish.pickAria", { name })}
-        onChange={ev => ev.target.value && set(id, { date: ev.target.value, kind: "unknown" })} /></span>
-  );
+  // phone's own calendar on every browser. It is the same element before
+  // and after a date is set (owner phone test 2026-11-02): iPhone fills in
+  // today as the wheel opens, and swapping the row then closed the wheel
+  // at once on today. A past date is refused, since iPhone ignores min.
+  const pick = (id: string, v: string) => {
+    if (!v) return;
+    if (v < minDate) { toast(t("today.datePast")); return; }
+    set(id, { date: v, kind: "unknown" });
+  };
 
   return (
     <Sheet open={open} onClose={() => { onClose(); reload(); }} id="perish-sheet" labelledBy="pz-title">
@@ -1252,20 +1256,21 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
             <li key={it.item_id} className={r.skip ? "skip" : undefined} data-pz={it.item_id}>
               <Face name={it.name} />
               <span className="grow"><b>{it.name}</b>{r.skip ? <small>{t("today.perish.skipped")}</small> : r.reading ? <small role="status">{t("today.perish.reading")}</small> : null}</span>
-              {r.skip
-                ? <button className="pz-undo" type="button" onClick={() => skip(it.item_id, false)}>{t("today.perish.undo")}</button>
-                : r.date
-                  ? picker(it.item_id, it.name, r.date, <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>)
-                  : <>
-                    {demo
-                      ? <button className="pz-b" type="button" aria-label={t("today.perish.snapAria", { name: it.name })} disabled={r.reading} onClick={() => snap(it.item_id)}><CameraSvg /></button>
-                      : <><label className="pz-b" htmlFor={fid} role="button" tabIndex={0} aria-label={t("today.perish.snapAria", { name: it.name })}
-                        onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById(fid)?.click(); } }}><CameraSvg /></label>
-                        <input type="file" id={fid} accept="image/*" capture="environment" hidden
-                          onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>}
-                    {picker(it.item_id, it.name, "", <span className="pz-b">{t("today.perish.pick")}</span>)}
-                    <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => skip(it.item_id, true)}>×</button>
-                  </>}
+              {r.skip && <button className="pz-undo" type="button" onClick={() => skip(it.item_id, false)}>{t("today.perish.undo")}</button>}
+              {!r.skip && !r.date && (demo
+                ? <button className="pz-b" type="button" aria-label={t("today.perish.snapAria", { name: it.name })} disabled={r.reading} onClick={() => snap(it.item_id)}><CameraSvg /></button>
+                : <><label className="pz-b" htmlFor={fid} role="button" tabIndex={0} aria-label={t("today.perish.snapAria", { name: it.name })}
+                  onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById(fid)?.click(); } }}><CameraSvg /></label>
+                  <input type="file" id={fid} accept="image/*" capture="environment" hidden
+                    onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>)}
+              {!r.skip && (
+                <span className="pz-pick">
+                  {r.date
+                    ? <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>
+                    : <span className="pz-b">{t("today.perish.pick")}</span>}
+                  <input type="date" min={minDate} value={r.date || ""} aria-label={t("today.perish.pickAria", { name: it.name })}
+                    onChange={ev => pick(it.item_id, ev.target.value)} /></span>)}
+              {!r.skip && !r.date && <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => skip(it.item_id, true)}>×</button>}
             </li>
           );
         })}

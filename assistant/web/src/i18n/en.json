@@ -2559,6 +2559,7 @@
     "snoozedToast": "{{name}}: Arya will check in again in 2 days.",
     "stoppedToast": "Stopped tracking {{name}}.",
     "pickDateFirst": "Pick the date first.",
+    "datePast": "That date has passed. Pick today or a later date.",
     "sayWhatItem": "Say what the item is.",
     "trackingUntil": "Tracking {{name}} until {{date}}.",
     "differentItem": "A different item…",
