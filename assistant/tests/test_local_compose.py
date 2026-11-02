@@ -20,6 +20,17 @@ class LocalCompose(unittest.TestCase):
         self.assertIn('"${ARYA_LOCAL_PORT:-8080}:8000"', c)
         self.assertIn('ARYA_INSECURE_COOKIE: "1"', c)
 
+    def test_judge_defaults_town_on_signup_open_no_supabase(self):
+        # Owner, 2026-11-02: plain username and password locally (no
+        # waitlist, no Google), and the Demo Town neighbourhood as seed.
+        c = read("compose.yaml")
+        self.assertIn("ARYA_DEMO_TOWN: ${ARYA_DEMO_TOWN:-1}", c)
+        self.assertIn("ARYA_REGISTRATION_OPEN: ${ARYA_REGISTRATION_OPEN:-1}", c)
+        self.assertIn('ARYA_SUPABASE_AUTH: "0"', c)
+        self.assertIn("ARYA_GROUPS: ${ARYA_GROUPS:-1}", c)
+        for live_only in ("SUPABASE_URL", "GOOGLE_OAUTH", "RESEND_API_KEY", "ARYA_KEY_VAULT_SECRET"):
+            self.assertNotIn(live_only, c)
+
     def test_env_example_needs_only_the_meta_key(self):
         e = read(".env.local.example")
         keys = dict(re.findall(r"^([A-Z_]+)=(.*)$", e, re.M))
