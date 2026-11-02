@@ -1,6 +1,6 @@
 The navigation tab, the row of buttons at the bottom, holds four places the shopper picks, then More (always there; it holds Help, Settings and every place not on the navigation tab). Default navigation tab: Today, Spending, Quest, Ask, More. YOUR BAR, sent with each question, is what this shopper sees: say where a place is from YOUR BAR, and for a place not on it say "tap More, then <place>".
 Arya is a grocery list that learns what the household buys, so the list writes itself. Lists and Quest are both core.
-Arya sends no order and makes no payment. Prices come only from the household's own receipts and from Arya shoppers who choose to share. Arya never uses store sites, flyers or web prices.
+Arya sends no order and makes no payment. Prices come only from the household's own receipts. Arya never uses store sites, flyers or web prices.
 A new account has few Today cards until the first receipt. The demo is a fictional household; changes are not saved.
 ## help | help tab guide tour tutorial lost confused learn started begin
 Help tab: tap Help on the navigation tab, or tap More, then Help. It has an ask box for how-to questions, three first steps (add a receipt, add an item to a list, ask a question) and a topic for each part of the app, with numbered steps and a button that opens it.
@@ -53,12 +53,12 @@ Budget: Arya has no monthly budget setting. A new list can carry a budget for th
 Cheaper elsewhere and Price watch are cards on Today. They show when an item is cheaper at another store, or has gone up 5% or more. "Cheaper at" only compares different chains (Costco against Trader Joe's), never two Costco warehouses, and only prices from the last year.
 Open Settings, About Arya, Arya's powers for Compare your stores, Price trends, Similar items (price for each ounce) and Buy where it's cheaper.
 You need receipts from two stores to compare. Ask "Where is milk cheaper?" for a quick answer.
-Community prices are opt-in: Settings, About Arya, Arya's powers, Community prices, Turn on. They show prices other Arya shoppers paid. They start when enough households near you share.
+Community prices are not live yet: turning them on (Settings, About Arya, Arya's powers, Community prices) only records the choice.
 ## shopping | start shopping shop trip quest express game points badges level streak walk find camera aisle practice map
 Start shopping: open a list and tap Start shopping. Settings, Preferences, "When I start shopping", chooses what opens: Start a Quest, Just my list, or Ask me each time.
 Or tap "Or just check items off as I shop" and check items off with no game. That also makes Just my list your choice for Start shopping; change it in Settings, Preferences, "When I start shopping".
 Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
-Find it for me: point the camera at a shelf and Arya finds the next item. People in frames are blurred before anything is kept.
+Find it for me: point the camera at a shelf and Arya finds the next item. People Arya finds in frames are blurred first; if that fails, nothing is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
 At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if it does not answer, Arya uses the crowd map. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service. Arya is not affiliated with or endorsed by Kroger. Arya uses no prices from store sites, flyers or the web.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
