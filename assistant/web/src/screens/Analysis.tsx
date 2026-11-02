@@ -49,8 +49,8 @@ export function Analysis() {
   const [receipts, setReceipts] = useState(0);
   const [ins, setIns] = useState<Insights>(null);
   const [info, setInfo] = useState<string | null>(null);
-  /* One (i) per Spending heading; all open the same "What these mean" sheet. */
-  const i = <InfoBtn k="spend" onOpen={setInfo} />;
+  /* One (i) per Spending heading, each explaining only its own row. */
+  const i = (row: string) => <InfoBtn k={"spend." + row} onOpen={setInfo} />;
   /* Who sees the receipts, for the Receipts row: you alone, or you and your group. */
   const [groupName, setGroupName] = useState<string | null>(null);
   useEffect(() => {
@@ -136,15 +136,15 @@ export function Analysis() {
         <Section title={t("analysis.spendLiveFromYourReceipts")} />
         <div className="group pad" id="an-spend">
           {d && latest && <>
-            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}{i}</p>
+            <p className="an-cap">{t("analysis.monthTotal", { month: monthName(latest) })}{i("month")}</p>
             <p className="bignum">{money(d.spend_by_month[latest])}</p>
             <p className="muted" style={{ textAlign: "center" }}>{t("analysis.acrossReceipt", { count: receipts })}</p>
-            <Row name={<>{t("analysis.allTimeSpend")}{i}</>} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
-            {!!d.spend_other && <Row name={<>{t("analysis.groceries")}{i}</>} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
-            {!!d.spend_other && <Row name={<>{t("analysis.otherPurchases")}{i}</>} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
-            {!!d.returns_total && <Row name={<>{t("analysis.returnsRow")}{i}</>} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
-            {!!d.savings_total && <Row name={<>{t("analysis.youSaved")}{i}</>} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
-            {!!d.for_others_total && <Row name={<>{t("analysis.boughtForOthers")}{i}</>} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
+            <Row name={<>{t("analysis.allTimeSpend")}{i("all")}</>} sub={t("analysis.trips", { count: d.trip_count }) + (d.returns_total ? " · " + t("analysis.afterReturns") : "")} right={money(d.spend_total)} />
+            {!!d.spend_other && <Row name={<>{t("analysis.groceries")}{i("groceries")}</>} sub={t("analysis.foodAndHousehold")} right={money(d.spend_groceries)} />}
+            {!!d.spend_other && <Row name={<>{t("analysis.otherPurchases")}{i("other")}</>} sub={Object.entries(d.other_by_kind || {}).map(([k, v]) => `${k} ${money(v)}`).join(" · ")} right={money(d.spend_other!)} />}
+            {!!d.returns_total && <Row name={<>{t("analysis.returnsRow")}{i("returns")}</>} sub={t("analysis.returnsRowSub", { count: d.returns_count || 1 })} right={<span className="return">{"−" + money(d.returns_total)}</span>} />}
+            {!!d.savings_total && <Row name={<>{t("analysis.youSaved")}{i("saved")}</>} sub={t("analysis.youSavedSub")} right={<span className="saved">{money(d.savings_total)}</span>} />}
+            {!!d.for_others_total && <Row name={<>{t("analysis.boughtForOthers")}{i("others")}</>} sub={t("analysis.giftsAndItemsForPeople")} right={money(d.for_others_total)} />}
           </>}
         </div>
       </>
