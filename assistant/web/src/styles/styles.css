@@ -2310,6 +2310,16 @@ body.hunting #offlinebar { display: none !important; }
 .ok-capcard b{font-size:17px}
 .ok-capcard .sub{color:var(--secondary);font-size:15px;margin-bottom:8px}
 
+/* Sign up with your own Meta key (ui/KeySignup.tsx, owner-approved mockup 2026-11-01) */
+.ks-way{display:block;width:100%;text-align:left;border:1px solid var(--sep);background:var(--panel);border-radius:14px;padding:14px;margin:12px 0 0;font:inherit;color:var(--label);cursor:pointer}
+.ks-way b{display:block;font-size:17px}
+.ks-way span{display:block;color:var(--secondary);font-size:15px;margin-top:3px;line-height:1.35}
+.ks-way em{display:inline-block;font-style:normal;font-size:12px;font-weight:700;background:var(--fill);border-radius:999px;padding:2px 8px;margin-top:8px}
+.ks-check{display:flex;gap:10px;align-items:flex-start;font-size:15px;margin:12px 0 0;line-height:1.35}
+.ks-check input{width:20px;height:20px;margin-top:1px;flex:none}
+.ks-ok{background:#E6F4EA;color:#1E6B34;border-radius:10px;padding:8px 12px;font-size:15px;font-weight:600;margin:0 0 12px}
+.ks-sub{font-size:13px}
+.ok-today{margin:8px 0 12px}.ok-today .btn{margin-top:10px}
 /* The Listening card (owner, 2026-11-01): one Stop and send, plus Cancel. */
 .listencard { background: var(--panel); border: 2px solid var(--acc); border-radius: 16px; padding: 14px; margin: 10px 0; }
 .listencard .lc-head { display: flex; align-items: center; gap: 10px; font-size: 17px; }

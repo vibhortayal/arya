@@ -7,6 +7,7 @@ import { get, post, friendlyError, keepBootRead } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { A2hsCard } from "../ui/A2hs";
+import { OwnKeyAlert } from "../ui/OwnKey";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
@@ -728,6 +729,7 @@ export function Today() {
         <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
       ) : (
         <>
+          <OwnKeyAlert />
           {/* First load: skeleton rows; a failed one: a Retry card, not an empty page (#3, #32). */}
           {!h && (loadFailed
             ? <div className="empty" role="alert" id="today-failed"><p>{t("today.couldNotLoad")}</p>
