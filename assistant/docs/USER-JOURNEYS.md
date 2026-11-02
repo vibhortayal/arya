@@ -94,6 +94,8 @@ button.
 **Status.** Shipped. Typing and tapping are code. Voice and photo adds
 need a model.
 
+_Update 2026-11-02: "Everything else" is no longer an automatic list (it exists only if you make one), and Lists now sits under More. The steps below and their screenshot show the earlier layout and are due a re-walk._
+
 | Step | What Priya does | What Arya shows |
 |---|---|---|
 | 1 | Taps **Lists**. | Cards: **Costco** (2 items), **Trader Joe's** (3 items), **Everything else** (1 item). |
@@ -292,9 +294,9 @@ before milk runs out.
 ### 7a. Ask Arya
 
 **Status.** Shipped. **Needs a model.** Without `MODEL_API_KEY` the
-Ask tab says it could not answer.
+Ask Arya tab says it could not answer.
 
-In the Ask tab Priya can type, or tap **Talk** to speak. Arya answers in text only:
+In the Ask Arya tab Priya can type, or tap **Talk** to speak. Arya answers in text only:
 
 | She says | Arya does |
 |---|---|

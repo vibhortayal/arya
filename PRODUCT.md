@@ -46,7 +46,7 @@ or near a store. Speed and trust matter more than features.
 
 ## Surface
 
-A phone-first PWA with five tabs: Today, Lists, Ask, Quest, Settings. Mode: Operate. The user is completing a task, not
+A phone-first PWA with a navigation tab with five entries: Today, Spending, Quest, Ask Arya and More (Lists, Receipts, Stores, Help and Settings sit under More). Mode: Operate. The user is completing a task, not
 reading marketing. The visual language follows the Apple UI design system for
 type and layout: system typography, grouped lists, 44 pt targets. Color is
 greyscale structure with one orange accent, light mode only (`DESIGN.md`). One account, the owner's; judges of the hackathon use a
