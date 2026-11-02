@@ -6,7 +6,7 @@ import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
 import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
-import { useListSync } from "./app/listSync";
+import { useListQueue, useListSync } from "./app/listSync";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { useTranslation } from "./i18n";
 import { get } from "./lib/api";
@@ -153,6 +153,7 @@ function Shell() {
   useListFromHash();
   useGroupLive();
   useListSync();
+  const { pending } = useListQueue();
   useScanQueue();
   useEffect(() => {
     // After first paint and a quiet moment, fetch the other tabs' code.
@@ -164,7 +165,7 @@ function Shell() {
     <>
       {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
         <button id="demo-finish" className="linkbtn" type="button" onClick={openEndOfDemo}>{t("endDemo.finish")}</button></p>}
-      {nav.chrome && offline && <p id="offlinebar" role="status" className="note">{t("offline.bar")}</p>}
+      {nav.chrome && offline && <p id="offlinebar" role="status" className="note">{t("offline.bar")}{pending ? " " + t("lists.queue.waiting", { count: pending }) : ""}</p>}
       {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>
