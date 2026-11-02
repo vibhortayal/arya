@@ -4,7 +4,7 @@ Two paths. Path A is the live presentation on the owner's account (real
 data, 114 trips). Path B is the judge self-serve path (demo household).
 The video follows Path A beats; the narration is Path B safe.
 
-## Beats (fixed order; matches video script v4, `/mnt/project-files/demo-video/`)
+## Beats (fixed order; matches video script v4)
 
 1. **Why and bridge** (presenter, about 1:04). Groceries, scattered notes, no
    shared memory. Say: "I built Arya during this hackathon. I downloaded 114
