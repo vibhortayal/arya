@@ -35,6 +35,9 @@ def load_list_photo_prompt():
     return text.split("SYSTEM:", 1)[1].strip()
 
 
+LIST_PHOTO_EFFORT = "minimal"
+
+
 def read_list_photo(image_bytes, client, media_type="image/jpeg"):
     """Photo -> {"kind": "list"|"receipt", "items": [names]}.
     Personal data: Standard mode only (enforced in meta_client)."""
@@ -46,8 +49,12 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
                      "text": "Read this photo for the shopping list."},
                     {"type": "image_url",
                      "image_url": {"url": data_uri}}]}]
+    # Minimal reasoning: reading a list is transcription, and the model's
+    # thinking was most of the wait (Ops, 2026-11-03: 6.0 s / 645 tokens at
+    # "low" against 5.5 s / 361 at "minimal" for four items, same items).
     out, _usage, _cost = client.chat(messages, mode="standard",
-                                     personal=True)
+                                     personal=True,
+                                     reasoning_effort=LIST_PHOTO_EFFORT)
     dec = parse_json(out)
     kind = dec.get("kind")
     if kind not in ("list", "receipt", "item", "unclear"):
