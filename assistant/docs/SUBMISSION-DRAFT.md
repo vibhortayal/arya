@@ -201,4 +201,6 @@ Also built, but switched off: an Alexa skill that sends misheard adds to Spark i
 ## Track and team
 
 Indie track. Team Nightshift: Vibhor Tayal (representative and only
-member), building with Claude Code as the coding agent.
+member), building with Claude Code and the Meta Muse agent (running Muse
+Spark, which used Muse Wonder) as coding agents, in parallel. Details: README,
+"How this was built".
