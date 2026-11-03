@@ -315,10 +315,12 @@ Short answer: one server for a few dozen people at once, tested on 114 receipts 
 
 What ships now is a limited-scope MVP. These are ideas I am thinking
 about for where Arya could go; they are not commitments, and I need more time
-to figure them out. Nothing in this list is built, except one thing that is
-built but switched off on purpose: **Use your own Meta key**. The code is in
-this repo and tested, but it is unfinished, I decided not to use it,
-and it is not part of the demo. The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
+to figure them out. Nothing in this list is built, except two things that are
+built but switched off: **Use your own Meta key** (the code is in this repo and
+tested, but it is unfinished, I decided not to use it, and it is not part of the
+demo) and an **Alexa skill** that adds items to your list by voice (merged
+behind a flag that is off, paused until after the hackathon, not yet tried on a
+real device, and with no sync to Alexa's own lists). The ideas, grouped in [`docs/ROADMAP.md`](docs/ROADMAP.md):
 
 - **Devices:** Ray-Ban Meta glasses and Meta Ray-Ban Display glasses.
 - **Store data and community:** capture more store data, Arya shoppers and
