@@ -73,7 +73,7 @@ def first_run(cur):
 # Today's cards (customizable Today, owner 2026-10-30). "today_cards"
 # is the ordered list of cards shown; absent means the default. The
 # ids match web/src/screens/todayCards.ts.
-TODAY_CARDS = ("low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip")
+TODAY_CARDS = ("low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip", "alexa")
 
 
 # Card sizes (card library, 2026-10-30): "s" one line, "m" the usual

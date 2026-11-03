@@ -5,12 +5,24 @@
  * the default. A card that is on still hides when it has nothing to
  * say (relevant cards, owner 2026-10-30). */
 
-export const CARD_IDS = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip"] as const;
+export const CARD_IDS = ["low", "lists", "report", "price", "expiry", "checks", "patterns", "quest", "watch", "trip", "alexa"] as const;
 export type CardId = (typeof CARD_IDS)[number];
 
 /* Today's order before it was customizable. Next trip leads (the main
  * action, 2026-11-01); Price watch starts in the card library, off. */
-export const DEFAULT_CARDS: CardId[] = ["trip", "low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"];
+export const DEFAULT_CARDS: CardId[] = ["alexa", "trip", "low", "lists", "report", "price", "expiry", "checks", "patterns", "quest"];
+
+/* "From Alexa" (owner, 2026-11-03, mockup 93u3oRPsr5TeBzm9TFDwNo) is a
+ * hidden card: it exists only while the server's Alexa flag is on
+ * (GET /api/alexa/review answers; 404 otherwise) and leads Today, since
+ * each row asks for a check. A Today arranged before the card existed
+ * gets it once; today_sizes.alexa marks "already offered", so a person
+ * who then removes it keeps it off. */
+export function withAlexa(on: CardId[], enabled: boolean, offered: boolean): CardId[] {
+  if (!enabled) return on.filter(c => c !== "alexa");
+  if (on.includes("alexa") || offered) return on;
+  return ["alexa", ...on];
+}
 
 const isCard = (x: unknown): x is CardId => (CARD_IDS as readonly string[]).includes(x as string);
 
@@ -64,7 +76,7 @@ export type Size = "s" | "m" | "l";
 export const SIZES_OF: Record<CardId, Size[]> = {
   low: ["s", "m", "l"], lists: ["s", "m", "l"], report: ["s", "m", "l"], price: ["s", "m", "l"],
   expiry: ["s", "m", "l"], checks: ["s", "m", "l"], patterns: ["s", "m"], quest: ["s", "m"],
-  watch: ["s", "m", "l"], trip: ["s", "m"],
+  watch: ["s", "m", "l"], trip: ["s", "m"], alexa: ["m"],
 };
 export function sizeOf(sizes: unknown, id: CardId): Size {
   const s = sizes && typeof sizes === "object" ? (sizes as Record<string, unknown>)[id] : undefined;
@@ -76,5 +88,5 @@ export const LIBRARY_GROUPS = ["all", "money", "food", "shop"] as const;
 export type LibraryGroup = (typeof LIBRARY_GROUPS)[number];
 export const CARD_GROUP: Record<CardId, Exclude<LibraryGroup, "all">> = {
   low: "food", lists: "shop", report: "shop", price: "money", expiry: "food", checks: "food", patterns: "money", quest: "shop",
-  watch: "money", trip: "shop",
+  watch: "money", trip: "shop", alexa: "shop",
 };

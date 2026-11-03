@@ -9,7 +9,7 @@ describe("customizable Today", () => {
   });
 
   test("More cards lists what is off, in the default order", () => {
-    expect(cardsOff(["quest", "low"])).toEqual(["lists", "report", "price", "expiry", "checks", "patterns", "watch", "trip"]);
+    expect(cardsOff(["quest", "low"])).toEqual(["lists", "report", "price", "expiry", "checks", "patterns", "watch", "trip", "alexa"]);
     // The newer cards start off, in the card library.
     expect(cardsOff(DEFAULT_CARDS)).toEqual(["watch"]);
   });
