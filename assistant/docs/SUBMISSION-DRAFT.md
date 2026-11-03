@@ -95,7 +95,7 @@ hold the truth about what you buy, but nobody reads them.
 - All math (ledger, returns, cadence, spend, price compare) is plain code.
   The models read and speak; they never calculate.
 
-## How we built it
+## How I built it
 
 Python (FastAPI) backend with deterministic engines for the ledger,
 patterns and lists; a React + TypeScript PWA (a website that installs to the Home Screen like an app); in-process demo sandboxes;
@@ -105,13 +105,13 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 
 ## Challenges
 
-- **Reading receipts you can trust.** In our test on 9 public receipts
+- **Reading receipts you can trust.** In my test on 9 public receipts
   (98 lines, labeled by hand first), Wonder got 97 lines right with 0 price
   errors; Spark got 92 with 4 price errors its own confidence did not
   flag, at about a tenth of the cost and a quarter of the time. So Spark
   reads first, code checks the arithmetic, and Wonder takes a second look
   only when a check fails. This combined reader is not yet measured on
-  those photos, so we claim no accuracy number for it; unsure lines always
+  those photos, so I claim no accuracy number for it; unsure lines always
   go to a review queue.
 - **Patterns, not prompts.** A model guessing "you need milk" is easy to
   build and hard to trust. Cadence and price are code; the model only
