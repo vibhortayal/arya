@@ -5,6 +5,16 @@ a household, where Arya could connect to it, and where Arya is different.
 Written 2026-11-02 during the hackathon. It is desk research from public web
 pages, not user interviews, and it is not a business plan.
 
+> **Unverified claims.** This is desk research from public web pages, not a
+> product claim: nothing on this page says what Arya does or promises. What
+> Arya does is in the [README](../README.md) and [`STATUS.md`](../STATUS.md).
+> These outside claims are **not verified**, so do not quote them:
+> the Mealime shutdown date; the Instacart pricing study and its numbers; the
+> GS1 UK food-waste figures (UK data, not US); YNAB, Copilot, Open Prices and
+> list-app import formats (not checked); app prices and plans (from one review
+> article and from vendors); the Monarch features; and the Samsung and
+> Instacart fridge and Meta Ray-Ban Display items (one news article each).
+
 **How to read it.** Every outside claim has a link. A claim marked *(vendor
 source)* comes from a company describing itself or a competitor, so treat it as
 unverified. A claim marked *(not checked)* is something we believe but did not
@@ -155,9 +165,9 @@ What is built today, in plain terms (see README and `STATUS.md`):
 
 - A list that learns from your own receipts: what is running low, what to use
   soon, and where you usually buy it, each with a reason.
-- Receipt reading with a code check: Muse Spark reads first, Muse Wonder
-  re-reads flagged receipts, and every line is checked against the printed
-  total before anything posts.
+- Receipt reading with a code check: every line is checked against the printed
+  total before anything posts (which Meta model reads what is in the
+  [model map](../JUDGES.md#which-model-does-which-job)).
 - Prices from your own receipts only. Nothing is fetched from store sites,
   flyers, APIs or the web.
 - Groups that share lists; an Ask chat; the MCP connector; a Lists API.
@@ -172,7 +182,7 @@ What Arya is not, so the comparison stays fair:
   real phone.
 - It does not match the maturity, store coverage or price of the list apps
   above, which have had years of polish.
-- Registration is closed for the hackathon; the demo needs no account.
+- Sign-up is invite only, for a few beta testers; the demo needs no account.
 
 The honest pitch: apps above are strong at one step. Arya's bet is the
 connective tissue: a household's own receipts as a shared source of truth that
@@ -187,8 +197,3 @@ export so people can bring data in and take it out.
 3. Check Meta's glasses preview terms before promising anything on glasses.
 4. Verify the *(not checked)* items above, and read at least five people who
    use these apps today, before relying on this page for anything public.
-
-## Wording note
-
-Spark and Wonder run in Meta's Standard mode, which Meta does not use to train
-its models. This page makes no other claim about model training.
