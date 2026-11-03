@@ -61,7 +61,7 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
   <img src="docs/images/lists.png" alt="Lists: one card per store list, with suggestions" width="230">
 </p>
 
-*Today and Lists in the demo household (a simulated neighborhood, labelled as such).*
+*Today and Lists in the demo household.*
 
 ### What is real, and what is not?
 
@@ -79,7 +79,7 @@ Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 **The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
 
-**The coding model.** Muse Code, running Muse Wonder, wrote the first version of the engine on Oct 27; I then built the rest of the app with Claude. Muse Code is not part of the shipped app. More under [How this was built](#how-this-was-built).
+**The coding model.** Muse Code wrote the first version of the engine and I built the rest of the app with Claude. Details under [Build tools](#how-this-was-built).
 
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
@@ -348,26 +348,11 @@ in `assistant/loops/` record the rest.
 
 ## Built with
 
-Open-source code, models and services Arya builds on. Each keeps its own
-license; full notices are in [`NOTICE.md`](NOTICE.md).
-
-| Part | What | License |
-|---|---|---|
-| App | React, React DOM, three.js, `@react-three/fiber`, i18next, react-i18next, motion, Vite, vite-plugin-pwa, Vitest | MIT |
-| App | canvas-confetti | ISC |
-| App | TypeScript | Apache-2.0 |
-| App | Scalar API Reference (the `/developers/reference` page) | MIT |
-| API | FastAPI | MIT |
-| API | uvicorn, httpx, pypdf | BSD-3-Clause |
-| API | NumPy | BSD-3-Clause (with other permissive terms) |
-| API | Pillow | MIT-CMU |
-| API | OpenCV (headless), cryptography, pypdfium2 | Apache-2.0 (cryptography: Apache-2.0 or BSD-3-Clause; pypdfium2: BSD-3-Clause or Apache-2.0) |
-| API | pywebpush | MPL-2.0 |
-| API | psycopg | LGPL-3.0 |
-| Serving | Caddy, and the Docker base images (Node, Python) | Apache-2.0, and each image's own terms |
-| Models | Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image, through the Meta Model API | Meta's API terms (hosted; no weights are in this repo) |
-| Models | Muse Spark Open (open weights, `meta-models/muse-spark-open-1026`), hosted on Baseten | Muse Model License (Oct 15, 2026) with its Usage Policy: [`LICENSE.md`](https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B/blob/main/LICENSE.md). Not copied into this repo |
-| Services | Baseten, Supabase (optional), Resend (email) | Their service terms |
+Open-source code, models and services Arya builds on keep their own
+licenses; the full list with every license is in [`NOTICE.md`](NOTICE.md).
+The Meta models come through the Meta Model API (no weights are in this
+repo). Muse Spark Open runs under the Muse Model License and its Usage Policy
+and is not copied here.
 
 **Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
 on Baseten) as a second seat on the staple judge and for dictionary labels, and

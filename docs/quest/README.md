@@ -2,8 +2,7 @@
 
 Quest is the optional game layer of Arya, a grocery list that learns
 ("Waze for grocery shopping"; see the root `README.md`). Team Nightshift,
-Meta Global AI Developer Hackathon, Indie track, submission Nov 4, 2026,
-9:00 PM ET.
+Indie track, submission Nov 4, 2026, 9:00 PM ET.
 
 Quest turns your grocery list into a treasure hunt in your real store. Pick the store; Arya sorts your list by where you usually buy
 each thing. Walk the hunt through real photos of the aisles, grab each
