@@ -235,6 +235,13 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   scrub fails, the frame is not kept.
 - FR-8.8 "Not here?" files a report and edits nothing. Time resolves
   it: a later grab means a stockout; a confirmed new spot means a move.
+  Reports are shared (#542): other shoppers see a store and item only
+  once 3 distinct accounts have a fresh report (`ARYA_REPORT_QUORUM`,
+  default 3). One report per account per store and item, at most 30 a
+  day per account. A report expires after 3 days, or clears for everyone
+  when the item is found or checked off. The alert shows for 12 hours, in
+  the Today feed only (no push or email), and only for items on the
+  viewer's own list at stores they use.
 - FR-8.9 Every board and badge is receipt-verified.
 - FR-8.10 A hunt row taps to grab with a circle. Tapping again puts the grab back.
 - FR-8.11 "Map my store" is a guided camera scan. The user pans and does
