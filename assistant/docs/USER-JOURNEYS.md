@@ -147,7 +147,7 @@ screen stays only for runs started before it was removed.
 | 1 | Opens the Trader Joe's list. Taps **Start shopping · 3 items**. | A first-time how-to: Find it, Grab it, Snap the receipt. A list with no items sends her to Add items instead. |
 | 2 | Taps **Got it**. | "Trader Joe's · Quest", a points counter, "0 of 3". The store's layout is labelled as a typical layout until shoppers map it. A card says "Pasta 1 lb x2, Pasta Shelf". |
 | 3 | Taps **Grab**. | +10 points. She can put an item back. |
-| 4 | An item is not on the shelf. She taps **Not here?** and confirms. | The report shows as a store alert for other shoppers. |
+| 4 | An item is not on the shelf. She taps **Not here?** and confirms. | The report is shared. Once three different shoppers have reported the same item at a store, other shoppers who have it on their list and use that store see a "3 shoppers say not here" alert on Today. |
 | 5 | Taps **Find it for me** and aims the camera at a shelf. | SAM 3.1 boxes candidates, Muse Spark checks each one, and the match lights up for one tap. |
 | 6 | Taps **I'm done shopping**, then photographs the receipt. | +50 points. The receipt is filed with the same checks as Journey 1. |
 

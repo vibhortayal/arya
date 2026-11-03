@@ -7,6 +7,7 @@ on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
 - **Live commit:** not listed here (me, 2026-11-01). `/health` shows the running commit (#359); deploy and rollback steps are in `assistant/docs/OPS.md`.
+- **Not here reports shared across shoppers (#542, merged, deploy pending Tester smoke):** other shoppers see a store and item only once 3 different accounts (`ARYA_REPORT_QUORUM`, default 3) have a fresh report; only for items on their own list and at stores they use (My stores or a store named on one of their lists); one report per account per store and item, at most 30 a day; a report expires after 3 days or clears for everyone when the item is found or checked off; taking a report back removes only your own. Today shows one folded alert ("N shoppers say not here") for 12 hours, in the feed only, with no push or email. The server stores an 8-character account hash, never a name or handle. The demo writes to its sandbox. `assistant/loops/2026-11-03-shared-not-here.md`.
 - **Own Meta key (#388):** screens merged, unfinished and switched off (`ARYA_BYOK` off); not used and not part of the demo. See `docs/DECISIONS.md`, 2026-11-02. `assistant/loops/2026-11-01-own-key-ui.md`.
 - **Judge review round (#380 to #387, merged):** eval evidence in `docs/evals/`, Known limits (one household, iPhone 17 Pro only) in README, judge playbook and submission draft; Spark and Wonder both in Standard mode (#380, #382); receipt photo reader default is Auto, Spark first with Wonder re-reading a flagged receipt (#382); Ask acts on lists, reads receipts, keeps follow-ups and cooks (#384); install questions find the Home Screen steps (#383); a coordinator relay counts as my word for every role (#385); demo beats match video script v4 and the judge playbook says what happens at a budget gate (#386); portal copy for the submission (#387).
 - **Landing: Add Arya to your Home Screen (#378, merged):** the "apps coming soon" line is replaced by an install card (Install on Android when the browser offers it, steps for iPhone and Android); also in Settings, About Arya.
@@ -310,9 +311,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 
 ## Known gaps
 - One web test is flaky: `pack.test.tsx` "arrow keys pack and skip" can fail in a full `npm test` run (a timing issue) and passes when run alone. Seen once in a fresh-clone run on 2026-11-03.
-- Store news and the Friends/Store/Global boards read this account
-  only; cross-account data shows labelled samples. Shop-Off and Spotter
-  reports are single-account.
+- The Friends/Store/Global boards read this account only; cross-account
+  data shows labelled samples. Shop-Off and Spotter reports are
+  single-account. "Not here" reports are shared (see the #542 entry above).
 - Split the list (kids or partner) is not built. Friend run
   notifications: designed (Discussion 24), not built.
 - `scene.js` (three.js store view, about 930 lines) is still a classic
