@@ -51,6 +51,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
 - Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#what-are-the-known-limits).
 - Open API and docs: https://arya.teamnightshift.org/developers
+- Outside services: the Google Places API finds stores for the store picker; Supabase, Resend and Baseten are listed in the [README](README.md#built-with).
 - Tests: commands in the [README](README.md#run-it-yourself); known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
 - How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
 - Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).

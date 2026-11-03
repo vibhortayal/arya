@@ -177,6 +177,10 @@ The full feature list, with why each matters, is the [dated build page](docs/WHA
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
 - **Lists you name.** Every item belongs to a list.
+- **Store search from Google Places.** When you add a store, Arya suggests real
+  grocery stores with their address from the Google Places API (US, near you if
+  you allow location) and saves each store once in a shared directory. A copy
+  you run needs your own Google Places key.
 - **You decide.** Arya suggests; you decide what goes on the list.
 
 **Kroger aisle lookup.** At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored, and it falls back to the crowd map if Kroger does not answer. It needs your own Kroger developer keys if you run your own copy. The demo stores are invented, so you will not see it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
@@ -353,7 +357,7 @@ in `assistant/loops/` record the rest.
 Open-source code, models and services Arya builds on keep their own
 licenses; the full list with every license is in [`NOTICE.md`](NOTICE.md).
 The Meta models come through the Meta Model API (no weights are in this
-repo). Muse Spark Open runs under the Muse Model License and its Usage Policy
+repo). Store search uses the Google Places API. Muse Spark Open runs under the Muse Model License and its Usage Policy
 and is not copied here.
 
 **Built with Muse Spark Open.** Arya uses Muse Spark Open (open weights, hosted
