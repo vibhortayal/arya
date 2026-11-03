@@ -69,6 +69,8 @@ hold the truth about what you buy, but nobody reads them.
 
 ## How Meta models are used
 
+- **Muse as a client of Arya (live).** Muse connects to Arya over MCP as an agent, with the code pasted into Muse's secure credentials vault, and uses six tools to read the list, add and check off items, and file receipts it read in chat. Tested on my own Muse on 2026-11-02.
+
 - **Muse Spark 1.3** (Standard mode): the first reader for receipt photos
   and PDFs; reads list photos and expands receipt abbreviations; labels
   shelves in the store scan; runs Ask Arya; and is the staple judge that
