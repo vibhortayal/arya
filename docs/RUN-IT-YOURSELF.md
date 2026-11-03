@@ -111,7 +111,7 @@ on this route its last words, "docker compose up -d", do not apply: set
 If you use a coding agent that can run commands on your computer, paste this
 prompt to it. It uses the no-Docker route, which the Tester followed from a
 fresh clone (without a key). Read the prompt first: it asks the agent to run
-the commands in this guide on your machine.
+commands on your machine.
 
 ```text
 Set up Arya on my computer so I can try it. Repository:
@@ -119,14 +119,13 @@ https://github.com/vibhortayal/arya
 
 1. Clone the repository into a new, empty folder and open
    docs/RUN-IT-YOURSELF.md.
-2. Follow the section "Can I run it without Docker?" literally, step by step.
-   Run only the commands in that guide. Do not change any file in the
-   repository, and do not run anything else.
+2. Follow the section "Can I run it without Docker?" step by step. If
+   something goes wrong, troubleshoot it as you normally would to get Arya
+   running, and use "What if something goes wrong?" in the guide. Do not
+   change any file in the repository.
 3. Use the no-key demo mode: leave MODEL_API_KEY empty. Do not ask me for a
    key, a password or any secret, and do not paste or print one.
-4. If a step fails, stop. Tell me the exact step and the exact output. Do not
-   guess a fix or work around it.
-5. When the server is up, tell me the local address (http://localhost:8000),
+4. When the server is up, tell me the local address (http://localhost:8000),
    that /health answers "ok", and the sign-in steps: tap Close on the "Create
    your account" sheet, then tap "Try it now" for the demo household. Tell me
    to make the browser about 390 px wide.
