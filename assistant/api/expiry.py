@@ -70,12 +70,20 @@ _MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct",
 
 def raw_has_year(raw):
     """Does the printed text carry a year? "BB NOV 4" does not; "03 11 26",
-    "NOV 04 26" and "2026/11/03" do."""
+    "NOV 04 26" and "2026/11/03" do. A time (07:00) and lot codes
+    (06-691) printed beside the date are not years, so they are dropped
+    first (Tester, #559)."""
     r = str(raw or "").lower()
+    r = re.sub(r"\b\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?", " ", r)   # times
+    r = re.sub(r"\b\d+\s*-\s*\d{3,}\b", " ", r)                  # lot codes
+    r = re.sub(r"\b\d{1,2}\s+(?!20\d\d\b)\d{3,}\b", " ", r)       # "06 691"
     if re.search(r"\b20\d\d\b", r):
         return True
-    nums = len(re.findall(r"\d+", r))
-    return nums >= (2 if any(m in r for m in _MONTHS) else 3)
+    if any(m in r for m in _MONTHS):
+        # month day YEAR or day month YEAR, with a two-digit year
+        return bool(re.search(r"[a-z]{3,}\.?\s*\d{1,2}[\s,/.'\-]+\d{2}\b", r)
+                    or re.search(r"\b\d{1,2}\s*[a-z]{3,}\.?[\s,/.'\-]+\d{2}\b", r))
+    return len(re.findall(r"\d+", r)) >= 3
 
 
 def _next_occurrence(d, today):

@@ -61,6 +61,18 @@ class TestNormalize(unittest.TestCase):
         for raw in ("BB NOV 4", "SELL BY 11/04", ""):
             self.assertFalse(expiry.raw_has_year(raw), raw)
 
+    def test_time_and_lot_code_beside_the_date_are_not_a_year(self):
+        # The jug also prints "07:00 06-691" (Tester, #559).
+        t = date(2026, 11, 3)
+        for raw in ("BB NOV 4 07:00 06-691", "BB NOV 4 07:00", "BB NOV 4 06-691",
+                    "BB 11/04 07:00 06-691", "BB NOV 4 07:00 06 691"):
+            for my in (2025, 2026, 2027):
+                r = expiry.normalize_read({"date": f"{my}-11-04", "kind": "best_by",
+                                           "confidence": 0.7, "raw": raw}, t)
+                self.assertEqual(r["date"], "2026-11-04", (raw, my))
+        self.assertTrue(expiry.raw_has_year("BB NOV 04 27 07:00 06-691"))
+        self.assertTrue(expiry.raw_has_year("4 NOV 27"))
+
     def test_prompt_and_message_give_today_and_the_no_year_rule(self):
         self.assertIn("NO year", expiry.load_prompt())
         seen = {}
