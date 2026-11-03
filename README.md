@@ -236,9 +236,12 @@ Details and the VM runbook are in
 
 ## Run it yourself
 
-With Docker and your own Meta key (optional, it turns the AI on):
+With Docker and your own Meta key (optional, it turns the AI on). A shallow
+clone is small and fast; a normal `git clone` also works and brings the full
+history:
 
 ```bash
+git clone --depth 1 https://github.com/vibhortayal/arya.git && cd arya
 cp .env.local.example .env       # put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
