@@ -114,9 +114,18 @@ cd assistant/web && npm ci && npm run build && cd ..
 MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
 ```
 
-Open http://localhost:8000. Without a key, Ask shows the "no Meta key" message;
+In `MODEL_API_KEY=<your key>`, put your key in place of `<your key>`, or nothing
+at all for no-key mode (`MODEL_API_KEY=`). Pasting the angle brackets as they
+are fails in bash. The snippet leaves your shell in `assistant/`.
+
+Open http://localhost:8000; http://localhost:8000/health answers `ok` when the
+server is up. These steps were tested on Linux only; macOS and Windows have not
+been tried. Without a key, Ask shows the "no Meta key" message;
 on this route its last words, "docker compose up -d", do not apply: set
-`MODEL_API_KEY` and start uvicorn again. For front-end work, `npm run dev` in
+`MODEL_API_KEY` and start uvicorn again. To open it from a phone at
+`http://<your computer's IP>:8000`, make uvicorn listen on your network address (its
+`--host` option) and set `ARYA_INSECURE_COOKIE=1` before it; without that, sign-in may not stick
+over plain http. I have not tested this on a phone. For front-end work, `npm run dev` in
 `assistant/web` starts Vite.
 
 ## Let your AI agent set it up
@@ -129,7 +138,7 @@ commands on your machine.
 Set up Arya on my computer so I can try it. Repository:
 https://github.com/vibhortayal/arya
 
-1. Clone the repository into a new, empty folder and open
+1. Clone the repository into a new, empty folder, cd into it, and open
    docs/RUN-IT-YOURSELF.md.
 2. Follow the section "Can I run it without Docker?" step by step. If
    something goes wrong, troubleshoot it as you normally would to get Arya
