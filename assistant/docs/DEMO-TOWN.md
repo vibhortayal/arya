@@ -25,7 +25,7 @@ With the flag off nothing changes: no routes, no chips, real-style names in the 
 - **Director** (open the app with `?director=1`, then Settings): stage "Eggs run out", "Store
   closes", "Saturday rush", "Incident", or Reset. Staged moments live in the demo sandbox only.
 
-## Rules (SPEC FR-11.7 and the owner's design)
+## Rules (SPEC FR-11.7 and my design)
 
 | Report | Needs | Shows for |
 |---|---|---|

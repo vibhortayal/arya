@@ -1,3 +1,5 @@
+> **Superseded 2026-11-02.** This report recommends switching receipt reading to Wonder through Nov 4. The rule now in force is in [`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md): Spark reads first, Wonder re-reads flagged receipts, through Nov 9. The measurements below still stand.
+
 # Spark vs Wonder on receipt decode — accuracy and latency
 
 **Headline: on the Gate 0 public set, Wonder reads receipts more
@@ -22,8 +24,8 @@ vs Spark 8.6 s per receipt photo. Cost: $0.118 vs $0.013 per receipt."**
 
 - **Data.** The Gate 0 public set only: 9 receipt photos
   (`~/workspace/meta-hackathon-2026/spike2/public-set/photos/`), 98
-  hand-labeled lines, labels written before any decode ran. No owner
-  receipts anywhere in this eval.
+  hand-labeled lines, labels written before any decode ran. No receipts of mine
+  anywhere in this eval.
 - **Identical conditions.** Both models ran the app's own photo
   pipeline: the system prompt from `assistant/prompts/decode_photo_v1.md`
   loaded the way `api/decode/service.py: load_photo_prompt()` loads it,
@@ -59,7 +61,7 @@ vs Spark 8.6 s per receipt photo. Cost: $0.118 vs $0.013 per receipt."**
   judge-eval archetypes (weekly staples, December eggnog, twice-a-year
   spices, gift cards, and the 2-buys-703-days-apart foil case). Run
   through the app's own `api/judge.py` batch path, one call per model.
-  Synthetic because the real judge inputs are the owner's purchase
+  Synthetic because the real judge inputs are my purchase
   history; no personal data was sent to either model.
 
 ## Results
@@ -201,9 +203,9 @@ needs a spinner the demo can survive and a timeout with a Spark
 fallback behind it.
 
 **Policy note:** the repo's MODEL-POLICY.md bans Wonder from volume
-paths, and AGENTS.md reserves policy changes to the owner. The
+paths, and AGENTS.md reserves policy changes to me. The
 recommendation above is scoped to the judge-facing demo paths through
-Nov 4 (demo household + the owner's own demo use), not a production
+Nov 4 (demo household + my own demo use), not a production
 policy change. No production code was changed by this eval.
 
 ## Caveats

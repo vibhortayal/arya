@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, useMemo } from "react";
 import { get, post, forgetReads, keepBootRead, SESSION_ENDED } from "../lib/api";
+import { dropQueue } from "../lib/listQueue";
 import { toastGlobal } from "../ui/Toast";
 import { t } from "../i18n";
 import type { Currency } from "../lib/format";
@@ -217,12 +218,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.layouts) setLayouts(r.layouts);
   }, []);
 
-  const enter = useCallback((u: string, d: boolean) => { leaving = false; forgetReads(); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
+  // A demo visit starts clean: nothing waits from an earlier visit,
+  // whose sandbox is gone (lib/listQueue.ts).
+  const enter = useCallback((u: string, d: boolean) => { leaving = false; forgetReads(); if (d) dropQueue(u); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
 
   const leave = useCallback(async () => {
     leaving = true;
     runLeaveHooks();
     forgetReads();
+    const was = lastUser();
+    if (was?.demo) dropQueue(was.user);
     remember(null);
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);

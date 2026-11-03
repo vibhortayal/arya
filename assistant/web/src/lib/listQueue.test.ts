@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { get, post, syncLists } from "./api";
-import { applyQueued, pendingCount, queued, SYNCED } from "./listQueue";
+import { applyQueued, dropQueue, pendingCount, queued, SYNCED } from "./listQueue";
 
 const ok = (body: unknown) => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 const home = { list: { items: [
@@ -111,10 +111,14 @@ describe("list changes made offline (owner, 2026-11-01)", () => {
     expect(pendingCount()).toBe(0);
   });
 
-  test("the demo never queues", async () => {
+  test("the demo queues for the visit, and dropQueue forgets it", async () => {
+    // Owner phone test 2026-11-02: an offline add in the demo failed.
     localStorage.setItem("arya.lastUser", JSON.stringify({ user: "demo", demo: true }));
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
-    await expect(post("/api/list/check", { item_id: "milk", checked: true })).rejects.toBeInstanceOf(TypeError);
+    await expect(post("/api/list/check", { item_id: "milk", checked: true })).resolves.toMatchObject({ queued: true });
+    expect(pendingCount()).toBe(1);
+    dropQueue("demo");
+    expect(pendingCount()).toBe(0);
   });
 
   test("other writes are not queued", async () => {

@@ -166,6 +166,8 @@ def delete_user(username):
         _save("sessions.json", {k: v for k, v in all_sessions.items()
                                 if v.get("user") != username})
     revoke_api_tokens(username)
+    from api import alexa_link
+    alexa_link.revoke(username)
     import shutil
     dest = os.path.join(_root(), "users", username)
     if os.path.isdir(dest):

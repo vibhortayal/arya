@@ -6,17 +6,18 @@ import { TourProvider, useTour } from "./ui/Tour";
 import { GuideProvider } from "./ui/Guide";
 import { useTourSteps } from "./onboarding/demoTour";
 import { useGroupLive } from "./app/groupLive";
-import { useListSync } from "./app/listSync";
+import { useListQueue, useListSync } from "./app/listSync";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { useTranslation } from "./i18n";
 import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { isOffline, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
-import { forgetJoinCode, isDevelopersPath, joinCodeFromUrl, stashJoinCode } from "./lib/paths";
+import { appLinkPending, forgetAppLink, forgetJoinCode, isDevelopersPath, joinCodeFromUrl, LINK_RESUME, stashAppLink, stashJoinCode } from "./lib/paths";
 
 // Keep an invite code from the address before sign-in can drop it.
 stashJoinCode();
+stashAppLink();
 import { BottomBar } from "./ui/Bar";
 import { OwnKeyRoute } from "./ui/OwnKey";
 import { ListPickHost } from "./ui/ListPick";
@@ -49,6 +50,12 @@ function Root() {
   if (isDevelopersPath(location.pathname)) return <Suspense fallback={null}><Developers /></Suspense>;
   if (!s.ready) return null;
   if (!s.user) return <Login />;
+  if (!s.demo && appLinkPending()) {
+    // Signed in for a link another app started: the server's page goes on.
+    forgetAppLink();
+    location.replace(LINK_RESUME);
+    return null;
+  }
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
 }
 
@@ -153,6 +160,7 @@ function Shell() {
   useListFromHash();
   useGroupLive();
   useListSync();
+  const { pending } = useListQueue();
   useScanQueue();
   useEffect(() => {
     // After first paint and a quiet moment, fetch the other tabs' code.
@@ -164,7 +172,7 @@ function Shell() {
     <>
       {nav.chrome && s.demo && <p id="demobar" className="note">{town ? t("town.demoBar") : t("common.demoBar")}{" "}
         <button id="demo-finish" className="linkbtn" type="button" onClick={openEndOfDemo}>{t("endDemo.finish")}</button></p>}
-      {nav.chrome && offline && <p id="offlinebar" role="status" className="note">{t("offline.bar")}</p>}
+      {nav.chrome && offline && <p id="offlinebar" role="status" className="note">{t("offline.bar")}{pending ? " " + t("lists.queue.waiting", { count: pending }) : ""}</p>}
       {s.demo && <EndOfDemo />}
       <main id="app-main">
         <section id={"view-" + nav.view} className="view" key={nav.key}>

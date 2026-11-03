@@ -51,6 +51,12 @@ class TestCardSizesAndDisplay(TestTodayCards):
         self.post(400, today_sizes={"low": "xl"})
         self.post(400, today_sizes={"nope": "s"})
 
+    def test_from_alexa_card_saves_like_the_others(self):
+        # Hidden From Alexa card (2026-11-03): its id is a normal card id,
+        # and today_sizes.alexa is the "already offered" mark.
+        self.assertEqual(self.post(today_cards=["alexa", "trip"])["today_cards"], ["alexa", "trip"])
+        self.assertEqual(self.post(today_sizes={"alexa": "m"})["today_sizes"], {"alexa": "m"})
+
     def test_display_defaults_merge_and_validate(self):
         d = self.c.get("/api/settings").json()["display"]
         self.assertEqual(d, {"text": 1, "spacing": "comfortable", "bold": False, "pictures": True, "motion": True})

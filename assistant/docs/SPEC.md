@@ -2,7 +2,7 @@
 
 Team Nightshift. Indie track. Meta Global AI Developer Hackathon.
 Submission deadline: November 4, 2026, 9:00 PM ET.
-The owner reviews the final package. No person submits without the approval of the owner.
+I review the final package. No person submits without my approval.
 This document uses ASD-STE100 style. Sentences are short. Each sentence has one idea.
 
 Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
@@ -40,7 +40,7 @@ Food gets the deep functions because food expires and food is visible in the hom
 ### 2.3 The MVP
 
 The MVP has one user and one household.
-The MVP uses the real data of the owner.
+The MVP uses my real data.
 The MVP closes the core loop of Section 3 with no store map.
 Quest (Section 6.8) is the play layer. It feeds the core and is not on its critical path.
 
@@ -81,7 +81,7 @@ Rule 10. A reasoning agent proposes changes to identity. It never applies them. 
 
 ## 5. Users and user stories
 
-The primary user is the owner. The data is the data of the owner.
+The primary user is me. The data is my data.
 
 | # | Story |
 |---|---|
@@ -157,6 +157,7 @@ Allocation (a field on each ledger line):
 - FR-5.1 The system suggests due items from the patterns. An item is due when the time since the last purchase is equal to or more than the median interval of the item. A list shows only what the household added. A due staple appears as a suggestion under the list of its usual store, with a reason and a "why" sheet.
 - FR-5.2 The suggested quantity comes from the typical quantity of the item.
 - FR-5.3 The model ranks and narrates the draft. The model adds no item outside the computed due set and the additions of the user.
+- FR-5.4 Removed (the number is kept so later requirements keep theirs).
 - FR-5.5 The prepared cart was removed (PR #105). It copied the whole list into one Costco cart and added no value. The named lists of Section 6.9 replace it.
 - FR-5.6 The system sends no order and makes no payment. Arya works in any store and holds no retailer data.
 - FR-5.7 Typing a name links it to a tracked item. "milk" finds "Whole Milk". A near miss such as "mlik" is fixed. An add applies at once with Undo. A riskier change (out, never, snooze) asks first.
@@ -198,7 +199,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   each item is usually bought, counted from the ledger. Unticked items
   stay on the list. Removing an item removes it from the list.
 - FR-8.3 The game has no lives, no game over and no clock. Points
-  only go up: +10 a grab, +25 a full haul, +50 the receipt. Points
+  only go up: +10 per grab, +25 a full haul, +50 the receipt. Points
   bank when the receipt lands.
 - FR-8.4 Any stop can be grabbed in any order. A grab can be put back.
   Nothing finishes by itself.
@@ -211,7 +212,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   verifies each crop. Only a verified item highlights. A miss never
   says the item is absent.
 - FR-8.7 No pictures of people are kept. A frame is kept only after
-  SAM finds every person and the frame is pixelated there. If the
+  SAM finds the people it detects and the frame is pixelated there. If the
   scrub fails, the frame is not kept.
 - FR-8.8 "Not here?" files a report and edits nothing. Time resolves
   it: a later grab means a stockout; a confirmed new spot means a move.
@@ -226,7 +227,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 
 ### 6.9 Named lists and Today (C5)
 
-- FR-5.10 Lists are named. The Lists tab has one card per list plus "Everything else." The user creates, renames (pencil), deletes, and restores a list.
+- FR-5.10 Lists are named. The Lists tab has one card per list plus "Everything else." (Update 2026-11-02, #419: "Everything else" is no longer automatic; it exists only if the user makes one.) The user creates, renames (pencil), deletes, and restores a list.
 - FR-5.11 Swipe moves or removes an item. Select moves many items.
 - FR-5.12 A new list can name a store. The store drives the aisle sort and the suggestions.
 - FR-5.13 Today is the dashboard: running low, store alerts, use soon, still-good checks, the user's lists, patterns, and one quiet Quest row. A new account shows no sample alerts.
@@ -288,7 +289,7 @@ IMPLEMENTATION.md Section 8 gives the stage allocations.
 The map, the ledger, and the dictionary belong to one user.
 Records stay on the server of the user.
 Update 2026-11-01: Spark runs in Meta's Standard mode (the code default, and confirmed live). Receipt photos are read by Spark first (auto, the default); a Wonder re-read of a flagged receipt also runs on Standard. A cheaper Contributor tier exists as an operator setting (ARYA_SPARK_TIER=contributor or the Ops switch) and is off. A user opt-in for it is only a possible future option and is not built.
-The demo household is synthetic (the "Sharma family"). Its data is invented. The data of the owner lives on his own account only. No data of a third party is in the demo.
+The demo household is synthetic (the "Sharma family"). Its data is invented. My data lives on my own account only. No data of a third party is in the demo.
 
 ### 7.4 Connectivity and degradation
 
@@ -301,13 +302,8 @@ Manual check-off always works.
 ## 8. Client requirements (PWA-core)
 
 The PWA is installable. The PWA is phone-first. The PWA uses one hand.
-The app is list first. It has six tabs: Today, Lists, Ask, Quest, Help,
-Settings. Settings has Group, Preferences (currency and language, When I
-start shopping, Display, Reminders), Account (Export my data, Delete my
-account), About Arya and, last, Sign out. About Arya has Arya's powers,
-Use Arya in another AI app, Add to Home Screen and Keeping Arya running.
-Stores, Receipts and Spending are on Lists, in one group at the bottom. Help has the guide, the tour and feedback. Item and category
-detail opens from any list.
+Update 2026-11-02 (#416): the navigation tab is Today, Spending, Quest, Ask and More; Lists, Receipts, Stores, Help and Settings sit under More.
+Superseded 2026-11-02 (#416): the earlier six-tab layout (Today, Lists, Ask, Quest, Help, Settings) is gone. The app is list first. The navigation tab is Today, Spending, Quest, Ask and More. More holds Lists, Receipts, Stores, Help and Settings. Settings has Group, Preferences (currency and language, When I start shopping, Display, Reminders), Account (Export my data, Delete my account), About Arya and, last, Sign out. About Arya has Arya's powers, Use Arya in Muse, Add to Home Screen and Keeping Arya running. Help has the guide, the tour and feedback. Item and category detail opens from any list.
 
 1. Today. Section 6.9 lists the parts. Each running-low item shows a date range. One tap confirms, edits, or adds.
 2. Lists. One card per named list. One add row: a text field, a mic, and a camera. Receipts enter by image, PDF, or pasted order text. The review queue sits with the receipts. Ask is a tab of its own. Ask takes typed or spoken questions through labelled Talk and Photo buttons under the field. A photo opens a chooser (add to my list, file a receipt, check my fridge, read the date, or ask about this photo); asking about a photo sends it once with the question, keeps nothing, and never judges a price from the picture. Replies are text only, never spoken.
@@ -331,13 +327,13 @@ Targets in the store are 64 pixels or more. No text input is required in the sto
 ### Gate 0 — photo-receipt gate (before the build commits)
 
 Set as planned: 20 real paper receipts, stores and light mixed.
-As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus the owner subset (32 lines), reported separately, as below.
+As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus my subset (32 lines), reported separately, as below.
 Data isolation is a hard rule. Public receipts are test fixtures only.
-A public receipt never enters the ledger of the owner.
-A public receipt never enters the dictionary of the owner.
-A public receipt never enters the patterns of the owner.
+A public receipt never enters my ledger.
+A public receipt never enters my dictionary.
+A public receipt never enters my patterns.
 Gate data lives in a separate store. The gate store is discarded or archived after scoring.
-The two subsets report separately. The pass mark applies to the combined set and to the owner subset.
+The two subsets report separately. The pass mark applies to the combined set and to my subset.
 Pass mark: 90 percent or more of lines correct.
 A correct line has the right product, the right quantity, and the right price.
 The build commits only after this gate passes.
@@ -346,7 +342,7 @@ Fallback after a failure: PDF receipts and e-receipts only. Photo intake leaves 
 Status of the evidence:
 
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
-- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). Owner subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
+- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
 
 ### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
 

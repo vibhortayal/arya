@@ -36,11 +36,12 @@ on a Docker volume, in Supabase Postgres, or both.
   (`app/groupLive.ts`), push reminders, powers and the install prompt
   are ported one to one from the old plain-JS files. The store view is
   `scene.js` (three.js), loaded as a classic script.
-- Six tabs: **Today**, **Lists**, **Ask**, **Quest**, **Help**, **Settings**.
-  Settings opens the Profile page (Group, Preferences with Reminders,
-  Account, About Arya, Sign out last). About Arya is the `about` view:
-  Arya's powers, Use Arya in another AI app, Add to Home Screen, Keeping
-  Arya running. Stores, Receipts and Spending are on Lists.
+- The navigation tab is **Today**, **Spending**, **Quest**, **Ask** and **More**
+  (the default; it can be customized). More holds Lists, Receipts, Stores, Help
+  and Settings. Settings opens the Profile page (Group, Preferences with
+  Reminders, Account, About Arya, Sign out last). About Arya is the `about`
+  view: Arya's powers, Use Arya in Muse, Add to Home Screen, Keeping Arya
+  running. (Updated 2026-11-02, #416; this replaced the earlier six-tab layout.)
 - Service worker `web/src/sw.js`, built to `/sw.js` (vite-plugin-pwa,
   injectManifest). It precaches the built shell and the runtime files of
   the static folder. It is network first. It sends `/api/`, `/auth/`,
@@ -65,7 +66,7 @@ for the PWA. Routes live in `api/routes/`, one router per area:
 
 | Router | What it serves |
 |---|---|
-| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
+| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`; the Ops flag overrides the env, and sign-up is closed on the live site), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
 | `intake`, `review` | receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue |
 | `lists`, `items`, `expiry` | named lists, add by text or photo, check, move, judge runs, item pages and flags, expiry dates |
 | `home`, `chat` | the Today payload, Ask Arya and its apply step |
@@ -97,9 +98,9 @@ enforced there. `open_client.py` is the only other model client.
 |---|---|---|
 | Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya | `muse-spark-1.3` (Standard; `ARYA_SPARK_TIER=contributor` is an operator option, off) | cached prefixes, low effort |
 | Receipt photo reader (default, `auto`) | Spark first; `muse-wonder-1.0` (90 s bound) re-reads only a receipt the arithmetic checks flag | `decoded_by` records which read was kept; `ARYA_PHOTO_READER=spark` or `wonder`, or the Ops "Photo reader" switch, changes it with no code change |
-| Avatar and look images | `muse-image-1.0` | |
+| Celebration characters, generated once | `muse-image-1.0` | |
 | Voice in | `muse-voice-transcribe-1.0` | |
-| Shelf and people segmentation | `sam-3.1` | every person in a stored frame is pixelated first |
+| Shelf and people segmentation | `sam-3.1` | people SAM detects are pixelated first, and the frame is discarded if that fails (detection is not perfect and has not been scored) |
 | Second judge seat, dictionary enrichment | Spark Open, hosted on Baseten | platform data only; the client refuses personal data |
 
 ### 0.5 Storage
@@ -169,6 +170,14 @@ handle the nightly backup. CI is manual only
 
 ### 0.11 Feature flags and settings
 
+The table gives the default in compose. The live site (checked with Ops on
+Nov 2) differs in these places: `ARYA_STORE=dual`; push reminders on (daily
+cron at 13:00 UTC); Supabase Auth and email sign-in on; Demo Town on; the
+Kroger aisle lookup on; own-key sign-up off; photo reader `auto`; Spark tier
+`standard`; new sign-up closed (the Ops flag wins over the env). Budgets: $10 a
+day for the app, $20 a day for the demo (code default $2), $0.40 per demo visit.
+Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
+
 | Variable | Default in compose | Effect |
 |---|---|---|
 | `ARYA_STORE` | `json` | `json`, `dual` or `pg` storage |
@@ -183,14 +192,14 @@ handle the nightly backup. CI is manual only
 | `ARYA_DAILY_BUDGET_USD` | `10` | app model-spend ceiling per day |
 | `ARYA_USER_HEAVY_MONTHLY_USD` | `3` | one account's month of AI spend that shows a heads-up on its usage screen |
 | `ARYA_USER_MONTHLY_CEILING_USD` | `5` | one account's month of AI spend that pauses its paid reads until the 1st |
-| `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); the owner can lift it with `POST /api/usage/unfreeze` |
+| `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); I can lift it with `POST /api/usage/unfreeze` |
 | `ARYA_COST_PUBLIC_MIN` | `50` | accounts with spend before the whole-Arya totals show on the usage screen |
 | `ARYA_COST_PAID_BY` | `Hackathon credits` | who the usage screen says pays for the AI reading |
 | `ARYA_DEMO_DAILY_BUDGET_USD` | `20` (code default `2`) | demo household's day bucket |
 | `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
-| `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export); `off` lifts the list |
+| `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); `off` lifts the list |
 | `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
 | `ARYA_OWNER_USERNAME` | empty | the account that can flip registration in Settings |
 | `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |
@@ -337,7 +346,7 @@ Each agent has a narrow job and a named limit.
   hashes; sign-in is throttled; sessions are cookies, and session
   tokens are stored as SHA-256 hashes.
 - Email code and Google sign-in (Supabase Auth) are built behind
-  `ARYA_SUPABASE_AUTH=1`, off by default. Supabase only proves the
+  `ARYA_SUPABASE_AUTH=1`, off by default and on in the live site. Supabase only proves the
   email; Arya keeps its own account (named by the email, no password)
   and its own cookie (`api/supabase_auth.py`).
 - A connector token is `arya_` plus a random secret. **Only its SHA-256
@@ -357,13 +366,13 @@ Each agent has a narrow job and a named limit.
 
 1. Create an account. A new account opens on Today; there is no
    Connect an AI agent step on first run.
-2. Connecting Muse is optional, from Profile > Connect an AI agent: mint the
-   token there (shown once).
-3. Add the Arya connector in Muse; paste the token into the secure
-   form. Never into a chat message.
-4. Talk to Muse. Profile > Connect an AI agent carries these steps and a
-   copyable fallback setup prompt for assistant apps that do not load
-   the connector doc automatically.
+2. Connecting Muse is optional, from Settings > About Arya > Use Arya in Muse:
+   make the code there (shown once).
+3. Tell the Muse agent to connect to Arya; it asks for the code and opens a
+   secure credentials vault. Paste the code there, never into a chat message.
+4. Talk to Muse. The screen carries these steps and a copyable fallback setup
+   prompt for assistant apps that do not load the connector doc automatically.
+   The Muse Code settings-file route is the backup (`AGENT-CONNECTOR.md`).
 
 ## 10. Cost control
 
@@ -380,8 +389,10 @@ Each agent has a narrow job and a named limit.
   drain the app. Every live door, batch judge run and hunt creation
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,
-  never a 500 (`meta_client.parse_json`). There is no per-user spend cap;
-  the owner decided on 2026-10-29 to go without one for now.
+  never a 500 (`meta_client.parse_json`). Each account has its own limits:
+  a monthly heads-up, a monthly pause on paid reads, and an hourly freeze (defaults
+  $3, $5 and $1, see the flag table; the live site uses $3, $20 and $10, and the owner
+  account is exempt), on top of the daily ceiling for the whole app.
 - api/meta_client.py is the only module that calls the Model API. The
   personal-data rule is enforced there by construction.
 
@@ -389,9 +400,17 @@ Each agent has a narrow job and a named limit.
 
 - One Oracle VM (Always Free; no new cloud resources). Docker Compose:
   the API and Caddy with Let's Encrypt. No database container: data is
-  JSON files, or Supabase with `ARYA_STORE`. Public name:
+  JSON files, mirrored to Supabase on the live site (`ARYA_STORE=dual`); after judging Postgres can become the master copy (`pg`). Public name:
   arya.teamnightshift.org (Cloudflare A record, DNS only). The old
   arya-pilot.duckdns.org name is a permanent Caddy redirect to it.
+- Known limit: one uvicorn process on one VM. Demo sandboxes live in that
+  process's memory and the JSON files have one writer, so it cannot run as
+  several processes yet; dual-mode saves mirror to Supabase inside the
+  request, so a slow Supabase can slow a save. Roughly a few dozen people at
+  once is the ceiling (README, Known limits). After judging: Postgres as
+  master copy, session state out of memory, several processes, a cloud
+  provider (see `docs/ROADMAP.md`; the phased design is
+  `docs/SCALABILITY-DESIGN.md`, a plan, not built).
 - Deploy is `git pull` on the VM, then a compose rebuild. Never
   rsync --delete: it once deleted the VM-only deploy environment.
 - Settings come from `deploy/.env` (VM only). Compose passes only the
@@ -400,7 +419,7 @@ Each agent has a narrow job and a named limit.
   missing. `.env.example` names them.
 - The full test suite runs before a PR merges. A GitHub Actions workflow
   (`.github/workflows/tests.yml`) runs it on demand only, not on
-  every PR (owner's choice). Nothing is committed to `main` directly;
+  every PR (my choice). Nothing is committed to `main` directly;
   a session log goes to `loops/` and `STATUS.md` is updated.
 
 ### 11.1 Logs and backups (VM runbook)
@@ -412,7 +431,7 @@ Each agent has a narrow job and a named limit.
   the `arya` Postgres schema when `ARYA_BACKUP_DATABASE_URL` is set in
   `deploy/.env`) into `~/arya-backups`, keeping the newest 7 of each.
   Install once on the VM with `crontab -e`:
-  `17 3 * * * /home/ubuntu/arya/assistant/deploy/backup.sh >> /home/ubuntu/arya-backup.log 2>&1`
+  `17 3 * * * /path/to/arya/assistant/deploy/backup.sh >> /path/to/arya-backup.log 2>&1`
   Check it with `ls -l ~/arya-backups` the next morning.
 - **Off-VM copy.** A backup on the same disk dies with the VM. Install
   rclone (`sudo apt install rclone`), run `rclone config` once to add a
@@ -436,9 +455,9 @@ memory. The store directory (`stores.json`) is platform-level.
 
 ## 13. Not built / held
 
-- Per-user spend caps (§10). Not built; the owner decided to go without
-  one for now.
-- Public registration is closed by default (`ARYA_REGISTRATION_OPEN`). The
+- A fixed per-account spend allowance that resets by itself. Not built; per-account
+  limits do exist (§10: defaults $3 heads-up, $5 pause, $1 hourly freeze; live $3, $20, $10).
+- Public registration is closed by default (`ARYA_REGISTRATION_OPEN`; the Ops flag overrides the env and is closed on the live site). The
   owner can open it in Settings. Every door runs on Meta models: Muse in
   chat, Spark on the Meta API in the app.
 - Forgot-password — not built. Once switched on, email code sign-in

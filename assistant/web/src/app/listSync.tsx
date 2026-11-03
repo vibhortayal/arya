@@ -60,14 +60,14 @@ export function useWaitingIds(): Set<string> {
   });
 }
 
-/* The yellow note on Lists (owner, 2026-11-02): offline, or changes
- * still waiting. Nothing shows when online with nothing waiting, or in
- * the demo (it never queues). */
+/* The yellow note on Lists: changes waiting while online (syncing, or
+ * stuck). Offline, the app-wide bar (#offlinebar in App.tsx) says it
+ * and counts what is waiting: one notice, not two (owner, 2026-11-02,
+ * "double notifications"). Nothing in the demo (it never queues). */
 export function QueueNote({ id }: { id?: string }) {
   const { pending, syncing, online } = useListQueue();
   const s = useSession();
-  if (s.demo || (online && !pending)) return null;
-  const text = syncing ? t("lists.queue.syncing", { count: pending })
-    : pending ? t("lists.queue.waiting", { count: pending }) : t("lists.queue.offline");
+  if (s.demo || !pending || !online) return null;
+  const text = syncing ? t("lists.queue.syncing", { count: pending }) : t("lists.queue.waiting", { count: pending });
   return <p id={id} className="queuenote" role="status"><span aria-hidden="true">{syncing ? "↻" : "⏳"}</span> {text}</p>;
 }

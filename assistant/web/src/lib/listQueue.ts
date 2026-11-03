@@ -16,8 +16,9 @@
  * (X-Arya-Op-At, X-Arya-Op-Sent): the server applies an id once, and
  * skips a change older than the item's last change (api/listops.py).
  * An item added offline has a "local:" id until its add is sent; later
- * changes to it are rewritten to the real id. The demo keeps nothing,
- * so it never queues. Signing out keeps an account's waiting changes:
+ * changes to it are rewritten to the real id. The demo queues too, for
+ * the visit only (owner phone test 2026-11-02): starting or leaving a
+ * demo visit drops what it left waiting (dropQueue). Signing out keeps an account's waiting changes:
  * they go out the next time that account signs in on this phone. */
 import { account, savedRead } from "./offline";
 
@@ -37,6 +38,11 @@ export const queueable = (path: string) => ITEM.test(path) || FLAG.test(path) ||
 export const isLocalId = (id: unknown) => typeof id === "string" && id.startsWith(LOCAL);
 const key = () => { const u = account(); return u ? PREFIX + u : null; };
 export const canQueue = () => key() !== null;
+/* Forget one account's waiting changes (a demo visit that ended). */
+export function dropQueue(user: string): void {
+  try { localStorage.removeItem(PREFIX + user); } catch { /* nothing kept */ }
+  try { dispatchEvent(new Event(CHANGE)); } catch { /* no window */ }
+}
 
 export function newOpId(): string {
   try { if (typeof crypto?.randomUUID === "function") return crypto.randomUUID(); } catch { /* insecure page */ }

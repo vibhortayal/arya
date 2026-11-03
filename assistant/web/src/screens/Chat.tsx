@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { replyChoices, type Choice } from "../lib/replyChoices";
 import { askList, type NeedList } from "../lib/listPick";
 import { orderLists } from "../ui/ListPick";
 import { withBar } from "../lib/bar";
 import { clearOnSignOut, useSession } from "../app/session";
-import { ApiError, get, post } from "../lib/api";
+import { ApiError, get, noKeyMessage, post } from "../lib/api";
 import { isOwnKeyOffer, requestOwnKey } from "../lib/ownKey";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListeningCard } from "../ui/Listening";
@@ -29,8 +30,11 @@ import { fitPhoto } from "../lib/photo";
  * already exist; Ask about this photo sends it once with the next
  * question and keeps nothing. No voice out: Arya's replies are text. */
 type Chip = { label: string; run: () => void };
-type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking"; text: string; code?: string; offer?: string;
-  url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number };
+/* "Which list?" options (lib/replyChoices) from /api/chat (owner 2026-11-02, mockup
+ * G6Q6JqZmx5u9zBck82PZYx): the chip shows `label`, a tap sends `send`
+ * as the next message, exactly as if typed. */
+type Line = { kind: "me" | "arya" | "sys" | "actionchip" | "offer" | "map" | "err" | "photo" | "choose" | "working" | "thinking" | "replies"; text: string; code?: string; offer?: string;
+  url?: string; file?: File; sub?: string; chips?: Chip[]; job?: number; choices?: Choice[] };
 type Msg = { role: "user" | "assistant"; content: string; applied?: string[] };
 const lines: Line[] = [];
 const history: Msg[] = [];
@@ -269,6 +273,8 @@ export function Chat() {
     const q = raw.trim();
     if (!q) { toast(t("ask.typeFirst")); input.current?.focus(); return; }
     setText("");
+    // Answering (by tap or by typing) retires the last question's choices.
+    for (let k = lines.length - 1; k >= 0; k--) if (lines[k].kind === "replies") lines.splice(k, 1);
     if (naming.current) { const go = naming.current; add({ kind: "me", text: q }); await go(q.slice(0, 80)); return; }
     if (wantsMapStore(q)) {
       add({ kind: "me", text: q }, { kind: "map", text: t("ask.mapStoreReply") });
@@ -287,7 +293,7 @@ export function Chat() {
     const stop = () => { drop(think); if (mine === epoch) setBusy(false); };
     try {
       const image = pic ? await shrinkPhoto(pic.file) : undefined;
-      const res = await post<{ reply: string; applied?: string[]; skipped?: string[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
+      const res = await post<{ reply: string; applied?: string[]; skipped?: string[]; choices?: Choice[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply, ...(res.applied?.length ? { applied: res.applied } : {}) });
@@ -297,6 +303,7 @@ export function Chat() {
       add(...(res.reply.trim() || !(res.applied || []).length ? [{ kind: "arya" as const, text: res.reply }] : []),
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
+        ...(replyChoices(res.choices).length ? [{ kind: "replies" as const, text: "", choices: replyChoices(res.choices) }] : []),
         ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
     } catch (e) {
       stop();
@@ -304,7 +311,7 @@ export function Chat() {
       history.pop();
       // Arya's daily limit (or a failed own key): a card that offers the shopper's own Meta key.
       if (e instanceof ApiError && isOwnKeyOffer(e.offer)) { add({ kind: "err", text: e.message, code: q, offer: e.offer }); return; }
-      add({ kind: "err", text: t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
+      add({ kind: "err", text: noKeyMessage(e) || t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
   };
 
@@ -321,7 +328,7 @@ export function Chat() {
         if (said) { setNote(null); send(said); }
         else setNote(t("ask.voiceEmpty"));
       } catch (e) {
-        setNote(t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
+        setNote(noKeyMessage(e) || t("common.voice.failed", { error: e instanceof Error ? e.message : String(e) }));
       }
       setReading(false);
       return;
@@ -452,6 +459,10 @@ export function Chat() {
             <p>{l.text}</p>
             <p className="muted small">{t("ask.workingNote")}</p>
             <button type="button" className="linkbtn tall" data-photo-cancel onClick={() => cancelWork(l)}>{t("common.cancel")}</button>
+          </div>
+        ) : l.kind === "replies" ? (
+          <div key={i} className="replychips" role="group" aria-label={t("ask.pickOne")}>
+            {(l.choices || []).map(c => <button key={c.send} type="button" className="chip" data-reply-chip={c.send} disabled={busy} onClick={() => { if (!busy) void send(c.send); }}>{c.label}</button>)}
           </div>
         ) : l.chips || l.sub ? (
           <div key={i} className="bubble arya">

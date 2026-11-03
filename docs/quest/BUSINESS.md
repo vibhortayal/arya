@@ -1,40 +1,31 @@
-# Business — Arya Quest
+# Who it is for, and who else is out there
 
-How the product makes money, and in what order. Companion to PITCH.md (the story). Written 2026-10-27.
+Companion to PITCH.md (the story) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md) (why Arya exists). Originally written 2026-10-27; reworked 2026-11-02. The goal is that people use Arya and help each other.
 
-## The owner's four pillars (their words, 2026-10-27)
+## Who it is for
 
-1. **Gamification** — it makes a chore fun.
-2. **Google Maps, but for a grocery store** — the indoor map layer.
-3. **Community-based inventory reports** — shelf truth from the players.
-4. **A smart grocery list maker** — "there are many, but how many make it fun?"
+Shoppers: the people who keep a household or a group fed. First parents and households, who feel the problem most; then anyone who shares a list. Built and tested with US receipts, dollars and stores first; other markets not tested.
 
-Fun recruits, the map is the asset, community inventory is the moat, the smart list retains. Each pillar makes the next one possible.
+## The four pillars (my words, 2026-10-27)
 
-## The position money follows
+1. **Gamification**: it makes a chore fun.
+2. **Google Maps, but for a grocery store**: the indoor map layer.
+3. **Community-based inventory reports**: shelf truth from the players.
+4. **A smart grocery list maker**: "there are many, but how many make it fun?"
 
-Grocery marketing is bought blind: brands pay before the trip (ads, coupons) or measure after it (panels). Arya Quest owns the three moments in between, and no competitor holds more than one of them:
+Fun brings people in, the map is what they build together, community reports keep it true, and the smart list keeps them coming back. Each pillar makes the next one possible.
 
-- **The list** — declared intent, before the trip.
-- **The shelf** — the player's attention, at the exact stop, in the exact aisle.
-- **The receipt** — a verified purchase, after the trip. The receipt closes the loop: promotions can be charged per verified purchase, not per impression.
+## The community side
 
-## Revenue, in unlock order
+Arya works better the more shoppers help each other, and it asks for nothing in return:
 
-Virality is the gate for all of it. Nothing below is sold before the data is dense somewhere.
+- **Lists and groups.** A household or a group shares lists, so everyone sees the same thing.
+- **Store maps.** Maps come from shoppers' own guided scans; people are blurred before anything is kept. The first person to scan a store starts its map.
 
-**The consumer is never charged — not for the game, not for the brain, not for analysis (owner rule, 2026-10-27).** Players are the supply: they map the stores, verify the shelves, and close the loop with receipts. Money comes only from the businesses that need what that supply produces.
+Two rules keep that trustworthy:
 
-**1. Retailer data (first money — needs depth, not breadth).** Players observe a store's stockouts and layout drift before the store's own systems do. The community inventory feed — out-of-stock events, drift alerts, planogram mismatches — is a B2B product for one chain in one region. It needs density in a single trade area, so it is sellable earliest.
-
-**2. Brand promotions at the shelf (the largest pool).** Retail media is the fastest-growing category in advertising, and it is online or static. Arya Quest offers the physical shelf moment with closed-loop proof: labeled brand offers, shown outside the hunt — never as a stop, never in a route, never inside a quest (GAME-DESIGN's anti-design rule governs: no ads, no sponsored placements in routes) — billed per verified purchase from the receipt. A promotion never changes where a product is, what a stop says, or what a badge says (see the honesty rules below). Rebate matching rides here too: brand-funded offers matched against receipts — the shopper saves, the brand pays, Arya keeps a share of what redeems.
-
-**3. Platform licensing (later).** The mapping pipeline and the game engine apply to any indoor space where people search for things: hardware, pharmacy, warehouses, airports, campuses. Google Maps stopped at the front door; the indoor layer is unclaimed as consumer infrastructure.
-
-## The two rules that protect the business
-
-- **Density beats coverage.** A thin layer over a thousand stores is worthless to every buyer above. Win one metro's stores completely, then expand. A game in fifty states with no shelf truth anywhere is a toy; one city with total truth is a business.
-- **The game's honesty is never sold.** Receipt-verified trust is the asset every buyer pays for. A faked location, a buyable badge, or a sold receipt destroys it in one move. Personal data is never sold — aggregated shelf data only.
+- **Density beats coverage.** A thin layer over a thousand stores helps nobody. Win one neighbourhood's stores completely, then grow.
+- **Honesty is never traded away.** Receipt-verified results are what people trust. A faked location, a buyable badge or a sold receipt would destroy that. Personal data is never sold, and there are no ads or sponsored placements in Quest.
 
 ## Competitive landscape (checked 2026-10-27)
 

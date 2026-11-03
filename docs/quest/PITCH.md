@@ -1,3 +1,5 @@
+> **Early pitch, written Oct 27 when the game came first.** The product is now list first and Quest is optional. For the current story read [`PITCH-SCRIPT.md`](PITCH-SCRIPT.md) and [`../PRINCIPLES.md`](../PRINCIPLES.md).
+
 # Pitch
 
 ## Problem
@@ -25,7 +27,7 @@ Arya Quest is a collection game played in the player's own store, mapped by the 
 
 1. **Parents first.** The pain is sharpest and most memorable: a child who begs to find the next item is a child following the list.
 2. **Households second.** The brain underneath (patterns, spend, returns) serves the person who plans the shopping.
-3. **Mappers.** Early adopters who scan their store get first-mapper credit on it — status is the wage the game pays for labor.
+3. **Mappers.** Early adopters who scan their store get first-mapper credit on it — status is the reward the game gives for the work.
 
 ## The flywheel
 
@@ -49,7 +51,7 @@ Every metric is receipt-verified, so the social layer needs no trust: leaderboar
 
 ## Rollout story
 
-- Shipped for the hackathon: no store ships pre-mapped. Every store starts as a labelled typical layout and is mapped by its shoppers with the guided camera scan (pan, no taps; SAM blurs people first). Status is earned: only sections with a real, fresh picture count.
+- Shipped for the hackathon: no store ships pre-mapped. Every store starts as a labelled typical layout and is mapped by its shoppers with the guided camera scan (pan, no taps; SAM pixelates the people it detects first). Status is earned: only sections with a real, fresh picture count.
 - Mapping is crowdsourced from day one by design: a store is added by the first player who wants to hunt in it.
 - Depth path (post-hackathon): camera placement in the aisle, more game skins (escape room), household analytics, mapper events and store leaderboards.
 

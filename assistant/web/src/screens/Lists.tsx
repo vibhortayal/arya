@@ -11,7 +11,7 @@ import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../
 import { useTown } from "../lib/town";
 import { decode, isPdfFile } from "../ui/AddReceiptSheet";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
-import { get, post } from "../lib/api";
+import { get, noKeyMessage, post } from "../lib/api";
 import { SYNCED } from "../lib/listQueue";
 import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
@@ -783,7 +783,7 @@ export function Lists() {
           const ok = await ask.run(spoken, here ? { list: here.name, list_id: here.id } : {});
           if (!ok) { const cur = textRef.current.trim(); changeText(cur ? `${cur}, ${spoken}` : spoken); }
         }
-      } catch (e) { setReading(false); setStatus(""); failCard(t("lists.input.voiceFailed"), t("lists.input.voiceFailedBody"), "mic"); }
+      } catch (e) { setReading(false); setStatus(""); failCard(t("lists.input.voiceFailed"), noKeyMessage(e) || t("lists.input.voiceFailedBody"), "mic"); }
       return;
     }
     if (!voiceSupported()) { failCard(t("lists.input.noVoice"), t("common.voice.unsupported"), "mic"); return; }
@@ -1351,7 +1351,7 @@ export function Lists() {
           openLens(id);
         })} /> : null}
         <div className="group shopmodes">
-          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => pick("quest")}><img className="rowface" src="/assets/scenes/storefront.webp" alt="" /><span className="hr-label">{t("lists.startAQuest")}<span className="sub">{t("lists.shopQuestSub")}</span></span><span className="chev">›</span></button>
+          <button className="hubrow" type="button" data-shop="quest" data-first onClick={() => pick("quest")}><img className="rowface" src="/assets/scenes/storefront-thumb.webp" alt="" /><span className="hr-label">{t("lists.startAQuest")}<span className="sub">{t("lists.shopQuestSub")}</span></span><span className="chev">›</span></button>
           <button className="hubrow" type="button" data-shop="list" onClick={() => pick("list")}><span className="hr-label">{t("lists.shopJustList")}<span className="sub">{t("lists.shopJustListSub")}</span></span><span className="chev">›</span></button>
         </div>
         {shopMode === null ? <>

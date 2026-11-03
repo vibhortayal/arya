@@ -2,8 +2,7 @@
 
 Quest is the optional game layer of Arya, a grocery list that learns
 ("Waze for grocery shopping"; see the root `README.md`). Team Nightshift,
-Meta Global AI Developer Hackathon, Indie track, submission Nov 4, 2026,
-9:00 PM ET.
+Indie track, submission Nov 4, 2026, 9:00 PM ET.
 
 Quest turns your grocery list into a treasure hunt in your real store. Pick the store; Arya sorts your list by where you usually buy
 each thing. Walk the hunt through real photos of the aisles, grab each
@@ -25,10 +24,10 @@ camera scan maps it for every shopper after you.
 2. **Find.** Shoppers' photos where a store section is mapped (people
    blurred by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
    Muse Spark verifies.
-3. **Grab.** +10 a grab, milestones, a full-haul bonus. Shortage
+3. **Grab.** +10 per grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.
-4. **Receipt.** Muse Spark reads it, code checks the arithmetic, and
-   Muse Wonder re-reads only a receipt the checks flag; it
+4. **Receipt.** Muse Spark reads it (Spark first; see the model map in
+   `JUDGES.md`), code checks the arithmetic, and it
    feeds patterns, spend and returns.
 
 ## Documents
@@ -43,8 +42,8 @@ camera scan maps it for every shopper after you.
 | [META-PRODUCTS.md](META-PRODUCTS.md) | Each Meta product and its job |
 | [JUDGE-PLAYBOOK.md](JUDGE-PLAYBOOK.md) | An 8-minute path through the live demo |
 | [PITCH.md](PITCH.md), [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | Pitch and spoken script |
-| [BUSINESS.md](BUSINESS.md) | Market and model |
+| [BUSINESS.md](BUSINESS.md) | Who it is for and who else is out there |
 | [BUILD-PLAN.md](BUILD-PLAN.md), [SUBMISSION.md](SUBMISSION.md) | Road to Nov 4, checklist |
-| [DISCUSSION.md](DISCUSSION.md) | The owner's steering, in order |
+| [DISCUSSION.md](DISCUSSION.md) | My steering, in order |
 
 Current state: `STATUS.md` at the repo root.

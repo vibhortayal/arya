@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { get, post, forgetReads, forgetKept, SESSION_ENDED } from "./api";
+import { get, post, forgetReads, forgetKept, SESSION_ENDED, friendlyError, noKeyMessage } from "./api";
 
 const reply = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 
@@ -45,14 +45,14 @@ describe("offline copy", () => {
     await expect(get("/api/home")).rejects.toThrow();
   });
 
-  test("the demo keeps no copy, and signing out deletes them", async () => {
+  test("the demo keeps a copy for the visit, and signing out deletes them", async () => {
     localStorage.setItem("arya.lastUser", JSON.stringify({ user: "demo", demo: true }));
     vi.spyOn(globalThis, "fetch").mockImplementation(reply({ a: 1 }));
     await get("/api/today");
-    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
     localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
     await get("/api/settings");
-    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(1);
+    expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:")).length).toBe(2);
     forgetReads();
     expect(Object.keys(localStorage).filter(k => k.startsWith("arya.rc:"))).toEqual([]);
   });
@@ -104,5 +104,16 @@ describe("kept reads", () => {
     forgetKept();
     await get("/api/town/hints");
     expect(f).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("a copy of Arya with no Meta key (local Docker, #432)", () => {
+  test("the no-key error is shown as it is, saying where the key goes", () => {
+    const msg = friendlyError("MODEL_API_KEY not provisioned on this runtime");
+    expect(msg).toContain("MODEL_API_KEY=");
+    expect(msg).toContain("docker compose up -d");
+    expect(noKeyMessage(new Error(msg))).toBe(msg);
+    expect(noKeyMessage(new Error("MODEL_API_KEY not provisioned on this runtime"))).toBe(msg);
+    expect(noKeyMessage(new Error("Meta's model is busy right now."))).toBeNull();
   });
 });

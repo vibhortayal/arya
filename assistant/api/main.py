@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from api import album_routes, haul_routes, hunt_routes, listops, pack, state
 from api.demo_guard import require_login
 from api.deps import _PWA
-from api.routes import (account, auth, avatar, chat, expiry, eyes, friends, groups, home,
+from api.routes import (account, alexa, auth, avatar, chat, expiry, eyes, friends, groups, home,
                         intake, items, lists, lists_v1, mcp_connector, ops, prices, quest,
                         questmap, receiptjobs, receipts, review, shelf, storemap, stores, town)
 
@@ -85,7 +85,7 @@ for _router in (pack.router, auth.router, intake.router, review.router,
                 avatar.router, receipts.router, hunt_routes.router,
                 storemap.router, haul_routes.router, prices.router,
                 groups.router, questmap.router, town.router, ops.router,
-                receiptjobs.router):
+                receiptjobs.router, alexa.router):
     app.include_router(_router)
 
 def _resume_scan_jobs():
@@ -110,6 +110,18 @@ def _resume_receipt_jobs():
 
 
 app.router.on_startup.append(_resume_receipt_jobs)
+
+
+def _resume_alexa_jobs():
+    """Alexa adds a restart interrupted carry on (hidden flag)."""
+    from api import alexa_brain
+    try:
+        alexa_brain.resume()
+    except Exception:
+        _log.exception("could not resume alexa jobs")
+
+
+app.router.on_startup.append(_resume_alexa_jobs)
 
 # The open Lists API is its own small app, so its errors and schema
 # (/api/v1/openapi.json) stay separate from the app's routes.
