@@ -167,13 +167,24 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 **Supabase.** Email-code and Google sign-in through the REST auth API, with no client library, plus a Postgres mirror of our JSON documents. Both are live. **Resend.** Waitlist and account-deletion emails, best effort. We hit no notable problems with either.
 
-## How creatively did we use Meta's AI tooling? (about 240 words)
+## How creatively did we use Meta's AI tooling? (about 670 words; trim to fit the portal limit)
 
 1. **Muse connected itself to Arya.** This surprised us most. Arya has an MCP server with six tools: get_snapshot, get_list, add_items, check_item, file_receipt and get_receipts. On Nov 2 we set it up on a real Muse account with no terminal and no settings file. We tapped "Make my code" in Arya and asked the Muse agent to connect to Arya at its address. Muse asked for the code, opened its own secure credentials box for it (so the code never went into the chat), and the connection worked. Arya's connector carries its own instruction doc, so the person writes no prompt. After that, "add oat milk to my list" in Muse changes the real list in Arya. We think it was this easy because the whole stack is Meta's. Muse is the assistant, Muse Spark and Wonder (through the Meta Model API) read the receipts and answer Ask, and Muse Spark Open on Baseten ran our batch jobs (labeling the shared item dictionary and a second opinion for the staple judge), so Arya fits in as one more piece of the same ecosystem.
 
 2. **Two Meta models as a checked team.** On real receipts, Wonder was more accurate, but Spark was about nine times cheaper and four times faster, and most of Spark's errors were silent. So Spark reads first, and plain code checks the arithmetic, the item count and each price against the item's own history. Only flagged receipts go to Wonder, and every receipt records who read it and why.
 
 3. **SAM 3.1 for privacy.** When a shopper photographs a shelf, SAM finds every person in the frame and Arya pixelates them before anything is saved. The same model proposes product boxes, and Arya checks the top three, not just the best one.
+
+4. **Every Meta model has a job, and we can name an example for each.** Spark reads receipts first and answers Ask Arya. Wonder re-reads the receipts Spark gets wrong: on a Westside Market receipt Spark got 9 of 13 lines and Wonder got all 13. SAM 3.1 pixelates shoppers in shelf photos. Muse Image painted Arya's 23 characters. Muse Voice Transcribe turns the Talk button into list adds. Muse Spark Open on Baseten labels the shared item dictionary.
+
+5. **We tuned Ask Arya from real phone tests, one failure at a time.** Each fix came from a real message that went wrong:
+   - "Add a dozen eggs" added a 12-count carton 12 times. Now a quantity that matches the pack size counts as one pack.
+   - "Remove rice" also re-added oat milk from an earlier turn. Now Ask acts only on the last message.
+   - A Hinglish test ("main Hindi mein baat kar raha hun") got "Arya does not do that yet". Now small talk gets a friendly reply in the person's own language, plus example questions.
+   - "Add oat milk and two lemons" added "Milk - 2%" and an item called "two lemons". Now spoken number words become a count, and an add joins only an item with exactly that name.
+   Behind it, Ask reads a feature guide kept under 26,000 characters, updated in the same change as every app change, so its answers about Arya stay current.
+
+6. **Voice that copes with mishearing.** Muse Voice Transcribe hears the Talk button in Lists and Ask. The browser records 16 kHz mono audio, and Arya keeps no recording or transcript. When the person has fixed a language, Arya sends it as a hint, and repeats the call without the hint if the API refuses it. Real example: voice heard "Costcosi" for a list named Costcozy. Now a sound-alike match over the person's own list names finds it, and when two lists could fit, Ask offers tap-to-answer choices.
 
 Also built, but switched off: an Alexa skill that sends misheard adds to Spark in the background, where Spark matches them against the person's real list names.
 
