@@ -97,11 +97,11 @@ Next, a step-by-step tour of every feature on your copy:
 
 ## Can I run it without Docker?
 This route was followed step by step from a fresh clone by the Tester, without a
-key (the receipt step was not run). The Docker route above was run from a fresh
-shallow clone on a Linux server, once with cached build layers and once with a
-cold build (about 55 seconds), with no Meta key, in a browser at 390x844. Start,
-`/health`, creating an account, signing in again, the demo, the no-key Ask and
-receipt messages, Start shopping, editing `.env` and the port setting all worked.
+key (the receipt step was not run). The Docker route above was run twice on a Linux server with no Meta key. A cold
+build (about 55 seconds) from a fresh shallow clone, in a browser at 390x844:
+start, `/health`, creating an account, signing in again, the demo, the no-key Ask
+and receipt messages and Start shopping all worked. An earlier run with cached
+build layers, through direct requests: editing `.env` and the port setting worked.
 The cold build needed that test machine's proxy certificate added, because its
 network re-signs HTTPS (see "What if something goes wrong?"). Reading a receipt,
 photos, voice and a working Ask answer need a real key and were not run on either
