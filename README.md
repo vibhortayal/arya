@@ -36,7 +36,7 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 **I add** by typing, by voice — **Muse Voice Transcribe** — or a photo of a paper list — **Muse Spark** converts it into a list.
 
-**At the store,** if I can't find something, I point the camera at a shelf: **SAM 3.1** finds the item, **Spark** checks it. *This shelf is empty,* so I tap **Not here**, and the next shopper knows.
+**At the store,** if I can't find something, I point the camera at a shelf: **SAM 3.1** finds the item, **Spark** checks it. *This shelf is empty,* so I tap **Not here**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list see an alert.
 
 **At checkout** I snap the receipt. **Spark** reads it, Arya checks the math, and if anything is off, **Muse Wonder** takes a second look. *Next week's list is already learning.*
 
