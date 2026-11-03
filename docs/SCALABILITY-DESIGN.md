@@ -6,7 +6,7 @@ one-line plan in [`ROADMAP.md`](ROADMAP.md) ("Scale out as the community
 grows") and the Known limits entry in the [README](../README.md#what-are-the-known-limits);
 where this page says more, it does not contradict them. No provider, dates
 or costs are named: each phase is chosen when the number of shoppers asks
-for it. Rome wasn't built in a day.
+for it.
 
 The theme that shapes every choice here: Arya is a community app that grows
 with its users. The design keeps one codebase and one set of product rules

@@ -2,12 +2,12 @@
 
 **Problem statement: Build for Your World.**
 
-Arya learns how you shop from your receipts and helps shoppers help each other. Built for the Meta Global AI
-Developer Hackathon 2026, Indie track, solo. Build window: Oct 27 to Nov 4, 2026.
+Arya learns how you shop from your receipts and helps shoppers help each other. Indie track, solo. Build window:
+Oct 27 to Nov 4, 2026.
 
 Theme fit: a tool for everyday life that depends on Meta's models for reading receipts, labels, voice and shelves. The model map below shows which model does which job.
 
-- **Why this is built for our world:** a shopper's problem I had personally, built for shoppers to help each other, and free to use. [`README.md`](README.md#what-is-arya), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
+- **Why this is built for our world:** a shopper's problem I had personally, and free to use. [`README.md`](README.md#what-is-arya), [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)
 - **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the Nov 3 freeze and linked here then. The live demo and the path below work without it.
@@ -31,18 +31,18 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 
 **Could it become something people use?** It already runs: live at arya.teamnightshift.org, installable, free to use, with a no-account demo, shared lists for groups, a Lists API and an MCP connector so an agent can edit your lists ([agent connector](assistant/docs/AGENT-CONNECTOR.md)). Store maps already merge across shoppers, so each trip helps the next; shared prices are planned and not switched on. It runs as one server today, and the plan to scale it is in the [roadmap](docs/ROADMAP.md). Rome wasn't built in a day: I built the foundation, and the more people use Arya the better it gets for them.
 
-**Does it fit a problem statement?** Yes: Build for Your World. It is a shopper's problem I had personally, built for shoppers to help each other ([why](docs/PRINCIPLES.md)).
+**Does it fit a problem statement?** Yes. It is a shopper's problem I had personally ([why](docs/PRINCIPLES.md)).
 
 ## Which Meta models does it use, and for what? (Meta AI tooling, 25%)
 
 Six Meta products plus the Meta Model API, each with a job (the model map is below). The full table with where each lives in code: [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
 - Spark reads receipt photos first; Wonder re-reads only a receipt the arithmetic checks flag. Code: [`decode/service.py`](assistant/api/decode/service.py), [`checks.py`](assistant/api/decode/checks.py).
-- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only (no prices, dates, stores or account details). [`open_client.py`](assistant/api/open_client.py)
+- Muse Spark Open (open weights, hosted on Baseten) is a second seat on the staple judge; it sees item names only. [`open_client.py`](assistant/api/open_client.py)
 - SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. [`shelfscan.py`](assistant/api/shelfscan.py)
 - Muse can use Arya: any MCP-capable assistant connects to Arya's MCP address, and Muse is the reference client. I tested it end to end on my own Muse on 2026-11-02: I asked the Muse agent to connect, pasted the code into the secure credentials vault Muse opened (never the chat), and Muse then read my list, added items and filed receipts through six tools. [Agent connector](assistant/docs/AGENT-CONNECTOR.md), code in [`mcp.py`](assistant/api/mcp.py)
 - Available but not used: Muse Glimmer (open weights, self-hosted) and the Spark Contributor tier (cheaper, different data terms). Reasons: [`docs/MODELS.md`](docs/MODELS.md).
-- Built with Muse Code: Muse Code, running Muse Wonder, wrote the first version of the engine on Oct 27; I then built the rest of the app with Claude. Muse Code is not part of the shipped app. How: README, "How this was built".
+- Built with Muse Code: it wrote the first version of the engine; I built the rest with Claude. Details: README, "How this was built".
 
 ## How is it built, and how well? (Technical depth, 20%)
 
@@ -75,7 +75,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 | Auto reader (the live path) | `ARYA_PHOTO_READER=auto` (the default) | Spark first; Wonder re-reads a flagged receipt | Not yet measured on photos. A swapped pair of prices keeps the sum, so the review queue stays |
 | Meta Model API | one client | Every server call, with a daily spend ceiling | n/a |
 
-Spark and Wonder run in Meta's Standard mode, which Meta does not use to train its models. The live receipt reader is `auto` (the code default): Spark first, Wonder on a flagged read. Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+Spark and Wonder run in Meta's Standard mode. The live reader is `auto` (the code default). Reader history is in [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
 Eval numbers: the automatic scorer gives Wonder 86 of 98 (87.8%), below Spark's 92 of 98; after hand adjudication Wonder is 97 of 98. The same Spark scored 90 of 98 in the earlier Gate 0 run and 92 of 98 in the Wonder comparison: that is run-to-run variance on one small set, so quote the gap between the models, not either number alone. See [`docs/evals/`](docs/evals/).
 

@@ -27,11 +27,10 @@ ask Arya questions, and, if you like, turn the trip into a game.
 
 ## Build for Your World
 
-- **What is Arya.** Arya learns how you shop from your receipts and helps shoppers help each other.
+- **What is Arya.** A grocery app that learns from your receipts and helps shoppers help each other; the full story is in the README.
 - **Why I built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
-  mental space. Arya is free to use and made for shoppers to help each other;
-  households and groups share lists. It costs money to keep running (the AI
+  mental space. Arya is free to use; households and groups share lists. It costs money to keep running (the AI
   reading), and you can see what you use in Settings, About Arya, Keeping
   Arya running. See `docs/PRINCIPLES.md`.
 - **What it uses.** Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice

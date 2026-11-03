@@ -233,7 +233,7 @@ fs.writeFileSync(path.join(OUT, 'scrub-report.txt'), Object.entries(counts).map(
 // llms.txt: a short index of the site for tools that read docs, built from the same list as the sidebar.
 const siteUrl = (process.env.DOCS_URL || '').replace(/\/$/, '') + BASE;
 const llmsOut = ['# Arya', '',
-  '> Arya learns how you shop from your receipts and helps shoppers help each other. Meta models read the receipts, plain code checks the arithmetic, and shoppers share lists and store maps. Built for the Meta Global AI Developer Hackathon 2026 (Team Nightshift, Indie track).', ''];
+  '> Arya learns how you shop from your receipts and helps shoppers help each other.', ''];
 let lastSection = '';
 for (const [section, label, route, desc] of llms) {
   if (section !== lastSection) { if (lastSection) llmsOut.push(''); llmsOut.push(`## ${section}`, ''); lastSection = section; }

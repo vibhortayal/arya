@@ -89,7 +89,7 @@ nobody has designed it yet. Sources are named so you can check them.
   one VM (see [Known limits](../README.md#what-are-the-known-limits)). The plan, not a
   promise: make Postgres the master copy, move demo and session state out of
   memory, run several processes, and move to a cloud provider in step with
-  the number of shoppers. Rome wasn't built in a day. The design, phase by
+  the number of shoppers. The design, phase by
   phase, is in [`SCALABILITY-DESIGN.md`](SCALABILITY-DESIGN.md) (a plan,
   not built).
 
