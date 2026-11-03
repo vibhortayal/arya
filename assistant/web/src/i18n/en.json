@@ -1446,6 +1446,15 @@
     "shoppers_other": "{{count}} shoppers",
     "startMapping": "Start mapping",
     "startMappingAt": "Start mapping {{store}}",
+    "here": {
+      "near": "You are at the store, so the live walk is ready.",
+      "demo": "Demo store: the live walk is ready.",
+      "ask": "The live walk needs your location to know you are in the store. You can also map with a video or photos.",
+      "check": "Check my location",
+      "again": "Check again",
+      "denied": "Location is off for Arya, so the live walk is off. Upload a video or photos, or turn on location and check again.",
+      "cant": "We could not confirm you are at this store, so the live walk is off. Upload a video or photos instead."
+    },
     "showAllStores": "Show all my stores ({{count}})",
     "findMyStore": "Find my store",
     "findMyStoreSub": "Search by name or address, or add it",
@@ -3303,7 +3312,7 @@
         "body": "Arya knows the store's layout, mapped by you or by other Arya shoppers, and walks you to each item in order. No more doubling back for the eggs. Turn it into a game with Quest if you like.",
         "s1": "Open a store's list and tap Start shopping.",
         "s2": "Arya walks you to each item in aisle order.",
-        "s3": "Store not mapped yet? Tap Map my store and walk it once."
+        "s3": "Store not mapped yet? Tap Map my store and walk it once. Without location, upload a video or photos."
       },
       "news": {
         "kicker": "Store news",
@@ -3864,6 +3873,7 @@
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
         "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Kroger's aisle data is used under Kroger's developer terms; Arya is not affiliated with Kroger.",
+        "n4": "Before a Quest at a store with a known spot, Arya can check your location once. It never blocks you, and Arya does not save where you are.",
         "cta": "Open Quest"
       },
       "map": {
@@ -3876,6 +3886,7 @@
         "s4": "Arya builds the map in the background. A card tells you when it is ready.",
         "n1": "No signal? Frames save on your phone and send later.",
         "n2": "Arya pixelates people in the frames before anything is kept.",
+        "n3": "The live walk needs your location to show you are at the store. If location is off, or Arya cannot confirm it, upload a video or photos instead. Arya does not save where you are.",
         "cta": "Open Map my store"
       },
       "news": {

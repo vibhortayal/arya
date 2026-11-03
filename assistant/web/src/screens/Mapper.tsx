@@ -7,6 +7,7 @@ import { get, post } from "../lib/api";
 import { FindStorePanel } from "./StoresFind";
 import { ScanStatus, UploadWalk } from "./MapScanStatus";
 import { Trans, useTranslation } from "../i18n";
+import { hereAt, judge, quietGeo, type Here } from "../lib/geo";
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
  * paintMapper, focus toggle, add aisle, teach-walk start, open segment).
@@ -26,7 +27,7 @@ type MapView = {
   credit?: { title?: string; points?: number };
   next?: Prompt | null; segments: Seg[]; focus?: string[];
 };
-type Mine = { name: string; favorite?: boolean; street?: string; city?: string };
+type Mine = { id?: string; name: string; favorite?: boolean; street?: string; city?: string; lat?: number | null; lng?: number | null };
 
 /* Status and side names are en.json keys. */
 const STATUS: Record<Seg["status"], [string, string]> = {
@@ -62,6 +63,9 @@ export function Mapper() {
   // when My Stores is empty, since there is nothing else to pick.
   const [allStores, setAllStores] = useState(false);
   const [uploading, setUploading] = useState(false);
+  /* The live walk needs the phone at the store (owner, 2026-11-03).
+   * null: not checked yet. The position is compared and dropped. */
+  const [here, setHere] = useState<Here | "checking" | null>(null);
   const seq = useRef(0);
   const paramStore = typeof nav.params.store === "string" ? nav.params.store : "";
 
@@ -118,6 +122,24 @@ export function Mapper() {
     } catch (e) { toast(msg(e)); }
   };
 
+  const place = mine.find(m => m.name === store);
+  const isTown = !!place?.id?.startsWith("town-");
+  const checkHere = async () => {
+    if (!place) { setHere("unsure"); return; }
+    setHere("checking");
+    setHere(await hereAt(place));
+  };
+  /* A store changes: read the position only when the browser already
+   * allows it, so opening Map my store never opens a prompt. */
+  useEffect(() => {
+    setHere(null);
+    if (!place || isTown) return;
+    let live = true;
+    quietGeo().then(g => { if (live && g) setHere(judge(g, place)); }).catch(() => {});
+    return () => { live = false; };
+  }, [store, mine]); // eslint-disable-line react-hooks/exhaustive-deps
+  const liveOk = isTown || here === "near";
+
   /* Zero-entry teach: the walk IS the form. */
   const startWalk = () => openCapture({ kind: "walk", segment: "", teach: true, est_seconds: 30,
     title: t("mapper.walk.title", { store }),
@@ -163,9 +185,20 @@ export function Mapper() {
       <div id="mp-walk">
         {v && store && (
           <div className="group pad mp-nextcard">
-            <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMappingAt", { store })}</button>
-            <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
-            <button className="btn wide mp-upload" id="mp-upload" type="button" onClick={() => setUploading(true)}>{t("mapScan.uploadButton")}</button>
+            {liveOk ? (
+              <>
+                <p className="muted nomargin" id="mp-here" role="status">{isTown ? t("mapper.here.demo") : t("mapper.here.near")}</p>
+                <button className="btn primary wide" id="mp-walkstart" type="button" onClick={startWalk}>{t("mapper.startMappingAt", { store })}</button>
+                <p className="muted nomargin mp-howto">{t("mapper.howTo")}</p>
+                <button className="btn wide mp-upload" id="mp-upload" type="button" onClick={() => setUploading(true)}>{t("mapScan.uploadButton")}</button>
+              </>
+            ) : (
+              <>
+                <p className="muted nomargin" id="mp-here" role="status">{t(here === "denied" ? "mapper.here.denied" : here === "far" || here === "unsure" ? "mapper.here.cant" : "mapper.here.ask")}</p>
+                <button className="btn primary wide mp-upload" id="mp-upload" type="button" onClick={() => setUploading(true)}>{t("mapScan.uploadButton")}</button>
+                <button className="btn wide" id="mp-check" type="button" disabled={here === "checking"} onClick={() => { checkHere().catch(showErr); }}>{t(here === null || here === "checking" ? "mapper.here.check" : "mapper.here.again")}</button>
+              </>
+            )}
           </div>
         )}
       </div>

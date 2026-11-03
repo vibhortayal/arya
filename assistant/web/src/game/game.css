@@ -495,3 +495,10 @@
 .qg-listbtn::before, .qg-live .qg-cue::before, .qg-live .qg-hud .qg-ic::before { content: ""; position: absolute; inset: -8px -3px; }
 .qg-live .qg-hud .qg-ic::before { inset: -3px; }
 .qg-store.qm-ready { box-shadow: inset 0 0 0 2px #C2410C, 0 2px 0 var(--q-line); }
+
+/* Quest start: the soft location check. */
+.qg-locate { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; }
+.qg-locate h2 { margin: 0; font-size: 20px; }
+.qg-locate p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--q-ink2); }
+.qg-here { padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.05); }
+.qg-here.ok { background: rgba(31,122,77,.14); color: #1f7a4d; }

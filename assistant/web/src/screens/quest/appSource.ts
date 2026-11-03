@@ -32,7 +32,7 @@ import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/
 
 type PlanRow = { name: string; qty?: number; list?: string | null; also?: string[]; on_list?: boolean };
 type NamedList = { id: string; name: string; stores?: string[] };
-type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string };
+type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string; lat?: number | null; lng?: number | null };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
 type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
 type SessItem = { name: string; shelf_label?: string | null; checked?: boolean };
@@ -155,9 +155,9 @@ export class AppSource implements QuestSource {
     rows.forEach(r => this.stores.set(r.id, r));
     const mine = await this.maps().catch(() => [] as SavedMap[]);
     return Promise.all(rows.map(async r => {
-      if (mine.some(m => m.key === `store:${r.id}`)) return { id: r.id, name: r.name, area: area(r), kind: "mapped" as MapKind, seen: "Your map" };
+      if (mine.some(m => m.key === `store:${r.id}`)) return { id: r.id, name: r.name, area: area(r), kind: "mapped" as MapKind, seen: "Your map", lat: r.lat, lng: r.lng };
       const cov = await this.mapOf(mapRef(r.name, r.id));
-      return { id: r.id, name: r.name, area: area(r), kind: cov.kind, seen: seenLine(cov) };
+      return { id: r.id, name: r.name, area: area(r), kind: cov.kind, seen: seenLine(cov), lat: r.lat, lng: r.lng };
     }));
   }
 
