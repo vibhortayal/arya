@@ -70,7 +70,7 @@ class TestToday(unittest.TestCase):
     def test_quest_nudge_retires_after_first_quest_open(self):
         today = src_raw("screens/Today.tsx")
         self.assertIn("useState(() => questOpened(user))", today)
-        self.assertIn("!questSeen && (", today)
+        self.assertIn("!questSeen && !questHidden && (", today)
         self.assertIn("markQuestOpened(s.user)", src_raw("screens/quest/QuestMode.tsx"))
         lib = src_raw("lib/questSeen.ts")
         self.assertIn("arya-quest-opened:", lib)

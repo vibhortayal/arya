@@ -2460,3 +2460,10 @@ body.hunting #offlinebar { display: none !important; }
 .mp-world .qg-world { position: absolute; inset: 0; }
 .mp-scenewait { margin: 0; padding: 24px 16px; opacity: .85; }
 .mp-scenecap { margin: 0; padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); font-size: 14px; opacity: .9; }
+/* Hide one Today row with ✕ (owner, 2026-11-03): this account only, Undo in the toast. */
+.rowx { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px -2px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; color: var(--secondary); }
+.rowx > span { width: 26px; height: 26px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-size: 13px; line-height: 1; }
+.rowx:active > span { background: var(--fill2); }
+.hiderow { display: flex; align-items: center; }
+.hiderow > .hubrow, .hiderow > .gamerow { flex: 1; min-width: 0; }
+.hiderow > .rowx { margin: 0 -4px 0 0; }

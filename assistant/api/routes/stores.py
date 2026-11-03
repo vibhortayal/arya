@@ -81,7 +81,13 @@ def stores_places(q: str = "", session: str = "",
     route: the upstream call blocks, so FastAPI runs it in the
     threadpool. Unprovisioned (no key) is a quiet no-op, the
     second-seat shape."""
-    from api import places
+    from api import places, town
+    if town.active():
+        # Demo Town: the demo's pickers name the town's stores only, so
+        # Google is never asked and a real store never joins the demo
+        # (bug 2026-11-03: a picked Google store vanished and the app
+        # read .name on nothing).
+        return {"provisioned": True, "suggestions": [], "demo_town": True}
     nearby = not q.strip() and lat is not None and lng is not None
     if not places.provisioned() or (len(q.strip()) < 3 and not nearby):
         return {"provisioned": places.provisioned(), "suggestions": []}
@@ -108,7 +114,9 @@ async def stores_places_pick(req: Request):
     name = (body.get("name") or "").strip()
     if not place_id or not name:
         raise HTTPException(400, "place_id and name are required")
-    from api import places
+    from api import places, town
+    if town.active():
+        raise HTTPException(400, "The demo uses Demo Town's stores. Pick one from the list.")
     if not places.provisioned():
         raise HTTPException(503, "Google Places is not provisioned yet")
     from starlette.concurrency import run_in_threadpool
@@ -119,6 +127,9 @@ async def stores_places_pick(req: Request):
         raise HTTPException(502, safe_detail(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
+    if row is None:
+        # Never answer 200 with nothing: the picker reads the row.
+        raise HTTPException(409, "Arya couldn't add that store. Try again.")
     return row
 
 

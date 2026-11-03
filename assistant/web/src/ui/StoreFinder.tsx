@@ -17,7 +17,7 @@ import { useToast } from "./Toast";
 
 export type Suggestion = { place_id: string; name: string; secondary: string };
 export type PickedStore = { id: string; name: string; street?: string; city?: string };
-type Places = { suggestions?: Suggestion[]; provisioned?: boolean };
+type Places = { suggestions?: Suggestion[]; provisioned?: boolean; demo_town?: boolean };
 type Drop = { head: string; d: Places };
 
 /* One billing token per search, ended by a pick. */
@@ -76,8 +76,11 @@ export function useStoreSearch(onPicked: (s: PickedStore) => void) {
   const pick = async (r: Suggestion) => {
     setBusy(r.place_id);
     try {
-      const row = await post<PickedStore>("/api/stores/places/pick", { place_id: r.place_id, name: r.name });
+      const row = await post<PickedStore | null>("/api/stores/places/pick", { place_id: r.place_id, name: r.name });
       token = null; // the pick ends Google's billing session
+      // A pick that came back empty is an error, never a crash on .name
+      // (bug 2026-11-03).
+      if (!row || !row.name) throw new Error(t("storeFinder.pickFailed"));
       if (alive.current) { setDrop(null); setQ(""); }
       cb.current(row);
     } catch (e) { toast(errMsg(e)); }
@@ -110,7 +113,7 @@ export function StoreSearch({ search, label, id }: { search: StoreSearchState; l
                 <span className="name">{r.name}</span><span className="sub">{r.secondary}</span>
               </button>))}
           </>
-          : <div className="ghead">{drop.d.provisioned === false ? t("common.googleNotSetUp") : t("common.noStoresFound")}</div>)}
+          : <div className="ghead">{drop.d.demo_town ? t("storeFinder.demoTown") : drop.d.provisioned === false ? t("common.googleNotSetUp") : t("common.noStoresFound")}</div>)}
       </div>
     </div>
   );

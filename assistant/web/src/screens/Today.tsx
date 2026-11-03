@@ -21,6 +21,8 @@ import { AlexaCard, reviewItems, type Review } from "./todayAlexa";
 import { EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
 import { fitPhoto } from "../lib/photo";
+import { isHidden, hideValue, type Hidden } from "../lib/todayHidden";
+import { HideX } from "./hideX";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -64,12 +66,15 @@ const isoToday = () => {
 const PLACES = ["fridge", "pantry", "freezer", "fruit"];
 const cap = (t: unknown) => String(t || "").replace(/^./, c => c.toUpperCase());
 
+/* A Running low row comes back when its due window moves (bought again). */
+export const lowSig = (i: { due_window?: unknown }) => JSON.stringify(i.due_window ?? "");
+
 /* app.js storeAlertRows: up to three "not there" reports, then price
  * gaps worth a detour (two stores or more, 25 cents apart or more),
  * four rows at most. */
-export type AlertRow = { key: string; kind: "report" | "price"; name: string; sub: string;
-  /* A store alert's id (store key | item key), for ✕ hide; and what
-   * the ✕ reads aloud. Price rows have neither. */
+export type AlertRow = { key: string; kind: "report" | "price"; name: string; sub: string; hideKey: string; sig: string; what: string;
+  /* A store alert's id (store key | item key), for its own ✕ hide
+   * (#552: kept while that report is open); and what the ✕ reads aloud. */
   id?: string; hideLabel?: string };
 export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof money>[1]): AlertRow[] {
   const items: any[] = h?.list?.items || [];
@@ -77,7 +82,8 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
   const mineNames = new Set(items.filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
   news.slice(0, 3).forEach((n, k) => {
     const mine = mineNames.has(String(n.item || "").toLowerCase());
-    rows.push({ key: "n" + (n.id || k), kind: "report", name: t("today.alertNotThere", { store: n.store, item: n.item }),
+    rows.push({ key: "n" + (n.id || k), kind: "report", hideKey: `r:${n.store}|${n.item}`, sig: "", what: String(n.item || ""),
+      name: t("today.alertNotThere", { store: n.store, item: n.item }),
       id: n.id ? String(n.id) : undefined, hideLabel: t("today.hideAlert", { store: n.store, item: n.item }),
       sub: t("today.alertReports", { count: n.count, date: fmtShort(String(n.reported_at || "").slice(0, 10)) }) + (mine ? t("today.alertOnYourList") : "") });
   });
@@ -91,7 +97,8 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
     stores.sort((a, b) => a[1].median - b[1].median);
     const [lo, hi] = [stores[0], stores[stores.length - 1]];
     if (hi[1].median - lo[1].median < 0.25) continue; // not worth a detour
-    rows.push({ key: "p" + id, kind: "price", name: t("today.alertPrice", { name: names[id], store: lo[0] }),
+    rows.push({ key: "p" + id, kind: "price", hideKey: `p:${id}`, sig: lo[0], what: names[id],
+      name: t("today.alertPrice", { name: names[id], store: lo[0] }),
       sub: t("today.alertUsuallyPay", { price: money(lo[1].median, currency), usual: money(hi[1].median, currency), store: hi[0] }) });
   }
   return rows;
@@ -289,6 +296,17 @@ export function Today() {
   const [editing, setEditing] = useState(false);
   // Card sizes; a Small card tapped open shows as Medium until you leave.
   const [sizes, setSizes] = useState<Partial<Record<CardId, Size>>>(mem?.settings?.today_sizes || {});
+  const [hidden, setHiddenMap] = useState<Hidden>(mem?.settings?.today_hidden || {});
+  // Hide for this account only; Undo shows it again. Nothing is deleted.
+  function hideRow(key: string, sig: string) {
+    const was = hidden[key] ?? null;
+    const put = (v: string | null) => {
+      setHiddenMap(m => { const n = { ...m }; if (v == null) delete n[key]; else n[key] = v; if (todayMem?.settings) todayMem.settings.today_hidden = n; return n; });
+      return post("/api/settings", { today_hidden: { [key]: v } });
+    };
+    put(hideValue(sig)).catch(showErr);
+    toast(t("today.hide.toast"), { action: t("common.undo"), onAction: () => { put(was).catch(showErr); } });
+  }
   const [peekOpen, setPeekOpen] = useState<Set<CardId>>(new Set());
   const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
   const big = (id: CardId) => sz(id) === "l";
@@ -338,6 +356,7 @@ export function Today() {
     setGs(demo ? null : st?.get_started ?? null);
     setCardsSaved(st?.today_cards ?? null);
     setSizes(st?.today_sizes || {});
+    setHiddenMap(st?.today_hidden || {});
     // Asked once; someone who already arranged Today is not asked.
     setFocusAsked(!st || demo || !!st.today_asked || st.today_cards != null);
     setLoadFailed(false);
@@ -382,7 +401,8 @@ export function Today() {
   const onList = new Set(items.filter(i => !i.checked && i.on_list).map(i => i.item_id));
   // Already on a list: handled, so the row goes (one added here stays
   // until you leave, so the tap shows its result).
-  const low: any[] = (h?.running_low || []).filter((i: any) => !onList.has(i.item_id) || added.has(i.item_id)).slice(0, 5);
+  const low: any[] = (h?.running_low || []).filter((i: any) => (!onList.has(i.item_id) || added.has(i.item_id))
+    && !isHidden(hidden, `l:${i.item_id}`, lowSig(i))).slice(0, 5);
   async function addLow(id: string) {
     setBusy(b => new Set(b).add(id));
     try {
@@ -397,14 +417,14 @@ export function Today() {
   }
 
   /* ---- Store alerts ---- */
-  const alertRows = h && news ? storeAlerts(h, news, currency) : [];
+  const alertRows = (h && news ? storeAlerts(h, news, currency) : []).filter(r => !isHidden(hidden, r.hideKey, r.sig));
   const lowCap = capRows(low, lowOpen || big("low"));
 
   /* ---- Still good? ---- */
   // The after-receipt card already asks about these; no repeats.
   const asked = new Set<string>((h?.perishables?.items || []).map((i: { item_id: string }) => i.item_id));
-  const checks: any[] = (h?.checks || []).filter((c: any) => !asked.has(c.item_id));
-  const seen: any[] = (h?.seen || []).filter((c: any) => !asked.has(c.item_id));
+  const checks: any[] = (h?.checks || []).filter((c: any) => !asked.has(c.item_id) && !isHidden(hidden, `c:${c.item_id}`, String(c.text || "")));
+  const seen: any[] = (h?.seen || []).filter((c: any) => !asked.has(c.item_id) && !isHidden(hidden, `s:${c.item_id}`, String(c.date || "")));
   const nChecks = checks.length + seen.length;
   const tip = facts && !firstRun ? <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} /> : null;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
@@ -432,7 +452,8 @@ export function Today() {
   const lists: any[] = arrange(allLists.map(l => l.id), layouts.lists?.order, layouts.lists?.hidden).shown.map(id => allLists.find(l => l.id === id));
   const allCards = lists.map(l => ({ id: l.id as string, name: l.name as string, items: listItems.filter(i => i.list === l.id || (i.also || []).includes(l.id)) }));
   const cards = allCards.filter(c => c.items.length);
-  const emptyNames = allCards.filter(c => !c.items.length).map(c => c.name);
+  const emptyAll = allCards.filter(c => !c.items.length).map(c => c.name);
+  const emptyNames = isHidden(hidden, "empty", emptyAll.join("|")) ? [] : emptyAll;
   const rest = listItems.filter(i => !i.list || !allLists.some(l => l.id === i.list));
   if (rest.length || (!cards.length && !emptyNames.length)) cards.push({ id: "else", name: allLists.length ? t("common.everythingElse") : t("today.yourList"), items: rest });
   const noLists = !listItems.length && !allLists.length;
@@ -441,15 +462,16 @@ export function Today() {
   const trip = h ? nextTrip(cards, lists, h) : null;
   // Items of the trip that Demo Town says are out at the list's store.
   const tripOut = trip && town ? trip.items.map(i => outAt(town, i.item_id, trip.stores) && (town.items[i.item_id]?.name || i.name)).filter((x): x is string => !!x) : [];
-  const watch = h ? watchRows(ins, h) : [];
+  const watch = (h ? watchRows(ins, h) : []).filter(w => !isHidden(hidden, `w:${w.key}`, w.name));
   const watchCap = capRows(watch, watchOpen || big("watch"));
 
   /* ---- Your patterns ---- */
   const monthKeys = months ? Object.keys(months.spend).sort() : [];
-  const lastMonth = monthKeys[monthKeys.length - 1];
+  const lastMonth = isHidden(hidden, "pat", monthKeys[monthKeys.length - 1] || "") ? undefined : monthKeys[monthKeys.length - 1];
 
   /* ---- Use soon ---- */
-  const soon: Soon[] = h?.use_soon || [];
+  const soon: Soon[] = (h?.use_soon || []).filter((s: Soon) => !isHidden(hidden, `u:${s.item_id}`, String(s.date || "")));
+  const questHidden = isHidden(hidden, "quest", "");
   const perish: Perish | null = h?.perishables || null;
   const [perishOpen, setPerishOpen] = useState(false);
   async function perishNotNow() {
@@ -482,8 +504,10 @@ export function Today() {
     return <div id={id}>{rows.length > 0 && <><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
       <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
         <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div>
-        {r.kind === "report" && r.id && <button type="button" className="alertx" aria-label={r.hideLabel}
-          onClick={() => hideAlert(r.id!)}><span aria-hidden="true">✕</span></button>}</div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
+        {r.kind === "report"
+          ? r.id && <button type="button" className="alertx" aria-label={r.hideLabel}
+            onClick={() => hideAlert(r.id!)}><span aria-hidden="true">✕</span></button>
+          : <HideX what={r.what} onHide={() => hideRow(r.hideKey, r.sig)} />}</div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
   };
   const sections: Record<CardId, ReactNode> = {
     alexa: <AlexaCard rows={alexaRows || []} setRows={setAlexaRows} toast={toast}
@@ -505,6 +529,7 @@ export function Today() {
                         ? <span className="chip onlist" aria-label={added.has(i.item_id) ? undefined : t("today.onYourList")}>{t("today.onList")}</span>
                         : <button className="chip" data-low-add={i.item_id} type="button" aria-label={t("today.addToYourList", { name: i.name })}
                           disabled={busy.has(i.item_id)} onClick={() => addLow(i.item_id)}>{t("common.add")}</button>}
+                      <HideX what={i.name} onHide={() => hideRow(`l:${i.item_id}`, lowSig(i))} />
                     </div>
                   ))}
                   <MoreRow more={lowCap.more} onOpen={() => setLowOpen(true)} />
@@ -531,9 +556,10 @@ export function Today() {
             </div>
           )}
           {h && !noLists && emptyNames.length > 0 && (
-            <div className="group"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
+            <div className="group"><div className="hiderow"><button className="hubrow" id="today-emptylists" type="button" onClick={() => nav.show("list")}>
               <span className="hr-label">{emptyListsLine(emptyNames)}<span className="sub">{t(!facts?.receipts ? "today.emptyLists.subNew" : low.length && on.includes("low") ? "today.emptyLists.sub" : "today.emptyLists.subNoLow")}</span></span>
-              <span className="chev" aria-hidden="true">›</span></button></div>
+              <span className="chev" aria-hidden="true">›</span></button>
+              <HideX what={emptyListsLine(emptyNames)} onHide={() => hideRow("empty", emptyAll.join("|"))} /></div></div>
           )}
           {h && listCap.seeAll && (
             <button id="today-seeall" className="seeall" type="button" onClick={() => nav.show("list")}>
@@ -547,7 +573,8 @@ export function Today() {
     expiry: (
           <div id="today-expiry">
             {h && <UseSoon large={big("expiry")} soon={soon} perish={perish} setEx={setEx} onDone={s => doneWith(s)}
-              onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow} />}
+              onPerish={() => setPerishOpen(true)} onNotNow={perishNotNow}
+              onHide={s => hideRow(`u:${s.item_id}`, String(s.date || ""))} />}
           </div>
     ),
     checks: (
@@ -563,11 +590,13 @@ export function Today() {
                       <span className="chipset checkchips">
                         <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
                         <button className="chip" data-check-used={c.item_id} type="button" onClick={() => check("used", c.item_id)}>{t("today.usedIt")}</button>
-                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
+                        <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div>
+                      <HideX what={c.name || c.text} onHide={() => hideRow(`c:${c.item_id}`, String(c.text || ""))} /></div>
                   ))}
                   {seen.map((s, k) => (
                     <div className="row" key={"s" + k}><div className="grow"><span className="checktext">{s.name}</span>
-                      <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div></div>
+                      <span className="sub">{t("today.seenInTheInStock", { place: t(`today.place.${PLACES.includes(s.kind) ? s.kind : "photo"}`), date: fmtShort(s.date) })}</span></div>
+                      <HideX what={s.name} onHide={() => hideRow(`s:${s.item_id}`, String(s.date || ""))} /></div>
                   ))}
                 </div>
               </div>
@@ -581,9 +610,10 @@ export function Today() {
             <>
               <h3 className="sect">{t("today.yourPatterns")}</h3>
               <div className="group">
-                <button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                <div className="hiderow"><button className="hubrow" id="today-patterns-btn" type="button" onClick={() => nav.show("analysis", { from: "home" })}>
                   <span className="hr-label">{t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) })}</span>
                   <span className="hr-action">{t("today.patterns")}</span><span className="chev">›</span></button>
+                  <HideX what={t("today.yourPatterns")} onHide={() => hideRow("pat", lastMonth)} /></div>
                 {tip}
               </div>
             </>
@@ -599,9 +629,10 @@ export function Today() {
             <h3 className="sect">{t("today.cards.watch.name")}</h3>
             <div className="group">
               {watchCap.shown.map(w => (
-                <button className="hubrow" key={w.key} data-watch={w.key} type="button" onClick={() => nav.show("analysis", { from: "home" })}>
+                <div className="hiderow" key={w.key}><button className="hubrow" data-watch={w.key} type="button" onClick={() => nav.show("analysis", { from: "home" })}>
                   <span className="hr-label">{w.name}<span className="sub">{t("today.watch.up", { pct: w.pct, month: ins!.basket!.since_month })}{w.cheaperAt ? " " + t("today.finding.cheaperAt", { store: w.cheaperAt }) : ""}</span></span>
                   <span className="chev" aria-hidden="true">›</span></button>
+                  <HideX what={w.name} onHide={() => hideRow(`w:${w.key}`, w.name)} /></div>
               ))}
               <MoreRow more={watchCap.more} onOpen={() => setWatchOpen(true)} />
             </div>
@@ -649,11 +680,12 @@ export function Today() {
             </div>
           </div>
         )}
-        {listItems.length > 0 && !questSeen && (
-          <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
+        {listItems.length > 0 && !questSeen && !questHidden && (
+          <div className="hiderow"><button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
             <img className="rowimg" src={asset("assets/scenes/storefront-thumb.webp")} alt="" />
             <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
             <span className="chev">›</span></button>
+            <HideX what={t("today.makeYourNextRunA")} onHide={() => hideRow("quest", "")} /></div>
         )}
       </>
     ),
@@ -667,7 +699,7 @@ export function Today() {
     expiry: soon.length > 0 || !!perish,
     checks: nChecks > 0,
     patterns: !!(lastMonth && months) || !!tip,
-    quest: !!questNudge || (listItems.length > 0 && !questSeen),
+    quest: !!questNudge || (listItems.length > 0 && !questSeen && !questHidden),
     watch: watch.length > 0,
     trip: !!h && !firstRun,
   };
@@ -799,7 +831,7 @@ export function Today() {
           {/* From Alexa leads: each row asks for a check. */}
           {on.includes("alexa") && tcard("alexa")}
           {tripFirst && tcard("trip")}
-          {town ? <TownFeed town={town} /> : null}
+          {town ? <TownFeed town={town} hidden={k => isHidden(hidden, k, "")} onHide={k => hideRow(k, "")} /> : null}
           {noReceipt.length > 0 && (
             <div className="group" id="today-noreceipt">
               <button className="navrow" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
@@ -993,8 +1025,8 @@ export function perishNames(items: { name: string }[]): string {
   return names.length > 3 ? t("today.perish.andMore", { names: names.slice(0, 3).join(", "), count: names.length - 3 }) : names.join(", ");
 }
 
-function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow }: { large?: boolean; soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
-  onDone: (s: Soon) => void; onPerish: () => void; onNotNow: () => void }) {
+function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow, onHide }: { large?: boolean; soon: Soon[]; perish: Perish | null; setEx: (s: ExState) => void;
+  onDone: (s: Soon) => void; onPerish: () => void; onNotNow: () => void; onHide: (s: Soon) => void }) {
   const { t } = useTranslation();
   const snap = () => setEx({ k: "capture" });
   const [soonOpen, setSoonOpen] = useState(false);
@@ -1019,7 +1051,8 @@ function UseSoon({ large, soon, perish, setEx, onDone, onPerish, onNotNow }: { l
           <div className="row" key={s.item_id} data-ex-item={s.item_id} onClick={() => open(s.item_id)}>
             <Face name={s.name} />
             <button type="button" className="grow rowopen" onClick={ev => { ev.stopPropagation(); open(s.item_id); }}><span className="name">{s.name}</span><span className="sub"><b>{fmtLong(s.date)}</b> · {when(s.days)}</span></button>
-            <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>{t("today.usedIt")}</button></div>
+            <button className="chip" data-ex-done={s.item_id} type="button" onClick={ev => { ev.stopPropagation(); onDone(s); }}>{t("today.usedIt")}</button>
+            <HideX what={s.name} onHide={() => onHide(s)} /></div>
         ))}
         <MoreRow more={capped.more} onOpen={() => setSoonOpen(true)} />
       </div>

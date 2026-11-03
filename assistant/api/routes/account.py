@@ -114,6 +114,25 @@ def _today_sizes(cur):
     return {k: v for k, v in sizes.items() if k in TODAY_CARDS and v in TODAY_SIZES}
 
 
+HIDDEN_MAX = 300
+
+
+def _today_hidden(cur):
+    """Rows hidden from Today with their ✕ (owner, 2026-11-03): row key ->
+    "signature|YYYY-MM-DD". The web app decides when a row comes back
+    (its signature changed, or the hide is older than that kind's limit)."""
+    got = cur.get("today_hidden")
+    if not isinstance(got, dict):
+        return {}
+    return {k: v for k, v in got.items() if isinstance(k, str) and isinstance(v, str)}
+
+
+def _hidden_ok(body):
+    return isinstance(body, dict) and len(body) <= 50 and all(
+        isinstance(k, str) and 0 < len(k) <= 160 and (v is None or (isinstance(v, str) and len(v) <= 200))
+        for k, v in body.items())
+
+
 def _display(cur):
     d = cur.get("display") if isinstance(cur.get("display"), dict) else {}
     return {k: d[k] if k in d and d[k] in ok else DISPLAY_DEFAULT[k] for k, ok in DISPLAY.items()}
@@ -158,6 +177,7 @@ def settings_get():
             "today_cards": _today_cards(cur),
             "today_asked": bool(cur.get("today_asked")),
             "today_sizes": _today_sizes(cur),
+            "today_hidden": _today_hidden(cur),
             "display": _display(cur),
             "layouts": _layouts(cur),
             **first_run(cur)}
@@ -178,6 +198,9 @@ async def settings_set(req: Request):
     sizes = body.get("today_sizes")
     display = body.get("display")
     layouts = body.get("layouts")
+    hidden = body.get("today_hidden")
+    if hidden is not None and not _hidden_ok(hidden):
+        raise HTTPException(400, "today_hidden maps row keys to text, or null to show the row again")
     if layouts is not None and (not isinstance(layouts, dict) or any(
             k not in LAYOUT_SCREENS or not _layout_ok(v) for k, v in layouts.items())):
         raise HTTPException(400, "layouts maps lists, ask, spending, quest or bar to lists of ids")
@@ -197,7 +220,7 @@ async def settings_set(req: Request):
         raise HTTPException(400, "quest_nudge must be snooze or off")
     if (code is None and lang is None and not onboard and not dismiss
             and mode is None and nudge is None and not trip
-            and cards == "absent" and not asked and sizes is None and display is None and layouts is None):
+            and cards == "absent" and not asked and sizes is None and display is None and layouts is None and hidden is None):
         raise HTTPException(400, "send currency, language, onboarded, get_started_dismissed, shop_mode or today_cards")
     if code is not None and code not in CURRENCIES:
         raise HTTPException(400, "currency must be one of " + ", ".join(CURRENCIES))
@@ -242,6 +265,14 @@ async def settings_set(req: Request):
             cur["display"] = {**_display(cur), **display}
         if layouts is not None:
             cur["layouts"] = {**_layouts(cur), **layouts}
+        if hidden is not None:
+            # Merged in; null shows a row again (Undo). Oldest dropped past the cap.
+            merged = {**_today_hidden(cur), **hidden}
+            merged = {k: v for k, v in merged.items() if v is not None}
+            if len(merged) > HIDDEN_MAX:
+                keep = sorted(merged, key=lambda k: merged[k].rsplit("|", 1)[-1])[-HIDDEN_MAX:]
+                merged = {k: merged[k] for k in keep}
+            cur["today_hidden"] = merged
         state._save("settings.json", cur)
     return settings_get()
 
