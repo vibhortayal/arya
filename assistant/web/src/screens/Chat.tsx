@@ -17,7 +17,7 @@ import { languageToast, offerFor, offerRefused, refuseOffer } from "../lib/langu
 import "../ui/language.css";
 import { t, useTranslation } from "../i18n";
 import { EditList, EditTitle } from "../ui/EditList";
-import { fitPhoto } from "../lib/photo";
+import { fitPhoto, LIST_PHOTO } from "../lib/photo";
 
 /* Port of "Ask Arya + voice" (pwa/app.js, pwa/index.html #view-chat).
  * The log and the history outlive the screen, as the old DOM did.
@@ -110,7 +110,7 @@ const readJson = async (r: Response) => {
   return r.json();
 };
 const post_photo = async (url: string, original: File) => {
-  const f = await fitPhoto(original);
+  const f = await fitPhoto(original, LIST_PHOTO);
   return fetch(url, { method: "POST", headers: { "Content-Type": f.type || "image/jpeg" }, body: f }).then(readJson);
 };
 
