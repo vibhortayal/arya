@@ -157,6 +157,26 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 
+## Feedback from using partner technologies (about 320 words)
+
+**Meta Model API (Muse Spark and Muse Wonder).** Spark was the workhorse: receipt reads, list photos, Ask Arya, list suggestions and the staple judge all run on it. Structured JSON output and prompt caching (prompt_cache_key) kept per-receipt cost near a cent. In our 9-receipt eval, Wonder was the more accurate reader (97 of 98 lines after hand checking, against Spark's 92) but about four times slower: a 34 s mean and a 60.5 s p95, against Spark's 8.6 s and 11.9 s. That gap shaped the product. Spark reads first, arithmetic checks run, and Wonder re-reads only the receipts the checks flag, with a 60 s cap. What was rough: Spark's mistakes were often silent (4 of its 6 wrong lines carried no low-confidence flag), so we had to build our own checks. A read timeout is ambiguous about billing, so we never retry one. Content-policy errors arrive as raw HTTP 400 text that we had to translate for people. Asks: a per-line confidence that tracks real accuracy, a latency or priority option for Wonder, clear billing rules for timed-out calls, and typed error codes.
+
+**Baseten (open weights).** We ran Muse Spark Open on Baseten for batch jobs that touch only platform data: naming and sorting the shared item dictionary, and a second opinion for the staple judge. The OpenAI-style endpoint dropped in beside our hosted client with almost no new code. Ask: a usage view that maps clearly to the credit grant.
+
+**Kroger Products API.** It gives live aisle locations for Kroger-family stores, which became Arya's aisle hints. It was easy to start with. It is a suggestion layer only; crowd mapping stays the core. Rough edges: responses carry no cache headers, so every lookup is live, and we set our own daily cap. Ask: a published per-app call limit and a clear attribution rule.
+
+**Supabase.** Email-code and Google sign-in through the REST auth API, with no client library, plus a Postgres mirror of our JSON documents. Both are live. **Resend.** Waitlist and account-deletion emails, best effort. We hit no notable problems with either.
+
+## How creatively did we use Meta's AI tooling? (about 240 words)
+
+1. **Muse connected itself to Arya.** This surprised us most. Arya has an MCP server with six tools: get_snapshot, get_list, add_items, check_item, file_receipt and get_receipts. On Nov 2 we set it up on a real Muse account with no terminal and no settings file. We tapped "Make my code" in Arya and asked the Muse agent to connect to Arya at its address. Muse asked for the code, opened its own secure credentials box for it (so the code never went into the chat), and the connection worked. Arya's connector carries its own instruction doc, so the person writes no prompt. After that, "add oat milk to my list" in Muse changes the real list in Arya. We think it was this easy because the whole stack is Meta's. Muse is the assistant, Muse Spark and Wonder (through the Meta Model API) read the receipts and answer Ask, and Muse Spark Open runs our batch jobs, so Arya fits in as one more piece of the same ecosystem.
+
+2. **Two Meta models as a checked team.** On real receipts, Wonder was more accurate, but Spark was about nine times cheaper and four times faster, and most of Spark's errors were silent. So Spark reads first, and plain code checks the arithmetic, the item count and each price against the item's own history. Only flagged receipts go to Wonder, and every receipt records who read it and why.
+
+3. **SAM 3.1 for privacy.** When a shopper photographs a shelf, SAM finds every person in the frame and Arya pixelates them before anything is saved. The same model proposes product boxes, and Arya checks the top three, not just the best one.
+
+Also built, but switched off: an Alexa skill that sends misheard adds to Spark in the background, where Spark matches them against the person's real list names.
+
 ## Try it
 
 - Live: https://arya.teamnightshift.org. Tap "Try it now" for a fictional
