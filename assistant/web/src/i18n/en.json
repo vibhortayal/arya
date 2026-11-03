@@ -2177,6 +2177,38 @@
     "failedLine_other": "{{count}} could not be read",
     "tryAgain": "Try again"
   },
+  "secondRead": {
+    "button": "Checking…",
+    "checking": "Double-checking with Muse Wonder…",
+    "checkingSub": "{{reason}}, so Wonder is reading the photo again. Usually under a minute.",
+    "fixed_one": "Muse Wonder fixed {{count}} line",
+    "fixed_other": "Muse Wonder fixed {{count}} lines",
+    "fixedSub": "{{reason}}. Wonder read the photo again. Changed lines are marked below.",
+    "same": "Muse Wonder read it the same way",
+    "sameSub": "{{reason}} on the first read, so Wonder checked it. It found the same lines and total.",
+    "failed": "Muse Wonder didn't finish",
+    "failedSub": "This is Muse Spark's read. {{reason}}, so check the prices against your receipt.",
+    "changed": "Changed",
+    "sparkRead": "Spark read",
+    "whoChecking": "Read by Muse Spark · checking",
+    "whoWonder": "Read by Muse Wonder",
+    "whoChecked": "Checked by Muse Wonder",
+    "whoSpark": "Read by Muse Spark",
+    "now": {
+      "addUp": "The lines don't add up to the total",
+      "count": "The item count doesn't match",
+      "price": "A price looks off",
+      "unsure": "Some lines were hard to read",
+      "other": "Arya's checks flagged this read"
+    },
+    "was": {
+      "addUp": "Spark's lines didn't add up to the total",
+      "count": "Spark's item count didn't match",
+      "price": "A price on Spark's read looked off",
+      "unsure": "Some lines were hard to read",
+      "other": "Arya's checks flagged Spark's read"
+    }
+  },
   "receiptJob": {
     "sending": "Sending {{sent}} of {{total}} receipts",
     "sendingOne": "Sending your receipt",
@@ -3817,6 +3849,7 @@
         "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
         "n4": "On Spending, tap (i) next to a heading to see what that heading counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
+        "n5": "In the demo, when Arya's checks flag Muse Spark's read of a photo, you see it at once while Muse Wonder double-checks it. Then changed lines are marked, or a note says Wonder read it the same way.",
         "cta": "Open Spending"
       },
       "prices": {

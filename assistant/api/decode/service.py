@@ -544,16 +544,55 @@ def _decode_auto(messages, client, image_bytes):
     the result; Wonder re-reads only a receipt that fails them. A Spark
     failure goes straight to Wonder. The record says which reader filed it
     and why a second read happened, so nothing is silent."""
+    spark, reasons = _spark_first(messages, client, image_bytes)
+    if spark is not None and not reasons:
+        return spark
+    return _second_read(messages, client, image_bytes, spark, reasons)
+
+
+def _spark_first(messages, client, image_bytes):
+    """Spark's read and the checks it failed: (record, reasons), or
+    (None, ["spark_failed"]) when Spark could not read it."""
     from api.decode import checks
-    spark = None
     try:
         dec = _photo_read(messages, client, mode="standard")
         spark = _photo_record(dec, image_bytes, spark_model())
-        reasons = checks.validate(spark, _known_sku_prices())
+        return spark, checks.validate(spark, _known_sku_prices())
     except Exception:
-        reasons = ["spark_failed"]
+        return None, ["spark_failed"]
+
+
+def _photo_messages(image_bytes, media_type):
+    import base64
+    data_uri = f"data:{media_type};base64," + base64.b64encode(image_bytes).decode()
+    return [{"role": "system", "content": load_photo_prompt()},
+            {"role": "user", "content": [
+                {"type": "text", "text": "Decode this receipt photo."},
+                {"type": "image_url", "image_url": {"url": data_uri}}]}]
+
+
+def decode_photo_spark_first(image_bytes, client, media_type="image/jpeg"):
+    """The demo's receipt read (owner, 2026-11-03): show Spark's read as
+    soon as it is ready, then Wonder's second read. Returns
+    (record, reasons, second): with the auto reader and a Spark read the
+    checks flag, record is Spark's read and second() runs Wonder's read
+    (the same rules as _decode_auto, so a slow or failed Wonder keeps
+    Spark's read with every line sent to review). Otherwise record is the
+    finished read and second is None."""
+    if photo_reader() != "auto":
+        return decode_photo(image_bytes, client, media_type=media_type), [], None
+    messages = _photo_messages(image_bytes, media_type)
+    spark, reasons = _spark_first(messages, client, image_bytes)
     if spark is not None and not reasons:
-        return spark
+        return spark, [], None
+    if spark is None:
+        return _second_read(messages, client, image_bytes, None, reasons), reasons, None
+    import copy
+    first = copy.deepcopy(spark)
+    return first, reasons, lambda: _second_read(messages, client, image_bytes, spark, reasons)
+
+
+def _second_read(messages, client, image_bytes, spark, reasons):
     try:
         dec = _photo_read(messages, client, mode="wonder", reasoning_effort=None,
                           timeout=PHOTO_WONDER_TIMEOUT_S)

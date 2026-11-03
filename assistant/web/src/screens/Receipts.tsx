@@ -92,6 +92,32 @@ export function Receipts() {
   const [sort, setSort] = useState<SortKey>("new");
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
+  /* The demo's second read (owner, 2026-11-03): Spark's read shows
+   * first; Wonder's lands in place through /decode/check. */
+  const [second, setSecond] = useState<SecondRead | null>(null);
+  useEffect(() => {
+    if (!second || second.state !== "pending") return;
+    let alive = true;
+    const started = Date.now();
+    const tick = async () => {
+      if (!alive) return;
+      let out: any = null;
+      try { out = await get(`/decode/check/${encodeURIComponent(second.id)}`); } catch { out = null; }
+      if (!alive) return;
+      if (out && out.state && out.state !== "pending") {
+        if (out.receipt) setPreview(out.receipt);
+        setSecond({ ...second, state: out.state, fixed: out.fixed || 0 });
+        loadScan().catch(() => {});
+        loadArchive().catch(() => {});
+        return;
+      }
+      // The server gives Wonder 60 s; past 90 s, stop and keep Spark's read.
+      if (!out || Date.now() - started > 90000) { setSecond({ ...second, state: "failed", fixed: 0 }); return; }
+      timer = window.setTimeout(tick, SECOND_POLL_MS);
+    };
+    let timer = window.setTimeout(tick, SECOND_POLL_MS);
+    return () => { alive = false; window.clearTimeout(timer); };
+  }, [second]); // eslint-disable-line react-hooks/exhaustive-deps
   const [ar, setAr] = useState<ReceiptTarget | null>(null);
   // Files a bulk add could not read, each with the reason, kept on screen
   // (a toast alone vanished before the owner could read it).
@@ -170,6 +196,7 @@ export function Receipts() {
       setStatus("");
       if (out.demo) {
         if (withPreview) setPreview(rec); else setStatus(t("common.receiptFile.demo"));
+        if (withPreview && out.check?.id) setSecond({ id: out.check.id, reasons: out.check.reasons || [], state: "pending", fixed: 0 });
         return { ok: true } as FileResult;
       }
       if (out.duplicate) {
@@ -198,6 +225,7 @@ export function Receipts() {
   const readFiles = async (files: File[]) => {
     setOutcome(null);
     setPreview(null);
+    setSecond(null);
     // Signed in, one file or many: send them to the server first, which
     // reads them while the app is closed (owner, 2026-11-01). If a batch
     // cannot be opened (the demo, no connection), read them here.
@@ -246,6 +274,8 @@ export function Receipts() {
     loadArchive().catch(() => {});
   };
 
+  const checking = !!second && second.state === "pending";
+
   return (
     <>
       <p><a href="#" id="rc-back" className="backlink" onClick={ev => { ev.preventDefault(); nav.back("home"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
@@ -262,9 +292,11 @@ export function Receipts() {
         onChange={() => { loadScan().catch(() => {}); loadArchive().catch(() => {}); }}
         onCheck={() => nav.show("tocheck")} />
       <div className="group pad">
-        <label className={"btn primary wide receiptbtn" + (reading ? " dis" : "")} htmlFor="rc-photo" aria-disabled={!!reading || undefined} {...pickerProps("rc-photo")}>{reading ? t("receiptRead.button") : t("receipts.addReceipts")}</label>
+        <label className={"btn primary wide receiptbtn" + (reading || checking ? " dis" : "")} htmlFor="rc-photo" aria-disabled={!!reading || checking || undefined} {...pickerProps("rc-photo")}>{reading ? t("receiptRead.button") : checking ? t("secondRead.button") : t("receipts.addReceipts")}</label>
         <p className="muted nomargin">{t("receipts.addAReceiptPhotoOr")}</p>
-        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden disabled={!!reading} onChange={onFiles} />
+        <input type="file" id="rc-photo" accept="application/pdf,image/*" multiple hidden disabled={!!reading || checking} onChange={onFiles} />
+        {second && <SecondReadNote second={second} />}
+        {checking && demo && <p className="rcread-demo">{t("receiptRead.demoNote")}</p>}
         {reading ? (
           <div id="rc-reading" role="status" aria-live="polite">
             <p className="nomargin rcread-head"><strong>{reading.n === 1 ? t("receiptRead.readingOne") : t("receiptRead.readingN", { i: reading.i, n: reading.n })}</strong></p>
@@ -288,9 +320,12 @@ export function Receipts() {
         <div id="rc-photo-preview">
           {preview && (
             <div className="group pad" style={{ marginTop: 10 }}>
-              <p className="nomargin"><strong>{preview.merchant || t("common.receipt")}</strong> <span className="sub">{t("receipts.readLiveKeptForThis")}</span></p>
+              <p className="nomargin"><strong>{preview.merchant || t("common.receipt")}</strong>{second && <span className="rc2-who"> {t(SECOND_WHO[second.state])}</span>} <span className="sub">{t("receipts.readLiveKeptForThis")}</span></p>
               {(preview.lines || []).map((l: any, i: number) => (
-                <Row key={i} name={l.decoded_name || l.raw || "line"} right={l.line_total != null ? money(l.line_total, currency) : ""} />
+                <Row key={i} className={l.was ? "rc2-chg" : undefined}
+                  name={<>{l.decoded_name || l.raw || "line"}{l.was && <span className="rc2-tag">{t("secondRead.changed")}</span>}</>}
+                  sub={l.was && (l.was.name != null || l.was.price != null) ? <>{t("secondRead.sparkRead")} <s>{[l.was.name, l.was.price != null ? money(l.was.price, currency) : null].filter(x => x != null).join(" · ")}</s></> : undefined}
+                  right={l.line_total != null ? money(l.line_total, currency) : ""} />
               ))}
               {preview.total != null && <Row name={t("common.total")} right={money(preview.total, currency)} />}
             </div>
@@ -365,5 +400,42 @@ export function Receipts() {
       {/* Old onDone was renderReceipts: the filed lines can land in Needs your eye. */}
       <AddReceiptSheet target={ar} onClose={() => setAr(null)} onDone={() => loadAll().catch(showErr)} />
     </>
+  );
+}
+
+
+/* The demo's second read: the note above Spark's read while Muse Wonder
+ * reads the photo again, and what Wonder found (mockup approved
+ * 2026-11-03, claude.ai/artifact/4UTn4g2Q8PDdcSCB54yrms). */
+export type SecondRead = { id: string; reasons: string[]; state: "pending" | "changed" | "same" | "failed"; fixed: number };
+export const SECOND_POLL_MS = 3000;
+const SECOND_WHO: Record<SecondRead["state"], string> = {
+  pending: "secondRead.whoChecking", changed: "secondRead.whoWonder",
+  same: "secondRead.whoChecked", failed: "secondRead.whoSpark",
+};
+export function secondReason(reasons: string[]): string {
+  for (const r of reasons) {
+    if (r === "lines_do_not_add_up" || r === "total_mismatch") return "addUp";
+    if (r === "item_count_mismatch") return "count";
+    if (r === "bad_price" || r === "price_changed") return "price";
+    if (r === "many_unsure_lines") return "unsure";
+  }
+  return "other";
+}
+function SecondReadNote({ second }: { second: SecondRead }) {
+  const { t } = useTranslation();
+  const why = secondReason(second.reasons);
+  const now = t(`secondRead.now.${why}`), was = t(`secondRead.was.${why}`);
+  const [cls, ic, head, body] =
+    second.state === "pending" ? ["run", "", t("secondRead.checking"), t("secondRead.checkingSub", { reason: now })]
+    : second.state === "changed" ? ["chg", "!", t("secondRead.fixed", { count: second.fixed }), t("secondRead.fixedSub", { reason: was })]
+    : second.state === "same" ? ["same", "✓", t("secondRead.same"), t("secondRead.sameSub", { reason: was })]
+    : ["gave", "i", t("secondRead.failed"), t("secondRead.failedSub", { reason: was })];
+  return (
+    <div className={"rc2 " + cls} id="rc-second-read" role="status" aria-live="polite">
+      <span className="rc2-ic" aria-hidden="true">{ic}</span>
+      <div><strong>{head}</strong><span>{body}</span>
+        {second.state === "pending" && <div className="pbar ind" aria-hidden="true"><i /></div>}</div>
+    </div>
   );
 }
