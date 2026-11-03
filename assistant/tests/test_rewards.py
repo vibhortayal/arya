@@ -83,9 +83,9 @@ class TestFindItForMe(unittest.TestCase):
         h = hunt()
         pop = h.split('id="hunt-pop"')[1].split('id="hunt-done-note"')[0]
         self.assertIn('id="hunt-fresh"', pop)
-        self.assertIn("People are blurred out; Arya keeps only products.", src("screens/hunt/Scan.tsx"))
+        self.assertIn("People are pixelated; Arya keeps only products.", src("screens/hunt/Scan.tsx"))
         self.assertIn("/api/quest/shelf-photo?store=", h)
-        self.assertIn("People are blurred out; we only keep products.", h)
+        self.assertIn("People are pixelated; we only keep products.", h)
 
 
 class TestPlanAHunt(unittest.TestCase):

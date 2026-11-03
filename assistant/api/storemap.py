@@ -675,7 +675,7 @@ def _prompt_for(seg, status, item=None, walk=False):
                   "Hold the phone upright and level.",
                   "Get the whole shelf in the frame, top to bottom.",
                   "Hold still. Arya snaps the best moment by itself.",
-                  "Shoppers in view are fine. We blur people before we save anything."]}
+                  "Shoppers in view are fine. We pixelate people before we save anything."]}
 
 
 NEED = {"stale": 3.0, "unmapped": 2.0, "aging": 1.0}
@@ -756,7 +756,7 @@ def snap_prompt(name, item):
         "steps": ["Stand back so that the shelf is in the frame, top to bottom.",
                   "Take one photo. Or record a short video as you walk the aisle.",
                   "Arya reads the shelf and names the aisle. You type nothing.",
-                  "Shoppers in view are fine. We blur people before we save anything."]}
+                  "Shoppers in view are fine. We pixelate people before we save anything."]}
 
 
 # --- rewards: small, kind, never a penalty ---------------------------------
