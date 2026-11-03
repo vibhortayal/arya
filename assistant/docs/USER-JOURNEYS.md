@@ -29,8 +29,9 @@ taken on Oct 29, 2026, so a date such as "Oct 19" in a picture is a
 seed date moved forward. Money amounts never move.
 
 **Where prices come from.** Every price in this page comes from the
-household's own receipts. Arya does not scrape stores. It does not call
-store APIs, read flyers or search the web for prices.
+household's own receipts. Arya does not scrape stores, read flyers or search the web for
+prices, and it calls no store API for prices. (Google Places finds stores for the
+store picker, and Kroger's API gives aisle hints; neither supplies prices.)
 
 **Screenshots** are real 390x844 captures of the demo, in
 `assistant/docs/img/`.
