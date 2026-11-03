@@ -10,7 +10,7 @@ now".
 - **A Meta Model API key** for the AI parts. Make one at dev.meta.ai (API keys,
   then Create API key); it starts with `LLM_`. It is optional: without it the
   app and the demo household open and work, but anything that reads a photo,
-  answers in Ask or listens to your voice says it cannot reach Meta.
+  answers in Ask or listens to your voice says "This copy of Arya has no Meta key, so AI features are off".
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
   and microphone steps need a phone, and a phone browser only allows the camera
   on https. On a phone reaching your computer over plain `http://` on your
@@ -125,8 +125,10 @@ https://github.com/vibhortayal/arya
 2. Follow the section "Can I run it without Docker?" step by step. If
    something goes wrong, troubleshoot it as you normally would to get Arya
    running, and use "What if something goes wrong?" in the guide. Do not
-   change any file in the repository.
-3. Use the no-key demo mode: leave MODEL_API_KEY empty. Do not ask me for a
+   edit any file that git tracks; the folders the guide's commands create
+   (.venv, node_modules, the web build, the data folder) are expected.
+3. Use the no-key demo mode: run the uvicorn command with MODEL_API_KEY= left
+   empty (nothing after the equals sign). Do not ask me for a
    key, a password or any secret, and do not paste or print one.
 4. When the server is up, tell me the local address (http://localhost:8000),
    that /health answers "ok", and the sign-in steps: tap Close on the "Create
@@ -134,8 +136,8 @@ https://github.com/vibhortayal/arya
    to make the browser about 390 px wide.
 ```
 
-Without a key, anything that reads a photo or answers in Ask says it cannot
-reach Meta. That is expected.
+Without a key, anything that reads a photo or answers in Ask says "This copy of
+Arya has no Meta key, so AI features are off". That is expected.
 
 ## How do I run the tests?
 ```bash
