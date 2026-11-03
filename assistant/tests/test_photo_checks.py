@@ -112,6 +112,28 @@ class TestAutoReader(unittest.TestCase):
         self.assertIn("wonder_failed", r["second_read"])
         self.assertTrue(all(l["status"] == "unverified" for l in r["lines"]))
 
+    def test_wonder_too_slow_keeps_spark_flagged_and_says_timeout(self):
+        # Owner, 2026-11-03: a Wonder re-read waits 60 s at most.
+        from api.meta_client import model_error
+
+        class Slow(FakeClient):
+            def chat(self, messages, mode="standard", **kw):
+                self.calls.append(mode)
+                self.timeouts = getattr(self, "timeouts", []) + [kw.get("timeout")]
+                if mode == "wonder":
+                    try:
+                        raise TimeoutError("The read operation timed out")
+                    except TimeoutError as t:
+                        raise model_error(None, t, "network") from t
+                return json.dumps(self.out[mode]), {}, 0.0
+        c = Slow(dec([3.99, 1.49], subtotal=9.0))
+        r = service.decode_photo(b"img6", c)
+        self.assertEqual(service.PHOTO_WONDER_TIMEOUT_S, 60)
+        self.assertEqual(c.timeouts[-1], 60)
+        self.assertEqual(r["decoded_by"], service.spark_model())
+        self.assertIn("wonder_timeout", r["second_read"])
+        self.assertTrue(all(l["status"] == "unverified" for l in r["lines"]))
+
     def test_default_reader_is_auto(self):
         # Since 2026-11-01 (judge review, finding 1) the default is auto:
         # a clean Spark read is the only call.
