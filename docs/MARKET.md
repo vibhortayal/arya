@@ -12,18 +12,21 @@ pages, not user interviews, and it is not a business plan.
 > the Mealime shutdown date; the Instacart pricing study and its numbers; the
 > GS1 UK food-waste figures (UK data, not US); YNAB, Copilot, Open Prices and
 > list-app import formats (not checked); app prices and plans (from one review
-> article and from vendors); the Monarch features; and the Samsung and
-> Instacart fridge and Meta Ray-Ban Display items (one news article each).
+> article and from vendors); the Monarch features; the Fetch rewards figures (25 points, 5,000 points,
+> 35 scans a week); the Flipp and Basket descriptions; the Instacart Developer
+> Platform access line; and the Samsung and Instacart fridge items (including
+> Samsung's "37 items") and the Meta Ray-Ban Display items (one news article
+> each).
 
 **How to read it.** Every outside claim has a link. A claim marked *(vendor
 source)* comes from a company describing itself or a competitor, so treat it as
-unverified. A claim marked *(not checked)* is something we believe but did not
+unverified. A claim marked *(not checked)* is something I believe but did not
 confirm in this pass. Prices change often; check the linked page before
 quoting one. What Arya itself does is described by the README and `STATUS.md`;
 this page does not add to it.
 
-**Positioning (from [`ROADMAP.md`](ROADMAP.md)).** Arya does not try to out-do
-apps that do one thing better. It aims to be the core platform where a
+**Positioning (after [`ROADMAP.md`](ROADMAP.md)).** Arya does not try to out-do
+apps that do one thing better. The aim is a shared place where a
 community can use shared grocery information (lists, receipts, prices, stores)
 and connect to other tools through import and export.
 
@@ -56,8 +59,8 @@ All entries are as of the linked pages, read on 2026-11-02.
 | Listonic | Compared itself favourably against AnyList and others on its own site *(vendor source)*. | [Listonic](https://fpdev.listonic.com/compare-apps/listonic-vs-anylist) |
 
 Takeaway: these are good, mature and cheap. They own "type it, share it, tick it
-off". None of the pages we read say they learn what a household buys from
-receipts. *(Based on the review pages above; we did not install each app.)*
+off". None of the pages I read say they learn what a household buys from
+receipts. *(Based on the review pages above; I did not install each app.)*
 
 ### Receipt scanning for rewards
 
@@ -101,7 +104,7 @@ Plan to Eat, Samsung Food (pantry awareness only on the paid tier) and others.
 It is written by a competitor and says nothing about receipt scanning
 *(vendor source)* ([FoodiePrep](https://www.foodieprep.ai/blog/meal-planning-apps-with-builtin-grocery-lists-a-2026-sidebyside-review)).
 The same page says Mealime was discontinued on 21 Oct 2026 with no data export;
-we did not confirm that with Mealime *(not checked)*. If true, it is a reminder
+I did not confirm that with Mealime *(not checked)*. If true, it is a reminder
 of why export matters.
 
 ### Delivery and smart fridges
@@ -116,9 +119,9 @@ of why export matters.
   Instacart called the differences "price tests" with a small group of retail
   partners and reportedly ended item price tests on 23 Dec 2025 ([APH Networks](https://aphnetworks.com/news/31190-instacart-ends-ai-pricing-tests-showing-different-prices-same-items)).
   The headline numbers (share of items with several prices, basket difference)
-  are left out here because we could not confirm them in a source the reviewer
+  are left out here because I could not confirm them in a source I
   could open; see the study coverage at [ConsumerAffairs](https://www.consumeraffairs.com/news/study-found-instacart-showed-different-prices-to-different-shoppers-121025.html)
-  *(could not be opened by the reviewer)*. Why it matters here: a record of
+  *(could not be opened in this pass)*. Why it matters here: a record of
   what you actually paid has value.
 - **Samsung** announced a multi-year Instacart partnership in Jan 2025 for
   fridges that watch contents and reorder; the AI recognises up to 37 food
@@ -128,15 +131,15 @@ of why export matters.
 
 | Problem | Evidence | Does Arya touch it? |
 |---|---|---|
-| Food is forgotten and wasted | UK survey of 2,000 adults (OnePoll for GS1 UK, Sept 2025, published Mar 2026): 33% forget food they bought is in the fridge, 49% throw food away because it goes off, 43% call it a waste of money ([GS1 UK](https://www.gs1uk.org/insights/news/As-grocery-prices-rise-again-UK-households-are-throwing-away-hundreds-of-pounds-on-forgotten-food)). UK data, not US. *(GS1 UK page could not be opened by the reviewer.)* | Partly built: "Use soon" and a food-waste cost figure from your own receipts. Not tested for effect on waste. |
+| Food is forgotten and wasted | UK survey of 2,000 adults (OnePoll for GS1 UK, Sept 2025, published Mar 2026): 33% forget food they bought is in the fridge, 49% throw food away because it goes off, 43% call it a waste of money ([GS1 UK](https://www.gs1uk.org/insights/news/As-grocery-prices-rise-again-UK-households-are-throwing-away-hundreds-of-pounds-on-forgotten-food)). UK data, not US. *(GS1 UK page could not be opened in this pass.)* | Partly built: "Use soon" and a food-waste cost figure from your own receipts. Not tested for effect on waste. |
 | Prices are hard to judge, and may differ by session | Instacart study above. | Partly built: cheaper store and price trend, from your own receipts only. No outside prices are fetched. |
 | Spend is one number, items are lost | Monarch needs a browser extension or receipt photo to split items. | Built: receipts are read, every line is checked against the printed total, returns net out. Small test set (see README "Known limits"). |
 | The list does not know the household | Reviews above describe lists as typed or recipe-driven. | Built: staples due show as suggestions with a reason. |
 | Everyone adds things differently | Voice, photo, barcode, recipes across apps. | Built: type, voice, photo of a note, and an MCP connector for your own assistant. |
 | Switching apps is painful | Mealime item above *(not confirmed)*. | Not built: import and export are roadmap ideas. A Lists API exists. |
 
-We did not find a reliable, current source for "how many households struggle
-with X" that we trust enough to quote for the US; we left those numbers out
+I did not find a reliable, current source for "how many households struggle
+with X" that I trust enough to quote for the US; I left those numbers out
 rather than guess.
 
 ## 4. Collaboration and integration opportunities
