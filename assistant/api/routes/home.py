@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from api import state
 from api.deps import _d_today
+from api.list.build import due_reason
 
 router = APIRouter()
 
@@ -60,8 +61,7 @@ def home():
     checks = still_good_checks(d, nm, _fl)
     low = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
             "judge_reason": (p.get("judge") or {}).get("reason", ""),
-            "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else
-            f"every ~{p['median_interval_days']:.0f} days; last bought {p['days_since_last']} days ago"}
+            "due_window": p["due_window"], "reason": p["due_reason"] if "due_reason" in p else due_reason(p)}
            for p in state.running_low(d)]
     # Store affinity for the list ships with this payload: the List
     # view used to make one /api/items/{id} call per list item just
