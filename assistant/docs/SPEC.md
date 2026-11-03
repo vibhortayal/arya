@@ -15,8 +15,9 @@ Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
 > - **Retailer API.** FR-5.6 and FR-11.1 say Arya calls no retailer API. One
 >   call exists now: Kroger-family aisle hints from Kroger's public Products API
 >   (aisle location only, never prices). See the README.
-> - **Fridge photos.** FR-7.7 stands: inventory from fridge or pantry photos is not
->   a product feature. The Ask photo chooser can read a fridge photo as a list.
+> - **Fridge photos.** FR-7.7 is out of date: Check my fridge (Ask, Photo) records
+>   what a fridge, pantry, freezer or fruit photo shows as sightings. Two reads
+>   must agree, unseen items stay unknown, and a photo never removes an item.
 > - **Name guesses.** FR-5.14's up to 4 guesses from Spark are off by default.
 >   Add-field suggestions come from the user's own names, shared names and a
 >   built-in grocery word list.

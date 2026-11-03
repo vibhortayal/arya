@@ -56,7 +56,7 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
   part is a target; the name opens the item page. In a hunt, tapping the
   circle grabs the item.
 - Navigation tab: fixed, backdrop blur, four places the shopper picks (default
-  Today, Spending, Quest, Ask Arya) then More, with drawn SVG icons (1.8 stroke,
+  Today, Spending, Quest, Ask) then More, with drawn SVG icons (1.8 stroke,
   one weight) + 11px labels. Active = accent. The navigation tab hides during a
   hunt. There is no floating avatar (removed 2026-10-29).
 - Chat: bubbles, round input, Talk and Photo chips (44px). Talk turns
