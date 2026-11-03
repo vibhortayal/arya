@@ -1,6 +1,7 @@
 {
   "offline": {
-    "bar": "You're offline. You can still add, tick, edit and remove list items: changes save on this phone and sync when you're back. Ask Arya, receipts, photos, voice and sharing need a connection."
+    "bar": "You're offline. You can still add, tick, edit and remove list items: changes save on this phone and sync when you're back. Ask Arya, receipts, photos, voice and sharing need a connection.",
+    "slowBar": "Slow connection. Showing what's saved on this phone. List changes still save and sync when the signal is better."
   },
   "common": {
     "back": "Back",
@@ -3792,7 +3793,7 @@
         "s4": "Tap an item under \"Suggested for ...\" to see why Arya suggests it.",
         "n1": "Tap Select to move or remove several items.",
         "n2": "The three dots on a list open Share, export or import.",
-        "n3": "No signal? Keep adding, ticking, editing and removing items. The offline note at the top counts the changes waiting, and each one shows Waiting to sync until you're back online.",
+        "n3": "No signal? Keep adding, ticking, editing and removing items. The offline note at the top counts the changes waiting, and each one shows Waiting to sync until you're back online. On a weak signal, the note says Slow connection and shows what's saved.",
         "n4": "A store you choose for a list also joins Stores, and so does a store a receipt comes from. A store you take out of Stores stays out until you add it again.",
         "cta": "Open Lists"
       },

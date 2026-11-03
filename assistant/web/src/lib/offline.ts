@@ -58,8 +58,19 @@ export function clearSaved(): void {
 let served = false;
 const EVT = "arya-offline-change";
 export const markServedSaved = () => { if (!served) { served = true; dispatchEvent(new Event(EVT)); } };
-export const markLive = () => { if (served) { served = false; dispatchEvent(new Event(EVT)); } };
+export const markLive = () => { slowUntil = 0; if (served) { served = false; dispatchEvent(new Event(EVT)); } };
 export const isOffline = () => (typeof navigator !== "undefined" && navigator.onLine === false) || served;
+
+/* "Slow": the phone says it is online, but a read took too long or
+ * failed, so a saved copy was shown (owner, 2026-11-03: a weak signal
+ * kept the app looking things up). For the next minute, screens with a
+ * saved copy show it at once; any good read ends it early. */
+const SLOW_FOR_MS = 60000;
+let slowUntil = 0;
+export const markSlow = () => { slowUntil = Date.now() + SLOW_FOR_MS; };
+export const isSlow = () => Date.now() < slowUntil;
+/* For the bar: on a weak signal (not airplane mode) it says "slow". */
+export const isSlowOnly = () => isOffline() && !(typeof navigator !== "undefined" && navigator.onLine === false);
 export function subscribeOffline(fn: () => void): () => void {
   for (const e of [EVT, "online", "offline"]) addEventListener(e, fn);
   return () => { for (const e of [EVT, "online", "offline"]) removeEventListener(e, fn); };

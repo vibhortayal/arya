@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { get, post, forgetReads, forgetKept, SESSION_ENDED, friendlyError, noKeyMessage } from "./api";
+import { get, post, forgetReads, forgetKept, SESSION_ENDED, friendlyError, noKeyMessage, SLOW_MS, SLOW_GRACE_MS } from "./api";
+import { isSlowOnly, markLive, markSlow } from "./offline";
 
 const reply = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
 
@@ -115,5 +116,57 @@ describe("a copy of Arya with no Meta key (local Docker, #432)", () => {
     expect(noKeyMessage(new Error(msg))).toBe(msg);
     expect(noKeyMessage(new Error("MODEL_API_KEY not provisioned on this runtime"))).toBe(msg);
     expect(noKeyMessage(new Error("Meta's model is busy right now."))).toBeNull();
+  });
+});
+
+describe("slow connection (owner, 2026-11-03: weak signal kept looking things up)", () => {
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); localStorage.clear(); markLive(); });
+  const hang = () => new Promise<Response>(() => {});
+
+  test("a slow read shows the saved copy after a few seconds, then at once while slow", async () => {
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ items: [1] }));
+    await get("/api/home");
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    vi.spyOn(globalThis, "fetch").mockImplementation(hang);
+    const p = get("/api/home");
+    await vi.advanceTimersByTimeAsync(SLOW_MS + 10);
+    expect(await p).toEqual({ items: [1] });
+    expect(isSlowOnly()).toBe(true);
+    // While slow, another saved screen answers without waiting.
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ cards: 1 }));
+    await get("/api/today");
+    vi.spyOn(globalThis, "fetch").mockImplementation(hang);
+    markSlow();
+    const q = get("/api/today");
+    await vi.advanceTimersByTimeAsync(SLOW_GRACE_MS + 10);
+    expect(await q).toEqual({ cards: 1 });
+  });
+
+  test("a fast read never shows the saved copy", async () => {
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ v: 1 }));
+    await get("/api/powers");
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ v: 2 }));
+    expect(await get("/api/powers")).toEqual({ v: 2 });
+    expect(isSlowOnly()).toBe(false);
+  });
+
+  test("a copy from before this tab's last change is not used for a slow read", async () => {
+    localStorage.setItem("arya.lastUser", JSON.stringify({ user: "a@test.arya", demo: false }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(reply({ items: [1] }));
+    await get("/api/stores/mine");
+    await new Promise(r => setTimeout(r, 5));
+    await post("/api/settings", {});
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    let answer: (r: Response) => void = () => {};
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise<Response>(r => { answer = r; }));
+    const p = get("/api/stores/mine");
+    let settled = false;
+    p.then(() => { settled = true; });
+    await vi.advanceTimersByTimeAsync(SLOW_MS + 10);
+    expect(settled).toBe(false);
+    answer(new Response(JSON.stringify({ items: [2] }), { status: 200 }));
+    expect(await p).toEqual({ items: [2] });
   });
 });

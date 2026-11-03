@@ -1,4 +1,4 @@
-import { keepRead, savedRead, clearSaved, markServedSaved, markLive } from "./offline";
+import { keepRead, savedRead, clearSaved, markServedSaved, markLive, markSlow, isSlow } from "./offline";
 import { applyQueued, canQueue, enqueue, flush, isLocalId, newOpId, pendingCount, queueable } from "./listQueue";
 
 /* One door to the backend: same paths, same cookies, same error
@@ -51,9 +51,12 @@ export class ApiError extends Error {
 export const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 
 /* No request waits forever (speed audit #6): a read gives up after
- * 20 s, a write or a model call (Ask, photo reads) after 130 s. A caller
- * can pass its own signal instead. */
-const READ_MS = 20000, WRITE_MS = 130000; // writes outlast the server's own 120 s model timeout
+ * 15 s, a write or a model call (Ask, photo reads) after 130 s. A caller
+ * can pass its own signal instead. On a slow connection (owner,
+ * 2026-11-03: "low network keeps trying to look up data") a screen
+ * with a saved copy shows it after SLOW_MS instead of waiting; see get(). */
+const READ_MS = 15000, WRITE_MS = 130000; // writes outlast the server's own 120 s model timeout
+export const SLOW_MS = 3500, SLOW_GRACE_MS = 800, LIST_MS = 10000;
 function deadline(ms: number): AbortSignal | undefined {
   const T = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout;
   return typeof T === "function" ? T.call(AbortSignal, ms) : undefined;
@@ -64,7 +67,7 @@ export const OFFLINE_WRITE = "You're offline. List changes save on this phone an
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const write = !!opts?.method && opts.method !== "GET";
   if (write) {
-    inflight.clear(); fresh.clear();
+    inflight.clear(); fresh.clear(); lastWrite = Date.now();
     // boot.js's early Today is from before this change (re-audit N5).
     if (typeof window !== "undefined" && window.__bootData) window.__bootData.today = undefined;
   }
@@ -113,6 +116,29 @@ const inflight = new Map<string, Promise<unknown>>();
 // Demo Town's hints were read on every tab switch (re-audit N11).
 const KEEP_MS: Record<string, number> = { "/api/group": 30000, "/api/settings": 30000, "/api/town/hints": 30000 };
 const fresh = new Map<string, { at: number; p: Promise<unknown> }>();
+/* A saved copy taken before this tab's last change is out of date, so
+ * it never stands in for a slow read (only for no connection at all). */
+let lastWrite = 0;
+/* The saved copy, if one exists and is not older than this tab's last change. */
+function usable<T>(path: string): { at: number; data: T } | null {
+  const c = savedRead<T>(path);
+  return c && c.at > lastWrite ? c : null;
+}
+/* Slow connection: a read with a usable saved copy answers with it
+ * after SLOW_MS, or after SLOW_GRACE_MS while the connection is known
+ * to be slow (a quick server error still shows as an error).
+ * The real read carries on and keeps its answer for the next screen. */
+function savedFirst<T>(path: string, net: Promise<T>): Promise<T> {
+  const c = usable<T>(path);
+  if (!c) return net;
+  return new Promise<T>((resolve, reject) => {
+    let done = false;
+    const useSaved = () => { if (done) return; done = true; markSlow(); markServedSaved(); resolve(c.data); };
+    const timer = setTimeout(useSaved, isSlow() ? SLOW_GRACE_MS : SLOW_MS);
+    net.then(v => { clearTimeout(timer); if (!done) { done = true; resolve(v); } },
+             e => { clearTimeout(timer); if (!done) { done = true; reject(e); } });
+  });
+}
 export const get = <T = any>(path: string): Promise<T> => {
   let p = inflight.get(path) as Promise<T> | undefined;
   const kept = fresh.get(path);
@@ -124,9 +150,12 @@ export const get = <T = any>(path: string): Promise<T> => {
     p = api<T>(path).then(v => { keepRead(path, v); markLive(); return v; }, e => {
       const c = e instanceof TypeError ? savedRead<T>(path) : null;
       if (!c) throw e;
+      if (navigator.onLine !== false) markSlow();
       markServedSaved();
       return c.data;
     });
+    p.catch(() => {});
+    p = savedFirst(path, p);
     inflight.set(path, p);
     const done = () => { if (inflight.get(path) === p) inflight.delete(path); };
     p.then(done, done);
@@ -156,7 +185,11 @@ async function postList<T>(path: string, body: Record<string, unknown>): Promise
   const keep = () => { const r = enqueue(path, body, id); syncLists(); return r as T; };
   if ((typeof navigator !== "undefined" && navigator.onLine === false) || pendingCount() > 0 || isLocalId(target)) return keep();
   try {
-    return await api<T>(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Arya-Op": id }, body: JSON.stringify(body) });
+    // A list change waits LIST_MS at most on a weak signal, then is kept
+    // on the phone like an offline change; the op id makes the resend
+    // count once even if the first try did arrive (owner, 2026-11-03).
+    return await api<T>(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Arya-Op": id }, body: JSON.stringify(body),
+                                ...(deadline(LIST_MS) ? { signal: deadline(LIST_MS) } : {}) });
   } catch (e) {
     if (e instanceof TypeError) return keep();
     throw e;
@@ -165,7 +198,8 @@ async function postList<T>(path: string, body: Record<string, unknown>): Promise
 /* Send the list changes waiting on this phone, if there is signal. */
 export const syncLists = () => {
   if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve(null);
-  return flush((p, b, headers) => api(p, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(b) }));
+  return flush((p, b, headers) => api(p, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(b),
+                                           ...(deadline(LIST_MS) ? { signal: deadline(LIST_MS) } : {}) }));
 };
 export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json("PUT", body));
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
