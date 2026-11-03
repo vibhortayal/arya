@@ -16,6 +16,7 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-03 | The Editor role runs on an Opus 5.5 thread (it was a Fable 5.1 thread, now retired). Role and rules are unchanged; AGENTS.md names the model. | - | Coordinator |
 | 2026-11-02 | The after-receipt "can expire or go bad" card on Today stays until every item has a date or is removed; Done saves dates but no longer hides the card while items are left. × on a row removes that item at once and for good. Supersedes the #207 behaviour where Done (or one answer) closed the receipt's question. "Not now" still hides the card. (16:30Z) | this PR | Owner via coordinator |
 | 2026-11-02 | "Build for Your World" framing: README, JUDGES and SUBMISSION-DRAFT open with who Arya is for, what it does and how it frees time and mental space (a problem I had personally); new `docs/PRINCIPLES.md`; revenue and partner text removed from BUSINESS.md and ROADMAP.md; the goal is that people use it and help each other. | none | Me, via coordinator |
 | 2026-11-02 | Editor findings on source docs: "Ask Arya", "navigation tab" and "Map my store" in README, JUDGES, the playbook and WHAT-WE-BUILT; 23 celebration characters; PRODUCT, SPEC, IMPLEMENTATION and USER-JOURNEYS carry dated updates for the new tabs and no automatic "Everything else". USER-JOURNEYS screenshots to be re-walked, not retaken yet. | none | Doc maintainer |

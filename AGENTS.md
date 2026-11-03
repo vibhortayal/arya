@@ -170,7 +170,7 @@ owner approved on 2026-11-01; the coordinator keeps it current.
 | Security | Reviews for secrets, auth, uploads, API tokens; report only unless the owner asks for a fix | Deploys | Opus | Coordinator |
 | Cost watcher | AI spend against the model policy and the ledger; report only | Code, deploys | Sonnet 5.5 | Coordinator |
 | Researcher (market research thread; stays open for docs requests) | Outside facts for the docs, each linked or marked unchecked | Shipped docs, code, deploys | Sonnet 5.5 | The Doc maintainer |
-| Editor (reads the repo cold) | Reads each new or rewritten reader-facing docs PR against the "Docs for readers" checklist in the PR template; report only | Merging, editing, code, deploys | Fable 5.1 | The coordinator and the Doc maintainer |
+| Editor (reads the repo cold) | Reads each new or rewritten reader-facing docs PR against the "Docs for readers" checklist in the PR template; report only | Merging, editing, code, deploys | Opus 5.5 | The coordinator and the Doc maintainer |
 | Review threads (receipt names, receipts filter, architecture and intelligence reviews) | One piece of work each, then they stop | Anything outside that piece | Sonnet 5.5 | The builder or Tester |
 
 ### The handoff chain
@@ -214,8 +214,7 @@ page. A new document or a rewritten section in these goes through three roles:
    nothing into the shipped docs.
 2. **Doc maintainer** (the Doc maintainer thread): writes the document from the Researcher's
    notes and the repo, in one small docs-only PR.
-3. **Editor** (the Fable 5.1 thread "Edit docs as a judge would", which reads the
-   repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
+3. **Editor** (an Opus 5.5 thread that reads the repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
    reports PASS or what to fix. The Editor does not merge or edit.
 
 Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
