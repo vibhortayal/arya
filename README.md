@@ -48,6 +48,8 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 **Arya is live** — the demo is open to everyone, no sign-up; accounts are by invite from the waitlist for now for beta testers. *Honestly, it's early:* a week is not enough to build all of this, and it gets better as more of us use it.
 
+**Arya is a hackathon product. With Meta's help, it could come to life and reach more people: a platform for a problem most of us face and never solve, because other things in life take priority. Arya frees up that time and mental space.**
+
 **The potential is bigger.** The eyes that read a shelf today could run on **Meta glasses** tomorrow. Stores could partner too — only where it makes the community better. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integration. AI agents like **Meta Muse** can already integrate over **MCP** and talk to Arya.
 
 > **The AI does the remembering. We do the shopping, and we help each other.**
