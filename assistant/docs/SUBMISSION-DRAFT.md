@@ -85,7 +85,7 @@ hold the truth about what you buy, but nobody reads them.
   candidates for Find it for me (Spark then checks each crop), and finds
   people so they are pixelated before any frame is kept.
 - **Muse Voice Transcribe**: voice adds in lists and voice questions in Ask.
-- **Muse Image**: painted the 20 Quest celebration characters once during
+- **Muse Image**: painted the 23 Quest celebration characters once during
   the build, and paints live in the app (a player's avatar, and the
   optional paint pass on the trip share card).
 - **Meta Model API**: one client module (`assistant/api/meta_client.py`)
@@ -175,7 +175,7 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 3. **SAM 3.1 for privacy.** When a shopper photographs a shelf, SAM finds every person in the frame and Arya pixelates them before anything is saved. The same model proposes product boxes, and Arya checks the top three, not just the best one.
 
-4. **Every Meta model has a job, and we can name an example for each.** Spark reads receipts first and answers Ask Arya. Wonder re-reads the receipts Spark gets wrong: on a Westside Market receipt Spark got 9 of 13 lines and Wonder got all 13. SAM 3.1 pixelates shoppers in shelf photos. Muse Image painted Arya's 23 characters. Muse Voice Transcribe turns the Talk button into list adds. Muse Spark Open on Baseten labels the shared item dictionary.
+4. **Every Meta model has a job, and we can name an example for each.** Spark reads receipts first and answers Ask Arya. Wonder re-reads the receipts the checks flag; in our eval, on a Westside Market receipt Spark got 9 of 13 lines and Wonder got all 13. SAM 3.1 pixelates shoppers in shelf photos. Muse Image painted Arya's 23 characters. Muse Voice Transcribe turns the Talk button into list adds. Muse Spark Open on Baseten labeled the shared item dictionary.
 
 5. **We tuned Ask Arya from real phone tests, one failure at a time.** Each fix came from a real message that went wrong:
    - "Add a dozen eggs" added a 12-count carton 12 times. Now a quantity that matches the pack size counts as one pack.
