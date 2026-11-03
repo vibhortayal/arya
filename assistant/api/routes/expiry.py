@@ -122,7 +122,16 @@ def expiry_action(item_id: str, action: str):
     """done (used it) and stop both untrack; snooze waits two days."""
     from datetime import timedelta as _td
     from api import expiry
+    if action not in ("done", "stop", "snooze"):
+        raise HTTPException(404, "unknown action")
+    known = item_id in state.flags() or item_id in state.names()
     if not expiry.tracked(state.flags().get(item_id)):
+        # Used it / stop on a date that is already gone (a second tap, a
+        # stale card, another phone) has nothing left to do: that is
+        # success, not an error toast (owner bug 2026-11-03). Snooze of
+        # an untracked item still has nothing to wait on.
+        if action in ("done", "stop") and known:
+            return {"item_id": item_id, "name": _known_item_name(item_id), "action": action}
         raise HTTPException(404, "that item has no tracked date")
     if action in ("done", "stop"):
         _merge_flag(item_id, expiry.untrack_fields())

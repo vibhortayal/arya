@@ -204,7 +204,11 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(len(self.use_soon()), 1)
         self.assertEqual(self.c.post(f"/api/expiry/{item}/done").status_code, 200)
         self.assertEqual(self.use_soon(), [])
-        self.assertEqual(self.c.post(f"/api/expiry/{item}/stop").status_code, 404)
+        # A second Used it / stop finds nothing left to do: success, no error.
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/done").status_code, 200)
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/stop").status_code, 200)
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/snooze").status_code, 404)
+        self.assertEqual(self.c.post("/api/expiry/nope/done").status_code, 404)
 
     def test_save_rejects_bad_dates(self):
         for d in ("soon", "1999-01-01", None):
