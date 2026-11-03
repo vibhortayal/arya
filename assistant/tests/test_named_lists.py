@@ -197,7 +197,7 @@ class TestChatActions(unittest.TestCase):
         # Every item on a list (owner, 2026-11-02): no stray row.
         out = self.ask([{"type": "add_to_list", "item": "naan", "list": "Nowhere"}])
         self.assertEqual(out["applied"], [])
-        self.assertIn("no list called Nowhere", out["skipped"][0])
+        self.assertIn("no list called Nowhere", out["reply"])  # nothing added: the question is the reply (yogurt bug, 2026-11-03)
         self.assertNotIn("naan", rows(self.c))
 
     def test_snapshot_names_lists_and_their_items(self):

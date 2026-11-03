@@ -116,7 +116,7 @@ class TestAmbiguousListNames(AskCase):
         out = self.ask("add oat milk to Costco", [{"type": "add_to_list", "item": "oat milk", "list": "Costco"}])
         self.assertEqual(out["applied"], [])
         self.assertEqual(out["added"], [])
-        self.assertEqual(out["skipped"], ["More than one list fits Costco: Costcozy or Costco Run. Which one?"])
+        self.assertEqual(out["reply"], "More than one list fits Costco: Costcozy or Costco Run. Which one?")  # nothing added: the question is the reply (yogurt bug, 2026-11-03)
         self.assertEqual(self.flags(), before)
 
     def test_ambiguous_remove_asks_which(self):
@@ -137,7 +137,7 @@ class TestAmbiguousListNames(AskCase):
             self.assertEqual(chat_service._list_matches("co"), [])
         out = self.ask("add eggs to c", [{"type": "add_to_list", "item": "eggs", "list": "c"}])
         # Every item on a list (owner, 2026-11-02): nothing added, Arya asks.
-        self.assertTrue(out["skipped"][0].startswith("You have no list called c. Which list should eggs go on:"), out)
+        self.assertTrue(out["reply"].startswith("You have no list called c. Which list should eggs go on:"), out)
         self.assertEqual(out["applied"], [])
 
 

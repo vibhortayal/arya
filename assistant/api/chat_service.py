@@ -104,6 +104,7 @@ _T = {
         "q_expired": "¿Marcar {name} como caducado? Pasa a tu lista como pendiente.",
         "q_never": "¿Dejar de sugerir {name}?",
         "q_snooze": "¿Posponer {name} {days} días?",
+        "already_on": "{name} ya está en {list}.",
     },
     "hi": {
         "no_list": "आपकी {list} नाम की कोई सूची नहीं है।",
@@ -121,6 +122,7 @@ _T = {
         "q_expired": "{name} को एक्सपायर चिह्नित करें? यह सूची में तुरंत आ जाएगा।",
         "q_never": "{name} सुझाना बंद करें?",
         "q_snooze": "{name} को {days} दिन के लिए टालें?",
+        "already_on": "{name} पहले से {list} में है।",
     },
 }
 
@@ -470,7 +472,7 @@ def apply_actions(actions, added=None, choices=None):
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
             continue
-        qty, unit, said = 1, "", a.get("item")
+        qty, unit, said, known = 1, "", a.get("item"), None
         if a.get("type") in ("add_to_list", "ran_out"):
             # An add reads the quantity out of the words ("two lemons" ->
             # Lemons x 2), and matches only a name that IS a tracked item:
@@ -488,6 +490,7 @@ def apply_actions(actions, added=None, choices=None):
             # is one carton, not 12 cartons (live Ask run, 2026-11-01).
             qty = _packs(qty, state.names().get(item_id) if item_id else said)
             if item_id and item_id.startswith("manual-"):
+                known = item_id  # its list still counts (yogurt bug, 2026-11-03)
                 item_id = None   # a typed row: handled below, same as a new name
         else:
             item_id = _resolve(a.get("item"))
@@ -508,7 +511,11 @@ def apply_actions(actions, added=None, choices=None):
         if a.get("type") in ("add_to_list", "ran_out") and target is None:
             # No list named: the list it is already on, the only list, or ask.
             have = state.named_lists()
-            cur = state.flags().get(item_id, {}).get("list") if item_id else None
+            # A typed row counts too: "we finished the yogurt" with
+            # Yogurts on Costcozy goes there, not to a which-list question
+            # (owner bug 2026-11-03).
+            ref = item_id or known
+            cur = state.flags().get(ref, {}).get("list") if ref else None
             target = next((l for l in have if l["id"] == cur), None)
             if target is None and len(have) == 1:
                 target = have[0]
@@ -530,6 +537,10 @@ def apply_actions(actions, added=None, choices=None):
                 tid = existing_item_id(name, state.dictionary()["entries"],
                                        state.flags()) or "manual-" + slug
                 fl = dict(state.flags().get(tid, {}))
+                if _already_on(fl, target, qty, unit):
+                    skipped.append(_cap(_t("already_on", "{name} is already on {list}.",
+                                           name=fl.get("name") or name, list=target["name"])))
+                    continue
                 if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                     added.append({"item_id": tid, "name": name})
                 fl.update({"manual": True, "dismissed_on": None})
@@ -560,6 +571,9 @@ def apply_actions(actions, added=None, choices=None):
             fl["list"] = target["id"]
         if t in ("add_to_list", "ran_out", "mark_expired"):
             _untick(fl, target)
+        if t == "add_to_list" and _already_on(dict(state.flags().get(item_id, {})), target, qty, unit):
+            skipped.append(_cap(_t("already_on", "{name} is already on {list}.", name=nm, list=target["name"])))
+            continue
         if t == "add_to_list":
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
@@ -588,6 +602,24 @@ def apply_actions(actions, added=None, choices=None):
             continue
         state.set_flag(item_id, fl)
     return applied, skipped
+
+
+def _cap(line):
+    return line[:1].upper() + line[1:]
+
+
+def _already_on(fl, target, qty=1, unit=""):
+    """The row is on this list, unticked, with nothing new to change:
+    an add then says so instead of "Added" (owner bug 2026-11-03)."""
+    if not target or not fl.get("manual") or fl.get("dismissed_on") or fl.get("checked_on"):
+        return False
+    if target["id"] != fl.get("list") and target["id"] not in (fl.get("also") or []):
+        return False
+    if target["id"] in (fl.get("checked_in") or {}):
+        return False
+    if qty != 1 and qty != fl.get("qty_override"):
+        return False
+    return not unit or unit == fl.get("unit")
 
 
 def _untick(fl, target):
@@ -782,7 +814,13 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
     # One question's chips at a time: two questions in one answer would
     # mix their options, so then the user types (the typed path stays).
     asks = sum(1 for k in skipped if k.endswith("?"))
-    return {"reply": _scrub_labels(dec.get("reply", "")), "applied": applied, "skipped": skipped,
+    reply = _scrub_labels(dec.get("reply", ""))
+    if not applied and skipped and any(a.get("type") in ("add_to_list", "ran_out") for a in now):
+        # The model writes its reply before the add runs: "I'll add it"
+        # must not stand when nothing was added (owner bug 2026-11-03).
+        # What happened (a which-list question, "already on") is the reply.
+        reply, skipped = " ".join(skipped), []
+    return {"reply": reply, "applied": applied, "skipped": skipped,
             "added": added, "proposed": proposed, "choices": choices if asks == 1 else []}
 
 

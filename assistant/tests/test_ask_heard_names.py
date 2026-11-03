@@ -45,7 +45,7 @@ class TestHeardNames(unittest.TestCase):
         self.make("Costcosy")   # sounds the same as Costcozy
         out = self.ask([{"type": "add_to_list", "item": "naan", "list": "Costcosi"}])
         self.assertEqual(out["applied"], [])
-        self.assertIn("Which one?", out["skipped"][0])
+        self.assertIn("Which one?", out["reply"])  # nothing added: the question is the reply (yogurt bug, 2026-11-03)
         labels = [c["label"] for c in out["choices"]]
         self.assertIn("Costcozy", labels)
         self.assertIn("Costcosy", labels)
@@ -84,7 +84,7 @@ class TestHeardNames(unittest.TestCase):
     def test_two_questions_send_no_chips(self):
         self.setUp_town()
         out = self.ask([{"type": "add_to_list", "item": "naan"}, {"type": "add_to_list", "item": "atta"}])
-        self.assertEqual(len(out["skipped"]), 2)
+        self.assertEqual(out["reply"].count("?"), 2)  # nothing added: the question is the reply (yogurt bug, 2026-11-03)
         self.assertEqual(out["choices"], [])
 
     def test_unrelated_name_does_not_sound_alike(self):
