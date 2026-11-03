@@ -171,7 +171,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `2026-10-29-quest-instore.md`.
   After a find in a part of the store Arya has not located, a one-line
   nudge offers Snap: the camera opens inside the game and the shelf photo
-  goes to Map my store's scan (people blurred first). The finish card
+  goes to Map my store's scan (people pixelated first). The finish card
   lists those sections with Snap each. `2026-10-30-quest-fog-snap.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
@@ -309,6 +309,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - My phone pass on the list-first build after deploy.
 
 ## Known gaps
+- One web test is flaky: `pack.test.tsx` "arrow keys pack and skip" can fail in a full `npm test` run (a timing issue) and passes when run alone. Seen once in a fresh-clone run on 2026-11-03.
 - Store news and the Friends/Store/Global boards read this account
   only; cross-account data shows labelled samples. Shop-Off and Spotter
   reports are single-account.
