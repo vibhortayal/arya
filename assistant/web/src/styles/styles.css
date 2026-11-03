@@ -375,6 +375,14 @@ textarea {
 }
 @keyframes sheetup { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes scrimin { from { opacity: 0; } to { opacity: 1; } }
+/* Keyboard open (app/keyboard.ts sets --kb): lift sheets above it. */
+.kb-open .sheetwrap { padding-bottom: var(--kb, 0px); }
+.kb-open .sheet, .kb-open .sheet:has(.sheetbody.kb) { max-height: calc(100dvh - var(--kb, 0px) - 12px); padding-bottom: 16px; }
+.kb-open .gd, .kb-open .mp-scene { bottom: var(--kb, 0px); }
+/* More specific than .fr-welcome .sheet (max-height: none, later in the file). */
+.kb-open .fr-welcome .sheet { max-height: calc(100dvh - var(--kb, 0px) - 12px); overflow: auto; }
+/* The Ask bar is sticky above the tab bar; with the keyboard up it sits on it. */
+.kb-open #chat-form { bottom: var(--kb, 0px); }
 .warn { color: var(--danger); font-weight: 600; }
 /* Reported-missing flag: the amber palette, kept separate from
    the accent exactly as the wireframes hold it. */
