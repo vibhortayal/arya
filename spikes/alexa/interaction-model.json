@@ -1,0 +1,75 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "my arya",
+      "intents": [
+        {"name": "AMAZON.CancelIntent", "samples": []},
+        {"name": "AMAZON.HelpIntent", "samples": []},
+        {"name": "AMAZON.StopIntent", "samples": []},
+        {"name": "AMAZON.NavigateHomeIntent", "samples": []},
+        {"name": "AMAZON.FallbackIntent", "samples": []},
+        {
+          "name": "AddItemIntent",
+          "slots": [
+            {"name": "item", "type": "ARYA_ITEM"},
+            {"name": "list", "type": "ARYA_LIST"}
+          ],
+          "samples": [
+            "add {item}",
+            "add {item} to {list}",
+            "add {item} to my {list} list",
+            "add {item} to the {list} list",
+            "add {item} to {list} list",
+            "add {item} to my list",
+            "put {item} on {list}",
+            "put {item} on my {list} list",
+            "put {item} on the {list} list",
+            "put {item} on my list",
+            "we need {item}",
+            "i need {item}",
+            "we are out of {item}",
+            "we're out of {item}",
+            "remember {item}",
+            "get {item}",
+            "buy {item}"
+          ]
+        },
+        {
+          "name": "ListAnswerIntent",
+          "slots": [{"name": "list", "type": "ARYA_LIST"}],
+          "samples": [
+            "{list}",
+            "{list} list",
+            "the {list} list",
+            "my {list} list",
+            "on {list}",
+            "to {list}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "ARYA_ITEM",
+          "values": [
+            {"name": {"value": "milk"}}, {"name": {"value": "eggs"}}, {"name": {"value": "bread"}},
+            {"name": {"value": "bananas"}}, {"name": {"value": "two lemons"}}, {"name": {"value": "a dozen eggs"}},
+            {"name": {"value": "paper towels"}}, {"name": {"value": "oat milk"}}, {"name": {"value": "greek yogurt"}},
+            {"name": {"value": "naan"}}, {"name": {"value": "basmati rice"}}, {"name": {"value": "chicken breast"}},
+            {"name": {"value": "baby spinach"}}, {"name": {"value": "coffee beans"}}, {"name": {"value": "avocados"}},
+            {"name": {"value": "dish soap"}}, {"name": {"value": "toilet paper"}}, {"name": {"value": "olive oil"}},
+            {"name": {"value": "three cans of chickpeas"}}, {"name": {"value": "fresh basil"}}
+          ]
+        },
+        {
+          "name": "ARYA_LIST",
+          "values": [
+            {"name": {"value": "costco"}}, {"name": {"value": "trader joe's"}}, {"name": {"value": "groceries"}},
+            {"name": {"value": "indian store"}}, {"name": {"value": "party"}}, {"name": {"value": "walmart"}},
+            {"name": {"value": "target"}}, {"name": {"value": "whole foods"}}, {"name": {"value": "kroger"}},
+            {"name": {"value": "weekly shop"}}
+          ]
+        }
+      ]
+    }
+  }
+}
