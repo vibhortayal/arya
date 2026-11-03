@@ -419,7 +419,7 @@ class TestWithdraw(Base):
         sid = sess["id"]
         self.report(sid, "Bread")
         self.assertEqual(self.c.get("/api/quest/stores/Corner%20Shop/reports").json()["count"], 1)
-        self.assertEqual(len(self.c.get("/api/quest/news").json()["news"]), 1)
+        self.assertEqual(self.c.get("/api/quest/news").json()["news"], [])   # own reports never alert
         self.assertEqual(self.get(sid)["my_reports"], ["Bread"])
         self.assertEqual(self.c.get("/api/quest/profile").json()["stats"]["spots_reported"], 1)
         out = self.op(sid, "withdraw-report", {"item": "Bread"})

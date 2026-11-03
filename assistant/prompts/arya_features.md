@@ -70,7 +70,7 @@ Build (Quest tab) lets you shape a store in the game. The Quest tab Edit button 
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up at the top of a list. It shows what Arya shoppers report: out of stock, back in stock, quiet times.
 To report an empty shelf, find "Report something yourself" on Today and tap Out of stock.
-Store news needs reports from other Arya shoppers, so a new account may show little. In the demo this news is simulated.
+Others' "Not here?" shows once 3 shoppers report an item on your list at your store; never your own. Demo news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi
 Ask tab: type a question or tap Talk to speak. Arya answers from the household's own lists and receipts. It does not speak aloud.
 Talking to Arya (Ask, a list's microphone, New list Record, Ask in the store): a Listening card shows a red dot, bars that move with your voice and a timer. Tap Stop and send when you are done, or Cancel to drop it. Then it says "Got it, reading…" while your words come back. The words show only after you stop; the recording goes only to Meta to turn it into text.
