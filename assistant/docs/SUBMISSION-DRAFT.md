@@ -159,7 +159,7 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 
-## Feedback from using partner technologies (about 320 words)
+## Feedback from using partner technologies
 
 **Meta Model API (Muse Spark and Muse Wonder).** Spark was the workhorse: receipt reads, list photos, Ask Arya, list suggestions and the staple judge all run on it. Spark cost about $0.013 per receipt read in my eval; I also send prompt_cache_key so the shared prompt prefix is cached. In my 9-receipt eval, Wonder was the more accurate reader (97 of 98 lines after hand checking; on the automatic scorer, Spark 92 and Wonder 86, because the scorer was calibrated on Spark's recorded run and counted Wonder's spelled-out brand names, such as "PF" as "Pepperidge Farm", as wrong, though every price on those lines was exact) but about four times slower: a 34 s mean and a 60.5 s p95, against Spark's 8.6 s and 11.9 s. That gap shaped the product. Spark reads first, arithmetic checks run, and Wonder re-reads only the receipts the checks flag, with a 60 s cap. What was rough: Spark's mistakes were often silent (4 of its 6 wrong lines carried no low-confidence flag), so I had to build my own checks. A read timeout is ambiguous about billing, so I never retry one. Content-policy errors arrive as raw HTTP 400 text that I had to translate for people. Asks: a per-line confidence that tracks real accuracy, a latency or priority option for Wonder, clear billing rules for timed-out calls, and typed error codes.
 
