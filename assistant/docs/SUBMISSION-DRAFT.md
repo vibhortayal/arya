@@ -2,7 +2,7 @@
 
 Status: DRAFT. Checked 2026-11-01 against main 0d0b0f2 and the live site.
 The character count, the test count and the known-failures pointer were
-rechecked on 2026-11-03 against main 731fd308.
+rechecked on 2026-11-03 against main a81b4e25.
 Nothing is submitted until I approve the complete package. Portal
 fields sit behind participant sign-in, so the blocks below follow common
 portal fields; paste each into the field that matches. The judging map and
@@ -132,7 +132,7 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 - Receipt photo test (9 public receipts, 98 lines): Wonder 97/98, 0 price
   errors; Spark 92/98, 4 price errors. Public test receipts never entered
   my data.
-- About 1,880 Python unit tests plus the web app's tests. Known failures on
+- About 1,900 Python unit tests plus the web app's tests. Known failures on
   `main` are listed in `STATUS.md`.
 
 ## Responsible AI
