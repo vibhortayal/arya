@@ -241,13 +241,18 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   day per account. A report expires after 3 days, or clears for everyone
   when the item is found or checked off. The alert shows for 12 hours, in
   the Today feed only (no push or email), and only for items on the
-  viewer's own list at stores they use.
+  viewer's own list at stores they use. A ✕ on the alert hides it for that
+  account only while that report stays open; Undo brings it back.
 - FR-8.9 Every board and badge is receipt-verified.
 - FR-8.10 A hunt row taps to grab with a circle. Tapping again puts the grab back.
 - FR-8.11 "Map my store" is a guided camera scan. The user pans and does
   not tap. Every few seconds a frame goes up, SAM 3.1 pixelates each person,
   and Spark reads the section, the aisle signs, the items, and (if the
   user chooses) shelf prices. A daily frame cap bounds the cost.
+- FR-8.13 The live walk starts only when the phone location is confirmed
+  near the store. If location is off or cannot be confirmed, the user can
+  upload a video or photos instead. A Demo Town store is always allowed.
+  The position is compared on the phone and is not stored.
 - FR-8.12 One map belongs to one store location. The user can save a
   built or scanned store as "My map" for a real store.
 
