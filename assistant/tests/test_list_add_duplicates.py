@@ -51,6 +51,16 @@ class TestExistingItemId(unittest.TestCase):
         self.assertEqual(existing_item_id("butter", hist[2:3], {}), "s")   # qualifier, same product
         self.assertEqual(existing_item_id("milk", hist[3:], {}), "m")      # head word, as documented
 
+    def test_a_leading_article_is_not_part_of_the_name(self):
+        self.assertEqual(existing_item_id("the eggs", ENTRIES, {}), "costco-2002")
+        self.assertEqual(existing_item_id("a milk", ENTRIES, {}), "costco-2001")
+        yog = [{"item_id": "y", "canonical_name": "yogurts", "aliases": []}]
+        self.assertEqual(existing_item_id("the yogurt", yog, {}), "y")
+        self.assertEqual(existing_item_id("an egg", [], {"manual-egg": {"name": "Egg"}}), "manual-egg")
+        # A name that is only an article, or starts like one, is left alone.
+        self.assertIsNone(existing_item_id("the", ENTRIES, {}))
+        self.assertIsNone(existing_item_id("theta", ENTRIES, {}))
+
     def test_one_slip_typos_link(self):
         self.assertEqual(existing_item_id("mlik", ENTRIES, {}), "costco-2001")
         self.assertEqual(existing_item_id("Whole Mlik", ENTRIES, {}), "costco-2001")

@@ -426,6 +426,10 @@ def existing_item_id(name, dictionary_entries, flags):
     same after fixing a one-slip typo ("mlik"). It never picks between
     two candidates, so "milk" is not guessed into "almond milk"."""
     key = _key(name)
+    # "the yogurt" is "yogurt": a leading article is not part of the name.
+    words = key.split()
+    if len(words) > 1 and words[0] in ("the", "a", "an"):
+        key = " ".join(words[1:])
     if not key:
         return None
     tracked = [(e["item_id"], _key(n)) for e in dictionary_entries
