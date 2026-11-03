@@ -10,6 +10,9 @@ unless it says so, and nothing is promised for the submission. "Idea" means
 nobody has designed it yet. Sources are named so you can check them.
 
 ## Devices
+- **Native iOS and Android apps; the PWA stays.** Plan. The PWA was the
+  fastest way to build in a hackathon. Not designed or scheduled, and not in
+  any app store today.
 - **Ray-Ban Meta glasses.** Idea, raised by me for the store scan.
   Spark's check during the hackathon found no public live-camera API for
   third-party apps; the flow that works today is to capture on the glasses,
