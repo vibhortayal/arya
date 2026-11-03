@@ -250,9 +250,18 @@ async def decode_photo_route(req: Request):
     demo = _is_demo(req)
     _budget_guard(demo=demo)
     client = new_client()
+    second = None
+    reasons = []
     try:
-        receipt = await run_in_threadpool(decode_photo, body, client,
-                                          media_type=media)
+        if demo:
+            # The demo shows Spark's read first and Wonder's second read
+            # on the same screen (owner, 2026-11-03, demo only).
+            from api.decode.service import decode_photo_spark_first
+            receipt, reasons, second = await run_in_threadpool(
+                decode_photo_spark_first, body, client, media)
+        else:
+            receipt = await run_in_threadpool(decode_photo, body, client,
+                                              media_type=media)
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt photo model error (%s)", str(e)[:120])
         raise HTTPException(502, safe_detail(e))
@@ -266,7 +275,12 @@ async def decode_photo_route(req: Request):
         # hunt can finish on its receipt; the batch judge does not run.
         receipt["live"] = True
         added = state.add_receipts([receipt])
-        return {"demo": True, "added": added, "receipt": receipt}
+        out = {"demo": True, "added": added, "receipt": receipt}
+        if second is not None and added:
+            from api.decode import second_read
+            out["check"] = {"id": second_read.start(receipt, reasons, second),
+                            "reasons": reasons}
+        return out
     dup = state.find_duplicate(receipt)
     if dup is not None:
         return {"added": 0, "duplicate": True,
@@ -281,6 +295,20 @@ async def decode_photo_route(req: Request):
                 "total_receipts": len(state.receipts()), "receipt": dup}
     await run_in_threadpool(state.judge_pending, new_client())
     return {"added": added, "total_receipts": len(state.receipts()), "receipt": receipt}
+
+
+@router.get("/decode/check/{job_id}")
+def decode_check(job_id: str, req: Request):
+    """The demo's Wonder second read: pending, changed, same or failed
+    (api/decode/second_read.py). Only the visitor who started it can
+    read it."""
+    if not _is_demo(req):
+        raise HTTPException(404, "no such check")
+    from api.decode import second_read
+    out = second_read.check(job_id)
+    if out is None:
+        raise HTTPException(404, "no such check")
+    return out
 
 
 @router.post("/api/transcribe")
