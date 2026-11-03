@@ -7,6 +7,8 @@ Status: **paused**. Nothing here is published, linked from docs, Help or Ask Ary
 - **Alexa list sync:** not possible. Amazon removed the List Management API on 2024-07-01. See `ALEXA-LISTS-SYNC-DESIGN.md`.
 
 Files:
+- `BUILD-LOG.md` - what we built, decisions, console and VM setup, tests, open risks.
+- `AFTER-HACKATHON.md` - how we continue after Nov 4.
 - `ALEXA-LISTS-SYNC-DESIGN.md` - why one-way Alexa list pull fails, and the alternatives.
 - `LIST-IMPORT-DESIGN.md` - options for importing lists from other apps.
 - `CONSOLE-STEPS.md` - Alexa developer console setup steps (owner checklist).
