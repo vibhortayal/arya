@@ -90,8 +90,11 @@ Next, a step-by-step tour of every feature on your copy:
 
 ## Can I run it without Docker?
 This route was followed step by step from a fresh clone by the Tester, without a
-key (the receipt step was not run). The Docker route above is not yet verified
-end to end on a clean machine.
+key (the receipt step was not run). The Docker route above was run once from a
+fresh clone on a Linux server, with cached build layers, through direct requests
+instead of a browser, and without a real key: start, `/health`, account, demo,
+the no-key Ask error, editing `.env` and the port setting all worked. It has not
+had a cold build, a browser run or a run on a Mac or Windows laptop.
 
 You need Python 3.12 or newer (3.13 worked) and Node 22. From the repository root:
 
