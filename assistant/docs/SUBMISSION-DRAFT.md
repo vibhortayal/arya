@@ -83,7 +83,7 @@ hold the truth about what you buy, but nobody reads them.
   seat. It judges again from item names alone (no prices, dates, stores or account details).
 - **SAM 3.1**: finds shelves and signs in the guided store scan, boxes
   candidates for Find it for me (Spark then checks each crop), and finds
-  people so they are blurred before any frame is kept.
+  people so they are pixelated before any frame is kept.
 - **Muse Voice Transcribe**: voice adds in lists and voice questions in Ask.
 - **Muse Image**: painted the 20 Quest celebration characters once during
   the build, and paints live in the app (a player's avatar, and the
@@ -116,7 +116,7 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
   build and hard to trust. Cadence and price are code; the model only
   judges which items are staples, and a second open-weights model checks it.
 - **Privacy in the store.** No picture of a person is kept: SAM finds
-  people and blurs them before a store frame is saved, and the scan fails
+  people and pixelates them before a store frame is saved, and the scan fails
   closed.
 
 ## Accomplishments and evidence
