@@ -31,9 +31,46 @@ class TestNormalize(unittest.TestCase):
 
     def test_unreadable_cases_ask_the_user(self):
         for bad in (dict(date=None), dict(confidence=0.3), dict(kind="packed"),
-                    dict(date="2019-01-01"), dict(date="2099-01-01"), dict(date="not a date"),
+                    dict(date="2019-01-01", raw="EXP 01 01 2019"),
+                    dict(date="2099-01-01", raw="EXP 01 01 2099"), dict(date="not a date"),
                     dict(confidence="high")):
             self.assertFalse(self.read(**bad)["readable"], bad)
+
+    def test_no_year_on_the_pack_is_normal(self):
+        # "BB NOV 4" (a milk jug, owner 2026-11-03): month and day only.
+        t = date(2026, 11, 3)
+        for model_year, raw in ((2026, "BB NOV 4"), (2025, "BB NOV 4"), (2027, "BB NOV 4")):
+            r = expiry.normalize_read({"product": None, "date": f"{model_year}-11-04", "kind": "best_by",
+                                       "confidence": 0.7, "raw": raw}, t)
+            self.assertEqual((r["readable"], r["date"]), (True, "2026-11-04"), model_year)
+        # Late-December print read in January: next year, not last.
+        r = expiry.normalize_read({"date": "2026-01-02", "kind": "best_by", "confidence": 0.8,
+                                   "raw": "BB JAN 2"}, date(2026, 12, 28))
+        self.assertEqual(r["date"], "2027-01-02")
+        # A few days past stays in this year.
+        r = expiry.normalize_read({"date": "2026-11-01", "kind": "best_by", "confidence": 0.8,
+                                   "raw": "BB NOV 1"}, t)
+        self.assertEqual(r["date"], "2026-11-01")
+
+    def test_printed_year_is_kept(self):
+        for raw in ("BB 11 04 27", "BB 2027/11/04", "BB NOV 04 27"):
+            self.assertTrue(expiry.raw_has_year(raw), raw)
+            r = expiry.normalize_read({"date": "2027-11-04", "kind": "best_by", "confidence": 0.8,
+                                       "raw": raw}, date(2026, 11, 3))
+            self.assertEqual(r["date"], "2027-11-04", raw)
+        for raw in ("BB NOV 4", "SELL BY 11/04", ""):
+            self.assertFalse(expiry.raw_has_year(raw), raw)
+
+    def test_prompt_and_message_give_today_and_the_no_year_rule(self):
+        self.assertIn("NO year", expiry.load_prompt())
+        seen = {}
+
+        class C:
+            def chat(self, messages, **k):
+                seen["m"] = messages
+                return '{"date": null, "confidence": 0}', {}, 0
+        expiry.read_expiry_photo(b"x", C(), today=date(2026, 11, 3))
+        self.assertIn("Today is 2026-11-03", seen["m"][1]["content"][0]["text"])
 
     def test_odd_kind_is_unknown(self):
         self.assertEqual(self.read(kind="whenever")["kind"], "unknown")
