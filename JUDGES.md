@@ -61,7 +61,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
 - Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
-- To go past the demo, run it locally with your own key ([Run it yourself](docs/RUN-IT-YOURSELF.md), or the [setup in the README](README.md#run-it-yourself)), or tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and reach out to me to get approved: [support@teamnightshift.org](mailto:support@teamnightshift.org), or [LinkedIn](https://www.linkedin.com/in/vibhortayal).
+- To go past the demo, run it locally with your own key ([Run it yourself](docs/RUN-IT-YOURSELF.md), which includes a prompt for an AI agent to [set it up for you](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up), or the [setup in the README](README.md#run-it-yourself)), or tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and reach out to me to get approved: [support@teamnightshift.org](mailto:support@teamnightshift.org), or [LinkedIn](https://www.linkedin.com/in/vibhortayal).
 
 ## Which model does which job?
 

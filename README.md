@@ -251,8 +251,10 @@ committed. Do not put a key in a file that is tracked. Open
 http://localhost:8080. On the first visit, create your account (a username
 and password) to read your own receipts, or close the sheet and tap "Try it now"
 for the demo household. Without a key the app and the demo open, but anything that calls a
-Meta model says it cannot reach Meta. Making a key, settings, resetting, the no-Docker route
+Meta model says "This copy of Arya has no Meta key, so AI features are off". Making a key, settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
+If you use an AI coding agent, there is a prompt that sets it up for you:
+[Let your AI agent set it up](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up).
 To try every feature step by step on your copy, follow
 [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md).
 
