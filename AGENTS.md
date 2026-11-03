@@ -195,7 +195,7 @@ owner approved on 2026-11-01; the coordinator keeps it current.
    them before it.
 5. **Only Ops deploys**, on the owner's word relayed by the coordinator into the
    Ops thread (the owner's message attached): either per batch or a standing word
-   with an end date. No deploys after the Nov 4, 9:00 PM ET submission or during
+   with an end date. No deploys from the Nov 4, 6PM ET deploy freeze until the owner lifts it, or during
    judging, except a rollback under the owner's standing rollback word (commit
    and condition named in the Ops thread, for example `/health` down 10 minutes
    or a failed live smoke test).
