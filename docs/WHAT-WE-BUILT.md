@@ -7,7 +7,7 @@ What git cannot show is listed under "What git cannot confirm".
 ## What existed before the window
 
 - **The idea search.** By my own account it took about two days. The commits for
-  it in a separate research repo (`vibhortayal/meta-hackathon-research`) start
+  it in a separate research repo ([`vibhortayal/meta-hackathon-research`](https://github.com/vibhortayal/meta-hackathon-research)) start
   on Oct 26 at 12:37; the 28 commits that day, to 16:51, hold candidate ideas
   and a plan for spikes, with no spike results. This is before Oct 27, and I
   say so plainly.

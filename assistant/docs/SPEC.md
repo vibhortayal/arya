@@ -24,7 +24,9 @@ Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
 > - **Name.** The product is Arya. "Arya Quest" is the hackathon entry name;
 >   Quest is the optional game inside Arya.
 > - **Missing sources.** COMPETITORS.md and VISION.md were written outside this
->   repository and are not in it. The Gate 0 record is `docs/evals/GATE-0-REPORT.md`.
+>   repository and are not in it. The Gate 0 record is `docs/evals/GATE-0-REPORT.md`;
+>   the original public-set report is in the
+>   [research repo](https://github.com/vibhortayal/meta-hackathon-research/blob/main/project/spike2/public-set/GATE-REPORT.md).
 
 ## 1. What the product is
 
@@ -359,7 +361,7 @@ Fallback after a failure: PDF receipts and e-receipts only. Photo intake leaves 
 Status of the evidence:
 
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
-- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: `docs/evals/GATE-0-REPORT.md`.
+- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: `docs/evals/GATE-0-REPORT.md`, and the public-set report in the [research repo](https://github.com/vibhortayal/meta-hackathon-research/blob/main/project/spike2/public-set/GATE-REPORT.md).
 
 ### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
 
