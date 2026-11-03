@@ -175,7 +175,7 @@ def read_and_keep(name, body, client, media="image/jpeg", prices=False,
     jpeg, people, share = shelfscan.scrub_people_boxes(body, client,
                                                        media_type=media)
     if jpeg is None:
-        raise ScrubFailed("could not blur people out of the photo")
+        raise ScrubFailed("could not pixelate the people in the photo")
     if share >= PEOPLE_PAUSE_SHARE:
         return {"paused": "people", "kept": False}
     try:

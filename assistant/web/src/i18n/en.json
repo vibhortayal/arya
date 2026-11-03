@@ -171,7 +171,7 @@
     "photos": "Photos and voice",
     "photosSub": "Reads lists, dates and your fridge. You confirm before anything is saved",
     "maps": "Store maps",
-    "mapsSub": "Guesses a layout from your walk. People are blurred",
+    "mapsSub": "Guesses a layout from your walk. People are pixelated",
     "prices": "Prices",
     "pricesSub": "Come from your own receipts, not the web",
     "food": "Food safety",
@@ -327,7 +327,7 @@
       "title": "Upload a video or photos",
       "why": "Already filmed {{store}}? Pick a video (up to 5 minutes) or photos of the aisles. Arya picks the sharp frames on your phone; the video itself never leaves your phone.",
       "mine": "I filmed this myself",
-      "mineSub": "In a store that allows it. People are blurred and never kept.",
+      "mineSub": "In a store that allows it. People are pixelated and never kept.",
       "choose": "Choose from Photos",
       "picking": "Picking the sharp frames…",
       "photos": "Reading photo {{done}} of {{total}}…",
@@ -360,7 +360,7 @@
     "backToShopping": "Back to shopping",
     "teachOneMore": "Map one more · about 20 s",
     "backToMap": "Back to the map",
-    "blurring": "Blurring any people and adding it to the map…",
+    "blurring": "Pixelating any people and adding it to the map…",
     "reading": "Reading the shelves and building the map…",
     "picking": "Picking the sharpest frames from your walk…",
     "snapping": "Snapping when steady…",
@@ -409,8 +409,8 @@
       "pricesOptSub": "Only clear price tags, saved as your own prices.",
       "signsRead": "Signs read",
       "pricesRead": "Shelf prices",
-      "peopleBlurred_one": "{{count}} person blurred, none kept",
-      "peopleBlurred_other": "{{count}} people blurred, none kept"
+      "peopleBlurred_one": "{{count}} person pixelated, none kept",
+      "peopleBlurred_other": "{{count}} people pixelated, none kept"
     }
   },
   "ask": {
@@ -662,7 +662,7 @@
     "oneFewer": "One fewer",
     "noteSizeBrandForWhom": "Note (size, brand, for whom)",
     "shelfScan": "Shelf scan",
-    "spotsItemsFromYourList": "Finds items from your list in a photo. People are blurred out; Arya keeps only products.",
+    "spotsItemsFromYourList": "Finds items from your list in a photo. People are pixelated; Arya keeps only products.",
     "takeAPhoto": "Take a photo",
     "stop": "Stop",
     "closeScan": "Close scan",
@@ -716,7 +716,7 @@
     "combo": "{{n}} in a row",
     "backToPhotos": "Back to the photos",
     "seeIn3d": "See it in 3D",
-    "freshFrom": "Fresh from a shopper, {{ago}}. People are blurred out; we only keep products.",
+    "freshFrom": "Fresh from a shopper, {{ago}}. People are pixelated; we only keep products.",
     "allCollectedNote": "Everything is in your cart. Nothing moves you on by itself. Tap Done when you are ready. You can still put any item back.",
     "nothingLeftOnHunt": "Nothing left on this quest. Tap Done when you are ready.",
     "listEmpty": "The list is empty.",
@@ -1401,7 +1401,7 @@
     "addAnAisle": "Add an aisle",
     "aisle4FrozenDairyWall": "Aisle 4, Frozen, Dairy wall",
     "addThisAisle": "Add this aisle",
-    "weBlurEveryPersonBefore": "Arya blurs the people it can find before it saves a photo, and keeps none if that step fails. We keep pictures of products only.",
+    "weBlurEveryPersonBefore": "Arya pixelates the people it can find before it saves a photo, and keeps none if that step fails. We keep pictures of products only.",
     "status": {
       "unmapped": "Not mapped",
       "mapped": "Mapped",
@@ -3841,7 +3841,7 @@
         "s3": "Walk the aisles with the camera. Tap Done when you finish.",
         "s4": "Arya builds the map in the background. A card tells you when it is ready.",
         "n1": "No signal? Frames save on your phone and send later.",
-        "n2": "Arya blurs people in the frames before anything is kept.",
+        "n2": "Arya pixelates people in the frames before anything is kept.",
         "cta": "Open Map my store"
       },
       "news": {

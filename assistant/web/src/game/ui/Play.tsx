@@ -293,7 +293,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
           <div className={"qg-nudge " + nudge.state} role="status">
             <span className="qg-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
             <p>{nudge.state === "ask" ? <><b>{L.kind === "partial" ? "Spotted" : "Found"} in {nudgeSec}!</b> {L.kind === "partial" ? "Snap the shelf to clear the fog for good." : "Snap the shelf to put it on the map."}</>
-              : nudge.state === "busy" ? <>Reading the shelf… People are blurred first.</>
+              : nudge.state === "busy" ? <>Reading the shelf… People are pixelated first.</>
               : nudge.state === "done" ? <><b>{nudgeSec} is on the map.</b> Thanks!</>
               : <>{nudge.note || "That photo didn't go through."}</>}</p>
             {(nudge.state === "ask" || nudge.state === "fail") && <SnapButton className="qg-nudge-snap" onPhoto={f => void snap(nudge, f)}>{nudge.state === "fail" ? "Retry" : "Snap"}</SnapButton>}
@@ -411,7 +411,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
         <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
       <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map my store?">
-        <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are blurred first.</p>
+        <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are pixelated first.</p>
         <p className="qg-p">{got ? `You have ${got} of ${total} in the cart. Your grabs are saved; the trip ends here.` : "Nothing is in the cart yet, so nothing is lost."}</p>
         <div className="qg-opts">
           <button id="qg-mapnow" className="qg-btn primary" onClick={() => { setSheet(null); onMap?.(); }}>Map it now</button>
