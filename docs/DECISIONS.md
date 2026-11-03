@@ -16,6 +16,7 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-03 | Freeze dates. Code and UI freeze at noon ET on Nov 3: bug fixes only after. Deploy freeze from Nov 4, 6PM ET until I lift it. Submission Nov 4, 9PM ET. The demo video is recorded after the code freeze. Supersedes the "no freeze dates" row of ~2026-10-31. | none | Coordinator |
 | 2026-11-03 | The repo uses a custom source-available LICENSE: all rights reserved; judges and anyone may view and run it locally to evaluate it; nothing limits the Organizers' rights under the Official Rules. Never call it open source. I chose custom over PolyForm. MIT is considered after submission. Supersedes the 2026-11-02 "licence stays parked" line. | #404 | Coordinator |
 | 2026-11-03 | The Editor role runs on the Opus 5.5 thread "Review docs as Editor on Opus" (it was a Fable 5.1 thread, now retired). Role and rules are unchanged; AGENTS.md names the model. | #536 | Coordinator |
 | 2026-11-02 | The after-receipt "can expire or go bad" card on Today stays until every item has a date or is removed; Done saves dates but no longer hides the card while items are left. × on a row removes that item at once and for good. Supersedes the #207 behaviour where Done (or one answer) closed the receipt's question. "Not now" still hides the card. (16:30Z) | this PR | Owner via coordinator |
@@ -48,7 +49,7 @@ line and mark the old one "superseded by" the new date.
 | 2026-11-01 | Spark runs on the Standard tier (not Contributor). The live setting is `ARYA_SPARK_TIER=standard` on `muse-spark-1.3`. | none | Coordinator |
 | 2026-11-01 | Deploy freeze from Nov 4, 6PM ET until I lift it. Ops may deploy `main` after the Tester's smoke test and a green `/health`, and rolls back on failure. | none | Ops |
 | 2026-11-01 | Hide the Contributor-tier warning in app copy: Ops strings no longer carry the data-use warning. | #432 | Product and backend builder |
-| ~2026-10-31 | No freeze dates. Only the Nov 4 submission date stands (the deploy freeze above is the one exception). | none | Coordinator |
+| ~2026-10-31 | No freeze dates. Only the Nov 4 submission date stands (the deploy freeze above is the one exception). Superseded by 2026-11-03. | none | Coordinator |
 | ~2026-10-31 | Demo is a fresh private sandbox for every visitor; no deploy during judging. | none | Demo and submission readiness |
 | ~2026-10-29 | List and Quest are both core. PWA only, React screens only, no per-user spend cap (later: per-account limits were added, see ARCHITECTURE §10). | none | Coordinator |
 | 2026-10-29 | "Used it" on a use-soon item adds it back to a list: the usage-chosen list, else the "Which list?" picker. Superseded by 2026-11-02 05:50Z (goes to Suggestions). | #96 | Expiry thread |
