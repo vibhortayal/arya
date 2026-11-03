@@ -16,6 +16,8 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-03 | The repo uses a custom source-available LICENSE: all rights reserved; judges and anyone may view and run it locally to evaluate it; nothing limits the Organizers' rights under the Official Rules. Never call it open source. I chose custom over PolyForm. MIT is considered after submission. Supersedes the 2026-11-02 "licence stays parked" line. | #404 | Coordinator |
+| 2026-11-03 | The Editor role runs on the Opus 5.5 thread "Review docs as Editor on Opus" (it was a Fable 5.1 thread, now retired). Role and rules are unchanged; AGENTS.md names the model. | #536 | Coordinator |
 | 2026-11-02 | The after-receipt "can expire or go bad" card on Today stays until every item has a date or is removed; Done saves dates but no longer hides the card while items are left. × on a row removes that item at once and for good. Supersedes the #207 behaviour where Done (or one answer) closed the receipt's question. "Not now" still hides the card. (16:30Z) | this PR | Owner via coordinator |
 | 2026-11-02 | "Build for Your World" framing: README, JUDGES and SUBMISSION-DRAFT open with who Arya is for, what it does and how it frees time and mental space (a problem I had personally); new `docs/PRINCIPLES.md`; revenue and partner text removed from BUSINESS.md and ROADMAP.md; the goal is that people use it and help each other. | none | Me, via coordinator |
 | 2026-11-02 | Editor findings on source docs: "Ask Arya", "navigation tab" and "Map my store" in README, JUDGES, the playbook and WHAT-WE-BUILT; 23 celebration characters; PRODUCT, SPEC, IMPLEMENTATION and USER-JOURNEYS carry dated updates for the new tabs and no automatic "Everything else". USER-JOURNEYS screenshots to be re-walked, not retaken yet. | none | Doc maintainer |
@@ -35,7 +37,7 @@ line and mark the old one "superseded by" the new date.
 | 2026-11-02 | No automatic "Everything else" list; it exists only if the user makes one. | #419 | Product and backend builder |
 | 2026-11-02 | Every item belongs to a list. An add uses the list you name, else the only list (auto-filed), else asks "Which list?". With no lists, create one first. | #427 | Product and backend builder, UI/UX |
 | 2026-11-02 | Receipt line edit: any group member may edit a line (name, quantity, price); only the person who filed the receipt may delete it. The printed total never changes. | #414 | Product and backend builder |
-| 2026-11-02 | The licence stays parked. The organizers say no specific licence is required and any source-available licence is fine if the repo is public, so the repo stays "all rights reserved" and public for now. | #438 | Me, Doc maintainer |
+| 2026-11-02 | The licence stays parked. The organizers say no specific licence is required and any source-available licence is fine if the repo is public, so the repo stays "all rights reserved" and public for now. Superseded by 2026-11-03 (#404). | #438 | Me, Doc maintainer |
 | 2026-11-02 | Open-source and model disclosure: README "Built with" table and `NOTICE.md`, including Muse Spark Open under the Muse Model License and the line "Built with Muse Spark Open". | #438 | Doc maintainer |
 | 2026-11-02 | Voice add uses a Listening card with one "Stop and send" and Cancel; no live words. | #410 | UI/UX designer and builder |
 | 2026-11-02 | Push reminders are ON, with a greyed Reminders row where it cannot be used. | #408 | UI/UX designer and builder |
