@@ -97,13 +97,16 @@ Next, a step-by-step tour of every feature on your copy:
 
 ## Can I run it without Docker?
 This route was followed step by step from a fresh clone by the Tester, without a
-key (the receipt step was not run). The Docker route above was run once from a
-fresh clone on a Linux server, with cached build layers, through direct requests
-instead of a browser, and without a real key: start, `/health`, account, demo,
-the no-key Ask error, editing `.env` and the port setting all worked. Reading a
-receipt, photos, voice and a working Ask answer need a real key and were not
-run on either route. The Docker route has not had a cold build, a browser run or
-a run on a Mac or Windows laptop.
+key (the receipt step was not run). The Docker route above was run twice on a Linux server with no Meta key. A cold
+build (about 55 seconds) from a fresh shallow clone, in a browser at 390x844:
+start, `/health`, creating an account, signing in again, the demo, the no-key Ask
+and receipt messages and Start shopping all worked. An earlier run with cached
+build layers, through direct requests: editing `.env` and the port setting worked.
+The cold build needed that test machine's proxy certificate added, because its
+network re-signs HTTPS (see "What if something goes wrong?"). Reading a receipt,
+photos, voice and a working Ask answer need a real key and were not run on either
+route. Still untested: a real Meta key, Docker Desktop on a Mac or Windows
+laptop, and a real phone.
 
 You need Python 3.12 or newer (3.13 worked) and Node 22. From the repository root:
 
