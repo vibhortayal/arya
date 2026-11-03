@@ -285,6 +285,8 @@ def _add_now(user, item, heard_list):
         applied, skipped = alexa_brain.add(item, p.get("list"))
         if applied:
             return _say(alexa_brain.spoken(applied))
+        if skipped and " already " in skipped[0]:
+            return _say(skipped[0])
         if not skipped:
             return _say("Sent to Arya.")
     alexa_brain.enqueue(user, item, heard_list, p.get("list"))

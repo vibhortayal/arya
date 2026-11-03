@@ -221,7 +221,8 @@ class TestSkill(AlexaBase):
 
     def test_known_item_adds_now_and_says_so(self):
         text = self.speech(self.say("AddItemIntent", {"item": "pasta"}, self.tok))
-        self.assertIn("Added", text)
+        # Pasta is already on Trader Joe's in the demo: it says so (2026-11-03).
+        self.assertIn("already on", text)
         self.assertIn("Trader Joe's", text)
         self.assertEqual(Spark.calls, 0)
 
