@@ -73,7 +73,7 @@ Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 ## Why I built it this way
 
-**A PWA.** One link works on any phone, with nothing to install and no app-store review. It sits on the Home Screen, keeps your lists usable with no signal and can send reminders, and a judge can open it in one tap.
+**A PWA (progressive web app).** A PWA is a website you can add to your phone's Home Screen, so it opens like an app with nothing to install from an app store. One link works on any phone, with no app-store review. It sits on the Home Screen, keeps your lists usable with no signal and can send reminders, and a judge can open it in one tap.
 
 **The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
 
