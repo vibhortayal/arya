@@ -2437,7 +2437,11 @@
         "name": "Next trip",
         "desc": "Start shopping, add items, scan a receipt"
       },
-      "waiting": "Hidden until it has news"
+      "waiting": "Hidden until it has news",
+      "alexa": {
+        "name": "From Alexa",
+        "desc": "Alexa adds Arya was not sure about"
+      }
     },
     "edit": {
       "edit": "Edit",
@@ -2663,7 +2667,26 @@
       "move": "Buy {{name}} at {{store}}: about {{money}} a month less."
     },
     "turnTheListInto": "Turn your list into a game with points and badges.",
-    "couldNotLoad": "Couldn't load Today. Check your connection and try again."
+    "couldNotLoad": "Couldn't load Today. Check your connection and try again.",
+    "alexa": {
+      "toCheck_one": "{{count}} to check",
+      "toCheck_other": "{{count}} to check",
+      "guess": "Arya's guess",
+      "unchecked": "Not checked",
+      "heard": "Alexa heard",
+      "onList": "on {{list}}",
+      "notChecked": "Arya couldn't check this one",
+      "right": "Right",
+      "fix": "Fix",
+      "list": "List",
+      "item": "Item",
+      "editName": "Edit name",
+      "remove": "Remove from {{list}}",
+      "kept": "Kept {{name}} on {{list}}",
+      "moved": "Moved {{name}} to {{list}}",
+      "renamed": "Renamed to {{name}}",
+      "removed": "Removed {{name}} from {{list}}"
+    }
   },
   "haul": {
     "exampleOnly": "Example only",

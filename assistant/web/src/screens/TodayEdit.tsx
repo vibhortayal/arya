@@ -13,6 +13,8 @@ import { cardsOff, CARD_GROUP, FOCUS_IDS, LIBRARY_GROUPS, SIZES_OF, type CardId,
 
 type EditProps = {
   on: CardId[];
+  /* Cards that do not exist for this account right now (From Alexa while its flag is off). */
+  hidden?: CardId[];
   has: Record<CardId, boolean>;
   peek: (id: CardId) => string;
   size: (id: CardId) => Size;
@@ -21,12 +23,12 @@ type EditProps = {
   onReset: () => void;
 };
 
-export function TodayEdit({ on, has, peek, size, onChange, onSize, onReset }: EditProps) {
+export function TodayEdit({ on, hidden, has, peek, size, onChange, onSize, onReset }: EditProps) {
   const { t } = useTranslation();
   const name = (id: CardId) => t(`today.cards.${id}.name`);
   const [open, setOpen] = useState<CardId | null>(null);
   const [group, setGroup] = useState<LibraryGroup>("all");
-  const off = cardsOff(on);
+  const off = cardsOff(on).filter(id => !hidden?.includes(id));
   const shown = off.filter(id => group === "all" || CARD_GROUP[id] === group);
   const sizeNames = (id: CardId) => SIZES_OF[id].map(z => t(`today.sizes.${z}`)).join(" · ");
 

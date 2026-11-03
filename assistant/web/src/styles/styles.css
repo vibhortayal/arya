@@ -2393,3 +2393,19 @@ body.hunting #offlinebar { display: none !important; }
 .replychips .chip, .bubble.arya .chip.tall { background: var(--panel); color: var(--accent-text); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .replychips .chip:active, .bubble.arya .chip.tall:active { background: var(--accent); color: #fff; }
 .replychips .chip:disabled { opacity: .5; }
+
+/* From Alexa (hidden Alexa flag; owner 2026-11-03, mockup
+ * 93u3oRPsr5TeBzm9TFDwNo): unclear Alexa adds, Right or Fix per row. */
+#today-alexa .sect small { float: right; font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--secondary); }
+#today-alexa .row { align-items: flex-start; flex-wrap: wrap; row-gap: 8px; }
+#today-alexa .row .grow { min-width: 0; flex: 1 1 0; }
+#today-alexa .sub q { color: var(--label); font-style: italic; }
+#today-alexa .atag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--accent-text); background: var(--acc-soft); border-radius: 6px; padding: 1px 6px; margin-left: 4px; vertical-align: 2px; }
+#today-alexa .atag.grey { color: var(--secondary); background: var(--fill2); }
+#today-alexa .aacts { display: flex; gap: 8px; flex-basis: 100%; padding-left: 52px; }
+#today-alexa .aacts .chip.ok { background: var(--panel); color: var(--accent-text); box-shadow: inset 0 0 0 1.5px var(--accent); }
+#today-alexa .aacts .chip:disabled { opacity: .5; }
+#alexa-fix .heardline { font-size: 15px; margin: 0 0 6px; }
+#alexa-fix .sectlbl { font-size: 13px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 2px; }
+#alexa-fix .navrow { width: 100%; }
+#alexa-fix #alexa-name { margin: 6px 0 4px; }

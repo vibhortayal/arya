@@ -16,7 +16,8 @@ import { TownFeed, SimPill, outAt } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
 import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
-import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
+import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, withAlexa, type CardId, type FocusId, type Size } from "./todayCards";
+import { AlexaCard, reviewItems, type Review } from "./todayAlexa";
 import { EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
 import { fitPhoto } from "../lib/photo";
@@ -273,6 +274,8 @@ export function Today() {
   const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
   const big = (id: CardId) => sz(id) === "l";
   const [menu, setMenu] = useState<{ id: CardId; top: number } | null>(null);
+  // "From Alexa" rows; null while the hidden Alexa flag is off (404).
+  const [alexaRows, setAlexaRows] = useState<Review[] | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
 
@@ -318,6 +321,9 @@ export function Today() {
     setLoadFailed(false);
     setH(d.home);
     setAdded(new Set());
+    // Its own read, so a 404 (flag off, demo) never touches the rest.
+    if (!demo) get("/api/alexa/review").then(b => { if (live.current) setAlexaRows(reviewItems(b)); },
+      () => { if (live.current) setAlexaRows(null); });
   }, [showErr, setRing, demo]);
   // Group live sync reloads Today in place instead of remounting it (#3).
   useEffect(() => {
@@ -432,7 +438,15 @@ export function Today() {
   }
 
   /* ---- Customizable Today (todayCards.ts) ---- */
-  const on = cardsOn(cardsSaved);
+  const alexaOn = alexaRows !== null;
+  const on = withAlexa(cardsOn(cardsSaved), alexaOn, !!sizes.alexa);
+  // The first time From Alexa appears, mark it offered (today_sizes.alexa)
+  // and keep an arranged Today's order with it, so a later remove sticks.
+  useEffect(() => {
+    if (!alexaOn || sizes.alexa) return;
+    setSizes(x => ({ ...x, alexa: "m" }));
+    post("/api/settings", { today_sizes: { alexa: "m" }, ...(Array.isArray(cardsSaved) ? { today_cards: on } : {}) }).catch(() => {});
+  }, [alexaOn, sizes.alexa]); // eslint-disable-line react-hooks/exhaustive-deps
   const alertSection = (kind: "report" | "price", id: string, head: string) => {
     /* Out-of-stock reports and price tips are two kinds of row, so
      * each gets its own heading (labels audit, 2026-10-29) and is its
@@ -444,6 +458,8 @@ export function Today() {
         <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
   };
   const sections: Record<CardId, ReactNode> = {
+    alexa: <AlexaCard rows={alexaRows || []} setRows={setAlexaRows} toast={toast}
+      lists={allLists.map(l => ({ id: String(l.id), name: String(l.name) }))} />,
     low: (
           <div id="today-low">
             {low.length > 0 && (
@@ -615,6 +631,7 @@ export function Today() {
     ),
   };
   const has: Record<CardId, boolean> = {
+    alexa: !!alexaRows?.length,
     low: low.length > 0,
     lists: !!h && !noLists,
     report: alertRows.some(r => r.kind === "report"),
@@ -633,6 +650,7 @@ export function Today() {
     if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
     if (id === "checks") return checkLabel;
     if (id === "watch") return watch.map(w => w.name).slice(0, 3).join(", ");
+    if (id === "alexa") return (alexaRows || []).map(r => r.name).slice(0, 3).join(", ");
     if (id === "trip") return trip ? t("today.trip.peek", { name: trip.name, count: trip.count }) : t("today.trip.empty");
     if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
     return t(`today.cards.${id}.desc`);
@@ -722,7 +740,7 @@ export function Today() {
 
   /* Next trip, when it leads Today, sits right under the title, above the
    * town news (owner, option A, 2026-11-01); anywhere else it is a card. */
-  const tripFirst = on[0] === "trip";
+  const tripFirst = on.filter(c => c !== "alexa")[0] === "trip";
   const tcard = (id: CardId) => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>;
 
   /* The one question: once, after the first list (not on the demo). */
@@ -739,7 +757,7 @@ export function Today() {
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
       <EditTitle id="today-editbtn" editLabel={t("today.edit.editToday")} title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
-        <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
+        <TodayEdit on={on} hidden={alexaOn ? [] : ["alexa"]} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
       ) : (
         <>
           <OwnKeyAlert />
@@ -750,6 +768,8 @@ export function Today() {
             : <div className="skel" role="status" aria-label={t("common.loading")}><i /><i /><i /></div>)}
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+          {/* From Alexa leads: each row asks for a check. */}
+          {on.includes("alexa") && tcard("alexa")}
           {tripFirst && tcard("trip")}
           {town ? <TownFeed town={town} /> : null}
           {noReceipt.length > 0 && (
@@ -760,7 +780,7 @@ export function Today() {
                 <span className="chev">›</span></button>
             </div>
           )}
-          {on.map(id => (id === "trip" && tripFirst ? null : tcard(id)))}
+          {on.map(id => ((id === "trip" && tripFirst) || id === "alexa" ? null : tcard(id)))}
           <div id="today-eye">
             {eyeCount > 0 && (
               <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
