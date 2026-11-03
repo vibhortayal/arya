@@ -290,7 +290,7 @@ Tests, from the repo root:
 
 The scored reports and the Gate 0 labels and results are in
 [`docs/evals/`](docs/evals/). The companion research repo,
-`vibhortayal/meta-hackathon-research`, holds the earlier spikes.
+[`vibhortayal/meta-hackathon-research`](https://github.com/vibhortayal/meta-hackathon-research), holds the earlier spikes.
 
 ## What are the known limits?
 
