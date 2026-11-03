@@ -132,7 +132,7 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 - Receipt photo test (9 public receipts, 98 lines): Wonder 97/98, 0 price
   errors; Spark 92/98, 4 price errors. Public test receipts never entered
   my data.
-- More than 1,880 Python unit tests plus the web app's tests. Known failures on
+- More than 1,900 Python unit tests plus the web app's tests. Known failures on
   `main` are listed in `STATUS.md`.
 
 ## Responsible AI
