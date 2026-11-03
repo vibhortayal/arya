@@ -85,7 +85,7 @@ Share a haul: after a trip, share a photo of what you bought from the score scre
 Share a list as a checklist, or export or import one: the three dots on a list, Share, export or import.
 ## customize | edit customize today card cards hide reorder resize library display text size zoom spacing
 Next trip: the first card on Today. It shows your fullest list (store, item count, item names, and a store heads-up). Start shopping opens Quest on that list, the same as Start shopping on the list. Add items opens Lists and Scan a receipt opens Receipts (Add your first receipt before the first one). When every list is empty, the main button is Add items. It is a Today card: Customize your "Today" screen can move, hide or resize it.
-Customize your "Today" screen: tap Customize on Today, or touch and hold a card. Drag to reorder, tap the red minus to hide, tap the green plus to add from the card library, choose a card size, or tap Reset.
+Customize your "Today" screen: tap Customize on Today, or touch and hold a card. Drag to reorder, tap the red minus to hide, tap the green plus to add from the card library, choose a card size, or tap Reset. Most Today rows have a ✕: it hides that row for you only (Undo; deletes nothing) until something changes, like buying the item again.
 Lists, Ask and Quest have an Edit button too. Cards with nothing to say stay hidden.
 Settings, Preferences, Display changes text size, spacing, bold text, pictures and motion.
 ## bar | navigation tab bar tabs bottom menu more pin unpin move missing gone disappeared customize change
