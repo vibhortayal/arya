@@ -2,7 +2,7 @@
 
 Status: owner draft of 2026-11-03, not locked. Spoken text is the owner's, verbatim. Text in (parentheses) is a stage direction, not spoken.
 
-Groceries are a big part of life and think about what it takes today. You have many lists in your notes, your partner sends you items over text, while they are shopping at another store. So both of you bought yogurt, and neither bought the toilet paper that ran out. The milk your kids need is out of stock, so now you need to go to another store. You hold all of it in your head, and it's still never quite right.
+Grocery shopping is an integral part of our lives. Hunters and gatherers did it to survive. Think about what it takes today. You have many lists in your notes, your partner sends you items over text, while they are shopping at another store. So both of you bought yogurt, and neither bought the toilet paper that ran out. The milk your kids need is out of stock, so now you need to go to another store. You hold all of it in your head, and it's still never quite right.
 
 I built Arya for this hackathon to make the whole grocery routine easier. My goal is to put the whole chore in one place — shared lists, a guided store route, visibility into your spend and usage patterns, and out-of-stock warnings from other shoppers so your trip isn't wasted. If we could share what we see — where things are, what's good, what's cheaper — nobody starts from zero.Humans helping Humans. This is Arya.
 
