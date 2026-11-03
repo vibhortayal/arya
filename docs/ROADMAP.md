@@ -141,7 +141,8 @@ and, where it touches personal data, a privacy review first.
 - Pantry and fridge check-in by photo (outside the current spec).
 - Home Screen widgets and watch glances for the list and for use-soon items.
 - Calendar-aware reminders, such as "you host on Saturday".
-- Voice assistants (Siri, Google Assistant, Alexa) adding to the list, and
+- Voice assistants (Siri, Google Assistant) adding to the list (Alexa is built
+  but switched off, see below), and
   more connectors beyond the Muse agent and MCP.
 - Receipt import from email or a store account, so no photo is needed.
 - Warranty and return reminders read from receipts (Return Regret already
@@ -180,6 +181,12 @@ and, where it touches personal data, a privacy review first.
 - A published API with webhooks and OAuth (`docs/API.md`, "Later").
 - A real licence choice, once I decide.
 - Store permission programme for mapping, and a takedown route for stores.
+
+## Alexa skill: built, switched off, not tested on a device
+The code is merged (#515 and #516) behind the `ARYA_ALEXA` flag, which is off in
+the live app and the demo. I paused it until after the hackathon. It adds items
+by voice only and has not been tried on a real Echo. Amazon shut down the Alexa
+list API in 2024, so Arya cannot sync with Alexa's own lists.
 
 ## Use your own Meta key: unfinished, switched off, not used
 The code exists (PRs #391 and #393), it is unfinished, and it is switched off
