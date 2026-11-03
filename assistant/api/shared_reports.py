@@ -177,7 +177,7 @@ def _drop(store, item, group, only):
 
 def groups(store=None):
     """Store-and-item groups that passed the quorum, for one store or
-    all: [{store_key, item_key, kind, count, latest, mine}]. count is
+    all: [{store_key, item_key, kind, count, latest, oldest, mine}]. count is
     distinct accounts (the hash, not repeats) with a fresh open report;
     expired and found reports are already gone, so they never count.
     mine says whether this account is one of them. Nothing here names
@@ -189,8 +189,11 @@ def groups(store=None):
     for k in keys:
         by_item = {}
         for r in _fresh(doc.get(k, []), now):
-            g = by_item.setdefault(r.get("item_key"), {"who": set(), "latest": "", "kind": None})
+            g = by_item.setdefault(r.get("item_key"), {"who": set(), "latest": "", "kind": None,
+                                                       "oldest": r.get("at") or ""})
             g["who"].add(r.get("by"))
+            if (r.get("at") or "") < g["oldest"]:
+                g["oldest"] = r.get("at") or ""
             if (r.get("at") or "") > g["latest"]:
                 g["latest"], g["kind"] = r.get("at"), r.get("kind")
         for ik, g in by_item.items():
@@ -199,5 +202,5 @@ def groups(store=None):
                 continue
             out.append({"store_key": k, "item_key": ik, "kind": g["kind"],
                         "count": len(g["who"]), "latest": g["latest"],
-                        "mine": me in g["who"]})
+                        "oldest": g["oldest"], "mine": me in g["who"]})
     return out

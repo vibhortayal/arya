@@ -119,10 +119,100 @@ class TestRelevance(Base):
         with mock.patch.object(self.q, "_my_list_names", return_value={}):
             self.assertEqual(self.q.store_reports("Costco")["count"], 0)
         news = self.news_for("me@x.com")
-        self.assertEqual(set(news[0]), {"store", "item", "kind", "count", "reported_at", "shared"})
+        self.assertEqual(set(news[0]), {"store", "item", "kind", "count", "reported_at", "shared", "id"})
+        self.assertEqual(news[0]["id"], "costco|oat milk")      # store and item keys, no account
         raw = self.sr._load()["costco"][0]
         self.assertEqual(set(raw), {"store_key", "item_key", "kind", "at", "by"})
         self.assertNotIn("@", raw["by"])
+
+
+class TestHide(Base):
+    """✕ on a store alert (owner, 2026-11-03): hidden for this account
+    only, while that report is open; Undo brings it back."""
+    def setUp(self):
+        super().setUp()
+        for u in ("a@x.com", "b@x.com", "c@x.com"):
+            self.report(u)
+        self.id = "costco|oat milk"
+
+    def hide(self, user, hide=True):
+        self.as_(user)
+        return self.q.hide_news(self.id, hide)
+
+    def fresh_window(self, user):
+        # Past the 12-hour window, so only the hide decides what shows.
+        self.as_(user)
+        self.state._save(self.q.NEWS_SEEN, {})
+
+    def test_hidden_for_me_only(self):
+        self.assertTrue(self.hide("me@x.com"))
+        self.assertEqual(self.news_for("me@x.com"), [])
+        self.assertEqual(len(self.news_for("you@x.com")), 1)        # other shoppers still see it
+        self.as_("me@x.com")
+        self.assertEqual(len(self.sr._load()["costco"]), 3)          # the report itself is untouched
+
+    def test_stays_hidden_as_more_shoppers_report(self):
+        self.hide("me@x.com")
+        import datetime
+        with mock.patch.object(self.sr, "_now", return_value=self.sr._now() + datetime.timedelta(seconds=5)):
+            self.report("d@x.com")
+        self.fresh_window("me@x.com")
+        self.assertEqual(self.news_for("me@x.com"), [])
+
+    def test_undo_brings_it_back(self):
+        self.hide("me@x.com")
+        self.assertTrue(self.hide("me@x.com", hide=False))
+        self.fresh_window("me@x.com")
+        self.assertEqual(len(self.news_for("me@x.com")), 1)
+
+    def test_forgotten_when_the_report_clears(self):
+        self.hide("me@x.com")
+        self.as_("me@x.com")
+        self.sr.found("Costco", "Oat Milk", None)
+        self.news_for("me@x.com")                                    # cleared: the hide is dropped
+        self.assertEqual(self.state._load(self.q.NEWS_HIDDEN, {}), {})
+        import datetime
+        with mock.patch.object(self.sr, "_now", return_value=self.sr._now() + datetime.timedelta(seconds=5)):
+            for u in ("a@x.com", "b@x.com", "c@x.com"):
+                self.report(u)
+        self.assertEqual(len(self.news_for("me@x.com")), 1)          # a fresh report shows again
+
+    def test_a_report_reopened_after_a_quiet_clear_shows_again(self):
+        # The report cleared and came back while I never opened Today:
+        # every entry is newer than my hide, so it shows.
+        import datetime
+        self.hide("me@x.com")
+        later = self.sr._now() + datetime.timedelta(days=4)
+        with mock.patch.object(self.sr, "_now", return_value=later):
+            for u in ("a@x.com", "b@x.com", "c@x.com"):
+                self.report(u)
+            self.fresh_window("me@x.com")
+            self.assertEqual(len(self.news_for("me@x.com")), 1)
+
+    def test_only_an_open_report_can_be_hidden(self):
+        self.as_("me@x.com")
+        self.assertFalse(self.q.hide_news("costco|eggs"))
+        self.assertEqual(self.state._load(self.q.NEWS_HIDDEN, {}), {})
+
+    def test_routes(self):
+        from api import main, deps
+        from tests.test_hunt_ops import FakeClient
+        deps.MetaClient = FakeClient
+        deps._login_fails.clear()
+        c = TestClient(main.app)
+        r = c.post("/auth/setup", json={"username": "owner@example.com", "password": "long-password"})
+        self.assertEqual(r.status_code, 200, r.text)
+        for u in ("a@x.com", "b@x.com", "c@x.com"):     # importing the app moved the data dir
+            self.report(u)
+        r = c.post("/api/quest/news/hide", json={"id": self.id})
+        self.assertEqual(r.status_code, 200, r.text)
+        f = os.path.join(self.state.user_dir("owner@example.com"), self.q.NEWS_HIDDEN)
+        import json
+        self.assertIn(self.id, json.load(open(f)))
+        self.assertEqual(c.post("/api/quest/news/unhide", json={"id": self.id}).status_code, 200)
+        self.assertEqual(json.load(open(f)), {})
+        self.assertEqual(c.post("/api/quest/news/hide", json={"id": "costco|eggs"}).status_code, 404)
+        self.assertEqual(c.post("/api/quest/news/hide", json={}).status_code, 422)
 
 
 class TestLifetime(Base):

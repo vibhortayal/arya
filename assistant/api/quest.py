@@ -912,6 +912,45 @@ def store_reports(store_name):
 
 NEWS_SEEN = "news_seen.json"
 NEWS_SHOW_H = 12      # an alert shows for 12 hours, then waits for a newer report
+NEWS_HIDDEN = "news_hidden.json"
+NEWS_HIDDEN_MAX = 200
+
+
+def _news_hidden(open_groups):
+    """This account's hidden store alerts ({store_key|item_key: hidden
+    at}), keeping only those whose report is still open (owner,
+    2026-11-03): a hide lasts while that report stays open, however
+    many shoppers add to it, and is forgotten once it clears (3 days,
+    or someone found the item). A report whose every entry is newer
+    than the hide was opened again after a clear, so it shows again."""
+    oldest = {g["store_key"] + "|" + g["item_key"]: g.get("oldest") or "" for g in open_groups}
+    hidden = state._load(NEWS_HIDDEN, {})
+    keep = {k: at for k, at in hidden.items() if k in oldest and oldest[k] <= at}
+    if keep != hidden:
+        state._save(NEWS_HIDDEN, keep)
+    return keep
+
+
+def hide_news(news_id, hide=True):
+    """Hide one store alert for this account only, or (hide=False)
+    bring it back (Undo). Other shoppers still see it, and the list
+    does not change. Only an open report can be hidden. Returns False
+    when there is no such open report."""
+    from api import shared_reports
+    news_id = str(news_id or "")
+    with state.file_lock(NEWS_HIDDEN):
+        groups = shared_reports.groups()
+        hidden = _news_hidden(groups)
+        if hide:
+            if news_id not in {g["store_key"] + "|" + g["item_key"] for g in groups}:
+                return False
+            hidden[news_id] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            if len(hidden) > NEWS_HIDDEN_MAX:
+                hidden = dict(sorted(hidden.items(), key=lambda kv: kv[1])[-NEWS_HIDDEN_MAX:])
+        else:
+            hidden.pop(news_id, None)
+        state._save(NEWS_HIDDEN, hidden)
+    return True
 
 
 def _match_name(name):
@@ -976,7 +1015,10 @@ def store_news(limit=20):
     - its own reports never alert it;
     - an alert shows for NEWS_SHOW_H hours, then stays quiet until a
       newer report for that store and item arrives;
-    - feed only: nothing here sends a push or an email.
+    - feed only: nothing here sends a push or an email;
+    - an alert the household hid (✕ on Today) stays out while that
+      report is open (_news_hidden).
+    Each alert carries an id (store key | item key) for hiding.
     Newest first."""
     from api import shared_reports
     wanted = _my_list_names()
@@ -987,13 +1029,17 @@ def store_news(limit=20):
     for m in _my_store_names():
         my_stores.setdefault(store_key(m), m)
     found = []
-    for g in shared_reports.groups():
+    groups = shared_reports.groups()
+    with state.file_lock(NEWS_HIDDEN):
+        hidden = _news_hidden(groups)
+    for g in groups:
         item = wanted.get(g["item_key"])
         store = my_stores.get(g["store_key"])
-        if item and store:
+        key = g["store_key"] + "|" + g["item_key"]
+        if item and store and key not in hidden:
             found.append({"store": store, "item": item, "kind": g["kind"],
                           "count": g["count"], "reported_at": g["latest"],
-                          "shared": True, "_key": g["store_key"] + "|" + g["item_key"]})
+                          "shared": True, "id": key, "_key": key})
     if not found:
         return {"news": []}
     now = datetime.now(timezone.utc)

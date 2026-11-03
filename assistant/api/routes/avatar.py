@@ -3,6 +3,7 @@ import os
 
 from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
@@ -109,6 +110,28 @@ def quest_news():
     """Store news: stops people flagged as not here, newest first."""
     from api import quest
     return quest.store_news()
+
+
+class NewsHide(BaseModel):
+    id: str = Field(..., min_length=3, max_length=200)
+
+
+@router.post("/api/quest/news/hide")
+def quest_news_hide(body: NewsHide):
+    """Hide one store alert for this account only (✕ on Today); other
+    shoppers still see it. Forgotten when the report clears."""
+    from api import quest
+    if not quest.hide_news(body.id):
+        raise HTTPException(404, "That alert has already cleared.")
+    return {"ok": True}
+
+
+@router.post("/api/quest/news/unhide")
+def quest_news_unhide(body: NewsHide):
+    """Undo a hide."""
+    from api import quest
+    quest.hide_news(body.id, hide=False)
+    return {"ok": True}
 
 
 @router.get("/api/quest/profile")
