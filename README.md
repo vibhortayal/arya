@@ -3,7 +3,7 @@
 </p>
 <!-- Badge numbers: the Doc maintainer updates "python tests" from the STATUS.md Python test count and "receipt arithmetic" from the "My corpus" line under Measured results whenever either changes; "people in scans" follows the Map my store row. -->
 <p align="center">
-  <img src="https://img.shields.io/badge/python%20tests-1%2C842%20passing-1a7f37" alt="Python tests: 1,842 passing">
+  <img src="https://img.shields.io/badge/python%20tests-1%2C880%20passing-1a7f37" alt="Python tests: 1,880 passing">
   <img src="https://img.shields.io/badge/receipt%20arithmetic-114%2F114%20passing-2a78d6" alt="Receipt arithmetic check: 114 of 114 receipts passing">
   <img src="https://img.shields.io/badge/people%20in%20scans-pixelated%20before%20saving-8250df" alt="People in store scans are pixelated before anything is saved">
 </p>
