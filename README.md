@@ -65,9 +65,9 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 ### What is real, and what is not?
 
-| Real | Simulated | Not connected |
-|---|---|---|
-| The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. | Store accounts, retailer data, ordering and payment. |
+| Real | Simulated |
+|---|---|
+| The live app. Receipts read by Meta models and checked in code. The Lists API and the Muse connector. | The demo household and Demo Town: invented stores and receipts, labelled as simulated. The demo reads a receipt live but keeps nothing. |
 
 Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
