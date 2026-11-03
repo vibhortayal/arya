@@ -163,5 +163,5 @@ Everything here is built and in the code. Ideas that are not built are on the
   skill that adds items to your Arya list by voice. The code is merged (#515,
   #516) behind the `ARYA_ALEXA` flag, which is off. I paused it until after the
   hackathon, and it has not been tried on a real Echo. It is voice add only:
-  Amazon shut down the Alexa list API in 2024, so Arya cannot sync with Alexa's
+  Amazon has retired its Alexa list API, so Arya cannot sync with Alexa's
   own lists.

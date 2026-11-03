@@ -185,8 +185,8 @@ and, where it touches personal data, a privacy review first.
 ## Alexa skill: built, switched off, not tested on a device
 The code is merged (#515 and #516) behind the `ARYA_ALEXA` flag, which is off in
 the live app and the demo. I paused it until after the hackathon. It adds items
-by voice only and has not been tried on a real Echo. Amazon shut down the Alexa
-list API in 2024, so Arya cannot sync with Alexa's own lists.
+by voice only and has not been tried on a real Echo. Amazon has retired its Alexa
+list API, so Arya cannot sync with Alexa's own lists.
 
 ## Use your own Meta key: unfinished, switched off, not used
 The code exists (PRs #391 and #393), it is unfinished, and it is switched off
