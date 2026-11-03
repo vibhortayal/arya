@@ -231,7 +231,9 @@ Deploy by `git pull` on the VM only. Never rsync --delete over the VM
 The Hard rules and Arya rules above apply to every thread.
 - Builders and designers check `docs/DECISIONS.md` before building or mocking up, and
   add an entry when the owner decides something (date, decision, PR or issue, thread).
-- No freeze dates. Only the Nov 4 submission date stands.
+- Freeze dates: code and UI freeze at noon ET on Nov 3 (bug fixes only after);
+  deploy freeze from Nov 4, 6PM ET until the owner lifts it; submission Nov 4, 9PM ET.
+  See `docs/DECISIONS.md`.
 - Be an advisor: give pros, cons and a recommendation on every decision, and say
   so when you disagree.
 - Words: "Tour" = the dark-screen bubbles, "Arya guide" = the swipeable cards,
