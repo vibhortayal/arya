@@ -52,7 +52,7 @@ def read_expiry_photo(image_bytes, client, media_type="image/jpeg", today=None):
     data_uri = f"data:{media_type};base64," + base64.b64encode(image_bytes).decode()
     messages = [{"role": "system", "content": load_prompt()},
                 {"role": "user", "content": [
-                    {"type": "text", "text": "Read the date on this package."},
+                    {"type": "text", "text": "Today is %s. Read the date on this package." % today.isoformat()},
                     {"type": "image_url", "image_url": {"url": data_uri}}]}]
     out, _usage, _cost = client.chat(messages, mode="standard", personal=True)
     try:
@@ -65,9 +65,45 @@ def read_expiry_photo(image_bytes, client, media_type="image/jpeg", today=None):
     return normalize_read(dec, today)
 
 
+_MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+
+
+def raw_has_year(raw):
+    """Does the printed text carry a year? "BB NOV 4" does not; "03 11 26",
+    "NOV 04 26" and "2026/11/03" do. A time (07:00) and lot codes
+    (06-691) printed beside the date are not years, so they are dropped
+    first (Tester, #559)."""
+    r = str(raw or "").lower()
+    r = re.sub(r"\b\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?", " ", r)   # times
+    r = re.sub(r"\b\d+\s*-\s*\d{3,}\b", " ", r)                  # lot codes
+    r = re.sub(r"\b\d{1,2}\s+(?!20\d\d\b)\d{3,}\b", " ", r)       # "06 691"
+    if re.search(r"\b20\d\d\b", r):
+        return True
+    if any(m in r for m in _MONTHS):
+        # month day YEAR or day month YEAR, with a two-digit year
+        return bool(re.search(r"[a-z]{3,}\.?\s*\d{1,2}[\s,/.'\-]+\d{2}\b", r)
+                    or re.search(r"\b\d{1,2}\s*[a-z]{3,}\.?[\s,/.'\-]+\d{2}\b", r))
+    return len(re.findall(r"\d+", r)) >= 3
+
+
+def _next_occurrence(d, today):
+    """The month/day of `d` in the year that lands on or after 30 days
+    before today (a pack printed with no year)."""
+    for y in (today.year - 1, today.year, today.year + 1):
+        try:
+            c = d.replace(year=y)
+        except ValueError:       # Feb 29
+            continue
+        if c >= today - timedelta(days=30):
+            return c
+    return d
+
+
 def normalize_read(dec, today):
     kind = dec.get("kind") if dec.get("kind") in KINDS else "unknown"
     d = parse_iso(dec.get("date"))
+    if d is not None and not raw_has_year(dec.get("raw")):
+        d = _next_occurrence(d, today)   # the model may pick the wrong year
     try:
         conf = max(0.0, min(1.0, float(dec.get("confidence") or 0)))
     except (TypeError, ValueError):
