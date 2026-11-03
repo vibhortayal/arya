@@ -18,6 +18,17 @@
   <a href="#documentation-map"><strong>All the docs</strong></a>
 </p>
 
+<p align="center"><strong>Contents:</strong>
+  <a href="#what-is-arya">What is Arya</a> ·
+  <a href="#live-demo">Live demo</a> ·
+  <a href="#try-it-in-one-minute">Try it in one minute</a> ·
+  <a href="#verify-it-without-signing-in">Verify it</a> ·
+  <a href="#how-it-fits-together">How it fits together</a> ·
+  <a href="#run-it-yourself">Run it yourself</a> ·
+  <a href="#measured-results">Measured results</a> ·
+  <a href="#what-are-the-known-limits">Known limits</a>
+</p>
+
 ## What is Arya
 
 **Groceries are a big part of life, one of the largest expenses in the budget,** and think about what it takes today.
