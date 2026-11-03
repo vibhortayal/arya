@@ -43,3 +43,24 @@ html { color-scheme: light; }
 .card:hover { border-color: var(--acc); }
 .footer { border-top: 1px solid var(--line); }
 ::selection { background: rgba(194, 65, 12, 0.28); }
+
+/* Docs site UI pass (2026-11-02): readable tables on a phone, line length, light code blocks,
+   home page buttons and screenshots, card text colours. */
+@media (max-width: 600px) {
+  .markdown th, .markdown td { min-width: 9rem; }
+}
+.theme-doc-markdown { max-width: 46rem; }
+.theme-doc-markdown table, .theme-doc-markdown img, .theme-doc-markdown pre { max-width: none; }
+.theme-code-block .prism-code { background-color: var(--fill) !important; }
+.theme-code-block { border: 1px solid var(--line); }
+.card h3 { color: var(--acc); }
+.card p { color: var(--ink2); }
+.home-buttons { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0 1.5rem; }
+.home-columns { display: grid; gap: 1.5rem; align-items: start; grid-template-columns: minmax(0, 1fr); }
+.home-columns > * { min-width: 0; }
+.home-shots { display: flex; gap: 0.75rem; }
+.home-shots img { flex: 1 1 0; min-width: 0; width: 50%; max-width: 200px; height: auto; border-radius: 14px; border: 1px solid var(--line); }
+@media (min-width: 997px) {
+  .home-columns { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .home-shots { justify-content: flex-end; }
+}

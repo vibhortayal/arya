@@ -134,6 +134,10 @@ function copyAsset(rel, withBase = true) {
   return `${withBase ? BASE : '/'}repo/${rel}`;
 }
 
+// Always-on assets: the home page screenshots, the social card and the icons.
+for (const rel of ['docs/images/today.png', 'docs/images/lists.png', 'docs/images/social-preview.png',
+  'assistant/pwa/icons/favicon-48.png', 'assistant/pwa/icons/icon-192.png']) copyAsset(rel);
+
 function rewrite(target, fromSrc, withBase = true) {
   if (/^([a-z][a-z0-9+.-]*:|#|\/\/|mailto:)/i.test(target)) return target;
   const [p, hash = ''] = target.split('#');
