@@ -22,7 +22,7 @@ camera scan maps it for every shopper after you.
    Muse chat). Pick the store; the list is sorted for it from your
    receipts.
 2. **Find.** Shoppers' photos where a store section is mapped (people
-   blurred by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
+   pixelated by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
    Muse Spark verifies.
 3. **Grab.** +10 per grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.

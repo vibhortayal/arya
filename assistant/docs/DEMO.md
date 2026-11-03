@@ -18,7 +18,7 @@ The video follows Path A beats; the narration is Path B safe.
    voice or by a photo of a paper list. Start shopping: the quest walks you item
    to item; tap Got it. At a stop, Find it for me (SAM 3.1 finds the shelf,
    Spark checks it). Empty shelf: Not here? warns the next shopper. At checkout,
-   snap the receipt: Spark reads it first (see the model map) and Arya checks the math.
+   snap the receipt: Spark reads it first (see the [model map](../../JUDGES.md#which-model-does-which-job)) and Arya checks the math.
 4. **At home.** Today shows Use soon (the spinach). Ask Arya: "We finished the
    yogurt." The list updates. Say: "The agent answers from the model. It does not
    invent numbers."

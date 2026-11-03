@@ -38,7 +38,7 @@ first.
 
 The view is a viewport, not the game. One view, picked by the store:
 
-- **Mapped store:** shoppers' aisle photos, people blurred by SAM.
+- **Mapped store:** shoppers' aisle photos, people pixelated by SAM.
   No store ships with photos (the old Trader Joe's walk was removed
   2026-10-29); every map is earned by shoppers' captures.
 - **Any other store:** shelf cards in walking order. Playable, never
