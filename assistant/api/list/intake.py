@@ -379,9 +379,34 @@ def _link(key, tracked):
     # A pack size is not part of the name: "milk" is half of "whole
     # milk 1 gal" and "avocado" all of "avocados 4 ct" (retest
     # 2026-10-31 #6: "mlik" and "3 avocados" made new rows).
+    # The typed name must also end on the tracked name's head word
+    # (qualifiers like "salted" aside): "milk" is "Whole Milk", but
+    # "butter" is not "Butter Croissants" (owner, 2026-11-03: a photo
+    # list's "butter" came back as a pastry).
+    last = key.split()[-1]
     hits = {item_id for item_id, k in tracked
-            if (core := _core(k)) and words <= core and len(words) * 2 >= len(core)}
+            if (core := _core(k)) and words <= core and len(words) * 2 >= len(core)
+            and _head(k) == last}
     return hits.pop() if len(hits) == 1 else None
+
+
+# Words that can trail a product's name without changing what it is.
+_TRAILING_QUALIFIERS = {"organic", "salted", "unsalted", "fresh", "frozen", "large", "small",
+                        "medium", "plain", "original", "natural", "raw", "sliced", "shredded",
+                        "unsweetened", "sweetened", "lowfat", "nonfat", "reduced", "fat",
+                        "free", "low", "sodium", "regular"}
+
+
+def _head(key):
+    """The word a tracked name is about: its last word once the pack
+    size and trailing qualifiers are left off ("whole milk 1 gal" ->
+    "milk", "butter salted" -> "butter", "butter croissant" ->
+    "croissant")."""
+    words = [w for w in key.split() if w not in _SIZE_WORDS
+             and not re.fullmatch(r"\d+(\.\d+)?[a-z]{0,3}", w)]
+    while len(words) > 1 and words[-1] in _TRAILING_QUALIFIERS:
+        words.pop()
+    return words[-1] if words else ""
 
 
 _SIZE_WORDS = {"oz", "fl", "lb", "lbs", "ct", "count", "gal", "qt", "pt", "g", "kg", "ml", "l",

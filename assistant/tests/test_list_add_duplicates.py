@@ -40,6 +40,17 @@ class TestExistingItemId(unittest.TestCase):
         long_ = [{"item_id": "x", "canonical_name": "Chocolate Almond Milk", "aliases": []}]
         self.assertIsNone(existing_item_id("milk", long_, {}))
 
+    def test_a_bare_word_is_not_a_different_product(self):
+        # Owner 2026-11-03: a photo list's "butter" came back as "Butter Croissants".
+        hist = [{"item_id": "c", "canonical_name": "Butter Croissants", "aliases": []},
+                {"item_id": "d", "canonical_name": "Dish Soap - Blueland", "aliases": []},
+                {"item_id": "s", "canonical_name": "Butter Salted 4 ct", "aliases": []},
+                {"item_id": "m", "canonical_name": "Whole Milk 1 gal", "aliases": []}]
+        self.assertIsNone(existing_item_id("butter", hist[:1], {}))
+        self.assertIsNone(existing_item_id("dish soap", hist[1:2], {}))
+        self.assertEqual(existing_item_id("butter", hist[2:3], {}), "s")   # qualifier, same product
+        self.assertEqual(existing_item_id("milk", hist[3:], {}), "m")      # head word, as documented
+
     def test_one_slip_typos_link(self):
         self.assertEqual(existing_item_id("mlik", ENTRIES, {}), "costco-2001")
         self.assertEqual(existing_item_id("Whole Mlik", ENTRIES, {}), "costco-2001")
