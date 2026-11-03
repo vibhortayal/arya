@@ -42,7 +42,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - SAM 3.1 boxes shelf items and pixelates the people it detects before any frame is kept; if that step fails the frame is discarded. Detection is not perfect and has not been scored. [`shelfscan.py`](assistant/api/shelfscan.py)
 - Muse can use Arya: any MCP-capable assistant connects to Arya's MCP address, and Muse is the reference client. I tested it end to end on my own Muse on 2026-11-02: I asked the Muse agent to connect, pasted the code into the secure credentials vault Muse opened (never the chat), and Muse then read my list, added items and filed receipts through six tools. [Agent connector](assistant/docs/AGENT-CONNECTOR.md), code in [`mcp.py`](assistant/api/mcp.py)
 - Available but not used: Muse Glimmer (open weights, self-hosted) and the Spark Contributor tier (cheaper, different data terms). Reasons: [`docs/MODELS.md`](docs/MODELS.md).
-- Built with Muse Code: it wrote the first version of the engine; I built the rest with Claude. Details: README, "How this was built".
+- Built with Muse Code: it wrote the first version of the engine. The Meta Muse agent on my VM (Muse Spark, which used Muse Wonder) coded in parallel with Claude, and the 253 commits named "Spark" are its work. Details: [README, "How this was built"](README.md#how-this-was-built).
 
 ## How is it built, and how well? (Technical depth, 20%)
 
@@ -61,7 +61,7 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 - The same loop as the video plays live: Today, Lists, Ask ("We finished the Greek yogurt"), Start shopping. [`README.md`](README.md#try-it-in-one-minute)
 - Steps that need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, receipt snap.
 - What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
-- To go past the demo, run it locally with your own key ([Run it yourself](docs/RUN-IT-YOURSELF.md), or the [setup in the README](README.md#run-it-yourself)), or tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and reach out to me to get approved: [support@teamnightshift.org](mailto:support@teamnightshift.org), or [LinkedIn](https://www.linkedin.com/in/vibhortayal).
+- To go past the demo, run it locally with your own key ([Run it yourself](docs/RUN-IT-YOURSELF.md), which includes a prompt for an AI agent to [set it up for you](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up), or the [setup in the README](README.md#run-it-yourself)), or tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and reach out to me to get approved: [support@teamnightshift.org](mailto:support@teamnightshift.org), or [LinkedIn](https://www.linkedin.com/in/vibhortayal).
 
 ## Which model does which job?
 

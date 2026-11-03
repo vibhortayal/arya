@@ -11,11 +11,11 @@ describe("store alerts", () => {
     const rows = storeAlerts(h, [{ store: "Costco", item: "eggs", count: 2, reported_at: "2026-10-28T10:00" }]);
     expect(rows).toHaveLength(1);
     expect(rows[0].name).toContain("eggs: out at Costco");
-    expect(rows[0].sub).toContain("2 reports");
+    expect(rows[0].sub).toContain("2 shoppers say not here");
     expect(rows[0].sub).toContain("on your list");
     // not on the list: no mark
     const off = storeAlerts({ list: { items: [] } }, [{ store: "Costco", item: "eggs", count: 1, reported_at: "2026-10-28" }]);
-    expect(off[0].sub).toContain("1 report ");
+    expect(off[0].sub).toContain("1 shopper says not here ");
     expect(off[0].sub).not.toContain("on your list");
   });
 

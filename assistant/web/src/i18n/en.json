@@ -2519,8 +2519,8 @@
     "nothingIsSavedUntilYou": "Nothing is saved until you tap. Arya keeps the date, not the photo.",
     "trackIt": "Track it",
     "alertNotThere": "{{item}}: out at {{store}}",
-    "alertReports_one": "{{count}} report · {{date}}",
-    "alertReports_other": "{{count}} reports · {{date}}",
+    "alertReports_one": "{{count}} shopper says not here · {{date}}",
+    "alertReports_other": "{{count}} shoppers say not here · {{date}}",
     "alertOnYourList": " · it's on your list",
     "alertPrice": "{{name}}: cheaper at {{store}}",
     "alertUsuallyPay": "{{price}} there, {{usual}} at {{store}}",
@@ -3277,7 +3277,7 @@
         "kicker": "Store news",
         "title": "Know what's in stock before you go",
         "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. See an out of stock item in the store, report it and help the next shopper. Store news is only accurate if shoppers report what's happening in the store.",
-        "s1": "Open Today to see what Arya shoppers report at your stores.",
+        "s1": "Open Today to see what Arya shoppers report at your stores. An out-of-stock alert shows once 3 or more shoppers report an item on your list.",
         "s2": "See an empty shelf? Tap Out of stock to let other shoppers know."
       },
       "receipts": {
@@ -3854,7 +3854,7 @@
         "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
         "n1": "A heads-up also shows at the top of a list.",
         "cta": "Open Today",
-        "n2": "Store news needs reports from other Arya shoppers. It fills up as more shoppers near you use Arya."
+        "n2": "Store news needs reports from other Arya shoppers. Another shopper's \"Not here?\" shows only when 3 or more shoppers report the same item at a store you use, and only if it is on your list. Your own reports never alert you. A report clears after 3 days, or sooner when someone finds the item."
       },
       "share": {
         "title": "Share with your household",

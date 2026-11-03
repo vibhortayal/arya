@@ -1,4 +1,4 @@
-# STATUS — where Arya stands (2026-11-01)
+# STATUS — where Arya stands (2026-11-03)
 
 Live: https://arya.teamnightshift.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions

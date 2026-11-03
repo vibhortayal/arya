@@ -112,7 +112,7 @@ class TestEditImage(unittest.TestCase):
 
 
 class TestNewsAndSamples(unittest.TestCase):
-    def test_store_news_groups_open_reports(self):
+    def test_store_news_never_shows_my_own_reports(self):
         os.environ["ARYA_DATA_DIR"] = tempfile.mkdtemp()
         from api import quest, state
         s = quest._store()
@@ -123,9 +123,9 @@ class TestNewsAndSamples(unittest.TestCase):
             dict(base, id="3", store="Costco", item="Eggs", item_group="eggs", reported_at="2026-10-26T10:00"),
             dict(base, id="4", store="Costco", item="Gone", item_group="gone", reported_at="2026-10-29T10:00", state="resolved")]
         quest._save_store(s)
-        news = quest.store_news()["news"]
-        self.assertEqual([n["item"] for n in news], ["Oat milk", "Eggs"])
-        self.assertEqual(news[0]["count"], 2)
+        # Owner, 2026-11-03: your own reports never alert you; store
+        # news is other shoppers' reports (tests/test_shared_reports.py).
+        self.assertEqual(quest.store_news()["news"], [])
 
     def test_samples_are_labelled(self):
         from tests import frontend

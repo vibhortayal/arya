@@ -52,7 +52,7 @@ on the view.
 Add is one surface: a text field (type or paste), a mic (Voice
 Transcribe), a camera (a list photo becomes items; a receipt photo is
 offered as a receipt), and Muse chat through the connector. Receipts
-enter by image only. Items typed while planning a hunt join the list.
+enter by photo or PDF. Items typed while planning a hunt join the list.
 
 ## Simplicity budget
 

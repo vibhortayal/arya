@@ -172,7 +172,7 @@ loop on a phone. The window should be about 390 px wide.
 
 ## What is in it
 
-The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). Two things a judge cannot get elsewhere:
+The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). A few things a judge cannot get elsewhere:
 
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
@@ -251,8 +251,10 @@ committed. Do not put a key in a file that is tracked. Open
 http://localhost:8080. On the first visit, create your account (a username
 and password) to read your own receipts, or close the sheet and tap "Try it now"
 for the demo household. Without a key the app and the demo open, but anything that calls a
-Meta model says it cannot reach Meta. Making a key, settings, resetting, the no-Docker route
+Meta model says "This copy of Arya has no Meta key, so AI features are off". Making a key, settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
+If you use an AI coding agent, there is a prompt that sets it up for you:
+[Let your AI agent set it up](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up).
 To try every feature step by step on your copy, follow
 [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md).
 
@@ -288,7 +290,7 @@ Tests, from the repo root:
 
 The scored reports and the Gate 0 labels and results are in
 [`docs/evals/`](docs/evals/). The companion research repo,
-`vibhortayal/meta-hackathon-research`, holds the earlier spikes.
+[`vibhortayal/meta-hackathon-research`](https://github.com/vibhortayal/meta-hackathon-research), holds the earlier spikes.
 
 ## What are the known limits?
 
@@ -340,8 +342,12 @@ The first commit here is Oct 27, 15:13 ET, nothing in this repo is older, and
 separate research repo start on Oct 26. The engine (decode, dictionary, ledger, patterns, the first phone app)
 landed in four commits between 15:31 and 15:38. Muse Code, running Muse Wonder, wrote that
 engine with me (my account); git lists the commits under the author name "Spark". The dated table
-is on the [build page](docs/WHAT-WE-BUILT.md). The session logs
-in `assistant/loops/` record the rest.
+is on the [build page](docs/WHAT-WE-BUILT.md).
+
+Other commits are named "Spark" too: 253 of the 1,333 in all, next to 556 named
+Claude and 524 under my own name. They come from the Meta Muse agent running on
+my VM. It ran Muse Spark and used Muse Wonder through the agent, and it coded in
+parallel with Claude. The session logs in `assistant/loops/` record the rest.
 
 
 **Build tools.** I used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, running Muse Wonder, to write the first version of the engine on Oct 27. I then built the rest of the app with Claude, which I know well. Muse Code is not part of the shipped app.

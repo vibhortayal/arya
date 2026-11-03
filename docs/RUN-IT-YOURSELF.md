@@ -10,7 +10,7 @@ now".
 - **A Meta Model API key** for the AI parts. Make one at dev.meta.ai (API keys,
   then Create API key); it starts with `LLM_`. It is optional: without it the
   app and the demo household open and work, but anything that reads a photo,
-  answers in Ask or listens to your voice says it cannot reach Meta.
+  answers in Ask or listens to your voice says "This copy of Arya has no Meta key, so AI features are off".
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
   and microphone steps need a phone, and a phone browser only allows the camera
   on https. On a phone reaching your computer over plain `http://` on your
@@ -97,8 +97,13 @@ Next, a step-by-step tour of every feature on your copy:
 
 ## Can I run it without Docker?
 This route was followed step by step from a fresh clone by the Tester, without a
-key (the receipt step was not run). The Docker route above is not yet verified
-end to end on a clean machine.
+key (the receipt step was not run). The Docker route above was run once from a
+fresh clone on a Linux server, with cached build layers, through direct requests
+instead of a browser, and without a real key: start, `/health`, account, demo,
+the no-key Ask error, editing `.env` and the port setting all worked. Reading a
+receipt, photos, voice and a working Ask answer need a real key and were not
+run on either route. The Docker route has not had a cold build, a browser run or
+a run on a Mac or Windows laptop.
 
 You need Python 3.12 or newer (3.13 worked) and Node 22. From the repository root:
 
@@ -109,10 +114,48 @@ cd assistant/web && npm ci && npm run build && cd ..
 MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
 ```
 
-Open http://localhost:8000. Without a key, Ask shows the "no Meta key" message;
+In `MODEL_API_KEY=<your key>`, put your key in place of `<your key>`, or nothing
+at all for no-key mode (`MODEL_API_KEY=`). Pasting the angle brackets as they
+are fails in bash. The snippet leaves your shell in `assistant/`.
+
+Open http://localhost:8000; http://localhost:8000/health answers `ok` when the
+server is up. These steps were tested on Linux only; macOS and Windows have not
+been tried. Without a key, Ask shows the "no Meta key" message;
 on this route its last words, "docker compose up -d", do not apply: set
-`MODEL_API_KEY` and start uvicorn again. For front-end work, `npm run dev` in
+`MODEL_API_KEY` and start uvicorn again. To open it from a phone at
+`http://<your computer's IP>:8000`, make uvicorn listen on your network address (its
+`--host` option) and set `ARYA_INSECURE_COOKIE=1` before it; without that, sign-in may not stick
+over plain http. I have not tested this on a phone. For front-end work, `npm run dev` in
 `assistant/web` starts Vite.
+
+## Let your AI agent set it up
+If you use a coding agent that can run commands on your computer, paste this
+prompt to it. It uses the no-Docker route, which the Tester followed from a
+fresh clone (without a key). Read the prompt first: it asks the agent to run
+commands on your machine.
+
+```text
+Set up Arya on my computer so I can try it. Repository:
+https://github.com/vibhortayal/arya
+
+1. Clone the repository into a new, empty folder, cd into it, and open
+   docs/RUN-IT-YOURSELF.md.
+2. Follow the section "Can I run it without Docker?" step by step. If
+   something goes wrong, troubleshoot it as you normally would to get Arya
+   running, and use "What if something goes wrong?" in the guide. Do not
+   edit any file that git tracks; the folders the guide's commands create
+   (.venv, node_modules, the web build, the data folder) are expected.
+3. Use the no-key demo mode: run the uvicorn command with MODEL_API_KEY= left
+   empty (nothing after the equals sign). Do not ask me for a
+   key, a password or any secret, and do not paste or print one.
+4. When the server is up, tell me the local address (http://localhost:8000),
+   that /health answers "ok", and the sign-in steps: tap Close on the "Create
+   your account" sheet, then tap "Try it now" for the demo household. Tell me
+   to make the browser about 390 px wide.
+```
+
+Without a key, anything that reads a photo or answers in Ask says "This copy of
+Arya has no Meta key, so AI features are off". That is expected.
 
 ## How do I run the tests?
 ```bash
