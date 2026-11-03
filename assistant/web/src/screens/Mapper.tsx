@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useNav } from "../app/nav";
 import { clearOnSignOut } from "../app/session";
 import { useToast } from "../ui/Toast";
@@ -10,6 +10,8 @@ import { Trans, useTranslation } from "../i18n";
 import { hereAt, judge, quietGeo, type Here } from "../lib/geo";
 import { storeModel, useStoreData } from "../lib/stores";
 import { SceneView } from "../ui/Scene";
+
+const MapperWorld = lazy(() => import("./MapperWorld"));
 
 /* Port of pwa/index.html #view-mapper and pwa/mapper.js (renderMapper,
  * paintMapper, focus toggle, add aisle, teach-walk start, open segment).
@@ -160,6 +162,10 @@ export function Mapper() {
   const tags = (m?: Mine) => [m?.aisles ? t("mapper.aislesMapped", { count: m.aisles }) : "",
     m?.scene === "cloud" ? t("storesMine.scene.cloud") : ""].filter(Boolean);
   const model = store ? storeModel(store, place?.id) : null;
+  /* View map shows wherever the "Map view" tag does (scene "cloud"):
+   * the store's point cloud when one has shipped, else the Quest
+   * store world. */
+  const hasView = place?.scene === "cloud" || !!model;
 
   /* Zero-entry teach: the walk IS the form. */
   const startWalk = () => openCapture({ kind: "walk", segment: "", teach: true, est_seconds: 30,
@@ -195,7 +201,7 @@ export function Mapper() {
               {tags(place).length > 0 && <span className="mp-tags">{tags(place).map(x => <span key={x} className="mp-tag">{x}</span>)}</span>}</span>
             <button className="linkbtn" id="mp-change" type="button" onClick={() => { setChanging(true); setAllStores(true); }}>{t("mapper.change")}</button>
           </div>
-          {model && <button className="hubrow mp-viewmap" id="mp-viewmap" type="button" onClick={() => setViewing(true)}>
+          {hasView && <button className="hubrow mp-viewmap" id="mp-viewmap" type="button" onClick={() => setViewing(true)}>
             <span className="hr-label">{t("mapper.viewMap")}</span><span className="chev" aria-hidden="true">›</span></button>}
         </>
       ) : (
@@ -322,11 +328,13 @@ export function Mapper() {
         <p className="muted">{t("mapper.theMoreOfYourStore")}</p>
         <p className="muted">{t("mapper.justWalkTheAislesYou")}</p>
       </details>
-      {viewing && model && (
+      {viewing && hasView && (
         <div className="mp-scene" role="dialog" aria-modal="true" aria-label={t("mapper.viewMap")}>
           <div className="mp-scenebar"><b>{t("mapper.mapOf", { store })}</b>
             <button className="linkbtn" id="mp-scenedone" type="button" onClick={() => setViewing(false)}>{t("common.done")}</button></div>
-          <SceneView className="storeview mp-sceneview" driver="cloud" photos={null} model={model} stops={[]} next={-1} />
+          {model ? <SceneView className="storeview mp-sceneview" driver="cloud" photos={null} model={model} stops={[]} next={-1} />
+            : <div className="mp-sceneview mp-world"><Suspense fallback={<p className="mp-scenewait">{t("mapper.drawing")}</p>}>
+              <MapperWorld id={place?.id} name={store} where={where(store)} /></Suspense></div>}
           <p className="mp-scenecap">{t("mapper.sceneCap")}</p>
         </div>
       )}

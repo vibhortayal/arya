@@ -82,3 +82,26 @@ test("Aisles: Add an aisle opens the form in place; tags say what is there, neve
   expect($("#mp-label")).not.toBeNull();
   expect($("#mp-more")).toBeNull();
 });
+
+test("View map follows the Map view tag: shown for scene cloud, opens the store world, hidden otherwise", async () => {
+  vi.doMock("./MapperWorld", () => ({ default: ({ name }: { name: string }) => <div id="mp-world-stub">{name}</div> }));
+  mine = [{ id: "s1", name: "Trader Joe's", favorite: true, lat: 1, lng: 1, scene: "cloud" }];
+  mapView = view();
+  page();
+  await waitFor(() => expect($("#mp-viewmap")).not.toBeNull());
+  expect($("#mp-viewmap")!.textContent).toContain("View map");
+  fireEvent.click($("#mp-viewmap")!);
+  await waitFor(() => expect($("#mp-world-stub")).not.toBeNull());
+  expect($(".mp-scene")!.textContent).toContain("Trader Joe's · Map");
+  fireEvent.click($("#mp-scenedone")!);
+  expect($(".mp-scene")).toBeNull();
+  cleanup();
+  mine = [{ id: "s2", name: "Costco", favorite: true, lat: 1, lng: 1, scene: "strip" }];
+  vi.resetModules();
+  await import("../i18n");
+  Mapper = (await import("./Mapper")).Mapper;
+  ToastProvider = (await import("../ui/Toast")).ToastProvider;
+  page();
+  await waitFor(() => expect($("#mp-picked")).not.toBeNull());
+  expect($("#mp-viewmap")).toBeNull();
+});
