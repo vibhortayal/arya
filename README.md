@@ -373,6 +373,7 @@ trademarks, used only to point at an install.
 ## License
 
 Arya's own code and documents are all rights reserved; see `LICENSE`. The
-repository is public so judges can read, run and test it; no license to reuse
-it is granted yet, and the choice is still open. Third-party code and asset
+repository is public so judges can read, run and test it. Anyone may view the
+source and run it on their own computer to evaluate it; no other use is
+permitted, and no license to reuse it is granted. Third-party code and asset
 notes are in `NOTICE.md`.
