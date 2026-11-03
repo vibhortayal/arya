@@ -98,7 +98,7 @@ hold the truth about what you buy, but nobody reads them.
 ## How we built it
 
 Python (FastAPI) backend with deterministic engines for the ledger,
-patterns and lists; a React + TypeScript PWA; in-process demo sandboxes;
+patterns and lists; a React + TypeScript PWA (a website that installs to the Home Screen like an app); in-process demo sandboxes;
 Supabase for email sign-in codes; one Oracle VM with Docker Compose. Every line of
 product code was written during the hackathon window (first commit
 Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
