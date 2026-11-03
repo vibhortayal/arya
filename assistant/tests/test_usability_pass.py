@@ -16,18 +16,24 @@ class TestMapper(unittest.TestCase):
         self.assertIn(".backrow { padding-top: env(safe-area-inset-top);", css)
 
     def test_store_first_then_one_start_button(self):
+        # Page order (owner-approved mockup, 2026-11-03): the picked store
+        # with Change, the next step right under it, then Aisles; the
+        # store list and Find my store only after Change.
         m = src("screens/Mapper.tsx")
+        self.assertLess(m.index('id="mp-picked"'), m.index('id="mp-stores"'))
         self.assertLess(m.index('id="mp-stores"'), m.index('id="mp-walkstart"'))
-        self.assertLess(m.index('id="mp-walkstart"'), m.index('id="mp-cover"'))
-        self.assertIn(">Start mapping {{store}}</button>", m)
+        self.assertLess(m.index('id="mp-walkstart"'), m.index('id="mp-segs"'))
+        self.assertLess(m.index('id="mp-segs"'), m.index('id="mp-how"'))
+        self.assertIn('id="mp-change"', m)
         # Illustration and long text wait behind How it works.
         how = m.split('id="mp-how"')[1].split("</details>")[0]
         self.assertIn("How it works", how)
         self.assertIn('className="mapperhero"', how)
-        # Add an aisle by hand folds under More.
-        more = m.split('id="mp-more"')[1].split("</details>")[0]
-        self.assertIn("<summary>More</summary>", more)
-        self.assertIn('id="mp-add"', more)
+        # Add an aisle is a row in Aisles that opens the form in place; no More fold.
+        self.assertNotIn('id="mp-more"', m)
+        aisles = m.split('id="mp-segs"')[1].split('id="mp-how"')[0]
+        self.assertIn('id="mp-addrow"', aisles)
+        self.assertIn('id="mp-add"', aisles)
 
 
 class TestSettingsHelp(unittest.TestCase):

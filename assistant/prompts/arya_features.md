@@ -57,17 +57,17 @@ Community prices are not live yet: turning them on (Settings, About Arya, Arya's
 ## shopping | start shopping shop trip quest express game points badges level streak walk find camera aisle practice map
 Start shopping: open a list and tap Start shopping. Settings, Preferences, "When I start shopping", chooses what opens: Start a Quest, Just my list, or Ask me each time.
 Or tap "Or just check items off as I shop" and check items off with no game. That also makes Just my list your choice for Start shopping; change it in Settings, Preferences, "When I start shopping".
-Quest is a game: a 3D model of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
+Quest is a game: a map of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: point the camera at a shelf and Arya finds the next item. People Arya finds in frames are pixelated first; if that fails, nothing is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
 At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if it does not answer, Arya uses the crowd map. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service. Arya is not affiliated with or endorsed by Kroger.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
 ## map my store | map my store scan aisle layout walk video photos mapped build dream
 Map my store: open the Quest tab and tap Map my store, or tap the Map my store chip on Ask.
-Choose the store. Walk the aisles with the camera and tap Done when you finish. Arya builds the map in the background and shows a "map ready" card.
+Choose the store; the next step shows under it (Change picks another). Walk with the camera, tap Done; a "map ready" card follows. Aisles has Add an aisle; View map opens a map view.
 A quest can check your location and never blocks. The live walk needs location (not saved); without it, tap Upload a video or photos.
-If there is no signal, frames save on the phone and send later. Arya then walks you to each item in aisle order.
-Build (Quest tab) lets you shape a store in the game. The Quest tab Edit button hides what you do not use.
+No signal? Frames save and send later. Arya then walks you to each item in aisle order.
+Build (Quest tab) shapes a store in the game. The Quest tab Edit button hides what you do not use.
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up atop a list. It shows Arya shoppers' reports: out of stock, back in stock, quiet times.
 To report an empty shelf, tap Out of stock under "Report something yourself" on Today.
