@@ -310,7 +310,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - My phone pass on the list-first build after deploy.
 
 ## Known gaps
-- Location check (owner, 2026-11-03): Quest start shows a soft "at the store" note and never blocks; the Map my store live walk needs a confirmed location, else upload a video or photos. The position is read once and dropped. Stores with no stored coordinates (older or hand-added rows) are not checked. Not tested indoors on a real phone.
+- Location check (owner, 2026-11-03): Quest start shows a soft "at the store" note and never blocks; the Map my store live walk needs a confirmed location, else upload a video or photos. The position is compared on the phone and never saved (kept in memory only until sign-out). Stores with no stored coordinates (older or hand-added rows) are not checked. Not tested indoors on a real phone.
 - One web test is flaky: `pack.test.tsx` "arrow keys pack and skip" can fail in a full `npm test` run (a timing issue) and passes when run alone. Seen once in a fresh-clone run on 2026-11-03.
 - The Friends/Store/Global boards read this account only; cross-account
   data shows labelled samples. Shop-Off and Spotter reports are
