@@ -32,7 +32,7 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 | Tests run in CI only on demand (my choice, to keep the loop fast) | A broken merge can reach the server unless someone runs the suite | Not a scaling item; revisit after judging |
 | Concurrency rules are by convention (each writer must remember the lock) | Easy to get wrong as more people touch the code | Phase 2 |
 
-Two audit items are closed: `/health` now reports the running commit, and the photo reader is Spark first with Wonder only on a flagged read, which took the cost pressure off receipt batches.
+Two audit items are closed: `/health` now reports the running commit, and the photo reader is now Spark first (see the model map), which took the cost pressure off receipt batches.
 
 ## What is the plan to grow it?
 

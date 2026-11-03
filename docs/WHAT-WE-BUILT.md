@@ -66,8 +66,8 @@ Everything here is built and in the code. Ideas that are not built are on the
 [`assistant/docs/USER-JOURNEYS.md`](../assistant/docs/USER-JOURNEYS.md).
 
 ## Receipts you can trust
-- **A model reads, code checks.** Muse Spark reads a receipt photo first; Muse
-  Wonder re-reads one the checks flag; plain code then checks every line
+- **A model reads, code checks.** Muse Spark reads a receipt photo first (Wonder is the backup
+  reader); plain code then checks every line
   against the printed total before anything posts. *Why:* a wrong price never
   goes in silently. [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md), [`docs/evals/`](evals/)
 - **Returns net out** against purchases, and items bought for someone else are

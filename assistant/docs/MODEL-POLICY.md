@@ -108,6 +108,5 @@ them back to Standard, so nothing the app sends is used for training.
   allows 150/min, so `meta_client` keeps a sliding-window gate at 140/min for that
   case; a call that would wait over 20 s fails with "Arya's AI is busy right now"
   (HTTP 502) instead of hanging.
-- Receipt photos: with the reader on auto (the default) Spark reads first and
-  Wonder re-reads only a flagged receipt. SAM, Muse Voice and the open-weights
-  client are unchanged.
+- Receipt photos follow the auto reader above. SAM, Muse Voice and the
+  open-weights client are unchanged.
