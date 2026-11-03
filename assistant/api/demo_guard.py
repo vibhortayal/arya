@@ -45,6 +45,7 @@ _TOKEN_BLOCKED = (
     # Kroger aisle hints: Kroger's terms (5.e.2) forbid passing its
     # content to third parties, so only the app itself may ask.
     ("/api/stores/kroger", None),
+    ("/api/alexa/", None),
 )
 
 
