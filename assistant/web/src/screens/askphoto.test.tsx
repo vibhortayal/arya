@@ -8,6 +8,7 @@ import { Chat } from "./Chat";
  * that already exist, Ask about this photo sends it once with the next
  * question, and there is no voice out. */
 const resets = vi.hoisted(() => [] as (() => void)[]);
+vi.mock("../lib/photo", async (orig) => ({ ...(await orig<typeof import("../lib/photo")>()), fitPhoto: async (f: unknown) => f }));
 vi.mock("../app/session", () => ({ useSession: () => ({ language: "en", languages: [], setLanguage: () => {} }), clearOnSignOut: (f: () => void) => { resets.push(f); } }));
 vi.mock("../lib/recorder", () => ({ startCapture: vi.fn(), transcribeBlob: vi.fn(), voiceSupported: () => true }));
 

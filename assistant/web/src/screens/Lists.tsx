@@ -30,7 +30,7 @@ import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 import { EditList, EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
-import { fitPhoto } from "../lib/photo";
+import { fitPhoto, LIST_PHOTO } from "../lib/photo";
 import { QueueNote, useWaitingIds } from "../app/listSync";
 
 /* Port of pwa/index.html #view-list and the Lists half of pwa/app.js
@@ -805,7 +805,7 @@ export function Lists() {
     closeCard();
     setStatus(t("lists.readingPhoto"));
     try {
-      const small = await fitPhoto(f);
+      const small = await fitPhoto(f, LIST_PHOTO);
       const r = await fetch("/api/list/from-photo" + (here ? `?list_id=${encodeURIComponent(here.id)}` : ""), { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();

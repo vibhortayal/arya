@@ -24,19 +24,26 @@ async function load(f: Blob): Promise<Source> {
   return { width: img.naturalWidth, height: img.naturalHeight, img, done: () => URL.revokeObjectURL(url) };
 }
 
-export function photoScale(w: number, h: number): number {
+/* List and expiry-date photos (a handwritten list, a printed date) need
+ * far fewer pixels than a long receipt: always redraw them at a long side
+ * of about 2048 px, even when the file is under 1.5 MB. */
+export const LIST_SIDE = 2048;
+export const LIST_PHOTO = { maxSide: LIST_SIDE, always: true } as const;
+export type FitOptions = { maxSide?: number; always?: boolean };
+
+export function photoScale(w: number, h: number, maxSide = MAX_SIDE): number {
   if (!w || !h) return 1;
-  return Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)), MAX_SIDE / Math.max(w, h));
+  return Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)), maxSide / Math.max(w, h));
 }
 
 /* The file to send: the original, or a smaller JPEG with the same name. */
-export async function fitPhoto<T extends Blob & { name?: string }>(f: T): Promise<T | File> {
+export async function fitPhoto<T extends Blob & { name?: string }>(f: T, opts: FitOptions = {}): Promise<T | File> {
   if (!f || isPdf(f)) return f;
-  if (f.size <= SMALL && drawable(f.type || "image/jpeg")) return f;
+  if (!opts.always && f.size <= SMALL && drawable(f.type || "image/jpeg")) return f;
   let src: Source;
   try { src = await load(f); } catch { return f; }
   try {
-    const k = photoScale(src.width, src.height);
+    const k = photoScale(src.width, src.height, opts.maxSide);
     const c = document.createElement("canvas");
     c.width = Math.max(1, Math.round(src.width * k));
     c.height = Math.max(1, Math.round(src.height * k));

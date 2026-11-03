@@ -6,6 +6,7 @@ import { cache, lensState } from "./lists/model";
 
 /* A photo or voice input that Arya cannot use never ends silently: a card
  * says what was understood, or why not, with Try again / Type it instead. */
+vi.mock("../lib/photo", async (orig) => ({ ...(await orig<typeof import("../lib/photo")>()), fitPhoto: async (f: unknown) => f }));
 vi.mock("../app/session", () => ({ useSession: () => ({ demo: false, user: "t@x.y" }), clearOnSignOut: () => {} }));
 vi.mock("../app/avatar", () => ({ useAvatar: () => ({ src: "" }) }));
 

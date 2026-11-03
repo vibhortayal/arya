@@ -12,7 +12,7 @@ import { faceFor, loadCharacters } from "../lib/characters";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
 import { motionOff } from "../lib/motion";
-import { fitPhoto } from "../lib/photo";
+import { fitPhoto, LIST_PHOTO } from "../lib/photo";
 
 /* Port of pwa/index.html #view-newlist, the plan half of quest.js
  * (renderPlan, qNl*, nl-next, qFastStart, qLoadPlan, qLoadMissing)
@@ -782,7 +782,7 @@ export function NewList() {
     if (!f) return;
     setStatus(t("newList.readingPhoto"));
     try {
-      const small = await fitPhoto(f);
+      const small = await fitPhoto(f, LIST_PHOTO);
       const r = await fetch("/api/list/from-photo", { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { detail?: string }).detail || `HTTP ${r.status}`);
       const out = await r.json();
