@@ -49,6 +49,7 @@ Only one is required.
 | `ARYA_STORE` | Where data is kept. `json` means files in a Docker volume | `json` |
 | `ARYA_PHOTO_READER` | `auto`: Muse Spark reads a photo first, Muse Wonder re-reads one the checks flag. Or `spark`, `wonder` | `auto` |
 | `ARYA_SPARK_TIER` | Spark runs on Meta's Standard plan | `standard` |
+| `GOOGLE_PLACES_API_KEY` | Optional. Store picker suggestions from the Google Places API. Empty means no suggestions | empty |
 | `BASETEN_API_KEY` | Optional. Muse Spark Open, the staple judge's second seat. Leave empty to skip that check | empty |
 | `ARYA_LOCAL_PORT` | Use another port if 8080 is taken | `8080` |
 
