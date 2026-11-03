@@ -169,7 +169,7 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 **Supabase.** Email-code and Google sign-in through the REST auth API, with no client library, plus a Postgres mirror of my JSON documents. Both are live. **Resend.** Waitlist and account-deletion emails, best effort. I hit no notable problems with either.
 
-## How creatively did I use Meta's AI tooling? (about 670 words; trim to fit the portal limit)
+## How creatively did I use Meta's AI tooling?
 
 1. **Muse connected itself to Arya.** This surprised me most. Arya has an MCP server with six tools: get_snapshot, get_list, add_items, check_item, file_receipt and get_receipts. On Nov 2 I set it up on a real Muse account with no terminal and no settings file. I tapped "Make my code" in Arya and asked the Muse agent to connect to Arya at its address. Muse asked for the code, opened its own secure credentials box for it (so the code never went into the chat), and the connection worked. Arya's connector carries its own instruction doc, so the person writes no prompt. After that, "add oat milk to my list" in Muse changes the real list in Arya. I think it was this easy because the whole stack is Meta's. Muse is the assistant, Muse Spark and Wonder (through the Meta Model API) read the receipts and answer Ask, and Muse Spark Open on Baseten ran my batch jobs (labeling the shared item dictionary and a second opinion for the staple judge), so Arya fits in as one more piece of the same ecosystem.
 
