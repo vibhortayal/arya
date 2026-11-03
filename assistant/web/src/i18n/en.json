@@ -2404,6 +2404,10 @@
     "noStoreMatches": "No store matches “{{q}}”."
   },
   "today": {
+    "hide": {
+      "aria": "Hide {{what}} from Today",
+      "toast": "Hidden from Today."
+    },
     "today": "Today",
     "tripsNeedReceipt_one": "{{count}} trip needs a receipt",
     "tripsNeedReceipt_other": "{{count}} trips need a receipt",
@@ -3395,7 +3399,7 @@
       "today": {
         "kicker": "Today",
         "title": "Customize your \"Today\" screen",
-        "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping.",
+        "body": "Today is the first screen you see. Show the cards you use and hide the ones you don't. Your next trip stays at the top, and one tap starts your shopping. Tap ✕ on any row to hide just that row.",
         "s1": "On Today, tap Customize, or touch and hold any card.",
         "s2": "Drag a card up or down to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card.",
@@ -3947,7 +3951,7 @@
         "s2": "Drag a card to move it. Tap the red minus to hide it.",
         "s3": "Tap the green plus to add a card from the library.",
         "n1": "Next trip is the first card. It has Start shopping, Add items and Scan a receipt. Lists, Ask and Quest have an Edit button too.",
-        "n2": "Settings, then Preferences, then Display, changes text size and spacing.",
+        "n2": "Settings, then Preferences, then Display, changes text size and spacing. Tap ✕ on a row to hide just that row for you; Undo brings it back, and nothing is deleted. It comes back when something changes, like buying the item again or a new month.",
         "cta": "Open Today"
       },
       "bar": {

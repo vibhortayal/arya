@@ -91,3 +91,29 @@ class TestLayouts(TestTodayCards):
         self.post(400, layouts={"ask": {"chips": ["x" * 121]}})
         self.post(400, layouts={"spending": {"on": [1]}})
         self.post(400, layouts={"bar": ["list"]})
+
+
+class TestTodayHidden(TestTodayCards):
+    """The ✕ on a Today row (owner, 2026-11-03): this account only, merged,
+    null shows the row again, nothing else changes."""
+
+    def test_hide_merge_and_undo(self):
+        self.assertEqual(self.c.get("/api/settings").json()["today_hidden"], {})
+        self.post(today_hidden={"r:Corner|Milk": "|2026-11-03"})
+        got = self.post(today_hidden={"l:eggs": "[3,5]|2026-11-03"})["today_hidden"]
+        self.assertEqual(got, {"r:Corner|Milk": "|2026-11-03", "l:eggs": "[3,5]|2026-11-03"})
+        got = self.post(today_hidden={"r:Corner|Milk": None})["today_hidden"]
+        self.assertEqual(got, {"l:eggs": "[3,5]|2026-11-03"})
+
+    def test_hide_validates(self):
+        self.post(400, today_hidden=["l:eggs"])
+        self.post(400, today_hidden={"l:eggs": 3})
+        self.post(400, today_hidden={"": "x|2026-11-03"})
+        self.post(400, today_hidden={"k" * 161: "x|2026-11-03"})
+
+    def test_hide_keeps_the_newest_past_the_cap(self):
+        from api.routes import account
+        for b in range(0, account.HIDDEN_MAX + 20, 50):
+            self.post(today_hidden={f"l:{i}": f"s|2026-10-{1 + i % 28:02d}" for i in range(b, b + 50)})
+        got = self.c.get("/api/settings").json()["today_hidden"]
+        self.assertEqual(len(got), account.HIDDEN_MAX)

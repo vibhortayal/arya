@@ -63,7 +63,9 @@ class TestStoreAlerts(unittest.TestCase):
     def test_rows_come_from_one_pure_function(self):
         js = today()
         self.assertIn("export function storeAlerts(", js)
-        self.assertIn("const alertRows = h && news ? storeAlerts(h, news, currency) : [];", js)
+        self.assertIn("const alertRows = (h && news ? storeAlerts(h, news, currency) : [])", js)
+        # Rows the account hid with their ✕ drop out here (2026-11-03).
+        self.assertIn('.filter(r => !isHidden(hidden, r.hideKey, r.sig));', js)
         self.assertIn('if (hi[1].median - lo[1].median < 0.25) continue;', js)
         t = src("screens/today.test.ts")
         for name in ("a report marks an item on your list", "a price row needs two stores and a real gap",

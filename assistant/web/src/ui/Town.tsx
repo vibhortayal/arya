@@ -3,6 +3,7 @@ import { Sheet } from "./Sheet";
 import { Button } from "./kit";
 import { useToast } from "./Toast";
 import { t, useTranslation } from "../i18n";
+import { HideX } from "../screens/hideX";
 import { directorOn, townDirector, townReport, type Town, type TownAlt, type TownLine } from "../lib/town";
 import "./town.css";
 
@@ -39,16 +40,21 @@ export function lineText(l: TownLine): { title: string; sub: string } {
 }
 
 /* Today: "Near you today". */
-export function TownFeed({ town }: { town: Town }) {
+export function TownFeed({ town, hidden, onHide }: { town: Town; hidden?: (key: string) => boolean; onHide?: (key: string, what: string) => void }) {
   const { t } = useTranslation();
-  if (!town.feed.length) return null;
+  const rows = town.feed.map((l, i) => ({ l, key: `t:${l.kind}:${l.store || ""}:${l.item || ""}:${i}` })).filter(r => !hidden?.(r.key));
+  if (!rows.length) return null;
   return (
     <div id="today-town" className="towncard">
       <div className="sectrow townhead"><h3 className="sect">{t("town.nearYou")}</h3><SimPill /></div>
       <div className="group">
-        {town.feed.map((l, i) => {
+        {rows.map(({ l, key }) => {
           const x = lineText(l);
-          return <div className="hubrow" key={i}><span className="hr-label">{x.title}<span className="sub">{x.sub}</span></span></div>;
+          return (
+            <div className="hiderow" key={key}>
+              <div className="hubrow"><span className="hr-label">{x.title}<span className="sub">{x.sub}</span></span></div>
+              {onHide && <HideX what={x.title} onHide={() => onHide(key, x.title)} />}
+            </div>);
         })}
       </div>
     </div>
