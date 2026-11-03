@@ -1454,6 +1454,12 @@ body.hunting #view-hunt.full .askbar {
 .sectrow .linkbtn { margin-left: auto; font-size: 15px; padding: 0 0 1px; min-height: 44px; display: flex; align-items: flex-end; }
 .alertic { width: 40px; height: 40px; border-radius: 10px; flex: none; display: grid; place-items: center;
   font-size: 19px; font-weight: 700; background: #FFF4D6; color: #8A5A00; }
+/* ✕ that hides a store alert: 44 px tap area, a small round mark. */
+.alertx { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px 0; border: 0; padding: 0;
+  background: transparent; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.alertx span { width: 26px; height: 26px; border-radius: 50%; background: var(--fill); color: var(--secondary);
+  display: grid; place-items: center; font-size: 14px; line-height: 1; }
+.alertx:active span { background: var(--fill2); }
 .alertic.good { background: #E6F4EA; color: #1E6B34; }
 .listcards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .listcard { background: var(--panel); border-radius: var(--radius); padding: 12px 14px; border: none;

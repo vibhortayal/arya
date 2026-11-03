@@ -67,14 +67,18 @@ const cap = (t: unknown) => String(t || "").replace(/^./, c => c.toUpperCase());
 /* app.js storeAlertRows: up to three "not there" reports, then price
  * gaps worth a detour (two stores or more, 25 cents apart or more),
  * four rows at most. */
-export type AlertRow = { key: string; kind: "report" | "price"; name: string; sub: string };
+export type AlertRow = { key: string; kind: "report" | "price"; name: string; sub: string;
+  /* A store alert's id (store key | item key), for ✕ hide; and what
+   * the ✕ reads aloud. Price rows have neither. */
+  id?: string; hideLabel?: string };
 export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof money>[1]): AlertRow[] {
   const items: any[] = h?.list?.items || [];
   const rows: AlertRow[] = [];
   const mineNames = new Set(items.filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
   news.slice(0, 3).forEach((n, k) => {
     const mine = mineNames.has(String(n.item || "").toLowerCase());
-    rows.push({ key: "n" + k, kind: "report", name: t("today.alertNotThere", { store: n.store, item: n.item }),
+    rows.push({ key: "n" + (n.id || k), kind: "report", name: t("today.alertNotThere", { store: n.store, item: n.item }),
+      id: n.id ? String(n.id) : undefined, hideLabel: t("today.hideAlert", { store: n.store, item: n.item }),
       sub: t("today.alertReports", { count: n.count, date: fmtShort(String(n.reported_at || "").slice(0, 10)) }) + (mine ? t("today.alertOnYourList") : "") });
   });
   // Only what is on a list now: a price gap helps the next trip, not
@@ -91,6 +95,21 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
       sub: t("today.alertUsuallyPay", { price: money(lo[1].median, currency), usual: money(hi[1].median, currency), store: hi[0] }) });
   }
   return rows;
+}
+
+/* ✕ on a store alert (owner, 2026-11-03): the row leaves at once and
+ * is hidden for this account only while that report is open; Undo
+ * brings it back. Other shoppers still see it, the list does not
+ * change. A failed hide puts the row back. */
+export function hideStoreAlert(id: string, before: any[], setNews: (v: any[]) => void,
+  toast: (m: string, a?: { action: string; onAction: () => void }) => void, showErr: (e: unknown) => void) {
+  setNews(before.filter(n => n.id !== id));
+  return post("/api/quest/news/hide", { id }).then(() => {
+    toast(t("today.alertHidden"), { action: t("common.undo"), onAction: () => {
+      setNews(before);
+      post("/api/quest/news/unhide", { id }).catch(showErr);
+    } });
+  }, e => { setNews(before); showErr(e); });
 }
 
 /* Adaptive Today (#156): a row section shows three rows at most, then
@@ -450,6 +469,10 @@ export function Today() {
     setSizes(x => ({ ...x, alexa: "m" }));
     post("/api/settings", { today_sizes: { alexa: "m" }, ...(Array.isArray(cardsSaved) ? { today_cards: on } : {}) }).catch(() => {});
   }, [alexaOn, sizes.alexa]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hideAlert = (id: string) => hideStoreAlert(id, news || [], (v: any[]) => {
+    setNews(v);
+    if (todayMem?.news) todayMem = { ...todayMem, news: { ...todayMem.news, news: v } };
+  }, toast, showErr);
   const alertSection = (kind: "report" | "price", id: string, head: string) => {
     /* Out-of-stock reports and price tips are two kinds of row, so
      * each gets its own heading (labels audit, 2026-10-29) and is its
@@ -458,7 +481,9 @@ export function Today() {
     const capped = capRows(rows, alertsOpen || big(kind));
     return <div id={id}>{rows.length > 0 && <><h3 className="sect">{t(head)}</h3><div className="group">{capped.shown.map(r => (
       <div className="row" key={r.key}><span className={r.kind === "price" ? "alertic good" : "alertic"} aria-hidden="true">{r.kind === "price" ? "$" : "!"}</span><div className="grow">
-        <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
+        <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div>
+        {r.kind === "report" && r.id && <button type="button" className="alertx" aria-label={r.hideLabel}
+          onClick={() => hideAlert(r.id!)}><span aria-hidden="true">✕</span></button>}</div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
   };
   const sections: Record<CardId, ReactNode> = {
     alexa: <AlexaCard rows={alexaRows || []} setRows={setAlexaRows} toast={toast}
