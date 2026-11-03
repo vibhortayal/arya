@@ -41,7 +41,7 @@ Play → contribute → platform learns → play improves.
 
 Three Meta capabilities make this buildable in 2026 and not before:
 
-1. **SAM 3.1** finds shelves, signs and products in a phone camera frame, and finds people so they can be blurred before anything is kept.
+1. **SAM 3.1** finds shelves, signs and products in a phone camera frame, and finds people so they can be pixelated before anything is kept.
 2. **Muse Spark** reads what the scanned aisle holds: the section, aisle numbers, signage and shelf prices.
 3. **Muse Spark and Wonder** read the handwritten lists and the receipts — perception good enough to trust a household's record to, with arithmetic verification on every receipt.
 

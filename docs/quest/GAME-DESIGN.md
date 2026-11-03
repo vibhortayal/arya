@@ -32,7 +32,7 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 ## The hunt (Quest)
 
 - One store view, picked by the store: real photos of a mapped store
-  (people blurred by SAM), shelf cards anywhere else.
+  (people pixelated by SAM), shelf cards anywhere else.
 - The next-item card suggests a stop; any stop can be grabbed in any
   order. A fresh shopper photo shows the item boxed when one exists.
 - **Find it for me:** the camera scans for that one item. SAM 3.1

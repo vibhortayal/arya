@@ -11,7 +11,7 @@ for the steps that use them.
 **What is real.** The demo household is fictional. Your changes live in
 an in-memory sandbox for your visit only; nothing reaches disk or
 another visitor. No store ships pre-mapped: a store's map comes only
-from shoppers' guided scans, with people blurred by SAM first. Camera,
+from shoppers' guided scans, with people pixelated by SAM first. Camera,
 microphone and chat call the Meta API live, within a small per-visit allowance. If the allowance or the day's cap is used up, the app says so; the sample buttons still work.
 
 **Known limits.** One household's data and one real phone: see [Known limits](../../README.md#what-are-the-known-limits).

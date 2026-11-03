@@ -20,7 +20,7 @@ Fun brings people in, the map is what they build together, community reports kee
 Arya works better the more shoppers help each other, and it asks for nothing in return:
 
 - **Lists and groups.** A household or a group shares lists, so everyone sees the same thing.
-- **Store maps.** Maps come from shoppers' own guided scans; people are blurred before anything is kept. The first person to scan a store starts its map.
+- **Store maps.** Maps come from shoppers' own guided scans; people are pixelated before anything is kept. The first person to scan a store starts its map.
 
 Two rules keep that trustworthy:
 

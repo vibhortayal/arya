@@ -21,7 +21,7 @@ fallback if the live read is slow.
 | 0:50-1:20 | Suggestions with reasons: Running low with reasons, one list per store, the "why" sheet. | Muse Spark staple judge, Muse Spark Open second seat |
 | 1:20-1:45 | Add any way: say it, or snap a handwritten note. | Muse Voice Transcribe, Muse Spark vision |
 | 1:45-2:05 | Ask Arya: "We finished the Greek yogurt", then "What did we spend on coffee?" | Muse Spark |
-| 2:05-2:40 | Optional fun: Start shopping opens a quest at the list's store, Got it +10, Find it for me on a shelf, people blurred. | SAM 3.1, Muse Spark, Muse Image |
+| 2:05-2:40 | Optional fun: Start shopping opens a quest at the list's store, Got it +10, Find it for me on a shelf, people pixelated. | SAM 3.1, Muse Spark, Muse Image |
 | 2:40-3:00 | Close: the math is code, the model only reads and speaks; privacy; the live link and "Try it now". | |
 
 ## Package checklist
