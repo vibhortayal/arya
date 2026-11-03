@@ -3760,7 +3760,9 @@
   "storeFinder": {
     "label": "Find a store",
     "placeholder": "Name, ZIP or address",
-    "nearMe": "Near me"
+    "nearMe": "Near me",
+    "demoTown": "The demo uses Demo Town's stores. Pick one from your stores.",
+    "pickFailed": "Arya couldn't add that store. Try again."
   },
   "help": {
     "title": "Help",
