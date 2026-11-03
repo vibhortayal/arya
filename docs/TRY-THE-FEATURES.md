@@ -78,8 +78,7 @@ On **Today**, tap **Use soon** and add dates. Arya reminds you before things go 
 
 1. Sign in with the account from step 0, or make one with **Start my own list**.
 2. Go to **More**, then **Receipts**, then **Add receipt**, and snap or upload a receipt photo or PDF.
-   - Spark reads it first, and Arya checks the lines against the printed total.
-   - Wonder re-reads it only if the checks flag it.
+   - Spark reads it first (Wonder is the backup; see [the model map](../JUDGES.md#which-model-does-which-job)), and Arya checks the lines against the printed total.
    - Items land in your data, and a store you choose for a list joins **My stores**.
 
 The demo household reads a receipt live on the screen, but it does not keep it. Stay on the Receipts screen while Arya reads.
