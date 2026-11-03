@@ -1,6 +1,6 @@
 # Push reminders (flag, off by default)
 
-A phone can opt in from Profile > Reminders. Arya then sends one push a
+A phone can opt in from More > Settings > Preferences > Reminders. Arya then sends one push a
 day, at most, when a staple will run out inside the notice window
 (1 to 7 days, default 2). The same staples as Today's running-low list
 qualify, plus the ones due inside the window. A cycle is announced once;
@@ -13,7 +13,7 @@ a new receipt for the item starts a new cycle.
    `ARYA_PUSH_REMINDERS=1`.
 3. Rebuild the api container (pywebpush is a new requirement).
 4. Add one daily cron line on the VM, for example 9:00 local:
-   `0 9 * * * cd /home/ubuntu/arya/assistant/deploy && docker compose exec -T api python -m api.reminders`
+   `0 9 * * * cd /path/to/arya/assistant/deploy && docker compose exec -T api python -m api.reminders`
 
 Without the flag and both keys, `/api/push/*` answers 404 (config says
 `enabled: false`) and the Profile section stays hidden. To turn off,

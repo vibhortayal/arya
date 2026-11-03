@@ -1,6 +1,6 @@
 # Map my store ("Teach Arya your store") — design
 
-Owner, 2026-10-28: replace "take a photo or record a video" with a guided
+Me, 2026-10-28: replace "take a photo or record a video" with a guided
 mapper. Map only the aisles you use, over many visits. Many partial maps
 merge into one store map. A "not found" or "map is outdated" asks for one
 specific capture. The engine keeps the best images.
@@ -38,13 +38,13 @@ segment keeps its 3 best captures. Contributors are stored as a hash, never
 the username. Demo visitors write to their sandbox overlay, never the shared
 map.
 
-## Framing (owner, 2026-10-28)
+## Framing (me, 2026-10-28)
 The shopper teaches Arya so Arya can help them: "Arya knows 64% of
 Trader Joe's", and every capture says what it unlocks for you (a real
 shelf photo in your next hunt). Helping other shoppers is the bonus.
 
 ## Capture: no retakes, ever
-Owner: "I click pictures, then app says not good... this will cause
+I said: "I click pictures, then app says not good... this will cause
 friction." So the shopper opens a live camera and the app does the work:
 - **Photo:** the phone grades every frame (sharpness, light), shows one
   live hint ("Hold still…", "A bit dark. Face the shelf light."), and
@@ -107,7 +107,7 @@ shopper is asked which aisle they are in. The report response carries
 `map_task`; the app offers "Take the photo".
 
 ## Privacy
-Only scrubbed frames are kept. No opt-in screens yet (deferred by the owner
+Only scrubbed frames are kept. No opt-in screens yet (deferred by me
 for the hackathon). Raw frames never touch disk.
 
 ## Not built yet

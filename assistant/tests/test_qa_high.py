@@ -1,6 +1,7 @@
 """QA pass 2026-10-28, High findings: typed quantities land, the
 prepared cart names hand-added items, and a hunt survives a demo
 sandbox reset."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -32,6 +33,7 @@ class TestTypedQuantity(unittest.TestCase):
         r = c.post("/auth/setup", json={"username": "t@x.y",
                                         "password": "long-password"})
         self.assertEqual(r.status_code, 200, r.text)
+        one_list(c)
         r = c.post("/api/list/from-text",
                    json={"text": "eggs x 2\noat milk x 3"})
         self.assertEqual(r.status_code, 200, r.text)

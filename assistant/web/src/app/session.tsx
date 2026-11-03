@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, useMemo } from "react";
 import { get, post, forgetReads, keepBootRead, SESSION_ENDED } from "../lib/api";
+import { dropQueue } from "../lib/listQueue";
 import { toastGlobal } from "../ui/Toast";
 import { t } from "../i18n";
 import type { Currency } from "../lib/format";
@@ -34,7 +35,7 @@ export function applyDisplay(d: Display): void {
   root.classList.toggle("nopics", !d.pictures);
   root.classList.toggle("nomotion", !d.motion);
 }
-export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean };
+export type AuthStatus = { has_users: boolean; registration_open: boolean; email_signin?: boolean; own_key_signup?: boolean };
 type Session = {
   ready: boolean;
   user: string | null;
@@ -90,6 +91,16 @@ function runLeaveHooks() { onLeave.forEach(fn => { try { fn(); } catch { /* keep
  * app instead of the sign-in page. Only the name: the session cookie
  * stays the proof, and sign out removes it. */
 const LAST_USER = "arya.lastUser";
+/* How long the start waits on the sign-in check before opening as the
+ * last account on a weak signal. */
+export const BOOT_WAIT_MS = 5000;
+export function within<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise<T>(resolve => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    p.then(v => { clearTimeout(timer); resolve(v); }, () => { clearTimeout(timer); resolve(fallback); });
+  });
+}
+
 function remember(user: string | null, demo = false): void {
   try {
     if (user) localStorage.setItem(LAST_USER, JSON.stringify({ user, demo }));
@@ -138,18 +149,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const boot = window.__boot;
       window.__boot = undefined;
       window.__bootData = { settings: (boot as any)?.settings, today: (boot as any)?.today };
-      const st = await (boot?.status ?? get<AuthStatus>("/auth/status")).catch(() => ({ has_users: true, registration_open: false }));
+      // A weak signal must not hold the app on a blank start (owner,
+      // 2026-11-03): someone signed in before opens as that account
+      // after BOOT_WAIT_MS; the late answer still signs out if it says so.
+      const last = lastUser();
+      const meP: Promise<{ user?: string | null; demo?: boolean; owner?: boolean; waitlist_admin?: boolean } | null> =
+        (boot?.me ?? fetch("/auth/me").then(r => (r.ok ? r.json() : null))).catch(() => null);
+      const stP = (boot?.status ?? get<AuthStatus>("/auth/status")).catch(() => ({ has_users: true, registration_open: false }));
+      const st = await (last ? within(stP, BOOT_WAIT_MS, { has_users: true, registration_open: false }) : stP);
       setStatus(st);
-      // null: no answer (no signal, or the server is down), which is
-      // not the same as "signed out" ({ user: null }).
-      const me = await (boot?.me ?? fetch("/auth/me").then(r => (r.ok ? r.json() : null))).catch(() => null);
+      // null: no answer (no signal, the server is down, or too slow),
+      // which is not the same as "signed out" ({ user: null }).
+      const me = await (last ? within(meP, BOOT_WAIT_MS, null) : meP);
+      if (!me && last) {
+        void meP.then(m => {
+          if (m && !m.user) { remember(null); setUser(null); setDemo(false); }
+          else if (m && m.user) setAdmin({ owner: !!m.owner, waitlist: !!m.waitlist_admin });
+        });
+      }
       if (me && me.user) { setUser(me.user); setDemo(!!me.demo); setAdmin({ owner: !!me.owner, waitlist: !!me.waitlist_admin }); remember(me.user, !!me.demo); leaveTeamPath(); }
       else if (me) remember(null);
       else {
         // A reload in a store with no signal opens the app as the last
         // account (audit H1, 2026-10-30), not the sign-in page. When the
         // signal is back, a session that ended meanwhile signs out.
-        const last = lastUser();
         if (last) {
           setUser(last.user); setDemo(last.demo);
           addEventListener("online", () => {
@@ -171,7 +194,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     type S = { currency: string; symbol: string; language?: string; languages?: Language[]; onboarded?: boolean; shop_mode?: ShopMode | null; quest_nudge?: boolean; display?: Display; layouts?: Layouts };
     const early = window.__bootData?.settings as Promise<S> | undefined;
     if (window.__bootData) window.__bootData.settings = undefined;
-    (early ? early.then(v => { keepBootRead("/api/settings", v); return v; }, () => get<S>("/api/settings")) : get<S>("/api/settings"))
+    (early ? within(early.then(v => { keepBootRead("/api/settings", v); return v; }), BOOT_WAIT_MS, null as S | null)
+        .then(v => v ?? get<S>("/api/settings"), () => get<S>("/api/settings")) : get<S>("/api/settings"))
       .then(s => {
         setCurrency({ code: s.currency, symbol: s.symbol });
         setOnboarded(s.onboarded !== false);
@@ -217,12 +241,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.layouts) setLayouts(r.layouts);
   }, []);
 
-  const enter = useCallback((u: string, d: boolean) => { leaving = false; forgetReads(); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
+  // A demo visit starts clean: nothing waits from an earlier visit,
+  // whose sandbox is gone (lib/listQueue.ts).
+  const enter = useCallback((u: string, d: boolean) => { leaving = false; forgetReads(); if (d) dropQueue(u); setUser(u); setDemo(d); (window as any).__aryaUser = u; remember(u, d); leaveTeamPath(); }, []);
 
   const leave = useCallback(async () => {
     leaving = true;
     runLeaveHooks();
     forgetReads();
+    const was = lastUser();
+    if (was?.demo) dropQueue(was.user);
     remember(null);
     const st = await get<AuthStatus>("/auth/status").catch(() => null);
     if (st) setStatus(st);

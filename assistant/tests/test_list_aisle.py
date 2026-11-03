@@ -1,6 +1,7 @@
 """Long lists group by department (owner, 2026-10-30). The server tags
 list items with their department; a household's own pick wins and is
 remembered."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -16,6 +17,7 @@ def fresh(case):
     case.c = TestClient(main.app)
     r = case.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
     assert r.status_code == 200, r.text
+    one_list(case.c)
 
 
 def rows(c):

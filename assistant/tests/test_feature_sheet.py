@@ -7,7 +7,7 @@ import unittest
 from api import chat_service
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open"}
+KNOWN_FLAGS = {"push_reminders", "supabase_auth", "registration_open", "own_key", "byok", "not_own_key"}
 
 
 def raw():
@@ -43,7 +43,7 @@ class FeatureSheet(unittest.TestCase):
         got = dict(re.findall(r'"?([\w-]+)"?:\s*"(\w+)"', labels))
         self.assertEqual(got, chat_service.BAR_NAMES)
         first = raw().splitlines()[0]
-        self.assertIn("Default bar: " + ", ".join(chat_service.BAR_NAMES[k] for k in default) + ", More.", first)
+        self.assertIn("Default navigation tab: " + ", ".join(chat_service.BAR_NAMES[k] for k in default) + ", More.", first)
         self.assertIn('id="pf-reminders"', frontend.src("screens/Profile.tsx"))
 
     def test_your_bar_goes_with_each_question(self):
@@ -57,7 +57,7 @@ class FeatureSheet(unittest.TestCase):
                 return '{"reply":"ok","actions":[]}', 0, 0
         chat_service.chat([{"role": "user", "content": "how do I change the bar?"}], C(), bar=["list", "help"])
         self.assertIn("YOUR BAR: Lists, Help, More. In More: Today, Receipts, Stores, Spending, Ask, Quest, Settings.", seen["sheet"])
-        self.assertIn("Change the bar:", seen["sheet"])
+        self.assertIn("Customize navigation tab:", seen["sheet"])
 
     def test_sizes(self):
         flags = {k: True for k in KNOWN_FLAGS}
@@ -65,7 +65,7 @@ class FeatureSheet(unittest.TestCase):
         # never sends it whole: a question gets the overview plus the
         # sections it matches. So guard both: the whole file against
         # runaway growth, and what one question sends (the real cost).
-        self.assertLess(len(chat_service.feature_sheet(flags)), 24000)
+        self.assertLess(len(chat_service.feature_sheet(flags)), 26000)
         self.assertLess(len(chat_service.feature_sheet(flags, question="how do I add a receipt?")), 8000)
         # A data question gets the overview only; a topic gets its section.
         base = chat_service.feature_sheet(flags, question="how much was milk at Costco?")
@@ -78,8 +78,8 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Map my store: open the Quest tab", f("how do I map my store?"))
         self.assertIn("Start a group", f("how do I share my list with my wife"))
         self.assertIn("Help tab: tap Help", f("where is the help tab"))
-        self.assertIn("tap Edit on Today", f("can I move the cards around"))
-        self.assertIn("Receipts: open the Lists tab", f("where do I add a receipt"))
+        self.assertIn("tap Customize on Today", f("can I move the cards around"))
+        self.assertIn("Receipts: open Spending", f("where do I add a receipt"))
         # install steps have their own topic (Ask gap 6)
         for q in ("How do I install Arya on my phone?", "how do I add it to my home screen", "is there an app store app"):
             self.assertIn("Get the app: Arya has no App Store", f(q), q)
@@ -87,7 +87,7 @@ class FeatureSheet(unittest.TestCase):
         self.assertIn("Preferences, the Remind me switch", f("where do I turn on reminders"))
         # no topic words but a general ask: everything
         self.assertIn("Use soon:", f("what can you do?"))
-        self.assertIn("Receipts: open the Lists tab", f("what can you do?"))
+        self.assertIn("Receipts: open Spending", f("what can you do?"))
 
     def test_other_languages_get_every_topic(self):
         seen = {}
@@ -98,7 +98,7 @@ class FeatureSheet(unittest.TestCase):
                 return '{"reply":"ok","actions":[]}', 0, 0
         chat_service.chat([{"role": "user", "content": "¿Cómo comparto mi lista?"}], C())
         self.assertIn("Start a group", seen["sheet"])
-        self.assertIn("Receipts: open the Lists tab", seen["sheet"])
+        self.assertIn("Receipts: open Spending", seen["sheet"])
         chat_service.chat([{"role": "user", "content": "how much was milk?"}], C())
         self.assertNotIn("Start a group", seen["sheet"])
 

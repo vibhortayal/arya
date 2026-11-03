@@ -5,6 +5,7 @@ used to make a second row. Exact match after case, spacing and a
 plural "s" now reuses the first. "milk" is NOT merged into "Whole
 Milk" (a looser match would merge "milk" into "almond milk").
 """
+from tests.conftest import one_list
 import os, tempfile, unittest
 from datetime import date, timedelta
 
@@ -71,6 +72,7 @@ class TestAddRoutes(unittest.TestCase):
         deps._login_fails.clear()
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
+        one_list(self.c)
         seed_receipt(self.c, "Costco", (date.today() - timedelta(days=3)).isoformat(),
                      [("Eggs", "2002", 5.0)], "r1")
         state.set_current_user("t@x.y")

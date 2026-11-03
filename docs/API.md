@@ -117,7 +117,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" $ARYA/items/manual-milk
 `text` is a checklist, one item per line: `☐ rice 2 kg`, `☐ eggs x 12`,
 `☑ milk`. `csv` has this header and these columns, in this order:
 
-```
+```text
 name,qty,unit,checked,department,list
 rice,2,kg,false,Pantry,Costco
 ```

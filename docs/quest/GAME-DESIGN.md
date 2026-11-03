@@ -6,7 +6,7 @@
 list, the dungeon is the real store, the treasures are the items on
 their real shelves. Mobile first; the keyboard is for the demo only.
 
-## Owner rules (2026-10-28)
+## My rules (2026-10-28)
 
 - No lives, no game over, no clock, no way to lose. Points only go up.
 - Dopamine during the hunt and after it, never stress or pressure.
@@ -32,7 +32,7 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 ## The hunt (Quest)
 
 - One store view, picked by the store: real photos of a mapped store
-  (people blurred by SAM), shelf cards anywhere else.
+  (people pixelated by SAM), shelf cards anywhere else.
 - The next-item card suggests a stop; any stop can be grabbed in any
   order. A fresh shopper photo shows the item boxed when one exists.
 - **Find it for me:** the camera scans for that one item. SAM 3.1
@@ -49,7 +49,7 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 | Event | Reward |
 | --- | --- |
 | Grab | +10, the chip bumps, a fun fact |
-| Combo | Combo: each grab of the suggested stop adds 1. It never resets and put back never lowers it. |
+| Combo count | Combo: each grab of the suggested stop adds 1. It never resets and put back never lowers it. |
 | Boss | +40, only when the boss item was grabbed; a boss is an item you reported missing here on 2 earlier trips. |
 | Halfway, full haul | milestone; full haul +25 and confetti |
 | Receipt snapped | +50; the trip's points bank |
@@ -106,5 +106,5 @@ private; their reward is a smarter list and a hunt that plans itself.
 
 - No random spawns or sponsored placements in routes.
 - No purchases, external links or chat in the hunt.
-- No pictures of people kept: frames are kept only after SAM blurs
-  every person in them.
+- No pictures of people kept: frames are kept only after SAM pixelates
+  the people it detects.

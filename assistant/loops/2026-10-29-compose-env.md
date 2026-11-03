@@ -8,5 +8,5 @@
   until `.env` sets them. `.env.example` now lists them.
 - New `tests/test_compose_env.py` fails when code reads an env var that
   compose does not pass, and checks the numeric defaults parse.
-- Next: after merge, deploy (`git pull` + `compose up -d --build`). On
-  Nov 4, set `ARYA_PHOTO_READER=spark` in `deploy/.env` and rebuild.
+- Next: after merge, deploy (`git pull` + `compose up -d --build`). Keep
+  `ARYA_PHOTO_READER=auto` through Nov 9 (Wonder stays the backup).

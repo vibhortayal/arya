@@ -339,7 +339,7 @@ def load_photo_prompt():
 # ARYA_PHOTO_READER=wonder, ANY Wonder failure (timeout, HTTP error,
 # unparseable output) falls back to Spark. The receipt records the
 # reader in decoded_by, so a fallback is never silent.
-PHOTO_WONDER_TIMEOUT_S = 90
+PHOTO_WONDER_TIMEOUT_S = 60   # owner, 2026-11-03: past this, keep Spark's read, flagged
 
 
 def photo_reader():
@@ -560,15 +560,25 @@ def _decode_auto(messages, client, image_bytes):
         rec = _photo_record(dec, image_bytes, MODELS["wonder"])
         rec["second_read"] = reasons
         return rec
-    except Exception:
+    except Exception as e:
         if spark is None:
             raise
-        # Wonder is down: keep Spark's read and send every line to review.
+        # Wonder is down or slower than PHOTO_WONDER_TIMEOUT_S: keep
+        # Spark's read and send every line to review.
         for ln in spark["lines"]:
             if ln.get("line_type", "item") != "discount":
                 ln["status"] = "unverified"
-        spark["second_read"] = reasons + ["wonder_failed"]
+        spark["second_read"] = reasons + ["wonder_timeout" if _timed_out(e) else "wonder_failed"]
         return spark
+
+
+def _timed_out(e):
+    """A model call that hit its timeout (meta_client keeps the cause)."""
+    cause = getattr(e, "__cause__", None)
+    if isinstance(cause, TimeoutError):
+        return True
+    reason = getattr(cause, "reason", None)
+    return isinstance(reason, TimeoutError) or "timed out" in str(cause or "").lower()
 
 
 ORDER_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "..",

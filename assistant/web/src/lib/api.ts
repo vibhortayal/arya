@@ -1,4 +1,5 @@
-import { keepRead, savedRead, clearSaved, markServedSaved, markLive } from "./offline";
+import { keepRead, savedRead, clearSaved, markServedSaved, markLive, markSlow, isSlow } from "./offline";
+import { applyQueued, canQueue, enqueue, flush, isLocalId, newOpId, pendingCount, queueable } from "./listQueue";
 
 /* One door to the backend: same paths, same cookies, same error
  * wording as the plain-JS app (pwa/app.js api/post/put). */
@@ -9,11 +10,26 @@ const FRIENDLY: Record<string, string> = {
   "no such session": "This quest ended when the demo reset. Start it again from Today.",
   "no account with that handle": "No one has that username. Check the spelling and try again.",
   "this needs a real account": "Create an account to do this. The demo keeps nothing.",
-  "model_api_key not provisioned on this runtime": "Arya's AI isn't available right now. Try again in a little while.",
+  // Only a copy run without a Meta key says this (the live site has one):
+  // tell whoever runs it what to do (local Docker, 2026-11-02).
+  "model_api_key not provisioned on this runtime": "This copy of Arya has no Meta key, so AI features are off. Put your key from dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d",
 };
 
+/** The no-key sentence when this error is a copy of Arya running with
+ * no MODEL_API_KEY (local Docker), else null. Screens that wrap errors
+ * in their own sentence show this one as it is, so a judge sees what
+ * to add (Tester on #432). */
+export function noKeyMessage(e: unknown): string | null {
+  const m = e instanceof Error ? e.message : String(e ?? "");
+  const t = FRIENDLY["model_api_key not provisioned on this runtime"];
+  return m === t || m.toLowerCase().startsWith("model_api_key not provisioned") ? t : null;
+}
+
 export function friendlyError(d: unknown): string {
-  const s = typeof d === "string" ? d : "Something went wrong.";
+  // A structured answer (every item on a list: {code, message, ...})
+  // reads as its message; the code and the rest ride on ApiError.detail.
+  const m = d && typeof d === "object" ? (d as { message?: unknown }).message : undefined;
+  const s = typeof d === "string" ? d : typeof m === "string" ? m : "Something went wrong.";
   const key = s.toLowerCase().replace(/[.\s]+$/, "");
   if (FRIENDLY[key]) return FRIENDLY[key];
   if (key.startsWith("this needs a real account")) return FRIENDLY["this needs a real account"];
@@ -24,7 +40,10 @@ export class ApiError extends Error {
   /* offer: what the server suggests next (X-Arya-Offer), e.g.
    * "own-key" on a daily-limit answer, "own-key-fix" when the shopper's
    * own Meta key failed (ui/OwnKey.tsx). */
-  constructor(message: string, public status: number, public offer?: string) { super(message); }
+  /* detail: the server's structured answer when it sent one, e.g.
+   * {code: "pick_list", lists, suggested, names} or {code: "no_lists"}
+   * for an add with no list to go on (every item on a list). */
+  constructor(message: string, public status: number, public offer?: string, public detail?: unknown) { super(message); }
 }
 
 /* One id per open tab (app.js CLIENT_ID): group live sync
@@ -32,21 +51,29 @@ export class ApiError extends Error {
 export const CLIENT_ID = Math.random().toString(36).slice(2, 12);
 
 /* No request waits forever (speed audit #6): a read gives up after
- * 20 s, a write or a model call (Ask, photo reads) after 130 s. A caller
- * can pass its own signal instead. */
-const READ_MS = 20000, WRITE_MS = 130000; // writes outlast the server's own 120 s model timeout
+ * 15 s, a write or a model call (Ask, photo reads) after 130 s. A caller
+ * can pass its own signal instead. On a slow connection (owner,
+ * 2026-11-03: "low network keeps trying to look up data") a screen
+ * with a saved copy shows it after SLOW_MS instead of waiting; see get(). */
+const READ_MS = 15000, WRITE_MS = 130000; // writes outlast the server's own 120 s model timeout
+export const SLOW_MS = 3500, SLOW_GRACE_MS = 800, LIST_MS = 10000;
 function deadline(ms: number): AbortSignal | undefined {
   const T = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout;
   return typeof T === "function" ? T.call(AbortSignal, ms) : undefined;
 }
 
+export const OFFLINE_WRITE = "You're offline. List changes save on this phone and sync later, but this one needs a connection. Try again when you're back online.";
+
 export async function api<T = any>(path: string, opts?: RequestInit): Promise<T> {
   const write = !!opts?.method && opts.method !== "GET";
   if (write) {
-    inflight.clear(); fresh.clear();
+    inflight.clear(); fresh.clear(); lastWrite = Date.now();
     // boot.js's early Today is from before this change (re-audit N5).
     if (typeof window !== "undefined" && window.__bootData) window.__bootData.today = undefined;
   }
+  // Offline, a change that cannot wait on the phone (anything but a list
+  // change, lib/listQueue.ts) says so plainly, at once, instead of waiting.
+  if (write && typeof navigator !== "undefined" && navigator.onLine === false) throw new TypeError(OFFLINE_WRITE);
   let r: Response;
   const headers = new Headers(opts?.headers || {});
   headers.set("X-Arya-Client", CLIENT_ID);
@@ -57,14 +84,15 @@ export async function api<T = any>(path: string, opts?: RequestInit): Promise<T>
     // offline outbox keys on it) but reads as what it is.
     if ((e as Error)?.name === "TimeoutError") throw new TypeError("The connection is too slow right now — try again in a moment.");
     if ((e as Error)?.name === "AbortError") throw e;
-    throw new TypeError("No connection right now — try again when you're back online.");
+    throw new TypeError(write ? OFFLINE_WRITE : "No connection right now. Try again when you're back online.");
   }
   if (!r.ok) {
     const detail = (await r.json().catch(() => ({}))).detail;
     // The server no longer knows this tab's session (a deploy drops
     // every demo session, re-audit N1): app/session.tsx ends it.
     if (r.status === 401 && detail === "login required" && path.startsWith("/api/")) sessionEnded();
-    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status, r.headers?.get?.("X-Arya-Offer") || undefined);
+    throw new ApiError(friendlyError(detail || `HTTP ${r.status}`), r.status, r.headers?.get?.("X-Arya-Offer") || undefined,
+      detail && typeof detail === "object" ? detail : undefined);
   }
   return r.json();
 }
@@ -88,6 +116,29 @@ const inflight = new Map<string, Promise<unknown>>();
 // Demo Town's hints were read on every tab switch (re-audit N11).
 const KEEP_MS: Record<string, number> = { "/api/group": 30000, "/api/settings": 30000, "/api/town/hints": 30000 };
 const fresh = new Map<string, { at: number; p: Promise<unknown> }>();
+/* A saved copy taken before this tab's last change is out of date, so
+ * it never stands in for a slow read (only for no connection at all). */
+let lastWrite = 0;
+/* The saved copy, if one exists and is not older than this tab's last change. */
+function usable<T>(path: string): { at: number; data: T } | null {
+  const c = savedRead<T>(path);
+  return c && c.at > lastWrite ? c : null;
+}
+/* Slow connection: a read with a usable saved copy answers with it
+ * after SLOW_MS, or after SLOW_GRACE_MS while the connection is known
+ * to be slow (a quick server error still shows as an error).
+ * The real read carries on and keeps its answer for the next screen. */
+function savedFirst<T>(path: string, net: Promise<T>): Promise<T> {
+  const c = usable<T>(path);
+  if (!c) return net;
+  return new Promise<T>((resolve, reject) => {
+    let done = false;
+    const useSaved = () => { if (done) return; done = true; markSlow(); markServedSaved(); resolve(c.data); };
+    const timer = setTimeout(useSaved, isSlow() ? SLOW_GRACE_MS : SLOW_MS);
+    net.then(v => { clearTimeout(timer); if (!done) { done = true; resolve(v); } },
+             e => { clearTimeout(timer); if (!done) { done = true; reject(e); } });
+  });
+}
 export const get = <T = any>(path: string): Promise<T> => {
   let p = inflight.get(path) as Promise<T> | undefined;
   const kept = fresh.get(path);
@@ -99,9 +150,12 @@ export const get = <T = any>(path: string): Promise<T> => {
     p = api<T>(path).then(v => { keepRead(path, v); markLive(); return v; }, e => {
       const c = e instanceof TypeError ? savedRead<T>(path) : null;
       if (!c) throw e;
+      if (navigator.onLine !== false) markSlow();
       markServedSaved();
       return c.data;
     });
+    p.catch(() => {});
+    p = savedFirst(path, p);
     inflight.set(path, p);
     const done = () => { if (inflight.get(path) === p) inflight.delete(path); };
     p.then(done, done);
@@ -111,11 +165,42 @@ export const get = <T = any>(path: string): Promise<T> => {
       p.catch(() => { if (fresh.get(path) === mine) fresh.delete(path); });
     }
   }
-  return p.then(v => (v !== null && typeof v === "object" ? structuredClone(v) : v));
+  return p.then(v => {
+    const c = v !== null && typeof v === "object" ? structuredClone(v) : v;
+    // Changes still waiting on this phone show as made (lib/listQueue.ts).
+    return path === "/api/home" ? applyQueued(c) : c;
+  });
 };
 /* A read the page made itself (boot.js) keeps its copy too. */
 export const keepBootRead = keepRead;
-export const post = <T = any>(path: string, body?: unknown) => api<T>(path, json("POST", body));
+export const post = <T = any>(path: string, body?: unknown): Promise<T> =>
+  queueable(path) && canQueue() ? postList<T>(path, (body || {}) as Record<string, unknown>) : api<T>(path, json("POST", body));
+
+/* A list change (lib/listQueue.ts): sent with an op id so a retry is
+ * applied once; kept on the phone instead when there is no connection,
+ * or while older changes are still waiting, so they go out in order. */
+async function postList<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const id = newOpId();
+  const target = path.startsWith("/api/items/") ? decodeURIComponent(path.split("/")[3]) : body.item_id;
+  const keep = () => { const r = enqueue(path, body, id); syncLists(); return r as T; };
+  if ((typeof navigator !== "undefined" && navigator.onLine === false) || pendingCount() > 0 || isLocalId(target)) return keep();
+  try {
+    // A list change waits LIST_MS at most on a weak signal, then is kept
+    // on the phone like an offline change; the op id makes the resend
+    // count once even if the first try did arrive (owner, 2026-11-03).
+    return await api<T>(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Arya-Op": id }, body: JSON.stringify(body),
+                                ...(deadline(LIST_MS) ? { signal: deadline(LIST_MS) } : {}) });
+  } catch (e) {
+    if (e instanceof TypeError) return keep();
+    throw e;
+  }
+}
+/* Send the list changes waiting on this phone, if there is signal. */
+export const syncLists = () => {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve(null);
+  return flush((p, b, headers) => api(p, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(b),
+                                           ...(deadline(LIST_MS) ? { signal: deadline(LIST_MS) } : {}) }));
+};
 export const put = <T = any>(path: string, body?: unknown) => api<T>(path, json("PUT", body));
 export const del = <T = any>(path: string) => api<T>(path, { method: "DELETE" });
 /* Multipart upload (receipt photos, audio, shelf shots). */

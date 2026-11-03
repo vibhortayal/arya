@@ -58,7 +58,7 @@ class CostLedger:
         if not ok:
             row["ok"] = False
             row["err"] = err
-        if self.user and self.bucket == "app":
+        if self.user and self.bucket in ("app", "own_key"):
             row["user"] = self.user
         os.makedirs(os.path.dirname(os.path.abspath(self.path)), exist_ok=True)
         with open(self.path, "a") as f:
@@ -94,14 +94,24 @@ class CostLedger:
                          and in_bucket(r)), 4)
 
     def usage(self, user):
-        """One account's spend: lifetime and this month in dollars, the
-        first booked call, and a count and total per kind."""
+        """One account's spend on the app's key: lifetime and this month
+        in dollars, the first booked call, and a count and total per
+        kind. Calls on the person's own Meta key are counted apart in
+        own_key_month_usd (an estimate) and never count toward the
+        app's per-account caps."""
         month = time.strftime("%Y-%m")
         hour_ago = time.time() - 3600
         out = {"lifetime_usd": 0.0, "month_usd": 0.0, "hour_usd": 0.0, "since": "",
+               "own_key_month_usd": 0.0, "own_key_hour_usd": 0.0,
                "kinds": {k: {"n": 0, "usd": 0.0} for k in KINDS}}
         for r in self.rows():
             if not user or r.get("user") != user or r.get("ok") is False:
+                continue
+            if r.get("bucket") == "own_key":
+                if str(r.get("ts", "")).startswith(month):
+                    out["own_key_month_usd"] += r["cost_usd"]
+                if _epoch(r.get("ts")) >= hour_ago:
+                    out["own_key_hour_usd"] += r["cost_usd"]
                 continue
             c = r["cost_usd"]
             out["lifetime_usd"] += c
@@ -116,6 +126,8 @@ class CostLedger:
         out["lifetime_usd"] = round(out["lifetime_usd"], 4)
         out["month_usd"] = round(out["month_usd"], 4)
         out["hour_usd"] = round(out["hour_usd"], 4)
+        out["own_key_month_usd"] = round(out["own_key_month_usd"], 4)
+        out["own_key_hour_usd"] = round(out["own_key_hour_usd"], 4)
         for v in out["kinds"].values():
             v["usd"] = round(v["usd"], 4)
         return out
@@ -132,7 +144,8 @@ class CostLedger:
 
     def health(self, hours=24):
         """What the ops report needs from the last `hours`: calls, failures
-        and p50/p95 latency by model mode and by kind, plus spend per
+        and p50/p90/p95 latency by model mode and by kind (Wonder calls
+        are their own kind, "wonder"), plus spend per
         account. Failed rows count as calls with cost 0."""
         since = time.time() - hours * 3600
         by_mode, by_kind, users = {}, {}, {}
@@ -140,8 +153,10 @@ class CostLedger:
             if _epoch(r.get("ts")) < since:
                 continue
             failed = r.get("ok") is False
-            for table, key in ((by_mode, r.get("mode", "?")),
-                               (by_kind, r.get("kind") or "helps")):
+            # Wonder re-reads take much longer than Spark by design, so
+            # the Ops screen judges them on their own (owner, 2026-11-03).
+            kind = "wonder" if r.get("mode") == "wonder" else (r.get("kind") or "helps")
+            for table, key in ((by_mode, r.get("mode", "?")), (by_kind, kind)):
                 t = table.setdefault(key, {"calls": 0, "failed": 0, "usd": 0.0,
                                            "ms": [], "errs": {}})
                 t["calls"] += 1
@@ -157,6 +172,8 @@ class CostLedger:
             for t in table.values():
                 ms = sorted(t.pop("ms"))
                 t["p50_ms"] = ms[len(ms) // 2] if ms else None
+                # Nearest rank: nine in ten calls took this long or less.
+                t["p90_ms"] = ms[max(0, -(-len(ms) * 9 // 10) - 1)] if ms else None
                 t["p95_ms"] = ms[min(len(ms) - 1, int(len(ms) * 0.95))] if ms else None
                 t["usd"] = round(t["usd"], 4)
         top = sorted(users.items(), key=lambda kv: -kv[1])[:5]

@@ -24,6 +24,7 @@ import contextvars, json, logging, os, queue, shutil, threading, time, uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
+from api import own_key
 from api import state
 
 log = logging.getLogger("arya.scanjobs")
@@ -273,7 +274,10 @@ def _run(job_id):
         result = job.get("result") or _empty_result()
         res_lock = threading.Lock()
         frames = list(job.get("received") or [])
-        if not os.environ.get("MODEL_API_KEY"):
+        if not own_key.model_ready() and own_key.required():
+            _finish(job_id, error=own_key.NEEDS_KEY_MSG)
+            return
+        if not own_key.model_ready():
             _finish(job_id, error="Shelf reading isn't on right now, so "
                                   "this walk could not be read.")
             return
@@ -283,6 +287,9 @@ def _run(job_id):
             if body is None:
                 return
             with res_lock:
+                if result.get("own_key_failed"):
+                    _forget_frame(job_id, n)
+                    return
                 if result["capped"] or storescan.frames_left() <= 0:
                     result["capped"] = True
                     _forget_frame(job_id, n)
@@ -292,6 +299,10 @@ def _run(job_id):
                 out = storescan.read_and_keep(job["store"], body, new_client(),
                                               "image/jpeg", job["prices"],
                                               outlines=False)
+            except own_key.OwnKeyFailed:
+                # A refused own key: every other frame would fail too.
+                result["own_key_failed"] = True
+                out = {"kept": False}
             except Exception as e:      # scrub failed, map refused, model error
                 log.info("scan job %s frame %s skipped: %s", job_id, n, e)
                 out = {"kept": False}
@@ -313,6 +324,9 @@ def _run(job_id):
             with ThreadPoolExecutor(READERS) as pool:
                 for n in frames:
                     pool.submit(contextvars.copy_context().run, one, n)
+        if result.pop("own_key_failed", False):
+            _finish(job_id, error=own_key.FAILED_MSG, result=result)
+            return
         _finish(job_id, error=None, result=result)
 
 

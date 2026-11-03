@@ -17,7 +17,10 @@ FEATURES_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "arya_f
 def _feature_flags():
     from api import reminders, supabase_auth
     from api.deps import _registration_open
-    return {"push_reminders": reminders.flag_on(),
+    from api import own_key
+    on = own_key.available()   # the same answer the Settings row and Help topic use
+    return {"own_key": on, "byok": on, "not_own_key": not on,
+            "push_reminders": reminders.flag_on(),
             "supabase_auth": supabase_auth.enabled(),
             "registration_open": _registration_open()}
 
@@ -86,7 +89,9 @@ LANGUAGES = {"en": "English", "es": "Spanish", "hi": "Hindi"}
 
 _T = {
     "es": {
-        "no_list": "No tienes una lista llamada {list}, así que {item} fue a Everything else.",
+        "no_list": "No tienes una lista llamada {list}.",
+        "pick_list": "¿En qué lista va {item}: {names}?",
+        "make_list_first": "Primero crea una lista (Listas, luego Nueva lista) y después añado {item}.",
         "not_tracked": "Todavía no sigo {item}: aparecerá después de su primer recibo.",
         "added": "Añadí {name}{dest}.",
         "dest_list": " a tu lista",
@@ -101,7 +106,9 @@ _T = {
         "q_snooze": "¿Posponer {name} {days} días?",
     },
     "hi": {
-        "no_list": "आपकी {list} नाम की कोई सूची नहीं है, इसलिए {item} Everything else में गया।",
+        "no_list": "आपकी {list} नाम की कोई सूची नहीं है।",
+        "pick_list": "{item} किस सूची में जाए: {names}?",
+        "make_list_first": "पहले एक सूची बनाइए (Lists, फिर New list), फिर मैं {item} उसमें जोड़ दूँगा।",
         "not_tracked": "मैं अभी {item} को ट्रैक नहीं करता: पहली रसीद के बाद यह दिखेगा।",
         "added": "{name} {dest} जोड़ दिया।",
         "dest_list": "आपकी सूची में",
@@ -263,8 +270,10 @@ def _food_dates(d, nm):
     from api.routes.home import still_good_checks
     fl = state.flags()
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
-    dated = expiry.use_soon(fl, nm, last_bought, _d_today(),
-                            ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+    listed = state.on_list_ids(d)   # on a list = ran out
+    dated = [r for r in expiry.use_soon(fl, nm, last_bought, _d_today(),
+                                        ahead=ASK_DATES_AHEAD, skip_snoozed=False)
+             if r["item_id"] not in listed]
     pack = [{"name": r["name"], "date": r["date"],
              "label": KIND_WORDS.get(r["kind"], KIND_WORDS["unknown"]),
              "days_left": r["days"]} for r in dated[:ASK_DATES_MAX]]
@@ -326,7 +335,30 @@ def _list_matches(name):
     close = difflib.get_close_matches(want, [k for _l, k in keys], n=3, cutoff=0.75)
     if close:
         return [l for l, k in keys if k in close]
-    return [l for l in lists if any(_list_key(s) == want for s in l.get("stores") or [])]
+    by_store = [l for l in lists if any(_list_key(s) == want for s in l.get("stores") or [])]
+    if by_store:
+        return by_store
+    # Heard, not typed (owner, 2026-11-02: voice gave "Costcosi" for
+    # Costcozy): compare how the names sound, the user's own lists only.
+    # Two that sound alike come back together and Ask asks which.
+    said = _sound_key(want)
+    if len(said) < LIST_MIN_CHARS:
+        return []
+    def score(l):
+        ks = [_sound_key(_list_key(n)) for n in [l["name"]] + list(l.get("stores") or [])]
+        return max((difflib.SequenceMatcher(None, said, k).ratio() for k in ks if len(k) >= LIST_MIN_CHARS), default=0)
+    scored = [(score(l), l) for l in lists]
+    best = max((sc for sc, _l in scored), default=0)
+    return [l for sc, l in scored if sc >= 0.8 and sc >= best - 0.1]
+
+
+def _sound_key(name):
+    """A rough sound-alike key: no spaces or apostrophes, c/k, s/z and
+    the ee/ie/y/i endings made the same ("costco see" ~ "costcozy")."""
+    w = re.sub(r"[^a-z0-9]", "", str(name or "").lower())
+    w = w.replace("ph", "f").replace("ck", "k").replace("q", "k").replace("c", "k").replace("z", "s")
+    w = re.sub(r"(ee|ie|ey|ea|y)", "i", w)
+    return re.sub(r"(.)\1+", r"\1", w)
 
 
 def _list_for(name):
@@ -334,6 +366,24 @@ def _list_for(name):
     than one fits."""
     m = _list_matches(name)
     return m[0] if len(m) == 1 else None
+
+
+def _ask_list(item, item_id=None):
+    """Every item on a list (owner, 2026-11-02): the question when an
+    add names no list and the household has more than one, or the ask to
+    make a list first when it has none. Nothing is added until then."""
+    from api import state
+    have = state.named_lists()
+    if not have:
+        return _t("make_list_first", "Make a list first (Lists, then New list), then I'll add {item} to it.",
+                  item=item)
+    sug = state.usual_list(item_id) if item_id else None
+    names = [l["name"] for l in have]
+    if sug:
+        first = next(l["name"] for l in have if l["id"] == sug)
+        names = [first] + [n for n in names if n != first]
+    shown = ", ".join(names[:6]) + (" or another list" if len(names) > 6 else "")
+    return _t("pick_list", "Which list should {item} go on: {names}?", item=item, names=shown)
 
 
 def _which_list(name):
@@ -380,19 +430,42 @@ def _remove(a, target):
     return _t("removed", "Removed {name} from your list.", name=name), None
 
 
-def apply_actions(actions, added=None):
+def _list_choices(lists, verb, item, qty=1):
+    """Tap-to-answer options for a which-list question (owner,
+    2026-11-02): each chip's `send` is the words a tap sends, as if typed."""
+    shown = f"{qty} {item}" if qty and qty != 1 else str(item or "")
+    if verb == "remove":
+        return [{"label": l["name"], "send": _t("choice_remove", "Remove {item} from {list}", item=shown, list=l["name"])}
+                for l in lists[:6]]
+    return [{"label": l["name"], "send": _t("choice_add", "Add {item} to {list}", item=shown, list=l["name"])}
+            for l in lists[:6]]
+
+
+def _lists_to_offer(item_id=None):
+    """Every list, the item's usual list first."""
+    from api import state
+    have = state.named_lists()
+    sug = state.usual_list(item_id) if item_id else None
+    return sorted(have, key=lambda l: l["id"] != sug)
+
+
+def apply_actions(actions, added=None, choices=None):
     """Apply validated actions. `added`, when given, collects
     {item_id, name} for each item that newly joined the list, so a
-    caller can offer Undo."""
+    caller can offer Undo. `choices`, when given, collects the options
+    for a which-list question, so the app can show them as chips."""
     from api import state
     applied, skipped = [], []
+    offer = (lambda opts: choices.extend(opts)) if choices is not None else (lambda opts: None)
     today = date.today().isoformat()
     for a in actions or []:
         if a.get("type") == "remove_from_list":
             target = _list_for(a.get("list")) if a.get("list") else None
             if a.get("list") and target is None:
+                fits = _list_matches(a["list"])
                 skipped.append(_which_list(a["list"])
                                or _t("no_list_remove", "You have no list called {list}.", list=a["list"]))
+                offer(_list_choices(fits if len(fits) > 1 else state.named_lists(), "remove", a.get("item")))
                 continue
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
@@ -411,20 +484,38 @@ def apply_actions(actions, added=None):
                 qty = int(q)
             a = dict(a, item=said)
             item_id = existing_item_id(said or "", state.dictionary()["entries"], state.flags())
+            # Quantity counts packages: "a dozen eggs" on a 12-count carton
+            # is one carton, not 12 cartons (live Ask run, 2026-11-01).
+            qty = _packs(qty, state.names().get(item_id) if item_id else said)
             if item_id and item_id.startswith("manual-"):
                 item_id = None   # a typed row: handled below, same as a new name
         else:
             item_id = _resolve(a.get("item"))
-        target = _list_for(a.get("list")) if a.get("type") == "add_to_list" else None
-        if a.get("type") == "add_to_list" and a.get("list") and target is None:
+        target = _list_for(a.get("list")) if a.get("type") in ("add_to_list", "ran_out") else None
+        if a.get("type") in ("add_to_list", "ran_out") and a.get("list") and target is None:
             ask = _which_list(a["list"])
             if ask:
-                # Ask first; adding to Everything else and then asking
+                # Ask first; adding to no list and then asking
                 # leaves a stray row (Tester, #384).
                 skipped.append(ask)
+                offer(_list_choices(_list_matches(a["list"]), "add", a.get("item"), qty))
                 continue
-            skipped.append(_t("no_list", "You have no list called {list}, so {item} went to Everything else.",
-                              list=a["list"], item=a.get("item")))
+            # Every item on a list (owner, 2026-11-02): no stray row; ask.
+            skipped.append(_t("no_list", "You have no list called {list}.", list=a["list"])
+                           + " " + _ask_list(a.get("item"), item_id))
+            offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
+            continue
+        if a.get("type") in ("add_to_list", "ran_out") and target is None:
+            # No list named: the list it is already on, the only list, or ask.
+            have = state.named_lists()
+            cur = state.flags().get(item_id, {}).get("list") if item_id else None
+            target = next((l for l in have if l["id"] == cur), None)
+            if target is None and len(have) == 1:
+                target = have[0]
+            if target is None:
+                skipped.append(_ask_list(a.get("item"), item_id))
+                offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
+                continue
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
                 else _t("dest_list", " to your list"))
         if not item_id and a.get("type") in ("add_to_list", "ran_out"):
@@ -442,6 +533,7 @@ def apply_actions(actions, added=None):
                 if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                     added.append({"item_id": tid, "name": name})
                 fl.update({"manual": True, "dismissed_on": None})
+                _untick(fl, target)
                 if qty != 1:
                     fl["qty_override"] = qty
                 if unit:
@@ -464,14 +556,10 @@ def apply_actions(actions, added=None):
         nm = state.names().get(item_id, item_id)
         fl = dict(state.flags().get(item_id, {}))
         t = a.get("type")
-        if t in ("add_to_list", "ran_out") and not target and not fl.get("list"):
-            # No list named: the list for the store it is usually bought at (retest #5).
-            home = state.usual_list(item_id)
-            if home:
-                fl["list"] = home
-                lst = next((x for x in state.named_lists() if x["id"] == home), None)
-                if lst:
-                    dest = _t("dest_named", " to {list}", list=lst["name"])
+        if t == "ran_out" and target and fl.get("list") != target["id"]:
+            fl["list"] = target["id"]
+        if t in ("add_to_list", "ran_out", "mark_expired"):
+            _untick(fl, target)
         if t == "add_to_list":
             if added is not None and not (fl.get("manual") and not fl.get("dismissed_on")):
                 added.append({"item_id": item_id, "name": nm})
@@ -502,6 +590,38 @@ def apply_actions(actions, added=None):
     return applied, skipped
 
 
+def _untick(fl, target):
+    """Asked for again means wanted again: a tick from this trip comes
+    off, so the item lands in the unchecked part of the list, as a
+    typed add does (owner bug 2026-11-02: Ask adds showed under
+    Checked off)."""
+    fl["checked_on"] = None
+    ticks = fl.get("checked_in") or {}
+    if target and target["id"] in ticks:
+        fl["checked_in"] = {k: v for k, v in ticks.items() if k != target["id"]}
+
+
+_PACK = re.compile(r"\b(\d{1,3})\s*-?\s*(?:ct|count|pk|pack|pcs?|eggs)\b|\b(dozen|doz)\b", re.I)
+
+
+def pack_size(name):
+    """How many units one package of a named item holds ("Pasture Eggs
+    12 ct" -> 12, "Eggs dozen" -> 12), else 1."""
+    m = _PACK.search(str(name or ""))
+    if not m:
+        return 1
+    return 12 if m.group(2) else max(1, int(m.group(1)))
+
+
+def _packs(qty, name):
+    """A count that is the pack's own size (or a whole number of packs)
+    means packages: 12 of a 12-count carton is 1 carton, 24 is 2."""
+    n = pack_size(name)
+    if n > 1 and qty >= n and qty % n == 0:
+        return qty // n
+    return qty
+
+
 RISKY = {"ran_out", "mark_expired", "never_suggest", "snooze"}
 
 
@@ -529,7 +649,7 @@ PHOTO_RULES = ("PHOTO: the user attached a photo to their last question. Answer 
 # fallback.
 BAR_NAMES = {"home": "Today", "list": "Lists", "receipts": "Receipts", "stores-mine": "Stores",
              "analysis": "Spending", "chat": "Ask", "community": "Quest", "help": "Help", "profile": "Settings"}
-DEFAULT_BAR = ["home", "list", "community", "chat"]
+DEFAULT_BAR = ["home", "analysis", "community", "chat"]  # owner, 2026-11-02
 BAR_MAX = 4
 
 
@@ -636,13 +756,12 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
                               cache_key="arya-ask-v1")
     dec = parse_json(out)
     actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)] if not image else []
-    if surface:
-        # Viewing a named list: an add that names no list goes there.
-        here = next((l for l in state.named_lists() if l["id"] == ctx.get("list_id")), None)
-        if here:
-            for a in actions:
-                if a.get("type") in ("add_to_list", "remove_from_list") and not a.get("list"):
-                    a["list"] = here["name"]
+    # Viewing a named list: an add that names no list goes there.
+    here = next((l for l in state.named_lists() if l["id"] == (ctx or {}).get("list_id")), None)
+    if here:
+        for a in actions:
+            if a.get("type") in ("add_to_list", "ran_out", "remove_from_list") and not a.get("list"):
+                a["list"] = here["name"]
     proposed, now = [], actions
     if surface:
         # "We ran out of X" for an X Arya has never seen is just an add (retest #4).
@@ -653,15 +772,18 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
                 iid = _resolve(a.get("item"))
                 if iid:
                     proposed.append({"action": a, "text": _risky_text(a, state.names().get(iid, a.get("item")))})
-    added = []
-    applied, skipped = apply_actions(now, added)
+    added, choices = [], []
+    applied, skipped = apply_actions(now, added, choices)
     if surface:
         for a in actions:
             if a.get("type") in RISKY and a.get("type") != "ran_out" and not _resolve(a.get("item")):
                 skipped.append(_t("not_tracked", "I don't track {item} yet — it will appear after its first receipt.",
                                   item=a.get("item")))
+    # One question's chips at a time: two questions in one answer would
+    # mix their options, so then the user types (the typed path stays).
+    asks = sum(1 for k in skipped if k.endswith("?"))
     return {"reply": _scrub_labels(dec.get("reply", "")), "applied": applied, "skipped": skipped,
-            "added": added, "proposed": proposed}
+            "added": added, "proposed": proposed, "choices": choices if asks == 1 else []}
 
 
 def apply_confirmed(actions):

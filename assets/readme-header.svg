@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="854" height="220" viewBox="0 0 854 220" role="img" aria-labelledby="t d">
+  <title id="t">Arya</title>
+  <desc id="d">Arya: she remembers the list</desc>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C2410C"/>
+      <stop offset="100%" stop-color="#DB5A1F"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 0L0 172Q213.5 204 427 180T854 186L854 0Z" fill="url(#g)" opacity="0.45"/>
+  <path d="M0 0L0 150Q213.5 184 427 160T854 166L854 0Z" fill="url(#g)"/>
+  <text x="427" y="68" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF" font-size="80" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">Arya</text>
+  <text x="427" y="128" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF" font-size="32" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">She remembers the list</text>
+</svg>

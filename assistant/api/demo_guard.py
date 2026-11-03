@@ -42,6 +42,10 @@ _TOKEN_BLOCKED = (
     ("/api/quest/receipts/", ("POST",)),
     # bulk receipt photo reads and the owner's unfreeze (MCP review finding 5)
     ("/api/receipts/jobs", None), ("/api/usage/unfreeze", None),
+    # Kroger aisle hints: Kroger's terms (5.e.2) forbid passing its
+    # content to third parties, so only the app itself may ask.
+    ("/api/stores/kroger", None),
+    ("/api/alexa/", None),
 )
 
 

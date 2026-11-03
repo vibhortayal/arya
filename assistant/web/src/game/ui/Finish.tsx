@@ -160,7 +160,7 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
                   </div>
                 );
               })}
-              <p className="qg-p" style={{ marginTop: 10 }}>A photo of the shelf turns your find into a real pin. People are blurred first.</p>
+              <p className="qg-p" style={{ marginTop: 10 }}>A photo of the shelf turns your find into a real pin. People are pixelated first.</p>
               {onMap && <button className="qg-btn ghost" onClick={onMap}>Map the whole store</button>}
             </motion.div>
           ) : onMap && (

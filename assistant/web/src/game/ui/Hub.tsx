@@ -77,6 +77,9 @@ function HomeCta({ newbie, list, lists, onList, onPractice, onQuest, onAddItems,
   newbie: boolean; list: ShoppingList | null; lists: ShoppingList[]; onList?: (l: ShoppingList) => void;
   onPractice: () => void; onQuest: () => void; onAddItems?: () => void; onPick?: () => void;
 }) {
+  // Every item belongs to a list (owner, 2026-11-02): with none yet, make one first.
+  const noLists = !lists.length && !list;
+  const full = lists.filter(l => l.items.length);
   return newbie ? (
         <motion.div className="qg-cta" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
           <p className="qg-kicker">New here? Start with practice</p>
@@ -84,15 +87,17 @@ function HomeCta({ newbie, list, lists, onList, onPractice, onQuest, onAddItems,
           <p className="qg-p">A pretend store with a short list. Two minutes, no pressure, nothing is saved. You'll learn every move: the route, grabbing, fog and the golden item.</p>
           <button className="qg-btn primary big" onClick={onPractice}>Play practice <span aria-hidden="true">▶</span></button>
           {list?.items.length ? <button className="qg-btn ghost" onClick={onQuest}>Skip to a real quest</button>
-            : onAddItems && <button className="qg-btn ghost" onClick={onAddItems}>Add items to your list</button>}
+            : onAddItems && <button className="qg-btn ghost" onClick={onAddItems}>{noLists ? "Create a list" : "Add items to your list"}</button>}
         </motion.div>
       ) : (
         <motion.div className="qg-cta" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-          <p className="qg-kicker">{list ? `${list.name} · ${list.items.length} items` : "Your list"}</p>
-          <h2>Ready for a quest?</h2>
-          {lists.length > 1 && onList && (
+          {noLists ? <h2>Create a list to start a quest</h2> : <>
+            <p className="qg-kicker">{list ? `${list.name} · ${list.items.length} items` : "Your list"}</p>
+            <h2>Ready for a quest?</h2>
+          </>}
+          {full.length > 1 && onList && (
             <div className="qg-chips qg-lists" role="radiogroup" aria-label="Which list">
-              {lists.filter(l => l.items.length).map(l => (
+              {full.map(l => (
                 <button key={l.id} role="radio" aria-checked={l.id === list?.id} className={l.id === list?.id ? "on" : ""} onClick={() => onList(l)}>{l.name} · {l.items.length}</button>
               ))}
             </div>
@@ -100,6 +105,10 @@ function HomeCta({ newbie, list, lists, onList, onPractice, onQuest, onAddItems,
           {list?.items.length ? <>
                 <button className="qg-btn primary big" onClick={onQuest}>{list.store ? `Start at ${list.store}` : "Start a quest"} <span aria-hidden="true">▶</span></button>
                 {list.store && onPick && <button id="qg-otherstore" className="qg-btn ghost" onClick={onPick}>Shop somewhere else</button>}
+              </>
+            : noLists ? <>
+                <p className="qg-p">Quest plays one of your lists. Make one on Lists, or try practice.</p>
+                {onAddItems && <button id="qg-additems" className="qg-btn primary big" onClick={onAddItems}>Create a list</button>}
               </>
             : <>
                 <p className="qg-p">Your list is empty. Add what you need, or try practice.</p>

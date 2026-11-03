@@ -129,8 +129,16 @@ class TestBadgesAndEmptyStates(unittest.TestCase):
         # Teach row (Quest), mapper, Today's quiet Quest row, and the
         # Quest choice on a list's Start shopping sheet.
         # (Your trips lost its Teach row: mapping lives in Quest.)
-        for f in ("screens/Mapper.tsx", "screens/Today.tsx", "screens/Lists.tsx"):
-            self.assertEqual(src(f).count("assets/scenes/storefront.webp"), 1, f)
+        # The 44 px rows use a small copy (performance report 2026-11-02,
+        # finding 3: the 1920x1280 file was 84 KB for a 44 px face).
+        self.assertEqual(src("screens/Mapper.tsx").count("assets/scenes/storefront.webp"), 1)
+        for f in ("screens/Today.tsx", "screens/Lists.tsx"):
+            self.assertEqual(src(f).count("assets/scenes/storefront-thumb.webp"), 1, f)
+            self.assertNotIn("assets/scenes/storefront.webp", src(f), f)
+        from PIL import Image
+        thumb = os.path.join(os.path.dirname(__file__), "..", "pwa", "assets", "scenes", "storefront-thumb.webp")
+        self.assertLessEqual(max(Image.open(thumb).size), 200)
+        self.assertLess(os.path.getsize(thumb), 8000)
 
     def test_sw_v45_precaches_the_new_art(self):
         sw = src("sw.js")

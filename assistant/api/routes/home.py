@@ -14,14 +14,15 @@ def still_good_checks(d, nm, _fl):
     from api import shelflife
     _shelf = shelflife.known()
     checks = []
+    listed = state.on_list_ids(d)   # on a list = ran out: no question
     _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for p in d["patterns"]:
         # Spark's shelf life for this item when it has answered, else
         # the keyword table (api/shelflife.py).
         prior = shelflife.shelf_days(p["item_id"], nm.get(p["item_id"], ""), _shelf)
-        if prior and p.get("last_bought") and not p["due"]:
+        if prior and p.get("last_bought") and not p["due"] and p["item_id"] not in listed:
             f = _fl.get(p["item_id"], {})
-            said = f.get("out") or f.get("expired")
+            said = f.get("out") or f.get("used") or f.get("expired")
             if said and said >= p["last_bought"]:
                 continue  # the user already said it is gone
             if _fl.get(p["item_id"], {}).get("check_ok") == state.cycle():
@@ -45,6 +46,11 @@ def still_good_checks(d, nm, _fl):
 
 @router.get("/api/home")
 def home():
+    # Rows from before every item had a list go to their usual store's
+    # list, or the only list (owner, 2026-11-02). Only writes when one moves.
+    from api.routes.lists import file_unlisted
+    if not state.in_sandbox():
+        file_unlisted()
     d = state.derived()
     nm = state.names()
     seen = [{"item_id": p["item_id"], "name": nm.get(p["item_id"], p["item_id"]),
@@ -76,7 +82,8 @@ def home():
             pbs[item["item_id"]] = {s: state.price_summary(v) for s, v in prices.items()}
     from api import expiry
     last_bought = {p["item_id"]: p.get("last_bought") for p in d["patterns"]}
-    use_soon = expiry.use_soon(_fl, nm, last_bought, _d_today())
+    listed = state.on_list_ids(d)   # on a list = ran out (owner, 2026-11-02)
+    use_soon = [r for r in expiry.use_soon(_fl, nm, last_bought, _d_today()) if r["item_id"] not in listed]
     # After a receipt, the things that can expire or go bad (#207): asked once per
     # receipt, and never again after two "Not now"s.
     # The demo's receipts are fixed in time, so its window counts back

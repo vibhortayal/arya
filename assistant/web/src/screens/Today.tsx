@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { addToUsual } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
-import { clearOnSignOut, useSession } from "../app/session";
+import { BOOT_WAIT_MS, clearOnSignOut, useSession, within } from "../app/session";
 import { questOpened } from "../lib/questSeen";
 import { get, post, friendlyError, keepBootRead } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { A2hsCard } from "../ui/A2hs";
+import { OwnKeyAlert } from "../ui/OwnKey";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
 import { Sheet } from "../ui/Sheet";
 import { useToast } from "../ui/Toast";
@@ -14,9 +16,11 @@ import { TownFeed, SimPill, outAt } from "../ui/Town";
 import { useTown } from "../lib/town";
 import { t, useTranslation } from "../i18n";
 import { AskSheet, CardMenu, TodayEdit } from "./TodayEdit";
-import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, type CardId, type FocusId, type Size } from "./todayCards";
+import { cardsForFocus, cardsOn, moveCard, removeCard, sizeOf, SIZES_OF, withAlexa, type CardId, type FocusId, type Size } from "./todayCards";
+import { AlexaCard, reviewItems, type Review } from "./todayAlexa";
 import { EditTitle } from "../ui/EditList";
 import { arrange } from "../lib/layout";
+import { fitPhoto } from "../lib/photo";
 
 /* Port of pwa/index.html #view-home and app.js renderHome and its
  * paintToday* functions, plus the Today parts of expiry.js (Use soon
@@ -270,6 +274,8 @@ export function Today() {
   const sz = (id: CardId): Size => (peekOpen.has(id) ? "m" : sizeOf(sizes, id));
   const big = (id: CardId) => sz(id) === "l";
   const [menu, setMenu] = useState<{ id: CardId; top: number } | null>(null);
+  // "From Alexa" rows; null while the hidden Alexa flag is off (404).
+  const [alexaRows, setAlexaRows] = useState<Review[] | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   const hold = useRef<{ timer?: number; x: number; y: number; fired: boolean }>({ x: 0, y: 0, fired: false });
 
@@ -287,7 +293,10 @@ export function Today() {
     // any write also drops it, lib/api.ts).
     const early = performance.now() < BOOT_FRESH_MS ? window.__bootData?.today as Promise<TodayData> | undefined : undefined;
     if (window.__bootData) window.__bootData.today = undefined;
-    try { d = await (early ? early.then(v => { keepBootRead("/api/today", v); return v; }, () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
+    // On a weak signal the early read is not waited on for long: the
+    // app's own read can answer from the saved copy (lib/api.ts get).
+    try { d = await (early ? within(early.then(v => { keepBootRead("/api/today", v); return v; }), BOOT_WAIT_MS, null as TodayData | null)
+        .then(v => v ?? get<TodayData>("/api/today"), () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
     catch (e) { if (live.current && !todayMem) setLoadFailed(true); showErr(e); return; }
     if (!live.current || !d.home) { if (live.current && !todayMem) setLoadFailed(true); return; }
     todayMem = d;
@@ -315,6 +324,9 @@ export function Today() {
     setLoadFailed(false);
     setH(d.home);
     setAdded(new Set());
+    // Its own read, so a 404 (flag off, demo) never touches the rest.
+    if (!demo) get("/api/alexa/review").then(b => { if (live.current) setAlexaRows(reviewItems(b)); },
+      () => { if (live.current) setAlexaRows(null); });
   }, [showErr, setRing, demo]);
   // Group live sync reloads Today in place instead of remounting it (#3).
   useEffect(() => {
@@ -355,9 +367,12 @@ export function Today() {
   async function addLow(id: string) {
     setBusy(b => new Set(b).add(id));
     try {
-      await post("/api/list/add", { item_id: id });
-      setAdded(a => new Set(a).add(id));
-      toast(t("common.addedToList"));
+      const it = low.find(i => i.item_id === id);
+      const out = await addToUsual(id, it?.name || "");
+      if (out) {
+        setAdded(a => new Set(a).add(id));
+        toast(out.list ? t("listPick.addedTo", { what: it?.name || "", list: out.list.name }) : t("common.addedToList"));
+      }
     } catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     setBusy(b => { const n = new Set(b); n.delete(id); return n; });
   }
@@ -375,11 +390,14 @@ export function Today() {
   const tip = facts && !firstRun ? <TipLine facts={facts} setFacts={setFacts} finding={h ? findingLine(ins, h, currency) : null} /> : null;
   const checkNames = [...checks.map(c => c.name || ""), ...seen.map(s => s.name)].filter(Boolean);
   const checkLabel = checkNames.length ? checkNames.slice(0, 2).join(", ") + (checkNames.length > 2 ? t("today.andMore", { n: checkNames.length - 2 }) : "") : "";
-  async function check(kind: "ok" | "expired", id: string) {
+  async function check(kind: "ok" | "used" | "expired", id: string) {
     try {
       if (kind === "ok") {
         await post("/api/list/check-ok", { item_id: id });
         toast(t("today.stillGoodToast"));
+      } else if (kind === "used") {
+        await usedUp({ id, name: checks.find(c => c.item_id === id)?.name || "", t, toast, reload: load });
+        return;
       } else {
         await post(`/api/items/${encodeURIComponent(id)}/expired`);
         toast(t("today.markedExpiredToast"));
@@ -423,7 +441,15 @@ export function Today() {
   }
 
   /* ---- Customizable Today (todayCards.ts) ---- */
-  const on = cardsOn(cardsSaved);
+  const alexaOn = alexaRows !== null;
+  const on = withAlexa(cardsOn(cardsSaved), alexaOn, !!sizes.alexa);
+  // The first time From Alexa appears, mark it offered (today_sizes.alexa)
+  // and keep an arranged Today's order with it, so a later remove sticks.
+  useEffect(() => {
+    if (!alexaOn || sizes.alexa) return;
+    setSizes(x => ({ ...x, alexa: "m" }));
+    post("/api/settings", { today_sizes: { alexa: "m" }, ...(Array.isArray(cardsSaved) ? { today_cards: on } : {}) }).catch(() => {});
+  }, [alexaOn, sizes.alexa]); // eslint-disable-line react-hooks/exhaustive-deps
   const alertSection = (kind: "report" | "price", id: string, head: string) => {
     /* Out-of-stock reports and price tips are two kinds of row, so
      * each gets its own heading (labels audit, 2026-10-29) and is its
@@ -435,6 +461,8 @@ export function Today() {
         <span className="name">{r.name}</span><span className="sub">{r.sub}</span></div></div>))}<MoreRow more={capped.more} onOpen={() => setAlertsOpen(true)} /></div></>}</div>;
   };
   const sections: Record<CardId, ReactNode> = {
+    alexa: <AlexaCard rows={alexaRows || []} setRows={setAlexaRows} toast={toast}
+      lists={allLists.map(l => ({ id: String(l.id), name: String(l.name) }))} />,
     low: (
           <div id="today-low">
             {low.length > 0 && (
@@ -507,8 +535,9 @@ export function Today() {
                 <div className="checkrows" hidden={!checksOpen && !big("checks")}>
                   {checks.map(c => (
                     <div className="row" key={c.item_id}><div className="grow"><span className="checktext">{c.text}</span>
-                      <span className="chipset">
+                      <span className="chipset checkchips">
                         <button className="chip" data-check-ok={c.item_id} type="button" onClick={() => check("ok", c.item_id)}>{t("today.stillGood")}</button>
+                        <button className="chip" data-check-used={c.item_id} type="button" onClick={() => check("used", c.item_id)}>{t("today.usedIt")}</button>
                         <button className="chip" data-check-expired={c.item_id} type="button" onClick={() => check("expired", c.item_id)}>{t("today.itExpired")}</button></span></div></div>
                   ))}
                   {seen.map((s, k) => (
@@ -567,7 +596,7 @@ export function Today() {
                 <span className="lc-items">{trip.items.slice(0, 4).map(i => i.name).join(", ") + (trip.count > 4 ? "…" : "")}
                   {tripOut.length > 0 && <> · {tripOut.length === 1 ? t("today.trip.outOne", { item: tripOut[0] }) : t("today.trip.outMany", { count: tripOut.length })} <SimPill /></>}</span>
               </button>
-              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => nav.show("community", { listId: trip.id === "else" ? "all" : trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
+              <button className="btn primary wide" id="today-trip-start" type="button" onClick={() => trip.id === "else" ? nav.show("list", { lens: "else" }) : nav.show("community", { listId: trip.id })}>{t("today.trip.start", { count: trip.count })}</button>
             </>
           ) : (
             <>
@@ -597,7 +626,7 @@ export function Today() {
         )}
         {listItems.length > 0 && !questSeen && (
           <button id="today-quest" className="gamerow newrow" type="button" onClick={() => nav.show("community")}>
-            <img className="rowimg" src={asset("assets/scenes/storefront.webp")} alt="" />
+            <img className="rowimg" src={asset("assets/scenes/storefront-thumb.webp")} alt="" />
             <span className="g-main"><span className="g-name">{t("today.makeYourNextRunA")}</span><span className="g-sub">{t("today.turnTheListInto")}</span></span>
             <span className="chev">›</span></button>
         )}
@@ -605,6 +634,7 @@ export function Today() {
     ),
   };
   const has: Record<CardId, boolean> = {
+    alexa: !!alexaRows?.length,
     low: low.length > 0,
     lists: !!h && !noLists,
     report: alertRows.some(r => r.kind === "report"),
@@ -623,6 +653,7 @@ export function Today() {
     if (id === "expiry") return perish ? t("today.perish.title", { count: perish.items.length }) : soon.map(s => s.name).slice(0, 3).join(", ");
     if (id === "checks") return checkLabel;
     if (id === "watch") return watch.map(w => w.name).slice(0, 3).join(", ");
+    if (id === "alexa") return (alexaRows || []).map(r => r.name).slice(0, 3).join(", ");
     if (id === "trip") return trip ? t("today.trip.peek", { name: trip.name, count: trip.count }) : t("today.trip.empty");
     if (id === "patterns" && lastMonth && months) return t("today.spent", { value: MONTHS[Number(lastMonth.slice(5, 7)) - 1], money: money(months.spend[lastMonth], currency) });
     return t(`today.cards.${id}.desc`);
@@ -651,9 +682,14 @@ export function Today() {
   async function addAllLow() {
     const ids = low.filter(i => !onList.has(i.item_id) && !added.has(i.item_id)).map(i => i.item_id);
     try {
-      for (const id of ids) await post("/api/list/add", { item_id: id });
-      setAdded(a => new Set([...a, ...ids]));
-      toast(t("today.small.addedAll"));
+      const done: string[] = [];
+      for (const id of ids) {
+        const out = await addToUsual(id, low.find(i => i.item_id === id)?.name || "");
+        if (!out) break;                       // cancelled: stop asking
+        done.push(id);
+      }
+      setAdded(a => new Set([...a, ...done]));
+      if (done.length) toast(t("today.small.addedAll"));
     } catch (e) { showErr(e); }
   }
   const small = (id: CardId) => (
@@ -707,7 +743,7 @@ export function Today() {
 
   /* Next trip, when it leads Today, sits right under the title, above the
    * town news (owner, option A, 2026-11-01); anywhere else it is a card. */
-  const tripFirst = on[0] === "trip";
+  const tripFirst = on.filter(c => c !== "alexa")[0] === "trip";
   const tcard = (id: CardId) => <div key={id} className="tcard" data-card={id} {...holdProps(id)}>{sz(id) === "s" && has[id] ? small(id) : sections[id]}</div>;
 
   /* The one question: once, after the first list (not on the demo). */
@@ -724,9 +760,10 @@ export function Today() {
       <p id="today-dow" className="dow">{h ? `${DAYS[now.getDay()]} · ${fmtDate(isoToday())}` : ""}</p>
       <EditTitle id="today-editbtn" editLabel={t("today.edit.editToday")} title={t("today.today")} editTitle={t("today.edit.title")} editing={editing} onToggle={() => setEditing(e => !e)} />
       {editing ? (
-        <TodayEdit on={on} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
+        <TodayEdit on={on} hidden={alexaOn ? [] : ["alexa"]} has={has} peek={peek} size={id => sizeOf(sizes, id)} onChange={saveCards} onSize={saveSize} onReset={resetToday} />
       ) : (
         <>
+          <OwnKeyAlert />
           {/* First load: skeleton rows; a failed one: a Retry card, not an empty page (#3, #32). */}
           {!h && (loadFailed
             ? <div className="empty" role="alert" id="today-failed"><p>{t("today.couldNotLoad")}</p>
@@ -734,6 +771,8 @@ export function Today() {
             : <div className="skel" role="status" aria-label={t("common.loading")}><i /><i /><i /></div>)}
           {firstRun && <GetStartedCard gs={gs} onStep={gsStep} onDismiss={gsDismiss} />}
           <div id="today-a2hs">{h && <A2hsCard hasList={items.some(i => i.on_list)} demo={demo} />}</div>
+          {/* From Alexa leads: each row asks for a check. */}
+          {on.includes("alexa") && tcard("alexa")}
           {tripFirst && tcard("trip")}
           {town ? <TownFeed town={town} /> : null}
           {noReceipt.length > 0 && (
@@ -744,7 +783,7 @@ export function Today() {
                 <span className="chev">›</span></button>
             </div>
           )}
-          {on.map(id => (id === "trip" && tripFirst ? null : tcard(id)))}
+          {on.map(id => ((id === "trip" && tripFirst) || id === "alexa" ? null : tcard(id)))}
           <div id="today-eye">
             {eyeCount > 0 && (
               <button className="hubrow" id="today-eye-btn" type="button" onClick={() => nav.show("receipts", { from: "home" })}>
@@ -768,20 +807,37 @@ export function Today() {
   );
 
 
-  /* Used up: offer, never assume, to put it back on the shopping list
-   * (expiry.js done). */
-  async function doneWith(s: Soon) {
-    try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); }
-    catch (e) { toast(e instanceof Error ? e.message : String(e)); return; }
-    load();
-    toast(t("today.doneWith", { name: s.name }), {
-      action: t("common.add"),
-      onAction: async () => {
-        try { await post("/api/list/add", { item_id: s.item_id }); toast(t("today.isOnYourList", { name: s.name })); load(); }
-        catch (e) { toast(e instanceof Error ? e.message : String(e)); }
-      },
-    });
+  function doneWith(s: Soon) {
+    return usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload: load });
   }
+}
+
+/* Used it (owner, 2026-11-02), on Use soon and on Still good?: off
+ * the use-by section and into Suggestions ("used" flag: Running low
+ * learns, and the item is suggested for its list). Arya never adds to
+ * a list itself; Add on the suggestion does, asking "Which list?" when
+ * it can't tell. Undo takes it out of Suggestions and puts it back in
+ * the use-by section. */
+async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string, v?: Record<string, unknown>) => string;
+  toast: (m: string, a?: { action: string; onAction: () => void }) => void; reload: () => void }) {
+  const { id, name, soon, t, toast, reload } = o;
+  const enc = encodeURIComponent(id);
+  const day = new Date().toISOString().slice(0, 10);
+  const say = (e: unknown) => toast(e instanceof Error ? e.message : String(e));
+  try {
+    if (soon) await post(`/api/expiry/${enc}/done`);
+    await post(`/api/items/${enc}/flag`, { used: day });
+  } catch (e) { say(e); return; }
+  reload();
+  toast(t("today.usedToSuggest", { name }), {
+    action: t("common.undo"),
+    onAction: async () => {
+      try {
+        await post(`/api/items/${enc}/flag`, { used: null, ...(soon ? { use_by: soon.date, use_by_set: day } : {}) });
+        reload();
+      } catch (e) { say(e); }
+    },
+  });
 }
 
 /* ---------------- Did you know? (powers.js todaysTip) ---------------- */
@@ -971,7 +1027,8 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
   async function readPhoto(file: File) {
     setEx({ k: "reading" });
     try {
-      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+      const small = await fitPhoto(file);
+      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
       if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
       await handleRead(await r.json());
     } catch (e) { setEx({ k: "cant", why: errMsg(e) }); }
@@ -1030,15 +1087,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
         <div className="exhead"><Face name={s.name} /><div><h3 className="hm-title" id="ex-title">{s.name}</h3><p className="muted nomargin">{fmtLong(s.date)} · {when(s.days)}</p></div></div>
         <button className="btn primary wide" id="ex-done" type="button" data-first onClick={async () => {
           close();
-          try { await post(`/api/expiry/${encodeURIComponent(s.item_id)}/done`); } catch (e) { toast(errMsg(e)); return; }
-          reload();
-          toast(t("today.doneWith", { name: s.name }), {
-            action: t("common.add"),
-            onAction: async () => {
-              try { await post("/api/list/add", { item_id: s.item_id }); toast(t("today.isOnYourList", { name: s.name })); reload(); }
-              catch (e) { toast(errMsg(e)); }
-            },
-          });
+          await usedUp({ id: s.item_id, name: s.name, soon: s, t, toast, reload });
         }}>{t("today.usedIt")}</button>
         <button className="btn wide" id="ex-snooze" type="button" onClick={async () => {
           close();
@@ -1066,7 +1115,7 @@ function ExpirySheets({ ex, setEx, soon, demo, reload }: { ex: ExState; setEx: (
 /* The confirm sheet (after a read) and the type sheet (typed or fixed)
  * share the item picker, the date and the save (expiry.js confirmSheet,
  * typeSheet, save). */
-function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "confirm" | "type" }>; onSaved: (msg: string) => void; onError: (m: string) => void }) {
+export function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "confirm" | "type" }>; onSaved: (msg: string) => void; onError: (m: string) => void }) {
   const { t } = useTranslation();
   const read = ex.k === "confirm" ? ex.read : null;
   const fix = ex.k === "type" ? ex.item : undefined;
@@ -1101,7 +1150,8 @@ function ConfirmForm({ ex, onSaved, onError }: { ex: Extract<ExState, { k: "conf
     </>
   );
   const dateRow = (
-    <div className="exkv"><span className="exk">{t("today.date")}</span><span className="exv"><input type="date" id="ex-date" value={date} aria-label={t("today.date")} onChange={ev => setDate(ev.target.value)} /></span></div>
+    <div className="exkv"><span className="exk">{t("today.date")}</span><span className="exv"><input type="date" id="ex-date" min={isoToday()} value={date} aria-label={t("today.date")}
+      onChange={ev => { const v = ev.target.value; if (v && v < isoToday()) { onError(t("today.datePast")); return; } setDate(v); }} /></span></div>
   );
 
   if (read) {
@@ -1144,7 +1194,7 @@ const CameraSvg = () => (
     <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.3-2h5.4L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" /><circle cx="12" cy="12.5" r="3.2" /></svg>
 );
 
-function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: boolean; perish: Perish; demo: boolean;
+export function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: boolean; perish: Perish; demo: boolean;
   onClose: () => void; onMore: () => void; reload: () => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -1161,7 +1211,8 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
       if (demo) read = await post("/api/expiry/read?sample=1");
       else {
         if (!file) throw new Error("no photo");
-        const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": file.type || "image/jpeg" }, body: file });
+        const small = await fitPhoto(file);
+      const r = await fetch("/api/expiry/read", { method: "POST", headers: { "Content-Type": small.type || "image/jpeg" }, body: small });
         if (!r.ok) throw new Error(friendlyError((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`));
         read = await r.json();
       }
@@ -1173,6 +1224,16 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
     }
   }
 
+  /* × removes an item from this card at once and for good (owner,
+   * 2026-11-02): it is remembered on the item ("use_by_skip", the trip
+   * date), so it never comes back even if the sheet closes without Done.
+   * Undo on the row brings it back. */
+  async function skip(id: string, on: boolean) {
+    set(id, on ? { skip: true } : {});
+    try { await post(`/api/items/${encodeURIComponent(id)}/flag`, { use_by_skip: on ? perish.date : null }); }
+    catch (e) { set(id, on ? {} : { skip: true }); toast(e instanceof Error ? e.message : String(e)); }
+  }
+
   async function done() {
     setBusy(true);
     let saved = 0;
@@ -1182,7 +1243,10 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
       try { await post("/api/expiry/save", { item_id: it.item_id, date: r.date, kind: r.kind || "unknown" }); saved++; }
       catch (e) { toast(e instanceof Error ? e.message : String(e)); }
     }
-    try { await post("/api/expiry/nudge", { action: "done", date: perish.date }); } catch { /* asked again next time */ }
+    // The card stays while anything is left (owner, 2026-11-02): no date
+    // yet and not removed. Done closes the receipt only when it is empty.
+    const left = perish.items.filter(it => !rows[it.item_id]?.skip && !rows[it.item_id]?.date).length;
+    if (!left) { try { await post("/api/expiry/nudge", { action: "done", date: perish.date }); } catch { /* asked again next time */ } }
     setBusy(false);
     onClose();
     if (saved) toast(t("today.perish.saved", { count: saved }));
@@ -1190,15 +1254,18 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
   }
 
   // A native date input laid over the button, so a tap opens the
-  // phone's own calendar on every browser.
-  const picker = (id: string, name: string, value: string, face: ReactNode) => (
-    <span className="pz-pick">{face}
-      <input type="date" min={minDate} value={value} aria-label={t("today.perish.pickAria", { name })}
-        onChange={ev => ev.target.value && set(id, { date: ev.target.value, kind: "unknown" })} /></span>
-  );
+  // phone's own calendar on every browser. It is the same element before
+  // and after a date is set (owner phone test 2026-11-02): iPhone fills in
+  // today as the wheel opens, and swapping the row then closed the wheel
+  // at once on today. A past date is refused, since iPhone ignores min.
+  const pick = (id: string, v: string) => {
+    if (!v) return;
+    if (v < minDate) { toast(t("today.datePast")); return; }
+    set(id, { date: v, kind: "unknown" });
+  };
 
   return (
-    <Sheet open={open} onClose={onClose} id="perish-sheet" labelledBy="pz-title">
+    <Sheet open={open} onClose={() => { onClose(); reload(); }} id="perish-sheet" labelledBy="pz-title">
       <span className="sheetgrip" />
       <div className="sheethead"><h3 className="hm-title" id="pz-title">{t("today.perish.sheetTitle")}</h3>
         <button className="linkbtn" type="button" id="pz-done" data-first disabled={busy} onClick={done}>{t("today.perish.done")}</button></div>
@@ -1212,20 +1279,21 @@ function PerishSheet({ open, perish, demo, onClose, onMore, reload }: { open: bo
             <li key={it.item_id} className={r.skip ? "skip" : undefined} data-pz={it.item_id}>
               <Face name={it.name} />
               <span className="grow"><b>{it.name}</b>{r.skip ? <small>{t("today.perish.skipped")}</small> : r.reading ? <small role="status">{t("today.perish.reading")}</small> : null}</span>
-              {r.skip
-                ? <button className="pz-undo" type="button" onClick={() => set(it.item_id, {})}>{t("today.perish.undo")}</button>
-                : r.date
-                  ? picker(it.item_id, it.name, r.date, <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>)
-                  : <>
-                    {demo
-                      ? <button className="pz-b" type="button" aria-label={t("today.perish.snapAria", { name: it.name })} disabled={r.reading} onClick={() => snap(it.item_id)}><CameraSvg /></button>
-                      : <><label className="pz-b" htmlFor={fid} role="button" tabIndex={0} aria-label={t("today.perish.snapAria", { name: it.name })}
-                        onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById(fid)?.click(); } }}><CameraSvg /></label>
-                        <input type="file" id={fid} accept="image/*" capture="environment" hidden
-                          onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>}
-                    {picker(it.item_id, it.name, "", <span className="pz-b">{t("today.perish.pick")}</span>)}
-                    <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => set(it.item_id, { skip: true })}>×</button>
-                  </>}
+              {r.skip && <button className="pz-undo" type="button" onClick={() => skip(it.item_id, false)}>{t("today.perish.undo")}</button>}
+              {!r.skip && !r.date && (demo
+                ? <button className="pz-b" type="button" aria-label={t("today.perish.snapAria", { name: it.name })} disabled={r.reading} onClick={() => snap(it.item_id)}><CameraSvg /></button>
+                : <><label className="pz-b" htmlFor={fid} role="button" tabIndex={0} aria-label={t("today.perish.snapAria", { name: it.name })}
+                  onKeyDown={ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); document.getElementById(fid)?.click(); } }}><CameraSvg /></label>
+                  <input type="file" id={fid} accept="image/*" capture="environment" hidden
+                    onChange={ev => { const f = ev.target.files?.[0]; if (f) snap(it.item_id, f); ev.target.value = ""; }} /></>)}
+              {!r.skip && (
+                <span className="pz-pick">
+                  {r.date
+                    ? <span className="pz-date">{t("today.perish.useBy", { date: fmtMD(r.date) })}</span>
+                    : <span className="pz-b">{t("today.perish.pick")}</span>}
+                  <input type="date" min={minDate} value={r.date || ""} aria-label={t("today.perish.pickAria", { name: it.name })}
+                    onChange={ev => pick(it.item_id, ev.target.value)} /></span>)}
+              {!r.skip && !r.date && <button className="pz-x" type="button" aria-label={t("today.perish.skipAria", { name: it.name })} onClick={() => skip(it.item_id, true)}>×</button>}
             </li>
           );
         })}

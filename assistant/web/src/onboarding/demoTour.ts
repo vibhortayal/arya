@@ -16,7 +16,7 @@ import { BAR_STEP, MORE_STEP, TOUR_KEY, firstRunTour, tabButton } from "./firstR
  * order (owner, 2026-11-01), then More, Help and Settings, then "Make
  * the bar yours". The first step of each screen goes to that screen;
  * "Skip Today" jumps to the next screen. Done opens the Arya guide. A card that is not on the screen (hidden by
- * Edit Today) shows its bubble over the plain scrim. */
+ * Customize your "Today" screen) shows its bubble over the plain scrim. */
 export function demoTour(go: (view: ViewId) => void, bar: BarItem[] = DEFAULT_BAR): TourStep[] {
   const s = (screen: string, view: BarItem, k: string, target: TourStep["target"], placement: TourStep["placement"]): TourStep => ({
     id: `${screen}-${k}`,
@@ -41,6 +41,10 @@ export function demoTour(go: (view: ViewId) => void, bar: BarItem[] = DEFAULT_BA
       s("lists", "list", "tab", tabButton("list"), "above"),
       s("lists", "list", "cards", '#list-cards', "below"),
       s("lists", "list", "new", '#list-new', "above"),
+    ],
+    analysis: [
+      s("spending", "analysis", "tab", tabButton("analysis"), "above"),
+      s("spending", "analysis", "places", '#an-places', "below"),
     ],
     chat: [
       s("ask", "chat", "tab", tabButton("chat"), "above"),

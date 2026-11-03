@@ -53,7 +53,8 @@ describe("Help screen", () => {
   test("home lists the first steps and every how-to topic", () => {
     mount();
     expect(screen.getByRole("heading", { name: "Help" })).toBeTruthy();
-    for (const tp of HELP_TOPICS) expect(document.querySelector(`[data-topic="${tp.id}"]`)).toBeTruthy();
+    // "ownkey" is gated on the server (own-key tests below).
+    for (const tp of HELP_TOPICS.filter(x => x.id !== "ownkey")) expect(document.querySelector(`[data-topic="${tp.id}"]`)).toBeTruthy();
     expect(HELP_TOPICS.filter(x => x.group === "start").map(x => x.id)).toEqual(["receipt", "additem", "ask"]);
   });
   test("a topic shows numbered steps; Back returns to Help", () => {
@@ -89,5 +90,21 @@ describe("Help screen", () => {
     mount();
     fireEvent.click(screen.getByText("How do I map my store?"));
     expect(screen.getByTestId("view").textContent).toBe("chat:How do I map my store?");
+  });
+});
+
+describe("own Meta key topic (owner: gate it, 2026-11-01)", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+  const title = en.help.topics.ownkey.title;
+  test("hidden when the server does not offer it", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ available: false, set: false }), { status: 200, headers: { "Content-Type": "application/json" } })));
+    mount();
+    await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+    expect(screen.queryByText(title)).toBeNull();
+  });
+  test("shown when it is available", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ available: true, set: false }), { status: 200, headers: { "Content-Type": "application/json" } })));
+    mount();
+    expect(await screen.findByText(title)).toBeTruthy();
   });
 });

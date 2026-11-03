@@ -5,6 +5,7 @@ photo adds nothing and is offered filing instead — receipts enter
 by image only, and the Add tab no longer decodes them. The server
 split of pasted text is deterministic; a Spark call runs only
 when the split finds nothing sensible."""
+from tests.conftest import one_list
 import json, os, tempfile, unittest
 
 os.environ["ARYA_INSECURE_COOKIE"] = "1"
@@ -50,6 +51,7 @@ def fresh_client(case):
     r = case.c.post("/auth/setup", json={"username": "t@x.y",
                                          "password": "long-password"})
     assert r.status_code == 200, r.text
+    one_list(case.c)
     return case.c
 
 

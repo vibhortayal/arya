@@ -1,13 +1,13 @@
 # OPS — watching Arya and what to do when it breaks
 
 Written 2026-10-31 from the ops review. Everything here runs on the VM,
-from `assistant/deploy`. The owner is the only operator.
+from `assistant/deploy`. I am the only operator.
 
 ## What watches the app
 | Thing | Where | Alerts you when |
 |---|---|---|
 | Outside uptime check on `https://arya.teamnightshift.org/health` | UptimeRobot or Better Stack, free plan | The site is down, or `/health` answers 503 (data folder not writable, or free disk under `ARYA_HEALTH_MIN_FREE_MB`, default 500) |
-| Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
+| Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s; the Ops screen uses the slowest tenth, p90, with 5 or more calls, and gives Wonder re-reads 45 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
 | Backup dead-man ping | Healthchecks.io free plan, pinged at the end of `backup.sh` | The nightly backup did not finish |
 
 ## The Ops screen (owner only)
@@ -17,10 +17,18 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Demo live reads**: off stops only the demo household's paid reads.
 - **Registration**: the existing switch.
 - **Unfreeze** on a frozen account.
-- **Settings** (2026-11-01): three pages under the Ops screen. *Models and reading*: photo reader (Wonder, Spark only, or Spark first with Wonder as backup), Spark plan (Standard, which is what Arya runs; Contributor would let Meta train on content and is not used), Spark reasoning effort, open model name. *Dollar limits*: hourly freeze, freeze length, monthly heads-up and ceiling, daily budgets for the real app and the demo, per-demo-visit budget, and per-account overrides (for example $10 an hour for one account). *Other caps*: store-scan frames a day, Kroger calls a day, MCP calls an hour, feedback and waitlist emails, demo sign-ins. Each value is held to a safe range. A value set here beats the `.env` variable; "Use default" hands it back to `.env`. They live in `site.json` under `settings` and `overrides`.
+- **Settings** (2026-11-01): three pages under the Ops screen. *Models and reading*: photo reader (Wonder, Spark only, or Spark first with Wonder as backup), Spark plan (Standard, which is what Arya runs; Contributor is a different Meta plan and is not used), Spark reasoning effort, open model name. *Dollar limits*: hourly freeze, freeze length, monthly heads-up and ceiling, daily budgets for the real app and the demo, per-demo-visit budget, and per-account overrides (for example $10 an hour for one account). *Other caps*: store-scan frames a day, Kroger calls a day, MCP calls an hour, feedback and waitlist emails, demo sign-ins. Each value is held to a safe range. A value set here beats the `.env` variable; "Use default" hands it back to `.env`. They live in `site.json` under `settings` and `overrides`.
 - **Meta says spent**: type what Meta's dashboard shows; Ops shows the gap to Arya's ledger.
 - **Recent changes**: the last changes from `ops-changes.jsonl`.
 The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
+
+## Own Meta keys (BYOK, 2026-11-01)
+**Status: unfinished, switched off on purpose, not used.** I decided not to use it (2026-11-02). No `ARYA_KEY_VAULT_SECRET` is set, so the Settings row, the Help topic, the Ask answer and the sign-up door stay hidden and nothing is stored. Do not set the secret. The notes below only apply if the decision is ever reversed (`docs/ROADMAP.md`).
+- **Before the deploy that ships it:** set `ARYA_KEY_VAULT_SECRET` in `deploy/.env` (generate with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), then `docker compose up -d`. Without it the feature stays off and nothing is stored. Losing or changing the secret means every saved key must be entered again (the account sees "needs attention"). The image needs the `cryptography` wheel (in `api/requirements.txt`); check the ARM build before deploy day.
+- **Two kinds of account:** "shared" (invited, Arya's key; may add its own key in Settings) and "own" (signed up with its own key; `key_mode: "own"` in `users.json`). An own account never reads on Arya's key: with no working key its reads answer 402 and the rest of the app works.
+- **The sign-up door:** `POST /auth/own-key/door {"open": false}` (owner only) closes it at once; `ARYA_OWN_KEY_SIGNUP` is only the bootstrap default. It also closes itself when `own_key_signups_per_day` is used up. Limits: 3 key checks per IP an hour, 3 per email a day, 10 accounts per IP a day, one key on at most 3 accounts.
+- **Caps for own-key reading:** the daily budget and monthly ceiling do not apply; the pause switch, scan frames, upload sizes and per-IP limits do, plus `own_key_hourly_usd` (default $5 an hour, a load guard). Own accounts get no open-weights second seat and `places_daily_lookups` Google store lookups a day.
+- **Files:** `data/users/<user>/own_key.json` (encrypted key, last 4, a keyed hash, status), `data/pending_own_key/` (keys held 15 minutes while the email code is checked; swept on expiry), `data/own_key_signups.json` (today's count). Ledger rows for own-key calls have `bucket: "own_key"`.
 
 ## Accounts and data tools (Ops)
 - **Accounts**: switch an account off or on, unfreeze, change the owner, and open the waitlist.

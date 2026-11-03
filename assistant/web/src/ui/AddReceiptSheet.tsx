@@ -8,6 +8,7 @@ import { afterFinish } from "../screens/haul/state";
 import { qLoadSessions, type Session } from "../screens/hunt/model";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "./picker";
+import { fitPhoto } from "../lib/photo";
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
  * attaches this trip's receipt to a finished hunt. Moved out of
@@ -15,8 +16,9 @@ import { pickerProps } from "./picker";
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export const isPdfFile = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
-export async function decode(file: File) {
-  const pdf = isPdfFile(file);
+export async function decode(original: File) {
+  const pdf = isPdfFile(original);
+  const file = pdf ? original : await fitPhoto(original);
   const r = await fetch(pdf ? "/decode/pdf" : "/decode/photo", {
     method: "POST",
     headers: { "Content-Type": pdf ? "application/pdf" : (file.type || "image/jpeg") },

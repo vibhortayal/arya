@@ -12,7 +12,7 @@ import { useTranslation } from "../i18n";
  * demo reads, photo reader), /auth/registration and /api/usage/unfreeze. */
 
 type Need = { title: string; sub: string; chip?: string; bad?: boolean; freeze?: string };
-type Call = { key: string; label: string; calls: number; failed: number; usd: number; p95_ms: number | null; bad: boolean };
+type Call = { key: string; label: string; calls: number; failed: number; usd: number; p90_ms?: number | null; p95_ms: number | null; bad: boolean };
 type OpsData = {
   updated: number;
   needs: Need[];
@@ -129,7 +129,7 @@ export function Ops() {
                 {d.calls.map(c => (
                   <Row key={c.key} name={c.label}
                     sub={<>{t("ops.callsSub", { calls: c.calls, failed: c.failed, usd: usd(c.usd) })}
-                      {c.p95_ms !== null && <><br />{t("ops.slowest", { s: (c.p95_ms / 1000).toFixed(1) })}</>}</>}
+                      {(c.p90_ms ?? c.p95_ms) != null && <><br />{t("ops.slowest", { s: ((c.p90_ms ?? c.p95_ms)! / 1000).toFixed(1) })}</>}</>}
                     right={c.bad ? <Pill ok={false}>{t("ops.failedPct", { pct: Math.round((c.failed / c.calls) * 100) })}</Pill> : <Pill ok>{t("ops.ok")}</Pill>} />
                 ))}
               </Group>

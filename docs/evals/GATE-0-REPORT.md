@@ -8,15 +8,15 @@ Date: 2026-10-27. Model: muse-spark-1.3 (Standard), temperature 0.1, SYSTEM prom
 |---|---|---|---|
 | Public set (identity metric) | 90 / 98 | 91.84% | PASS |
 | Public set (strict-string metric) | 80 / 98 | 81.63% | FAIL |
-| Combined: owner subset (32/32) + public (identity) | 122 / 130 | 93.85% | PASS |
+| Combined: my subset (32/32) + public (identity) | 122 / 130 | 93.85% | PASS |
 | Combined (strict-string) | 112 / 130 | 86.15% | FAIL |
 
-Two metrics are reported because the task rule ("product identity matches the printed identity, allowing spacing/case differences only") and the decode prompt pull in opposite directions: the SYSTEM prompt itself instructs the model to expand brand abbreviations when confident (GG = Green Giant is its own example). The **identity metric** counts a line correct when the decoded product is the same product as printed (abbreviation expansions such as Bh → Boar's Head, BC → Betty Crocker, KS → Kirkland Signature, and word reordering from the brand/product/detail field split are accepted) AND the paid price is exact. The **strict-string metric** accepts only spacing/case differences. All 10 lines that separate the two metrics are abbreviation expansions — no other difference. Recommendation: judge the gate on the identity metric; a strict-string gate would penalize behavior the prompt orders. Note: if the owner subset's 32/32 was scored strict-string, the two subsets are not commensurable and the combined strict figure (86.15%) is the conservative reading.
+Two metrics are reported because the task rule ("product identity matches the printed identity, allowing spacing/case differences only") and the decode prompt pull in opposite directions: the SYSTEM prompt itself instructs the model to expand brand abbreviations when confident (GG = Green Giant is its own example). The **identity metric** counts a line correct when the decoded product is the same product as printed (abbreviation expansions such as Bh → Boar's Head, BC → Betty Crocker, KS → Kirkland Signature, and word reordering from the brand/product/detail field split are accepted) AND the paid price is exact. The **strict-string metric** accepts only spacing/case differences. All 10 lines that separate the two metrics are abbreviation expansions — no other difference. Recommendation: judge the gate on the identity metric; a strict-string gate would penalize behavior the prompt orders. Note: if my subset's 32/32 was scored strict-string, the two subsets are not commensurable and the combined strict figure (86.15%) is the conservative reading.
 
 ## Isolation compliance
 
 - All public-set data lives ONLY under `~/workspace/meta-hackathon-2026/spike2/public-set/` (`photos/`, `labels/`, `results/`, plus `decode_public.py`, `score_public.py`, and this report).
-- The only owner-side files read were `spike2/decode_photo.py` and `spike2/run_one.py` (to reuse the exact SYSTEM prompt and call pattern) and the owner-subset result line in `spike2/SPIKE2-REPORT.md` (4 receipts, 32/32) for the combined figure.
+- The only files on my side read were `spike2/decode_photo.py` and `spike2/run_one.py` (to reuse the exact SYSTEM prompt and call pattern) and my subset's result line in `spike2/SPIKE2-REPORT.md` (4 receipts, 32/32) for the combined figure.
 - Nothing was written to `spike1/`, `spike2/photos/`, or `spike2/results/`. No public item entered any dictionary, ledger, or pattern file. No shared state exists between calls.
 
 ## Sourcing shortfall (stated plainly)
@@ -46,7 +46,7 @@ Mix targets: long receipts (15+ lines) — target 4, got 1 (Alexander's, 27 line
 | pub-08 | Food Lion (Rutherfordton, NC) | 8 (+5 unreadable) | 8 | not in frame | dark, thumb-occluded, PARTIAL |
 | pub-09 | Costco (Tigard, OR) | 10 (+5 unreadable) | 10 | not in frame | hand-held, thumb-occluded, PARTIAL |
 
-Chains represented: Walmart, Publix (×2), H-E-B, Kroger, Costco, Food Lion, Alexander's, Westside Market (independent) — 8 chains plus 1 independent, all beyond the owner set's Safeway.
+Chains represented: Walmart, Publix (×2), H-E-B, Kroger, Costco, Food Lion, Alexander's, Westside Market (independent) — 7 chains (Publix appears twice) plus 1 independent, all beyond my set's Safeway.
 
 ## Errors, ranked
 

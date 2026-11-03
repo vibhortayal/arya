@@ -1,16 +1,16 @@
 # Demo runbook — Arya
 
-Two paths. Path A is the live presentation on the owner's account (real
+Two paths. Path A is the live presentation on my account (real
 data, 114 trips). Path B is the judge self-serve path (demo household).
 The video follows Path A beats; the narration is Path B safe.
 
-## Beats (fixed order; matches video script v4, `/mnt/project-files/demo-video/`)
+## Beats (fixed order; matches video script v4)
 
 1. **Why and bridge** (presenter, about 1:04). Groceries, scattered notes, no
    shared memory. Say: "I built Arya during this hackathon. I downloaded 114
    receipts from the Costco app, three years of my own shopping."
-2. **Proof** (owner's real account: Spending, Receipts, Item). Arya checked all
-   114 lines against the printed totals, in plain code. Show egg whites in 35 of
+2. **Proof** (my real account: Spending, Receipts, Item). Arya checked all
+   114 receipts (1,226 lines) against the printed totals, in plain code. Show egg whites in 35 of
    114 trips, and almond flour at $13.59 in one Costco and $16.99 in another.
    Say: "Patterns are math, not prompts." No model read those 114 as photos;
    Spark only expands the receipt abbreviations.
@@ -18,8 +18,7 @@ The video follows Path A beats; the narration is Path B safe.
    voice or by a photo of a paper list. Start shopping: the quest walks you item
    to item; tap Got it. At a stop, Find it for me (SAM 3.1 finds the shelf,
    Spark checks it). Empty shelf: Not here? warns the next shopper. At checkout,
-   snap the receipt: Spark reads it first, Arya checks the math, and Wonder
-   re-reads only if the checks flag it.
+   snap the receipt: Spark reads it first (see the [model map](../../JUDGES.md#which-model-does-which-job)) and Arya checks the math.
 4. **At home.** Today shows Use soon (the spinach). Ask Arya: "We finished the
    yogurt." The list updates. Say: "The agent answers from the model. It does not
    invent numbers."
@@ -57,7 +56,7 @@ real account. The step-by-step version is
   against `STATUS.md` before recording.
 - The ask beat is stronger with a how-to question ("How do I add a
   receipt?") or a photo; household sharing is the swap if a beat must go.
-- Owner switches in `assistant/deploy/.env` that change what the demo can
+- My switches in `assistant/deploy/.env` that change what the demo can
   show: `ARYA_DEMO_TOWN`, `ARYA_KROGER_AISLES`, `ARYA_OWNER_USERNAME`,
   `ARYA_WAITLIST_ADMINS`, `ARYA_SUPABASE_AUTH`. Details are in `STATUS.md`
   (Feature flags) and `assistant/docs/OPS.md`.

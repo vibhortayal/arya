@@ -113,3 +113,23 @@ test("an offer header rides on ApiError, and the limit toast opens Settings with
   try { await get("/api/x"); } catch (e) { expect(e).toBeInstanceOf(ApiError); expect((e as ApiError).offer).toBe("own-key"); }
 });
 function Shown() { const nav = useNav(); return nav.view === "profile" ? <OwnKeyRow /> : null; }
+
+test("a key account: Today says the AI is paused when Meta turned the key down; Settings uses the account words", async () => {
+  const { OwnKeyAlert } = await import("./OwnKey");
+  state = { available: true, set: true, ends: "4321", status: "needs_attention", required: true };
+  serve();
+  render(<ToastProvider><NavProvider initial="home"><OwnKeyAlert /></NavProvider></ToastProvider>);
+  await waitFor(() => expect($("#today-own-key")).not.toBeNull());
+  expect($("#today-own-key")!.textContent).toContain("Your Meta key stopped working");
+  expect($("#today-own-key")!.textContent).toContain("…4321");
+  cleanup(); calls = [];
+  state = { available: true, set: true, ends: "4321", status: "ok", required: true };
+  serve();
+  render(<ToastProvider><NavProvider initial="home"><OwnKeyAlert /><OwnKeyRow /></NavProvider></ToastProvider>);
+  await waitFor(() => expect($("#own-key-row")).not.toBeNull());
+  expect($("#today-own-key")).toBeNull();
+  expect($("#own-key-row")!.textContent).toContain("Your account runs on it");
+  fireEvent.click($("#own-key-row")!);
+  fireEvent.click($("#own-key-remove")!);
+  expect(document.body.textContent).toContain("Ask, receipt reading and scans stop until you add a key again.");
+});

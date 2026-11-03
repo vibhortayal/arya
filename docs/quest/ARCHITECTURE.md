@@ -13,7 +13,7 @@ phone. Two data planes never mix:
 ### 1. Store mapping (platform)
 `guided camera scan → SAM 3.1 people scrub → Spark reads the section, signs, prices → SAM shelf and sign boxes → store map sections`
 
-The shopper pans; a frame goes up every few seconds. People are blurred
+The shopper pans; a frame goes up every few seconds. People are pixelated
 first and the frame is dropped if that fails. No store ships pre-mapped
 (the old Trader Joe's walkthrough model was removed 2026-10-29); a
 section counts as mapped only with a usable, fresh picture.
@@ -31,13 +31,13 @@ be two real products. Deterministic first; Spark only where code
 cannot settle. A clean list skips the screen.
 
 ### 4. The hunt (client PWA)
-Installable, works offline (grabs queue and sync). One store view per
+Installable. Signed-in accounts keep a cached copy and queue grabs offline, which sync later; receipts and Ask need a connection. One store view per
 store: photos or shelf cards. Any stop can be grabbed in any order.
 Shelf Scan and Find it for me
 send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one
 item): SAM 3.1 proposes boxes, Spark verifies each crop. Verified pops
 are stored as sightings (item, store, shelf, time). A frame is kept as
-a fresh shelf photo only after SAM finds every person and pixelates
+a fresh shelf photo only after SAM finds the people it detects and pixelates
 them; if that step fails, nothing is kept.
 
 ### 5. Settle (account)

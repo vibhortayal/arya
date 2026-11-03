@@ -11,3 +11,6 @@ media/
 
 # Per-machine Claude Code permissions (never commit)
 .claude/settings.local.json
+
+# Cost ledger rows written by tests and local runs (the real one lives in the data folder)
+assistant/data/cost-ledger.jsonl

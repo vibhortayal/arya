@@ -1,4 +1,5 @@
 """Today and Ask Arya agree on what is running low — audit 2026-10-29."""
+from tests.conftest import one_list
 import os, tempfile, unittest
 from datetime import date, timedelta
 
@@ -20,6 +21,7 @@ class TestOneSource(unittest.TestCase):
         self.state = state
         self.c = TestClient(main.app)
         self.c.post("/auth/setup", json={"username": "t@x.y", "password": "long-password"})
+        one_list(self.c)
         t = date.today()
         for d in (40, 20):
             seed_receipt(self.c, "Costco", (t - timedelta(days=d)).isoformat(),

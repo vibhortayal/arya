@@ -6,7 +6,9 @@
  * What is kept: the JSON body of a few GET reads (lists, Today,
  * settings, groups, stores, powers, receipts, Quest profile). Never a
  * cookie or token (the sign-in is an HttpOnly cookie the page cannot
- * read), never the demo (it keeps nothing), never a body over 400 KB.
+ * read), never a body over 400 KB. The demo keeps its copies for the
+ * visit only (owner phone test 2026-11-02: offline lists in the demo):
+ * entering or leaving the demo deletes them.
  * Copies are filed under the signed-in account and are all deleted at
  * sign-in and sign-out (forgetReads in lib/api.ts). */
 
@@ -18,10 +20,10 @@ export const SAVED_PATHS = new Set([
   "/api/powers", "/api/quest/profile", "/api/quest/receipts", "/api/prices/insights",
 ]);
 
-function account(): string | null {
+export function account(): string | null {
   try {
     const v = JSON.parse(localStorage.getItem("arya.lastUser") || "null");
-    return v && typeof v.user === "string" && !v.demo ? v.user : null;
+    return v && typeof v.user === "string" ? v.user : null;
   } catch { return null; }
 }
 const keyFor = (path: string) => { const u = account(); return u && SAVED_PATHS.has(path) ? `${PREFIX}${u}:${path}` : null; };
@@ -56,8 +58,19 @@ export function clearSaved(): void {
 let served = false;
 const EVT = "arya-offline-change";
 export const markServedSaved = () => { if (!served) { served = true; dispatchEvent(new Event(EVT)); } };
-export const markLive = () => { if (served) { served = false; dispatchEvent(new Event(EVT)); } };
+export const markLive = () => { slowUntil = 0; if (served) { served = false; dispatchEvent(new Event(EVT)); } };
 export const isOffline = () => (typeof navigator !== "undefined" && navigator.onLine === false) || served;
+
+/* "Slow": the phone says it is online, but a read took too long or
+ * failed, so a saved copy was shown (owner, 2026-11-03: a weak signal
+ * kept the app looking things up). For the next minute, screens with a
+ * saved copy show it at once; any good read ends it early. */
+const SLOW_FOR_MS = 60000;
+let slowUntil = 0;
+export const markSlow = () => { slowUntil = Date.now() + SLOW_FOR_MS; };
+export const isSlow = () => Date.now() < slowUntil;
+/* For the bar: on a weak signal (not airplane mode) it says "slow". */
+export const isSlowOnly = () => isOffline() && !(typeof navigator !== "undefined" && navigator.onLine === false);
 export function subscribeOffline(fn: () => void): () => void {
   for (const e of [EVT, "online", "offline"]) addEventListener(e, fn);
   return () => { for (const e of [EVT, "online", "offline"]) removeEventListener(e, fn); };

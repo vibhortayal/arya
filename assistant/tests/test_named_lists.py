@@ -50,11 +50,18 @@ class TestNamedLists(unittest.TestCase):
         l = self.make("Indian Store")
         r = self.c.post("/api/list/from-text", json={"text": "atta, basmati rice", "list_id": l["id"]})
         self.assertEqual(r.json()["added"], 2)
+        # The only list: an add that names none goes there (owner, 2026-11-02).
         self.c.post("/api/list/add", json={"name": "dish soap"})
         got = rows(self.c)
         self.assertEqual(got["atta"]["list"], l["id"])
         self.assertEqual(got["basmati rice"]["list"], l["id"])
-        self.assertNotIn("list", got["dish soap"])
+        self.assertEqual(got["dish soap"]["list"], l["id"])
+        # With two lists it asks and adds nothing.
+        self.make("Costco")
+        r = self.c.post("/api/list/add", json={"name": "sponges"})
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual(r.json()["detail"]["code"], "pick_list")
+        self.assertNotIn("sponges", rows(self.c))
 
     def test_add_to_missing_list_is_404_and_writes_nothing(self):
         r = self.c.post("/api/list/add", json={"name": "milk", "list_id": "l-nope"})
@@ -98,16 +105,32 @@ class TestNamedLists(unittest.TestCase):
         self.assertEqual(r.json()["store_ids"], [])
         self.assertNotIn("store_ids", self.make("Plain"))
 
-    def test_delete_keeps_items_and_restore_brings_them_back(self):
+    def test_delete_asks_where_items_go_and_restore_brings_them_back(self):
         a = self.make("Costco")
         b = self.make("Party")
         self.c.post("/api/list/add", json={"name": "eggs", "list_id": b["id"]})
-        out = self.c.post("/api/lists/delete", json={"id": b["id"]}).json()
+        # A list with items says where they go first (owner, 2026-11-02).
+        r = self.c.post("/api/lists/delete", json={"id": b["id"]})
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual((r.json()["detail"]["code"], r.json()["detail"]["count"]), ("list_has_items", 1))
+        self.assertEqual(r.json()["detail"]["lists"], [{"id": a["id"], "name": "Costco"}])
+        # Move them to another list.
+        out = self.c.post("/api/lists/delete", json={"id": b["id"], "move_to": a["id"]}).json()
         self.assertEqual(out["deleted"], b)
         self.assertEqual(out["index"], 1)
-        self.assertIn("eggs", rows(self.c))
-        self.assertNotIn("list", rows(self.c)["eggs"])
+        self.assertEqual(rows(self.c)["eggs"]["list"], a["id"])
         self.assertEqual([l["id"] for l in self.c.get("/api/home").json()["lists"]], [a["id"]])
+        # Undo puts the list and its items back.
+        self.c.post("/api/lists/restore", json={"list": out["deleted"], "index": out["index"], "items": out["items"]})
+        self.assertEqual(rows(self.c)["eggs"]["list"], b["id"])
+        # Or take them off the shopping list.
+        out = self.c.post("/api/lists/delete", json={"id": b["id"], "remove_items": True}).json()
+        self.assertNotIn("eggs", rows(self.c))
+        self.c.post("/api/lists/restore", json={"list": out["deleted"], "index": out["index"], "items": out["items"]})
+        self.assertEqual(rows(self.c)["eggs"]["list"], b["id"])
+        # An empty list goes at once.
+        e = self.make("Empty")
+        self.assertEqual(self.c.post("/api/lists/delete", json={"id": e["id"]}).status_code, 200)
         r = self.c.post("/api/lists/restore", json={"list": out["deleted"], "index": out["index"]})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(rows(self.c)["eggs"]["list"], b["id"])
@@ -170,11 +193,12 @@ class TestChatActions(unittest.TestCase):
         self.assertEqual(out["skipped"], [])
         self.assertEqual(rows(self.c)["naan"]["list"], l["id"])
 
-    def test_unknown_list_still_adds_and_says_so(self):
+    def test_unknown_list_asks_and_adds_nothing(self):
+        # Every item on a list (owner, 2026-11-02): no stray row.
         out = self.ask([{"type": "add_to_list", "item": "naan", "list": "Nowhere"}])
-        self.assertEqual(out["applied"], ["Added naan to your list."])
+        self.assertEqual(out["applied"], [])
         self.assertIn("no list called Nowhere", out["skipped"][0])
-        self.assertNotIn("list", rows(self.c)["naan"])
+        self.assertNotIn("naan", rows(self.c))
 
     def test_snapshot_names_lists_and_their_items(self):
         import json

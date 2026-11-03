@@ -214,6 +214,14 @@ async def add_items(list_id: str, req: Request, body: AddItems):
     if (body.items is None) == (body.text is None):
         raise HTTPException(400, "send either items or text")
     real = _real_list_id(list_id)
+    if real is None:
+        # Every item on a list (owner, 2026-11-02): new items go on a
+        # named list; with exactly one list, that one.
+        rows = state.named_lists()
+        if len(rows) != 1:
+            raise HTTPException(400, "add to a named list: " + (", ".join(f"{l['name']} ({l['id']})" for l in rows)
+                                                              or "make a list in Arya first"))
+        real = rows[0]["id"]
     aisle_for = {}
     if body.items is not None:
         typed = []

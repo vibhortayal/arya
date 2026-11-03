@@ -1,11 +1,11 @@
 # Sign-in and the waitlist
 
-Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. Mockup the owner approved
+Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. On the live site new sign-up is closed by an Ops flag, which wins over the env, and email code and Google sign-in are on for existing and approved accounts. Mockup I approved
 (2026-10-30): https://claude.ai/artifact/PbmjdCuX1TVqkcFGZPJR9E
 
-Owner heads-up mail on each new join: see "Waitlist join emails" in OPS.md.
+Heads-up mail to me on each new join: see "Waitlist join emails" in OPS.md.
 
-## Waitlist screen (owner, 2026-10-31)
+## Waitlist screen (me, 2026-10-31)
 
 Settings, Waitlist (admins only) has three sections: **Waiting** (top), **Approved**,
 **Rejected**, each with a count and an empty line. Tick people in one section at a time;
@@ -42,13 +42,13 @@ row is deleted at first sign-in. API: `POST /auth/waitlist/reject`, `/restore`, 
    `ARYA_MAIL_REPLY_TO` (default `support@teamnightshift.org`, forwarded by Cloudflare
    Email Routing), `ARYA_PUBLIC_URL` (the app's web address for the "Try the demo" link,
    `https://arya.teamnightshift.org`). A failed send is logged and never blocks joining.
-2. **The code emails** are sent by Supabase, not the app (also when the owner approves
+2. **The code emails** are sent by Supabase, not the app (also when I approve
    someone on the Waitlist screen). `send_code` asks for a code with `create_user: true`,
    so Supabase picks the template by whether that address has signed in before. Both are
    edited in the dashboard (Authentication, Emails), both are code only (`{{ .Token }}`,
    `{{ .ConfirmationURL }}` unused), both carry an "Open Arya" button that links the plain site
    (`https://arya.teamnightshift.org`, never a login link), both end with the not-monitored line, and both are styled
-   with Arya's colours and type. The styled originals, with copy buttons, are in the owner's
+   with Arya's colours and type. The styled originals, with copy buttons, are in my
    artifact https://claude.ai/artifact/MqVD7GHNGv14L5AW4NZWee and are repeated here. The
    sender and Reply-To for these emails are set in Supabase (Project Settings, Auth, SMTP).
 
