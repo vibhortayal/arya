@@ -123,7 +123,7 @@ The four rubric questions are answered on [the judges page, Impact](../../JUDGES
   personal data. Glimmer is not used.
 - Closed in the demo: bulk imports, PDF and text decode, Curator runs
   and judge runs.
-- Friends and shopper reports stay inside one account. You can add a friend by handle, but the Friends, Store and Global boards show only your own account's data (plus labelled samples), and the demo is a single account. "Not here" reports are shared across shoppers (three different shoppers must report the same item at a store, and only shoppers with that item on their list see it), but the demo writes to its own sandbox, so a demo report reaches no one.
+- Friends, the boards and Shop-Off and Spotter reports stay inside one account. You can add a friend by handle, but the Friends, Store and Global boards show only your own account's data (plus labelled samples), and the demo is a single account. "Not here" reports are shared across shoppers (three different shoppers must report the same item at a store, and only shoppers with that item on their list see it), but the demo writes to its own sandbox, so a demo report reaches no one.
 - Live calls can be slow (a receipt that needs the Wonder re-read can take up to 90 seconds). A daily budget
   and a per-IP limit protect the account. If a gate is hit, nothing breaks: a demo visit
   that spends its share ($0.40) says "You've used this demo visit's live reads", and when
