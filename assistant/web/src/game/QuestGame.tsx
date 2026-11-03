@@ -14,12 +14,14 @@ import { Album, Home, Pick } from "./ui/Hub";
 import { Play } from "./ui/Play";
 import { Finish } from "./ui/Finish";
 import { Build } from "./ui/Build";
+import { Locate } from "./ui/Locate";
 import { buildLayout, sectionFor } from "./core/template";
 import type { StoreGraph } from "./map/graph";
 import "./game.css";
 
 export type Screen =
   | { s: "home" } | { s: "pick" } | { s: "album" } | { s: "loading" } | { s: "build" }
+  | { s: "locate"; st: StoreSummary }
   | { s: "play"; trip: Trip }
   | { s: "finish"; trip: Trip; rewards: Rewards };
 
@@ -125,7 +127,14 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     went.current = true;
     void listStore(list).then(st => { if (st) void startQuest(st); });
   }, [list]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* A store with known coordinates gets the soft location check first;
+   * a Demo Town store, or one with no coordinates, starts straight away. */
   const startQuest = async (st: StoreSummary) => {
+    if (!list?.items.length) { setScreen({ s: "home" }); return; }
+    if (st.lat != null && st.lng != null && !st.id.startsWith("town-")) { setScreen({ s: "locate", st }); return; }
+    await beginQuest(st);
+  };
+  const beginQuest = async (st: StoreSummary) => {
     if (!list?.items.length) { setScreen({ s: "home" }); return; }
     setScreen({ s: "loading" });
     const { layout, items } = await source.open(st.id, list);
@@ -158,6 +167,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
           {screen.s === "home" && <Home profile={profile} newbie={newbie} list={list} lists={lists} onList={l => { setList(l); rememberList(l.id); }} onPractice={startPractice} onQuest={() => void quest()} onPick={() => setScreen({ s: "pick" })} onAlbum={() => setScreen({ s: "album" })} onExit={onExit} extra={homeExtra} panels={homePanels} order={homeOrder} hidden={homeHidden} onEdit={onEditHome} onBuild={() => setScreen({ s: "build" })} onAddItems={onAddItems} />}
           {screen.s === "build" && <Build source={source} onBack={() => setScreen({ s: "home" })} onWalk={walkBuilt} findStore={findStore} />}
           {screen.s === "pick" && <Pick source={source} newbie={newbie} first={list?.store} onPick={startQuest} onPractice={startPractice} onBack={() => setScreen({ s: "home" })} />}
+          {screen.s === "locate" && <Locate store={screen.st} onGo={() => void beginQuest(screen.st)} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "album" && <Album profile={profile} onBack={() => setScreen({ s: "home" })} />}
           {screen.s === "loading" && <div className="qg-loading" role="status">Opening the store…</div>}
           {screen.s === "play" && (

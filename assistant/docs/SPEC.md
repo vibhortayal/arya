@@ -248,6 +248,10 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
   not tap. Every few seconds a frame goes up, SAM 3.1 pixelates each person,
   and Spark reads the section, the aisle signs, the items, and (if the
   user chooses) shelf prices. A daily frame cap bounds the cost.
+- FR-8.13 The live walk starts only when the phone location is confirmed
+  near the store. If location is off or cannot be confirmed, the user can
+  upload a video or photos instead. A Demo Town store is always allowed.
+  The position is compared on the phone and is not stored.
 - FR-8.12 One map belongs to one store location. The user can save a
   built or scanned store as "My map" for a real store.
 
