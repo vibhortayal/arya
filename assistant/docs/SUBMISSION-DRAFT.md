@@ -61,7 +61,8 @@ hold the truth about what you buy, but nobody reads them.
   action the server checks first.
 - **Quest (optional).** Start shopping turns the list into a walk through
   your store. Find it for me points the camera at a shelf and lights up
-  the item. Not here? warns the next shopper. A guided scan lets shoppers
+  the item. Not here? is shared: once three shoppers report the
+  same item at a store, other shoppers who have it on their list are told. A guided scan lets shoppers
   map their store, with the people it detects pixelated first.
 - **Open to other apps.** A developer portal (/developers) with an open
   Lists API, per-account tokens and a standard MCP connector, so an
