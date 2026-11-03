@@ -50,7 +50,7 @@ kept in the account.
 ## Cost rules
 - Math, routing, planning and patterns are code, $0.
 - Spark (Standard mode) for volume judgment.
-- Engine spend caps: $10/day for the app, $2/day for the demo bucket.
+- Engine spend caps: $10/day for the app, $2/day for the demo bucket in code (the judging compose sets $20).
 - Find it for me scans one item: one item's SAM and Spark calls.
 
 ## Known limits

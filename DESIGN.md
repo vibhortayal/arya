@@ -11,7 +11,7 @@ the Apple UI design system (impeccable.style skill vendored at
 A native-feeling phone surface. Arya is an Operate surface: the user is
 mid-task, often one-handed, often in a store. The interface uses the
 patterns the user's hand already knows: large titles, grouped inset
-lists, a translucent tab bar, pill actions. Nothing on screen performs;
+lists, a translucent navigation tab, pill actions. Nothing on screen performs;
 every element is a control or a fact.
 
 Scene that forces the choices: a shopper in a bright store aisle,
@@ -55,9 +55,9 @@ the approved wireframes (2026-10-27), and `tests/test_theme.py` pins them.
   quantity (tap the amount to change it), swipe to Move or Remove. Every
   part is a target; the name opens the item page. In a hunt, tapping the
   circle grabs the item.
-- Tab bar: fixed, backdrop blur, four places the shopper picks (default
-  Today, Lists, Quest, Ask) then More, with drawn SVG icons (1.8 stroke,
-  one weight) + 11px labels. Active = accent. The tab bar hides during a
+- Navigation tab: fixed, backdrop blur, four places the shopper picks (default
+  Today, Spending, Quest, Ask Arya) then More, with drawn SVG icons (1.8 stroke,
+  one weight) + 11px labels. Active = accent. The navigation tab hides during a
   hunt. There is no floating avatar (removed 2026-10-29).
 - Chat: bubbles, round input, Talk and Photo chips (44px). Talk turns
   danger-red while listening. Ask does not speak aloud.

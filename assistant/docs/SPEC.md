@@ -9,6 +9,22 @@ Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
 "the assistant". Structure as built: ARCHITECTURE.md. Decisions:
 `docs/quest/DISCUSSION.md`.
 
+> **Superseded in places (2026-11-03).** This spec was written before the build and
+> is kept as written. Where it disagrees with the app, `STATUS.md`,
+> `docs/WHAT-WE-BUILT.md` and `README.md` win. Known differences:
+> - **Retailer API.** FR-5.6 and FR-11.1 say Arya calls no retailer API. One
+>   call exists now: Kroger-family aisle hints from Kroger's public Products API
+>   (aisle location only, never prices). See the README.
+> - **Fridge photos.** FR-7.7 stands: inventory from fridge or pantry photos is not
+>   a product feature. The Ask photo chooser can read a fridge photo as a list.
+> - **Name guesses.** FR-5.14's up to 4 guesses from Spark are off by default.
+>   Add-field suggestions come from the user's own names, shared names and a
+>   built-in grocery word list.
+> - **Name.** The product is Arya. "Arya Quest" is the hackathon entry name;
+>   Quest is the optional game inside Arya.
+> - **Missing sources.** COMPETITORS.md and VISION.md were written outside this
+>   repository and are not in it. The Gate 0 record is `docs/evals/GATE-0-REPORT.md`.
+
 ## 1. What the product is
 
 The assistant keeps a living model of the purchases of one household.
@@ -342,7 +358,7 @@ Fallback after a failure: PDF receipts and e-receipts only. Photo intake leaves 
 Status of the evidence:
 
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
-- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: the research repo's GATE-REPORT.md.
+- Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: `docs/evals/GATE-0-REPORT.md`.
 
 ### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
 
@@ -371,7 +387,7 @@ with the walkthrough data on 2026-10-29.
 
 ## 10. Positioning and demo requirements
 
-Source: COMPETITORS.md. Sixteen products scored on six functions.
+Source: COMPETITORS.md (not in this repository). Sixteen products scored on six functions.
 
 ### 10.1 What the teardown shows
 

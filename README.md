@@ -172,7 +172,7 @@ loop on a phone. The window should be about 390 px wide.
 
 ## What is in it
 
-The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). Two things a judge cannot get elsewhere:
+The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). A few things a judge cannot get elsewhere:
 
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
