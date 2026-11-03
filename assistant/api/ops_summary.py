@@ -11,12 +11,18 @@ from api.cost_ledger import CostLedger
 
 FAIL_RATE = 0.10        # a type or feature failing more than this is flagged
 MIN_CALLS = 5
-SLOW_P95_MS = 20000
+# "Slow" is the slowest tenth (p90) over its limit, with at least
+# MIN_CALLS calls (owner, 2026-11-03: two slow calls flagged a feature).
+# Wonder re-reads are slow by design and have their own limit.
+SLOW_P90_MS = 20000
+WONDER_SLOW_P90_MS = 45000
+SLOW_P95_MS = SLOW_P90_MS   # old name, kept for harness/ops.py
 BUDGET_WARN = 0.8
 BACKUP_DIR = "/backups"   # compose mounts the VM backups folder here, read only
 BACKUP_STALE_H = 30
 
-KIND_LABEL = {"reads": "Photo and receipt reads", "ask": "Ask", "maps": "Store maps", "helps": "Other helps"}
+KIND_LABEL = {"reads": "Photo and receipt reads", "ask": "Ask", "maps": "Store maps", "helps": "Other helps",
+              "wonder": "Wonder re-reads"}
 
 
 def _num(name, default):
@@ -24,6 +30,10 @@ def _num(name, default):
         return float(os.environ.get(name, default))
     except ValueError:
         return float(default)
+
+
+def slow_limit_ms(key):
+    return WONDER_SLOW_P90_MS if key == "wonder" else SLOW_P90_MS
 
 
 def backup_age_hours():
@@ -73,11 +83,11 @@ def summary(hours=24):
     calls = []
     for key, t in sorted(h["by_kind"].items(), key=lambda kv: -kv[1]["calls"]):
         calls.append({"key": key, "label": KIND_LABEL.get(key, key), **{k: t[k] for k in
-                      ("calls", "failed", "usd", "p95_ms", "errs")}})
+                      ("calls", "failed", "usd", "p90_ms", "p95_ms", "errs")}})
     if "voice" in h["by_mode"]:
         t = h["by_mode"]["voice"]
         calls.append({"key": "voice", "label": "Voice", **{k: t[k] for k in
-                      ("calls", "failed", "usd", "p95_ms", "errs")}})
+                      ("calls", "failed", "usd", "p90_ms", "p95_ms", "errs")}})
     for c in calls:
         c["bad"] = c["calls"] >= MIN_CALLS and c["failed"] / c["calls"] > FAIL_RATE
         if c["bad"]:
@@ -85,8 +95,8 @@ def summary(hours=24):
             needs.append({"title": f"{c['label']} failing",
                           "sub": f"{c['failed']} of {c['calls']} failed in {hours} h ({errs}).",
                           "chip": f"{c['failed']} of {c['calls']}", "bad": True})
-        elif c["p95_ms"] and c["p95_ms"] > SLOW_P95_MS:
-            needs.append({"title": f"{c['label']} is slow", "sub": f"Slowest tenth took {c['p95_ms'] / 1000:.0f} s.",
+        elif c["calls"] >= MIN_CALLS and c["p90_ms"] and c["p90_ms"] > slow_limit_ms(c["key"]):
+            needs.append({"title": f"{c['label']} is slow", "sub": f"Slowest tenth took {c['p90_ms'] / 1000:.0f} s.",
                           "chip": "Slow", "bad": True})
 
     frozen = []

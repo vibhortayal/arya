@@ -7,7 +7,7 @@ from `assistant/deploy`. I am the only operator.
 | Thing | Where | Alerts you when |
 |---|---|---|
 | Outside uptime check on `https://arya.teamnightshift.org/health` | UptimeRobot or Better Stack, free plan | The site is down, or `/health` answers 503 (data folder not writable, or free disk under `ARYA_HEALTH_MIN_FREE_MB`, default 500) |
-| Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
+| Daily report email | cron + `python -m harness.ops report --email` | Every morning; the subject starts `[Arya] Needs a look` when a model type fails more than 10% of calls (5 or more calls), is slow (p95 over 20 s; the Ops screen uses the slowest tenth, p90, with 5 or more calls, and gives Wonder re-reads 45 s), a budget is at 80%, an account is frozen, the disk is low, or new feedback came in |
 | Backup dead-man ping | Healthchecks.io free plan, pinged at the end of `backup.sh` | The nightly backup did not finish |
 
 ## The Ops screen (owner only)

@@ -44,7 +44,7 @@ class TestOpsScreen(unittest.TestCase):
         led = CostLedger(self.deps._LEDGER, user="x@y")
         tok = usage_kind.set("reads")
         for _ in range(6):
-            led.record("wonder", "m", ok=False, err="timeout", ms=900)
+            led.record("standard", "m", ok=False, err="timeout", ms=900)
         usage_kind.reset(tok)
         self.deps.freeze("ann@x", 1.4)
         self._login("kim@test.arya")
@@ -54,6 +54,37 @@ class TestOpsScreen(unittest.TestCase):
         self.assertIn("ann@x is frozen", titles)
         self.assertEqual(d["frozen"][0]["user"], "ann@x")
         self.assertIn("ai_paused", d["controls"])
+
+    def _summary_with(self, rows):
+        from api.cost_ledger import CostLedger, usage_kind
+        os.environ["ARYA_OWNER_USERNAME"] = "kim@test.arya"
+        led = CostLedger(self.deps._LEDGER, user="x@y")
+        for kind, mode, ms in rows:
+            tok = usage_kind.set(kind)
+            led.record(mode, "m", ms=ms)
+            usage_kind.reset(tok)
+        self._login("kim@test.arya")
+        return self.c.get("/api/ops").json()
+
+    def test_slow_needs_five_calls_and_uses_the_slowest_tenth(self):
+        # Owner, 2026-11-03: two slow calls flagged "Other helps is slow".
+        d = self._summary_with([("helps", "standard", 38000)] * 2)
+        self.assertNotIn("Other helps is slow", [n["title"] for n in d["needs"]])
+        # 10 calls, one slow: p90 is the 9th fastest, so not flagged.
+        d = self._summary_with([("ask", "standard", 2000)] * 9 + [("ask", "standard", 40000)])
+        self.assertNotIn("Ask is slow", [n["title"] for n in d["needs"]])
+        d = self._summary_with([("ask", "standard", 30000)] * 5)
+        slow = next(n for n in d["needs"] if n["title"] == "Ask is slow")
+        self.assertEqual(slow["sub"], "Slowest tenth took 30 s.")
+
+    def test_wonder_re_reads_have_their_own_limit(self):
+        d = self._summary_with([("reads", "standard", 8000)] * 5 + [("reads", "wonder", 34000)] * 5)
+        titles = [n["title"] for n in d["needs"]]
+        self.assertNotIn("Photo and receipt reads is slow", titles)
+        self.assertNotIn("Wonder re-reads is slow", titles)
+        self.assertIn("wonder", [c["key"] for c in d["calls"]])
+        d = self._summary_with([("reads", "wonder", 50000)] * 5)
+        self.assertIn("Wonder re-reads is slow", [n["title"] for n in d["needs"]])
 
     def test_pause_stops_paid_reads_and_lists_keep_working(self):
         from fastapi import HTTPException

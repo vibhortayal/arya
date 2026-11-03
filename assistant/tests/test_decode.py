@@ -236,10 +236,10 @@ class TestPhotoDecodeWonderFlip(unittest.TestCase):
         self.assertEqual(call["mode"], "wonder")
         self.assertIs(call["personal"], True)
         # The eval's Wonder configuration: no reasoning_effort key, and
-        # the attempt is bounded (eval p95 was 60.5 s; bound is 90 s).
+        # the attempt is bounded (eval p95 was 60.5 s; owner set 60 s on 2026-11-03: past it, Spark's read is kept, flagged).
         self.assertIsNone(call["reasoning_effort"])
         self.assertEqual(call["timeout"], PHOTO_WONDER_TIMEOUT_S)
-        self.assertEqual(PHOTO_WONDER_TIMEOUT_S, 90)
+        self.assertEqual(PHOTO_WONDER_TIMEOUT_S, 60)
 
     def test_spark_only_setting_never_calls_wonder(self):
         import os

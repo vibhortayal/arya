@@ -144,7 +144,8 @@ class CostLedger:
 
     def health(self, hours=24):
         """What the ops report needs from the last `hours`: calls, failures
-        and p50/p95 latency by model mode and by kind, plus spend per
+        and p50/p90/p95 latency by model mode and by kind (Wonder calls
+        are their own kind, "wonder"), plus spend per
         account. Failed rows count as calls with cost 0."""
         since = time.time() - hours * 3600
         by_mode, by_kind, users = {}, {}, {}
@@ -152,8 +153,10 @@ class CostLedger:
             if _epoch(r.get("ts")) < since:
                 continue
             failed = r.get("ok") is False
-            for table, key in ((by_mode, r.get("mode", "?")),
-                               (by_kind, r.get("kind") or "helps")):
+            # Wonder re-reads take much longer than Spark by design, so
+            # the Ops screen judges them on their own (owner, 2026-11-03).
+            kind = "wonder" if r.get("mode") == "wonder" else (r.get("kind") or "helps")
+            for table, key in ((by_mode, r.get("mode", "?")), (by_kind, kind)):
                 t = table.setdefault(key, {"calls": 0, "failed": 0, "usd": 0.0,
                                            "ms": [], "errs": {}})
                 t["calls"] += 1
@@ -169,6 +172,8 @@ class CostLedger:
             for t in table.values():
                 ms = sorted(t.pop("ms"))
                 t["p50_ms"] = ms[len(ms) // 2] if ms else None
+                # Nearest rank: nine in ten calls took this long or less.
+                t["p90_ms"] = ms[max(0, -(-len(ms) * 9 // 10) - 1)] if ms else None
                 t["p95_ms"] = ms[min(len(ms) - 1, int(len(ms) * 0.95))] if ms else None
                 t["usd"] = round(t["usd"], 4)
         top = sorted(users.items(), key=lambda kv: -kv[1])[:5]
