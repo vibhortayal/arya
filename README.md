@@ -83,6 +83,8 @@ Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 **The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
+**Muse can use Arya.** Arya has a standard MCP connector, and Muse is the reference client: ask the Muse agent to connect to Arya, paste the code into the secure credentials vault Muse opens (never the chat), and Muse can read your list, add items, check them off and file a receipt it read in chat, through six tools. I tested it on my own Muse on 2026-11-02. Setup: [the agent connector](assistant/docs/AGENT-CONNECTOR.md).
+
 **Rome wasn't built in a day.** A community can't be built inside one hackathon. What I finished is the foundation: the more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. The more people use it, the more it gives back to them.
 
 ## Live demo

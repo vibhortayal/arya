@@ -8,11 +8,14 @@ ffmpeg, Postgres) does plumbing only.
 | **SAM 3.1** | Shelf segmentation for the store map; Shelf Scan and Find it for me boxes; finding people so they are pixelated before any frame is kept | Mapping pipeline; server |
 | **Muse Spark 1.3 Standard** | Staple judge, Curator, Ask Arya, list photos, expiry-date photos, grocery check for unknown names, order-text fallback, shelf labels, Shelf Scan crop verification, receipt fallback | Server (Meta Model API) |
 | **Muse Spark Open** (open weights, hosted on Baseten) | Second seat of the staple judge (names only, advisory) and dictionary category labels. It sees item names only (no prices, dates, stores or account details). Numbers: [JUDGES.md](../../JUDGES.md#which-model-does-which-job) | Batch jobs (`api/open_client.py`) |
-| **Muse Spark** (user's own Muse + connector) | Edge perception: lists, receipts from chat | The user's Muse session |
+| **Muse, the user's own assistant (over MCP)** | Connects to Arya as an agent: reads the list, adds and checks off items, answers "what am I running low on?", and files a receipt it read in chat (Arya checks the arithmetic) | The user's Muse session, to Arya's MCP address (live) |
 | **Muse Wonder 1.0** | (1) Second reader for receipt photos: re-reads when Spark fails or the checks flag the read (me, 2026-11-01). Numbers: [JUDGES.md](../../JUDGES.md#which-model-does-which-job). | Server |
 | **Muse Image 1.0** | The 23 grab-celebration characters; share looks | Characters generated once and shipped as assets; share looks are generated live per tap |
 | **Muse Voice Transcribe** | The list mic and Ask Arya's mic | Server |
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
+
+## Muse connects to Arya (live)
+Arya has a standard MCP connector, and Muse is the reference client. In Muse, ask the agent to connect to Arya's MCP address; when it asks for your code, paste it into the secure credentials vault Muse opens, never the chat. I tested exactly that on my own Muse on 2026-11-02, with no terminal and no settings file. Muse then has six tools: `get_snapshot`, `get_list`, `add_items`, `check_item`, `file_receipt` and `get_receipts`. A receipt Muse reads in chat is filed through `file_receipt`; Arya checks the arithmetic itself and spends no photo-reading credits on it. The code acts as your account, but cannot reach routes that spend model credits in bulk, change settings, or touch groups and friends; it is capped at 600 calls an hour and can be turned off in Arya at any time. Setup and limits: [the agent connector](../../assistant/docs/AGENT-CONNECTOR.md).
 
 ## Rules
 - Spark and Wonder run in Standard mode (me, 2026-11-01): content is not used to train Meta models. Contributor
