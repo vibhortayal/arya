@@ -340,8 +340,12 @@ The first commit here is Oct 27, 15:13 ET, nothing in this repo is older, and
 separate research repo start on Oct 26. The engine (decode, dictionary, ledger, patterns, the first phone app)
 landed in four commits between 15:31 and 15:38. Muse Code, running Muse Wonder, wrote that
 engine with me (my account); git lists the commits under the author name "Spark". The dated table
-is on the [build page](docs/WHAT-WE-BUILT.md). The session logs
-in `assistant/loops/` record the rest.
+is on the [build page](docs/WHAT-WE-BUILT.md).
+
+Other commits are named "Spark" too: 253 of the 1,333 in all, next to 556 named
+Claude and 524 under my own name. They come from the Meta Muse agent running on
+my VM. It ran Muse Spark and used Muse Wonder through the agent, and it coded in
+parallel with Claude. The session logs in `assistant/loops/` record the rest.
 
 
 **Build tools.** I used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, running Muse Wonder, to write the first version of the engine on Oct 27. I then built the rest of the app with Claude, which I know well. Muse Code is not part of the shipped app.
