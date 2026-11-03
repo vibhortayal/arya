@@ -98,7 +98,9 @@ Starting point today: the Lists API and the developer portal at `/developers`
 (with a quickstart and an interactive reference; `docs/API.md`), and the MCP
 connector that lets an AI agent read and edit your lists
 (`assistant/docs/AGENT-CONNECTOR.md`). The API is for your own data, with a
-personal token. Everything below is future work and not built:
+personal token. Desk research on who else is in this space, with its unverified
+claims flagged, is in [`MARKET.md`](MARKET.md). Everything below is future work
+and not built:
 - **A bigger developer portal,** so other platforms can integrate with Arya
   with Arya's household data as the shared source: more endpoints (receipts,
   spend, what is running low), webhooks, OAuth sign-in instead of a personal
