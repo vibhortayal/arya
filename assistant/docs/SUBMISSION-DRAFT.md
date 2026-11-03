@@ -27,7 +27,7 @@ ask Arya questions, and, if you like, turn the trip into a game.
 
 ## Build for Your World
 
-- **What is Arya.** The tagline above, in full: `README.md`, "What is Arya".
+- **What is Arya.** A grocery app that learns from your receipts and helps shoppers help each other; the full story is in the README.
 - **Why I built it.** I had this problem: carrying the list in my
   head and not knowing where the money went. Arya frees up that time and
   mental space. Arya is free to use; households and groups share lists. It costs money to keep running (the AI
