@@ -1,7 +1,8 @@
 # Submission draft — Cerebral Valley portal (paste-ready blocks)
 
-Status: DRAFT, checked 2026-11-01 against main 0d0b0f2, the live site and
-the video claim check (`/mnt/project-files/demo-video/03-CLAIM-CHECK.md`).
+Status: DRAFT. Checked 2026-11-01 against main 0d0b0f2 and the live site.
+The character count, the test count and the known-failures pointer were
+rechecked on 2026-11-03 against main a81b4e25.
 Nothing is submitted until I approve the complete package. Portal
 fields sit behind participant sign-in, so the blocks below follow common
 portal fields; paste each into the field that matches. The judging map and
@@ -60,7 +61,8 @@ hold the truth about what you buy, but nobody reads them.
   action the server checks first.
 - **Quest (optional).** Start shopping turns the list into a walk through
   your store. Find it for me points the camera at a shelf and lights up
-  the item. Not here? warns the next shopper. A guided scan lets shoppers
+  the item. Not here? is shared: once three shoppers report the
+  same item at a store, other shoppers who have it on their list are told. A guided scan lets shoppers
   map their store, with the people it detects pixelated first.
 - **Open to other apps.** A developer portal (/developers) with an open
   Lists API, per-account tokens and a standard MCP connector, so an
@@ -85,7 +87,7 @@ hold the truth about what you buy, but nobody reads them.
   candidates for Find it for me (Spark then checks each crop), and finds
   people so they are pixelated before any frame is kept.
 - **Muse Voice Transcribe**: voice adds in lists and voice questions in Ask.
-- **Muse Image**: painted the 20 Quest celebration characters once during
+- **Muse Image**: painted the 23 Quest celebration characters once during
   the build, and paints live in the app (a player's avatar, and the
   optional paint pass on the trip share card).
 - **Meta Model API**: one client module (`assistant/api/meta_client.py`)
@@ -94,7 +96,7 @@ hold the truth about what you buy, but nobody reads them.
 - All math (ledger, returns, cadence, spend, price compare) is plain code.
   The models read and speak; they never calculate.
 
-## How we built it
+## How I built it
 
 Python (FastAPI) backend with deterministic engines for the ledger,
 patterns and lists; a React + TypeScript PWA (a website that installs to the Home Screen like an app); in-process demo sandboxes;
@@ -104,13 +106,13 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 
 ## Challenges
 
-- **Reading receipts you can trust.** In our test on 9 public receipts
+- **Reading receipts you can trust.** In my test on 9 public receipts
   (98 lines, labeled by hand first), Wonder got 97 lines right with 0 price
   errors; Spark got 92 with 4 price errors its own confidence did not
   flag, at about a tenth of the cost and a quarter of the time. So Spark
   reads first, code checks the arithmetic, and Wonder takes a second look
   only when a check fails. This combined reader is not yet measured on
-  those photos, so we claim no accuracy number for it; unsure lines always
+  those photos, so I claim no accuracy number for it; unsure lines always
   go to a review queue.
 - **Patterns, not prompts.** A model guessing "you need milk" is easy to
   build and hard to trust. Cadence and price are code; the model only
@@ -130,8 +132,8 @@ Oct 27, 2026, 15:13 ET); see "How this was built" in the README.
 - Receipt photo test (9 public receipts, 98 lines): Wonder 97/98, 0 price
   errors; Spark 92/98, 4 price errors. Public test receipts never entered
   my data.
-- More than 1,200 Python unit tests plus the web app's tests. A small
-  number of known failures on `main` are tracked in GitHub issues.
+- More than 1,880 Python unit tests plus the web app's tests. Known failures on
+  `main` are listed in `STATUS.md`.
 
 ## Responsible AI
 
@@ -157,6 +159,37 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 
 **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
 
+## Feedback from using partner technologies
+
+**Meta Model API (Muse Spark and Muse Wonder).** Spark was the workhorse: receipt reads, list photos, Ask Arya, list suggestions and the staple judge all run on it. Spark cost about $0.013 per receipt read in my eval; I also send prompt_cache_key so the shared prompt prefix is cached. In my 9-receipt eval, Wonder was the more accurate reader (97 of 98 lines after hand checking; on the automatic scorer, Spark 92 and Wonder 86, because the scorer was calibrated on Spark's recorded run and counted Wonder's spelled-out brand names, such as "PF" as "Pepperidge Farm", as wrong, though every price on those lines was exact) but about four times slower: a 34 s mean and a 60.5 s p95, against Spark's 8.6 s and 11.9 s. That gap shaped the product. Spark reads first, arithmetic checks run, and Wonder re-reads only the receipts the checks flag, with a 60 s cap. What was rough: Spark's mistakes were often silent (4 of its 6 wrong lines carried no low-confidence flag), so I had to build my own checks. A read timeout is ambiguous about billing, so I never retry one. Content-policy errors arrive as raw HTTP 400 text that I had to translate for people. Asks: a per-line confidence that tracks real accuracy, a latency or priority option for Wonder, clear billing rules for timed-out calls, and typed error codes.
+
+**Baseten (open weights).** I ran Muse Spark Open on Baseten for batch jobs that touch only platform data: labeling the shared item dictionary with category and store section, and a second opinion for the staple judge. The OpenAI-style endpoint dropped in beside my hosted client with little new code, and on a 32-name test it agreed with hosted Spark on every category and store section. As the judge's second opinion on the demo account, it agreed on 3 of 4 items. The one split was Greek Yogurt 32 oz: from the name alone it said staple, while Spark, which sees the purchase history, said occasional. That is exactly the kind of disagreement I want a second opinion to surface. Rough: my partner key answered only one model name, and when my model setting was blank, Baseten replied with a bare HTTP 400 instead of naming the problem. Asks: a clear error for an unknown or empty model, and a usage view that maps to the credit grant.
+
+**Kroger Products API.** It gives live aisle locations for Kroger-family stores, which became Arya's aisle hints. It was easy to start with. It is a suggestion layer only; crowd mapping stays the core. Rough edges: responses carry no cache headers, so every lookup is live, and I set my own daily cap. Ask: a published per-app call limit and a clear attribution rule.
+
+**Supabase.** Email-code and Google sign-in through the REST auth API, with no client library, plus a Postgres mirror of my JSON documents. Both are live. **Resend.** Waitlist and account-deletion emails, best effort. I hit no notable problems with either.
+
+## How creatively did I use Meta's AI tooling?
+
+1. **Muse connected itself to Arya.** This surprised me most. Arya has an MCP server with six tools: get_snapshot, get_list, add_items, check_item, file_receipt and get_receipts. On Nov 2 I set it up on a real Muse account with no terminal and no settings file. I tapped "Make my code" in Arya and asked the Muse agent to connect to Arya at its address. Muse asked for the code, opened its own secure credentials box for it (so the code never went into the chat), and the connection worked. Arya's connector carries its own instruction doc, so the person writes no prompt. After that, "add oat milk to my list" in Muse changes the real list in Arya. I think it was this easy because the whole stack is Meta's. Muse is the assistant, Muse Spark and Wonder (through the Meta Model API) read the receipts and answer Ask, and Muse Spark Open on Baseten ran my batch jobs (labeling the shared item dictionary and a second opinion for the staple judge), so Arya fits in as one more piece of the same ecosystem.
+
+2. **Two Meta models as a checked team.** On real receipts, Wonder was more accurate, but Spark was about nine times cheaper and four times faster, and most of Spark's errors were silent. So Spark reads first, and plain code checks the arithmetic, the item count and each price against the item's own history. Only flagged receipts go to Wonder, and every receipt records who read it and why.
+
+3. **SAM 3.1 for privacy.** When a shopper photographs a shelf, SAM finds every person in the frame and Arya pixelates them before anything is saved. The same model proposes product boxes, and Arya checks the top three, not just the best one.
+
+4. **Every Meta model has a job, and I can name an example for each.** Spark reads receipts first and answers Ask Arya. Wonder re-reads the receipts the checks flag; in my eval, on a Westside Market receipt Spark got 9 of 13 lines and Wonder got all 13. SAM 3.1 pixelates shoppers in shelf photos. Muse Image painted Arya's 23 characters. Muse Voice Transcribe turns the Talk button into list adds. Muse Spark Open on Baseten labeled the shared item dictionary.
+
+5. **I tuned Ask Arya from real phone tests, one failure at a time.** Each fix came from a real message that went wrong:
+   - "Add a dozen eggs" added a 12-count carton 12 times. Now a quantity that matches the pack size counts as one pack.
+   - "Remove rice" also re-added oat milk from an earlier turn. Now Ask acts only on the last message.
+   - A Hinglish test ("main Hindi mein baat kar raha hun") got "Arya does not do that yet". Now small talk gets a friendly reply in the person's own language, plus example questions.
+   - "Add oat milk and two lemons" added "Milk - 2%" and an item called "two lemons". Now spoken number words become a count, and an add joins only an item with exactly that name.
+   Behind it, Ask reads a feature guide kept under 26,000 characters, updated in the same change as every app change, so its answers about Arya stay current.
+
+6. **Voice that copes with mishearing.** Muse Voice Transcribe hears the Talk button in Lists and Ask. The browser records 16 kHz mono audio, and Arya keeps no recording or transcript. When the person has fixed a language, Arya sends it as a hint, and repeats the call without the hint if the API refuses it. Real example: voice heard "Costcosi" for a list named Costcozy. Now a sound-alike match over the person's own list names finds it, and when two lists could fit, Ask offers tap-to-answer choices.
+
+Also built, but switched off: an Alexa skill that sends misheard adds to Spark in the background, where Spark matches them against the person's real list names.
+
 ## Try it
 
 - Live: https://arya.teamnightshift.org. Tap "Try it now" for a fictional
@@ -169,4 +202,6 @@ checked in a browser at 360x640, 390x844, 430x932 and 390x568.
 ## Track and team
 
 Indie track. Team Nightshift: Vibhor Tayal (representative and only
-member), building with Claude Code as the coding agent.
+member), building with Claude Code and the Meta Muse agent (running Muse
+Spark, which used Muse Wonder) as coding agents, in parallel. Details: README,
+"How this was built".
