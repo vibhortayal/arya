@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouse
 import { addToUsual } from "../lib/listPick";
 import { useAvatar } from "../app/avatar";
 import { useNav } from "../app/nav";
-import { clearOnSignOut, useSession } from "../app/session";
+import { BOOT_WAIT_MS, clearOnSignOut, useSession, within } from "../app/session";
 import { questOpened } from "../lib/questSeen";
 import { get, post, friendlyError, keepBootRead } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
@@ -293,7 +293,10 @@ export function Today() {
     // any write also drops it, lib/api.ts).
     const early = performance.now() < BOOT_FRESH_MS ? window.__bootData?.today as Promise<TodayData> | undefined : undefined;
     if (window.__bootData) window.__bootData.today = undefined;
-    try { d = await (early ? early.then(v => { keepBootRead("/api/today", v); return v; }, () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
+    // On a weak signal the early read is not waited on for long: the
+    // app's own read can answer from the saved copy (lib/api.ts get).
+    try { d = await (early ? within(early.then(v => { keepBootRead("/api/today", v); return v; }), BOOT_WAIT_MS, null as TodayData | null)
+        .then(v => v ?? get<TodayData>("/api/today"), () => get<TodayData>("/api/today")) : get<TodayData>("/api/today")); }
     catch (e) { if (live.current && !todayMem) setLoadFailed(true); showErr(e); return; }
     if (!live.current || !d.home) { if (live.current && !todayMem) setLoadFailed(true); return; }
     todayMem = d;

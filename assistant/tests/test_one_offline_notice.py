@@ -23,7 +23,7 @@ class OneOfflineNotice(unittest.TestCase):
 
     def test_app_bar_counts_waiting(self):
         a = src("web/src/App.tsx")
-        self.assertIn('t("offline.bar")}{pending ? " " + t("lists.queue.waiting", { count: pending }) : ""}', a)
+        self.assertIn('t(slow ? "offline.slowBar" : "offline.bar")}{pending ? " " + t("lists.queue.waiting", { count: pending }) : ""}', a)
 
     def test_help_and_ask_say_so(self):
         self.assertIn("The offline note at the top counts the changes waiting", src("web/src/i18n/en.json"))
