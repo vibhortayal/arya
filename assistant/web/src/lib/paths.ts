@@ -30,3 +30,28 @@ export function joinCodeFromUrl(): string {
 export function forgetJoinCode(): void {
   try { localStorage.removeItem(JOIN_KEY); } catch { /* nothing kept */ }
 }
+
+/* Back to a link another app started (/?alexa=1, hidden behind a
+ * server flag): kept on this phone for 10 minutes so it survives
+ * signing in, then the server's own page takes over. */
+const LINK_KEY = "arya.applink";
+const LINK_MS = 10 * 60 * 1000;
+export const LINK_RESUME = "/alexa/authorize/resume";
+export function stashAppLink(): void {
+  try {
+    if (new URLSearchParams(location.search).get("alexa") === "1")
+      localStorage.setItem(LINK_KEY, String(Date.now()));
+  } catch { /* private mode: the address still has it */ }
+}
+export function appLinkPending(): boolean {
+  try {
+    if (new URLSearchParams(location.search).get("alexa") === "1") return true;
+  } catch { /* fall through */ }
+  try {
+    const t = Number(localStorage.getItem(LINK_KEY) || 0);
+    return t > 0 && Date.now() - t < LINK_MS;
+  } catch { return false; }
+}
+export function forgetAppLink(): void {
+  try { localStorage.removeItem(LINK_KEY); } catch { /* nothing kept */ }
+}

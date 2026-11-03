@@ -13,10 +13,11 @@ import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { isOffline, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
-import { forgetJoinCode, isDevelopersPath, joinCodeFromUrl, stashJoinCode } from "./lib/paths";
+import { appLinkPending, forgetAppLink, forgetJoinCode, isDevelopersPath, joinCodeFromUrl, LINK_RESUME, stashAppLink, stashJoinCode } from "./lib/paths";
 
 // Keep an invite code from the address before sign-in can drop it.
 stashJoinCode();
+stashAppLink();
 import { BottomBar } from "./ui/Bar";
 import { OwnKeyRoute } from "./ui/OwnKey";
 import { ListPickHost } from "./ui/ListPick";
@@ -49,6 +50,12 @@ function Root() {
   if (isDevelopersPath(location.pathname)) return <Suspense fallback={null}><Developers /></Suspense>;
   if (!s.ready) return null;
   if (!s.user) return <Login />;
+  if (!s.demo && appLinkPending()) {
+    // Signed in for a link another app started: the server's page goes on.
+    forgetAppLink();
+    location.replace(LINK_RESUME);
+    return null;
+  }
   return <AvatarProvider><NavProvider initial="home"><TourProvider><GuideProvider><Shell /></GuideProvider></TourProvider></NavProvider></AvatarProvider>;
 }
 
