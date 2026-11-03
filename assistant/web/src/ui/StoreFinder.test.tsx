@@ -30,3 +30,27 @@ test("Near me lists stores near you, with the location sent to the server", asyn
   expect(urls.some(u => u.includes("lat=1") && u.includes("lng=2"))).toBe(true);
   expect(screen.getByText("Near you")).toBeTruthy();
 });
+
+/* Demo bug (owner, 2026-11-03): a pick that came back empty crashed on
+ * .name ("null is not an object"). It is now a message, and the caller
+ * is never handed nothing. */
+const reply = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
+
+test("a pick that comes back empty shows a message and never calls back", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (u: string) => String(u).includes("/pick") ? reply(null)
+    : reply({ suggestions: [{ place_id: "p1", name: "Costco", secondary: "Newark, CA" }] })));
+  const picked = vi.fn();
+  render(<ToastProvider><Host onPicked={picked} /></ToastProvider>);
+  fireEvent.click(document.querySelector("[data-near]")!);
+  await waitFor(() => expect(document.querySelector("[data-pick]")).not.toBeNull());
+  fireEvent.click(document.querySelector("[data-pick]")!);
+  await waitFor(() => expect(document.body.textContent).toContain("Arya couldn't add that store. Try again."));
+  expect(picked).not.toHaveBeenCalled();
+});
+
+test("Demo Town: no Google results, it points to the town's stores", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => reply({ provisioned: true, suggestions: [], demo_town: true })));
+  render(<ToastProvider><Host onPicked={() => {}} /></ToastProvider>);
+  fireEvent.click(document.querySelector("[data-near]")!);
+  await waitFor(() => expect(document.body.textContent).toContain("The demo uses Demo Town's stores."));
+});
