@@ -12,7 +12,9 @@ now".
   app and the demo household open and work, but anything that reads a photo,
   answers in Ask or listens to your voice says it cannot reach Meta.
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
-  and microphone steps need a phone.
+  and microphone steps need a phone, and a phone browser only allows the camera
+  on https. On a phone reaching your computer over plain `http://` on your
+  network, use the receipt upload instead of the camera.
 
 ## How do I start it?
 From the repository root:
@@ -26,7 +28,7 @@ Open http://localhost:8080. The first build takes a few minutes. On the first
 visit a "Create your account" sheet opens. That makes the one real account on
 this copy: a username (lowercase letters, digits and `_ % + @ -`, and `.` after the first character) and a password. Use it
 to snap or upload your own receipts and see them read and saved, which is
-Arya's core feature. Or close the sheet and tap **Try it now** for the demo
+Arya's core feature. Or tap **Close** on the sheet and then **Try it now** for the demo
 household. The demo keeps nothing: it reads a receipt live on the screen but does not
 save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
 household into a Docker volume; later starts keep what is there.
@@ -87,9 +89,11 @@ Next, a step-by-step tour of every feature on your copy:
 [`docs/TRY-THE-FEATURES.md`](TRY-THE-FEATURES.md).
 
 ## Can I run it without Docker?
-This route has not been tested by the Tester yet; the Docker route above has.
+This route was followed step by step from a fresh clone by the Tester, without a
+key (the receipt step was not run). The Docker route above is not yet verified
+end to end on a clean machine.
 
-You need Python 3.12 and Node 22. From the repository root:
+You need Python 3.12 or newer (3.13 worked) and Node 22. From the repository root:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt
@@ -98,7 +102,9 @@ cd assistant/web && npm ci && npm run build && cd ..
 MODEL_API_KEY=<your key> ../.venv/bin/python -m uvicorn api.main:app --port 8000
 ```
 
-Open http://localhost:8000. For front-end work, `npm run dev` in
+Open http://localhost:8000. Without a key, Ask shows the "no Meta key" message;
+on this route its last words, "docker compose up -d", do not apply: set
+`MODEL_API_KEY` and start uvicorn again. For front-end work, `npm run dev` in
 `assistant/web` starts Vite.
 
 ## How do I run the tests?
@@ -106,7 +112,8 @@ Open http://localhost:8000. For front-end work, `npm run dev` in
 (cd assistant && ../.venv/bin/python -m unittest discover -s tests)
 (cd assistant/web && npm test)
 ```
-Current counts and known failures: [`STATUS.md`](../STATUS.md). CI is
+Current counts and known failures: [`STATUS.md`](../STATUS.md). One web test,
+`pack.test.tsx` "arrow keys pack and skip", is flaky in a full run and passes alone. CI is
 manual-only (`.github/workflows/tests.yml`).
 
 ## What if something goes wrong?
@@ -119,6 +126,11 @@ manual-only (`.github/workflows/tests.yml`).
 - **Port already in use.** Set `ARYA_LOCAL_PORT` to a free port.
 - **A model error with a key set.** The key was rejected or has no credit;
   check it at dev.meta.ai.
+- **The build fails to download packages, with a certificate error (pip or npm).** A
+  proxy that re-signs HTTPS is the usual cause. Build on a network without one, or
+  add your proxy's certificate to Docker.
+- **Docker Hub answers `429 Too Many Requests`.** The pull limit for your address
+  is used up. Wait a few minutes and run the build again, or run `docker login`.
 - **Status check.** `http://localhost:8080/health` answers when the app is up.
 
 This is not the feature "Use your own Meta key" in the live app's Settings,

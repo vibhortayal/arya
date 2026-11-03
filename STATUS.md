@@ -89,7 +89,7 @@ headline: "Your grocery run, smarter." The app is the React app (`assistant/web/
 served at `/`; the plain-JS app is retired (it stays in git history: tag
 `plain-js-app`, commit 80bd79d). `/next/...` answers 302 to `/...`. The
 service worker (`web/src/sw.js`) precaches the build, so no cache name is
-bumped by hand. Tests: the last full run (2026-11-02) collected 1,842 Python tests, all passing, 1 skipped; re-run before quoting numbers. All
+bumped by hand. Tests: the Tester's smoke on main b2c2658 (2026-11-03) passed all 1,880 Python tests (the strict fresh-clone run the same day counted 1,877 with 1 skipped, on an older commit); re-run before quoting numbers. All
 UI text lives in `web/src/i18n/en.json` (i18next; English only for now).
 Architecture diagram and technical detail: `assistant/docs/ARCHITECTURE.md`
 section 0. `assistant/loops/2026-10-29-react-at-root.md`.
@@ -171,7 +171,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   `2026-10-29-quest-instore.md`.
   After a find in a part of the store Arya has not located, a one-line
   nudge offers Snap: the camera opens inside the game and the shelf photo
-  goes to Map my store's scan (people blurred first). The finish card
+  goes to Map my store's scan (people pixelated first). The finish card
   lists those sections with Snap each. `2026-10-30-quest-fog-snap.md`.
   The Quest home shows level, streak and the sticker album only once
   there is something to show, and "New here?" only to a player who has
@@ -309,6 +309,7 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - My phone pass on the list-first build after deploy.
 
 ## Known gaps
+- One web test is flaky: `pack.test.tsx` "arrow keys pack and skip" can fail in a full `npm test` run (a timing issue) and passes when run alone. Seen once in a fresh-clone run on 2026-11-03.
 - Store news and the Friends/Store/Global boards read this account
   only; cross-account data shows labelled samples. Shop-Off and Spotter
   reports are single-account.

@@ -219,7 +219,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 - FR-8.9 Every board and badge is receipt-verified.
 - FR-8.10 A hunt row taps to grab with a circle. Tapping again puts the grab back.
 - FR-8.11 "Map my store" is a guided camera scan. The user pans and does
-  not tap. Every few seconds a frame goes up, SAM 3.1 blurs each person,
+  not tap. Every few seconds a frame goes up, SAM 3.1 pixelates each person,
   and Spark reads the section, the aisle signs, the items, and (if the
   user chooses) shelf prices. A daily frame cap bounds the cost.
 - FR-8.12 One map belongs to one store location. The user can save a
