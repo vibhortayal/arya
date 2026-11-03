@@ -214,7 +214,8 @@ page. A new document or a rewritten section in these goes through three roles:
    nothing into the shipped docs.
 2. **Doc maintainer** (the Doc maintainer thread): writes the document from the Researcher's
    notes and the repo, in one small docs-only PR.
-3. **Editor** (an Opus 5.5 thread that reads the repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
+3. **Editor** (the Opus 5.5 thread "Review docs as Editor on Opus", which reads the
+   repo cold, like a judge): fills the "Docs for readers" checklist in the PR template and
    reports PASS or what to fix. The Editor does not merge or edit.
 
 Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
