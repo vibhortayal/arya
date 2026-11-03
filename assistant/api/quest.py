@@ -9,7 +9,7 @@ for a store with a shelf graph also runs item–shelf matching
 blocks or breaks creation.
 """
 import base64, contextlib, hashlib, re, secrets
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from api import itemmeta, state
 
@@ -307,6 +307,10 @@ def check_item(session_id, item_name, checked, instead=None):
     sess = _mutate(session_id, fn)
     if sess is None or not found:
         return None
+    if checked and not (instead or "").strip():
+        # Found it on the shelf: every shopper's "Not here" for it clears.
+        from api import shared_reports
+        shared_reports.found(sess.get("store"), found[0]["name"], found[0].get("group"))
     return sess
 
 
@@ -781,10 +785,11 @@ def record_sightings(session_id, pops):
         s["sightings"] = s["sightings"][-SIGHTINGS_MAX:]
         _save_store(s)
     # Map my store: remember which segment each item was seen in.
-    from api import storemap
+    from api import storemap, shared_reports
     for rec in out:
         storemap.note_sighting(rec["store"], rec["item"],
                                rec.get("shelf_label"))
+        shared_reports.found(rec["store"], rec["item"], rec.get("item_group"))
     return out
 
 
@@ -866,7 +871,11 @@ def report_missing(session_id, item_name, kind, photo=None):
                "reporter": my_handle()}
         s["reports"].append(rep)
         _save_store(s)
-        return rep
+    # Tell other Arya shoppers (owner, 2026-11-03): the shared copy
+    # holds no name, session or photo (api/shared_reports.py).
+    from api import shared_reports
+    shared_reports.add(rep["store"], rep["item"], rep["item_group"], kind)
+    return rep
 
 
 def _same_store(a, b):
@@ -880,29 +889,133 @@ def _same_store(a, b):
 
 def store_reports(store_name):
     """A store's open reports — the candidate queue a hunt reads to
-    flag its stops. Open means still in the "reported" state."""
+    flag its stops. Open means still in the "reported" state. Other
+    shoppers' reports that passed the quorum are added for items on
+    this household's lists, in the household's own words (never the
+    reporter's text or anything about the reporter)."""
     open_reps = [r for r in _store()["reports"]
                  if r["state"] == "reported"
                  and _same_store(r.get("store"), store_name)]
+    from api import shared_reports
+    groups = shared_reports.groups(store_name)
+    if groups:
+        names = _my_list_names()
+        for g in groups:
+            mine = names.get(g["item_key"])
+            if mine:
+                open_reps.append({"store": store_name, "item": mine, "kind": g["kind"],
+                                  "state": "reported", "reported_at": g["latest"],
+                                  "shared": True, "count": g["count"]})
     return {"store": store_name, "count": len(open_reps),
             "reports": open_reps}
 
 
+NEWS_SEEN = "news_seen.json"
+NEWS_SHOW_H = 12      # an alert shows for 12 hours, then waits for a newer report
+
+
+def _match_name(name):
+    """Item identity for the news filter: the normalized name (case,
+    punctuation and extra spaces ignored) with a plural ending on the
+    last word dropped, so "Bananas" matches "banana" and "Berries"
+    matches "berry". Sizes and extra words still count: "Greek Yogurt
+    32 oz" is not "Greek Yogurt"."""
+    words = state._norm_name(name or "").split()
+    if not words:
+        return ""
+    w = words[-1]
+    if len(w) > 4 and w.endswith("ies"):
+        w = w[:-3] + "y"
+    elif len(w) > 4 and w.endswith(("ches", "shes", "sses", "xes", "zes")):
+        w = w[:-2]
+    elif len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
+        w = w[:-1]
+    return " ".join(words[:-1] + [w])
+
+
+def _my_list_names():
+    """Items on one of this household's lists now, not yet checked off,
+    as {match key: the household's own name}."""
+    try:
+        items = state.derived()["smart_list"]["items"]
+    except Exception:
+        return {}
+    out = {}
+    for i in items:
+        if i.get("on_list") and not i.get("checked"):
+            k = _match_name(i.get("name"))
+            if k:
+                out.setdefault(k, i.get("name"))
+    return out
+
+
+def _my_store_names():
+    """Stores this household uses: My stores plus the stores named on
+    its lists."""
+    names = []
+    try:
+        from api import stores
+        names += [s.get("name") for s in stores.mine()]
+    except Exception:
+        pass
+    for l in state.named_lists():
+        names += list(l.get("stores") or [])
+    return [n for n in names if n]
+
+
 def store_news(limit=20):
-    """Store news: open "not here" reports grouped by store and item,
-    newest first. It reads this account's own reports (reports are
-    single-account), counting each stop once."""
-    groups = {}
-    for r in _store()["reports"]:
-        if r["state"] != "reported":
-            continue
-        key = (state._norm_name(r.get("store") or "").replace(" ", ""),
-               r.get("item_group") or state._norm_name(r.get("item") or ""))
-        g = groups.setdefault(key, {"store": r.get("store"), "item": r.get("item"),
-                                    "kind": r.get("kind"), "count": 0,
-                                    "reported_at": r.get("reported_at")})
-        g["count"] += 1
-        if (r.get("reported_at") or "") > (g["reported_at"] or ""):
-            g["reported_at"] = r.get("reported_at")
-    news = sorted(groups.values(), key=lambda g: g["reported_at"] or "", reverse=True)
+    """Store news: other shoppers' "Not here" reports, only where they
+    help this household (owner, 2026-11-03, "I don't want to be
+    spammed"):
+    - the item is on one of its lists now (see _match_name);
+    - the store is one it uses (My stores, or a list's stores);
+    - a store and item needs ARYA_REPORT_QUORUM distinct accounts
+      (default 3) before anyone else sees it (shared_reports.others);
+    - reports for the same store and item fold into one alert that
+      counts the distinct shoppers ("3 shoppers say not here");
+    - its own reports never alert it;
+    - an alert shows for NEWS_SHOW_H hours, then stays quiet until a
+      newer report for that store and item arrives;
+    - feed only: nothing here sends a push or an email.
+    Newest first."""
+    from api import shared_reports
+    wanted = _my_list_names()
+    if not wanted:
+        return {"news": []}
+    from api.shared_reports import store_key
+    my_stores = {}
+    for m in _my_store_names():
+        my_stores.setdefault(store_key(m), m)
+    found = []
+    for g in shared_reports.groups():
+        item = wanted.get(g["item_key"])
+        store = my_stores.get(g["store_key"])
+        if item and store:
+            found.append({"store": store, "item": item, "kind": g["kind"],
+                          "count": g["count"], "reported_at": g["latest"],
+                          "shared": True, "_key": g["store_key"] + "|" + g["item_key"]})
+    if not found:
+        return {"news": []}
+    now = datetime.now(timezone.utc)
+    news = []
+    with state.file_lock(NEWS_SEEN):
+        seen = state._load(NEWS_SEEN, {})
+        changed = False
+        for n in found:
+            k = n.pop("_key")
+            mark = seen.get(k)
+            if mark is None or mark.get("latest") != n["reported_at"]:
+                seen[k] = {"latest": n["reported_at"], "first": now.strftime("%Y-%m-%dT%H:%M:%SZ")}
+                changed = True
+            else:
+                try:
+                    first = datetime.strptime(mark["first"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                except (KeyError, ValueError):
+                    first = now
+                if (now - first).total_seconds() >= NEWS_SHOW_H * 3600:
+                    continue
+            news.append(n)
+        if changed:
+            state._save(NEWS_SEEN, seen)
+    news.sort(key=lambda g: g["reported_at"] or "", reverse=True)
     return {"news": news[:limit]}
