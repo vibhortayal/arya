@@ -77,7 +77,7 @@ nobody has designed it yet. Sources are named so you can check them.
 - The forgot-password flow is held, by choice
   (`assistant/docs/ARCHITECTURE.md`, section 13, "Not built / held").
 - The licence is undecided; the repository is all rights reserved for now
-  (`LICENSE`).
+  (there is no license file).
 
 ## Running it yourself
 - More for self-hosters: a one-command setup for a small server with TLS (the

@@ -1,6 +1,6 @@
 # Third-party notices and asset provenance
 
-Arya's own code and documents are all rights reserved (see `LICENSE`).
+Arya's own code and documents are all rights reserved (the repository has no license file).
 The items below are not covered by that grant, or need attribution.
 
 ## Code
