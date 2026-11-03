@@ -672,7 +672,7 @@
     "item_other": "{{count}} items",
     "caption": {
       "photo": "Real photos from this store. The orange dot is your next item.",
-      "cloud": "A 3D view of this store. Drag to look around.",
+      "cloud": "A map view of this store. Drag to look around.",
       "strip": "One card per item. This store has no map yet, so the cards lead the way.",
       "art": "A drawing of this store until someone maps it. Tap Map my store to help."
     },
@@ -716,7 +716,7 @@
     "handledOf": "{{done}} of {{total}}",
     "combo": "{{n}} in a row",
     "backToPhotos": "Back to the photos",
-    "seeIn3d": "See it in 3D",
+    "seeIn3d": "View map",
     "freshFrom": "Fresh from a shopper, {{ago}}. People are pixelated; we only keep products.",
     "allCollectedNote": "Everything is in your cart. Nothing moves you on by itself. Tap Done when you are ready. You can still put any item back.",
     "nothingLeftOnHunt": "Nothing left on this quest. Tap Done when you are ready.",
@@ -1384,8 +1384,21 @@
   },
   "mapper": {
     "theMoreOfYourStore": "The more of your store Arya knows, the more it helps you: real shelf photos in your quest, the exact aisle for each item, and fewer “can't find it” moments. Map the aisles you use, a little at a time. Arya shoppers fill in the rest.",
-    "pickAStoreFromMy": "Find your store above to start.",
+    "pickAStoreFromMy": "Pick or find your store above to start.",
     "selectStore": "Select store",
+    "yourStore": "Your store",
+    "change": "Change",
+    "findMyStore": "Find my store",
+    "viewMap": "View map",
+    "mapOf": "{{store}} · Map",
+    "sceneCap": "Drag to look around the store. Fog and labelled guesses are parts nobody has mapped yet. Your aisles are in the Aisles card.",
+    "drawing": "Drawing the store…",
+    "aislesMapped_one": "{{count}} aisle mapped",
+    "aislesMapped_other": "{{count}} aisles mapped",
+    "keepMappingAt": "Keep mapping {{store}}",
+    "walkOrAdd": "Walk the store, or add an aisle you know.",
+    "nextUp": "Next: {{title}}",
+    "cameraS": "Camera · {{est_seconds}} s",
     "findAnotherStore": "Find or add a store",
     "teachTheAislesYouUse": "Map the aisles you use. You never need all of them.",
     "noAislesHereYetWalk": "No aisles here yet. Walk the store and Arya builds the map from what it sees.",
@@ -1397,7 +1410,7 @@
     "openCameraAboutS": "Open camera · about {{est_seconds}} s",
     "aryaKnowsEveryAisleYou": "Arya knows every aisle you picked. Your quests here use real shelf photos now.",
     "aisles": "Aisles",
-    "nothingMappedYet": "Nothing mapped yet.",
+    "nothingMappedYet": "Nothing mapped yet",
     "fineTuneAddAnAisle": "Add an aisle by name",
     "addAnAisle": "Add an aisle",
     "aisle4FrozenDairyWall": "Aisle 4, Frozen, Dairy wall",
@@ -1453,7 +1466,9 @@
       "check": "Check my location",
       "again": "Check again",
       "denied": "Location is off for Arya, so the live walk is off. Upload a video or photos, or turn on location and check again.",
-      "cant": "We could not confirm you are at this store, so the live walk is off. Upload a video or photos instead."
+      "cant": "We could not confirm you are at this store, so the live walk is off. Upload a video or photos instead.",
+      "noPlace": "Arya doesn't know where this store is, so it can't turn on the live walk. Upload a video or photos instead.",
+      "checking": "Checking…"
     },
     "showAllStores": "Show all my stores ({{count}})",
     "findMyStore": "Find my store",
@@ -2387,7 +2402,7 @@
     "theDirectoryIsSharedBy": "Every Arya shopper sees these stores. Add one to shop it.",
     "inYourStores": "{{name}} is in your stores.",
     "all": "All",
-    "withQuests": "Mapped"
+    "withQuests": "Map view"
   },
   "storesMine": {
     "myStores": "My stores",
@@ -2395,8 +2410,8 @@
     "allMyStores": "All my stores",
     "searchByNameZipOrAddress": "Search by name, ZIP or address, or add one from Google",
     "scene": {
-      "cloud": "Mapped, 3D view",
-      "strip": "Photo view"
+      "cloud": "Map view",
+      "strip": ""
     },
     "removed": "Removed from your stores.",
     "searchStores_one": "Search {{count}} store",
@@ -3889,12 +3904,13 @@
         "sub": "Walk the aisles, Arya builds the map",
         "body": "Walk the aisles once. Arya builds the store map, then walks you to each item in order.",
         "s1": "Open the Quest tab.",
-        "s2": "Tap Map my store and choose the store.",
+        "s2": "Tap Map my store and choose the store. The next step shows right under it; tap Change to pick another.",
         "s3": "Walk the aisles with the camera. Tap Done when you finish.",
         "s4": "Arya builds the map in the background. A card tells you when it is ready.",
         "n1": "No signal? Frames save on your phone and send later.",
         "n2": "Arya pixelates people in the frames before anything is kept.",
         "n3": "The live walk needs your location to show you are at the store. If location is off, or Arya cannot confirm it, upload a video or photos instead. Arya does not save where you are.",
+        "n4": "Aisles lists what the map holds; tap Add an aisle to name one you know. A store with a map view has View map.",
         "cta": "Open Map my store"
       },
       "news": {

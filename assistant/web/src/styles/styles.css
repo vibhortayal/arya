@@ -2435,6 +2435,31 @@ body.hunting #offlinebar { display: none !important; }
 .rc2-tag { font-size: 11.5px; font-weight: 600; color: var(--acc); margin-left: 6px; letter-spacing: .02em; }
 .row.rc2-chg { background: var(--acc-soft); }
 .row.rc2-chg .sub s { color: var(--ink3); }
+
+/* Map my store page order (owner-approved, 2026-11-03): the picked store
+ * with Change, the next step right under it, then Aisles. */
+.mp-picked { cursor: default; margin-bottom: 10px; }
+.mp-picked .linkbtn { flex: none; font-weight: 600; min-height: 44px; padding: 0 4px; }
+.mp-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.mp-tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--fill); color: var(--secondary); }
+.mp-viewmap { background: var(--panel); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; color: var(--accent-text); border-bottom: 0; }
+.mp-cover { margin: 0 4px 10px; }
+.mp-empty .name, .mp-nextrow .name, .mp-addrow .name { font-weight: 500; }
+.mp-empty .sub, .mp-nextrow .sub { display: block; color: var(--secondary); font-size: 13px; }
+.mp-nextrow { align-items: center; gap: 10px; }
+.mp-nextrow .btn { flex: none; padding: 7px 12px; font-size: 14px; }
+.mp-addrow { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-top: 1px solid var(--sep); font: inherit; color: var(--accent-text); font-weight: 600; text-align: left; min-height: 48px; }
+.mp-addrow .mp-mine { display: grid; place-items: center; flex: none; width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; font-size: 22px; line-height: 1; }
+.mp-addform { border-top: 1px solid var(--sep); }
+.mp-how.group { margin-top: 14px; }
+.mp-scene { position: fixed; inset: 0; z-index: 60; background: #1a1c22; color: #fff; display: flex; flex-direction: column; }
+.mp-scenebar { display: flex; justify-content: space-between; align-items: center; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 8px; }
+.mp-scenebar .linkbtn { color: #FDBA8C; font-weight: 600; min-height: 44px; }
+.mp-sceneview { flex: 1; min-height: 0; }
+.mp-world { position: relative; overflow: hidden; }
+.mp-world .qg-world { position: absolute; inset: 0; }
+.mp-scenewait { margin: 0; padding: 24px 16px; opacity: .85; }
+.mp-scenecap { margin: 0; padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); font-size: 14px; opacity: .9; }
 /* Hide one Today row with ✕ (owner, 2026-11-03): this account only, Undo in the toast. */
 .rowx { flex: none; width: 44px; height: 44px; margin: -8px -10px -8px -2px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; color: var(--secondary); }
 .rowx > span { width: 26px; height: 26px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-size: 13px; line-height: 1; }

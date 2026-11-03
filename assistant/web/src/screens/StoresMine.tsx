@@ -26,7 +26,9 @@ export function StarSvg({ filled }: { filled: boolean }) {
 /* quest.js qStoreMeta */
 export const storeMeta = (s: MyStore) =>
   // Empty parts drop out: a Demo Town store has only a town (retest 2026-10-31 #3).
-  `${[s.street, s.city, [s.state, s.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")} · ${(s.scene && SCENE_LABEL[s.scene] && t(SCENE_LABEL[s.scene])) || ""}`;
+  // Only a label that says something ("Map view"); no "Photo view" (owner, 2026-11-03).
+  [[s.street, s.city, [s.state, s.zip].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+    (s.scene && SCENE_LABEL[s.scene] && t(SCENE_LABEL[s.scene])) || ""].filter(Boolean).join(" · ");
 
 /* Search: the store's name, street, city or ZIP, case-insensitive. */
 export function filterStores(stores: MyStore[], q: string): MyStore[] {

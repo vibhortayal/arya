@@ -20,7 +20,16 @@ def stores_search(q: str = "", quests: int = 0):
 def stores_mine():
     from api import stores as stores_mod
     stores_mod.backfill_mine()  # once per account (owner, 2026-11-02)
-    return {"stores": stores_mod.mine()}
+    rows = stores_mod.mine()
+    # "N aisles mapped" (owner, 2026-11-03): only what the store's map
+    # really holds, per location.
+    from api import storemap
+    for r in rows:
+        try:
+            r["aisles"] = len(storemap.load_map(f"{r['name']}|{r['id']}").get("segments") or {})
+        except Exception:
+            r["aisles"] = 0
+    return {"stores": rows}
 
 
 @router.post("/api/stores/mine")

@@ -233,6 +233,18 @@ export class AppSource implements QuestSource {
     return { layout, items };
   }
 
+  /* Map my store's View map: the store's world with nothing on the
+   * trip, every section drawn. Your own Build map is the shape when
+   * there is one; otherwise what the shared map has located (the rest
+   * fog or a labelled guess, as in a trip). No session is made. */
+  async preview(storeId: string | undefined, name: string, where: string) {
+    const own = storeId ? (await this.maps().catch(() => [] as SavedMap[])).find(m => m.key === `store:${storeId}`)?.graph : undefined;
+    const cov: Coverage = own ? { kind: "mapped", seen: own.zones.map(z => z.id) } : await this.mapOf(mapRef(name, storeId));
+    const kind = cov.kind, ids = kind === "simulated" ? [] : cov.seen;
+    return buildLayout({ id: storeId || name, name, area: own ? "Your map" : where, kind, items: [], mapped: ids, graph: own, all: true,
+      typicalOf: kind === "simulated" ? cov.typical : undefined });
+  }
+
   async build(answers: Answers, base: StoreGraph): Promise<StoreGraph> {
     const r = await post<{ graph: StoreGraph }>("/api/quest/build", { answers, base });
     return r.graph || base;
