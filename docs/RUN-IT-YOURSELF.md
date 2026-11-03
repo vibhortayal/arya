@@ -17,7 +17,14 @@ now".
   network, use the receipt upload instead of the camera.
 
 ## How do I start it?
-From the repository root:
+Get the code with a shallow clone, which is small and fast. A normal
+`git clone` also works and brings the full history (much larger):
+
+```bash
+git clone --depth 1 https://github.com/vibhortayal/arya.git && cd arya
+```
+
+Then, from the repository root:
 
 ```bash
 cp .env.local.example .env       # then put your key on the MODEL_API_KEY line
