@@ -248,6 +248,8 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
   link, Help topic, Ask knowledge). The Today, navigation tab and powers cards were
   reworded in plain words (titles: Customize your "Today" screen, and Customize navigation tab, my words for the bottom bar). On 2026-11-02 I renamed the bottom bar to "navigation tab" everywhere users read it: the Customize button, the Tour step, Help, the guide, Ask knowledge and docs. Code names (`lib/bar.ts`, `layouts.bar`) are unchanged.
 
+- **Store search from Google Places (documented 2026-11-03):** the store picker suggests real US grocery stores with their address from the Google Places API (Autocomplete, then Place Details once per store, saved by `place_id` in the shared directory); receipt store names are matched the same way. Live (`GOOGLE_PLACES_API_KEY` set; Ops confirmed the picker returns suggestions 2026-11-03). Without a key the picker stays local. Now in the README, JUDGES, NOTICE and the run-it-yourself env table; not yet in Help or Ask knowledge (after Tester smoke). `assistant/api/places.py`.
+
 - **Kroger aisle hints (documented 2026-11-02, me):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
 
 ## Feature flags
