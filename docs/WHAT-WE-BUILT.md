@@ -91,7 +91,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   decide. [`assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md)
 - **The Curator** proposes product merges and splits with reasons; nothing
   changes until you apply it.
-- **Your own lists, and every item sits on one:** you make your own lists, for example one for each store, such as Trader Jill's or Costcozy. When you add an item, it goes to the list you say,
+- **Your own lists, and every item sits on one:** you make your own lists, for example, one for each store, such as Trader Jill's or Costcozy. When you add an item, it goes to the list you say,
   or to your only list, or Arya asks "Which list?".
 - **Works offline (signed-in accounts):** lists and other screens show as last saved, and list edits
   queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy. The demo saves offline list changes for that visit only.

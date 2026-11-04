@@ -184,7 +184,7 @@ wide.
 The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). A few things a judge cannot get elsewhere:
 
 - **Returns.** Returns net out against purchases.
-- **Your own lists.** You make your own lists, for example one for each store,
+- **Your own lists.** You make your own lists, for example, one for each store,
   such as Trader Jill's or Costcozy. Every item sits on one list. With one
   list, adds go straight to it. With more, Arya asks which list.
 - **Store search from Google Places.** When you add a store, Arya suggests real
