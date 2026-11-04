@@ -50,7 +50,8 @@ html { color-scheme: light; }
   .markdown th, .markdown td { min-width: 9rem; }
 }
 .theme-doc-markdown { max-width: 46rem; }
-.theme-doc-markdown table, .theme-doc-markdown img, .theme-doc-markdown pre { max-width: none; }
+.theme-doc-markdown table, .theme-doc-markdown pre { max-width: none; }
+.theme-doc-markdown img { max-width: 100%; height: auto; }
 .theme-code-block .prism-code { background-color: var(--fill) !important; }
 .theme-code-block { border: 1px solid var(--line); }
 .card h3 { color: var(--acc); }
@@ -73,3 +74,10 @@ html { color-scheme: light; }
 .arya-link { display: inline-flex !important; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--fill); color: var(--ink) !important; font-weight: 600; text-decoration: none !important; }
 .arya-link:hover { border-color: var(--acc); color: var(--acc) !important; }
 .arya-link svg { flex: none; align-self: center; color: var(--acc); }
+
+/* Wide diagrams (the architecture map is 1200 px wide): scale to the column on a laptop,
+   and on a phone scroll sideways inside the page instead of widening the whole page. */
+@media (max-width: 700px) {
+  .markdown p:has(> img[width="1200"]) { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
+  .markdown p:has(> img[width="1200"]) > img { max-width: none; width: 900px; }
+}
