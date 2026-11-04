@@ -18,7 +18,9 @@ microphone and chat call the Meta API live, within a small per-visit allowance. 
 
 **What you need.** A grocery receipt photo for step 6. Without one, use
 [the sample receipt photo](../images/sample-receipt.jpg) (a real receipt of
-mine), tap **Use a sample receipt**, or **Skip**.
+mine), tap **Use a sample receipt**, or **Skip**. For the shelf step (4),
+have [the sample shelf photo](../images/sample-shelf.jpg) open on a second
+screen or a computer.
 
 ---
 
@@ -38,7 +40,8 @@ holds Lists, Receipts, Stores, Help and Settings.
 Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list
 (the town's stores have fictional names). Due staples show under
 **Suggested for** the store where they are usually bought; tap one to
-see why. A **Muse Spark 1.3**
+see why. **Before you shop (step 4), add "Tomato soup"** to the Trader Jill's
+list: type it in the add row. You will look for it with the shelf camera. A **Muse Spark 1.3**
 staple judge decides which items may be suggested (precision 0.79
 against a purchase-cadence proxy on my receipts).
 
@@ -64,8 +67,12 @@ On Today, tap **Start shopping** on the next trip, then **Let's go**.
   clock and no way to lose.
 - **Can't find it** offers **Find it for me**: the camera aims at the
   item, **SAM 3.1** boxes candidates and **Muse Spark** checks each crop.
-  Point it at any shelf photo on a second screen if you are not in a
-  store. From the same place you can tell other Arya shoppers it is gone.
+  Not in a store? When you reach **Tomato soup**, open
+  [the sample shelf photo](../images/sample-shelf.jpg) (a Trader Joe's soup
+  and broth shelf, a frame from my own video) on a second screen or a computer, tap
+  **Can't find it**, then **Find it for me**, and point the phone camera at
+  that screen. Any other shelf photo works too.
+  From the same place you can tell other Arya shoppers it is gone.
 - **Map my store** (on the Quest tab) opens the guided scan: pan along
   the shelves, SAM 3.1 pixelates the people it detects, and Muse Spark reads sections,
   aisle signs and prices.

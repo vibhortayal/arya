@@ -11,7 +11,7 @@ Theme fit: a tool for everyday life that depends on Meta's models for reading re
 - **Built in the hackathon window:** what existed before Oct 27, and a dated table of what I made. [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md)
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone.
 - **Demo video (3 min):** recorded after the code freeze (Nov 3, noon PT) and linked here when it is ready. The live demo and the path below work without it.
-- **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) to try in step 6
+- **Guided path through the app:** [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) to try in step 6 and a [sample shelf photo](docs/images/sample-shelf.jpg) for the shelf camera in step 4
 - **Where it was tested:** Built and tested with US receipts, dollars and stores first; other markets not tested.
 - **Stage 1 (really uses Meta models):** every intelligent step is a Meta model, and every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py).
 - **Why these choices:** the idea, PWA (a website you add to your phone's Home Screen), stack, hosting, coding model and each Meta model: [`README.md`](README.md#why-i-built-it-this-way)
