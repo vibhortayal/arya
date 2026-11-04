@@ -285,6 +285,7 @@ def _list_add(body):
         from api.list.intake import split_list_items_units, clean_unit
         typed = split_list_items_units(str(body["name"]))
         name, qty, unit = typed[0] if len(typed) == 1 else (body["name"], 1, "")
+        name = str(name).strip()[:80].strip() or str(body["name"]).strip()[:80]   # review 2026-11-04 F4
         unit = clean_unit(body["unit"]) if "unit" in body else unit
         lid = pick_list(fields.get("list"), names=[name])
         if lid:

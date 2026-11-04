@@ -88,6 +88,8 @@ services:
       # report --email, see docs/OPS.md) and the free disk below which
       # /health answers 503 so the outside uptime check alerts.
       ARYA_OPS_EMAIL: ${ARYA_OPS_EMAIL:-}
+      # Ask Arya locked after 3 strikes: one email per lock (max 20 a day). Needs RESEND_API_KEY.
+      ARYA_ALERT_EMAIL: ${ARYA_ALERT_EMAIL:-}
       # Heads-up mail to the owner when a new address joins the waitlist.
       # Falls back to ARYA_OPS_EMAIL; max N mails an hour, then one "paused".
       ARYA_WAITLIST_NOTIFY_EMAIL: ${ARYA_WAITLIST_NOTIFY_EMAIL:-}

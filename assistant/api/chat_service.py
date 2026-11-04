@@ -104,6 +104,7 @@ _T = {
         "q_expired": "¿Marcar {name} como caducado? Pasa a tu lista como pendiente.",
         "q_never": "¿Dejar de sugerir {name}?",
         "q_snooze": "¿Posponer {name} {days} días?",
+        "q_remove_many": "¿Quitar estos {n} artículos? {names}",
         "already_on": "{name} ya está en {list}.",
     },
     "hi": {
@@ -122,6 +123,7 @@ _T = {
         "q_expired": "{name} को एक्सपायर चिह्नित करें? यह सूची में तुरंत आ जाएगा।",
         "q_never": "{name} सुझाना बंद करें?",
         "q_snooze": "{name} को {days} दिन के लिए टालें?",
+        "q_remove_many": "ये {n} चीज़ें हटाएँ? {names}",
         "already_on": "{name} पहले से {list} में है।",
     },
 }
@@ -725,6 +727,9 @@ def _packs(qty, name):
 
 
 RISKY = {"ran_out", "mark_expired", "never_suggest", "snooze"}
+MAX_ACTIONS = 10       # per Ask turn, the same as /api/chat/apply
+BULK_REMOVE = 3        # more removes than this in one turn wait for a yes
+ASK_MAX_TOKENS = 1500  # bounds one reply's cost (review F3)
 
 
 def _risky_text(a, name):
@@ -855,9 +860,17 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
     # The system prompt leads every request unchanged, so a stable cache
     # key lets the API reuse that prefix (cheaper input, faster).
     out, _u, _c = client.chat(messages, mode="standard", personal=True,
-                              cache_key="arya-ask-v1")
+                              cache_key="arya-ask-v1", max_tokens=ASK_MAX_TOKENS)
     dec = parse_json(out)
-    actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)] if not image else []
+    from api import ask_guard
+    if ask_guard.bad_reply(str(dec.get("reply", "")), system):
+        # A reply that leaks the prompt, shows something key-shaped or
+        # links off Arya is dropped whole, actions too. No strike: the
+        # model wrote it, not the user (review 2026-11-04).
+        return {"reply": ask_guard.REFUSAL, "applied": [], "skipped": [], "added": [],
+                "proposed": [], "choices": [], "guarded": True}
+    # At most 10 actions a turn, like /api/chat/apply (review F1).
+    actions = [a for a in (dec.get("actions") or []) if isinstance(a, dict)][:MAX_ACTIONS] if not image else []
     # Viewing a named list: an add that names no list goes there.
     here = next((l for l in state.named_lists() if l["id"] == (ctx or {}).get("list_id")), None)
     if here:
@@ -865,9 +878,19 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
             if a.get("type") in ("add_to_list", "ran_out", "remove_from_list") and not a.get("list"):
                 a["list"] = here["name"]
     proposed, now = [], actions
+    removes = [a for a in actions if a.get("type") == "remove_from_list"]
+    if len(removes) > BULK_REMOVE:
+        # A sweep of removes waits for a yes on every screen (review F1):
+        # stored text or a bad turn must not clear a list in one go.
+        now = [a for a in actions if a.get("type") != "remove_from_list"]
+        names = ", ".join(str(a.get("item") or "") for a in removes)
+        ask = _t("q_remove_many", "Remove these {n} items? {names}", n=len(removes), names=names)
+        # One entry per action (the clients send every entry's action
+        # on a yes); the question rides on the first.
+        proposed += [{"action": a, "text": ask if i == 0 else ""} for i, a in enumerate(removes)]
     if surface:
         # "We ran out of X" for an X Arya has never seen is just an add (retest #4).
-        now = [a for a in actions if a.get("type") not in RISKY
+        now = [a for a in now if a.get("type") not in RISKY
                or (a.get("type") == "ran_out" and not _resolve(a.get("item")))]
         for a in actions:
             if a.get("type") in RISKY:
@@ -896,6 +919,7 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
 
 def apply_confirmed(actions):
     """The yes to a proposed action: only the risky types apply here."""
-    ok = [a for a in actions or [] if isinstance(a, dict) and a.get("type") in RISKY]
+    ok = [a for a in actions or [] if isinstance(a, dict)
+          and (a.get("type") in RISKY or a.get("type") == "remove_from_list")]
     applied, skipped = apply_actions(ok)
     return {"applied": applied, "skipped": skipped}

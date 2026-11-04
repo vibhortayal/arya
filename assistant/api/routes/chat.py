@@ -6,6 +6,7 @@ from api.errors import safe_detail
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 
+from api import ask_guard
 from api import own_key
 from api import state
 from api.cart.build import approve
@@ -37,11 +38,40 @@ def _chat_image(raw):
     return {"media_type": raw["media_type"], "data": data}
 
 
+def _ask_keys(req):
+    """Who this Ask caller is for the three-strike lock. The owner is
+    never locked, so has no keys."""
+    from api import auth
+    from api.deps import _client_ip, _is_owner
+    from api.demo_guard import _is_demo
+    if _is_demo(req):
+        return ask_guard.keys_for(demo=True, session=req.cookies.get(auth.COOKIE),
+                                  ip=_client_ip(req)), True
+    user = state._owner()
+    if not user or _is_owner(user):
+        return [], False
+    return ask_guard.keys_for(user=user), False
+
+
 @router.post("/api/chat")
 async def chat_route(req: Request):
+    keys, demo = _ask_keys(req)
+    if ask_guard.locked(keys):
+        raise HTTPException(403, ask_guard.LOCKED_DEMO if demo else ask_guard.LOCKED)
+    body = await _json_obj(req)
+    # Rules, not a model: a plain attempt to get around Arya's rules in
+    # the user's own latest message gets a fixed answer and a strike,
+    # before any credit is spent. Stored text never strikes.
+    family = ask_guard.check(ask_guard.latest_user_text(body.get("messages")))
+    if family:
+        _n, now_locked = ask_guard.strike(keys, family, demo=demo)
+        reply = ask_guard.REFUSAL
+        if now_locked:
+            reply += " " + (ask_guard.LOCKED_DEMO if demo else ask_guard.LOCKED)
+        return {"reply": reply, "applied": [], "skipped": [], "added": [],
+                "proposed": [], "choices": [], "guarded": True}
     own_key.need_model()
     _budget_guard()
-    body = await _json_obj(req)
     from api.chat_service import chat as run_chat
     client = new_client()
     try:

@@ -293,7 +293,7 @@ export function Chat() {
     const stop = () => { drop(think); if (mine === epoch) setBusy(false); };
     try {
       const image = pic ? await shrinkPhoto(pic.file) : undefined;
-      const res = await post<{ reply: string; applied?: string[]; skipped?: string[]; choices?: Choice[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
+      const res = await post<{ reply: string; applied?: string[]; skipped?: string[]; choices?: Choice[]; proposed?: { text: string; action: unknown }[] }>("/api/chat", withBar(image ? { messages: history, image } : { messages: history }));
       stop();
       if (mine !== epoch) return;
       history.push({ role: "assistant", content: res.reply, ...(res.applied?.length ? { applied: res.applied } : {}) });
@@ -304,6 +304,7 @@ export function Chat() {
         ...(res.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
         ...(res.skipped || []).map(a => ({ kind: "sys" as const, text: a })),
         ...(replyChoices(res.choices).length ? [{ kind: "replies" as const, text: "", choices: replyChoices(res.choices) }] : []),
+        ...((res.proposed || []).length ? [askFirst(res.proposed!)] : []),
         ...(offer ? [{ kind: "offer" as const, text: offer.name, code: offer.code }] : []));
     } catch (e) {
       stop();
@@ -311,8 +312,31 @@ export function Chat() {
       history.pop();
       // Arya's daily limit (or a failed own key): a card that offers the shopper's own Meta key.
       if (e instanceof ApiError && isOwnKeyOffer(e.offer)) { add({ kind: "err", text: e.message, code: q, offer: e.offer }); return; }
+      // Ask paused after repeated attempts to get around its rules: the server's words, no retry.
+      if (e instanceof ApiError && e.status === 403 && e.message) { add({ kind: "arya", text: e.message }); return; }
       add({ kind: "err", text: noKeyMessage(e) || t("ask.couldNotAnswer", { error: e instanceof Error ? e.message : String(e) }), code: q });
     }
+  };
+
+  // A sweep of removes waits for a yes (review 2026-11-04 F1): one
+  // bubble with the question, Yes applies them, Not now drops them.
+  const askFirst = (proposed: { text: string; action: unknown }[]): Line => {
+    const card: Line = { kind: "arya", text: proposed.map(p => p.text).filter(Boolean).join(" "), chips: [] };
+    let done = false;
+    const settle = (more: Line[]) => { card.chips = []; add(...more); };
+    card.chips = [
+      { label: proposed.length > 1 ? t("common.yesDoThese") : t("common.yesDoIt"), run: async () => {
+        if (done) return;
+        done = true;
+        try {
+          const r = await post<{ applied?: string[]; skipped?: string[] }>("/api/chat/apply", { actions: proposed.map(p => p.action) });
+          settle([...(r.applied || []).map(a => ({ kind: "actionchip" as const, text: "✓ " + a })),
+            ...(r.skipped || []).map(a => ({ kind: "sys" as const, text: a }))]);
+        } catch (e) { settle([{ kind: "err", text: e instanceof Error ? e.message : String(e) }]); }
+      } },
+      { label: t("common.notNow"), run: () => { if (!done) { done = true; settle([{ kind: "sys", text: t("ask.nothingChanged") }]); } } },
+    ];
+    return card;
   };
 
   const mic = async () => {
