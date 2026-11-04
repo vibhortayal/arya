@@ -17,7 +17,8 @@ verbatim). The timings are from the finished cut, which runs under three minutes
 2. **What Arya is** (0:32 to 0:54). One place for groceries: shared lists,
    guided store routes, spend and usage insights, community powered alerts.
    The idea: shoppers share where items are, what's cheaper and what's out
-   of stock, so every trip gets a little easier.
+   of stock, so every trip gets a little easier. (Shared prices are planned,
+   not switched on, so do not demo them.)
 3. **The engine and the proof** (0:54 to 1:20, my real account). "Using
    Muse Wonder, I created Arya's learning engine" (Muse Code running Wonder
    wrote the day-one engine; the receipts were imported as data and checked
@@ -29,11 +30,12 @@ verbatim). The timings are from the finished cut, which runs under three minutes
    typing, speaking, or a photo of a handwritten list. Quest mode turns the
    trip into a game.
 5. **Before the trip** (1:33 to 1:37). Today warns that eggs are out of
-   stock at my store (three shoppers tapped Not here).
+   stock at my store (three test accounts tapped Not here, the 3-shopper rule).
 6. **In the store** (1:37 to 2:02). The quest guides me aisle by aisle. Find
    it for me: point the camera at a shelf, SAM finds the item, Spark checks
    the crop and the item lights up (see the [model map](../../JUDGES.md#which-model-does-which-job)).
-   Empty shelf: tap "Not here", and the next shopper knows. At checkout,
+   Empty shelf: tap "Not here?" (or Can't find it, then The shelf is
+   empty), and the next shopper knows. At checkout,
    snap the receipt: Spark reads it first, and Muse Wonder takes a second
    look only when a check fails. "The learning engine improves with every
    trip."
