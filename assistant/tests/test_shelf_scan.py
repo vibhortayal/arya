@@ -157,6 +157,14 @@ class TestScanEndpoint(unittest.TestCase):
         aimed = [p for p in FakeScanClient.calls["segment"]
                  if p not in shelfscan.PEOPLE_PROMPTS]
         self.assertTrue(aimed and all("cookie" in p for p in aimed), aimed)
+        # SAM's boxes come back for drawing (owner, 2026-11-04: "I want to
+        # see the SAM detection"): both cookie-prompt boxes, normalized,
+        # the two Spark judged marked checked; the verified one is the pop.
+        cands = [c for c in out["candidates"] if c["item"] == "Cookies"]
+        self.assertEqual(len(cands), 2)
+        self.assertTrue(all(c["checked"] for c in cands))
+        self.assertTrue(all(0 <= v <= 1 for c in cands for v in c["box"]))
+        self.assertIn(out["pops"][0]["box"], [c["box"] for c in cands])
         # A target not left on the list answers not found, no calls.
         FakeScanClient.calls = {"segment": [], "chat": []}
         r = self.c.post(f"/api/quest/scan-shelf?session={self.sid}&item=Milk",

@@ -47,7 +47,7 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 **I add** by typing, by voice — **Muse Voice Transcribe** — or a photo of a paper list — **Muse Spark** converts it into a list.
 
-**At the store,** if I can't find something, I point the camera at a shelf: **SAM 3.1** finds the item, **Spark** checks it. *This shelf is empty,* so I tap **Not here**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list and shop there see an alert.
+**At the store,** if I can't find something, I tap **Can't find it**, then **Find it for me**, and point the camera at the shelf: **SAM 3.1** marks the possible spots, **Spark** checks them, and the match lights up. *This shelf is empty,* so I tap **The shelf is empty**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list and shop there see an alert.
 
 **At checkout** I snap the receipt. **Spark** reads it, Arya checks the math, and if anything is off, **Muse Wonder** takes a second look. *Next week's list is already learning.*
 
@@ -169,7 +169,7 @@ Everything below runs in the demo household, no account needed. "Live" means the
 | Ask Arya | Ask Arya, type a question or tap a chip | An answer from the household data; a stated fact becomes an action you confirm | Muse Spark (live) | `assistant/api/chat_service.py` |
 | Use soon date read | Today, Use soon, Snap a date (or the sample) | The item and date Arya read | Muse Spark vision (live); the sample is canned | `assistant/api/routes/expiry.py` |
 | Quest | A list, Start shopping | The store as a labelled typical layout, points per grab | Muse Spark sorts the list into sections (live, falls back to code) | `assistant/api/quest.py` |
-| Find it for me | In a quest, Can't find it, Find it for me | Boxes on the shelf, the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
+| Find it for me | In a Quest, Can't find it, Find it for me | SAM's boxes on the shelf photo, then the match lit | SAM 3.1 then Muse Spark per crop (live, needs a camera) | `assistant/api/shelfscan.py` |
 | Map my store | Quest tab, Map my store | A guided scan; people detected and pixelated before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 

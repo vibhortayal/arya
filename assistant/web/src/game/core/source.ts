@@ -31,6 +31,10 @@ export interface QuestSource {
    * nudge, the finish card). The host blurs people first and may
    * refuse (daily cap, no reader); note says why, for the player. */
   snap?(e: { section: string; item: string; photo: Blob }): Promise<SnapResult>;
+  /* Find it for me (owner, 2026-11-04): one shelf photo aimed at one
+   * item. SAM 3.1 proposes boxes, Muse Spark checks them; box is the
+   * verified one (0-1 of the photo), candidates every box SAM drew. */
+  findIt?(e: { item: string; photo: Blob }): Promise<FindResult>;
   /* Pick a saved trip back up (Your trips › Resume): its layout, items
    * and the keys already grabbed; null when the game cannot play it. */
   resume?(id: string): Promise<{ layout: StoreLayout; items: QuestItem[]; got: string[] } | null>;
@@ -47,6 +51,8 @@ export interface QuestSource {
 }
 
 export type SnapResult = { ok: boolean; label?: string; note?: string };
+export type Box = [number, number, number, number];
+export type FindResult = { found: boolean; box?: Box; candidates: Box[]; photo?: Blob; note?: string };
 
 /* A store the player built: "store" is their own map of a real store
  * (it stays theirs until others agree), "dream" is made up and only

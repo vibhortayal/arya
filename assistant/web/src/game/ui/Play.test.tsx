@@ -106,3 +106,55 @@ describe("fog nudge", () => {
     kroger.hints = {};
   });
 });
+
+describe("Find it for me", () => {
+  const box = (a: number, b: number, c: number, d: number) => [a, b, c, d] as [number, number, number, number];
+  const at = async (src: SampleSource) => {
+    const { layout, items } = await src.open("qfc-redmond", { id: "l", name: "L", items: [{ name: "Milk" }, { name: "Bananas" }] });
+    let trip: Trip = { ...newTrip(layout, items, { seed: 1 }), here: items[0].section };
+    render(<Play trip={trip} source={src} onTrip={n => { trip = n; }} onFinish={() => {}} onQuit={() => {}} />);
+    await waitFor(() => expect(world.arrive).toBeTruthy());
+    act(() => world.arrive!({ kind: "item", key: items[0].key }));
+    fireEvent.click(await screen.findByText("Can't find it"));
+    await screen.findByText("Ask a staff member");
+    return { items, get trip() { return trip; } };
+  };
+  const shoot = async () => {
+    const input = document.querySelector<HTMLInputElement>(".qg-findopt + .qg-snapfile")!;
+    await act(async () => { fireEvent.change(input, { target: { files: [new File(["x"], "shelf.jpg", { type: "image/jpeg" })] } }); });
+  };
+  globalThis.URL.createObjectURL ||= () => "blob:x";
+  globalThis.URL.revokeObjectURL ||= () => {};
+
+  it("is the first option only when the host can scan", async () => {
+    await at(new SampleSource());
+    expect(screen.queryByText(/Find it for me/)).toBeNull();
+  });
+
+  it("draws SAM's boxes, lights the verified one, and Got it grabs", async () => {
+    const src = Object.assign(new SampleSource(), { findIt: vi.fn(async () => ({ found: true, box: box(.6, .3, .8, .5), candidates: [box(.1, .3, .3, .5), box(.6, .3, .8, .5)] })) });
+    const g = await at(src);
+    const first = document.querySelector(".qg-opts")!.firstElementChild!;
+    expect(first.textContent).toContain("Find it for me");
+    await shoot();
+    expect(src.findIt).toHaveBeenCalledWith(expect.objectContaining({ item: "Milk" }));
+    expect(document.querySelectorAll(".qg-find-cand").length).toBe(2);
+    expect(await screen.findByText("There it is.")).toBeTruthy();
+    expect(document.querySelector(".qg-find-hit")).toBeTruthy();
+    expect(document.querySelector(".qg-find-pill")!.textContent).toBe("Milk");
+    fireEvent.click(screen.getByText(/^Got it \+/, { selector: ".qg-find-btn" }));
+    expect(g.trip.got).toContain(g.items[0].key);
+    expect(document.querySelector(".qg-find")).toBeNull();
+  });
+
+  it("a miss never says it isn't there, and offers Look again and The shelf is empty", async () => {
+    const src = Object.assign(new SampleSource(), { findIt: vi.fn(async () => ({ found: false, candidates: [box(.1, .1, .2, .2)] })) });
+    await at(src);
+    await shoot();
+    expect(await screen.findByText(/Arya didn't spot milk in this photo\. That doesn't mean it isn't here/)).toBeTruthy();
+    expect(screen.getByText("Look again")).toBeTruthy();
+    expect(screen.getByText("The shelf is empty", { selector: ".qg-find-btn" })).toBeTruthy();
+    fireEvent.click(screen.getByText("Back", { selector: ".qg-find-btn" }));
+    expect(document.querySelector(".qg-find")).toBeNull();
+  });
+});

@@ -32,6 +32,7 @@ from PIL import Image
 
 AREA_CAP = 0.35        # fix 2: fraction of frame area
 TOP_N = 3              # fix 1: boxes verified per item
+MAX_SEEN = 8           # SAM boxes per item returned for drawing
 CROP_MARGIN = 0.20     # the spike's verify-crop context margin
 
 # Fix 3 — the phrasing bank. (keywords, phrasings in try order).
@@ -151,7 +152,8 @@ def scan(image_bytes, item_names, client, media_type="image/jpeg"):
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     W, H = img.size
     frame_area = float(W * H)
-    pops, not_found = [], []
+    pops, not_found, seen = [], [], []
+    norm = lambda b: [round(b[0] / W, 4), round(b[1] / H, 4), round(b[2] / W, 4), round(b[3] / H, 4)]
     for name in item_names:
         boxes = []
         for prompt in phrasings_for(name):
@@ -174,18 +176,19 @@ def scan(image_bytes, item_names, client, media_type="image/jpeg"):
                 continue  # a near-duplicate of a judged crop
             tried.append(cand["box"])
             if _verify(client, _crop_jpeg(img, cand["box"]), name):
-                pop = {"item": name,
-                       "box": [round(cand["box"][0] / W, 4),
-                               round(cand["box"][1] / H, 4),
-                               round(cand["box"][2] / W, 4),
-                               round(cand["box"][3] / H, 4)],
-                       "grade": grade}
+                pop = {"item": name, "box": norm(cand["box"]), "grade": grade}
                 break
+        # What SAM 3.1 proposed, for the app to draw before the verified
+        # one lights up (owner, 2026-11-04: "I want to see the SAM
+        # detection"). checked: Spark judged it; only a pop passed.
+        for b in ranked[:MAX_SEEN]:
+            seen.append({"item": name, "box": norm(b["box"]),
+                         "checked": any(_iou(b["box"], t) > 0.8 for t in tried)})
         if pop:
             pops.append(pop)
         else:
             not_found.append(name)
-    return {"pops": pops, "not_found": not_found}
+    return {"pops": pops, "not_found": not_found, "candidates": seen}
 
 
 # --- people scrub (owner, 2026-10-28) ---------------------------------
