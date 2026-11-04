@@ -113,7 +113,7 @@ export function Finish() {
         <p className="nomargin demo-only" hidden={!demo || reading} style={{ marginTop: 10 }}><button id="fin-sample" className="btn wide" type="button" disabled={busy || reading} onClick={sample}>{t("finish.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
         {reading ? <ReadingBlock id="fin-reading" demo={demo} /> : <p id="fin-status" className="muted nomargin">{status}</p>}
       </div>
-      <p><button id="fin-skip" className="btn secondary wide" type="button" onClick={skip}>{t("finish.noReceiptToday")}</button></p>
+      <p><button id="fin-skip" className="btn secondary wide" type="button" disabled={reading} onClick={skip}>{t("finish.noReceiptToday")}</button></p>
       <p className="muted" id="fin-bonus" hidden={sess.mode === "express"}>{t("finish.your50BonusWaitsIt")}</p>
       <p className="muted">{t("finish.aBlurryOrPartialPhoto")}</p>
     </>
