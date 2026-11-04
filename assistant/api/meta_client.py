@@ -385,13 +385,23 @@ class MetaClient:
                 "temperature": temperature}
         if reasoning_effort is not None:
             from api import site_flags   # Ops can raise or lower every Spark call's effort
-            body["reasoning_effort"] = site_flags.reasoning_effort() or reasoning_effort
+            # A caller's "minimal" (a speed choice) stands; Ops' setting
+            # moves the rest.
+            body["reasoning_effort"] = (reasoning_effort if reasoning_effort == "minimal"
+                                        else site_flags.reasoning_effort() or reasoning_effort)
         if cache_key:
             body["prompt_cache_key"] = cache_key
         if schema:
             body["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": schema[0], "schema": schema[1]}}
         status, payload = self._send("/chat/completions", body, timeout=timeout)
+        if (status == 400 and body.get("reasoning_effort") == "minimal"
+                and "reasoning" in str(payload)):
+            # "minimal" is a speed choice (list photo read, owner
+            # 2026-11-04); if the API refuses the value the call repeats
+            # once at "low", so the read still lands.
+            body["reasoning_effort"] = "low"
+            status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status == 400 and schema and "response_format" in str(payload):
             body.pop("response_format")
             status, payload = self._send("/chat/completions", body, timeout=timeout)

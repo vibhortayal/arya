@@ -46,8 +46,12 @@ def read_list_photo(image_bytes, client, media_type="image/jpeg"):
                      "text": "Read this photo for the shopping list."},
                     {"type": "image_url",
                      "image_url": {"url": data_uri}}]}]
+    # Minimal reasoning: reading a list is transcription, and speed
+    # matters (owner, 2026-11-04). meta_client falls back to "low" if
+    # the API refuses the value.
     out, _usage, _cost = client.chat(messages, mode="standard",
-                                     personal=True)
+                                     personal=True,
+                                     reasoning_effort="minimal")
     dec = parse_json(out)
     kind = dec.get("kind")
     if kind not in ("list", "receipt", "item", "unclear"):

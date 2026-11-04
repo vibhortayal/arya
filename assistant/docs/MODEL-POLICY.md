@@ -19,6 +19,9 @@ Escalation is by evidence (a scored eval), never by default.
    command parsing, Ask Arya, judge): Spark, reasoning_effort=low, stable
    prefixes cached. Spark runs as muse-spark-1.3 Standard (see "Spark tier"
    below).
+   Exception (owner, 2026-11-04): the list photo read sends
+   reasoning_effort=minimal for speed, and repeats once at low if the
+   API refuses the value.
 3. Eval loops (golden sets, prompt variants): Contributor mode. Gate
    scores still count on Standard. (Superseded for app traffic by the
    2026-11-01 amendment.)
