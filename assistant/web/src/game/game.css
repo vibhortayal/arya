@@ -236,6 +236,7 @@
 .qg-list-i span { flex: 1; }
 .qg-list-i small { color: var(--q-ink3); font-size: 13px; }
 .qg-list-i.got span { text-decoration: line-through; color: var(--q-ink3); }
+.qg-putback { min-height: 44px; min-width: 78px; padding: 0 10px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--q-acc); color: var(--q-acc); font-weight: 800; font-size: 14px; flex: none; }
 .qg-list-i.got small { color: var(--q-green); font-weight: 700; }
 .qg-route ol { list-style: none; padding: 0; margin: 12px 0; }
 .qg-route li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--q-line); }
