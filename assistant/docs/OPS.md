@@ -1,4 +1,4 @@
-# OPS — watching Arya and what to do when it breaks
+# OPS: watching Arya and what to do when it breaks
 
 Written 2026-10-31 from the ops review. Everything here runs on the VM,
 from `assistant/deploy`. I am the only operator.
@@ -11,7 +11,7 @@ from `assistant/deploy`. I am the only operator.
 | Backup dead-man ping | Healthchecks.io free plan, pinged at the end of `backup.sh` | The nightly backup did not finish |
 
 ## The Ops screen (owner only)
-Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Needs a look"). It needs `ARYA_OWNER_USERNAME` set, like the Registration switch. It shows what needs a look, the box (disk, newest backup), spend against the daily caps, model calls with failures and slow calls, and the controls:
+Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Needs a look"). It needs `ARYA_OWNER_USERNAME` set, like the Registration switch. It shows what needs a look, the box (disk, newest backup), spend against the daily caps, and model calls with failures and slow calls. The controls:
 - **Pause all paid reads** (asks first): no model call starts for anyone, demo included. Lists, Today and sign-in keep working.
 - **Photo reader** Spark or Wonder: beats `ARYA_PHOTO_READER`, no redeploy.
 - **Demo live reads**: off stops only the demo household's paid reads.
@@ -20,7 +20,7 @@ Settings, Account group, first row: **Ops and health** (shows "All quiet" or "Ne
 - **Settings** (2026-11-01): three pages under the Ops screen. *Models and reading*: photo reader (Wonder, Spark only, or Spark first with Wonder as backup), Spark plan (Standard, which is what Arya runs; Contributor is a different Meta plan and is not used), Spark reasoning effort, open model name. *Dollar limits*: hourly freeze, freeze length, monthly heads-up and ceiling, daily budgets for the real app and the demo, per-demo-visit budget, and per-account overrides (for example $10 an hour for one account). *Other caps*: store-scan frames a day, Kroger calls a day, MCP calls an hour, feedback and waitlist emails, demo sign-ins. Each value is held to a safe range. A value set here beats the `.env` variable; "Use default" hands it back to `.env`. They live in `site.json` under `settings` and `overrides`.
 - **Meta says spent**: type what Meta's dashboard shows; Ops shows the gap to Arya's ledger.
 - **Recent changes**: the last changes from `ops-changes.jsonl`.
-The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`), apply within about 3 seconds, and every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`; with no folder mounted the row is left out.
+The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `photo_reader`) and apply within about 3 seconds. Every change is appended to `ops-changes.jsonl` with the time and account. The newest-backup row needs the backups folder: compose mounts `/home/ubuntu/arya-backups` read only at `/backups`. With no folder mounted, the row is left out.
 
 ## Own Meta keys (BYOK, 2026-11-01)
 **Status: unfinished, switched off on purpose, not used.** I decided not to use it (2026-11-02). No `ARYA_KEY_VAULT_SECRET` is set, so the Settings row, the Help topic, the Ask answer and the sign-up door stay hidden and nothing is stored. Do not set the secret. The notes below only apply if the decision is ever reversed (`docs/ROADMAP.md`).
@@ -35,7 +35,7 @@ The switches live in `site.json` in the data folder (`ai_paused`, `demo_live`, `
 - **Data tools**: erase one account's receipts or learned names (owner types the account name; a copy is first saved to `ops-deleted/` in the data folder, restore by copying it back), and run the Supabase mirror **Backfill** (copies every file into the database) or **Verify** (compares every file to the database) as a background job. Both need `DATABASE_URL`.
 
 ## Recover the owner
-Ops can name a different owner account (Settings, Ops and health, Accounts). Your old account keeps owner rights for 24 hours, so a wrong pick is undone by signing in with it and naming the right account. If both are lost: on the VM, remove the `"owner"` key from `site.json` in the data folder (the owner is then `ARYA_OWNER_USERNAME` from `.env` again), or set `ARYA_OWNER_USERNAME` in `.env` and run `docker compose up -d`. The environment account is always an owner. A switched-off account (Accounts) gets 403 on every call; switch it back on from the same page, or remove its name from `"disabled"` in `site.json`.
+Ops can name a different owner account (Settings, Ops and health, Accounts). Your old account keeps owner rights for 24 hours. A wrong pick is undone by signing in with the old account and naming the right one. If both are lost, on the VM remove the `"owner"` key from `site.json` in the data folder (the owner is then `ARYA_OWNER_USERNAME` from `.env` again), or set `ARYA_OWNER_USERNAME` in `.env` and run `docker compose up -d`. The environment account is always an owner. A switched-off account (Accounts) gets 403 on every call; switch it back on from the same page, or remove its name from `"disabled"` in `site.json`.
 
 ## Feedback emails
 Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`, up to `ARYA_FEEDBACK_MAIL_CAP` a day (default 20; the daily report still counts them all). To email every note saved so far, once: `docker compose exec -T api python -m harness.feedback_mail`.
@@ -55,10 +55,10 @@ Each new feedback note (signed-in or end of demo) is emailed to `ARYA_OPS_EMAIL`
 8. Make sure `support@teamnightshift.org` forwards to you (Cloudflare Email Routing, free). Arya's paused-account message sends people there.
 
 ## Waitlist join emails
-When a new address joins the waitlist the app emails you "[Arya] New waitlist join" with the address, the time and where to review it (Settings, Waitlist). Set `ARYA_WAITLIST_NOTIFY_EMAIL` in `.env`; if empty it uses `ARYA_OPS_EMAIL`; if both are empty or `RESEND_API_KEY` is missing nothing is sent. It is sent after the visitor's answer, so a slow or failing mail never blocks joining. A repeat of the same address sends nothing. At most `ARYA_WAITLIST_NOTIFY_PER_HOUR` (default 10) mails an hour per API process; past that one "many joins, emails paused" notice goes out and the rest stay on the Waitlist screen. The address is never written to the logs.
+When a new address joins the waitlist the app emails you "[Arya] New waitlist join" with the address, the time and where to review it (Settings, Waitlist). Set `ARYA_WAITLIST_NOTIFY_EMAIL` in `.env`. If it is empty, `ARYA_OPS_EMAIL` is used. If both are empty, or `RESEND_API_KEY` is missing, nothing is sent. The mail goes out after the visitor's answer, so a slow or failing mail never blocks joining. A repeat of the same address sends nothing. At most `ARYA_WAITLIST_NOTIFY_PER_HOUR` (default 10) mails go out an hour per API process. Past that, one "many joins, emails paused" notice goes out and the rest stay on the Waitlist screen. The address is never written to the logs.
 
 ## What the numbers mean
-The cost ledger (`cost-ledger.jsonl` in the data folder) has one row per model call. Since 2026-10-31 a row also has `ms` (how long the call took), and a failed call has a row with `ok: false`, `cost_usd: 0` and `err` (`http_429`, `timeout`, `unreachable`, `shape`, `error`). Older rows have none of these. Failed rows do not count toward anyone's usage or the daily budget. A refusal that comes back as a normal 200 answer is not a failure row.
+The cost ledger (`cost-ledger.jsonl` in the data folder) has one row per model call. Since 2026-10-31 a row also has `ms` (how long the call took). A failed call has a row with `ok: false`, `cost_usd: 0` and `err` (`http_429`, `timeout`, `unreachable`, `shape`, `error`). Older rows have none of these. Failed rows do not count toward anyone's usage or the daily budget. A refusal that comes back as a normal 200 answer is not a failure row.
 
 ## When something breaks
 - **Site down**: `docker compose ps`, then `docker compose logs --tail 100 api caddy`. `docker compose up -d` brings it back.

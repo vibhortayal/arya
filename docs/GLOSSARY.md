@@ -7,7 +7,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 - **Today**: the first tab. What is running low, store alerts and what to use soon. You can change what it shows with Customize your "Today" screen.
 - **Navigation tab**: the row of tabs at the bottom of the phone: Today, Spending, Quest, Ask and More. "Customize navigation tab" changes which ones sit there.
 - **Lists**: under More, one card per store list, with suggestions underneath. Every item belongs to a list.
-- **Suggestions**: items Arya thinks you may need, each with a reason. Arya never adds to a list by itself; you tap Add.
+- **Suggestions**: items Arya thinks you may need, each with a reason. Arya never adds to a list by itself. You tap Add.
 - **Running low**: staples that are due again, worked out from how often you buy them.
 - **Use soon**: food you bought that should be eaten soon. "Used it" moves an item back to Suggestions.
 - **Ask Arya**: the chat, on the tab named "Ask". Ask how to do something in Arya, or about your lists and spending.
@@ -21,7 +21,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 ## How it works
 
-- **Model proposes, code checks**: a model reads the receipt; plain code then checks every line against the printed total before anything posts.
+- **Model proposes, code checks**: a model reads the receipt. Plain code then checks every line against the printed total before anything posts.
 - **Staple judge**: decides whether an item is a staple you buy again and again. Muse Spark is the main seat and Muse Spark Open a second seat.
 - **Curator**: proposes product merges and splits for you to apply.
 - **Crowd map**: the aisle layout built from shoppers' own store scans.
@@ -31,7 +31,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 ## The Meta models
 
-Model ids, jobs and measured numbers live in [the model map on the judges page](../JUDGES.md#which-model-does-which-job); this list only says the words.
+Model ids, jobs and measured numbers live in [the model map on the judges page](../JUDGES.md#which-model-does-which-job). This list only explains the words.
 
 - **Muse Spark**: reads receipt photos first, and also runs the staple judge, the Curator, Ask Arya and photo reading. Arya uses the Standard tier.
 - **Muse Wonder**: re-reads a receipt only when the arithmetic checks flag it, or when Spark fails.
@@ -43,4 +43,4 @@ Model ids, jobs and measured numbers live in [the model map on the judges page](
 
 ## Not live
 
-Community prices, Deals and Arya shoppers (seeing other shoppers nearby) are not live. Muse Glimmer is not used. Muse Code, running Muse Wonder, wrote the first version of the engine; it is not part of the shipped app.
+Community prices, Deals and Arya shoppers (seeing other shoppers nearby) are not live. Muse Glimmer is not used. Muse Code, running Muse Wonder, wrote the first version of the engine. It is not part of the shipped app.

@@ -1,7 +1,7 @@
 # After the hackathon
 
-These are ideas I am thinking about for where Arya could go. They are
-not commitments, and I need more time to figure out and understand them.
+These are ideas for where Arya could go. They are not commitments, and I
+need more time to work them out.
 
 **What ships now is a limited-scope MVP:** Arya learns from receipts,
 Ask, groups, Quest and the connector, as described in the README and
@@ -15,10 +15,10 @@ nobody has designed it yet. Sources are named so you can check them.
   any app store today.
 - **Ray-Ban Meta glasses.** Idea, raised by me for the store scan.
   Spark's check during the hackathon found no public live-camera API for
-  third-party apps; the flow that works today is to capture on the glasses,
-  sync to the phone and ingest the video there. The demo uses the phone camera
+  third-party apps. The flow that works today is to capture on the glasses,
+  sync to the phone and read the video there. The demo uses the phone camera
   throughout. Source: `docs/quest/DISCUSSION.md` (item 38).
-- **Meta Ray-Ban Display glasses.** Idea. Not researched yet; what is possible
+- **Meta Ray-Ban Display glasses.** Idea. Not researched yet. What is possible
   depends on what Meta offers developers for that device.
 
 ## Store data and community
@@ -34,9 +34,9 @@ nobody has designed it yet. Sources are named so you can check them.
   Shop-Offs settled by receipt time and Clue Hunts. Designed, not built.
   Source: `docs/quest/GAME-DESIGN.md`.
 - **A store-data partnership.** Online store videos are off limits (copyright,
-  platform terms); a licensed source of in-store video and photos could power
+  platform terms). A licensed source of in-store video and photos could power
   better maps. See [`docs/MODELS.md`](MODELS.md).
-- **Density first.** Win one metro's stores completely before expanding; a thin
+- **Density first.** Cover one metro's stores completely before expanding. A thin
   layer over many stores is worth little. Source: `docs/quest/BUSINESS.md`.
 - **Store maps at scale.** Maps already merge across shoppers. Not built:
   resolving conflicts between maps. Source: `assistant/docs/SPEC.md`, "Not in scope".
@@ -57,8 +57,8 @@ nobody has designed it yet. Sources are named so you can check them.
 - **More use of open weights.** Muse Spark Open is a second seat on the staple
   judge and labels dictionary names today. Wider use would need the personal
   data rule kept (names only).
-- **More languages.** Ask answers in the language you write; Spanish and Hindi
-  were the ones verified, and the app's buttons and labels are English only
+- **More languages.** Ask answers in the language you write. Spanish and Hindi
+  were the ones verified. The app's buttons and labels are English only
   (`assistant/docs/MULTILINGUAL-ASK.md`). Translating the app itself is a separate project.
 - **A hosted open-weights option.** Today one open model (Muse Spark Open) is
   hosted on Baseten for two small jobs. A fuller option for people who want
@@ -66,7 +66,7 @@ nobody has designed it yet. Sources are named so you can check them.
 - **Models we did not use** (Spark Contributor for a community tier, Muse
   Glimmer self-hosted): see [`docs/MODELS.md`](MODELS.md).
 - A non-English Ask currently sends the whole feature guide (about 19 KB) on
-  each question; trimming that is planned.
+  each question. Trimming that is planned.
 
 ## Trust and privacy
 - A photo opt-in and a full privacy policy; store permission for mapping.
@@ -76,7 +76,7 @@ nobody has designed it yet. Sources are named so you can check them.
   (`assistant/docs/MODEL-POLICY.md`).
 - The forgot-password flow is held, by choice
   (`assistant/docs/ARCHITECTURE.md`, section 13, "Not built / held").
-- The licence is undecided; the repository is all rights reserved for now
+- The licence is undecided. The repository is all rights reserved for now
   (there is no license file).
 
 ## Running it yourself
@@ -94,15 +94,15 @@ nobody has designed it yet. Sources are named so you can check them.
   not built).
 
 ## Developer platform and integrations
-Starting point today: the Lists API and the developer portal at `/developers`
-(with a quickstart and an interactive reference; `docs/API.md`), and the MCP
+The starting point today is the Lists API and the developer portal at `/developers`
+(with a quickstart and an interactive reference; `docs/API.md`), plus the MCP
 connector that lets an AI agent read and edit your lists
 (`assistant/docs/AGENT-CONNECTOR.md`). The API is for your own data, with a
 personal token. Desk research on who else is in this space, with its unverified
 claims flagged, is in [`MARKET.md`](MARKET.md). Everything below is future work
 and not built:
-- **A bigger developer portal,** so other platforms can integrate with Arya
-  with Arya's household data as the shared source: more endpoints (receipts,
+- **A bigger developer portal,** so other platforms can connect to Arya,
+  with Arya's household data as the shared source. That means more endpoints (receipts,
   spend, what is running low), webhooks, OAuth sign-in instead of a personal
   token, SDKs and sample apps.
 - **Smart fridges, cooking devices and home robots** that add what is empty
@@ -126,7 +126,7 @@ and not built:
 - **Import lists from other list apps** (a file or a link). Not built.
 
 ## More ideas for growing the app and its community
-All ideas. None is designed or built, and each would need my word
+All of these are ideas. None is designed or built. Each would need my go-ahead
 and, where it touches personal data, a privacy review first.
 
 **Everyday use**
@@ -174,7 +174,7 @@ and, where it touches personal data, a privacy review first.
 
 **Trust, privacy and operating it**
 - One place for privacy controls. Export my data and Delete my account already
-  exist in Settings, under Account; the idea is to gather them with the other
+  exist in Settings, under Account. The idea is to gather them with the other
   privacy choices.
 - A public status page and an uptime history.
 - A staging address, and automated CI instead of manual runs.

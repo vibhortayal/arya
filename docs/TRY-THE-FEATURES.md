@@ -1,6 +1,6 @@
 # Try every feature on your own copy of Arya
 
-These steps were written by the builder and checked on a local copy (`docker compose up --build`, http://localhost:8080) on 2026-11-02. "Needs your key" means the step calls a Meta model, so `MODEL_API_KEY` must be set in `.env`. Everything else works without a key.
+The builder wrote these steps and checked them on a local copy (`docker compose up --build`, http://localhost:8080) on 2026-11-02. "Needs your key" means the step calls a Meta model, so `MODEL_API_KEY` must be set in `.env`. Everything else works without a key.
 
 Arya is a phone app. For the closest view, use your browser's phone mode (for example 390 × 844), or open the address from a phone on the same network.
 

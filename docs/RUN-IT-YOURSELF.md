@@ -8,7 +8,7 @@ now".
 - **Docker** with Compose (Docker Desktop, or Docker Engine and the Compose
   plugin). Nothing else: no Python, no Node.
 - **A Meta Model API key** for the AI parts. Make one at dev.meta.ai (API keys,
-  then Create API key); it starts with `LLM_`. It is optional: without it the
+  then Create API key). It starts with `LLM_`. It is optional. Without it the
   app and the demo household open and work, but anything that reads a photo,
   answers in Ask or listens to your voice says "This copy of Arya has no Meta key, so AI features are off".
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
@@ -34,16 +34,16 @@ docker compose up --build
 Open http://localhost:8080. The first build takes a few minutes. On the first
 visit a "Create your account" sheet opens. That makes the one real account on
 this copy: a username (lowercase letters, digits and `_ % + @ -`, and `.` after the first character) and a password. Use it
-to snap or upload your own receipts and see them read and saved, which is
+to snap or upload your own receipts and see them read and saved. That is
 Arya's core feature. Or tap **Close** on the sheet and then **Try it now** for the demo
-household. The demo keeps nothing: it reads a receipt live on the screen but does not
+household. The demo keeps nothing. It reads a receipt live on the screen but does not
 save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
-household into a Docker volume; later starts keep what is there.
+household into a Docker volume. Later starts keep what is there.
 
 ## How do I get a Meta API key?
 To run the live model calls from your own checkout, make a Meta Model API key
 just for this (dev.meta.ai, API keys, Create API key). Put it on the
-`MODEL_API_KEY` line of your local `.env`. Never commit a filled `.env`: the
+`MODEL_API_KEY` line of your local `.env`. Never commit a filled `.env`. The
 `MODEL_API_KEY=` line in `assistant/deploy/.env.example` is blank on purpose.
 The key is sent only to `api.meta.ai`. Meta keys have no spending cap of their
 own, so set a usage limit on your Meta billing page, and delete the key at Meta
@@ -96,12 +96,12 @@ Next, a step-by-step tour of every feature on your copy:
 [`docs/TRY-THE-FEATURES.md`](TRY-THE-FEATURES.md).
 
 ## Can I run it without Docker?
-This route was followed step by step from a fresh clone by the Tester, without a
+The Tester followed this route step by step from a fresh clone, without a
 key (the receipt step was not run). The Docker route above was run twice on a Linux server with no Meta key. A cold
-build (about 55 seconds) from a fresh shallow clone, in a browser at 390x844:
+build (about 55 seconds) from a fresh shallow clone, in a browser at 390x844, worked for
 start, `/health`, creating an account, signing in again, the demo, the no-key Ask
-and receipt messages and Start shopping all worked. An earlier run with cached
-build layers, through direct requests: editing `.env` and the port setting worked.
+and receipt messages, and Start shopping. An earlier run with cached
+build layers, through direct requests, showed that editing `.env` and the port setting worked.
 The cold build needed that test machine's proxy certificate added, because its
 network re-signs HTTPS (see "What if something goes wrong?"). Reading a receipt,
 photos, voice and a working Ask answer need a real key and were not run on either
@@ -121,20 +121,20 @@ In `MODEL_API_KEY=<your key>`, put your key in place of `<your key>`, or nothing
 at all for no-key mode (`MODEL_API_KEY=`). Pasting the angle brackets as they
 are fails in bash. The snippet leaves your shell in `assistant/`.
 
-Open http://localhost:8000; http://localhost:8000/health answers `ok` when the
-server is up. These steps were tested on Linux only; macOS and Windows have not
-been tried. Without a key, Ask shows the "no Meta key" message;
-on this route its last words, "docker compose up -d", do not apply: set
+Open http://localhost:8000. The address http://localhost:8000/health answers `ok` when the
+server is up. These steps were tested on Linux only. macOS and Windows have not
+been tried. Without a key, Ask shows the "no Meta key" message.
+On this route its last words, "docker compose up -d", do not apply. Instead, set
 `MODEL_API_KEY` and start uvicorn again. To open it from a phone at
 `http://<your computer's IP>:8000`, make uvicorn listen on your network address (its
-`--host` option) and set `ARYA_INSECURE_COOKIE=1` before it; without that, sign-in may not stick
+`--host` option) and set `ARYA_INSECURE_COOKIE=1` before it. Without that, sign-in may not stick
 over plain http. I have not tested this on a phone. For front-end work, `npm run dev` in
 `assistant/web` starts Vite.
 
 ## Let your AI agent set it up
 If you use a coding agent that can run commands on your computer, paste this
 prompt to it. It uses the no-Docker route, which the Tester followed from a
-fresh clone (without a key). Read the prompt first: it asks the agent to run
+fresh clone (without a key). Read the prompt first. It asks the agent to run
 commands on your machine.
 
 ```text
@@ -177,8 +177,8 @@ manual-only (`.github/workflows/tests.yml`).
 - **Receipts says "Reading paused" and there is no key.** The same cause as
   above: add the key and run `docker compose up -d`.
 - **Port already in use.** Set `ARYA_LOCAL_PORT` to a free port.
-- **A model error with a key set.** The key was rejected or has no credit;
-  check it at dev.meta.ai.
+- **A model error with a key set.** The key was rejected or has no credit.
+  Check it at dev.meta.ai.
 - **The build fails to download packages, with a certificate error (pip or npm).** A
   proxy that re-signs HTTPS is the usual cause. Build on a network without one, or
   add your proxy's certificate to Docker.

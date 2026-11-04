@@ -133,7 +133,7 @@ curl -s -H "Authorization: Bearer $TOKEN" "$ARYA/lists/l-1a2b3c4d/export?format=
 ### POST /lists/import
 
 Send the file as the request body. The format is `csv` when the
-`Content-Type` contains `csv`, else `text`; `?format=csv|text` overrides.
+`Content-Type` contains `csv`, else `text`. `?format=csv|text` overrides that.
 `?list=Name` is the list to fill (default `Imported`). It is created if you
 do not have it; names match without regard to case. In a CSV, a `list`
 column per row wins over `?list=`. Only `name` is required in a CSV. A
@@ -154,7 +154,7 @@ Checked state and department are applied to new items only.
 
 Your own data only: the receipts **you** filed. Receipts filed by other
 members of your household group are not returned. Nothing here is
-inferred by Arya; totals are sums of what your receipts say.
+inferred by Arya. Totals are sums of what your receipts say.
 
 A receipt is `{id, merchant, date, total, subtotal, tax, items, reconciles,
 has_photo}`. The detail adds `lines`: `{name, qty, unit_price, line_total,
@@ -222,4 +222,4 @@ Errors are JSON, with the matching HTTP status:
 Not in v1: webhooks, OAuth, sharing a list with another account, filing a
 receipt, and Quest data. Arya's own inference (what is running low,
 suggestions, aisle and store maps, prices from other households) is not
-part of the API by design: the API is for your own data.
+part of the API on purpose. The API is for your own data.

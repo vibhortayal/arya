@@ -3,14 +3,14 @@
 Status: a plan, not shipped. Nothing on this page is built unless it says
 "today". Written 2026-11-02 against `main` after #489. It extends the
 one-line plan in [`ROADMAP.md`](ROADMAP.md) ("Scale out as the community
-grows") and the Known limits entry in the [README](../README.md#what-are-the-known-limits);
-where this page says more, it does not contradict them. No provider, dates
-or costs are named: each phase is chosen when the number of shoppers asks
+grows") and the Known limits entry in the [README](../README.md#what-are-the-known-limits).
+Where this page says more, it does not contradict them. No provider, dates
+or costs are named. Each phase is chosen when the number of shoppers asks
 for it.
 
-The theme that shapes every choice here: Arya is a community app that grows
+One idea shapes every choice here: Arya is a community app that grows
 with its users. The design keeps one codebase and one set of product rules
-(`assistant/docs/SPEC.md`), and lets the operator turn each phase on with
+(`assistant/docs/SPEC.md`). The operator turns each phase on with
 settings, one at a time, with a way back.
 
 ## 1. What runs today
@@ -53,16 +53,16 @@ README says the same). The ordering below is a judgment, not a measurement.
 
 1. **One process, one GIL.** The Today payload is computed in Python on each
    read (the derived list, ledger and patterns are rebuilt from receipts, with
-   a per-request memo only). Alone it takes about 65 ms; with 10 people at
-   once the median is about 1.1 s and with 30 about 4 s. Threads share the
-   interpreter, so more threads do not help and the fix is more processes,
+   a per-request memo only). Alone it takes about 65 ms. With 10 people at
+   once the median is about 1.1 s, and with 30 about 4 s. Threads share the
+   interpreter, so more threads do not help. The fix is more processes,
    which the next three items block.
 2. **Process memory holds visitor state.** Demo sessions, demo sandboxes
    and rate-limit buckets live in the process. A second process would not
-   see a demo visitor's session; a restart drops every demo visit.
+   see a demo visitor's session. A restart drops every demo visit.
 3. **Files have one writer.** `_file_lock` is a process-local lock. Two
    processes writing the same account's `lists.json` would race. Dual mode
-   mirrors the whole document, so the mirror also carries no version and
+   mirrors the whole document, so the mirror carries no version and
    cannot detect a lost update. `pg` mode (not live) is a whole-document
    read-modify-write with the same process-local locks.
 4. **Saves wait for the mirror.** In `dual` mode each save upserts the whole
@@ -82,9 +82,9 @@ README says the same). The ordering below is a judgment, not a measurement.
 
 ## 2. Target architecture
 
-The target is boring on purpose: stateless app processes behind a load
+The target is plain on purpose: stateless app processes behind a load
 balancer, one database as the master copy, one shared store for short-lived
-state, one queue for background work, one object store for files. Every box
+state, one queue for background work, and one object store for files. Every box
 below is a role, not a product.
 
 ```
@@ -142,8 +142,8 @@ Today Postgres mirrors files (`dual`). The target makes it the only writer
 path (`pg`), with these additions that `pgstore.py` does not have yet:
 
 - **A version per document.** `user_docs` gains a `version` integer. A save
-  sends the version it read; the update is `where version = $read`; zero rows
-  means someone else saved first, so the request re-reads, re-applies and
+  sends the version it read, and the update is `where version = $read`. Zero rows
+  means someone else saved first. The request then re-reads, re-applies and
   retries a few times, then fails plainly. This replaces the process-local
   file lock and is the one change that makes several processes safe.
 - **Connection pool.** One pool per process with a small cap, instead of one
@@ -165,8 +165,8 @@ Migration from JSON, in order, each step reversible:
 2. Re-run `assistant/tools/migrate_json_to_pg.py`, compare every document (it reports
    mismatches), and fix any drift. Back up both sides (`backup.sh` already
    dumps the schema when `ARYA_BACKUP_DATABASE_URL` is set).
-3. Flip `ARYA_STORE=pg` on one process while the others stay on `dual`
-   reads only if the versioned path is on; otherwise flip the whole site in a
+3. Flip `ARYA_STORE=pg` on one process while the others stay on `dual`,
+   but only if the versioned path is on. Otherwise flip the whole site in a
    quiet hour. Keep writing files for a while as a shadow copy (a new
    `pg+shadow` mode, or the same `dual` logic with Postgres first and the file
    second) so rollback is a flag flip, not a restore.
@@ -203,11 +203,11 @@ phase, see 4).
 - Target: a queue with named job types (`receipt.read`, `scan.read`,
   `reminders.daily`, `backup.nightly`, `export.account`) and worker processes
   that run the same code as today's thread loops. A job carries the account,
-  a lease and a retry count; a crashed worker's lease expires and another
+  a lease and a retry count. A crashed worker's lease expires and another
   worker picks the job up. Idempotency keys (the job id plus the frame
   number, which `receiptjobs` already uses) make a retry safe.
 - Reminders become a scheduled job that enqueues one `reminders.account` job
-  per opted-in account, so a slow push to one phone does not delay the rest,
+  per opted-in account. A slow push to one phone then does not delay the rest,
   and the cron line on the VM goes away.
 - The "Your receipts are ready" and "Your map is ready" cards keep polling
   the job list exactly as now; only the producer of that list changes.
@@ -302,7 +302,7 @@ each one removes the blocker for the next. None has a date.
 | 7. Object storage | Originals, frames and map images in a bucket; `storemap_img.json` split | Bottleneck 6 | Keep files on the volume until the copy is verified; read from the volume on a bucket miss | Bytes on the volume; map save latency; signed-URL errors |
 | 8. Cloud provider | Move the whole set (processes, database, store, queue, bucket) to a provider with managed versions of each; the VM becomes a fallback until a full week passes | Hardware ceiling | DNS back to the VM | Same dashboard, same alerts, same load test |
 
-Phases 1 and 0 can happen on the current VM with no new service.
+Phases 0 and 1 can happen on the current VM with no new service.
 Phase 2 uses the database that already exists. Phase 3 is the first new
 service. From phase 4 on, the choice of provider matters, and the design
 above lets any of them fit.
