@@ -18,7 +18,7 @@ ffmpeg, Postgres) does plumbing only.
 Arya has a standard MCP connector, and Muse is the reference client. In Muse, ask the agent to connect to Arya's MCP address; when it asks for your code, paste it into the secure credentials vault Muse opens, never the chat. I tested exactly that on my own Muse on 2026-11-02, with no terminal and no settings file. Muse then has six tools: `get_snapshot`, `get_list`, `add_items`, `check_item`, `file_receipt` and `get_receipts`. A receipt Muse reads in chat is filed through `file_receipt`; Arya checks the arithmetic itself and spends no photo-reading credits on it. The code acts as your account, but cannot reach routes that spend model credits in bulk, change settings, or touch groups and friends; it is capped at 600 calls an hour and can be turned off in Arya at any time. Setup and limits: [the agent connector](../../assistant/docs/AGENT-CONNECTOR.md).
 
 ## Rules
-- Spark and Wonder run in Standard mode (me, 2026-11-01): content is not used to train Meta models. Contributor
+- Spark and Wonder run in Standard mode (checked 2026-11-01): content is not used to train Meta models. Contributor
   is used for eval and synthetic data only; a community Contributor tier with user opt-in is a possible later option, not built.
 - Model output is a proposal: receipts must reconcile, low-confidence
   lines queue for review, identity changes need the user's approval.
