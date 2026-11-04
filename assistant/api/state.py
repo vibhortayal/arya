@@ -821,14 +821,20 @@ def _derived():
             item["added_by"] = f["added_by"]
             if f.get("approved"):
                 item["approved"] = True
-        if f.get("checked_on") and f.get("checked_on") == today:
+        # A tick on a row the household put on the list stays until they
+        # clear it, untick it or add it again: a receipt landing mid-trip
+        # (a new cycle) un-ticked a whole finished Quest (owner bug,
+        # 2026-11-04: "things bought should have been checked off").
+        # Arya's own suggestions still reset per cycle.
+        if f.get("checked_on") and (f.get("checked_on") == today or f.get("manual")):
             item["checked"] = True
         if f.get("list") in list_ids:
             item["list"] = f["list"]
         also = [a for a in (f.get("also") or []) if a in list_ids and a != f.get("list")]
         if also:
             item["also"] = also
-            item["checked_in"] = [a for a in also if (f.get("checked_in") or {}).get(a) == today]
+            item["checked_in"] = [a for a in also if (f.get("checked_in") or {}).get(a)
+                                  and ((f.get("checked_in") or {}).get(a) == today or f.get("manual"))]
         kept.append(item)
     smart["items"] = kept
     verdicts = grocery_verdicts()
