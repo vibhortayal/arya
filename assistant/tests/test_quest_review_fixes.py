@@ -68,10 +68,12 @@ class TestOneLevel(unittest.TestCase):
         finally:
             state._current_user.set(prev)
 
-    def _trip(self, mode, rid):
+    def _trip(self, mode, rid, game=False):
         c = self.c
-        sid = c.post("/api/quest/sessions", json={"store": "Trader Joe's", "mode": mode,
-                                                 "items": ["milk", "eggs"]}).json()["id"]
+        body = {"store": "Trader Joe's", "mode": mode, "items": ["milk", "eggs"]}
+        if game:
+            body["game"] = True
+        sid = c.post("/api/quest/sessions", json=body).json()["id"]
         c.post(f"/api/quest/sessions/{sid}/state", json={"state": "playing"})
         for it in ("milk", "eggs"):
             c.post(f"/api/quest/sessions/{sid}/check", json={"item": it, "checked": True})
@@ -84,12 +86,23 @@ class TestOneLevel(unittest.TestCase):
     def test_a_quest_trip_counts_game_points_plus_50(self):
         c = self.c
         before = c.get("/api/quest/profile").json()["points"]
-        done = self._trip("quest", "r-q-1")
+        done = self._trip("quest", "r-q-1", game=True)
+        assert done.get("game") is True
         boss = 40 if done.get("boss") and any(i.get("checked") and i.get("group") == done["boss"]["group"] for i in done["items"]) else 0
         game = 20  # the game scored the two grabs
         c.put("/api/quest/game", json={"profile": {"xp": game, "stickers": [], "weeks": []}})
         after = c.get("/api/quest/profile").json()["points"]
         assert after - before == game + 50 + boss
+
+    def test_a_quest_mode_hunt_not_played_in_the_game_counts_in_full(self):
+        # The older hunt screens and trips from before the flag: no game xp.
+        from api import social
+        c = self.c
+        before = c.get("/api/quest/profile").json()["points"]
+        done = self._trip("quest", "r-q-2")
+        assert not done.get("game")
+        after = c.get("/api/quest/profile").json()["points"]
+        assert after - before == social.hunt_points(done)
 
     def test_express_keeps_its_hunt_points(self):
         from api import social

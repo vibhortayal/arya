@@ -93,7 +93,9 @@ async def quest_create_session(req: Request):
             body.get("items") or [],
             driver=body.get("driver") or "strip",
             store_id=store_id, store_address=store_address,
-            client=match_client, persist=not body.get("draft"))
+            client=match_client, persist=not body.get("draft"),
+            # Played in the Quest game: its grabs score in the game's xp (P3).
+            extra={"game": True} if body.get("game") is True else None)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sess

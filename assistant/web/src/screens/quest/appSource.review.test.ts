@@ -43,6 +43,7 @@ describe("Quest review fixes", () => {
     await open(src);
     const draft = calls.find(c => c.url === "/api/quest/sessions");
     expect(draft?.body.items).toEqual([{ name: "Milk" }, { name: "Eggs", qty: 2 }]);
+    expect(draft?.body.game).toBe(true); // a game trip: its grabs score once, in the game (P3)
   });
 
   it("an item added during the trip joins its list and the trip before its grab is sent", async () => {

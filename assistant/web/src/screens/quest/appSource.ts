@@ -198,7 +198,7 @@ export class AppSource implements QuestSource {
     if (!list.items.length) throw new Error("empty list");
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
-    const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name, ...(i.qty ? { qty: i.qty } : {}), ...(i.note ? { note: i.note } : {}) })) };
+    const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", game: true, items: list.items.map(i => ({ name: i.name, ...(i.qty ? { qty: i.qty } : {}), ...(i.note ? { note: i.note } : {}) })) };
     // A draft gives the shelf hints; nothing is saved until the first grab.
     const out = await this.lay(storeId, name, st ? area(st) : "", st ? storeId : undefined, list,
       post<Session>("/api/quest/sessions", { ...body, draft: true }));

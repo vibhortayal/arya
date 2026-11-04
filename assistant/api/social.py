@@ -495,12 +495,13 @@ def level_for(points):
 
 
 def level_points(sess, reports=None):
-    """What one receipt-closed trip adds to the account's level. A
-    Quest game trip's grabs already count in the game's xp (the game
-    scores every item), so here it adds only the receipt's +50 and the
-    boss (Quest review P3, owner 2026-11-04: "fix P3"). Express and
-    Shop-Off trips have no game xp, so they count in full."""
-    if sess.get("mode") == "quest" and not sess.get("shopoff_id"):
+    """What one receipt-closed trip adds to the account's level. A trip
+    played in the Quest game (game: true, set by the game when it makes
+    the trip) already scored its grabs in the game's xp, so here it adds
+    only the receipt's +50 and the boss (Quest review P3, owner
+    2026-11-04: "fix P3"). Every other trip (Express, Shop-Off, the
+    older hunt screens, trips from before the flag) counts in full."""
+    if sess.get("game") and not sess.get("shopoff_id"):
         from api import hunt
         return POINTS_RECEIPT + (POINTS_BOSS if hunt.boss_found(sess) else 0)
     return hunt_points(sess, reports)

@@ -63,9 +63,11 @@ export type QuestGameProps = {
   resume?: string;
   /* A one-line problem for the player (the host's toast). */
   onError?: (msg: string) => void;
+  /* The demo: route notes have nowhere to go, so the card is hidden. */
+  demo?: boolean;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, homePanels, homeOrder, homeHidden, onEditHome, avatar, onMapStore, findStore, onAddItems, practice, resume, onError }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, homePanels, homeOrder, homeHidden, onEditHome, avatar, onMapStore, findStore, onAddItems, practice, resume, onError, demo }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -199,7 +201,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
               onDone={() => setScreen({ s: "home" })} onReceipt={!screen.trip.practice ? onReceipt : undefined} onRealQuest={() => setScreen({ s: "pick" })} onAgain={startPractice}
               onMap={onMapStore && needsMap(screen.trip) ? () => onMapStore({ id: screen.trip.layout.id, name: screen.trip.layout.name }) : undefined}
               onSnap={source.snap ? e => source.snap!(e) : undefined}
-              onRoute={!screen.trip.practice && source.sendRoute ? notes => source.sendRoute!(screen.trip.layout.name, notes) : undefined} />
+              onRoute={!screen.trip.practice && !demo && source.sendRoute ? notes => source.sendRoute!(screen.trip.layout.name, notes) : undefined} />
           )}
         </motion.div>
       </AnimatePresence>

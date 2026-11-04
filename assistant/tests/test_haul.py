@@ -448,15 +448,12 @@ class TestPoints(HaulBase):
                         json={"receipt_id": "r-1b"})
         self.assertEqual(r.status_code, 200, r.text)
         after = self.c.get("/api/quest/profile").json()["points"]
+        self.assertEqual(after, pending)
         p = self.haul(sid)["points"]
         self.assertEqual((p["banked"], p["pending"]), (pending, 0))
-        # A Quest trip's grabs count in the game's xp, so the level adds
-        # only the receipt and the boss (Quest review P3).
-        level = p["receipt"] + p["boss"]
-        self.assertEqual(after, level)
         # Viewing the haul again, and fixing it, never pays twice.
         self.haul(sid)
-        self.assertEqual(self.c.get("/api/quest/profile").json()["points"], level)
+        self.assertEqual(self.c.get("/api/quest/profile").json()["points"], pending)
 
     def test_stats_carry_items_and_level(self):
         sid = self.hunt(rid="r-1")
