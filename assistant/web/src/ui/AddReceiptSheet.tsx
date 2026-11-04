@@ -8,6 +8,7 @@ import { afterFinish } from "../screens/haul/state";
 import { qLoadSessions, type Session } from "../screens/hunt/model";
 import { useTranslation } from "../i18n";
 import { pickerProps } from "./picker";
+import { ReadingBlock } from "./ReadingBlock";
 import { fitPhoto } from "../lib/photo";
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
@@ -45,6 +46,7 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
   const { toast } = useToast();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   // Closing mid-read means nothing is attached (quest.js qArSettle).
   const live = useRef(target);
   live.current = target;
@@ -64,13 +66,14 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
     ev.target.value = "";
     if (!f || !target) return;
     const sid = target.sessionId;
-    setStatus(t("common.receiptFile.reading"));
+    setStatus("");
+    setReading(true);
     try {
       const rid = (await decode(f)).receipt.receipt_id;
-      setStatus("");
+      setReading(false);
       await settle(() => post<Session>(`/api/quest/sessions/${sid}/receipt`, { receipt_id: rid }));
     } catch (e) {
-      setStatus("");
+      setReading(false);
       toast(t("finish.couldNotFilePhoto", { error: errMsg(e) }));
     }
   };
@@ -86,10 +89,10 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
     <Sheet open={!!target} onClose={close} id="ar-sheet">
       <div className="row"><span className="name">{t("common.addReceipt")}</span><button id="ar-close" className="btn" type="button" onClick={close}>{t("common.notNow")}</button></div>
       <p className="muted" id="ar-for">{target ? t("addReceiptSheet.forTarget", { label: target.label, state: t("common.finishedReceiptMissing") }) : ""}</p>
-      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label={t("addReceiptSheet.thisTripSReceiptPhoto")} hidden onChange={photo} />
-      <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="ar-photo" {...pickerProps("ar-photo")}>{t("addReceiptSheet.snapTheReceiptPhoto")}</label></p>
-      <p className="nomargin demo-only" hidden={!demo}><button id="ar-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("addReceiptSheet.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
-      <p id="ar-status" className="muted nomargin">{status}</p>
+      <input type="file" id="ar-photo" accept="application/pdf,image/*" aria-label={t("addReceiptSheet.thisTripSReceiptPhoto")} hidden disabled={reading} onChange={photo} />
+      <p className="nomargin"><label className={"btn primary wide receiptbtn" + (reading ? " dis" : "")} htmlFor="ar-photo" aria-disabled={reading || undefined} {...pickerProps("ar-photo")}>{reading ? t("receiptRead.button") : t("addReceiptSheet.snapTheReceiptPhoto")}</label></p>
+      <p className="nomargin demo-only" hidden={!demo || reading}><button id="ar-sample" className="btn wide" type="button" disabled={busy || reading} onClick={sample}>{t("addReceiptSheet.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
+      {reading ? <ReadingBlock id="ar-reading" demo={demo} /> : <p id="ar-status" className="muted nomargin">{status}</p>}
       <p className="muted nomargin">{t("addReceiptSheet.theHuntStaysClosedAttaching")}</p>
     </Sheet>
   );

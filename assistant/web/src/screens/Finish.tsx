@@ -7,6 +7,7 @@ import { post } from "../lib/api";
 import { Q, qLoadSessions, qProgress, qSetState, type Session } from "./hunt/model";
 import { afterFinish } from "./haul/state";
 import { useTranslation } from "../i18n";
+import { ReadingBlock } from "../ui/ReadingBlock";
 import { pickerProps } from "../ui/picker";
 
 /* Port of pwa/index.html #view-finish and quest.js openFinish,
@@ -25,6 +26,7 @@ export function Finish() {
   const sess = (nav.params.session as Session | undefined) || Q.current;
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const going = useRef(false);
 
   useEffect(() => { if (sess) Q.current = sess; setStatus(""); }, [sess, nav.key]);
@@ -56,13 +58,14 @@ export function Finish() {
   const onPhoto = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f) return;
-    setStatus(t("common.receiptFile.reading"));
+    setStatus("");
+    setReading(true);
     try {
       const rid = (await decode(f)).receipt.receipt_id;
-      setStatus("");
+      setReading(false);
       await closeToScore(attach(rid));
     } catch (e) {
-      setStatus("");
+      setReading(false);
       toast(t("finish.couldNotFilePhoto", { error: errMsg(e) }));
     }
     ev.target.value = "";
@@ -70,17 +73,18 @@ export function Finish() {
   const onEreceipt = async (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     if (!f) return;
-    setStatus(t("finish.readingFile"));
+    setStatus("");
+    setReading(true);
     let rid: string;
     try {
       rid = (await decode(f)).receipt.receipt_id;
     } catch (e) {
-      setStatus("");
+      setReading(false);
       ev.target.value = "";
       toast(t("finish.couldNotReadFile", { error: errMsg(e) }));
       return;
     }
-    setStatus("");
+    setReading(false);
     try { await closeToScore(attach(rid)); }
     catch (e) { toast(t("finish.couldNotAttach", { error: errMsg(e) })); }
     ev.target.value = "";
@@ -102,12 +106,12 @@ export function Finish() {
       <p className="muted" id="fin-sub">{sub}</p>
       <p className="muted">{t("finish.aryaReadsItemsAndThe")}</p>
       <div className="group pad">
-        <input type="file" id="fin-photo" accept="image/*" aria-label={t("finish.receiptPhoto")} hidden onChange={onPhoto} />
-        <p className="nomargin"><label className="btn primary wide receiptbtn" htmlFor="fin-photo" {...pickerProps("fin-photo")}>{t("finish.snapTheReceipt")}</label></p>
-        <input type="file" id="fin-ereceipt" accept="application/pdf,image/*" aria-label={t("finish.eReceiptPdfOrScreenshot")} hidden onChange={onEreceipt} />
-        <p className="nomargin real-only" style={{ marginTop: 10 }} hidden={demo}><label className="btn wide" htmlFor="fin-ereceipt" {...pickerProps("fin-ereceipt")}>{t("finish.addAnEReceiptPdf")}</label></p>
-        <p className="nomargin demo-only" hidden={!demo} style={{ marginTop: 10 }}><button id="fin-sample" className="btn wide" type="button" disabled={busy} onClick={sample}>{t("finish.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
-        <p id="fin-status" className="muted nomargin">{status}</p>
+        <input type="file" id="fin-photo" accept="image/*" aria-label={t("finish.receiptPhoto")} hidden disabled={reading} onChange={onPhoto} />
+        <p className="nomargin"><label className={"btn primary wide receiptbtn" + (reading ? " dis" : "")} htmlFor="fin-photo" aria-disabled={reading || undefined} {...pickerProps("fin-photo")}>{reading ? t("receiptRead.button") : t("finish.snapTheReceipt")}</label></p>
+        <input type="file" id="fin-ereceipt" accept="application/pdf,image/*" aria-label={t("finish.eReceiptPdfOrScreenshot")} hidden disabled={reading} onChange={onEreceipt} />
+        <p className="nomargin real-only" style={{ marginTop: 10 }} hidden={demo || reading}><label className="btn wide" htmlFor="fin-ereceipt" {...pickerProps("fin-ereceipt")}>{t("finish.addAnEReceiptPdf")}</label></p>
+        <p className="nomargin demo-only" hidden={!demo || reading} style={{ marginTop: 10 }}><button id="fin-sample" className="btn wide" type="button" disabled={busy || reading} onClick={sample}>{t("finish.useASampleReceipt")}{" "}<span className="demotag">{t("common.demo")}</span></button></p>
+        {reading ? <ReadingBlock id="fin-reading" demo={demo} /> : <p id="fin-status" className="muted nomargin">{status}</p>}
       </div>
       <p><button id="fin-skip" className="btn secondary wide" type="button" onClick={skip}>{t("finish.noReceiptToday")}</button></p>
       <p className="muted" id="fin-bonus" hidden={sess.mode === "express"}>{t("finish.your50BonusWaitsIt")}</p>
