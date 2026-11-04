@@ -3344,7 +3344,7 @@
         "title": "Know what's in stock before you go",
         "body": "Arya shoppers report what's out of stock or back on the shelf at your stores, so you skip the wasted trip. See an out of stock item in the store, report it and help the next shopper. Store news is only accurate if shoppers report what's happening in the store.",
         "s1": "Open Today to see what Arya shoppers report at your stores. An out-of-stock alert shows once 3 or more shoppers report an item on your list. Tap ✕ to hide one for you.",
-        "s2": "See an empty shelf? Tap Out of stock to let other shoppers know."
+        "s2": "See an empty shelf in a Quest? Tap Can't find it, then The shelf is empty, to let other shoppers know. In Demo Town, tap Out of stock instead."
       },
       "receipts": {
         "kicker": "Receipts",
@@ -3403,7 +3403,7 @@
         "title": "Shop like a game",
         "body": "Quest turns your list into a game. You get points, a level and badges. There are no timers and no lives.",
         "s1": "Open the Quest tab. Tap Start a quest.",
-        "s2": "Choose Everything, or one store.",
+        "s2": "Pick one of your lists.",
         "s3": "Can't find an item? Tap Can't find it, then Find it for me. Marked one by mistake? Tap List, then Put back or Revisit again.",
         "s4": "Open Quest progress to see badges and mapped stores."
       },
@@ -3900,6 +3900,7 @@
         "s4": "Marked an item by mistake? Tap List, then Put back (Got it) or Revisit again (shelf empty).",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
+        "n5": "A trip with no receipt does not change Spending or Use soon. Arya takes those from the receipt, so add it after the trip.",
         "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Kroger's aisle data is used under Kroger's developer terms; Arya is not affiliated with Kroger.",
         "n4": "Before a Quest at a store with a known spot, Arya can check your location once. It never blocks you, and Arya does not save where you are.",
         "cta": "Open Quest"
@@ -3924,7 +3925,7 @@
         "body": "Arya shoppers report what is out of stock or back on the shelf, so you skip a wasted trip.",
         "s1": "Open the Today tab.",
         "s2": "Look at \"Near you today\" for news from your stores.",
-        "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
+        "s3": "Empty shelf? In a Quest, tap Can't find it, then The shelf is empty. In Demo Town, tap Out of stock.",
         "n1": "A heads-up also shows at the top of a list.",
         "cta": "Open Today",
         "n2": "Store news needs reports from other Arya shoppers. Another shopper's \"Not here?\" shows only when 3 or more shoppers report the same item at a store you use, and only if it is on your list. A report counts for that one store location, not every store of the chain, and the alert names the town. Your own reports never alert you. A report clears after 3 days, or sooner when someone finds the item. Tap ✕ on an alert to hide it for you; it stays hidden while that report is open, and other shoppers still see it."
