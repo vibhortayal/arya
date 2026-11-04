@@ -53,12 +53,20 @@ function dateRange(key: DateKey, from: string, to: string, now = new Date()): [s
   if (key === "custom") return [from || "0000", to || "9999"];
   return ["0000", "9999"];
 }
-export function filterReceipts(list: Rec[], f: { query: string; date: DateKey; from: string; to: string; sort: SortKey }, now = new Date()): Rec[] {
+/* Spending opens Receipts on one month ("YYYY-MM") or one store (owner,
+ * 2026-11-04). A month is a custom range over its days; the store is the
+ * same readable name Spending sums by (storename.py labels). */
+export function presetFromParams(p: Record<string, unknown>): { date: DateKey; from: string; to: string; store: string } {
+  const m = typeof p.month === "string" && /^\d{4}-\d{2}$/.test(p.month) ? p.month : "";
+  return { date: m ? "custom" : "all", from: m ? m + "-01" : "", to: m ? m + "-31" : "", store: typeof p.store === "string" ? p.store : "" };
+}
+export function filterReceipts(list: Rec[], f: { query: string; date: DateKey; from: string; to: string; sort: SortKey; store?: string }, now = new Date()): Rec[] {
   const q = f.query.trim().toLowerCase().replace(/^\$/, "").replace(/,/g, "");
   const [lo, hi] = dateRange(f.date, f.from, f.to, now);
   const out = list.filter(r => {
     const d = day(r);
     if (d < lo || d > hi) return false;
+    if (f.store && (r.merchant || "") !== f.store) return false;
     if (!q) return true;
     const money = r.total != null ? Math.abs(r.total).toFixed(2) : "";
     return (r.merchant || "").toLowerCase().includes(q) || (r.by || "").toLowerCase().includes(q) || money.includes(q);
@@ -86,9 +94,11 @@ export function Receipts() {
   const [loaded, setLoaded] = useState(false);
   const [who, setWho] = useState("all");
   const [query, setQuery] = useState("");
-  const [dateKey, setDateKey] = useState<DateKey>("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [preset] = useState(() => presetFromParams(nav.params));
+  const [dateKey, setDateKey] = useState<DateKey>(preset.date);
+  const [from, setFrom] = useState(preset.from);
+  const [to, setTo] = useState(preset.to);
+  const [store, setStore] = useState(preset.store);
   const [sort, setSort] = useState<SortKey>("new");
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<any>(null);
@@ -169,9 +179,13 @@ export function Receipts() {
       : t("receipts.countMine", { count: archive.receipts.length });
   const ofWho = useMemo(() => archive.receipts.filter(r => whoNow === "all" || (whoNow === "mine" ? r.mine : r.by === whoNow)),
     [archive.receipts, whoNow]);
-  const shown = useMemo(() => filterReceipts(ofWho, { query, date: dateKey, from, to, sort }), [ofWho, query, dateKey, from, to, sort]);
-  const filtered = !!query.trim() || dateKey !== "all";
-  const clearFilters = () => { setQuery(""); setDateKey("all"); setFrom(""); setTo(""); };
+  const stores = useMemo(() => [...new Set(ofWho.map(r => r.merchant || "").filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })), [ofWho]);
+  // A store that came from Spending stays in the picker even if it has no receipts here.
+  const storeOpts = store && !stores.includes(store) ? [store, ...stores] : stores;
+  const shown = useMemo(() => filterReceipts(ofWho, { query, date: dateKey, from, to, sort, store }), [ofWho, query, dateKey, from, to, sort, store]);
+  const filtered = !!query.trim() || dateKey !== "all" || !!store;
+  const clearFilters = () => { setQuery(""); setDateKey("all"); setFrom(""); setTo(""); setStore(""); };
   const sum = shown.reduce((n, r) => n + (r.total != null && !(r.returns_total && !r.items) ? r.total : 0), 0);
   const unsettled = archive.unsettled || [];
 
@@ -345,6 +359,12 @@ export function Receipts() {
               placeholder={t("receipts.searchPlaceholder")} aria-label={t("receipts.searchPlaceholder")}
               onChange={e => setQuery(e.target.value)} />
           </div>
+          {storeOpts.length > 1 && (
+            <select id="rc-store" className={"rcsel rcstore" + (store ? " act" : "")} aria-label={t("receipts.storeLabel")}
+              value={store} onChange={e => setStore(e.target.value)}>
+              <option value="">{t("receipts.store_all")}</option>
+              {storeOpts.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>)}
           <div className="rcbar">
             <select id="rc-date" className={"rcsel" + (dateKey !== "all" ? " act" : "")} aria-label={t("receipts.dateLabel")}
               value={dateKey} onChange={e => setDateKey(e.target.value as DateKey)}>

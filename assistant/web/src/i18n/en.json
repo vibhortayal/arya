@@ -286,6 +286,7 @@
     "boughtForOthers": "Bought for others",
     "giftsAndItemsForPeople": "gifts and items for people outside the household",
     "spendByMonth": "Spending by month",
+    "openMonthReceipts": "{{month}}, {{money}}. Open its receipts",
     "noTripsYet": "No trips yet.",
     "spendByStore": "Spending by store",
     "topGroceryItems": "Top grocery items",
@@ -2299,6 +2300,8 @@
     "searchPlaceholder": "Search store or amount",
     "dateLabel": "Date",
     "sortLabel": "Sort by",
+    "storeLabel": "Store",
+    "store_all": "All stores",
     "date_all": "All dates",
     "date_month": "This month",
     "date_30": "Last 30 days",
@@ -3352,7 +3355,7 @@
         "body": "Snap a receipt or add a PDF. Arya shows your spending by month, by store and by item. Every receipt is kept, so you can pull one up for a return, or for a refund when a product is recalled.",
         "s1": "Lists › Receipts, or the camera on a list.",
         "s2": "Snap the receipt or pick a PDF. Arya adds it and checks the total.",
-        "s3": "Open Spending to see it by month, store and item, or open a receipt for a return or a recall refund. Tap a line on a receipt to fix its name, quantity or price. In Receipts, search, pick a date range and sort to find one fast."
+        "s3": "Open Spending to see it by month, store and item; tap a month or a store to see its receipts. Or open a receipt for a return or a recall refund. Tap a line on a receipt to fix its name, quantity or price. In Receipts, search, pick a store or a date range and sort to find one fast."
       },
       "prices": {
         "kicker": "Prices",
@@ -3873,7 +3876,7 @@
         "s2": "Take a photo, pick a PDF, or paste order text.",
         "s3": "Spending, on the navigation tab, shows it by month, store and item.",
         "n1": "Ask \"What did I spend in October?\" for one month.",
-        "n2": "In Receipts, search by store or amount, pick a date range, and sort by date, total or Store A to Z.",
+        "n2": "In Receipts, search by store or amount, pick one store or a date range, and sort by date, total or Store A to Z.",
         "n3": "In a group, anyone can fix a line on a shared receipt, but only the person who filed it can delete it.",
         "n4": "On Spending, tap (i) next to a heading to see what that heading counts. Groceries is food and household. Other purchases is everything else on the same receipts. All-time spending is both, minus returns.",
         "n5": "In the demo, when Arya's checks flag Muse Spark's read of a photo, you see it at once while Muse Wonder double-checks it. Then changed lines are marked, or a note says Wonder read it the same way.",

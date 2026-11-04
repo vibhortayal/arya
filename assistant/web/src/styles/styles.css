@@ -2478,3 +2478,7 @@ body.hunting #offlinebar { display: none !important; }
 /* A row picture that opens the same page as the row's name (Today Running low). */
 .facelink { display: flex; flex: none; }
 .nopics .facelink { display: none; }
+/* Spending rows open Receipts filtered to that month or store (owner, 2026-11-04). */
+.month-row.tap, .row.tap { cursor: pointer; }
+.month-row.tap:active, .row.tap:active { background: var(--fill); }
+.rcfilter .rcstore { width: 100%; margin-top: 8px; min-height: 44px; font-size: 15px; font-weight: 600; padding: 9px 12px; }
