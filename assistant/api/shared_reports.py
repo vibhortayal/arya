@@ -54,6 +54,35 @@ def item_key(name):
     return _match_name(name)
 
 
+def place_key(store_id):
+    """One store location (owner, 2026-11-04: "Not here" should be
+    store specific only): the directory id the trip started from, so
+    Trader Joe's Milpitas and Trader Joe's Sunnyvale are two stores.
+    None when the trip has no directory store (a typed name), and such
+    a report is not shared, since nobody can tell which store it means."""
+    sid = str(store_id or "").strip()
+    return "@" + sid if sid else None
+
+
+def is_place(key):
+    return str(key or "").startswith("@")
+
+
+def _keys_for(store, store_id):
+    """The doc keys that hold reports for this store: its location key,
+    plus the chain key that reports used before 2026-11-04. Those older
+    chain-wide rows still count until they expire (3 days), so open
+    reports filed before the change keep showing."""
+    keys = []
+    pk = place_key(store_id)
+    if pk:
+        keys.append(pk)
+    ck = store_key(store) if store else ""
+    if ck:
+        keys.append(ck)
+    return keys
+
+
 def _store_key(name):
     return store_key(name)
 
@@ -121,14 +150,15 @@ def _fresh(rows, now):
 SHARED_KINDS = ("empty_shelf", "replaced")
 
 
-def add(store, item, group, kind):
-    """Share one report. Returns the shared row, the account's existing
-    open row for the same store and item, or None over the daily cap
-    or for a kind that does not say the item is gone."""
+def add(store, item, group, kind, store_id=None):
+    """Share one report for one store location. Returns the shared row,
+    the account's existing open row for the same store and item, or
+    None over the daily cap, for a kind that does not say the item is
+    gone, or for a trip with no directory store (no location)."""
     if kind not in SHARED_KINDS:
         return None
     me, now = who(), _now()
-    sk, ik = _store_key(store), _item_key(group, item)
+    sk, ik = place_key(store_id), _item_key(group, item)
     if not sk or not ik:
         return None
     with _locked():
@@ -148,61 +178,76 @@ def add(store, item, group, kind):
         if today >= PER_DAY:
             return None
         row = {"store_key": sk, "item_key": ik, "kind": kind,
-               "at": _iso(now), "by": me}
+               "at": _iso(now), "by": me, "chain": _store_key(store) or None}
         rows.append(row)
         doc[sk] = rows[-PER_STORE:]
         _save(doc)
         return row
 
 
-def take_back(store, item, group):
+def take_back(store, item, group, store_id=None):
     """The reporter withdrew: drop their shared row for this item."""
-    _drop(store, item, group, only=who())
+    _drop(store, item, group, only=who(), store_id=store_id)
 
 
-def found(store, item, group):
-    """Any shopper found the item at this store: every report clears."""
-    _drop(store, item, group, only=None)
+def found(store, item, group, store_id=None):
+    """Any shopper found the item at this store: every report for it
+    at this location clears, and so does an older chain-wide one."""
+    _drop(store, item, group, only=None, store_id=store_id)
 
 
-def _drop(store, item, group, only):
-    sk = _store_key(store)
+def _drop(store, item, group, only, store_id=None):
     keys = {item_key(item)}
+    # The same item by its core words too (#577): grabbing "Large
+    # eggs" clears an "Eggs" report, as the alert reached that shopper.
+    from api.quest import _core_tokens
+    core = _core_tokens(item)
+    same = lambda k: k in keys or (core and _core_tokens(k) == core)
     with _locked():
         doc = _load()
-        rows = doc.get(sk)
-        if not rows:
-            return
-        # The same item by its core words too (#577): grabbing "Large
-        # eggs" clears an "Eggs" report, as the alert reached that shopper.
-        from api.quest import _core_tokens
-        core = _core_tokens(item)
-        same = lambda k: k in keys or (core and _core_tokens(k) == core)
-        keep = [r for r in rows if not (
-            same(r.get("item_key")) and (only is None or r.get("by") == only))]
-        if len(keep) == len(rows):
-            return
-        if keep:
-            doc[sk] = keep
-        else:
-            del doc[sk]
-        _save(doc)
+        changed = False
+        for sk in _keys_for(store, store_id):
+            rows = doc.get(sk)
+            if not rows:
+                continue
+            keep = [r for r in rows if not (
+                same(r.get("item_key")) and (only is None or r.get("by") == only))]
+            if len(keep) == len(rows):
+                continue
+            changed = True
+            if keep:
+                doc[sk] = keep
+            else:
+                del doc[sk]
+        if changed:
+            _save(doc)
 
 
-def groups(store=None):
+def groups(store=None, store_id=None):
     """Store-and-item groups that passed the quorum, for one store or
     all: [{store_key, item_key, kind, count, latest, oldest, mine}]. count is
     distinct accounts (the hash, not repeats) with a fresh open report;
     expired and found reports are already gone, so they never count.
     mine says whether this account is one of them. Nothing here names
-    an account or carries a reporter's typed words."""
+    an account or carries a reporter's typed words.
+
+    For one store, the location's reports and the older chain-wide
+    ones fold into one group per item, keyed by the location when the
+    store has one. All stores: each location and each older chain key
+    is its own group (store_news matches them to this household's
+    stores)."""
     me, now, need = who(), _now(), quorum()
     doc = _load()
-    keys = [store_key(store)] if store is not None else list(doc)
+    if store is not None or store_id is not None:
+        keys = _keys_for(store, store_id)
+        plan = [(keys[0] if keys else "", keys)]
+    else:
+        plan = [(k, [k]) for k in doc]
     out = []
-    for k in keys:
+    for k, ks in plan:
         by_item = {}
-        for r in _fresh(doc.get(k, []), now):
+        rows = [r for kk in ks for r in doc.get(kk, [])]
+        for r in _fresh(rows, now):
             if r.get("kind") not in SHARED_KINDS:
                 continue  # an older wrong-aisle row never alerts
             g = by_item.setdefault(r.get("item_key"), {"who": set(), "latest": "", "kind": None,

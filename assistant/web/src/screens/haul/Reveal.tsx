@@ -144,10 +144,14 @@ export function Reveal() {
       </div>
       <p className="rv-pts" id="rv-pts" data-target={target} aria-hidden="true">0</p>
       <p className="rv-sr" id="rv-pts-sr" role="status" aria-live="polite"></p>
-      <p className="muted rv-ptsub">{d.settled ? t("haul.banked") : t("haul.bankLater")}</p>
+      <p className="muted rv-ptsub">{d.settled ? t(p.in_game ? "haul.bankedLevel" : "haul.banked") : t("haul.bankLater")}</p>
       <div className="group rv-lines">
-        <div className="rv-row"><span>{t("haul.itemsPoints")}</span><b>+{p.items}</b></div>
-        {!!p.full_haul && <div className="rv-row"><span>{t("haul.fullHaul")}</span><b>+{p.full_haul}</b></div>}
+        {/* A Quest game trip's grabs already scored on Trip Clear: shown grey,
+          * without a plus, and left out of the big number (owner approved). */}
+        {p.in_game
+          ? <div className="rv-row rv-grey"><span>{t("haul.itemsPoints")}<small className="rv-note">{t("haul.inTripTotal")}</small></span><b>{p.items + (p.full_haul || 0)}</b></div>
+          : <div className="rv-row"><span>{t("haul.itemsPoints")}</span><b>+{p.items}</b></div>}
+        {!!p.full_haul && !p.in_game && <div className="rv-row"><span>{t("haul.fullHaul")}</span><b>+{p.full_haul}</b></div>}
         {d.boss && (status === "found"
           ? <div className="rv-row"><span>{t("haul.bossItem")}</span><b>+{p.boss}</b></div>
           : <div className="rv-row rv-grey"><span>{t("haul.bossItemNextTime")}</span><b></b></div>)}

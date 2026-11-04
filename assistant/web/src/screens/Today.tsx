@@ -82,9 +82,13 @@ export function storeAlerts(h: Home, news: any[], currency?: Parameters<typeof m
   const mineNames = new Set(items.filter(i => !i.checked && i.on_list).map(i => String(i.name || "").toLowerCase()));
   news.slice(0, 3).forEach((n, k) => {
     const mine = mineNames.has(String(n.item || "").toLowerCase());
+    // A report belongs to one store location (owner, 2026-11-04), so the
+    // row names it: "Eggs: out at Trader Joe's, Milpitas". Older chain-wide
+    // reports and stores with no saved town keep the plain store name.
+    const where = n.store_city ? `${n.store}, ${n.store_city}` : n.store;
     rows.push({ key: "n" + (n.id || k), kind: "report", hideKey: `r:${n.store}|${n.item}`, sig: "", what: String(n.item || ""),
-      name: t("today.alertNotThere", { store: n.store, item: n.item }),
-      id: n.id ? String(n.id) : undefined, hideLabel: t("today.hideAlert", { store: n.store, item: n.item }),
+      name: t("today.alertNotThere", { store: where, item: n.item }),
+      id: n.id ? String(n.id) : undefined, hideLabel: t("today.hideAlert", { store: where, item: n.item }),
       sub: t("today.alertReports", { count: n.count, date: fmtShort(String(n.reported_at || "").slice(0, 10)) }) + (mine ? t("today.alertOnYourList") : "") });
   });
   // Only what is on a list now: a price gap helps the next trip, not

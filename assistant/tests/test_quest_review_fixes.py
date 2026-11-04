@@ -19,9 +19,9 @@ class TestSharedKinds(unittest.TestCase):
 
     def test_only_a_gone_item_is_shared(self):
         from api import shared_reports
-        assert shared_reports.add("Trader Joe's", "Milk", "milk", "wrong_aisle") is None
-        assert shared_reports.add("Trader Joe's", "Milk", "milk", "cant_tell") is None
-        assert shared_reports.add("Trader Joe's", "Eggs", "eggs", "empty_shelf") is not None
+        assert shared_reports.add("Trader Joe's", "Milk", "milk", "wrong_aisle", store_id="tj-milpitas") is None
+        assert shared_reports.add("Trader Joe's", "Milk", "milk", "cant_tell", store_id="tj-milpitas") is None
+        assert shared_reports.add("Trader Joe's", "Eggs", "eggs", "empty_shelf", store_id="tj-milpitas") is not None
 
     def test_an_old_wrong_aisle_row_never_alerts(self):
         from api import shared_reports
@@ -81,6 +81,7 @@ class TestOneLevel(unittest.TestCase):
         self._file_receipt(rid)
         r = c.post(f"/api/quest/sessions/{sid}/receipt", json={"receipt_id": rid})
         assert r.status_code == 200 and r.json()["state"] == "done", r.text
+        self._last = r.json()
         return r.json()
 
     def test_a_quest_trip_counts_game_points_plus_50(self):
@@ -111,6 +112,17 @@ class TestOneLevel(unittest.TestCase):
         done = self._trip("express", "r-x-1")
         after = c.get("/api/quest/profile").json()["points"]
         assert after - before == social.hunt_points(done)
+
+    def test_the_reveal_total_is_what_the_level_gains(self):
+        # Reveal (owner approved the mockup, 2026-11-04): a game trip's big
+        # number is receipt + boss only; its item points show greyed.
+        from api import haul, social
+        done = self._trip("quest", "r-q-3", game=True)
+        p = haul.points_breakdown(done)
+        assert p["in_game"] is True and p["items"] == 20
+        assert p["total"] == social.level_points(done)
+        x = haul.points_breakdown(self._trip("express", "r-x-2"))
+        assert x["in_game"] is False and x["total"] == social.hunt_points(self._last)
 
 
 if __name__ == "__main__":

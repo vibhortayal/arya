@@ -21,15 +21,24 @@ class Base(unittest.TestCase):
     def as_(self, user):
         self.state.set_current_user(user)
 
+    def loc(self, store):
+        """A test store location: one directory id per store family, so
+        "Costco" and "COSTCO WHSE #0423" are the same branch here."""
+        return "loc-" + self.sr.store_key(store)
+
     def report(self, user, item="Oat Milk", store="Costco"):
         self.as_(user)
-        return self.sr.add(store, item, "name:" + item.lower(), "empty_shelf")
+        return self.sr.add(store, item, "name:" + item.lower(), "empty_shelf",
+                           store_id=self.loc(store))
 
     def news_for(self, user, wanted=("Oat milk",), stores=("Costco",)):
         self.as_(user)
         names = {self.q._match_name(n): n for n in wanted}
+        places = {self.loc(s): {"id": self.loc(s), "name": s, "street": "1 Main St", "city": "Town"}
+                  for s in stores}
         with mock.patch.object(self.q, "_my_list_names", return_value=names), \
-                mock.patch.object(self.q, "_my_store_names", return_value=list(stores)):
+                mock.patch.object(self.q, "_my_store_names", return_value=list(stores)), \
+                mock.patch.object(self.q, "_my_store_places", return_value=places):
             return self.q.store_news()["news"]
 
 
@@ -49,7 +58,7 @@ class TestQuorum(Base):
             self.report("a@x.com")
         self.as_("a@x.com")
         self.report("a@x.com", store="COSTCO WHSE #0423")   # same store family
-        self.assertEqual(len(self.sr._load()["costco"]), 1)
+        self.assertEqual(len(self.sr._load()["@loc-costco"]), 1)
         self.assertEqual(self.news_for("me@x.com"), [])
 
     def test_quorum_is_a_setting(self):
@@ -112,17 +121,18 @@ class TestRelevance(Base):
         self.as_("me@x.com")
         names = {"oat milk": "Oat milk"}
         with mock.patch.object(self.q, "_my_list_names", return_value=names):
-            out = self.q.store_reports("Costco")["reports"]
+            out = self.q.store_reports("Costco", store_id="loc-costco")["reports"]
         self.assertEqual(len(out), 1)
         self.assertEqual(set(out[0]), {"store", "item", "kind", "state", "reported_at", "shared", "count"})
         self.assertEqual(out[0]["count"], 3)
         with mock.patch.object(self.q, "_my_list_names", return_value={}):
-            self.assertEqual(self.q.store_reports("Costco")["count"], 0)
+            self.assertEqual(self.q.store_reports("Costco", store_id="loc-costco")["count"], 0)
         news = self.news_for("me@x.com")
-        self.assertEqual(set(news[0]), {"store", "item", "kind", "count", "reported_at", "shared", "id"})
-        self.assertEqual(news[0]["id"], "costco|oat milk")      # store and item keys, no account
-        raw = self.sr._load()["costco"][0]
-        self.assertEqual(set(raw), {"store_key", "item_key", "kind", "at", "by"})
+        self.assertEqual(set(news[0]), {"store", "item", "kind", "count", "reported_at", "shared", "id",
+                                         "store_id", "store_city"})
+        self.assertEqual(news[0]["id"], "@loc-costco|oat milk")      # store and item keys, no account
+        raw = self.sr._load()["@loc-costco"][0]
+        self.assertEqual(set(raw), {"store_key", "item_key", "kind", "at", "by", "chain"})
         self.assertNotIn("@", raw["by"])
 
 
@@ -133,7 +143,7 @@ class TestHide(Base):
         super().setUp()
         for u in ("a@x.com", "b@x.com", "c@x.com"):
             self.report(u)
-        self.id = "costco|oat milk"
+        self.id = "@loc-costco|oat milk"
 
     def hide(self, user, hide=True):
         self.as_(user)
@@ -149,7 +159,7 @@ class TestHide(Base):
         self.assertEqual(self.news_for("me@x.com"), [])
         self.assertEqual(len(self.news_for("you@x.com")), 1)        # other shoppers still see it
         self.as_("me@x.com")
-        self.assertEqual(len(self.sr._load()["costco"]), 3)          # the report itself is untouched
+        self.assertEqual(len(self.sr._load()["@loc-costco"]), 3)          # the report itself is untouched
 
     def test_stays_hidden_as_more_shoppers_report(self):
         self.hide("me@x.com")
@@ -168,7 +178,7 @@ class TestHide(Base):
     def test_forgotten_when_the_report_clears(self):
         self.hide("me@x.com")
         self.as_("me@x.com")
-        self.sr.found("Costco", "Oat Milk", None)
+        self.sr.found("Costco", "Oat Milk", None, store_id="loc-costco")
         self.news_for("me@x.com")                                    # cleared: the hide is dropped
         self.assertEqual(self.state._load(self.q.NEWS_HIDDEN, {}), {})
         import datetime
@@ -191,7 +201,7 @@ class TestHide(Base):
 
     def test_only_an_open_report_can_be_hidden(self):
         self.as_("me@x.com")
-        self.assertFalse(self.q.hide_news("costco|eggs"))
+        self.assertFalse(self.q.hide_news("@loc-costco|eggs"))
         self.assertEqual(self.state._load(self.q.NEWS_HIDDEN, {}), {})
 
     def test_routes(self):
@@ -211,7 +221,7 @@ class TestHide(Base):
         self.assertIn(self.id, json.load(open(f)))
         self.assertEqual(c.post("/api/quest/news/unhide", json={"id": self.id}).status_code, 200)
         self.assertEqual(json.load(open(f)), {})
-        self.assertEqual(c.post("/api/quest/news/hide", json={"id": "costco|eggs"}).status_code, 404)
+        self.assertEqual(c.post("/api/quest/news/hide", json={"id": "@loc-costco|eggs"}).status_code, 404)
         self.assertEqual(c.post("/api/quest/news/hide", json={}).status_code, 422)
 
 
@@ -226,35 +236,35 @@ class TestLifetime(Base):
         later = self.sr._now() + datetime.timedelta(days=3, seconds=1)
         with mock.patch.object(self.sr, "_now", return_value=later):
             self.as_("me@x.com")
-            self.assertEqual(self.sr.groups("Costco"), [])
+            self.assertEqual(self.sr.groups("Costco", store_id="loc-costco"), [])
 
     def test_found_clears_for_everyone(self):
         self.as_("me@x.com")
-        self.sr.found("costco", "oat milk", None)
-        self.assertEqual(self.sr.groups("Costco"), [])
+        self.sr.found("costco", "oat milk", None, store_id="loc-costco")
+        self.assertEqual(self.sr.groups("Costco", store_id="loc-costco"), [])
 
     def test_take_back_drops_only_mine_and_quorum_falls(self):
         self.as_("a@x.com")
-        self.sr.take_back("Costco", "Oat Milk", "name:oat milk")
-        self.assertEqual(len(self.sr._load()["costco"]), 2)
+        self.sr.take_back("Costco", "Oat Milk", "name:oat milk", store_id="loc-costco")
+        self.assertEqual(len(self.sr._load()["@loc-costco"]), 2)
         self.as_("me@x.com")
-        self.assertEqual(self.sr.groups("Costco"), [])
+        self.assertEqual(self.sr.groups("Costco", store_id="loc-costco"), [])
 
     def test_two_accounts_writing_both_survive(self):
         import threading
         def go(u):
             self.state.set_current_user(u)
-            self.sr.add("Target", "Eggs", None, "empty_shelf")
+            self.sr.add("Target", "Eggs", None, "empty_shelf", store_id="loc-target")
         ts = [threading.Thread(target=go, args=(f"t{i}@x.com",)) for i in range(8)]
         [t.start() for t in ts]
         [t.join() for t in ts]
-        self.assertEqual(len(self.sr._load()["target"]), 8)
+        self.assertEqual(len(self.sr._load()["@loc-target"]), 8)
 
     def test_daily_cap(self):
         self.as_("busy@x.com")
         for i in range(self.sr.PER_DAY):
-            self.assertIsNotNone(self.sr.add("Costco", f"Item {i}", None, "empty_shelf"))
-        self.assertIsNone(self.sr.add("Costco", "One more", None, "empty_shelf"))
+            self.assertIsNotNone(self.sr.add("Costco", f"Item {i}", None, "empty_shelf", store_id="loc-costco"))
+        self.assertIsNone(self.sr.add("Costco", "One more", None, "empty_shelf", store_id="loc-costco"))
 
 
 class TestDemoSandbox(Base):
@@ -264,10 +274,10 @@ class TestDemoSandbox(Base):
         tok = self.state._overlay.set({})
         try:
             self.report("demo-visitor")
-            self.assertEqual(len(self.sr._load()["costco"]), 3)   # the visit sees its own write
+            self.assertEqual(len(self.sr._load()["@loc-costco"]), 3)   # the visit sees its own write
         finally:
             self.state._overlay.reset(tok)
-        self.assertEqual(len(self.sr._load()["costco"]), 2)       # the real file never changed
+        self.assertEqual(len(self.sr._load()["@loc-costco"]), 2)       # the real file never changed
 
     def test_a_demo_visitors_find_clears_nothing_on_disk(self):
         for u in ("a@x.com", "b@x.com", "c@x.com"):
@@ -275,10 +285,10 @@ class TestDemoSandbox(Base):
         tok = self.state._overlay.set({})
         try:
             self.as_("demo-visitor")
-            self.sr.found("Costco", "Oat Milk", None)
+            self.sr.found("Costco", "Oat Milk", None, store_id="loc-costco")
         finally:
             self.state._overlay.reset(tok)
-        self.assertEqual(len(self.sr._load()["costco"]), 3)
+        self.assertEqual(len(self.sr._load()["@loc-costco"]), 3)
 
 
 class TestMatchName(Base):
@@ -319,13 +329,25 @@ class TestThroughTheApp(unittest.TestCase):
     def test_report_shares_and_check_off_clears(self):
         from api import shared_reports
         sid = self.c.post("/api/quest/sessions", json={
+            "store_id": "seed-trader-joes-91709", "mode": "quest", "items": ["Bread"]}).json()["id"]
+        r = self.c.post(f"/api/quest/sessions/{sid}/report-missing",
+                        json={"item": "Bread", "kind": "empty_shelf"})
+        self.assertEqual(r.status_code, 200, r.text)
+        key = "@seed-trader-joes-91709"
+        self.assertEqual(len(shared_reports._load().get(key, [])), 1)
+        r = self.c.post(f"/api/quest/sessions/{sid}/check", json={"item": "Bread", "checked": True})
+        self.assertEqual(shared_reports._load().get(key), None)
+
+    def test_a_typed_store_is_not_shared(self):
+        # No directory store, no location: the report stays in this
+        # account only (owner, 2026-11-04: store specific only).
+        from api import shared_reports
+        sid = self.c.post("/api/quest/sessions", json={
             "store": "Corner Shop", "mode": "quest", "items": ["Bread"]}).json()["id"]
         r = self.c.post(f"/api/quest/sessions/{sid}/report-missing",
                         json={"item": "Bread", "kind": "empty_shelf"})
         self.assertEqual(r.status_code, 200, r.text)
-        self.assertEqual(len(shared_reports._load().get("cornershop", [])), 1)
-        r = self.c.post(f"/api/quest/sessions/{sid}/check", json={"item": "Bread", "checked": True})
-        self.assertEqual(shared_reports._load().get("cornershop"), None)
+        self.assertEqual(shared_reports._load(), {})
 
 
 if __name__ == "__main__":

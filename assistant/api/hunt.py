@@ -450,5 +450,6 @@ def withdraw_report(session_id, name):
         quest._save_store(s)
     # Taken back: other shoppers stop seeing this account's report.
     from api import shared_reports
-    shared_reports.take_back(sess.get("store"), entry.get("name"), entry.get("group"))
+    shared_reports.take_back(sess.get("store"), entry.get("name"), entry.get("group"),
+                             store_id=sess.get("store_id"))
     return sess

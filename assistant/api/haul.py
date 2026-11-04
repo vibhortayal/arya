@@ -302,10 +302,16 @@ def points_breakdown(sess):
     full = getattr(social, "POINTS_FULL_HAUL", 25) if items and got == len(items) else 0
     boss = getattr(social, "POINTS_BOSS", 40) if boss_found(sess) else 0
     receipt = getattr(social, "POINTS_RECEIPT", 50)
-    total = p_items + full + boss + receipt
+    # A trip played in the Quest game already scored its grabs on the
+    # Trip Clear screen (social.level_points, P3), so here the total is
+    # only what this screen adds: the receipt and the boss. The item
+    # rows still show, greyed, as part of the trip total (owner
+    # approved the mockup, 2026-11-04).
+    in_game = bool(sess.get("game") and not sess.get("shopoff_id"))
+    total = (0 if in_game else p_items + full) + boss + receipt
     settled = _settled(sess)
     return {"items": p_items, "boss": boss, "full_haul": full,
-            "receipt": receipt, "total": total,
+            "receipt": receipt, "total": total, "in_game": in_game,
             "banked": total if settled else 0,
             "pending": 0 if settled else total}
 

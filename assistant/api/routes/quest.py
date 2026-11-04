@@ -312,9 +312,9 @@ async def quest_report_missing(session_id: str, req: Request):
 
 
 @router.get("/api/quest/stores/{store}/reports")
-def quest_store_reports(store: str):
+def quest_store_reports(store: str, store_id: str = ""):
     from api import quest
-    return quest.store_reports(store)
+    return quest.store_reports(store, store_id=store_id.strip() or None)
 
 
 @router.get("/api/quest/sos-count")

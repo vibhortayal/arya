@@ -85,7 +85,7 @@ export function Score() {
     }
     Q.current = sess;
     if ((sess.items || []).some(i => !i.checked) && !(Q.storeReports || []).some(r => r.session_id === sess!.id)) {
-      await qLoadStoreReports(sess.store);
+      await qLoadStoreReports(sess.store, sess.store_id);
     }
     const plain = sess.mode === "express";
     const receipt = sess.receipt_id
