@@ -76,8 +76,8 @@ nobody has designed it yet. Sources are named so you can check them.
   (`assistant/docs/MODEL-POLICY.md`).
 - The forgot-password flow is held, by choice
   (`assistant/docs/ARCHITECTURE.md`, section 13, "Not built / held").
-- The licence is undecided. The repository is all rights reserved for now
-  (there is no license file).
+- Arya's own code is MIT licensed (`LICENSE`). The Meta models and third-party
+  code keep their own terms (`NOTICE.md`).
 
 ## Running it yourself
 - More for self-hosters: a one-command setup for a small server with TLS (the
@@ -179,7 +179,6 @@ and, where it touches personal data, a privacy review first.
 - A public status page and an uptime history.
 - A staging address, and automated CI instead of manual runs.
 - A published API with webhooks and OAuth (`docs/API.md`, "Later").
-- A real licence choice, once I decide.
 - Store permission programme for mapping, and a takedown route for stores.
 
 ## Alexa skill: built, switched off, not tested on a device

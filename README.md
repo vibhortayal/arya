@@ -401,7 +401,7 @@ trademarks, used only to point at an install.
 
 ## License
 
-Arya's own code and documents are all rights reserved. The repository has no
-license file, and it grants no license to reuse it. It is public so judges can
-read, run and test it. Third-party code and asset
-notes are in `NOTICE.md`.
+Arya's own code and documentation are released under the MIT License
+([`LICENSE`](LICENSE)), copyright 2026 Vibhor Tayal. The license covers only
+what I wrote. The Meta models, the services Arya calls and the third-party code
+it builds on keep their own terms, listed in [`NOTICE.md`](NOTICE.md).
