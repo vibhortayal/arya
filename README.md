@@ -185,7 +185,9 @@ The full feature list, with why each matters, is the [dated build page](docs/WHA
 
 - **Returns and gifts.** Returns net out against purchases. Items bought for
   someone else are tracked but never suggested.
-- **Lists you name.** Every item belongs to a list.
+- **Your own lists.** You make a list for each store, such as Trader Jill's or
+  Costco. Every item sits on one list. With one list, adds go straight to it.
+  With more, Arya asks which list.
 - **Store search from Google Places.** When you add a store, Arya suggests real
   grocery stores with their address from the Google Places API (US, near you if
   you allow location) and saves each store once in a shared directory. A copy
