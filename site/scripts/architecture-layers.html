@@ -1,0 +1,72 @@
+<details class="am-wrap" open>
+<summary>Phone-friendly view of the same map</summary>
+<div class="am-layers">
+ <div class="am-layer"><div class="am-lab"><b>Who uses it</b><span>Three ways in</span></div>
+  <div class="am-chips">
+   <div class="am-c am-app"><b>Phone app</b>React + Vite PWA. Today, Spending, Quest, Ask, More<small>offline shell, push, live group sync</small></div>
+   <div class="am-c am-app"><b>Muse agent</b>MCP connector at <code>/api/mcp</code><small>bearer token, stored hashed</small></div>
+   <div class="am-c am-app"><b>Lists API</b><code>/api/v1</code><small>bearer token</small></div>
+   <div class="am-c am-edge"><b>Owner</b>Ops screen in the app<small>VM scripts: reminders, backup, restore</small></div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Front door</b><span>Oracle VM, Docker Compose</span></div>
+  <div class="am-chips">
+   <div class="am-c am-edge"><b>Caddy</b>TLS, CSP, HSTS</div>
+   <div class="am-c am-edge"><b>FastAPI, one process</b>serves the app at <code>/</code> and the API</div>
+   <div class="am-c am-edge"><b>Guards</b>sign-in, demo sandbox, rate limits<small>budget guard before every paid call; Ask guard, $0</small></div>
+   <div class="am-c am-edge"><b>Settings</b>Ops value, then env, then default</div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Routes</b><span>one router per area, <code>api/routes/</code></span></div>
+  <div class="am-chips">
+   <div class="am-c am-edge"><b>Lists and items</b>add, check, expiry</div>
+   <div class="am-c am-edge"><b>Receipts in</b>photo, PDF, text, voice</div>
+   <div class="am-c am-edge"><b>Today and Ask</b>home, chat</div>
+   <div class="am-c am-edge"><b>Spending</b>prices, insights</div>
+   <div class="am-c am-edge"><b>Quest</b>hunts, shelf scan, store maps, Eyes</div>
+   <div class="am-c am-edge"><b>Groups</b>shared home, live sync</div>
+   <div class="am-c am-edge"><b>Account</b>sign-in, settings, export</div>
+   <div class="am-c am-edge"><b>MCP and Lists API</b>tools for agents</div>
+   <div class="am-c am-edge"><b>Ops</b>owner only</div>
+   <div class="am-c am-edge"><b>Demo Town</b>simulated neighbours</div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>What answers</b><span>code first, models only where needed</span></div>
+  <div class="am-split">
+   <div><h4>Code · $0</h4><div class="am-chips">
+    <div class="am-c am-code"><b>Receipt maths</b>totals must add up</div>
+    <div class="am-c am-code"><b>Ledger</b>returns netted, who it was for</div>
+    <div class="am-c am-code"><b>Patterns</b>how often, which store</div>
+    <div class="am-c am-code"><b>The list</b>running low, with reasons</div>
+    <div class="am-c am-code"><b>Prices</b>own receipts only</div>
+    <div class="am-c am-code"><b>Expiry, dictionary</b>dates, names</div>
+    <div class="am-c am-code"><b>Live sync</b>SSE, Postgres NOTIFY</div>
+    <div class="am-c am-code"><b>Reminders</b>one push a day at most</div>
+   </div></div>
+   <div><h4>Meta models · via <code>meta_client.py</code></h4><div class="am-chips">
+    <div class="am-c am-ai"><b>Muse Spark 1.3</b>reads receipts first; Ask, judge, Curator, list photos</div>
+    <div class="am-c am-ai"><b>Muse Wonder 1.0</b>re-reads only flagged receipts</div>
+    <div class="am-c am-ai"><b>SAM 3.1</b>shelf scan; blurs people</div>
+    <div class="am-c am-ai"><b>Voice, Image</b>transcribe; stickers made once</div>
+    <div class="am-c am-ai"><b>Spark Open</b>on Baseten, platform data only</div>
+   </div></div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Where it's kept</b><span>one document per area</span></div>
+  <div class="am-chips">
+   <div class="am-c am-data"><b>JSON files</b>on the Docker volume</div>
+   <div class="am-c am-data"><b>Supabase Postgres</b><code>arya.user_docs</code>, in dual or pg mode</div>
+   <div class="am-c am-data"><b>Receipt originals</b>photo or PDF, per account</div>
+   <div class="am-c am-data"><b>Demo sandbox</b>in memory only</div>
+  </div></div>
+ <div class="am-layer" ><div class="am-lab"><b>Outside services</b><span>optional, behind flags</span></div>
+  <div class="am-chips">
+   <div class="am-c am-out"><b>Supabase Auth</b>email codes, Google</div>
+   <div class="am-c am-out"><b>Resend</b>email: codes, waitlist, alerts</div>
+   <div class="am-c am-out"><b>Google Places</b>store search</div>
+   <div class="am-c am-out"><b>Kroger</b>aisle hint, live only, nothing stored</div>
+   <div class="am-c am-out"><b>Web Push</b>reminders</div>
+  </div></div>
+</div>
+<div class="am-legend"><span><i class="am-app"></i>clients</span><span><i class="am-edge"></i>server</span><span><i class="am-code"></i>code, $0</span><span><i class="am-ai"></i>Meta models</span><span><i class="am-data"></i>storage</span><span><i class="am-out"></i>outside, optional</span></div>
+</details>
