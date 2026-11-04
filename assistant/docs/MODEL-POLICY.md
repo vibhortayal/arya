@@ -78,12 +78,15 @@ If I extend it, auto keeps Wonder's accuracy only where the checks say it
 is needed. Otherwise photo decode is Spark only.
 
 **Demo budget.** Each demo visit may spend `ARYA_DEMO_SESSION_BUDGET_USD`
-(default $0.40) on live reads, held in that visitor's in-memory sandbox;
-all demo visits together stay under `ARYA_DEMO_DAILY_BUDGET_USD`
-(code default $2; the compose default is $20 for the judging window,
-about 50 full visits a day). Set `ARYA_DEMO_DAILY_BUDGET_USD=2` in the
-VM env file to go back, then run `docker compose up -d` in
-`assistant/deploy` (a plain `restart` does not re-read the env file).
+(code default $0.40; $2 on the live site, owner 2026-11-04) on live
+reads, held in that visitor's in-memory sandbox; all demo visits together
+stay under `ARYA_DEMO_DAILY_BUDGET_USD` (code default $2; $100 a day on
+the live site for the judging window, about 50 full visits a day, and the
+top of the Ops range). Ops > Settings > Dollar limits sets both without a
+deploy and beats the env file. To go back through the env file, set
+`ARYA_DEMO_DAILY_BUDGET_USD=2` and `ARYA_DEMO_SESSION_BUDGET_USD=0.40` in
+the VM env file, then run `docker compose up -d` in `assistant/deploy` (a
+plain `restart` does not re-read the env file).
 
 **Switch after Nov 9, not before.** The photo reader is an env setting:
 `ARYA_PHOTO_READER=spark` in the VM env file, then `docker compose up -d`

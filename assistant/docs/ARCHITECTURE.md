@@ -175,7 +175,7 @@ Nov 2) differs in these places: `ARYA_STORE=dual`; push reminders on (daily
 cron at 13:00 UTC); Supabase Auth and email sign-in on; Demo Town on; the
 Kroger aisle lookup on; own-key sign-up off; photo reader `auto`; Spark tier
 `standard`; new sign-up closed (the Ops flag wins over the env). Budgets: $10 a
-day for the app, $20 a day for the demo (code default $2), $0.40 per demo visit.
+day for the app, $100 a day for the demo (code default $2), $2 per demo visit (code default $0.40).
 Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
 
 | Variable | Default in compose | Effect |
@@ -195,8 +195,8 @@ Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
 | `ARYA_USER_HOURLY_FREEZE_USD` | `1` | one account's hour of AI spend that switches its paid reads off for `ARYA_USER_FREEZE_HOURS` (24); I can lift it with `POST /api/usage/unfreeze` |
 | `ARYA_COST_PUBLIC_MIN` | `50` | accounts with spend before the whole-Arya totals show on the usage screen |
 | `ARYA_COST_PAID_BY` | `Hackathon credits` | who the usage screen says pays for the AI reading |
-| `ARYA_DEMO_DAILY_BUDGET_USD` | `20` (code default `2`) | demo household's day bucket |
-| `ARYA_DEMO_SESSION_BUDGET_USD` | `0.40` | one demo visit's share |
+| `ARYA_DEMO_DAILY_BUDGET_USD` | `100` (code default `2`) | demo household's day bucket |
+| `ARYA_DEMO_SESSION_BUDGET_USD` | `2.00` (code default `0.40`) | one demo visit's share |
 | `ARYA_DEMO_DOOR_RATE`, `ARYA_DEMO_AUTH_RATE` | `240`, `120` | per-IP demo door and auth rate limits |
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
 | `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); `off` lifts the list |
@@ -384,8 +384,8 @@ Each agent has a narrow job and a named limit.
 - Every model call is written to a cost ledger. The app's daily
   ceiling (`ARYA_DAILY_BUDGET_USD`, $10) stops app model spend; the
   demo household spends from a separate bucket
-  (`ARYA_DEMO_DAILY_BUDGET_USD`, $20/day in compose) and each demo visit from its
-  own share (`ARYA_DEMO_SESSION_BUDGET_USD`, $0.40), so demo use cannot
+  (`ARYA_DEMO_DAILY_BUDGET_USD`, $100/day in compose) and each demo visit from its
+  own share (`ARYA_DEMO_SESSION_BUDGET_USD`, $2 in compose), so demo use cannot
   drain the app. Every live door, batch judge run and hunt creation
   passes the guard first.
 - A model answer that cannot be read is a 502 with a plain sentence,

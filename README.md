@@ -325,7 +325,7 @@ Short answer: one server for a few dozen people at once, tested on 114 receipts 
 - **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
-- **Demo allowance.** Each demo visit can spend about $0.40 on live Meta calls, and the demo has a daily cap. A busy judging day can use it up. When that happens, the app says so, and the sample buttons still work.
+- **Demo allowance.** Each demo visit can spend about $2 on live Meta calls, and the demo has a daily cap. A busy judging day can use it up. When that happens, the app says so, and the sample buttons still work.
 - **Location check.** Quest start and the Map my store live walk check your phone's location once against the store's address point, within about 300 m or the GPS accuracy if that is larger. Indoor GPS is often off, so the Quest check only adds a note and never blocks. The live walk needs a confirmed location. Without one, you upload a video or photos instead. Stores with no stored address point (older or hand-added rows) cannot be checked. For those, Quest starts as usual and the live walk is upload only. I have not tested this on real phones indoors.
 - **Markets.** Built and tested with US receipts, dollars and stores first. Other markets are not tested.
 - **One server, a few dozen people at once.** Arya runs as one server process

@@ -52,7 +52,7 @@ The binding rules, prices and current caps are in
 [`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md); this page is the Quest summary.
 - Math, routing, planning and patterns are code, $0.
 - Spark (Standard mode) for volume judgment.
-- Engine spend caps: $10/day for the app, $2/day for the demo bucket by default; the live site's compose sets $20.
+- Engine spend caps: $10/day for the app, $2/day for the demo bucket by default; the live site sets $100 a day and $2 a visit.
 - Find it for me scans one item: one item's SAM and Spark calls.
 
 ## Known limits

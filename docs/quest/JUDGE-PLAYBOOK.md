@@ -47,7 +47,7 @@ When the list is done, tap **Head to checkout**, then **Add your receipt**. **Sn
 | Symptom | What to do |
 | --- | --- |
 | "demo rate limit" | Wait a minute and retry. |
-| "You've used this demo visit's live reads" | The visit's share (about $0.40) is spent. Lists, Today, Spending and the rest keep working, and **Use a sample receipt** still works. Only the live reads (receipt, photo, voice, Ask) pause. |
+| "You've used this demo visit's live reads" | The visit's share (about $2) is spent. Lists, Today, Spending and the rest keep working, and **Use a sample receipt** still works. Only the live reads (receipt, photo, voice, Ask) pause. |
 | "The demo's live reads are paused for today" | The demo's shared daily budget is used up. The rest is the same as above. The real app has its own daily budget, so judges cannot use it up. |
 | Receipt spinner over 90 s | A receipt that Muse Wonder re-reads can take up to about 90 seconds. Wait, or Skip. |
 | Voice gives nothing | Check microphone permission, or type. |
