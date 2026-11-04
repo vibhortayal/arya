@@ -75,9 +75,9 @@ html { color-scheme: light; }
 .arya-link:hover { border-color: var(--acc); color: var(--acc) !important; }
 .arya-link svg { flex: none; align-self: center; color: var(--acc); }
 
-/* Wide diagrams (the architecture map is 1200 px wide): scale to the column on a laptop,
+/* Wide diagrams (the architecture map is 1000 px wide): scale to the column on a laptop,
    and on a phone scroll sideways inside the page instead of widening the whole page. */
 @media (max-width: 700px) {
-  .markdown p:has(> img[width="1200"]) { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
-  .markdown p:has(> img[width="1200"]) > img { max-width: none; width: 900px; }
+  .markdown p:has(> img[width="1000"]) { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
+  .markdown p:has(> img[width="1000"]) > img { max-width: none; width: 880px; }
 }

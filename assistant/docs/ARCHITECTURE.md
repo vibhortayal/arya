@@ -8,9 +8,9 @@ wins for behavior and this document wins for structure.
 
 ![Arya architecture diagram](architecture.svg)
 
-*The diagram is `assistant/docs/architecture.svg` (plain SVG, light and dark).
-The sections below say what each box does. Facts here are checked against
-`main` on 2026-10-29.*
+*The diagram is `assistant/docs/architecture.svg` (plain SVG, light and dark),
+redrawn and checked against `main` on 2026-11-04. The sections below say what
+each box does. Their facts are checked against `main` on 2026-10-29.*
 
 **In one paragraph.** A phone-first PWA (React, built with Vite) talks
 to one FastAPI process, which also serves the built app at `/`. Caddy fronts it with TLS. Code does the
