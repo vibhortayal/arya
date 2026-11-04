@@ -80,7 +80,7 @@ reason is plausible on its face:
   weakest of this group in hindsight.
 - **Four buys inside two months (3):** Kirkland Signature Butter Quarters,
   Kirkland Signature Organic Whole Milk, Mini Cukes: a real
-  about-every-two-weeks rhythm in Nov and Dec 2023 that does not reappear under the
+  rhythm of about once every two weeks in Nov and Dec 2023 that does not reappear under the
   same SKUs later in the corpus (bought elsewhere, or re-SKU'd).
 - **The one clear error (1):** Reynolds Foil (printed "Reynlds Foil" on the receipt): 2 buys, 703 days apart,
   judged STAPLE ("long-life foil rebought"). It is also the only
