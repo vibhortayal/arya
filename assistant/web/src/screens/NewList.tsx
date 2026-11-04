@@ -589,7 +589,7 @@ export function NewList() {
       loadCharacters();
       if (store && !D.missing) {
         D.missing = new Set();
-        get<{ reports?: { item: string }[] }>(`/api/quest/stores/${encodeURIComponent(store)}/reports`)
+        get<{ reports?: { item: string }[] }>(`/api/quest/stores/${encodeURIComponent(store)}/reports` + (D.storeId ? `?store_id=${encodeURIComponent(D.storeId)}` : ""))
           .then(r => { D.missing = new Set((r.reports || []).map(x => qSing(x.item))); if (live && D.missing.size) force(); })
           .catch(() => {});
       }

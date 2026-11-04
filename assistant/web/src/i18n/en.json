@@ -2919,6 +2919,8 @@
       }
     },
     "itemsPoints": "Items",
+    "inTripTotal": "Already in your trip total",
+    "bankedLevel": "Points added to your level.",
     "postSheetHint_one": "Tap a sticker to hide it from this post. {{count}} sticker will go out.",
     "postSheetHint_other": "Tap a sticker to hide it from this post. {{count}} stickers will go out."
   },
@@ -3924,7 +3926,7 @@
         "s3": "Seen an empty shelf? Tap Out of stock under \"Report something yourself\".",
         "n1": "A heads-up also shows at the top of a list.",
         "cta": "Open Today",
-        "n2": "Store news needs reports from other Arya shoppers. Another shopper's \"Not here?\" shows only when 3 or more shoppers report the same item at a store you use, and only if it is on your list. Your own reports never alert you. A report clears after 3 days, or sooner when someone finds the item. Tap ✕ on an alert to hide it for you; it stays hidden while that report is open, and other shoppers still see it."
+        "n2": "Store news needs reports from other Arya shoppers. Another shopper's \"Not here?\" shows only when 3 or more shoppers report the same item at a store you use, and only if it is on your list. A report counts for that one store location, not every store of the chain, and the alert names the town. Your own reports never alert you. A report clears after 3 days, or sooner when someone finds the item. Tap ✕ on an alert to hide it for you; it stays hidden while that report is open, and other shoppers still see it."
       },
       "share": {
         "title": "Share with your household",

@@ -23,7 +23,9 @@ export type HaulView = {
   session_id: string; state: string; settled: boolean; name: string;
   receipt: { attached: boolean; count: number } | null;
   items: HaulItem[]; review: Review;
-  points: { items: number; full_haul?: number; boss?: number; receipt: number; total: number };
+  points: { items: number; full_haul?: number; boss?: number; receipt: number; total: number;
+    /* A Quest game trip: items and full haul already counted on Trip Clear, so total leaves them out. */
+    in_game?: boolean };
   boss: { name: string; found: boolean } | null;
   stats: { items: number; new?: number; level: number };
   private: Private;

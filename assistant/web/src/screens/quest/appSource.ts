@@ -224,7 +224,7 @@ export class AppSource implements QuestSource {
     // (Quest review P2): the grabs, their substitutes, and the shelves
     // this trip reported empty (its own open reports).
     const reps = await get<{ reports: { session_id?: string; item: string; kind: string; state: string }[] }>(
-      `/api/quest/stores/${encodeURIComponent(s.store)}/reports`).catch(() => ({ reports: [] }));
+      `/api/quest/stores/${encodeURIComponent(s.store)}/reports` + (s.store_id ? `?store_id=${encodeURIComponent(s.store_id)}` : "")).catch(() => ({ reports: [] }));
     const emptyNames = new Set((reps.reports || []).filter(r => r.session_id === s.id && r.state === "reported" && r.kind === "empty_shelf").map(r => r.item.toLowerCase()));
     const subs: Record<string, string> = {};
     out.items.forEach((it, i) => { const x = s.items[i]; if (x?.checked && x.instead) subs[it.key] = x.instead; });

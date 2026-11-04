@@ -29,6 +29,14 @@ describe("store alert hide", () => {
     expect(rows[1].id).toBeUndefined();
   });
 
+  test("a branch report names its town; an older chain report does not", () => {
+    const branch = { id: "@gplace-milpitas|egg", store: "Trader Joe's", store_city: "Milpitas", item: "Eggs", count: 3, reported_at: "2026-11-04T10:00:00Z" };
+    const rows = storeAlerts({ list: { items: [] } }, [branch, eggs]);
+    expect(rows[0].name).toBe("Eggs: out at Trader Joe's, Milpitas");
+    expect(rows[0].hideLabel).toBe("Hide alert: Eggs at Trader Joe's, Milpitas");
+    expect(rows[1].name).toBe("Eggs: out at Fresh Fields");
+  });
+
   test("✕ hides the row at once, Undo puts it back", async () => {
     let shown: any[] = [milk, eggs];
     const toasts: { m: string; a?: { action: string; onAction: () => void } }[] = [];

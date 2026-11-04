@@ -107,7 +107,7 @@ export function Express() {
 
   const loadReports = useCallback(async () => {
     if (!sessRef.current) return;
-    await qLoadStoreReports(sessRef.current.store);
+    await qLoadStoreReports(sessRef.current.store, sessRef.current.store_id);
     if (live.current) repaint();
   }, [repaint]);
   const loadRail = useCallback(async () => {

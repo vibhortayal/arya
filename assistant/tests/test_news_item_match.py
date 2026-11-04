@@ -31,7 +31,7 @@ class TestNewsItemMatch(Base):
 
     def test_finding_large_eggs_clears_an_eggs_report(self):
         self.as_("me@x.com")
-        self.sr.found("Trader Joe's", "Large eggs", None)
+        self.sr.found("Trader Joe's", "Large eggs", None, store_id=self.loc("Trader Joe's"))
         self.assertEqual(self.items(["Large eggs", "Milk"]), ["Milk"])
 
 

@@ -310,7 +310,8 @@ def check_item(session_id, item_name, checked, instead=None):
     if checked and not (instead or "").strip():
         # Found it on the shelf: every shopper's "Not here" for it clears.
         from api import shared_reports
-        shared_reports.found(sess.get("store"), found[0]["name"], found[0].get("group"))
+        shared_reports.found(sess.get("store"), found[0]["name"], found[0].get("group"),
+                             store_id=sess.get("store_id"))
     return sess
 
 
@@ -845,7 +846,8 @@ def record_sightings(session_id, pops):
     for rec in out:
         storemap.note_sighting(rec["store"], rec["item"],
                                rec.get("shelf_label"))
-        shared_reports.found(rec["store"], rec["item"], rec.get("item_group"))
+        shared_reports.found(rec["store"], rec["item"], rec.get("item_group"),
+                             store_id=sess.get("store_id"))
     return out
 
 
@@ -921,6 +923,7 @@ def report_missing(session_id, item_name, kind, photo=None):
                 return rep
         rep = {"id": _new_id("rep", session_id + item["group"]),
                "session_id": session_id, "store": sess["store"],
+               "store_id": sess.get("store_id"),
                "item": item["name"], "item_group": item["group"],
                "kind": kind, "photo": photo or None,
                "state": "reported", "reported_at": _now(),
@@ -928,9 +931,11 @@ def report_missing(session_id, item_name, kind, photo=None):
         s["reports"].append(rep)
         _save_store(s)
     # Tell other Arya shoppers (owner, 2026-11-03): the shared copy
-    # holds no name, session or photo (api/shared_reports.py).
+    # holds no name, session or photo (api/shared_reports.py). It is
+    # kept for this store location only (owner, 2026-11-04).
     from api import shared_reports
-    shared_reports.add(rep["store"], rep["item"], rep["item_group"], kind)
+    shared_reports.add(rep["store"], rep["item"], rep["item_group"], kind,
+                       store_id=sess.get("store_id"))
     return rep
 
 
@@ -943,17 +948,27 @@ def _same_store(a, b):
     return na == nb or na.replace(" ", "") == nb.replace(" ", "")
 
 
-def store_reports(store_name):
+def store_reports(store_name, store_id=None):
     """A store's open reports — the candidate queue a hunt reads to
     flag its stops. Open means still in the "reported" state. Other
     shoppers' reports that passed the quorum are added for items on
     this household's lists, in the household's own words (never the
-    reporter's text or anything about the reporter)."""
+    reporter's text or anything about the reporter).
+
+    With store_id, only that location (owner, 2026-11-04): this
+    account's own report from another Trader Joe's does not flag this
+    one. Other shoppers' reports are this location's plus the older
+    chain-wide ones until they expire (shared_reports._keys_for).
+    Without store_id, a typed store name, only other shoppers' older
+    chain-wide reports match, as no location report can be placed."""
+    def here(r):
+        if not _same_store(r.get("store"), store_name):
+            return False
+        return not (store_id and r.get("store_id") and r.get("store_id") != store_id)
     open_reps = [r for r in _store()["reports"]
-                 if r["state"] == "reported"
-                 and _same_store(r.get("store"), store_name)]
+                 if r["state"] == "reported" and here(r)]
     from api import shared_reports
-    groups = shared_reports.groups(store_name)
+    groups = shared_reports.groups(store_name, store_id=store_id)
     if groups:
         names = _my_list_names()
         for g in groups:
@@ -1076,6 +1091,34 @@ def _my_store_names():
     return [n for n in names if n]
 
 
+def _city(row):
+    """The branch's town for the alert ("Eggs: out at Trader Joe's,
+    Milpitas"), from this household's saved store. None for a Demo
+    Town store, whose city is a label, not a place."""
+    if str(row.get("id") or "").startswith("town-"):
+        return None
+    return (row.get("city") or "").strip() or None
+
+
+def _my_store_places():
+    """This household's store locations, {directory id: store row}: My
+    stores plus the stores its lists are linked to."""
+    out = {}
+    try:
+        from api import stores
+        for s in stores.mine():
+            out.setdefault(s["id"], s)
+        ids = [i for l in state.named_lists() for i in (l.get("store_ids") or [])]
+        for i in ids:
+            if i and i not in out:
+                row = stores.get_store(i)
+                if row:
+                    out[i] = row
+    except Exception:
+        pass
+    return out
+
+
 def store_news(limit=20):
     """Store news: other shoppers' "Not here" reports, only where they
     help this household (owner, 2026-11-03, "I don't want to be
@@ -1102,18 +1145,35 @@ def store_news(limit=20):
     my_stores = {}
     for m in _my_store_names():
         my_stores.setdefault(store_key(m), m)
+    places = _my_store_places()
     found = []
     groups = shared_reports.groups()
     with state.file_lock(NEWS_HIDDEN):
         hidden = _news_hidden(groups)
+    # A location's report first, so an older chain-wide report for the
+    # same item does not show twice beside it.
+    groups = sorted(groups, key=lambda g: not shared_reports.is_place(g["store_key"]))
+    shown = set()
     for g in groups:
         item = _list_name_for(wanted, g["item_key"])
-        store = my_stores.get(g["store_key"])
         key = g["store_key"] + "|" + g["item_key"]
-        if item and store and key not in hidden:
-            found.append({"store": store, "item": item, "kind": g["kind"],
-                          "count": g["count"], "reported_at": g["latest"],
-                          "shared": True, "id": key, "_key": key})
+        if shared_reports.is_place(g["store_key"]):
+            # Store specific (owner, 2026-11-04): only a location this
+            # household uses, never another branch of the same chain.
+            row = places.get(g["store_key"][1:])
+            store = row and row.get("name")
+            where = {"store_id": row["id"], "store_city": _city(row)} if row else {}
+        else:
+            store, where = my_stores.get(g["store_key"]), {}
+        if not (item and store) or key in hidden:
+            continue
+        if shared_reports.is_place(g["store_key"]):
+            shown.add((store_key(store), item))
+        elif (g["store_key"], item) in shown:
+            continue  # this chain's location already has the alert
+        found.append({"store": store, "item": item, "kind": g["kind"],
+                      "count": g["count"], "reported_at": g["latest"],
+                      "shared": True, "id": key, "_key": key, **where})
     if not found:
         return {"news": []}
     now = datetime.now(timezone.utc)

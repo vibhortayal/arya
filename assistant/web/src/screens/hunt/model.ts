@@ -212,9 +212,14 @@ export function qStops(sess: Session) {
     unplaced: i.shelf_label !== undefined && i.shelf_u == null,
   }));
 }
-export async function qLoadStoreReports(store: string) {
+/* The store's open reports. storeId names the branch (Not here is store
+   specific, owner 2026-11-04); without it only older chain-wide reports match. */
+export function storeReportsUrl(store: string, storeId?: string | null) {
+  return `/api/quest/stores/${encodeURIComponent(store)}/reports` + (storeId ? `?store_id=${encodeURIComponent(storeId)}` : "");
+}
+export async function qLoadStoreReports(store: string, storeId?: string | null) {
   try {
-    const d = await get<{ reports?: Report[] }>(`/api/quest/stores/${encodeURIComponent(store)}/reports`);
+    const d = await get<{ reports?: Report[] }>(storeReportsUrl(store, storeId));
     Q.storeReports = d.reports || [];
   } catch { Q.storeReports = []; }
 }

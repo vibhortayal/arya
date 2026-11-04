@@ -203,7 +203,7 @@ export function Hunt() {
     startTimer(sess);
     initMotion(document.getElementById("scene-mount"), repaint).then(repaint);
     walkStart(qCurrentIndex(sess));
-    qLoadStoreReports(sess.store).then(() => { if (Q.current === sess) repaint(); });
+    qLoadStoreReports(sess.store, sess.store_id).then(() => { if (Q.current === sess) repaint(); });
     qFlushOutbox();
     if (sess.mode === "quest") {
       let seen = false;
@@ -473,7 +473,7 @@ export function Hunt() {
       toast(e instanceof TypeError ? NO_SIGNAL : errMsg(e));
       return false;
     }
-    await qLoadStoreReports(s.store);
+    await qLoadStoreReports(s.store, s.store_id);
     Q.focusIdx = -1;
     return true;
   }
@@ -505,7 +505,7 @@ export function Hunt() {
         } });
       }
       Q.focusIdx = -1;
-      await qLoadStoreReports(s.store);
+      await qLoadStoreReports(s.store, s.store_id);
       repaint();
     } catch (e) {
       toast(errMsg(e));
