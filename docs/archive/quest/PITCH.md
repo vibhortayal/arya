@@ -1,4 +1,6 @@
-> **Early pitch, written Oct 27 when the game came first.** The product is now list first and Quest is optional. For the current story read [`PITCH-SCRIPT.md`](PITCH-SCRIPT.md) and [`../PRINCIPLES.md`](../PRINCIPLES.md).
+> **Archived on 2026-11-04.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
+
+> **Early pitch, written Oct 27 when the game came first.** The product is now list first and Quest is optional. For the current story read [`PITCH-SCRIPT.md`](../../quest/PITCH-SCRIPT.md) and [`docs/PRINCIPLES.md`](../../PRINCIPLES.md).
 
 # Pitch
 

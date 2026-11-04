@@ -6,7 +6,7 @@ rechecked on 2026-11-03 against main a81b4e25.
 Nothing is submitted until I approve the complete package. Portal
 fields sit behind participant sign-in, so the blocks below follow common
 portal fields; paste each into the field that matches. The judging map and
-the package checklist live in `docs/quest/SUBMISSION.md`.
+the package checklist live in `docs/archive/quest/SUBMISSION.md` (archived on 2026-11-04).
 
 Wording rules for this file: list first, Quest optional; nothing unbuilt
 is described as built; no lines about model training (me, 2026-11-01).

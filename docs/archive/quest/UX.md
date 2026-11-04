@@ -1,3 +1,5 @@
+> **Archived on 2026-11-04.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
+
 # UX — Arya Quest
 
 Design bar: a first-time player finishes a hunt with no instruction
