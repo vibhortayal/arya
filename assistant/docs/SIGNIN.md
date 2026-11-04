@@ -1,6 +1,6 @@
 # Sign-in and the waitlist
 
-Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. On the live site new sign-up is closed by an Ops flag, which wins over the env, and email code and Google sign-in are on for existing and approved accounts. Mockup I approved
+Arya is invite-only while `ARYA_REGISTRATION_OPEN=0`. On the live site new sign-up is closed by an Ops flag, which wins over the env. Email code and Google sign-in are on for existing and approved accounts. Mockup I approved
 (2026-10-30): https://claude.ai/artifact/PbmjdCuX1TVqkcFGZPJR9E
 
 Heads-up mail to me on each new join: see "Waitlist join emails" in OPS.md.
@@ -8,8 +8,8 @@ Heads-up mail to me on each new join: see "Waitlist join emails" in OPS.md.
 ## Waitlist screen (me, 2026-10-31)
 
 Settings, Waitlist (admins only) has three sections: **Waiting** (top), **Approved**,
-**Rejected**, each with a count and an empty line. Tick people in one section at a time;
-the buttons follow it: Approve / Reject (waiting), Back to waiting / Reject (approved),
+**Rejected**, each with a count and an empty line. Tick people in one section at a time.
+The buttons follow it: Approve / Reject (waiting), Back to waiting / Reject (approved),
 Approve / Back to waiting / Delete (rejected). **Reject** keeps the row marked
 `rejected` in `waitlist.jsonl`: no mail, the person still gets "already on the list" if they
 rejoin, and sign-in says "not invited yet" like any other address. **Delete** erases the
@@ -29,7 +29,7 @@ row is deleted at first sign-in. API: `POST /auth/waitlist/reject`, `/restore`, 
   "Not on the list yet" and one tap joins the waitlist (`/auth/supabase` answers 403
   with `{detail, email}`; `pwa/auth-callback.js` keeps the address for the page).
 - **Team sign-in:** `/team` (or `/?team=1`) shows the password form for beta testers
-  and test agents. Hiding it is tidiness, not security: `/auth/login` stays rate limited
+  and test agents. Hiding it is tidiness, not security. `/auth/login` stays rate limited
   (8 wrong tries per 15 minutes per IP) and new accounts stay closed. The form also
   stays on the public sheet while the first account is set up, while registration is open,
   and where email sign-in is not set up. Agents that call the API can use API tokens.

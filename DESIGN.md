@@ -1,8 +1,8 @@
-# DESIGN — Arya PWA
+# DESIGN: Arya PWA
 
 Written from the built interface (Stage 6 UX pass, 2026-10-27), per the
 Impeccable flow: DESIGN.md records the world that shipped, it does not
-prescribe a world that did not. Direction source: my brief —
+prescribe a world that did not. Direction source: my brief,
 the Apple UI design system (impeccable.style skill vendored at
 `.claude/skills/impeccable/`; apple-ui-design-system tokens).
 
@@ -11,8 +11,8 @@ the Apple UI design system (impeccable.style skill vendored at
 A native-feeling phone surface. Arya is an Operate surface: the user is
 mid-task, often one-handed, often in a store. The interface uses the
 patterns the user's hand already knows: large titles, grouped inset
-lists, a translucent navigation tab, pill actions. Nothing on screen performs;
-every element is a control or a fact.
+lists, a translucent navigation tab, pill actions. Nothing on screen performs.
+Every element is a control or a fact.
 
 Scene that forces the choices: a shopper in a bright store aisle,
 phone in one hand, cart in the other. Light theme only: no dark variant
