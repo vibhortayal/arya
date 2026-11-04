@@ -2960,6 +2960,7 @@
     "useASampleReceipt": "Use a sample receipt",
     "theHuntStaysClosedAttaching": "Add the receipt and this trip is complete.",
     "attached": "Receipt added. This trip is complete.",
+    "demoDateWaived": "Demo only: this receipt is dated {{date}}, before this trip began. Arya accepts it so you can try the flow. In a real account, Arya would flag it and not count it.",
     "seeHaul": "See haul",
     "forTarget": "{{label}} · {{state}}"
   },

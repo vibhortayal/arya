@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNav } from "../app/nav";
 import { useSession } from "../app/session";
 import { useToast } from "../ui/Toast";
-import { decode } from "../ui/AddReceiptSheet";
+import { decode, demoDateNote } from "../ui/AddReceiptSheet";
 import { post } from "../lib/api";
 import { Q, qLoadSessions, qProgress, qSetState, type Session } from "./hunt/model";
 import { afterFinish } from "./haul/state";
@@ -47,7 +47,11 @@ export function Finish() {
     going.current = true;
     try {
       if (sess.state === "playing" || sess.state === "paused" || sess.state === "not_started") await qSetState(sess, "finished");
-      if (settle) Object.assign(sess, await settle());
+      if (settle) {
+        Object.assign(sess, await settle());
+        const note = demoDateNote(sess);
+        if (note) toast(note);
+      }
       await qLoadSessions().catch(() => {});
       // haul.js afterFinish: the receipt check, the reveal, or (Express) the Score.
       await afterFinish(nav, sess, { replace: true });

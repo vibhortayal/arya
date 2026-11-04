@@ -10,6 +10,15 @@ import { useTranslation } from "../i18n";
 import { pickerProps } from "./picker";
 import { ReadingBlock } from "./ReadingBlock";
 import { fitPhoto } from "../lib/photo";
+import { fmtShort } from "../lib/format";
+import { t as tt } from "../i18n";
+
+/* Demo only (owner, 2026-11-04): an earlier-dated receipt was accepted,
+ * so the screen says why, and that a real account would not allow it. */
+export function demoDateNote(sess?: { demo_date_waived?: string | null } | null): string | null {
+  const d = sess?.demo_date_waived;
+  return d ? tt("addReceiptSheet.demoDateWaived", { date: fmtShort(String(d).slice(0, 10)) }) : null;
+}
 
 /* The Add receipt sheet (pwa quest.js openAddReceipt / qArSettle):
  * attaches this trip's receipt to a finished hunt. Moved out of
@@ -56,7 +65,8 @@ export function AddReceiptSheet({ target, onClose, onDone, goesToHaul }:
     if (!live.current) return;
     const sess = await run();
     close();
-    toast(t("addReceiptSheet.attached"),
+    const note = demoDateNote(sess);
+    toast(note || t("addReceiptSheet.attached"),
       goesToHaul ? undefined : { action: t("addReceiptSheet.seeHaul"), onAction: () => { afterFinish(nav, sess); } });
     await qLoadSessions().catch(() => {});
     onDone(sess);
