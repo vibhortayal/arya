@@ -71,7 +71,8 @@ No signal? Frames save and send later. Arya then walks you to each item in aisle
 Build (Quest tab) shapes a store in the game. The Quest tab Edit button hides what you do not use.
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up atop a list. It shows Arya shoppers' reports: out of stock, back in stock, quiet times.
-To report an empty shelf, tap Out of stock under "Report something yourself" on Today.
+To report an empty shelf, tap Can't find it in a Quest, then The shelf is empty; it shows in Store news once 3 shoppers report it. In Demo Town, tap Out of stock under "Report something yourself" on Today.
+In a Quest, Later keeps an item on the list for next time. A trip with no receipt does not change Spending or Use soon; add the receipt after the trip.
 Others' "Not here?" shows once 3 shoppers report an item on your list at your store (that branch), never your own. ✕ hides it while open. Demo news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi
 Ask tab: type a question or tap Talk to speak. Arya answers from the household's own lists and receipts. It does not speak aloud.

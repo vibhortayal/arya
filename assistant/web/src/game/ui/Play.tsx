@@ -159,7 +159,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
         const s = nxt.layout.sections.find(x => x.id === e.section)!;
         void source.report({ kind: "found", store: nxt.layout.id, section: e.section, item: nxt.items.find(i => i.key === e.key)!.name });
         if (!quiet) {
-          later(() => setBanner({ title: "Fog cleared!", sub: `${s.short} is on your map`, kind: "map" }), 300);
+          later(() => setBanner({ title: "Fog cleared!", sub: `You spotted it in ${s.short}`, kind: "map" }), 300);
           later(() => setBanner(b => (b?.kind === "map" ? null : b)), 1700);
         }
       } else if (e.t === "report") {
@@ -571,7 +571,7 @@ export function HowTo() {
     ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Your shopper walks to the next item by itself; tap any picture in your list to go there instead."],
     ["pantry.webp", "See every item", "Tap List to see every item. Marked one by mistake? Tap Put back, or Revisit again on a shelf empty item."],
     ["basket.webp", "Look first, then choose", "At the shelf, tap Got it, Can't find it or Later. Only Got it earns points; Later and Can't find it never cost anything."],
-    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you just mapped it for everyone."],
+    ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you spotted it. Snap the shelf to map it."],
     ["egg.webp", "Golden item", "Each trip, one item from your own list is picked at random and worth double. Arya never adds items or shows ads. No timer, no lives."],
   ];
   return (
