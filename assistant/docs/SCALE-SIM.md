@@ -18,8 +18,8 @@ Pick how many users share one neighbourhood (200, 1,000, 5,000). The page shows 
 | S | Simulated agent by agent (100 to 10,000 users per neighbourhood) | `agents.py` |
 | A | Assumption or arithmetic (100k to 5M users, cost, Postgres) | `model.py`, `world.py` |
 
-Nobody simulated 5,000,000 people one by one. For large stages, data quality comes from the
-neighbourhood-size simulation, and system numbers come from arithmetic on the measurements.
+Nobody simulated 5,000,000 people one by one. For the large stages, data quality comes from the
+neighbourhood-size simulation. System numbers come from arithmetic on the measurements.
 
 The agent simulation uses the real `api/storemap.py` functions (`segment_status`, `select_best`)
 with a simulated clock. Community price rules follow SPEC FR-11.7 (5 or more households, 30 days, median).

@@ -2,9 +2,9 @@
 
 ## Core loop
 
-**Plan → find → grab → snap the receipt.** The quest log is the grocery
-list, the dungeon is the real store, the treasures are the items on
-their real shelves. Mobile first; the keyboard is for the demo only.
+**Plan → find → grab → snap the receipt.** The grocery list is the quest
+log. The real store is the dungeon. The items on their real shelves are
+the treasures. Mobile first. The keyboard is for the demo only.
 
 ## My rules (2026-10-28)
 
@@ -21,8 +21,8 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 1. **Pick the store.** Each store says what you usually buy there,
    counted from your receipts ("my milk is from TJ, eggs from Costco").
 2. **Move items into the quest.** The Arya list, sorted for that
-   store: usually bought here and new items start ticked; items
-   usually bought elsewhere stay on the list; usuals not on the list
+   store. Items usually bought here, and new items, start ticked. Items
+   usually bought elsewhere stay on the list. Usuals not on the list
    are suggested. ✕ removes an item from the list (Undo). Typed extras
    join the list. Planning is list management, not a second list.
 3. **Check my list** appears only when Arya has a question.
@@ -36,12 +36,12 @@ their real shelves. Mobile first; the keyboard is for the demo only.
 - The next-item card suggests a stop; any stop can be grabbed in any
   order. A fresh shopper photo shows the item boxed when one exists.
 - **Find it for me:** the camera scans for that one item. SAM 3.1
-  boxes candidates, Muse Spark checks each crop; the item lights up
+  boxes candidates and Muse Spark checks each crop. The item lights up
   and one tap grabs it. A miss never says the item is not there.
 - Tools: Scan shelf, Not here?, How to
   play (?), sound.
 - Put back any grab; nothing finishes by itself.
-- I'm done shopping works any time; leftovers are saved for next trip or dropped; nothing counts as failure.
+- I'm done shopping works any time. Leftovers are saved for the next trip or dropped. Nothing counts as failure.
 - How to play shows once, on the first Quest hunt on a phone.
 
 ## Rewards
@@ -73,8 +73,8 @@ hunts and grabs while the adult handles quantities and checkout.
 
 Every hunt is a shelf survey. A grab proves a product is there; "Not
 here?" (Empty shelf / Something else here / Can't tell, optional photo)
-says it is not. A report edits nothing: it flags the stop and opens a
-window. A later grab at the stop means a stockout; a second player
+says it is not. A report edits nothing. It flags the stop and opens a
+window. A later grab at the stop means a stockout. A second player
 finding it elsewhere means a move, applied as a shelf-graph edit.
 Find it for me sightings add the same signal.
 
@@ -94,8 +94,8 @@ Every metric is receipt-verified: the receipt is the referee.
   (not built), Clue Hunt (rollout).
 - **Friends:** handle-based; no chat, no DMs, no lists shared. Run
   notifications are designed (Discussion 24), not built.
-- Handles, never real names; household boards private; spend boards
-  opt-in.
+- Handles, never real names. Household boards are private. Spend boards
+  are opt-in.
 
 ## Contribution
 
