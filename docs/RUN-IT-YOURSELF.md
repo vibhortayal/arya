@@ -96,7 +96,7 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
 - Demo Town (the simulated neighborhood, labelled simulated) is on, as on the
   live demo, and registration is open, so **Start my own list** on the landing
   page makes any number of accounts. Groups are on, so two local accounts can
-  share a list. There is no waitlist, no Google and no email code. The
+  share a list. There is no waitlist, no Google sign-in and no email code. The
   `compose.yaml` here does not touch the live deploy, which uses
   `assistant/deploy/docker-compose.yml`.
 
