@@ -72,7 +72,10 @@ The quest opens at that list's store.
   [the sample shelf photo](../images/sample-shelf.jpg) (a Trader Joe's soup
   and broth shelf, a frame from my own video) on a second screen or a computer, tap
   **I can't find it**, then **Find it for me**, and point the phone camera at
-  that screen. Any other shelf photo works too.
+  that screen. The highlight should land on a tomato soup
+  carton, or any soup. For a clean read, turn the screen to full brightness
+  and fill the camera view with the image, to avoid glare. Any other shelf
+  photo works too.
   From the same place you can tell other Arya shoppers it is gone.
 - **Map my store** (on the Quest tab) opens the guided scan: pan along
   the shelves, SAM 3.1 pixelates the people it detects, and Muse Spark reads sections,
