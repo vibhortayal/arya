@@ -288,3 +288,40 @@ class TestMcpReviewFixes(TestMcp):
     def test_demo_mcp_shares_the_per_ip_door_cap(self):
         from api import demo_guard
         self.assertTrue(demo_guard._demo_live_door("/api/mcp"))
+
+
+class TestMcpListsUpFront(TestMcp):
+    """Owner, 2026-11-04: Muse took 5-6 calls for one add (read, failed
+    add, ask, add, read back). The list names come up front and an add
+    returns its list, so it asks once and adds once."""
+
+    def test_list_names_in_initialize_tools_and_get_list(self):
+        self.c.post("/api/lists", json={"name": "Costcozy"})
+        names = [l["name"] for l in self.c.get("/api/lists").json()["lists"]]
+        self.assertGreaterEqual(len(names), 2)
+        r = rpc(self.c, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}, self.token)
+        ins = r.json()["result"]["instructions"]
+        self.assertIn("Their lists: " + ", ".join(names) + ".", ins)
+        self.assertIn("ask them once", ins)
+        tools = rpc(self.c, {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}, self.token).json()["result"]["tools"]
+        add = next(t for t in tools if t["name"] == "add_items")
+        self.assertIn("Costcozy", add["description"])
+        self.assertIn("One of: " + ", ".join(names), add["inputSchema"]["properties"]["list"]["description"])
+        # The shared catalog is not changed by one account's names.
+        from api import mcp
+        self.assertNotIn("Costcozy", json.dumps(mcp.TOOL_DEFS))
+        self.assertEqual(call(self.c, self.token, "get_list")["structuredContent"]["lists"], names)
+
+    def test_add_returns_the_list_after_it(self):
+        self.c.post("/api/lists", json={"name": "Costcozy"})
+        out = call(self.c, self.token, "add_items", {"items": ["oat milk", "eggs"], "list": "Costcozy"})
+        self.assertFalse(out["isError"], out)
+        data = out["structuredContent"]
+        self.assertEqual(data["lists"], ["Costcozy"])
+        self.assertEqual({r["name"] for r in data["now_on_list"]}, {"oat milk", "eggs"})
+        self.assertTrue(all(r["list"] == "Costcozy" for r in data["now_on_list"]))
+
+    def test_one_list_and_no_lists_are_said_plainly(self):
+        from api import mcp
+        self.assertEqual(mcp.lists_line(["Groceries"]), "Their one list is Groceries; adds go there.")
+        self.assertIn("no lists yet", mcp.lists_line([]))
