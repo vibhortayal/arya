@@ -18,7 +18,10 @@ type OpsData = {
 };
 type Page = "models" | "limits" | "caps" | "accounts" | "data";
 type Mirror = { store: string; configured: boolean; state: string; kind: string; done: number; total: number; result: string; ok: boolean | null };
-type Acct = { user: string; usd_24h: number; owner: boolean; frozen: boolean; disabled: boolean };
+type Acct = { user: string; usd_24h: number; owner: boolean; frozen: boolean; disabled: boolean; ask_locked?: boolean };
+/* Ask Arya paused after three strikes (review 2026-11-04): a real
+ * account stays paused until the owner unlocks; a demo visit ends by itself. */
+type AskLock = { key: string; locked_at: number | null; until: number | null; kinds: string[]; demo: boolean };
 type Accounts = { accounts: Acct[]; owner: { username: string | null; previous: string | null; at: number | null; undo_s: number } };
 
 function Num({ k, s, busy, onSave }: { k: string; s: Setting; busy: boolean; onSave: (k: string, v: number | null) => void }) {
@@ -54,6 +57,7 @@ export function OpsSettings() {
   const [oval, setOval] = useState("");
 
   const [acc, setAcc] = useState<Accounts | null>(null);
+  const [locks, setLocks] = useState<AskLock[] | null>(null);
   const [mir, setMir] = useState<Mirror | null>(null);
   const [delUser, setDelUser] = useState("");
   const [delWhat, setDelWhat] = useState("receipts");
@@ -66,7 +70,10 @@ export function OpsSettings() {
       get<Mirror>("/api/ops/mirror").then(setMir, () => toast(t("ops.couldNotLoad")));
       get<Accounts>("/api/ops/accounts").then(setAcc, () => {});
     }
-    if (page === "accounts") get<Accounts>("/api/ops/accounts").then(setAcc, () => toast(t("ops.couldNotLoad")));
+    if (page === "accounts") {
+      get<Accounts>("/api/ops/accounts").then(setAcc, () => toast(t("ops.couldNotLoad")));
+      get<{ locks: AskLock[] }>("/api/ops/ask-locks").then(r => setLocks(r.locks), () => setLocks(null));
+    }
   }, [t, toast, page]);
   useEffect(() => { load(); }, [nav.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -178,7 +185,7 @@ export function OpsSettings() {
           <Group>
             {acc.accounts.map(a => (
               <Row key={a.user} name={a.user}
-                sub={[a.owner ? t("opsSettings.ownerTag") : "", a.frozen ? t("opsSettings.frozenTag") : "", a.disabled ? t("opsSettings.offTag") : "", `$${a.usd_24h.toFixed(2)} ${t("opsSettings.today")}`].filter(Boolean).join(" · ")}
+                sub={[a.owner ? t("opsSettings.ownerTag") : "", a.frozen ? t("opsSettings.frozenTag") : "", a.disabled ? t("opsSettings.offTag") : "", a.ask_locked ? t("opsSettings.askLockedTag") : "", `$${a.usd_24h.toFixed(2)} ${t("opsSettings.today")}`].filter(Boolean).join(" · ")}
                 right={a.owner ? undefined : (
                   <span style={{ display: "inline-flex", gap: 6 }}>
                     {a.frozen && <Chip disabled={busy} onClick={() => act("/api/usage/unfreeze", { user: a.user }, t("ops.unfrozen", { user: a.user }))}>{t("ops.unfreeze")}</Chip>}
@@ -188,6 +195,19 @@ export function OpsSettings() {
             <button className="navrow" id="os-waitlist" type="button" onClick={() => nav.show("waitlist")}>
               <span className="grow">{t("opsSettings.invites")}<span className="sub">{t("opsSettings.invitesSub")}</span></span><span className="chev">›</span></button>
           </Group>
+          {locks && (
+            <>
+              <Section title={t("opsSettings.askLocks")} />
+              <Group>
+                {locks.length ? locks.map(l => (
+                  <Row key={l.key} name={l.key.startsWith("user:") ? l.key.slice(5) : t("opsSettings.askLockDemo", { key: l.key })}
+                    sub={[l.kinds.join(", "), l.locked_at ? new Date(l.locked_at * 1000).toLocaleString() : "",
+                      l.until ? t("opsSettings.askLockUntil", { when: new Date(l.until * 1000).toLocaleString() }) : t("opsSettings.askLockKept")].filter(Boolean).join(" · ")}
+                    right={<Chip disabled={busy} onClick={() => act("/api/ops/ask-locks/unlock", { key: l.key }, t("opsSettings.askUnlocked"))}>{t("opsSettings.askUnlock")}</Chip>} />
+                )) : <Row name={t("opsSettings.askLocksNone")} sub={t("opsSettings.askLocksNote")} />}
+              </Group>
+            </>
+          )}
           <Section title={t("opsSettings.ownerSection")} />
           <Group>
             <Row name={t("opsSettings.ownerName")} sub={acc.owner.username || t("opsSettings.ownerEnv")} />

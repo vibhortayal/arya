@@ -363,7 +363,7 @@ class MetaClient:
     @_watched(lambda a, k: k.get("mode", a[1] if len(a) > 1 else "standard"))
     def chat(self, messages, mode="standard", personal=False,
              reasoning_effort="low", temperature=0.1, timeout=None,
-             schema=None, cache_key=None):
+             schema=None, cache_key=None, max_tokens=None):
         """One chat completion. Returns (text, usage_dict, cost_usd).
         usage keys are normalized: input_tokens, cached_tokens, output_tokens.
         reasoning_effort=None omits the key entirely — Wonder's production
@@ -373,7 +373,9 @@ class MetaClient:
         (response_format json_schema, non-strict); if the API refuses
         the key the call repeats once without it, so callers keep their
         tolerant parser. cache_key is a stable prefix name sent as
-        prompt_cache_key (automatic prefix caching, cheaper input)."""
+        prompt_cache_key (automatic prefix caching, cheaper input).
+        max_tokens caps the reply length (Ask, review 2026-11-04 F3); if
+        the API refuses the key the call repeats once without it."""
         if personal and mode == "contributor":
             raise ValueError("personal data may not be sent with an explicit "
                              "contributor request (MODEL-POLICY rule 3); "
@@ -391,6 +393,8 @@ class MetaClient:
                                         else site_flags.reasoning_effort() or reasoning_effort)
         if cache_key:
             body["prompt_cache_key"] = cache_key
+        if max_tokens:
+            body["max_tokens"] = int(max_tokens)
         if schema:
             body["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": schema[0], "schema": schema[1]}}
@@ -401,6 +405,9 @@ class MetaClient:
             # 2026-11-04); if the API refuses the value the call repeats
             # once at "low", so the read still lands.
             body["reasoning_effort"] = "low"
+            status, payload = self._send("/chat/completions", body, timeout=timeout)
+        if status == 400 and max_tokens and "max_tokens" in str(payload):
+            body.pop("max_tokens")
             status, payload = self._send("/chat/completions", body, timeout=timeout)
         if status == 400 and schema and "response_format" in str(payload):
             body.pop("response_format")

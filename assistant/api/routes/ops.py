@@ -119,8 +119,10 @@ def _accounts():
     from api.cost_ledger import CostLedger
     today = dict(CostLedger(deps._LEDGER).health(24)["top_users"])
     frozen = deps._freezes()
+    from api import ask_guard
+    asked = ask_guard.locked_users()
     return [{"user": n, "usd_24h": round(today.get(n, 0), 2), "owner": deps._is_owner(n),
-             "frozen": deps.frozen_until(n) > 0 and n in frozen, "disabled": site_flags.disabled(n)}
+             "frozen": deps.frozen_until(n) > 0 and n in frozen, "disabled": site_flags.disabled(n), "ask_locked": n in asked}
             for n in names if n != "demo"]
 
 
@@ -227,4 +229,26 @@ async def ops_mirror_run(req: Request):
     if not started:
         raise HTTPException(409, "a job is already running")
     _log(me, {"mirror": body.get("kind")})
+    return {"ok": True}
+
+
+@router.get("/api/ops/ask-locks")
+def ops_ask_locks():
+    """Who has Ask Arya paused after three strikes (owner only)."""
+    _owner_only()
+    from api import ask_guard
+    return {"locks": ask_guard.list_locks(), "alert_email": bool(ask_guard.alert_email())}
+
+
+@router.post("/api/ops/ask-locks/unlock")
+async def ops_ask_unlock(req: Request):
+    me = _owner_only()
+    body = await _json_obj(req)
+    key = body.get("key")
+    if not isinstance(key, str) or not key:
+        raise HTTPException(400, "key is required")
+    from api import ask_guard
+    if not ask_guard.unlock(key):
+        raise HTTPException(404, "no Ask lock for that key")
+    _log(me, {"ask_unlock": key})
     return {"ok": True}

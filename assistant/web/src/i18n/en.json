@@ -3628,6 +3628,15 @@
     "ownerTag": "Owner",
     "frozenTag": "Frozen",
     "offTag": "Switched off",
+    "askLockedTag": "Ask locked",
+    "askLocks": "Ask locks",
+    "askLockDemo": "Demo visit {{key}}",
+    "askLockUntil": "ends {{when}}",
+    "askLockKept": "until you unlock",
+    "askUnlock": "Unlock",
+    "askUnlocked": "Ask is back on.",
+    "askLocksNone": "Nobody is locked.",
+    "askLocksNote": "Ask Arya pauses after 3 attempts in a day to get around its rules. Lists, Today and the rest keep working.",
     "today": "in 24 h",
     "switchOff": "Switch off",
     "switchOn": "Switch on",
@@ -3852,6 +3861,7 @@
         "n1": "Arya can also add or remove items, mark an item as out, count your receipts and trips, and suggest a dish from food to use first. When she asks which list, tap a list under her question. Tap New chat to start again.",
         "n2": "Tap Photo to send a picture, such as the date on a pack.",
         "n3": "After you tap Talk, a Listening card shows a moving bar and a timer. Tap Stop and send when you are done, or Cancel.",
+        "n4": "To remove more than 3 items at once, Arya asks first: tap Yes, do these or Not now. After 3 attempts in a day to get around Arya's rules, Ask pauses for that account (in the demo, for 24 hours). Lists, Today and everything else keep working.",
         "cta": "Open Ask"
       },
       "lists": {
