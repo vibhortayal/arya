@@ -19,7 +19,7 @@ Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every screen
 The navigation tab at the bottom is **Today, Spending, Quest, Ask, More**. **More** holds Lists, Receipts, Stores, Help and Settings.
 
 ### 2. Lists
-Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list (the town's stores have fictional names). Due staples show under **Suggested for** the store where they are usually bought; tap one to see why. A **Muse Spark 1.3** staple judge decides which items may be suggested (about 4 in 5 of its suggestions matched what my receipts show I rebuy: precision 0.79 against my own purchase rhythm, [details](../../README.md#measured-results)).
+Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list (the town's stores have fictional names). Due staples show under **Suggested for** the store where they are usually bought; tap one to see why. A **Muse Spark 1.3** staple judge decides which items may be suggested (about 4 in 5 of its suggestions matched my own purchase rhythm: precision 0.79 against a purchase-cadence proxy, [details](../../README.md#measured-results)).
 
 **Before you shop (step 4), add "Tomato soup"** to the Trader Jill's list: type it in the add row. You will look for it with the shelf camera.
 
@@ -40,7 +40,7 @@ Open **Ask**. Type "What am I running low on?", then "We finished the Greek yogu
 ### 6. Finish with a receipt
 When the list is done, tap **Head to checkout**, then **Add your receipt**. **Snap the receipt** with a photo, or tap **Use a sample receipt**. **Muse Spark** reads each line, in Meta's Standard mode, and code checks that the lines add up to the printed total. If Spark fails, or the checks flag the read (the lines don't add up, or too many lines are unsure), **Muse Wonder 1.0** reads the receipt again. Arya records which model read the receipt. The demo reads the receipt but keeps nothing; use a sample receipt if you would rather not send one.
 
-**With the sample receipt.** Download [the sample receipt photo](../images/sample-receipt.jpg) (India Bazaar, Nov 1, 2026; it is my own receipt, and it shows the last four digits of my card, which I left in). On a laptop, pick the file after tapping **Snap the receipt**; on a phone, save it to Photos first. A read takes about 10 seconds, or about 45 when Muse Wonder re-reads it. Expect 13 lines, a subtotal of $56.63, tax $0.57 and a total of $57.20, with **Total checks out** and the model that read it shown. The names come back shortened. How the readers score on a public set: [`docs/evals/`](../evals/).
+**With the sample receipt.** Download [the sample receipt photo](../images/sample-receipt.jpg) (India Bazaar, Nov 1, 2026; it is my own receipt, and it shows the last four digits of my card, which I left in). On a laptop, pick the file after tapping **Snap the receipt**; on a phone, save it to Photos first. A read takes about 30 seconds, up to about 90 when Muse Wonder re-reads it. Expect 13 lines, a subtotal of $56.63, tax $0.57 and a total of $57.20, with **Total checks out** and the model that read it shown. The names come back shortened. How the readers score on a public set: [`docs/evals/`](../evals/).
 
 ---
 
@@ -49,9 +49,9 @@ When the list is done, tap **Head to checkout**, then **Add your receipt**. **Sn
 | Symptom | What to do |
 | --- | --- |
 | "demo rate limit" | Wait a minute and retry. |
-| "You've used this demo visit's live reads" | The visit's share (about $0.40) is spent. Lists, Today, Spending and the rest keep working; use the sample buttons for receipt, photo, voice and Ask. |
+| "You've used this demo visit's live reads" | The visit's share (about $0.40) is spent. Lists, Today, Spending and the rest keep working, and **Use a sample receipt** still works; only the live reads (receipt, photo, voice, Ask) pause. |
 | "The demo's live reads are paused for today" | The demo's shared daily budget is used up; same as above. The real app has its own daily budget, so judges cannot use it up. |
-| Receipt spinner over 90 s | A receipt that needs the Wonder re-read can take up to 90 seconds. Wait, or Skip. |
+| Receipt spinner over 90 s | A receipt that Muse Wonder re-reads can take up to about 90 seconds. Wait, or Skip. |
 | Voice gives nothing | Check microphone permission, or type. |
 | Page looks stale | Reload twice, or clear site data. |
 

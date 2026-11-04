@@ -34,16 +34,16 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 
 ## What is the plan to grow it?
 
-[Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure:
+[Scalability design](SCALABILITY-DESIGN.md) has nine phases (0 to 8, the numbers the table above uses), each switched on by settings, each with a rollback and a number to measure:
 
-1. Baseline metrics and a live load test.
-2. A short-lived cache, and the Postgres mirror off the request path.
-3. Postgres as the master copy, with versioned updates.
-4. Shared state for sessions and demo visits.
-5. Several processes.
-6. A job queue.
-7. A model gateway with concurrency caps and spend reservation.
-8. Object storage for photos.
-9. A cloud provider.
+0. Baseline: request timing, a metrics endpoint and a live load test.
+1. Hot cache: a short-lived cache, and the Postgres mirror off the request path.
+2. Postgres master: Postgres as the master copy, with versioned updates.
+3. Shared short-lived state: sessions, demo visits and rate buckets in a shared store.
+4. Several processes.
+5. Queue and workers: a job queue for receipt, scan and reminder jobs.
+6. Model gateway: concurrency caps and spend reservation.
+7. Object storage for photos.
+8. Cloud provider.
 
 Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise.
