@@ -224,6 +224,11 @@ page. A new document or a rewritten section in these goes through three roles:
 Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
 in-app Help, guide cards and Ask stay in the builder chain.
 
+**Voice (owner, 2026-11-04).** Before pushing any doc change, including a small
+fix to an open PR, do a humanizer pass and a human-voice-writer pass. Plain
+words, short sentences, no stock phrases, no em-dash chains, no filler, no hype.
+Say in the PR description that both passes were done.
+
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
   tree: `assistant/deploy/.env` is VM-only (the owner's
