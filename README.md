@@ -183,11 +183,10 @@ wide.
 
 The full feature list, with why each matters, is the [dated build page](docs/WHAT-WE-BUILT.md). A few things a judge cannot get elsewhere:
 
-- **Returns and gifts.** Returns net out against purchases. Items bought for
-  someone else are tracked but never suggested.
-- **Your own lists.** You make a list for each store, such as Trader Jill's or
-  Costco. Every item sits on one list. With one list, adds go straight to it.
-  With more, Arya asks which list.
+- **Returns.** Returns net out against purchases.
+- **Your own lists.** You make your own lists, for example, one for each store,
+  such as Trader Jill's or Costcozy. Every item sits on one list. With one
+  list, adds go straight to it. With more, Arya asks which list.
 - **Store search from Google Places.** When you add a store, Arya suggests real
   grocery stores with their address from the Google Places API (US, near you if
   you allow location) and saves each store once in a shared directory. A copy
