@@ -3,7 +3,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SampleSource } from "../core/source";
-import { newTrip, type Trip } from "../core/trip";
+import { newTrip, reduce, type Action, type Trip } from "../core/trip";
+const reduceAll = (t: Trip, as: Action[]) => as.reduce(reduce, t);
 import { Play } from "./Play";
 
 const kroger = vi.hoisted(() => ({ hints: {} as Record<string, unknown> }));
@@ -48,6 +49,25 @@ describe("Play dock", () => {
     rerender(<Play trip={trip} source={new SampleSource()} onTrip={() => {}} onFinish={() => {}} onQuit={() => {}} onMap={() => {}} />);
     expect(trip.layout.kind).toBe("simulated");
     expect(screen.getByText(/Map it/)).toBeTruthy();
+  });
+});
+
+describe("Put back on the List sheet", () => {
+  it("a Got it row and a shelf-empty row each get Put back, and it restores the item", async () => {
+    const base = await open(["Milk", "Bananas", "Pasta"]);
+    let trip: Trip = reduceAll(base, [{ type: "grab", key: base.items[0].key }, { type: "report", key: base.items[1].key, kind: "empty" }]);
+    const src = Object.assign(new SampleSource(), { progress: vi.fn(), unreport: vi.fn() });
+    const view = () => <Play trip={trip} source={src} onTrip={n => { trip = n; }} onFinish={() => {}} onQuit={() => {}} />;
+    const { rerender } = render(view());
+    fireEvent.click(screen.getByText(/^List ·|List · /, { selector: "button" }));
+    expect(screen.getAllByText(/^(Put back|Revisit again)$/)).toHaveLength(2);
+    fireEvent.click(screen.getByLabelText("Put back Milk"));
+    expect(trip.got).toEqual([]);
+    expect(src.progress).toHaveBeenCalledWith({ kind: "ungrab", item: "Milk", instead: undefined });
+    rerender(view());
+    fireEvent.click(screen.getByLabelText("Revisit Bananas"));
+    expect(trip.reports).toEqual([]);
+    expect(src.unreport).toHaveBeenCalledWith("Bananas");
   });
 });
 

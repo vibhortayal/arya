@@ -46,6 +46,7 @@ export type Action =
   | { type: "ungrab"; key: string }
   | { type: "scout"; key: string }
   | { type: "report"; key: string; kind: ReportKind }
+  | { type: "unreport"; key: string }
   | { type: "pass"; key: string }
   | { type: "unpass"; key: string }
   | { type: "skipSection"; section: string }
@@ -138,6 +139,19 @@ export function reduce(trip: Trip, a: Action): Trip {
       t.points += SCORE.report;
       t.events.push({ t: "report", key: a.key, kind: a.kind, pts: SCORE.report });
       return afterHandle(t, item.section);
+    }
+    case "unreport": {
+      const r = t.reports.find(x => x.key === a.key);
+      if (!r) return trip;
+      const item = t.items.find(i => i.key === a.key)!;
+      t.reports = t.reports.filter(x => x.key !== a.key);
+      t.points = Math.max(0, t.points - SCORE.report);
+      if (t.cleared.includes(item.section)) {
+        t.points = Math.max(0, t.points - (t.clearPts[item.section] || 0));
+        t.cleared = t.cleared.filter(s => s !== item.section);
+        const { [item.section]: _gone, ...rest } = t.clearPts; t.clearPts = rest;
+      }
+      return t;
     }
     case "pass": {
       const item = t.items.find(i => i.key === a.key);
