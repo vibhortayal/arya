@@ -204,7 +204,22 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(len(self.use_soon()), 1)
         self.assertEqual(self.c.post(f"/api/expiry/{item}/done").status_code, 200)
         self.assertEqual(self.use_soon(), [])
-        self.assertEqual(self.c.post(f"/api/expiry/{item}/stop").status_code, 404)
+        # A second Used it / stop finds nothing left to do: success, no error.
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/done").status_code, 200)
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/stop").status_code, 200)
+        self.assertEqual(self.c.post(f"/api/expiry/{item}/snooze").status_code, 404)
+        self.assertEqual(self.c.post("/api/expiry/nope/done").status_code, 404)
+
+    def test_second_done_after_a_good_one_does_not_error(self):
+        # Owner recording 2026-11-03: Used it worked, then "no tracked
+        # date" appeared a moment after. A repeat done/stop is a no-op.
+        r = self.c.post("/api/expiry/save", json={"name": "Milk", "date": self.due}).json()
+        item = r["item_id"]
+        first = self.c.post(f"/api/expiry/{item}/done")
+        second = self.c.post(f"/api/expiry/{item}/done")
+        self.assertEqual((first.status_code, second.status_code), (200, 200))
+        self.assertEqual(second.json()["action"], "done")
+        self.assertEqual(self.use_soon(), [])
 
     def test_save_rejects_bad_dates(self):
         for d in ("soon", "1999-01-01", None):

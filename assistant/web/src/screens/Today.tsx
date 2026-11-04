@@ -875,16 +875,19 @@ export function Today() {
  * a list itself; Add on the suggestion does, asking "Which list?" when
  * it can't tell. Undo takes it out of Suggestions and puts it back in
  * the use-by section. */
+const usedBusy = new Set<string>();
 async function usedUp(o: { id: string; name: string; soon?: Soon; t: (k: string, v?: Record<string, unknown>) => string;
   toast: (m: string, a?: { action: string; onAction: () => void }) => void; reload: () => void }) {
   const { id, name, soon, t, toast, reload } = o;
+  if (usedBusy.has(id)) return;   // a second tap while the first is saving
+  usedBusy.add(id);
   const enc = encodeURIComponent(id);
   const day = new Date().toISOString().slice(0, 10);
   const say = (e: unknown) => toast(e instanceof Error ? e.message : String(e));
   try {
     if (soon) await post(`/api/expiry/${enc}/done`);
     await post(`/api/items/${enc}/flag`, { used: day });
-  } catch (e) { say(e); return; }
+  } catch (e) { say(e); return; } finally { usedBusy.delete(id); }
   reload();
   toast(t("today.usedToSuggest", { name }), {
     action: t("common.undo"),
