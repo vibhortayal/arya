@@ -23,7 +23,7 @@
 import { ApiError, api, get, post, put } from "../../lib/api";
 import { startCapture, transcribeBlob, voiceSupported } from "../../lib/recorder";
 import { charFor, loadCharacters } from "../../lib/characters";
-import { artFor, type FieldReport, type QuestSource, type SavedMap, type SnapResult } from "../../game/core/source";
+import { artFor, type Box, type FieldReport, type FindResult, type QuestSource, type SavedMap, type SnapResult } from "../../game/core/source";
 import { buildLayout, sectionFor, SECTIONS } from "../../game/core/template";
 import { TEMPLATE, type StoreGraph } from "../../game/map/graph";
 import { knownZone } from "../../game/map/classify";
@@ -316,6 +316,25 @@ export class AppSource implements QuestSource {
     } catch (err) {
       if (err instanceof ApiError && err.status === 503) return { ok: false, note: "Shelf photos aren't on right now, so nothing was kept." };
       return { ok: false, note: err instanceof Error ? err.message : "That photo didn't go through." };
+    }
+  }
+
+  /* Find it for me: the hunt's Shelf Scan (/api/quest/scan-shelf),
+   * aimed at one item of this trip. The trip's record is made now if
+   * it is not yet (the scan reads the item from it). */
+  async findIt(e: { item: string; photo: Blob }): Promise<FindResult> {
+    const s = await this.ensure();
+    if (!s) return { found: false, candidates: [], note: "This trip couldn't be saved, so Arya can't look yet. Try again in a moment." };
+    const photo = await shrink(e.photo);
+    try {
+      const out = await api<{ pops?: { item: string; box: Box }[]; candidates?: { item: string; box: Box }[] }>(
+        `/api/quest/scan-shelf?session=${encodeURIComponent(s.id)}&item=${encodeURIComponent(e.item)}`,
+        { method: "POST", headers: { "Content-Type": photo.type || "image/jpeg" }, body: photo });
+      const pop = (out.pops || []).find(p => p.item === e.item);
+      const candidates = (out.candidates || []).filter(c => c.item === e.item).map(c => c.box);
+      return { found: !!pop, box: pop?.box, candidates, photo };
+    } catch (err) {
+      return { found: false, candidates: [], photo, note: err instanceof Error ? err.message : "That photo didn't go through." };
     }
   }
 

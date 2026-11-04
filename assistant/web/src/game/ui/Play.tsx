@@ -17,6 +17,7 @@ import { buzz, chime, feel, goldChime, say, soft, stinger, tick, whoosh, type Fe
 import { Juice } from "../fx/juice";
 import { charArt, sceneArt } from "../assets";
 import { GhostHand, Sheet, SnapButton } from "./bits";
+import { FindIt, type FindState } from "./FindIt";
 import { hintFor as krogerLine, useKrogerHints } from "../../lib/krogerHints";
 import { coachFor } from "./coach";
 import type { Goal, WorldApi } from "../world/World3D";
@@ -51,6 +52,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
   const [subName, setSubName] = useState("");
   const [gestureHint, setGestureHint] = useState(false);
   const [nudge, setNudge] = useState<Nudge>(null);
+  const [find, setFind] = useState<null | (FindState & { key: string })>(null);
   const nudged = useRef(new Set(trip.snapped));
   const nudgeTimer = useRef(0);
   const noThanks = useRef(0);   // two ✕ and the nudge stops for this trip
@@ -219,6 +221,16 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
     walkTo({ kind: "item", key });
   };
 
+  /* Find it for me: one photo aimed at one item; a newer photo wins. */
+  const findSeq = useRef(0);
+  const look = async (key: string, name: string, photo: File) => {
+    if (!source.findIt) return;
+    const seq = ++findSeq.current;
+    setFind({ key, photo, result: null });
+    const result = await source.findIt({ item: name, photo });
+    if (seq === findSeq.current) setFind(f => (f && f.key === key ? { ...f, result } : f));
+  };
+
   const snap = async (n: NonNullable<Nudge>, photo: File) => {
     if (!source.snap) return;
     clearTimeout(nudgeTimer.current);
@@ -346,6 +358,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
                 )}
                 {page === "nothere" && (
                   <div className="qg-opts">
+                    {source.findIt && <SnapButton className="qg-opt qg-findopt" onPhoto={f => void look(item.key, item.name, f)}><b>Find it for me</b><span>Point your camera at the shelf. Arya highlights it.</span></SnapButton>}
                     <button className="qg-opt" onClick={() => setPage("staff")}><b>Ask a staff member</b><span>Shows a card you can hand them.</span></button>
                     <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
                     <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
@@ -393,6 +406,19 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
           </AnimatePresence>
         </>}
       </section>
+
+      {find && (() => {
+        const it = trip.items.find(i => i.key === find.key);
+        if (!it) return null;
+        const scout = sectionView(trip, it.section) === "fog";
+        const close = () => { findSeq.current++; setFind(null); };
+        return <FindIt item={it.name} state={find} scout={scout}
+          points={scout ? SCORE.item + SCORE.scout : SCORE.item * (trip.golden === it.key ? SCORE.golden : 1)}
+          onRetake={f => void look(it.key, it.name, f)}
+          onGot={() => { close(); act({ type: scout ? "scout" : "grab", key: it.key }); }}
+          onEmpty={() => { close(); act({ type: "report", key: it.key, kind: "empty" }); }}
+          onClose={close} />;
+      })()}
 
       <AnimatePresence>
         {banner && (
