@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-evals/judge-eval" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">judge-eval | Arya docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" name="twitter:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" property="og:url" content="https://vibhortayal.github.io/arya/docs/evals/judge-eval"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="judge-eval | Arya docs"><meta data-rh="true" name="description" content="How well the staple judge picks items to suggest, against a purchase-cadence check."><meta data-rh="true" property="og:description" content="How well the staple judge picks items to suggest, against a purchase-cadence check."><link data-rh="true" rel="icon" href="/arya/repo/assistant/pwa/icons/favicon-48.png"><link data-rh="true" rel="canonical" href="https://vibhortayal.github.io/arya/docs/evals/judge-eval"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/evals/judge-eval" hreflang="en"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/evals/judge-eval" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Staple judge eval","item":"https://vibhortayal.github.io/arya/docs/evals/judge-eval"}]}</script><link rel="stylesheet" href="/arya/assets/css/styles.b62ace9e.css">
+<script src="/arya/assets/js/runtime~main.02d6c6a6.js" defer="defer"></script>
+<script src="/arya/assets/js/main.21c0260e.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>document.documentElement.setAttribute("data-theme","light"),document.documentElement.setAttribute("data-theme-choice","light"),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/arya/repo/assistant/pwa/icons/icon-192.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/arya/"><div class="navbar__logo"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--light_rzkv" height="28" width="28"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--dark_mMAk" height="28" width="28"></div><b class="navbar__title text--truncate">Arya</b></a><a class="navbar__item navbar__link" href="/arya/docs/intro">Docs</a><a class="navbar__item navbar__link" href="/arya/docs/guide/user-journeys">Using Arya</a><a class="navbar__item navbar__link" href="/arya/api-reference">API reference</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Open Arya<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="/arya/docs/judges"><span title="Start here" class="categoryLinkLabel_W154">Start here</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/judges"><span title="For judges" class="linkLabel_WmDU">For judges</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/quest/judge-playbook"><span title="8-minute demo path" class="linkLabel_WmDU">8-minute demo path</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/intro"><span title="What is Arya" class="linkLabel_WmDU">What is Arya</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/what-we-built"><span title="Built in the hackathon window" class="linkLabel_WmDU">Built in the hackathon window</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/principles"><span title="Why Arya exists" class="linkLabel_WmDU">Why Arya exists</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/guide/user-journeys"><span title="Using Arya" class="categoryLinkLabel_W154">Using Arya</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/architecture/design-decisions"><span title="How it is built" class="categoryLinkLabel_W154">How it is built</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/arya/docs/evals/"><span title="Evidence" class="categoryLinkLabel_W154">Evidence</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/"><span title="Overview" class="linkLabel_WmDU">Overview</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/gate-0"><span title="Gate 0 report" class="linkLabel_WmDU">Gate 0 report</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/wonder-eval"><span title="Wonder eval" class="linkLabel_WmDU">Wonder eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/arya/docs/evals/judge-eval"><span title="Staple judge eval" class="linkLabel_WmDU">Staple judge eval</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/run-it-yourself"><span title="Developers" class="categoryLinkLabel_W154">Developers</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/roadmap"><span title="After the hackathon" class="categoryLinkLabel_W154">After the hackathon</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/arya/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Evidence</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Staple judge eval</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><blockquote>
+<p>Staple-judge evaluation, 2026-10-27, on my own 114 Costco receipts
+(shared with my approval). The raw receipts and state files are not in this repo.</p>
+</blockquote>
+<header><h1>Staple-judge accuracy: one defensible number</h1></header>
+<p><strong>In three lines.</strong></p>
+<ol>
+<li class="">Of the 52 items the staple judge admitted to the list on my 114 receipts, 41 (79%) are staples by purchase cadence alone. No human labels, no model calls, $0.</li>
+<li class="">The 11 others are mostly slow-cycle items bought 3 times; one is a clear error.</li>
+<li class="">The figure moves with the proxy&#x27;s definition (0.98 with a looser bar, 0.63 with a stricter one), so quote it with the definition, for one household.</li>
+</ol>
+<p><strong>Headline: precision 0.79 (41 of 52).</strong>
+One-sentence definition the submission may quote: <em>&quot;Of the 52 items Arya&#x27;s
+staple judge admitted to the self-writing list, 41 (79%) were independently
+corroborated as behavioral staples by purchase cadence alone (bought on at
+least 4 separate receipts spanning at least 3 different months, returns
+netted), with no human labels involved.&quot;</em></p>
+<p>Quotable form: <strong>&quot;Judge precision 79% against a cadence-derived ground
+truth (41/52 admits corroborated); the 11 uncorroborated admits are
+dominated by slow-cycle consumables bought 3 times, and only one admit
+(Reynolds Foil, 2 buys 703 days apart) is a clear error.&quot;</strong></p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="method-stated-before-the-numbers">Method (stated before the numbers)<a href="#method-stated-before-the-numbers" class="hash-link" aria-label="Direct link to Method (stated before the numbers)" title="Direct link to Method (stated before the numbers)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Data.</strong> My live state, copied read-only from the Oracle VM
+(Docker volume <code>arya-data</code>, per-user dir): 114 real Costco receipts,
+2023-10-25 to 2026-10-26; the dictionary (458 entries); and <code>judged.json</code>,
+the judge&#x27;s cached verdicts. No model calls were made; spend $0.</li>
+<li class=""><strong>Identical pipeline.</strong> The analysis re-ran the app&#x27;s own code on the
+copies: ledger build (discounts folded, fee SKUs excluded), dictionary
+grouping (Curator merges applied), and the pattern engine&#x27;s returns
+netting (FIFO, kept quantity only, FOR-OTHERS lines excluded). Item
+identities are therefore exactly the identities the judge saw.</li>
+<li class=""><strong>Admitted set.</strong> Items whose cached verdict has <code>list_ok = true</code>
+(class STAPLE, or SEASONAL). 156 raw verdicts collapse to 155 distinct
+grouped items under the current group map (one Curator merge); 52 of
+them are admitted (43 STAPLE, 9 SEASONAL).</li>
+<li class=""><strong>Ground-truth proxy (behavioral staples).</strong> An item is a proxy staple
+if, after returns netting, it was bought on <strong>≥ K distinct receipts</strong>
+spanning <strong>≥ M distinct calendar months</strong>. Primary setting <strong>K=4, M=3</strong>.
+Justification: the corpus holds ~3 receipts/month over 36 months, so
+4 separate trips in 3 different months is the weakest pattern that
+excludes one-trip stock-ups, gift/event buys, and two-trip trials, while
+still catching a quarterly Costco rhythm. The judge&#x27;s own eligibility
+bar is 2 buys, so the proxy is deliberately stricter than the judge:
+it corroborates the judge&#x27;s rule but does not re-derive it.</li>
+<li class=""><strong>Metrics.</strong> Precision = admitted ∩ proxy / admitted. Recall =
+admitted ∩ proxy / proxy. Disagreements are listed by name below; the
+names matter more than the decimals.</li>
+<li class=""><strong>What this number is NOT.</strong> It is not accuracy against a hand-labeled
+gold set, because no such set exists for this household. It measures agreement
+between a reasoning judge and an independent cadence proxy. Where they
+disagree, either can be right. The disagreement lists say which, case
+by case.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="results">Results<a href="#results" class="hash-link" aria-label="Direct link to Results" title="Direct link to Results" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Proxy</th><th>Proxy staples</th><th>Precision (all admits)</th><th>Precision (STAPLE only)</th><th>Recall</th></tr></thead><tbody><tr><td>K=3, M=2</td><td>88</td><td>51/52 = <strong>0.98</strong></td><td>0.98</td><td>0.58</td></tr><tr><td><strong>K=4, M=3 (primary)</strong></td><td>55</td><td>41/52 = <strong>0.79</strong></td><td>0.74 (32/43)</td><td>0.75 (41/55)</td></tr><tr><td>K=6, M=4</td><td>35</td><td>33/52 = 0.63</td><td>0.65</td><td>0.94</td></tr></tbody></table>
+<p>At the primary setting: all <strong>9 SEASONAL admits are corroborated (9/9)</strong>.
+Every disagreement below is at K=4, M=3.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="disagreements-at-the-primary-setting">Disagreements at the primary setting<a href="#disagreements-at-the-primary-setting" class="hash-link" aria-label="Direct link to Disagreements at the primary setting" title="Direct link to Disagreements at the primary setting" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="judge-admitted-proxy-does-not-corroborate-11-of-52">Judge admitted, proxy does not corroborate (11 of 52)<a href="#judge-admitted-proxy-does-not-corroborate-11-of-52" class="hash-link" aria-label="Direct link to Judge admitted, proxy does not corroborate (11 of 52)" title="Direct link to Judge admitted, proxy does not corroborate (11 of 52)" translate="no">​</a></h3>
+<p>Ten of the eleven miss the bar by exactly one receipt or one month. All
+eleven are slow-cycle or short-window items where the judge&#x27;s stated
+reason is plausible on its face:</p>
+<ul>
+<li class=""><strong>Three buys, three months (7):</strong> Avocados; Hand Wash; Kirkland
+Signature Bodywash; Kirkland Signature Pink Salt; Lubriderm; Organic
+2% Milk; Power Up Mega Omega Trail Mix. Soap, lotion, salt and foil are
+bought rarely <em>because</em> they last; a cadence bar built for food
+under-counts them. Avocados (Nov 2023 to Jan 2024, then nothing) is the
+weakest of this group in hindsight.</li>
+<li class=""><strong>Four buys inside two months (3):</strong> Kirkland Signature Butter Quarters,
+Kirkland Signature Organic Whole Milk, Mini Cukes: a real
+rhythm of about once every two weeks in Nov and Dec 2023 that does not reappear under the
+same SKUs later in the corpus (bought elsewhere, or re-SKU&#x27;d).</li>
+<li class=""><strong>The one clear error (1):</strong> Reynolds Foil (printed &quot;Reynlds Foil&quot; on the receipt): 2 buys, 703 days apart,
+judged STAPLE (&quot;long-life foil rebought&quot;). It is also the only
+uncorroborated admit under the looser K=3, M=2 proxy.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="proxy-staple-judge-kept-off-14-of-55">Proxy staple, judge kept off (14 of 55)<a href="#proxy-staple-judge-kept-off-14-of-55" class="hash-link" aria-label="Direct link to Proxy staple, judge kept off (14 of 55)" title="Direct link to Proxy staple, judge kept off (14 of 55)" translate="no">​</a></h3>
+<p>All fourteen carry the class OCCASIONAL, and every judge reason cites gap
+irregularity: Buter Croiss (5 receipts), Cantaloupe (6), KS Lightly
+Breaded Chicken Breast Chunks (5), KS Pine Nuts (4), KS Pistachio (5),
+KS Towel (5), KS Walnuts (6), Mixed Pepper (4), Nmcholstoff+ (4),
+Organic Broc 2Lb (4), Organic Brussels (4), Organic Gre Bean (4),
+Pumpkin Seed (5), Red Onions (4). None were left unjudged. The judge
+saw all of them and declined. This is the product&#x27;s stated policy made
+visible (precision over recall: a missed item costs the user one tap, an
+unnecessary suggestion costs trust). Twice-a-year pantry goods (walnuts,
+pistachios, pine nuts, pumpkin seeds) are the arguable cases: a human
+might call them staples; the judge calls a 150 to 250 day median gap
+&quot;occasional,&quot; and under its own prompt that is a defensible call.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="second-signal-my-behavior">Second signal: my behavior<a href="#second-signal-my-behavior" class="hash-link" aria-label="Direct link to Second signal: my behavior" title="Direct link to Second signal: my behavior" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Flags:</strong> my state has no <code>flags.json</code>. I have recorded no
+list edits (no &quot;never suggest&quot;, no dismissals, no manual adds) against
+the judge&#x27;s output. There is therefore no me-vs-judge settlement
+signal to report; absence of overrides is noted, not scored.</li>
+<li class=""><strong>The live list:</strong> the cart prepared from the current smart list holds
+5 items. The 4 pattern-surfaced items (Organic Raspberry, Mandarins,
+Kirkland Signature Almonds, Slice Almond, the list that went from 16 to 4 in
+the first judge sweep) are <strong>all corroborated proxy staples at the
+primary setting (4/4)</strong>. The fifth, Power Up Mega Omega Trail Mix, is
+judge-admitted (STAPLE, 3 buys at a 23-day median gap) and sits in the
+proxy-miss group above by one month of spread. My behavior (it is
+on my active list, qty 2) sides with the judge.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="sensitivity-and-how-to-read-the-headline">Sensitivity and how to read the headline<a href="#sensitivity-and-how-to-read-the-headline" class="hash-link" aria-label="Direct link to Sensitivity and how to read the headline" title="Direct link to Sensitivity and how to read the headline" translate="no">​</a></h2>
+<p>The precision figure depends on the definition, by construction. Loosen the
+proxy to K=3, M=2 and precision rises to 0.98, with recall falling to
+0.58 (the judge is far more selective than a loose cadence bar). Tighten
+it to K=6, M=4 and precision falls to 0.63, because a
+heavier proxy excludes mid-frequency items the judge reasonably admits.
+K=4, M=3 was fixed before the results were seen, as the weakest bar that
+still excludes stock-ups and trials; 0.79 is quoted with that definition
+attached, never bare.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="caveats">Caveats<a href="#caveats" class="hash-link" aria-label="Direct link to Caveats" title="Direct link to Caveats" translate="no">​</a></h2>
+<ul>
+<li class="">One household, one retailer (Costco), 114 receipts. Staples bought at
+other stores are invisible to both the judge and the proxy.</li>
+<li class="">Verdicts are cached at the buy-count current when judged (re-judging
+triggers at +2 buys); the proxy uses final corpus counts. A verdict can
+therefore predate an item&#x27;s later purchases. This cuts against the
+judge in the recall direction only.</li>
+<li class="">Grouping is the Curator&#x27;s current grouping; a wrong merge would move
+both sets together, so grouping errors mostly cancel in precision.</li>
+<li class="">SEASONAL admits are month-gated in the live list logic; this eval
+scores the judge&#x27;s <code>list_ok</code>, which is the judge&#x27;s own decision, not
+the seasonal gate&#x27;s.</li>
+</ul>
+<p><em>Analysis: analysis script and state copies are kept out of the repo (my data).</em></p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/vibhortayal/arya/edit/main/docs/evals/JUDGE-EVAL.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/arya/docs/evals/wonder-eval"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Wonder eval</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/arya/docs/run-it-yourself"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Run it yourself</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#method-stated-before-the-numbers" class="table-of-contents__link toc-highlight">Method (stated before the numbers)</a></li><li><a href="#results" class="table-of-contents__link toc-highlight">Results</a></li><li><a href="#disagreements-at-the-primary-setting" class="table-of-contents__link toc-highlight">Disagreements at the primary setting</a><ul><li><a href="#judge-admitted-proxy-does-not-corroborate-11-of-52" class="table-of-contents__link toc-highlight">Judge admitted, proxy does not corroborate (11 of 52)</a></li><li><a href="#proxy-staple-judge-kept-off-14-of-55" class="table-of-contents__link toc-highlight">Proxy staple, judge kept off (14 of 55)</a></li></ul></li><li><a href="#second-signal-my-behavior" class="table-of-contents__link toc-highlight">Second signal: my behavior</a></li><li><a href="#sensitivity-and-how-to-read-the-headline" class="table-of-contents__link toc-highlight">Sensitivity and how to read the headline</a></li><li><a href="#caveats" class="table-of-contents__link toc-highlight">Caveats</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links and contact</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>Arya on GitHub</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub profile</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://x.com/VibTayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (@VibTayal)</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://vibhortayal.github.io/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Website</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="mailto:support@teamnightshift.org"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Email</span></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Read these docs as plain text</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/arya/llms.txt">Short index (llms.txt)</a></li><li class="footer__item"><a class="footer__link-item" href="/arya/llms-full.txt">Everything in one file (llms-full.txt)</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Docs are generated from the repository Markdown.</div></div></div></footer></div>
+</body>
+</html>

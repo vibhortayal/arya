@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-run-it-yourself" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">Run Arya on your own computer | Arya docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" name="twitter:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" property="og:url" content="https://vibhortayal.github.io/arya/docs/run-it-yourself"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Run Arya on your own computer | Arya docs"><meta data-rh="true" name="description" content="How to run Arya on your own computer with Docker and your own Meta API key."><meta data-rh="true" property="og:description" content="How to run Arya on your own computer with Docker and your own Meta API key."><link data-rh="true" rel="icon" href="/arya/repo/assistant/pwa/icons/favicon-48.png"><link data-rh="true" rel="canonical" href="https://vibhortayal.github.io/arya/docs/run-it-yourself"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/run-it-yourself" hreflang="en"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/run-it-yourself" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Run it yourself","item":"https://vibhortayal.github.io/arya/docs/run-it-yourself"}]}</script><link rel="stylesheet" href="/arya/assets/css/styles.b62ace9e.css">
+<script src="/arya/assets/js/runtime~main.02d6c6a6.js" defer="defer"></script>
+<script src="/arya/assets/js/main.21c0260e.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>document.documentElement.setAttribute("data-theme","light"),document.documentElement.setAttribute("data-theme-choice","light"),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/arya/repo/assistant/pwa/icons/icon-192.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/arya/"><div class="navbar__logo"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--light_rzkv" height="28" width="28"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--dark_mMAk" height="28" width="28"></div><b class="navbar__title text--truncate">Arya</b></a><a class="navbar__item navbar__link" href="/arya/docs/intro">Docs</a><a class="navbar__item navbar__link" href="/arya/docs/guide/user-journeys">Using Arya</a><a class="navbar__item navbar__link" href="/arya/api-reference">API reference</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Open Arya<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="/arya/docs/judges"><span title="Start here" class="categoryLinkLabel_W154">Start here</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/judges"><span title="For judges" class="linkLabel_WmDU">For judges</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/quest/judge-playbook"><span title="8-minute demo path" class="linkLabel_WmDU">8-minute demo path</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/intro"><span title="What is Arya" class="linkLabel_WmDU">What is Arya</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/what-we-built"><span title="Built in the hackathon window" class="linkLabel_WmDU">Built in the hackathon window</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/principles"><span title="Why Arya exists" class="linkLabel_WmDU">Why Arya exists</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/guide/user-journeys"><span title="Using Arya" class="categoryLinkLabel_W154">Using Arya</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/architecture/design-decisions"><span title="How it is built" class="categoryLinkLabel_W154">How it is built</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/evals/"><span title="Evidence" class="categoryLinkLabel_W154">Evidence</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/arya/docs/run-it-yourself"><span title="Developers" class="categoryLinkLabel_W154">Developers</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/arya/docs/run-it-yourself"><span title="Run it yourself" class="linkLabel_WmDU">Run it yourself</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/try-the-features"><span title="Tour of your own copy" class="linkLabel_WmDU">Tour of your own copy</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/api/lists-api"><span title="Lists API v1" class="linkLabel_WmDU">Lists API v1</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/roadmap"><span title="After the hackathon" class="categoryLinkLabel_W154">After the hackathon</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/arya/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Developers</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Run it yourself</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Run Arya on your own computer</h1></header>
+<p>For judges and anyone who wants to try Arya locally with their own Meta key.
+The live demo needs none of this: <a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="">https://arya.teamnightshift.org</a>, then &quot;Try it
+now&quot;.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="what-do-i-need">What do I need?<a href="#what-do-i-need" class="hash-link" aria-label="Direct link to What do I need?" title="Direct link to What do I need?" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Docker</strong> with Compose (Docker Desktop, or Docker Engine and the Compose
+plugin). Nothing else: no Python, no Node.</li>
+<li class=""><strong>A Meta Model API key</strong> for the AI parts: receipts, Ask, photos and voice.
+Make one at dev.meta.ai (API keys, then Create API key). It starts with
+<code>LLM_</code>. Without it, lists, the demo household and Quest still run, but
+anything that reads a photo, answers in Ask or listens to your voice says
+&quot;This copy of Arya has no Meta key, so AI features are off&quot;.</li>
+<li class=""><strong>A Google Places API key</strong> to add stores on your own account. Adding a
+store searches the Google Places API. Without the key, the store picker says
+&quot;Google search is not set up&quot; and there is no way to type a store in by
+hand. The demo household comes with its own stores, so the demo needs no
+Google key.</li>
+<li class="">Everything else is optional.</li>
+<li class="">A phone-size window. On a laptop, make the browser about 390 px wide. Camera
+and microphone steps need a phone, and a phone browser only allows the camera
+on https. On a phone reaching your computer over plain <code>http://</code> on your
+network, use the receipt upload instead of the camera.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="how-do-i-start-it">How do I start it?<a href="#how-do-i-start-it" class="hash-link" aria-label="Direct link to How do I start it?" title="Direct link to How do I start it?" translate="no">​</a></h2>
+<p>Get the code with a shallow clone, which is small and fast. A normal
+<code>git clone</code> also works and brings the full history (much larger):</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">git clone --depth 1 https://github.com/vibhortayal/arya.git &amp;&amp; cd arya</span><br></span></code></pre></div></div>
+<p>Then, from the repository root:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">cp .env.local.example .env       # then put your key on the MODEL_API_KEY line</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker compose up --build</span><br></span></code></pre></div></div>
+<p>Open <a href="http://localhost:8080" target="_blank" rel="noopener noreferrer" class="">http://localhost:8080</a>. The first build takes a few minutes. On the first
+visit a &quot;Create your account&quot; sheet opens. That makes the one real account on
+this copy: a username (lowercase letters, digits and <code>_ % + @ -</code>, and <code>.</code> after the first character) and a password. Use it
+to snap or upload your own receipts and see them read and saved. That is
+Arya&#x27;s core feature. Or tap <strong>Close</strong> on the sheet and then <strong>Try it now</strong> for the demo
+household. The demo keeps nothing. It reads a receipt live on the screen but does not
+save it. Ask, photos of a list and voice work there with your key. The first start also writes the demo
+household into a Docker volume. Later starts keep what is there.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="how-do-i-get-a-meta-api-key">How do I get a Meta API key?<a href="#how-do-i-get-a-meta-api-key" class="hash-link" aria-label="Direct link to How do I get a Meta API key?" title="Direct link to How do I get a Meta API key?" translate="no">​</a></h2>
+<p>To run the live model calls from your own checkout, make a Meta Model API key
+just for this (dev.meta.ai, API keys, Create API key). Put it on the
+<code>MODEL_API_KEY</code> line of your local <code>.env</code>. Never commit a filled <code>.env</code>. The
+<code>MODEL_API_KEY=</code> line in <code>assistant/deploy/.env.example</code> is blank on purpose.
+The key is sent only to <code>api.meta.ai</code>. Meta keys have no spending cap of their
+own, so set a usage limit on your Meta billing page, and delete the key at Meta
+when you are done. Photo receipts: see <code>ARYA_PHOTO_READER</code> below.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="settings-env">Settings (<code>.env</code>)<a href="#settings-env" class="hash-link" aria-label="Direct link to settings-env" title="Direct link to settings-env" translate="no">​</a></h2>
+<p>Two matter: <code>MODEL_API_KEY</code> for the AI, and <code>GOOGLE_PLACES_API_KEY</code> to add
+stores on your own account. The rest are optional.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Setting</th><th>What it does</th><th>Default</th></tr></thead><tbody><tr><td><code>MODEL_API_KEY</code></td><td>Your Meta key. Receipts, Ask, photos, voice, notes and store scans use it. Lists, the demo and Quest run without it</td><td>empty (AI off)</td></tr><tr><td><code>ARYA_STORE</code></td><td>Where data is kept. <code>json</code> means files in a Docker volume</td><td><code>json</code></td></tr><tr><td><code>ARYA_PHOTO_READER</code></td><td><code>auto</code>: Muse Spark reads a photo first, Muse Wonder re-reads one the checks flag. Or <code>spark</code>, <code>wonder</code></td><td><code>auto</code></td></tr><tr><td><code>ARYA_SPARK_TIER</code></td><td>Spark runs on Meta&#x27;s Standard plan</td><td><code>standard</code></td></tr><tr><td><code>GOOGLE_PLACES_API_KEY</code></td><td>Needed to add a store on your own account: the store picker searches the Google Places API. Empty means the picker says &quot;Google search is not set up&quot;. The demo needs no key</td><td>empty</td></tr><tr><td><code>BASETEN_API_KEY</code></td><td>Optional. Muse Spark Open, the staple judge&#x27;s second seat. Leave empty to skip that check</td><td>empty</td></tr><tr><td><code>ARYA_LOCAL_PORT</code></td><td>Use another port if 8080 is taken</td><td><code>8080</code></td></tr></tbody></table>
+<p>Ignore everything else in <code>assistant/deploy/.env.example</code>: Supabase, email,
+Google, push and the other settings are for the live site. They default off.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="what-does-it-cost-me">What does it cost me?<a href="#what-does-it-cost-me" class="hash-link" aria-label="Direct link to What does it cost me?" title="Direct link to What does it cost me?" translate="no">​</a></h2>
+<p>Every model call runs on your key and your Meta account. The demo household
+keeps its visit limit locally too: about $0.40 of live reads per visit and
+$2 a day for the demo (<code>ARYA_DEMO_SESSION_BUDGET_USD</code>,
+<code>ARYA_DEMO_DAILY_BUDGET_USD</code>). Pricing is in
+<a class="" href="/arya/docs/architecture/model-policy"><code>assistant/docs/MODEL-POLICY.md</code></a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="how-do-i-stop-it-reset-it-or-change-the-port">How do I stop it, reset it or change the port?<a href="#how-do-i-stop-it-reset-it-or-change-the-port" class="hash-link" aria-label="Direct link to How do I stop it, reset it or change the port?" title="Direct link to How do I stop it, reset it or change the port?" translate="no">​</a></h2>
+<ul>
+<li class="">After editing <code>.env</code>, run <code>docker compose up -d</code>. <code>docker compose restart</code> does
+not re-read <code>.env</code>.</li>
+<li class="">Stop: press Ctrl+C, or <code>docker compose down</code>. Your data stays.</li>
+<li class="">Start over (wipes the volume; the next start writes the demo household again):
+<code>docker compose down -v</code>.</li>
+<li class="">Another port: set <code>ARYA_LOCAL_PORT</code> in <code>.env</code>.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="how-is-it-different-from-the-live-site">How is it different from the live site?<a href="#how-is-it-different-from-the-live-site" class="hash-link" aria-label="Direct link to How is it different from the live site?" title="Direct link to How is it different from the live site?" translate="no">​</a></h2>
+<ul>
+<li class="">One container, plain <code>http://localhost</code>, no Caddy and no certificate. The
+session cookie is set to work over plain http (<code>ARYA_INSECURE_COOKIE=1</code>).</li>
+<li class="">JSON files in a volume instead of Supabase. No email, so you sign in with the
+username and password you made on the first visit.</li>
+<li class="">Demo Town (the simulated neighborhood, labelled simulated) is on, as on the
+live demo, and registration is open, so <strong>Start my own list</strong> on the landing
+page makes any number of accounts. Groups are on, so two local accounts can
+share a list. There is no waitlist, no Google sign-in and no email code. The
+<code>compose.yaml</code> here does not touch the live deploy, which uses
+<code>assistant/deploy/docker-compose.yml</code>.</li>
+</ul>
+<p>Next, a step-by-step tour of every feature on your copy:
+<a class="" href="/arya/docs/try-the-features"><code>docs/TRY-THE-FEATURES.md</code></a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="can-i-run-it-without-docker">Can I run it without Docker?<a href="#can-i-run-it-without-docker" class="hash-link" aria-label="Direct link to Can I run it without Docker?" title="Direct link to Can I run it without Docker?" translate="no">​</a></h2>
+<p>The Tester followed this route step by step from a fresh clone, without a
+key (the receipt step was not run). The Docker route above was run twice on a Linux server with no Meta key. A cold
+build (about 55 seconds) from a fresh shallow clone, in a browser at 390x844, worked for
+start, <code>/health</code>, creating an account, signing in again, the demo, the no-key Ask
+and receipt messages, and Start shopping. An earlier run with cached
+build layers, through direct requests, showed that editing <code>.env</code> and the port setting worked.
+The cold build needed that test machine&#x27;s proxy certificate added, because its
+network re-signs HTTPS (see &quot;What if something goes wrong?&quot;). Reading a receipt,
+photos, voice and a working Ask answer need a real key and were not run on either
+route. Still untested: a real Meta key, Docker Desktop on a Mac or Windows
+laptop, and a real phone.</p>
+<p>You need Python 3.12 or newer (3.13 worked) and Node 22. From the repository root:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">python3 -m venv .venv &amp;&amp; .venv/bin/pip install -r assistant/api/requirements.txt</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">cd assistant/web &amp;&amp; npm ci &amp;&amp; npm run build &amp;&amp; cd ..</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">../.venv/bin/python -m harness.make_demo_household data</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">MODEL_API_KEY=&lt;your key&gt; ../.venv/bin/python -m uvicorn api.main:app --port 8000</span><br></span></code></pre></div></div>
+<p>In <code>MODEL_API_KEY=&lt;your key&gt;</code>, put your key in place of <code>&lt;your key&gt;</code>, or nothing
+at all for no-key mode (<code>MODEL_API_KEY=</code>). Pasting the angle brackets as they
+are fails in bash. The snippet leaves your shell in <code>assistant/</code>.</p>
+<p>Open <a href="http://localhost:8000" target="_blank" rel="noopener noreferrer" class="">http://localhost:8000</a>. The address <a href="http://localhost:8000/health" target="_blank" rel="noopener noreferrer" class="">http://localhost:8000/health</a> answers <code>ok</code> when the
+server is up. These steps were tested on Linux only. macOS and Windows have not
+been tried. Without a key, Ask shows the &quot;no Meta key&quot; message.
+On this route its last words, &quot;docker compose up -d&quot;, do not apply. Instead, set
+<code>MODEL_API_KEY</code> and start uvicorn again. To open it from a phone at
+<code>http://&lt;your computer&#x27;s IP&gt;:8000</code>, make uvicorn listen on your network address (its
+<code>--host</code> option) and set <code>ARYA_INSECURE_COOKIE=1</code> before it. Without that, sign-in may not stick
+over plain http. I have not tested this on a phone. For front-end work, <code>npm run dev</code> in
+<code>assistant/web</code> starts Vite.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="let-your-ai-agent-set-it-up">Let your AI agent set it up<a href="#let-your-ai-agent-set-it-up" class="hash-link" aria-label="Direct link to Let your AI agent set it up" title="Direct link to Let your AI agent set it up" translate="no">​</a></h2>
+<p>If you use a coding agent that can run commands on your computer, paste this
+prompt to it. It uses the no-Docker route, which the Tester followed from a
+fresh clone (without a key). Read the prompt first. It asks the agent to run
+commands on your machine.</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">Set up Arya on my computer so I can try it. Repository:</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">https://github.com/vibhortayal/arya</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">1. Clone the repository into a new, empty folder, cd into it, and open</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   docs/RUN-IT-YOURSELF.md.</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">2. Follow the section &quot;Can I run it without Docker?&quot; step by step. If</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   something goes wrong, troubleshoot it as you normally would to get Arya</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   running, and use &quot;What if something goes wrong?&quot; in the guide. Do not</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   edit any file that git tracks; the folders the guide&#x27;s commands create</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   (.venv, node_modules, the web build, the data folder) are expected.</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">3. Use the no-key demo mode: run the uvicorn command with MODEL_API_KEY= left</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   empty (nothing after the equals sign). Do not ask me for a</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   key, a password or any secret, and do not paste or print one.</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">4. When the server is up, tell me the local address (http://localhost:8000),</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   that /health answers &quot;ok&quot;, and the sign-in steps: tap Close on the &quot;Create</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   your account&quot; sheet, then tap &quot;Try it now&quot; for the demo household. Tell me</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">   to make the browser about 390 px wide.</span><br></span></code></pre></div></div>
+<p>Without a key, anything that reads a photo or answers in Ask says &quot;This copy of
+Arya has no Meta key, so AI features are off&quot;. That is expected.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="how-do-i-run-the-tests">How do I run the tests?<a href="#how-do-i-run-the-tests" class="hash-link" aria-label="Direct link to How do I run the tests?" title="Direct link to How do I run the tests?" translate="no">​</a></h2>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">(cd assistant &amp;&amp; ../.venv/bin/python -m unittest discover -s tests)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">(cd assistant/web &amp;&amp; npm test)</span><br></span></code></pre></div></div>
+<p>Current counts and known failures: <a href="https://github.com/vibhortayal/arya/blob/main/STATUS.md" target="_blank" rel="noopener noreferrer" class=""><code>STATUS.md</code></a>. One web test,
+<code>pack.test.tsx</code> &quot;arrow keys pack and skip&quot;, is flaky in a full run and passes alone. CI is
+manual-only (<code>.github/workflows/tests.yml</code>).</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="what-if-something-goes-wrong">What if something goes wrong?<a href="#what-if-something-goes-wrong" class="hash-link" aria-label="Direct link to What if something goes wrong?" title="Direct link to What if something goes wrong?" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>&quot;This copy of Arya has no Meta key, so AI features are off. Put your key from
+dev.meta.ai after MODEL_API_KEY= in the .env file, then run: docker compose up -d&quot;</strong>
+<code>MODEL_API_KEY</code> is empty, or the container was not recreated after you
+edited <code>.env</code>. Fix <code>.env</code>, then <code>docker compose up -d</code>.</li>
+<li class=""><strong>Receipts says &quot;Reading paused&quot; and there is no key.</strong> The same cause as
+above: add the key and run <code>docker compose up -d</code>.</li>
+<li class=""><strong>Port already in use.</strong> Set <code>ARYA_LOCAL_PORT</code> to a free port.</li>
+<li class=""><strong>A model error with a key set.</strong> The key was rejected or has no credit.
+Check it at dev.meta.ai.</li>
+<li class=""><strong>The build fails to download packages, with a certificate error (pip or npm).</strong> A
+proxy that re-signs HTTPS is the usual cause. Build on a network without one, or
+add your proxy&#x27;s certificate to Docker.</li>
+<li class=""><strong>Docker Hub answers <code>429 Too Many Requests</code>.</strong> The pull limit for your address
+is used up. Wait a few minutes and run the build again, or run <code>docker login</code>.</li>
+<li class=""><strong>Status check.</strong> <code>http://localhost:8080/health</code> answers when the app is up.</li>
+</ul>
+<p>This is not the feature &quot;Use your own Meta key&quot; in the live app&#x27;s Settings,
+which is unfinished, switched off and not used (see <a class="" href="/arya/docs/roadmap">After the hackathon</a>). Here
+the key is the server&#x27;s key, set in <code>.env</code>.</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/vibhortayal/arya/edit/main/docs/RUN-IT-YOURSELF.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/arya/docs/evals/judge-eval"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Staple judge eval</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/arya/docs/try-the-features"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Tour of your own copy</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-do-i-need" class="table-of-contents__link toc-highlight">What do I need?</a></li><li><a href="#how-do-i-start-it" class="table-of-contents__link toc-highlight">How do I start it?</a></li><li><a href="#how-do-i-get-a-meta-api-key" class="table-of-contents__link toc-highlight">How do I get a Meta API key?</a></li><li><a href="#settings-env" class="table-of-contents__link toc-highlight">Settings (<code>.env</code>)</a></li><li><a href="#what-does-it-cost-me" class="table-of-contents__link toc-highlight">What does it cost me?</a></li><li><a href="#how-do-i-stop-it-reset-it-or-change-the-port" class="table-of-contents__link toc-highlight">How do I stop it, reset it or change the port?</a></li><li><a href="#how-is-it-different-from-the-live-site" class="table-of-contents__link toc-highlight">How is it different from the live site?</a></li><li><a href="#can-i-run-it-without-docker" class="table-of-contents__link toc-highlight">Can I run it without Docker?</a></li><li><a href="#let-your-ai-agent-set-it-up" class="table-of-contents__link toc-highlight">Let your AI agent set it up</a></li><li><a href="#how-do-i-run-the-tests" class="table-of-contents__link toc-highlight">How do I run the tests?</a></li><li><a href="#what-if-something-goes-wrong" class="table-of-contents__link toc-highlight">What if something goes wrong?</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links and contact</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>Arya on GitHub</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub profile</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://x.com/VibTayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (@VibTayal)</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://vibhortayal.github.io/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Website</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="mailto:support@teamnightshift.org"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Email</span></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Read these docs as plain text</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/arya/llms.txt">Short index (llms.txt)</a></li><li class="footer__item"><a class="footer__link-item" href="/arya/llms-full.txt">Everything in one file (llms-full.txt)</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Docs are generated from the repository Markdown.</div></div></div></footer></div>
+</body>
+</html>

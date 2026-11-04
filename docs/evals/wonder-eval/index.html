@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-evals/wonder-eval" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">wonder-eval | Arya docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" name="twitter:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" property="og:url" content="https://vibhortayal.github.io/arya/docs/evals/wonder-eval"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="wonder-eval | Arya docs"><meta data-rh="true" name="description" content="How well Muse Wonder read the public receipt photos, line by line."><meta data-rh="true" property="og:description" content="How well Muse Wonder read the public receipt photos, line by line."><link data-rh="true" rel="icon" href="/arya/repo/assistant/pwa/icons/favicon-48.png"><link data-rh="true" rel="canonical" href="https://vibhortayal.github.io/arya/docs/evals/wonder-eval"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/evals/wonder-eval" hreflang="en"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/evals/wonder-eval" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wonder eval","item":"https://vibhortayal.github.io/arya/docs/evals/wonder-eval"}]}</script><link rel="stylesheet" href="/arya/assets/css/styles.b62ace9e.css">
+<script src="/arya/assets/js/runtime~main.02d6c6a6.js" defer="defer"></script>
+<script src="/arya/assets/js/main.21c0260e.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>document.documentElement.setAttribute("data-theme","light"),document.documentElement.setAttribute("data-theme-choice","light"),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/arya/repo/assistant/pwa/icons/icon-192.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/arya/"><div class="navbar__logo"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--light_rzkv" height="28" width="28"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--dark_mMAk" height="28" width="28"></div><b class="navbar__title text--truncate">Arya</b></a><a class="navbar__item navbar__link" href="/arya/docs/intro">Docs</a><a class="navbar__item navbar__link" href="/arya/docs/guide/user-journeys">Using Arya</a><a class="navbar__item navbar__link" href="/arya/api-reference">API reference</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Open Arya<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="/arya/docs/judges"><span title="Start here" class="categoryLinkLabel_W154">Start here</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/judges"><span title="For judges" class="linkLabel_WmDU">For judges</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/quest/judge-playbook"><span title="8-minute demo path" class="linkLabel_WmDU">8-minute demo path</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/intro"><span title="What is Arya" class="linkLabel_WmDU">What is Arya</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/what-we-built"><span title="Built in the hackathon window" class="linkLabel_WmDU">Built in the hackathon window</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/principles"><span title="Why Arya exists" class="linkLabel_WmDU">Why Arya exists</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/guide/user-journeys"><span title="Using Arya" class="categoryLinkLabel_W154">Using Arya</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/architecture/design-decisions"><span title="How it is built" class="categoryLinkLabel_W154">How it is built</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/arya/docs/evals/"><span title="Evidence" class="categoryLinkLabel_W154">Evidence</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/"><span title="Overview" class="linkLabel_WmDU">Overview</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/gate-0"><span title="Gate 0 report" class="linkLabel_WmDU">Gate 0 report</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/arya/docs/evals/wonder-eval"><span title="Wonder eval" class="linkLabel_WmDU">Wonder eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/evals/judge-eval"><span title="Staple judge eval" class="linkLabel_WmDU">Staple judge eval</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/run-it-yourself"><span title="Developers" class="categoryLinkLabel_W154">Developers</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/roadmap"><span title="After the hackathon" class="categoryLinkLabel_W154">After the hackathon</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/arya/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Evidence</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Wonder eval</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><blockquote>
+<p><strong>Superseded 2026-11-02.</strong> This report recommends switching receipt reading to Wonder through Nov 4. The rule now in force is in <a class="" href="/arya/docs/architecture/model-policy"><code>assistant/docs/MODEL-POLICY.md</code></a>: Spark reads first, Wonder re-reads flagged receipts, through Nov 9. The measurements below still stand.</p>
+</blockquote>
+<header><h1>Spark vs Wonder on receipt decode: accuracy and latency</h1></header>
+<p><strong>Headline: on the Gate 0 public set, Wonder reads receipts more
+accurately than Spark. Its errors are the kind the system catches,
+while Spark&#x27;s worst error is the kind it cannot. Wonder costs about 9 times more
+per receipt and takes about 4 times longer.</strong></p>
+<p>One-sentence result the submission may quote: <em>&quot;On the 9 public Gate 0
+receipt photos (98 hand-labeled lines), Muse Wonder 1.0 scored 97/98
+lines correct on identity+price against Spark 1.3 Standard&#x27;s 92/98,
+with zero price errors and zero silent errors; Spark repeated the
+set&#x27;s one known silent failure (a price rotation on Westside Market&#x27;s
+receipt, read at 0.85 confidence with no check flag), while Wonder
+read that line correctly at 0.95.&quot;</em></p>
+<p>Quotable form: <strong>&quot;Wonder 98.98% vs Spark 93.88% identity+price
+(hand-adjudicated under the Gate 0 definition); price errors 0 vs 4;
+silent errors 0 vs 4; arithmetic 7/7 both. Latency: Wonder mean 34.4 s
+vs Spark 8.6 s per receipt photo. Cost: $0.118 vs $0.013 per receipt.&quot;</strong></p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="method-stated-before-the-numbers">Method (stated before the numbers)<a href="#method-stated-before-the-numbers" class="hash-link" aria-label="Direct link to Method (stated before the numbers)" title="Direct link to Method (stated before the numbers)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Data.</strong> The Gate 0 public set only: 9 receipt photos
+(<code>~/workspace/meta-hackathon-2026/spike2/public-set/photos/</code>), 98
+hand-labeled lines, labels written before any decode ran. No receipts of mine
+anywhere in this eval.</li>
+<li class=""><strong>Identical conditions.</strong> Both models ran the app&#x27;s own photo
+pipeline: the system prompt from <code>assistant/prompts/decode_photo_v1.md</code>
+loaded the way <code>api/decode/service.py: load_photo_prompt()</code> loads it,
+the same message shape as <code>decode_photo()</code>, temperature 0.1, one
+stateless call per receipt. Spark ran at the app&#x27;s production
+configuration (<code>muse-spark-1.3</code>, <code>reasoning_effort=low</code>, the
+<code>meta_client.chat</code> default). Wonder ran at its default
+(<code>muse-wonder-1.0</code>, no <code>reasoning_effort</code> sent). This compares the
+configurations the app would actually ship, and the asymmetry is
+deliberate: effort is part of a model&#x27;s production configuration.</li>
+<li class=""><strong>Scoring, two columns.</strong> Gate 0&#x27;s verdicts were hand-made under a
+written definition (identity = same product as printed, prompt-
+sanctioned abbreviation expansions preserve identity, price exact
+with the savings-fold allowance). This eval first ran an automatic
+scorer (<code>wonder_score.py</code>) implementing that definition; the scorer
+was <strong>calibrated until it reproduced every Gate 0 hand verdict on
+the recorded Spark run exactly</strong> (90/98 identity, 80/98 strict, same
+error lines, arithmetic 7/7). The automatic column is that scorer,
+unmodified, on both fresh runs. Because the scorer&#x27;s expansion table
+covers the abbreviations the <em>recorded Spark run</em> used, every
+automatic non-correct line in both fresh runs was then
+<strong>hand-adjudicated under the same written Gate 0 definition</strong>. That is the
+adjudicated column. Each ruling is listed by name below. Reporting
+only the automatic column would penalize Wonder for doing what the
+prompt instructs (expanding abbreviations); reporting only the
+adjudicated column would hide the judgment calls. Both are printed.</li>
+<li class=""><strong>Latency</strong> is wall-clock per API call, one run, sequential calls.
+<strong>Cost</strong> is computed from each response&#x27;s usage block at the
+MODEL-POLICY prices (Spark Standard $1.25/$4.25, cached $0.15;
+Wonder $4/$20 per 1M) via the repo&#x27;s own <code>estimate_cost</code>.</li>
+<li class=""><strong>Judge spot check.</strong> 20 synthetic grouped items with expected
+verdicts set from the judge prompt&#x27;s rules, mirroring the production
+judge-eval archetypes (weekly staples, December eggnog, twice-a-year
+spices, gift cards, and the 2-buys-703-days-apart foil case). Run
+through the app&#x27;s own <code>api/judge.py</code> batch path, one call per model.
+Synthetic because the real judge inputs are my purchase
+history; no personal data was sent to either model.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="results">Results<a href="#results" class="hash-link" aria-label="Direct link to Results" title="Direct link to Results" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric (9 receipts, 98 lines)</th><th>Spark 1.3 Std (low)</th><th>Wonder 1.0 (default)</th></tr></thead><tbody><tr><td>Identity+price, automatic scorer</td><td>92/98 = 93.88%</td><td>86/98 = 87.76%</td></tr><tr><td>Identity+price, hand-adjudicated</td><td>92/98 = 93.88%</td><td><strong>97/98 = 98.98%</strong></td></tr><tr><td>Strict-string, automatic</td><td>77/98 = 78.57%</td><td>72/98 = 73.47%</td></tr><tr><td>Price errors</td><td><strong>4</strong></td><td><strong>0</strong></td></tr><tr><td>Product errors (adjudicated)</td><td>2</td><td>1</td></tr><tr><td>Silent errors (wrong, no check flag)</td><td><strong>4 of 6</strong></td><td><strong>0 of 1</strong></td></tr><tr><td>Arithmetic (of 7 scorable)</td><td>7/7</td><td>7/7</td></tr><tr><td>Latency mean / median / p95</td><td>8.6 s / 8.8 s / 11.9 s</td><td>34.4 s / 30.0 s / 60.5 s</td></tr><tr><td>Cost per receipt (total)</td><td>$0.0134 ($0.12)</td><td>$0.1180 ($1.06)</td></tr></tbody></table>
+<p>Per receipt (identity, adjudicated; latency s; cost $):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Receipt</th><th>Lines</th><th>Spark</th><th>Wonder</th><th>Spark lat</th><th>Wonder lat</th></tr></thead><tbody><tr><td>pub-01 Walmart</td><td>13</td><td>13/13</td><td>13/13</td><td>9.2</td><td>30.5</td></tr><tr><td>pub-02 Publix (rotated, crumpled)</td><td>10</td><td>10/10</td><td>10/10</td><td>8.7</td><td>30.0</td></tr><tr><td>pub-03 H-E-B</td><td>12</td><td>12/12</td><td>12/12</td><td>7.3</td><td>26.4</td></tr><tr><td>pub-04 Alexander&#x27;s (faded dot-matrix)</td><td>27</td><td>25/27</td><td>26/27</td><td>11.0</td><td>47.4</td></tr><tr><td>pub-05 Westside Market</td><td>13</td><td><strong>9/13</strong></td><td><strong>13/13</strong></td><td>11.9</td><td>28.3</td></tr><tr><td>pub-06 Kroger</td><td>3</td><td>3/3</td><td>3/3</td><td>6.3</td><td>15.4</td></tr><tr><td>pub-07 Publix</td><td>2</td><td>2/2</td><td>2/2</td><td>4.8</td><td>11.9</td></tr><tr><td>pub-08 Food Lion (partial)</td><td>8</td><td>8/8</td><td>8/8</td><td>8.8</td><td>59.5</td></tr><tr><td>pub-09 Costco (partial)</td><td>10</td><td>10/10</td><td>10/10</td><td>9.6</td><td>60.5</td></tr></tbody></table>
+<p>Judge spot check (20 synthetic items, one batch call per model):
+<strong>both models 20/20 on class and 20/20 on list admission</strong>, including
+the foil archetype (both OCCASIONAL, so the production judge&#x27;s one clear
+error from the 2026-10-27 eval was not reproduced by either model on
+the clean synthetic version). Spark: 5.9 s, $0.0067 per batch. Wonder:
+12.2 s, $0.0595 per batch. The synthetic items are deliberately
+clear-cut, so this instrument has a ceiling: it shows Wonder does not
+judge worse. It cannot show that Wonder judges better.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="where-the-reads-differ-by-name">Where the reads differ, by name<a href="#where-the-reads-differ-by-name" class="hash-link" aria-label="Direct link to Where the reads differ, by name" title="Direct link to Where the reads differ, by name" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="lines-spark-got-wrong-that-wonder-got-right">Lines Spark got wrong that Wonder got right<a href="#lines-spark-got-wrong-that-wonder-got-right" class="hash-link" aria-label="Direct link to Lines Spark got wrong that Wonder got right" title="Direct link to Lines Spark got wrong that Wonder got right" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>pub-05, the price rotation. All four of Spark&#x27;s price errors are
+on this one receipt, and Wonder made none, here or anywhere.</strong>
+ORANGE JUICE $8.99 read as $3.99 (confidence 0.85, <strong>no check
+flag</strong>); ROYAL GALA $5.99 as $2.99 (0.80, no flag); NAPOLITANER
+$2.99 as $4.05 (0.50, flagged); PIZZA POCKETS $4.05 as $10.99 (0.40,
+flagged). Wonder read all four at their true prices, 0.88 to 0.95
+confidence. The ORANGE JUICE line is the same line that was Gate
+0&#x27;s one silent error in the recorded run: a rotation preserves the
+line sum, so the arithmetic check (7/7 for both models) <strong>cannot</strong>
+catch it. This is the most dangerous error class in the product,
+and in this run Spark produced it twice silently (0.85 and 0.80, at or
+above the app&#x27;s 0.8 auto threshold, so both would auto-post) and Wonder
+produced it zero times.</li>
+<li class=""><strong>pub-04 idx16, SNK FRT/S CHRY48</strong> (faded dot-matrix): Spark read
+&quot;CHRY 8&quot;, dropping the 4, at 0.82 confidence and unflagged, so it
+would auto-post as the wrong product. Wonder read CHRY48 correctly
+and still flagged the line for a user check (0.58), the correct
+behavior on a hard line.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="lines-wonder-got-wrong-that-spark-got-right">Lines Wonder got wrong that Spark got right<a href="#lines-wonder-got-wrong-that-spark-got-right" class="hash-link" aria-label="Direct link to Lines Wonder got wrong that Spark got right" title="Direct link to Lines Wonder got wrong that Spark got right" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>None, after adjudication.</strong> Wonder&#x27;s only surviving error is one
+Spark shares (below). Its 11 other automatic-scorer failures were
+all the same behavior, expanding or completing what Spark leaves
+abbreviated, and every price was exact:
+<ul>
+<li class="">Brand expansions: LNF to &quot;Light &amp; Fit&quot; (pub-01), PF to
+&quot;Pepperidge Farm&quot;, KB to &quot;Keebler&quot; and CKS to &quot;Cookies&quot;, OS to
+&quot;Ocean Spray&quot; (all pub-08), HEB to &quot;H-E-B&quot; (five pub-03 lines:
+the same brand, hyphenated, twice with word order normalized).</li>
+<li class="">Two borderline completions, flagged as judgment calls: RED BELL to
+&quot;Red Bell Pepper&quot; (pub-01) and STRKST to &quot;StarKist TUNA …&quot;
+(pub-08). The printed abbreviation denotes exactly that product;
+the added word names its class. A stricter adjudicator could
+score these wrong; scoring both wrong still leaves Wonder at
+95/98, ahead of Spark.</li>
+<li class="">pub-03 idx11 carries the promo text in its detail (&quot;Special
+Today- 25.00% Off orig 9.32 Ea.&quot;). Gate 0 hand-scored the
+identical Spark read of this line correct. Same ruling here.</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="lines-both-got-wrong">Lines both got wrong<a href="#lines-both-got-wrong" class="hash-link" aria-label="Direct link to Lines both got wrong" title="Direct link to Lines both got wrong" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>pub-04 idx21, M&amp;M 15%FREE 1884 read as &quot;18&amp;4&quot;</strong>: the digit-string
+misread both models made at Gate 0 too. Wonder flagged it (0.72);
+Spark did not (0.85).</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="the-strict-string-inversion">The strict-string inversion<a href="#the-strict-string-inversion" class="hash-link" aria-label="Direct link to The strict-string inversion" title="Direct link to The strict-string inversion" translate="no">​</a></h3>
+<p>Wonder&#x27;s strict score (72) is lower than Spark&#x27;s (77)
+because it expands: &quot;Ranch Dressing&quot; is the right product and the
+wrong string. Spark&#x27;s strict number is itself both helped and hurt by
+receipt furniture. Its pub-02 reads are verbatim but carry the receipt&#x27;s
+&quot;F&quot; tax-flag glyph in every detail, which strict counts as 0/10 on
+that receipt. Strict-string measures transcription style, not
+correctness. The identity metric is the one the gate was judged on,
+and it is the one to quote.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="recommendation">Recommendation<a href="#recommendation" class="hash-link" aria-label="Direct link to Recommendation" title="Direct link to Recommendation" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Photo decode (receipt finish to review queue): flip to Wonder.</strong>
+The accuracy gap concentrates exactly where the product is weakest:
+silent price rotations that arithmetic cannot catch (Spark 4 price
+errors, 2 auto-posting silently; Wonder 0 and 0) and faded-print
+digit reads. Decode is asynchronous in the product (the user takes
+a photo and reviews a queue), so Wonder&#x27;s latency can be absorbed
+there. A wrong price that posts silently cannot. At $0.118/receipt
+the credit cost is not a concern through Nov 4 (about $118 per 1,000
+decodes against about $147 of remaining credit).</li>
+<li class=""><strong>Staple judge: stay on Spark.</strong> The spot check separates nothing
+(20/20 vs 20/20), and the only measured production number, 0.79
+precision against the cadence proxy, belongs to Spark&#x27;s run. Paying
+9 times more and waiting twice as long for an unmeasured benefit is not justified. Revisit
+only with a harder, labeled judge set.</li>
+<li class=""><strong>Ask Arya / chat: stay on Spark.</strong> Interactive paths depend
+on latency. Wonder&#x27;s profile (12 s for a text batch here, 26 to 60 s
+with an image) is the wrong shape for chat. This eval produced
+no chat-accuracy evidence for either model.</li>
+<li class=""><strong>Shelf labeling (Quest, offline batch): flip to Wonder is
+defensible but unmeasured head-on.</strong> The supporting evidence is
+indirect. Wonder&#x27;s expansions in this eval were consistently the
+correct brand renderings (Keebler, Pepperidge Farm, Ocean Spray,
+Betty Crocker, Finlandia), which is the labeling skill, and
+labeling runs offline where latency does not matter. If it flips,
+say &quot;on decode evidence,&quot; not &quot;measured.&quot;</li>
+<li class=""><strong>PDF/text decode: no claim.</strong> The public fixtures are photos; the
+text path shares the prompt family but was not run here.</li>
+</ul>
+<p><strong>The latency caveat, quantified:</strong> Wonder&#x27;s mean is 4.0 times Spark&#x27;s
+(34.4 s vs 8.6 s), its p95 is 60.5 s vs 11.9 s, and its two slowest
+calls (59.5 s, 60.5 s) were the two partial receipts. One further
+signal: a duplicated dispatch during this eval produced a second,
+unscored Wonder run whose latencies averaged about 76 s (max about 104 s) and
+which emitted 24 lines for pub-02 (duplicated reads of the rotated
+receipt, vs 10 in the scored run). Wonder&#x27;s tail is heavier and less
+stable than the scored run alone shows. Any judge-facing Wonder path
+needs a spinner the demo can survive and a timeout with a Spark
+fallback behind it.</p>
+<p><strong>Policy note:</strong> the repo&#x27;s MODEL-POLICY.md bans Wonder from volume
+paths, and AGENTS.md reserves policy changes to me. The
+recommendation above is scoped to the judge-facing demo paths through
+Nov 4 (demo household + my own demo use), not a production
+policy change. No production code was changed by this eval.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="caveats">Caveats<a href="#caveats" class="hash-link" aria-label="Direct link to Caveats" title="Direct link to Caveats" translate="no">​</a></h2>
+<ul>
+<li class="">One run per model per receipt, temperature 0.1. Variance is real.
+Fresh Spark (93.88%) and Gate 0&#x27;s recorded Spark (91.84%) differ by
+3 lines on pub-04 and pub-05, in opposite directions: Spark fixed 3 of
+pub-04&#x27;s 5 recorded digit errors this run and made pub-05&#x27;s
+rotation worse (4 price errors vs 3). Quote the gap between models
+(same-day, same-prompt runs), not either absolute as a constant.</li>
+<li class="">9 receipts, 98 lines, US grocery only. It is the same small set as
+Gate 0, with its known skew (one long receipt; two partials whose
+totals are out of frame, hence arithmetic scored on 7).</li>
+<li class="">The adjudicated column rests on 11 rulings, each named above; the
+two borderline completions are marked. The automatic column is
+printed alongside so a reader who rejects the rulings still has a
+consistent number. On that number Wonder loses, and that is
+itself a finding: the models differ in transcription style, and
+a scorer built from one model&#x27;s style misjudges the other&#x27;s.</li>
+<li class="">The judge spot check is a ceiling-limited instrument (synthetic,
+clear-cut by design). It is evidence of no regression, not of
+superiority, for either model.</li>
+</ul>
+<p><em>Spend: $4.47 total. Spark decode $0.12, Wonder decode (scored run)
+$1.06, the duplicated unscored Wonder run $3.22, judge spot checks
+$0.07. Runner: ~/workspace/arya-eval/wonder_run.py; scorer:
+~/workspace/arya-eval/wonder_score.py (calibration: reproduces Gate 0
+hand verdicts exactly); spot check: ~/workspace/arya-eval/
+judge_spotcheck.py; raw outputs and per-line scores in
+~/workspace/arya-eval/wonder-results/.</em></p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/vibhortayal/arya/edit/main/docs/evals/WONDER-EVAL.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/arya/docs/evals/gate-0"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Gate 0 report</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/arya/docs/evals/judge-eval"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Staple judge eval</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#method-stated-before-the-numbers" class="table-of-contents__link toc-highlight">Method (stated before the numbers)</a></li><li><a href="#results" class="table-of-contents__link toc-highlight">Results</a></li><li><a href="#where-the-reads-differ-by-name" class="table-of-contents__link toc-highlight">Where the reads differ, by name</a><ul><li><a href="#lines-spark-got-wrong-that-wonder-got-right" class="table-of-contents__link toc-highlight">Lines Spark got wrong that Wonder got right</a></li><li><a href="#lines-wonder-got-wrong-that-spark-got-right" class="table-of-contents__link toc-highlight">Lines Wonder got wrong that Spark got right</a></li><li><a href="#lines-both-got-wrong" class="table-of-contents__link toc-highlight">Lines both got wrong</a></li><li><a href="#the-strict-string-inversion" class="table-of-contents__link toc-highlight">The strict-string inversion</a></li></ul></li><li><a href="#recommendation" class="table-of-contents__link toc-highlight">Recommendation</a></li><li><a href="#caveats" class="table-of-contents__link toc-highlight">Caveats</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links and contact</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>Arya on GitHub</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub profile</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://x.com/VibTayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (@VibTayal)</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://vibhortayal.github.io/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Website</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="mailto:support@teamnightshift.org"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Email</span></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Read these docs as plain text</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/arya/llms.txt">Short index (llms.txt)</a></li><li class="footer__item"><a class="footer__link-item" href="/arya/llms-full.txt">Everything in one file (llms-full.txt)</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Docs are generated from the repository Markdown.</div></div></div></footer></div>
+</body>
+</html>

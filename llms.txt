@@ -1,0 +1,47 @@
+# Arya
+
+> Arya learns how you shop from your receipts and helps shoppers help each other.
+
+## Start here
+
+- [For judges](https://vibhortayal.github.io/arya/docs/judges): One page for judges: how Arya fits the problem statement and the Indie track, impact, Meta model use, technical depth, the demo, and limits.
+- [8-minute demo path](https://vibhortayal.github.io/arya/docs/quest/judge-playbook): An eight-minute walk through the live demo, step by step, with what you see and which model is working.
+- [What is Arya](https://vibhortayal.github.io/arya/docs/intro): What Arya is, how it works end to end, and which Meta model does which job.
+- [Built in the hackathon window](https://vibhortayal.github.io/arya/docs/what-we-built): What existed before the hackathon window, what was built in it and when, from git history.
+- [Why Arya exists](https://vibhortayal.github.io/arya/docs/principles): Why Arya exists, who it is for, and the five principles behind it.
+
+## Using Arya
+
+- [User journeys](https://vibhortayal.github.io/arya/docs/guide/user-journeys): Seven user journeys, from the first receipt to a shared household, with screens and sample data.
+- [Quest overview](https://vibhortayal.github.io/arya/docs/quest/overview): Quest, the optional game layer that turns a store trip into a hunt for list items.
+- [Quest game design](https://vibhortayal.github.io/arya/docs/quest/game-design): The design of the Quest hunt: rules, rewards, sound, and offline behaviour.
+- [Map my store](https://vibhortayal.github.io/arya/docs/quest/map-my-store): How shoppers map a store aisle by aisle, and how maps merge across shoppers.
+- [Use Arya in Muse](https://vibhortayal.github.io/arya/docs/guide/agent-connector): How to use Arya from Muse and other AI agents over MCP, with a secure vault for access.
+- [Glossary](https://vibhortayal.github.io/arya/docs/glossary): Plain-language definitions of the words Arya uses.
+
+## How it is built
+
+- [Design decisions and what is next](https://vibhortayal.github.io/arya/docs/architecture/design-decisions): What is built, what is known to be weak, and the plan to grow past one server.
+- [Architecture](https://vibhortayal.github.io/arya/docs/architecture/overview): How the app runs: the one-page map, storage, models, sync, security, and the design record.
+- [Scalability design](https://vibhortayal.github.io/arya/docs/architecture/scalability): A nine-phase plan for growing beyond one process, with rollback and a measure for each phase.
+- [Model policy](https://vibhortayal.github.io/arya/docs/architecture/model-policy): Which model runs each job, how the cheapest model that passes its test is chosen, and the spend limits.
+- [Meta products in the code](https://vibhortayal.github.io/arya/docs/quest/meta-products): Each Meta product Arya uses, its job, and where it sits in the code.
+- [Meta models used and not used](https://vibhortayal.github.io/arya/docs/architecture/models): Every Meta model on offer: the ones Arya uses, the ones it does not, and why.
+- [How we built it](https://vibhortayal.github.io/arya/docs/internal/index): How Arya was built by one person working with a team of AI agents, each with one job.
+
+## Evidence
+
+- [Overview](https://vibhortayal.github.io/arya/docs/evals/index): Index of the measured results, with the files behind each number.
+- [Gate 0 report](https://vibhortayal.github.io/arya/docs/evals/gate-0): The first test of Muse Spark reading receipt photos, with settings and results.
+- [Wonder eval](https://vibhortayal.github.io/arya/docs/evals/wonder-eval): How well Muse Wonder read the public receipt photos, line by line.
+- [Staple judge eval](https://vibhortayal.github.io/arya/docs/evals/judge-eval): How well the staple judge picks items to suggest, against a purchase-cadence check.
+
+## Developers
+
+- [Run it yourself](https://vibhortayal.github.io/arya/docs/run-it-yourself): How to run Arya on your own computer with Docker and your own Meta API key.
+- [Tour of your own copy](https://vibhortayal.github.io/arya/docs/try-the-features): A guided tour of the features on your own copy.
+- [Lists API v1](https://vibhortayal.github.io/arya/docs/api/lists-api): Read and write your own Arya lists from another app or a script (Lists API v1).
+
+## After the hackathon
+
+- [Roadmap](https://vibhortayal.github.io/arya/docs/roadmap): Ideas for where Arya could go after the hackathon; not commitments.

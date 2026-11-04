@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-architecture/overview" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">Arya architecture (as built) | Arya docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" name="twitter:image" content="https://vibhortayal.github.io/arya/repo/docs/images/social-preview.png"><meta data-rh="true" property="og:url" content="https://vibhortayal.github.io/arya/docs/architecture/overview"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Arya architecture (as built) | Arya docs"><meta data-rh="true" name="description" content="How the app runs: the one-page map, storage, models, sync, security, and the design record."><meta data-rh="true" property="og:description" content="How the app runs: the one-page map, storage, models, sync, security, and the design record."><link data-rh="true" rel="icon" href="/arya/repo/assistant/pwa/icons/favicon-48.png"><link data-rh="true" rel="canonical" href="https://vibhortayal.github.io/arya/docs/architecture/overview"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/architecture/overview" hreflang="en"><link data-rh="true" rel="alternate" href="https://vibhortayal.github.io/arya/docs/architecture/overview" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://vibhortayal.github.io/arya/docs/architecture/overview"}]}</script><link rel="stylesheet" href="/arya/assets/css/styles.b62ace9e.css">
+<script src="/arya/assets/js/runtime~main.02d6c6a6.js" defer="defer"></script>
+<script src="/arya/assets/js/main.21c0260e.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>document.documentElement.setAttribute("data-theme","light"),document.documentElement.setAttribute("data-theme-choice","light"),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/arya/repo/assistant/pwa/icons/icon-192.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/arya/"><div class="navbar__logo"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--light_rzkv" height="28" width="28"><img src="/arya/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--dark_mMAk" height="28" width="28"></div><b class="navbar__title text--truncate">Arya</b></a><a class="navbar__item navbar__link" href="/arya/docs/intro">Docs</a><a class="navbar__item navbar__link" href="/arya/docs/guide/user-journeys">Using Arya</a><a class="navbar__item navbar__link" href="/arya/api-reference">API reference</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Open Arya<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="/arya/docs/judges"><span title="Start here" class="categoryLinkLabel_W154">Start here</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/judges"><span title="For judges" class="linkLabel_WmDU">For judges</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/quest/judge-playbook"><span title="8-minute demo path" class="linkLabel_WmDU">8-minute demo path</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/intro"><span title="What is Arya" class="linkLabel_WmDU">What is Arya</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/what-we-built"><span title="Built in the hackathon window" class="linkLabel_WmDU">Built in the hackathon window</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/principles"><span title="Why Arya exists" class="linkLabel_WmDU">Why Arya exists</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/guide/user-journeys"><span title="Using Arya" class="categoryLinkLabel_W154">Using Arya</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/arya/docs/architecture/design-decisions"><span title="How it is built" class="categoryLinkLabel_W154">How it is built</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/architecture/design-decisions"><span title="Design decisions and what is next" class="linkLabel_WmDU">Design decisions and what is next</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/arya/docs/architecture/overview"><span title="Architecture" class="linkLabel_WmDU">Architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/architecture/scalability"><span title="Scalability design" class="linkLabel_WmDU">Scalability design</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/architecture/model-policy"><span title="Model policy" class="linkLabel_WmDU">Model policy</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/quest/meta-products"><span title="Meta products in the code" class="linkLabel_WmDU">Meta products in the code</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/architecture/models"><span title="Meta models used and not used" class="linkLabel_WmDU">Meta models used and not used</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/arya/docs/internal/"><span title="How we built it" class="linkLabel_WmDU">How we built it</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/evals/"><span title="Evidence" class="categoryLinkLabel_W154">Evidence</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/run-it-yourself"><span title="Developers" class="categoryLinkLabel_W154">Developers</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/arya/docs/roadmap"><span title="After the hackathon" class="categoryLinkLabel_W154">After the hackathon</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/arya/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">How it is built</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Architecture</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Arya architecture (as built)</h1></header>
+<p>Status: living document, revised 2026-11-04. Section 0 is the one-page map with the diagram. Sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
+how the built system is put together. Where the two disagree, SPEC.md
+wins for behavior and this document wins for structure.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="0-the-whole-app-on-one-page">0. The whole app on one page<a href="#0-the-whole-app-on-one-page" class="hash-link" aria-label="Direct link to 0. The whole app on one page" title="Direct link to 0. The whole app on one page" translate="no">​</a></h2>
+<p><strong>Detailed view</strong> (wide, scrolls sideways on a phone):</p>
+<p><img decoding="async" loading="lazy" alt="Arya architecture diagram" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDkxOCIgd2lkdGg9IjEwMDAiIGhlaWdodD0iOTE4IiByb2xlPSJpbWciIGFyaWEtbGFiZWxsZWRieT0idHRsIj4KPHRpdGxlIGlkPSJ0dGwiPkFyeWEgYXJjaGl0ZWN0dXJlOiB0aGUgYXBwIGFuZCB0aGUgTXVzZSBhZ2VudCB0YWxrIHRvIENhZGR5IGFuZCBvbmUgRmFzdEFQSSBzZXJ2ZXIuIENvZGUgZG9lcyBtb25leSBhbmQgdGltaW5nLiBNZXRhIG1vZGVscyByZWFkIHBob3RvcyBhbmQgYW5zd2VyIHF1ZXN0aW9ucy4gU3RhdGUgc2l0cyBpbiBmaWxlcywgUG9zdGdyZXMsIG9yIGJvdGguPC90aXRsZT4KPGRlZnM+PG1hcmtlciBpZD0iaCIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjNTU1Ii8+PC9tYXJrZXI+PC9kZWZzPgo8c3R5bGU+CnRleHR7Zm9udC1mYW1pbHk6LWFwcGxlLXN5c3RlbSxTZWdvZSBVSSxIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZn0KLmJne2ZpbGw6I2ZmZn0gLmJhbmR7ZmlsbDojZjZmN2Y5O3N0cm9rZTojZDhkYmUwfSAuYmx7Zm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6NzAwO2ZpbGw6IzU1NWI2NH0KLmJ7ZmlsbDojZmZmO3N0cm9rZTojOWFhMWFifSAuZ3tmaWxsOiNlOWY2ZWU7c3Ryb2tlOiMyZjhmNTd9IC5ve2ZpbGw6I2ZmZjFlYTtzdHJva2U6I2U0NTcyZX0gLnB7ZmlsbDojZWVmMGZiO3N0cm9rZTojNWI2NGM5fSAueXtmaWxsOiNmZmY4ZTE7c3Ryb2tlOiNjOWEyMjd9Ci50e2ZvbnQtd2VpZ2h0OjcwMDtmb250LXNpemU6MTVweDtmaWxsOiMxYzFjMWV9IC5ze2ZvbnQtc2l6ZToxM3B4O2ZpbGw6IzNjM2M0M30gLmFye3N0cm9rZTojNTU1O3N0cm9rZS13aWR0aDoxLjY7ZmlsbDpub25lfSAuYWx7Zm9udC1zaXplOjEycHg7ZmlsbDojNTU1fQoudHRse2ZvbnQtc2l6ZToyNHB4O2ZvbnQtd2VpZ2h0OjcwMDtmaWxsOiMxYzFjMWV9IC5zdWJ7Zm9udC1zaXplOjE0cHg7ZmlsbDojNTU1fQpAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOmRhcmspey5iZ3tmaWxsOiMwZDBkMGZ9LmJhbmR7ZmlsbDojMTcxODFiO3N0cm9rZTojMzQzNjNifS5ibHtmaWxsOiNhMGE0YWJ9LmJ7ZmlsbDojMWYyMDI0O3N0cm9rZTojNmI3MDc4fS5ne2ZpbGw6IzE0MjkxZDtzdHJva2U6IzNmYWU2Y30ub3tmaWxsOiMzMzIwMWE7c3Ryb2tlOiNmMDgwNjB9LnB7ZmlsbDojMWMxZjM4O3N0cm9rZTojODk5MGU2fS55e2ZpbGw6IzJiMjUxMDtzdHJva2U6I2Q5YjY0MH0udCwudHRse2ZpbGw6I2YyZjJmNH0ucywuc3ViLC5hbHtmaWxsOiNjNGM3Y2N9LmFye3N0cm9rZTojOWFhMGE4fSNoIHBhdGh7ZmlsbDojOWFhMGE4fX0KPC9zdHlsZT4KPHJlY3QgY2xhc3M9ImJnIiB3aWR0aD0iMTAwMCIgaGVpZ2h0PSI5MTgiLz4KPHRleHQgY2xhc3M9InR0bCIgeD0iMjQiIHk9IjM2Ij5BcnlhLCBhcyBidWlsdDwvdGV4dD4KPHRleHQgY2xhc3M9InN1YiIgeD0iMjQiIHk9IjYwIj5PbmUgc2VydmVyLiBDb2RlIGRvZXMgdGhlIG1vbmV5IGFuZCB0aGUgdGltaW5nLiBNZXRhIG1vZGVscyByZWFkIHBob3RvcyBhbmQgYW5zd2VyIHF1ZXN0aW9ucy48L3RleHQ+CjxyZWN0IGNsYXNzPSJiYW5kIiB4PSIyMCIgeT0iNzgiIHdpZHRoPSI5NjAiIGhlaWdodD0iMTMyIiByeD0iMTQiLz4KPHRleHQgY2xhc3M9ImJsIiB4PSIzNiIgeT0iMTAwIj4xICBZb3U8L3RleHQ+CjxyZWN0IGNsYXNzPSJvIiB4PSIzNiIgeT0iMTEyIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjkwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjUwIiB5PSIxMzYiPkFyeWEgYXBwIChpbnN0YWxsYWJsZSB3ZWIgYXBwKTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSIxNTgiPlJlYWN0ICsgVml0ZS4gVGFiczogVG9kYXkgwrcgU3BlbmRpbmcgwrcgUXVlc3QgwrcgQXNrIMK3IE1vcmU8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI1MCIgeT0iMTc2Ij5Xb3JrcyBvZmZsaW5lIMK3IHB1c2ggcmVtaW5kZXJzIMK3IGxpdmUgZ3JvdXAgc3luYzwvdGV4dD4KPHJlY3QgY2xhc3M9InAiIHg9IjQ3NCIgeT0iMTEyIiB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjkwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjQ4OCIgeT0iMTM2Ij5NdXNlIGFnZW50IGFuZCBMaXN0cyBBUEk8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI0ODgiIHk9IjE1OCI+UmVhZHMgYW5kIHdyaXRlcyB5b3VyIGxpc3Q8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI0ODgiIHk9IjE3NiI+d2l0aCBhIHRva2VuPC90ZXh0Pgo8cmVjdCBjbGFzcz0iYiIgeD0iNzM2IiB5PSIxMTIiIHdpZHRoPSIyMjgiIGhlaWdodD0iOTAiIHJ4PSIxMCIvPgo8dGV4dCBjbGFzcz0idCIgeD0iNzUwIiB5PSIxMzYiPk93bmVyIG9uIHRoZSBWTTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9Ijc1MCIgeT0iMTU4Ij5EYWlseSBwdXNoIChjcm9uKTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9Ijc1MCIgeT0iMTc2Ij5CYWNrdXAgYW5kIHJlc3RvcmU8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI3NTAiIHk9IjE5NCI+T3BzIHNjcmVlbjwvdGV4dD4KPHJlY3QgY2xhc3M9ImJhbmQiIHg9IjIwIiB5PSIyMzAiIHdpZHRoPSI5NjAiIGhlaWdodD0iMTY2IiByeD0iMTQiLz4KPHRleHQgY2xhc3M9ImJsIiB4PSIzNiIgeT0iMjUyIj4yICBTZXJ2ZXI6IG9uZSBWTSwgRG9ja2VyIENvbXBvc2U8L3RleHQ+CjxyZWN0IGNsYXNzPSJiIiB4PSIzNiIgeT0iMjY0IiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjExNiIgcng9IjEwIi8+Cjx0ZXh0IGNsYXNzPSJ0IiB4PSI1MCIgeT0iMjg4Ij5DYWRkeTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSIzMTAiPkhUVFBTIChMZXTigJlzIEVuY3J5cHQpPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNTAiIHk9IjMyOCI+U2VjdXJpdHkgaGVhZGVyczwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSIzNDYiPlJlZGlyZWN0cyBodHRwIHRvIGh0dHBzPC90ZXh0Pgo8cmVjdCBjbGFzcz0iZyIgeD0iMjYyIiB5PSIyNjQiIHdpZHRoPSI3MDIiIGhlaWdodD0iMTE2IiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjI3NiIgeT0iMjg4Ij5GYXN0QVBJLCBvbmUgcHJvY2VzcyAoYXBpL21haW4ucHkpPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iMjc2IiB5PSIzMTAiPlJvdXRlcywgb25lIHBlciBhcmVhOiBzaWduLWluIGFuZCBhY2NvdW50IMK3IHJlY2VpcHRzIGFuZCByZXZpZXcgwrcgbGlzdHMgYW5kIGl0ZW1zPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iMjc2IiB5PSIzMjgiPmhvbWUgYW5kIEFzayDCtyBwcmljZXMgwrcgZ3JvdXBzIMK3IFF1ZXN0IMK3IE11c2UgY29ubmVjdG9yPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iMjc2IiB5PSIzNDYiPkd1YXJkcyBvbiBldmVyeSByZXF1ZXN0OiBsb2dpbiBvciBkZW1vIHNhbmRib3ggwrcgY29zdCBsZWRnZXIgYW5kIGJ1ZGdldCDCtyByYXRlIGxpbWl0czwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjI3NiIgeT0iMzY0Ij5Bc2sgZ3VhcmQ6IHJlZnVzZXMgd2l0aCBubyBtb2RlbCBjYWxsLCAzLXN0cmlrZSBsb2NrPC90ZXh0Pgo8bGluZSBjbGFzcz0iYXIiIHgxPSIyMzYiIHkxPSIzMjIiIHgyPSIyNjIiIHkyPSIzMjIiIG1hcmtlci1lbmQ9InVybCgjaCkiLz4KPHJlY3QgY2xhc3M9ImJhbmQiIHg9IjIwIiB5PSI0MTYiIHdpZHRoPSI5NjAiIGhlaWdodD0iMTMwIiByeD0iMTQiLz4KPHRleHQgY2xhc3M9ImJsIiB4PSIzNiIgeT0iNDM4Ij4zICBDb2RlLCBubyBtb2RlbCwgJDA8L3RleHQ+CjxyZWN0IGNsYXNzPSJnIiB4PSIzNiIgeT0iNDUwIiB3aWR0aD0iMTc2IiBoZWlnaHQ9IjgwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjUwIiB5PSI0NzQiPkRlY29kZSArIGNoZWNrPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNTAiIHk9IjQ5NiI+TGluZXMgbXVzdCBhZGQgdXA8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI1MCIgeT0iNTE0Ij50byB0aGUgcHJpbnRlZCB0b3RhbDwvdGV4dD4KPHJlY3QgY2xhc3M9ImciIHg9IjIyNCIgeT0iNDUwIiB3aWR0aD0iMTc2IiBoZWlnaHQ9IjgwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjIzOCIgeT0iNDc0Ij5MZWRnZXIgKyBwYXR0ZXJuczwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjIzOCIgeT0iNDk2Ij5SZXR1cm5zIG5ldHRlZCw8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSIyMzgiIHk9IjUxNCI+Y2FkZW5jZSwgcHJpY2UgYnkgc3RvcmU8L3RleHQ+CjxyZWN0IGNsYXNzPSJnIiB4PSI0MTIiIHk9IjQ1MCIgd2lkdGg9IjE3NiIgaGVpZ2h0PSI4MCIgcng9IjEwIi8+Cjx0ZXh0IGNsYXNzPSJ0IiB4PSI0MjYiIHk9IjQ3NCI+TGlzdCArIGV4cGlyeTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjQyNiIgeT0iNDk2Ij5TZWxmLXdyaXRpbmcgbGlzdCw8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI0MjYiIHk9IjUxNCI+cnVubmluZy1sb3cgcnVsZTwvdGV4dD4KPHJlY3QgY2xhc3M9ImciIHg9IjYwMCIgeT0iNDUwIiB3aWR0aD0iMTc2IiBoZWlnaHQ9IjgwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjYxNCIgeT0iNDc0Ij5Hcm91cHMgKyBsaXZlIHN5bmM8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI2MTQiIHk9IjQ5NiI+U2hhcmVkIGhvbWUsIGludml0ZXMsPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNjE0IiB5PSI1MTQiPmxpdmUgdXBkYXRlczwvdGV4dD4KPHJlY3QgY2xhc3M9ImciIHg9Ijc4OCIgeT0iNDUwIiB3aWR0aD0iMTc2IiBoZWlnaHQ9IjgwIiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjgwMiIgeT0iNDc0Ij5SZW1pbmRlcnM8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI4MDIiIHk9IjQ5NiI+T25lIHB1c2ggYSBkYXk8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI4MDIiIHk9IjUxNCI+YXQgbW9zdDwvdGV4dD4KPHJlY3QgY2xhc3M9ImJhbmQiIHg9IjIwIiB5PSI1NjYiIHdpZHRoPSI5NjAiIGhlaWdodD0iMTQ4IiByeD0iMTQiLz4KPHRleHQgY2xhc3M9ImJsIiB4PSIzNiIgeT0iNTg4Ij40ICBNZXRhIG1vZGVscyBhbmQgaGVscGVycyAoZXZlcnkgY2FsbCBnb2VzIHRocm91Z2ggYXBpL21ldGFfY2xpZW50LnB5KTwvdGV4dD4KPHJlY3QgY2xhc3M9InkiIHg9IjM2IiB5PSI2MDAiIHdpZHRoPSIxNzYiIGhlaWdodD0iMTA0IiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjUwIiB5PSI2MjQiPlBob3RvIHJlYWRlcjwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSI2NDYiPlNwYXJrIHJlYWRzIGZpcnN0LjwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSI2NjQiPldvbmRlciByZS1yZWFkcyBvbmx5PC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNTAiIHk9IjY4MiI+YSByZWNlaXB0IHRoZSBjaGVja3MgZmxhZzwvdGV4dD4KPHJlY3QgY2xhc3M9InkiIHg9IjIyNCIgeT0iNjAwIiB3aWR0aD0iMTc2IiBoZWlnaHQ9IjEwNCIgcng9IjEwIi8+Cjx0ZXh0IGNsYXNzPSJ0IiB4PSIyMzgiIHk9IjYyNCI+QXNrIEFyeWE8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSIyMzgiIHk9IjY0NiI+U3BhcmsgYW5zd2VycyBvdmVyPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iMjM4IiB5PSI2NjQiPnlvdXIgaG91c2Vob2xkIHNuYXBzaG90PC90ZXh0Pgo8cmVjdCBjbGFzcz0ieSIgeD0iNDEyIiB5PSI2MDAiIHdpZHRoPSIxNzYiIGhlaWdodD0iMTA0IiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjQyNiIgeT0iNjI0Ij5TdGFwbGUganVkZ2U8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI0MjYiIHk9IjY0NiI+R2F0ZXMgd2hhdCBqb2lucyB0aGUgbGlzdDs8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI0MjYiIHk9IjY2NCI+c2Vjb25kIHNlYXQ6IFNwYXJrIE9wZW48L3RleHQ+CjxyZWN0IGNsYXNzPSJ5IiB4PSI2MDAiIHk9IjYwMCIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMDQiIHJ4PSIxMCIvPgo8dGV4dCBjbGFzcz0idCIgeD0iNjE0IiB5PSI2MjQiPlF1ZXN0IHZpc2lvbjwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjYxNCIgeT0iNjQ2Ij5TQU0gMy4xIGZpbmRzIGl0ZW1zLDwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjYxNCIgeT0iNjY0Ij5TcGFyayBjaGVja3MgZWFjaCBjcm9wPC90ZXh0Pgo8cmVjdCBjbGFzcz0ieSIgeD0iNzg4IiB5PSI2MDAiIHdpZHRoPSIxNzYiIGhlaWdodD0iMTA0IiByeD0iMTAiLz4KPHRleHQgY2xhc3M9InQiIHg9IjgwMiIgeT0iNjI0Ij5Wb2ljZSBhbmQgaW1hZ2VzPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iODAyIiB5PSI2NDYiPlZvaWNlIHRvIHRleHQ7PC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iODAyIiB5PSI2NjQiPmF2YXRhciBhbmQgY2VsZWJyYXRpb248L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI4MDIiIHk9IjY4MiI+Y2hhcmFjdGVyczwvdGV4dD4KPHJlY3QgY2xhc3M9ImJhbmQiIHg9IjIwIiB5PSI3MzQiIHdpZHRoPSI5NjAiIGhlaWdodD0iMTY4IiByeD0iMTQiLz4KPHRleHQgY2xhc3M9ImJsIiB4PSIzNiIgeT0iNzU2Ij41ICBTdG9yYWdlIGFuZCBvdXRzaWRlIHNlcnZpY2VzPC90ZXh0Pgo8cmVjdCBjbGFzcz0iYiIgeD0iMzYiIHk9Ijc2OCIgd2lkdGg9IjI1NiIgaGVpZ2h0PSIxMjQiIHJ4PSIxMCIvPgo8dGV4dCBjbGFzcz0idCIgeD0iNTAiIHk9Ijc5MiI+U3RvcmFnZSAoYXBpL3N0YXRlLnB5KTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSI4MTQiPmpzb246IGZpbGVzIG9uIGEgRG9ja2VyIHZvbHVtZTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSI4MzIiPmR1YWw6IGZpbGVzLCBtaXJyb3JlZCB0byBQb3N0Z3JlczwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUwIiB5PSI4NTAiPnBnOiBTdXBhYmFzZSBQb3N0Z3JlczwvdGV4dD4KPHJlY3QgY2xhc3M9InAiIHg9IjMwOCIgeT0iNzY4IiB3aWR0aD0iMTk2IiBoZWlnaHQ9IjEyNCIgcng9IjEwIi8+Cjx0ZXh0IGNsYXNzPSJ0IiB4PSIzMjIiIHk9Ijc5MiI+U2lnbi1pbjwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjMyMiIgeT0iODE0Ij5FbWFpbCBjb2RlIChTdXBhYmFzZSk8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSIzMjIiIHk9IjgzMiI+R29vZ2xlOiBBcnlh4oCZcyBvd24gc2lnbi1pbiw8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSIzMjIiIHk9Ijg1MCI+b3IgU3VwYWJhc2UgaWYgbm90IHNldCB1cDwvdGV4dD4KPHJlY3QgY2xhc3M9InAiIHg9IjUyMCIgeT0iNzY4IiB3aWR0aD0iMjA0IiBoZWlnaHQ9IjEyNCIgcng9IjEwIi8+Cjx0ZXh0IGNsYXNzPSJ0IiB4PSI1MzQiIHk9Ijc5MiI+TW9kZWwgaG9zdHM8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI1MzQiIHk9IjgxNCI+TWV0YSBNb2RlbCBBUEk6PC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNTM0IiB5PSI4MzIiPlNwYXJrIMK3IFdvbmRlciDCtyBJbWFnZSDCtzwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9IjUzNCIgeT0iODUwIj5Wb2ljZSDCtyBTQU0gMy4xPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNTM0IiB5PSI4NjgiPkJhc2V0ZW46IFNwYXJrIE9wZW48L3RleHQ+CjxyZWN0IGNsYXNzPSJiIiB4PSI3NDAiIHk9Ijc2OCIgd2lkdGg9IjIyNCIgaGVpZ2h0PSIxMjQiIHJ4PSIxMCIvPgo8dGV4dCBjbGFzcz0idCIgeD0iNzU0IiB5PSI3OTIiPk90aGVyIHNlcnZpY2VzPC90ZXh0Pgo8dGV4dCBjbGFzcz0icyIgeD0iNzU0IiB5PSI4MTQiPkdvb2dsZSBQbGFjZXMgKHN0b3JlIHNlYXJjaCk8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI3NTQiIHk9IjgzMiI+V2ViIFB1c2ggKFZBUElEKTwvdGV4dD4KPHRleHQgY2xhc3M9InMiIHg9Ijc1NCIgeT0iODUwIj5SZXNlbmQgKGFjY291bnQgZW1haWwsIGFsZXJ0cyk8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJzIiB4PSI3NTQiIHk9Ijg2OCI+S3JvZ2VyIChhaXNsZSBoaW50LCBsaXZlIG9ubHkpPC90ZXh0Pgo8bGluZSBjbGFzcz0iYXIiIHgxPSI1MDAiIHkxPSIyMTAiIHgyPSI1MDAiIHkyPSIyMzAiIG1hcmtlci1lbmQ9InVybCgjaCkiLz4KPGxpbmUgY2xhc3M9ImFyIiB4MT0iNTAwIiB5MT0iMzk2IiB4Mj0iNTAwIiB5Mj0iNDE2IiBtYXJrZXItZW5kPSJ1cmwoI2gpIi8+CjxsaW5lIGNsYXNzPSJhciIgeDE9IjUwMCIgeTE9IjU0NiIgeDI9IjUwMCIgeTI9IjU2NiIgbWFya2VyLWVuZD0idXJsKCNoKSIvPgo8bGluZSBjbGFzcz0iYXIiIHgxPSI1MDAiIHkxPSI3MTQiIHgyPSI1MDAiIHkyPSI3MzQiIG1hcmtlci1lbmQ9InVybCgjaCkiLz4KPC9zdmc+Cg==" width="1000" height="918" class="img_ev3q"></p>
+<details class="details_IdG1 alert alert--info details_b_Ee am-wrap" open="" data-collapsed="false"><summary>Phone-friendly view of the same map</summary><div><div class="collapsibleContent_U32h">
+<!-- -->
+<div class="am-layers">
+ <div class="am-layer"><div class="am-lab"><b>Who uses it</b><span>Three ways in</span></div>
+  <div class="am-chips">
+   <div class="am-c am-app"><b>Phone app</b>React + Vite PWA. Today, Spending, Quest, Ask, More<small>offline shell, push, live group sync</small></div>
+   <div class="am-c am-app"><b>Muse agent</b>MCP connector at <code>/api/mcp</code><small>bearer token, stored hashed</small></div>
+   <div class="am-c am-app"><b>Lists API</b><code>/api/v1</code><small>bearer token</small></div>
+   <div class="am-c am-edge"><b>Owner</b>Ops screen in the app<small>VM scripts: reminders, backup, restore</small></div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Front door</b><span>Oracle VM, Docker Compose</span></div>
+  <div class="am-chips">
+   <div class="am-c am-edge"><b>Caddy</b>TLS, CSP, HSTS</div>
+   <div class="am-c am-edge"><b>FastAPI, one process</b>serves the app at <code>/</code> and the API</div>
+   <div class="am-c am-edge"><b>Guards</b>sign-in, demo sandbox, rate limits<small>budget guard before every paid call; Ask guard, $0</small></div>
+   <div class="am-c am-edge"><b>Settings</b>Ops value, then env, then default</div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Routes</b><span>one router per area, <code>api/routes/</code></span></div>
+  <div class="am-chips">
+   <div class="am-c am-edge"><b>Lists and items</b>add, check, expiry</div>
+   <div class="am-c am-edge"><b>Receipts in</b>photo, PDF, text, voice</div>
+   <div class="am-c am-edge"><b>Today and Ask</b>home, chat</div>
+   <div class="am-c am-edge"><b>Spending</b>prices, insights</div>
+   <div class="am-c am-edge"><b>Quest</b>hunts, shelf scan, store maps, Eyes</div>
+   <div class="am-c am-edge"><b>Groups</b>shared home, live sync</div>
+   <div class="am-c am-edge"><b>Account</b>sign-in, settings, export</div>
+   <div class="am-c am-edge"><b>MCP and Lists API</b>tools for agents</div>
+   <div class="am-c am-edge"><b>Ops</b>owner only</div>
+   <div class="am-c am-edge"><b>Demo Town</b>simulated neighbours</div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>What answers</b><span>code first, models only where needed</span></div>
+  <div class="am-split">
+   <div><h4>Code · $0</h4><div class="am-chips">
+    <div class="am-c am-code"><b>Receipt math</b>totals must add up</div>
+    <div class="am-c am-code"><b>Ledger</b>returns netted, who it was for</div>
+    <div class="am-c am-code"><b>Patterns</b>how often, which store</div>
+    <div class="am-c am-code"><b>The list</b>running low, with reasons</div>
+    <div class="am-c am-code"><b>Prices</b>own receipts only</div>
+    <div class="am-c am-code"><b>Expiry, dictionary</b>dates, names</div>
+    <div class="am-c am-code"><b>Live sync</b>SSE, Postgres NOTIFY</div>
+    <div class="am-c am-code"><b>Reminders</b>one push a day at most</div>
+   </div></div>
+   <div><h4>Meta models · via <code>meta_client.py</code></h4><div class="am-chips">
+    <div class="am-c am-ai"><b>Muse Spark 1.3</b>reads receipts first; Ask, judge, Curator, list photos</div>
+    <div class="am-c am-ai"><b>Muse Wonder 1.0</b>re-reads only flagged receipts</div>
+    <div class="am-c am-ai"><b>SAM 3.1</b>shelf scan; pixelates people</div>
+    <div class="am-c am-ai"><b>Voice, Image</b>voice to text; avatar and celebration characters</div>
+    <div class="am-c am-ai"><b>Spark Open</b>on Baseten; staple judge, item names only</div>
+   </div></div>
+  </div></div>
+ <div class="am-down">↓</div>
+ <div class="am-layer"><div class="am-lab"><b>Where it&#x27;s kept</b><span>one document per area</span></div>
+  <div class="am-chips">
+   <div class="am-c am-data"><b>JSON files</b>on the Docker volume</div>
+   <div class="am-c am-data"><b>Supabase Postgres</b><code>arya.user_docs</code>, in dual or pg mode</div>
+   <div class="am-c am-data"><b>Receipt originals</b>photo or PDF, per account</div>
+   <div class="am-c am-data"><b>Demo sandbox</b>in memory only</div>
+  </div></div>
+ <div class="am-layer"><div class="am-lab"><b>Outside services</b><span>optional, behind flags</span></div>
+  <div class="am-chips">
+   <div class="am-c am-out"><b>Supabase Auth</b>email codes; Google fallback</div>
+   <div class="am-c am-out"><b>Google sign-in</b>Arya’s own, flagged</div>
+   <div class="am-c am-out"><b>Resend</b>account emails, waitlist, alerts</div>
+   <div class="am-c am-out"><b>Google Places</b>store search</div>
+   <div class="am-c am-out"><b>Kroger</b>aisle hint, live only, nothing stored</div>
+   <div class="am-c am-out"><b>Web Push</b>reminders</div>
+  </div></div>
+</div>
+<div class="am-legend"><span><i class="am-app"></i>clients</span><span><i class="am-edge"></i>server</span><span><i class="am-code"></i>code, $0</span><span><i class="am-ai"></i>Meta models</span><span><i class="am-data"></i>storage</span><span><i class="am-out"></i>outside, optional</span></div>
+</div></div></details>
+<p><em>The diagram is <code>assistant/docs/architecture.svg</code> (plain SVG, light and dark),
+redrawn and checked against <code>main</code> on 2026-11-04. The sections below say what
+each box does. Their facts are checked against <code>main</code> on 2026-11-04, except the
+live-site values in §0.11 and §10, which come from the Ops screen.</em></p>
+<p><strong>In one paragraph.</strong> A phone-first PWA (React, built with Vite) talks
+to one FastAPI process, which also serves the built app at <code>/</code>. Caddy fronts it with TLS. Code does the
+money, timing and list logic at $0. Meta models read photos, judge
+staples and answer questions, and every call to them goes through one
+module (<code>api/meta_client.py</code>). State is one JSON document per area, kept
+on a Docker volume, in Supabase Postgres, or both.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="01-front-end-assistantweb">0.1 Front end (<code>assistant/web/</code>)<a href="#01-front-end-assistantweb" class="hash-link" aria-label="Direct link to 01-front-end-assistantweb" title="Direct link to 01-front-end-assistantweb" translate="no">​</a></h3>
+<ul>
+<li class="">React 19 and TypeScript, built by Vite into <code>web/dist</code>. The API serves
+the build at <code>/</code> and the static folder <code>assistant/pwa/</code> (images, store
+models, three.js, <code>scene.js</code>, the manifest, icons) beside it; the build
+wins on a name clash. <code>index.html</code> and <code>sw.js</code> are sent with
+<code>Cache-Control: no-cache</code>. The old address <code>/next/...</code> answers 302 to
+the same path at <code>/</code>.</li>
+<li class="">One screen per file in <code>web/src/screens/</code>, listed in
+<code>screens/registry.tsx</code>. Navigation is a stack (<code>app/nav.tsx</code>); the
+session (user, demo, currency, language) is <code>app/session.tsx</code>. Shared
+parts: <code>web/src/ui/</code> (sheet, toast, info sheet, the store view) and
+<code>web/src/lib/</code> (API calls, formats, stores, language).</li>
+<li class="">The hunt, Express, Pack, haul, album, share, mapper, group live sync
+(<code>app/groupLive.ts</code>), push reminders, powers and the install prompt
+are ported one to one from the old plain-JS files. The store view is
+<code>scene.js</code> (three.js), loaded as a classic script.</li>
+<li class="">The navigation tab is <strong>Today</strong>, <strong>Spending</strong>, <strong>Quest</strong>, <strong>Ask</strong> and <strong>More</strong>
+(the default; it can be customized). More holds Lists, Receipts, Stores, Help
+and Settings. Settings opens the Profile page (Group, Preferences with
+Reminders, Account, About Arya, Sign out last). About Arya is the <code>about</code>
+view: Arya&#x27;s powers, Use Arya in Muse, Add to Home Screen, Keeping Arya
+running. (Updated 2026-11-02, #416; this replaced the earlier six-tab layout.)</li>
+<li class="">Service worker <code>web/src/sw.js</code>, built to <code>/sw.js</code> (vite-plugin-pwa,
+injectManifest). It precaches the built shell and the runtime files of
+the static folder. It is network first. It sends <code>/api/</code>, <code>/auth/</code>,
+<code>/decode</code>, <code>/import</code> and <code>/eyes</code> straight to the network, never touches
+a write (non-GET) or the live stream <code>/api/group/live</code>, and shows push
+reminders. It takes control at once and deletes every other cache,
+the old <code>arya-v*</code> caches too.</li>
+<li class="">Security: no inline script (the CSP has <code>script-src &#x27;self&#x27;</code>;
+<code>tests/test_csp.py</code> checks <code>web/index.html</code>); no inline handlers.</li>
+<li class="">Tests: string pins in <code>assistant/tests/</code> (they read <code>web/src</code> through
+<code>tests/frontend.py</code>), vitest tests beside the code
+(<code>web/src/**/*.test.ts*</code>), and browser runs in <code>web/e2e/</code>.</li>
+<li class="">Style: light theme, greyscale structure and one orange accent; see
+<code>DESIGN.md</code>.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="02-api-assistantapi">0.2 API (<code>assistant/api/</code>)<a href="#02-api-assistantapi" class="hash-link" aria-label="Direct link to 02-api-assistantapi" title="Direct link to 02-api-assistantapi" translate="no">​</a></h3>
+<p><code>api/main.py</code> is a short file: the app, the <code>require_login</code> middleware,
+a handler that turns a model failure (<code>RuntimeError</code>) into a 502 with a
+plain sentence, <code>/health</code>, one ordered router list, the Lists API mounted
+at <code>/api/v1</code>, and the static mount for the PWA. Routes live in <code>api/routes/</code>, one router per area:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Router</th><th>What it serves</th></tr></thead><tbody><tr><td><code>auth</code>, <code>account</code></td><td>sign-in, registration (closed unless <code>ARYA_REGISTRATION_OPEN=1</code>; the Ops flag overrides the env, and sign-up is closed on the live site), email code (Supabase) and Google (Arya&#x27;s own sign-in, flagged), connector and Lists API token, settings, export, feedback, push opt-in</td></tr><tr><td><code>intake</code>, <code>review</code>, <code>receiptjobs</code></td><td>receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue; receipt batches that keep reading while the app is closed</td></tr><tr><td><code>lists</code>, <code>items</code>, <code>expiry</code></td><td>named lists, add by text or photo, check, move, judge runs, item pages and flags, expiry dates</td></tr><tr><td><code>home</code>, <code>chat</code></td><td>the Today payload, Ask Arya and its apply step</td></tr><tr><td><code>prices</code></td><td>own-receipt prices, Analysis insights, Arya&#x27;s powers</td></tr><tr><td><code>groups</code></td><td>shared home: create, invite, join, leave, live stream</td></tr><tr><td><code>quest</code>, <code>questmap</code>, <code>receipts</code>, <code>shelf</code>, <code>storemap</code>, <code>stores</code>, <code>eyes</code>, <code>avatar</code>, <code>friends</code></td><td>hunts, filing items into a store&#x27;s zones, receipts with originals, shelf scan, Map my store, store directory, pantry and shelf photos kept as sightings, avatar, friends</td></tr><tr><td><code>mcp_connector</code></td><td><code>/api/mcp</code>, the tool surface for a Muse agent</td></tr><tr><td><code>lists_v1</code> (mounted at <code>/api/v1</code>)</td><td>the Open Lists API: read and write your own lists from another app, bearer token only, its own error format</td></tr><tr><td><code>ops</code></td><td>the owner&#x27;s Ops screen: models, limits, accounts, freezes, Ask locks (owner only)</td></tr><tr><td><code>town</code></td><td>Demo Town routes; the demo account only, and only when <code>ARYA_DEMO_TOWN=1</code></td></tr></tbody></table>
+<p>Older siblings stay beside the package: <code>album_routes</code>, <code>hunt_routes</code>,
+<code>haul_routes</code>, <code>pack</code>. Shared plumbing is in <code>api/deps.py</code> (cost ledger,
+budget guard, <code>new_client()</code>, rate-limit buckets, JSON helpers),
+<code>api/demo_guard.py</code> (login middleware, demo sandbox, door caps, the list of
+routes a token cannot reach), <code>api/ask_guard.py</code> (the Ask input and output
+guard and its three-strike lock, §6) and <code>api/settings.py</code> with
+<code>api/site_flags.py</code> (a value set in Ops, then the env var, then the default).</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="03-engines-in-code-0">0.3 Engines in code ($0)<a href="#03-engines-in-code-0" class="hash-link" aria-label="Direct link to 0.3 Engines in code ($0)" title="Direct link to 0.3 Engines in code ($0)" translate="no">​</a></h3>
+<p><code>decode/service.py</code> (PDF text layer, scanned PDF pages rendered with
+<code>pypdfium2</code> and sent to the photo reader, arithmetic reconcile),
+<code>ledger/</code> (returns netted FIFO, allocations), <code>patterns/</code> (cadence and
+price by store), <code>list/</code> (the derived list and its reasons),
+<code>state.running_low</code> (one rule for Today and Ask), <code>prices.py</code> (see §0.7),
+<code>expiry.py</code>, <code>dictionary/</code>, <code>optimizer.py</code> (merges duplicate adds and fixes typos before a hunt) and <code>cart/</code> (a sandbox cart proposal; approval is a state change only, and the app no longer shows it).</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="04-models">0.4 Models<a href="#04-models" class="hash-link" aria-label="Direct link to 0.4 Models" title="Direct link to 0.4 Models" translate="no">​</a></h3>
+<p>All calls go through <code>api/meta_client.py</code>; the personal-data rule is
+enforced there. <code>open_client.py</code> is the only other model client.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Job</th><th>Model</th><th>Notes</th></tr></thead><tbody><tr><td>Reasoning, decode fallback, judge, Curator, Eyes, Ask Arya</td><td><code>muse-spark-1.3</code> (Standard; <code>ARYA_SPARK_TIER=contributor</code> is an operator option, off)</td><td>cached prefixes, low effort</td></tr><tr><td>Receipt photo reader (default, <code>auto</code>)</td><td>Spark first; <code>muse-wonder-1.0</code> (90 s bound) re-reads only a receipt the arithmetic checks flag</td><td><code>decoded_by</code> records which read was kept; <code>ARYA_PHOTO_READER=spark</code> or <code>wonder</code>, or the Ops &quot;Photo reader&quot; switch, changes it with no code change</td></tr><tr><td>Celebration characters, generated once</td><td><code>muse-image-1.0</code></td><td></td></tr><tr><td>Voice in</td><td><code>muse-voice-transcribe-1.0</code></td><td></td></tr><tr><td>Shelf and people segmentation</td><td><code>sam-3.1</code></td><td>people SAM detects are pixelated first, and the frame is discarded if that fails (detection is not perfect and has not been scored)</td></tr><tr><td>Second judge seat, dictionary enrichment</td><td>Spark Open, hosted on Baseten</td><td>platform data only; the client refuses personal data</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="05-storage">0.5 Storage<a href="#05-storage" class="hash-link" aria-label="Direct link to 0.5 Storage" title="Direct link to 0.5 Storage" translate="no">​</a></h3>
+<p><code>api/state.py</code> keeps one JSON document per former file (receipts,
+dictionary, flags, lists, quest, push...). <code>ARYA_STORE</code> picks the
+backend: <code>json</code> (default; files under <code>data/users/&lt;account&gt;/</code>),
+<code>dual</code> (files are the truth, each save mirrors to Postgres) or <code>pg</code>
+(Supabase table <code>arya.user_docs</code>, keyed by owner and document name,
+role <code>arya_app</code>, via <code>DATABASE_URL</code>). The demo account always uses files,
+and its visitors write only to an in-memory sandbox overlay. Caches and
+big blobs (<code>shelf_matches.json</code>, <code>storemap_img.json</code>) stay on disk in
+every mode. A receipt&#x27;s original photo or PDF is kept per account.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="06-auth">0.6 Auth<a href="#06-auth" class="hash-link" aria-label="Direct link to 0.6 Auth" title="Direct link to 0.6 Auth" translate="no">​</a></h3>
+<p>Password accounts (PBKDF2 hashes, throttled sign-in, cookie sessions
+whose tokens are stored as SHA-256 hashes). Account names allow only
+letters, digits and <code>. _ % + - @</code>. Email-code sign-in goes through Supabase
+Auth and Google sign-in is Arya&#x27;s own (<code>api/google_oauth.py</code>, used when
+<code>GOOGLE_OAUTH_CLIENT_ID</code> and <code>GOOGLE_OAUTH_CLIENT_SECRET</code> are set; otherwise
+Google goes through Supabase). Either way the provider only proves an email
+address; Arya keeps its own account and cookie (<code>api/supabase_auth.py</code>, flag
+<code>ARYA_SUPABASE_AUTH</code>). The Muse connector and the Lists API use a bearer
+token whose hash is stored.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="07-price-intelligence">0.7 Price intelligence<a href="#07-price-intelligence" class="hash-link" aria-label="Direct link to 0.7 Price intelligence" title="Direct link to 0.7 Price intelligence" translate="no">​</a></h3>
+<p><code>api/prices.py</code> is deterministic and uses only the household&#x27;s own
+receipts: per-store unit prices, a cheaper-store hint when the gap is
+real, a trend only with enough buys over enough days, the household&#x27;s own
+basket inflation, a split-the-list suggestion, food waste in dollars.
+Nothing is fetched from a store, a flyer, an API or the web. Ask Arya
+answers price questions from these precomputed facts. Community prices,
+Deals and Arya Shoppers are opt-in, recorded only, and not live.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="08-groups-and-live-sync">0.8 Groups and live sync<a href="#08-groups-and-live-sync" class="hash-link" aria-label="Direct link to 0.8 Groups and live sync" title="Direct link to 0.8 Groups and live sync" translate="no">​</a></h3>
+<p>With <code>ARYA_GROUPS=1</code> (on in compose), an account in a group reads and
+writes the shared stores (lists, flags, product knowledge) in the group&#x27;s
+plane; receipts stay with the account that filed them and every member
+sees them. Invites are a 6-letter code valid 48 hours. Leaving copies
+the lists. Live sync: every shared save calls <code>live.changed(group_id)</code>;
+each open app holds one Server-Sent Events stream (<code>/api/group/live</code>)
+and reloads when its group changes. With <code>DATABASE_URL</code> set the change is
+a Postgres <code>NOTIFY arya_group</code> and one listener thread per process wakes
+its streams; without it, or with <code>ARYA_LIVE_PG=0</code>, the wake stays
+in-process.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="09-push-reminders">0.9 Push reminders<a href="#09-push-reminders" class="hash-link" aria-label="Direct link to 0.9 Push reminders" title="Direct link to 0.9 Push reminders" translate="no">​</a></h3>
+<p>Flag <code>ARYA_PUSH_REMINDERS=1</code> plus VAPID keys. A phone opts in from
+Settings; the subscription is saved in <code>push.json</code>. A daily cron line
+runs <code>python -m api.reminders</code>, which sends at most one push per account
+per day for staples that run out inside the notice window. No model
+calls. Steps: <code>PUSH-REMINDERS.md</code>.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="010-deploy">0.10 Deploy<a href="#010-deploy" class="hash-link" aria-label="Direct link to 0.10 Deploy" title="Direct link to 0.10 Deploy" translate="no">​</a></h3>
+<p>One Oracle VM, Docker Compose with two services: <code>api</code> (uvicorn,
+<code>deploy/Dockerfile.api</code>) and <code>caddy</code> (TLS, security headers, CSP, plain
+HTTP redirects to HTTPS). Data lives in the <code>arya-data</code> volume. Settings
+come from <code>deploy/.env</code> (VM only); compose lists every variable the app
+reads, and <code>tests/test_compose_env.py</code> fails if one is missing. Deploy is
+<code>git pull</code> then <code>docker compose up -d --build</code> in <code>assistant/deploy</code>
+(<code>deploy.sh</code>); never rsync <code>--delete</code>. The api image builds the app
+(<code>web/</code>) in a node stage and copies <code>web/dist</code> in. <code>backup.sh</code> and <code>restore.sh</code>
+handle the nightly backup. CI is manual only
+(<code>.github/workflows/tests.yml</code>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="011-feature-flags-and-settings">0.11 Feature flags and settings<a href="#011-feature-flags-and-settings" class="hash-link" aria-label="Direct link to 0.11 Feature flags and settings" title="Direct link to 0.11 Feature flags and settings" translate="no">​</a></h3>
+<p>Most limits and switches can also be set in the owner&#x27;s Ops screen (Settings,
+then Ops and health). A value set in Ops wins over the env var, which wins over
+the code default. The table gives the default in compose. The live site (checked with Ops on
+Nov 2) differs in these places: <code>ARYA_STORE=dual</code>; push reminders on (daily
+cron at 13:00 UTC); Supabase Auth and email sign-in on; Demo Town on; the
+Kroger aisle lookup on; own-key sign-up off; photo reader <code>auto</code>; Spark tier
+<code>standard</code>; new sign-up closed (the Ops flag wins over the env). Budgets: $10 a
+day for the app, $100 a day for the demo (code default $2), $2 per demo visit (code default $0.40).
+Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default in compose</th><th>Effect</th></tr></thead><tbody><tr><td><code>ARYA_STORE</code></td><td><code>json</code></td><td><code>json</code>, <code>dual</code> or <code>pg</code> storage</td></tr><tr><td><code>DATABASE_URL</code></td><td>empty</td><td>Supabase Postgres connection (role <code>arya_app</code>)</td></tr><tr><td><code>ARYA_GROUPS</code></td><td><code>1</code></td><td>shared households (code default is off)</td></tr><tr><td><code>ARYA_LIVE_PG</code></td><td><code>1</code></td><td>live sync through Postgres NOTIFY when <code>DATABASE_URL</code> is set</td></tr><tr><td><code>ARYA_PUSH_REMINDERS</code></td><td><code>0</code></td><td>push reminders; needs <code>ARYA_VAPID_*</code> keys</td></tr><tr><td><code>ARYA_SUPABASE_AUTH</code></td><td><code>0</code></td><td>email code and Google sign-in; needs <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code></td></tr><tr><td><code>ARYA_SUPABASE_SIGNUP</code></td><td><code>1</code></td><td><code>0</code> limits Supabase sign-in to existing accounts</td></tr><tr><td><code>ARYA_REGISTRATION_OPEN</code></td><td><code>0</code></td><td>open password sign-up</td></tr><tr><td><code>ARYA_PHOTO_READER</code></td><td><code>auto</code></td><td>receipt photo reader: <code>auto</code> (Spark first, Wonder on a flagged read), <code>spark</code> or <code>wonder</code></td></tr><tr><td><code>ARYA_DAILY_BUDGET_USD</code></td><td><code>10</code></td><td>app model-spend ceiling per day</td></tr><tr><td><code>ARYA_USER_HEAVY_MONTHLY_USD</code></td><td><code>3</code></td><td>one account&#x27;s month of AI spend that shows a heads-up on its usage screen</td></tr><tr><td><code>ARYA_USER_MONTHLY_CEILING_USD</code></td><td><code>5</code></td><td>one account&#x27;s month of AI spend that pauses its paid reads until the 1st</td></tr><tr><td><code>ARYA_USER_HOURLY_FREEZE_USD</code></td><td><code>1</code></td><td>one account&#x27;s hour of AI spend that switches its paid reads off for <code>ARYA_USER_FREEZE_HOURS</code> (24); I can lift it with <code>POST /api/usage/unfreeze</code></td></tr><tr><td><code>ARYA_COST_PUBLIC_MIN</code></td><td><code>50</code></td><td>accounts with spend before the whole-Arya totals show on the usage screen</td></tr><tr><td><code>ARYA_COST_PAID_BY</code></td><td><code>Hackathon credits</code></td><td>who the usage screen says pays for the AI reading</td></tr><tr><td><code>ARYA_DEMO_DAILY_BUDGET_USD</code></td><td><code>100</code> (code default <code>2</code>)</td><td>demo household&#x27;s day bucket</td></tr><tr><td><code>ARYA_DEMO_SESSION_BUDGET_USD</code></td><td><code>2.00</code> (code default <code>0.40</code>)</td><td>one demo visit&#x27;s share</td></tr><tr><td><code>ARYA_DEMO_DOOR_RATE</code>, <code>ARYA_DEMO_AUTH_RATE</code></td><td><code>240</code>, <code>120</code></td><td>per-IP demo door and auth rate limits</td></tr><tr><td><code>ARYA_FEEDBACK_DAILY_CAP</code></td><td><code>5</code></td><td>feedback messages per account per day</td></tr><tr><td><code>ARYA_TOKEN_GUARDS</code></td><td><code>on</code></td><td>an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); <code>off</code> lifts the list</td></tr><tr><td><code>ARYA_DEMO_TOWN</code></td><td><code>0</code></td><td>demo household shops at simulated stores in a simulated neighborhood (<code>DEMO-TOWN.md</code>)</td></tr><tr><td><code>ARYA_OWNER_USERNAME</code></td><td>empty</td><td>the owner account: it runs Ops and health (models, limits, accounts, freezes, Ask locks, registration). The owner can hand the role to another account in Ops; the old owner keeps owner rights for 24 hours so a wrong pick can be undone</td></tr><tr><td><code>ARYA_OPS_EMAIL</code>, <code>ARYA_ALERT_EMAIL</code>, <code>RESEND_API_KEY</code></td><td>empty</td><td>email through Resend: delete-account codes, waitlist and feedback notes, and one alert per Ask lock (at most 20 a day); off until the key is set</td></tr><tr><td><code>GOOGLE_OAUTH_CLIENT_ID</code>, <code>GOOGLE_OAUTH_CLIENT_SECRET</code></td><td>empty</td><td>Arya&#x27;s own Google sign-in; without both, Google goes through Supabase</td></tr><tr><td><code>ARYA_SCAN_DAILY_FRAMES</code></td><td><code>120</code></td><td>Map my store frames per account per day</td></tr><tr><td><code>ARYA_KROGER_AISLES</code>, <code>KROGER_CLIENT_ID</code>, <code>KROGER_CLIENT_SECRET</code>, <code>ARYA_KROGER_DAILY_CALLS</code></td><td><code>0</code>, empty, empty, <code>800</code></td><td>live Kroger aisle hint (api/kroger.py); never stored</td></tr><tr><td><code>MODEL_API_KEY</code>, <code>BASETEN_API_KEY</code>, <code>ARYA_OPEN_MODEL</code>, <code>GOOGLE_PLACES_API_KEY</code></td><td>empty</td><td>model keys and the store picker</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="012-cost-guards">0.12 Cost guards<a href="#012-cost-guards" class="hash-link" aria-label="Direct link to 0.12 Cost guards" title="Direct link to 0.12 Cost guards" translate="no">​</a></h3>
+<p>Every model call writes a row to the cost ledger. The app, the demo
+household and each demo visit spend from separate buckets (§10). Live
+doors, batch judge runs and hunt creation pass the guard first; the
+demo&#x27;s live doors also have per-IP caps. Deterministic code never calls a
+model. An Ask message the guard refuses costs $0 (no model call), and
+<code>max_tokens</code> bounds each Ask reply (§6).</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="1-the-shape-two-layers">1. The shape: two layers<a href="#1-the-shape-two-layers" class="hash-link" aria-label="Direct link to 1. The shape: two layers" title="Direct link to 1. The shape: two layers" translate="no">​</a></h2>
+<p>Arya has two layers. Each layer does the work it is good at.</p>
+<ul>
+<li class=""><strong>The edge</strong> is the user&#x27;s own Muse. It sees the media: receipt
+photos, PDFs, pasted orders. It reads them and sends
+Arya structured data only; on this path no receipt image reaches the
+server. A receipt photo filed in the app itself is kept per account
+and is viewable in the app (&quot;View receipt&quot;, Discussion 42). This is
+an accepted trade-off, recorded in SPEC.md.</li>
+<li class=""><strong>The core</strong> is the Arya server. It verifies, remembers, reasons, and
+answers. It spends no tokens on reading media.</li>
+</ul>
+<p>The rule between the layers: <strong>the client proposes, Arya disposes.</strong>
+Client data is untrusted. Totals must reconcile in code before a receipt
+is accepted. Low-confidence lines go to the review queue.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="2-intake-paths">2. Intake paths<a href="#2-intake-paths" class="hash-link" aria-label="Direct link to 2. Intake paths" title="Direct link to 2. Intake paths" translate="no">​</a></h2>
+<p>All paths end in one contract: a decoded receipt with lines, subtotal,
+tax, and total.</p>
+<ol>
+<li class=""><strong>Structured intake (primary).</strong> POST /api/intake/structured. The
+user&#x27;s Muse posts the decoded receipt as JSON. The server recomputes
+every line status. A subtotal that does not match the lines fails
+reconciliation and is marked, never silently accepted.</li>
+<li class=""><strong>Order text.</strong> POST /api/intake/order-text. A pasted online order
+(Instacart, Amazon) is extracted server-side, then follows the same
+path. Delivery fees and tips are excluded by rule.</li>
+<li class=""><strong>Server decode (fallback).</strong> PDF text and photo decode endpoints
+remain for clients that cannot decode at the edge. They use the
+Model API under the model policy (MODEL-POLICY.md).</li>
+<li class=""><strong>Costco JSON export.</strong> Bootstrap seed only. It is not a product
+intake path.</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="3-verification-in-code-no-model-no-cost">3. Verification in code (no model, no cost)<a href="#3-verification-in-code-no-model-no-cost" class="hash-link" aria-label="Direct link to 3. Verification in code (no model, no cost)" title="Direct link to 3. Verification in code (no model, no cost)" translate="no">​</a></h2>
+<ul>
+<li class="">Arithmetic: line totals must sum to the subtotal within 5 cents.</li>
+<li class="">Line status: auto at confidence 0.8 or above, else unverified and into
+the review queue.</li>
+<li class=""><strong>Discount lines are structure, not identity.</strong> A discount line
+(Costco prints it as &quot;/<item number="">&quot;) attaches to its parent item
+(named on the receipt, else the previous item line) and is always
+auto-verified. It never enters the review queue, on any path.</item></li>
+<li class="">Fee lines are classified once and never enter patterns or the list.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="4-identity-what-things-are">4. Identity: what things are<a href="#4-identity-what-things-are" class="hash-link" aria-label="Direct link to 4. Identity: what things are" title="Direct link to 4. Identity: what things are" translate="no">​</a></h2>
+<p>Three mechanisms, in order of strength.</p>
+<ol>
+<li class=""><strong>The dictionary</strong> maps each store SKU to a canonical name. A name the
+user confirms teaches the dictionary. An item whose name cannot be
+established is <strong>unresolved</strong>: off the list, out of patterns, waiting
+in the review queue. Arya never guesses a name.</li>
+<li class=""><strong>Groups.</strong> Products are grouped by an explicit group key when one is
+set, else by their normalized name. Costco re-SKUs the same product
+under one name; the group is the product everywhere it matters:
+patterns, ledger, list. Merges and splits set the explicit key.</li>
+<li class=""><strong>The Curator</strong> (server-side reasoning) proposes merges and splits
+inside candidate clusters built in code at no cost. The model judges
+a cluster under a strict doctrine: same product only; never across
+organic vs conventional, form, flavor, fat content, or a size that
+makes a different product; when in doubt, keep separate. <strong>A proposal
+changes nothing until the user applies it. No silent edits, ever.</strong>
+Proposals the dictionary has already overtaken (members already one
+group, a duplicate, a split already in effect) retire automatically
+as <em>superseded</em> and are never shown.</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="5-the-resolver-research-at-the-edge">5. The Resolver: research at the edge<a href="#5-the-resolver-research-at-the-edge" class="hash-link" aria-label="Direct link to 5. The Resolver: research at the edge" title="Direct link to 5. The Resolver: research at the edge" translate="no">​</a></h2>
+<p>Arya&#x27;s server models have no web access. Identification from the outside
+world is therefore an edge job, run by the user&#x27;s Muse:</p>
+<ul>
+<li class="">Trigger: an unresolved dictionary item, or an unverified receipt line
+whose name is abbreviated or unreadable.</li>
+<li class="">Method: the retailer&#x27;s own catalog first. A store item number matched
+on the retailer&#x27;s site (for Costco: costco.com and its same-day
+storefront) is the strongest evidence. Then the wider web.</li>
+<li class="">Output: candidates <strong>with source URLs</strong>, posted to Arya
+(POST /api/review/suggest) and shown in the review queue next to the
+item or line. Research is evidence, not a verdict: the user settles
+with one tap, and settling teaches the dictionary.</li>
+<li class="">A brand initial alone is not evidence. Items with no catalog match
+stay open.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="6-the-reasoning-agents-in-the-core">6. The reasoning agents in the core<a href="#6-the-reasoning-agents-in-the-core" class="hash-link" aria-label="Direct link to 6. The reasoning agents in the core" title="Direct link to 6. The reasoning agents in the core" translate="no">​</a></h2>
+<p>Each agent has a narrow job and a named limit.</p>
+<ul>
+<li class=""><strong>Staple judge.</strong> Input: pattern facts only (buys, cadence, quantities,
+all computed in code). Output: STAPLE, SEASONAL, OCCASIONAL, ONE_OFF, or
+NOT_CONSUMABLE per product. The verdict gates admission to the list.
+Explicit user intent always beats the judge. Unjudged and unresolved
+items stay off the list.</li>
+<li class=""><strong>Curator.</strong> See §4. Proposes identity changes; never applies them.</li>
+<li class=""><strong>Ask Arya.</strong> Chat over a household snapshot. Actions (add to list,
+remove from list, ran out, mark expired, never suggest, snooze) are
+validated server-side. A list is found by a near name (&quot;Costco&quot; finds
+&quot;Costcozy&quot;), and only a row already on a list can be removed. The
+snapshot carries receipt facts (count, last, biggest, trips per
+store), spend per store per month, pack dates as words, and the
+cheapest store per item. Numbers come from the data, never from the
+model. At most 10 actions
+run in a turn. More than 3 removes in one turn wait for a yes (Yes, do these
+or Not now) on every screen. On the Ask tab the other actions apply at
+once; from a list or a hunt, adds apply with Undo and the riskier actions
+(out, expired, never, snooze) wait for a yes (<code>/api/chat/apply</code>). Demo
+sessions can chat; it is a live door under the demo&#x27;s per-IP and per-visit
+caps (§10).</li>
+<li class=""><strong>Ask guard</strong> (<code>api/ask_guard.py</code>). The person&#x27;s latest message is checked
+against high-confidence phrases only (an override with a target, a prompt
+leak, secrets, other accounts). A hit gets a fixed refusal with no model
+call, and counts a strike. Three strikes in 24 hours pause Ask: a demo visit
+for 24 hours, a real account until the owner unlocks it in Ops (the message says to email support). The owner is
+never locked. A reply that quotes the system prompt, holds something shaped
+like a key or links off Arya is swapped for the refusal, with no strike.
+Stored text (item and list names, the screen, a photo) never strikes. Each
+Ask reply is capped at 1,500 tokens.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="7-money-rules-summary-specmd-owns-the-detail">7. Money rules (summary; SPEC.md owns the detail)<a href="#7-money-rules-summary-specmd-owns-the-detail" class="hash-link" aria-label="Direct link to 7. Money rules (summary; SPEC.md owns the detail)" title="Direct link to 7. Money rules (summary; SPEC.md owns the detail)" translate="no">​</a></h2>
+<ul>
+<li class="">Returns are first-class: FIFO netting against buys, refunds reconcile
+into spend, patterns count kept items only, a returned item is never
+re-suggested.</li>
+<li class="">Every line carries an allocation: HOUSEHOLD (default) or FOR-OTHERS.
+For-others spend is in the ledger, never in patterns, inventory, or
+the list.</li>
+<li class="">The list is a derived view of the inventory model, never the source
+of truth.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="8-accounts-tokens-and-the-connector">8. Accounts, tokens, and the connector<a href="#8-accounts-tokens-and-the-connector" class="hash-link" aria-label="Direct link to 8. Accounts, tokens, and the connector" title="Direct link to 8. Accounts, tokens, and the connector" translate="no">​</a></h2>
+<ul>
+<li class="">Per-user state is a set of JSON documents, one per former file
+(receipts, dictionary, flags, lists, quest...). <code>ARYA_STORE</code> picks
+where they live: <code>json</code> (files under data/users/<account>/, the
+default), <code>dual</code> (files are the truth, every save is mirrored to
+Postgres), or <code>pg</code> (table <code>arya.user_docs</code>, see <code>api/pgstore.py</code>).
+The demo account always stays on files.</account></li>
+<li class="">An account name is also a folder name, so it holds only letters,
+digits and <code>. _ % + - @</code> (<code>auth.valid_name</code>). Passwords are PBKDF2
+hashes; sign-in is throttled; sessions are cookies, and session
+tokens are stored as SHA-256 hashes.</li>
+<li class="">Email code sign-in (Supabase Auth) is built behind
+<code>ARYA_SUPABASE_AUTH=1</code>, off by default and on in the live site. Google
+sign-in is Arya&#x27;s own (<code>api/google_oauth.py</code>) when its client id and secret
+are set, with the Supabase Google provider as the fallback. The provider only
+proves the email; Arya keeps its own account (named by the email, no
+password) and its own cookie (<code>api/supabase_auth.py</code>).</li>
+<li class="">A connector token is <code>arya_</code> plus a random secret. <strong>Only its SHA-256
+hash is stored.</strong> It is shown once at mint. Minting a new one replaces
+the old, and it can be revoked at any time. Bearer tokens are accepted
+alongside session cookies, and the same token works for the Lists API
+(<code>/api/v1</code>). A token cannot reach paid bulk reads, Ops, groups, push,
+export or the Kroger lookup (<code>demo_guard._TOKEN_BLOCKED</code>). Demo accounts
+cannot mint.</li>
+<li class="">The Muse connector (custom.arya) carries its own instruction doc:
+operations, when to file, the verification rules, the Resolver
+procedure, filing hygiene. <strong>The doc is the standing prompt.</strong> The
+user writes no prompt.</li>
+<li class="">Routing is contextual. A receipt, an order, or a question about the
+user&#x27;s own list, spend, or inventory goes to Arya. A general question
+does not. &quot;Arya, …&quot; always routes. Ambiguous input: ask, or state
+the assumption.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="9-onboarding">9. Onboarding<a href="#9-onboarding" class="hash-link" aria-label="Direct link to 9. Onboarding" title="Direct link to 9. Onboarding" translate="no">​</a></h2>
+<ol>
+<li class="">Create an account. A new account opens on Today; there is no
+Connect an AI agent step on first run.</li>
+<li class="">Connecting Muse is optional, from Settings &gt; About Arya &gt; Use Arya in Muse:
+make the code there (shown once).</li>
+<li class="">Tell the Muse agent to connect to Arya; it asks for the code and opens a
+secure credentials vault. Paste the code there, never into a chat message.</li>
+<li class="">Talk to Muse. The screen carries these steps and a copyable fallback setup
+prompt for assistant apps that do not load the connector doc automatically.
+The Muse Code settings-file route is the backup (<code>AGENT-CONNECTOR.md</code>).</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="10-cost-control">10. Cost control<a href="#10-cost-control" class="hash-link" aria-label="Direct link to 10. Cost control" title="Direct link to 10. Cost control" translate="no">​</a></h2>
+<ul>
+<li class="">MODEL-POLICY.md is normative: deterministic work in code at $0;
+Spark 1.3 Standard, low effort, cached prefixes for volume reasoning
+(if the Contributor operator option is on, a client-side 140
+requests/min gate applies; its limit is 150); Wonder is banned from
+volume paths.</li>
+<li class="">Every model call is written to a cost ledger. The app&#x27;s daily
+ceiling (<code>ARYA_DAILY_BUDGET_USD</code>, $10) stops app model spend; the
+demo household spends from a separate bucket
+(<code>ARYA_DEMO_DAILY_BUDGET_USD</code>, $100/day in compose) and each demo visit from its
+own share (<code>ARYA_DEMO_SESSION_BUDGET_USD</code>, $2 in compose), so demo use cannot
+drain the app. Every live door, batch judge run and hunt creation
+passes the guard first.</li>
+<li class="">A model answer that cannot be read is a 502 with a plain sentence,
+never a 500 (<code>meta_client.parse_json</code>). Each account has its own limits:
+a monthly heads-up, a monthly pause on paid reads, and an hourly freeze (defaults
+$3, $5 and $1, see the flag table; the live site uses $3, $20 and $10, and the owner
+account is exempt), on top of the daily ceiling for the whole app.</li>
+<li class="">api/meta_client.py is the only module that calls the Model API. The
+personal-data rule is enforced there by construction.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="11-deployment">11. Deployment<a href="#11-deployment" class="hash-link" aria-label="Direct link to 11. Deployment" title="Direct link to 11. Deployment" translate="no">​</a></h2>
+<ul>
+<li class="">One Oracle VM (Always Free; no new cloud resources). Docker Compose:
+the API and Caddy with Let&#x27;s Encrypt. No database container: data is
+JSON files, mirrored to Supabase on the live site (<code>ARYA_STORE=dual</code>); after judging Postgres can become the master copy (<code>pg</code>). Public name:
+arya.teamnightshift.org (Cloudflare A record, DNS only). The old
+arya-pilot.duckdns.org name is a permanent Caddy redirect to it.</li>
+<li class="">Known limit: one uvicorn process on one VM. Demo sandboxes live in that
+process&#x27;s memory and the JSON files have one writer, so it cannot run as
+several processes yet. Dual-mode saves mirror to Supabase inside the
+request, so a slow Supabase can slow a save. Roughly a few dozen people at
+once is the ceiling (README, Known limits). After judging: Postgres as
+master copy, session state out of memory, several processes, a cloud
+provider (see <code>docs/ROADMAP.md</code>; the phased design is
+<code>docs/SCALABILITY-DESIGN.md</code>, a plan, not built).</li>
+<li class="">Deploy is <code>git pull</code> on the VM, then a compose rebuild. Never
+rsync --delete: it once deleted the VM-only deploy environment.</li>
+<li class="">Settings come from <code>deploy/.env</code> (VM only). Compose passes only the
+variables it lists, so every setting the app reads is listed in
+<code>docker-compose.yml</code>; <code>tests/test_compose_env.py</code> fails if one is
+missing. <code>.env.example</code> names them.</li>
+<li class="">The full test suite runs before a PR merges. A GitHub Actions workflow
+(<code>.github/workflows/tests.yml</code>) runs it on demand only, not on
+every PR (my choice). Nothing is committed to <code>main</code> directly;
+a session log goes to <code>loops/</code> and <code>STATUS.md</code> is updated.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="111-logs-and-backups-vm-runbook">11.1 Logs and backups (VM runbook)<a href="#111-logs-and-backups-vm-runbook" class="hash-link" aria-label="Direct link to 11.1 Logs and backups (VM runbook)" title="Direct link to 11.1 Logs and backups (VM runbook)" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Log caps.</strong> Compose caps each container&#x27;s log at 5 files of 10 MB
+(<code>x-logging</code> in <code>docker-compose.yml</code>), so logs cannot fill the disk.
+The cap applies when a container is recreated: <code>docker compose up -d</code>.</li>
+<li class=""><strong>Nightly backup.</strong> <code>deploy/backup.sh</code> archives the data volume (and
+the <code>arya</code> Postgres schema when <code>ARYA_BACKUP_DATABASE_URL</code> is set in
+<code>deploy/.env</code>) into <code>~/arya-backups</code>, keeping the newest 7 of each.
+Install once on the VM with <code>crontab -e</code>:
+<code>17 3 * * * /path/to/arya/assistant/deploy/backup.sh &gt;&gt; /path/to/arya-backup.log 2&gt;&amp;1</code>
+Check it with <code>ls -l ~/arya-backups</code> the next morning.</li>
+<li class=""><strong>Off-VM copy.</strong> A backup on the same disk dies with the VM. Install
+rclone (<code>sudo apt install rclone</code>), run <code>rclone config</code> once to add a
+remote you own (Oracle Object Storage, Google Drive, any S3), then add
+<code>ARYA_BACKUP_REMOTE=&lt;remote&gt;:arya-backups</code> to <code>deploy/.env</code>. The script
+then copies each night&#x27;s files there and exits non-zero (so the log
+shows it) if the copy fails.</li>
+<li class=""><strong>Restore.</strong> <code>deploy/restore.sh &lt;arya-data-*.tar.gz&gt;</code> stops the api,
+replaces the data volume and starts it again. The Postgres dump is
+restored by hand with <code>psql</code>.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="12-quest-storage">12. Quest storage<a href="#12-quest-storage" class="hash-link" aria-label="Direct link to 12. Quest storage" title="Direct link to 12. Quest storage" translate="no">​</a></h2>
+<p>Per account, in <code>quest.json</code>: sessions, Shop-Offs, friends, Spotter
+reports, and sightings (item, store, shelf label, time; no image).
+<code>shelf_frames.json</code> holds one fresh shelf photo per store and item,
+already scrubbed of people by SAM (<code>shelfscan.scrub_people</code>; no scrub,
+no frame). <code>GET /api/quest/plan</code> counts purchases per store from the
+ledger for Plan a hunt ($0). The demo sandbox overlays all of it in
+memory. The store directory (<code>stores.json</code>) is platform-level.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="13-not-built--held">13. Not built / held<a href="#13-not-built--held" class="hash-link" aria-label="Direct link to 13. Not built / held" title="Direct link to 13. Not built / held" translate="no">​</a></h2>
+<ul>
+<li class="">A fixed per-account spend allowance that resets by itself. Not built; per-account
+limits do exist (§10: defaults $3 heads-up, $5 pause, $1 hourly freeze; live $3, $20, $10).</li>
+<li class="">Public registration is closed by default (<code>ARYA_REGISTRATION_OPEN</code>; the Ops flag overrides the env and is closed on the live site). The
+owner can open it in Settings. Every door runs on Meta models: Muse in
+chat, Spark on the Meta API in the app.</li>
+<li class="">Forgot-password: not built. Once switched on, email code sign-in
+(§8) lets a person in without a password.</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/vibhortayal/arya/edit/main/assistant/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/arya/docs/architecture/design-decisions"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Design decisions and what is next</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/arya/docs/architecture/scalability"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Scalability design</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#0-the-whole-app-on-one-page" class="table-of-contents__link toc-highlight">0. The whole app on one page</a><ul><li><a href="#01-front-end-assistantweb" class="table-of-contents__link toc-highlight">0.1 Front end (<code>assistant/web/</code>)</a></li><li><a href="#02-api-assistantapi" class="table-of-contents__link toc-highlight">0.2 API (<code>assistant/api/</code>)</a></li><li><a href="#03-engines-in-code-0" class="table-of-contents__link toc-highlight">0.3 Engines in code ($0)</a></li><li><a href="#04-models" class="table-of-contents__link toc-highlight">0.4 Models</a></li><li><a href="#05-storage" class="table-of-contents__link toc-highlight">0.5 Storage</a></li><li><a href="#06-auth" class="table-of-contents__link toc-highlight">0.6 Auth</a></li><li><a href="#07-price-intelligence" class="table-of-contents__link toc-highlight">0.7 Price intelligence</a></li><li><a href="#08-groups-and-live-sync" class="table-of-contents__link toc-highlight">0.8 Groups and live sync</a></li><li><a href="#09-push-reminders" class="table-of-contents__link toc-highlight">0.9 Push reminders</a></li><li><a href="#010-deploy" class="table-of-contents__link toc-highlight">0.10 Deploy</a></li><li><a href="#011-feature-flags-and-settings" class="table-of-contents__link toc-highlight">0.11 Feature flags and settings</a></li><li><a href="#012-cost-guards" class="table-of-contents__link toc-highlight">0.12 Cost guards</a></li></ul></li><li><a href="#1-the-shape-two-layers" class="table-of-contents__link toc-highlight">1. The shape: two layers</a></li><li><a href="#2-intake-paths" class="table-of-contents__link toc-highlight">2. Intake paths</a></li><li><a href="#3-verification-in-code-no-model-no-cost" class="table-of-contents__link toc-highlight">3. Verification in code (no model, no cost)</a></li><li><a href="#4-identity-what-things-are" class="table-of-contents__link toc-highlight">4. Identity: what things are</a></li><li><a href="#5-the-resolver-research-at-the-edge" class="table-of-contents__link toc-highlight">5. The Resolver: research at the edge</a></li><li><a href="#6-the-reasoning-agents-in-the-core" class="table-of-contents__link toc-highlight">6. The reasoning agents in the core</a></li><li><a href="#7-money-rules-summary-specmd-owns-the-detail" class="table-of-contents__link toc-highlight">7. Money rules (summary; SPEC.md owns the detail)</a></li><li><a href="#8-accounts-tokens-and-the-connector" class="table-of-contents__link toc-highlight">8. Accounts, tokens, and the connector</a></li><li><a href="#9-onboarding" class="table-of-contents__link toc-highlight">9. Onboarding</a></li><li><a href="#10-cost-control" class="table-of-contents__link toc-highlight">10. Cost control</a></li><li><a href="#11-deployment" class="table-of-contents__link toc-highlight">11. Deployment</a><ul><li><a href="#111-logs-and-backups-vm-runbook" class="table-of-contents__link toc-highlight">11.1 Logs and backups (VM runbook)</a></li></ul></li><li><a href="#12-quest-storage" class="table-of-contents__link toc-highlight">12. Quest storage</a></li><li><a href="#13-not-built--held" class="table-of-contents__link toc-highlight">13. Not built / held</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links and contact</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>Arya on GitHub</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub profile</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://x.com/VibTayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (@VibTayal)</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://vibhortayal.github.io/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Website</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="mailto:support@teamnightshift.org"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Email</span></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Read these docs as plain text</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/arya/llms.txt">Short index (llms.txt)</a></li><li class="footer__item"><a class="footer__link-item" href="/arya/llms-full.txt">Everything in one file (llms-full.txt)</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Docs are generated from the repository Markdown.</div></div></div></footer></div>
+</body>
+</html>
