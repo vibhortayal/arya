@@ -28,7 +28,7 @@ Escalation is by evidence (a scored eval), never by default.
 4. Wonder: zero jobs at baseline (history; the live reader is `auto`, see below). A job earns Wonder only by failing its
    golden set on Spark at two effort levels, with the eval logged.
 5. Voice: transcribe on demand only; Ask has no voice out (replies are text).
-6. Muse Image: painted the 23 characters once and paints share looks (live); a dinner render is planned, not built. muse-image-1.0 at $0.01 is the one place a flat
+6. Muse Image: painted the 23 characters once and paints share looks (live); a dinner render is planned, not built. muse-image-1.0 costs $0.01 per image. It is the one place a flat
    per-unit price beats token metering.
 
 ## Measured anchors (default reasoning effort, spike runs)
