@@ -42,8 +42,8 @@ dominated by slow-cycle consumables bought 3 times, and only one admit
   4 separate trips in 3 different months is the weakest pattern that
   excludes one-trip stock-ups, gift/event buys, and two-trip trials, while
   still catching a quarterly Costco rhythm. The judge's own eligibility
-  bar is 2 buys, so the proxy is deliberately stricter than the judge.
-  It corroborates. It does not re-derive the judge's rule.
+  bar is 2 buys, so the proxy is deliberately stricter than the judge:
+  it corroborates the judge's rule but does not re-derive it.
 - **Metrics.** Precision = admitted ∩ proxy / admitted. Recall =
   admitted ∩ proxy / proxy. Disagreements are listed by name below; the
   names matter more than the decimals.
