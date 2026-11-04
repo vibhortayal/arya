@@ -1,6 +1,6 @@
 # Arya documentation index
 
-Every document in this repository, grouped by who reads it. Each fact has one home; other pages link to it. The docs site (https://vibhortayal.github.io/arya/) is built from the same files, so nothing here is copied.
+Every document in this repository, grouped by who reads it. Each fact has one home, and other pages link to it. The docs site (https://vibhortayal.github.io/arya/) is built from the same files, so nothing here is copied.
 
 ## Judging? Read these, in this order
 
@@ -17,7 +17,7 @@ Live demo: https://arya.teamnightshift.org (tap "Try it now", no sign-up).
 
 ## Where each fact lives
 
-When two pages seem to say the same thing, the page in this table is the one to trust and edit; the others should link to it.
+When two pages seem to say the same thing, the page in this table is the one to trust and edit. The other pages should link to it.
 
 | Fact | Home |
 |---|---|
@@ -54,7 +54,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 
 | Read | What it holds |
 |---|---|
-| [`assistant/docs/SPEC.md`](../assistant/docs/SPEC.md) | The product specification; wins over the code |
+| [`assistant/docs/SPEC.md`](../assistant/docs/SPEC.md) | The product specification. It wins over the code |
 | [`assistant/docs/IMPLEMENTATION.md`](../assistant/docs/IMPLEMENTATION.md) | Method, contracts, stages, golden sets |
 | [`assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md) | The one-page map (section 0) and the design record |
 | [`docs/SCALABILITY-DESIGN.md`](SCALABILITY-DESIGN.md) | The phased plan to grow past one server (a plan, not built) |
@@ -108,7 +108,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 | [`docs/quest/SUBMISSION.md`](quest/SUBMISSION.md) | The package checklist and the IP note |
 | [`docs/quest/PITCH-SCRIPT.md`](quest/PITCH-SCRIPT.md) | The spoken two-minute pitch |
 | [`docs/demo-video/SCRIPT.md`](demo-video/SCRIPT.md) | The demo video narration (working copy) |
-| [`docs/MARKET.md`](MARKET.md) | Desk research on the market; its unverified claims are marked |
+| [`docs/MARKET.md`](MARKET.md) | Desk research on the market. Its unverified claims are marked |
 | [`docs/quest/BUSINESS.md`](quest/BUSINESS.md) | Who it is for, the four pillars, the Oct 27 competitor table |
 
 ## Historical (kept as written, superseded in places)
@@ -120,6 +120,6 @@ These record how Arya got its shape. Most carry a note saying what replaced it. 
 | [`PRODUCT.md`](../PRODUCT.md) | The early product description of 2026-10-27 |
 | [`docs/quest/PITCH.md`](quest/PITCH.md) | The early game-first pitch |
 | [`docs/quest/BUILD-PLAN.md`](quest/BUILD-PLAN.md) | The build plan as of Oct 29 |
-| [`docs/quest/UX.md`](quest/UX.md) | Quest UX rules of Oct 27; the wireframes are the design of record |
+| [`docs/quest/UX.md`](quest/UX.md) | Quest UX rules of Oct 27. The wireframes are the design of record |
 | [`docs/quest/DISCUSSION.md`](quest/DISCUSSION.md) | The early design conversation, in order |
 | [`docs/quest/wireframes.html`](quest/wireframes.html) and the other `docs/quest/*.html` files | Clickable wireframes and prototypes |

@@ -15,16 +15,16 @@ ffmpeg, Postgres) does plumbing only.
 | **Meta Model API** | The one surface for server calls, through one client module with a daily spend ceiling | Server |
 
 ## Muse connects to Arya (live)
-Arya has a standard MCP connector, and Muse is the reference client. In Muse, ask the agent to connect to Arya's MCP address; when it asks for your code, paste it into the secure credentials vault Muse opens, never the chat. I tested exactly that on my own Muse on 2026-11-02, with no terminal and no settings file. Muse then has six tools: `get_snapshot`, `get_list`, `add_items`, `check_item`, `file_receipt` and `get_receipts`. A receipt Muse reads in chat is filed through `file_receipt`; Arya checks the arithmetic itself and spends no photo-reading credits on it. The code acts as your account, but cannot reach routes that spend model credits in bulk, change settings, or touch groups and friends; it is capped at 600 calls an hour and can be turned off in Arya at any time. Setup and limits: [the agent connector](../../assistant/docs/AGENT-CONNECTOR.md).
+Arya has a standard MCP connector, and Muse is the reference client. In Muse, ask the agent to connect to Arya's MCP address. When it asks for your code, paste it into the secure credentials vault Muse opens, never into the chat. I tested exactly that on my own Muse on 2026-11-02, with no terminal and no settings file. Muse then has six tools: `get_snapshot`, `get_list`, `add_items`, `check_item`, `file_receipt` and `get_receipts`. A receipt Muse reads in chat is filed through `file_receipt`. Arya checks the arithmetic itself and spends no photo-reading credits on it. The code acts as your account, but it cannot reach routes that spend model credits in bulk, change settings, or touch groups and friends. It is capped at 600 calls an hour, and you can turn it off in Arya at any time. Setup and limits: [the agent connector](../../assistant/docs/AGENT-CONNECTOR.md).
 
 ## Rules
 - Spark and Wonder run in Standard mode (checked 2026-11-01): content is not used to train Meta models. Contributor
   is used for eval and synthetic data only; a community Contributor tier with user opt-in is a possible later option, not built.
-- Model output is a proposal: receipts must reconcile, low-confidence
-  lines queue for review, identity changes need the user's approval.
+- Model output is a proposal. Receipts must reconcile, low-confidence
+  lines queue for review, and identity changes need the user's approval.
 - Cheapest model that holds the score. Wonder as the backup receipt reader is
   the one exception, time-boxed to the hackathon amendment (expires Nov 9).
-- No pictures of people kept: SAM pixelates the people it detects first, or the frame is
+- No pictures of people are kept. SAM pixelates the people it detects first, or the frame is
   dropped.
 
 **Used to build, not shipped.** Muse Code (Meta's coding agent), running Muse Wonder, wrote the first version of the engine (my account). It is not part of the shipped app; see the README, How this was built.
@@ -32,6 +32,6 @@ Arya has a standard MCP connector, and Muse is the reference client. In Muse, as
 ## Considered, not used
 - **Glimmer** (open weights): not run.
 - **Gaussian splatting and VGGT 3D models:** tried on a Trader Joe's
-  walkthrough during the hackathon, then removed (2026-10-29): the
+  walkthrough during the hackathon, then removed (2026-10-29). The
   store the video came from was never recorded, so it could not be
   any real store's map.
