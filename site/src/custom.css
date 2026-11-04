@@ -66,3 +66,10 @@ html { color-scheme: light; }
   .home-columns { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
   .home-shots { justify-content: flex-end; }
 }
+
+/* Footer links and contact (2026-11-04): icon + label chips, wrap on a phone. */
+.footer__links .footer__col:first-child .footer__items { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.footer__links .footer__col:first-child .footer__item { margin: 0; }
+.arya-link { display: inline-flex !important; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--fill); color: var(--ink) !important; font-weight: 600; text-decoration: none !important; }
+.arya-link:hover { border-color: var(--acc); color: var(--acc) !important; }
+.arya-link svg { flex: none; align-self: center; color: var(--acc); }
