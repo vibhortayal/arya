@@ -15,7 +15,7 @@ This is an Indie track entry. I built it alone in the hackathon window (Oct 27 t
 - You can play the same loop as the video: Today, Ask ("We finished the Greek yogurt"), Start shopping, and Lists under More. [`README.md`](README.md#try-it-in-one-minute)
 - These steps need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, and receipt snap. Everything else works on a laptop.
 - Nearly every feature works live in the demo. The staple-judge verdicts were computed beforehand. Only the data (the household, stores and other shoppers) is simulated. Nothing you add is kept after your visit. What the demo household contains: [`assistant/docs/DEMO.md`](assistant/docs/DEMO.md).
-- **Run it yourself** with your own key: see [Run it yourself](docs/RUN-IT-YOURSELF.md). It has a prompt that lets [an AI agent set it up for you](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up). The [setup in the README](README.md#run-it-yourself) also works.
+- **Run it yourself** with your own keys (Meta for the AI, Google Places to add stores on your own account): see [Run it yourself](docs/RUN-IT-YOURSELF.md). It has a prompt that lets [an AI agent set it up for you](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up). The [setup in the README](README.md#run-it-yourself) also works.
 - **Want an account?** Sign-up is invite only while I harden the cost guard rails. Tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and contact me ([support@teamnightshift.org](mailto:support@teamnightshift.org) or [LinkedIn](https://www.linkedin.com/in/vibhortayal)); judges can be approved.
 
 ## Does it matter to real people? (Impact)
