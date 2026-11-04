@@ -1,4 +1,4 @@
-# The Assistant — Implementation
+# The Assistant: Implementation
 
 This document says how Arya is built. SPEC.md says what and why; read
 it first. STATUS.md says where the build is now. ARCHITECTURE.md
@@ -8,19 +8,19 @@ idea each.
 
 ## 1. Method
 
-**Loop A — builder and verifier.** A builder writes the code. A
+**Loop A: builder and verifier.** A builder writes the code. A
 verifier runs the gate checks from behavior and evidence only. A
 failure returns as a defect: check, input, expected, actual.
 
-**Loop B — eval loop.** A prompt runs against a golden set. A code
+**Loop B: eval loop.** A prompt runs against a golden set. A code
 scorer gives a number. Change one variable per attempt. Log each
 attempt: prompt hash, set version, score, cost. Gate scores count on
 Standard mode only.
 
-**Loop C — parallel candidates.** The riskiest prompts get three
+**Loop C: parallel candidates.** The riskiest prompts get three
 variants. The winner ships; losers stay in the repo with scores.
 
-**Rule D — dual judge.** Two independent Spark calls must agree on a
+**Rule D: dual judge.** Two independent Spark calls must agree on a
 dictionary-novel auto-post and on a single-photo sighting. A
 disagreement goes to the review queue.
 
@@ -92,7 +92,7 @@ VM-only). I provision the key on the VM.
 The harness tests these before a UI exists.
 
 ```text
-DecodedReceipt — output of the decode service (SPEC 6.1, 6.2, 6.3)
+DecodedReceipt: output of the decode service (SPEC 6.1, 6.2, 6.3)
 { receipt_id, source_type: grocery | restaurant | delivery,
   merchant, purchased_at,
   lines: [ { raw, sku, item_id (dictionary ID or null),
@@ -114,7 +114,7 @@ LedgerEntry (SPEC 6.2, 6.3)
   qty, price, event_type: purchase | return | correction,
   allocation: HOUSEHOLD | FOR-OTHERS, supersedes (entry ID or null) }
 
-PatternSummary (SPEC 6.4) — computed by code, not by a model
+PatternSummary (SPEC 6.4): computed by code, not by a model
 { item_id, purchase_count, median_interval_days, last_bought,
   typical_qty, total_spend, due: true | false,
   history_state: pattern | not-enough-history }
@@ -126,25 +126,25 @@ ReconciliationResult (SPEC 6.6)
   unverified: [ { item_id, seen_in: [], reason } ],
   surprises: [ { raw, reason } ] }
 
-SmartList (SPEC 6.5) — suggestions
+SmartList (SPEC 6.5): suggestions
 { list_id, items: [ { item_id, qty, due_reason, source: pattern | user } ],
   narration }
 
-NamedList (SPEC 5.10, 6.9) — `lists` store, one row per list
+NamedList (SPEC 5.10, 6.9): `lists` store, one row per list
 { list_id, name, store (optional), items: [ { item_id, qty, checked } ] }
 "Everything else" holds items with no list. (Update 2026-11-02, #419: it is no longer automatic; it exists only if the user makes one.) A due staple is a suggestion
 under the list of its usual store; it is not an item until the user adds it.
 The prepared cart (PR #105) is gone from the app. Legacy `cart.json` and
 `/api/cart/approve` are not used by any screen. Arya places no order.
 
-ExpiryFlag (SPEC 6.7) — on the item's flag record
+ExpiryFlag (SPEC 6.7): on the item's flag record
 { use_by, use_by_kind: use_by | best_by | expires | packed | unknown,
   use_by_set, use_by_snooze }
 One vision read returns the printed date. The user confirms. The photo is never kept.
 Fridge and pantry photo inventory was never shipped in the app. The
 `eyes` code (`api/eyes/`) is a spike and has no screen.
 
-Group (SPEC 6.10) — `groups.json` in the data root
+Group (SPEC 6.10): `groups.json` in the data root
 { groups: { id: { name, owner, members: [ { user, joined } ], created,
                   invite: { hash, expires, by } | null } },
   member_of: { user: id } }
@@ -152,7 +152,7 @@ In a group, `state._plane()` sends lists, item flags, and product
 knowledge to the group plane. Receipts stay per account and are read as the union of all members.
 Live sync: `GET /api/group/live` (SSE); Postgres LISTEN/NOTIFY on channel `arya_group` when `DATABASE_URL` is set, else in-process. `ARYA_GROUPS=0` turns groups off.
 
-PriceFacts (SPEC 6.11) — computed by `api/prices.py`, deterministic, $0
+PriceFacts (SPEC 6.11): computed by `api/prices.py`, deterministic, $0
 { item_id, per_store: [ { store, unit_price } ], cheaper_store,
   trend_pct, similar: [], caveat }
 Unit price is net line total divided by quantity. A trend needs enough
@@ -178,7 +178,7 @@ RoutePlan { route_id, store_id, index_version,
 | 2 Patterns, list | Done. Returns netted; list needs 3 kept purchases. The prepared cart was removed in PR #105. |
 | 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar. Express mode (#107) lost its entry points when Quest mode landed (#172). Demo household is a per-visitor sandbox. |
 | 4 Ask | Done. Ask Arya answers about Arya and about prices. Fridge/pantry photos were never shipped; expiry-date photos (#96) replace them. |
-| 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
+| 5 Store add-on | Superseded by Quest Stages A to E (Discussion 29). |
 | 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video done (https://youtu.be/PeWF66ss3oI); package pending. |
 | 7 Groups | Merged (#121, live sync #127, on by default #128). |
 | 8 Price intelligence | Merged (#120): own-receipt prices, Arya's powers, daily card. Community prices, Deals, Arya Shoppers: after Nov 4. |
@@ -230,7 +230,7 @@ live beat fails.
 - **F2 SAM on video:** hosted SAM caps a request at 15,000 frames;
   SAM runs on stills ($0.0025 an image).
 - **F3 Spark latency:** low effort, short prompts, cached prefixes,
-  non-blocking calls in the store. Shelf Scan takes 4–8 s a frame.
+  non-blocking calls in the store. Shelf Scan takes 4 to 8 s a frame.
 - **F4 Voice Transcribe:** no confidence values; confidence lives in
   the parse layer.
 - **F5:** retired (never built); the number is kept so F6 and F7 keep theirs.

@@ -1,4 +1,4 @@
-# The Assistant — Product Specification
+# The Assistant: Product Specification
 
 Team Nightshift. Indie track. Meta Global AI Developer Hackathon.
 Submission deadline: November 4, 2026, 9:00 PM ET.
@@ -202,7 +202,7 @@ Allocation (a field on each ledger line):
 - FR-7.6 Category shelf-life priors drive the still-good checks when no date exists.
 - FR-7.7 Photos of a refrigerator or pantry are not a product feature. An earlier plan promised inventory from such photos. It was never shipped in the app. Items with no evidence stay "unknown" (Rule 4).
 
-### 6.8 Quest — the play layer (C8)
+### 6.8 Quest: the play layer (C8)
 
 Quest turns a store trip into a game. It feeds the core; it never
 replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
@@ -283,7 +283,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 - FR-11.6 Today shows one "Did you know?" card a day.
 - FR-11.7 Community prices, Deals, and Arya Shoppers (live presence: Quiet, Busy, Packed) are opt-in and not live. The opt-in records a choice only. A community figure would need 5 or more households over 30 days, a median, and no names. Roadmap.
 
-### 6.12 Meal hook — optional scene (C9)
+### 6.12 Meal hook: optional scene (C9)
 
 - FR-9.1 The system can suggest one dinner from ingredients the ledger supports. The suggestion shows the reason.
 - FR-9.2 A missing ingredient joins the list with one tap.
@@ -300,7 +300,7 @@ replaces it. Detail: `docs/quest/GAME-DESIGN.md` and the wireframes.
 | Receipt decode, photo to draft | 30 s or less (Spark; a flagged read adds a Wonder re-read, 90 s bound) | Progress is visible |
 | Review queue, one trip | 30 s or less of user time | One tap per line |
 | List draft generation | 5 s or less | The due set is computed by code |
-| Quest: Shelf Scan / Find it for me, one frame | 4–8 s | Not blocking; the camera stays live |
+| Quest: Shelf Scan / Find it for me, one frame | 4 to 8 s | Not blocking; the camera stays live |
 
 Spark is a reasoning model. Default effort is slow.
 In-store calls use low reasoning effort, short prompts, and cached prefixes.
@@ -355,7 +355,7 @@ Targets in the store are 64 pixels or more. No text input is required in the sto
 
 ## 9. Gates and acceptance criteria
 
-### Gate 0 — photo-receipt gate (before the build commits)
+### Gate 0: photo-receipt gate (before the build commits)
 
 Set as planned: 20 real paper receipts, stores and light mixed.
 As run: the planned composition was abandoned. The gate ran on 9 public receipts (98 lines) plus my subset (32 lines), reported separately, as below.
@@ -375,7 +375,7 @@ Status of the evidence:
 - Spike 1 (PDF decode) passed on October 27, 2026. Seven real Costco receipts. Seven of seven arithmetic matches. Zero silently-wrong lines in manual review. Both return receipts detected. Cost: 0.20 dollars total.
 - Gate 0 PASSED (2026-10-27). Public set: 90 of 98 lines correct (91.84 percent). My subset: 32 of 32. Combined: 122 of 130 (93.85 percent). Arithmetic reconciled on 7 of 7 receipts. One silent price rotation in the public set got through; it is disclosed, and the review queue is the mitigation. Full record: `docs/evals/GATE-0-REPORT.md`, and the public-set report in the [research repo](https://github.com/vibhortayal/meta-hackathon-research/blob/main/project/spike2/public-set/GATE-REPORT.md).
 
-### Gate 1 — decode quality (Stage 1, golden receipt set, Standard mode)
+### Gate 1: decode quality (Stage 1, golden receipt set, Standard mode)
 
 - 95 percent or more of lines captured. No line drops in silence.
 - 85 percent or more of lines auto-posted and correct.
@@ -383,7 +383,7 @@ Status of the evidence:
 - Totals reconcile within 0.05 dollars on the golden set.
 - After one corrections pass, a re-decode asks about zero corrected codes.
 
-### Gate 2 — core loop (Stage 2 and Stage 3)
+### Gate 2: core loop (Stage 2 and Stage 3)
 
 | Component | Criterion |
 |---|---|
@@ -393,7 +393,7 @@ Status of the evidence:
 | Smart list (C5) | The due set equals the rule output of FR-5.1. The narration adds no item outside the due set. |
 | Reconciliation (C6) | A test trip with one mismatch asks about that mismatch only. |
 
-### Gate 3 — superseded
+### Gate 3: superseded
 
 The store add-on became Quest (Discussion 29). Quest is measured by
 its own evidence: Shelf Scan (0 false pops in the spike). The
