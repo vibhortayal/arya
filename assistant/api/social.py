@@ -494,12 +494,25 @@ def level_for(points):
             "next_level_at": LEVEL_STEP * (n + 1) * n // 2}
 
 
+def level_points(sess, reports=None):
+    """What one receipt-closed trip adds to the account's level. A
+    Quest game trip's grabs already count in the game's xp (the game
+    scores every item), so here it adds only the receipt's +50 and the
+    boss (Quest review P3, owner 2026-11-04: "fix P3"). Express and
+    Shop-Off trips have no game xp, so they count in full."""
+    if sess.get("mode") == "quest" and not sess.get("shopoff_id"):
+        from api import hunt
+        return POINTS_RECEIPT + (POINTS_BOSS if hunt.boss_found(sess) else 0)
+    return hunt_points(sess, reports)
+
+
 def profile():
     done = _done_sessions()
     reports = quest._store().get("reports", [])
-    # One level everywhere: receipt-closed hunts plus the game's points.
+    # One level everywhere: receipt-closed hunts plus the game's points,
+    # each point counted once.
     from api import game_profile
-    points = sum(hunt_points(s, reports) for s in done) + game_profile.xp()
+    points = sum(level_points(s, reports) for s in done) + game_profile.xp()
     return {"handle": quest.my_handle(),
             "avatar": quest.my_avatar(),
             "points": points, **level_for(points),

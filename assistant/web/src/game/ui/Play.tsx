@@ -74,7 +74,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
   const L = trip.layout;
   /* Live aisle hints at a Kroger-family store: background fetch, trip memory only. */
-  const kroger = useKrogerHints(L.id, trip.items.map(i => i.name), !trip.practice);
+  const kroger = useKrogerHints(L.id, trip.items.map(i => i.name), !trip.practice && !L.id.startsWith("town-")); // Demo Town stores are made up
   const done = allHandled(trip);
   const item: QuestItem | null = at ? trip.items.find(i => i.key === at && !isHandled(trip, i.key)) ?? null : null;
   const section = item ? L.sections.find(s => s.id === item.section)! : null;
@@ -315,7 +315,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
         {!total ? (
           <>
             <div className="qg-empty"><b>Your list is empty</b><small>Add what you need and Arya plans the walk.</small></div>
-            <AddItem dispatch={a => onTrip(reduce(tripRef.current, a))} />
+            <AddItem dispatch={a => onTrip(reduce(tripRef.current, a))} onAdd={trip.practice ? undefined : source.addItem?.bind(source)} />
             <div className="qg-dock-row"><button onClick={onQuit}>Pick a saved list</button></div>
           </>
         ) : <>
@@ -361,7 +361,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
                     {source.findIt && <SnapButton className="qg-opt qg-findopt" onPhoto={f => void look(item.key, item.name, f)}><b>Find it for me</b><span>Point your camera at the shelf. Arya highlights it.</span></SnapButton>}
                     <button className="qg-opt" onClick={() => setPage("staff")}><b>Ask a staff member</b><span>Shows a card you can hand them.</span></button>
                     <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
-                    <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
+                    <button className="qg-opt" onClick={() => act({ type: "grab", key: item.key })}><b>↪ It's somewhere else here</b><span>Found it in another spot? Arya ticks it off.</span></button>
                     <button className="qg-opt" onClick={() => setPage("sub")}><b>Take something else instead</b><span>Counts as got; say what you took.</span></button>
                     <button className="qg-btn ghost" onClick={() => setPage("main")}>Back</button>
                   </div>
@@ -434,7 +434,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
       {/* ---- sheets ---- */}
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
-        <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
+        <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onAdd={trip.practice ? undefined : source.addItem?.bind(source)} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
       <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map my store?">
         <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are pixelated first.</p>
@@ -484,13 +484,13 @@ function hintFor(item: QuestItem, view: string, typical: string) {
 /* One list (usability audit: Route and List were two sheets for one
  * thing). Add at the top, then the items by section in walking order.
  * Arya keeps the order; moving or skipping a section is one link down. */
-function ListSheet({ trip, dispatch, onGo }: { trip: Trip; dispatch: (a: Action) => void; onGo: (id: string) => void }) {
+function ListSheet({ trip, dispatch, onGo, onAdd }: { trip: Trip; dispatch: (a: Action) => void; onGo: (id: string) => void; onAdd?: (name: string) => void }) {
   const [edit, setEdit] = useState(false);
   const order = stops(trip);
   const live = order.filter(id => !trip.skipped.includes(id));
   return (
     <div className="qg-list">
-      <AddItem dispatch={dispatch} />
+      <AddItem dispatch={dispatch} onAdd={onAdd} />
       {edit ? <RouteEdit trip={trip} dispatch={dispatch} onDone={() => setEdit(false)} /> : <>
         {order.length ? <p className="qg-p">In walking order. Arya sorts it; tap a section to go there.</p> : <p className="qg-p">Nothing on your list yet.</p>}
         {order.map(id => {
@@ -516,12 +516,12 @@ function ListSheet({ trip, dispatch, onGo }: { trip: Trip; dispatch: (a: Action)
   );
 }
 
-function AddItem({ dispatch }: { dispatch: (a: Action) => void }) {
+function AddItem({ dispatch, onAdd }: { dispatch: (a: Action) => void; onAdd?: (name: string) => void }) {
   const [name, setName] = useState("");
   const add = () => {
     const n = name.trim(); if (!n) return;
     const item: QuestItem = { key: `add-${Date.now()}`, name: n[0].toUpperCase() + n.slice(1), art: artFor(n), section: sectionFor(n) };
-    dispatch({ type: "addItem", item }); setName("");
+    dispatch({ type: "addItem", item }); onAdd?.(item.name); setName("");
   };
   return (
     <div className="qg-add">

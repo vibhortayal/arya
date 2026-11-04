@@ -62,4 +62,4 @@ export type QuestItem = {
 export type StoreSummary = { id: string; name: string; area: string; kind: MapKind; miles?: number; seen?: string; lat?: number | null; lng?: number | null };
 
 /* store: the store the list is for (a named list's first store), if any. */
-export type ShoppingList = { id: string; name: string; items: { name: string; art?: string }[]; store?: string };
+export type ShoppingList = { id: string; name: string; items: { name: string; art?: string; qty?: number; note?: string }[]; store?: string };
