@@ -56,21 +56,22 @@ vision) reads a photo of a handwritten note. Adds apply at once, with
 Undo. On a laptop with no camera, type the items instead; the photo read is shown on a phone.
 
 ### 4. Start a quest
-On Today, tap **Start shopping** on the next trip, then **Let's go**.
-(From a list, **Start shopping** asks how you want to shop; pick
-**Start a Quest**.) The quest opens at that list's store.
+To reach Tomato soup, start from the Trader Jill's list: **More**, **Lists**,
+open it, tap **Start shopping**, then pick **Start a Quest**. (On Today,
+**Start shopping** on the next trip also works, if that trip is Trader Jill's.)
+The quest opens at that list's store.
 
 - An unmapped store plays as a labelled typical layout ("A guess, not a
   pin").
 - Tap **Got it**: +10 points (the Golden item is worth double). The
   celebration characters were painted with **Muse Image**. There is no
   clock and no way to lose.
-- **Can't find it** offers **Find it for me**: the camera aims at the
+- **I can't find it** offers **Find it for me**: the camera aims at the
   item, **SAM 3.1** boxes candidates and **Muse Spark** checks each crop.
   Not in a store? When you reach **Tomato soup**, open
   [the sample shelf photo](../images/sample-shelf.jpg) (a Trader Joe's soup
   and broth shelf, a frame from my own video) on a second screen or a computer, tap
-  **Can't find it**, then **Find it for me**, and point the phone camera at
+  **I can't find it**, then **Find it for me**, and point the phone camera at
   that screen. Any other shelf photo works too.
   From the same place you can tell other Arya shoppers it is gone.
 - **Map my store** (on the Quest tab) opens the guided scan: pan along
