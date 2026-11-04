@@ -432,10 +432,30 @@ def _remove(a, target):
     return _t("removed", "Removed {name} from your list.", name=name), None
 
 
-def _list_choices(lists, verb, item, qty=1):
+def _counts(unit):
+    """True when a unit counts pieces ("ct", "pack"); a size ("oz",
+    "lb", "gal") is one package (api/itemmeta.COUNT_UNITS)."""
+    from api import itemmeta
+    return str(unit or "").strip().lower().rstrip(".") in itemmeta.COUNT_UNITS
+
+
+def _shown(name, qty=1, unit=""):
+    """How a reply names an added row: "Lemons \u00d72", or
+    "Chicken thighs 2 lb" for a size, never "\u00d72" for a size."""
+    name = str(name or "")
+    if unit and not _counts(unit):
+        q = int(qty) if float(qty) == int(qty) else qty
+        return f"{name} {q} {unit}"
+    return f"{name} \u00d7{qty}" if qty != 1 else name
+
+
+def _list_choices(lists, verb, item, qty=1, unit=""):
     """Tap-to-answer options for a which-list question (owner,
     2026-11-02): each chip's `send` is the words a tap sends, as if typed."""
-    shown = f"{qty} {item}" if qty and qty != 1 else str(item or "")
+    if unit and not _counts(unit):
+        shown = _shown(item, qty, unit)
+    else:
+        shown = f"{qty} {item}" if qty and qty != 1 else str(item or "")
     if verb == "remove":
         return [{"label": l["name"], "send": _t("choice_remove", "Remove {item} from {list}", item=shown, list=l["name"])}
                 for l in lists[:6]]
@@ -482,11 +502,20 @@ def apply_actions(actions, added=None, choices=None):
             # Lemons x 2), and matches only a name that IS a tracked item:
             # "oat milk" must not become "Milk - 2%" (owner, 2026-11-01).
             from api.list.intake import existing_item_id, split_list_items_units
-            parsed = split_list_items_units(str(said or ""))
+            whole = str(said or "")
+            parsed = split_list_items_units(whole)
             if parsed:
                 said, qty, unit = parsed[0]
+            size_in_name = False
+            if unit and not _counts(unit) and existing_item_id(
+                    whole, state.dictionary()["entries"], state.flags()):
+                # A package size is not a count: "Greek Yogurt 32 oz" is
+                # the item's own name, one tub, not 32 of them (owner
+                # bug 2026-11-04, live Ask).
+                said, qty, unit, size_in_name = whole, 1, "", True
             q = a.get("qty")
-            if isinstance(q, (int, float)) and not isinstance(q, bool) and 1 <= q <= 99:
+            if (isinstance(q, (int, float)) and not isinstance(q, bool) and 1 <= q <= 99
+                    and not (size_in_name and str(int(q)) in whole.split())):
                 qty = int(q)
             a = dict(a, item=said)
             item_id = existing_item_id(said or "", state.dictionary()["entries"], state.flags())
@@ -505,12 +534,12 @@ def apply_actions(actions, added=None, choices=None):
                 # Ask first; adding to no list and then asking
                 # leaves a stray row (Tester, #384).
                 skipped.append(ask)
-                offer(_list_choices(_list_matches(a["list"]), "add", a.get("item"), qty))
+                offer(_list_choices(_list_matches(a["list"]), "add", a.get("item"), qty, unit))
                 continue
             # Every item on a list (owner, 2026-11-02): no stray row; ask.
             skipped.append(_t("no_list", "You have no list called {list}.", list=a["list"])
                            + " " + _ask_list(a.get("item"), item_id))
-            offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
+            offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty, unit))
             continue
         if a.get("type") in ("add_to_list", "ran_out") and target is None:
             # No list named: the list it is already on, the only list, or ask.
@@ -525,7 +554,7 @@ def apply_actions(actions, added=None, choices=None):
                 target = have[0]
             if target is None:
                 skipped.append(_ask_list(a.get("item"), item_id))
-                offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty))
+                offer(_list_choices(_lists_to_offer(item_id), "add", a.get("item"), qty, unit))
                 continue
         dest = (_t("dest_named", " to {list}", list=target["name"]) if target
                 else _t("dest_list", " to your list"))
@@ -561,7 +590,7 @@ def apply_actions(actions, added=None, choices=None):
                 note = ""
                 if state.classify_grocery(name)["kind"] == "other":
                     note = " That does not look like a grocery item; I added it anyway, so remove it if it is a mistake."
-                shown = f"{name} \u00d7{qty}" if qty != 1 else name
+                shown = _shown(name, qty, unit)
                 applied.append(_t("added", "Added {name}{dest}.", name=shown, dest=dest) + note)
                 continue
         if not item_id:
@@ -593,7 +622,7 @@ def apply_actions(actions, added=None, choices=None):
                 fl["unit"] = unit
             if target:
                 fl["list"] = target["id"]
-            applied.append(_t("added", "Added {name}{dest}.", name=f"{nm} \u00d7{qty}" if qty != 1 else nm, dest=dest))
+            applied.append(_t("added", "Added {name}{dest}.", name=_shown(nm, qty, unit), dest=dest))
         elif t == "ran_out":
             fl["out"] = today
             applied.append(_t("ran_out", "Marked {name} as out — it's on the list.", name=nm))
