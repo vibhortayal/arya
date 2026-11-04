@@ -224,6 +224,20 @@ page. A new document or a rewritten section in these goes through three roles:
 Ops does not merge such a PR until the Editor line in the template is checked. A per-batch STATUS.md or DECISIONS.md line does not need the Editor, and
 in-app Help, guide cards and Ask stay in the builder chain.
 
+**Voice (owner, 2026-11-04).** Before pushing any doc change, including a small
+fix to an open PR, do a humanizer pass and a human-voice-writer pass (a
+humanizer pass: strip stock phrases, filler and AI tells; a human-voice-writer
+pass: read it aloud as the owner would say it). Plain words, sentences of
+natural length (no run-ons, no strings of clipped sentences), no em-dash
+chains, no hype. Watch for AI vocabulary ("delve", "pivotal", "showcase"),
+lists of three, "not just X, it's Y", trailing "-ing" phrases, "serves as" for
+"is", and a closing line that sounds hopeful. Checklist: the 24 patterns at
+oneaway.io/skills/humanizer and the features listed at
+mcpmarket.com/tools/skills/human-voice-writer (reference only, nothing to
+install). The owner's own words (README "What is Arya", the pitch script)
+are kept as written. Say in the PR description that both passes were done and
+which checklist you used.
+
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
   tree: `assistant/deploy/.env` is VM-only (the owner's
