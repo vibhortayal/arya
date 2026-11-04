@@ -29,6 +29,11 @@ class TestNewsItemMatch(Base):
     def test_my_own_words_and_both_items(self):
         self.assertEqual(self.items(["Large eggs", "Milk - 2%"]), ["Large eggs", "Milk - 2%"])
 
+    def test_finding_large_eggs_clears_an_eggs_report(self):
+        self.as_("me@x.com")
+        self.sr.found("Trader Joe's", "Large eggs", None)
+        self.assertEqual(self.items(["Large eggs", "Milk"]), ["Milk"])
+
 
 if __name__ == "__main__":
     unittest.main()

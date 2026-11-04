@@ -164,8 +164,13 @@ def _drop(store, item, group, only):
         rows = doc.get(sk)
         if not rows:
             return
+        # The same item by its core words too (#577): grabbing "Large
+        # eggs" clears an "Eggs" report, as the alert reached that shopper.
+        from api.quest import _core_tokens
+        core = _core_tokens(item)
+        same = lambda k: k in keys or (core and _core_tokens(k) == core)
         keep = [r for r in rows if not (
-            r.get("item_key") in keys and (only is None or r.get("by") == only))]
+            same(r.get("item_key")) and (only is None or r.get("by") == only))]
         if len(keep) == len(rows):
             return
         if keep:
