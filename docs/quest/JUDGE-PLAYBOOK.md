@@ -66,12 +66,12 @@ The quest opens at that list's store.
 - Tap **Got it**: +10 points (the Golden item is worth double). The
   celebration characters were painted with **Muse Image**. There is no
   clock and no way to lose.
-- **I can't find it** offers **Find it for me**: the camera aims at the
+- **Can't find it** offers **Find it for me**: the camera aims at the
   item, **SAM 3.1** boxes candidates and **Muse Spark** checks each crop.
   Not in a store? When you reach **Tomato soup**, open
   [the sample shelf photo](../images/sample-shelf.jpg) (a Trader Joe's soup
   and broth shelf, a frame from my own video) on a second screen or a computer, tap
-  **I can't find it**, then **Find it for me**, and point the phone camera at
+  **Can't find it**, then **Find it for me**, and point the phone camera at
   that screen. Look for the highlight on a soup carton; if it
   lands elsewhere, try again closer to the screen. For a clean read, turn the screen to full brightness
   and fill the camera view with the image, to avoid glare. Any other shelf
