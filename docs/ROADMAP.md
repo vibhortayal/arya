@@ -16,7 +16,7 @@ nobody has designed it yet. Sources are named so you can check them.
 - **Ray-Ban Meta glasses.** Idea, raised by me for the store scan.
   Spark's check during the hackathon found no public live-camera API for
   third-party apps. The flow that works today is to capture on the glasses,
-  sync to the phone and read the video there. The demo uses the phone camera
+  sync to the phone and import the video there. The demo uses the phone camera
   throughout. Source: `docs/quest/DISCUSSION.md` (item 38).
 - **Meta Ray-Ban Display glasses.** Idea. Not researched yet. What is possible
   depends on what Meta offers developers for that device.

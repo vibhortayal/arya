@@ -165,8 +165,8 @@ Migration from JSON, in order, each step reversible:
 2. Re-run `assistant/tools/migrate_json_to_pg.py`, compare every document (it reports
    mismatches), and fix any drift. Back up both sides (`backup.sh` already
    dumps the schema when `ARYA_BACKUP_DATABASE_URL` is set).
-3. Flip `ARYA_STORE=pg` on one process while the others stay on `dual`,
-   but only if the versioned path is on. Otherwise flip the whole site in a
+3. Flip `ARYA_STORE=pg` on one process while the others stay on `dual`
+   reads only if the versioned path is on. Otherwise flip the whole site in a
    quiet hour. Keep writing files for a while as a shadow copy (a new
    `pg+shadow` mode, or the same `dual` logic with Postgres first and the file
    second) so rollback is a flag flip, not a restore.
