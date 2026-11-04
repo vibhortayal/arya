@@ -6,6 +6,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 const cards = [
   ['What is Arya?', '/docs/intro', 'The idea, the screens and how it uses Meta models.'],
   ['What should a judge look at?', '/docs/judges', 'Where to look first, and what to try.'],
+  ['Can I watch it first?', 'https://youtu.be/cbJflgCXV5U', 'The judge walkthrough video: the eight-minute judge path, shown in 3 min 48 s, with voice and captions.'],
   ['How do I try every feature?', '/docs/try-the-features', 'Every feature, step by step, on your own copy.'],
   ['What can I do with it?', '/docs/guide/user-journeys', 'User journeys: walkthroughs with screenshots.'],
   ['How do I use the Lists API?', '/docs/api/lists-api', 'Read and write your lists from a script.'],

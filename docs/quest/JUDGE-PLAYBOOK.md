@@ -1,6 +1,6 @@
 # Judge playbook
 
-An eight-minute path through the live demo. Each step says what to do, what you see, and which Meta model is involved.
+An eight-minute path through the live demo. Each step says what to do, what you see, and which Meta model is involved. To watch the same path first, with voice and captions, see the [judge walkthrough video](https://youtu.be/cbJflgCXV5U) (3 min 48 s).
 
 **Live demo:** https://arya.teamnightshift.org/ (no account). Use a phone, or a browser window about 390 px wide. Allow the camera and microphone for the steps that use them. The demo household is fictional. Your changes live in a sandbox for your visit only ([what is real, and what is not](../../README.md#what-is-real-and-what-is-not)).
 
