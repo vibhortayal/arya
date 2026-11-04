@@ -1765,8 +1765,8 @@
       },
       "find": {
         "name": "Find it for me",
-        "sub": "In a Quest, point your camera at the shelf and Arya highlights the item you can't find.",
-        "what": "In a Quest, tap Can't find it, then Find it for me; the camera looks for that item."
+        "sub": "While you shop, point your camera at the shelf and Arya highlights the item you can't find.",
+        "what": "While you shop, tap Can't find it, then Find it for me; the camera looks for that item."
       },
       "alerts": {
         "name": "Store alerts",

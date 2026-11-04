@@ -358,7 +358,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
                 )}
                 {page === "nothere" && (
                   <div className="qg-opts">
-                    {source.findIt && <SnapButton className="qg-opt qg-findopt" onPhoto={f => void look(item.key, item.name, f)}><b>📷 Find it for me</b><span>Point your camera at the shelf. Arya highlights it.</span></SnapButton>}
+                    {source.findIt && <SnapButton className="qg-opt qg-findopt" onPhoto={f => void look(item.key, item.name, f)}><b>Find it for me</b><span>Point your camera at the shelf. Arya highlights it.</span></SnapButton>}
                     <button className="qg-opt" onClick={() => setPage("staff")}><b>Ask a staff member</b><span>Shows a card you can hand them.</span></button>
                     <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "empty" })}><b>The shelf is empty</b><span>Tells other shoppers. It counts as done; no points.</span></button>
                     <button className="qg-opt" onClick={() => act({ type: "report", key: item.key, kind: "elsewhere" })}><b>↪ It's somewhere else here</b><span>Arya asks the next shopper to confirm.</span></button>
