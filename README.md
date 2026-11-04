@@ -119,7 +119,8 @@ https://arya.teamnightshift.org, no account needed. Tap "Try it now" for a ficti
 | Using your own AI assistant | [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md) |
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
-| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md), and a feature-by-feature tour: [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
+| A feature-by-feature tour | [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
 | Why it exists and what it stands for | [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
