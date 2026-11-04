@@ -179,7 +179,7 @@ RoutePlan { route_id, store_id, index_version,
 | 3 PWA-core | Done. List first since PR #104: tabs Today, Lists, Ask, Quest, Settings. Named lists (#90), Start shopping bar. Express mode (#107) lost its entry points when Quest mode landed (#172). Demo household is a per-visitor sandbox. |
 | 4 Ask | Done. Ask Arya answers about Arya and about prices. Fridge/pantry photos were never shipped; expiry-date photos (#96) replace them. |
 | 5 Store add-on | Superseded by Quest Stages A–E (Discussion 29). |
-| 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video and package pending. |
+| 6 Hardening and demo | Backend split into `api/routes/` (#112, #118), strict CSP (#119), manual-only CI (#108). Demo video done (https://youtu.be/PeWF66ss3oI); package pending. |
 | 7 Groups | Merged (#121, live sync #127, on by default #128). |
 | 8 Price intelligence | Merged (#120): own-receipt prices, Arya's powers, daily card. Community prices, Deals, Arya Shoppers: after Nov 4. |
 
