@@ -234,8 +234,9 @@ lists of three, "not just X, it's Y", trailing "-ing" phrases, "serves as" for
 "is", and a closing line that sounds hopeful. Checklist: the 24 patterns at
 oneaway.io/skills/humanizer and the features listed at
 mcpmarket.com/tools/skills/human-voice-writer (reference only, nothing to
-install). Say in the PR description that both passes were done and which
-checklist you used.
+install). The owner's own words (README "What is Arya", the pitch script)
+are kept as written. Say in the PR description that both passes were done and
+which checklist you used.
 
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
