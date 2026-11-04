@@ -15,11 +15,17 @@ const cards = [
 export default function Home() {
   const today = useBaseUrl('repo/docs/images/today.png');
   const lists = useBaseUrl('repo/docs/images/lists.png');
+  const arya = useBaseUrl('repo/docs/images/arya-character.webp');
   return (
     <Layout title="Arya docs" description="Documentation for Arya, a grocery app that learns how you shop from your receipts and helps shoppers help each other. What it is, how to try it, how it is built, and the evidence.">
       <main style={{padding: '4rem 1rem', maxWidth: 960, margin: '0 auto'}}>
-        <h1 style={{fontSize: '2.6rem'}}>Arya docs</h1>
-        <p style={{fontSize: '1.2rem'}}>Arya, in three parts.</p>
+        <div className="home-hero">
+          <img className="home-arya" src={arya} alt="Arya, pushing a shopping cart with her checklist" />
+          <div>
+            <h1 style={{fontSize: '2.6rem', marginBottom: '0.4rem'}}>Arya docs</h1>
+            <p style={{fontSize: '1.2rem'}}>Arya, in three parts.</p>
+          </div>
+        </div>
         <div className="home-buttons">
           <a className="button button--primary button--lg" href="https://arya.teamnightshift.org">Open the live demo</a>
           <Link className="button button--outline button--primary button--lg" to="/docs/judges">Judging? Start here</Link>

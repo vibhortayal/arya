@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme-header.svg" alt="Arya: she remembers the list" width="100%">
+  <img src="assets/readme-header.webp" alt="Arya, pushing a shopping cart with her checklist. Arya: she remembers the list" width="100%">
 </p>
 <!-- Badge numbers: the Doc maintainer updates "python tests" from the STATUS.md Python test count and "receipt arithmetic" from the "My corpus" line under Measured results whenever either changes; "people in scans" follows the Map my store row. -->
 <p align="center">
