@@ -129,6 +129,7 @@ class TestStrikes(GuardCase):
             third = self.ask(ATTACKS[2]).json()["reply"]
         self.assertIn(ask_guard.LOCKED, third)
         self.assertNotIn("24 hours", third)
+        self.assertIn("support@teamnightshift.org", third)
         line = [m for m in logs.output if "strike" in m][-1]
         self.assertIn("user=user:t@x.y", line)
         self.assertIn("n=3", line)
@@ -319,6 +320,7 @@ class TestDemo(unittest.TestCase):
         r = b.post("/api/chat", json={"messages": [{"role": "user", "content": "hi"}]})
         self.assertEqual(r.status_code, 403)
         self.assertIn("24 hours", r.json()["detail"])
+        self.assertNotIn("support@", r.json()["detail"])
         locks = ask_guard.list_locks()
         self.assertTrue(all(l["until"] for l in locks))
         self.assertTrue({l["key"].split(":")[0] for l in locks} >= {"demo", "ip"})

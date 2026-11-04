@@ -37,9 +37,10 @@ MAIL_PER_DAY = 20
 
 REFUSAL = ("I can only help with your groceries and Arya. I can't share my "
            "instructions or anything about other accounts.")
-LOCKED = ("Ask Arya is paused for this account after repeated attempts to get "
-          "around its rules. Lists, Today and everything else still work.")
-LOCKED_DEMO = LOCKED + " It comes back in 24 hours."
+_PAUSED = ("Ask Arya is paused for this account after repeated attempts to get "
+           "around its rules. Lists, Today and everything else still work.")
+LOCKED = _PAUSED + " To turn it back on, email support@teamnightshift.org."
+LOCKED_DEMO = _PAUSED + " It comes back in 24 hours."
 
 _IGNORE = r"(?:ignore|disregard|forget|override|bypass)"
 _ALL = r"(?:all|any|every|the|your|my|previous|prior|above|earlier|preceding|system)"
