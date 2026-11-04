@@ -504,7 +504,7 @@ function ListSheet({ trip, dispatch, onGo }: { trip: Trip; dispatch: (a: Action)
                   <div key={i.key} className={"qg-list-i" + (g ? " got" : "")}>
                     <img src={charArt(i.art)} alt="" /><span>{i.name}</span>
                     <small>{g ? (trip.subs[i.key] ? `✓ took ${trip.subs[i.key]} instead` : "✓ got it") : r ? (r.kind === "empty" ? "shelf empty" : "somewhere else") : p ? "later" : ""}</small>
-                    {(g || r) && <button className="qg-putback" onClick={() => dispatch({ type: g ? "ungrab" : "unreport", key: i.key })} aria-label={`Put back ${i.name}`}>Put back</button>}
+                    {(g || r) && <button className="qg-putback" onClick={() => dispatch({ type: g ? "ungrab" : "unreport", key: i.key })} aria-label={`${g ? "Put back" : "Revisit"} ${i.name}`}>{g ? "Put back" : "Revisit again"}</button>}
                   </div>
                 );
               })}
@@ -565,7 +565,7 @@ function RouteEdit({ trip, dispatch, onDone }: { trip: Trip; dispatch: (a: Actio
 export function HowTo() {
   const steps: [string, string, string][] = [
     ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Your shopper walks to the next item by itself; tap any picture in your list to go there instead."],
-    ["pantry.webp", "See every item", "Tap List to see every item. If you marked one Got it or shelf empty by mistake, tap Put back."],
+    ["pantry.webp", "See every item", "Tap List to see every item. Marked one by mistake? Tap Put back, or Revisit again on a shelf empty item."],
     ["basket.webp", "Look first, then choose", "At the shelf, tap Got it, Can't find it or Later. Only Got it earns points; Later and Can't find it never cost anything."],
     ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you just mapped it for everyone."],
     ["egg.webp", "Golden item", "Each trip, one item from your own list is picked at random and worth double. Arya never adds items or shows ads. No timer, no lives."],

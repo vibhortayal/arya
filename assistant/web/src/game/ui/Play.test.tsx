@@ -59,11 +59,11 @@ describe("Put back on the List sheet", () => {
     const view = () => <Play trip={trip} source={new SampleSource()} onTrip={n => { trip = n; }} onFinish={() => {}} onQuit={() => {}} />;
     const { rerender } = render(view());
     fireEvent.click(screen.getByText(/^List ·|List · /, { selector: "button" }));
-    expect(screen.getAllByText("Put back")).toHaveLength(2);
+    expect(screen.getAllByText(/^(Put back|Revisit again)$/)).toHaveLength(2);
     fireEvent.click(screen.getByLabelText("Put back Milk"));
     expect(trip.got).toEqual([]);
     rerender(view());
-    fireEvent.click(screen.getByLabelText("Put back Bananas"));
+    fireEvent.click(screen.getByLabelText("Revisit Bananas"));
     expect(trip.reports).toEqual([]);
   });
 });
